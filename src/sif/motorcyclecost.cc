@@ -21,7 +21,7 @@ namespace valhalla {
 namespace sif {
 
 // Default options/values
-namespace {
+namespace motorcycle {
 
 // Base transition costs
 // TODO - can we define these in dynamiccost.h and override here if they differ?
@@ -107,7 +107,7 @@ constexpr float kSurfaceFactor[] = {
     1.0f  // kPath
 };
 
-} // namespace
+} // namespace motorcycle
 
 /**
  * Derived class providing dynamic edge costing for "direct" auto routes. This
@@ -290,7 +290,7 @@ public:
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
       if (edge->is_shortcut() || !(edge->forwardaccess() & kMotorcycleAccess) ||
-          edge->surface() > kMinimumMotorcycleSurface)
+          edge->surface() > motorcycle::kMinimumMotorcycleSurface)
         return 0.0f;
       else {
         // TODO - use classification/use to alter the factor
@@ -351,7 +351,7 @@ MotorcycleCost::MotorcycleCost(const Costing costing, const Options& options)
     highway_factor_ = f * f * f;
   } else {
     float f = 1.0f - (use_highways * 2.0f);
-    highway_factor_ = kMaxHighwayBiasFactor * (f * f);
+    highway_factor_ = motorcycle::kMaxHighwayBiasFactor * (f * f);
   }
 
   // Set toll factor based on preference to use tolls (value from 0 to 1).
@@ -376,7 +376,7 @@ MotorcycleCost::MotorcycleCost(const Costing costing, const Options& options)
     surface_factor_ = f * f * f;
   } else {
     float f = 1.0f - use_trails * 2.0f;
-    surface_factor_ = static_cast<uint32_t>(kMaxTrailBiasFactor * (f * f));
+    surface_factor_ = static_cast<uint32_t>(motorcycle::kMaxTrailBiasFactor * (f * f));
   }
 
   // Create speed cost table
@@ -414,7 +414,7 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
-  if (edge->surface() > kMinimumMotorcycleSurface) {
+  if (edge->surface() > motorcycle::kMinimumMotorcycleSurface) {
     return false;
   }
   return DynamicCost::EvaluateRestrictions(kMotorcycleAccess, edge, tile, edgeid, current_time,
@@ -442,7 +442,7 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  if (opp_edge->surface() > kMinimumMotorcycleSurface) {
+  if (opp_edge->surface() > motorcycle::kMinimumMotorcycleSurface) {
     return false;
   }
   return DynamicCost::EvaluateRestrictions(kMotorcycleAccess, edge, tile, opp_edgeid, current_time,
@@ -461,9 +461,10 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     return {sec * ferry_factor_, sec};
   }
 
-  float factor = density_factor_[edge->density()] +
-                 highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-                 surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
+  float factor =
+      density_factor_[edge->density()] +
+      highway_factor_ * motorcycle::kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+      surface_factor_ * motorcycle::kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
   if (edge->toll()) {
     factor += toll_factor_;
   }
@@ -486,11 +487,11 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   if (edge->stopimpact(idx) > 0) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      turn_cost = kTCCrossing;
+      turn_cost = motorcycle::kTCCrossing;
     } else {
       turn_cost = (node->drive_on_right())
-                      ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
-                      : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+                      ? motorcycle::kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
+                      : motorcycle::kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
 
     if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
@@ -531,11 +532,11 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
   if (edge->stopimpact(idx) > 0) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      turn_cost = kTCCrossing;
+      turn_cost = motorcycle::kTCCrossing;
     } else {
       turn_cost = (node->drive_on_right())
-                      ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
-                      : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+                      ? motorcycle::kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
+                      : motorcycle::kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
 
     if ((edge->use() != Use::kRamp && pred->use() == Use::kRamp) ||
@@ -571,90 +572,90 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
     // If specified, parse json and set pbf values
 
     // maneuver_penalty
-    pbf_costing_options->set_maneuver_penalty(kManeuverPenaltyRange(
+    pbf_costing_options->set_maneuver_penalty(motorcycle::kManeuverPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/maneuver_penalty")
-            .get_value_or(kDefaultManeuverPenalty)));
+            .get_value_or(motorcycle::kDefaultManeuverPenalty)));
 
     // destination_only_penalty
-    pbf_costing_options->set_destination_only_penalty(kDestinationOnlyPenaltyRange(
+    pbf_costing_options->set_destination_only_penalty(motorcycle::kDestinationOnlyPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/destination_only_penalty")
-            .get_value_or(kDefaultDestinationOnlyPenalty)));
+            .get_value_or(motorcycle::kDefaultDestinationOnlyPenalty)));
 
     // gate_cost
     pbf_costing_options->set_gate_cost(
-        kGateCostRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_cost")
-                           .get_value_or(kDefaultGateCost)));
+        motorcycle::kGateCostRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_cost")
+                                       .get_value_or(motorcycle::kDefaultGateCost)));
 
     // gate_penalty
-    pbf_costing_options->set_gate_penalty(
-        kGatePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_penalty")
-                              .get_value_or(kDefaultGatePenalty)));
+    pbf_costing_options->set_gate_penalty(motorcycle::kGatePenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/gate_penalty")
+            .get_value_or(motorcycle::kDefaultGatePenalty)));
 
     // toll_booth_cost
-    pbf_costing_options->set_toll_booth_cost(
-        kTollBoothCostRange(rapidjson::get_optional<float>(*json_costing_options, "/toll_booth_cost")
-                                .get_value_or(kDefaultTollBoothCost)));
+    pbf_costing_options->set_toll_booth_cost(motorcycle::kTollBoothCostRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/toll_booth_cost")
+            .get_value_or(motorcycle::kDefaultTollBoothCost)));
 
     // toll_booth_penalty
-    pbf_costing_options->set_toll_booth_penalty(kTollBoothPenaltyRange(
+    pbf_costing_options->set_toll_booth_penalty(motorcycle::kTollBoothPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/toll_booth_penalty")
-            .get_value_or(kDefaultTollBoothPenalty)));
+            .get_value_or(motorcycle::kDefaultTollBoothPenalty)));
 
     // alley_penalty
-    pbf_costing_options->set_alley_penalty(
-        kAlleyPenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
-                               .get_value_or(kDefaultAlleyPenalty)));
+    pbf_costing_options->set_alley_penalty(motorcycle::kAlleyPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
+            .get_value_or(motorcycle::kDefaultAlleyPenalty)));
 
     // country_crossing_cost
-    pbf_costing_options->set_country_crossing_cost(kCountryCrossingCostRange(
+    pbf_costing_options->set_country_crossing_cost(motorcycle::kCountryCrossingCostRange(
         rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_cost")
-            .get_value_or(kDefaultCountryCrossingCost)));
+            .get_value_or(motorcycle::kDefaultCountryCrossingCost)));
 
     // country_crossing_penalty
-    pbf_costing_options->set_country_crossing_penalty(kCountryCrossingPenaltyRange(
+    pbf_costing_options->set_country_crossing_penalty(motorcycle::kCountryCrossingPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_penalty")
-            .get_value_or(kDefaultCountryCrossingPenalty)));
+            .get_value_or(motorcycle::kDefaultCountryCrossingPenalty)));
 
     // ferry_cost
-    pbf_costing_options->set_ferry_cost(
-        kFerryCostRange(rapidjson::get_optional<float>(*json_costing_options, "/ferry_cost")
-                            .get_value_or(kDefaultFerryCost)));
+    pbf_costing_options->set_ferry_cost(motorcycle::kFerryCostRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/ferry_cost")
+            .get_value_or(motorcycle::kDefaultFerryCost)));
 
     // use_ferry
     pbf_costing_options->set_use_ferry(
-        kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
-                           .get_value_or(kDefaultUseFerry)));
+        motorcycle::kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
+                                       .get_value_or(motorcycle::kDefaultUseFerry)));
 
     // use_highways
-    pbf_costing_options->set_use_highways(
-        kUseHighwaysRange(rapidjson::get_optional<float>(*json_costing_options, "/use_highways")
-                              .get_value_or(kDefaultUseHighways)));
+    pbf_costing_options->set_use_highways(motorcycle::kUseHighwaysRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/use_highways")
+            .get_value_or(motorcycle::kDefaultUseHighways)));
 
     // use_tolls
     pbf_costing_options->set_use_tolls(
-        kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
-                           .get_value_or(kDefaultUseTolls)));
+        motorcycle::kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
+                                       .get_value_or(motorcycle::kDefaultUseTolls)));
 
     // use_trails
-    pbf_costing_options->set_use_trails(
-        kUseTrailsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_trails")
-                            .get_value_or(kDefaultUseTrails)));
+    pbf_costing_options->set_use_trails(motorcycle::kUseTrailsRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/use_trails")
+            .get_value_or(motorcycle::kDefaultUseTrails)));
   } else {
     // Set pbf values to defaults
-    pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
-    pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
-    pbf_costing_options->set_gate_cost(kDefaultGateCost);
-    pbf_costing_options->set_gate_penalty(kDefaultGatePenalty);
-    pbf_costing_options->set_toll_booth_cost(kDefaultTollBoothCost);
-    pbf_costing_options->set_toll_booth_penalty(kDefaultTollBoothPenalty);
-    pbf_costing_options->set_alley_penalty(kDefaultAlleyPenalty);
-    pbf_costing_options->set_country_crossing_cost(kDefaultCountryCrossingCost);
-    pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
-    pbf_costing_options->set_ferry_cost(kDefaultFerryCost);
-    pbf_costing_options->set_use_ferry(kDefaultUseFerry);
-    pbf_costing_options->set_use_highways(kDefaultUseHighways);
-    pbf_costing_options->set_use_tolls(kDefaultUseTolls);
-    pbf_costing_options->set_use_trails(kDefaultUseTrails);
+    pbf_costing_options->set_maneuver_penalty(motorcycle::kDefaultManeuverPenalty);
+    pbf_costing_options->set_destination_only_penalty(motorcycle::kDefaultDestinationOnlyPenalty);
+    pbf_costing_options->set_gate_cost(motorcycle::kDefaultGateCost);
+    pbf_costing_options->set_gate_penalty(motorcycle::kDefaultGatePenalty);
+    pbf_costing_options->set_toll_booth_cost(motorcycle::kDefaultTollBoothCost);
+    pbf_costing_options->set_toll_booth_penalty(motorcycle::kDefaultTollBoothPenalty);
+    pbf_costing_options->set_alley_penalty(motorcycle::kDefaultAlleyPenalty);
+    pbf_costing_options->set_country_crossing_cost(motorcycle::kDefaultCountryCrossingCost);
+    pbf_costing_options->set_country_crossing_penalty(motorcycle::kDefaultCountryCrossingPenalty);
+    pbf_costing_options->set_ferry_cost(motorcycle::kDefaultFerryCost);
+    pbf_costing_options->set_use_ferry(motorcycle::kDefaultUseFerry);
+    pbf_costing_options->set_use_highways(motorcycle::kDefaultUseHighways);
+    pbf_costing_options->set_use_tolls(motorcycle::kDefaultUseTolls);
+    pbf_costing_options->set_use_trails(motorcycle::kDefaultUseTrails);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
   }
 }
@@ -711,11 +712,12 @@ TEST(MotorcycleCost, testMotorcycleCostParams) {
   std::shared_ptr<TestMotorcycleCost> ctorTester;
 
   // maneuver_penalty_
-  distributor.reset(make_distributor_from_range(kManeuverPenaltyRange));
+  distributor.reset(make_distributor_from_range(motorcycle::kManeuverPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorcyclecost_from_json("maneuver_penalty", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->maneuver_penalty_,
-                test::IsBetween(kManeuverPenaltyRange.min, kManeuverPenaltyRange.max));
+                test::IsBetween(motorcycle::kManeuverPenaltyRange.min,
+                                motorcycle::kManeuverPenaltyRange.max));
   }
 
   // alley_penalty_
@@ -747,7 +749,8 @@ TEST(MotorcycleCost, testMotorcycleCostParams) {
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_motorcyclecost_from_json("gate_penalty", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->gate_cost_.cost,
-                test::IsBetween(kGatePenaltyRange.min, kGatePenaltyRange.max + kDefaultGateCost));
+                test::IsBetween(kGatePenaltyRange.min,
+                                kGatePenaltyRange.max + motorcycle::kDefaultGateCost));
   }
 
   // toll_booth_cost_ (Cost.secs)
@@ -764,7 +767,7 @@ TEST(MotorcycleCost, testMotorcycleCostParams) {
     ctorTester.reset(make_motorcyclecost_from_json("toll_booth_penalty", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->toll_booth_cost_.cost,
                 test::IsBetween(kTollBoothPenaltyRange.min,
-                                kTollBoothPenaltyRange.max + kDefaultTollBoothCost));
+                                kTollBoothPenaltyRange.max + motorcycle::kDefaultTollBoothCost));
   }
 
   // country_crossing_cost_ (Cost.secs)
@@ -783,7 +786,8 @@ TEST(MotorcycleCost, testMotorcycleCostParams) {
         make_motorcyclecost_from_json("country_crossing_penalty", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->country_crossing_cost_.cost,
                 test::IsBetween(kCountryCrossingPenaltyRange.min,
-                                kCountryCrossingPenaltyRange.max + kDefaultCountryCrossingCost));
+                                kCountryCrossingPenaltyRange.max +
+                                    motorcycle::kDefaultCountryCrossingCost));
   }
 
   // ferry_cost_ (Cost.secs)
@@ -796,32 +800,35 @@ TEST(MotorcycleCost, testMotorcycleCostParams) {
 
   /*
    // use_ferry
-   distributor.reset(make_distributor_from_range(kUseFerryRange));
+   distributor.reset(make_distributor_from_range(motorcycle::kUseFerryRange));
    for (unsigned i = 0; i < testIterations; ++i) {
      ctorTester.reset(make_motorcyclecost_from_json("use_ferry", (*distributor)(generator)));
-EXPECT_THAT(ctorTester->use_ferry , test::IsBetween( kUseFerryRange.min ,kUseFerryRange.max));
+EXPECT_THAT(ctorTester->use_ferry , test::IsBetween( motorcycle::kUseFerryRange.min
+,motorcycle::kUseFerryRange.max));
    }
 
     // use_highways
-    distributor.reset(make_distributor_from_range(kUseHighwaysRange));
+    distributor.reset(make_distributor_from_range(motorcycle::kUseHighwaysRange));
     for (unsigned i = 0; i < testIterations; ++i) {
       ctorTester.reset(make_motorcyclecost_from_json("use_highways", (*distributor)(generator)));
-EXPECT_THAT(ctorTester->use_highways , test::IsBetween( kUseHighwaysRange.min
-,kUseHighwaysRange.max));
+EXPECT_THAT(ctorTester->use_highways , test::IsBetween( motorcycle::kUseHighwaysRange.min
+,motorcycle::kUseHighwaysRange.max));
     }
 
      // use_trails
-     distributor.reset(make_distributor_from_range(kUseTrailsRange));
+     distributor.reset(make_distributor_from_range(motorcycle::kUseTrailsRange));
      for (unsigned i = 0; i < testIterations; ++i) {
        ctorTester.reset(make_motorcyclecost_from_json("use_trails", (*distributor)(generator)));
-EXPECT_THAT(ctorTester->use_trails , test::IsBetween( kUseTrailsRange.min ,kUseTrailsRange.max));
+EXPECT_THAT(ctorTester->use_trails , test::IsBetween( motorcycle::kUseTrailsRange.min
+,motorcycle::kUseTrailsRange.max));
      }
 
    // use_tolls
-   distributor.reset(make_distributor_from_range(kUseTollsRange));
+   distributor.reset(make_distributor_from_range(motorcycle::kUseTollsRange));
    for (unsigned i = 0; i < testIterations; ++i) {
      ctorTester.reset(make_motorcyclecost_from_json("use_tolls", (*distributor)(generator)));
-EXPECT_THAT(ctorTester->use_tolls , test::IsBetween( kUseTollsRange.min ,kUseTollsRange.max));
+EXPECT_THAT(ctorTester->use_tolls , test::IsBetween( motorcycle::kUseTollsRange.min
+,motorcycle::kUseTollsRange.max));
    }
    **/
 }

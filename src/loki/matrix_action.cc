@@ -8,6 +8,7 @@
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
 #include "tyr/actor.h"
+#include "loki/util.h"
 
 using namespace valhalla;
 using namespace valhalla::tyr;
@@ -15,9 +16,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::loki;
 
 namespace {
-midgard::PointLL to_ll(const valhalla::Location& l) {
-  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
-}
 
 void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
                     const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
@@ -27,7 +25,7 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
   for (const auto& source : sources) {
     for (const auto& target : targets) {
       // check if distance between latlngs exceed max distance limit
-      auto path_distance = to_ll(source).Distance(to_ll(target));
+      auto path_distance = loki::util::to_ll(source).Distance(loki::util::to_ll(target));
 
       // only want to log the maximum distance between 2 locations for matrix
       LOG_DEBUG("path_distance -> " + std::to_string(path_distance));

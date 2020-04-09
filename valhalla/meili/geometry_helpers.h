@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <vector>
 
+#include <valhalla/meili/measurement.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/distanceapproximator.h>
@@ -15,6 +16,19 @@
 namespace valhalla {
 namespace meili {
 namespace helpers {
+
+inline float GreatCircleDistanceSquared(const Measurement& left, const Measurement& right) {
+  return left.lnglat().DistanceSquared(right.lnglat());
+}
+
+inline float GreatCircleDistance(const Measurement& left, const Measurement& right) {
+  return left.lnglat().Distance(right.lnglat());
+}
+
+inline float ClockDistance(const Measurement& left, const Measurement& right) {
+  return right.epoch_time() < 0 || left.epoch_time() < 0 ? -1
+                                                         : right.epoch_time() - left.epoch_time();
+}
 
 // snapped point, sqaured distance, segment index, offset
 inline std::tuple<midgard::PointLL, float, typename std::vector<midgard::PointLL>::size_type, float>

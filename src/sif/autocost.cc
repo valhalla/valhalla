@@ -22,7 +22,7 @@ namespace valhalla {
 namespace sif {
 
 // Default options/values
-namespace {
+namespace auto_ {
 
 // Base transition costs
 // TODO - can we define these in dynamiccost.h and override here if they differ?
@@ -112,7 +112,7 @@ constexpr float kSurfaceFactor[] = {
     1.0f  // kPath
 };
 
-} // namespace
+} // namespace auto_
 
 /**
  * Derived class providing dynamic edge costing for "direct" auto routes. This
@@ -442,8 +442,8 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
   float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
 
-  factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
+  factor += highway_factor_ * auto_::kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+            surface_factor_ * auto_::kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
   if (edge->toll()) {
     factor += toll_factor_;
   }
@@ -470,11 +470,11 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   if (edge->stopimpact(idx) > 0) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      turn_cost = kTCCrossing;
+      turn_cost = auto_::kTCCrossing;
     } else {
       turn_cost = (node->drive_on_right())
-                      ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
-                      : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+                      ? auto_::kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
+                      : auto_::kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
 
     if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
@@ -514,11 +514,11 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   if (edge->stopimpact(idx) > 0) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      turn_cost = kTCCrossing;
+      turn_cost = auto_::kTCCrossing;
     } else {
       turn_cost = (node->drive_on_right())
-                      ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
-                      : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+                      ? auto_::kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
+                      : auto_::kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
 
     if ((edge->use() != Use::kRamp && pred->use() == Use::kRamp) ||
@@ -558,91 +558,91 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<std::string>(*json_costing_options, "/type").get_value_or("car"));
 
     // maneuver_penalty
-    pbf_costing_options->set_maneuver_penalty(kManeuverPenaltyRange(
+    pbf_costing_options->set_maneuver_penalty(auto_::kManeuverPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/maneuver_penalty")
-            .get_value_or(kDefaultManeuverPenalty)));
+            .get_value_or(auto_::kDefaultManeuverPenalty)));
 
     // destination_only_penalty
-    pbf_costing_options->set_destination_only_penalty(kDestinationOnlyPenaltyRange(
+    pbf_costing_options->set_destination_only_penalty(auto_::kDestinationOnlyPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/destination_only_penalty")
-            .get_value_or(kDefaultDestinationOnlyPenalty)));
+            .get_value_or(auto_::kDefaultDestinationOnlyPenalty)));
 
     // alley_factor
-    pbf_costing_options->set_alley_factor(
-        kAlleyFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_factor")
-                              .get_value_or(kDefaultAlleyFactor)));
+    pbf_costing_options->set_alley_factor(auto_::kAlleyFactorRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/alley_factor")
+            .get_value_or(auto_::kDefaultAlleyFactor)));
 
     // gate_cost
     pbf_costing_options->set_gate_cost(
-        kGateCostRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_cost")
-                           .get_value_or(kDefaultGateCost)));
+        auto_::kGateCostRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_cost")
+                                  .get_value_or(auto_::kDefaultGateCost)));
 
     // gate_penalty
-    pbf_costing_options->set_gate_penalty(
-        kGatePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_penalty")
-                              .get_value_or(kDefaultGatePenalty)));
+    pbf_costing_options->set_gate_penalty(auto_::kGatePenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/gate_penalty")
+            .get_value_or(auto_::kDefaultGatePenalty)));
 
     // toll_booth_cost
-    pbf_costing_options->set_toll_booth_cost(
-        kTollBoothCostRange(rapidjson::get_optional<float>(*json_costing_options, "/toll_booth_cost")
-                                .get_value_or(kDefaultTollBoothCost)));
+    pbf_costing_options->set_toll_booth_cost(auto_::kTollBoothCostRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/toll_booth_cost")
+            .get_value_or(auto_::kDefaultTollBoothCost)));
 
     // toll_booth_penalty
-    pbf_costing_options->set_toll_booth_penalty(kTollBoothPenaltyRange(
+    pbf_costing_options->set_toll_booth_penalty(auto_::kTollBoothPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/toll_booth_penalty")
-            .get_value_or(kDefaultTollBoothPenalty)));
+            .get_value_or(auto_::kDefaultTollBoothPenalty)));
 
     // alley_penalty
-    pbf_costing_options->set_alley_penalty(
-        kAlleyPenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
-                               .get_value_or(kDefaultAlleyPenalty)));
+    pbf_costing_options->set_alley_penalty(auto_::kAlleyPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
+            .get_value_or(auto_::kDefaultAlleyPenalty)));
 
     // country_crossing_cost
-    pbf_costing_options->set_country_crossing_cost(kCountryCrossingCostRange(
+    pbf_costing_options->set_country_crossing_cost(auto_::kCountryCrossingCostRange(
         rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_cost")
-            .get_value_or(kDefaultCountryCrossingCost)));
+            .get_value_or(auto_::kDefaultCountryCrossingCost)));
 
     // country_crossing_penalty
-    pbf_costing_options->set_country_crossing_penalty(kCountryCrossingPenaltyRange(
+    pbf_costing_options->set_country_crossing_penalty(auto_::kCountryCrossingPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_penalty")
-            .get_value_or(kDefaultCountryCrossingPenalty)));
+            .get_value_or(auto_::kDefaultCountryCrossingPenalty)));
 
     // ferry_cost
     pbf_costing_options->set_ferry_cost(
-        kFerryCostRange(rapidjson::get_optional<float>(*json_costing_options, "/ferry_cost")
-                            .get_value_or(kDefaultFerryCost)));
+        auto_::kFerryCostRange(rapidjson::get_optional<float>(*json_costing_options, "/ferry_cost")
+                                   .get_value_or(auto_::kDefaultFerryCost)));
 
     // use_ferry
     pbf_costing_options->set_use_ferry(
-        kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
-                           .get_value_or(kDefaultUseFerry)));
+        auto_::kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
+                                  .get_value_or(auto_::kDefaultUseFerry)));
 
     // use_highways
-    pbf_costing_options->set_use_highways(
-        kUseHighwaysRange(rapidjson::get_optional<float>(*json_costing_options, "/use_highways")
-                              .get_value_or(kDefaultUseHighways)));
+    pbf_costing_options->set_use_highways(auto_::kUseHighwaysRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/use_highways")
+            .get_value_or(auto_::kDefaultUseHighways)));
 
     // use_tolls
     pbf_costing_options->set_use_tolls(
-        kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
-                           .get_value_or(kDefaultUseTolls)));
+        auto_::kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
+                                  .get_value_or(auto_::kDefaultUseTolls)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_transport_type("car");
-    pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
-    pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
-    pbf_costing_options->set_alley_factor(kDefaultAlleyFactor);
-    pbf_costing_options->set_gate_cost(kDefaultGateCost);
-    pbf_costing_options->set_gate_penalty(kDefaultGatePenalty);
-    pbf_costing_options->set_toll_booth_cost(kDefaultTollBoothCost);
-    pbf_costing_options->set_toll_booth_penalty(kDefaultTollBoothPenalty);
-    pbf_costing_options->set_alley_penalty(kDefaultAlleyPenalty);
-    pbf_costing_options->set_country_crossing_cost(kDefaultCountryCrossingCost);
-    pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
-    pbf_costing_options->set_ferry_cost(kDefaultFerryCost);
-    pbf_costing_options->set_use_ferry(kDefaultUseFerry);
-    pbf_costing_options->set_use_highways(kDefaultUseHighways);
-    pbf_costing_options->set_use_tolls(kDefaultUseTolls);
+    pbf_costing_options->set_maneuver_penalty(auto_::kDefaultManeuverPenalty);
+    pbf_costing_options->set_destination_only_penalty(auto_::kDefaultDestinationOnlyPenalty);
+    pbf_costing_options->set_alley_factor(auto_::kDefaultAlleyFactor);
+    pbf_costing_options->set_gate_cost(auto_::kDefaultGateCost);
+    pbf_costing_options->set_gate_penalty(auto_::kDefaultGatePenalty);
+    pbf_costing_options->set_toll_booth_cost(auto_::kDefaultTollBoothCost);
+    pbf_costing_options->set_toll_booth_penalty(auto_::kDefaultTollBoothPenalty);
+    pbf_costing_options->set_alley_penalty(auto_::kDefaultAlleyPenalty);
+    pbf_costing_options->set_country_crossing_cost(auto_::kDefaultCountryCrossingCost);
+    pbf_costing_options->set_country_crossing_penalty(auto_::kDefaultCountryCrossingPenalty);
+    pbf_costing_options->set_ferry_cost(auto_::kDefaultFerryCost);
+    pbf_costing_options->set_use_ferry(auto_::kDefaultUseFerry);
+    pbf_costing_options->set_use_highways(auto_::kDefaultUseHighways);
+    pbf_costing_options->set_use_tolls(auto_::kDefaultUseTolls);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
   }
 }
@@ -979,7 +979,7 @@ public:
     auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
     if ((edge->forwardaccess() & kHOVAccess) && !(edge->forwardaccess() & kAutoAccess)) {
-      factor *= kHOVFactor;
+      factor *= auto_::kHOVFactor;
     }
     float sec = (edge->length() * speedfactor_[speed]);
     return Cost(sec * factor, sec);
@@ -1175,7 +1175,7 @@ public:
     auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
     if ((edge->forwardaccess() & kTaxiAccess) && !(edge->forwardaccess() & kAutoAccess)) {
-      factor *= kTaxiFactor;
+      factor *= auto_::kTaxiFactor;
     }
     float sec = (edge->length() * speedfactor_[speed]);
     return Cost(sec * factor, sec);

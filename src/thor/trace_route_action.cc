@@ -33,12 +33,6 @@ struct MapMatch {
   int edge_index = -1;
 };
 
-// <Confidence score, raw score, match results, trip path> tuple indexes
-constexpr size_t kConfidenceScoreIndex = 0;
-constexpr size_t kRawScoreIndex = 1;
-constexpr size_t kMatchResultsIndex = 2;
-constexpr size_t kTripLegIndex = 3;
-
 void add_path_edge(valhalla::Location* l, const meili::MatchResult& m) {
   l->mutable_path_edges()->Clear();
   auto* edge = l->mutable_path_edges()->Add();

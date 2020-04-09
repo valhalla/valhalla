@@ -15,19 +15,6 @@ using namespace valhalla::meili;
 
 constexpr float MAX_ACCUMULATED_COST = 99999999;
 
-inline float GreatCircleDistanceSquared(const Measurement& left, const Measurement& right) {
-  return left.lnglat().DistanceSquared(right.lnglat());
-}
-
-inline float GreatCircleDistance(const Measurement& left, const Measurement& right) {
-  return left.lnglat().Distance(right.lnglat());
-}
-
-inline float ClockDistance(const Measurement& left, const Measurement& right) {
-  return right.epoch_time() < 0 || left.epoch_time() < 0 ? -1
-                                                         : right.epoch_time() - left.epoch_time();
-}
-
 struct Interpolation {
   midgard::PointLL projected;
   baldr::GraphId edgeid;
@@ -177,8 +164,9 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
 
   for (const auto& measurement : measurements) {
     const auto& match_measurement = mapmatcher.state_container().measurement(stateid.time());
-    const auto match_measurement_distance = GreatCircleDistance(measurement, match_measurement);
-    const auto match_measurement_time = ClockDistance(measurement, match_measurement);
+    const auto match_measurement_distance =
+        helpers::GreatCircleDistance(measurement, match_measurement);
+    const auto match_measurement_time = helpers::ClockDistance(measurement, match_measurement);
 
     // interpolate this point along the route
     const auto interp =
@@ -754,7 +742,7 @@ MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements) {
   auto time = AppendMeasurement(*last, sq_max_search_radius);
   double interpolated_epoch_time = -1;
   for (auto m = std::next(last); m != measurements.end(); ++m) {
-    const auto sq_distance = GreatCircleDistanceSquared(*last, *m);
+    const auto sq_distance = helpers::GreatCircleDistanceSquared(*last, *m);
     // Always match the last measurement and if its far enough away
     if (sq_interpolation_distance < sq_distance || std::next(m) == measurements.end()) {
       // If there were interpolated points between these two points with time information

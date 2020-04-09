@@ -11,11 +11,6 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
-constexpr uint64_t kInitialEdgeLabelCount = 500000;
-
-// Number of iterations to allow with no convergence to the destination
-constexpr uint32_t kMaxIterationsWithoutConvergence = 800000;
-
 // Default constructor
 TimeDepForward::TimeDepForward() : AStarPathAlgorithm() {
   mode_ = TravelMode::kDrive;

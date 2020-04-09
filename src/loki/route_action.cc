@@ -1,4 +1,5 @@
 #include "loki/search.h"
+#include "loki/util.h"
 #include "loki/worker.h"
 
 #include "baldr/datetime.h"
@@ -10,9 +11,6 @@ using namespace valhalla;
 using namespace valhalla::baldr;
 
 namespace {
-midgard::PointLL to_ll(const valhalla::Location& l) {
-  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
-}
 
 void check_locations(const size_t location_count, const size_t max_locations) {
   // check that location size does not exceed max.
@@ -27,7 +25,8 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
   float total_path_distance = 0.0f;
   for (auto location = ++locations.begin(); location != locations.end(); ++location) {
     // check if distance between latlngs exceed max distance limit for each mode of travel
-    auto path_distance = to_ll(*std::prev(location)).Distance(to_ll(*location));
+    auto path_distance =
+        loki::util::to_ll(*std::prev(location)).Distance(loki::util::to_ll(*location));
     max_distance -= path_distance;
     if (max_distance < 0) {
       throw valhalla_exception_t{154};

@@ -8,7 +8,8 @@
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
-namespace {
+namespace valhalla {
+namespace thor {
 
 // Method to get an operator Id from a map of operator strings vs. Id.
 uint32_t GetOperatorId(const GraphTile* tile,
@@ -33,12 +34,7 @@ uint32_t GetOperatorId(const GraphTile* tile,
   return 0;
 }
 
-} // namespace
-
-namespace valhalla {
-namespace thor {
-
-constexpr uint64_t kInitialEdgeLabelCount = 200000;
+constexpr uint64_t kMultiModalInitialEdgeLabelCount = 200000;
 
 // Default constructor
 MultiModalPathAlgorithm::MultiModalPathAlgorithm()
@@ -60,7 +56,7 @@ void MultiModalPathAlgorithm::Init(const midgard::PointLL& origll,
 
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects
-  edgelabels_.reserve(kInitialEdgeLabelCount);
+  edgelabels_.reserve(kMultiModalInitialEdgeLabelCount);
 
   // Set up lambda to get sort costs
   const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };

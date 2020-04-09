@@ -566,13 +566,13 @@ void AddOSMConnection(const GraphId& transit_stop_node,
 
 // We make sure to lock on reading and writing since tiles are now being
 // written. Also lock on queue access since shared by different threads.
-void build(const std::string& transit_dir,
-           const boost::property_tree::ptree& pt,
-           std::mutex& lock,
-           const std::unordered_set<GraphId>& tiles,
-           std::unordered_set<GraphId>::const_iterator tile_start,
-           std::unordered_set<GraphId>::const_iterator tile_end,
-           std::promise<builder_stats>& results) {
+void build_transit(const std::string& transit_dir,
+                   const boost::property_tree::ptree& pt,
+                   std::mutex& lock,
+                   const std::unordered_set<GraphId>& tiles,
+                   std::unordered_set<GraphId>::const_iterator tile_start,
+                   std::unordered_set<GraphId>::const_iterator tile_end,
+                   std::promise<builder_stats>& results) {
   // GraphReader for local level and for transit level.
   GraphReader reader_local_level(pt);
   GraphReader reader_transit_level(pt);
@@ -747,7 +747,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(build, *transit_dir, std::cref(pt.get_child("mjolnir")),
+    threads[i].reset(new std::thread(build_transit, *transit_dir, std::cref(pt.get_child("mjolnir")),
                                      std::ref(lock), std::cref(tiles), tile_start, tile_end,
                                      std::ref(results.back())));
   }
