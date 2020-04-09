@@ -3809,7 +3809,7 @@ void NarrativeBuilder::FormVerbalMultiCue(std::list<Maneuver>& maneuvers) {
       // Set verbal pre transition instruction as a verbal multi-cue
       prev_maneuver->set_verbal_pre_transition_instruction(
           FormVerbalMultiCue(prev_maneuver, maneuver));
-      prev_maneuver->set_verbal_multi_cue(true);
+      prev_maneuver->set_imminent_verbal_multi_cue(true);
     }
 
     // Update previous maneuver
