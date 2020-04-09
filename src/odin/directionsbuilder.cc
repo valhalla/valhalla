@@ -363,8 +363,8 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
     }
 
     // Verbal multi-cue
-    if (maneuver.imminent_verbal_multi_cue()) {
-      trip_maneuver->set_verbal_multi_cue(maneuver.imminent_verbal_multi_cue());
+    if (maneuver.HasVerbalMultiCue()) {
+      trip_maneuver->set_verbal_multi_cue(maneuver.HasVerbalMultiCue());
     }
 
     // To stay on

@@ -112,8 +112,9 @@ Maneuver::Maneuver()
       transit_connection_(false), rail_(false), bus_(false), fork_(false),
       begin_intersecting_edge_name_consistency_(false), intersecting_forward_edge_(false),
       tee_(false), unnamed_walkway_(false), unnamed_cycleway_(false),
-      unnamed_mountain_bike_trail_(false), imminent_verbal_multi_cue_(false), to_stay_on_(false),
-      drive_on_right_(true), has_time_restrictions_(false) {
+      unnamed_mountain_bike_trail_(false), imminent_verbal_multi_cue_(false),
+      distant_verbal_multi_cue_(false), to_stay_on_(false), drive_on_right_(true),
+      has_time_restrictions_(false) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
@@ -630,6 +631,18 @@ void Maneuver::set_imminent_verbal_multi_cue(bool imminent_verbal_multi_cue) {
   imminent_verbal_multi_cue_ = imminent_verbal_multi_cue;
 }
 
+bool Maneuver::distant_verbal_multi_cue() const {
+  return distant_verbal_multi_cue_;
+}
+
+void Maneuver::set_distant_verbal_multi_cue(bool distant_verbal_multi_cue) {
+  distant_verbal_multi_cue_ = distant_verbal_multi_cue;
+}
+
+bool Maneuver::HasVerbalMultiCue() const {
+  return (imminent_verbal_multi_cue_ || distant_verbal_multi_cue_);
+}
+
 bool Maneuver::to_stay_on() const {
   return to_stay_on_;
 }
@@ -995,6 +1008,9 @@ std::string Maneuver::ToString() const {
 
   man_str += " | imminent_verbal_multi_cue=";
   man_str += std::to_string(imminent_verbal_multi_cue_);
+
+  man_str += " | distant_verbal_multi_cue=";
+  man_str += std::to_string(distant_verbal_multi_cue_);
 
   man_str += " | travel_mode=";
   man_str += std::to_string(travel_mode_);
