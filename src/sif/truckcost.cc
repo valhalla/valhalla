@@ -453,7 +453,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                const uint32_t tz_index,
                                bool& has_time_restrictions) const {
   if (flow_mask_ & kCurrentFlowMask) {
-    if (tile->IsClosedDueToTraffic(edgeid))
+    if (tile->IsClosedDueToTraffic(opp_edgeid))
       return false;
   }
   // Check access, U-turn, and simple turn restriction.
