@@ -56,6 +56,7 @@
    * ADDED: Added reclassify_links, use_direction_on_ways, and allow_alt_name as config options.  If `use_direction_on_ways = true` then use `direction` and `int_direction` on the way to update the directional for the `ref` and `int_ref`.  Also, copy int_efs to the refs. [#2285](https://github.com/valhalla/valhalla/pull/2285)
    * ADDED: Add support for live traffic. [#2268](https://github.com/valhalla/valhalla/pull/2268)
    * ADDED: Implement per-location search filters for functional road class and forms of way. [#2289](https://github.com/valhalla/valhalla/pull/2289)
+   * ADDED: Approach, multi-cue, and length updates [#2313](https://github.com/valhalla/valhalla/pull/2313)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
