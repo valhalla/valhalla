@@ -19,22 +19,23 @@ namespace baldr {
 namespace DateTime {
 
 tz_db_t::tz_db_t() : db(date::get_tzdb()) {
-  // load up the tz data
-  for (const auto& z : db.zones) {
-    names.push_back(z.name());
+  // NOTE: outside of this class 0 is reserved for invalid timezone
+  // so we offset each index by 1 to get into the valid range 1-300 or so
+  for (size_t i = 0; i < db.zones.size(); ++i) {
+    names.emplace(db.zones[i].name(), i + 1);
   }
 }
 
 size_t tz_db_t::to_index(const std::string& zone) const {
-  auto it = std::find(names.cbegin(), names.cend(), zone);
+  auto it = names.find(zone);
   if (it == names.cend()) {
     return 0;
   }
-  return (it - names.cbegin()) + 1;
+  return it->second;
 }
 
 const date::time_zone* tz_db_t::from_index(size_t index) const {
-  if (index < 1 || index > names.size()) {
+  if (index < 1 || index > db.zones.size()) {
     return nullptr;
   }
   return &db.zones[index - 1];

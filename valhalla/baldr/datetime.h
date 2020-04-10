@@ -9,6 +9,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <date/date.h>
@@ -31,7 +32,7 @@ struct tz_db_t {
   const date::time_zone* from_index(size_t index) const;
 
 protected:
-  std::vector<std::string> names;
+  std::unordered_map<std::string, size_t> names;
   const date::tzdb& db;
 };
 

@@ -583,6 +583,9 @@ TEST(DateTime, TestSecondOfWeek) {
   EXPECT_EQ(a, e) << "Wrong second of week";
 }
 
+TEST(DateTime, DiffCaching) {
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
