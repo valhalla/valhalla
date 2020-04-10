@@ -562,6 +562,18 @@ public:
     return de->speed();
   }
 
+  inline uint32_t GetCongestion(const DirectedEdge* de) const {
+    // TODO(danpat): this needs to consider the time - we should not use live speeds if
+    //               the request is not for "now", or we're some X % along the route
+    // TODO(danpat): for short-ish durations along the route, we should fade live
+    //               speeds into any historic/predictive/average value we'd normally use
+    auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
+    auto volatile& live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
+    if (live_speed.valid())
+      return live_speed.congestion_level;
+    return 0;
+  }
+
   /**
    * Convenience method to get the turn lanes for an edge given the directed edge index.
    * @param  idx  Directed edge index. Used to lookup turn lanes.
