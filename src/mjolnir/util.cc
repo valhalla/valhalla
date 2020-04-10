@@ -51,7 +51,7 @@ namespace mjolnir {
 std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) {
   std::vector<std::string> tokens;
   boost::algorithm::split(tokens, tag_value, std::bind1st(std::equal_to<char>(), delim),
-                          boost::algorithm::token_compress_on);
+                          boost::algorithm::token_compress_off);
   return tokens;
 }
 
