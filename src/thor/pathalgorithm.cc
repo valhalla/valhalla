@@ -1,32 +1,11 @@
 #include "thor/pathalgorithm.h"
-#include "baldr/datetime.h"
 #include "midgard/logging.h"
 #include "sif/edgelabel.h"
 
 #include <chrono>
-#include <ctime>
-#include <valhalla/meili/match_result.h>
 
 namespace dt = valhalla::baldr::DateTime;
 namespace sc = std::chrono;
-
-namespace {
-
-void foo(const std::vector<valhalla::meili::MatchResult>& match_results,
-         int first_index,
-         int last_index,
-         const std::vector<valhalla::meili::EdgeSegment>& segments,
-         std::vector<valhalla::meili::EdgeSegment>& new_segments) {
-
-  // loop over the path
-  const auto& match_result = match_results[first_index];
-  for (const auto& segment : segments) {
-    // this match result occurs on this edge of the path
-    if (segment.edgeid == match_result.edgeid) {}
-  }
-}
-
-} // namespace
 
 namespace valhalla {
 namespace thor {
