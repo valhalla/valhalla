@@ -412,8 +412,10 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
                                const uint64_t current_time,
                                const uint32_t tz_index,
                                bool& has_time_restrictions) const {
-  if (tile->IsClosedDueToTraffic(edgeid))
-    return false;
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(edgeid))
+      return false;
+  }
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!(edge->forwardaccess() & kMopedAccess) ||
@@ -439,8 +441,10 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                       const uint64_t current_time,
                                       const uint32_t tz_index,
                                       bool& has_time_restrictions) const {
-  if (tile->IsClosedDueToTraffic(opp_edgeid))
-    return false;
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(opp_edgeid))
+      return false;
+  }
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kMopedAccess) ||
