@@ -123,7 +123,7 @@ if(NOT TARGET CURL::CURL)
       find_package(CURL REQUIRED)
     endif()
     set_target_properties(CURL::CURL PROPERTIES
-      INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
+      #INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}" 
       INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
       INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
   endif()
@@ -261,7 +261,7 @@ if(ENABLE_TOOLS)
   foreach(program ${valhalla_programs})
     get_source_path(path ${program})
     add_executable(${program} ${path})
-    target_link_libraries(${program} Boost::program_options valhalla Threads::Threads Boost::filesystem Boost::system)
+    target_link_libraries(${program} Boost::program_options valhalla Threads::Threads Boost::filesystem Boost::system ${CURL_LIBRARIES})
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
@@ -270,7 +270,7 @@ if(ENABLE_DATA_TOOLS)
   foreach(program ${valhalla_data_tools})
     get_source_path(path ${program})
     add_executable(${program} ${path})
-    target_link_libraries(${program} valhalla Boost::program_options Threads::Threads Boost::filesystem Boost::system)
+    target_link_libraries(${program} valhalla Boost::program_options Threads::Threads Boost::filesystem Boost::system ${CURL_LIBRARIES})
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 

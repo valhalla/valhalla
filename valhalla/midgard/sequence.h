@@ -23,6 +23,7 @@
 
 #ifdef _MSC_VER
 #include <io.h>
+#define stat _stat64
 #else
 #include <sys/mman.h>
 #include <sys/stat.h>
