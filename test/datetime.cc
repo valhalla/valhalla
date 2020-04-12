@@ -584,6 +584,9 @@ TEST(DateTime, TestSecondOfWeek) {
 }
 
 TEST(DateTime, DiffCaching) {
+  const auto& tzdb = DateTime::get_tz_db();
+  auto diff = DateTime::timezone_diff(1586660072, tzdb.from_index(110), tzdb.from_index(94));
+  EXPECT_EQ(diff, -3 * 60 * 60);
 }
 
 } // namespace

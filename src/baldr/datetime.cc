@@ -113,13 +113,12 @@ int timezone_diff(const uint64_t seconds,
   const auto origin = date::make_zoned(origin_tz, tp);
   const auto dest = date::make_zoned(dest_tz, tp);
 
-  auto duration = std::chrono::duration_cast<std::chrono::seconds>(origin.get_local_time() -
-                                                                   dest.get_local_time());
-  if (origin.get_info().offset < dest.get_info().offset) {
-    return std::abs(duration.count());
-  } else {
-    return -1 * std::abs(duration.count());
-  }
+  const auto origin_info = origin.get_info();
+  const auto dest_info = dest.get_info();
+
+  return static_cast<int>(
+      std::chrono::duration_cast<std::chrono::seconds>(dest_info.offset - origin_info.offset)
+          .count());
 }
 
 std::string
