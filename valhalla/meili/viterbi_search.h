@@ -10,10 +10,6 @@
 #include <valhalla/meili/priority_queue.h>
 #include <valhalla/meili/stateid.h>
 
-// undef win32 macro (if it exists)
-#ifdef SearchPath
-#undef SearchPath
-#endif
 namespace valhalla {
 namespace meili {
 
