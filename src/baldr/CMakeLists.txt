@@ -69,21 +69,7 @@ set(sources
     verbal_text_formatter_factory.cc)
 
 #basic timezone stuff
-list(APPEND sources
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_africa.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_antarctica.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_asia.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_australasia.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_backward.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_etcetera.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_europe.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_leapseconds.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_northamerica.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_pacificnew.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_southamerica.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_systemv.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
-    tz_alt.cpp)
+list(APPEND sources ${VALHALLA_SOURCE_DIR}/third_party/date/src/tz.cpp)
 
 #ios we have more work to make use of system tzdb
 if(APPLE)

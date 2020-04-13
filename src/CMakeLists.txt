@@ -80,8 +80,6 @@ function(valhalla_module)
     PUBLIC
       $<$<BOOL:${MSVC}>:VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI>
       RAPIDJSON_HAS_STDSTRING
-      HAS_REMOTE_API=0
-      AUTO_DOWNLOAD=0
     PRIVATE
       $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>)
   target_include_directories(${library} ${MODULE_INCLUDE_DIRECTORIES}
@@ -91,6 +89,10 @@ function(valhalla_module)
 
   if(ENABLE_COVERAGE)
     target_compile_options(${library} PUBLIC -ftest-coverage -fprofile-arcs)
+  endif()
+
+  if(NOT TARGET CURL::CURL)
+    target_compile_options(${library} PUBLIC -DHAS_REMOTE_API=0 -DAUTO_DOWNLOAD=0)
   endif()
 
   if(ENABLE_COMPILER_WARNINGS)
