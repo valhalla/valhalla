@@ -38,6 +38,7 @@
    * FIXED: Fixed an issue where MatchGuidanceViewJunctions is only looking at the first edge. Set the data_id for guidance views to the changeset id as it is already being populated. Also added test for guidance views. [2303](https://github.com/valhalla/valhalla/pull/2303)
    * FIXED: Fixed a problem with live speeds where live speeds were being used to determine access, even when a live
    speed (current time) route wasn't what was requested. [#2311](https://github.com/valhalla/valhalla/pull/2311)
+   * FIXED: Fix break/continue typo in search filtering [#2317](https://github.com/valhalla/valhalla/pull/2317)
 
 * **Enhancement**
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)
