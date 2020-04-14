@@ -432,7 +432,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
                                                       '6',
                                                       '7',
                                                       '8',
-                                                      '9'};                                              
+                                                      '9'};
   // we require slashes
   auto pos = fname.find_last_of(filesystem::path::preferred_separator);
   if (pos == fname.npos) {
