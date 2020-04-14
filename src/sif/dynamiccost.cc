@@ -53,7 +53,6 @@ DynamicCost::DynamicCost(const Options& options, const TravelMode mode)
   for (auto& edge : options.avoid_edges()) {
     user_avoid_edges_.insert({GraphId(edge.id()), edge.percent_along()});
   }
-  
 }
 
 DynamicCost::~DynamicCost() {
@@ -206,7 +205,7 @@ void ParseCostOptions(const rapidjson::Value& value, CostingOptions* pbf_costing
   pbf_costing_options->set_flow_mask(SpeedMask_Parse(speed_types));
 
   // Parse Constraints (if any)
-  CostConstraints::ParseConstraints(value, pbf_costing_options);  
+  CostConstraints::ParseConstraints(value, pbf_costing_options);
 }
 
 } // namespace sif

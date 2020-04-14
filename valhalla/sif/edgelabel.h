@@ -340,9 +340,8 @@ public:
    * Get the transition cost object. This is used in the bidirectional A* to
    * determine the total transition cost
    * @return Returns the full transition cost object
-   */ 
-  Cost transition_cost_object() const
-  {
+   */
+  Cost transition_cost_object() const {
     return transition_cost_;
   }
   /**

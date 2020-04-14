@@ -165,7 +165,6 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
     auto transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
     Cost newcost = pred.cost() + edge_cost + transition_cost;
 
-
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge).
     auto p = destinations_percent_along_.find(edgeid);
@@ -183,9 +182,9 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
       }
       newcost.cost = std::max(0.0f, newcost.cost);
 
-    // Secondary constraints not met. Don't add to queue.
-    if(!costing_->ConstraintsSatisfied(newcost))
-      continue;
+      // Secondary constraints not met. Don't add to queue.
+      if (!costing_->ConstraintsSatisfied(newcost))
+        continue;
       // Mark this as the best connection if that applies. This allows
       // a path to be formed even if the convergence test fails (can
       // happen with large edge scores)
@@ -196,7 +195,7 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
     }
 
     // Secondary constraints not met. Don't add to queue.
-    if(!costing_->ConstraintsSatisfied(newcost))
+    if (!costing_->ConstraintsSatisfied(newcost))
       continue;
 
     // Check if edge is temporarily labeled and this path has less cost. If

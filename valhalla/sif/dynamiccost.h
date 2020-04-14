@@ -104,7 +104,6 @@ public:
     pass_ = pass;
   }
 
-  
   /**
    * Returns the maximum transfer distance between stops that you are willing
    * to travel for this mode.  It is the max distance you are willing to
@@ -194,13 +193,12 @@ public:
   virtual bool Allowed(const baldr::NodeInfo* node) const = 0;
 
   /**
-  * Checks whether all secondary constraints are satisfied. 
-  * @param  cost  Cost to be evaluated
-  * @return Returns true if constraints are satisfied, false if not.
-  */ 
-  virtual inline bool ConstraintsSatisfied(const Cost& cost) const   
-  { 
-     return constraints_->ConstraintsSatisfied(cost);
+   * Checks whether all secondary constraints are satisfied.
+   * @param  cost  Cost to be evaluated
+   * @return Returns true if constraints are satisfied, false if not.
+   */
+  virtual inline bool ConstraintsSatisfied(const Cost& cost) const {
+    return constraints_->ConstraintsSatisfied(cost);
   }
 
   inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
@@ -231,7 +229,6 @@ public:
                         const baldr::GraphTile* tile,
                         const uint32_t seconds) const = 0;
 
-
   /**
    * Get the cost to traverse the specified directed edge for a reverse search. Cost includes
    * the time (seconds) to traverse the edge.
@@ -241,9 +238,8 @@ public:
    * @return  Returns the cost and time (seconds).
    */
   virtual Cost EdgeCostReverse(const baldr::DirectedEdge* edge,
-                        const baldr::GraphTile* tile,
-                        const uint32_t seconds) const
-  {
+                               const baldr::GraphTile* tile,
+                               const uint32_t seconds) const {
     return EdgeCost(edge, tile, seconds);
   }
 
@@ -685,8 +681,7 @@ public:
   uint8_t flow_mask() const {
     return flow_mask_;
   }
-  std::shared_ptr<CostConstraints> GetConstraints()
-  {
+  std::shared_ptr<CostConstraints> GetConstraints() {
     return constraints_;
   }
 

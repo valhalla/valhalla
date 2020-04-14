@@ -230,9 +230,9 @@ public:
    * @return  Returns the cost and time (seconds).
    */
   virtual Cost EdgeCostReverse(const baldr::DirectedEdge* edge,
-                        const baldr::GraphTile* tile,
-                        const uint32_t seconds) const;
-                        
+                               const baldr::GraphTile* tile,
+                               const uint32_t seconds) const;
+
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
@@ -331,7 +331,7 @@ public:
   float alley_factor_;       // Avoid alleys factor.
   float toll_factor_;        // Factor applied when road has a toll
   float surface_factor_;     // How much the surface factors are applied.
-  float top_speed_;          // maximum speed 
+  float top_speed_;          // maximum speed
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
 };
@@ -471,9 +471,8 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   float sec = (edge->length() * speedfactor_[speed]);
-  if(constraints_->HasConstraints())
-  {  
-    auto c = Cost(sec * factor, sec);    
+  if (constraints_->HasConstraints()) {
+    auto c = Cost(sec * factor, sec);
     constraints_->ComputeConstraintsForEdge(c, edge, tile, seconds, seconds + sec, true);
     return c;
   }
@@ -482,9 +481,9 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
 
 // Get the cost to traverse the edge in seconds
 Cost AutoCost::EdgeCostReverse(const baldr::DirectedEdge* edge,
-                        const baldr::GraphTile* tile,
-                        const uint32_t seconds) const {
-  auto oldspeed = tile->GetSpeed(edge, flow_mask_, seconds);                          
+                               const baldr::GraphTile* tile,
+                               const uint32_t seconds) const {
+  auto oldspeed = tile->GetSpeed(edge, flow_mask_, seconds);
   auto speed = std::min(tile->GetSpeed(edge, flow_mask_, seconds), (uint32_t)top_speed_);
   float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
 
@@ -499,8 +498,7 @@ Cost AutoCost::EdgeCostReverse(const baldr::DirectedEdge* edge,
   }
 
   float sec = (edge->length() * speedfactor_[speed]);
-  if(constraints_->HasConstraints())
-  {  
+  if (constraints_->HasConstraints()) {
     auto c = Cost(sec * factor, sec);
     constraints_->ComputeConstraintsForEdge(c, edge, tile, seconds, seconds + sec, false);
     return c;
@@ -547,8 +545,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     c.cost += seconds;
     c.secs += seconds;
   }
-  if(constraints_->HasConstraints())
-  {   
+  if (constraints_->HasConstraints()) {
     auto id = pred.endnode();
     auto start = pred.cost().secs;
     constraints_->ComputeConstraintsForNode(c, id, start, start + c.secs, true);
@@ -598,8 +595,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     c.secs += seconds;
     c.cost += seconds;
   }
-  if(constraints_->HasConstraints())
-  {
+  if (constraints_->HasConstraints()) {
     constraints_->ComputeConstraintsForNode(c, pred->endnode(), 0, c.secs, false);
     return c;
   }
@@ -690,9 +686,10 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(
         kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
                            .get_value_or(kDefaultUseTolls)));
-        // top_speed                           
-    pbf_costing_options->set_top_speed(rapidjson::get_optional<float>(*json_costing_options, "/top_speed")
-                           .get_value_or(kMaxSpeedKph));    
+    // top_speed
+    pbf_costing_options->set_top_speed(
+        rapidjson::get_optional<float>(*json_costing_options, "/top_speed")
+            .get_value_or(kMaxSpeedKph));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_transport_type("car");

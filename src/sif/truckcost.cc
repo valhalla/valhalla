@@ -211,7 +211,7 @@ public:
                         const uint32_t curr_time) const {
     throw std::runtime_error("TruckCost::EdgeCost does not support transit edges");
   }
-    /**
+  /**
    * Get the cost to traverse the specified directed edge for a reverse search. Cost includes
    * the time (seconds) to traverse the edge.
    * @param   edge    Pointer to a directed edge.
@@ -220,8 +220,8 @@ public:
    * @return  Returns the cost and time (seconds).
    */
   virtual Cost EdgeCostReverse(const baldr::DirectedEdge* edge,
-                        const baldr::GraphTile* tile,
-                        const uint32_t seconds) const;
+                               const baldr::GraphTile* tile,
+                               const uint32_t seconds) const;
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
@@ -320,7 +320,7 @@ public:
   float height_;    // Vehicle height in meters
   float width_;     // Vehicle width in meters
   float length_;    // Vehicle length in meters
-  float top_speed_;  // Top speed (for vehicles with regulator)
+  float top_speed_; // Top speed (for vehicles with regulator)
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
 };
@@ -502,8 +502,7 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Use the lower or truck speed (ir present) and speed
   uint32_t s = (edge->truck_speed() > 0) ? std::min(edge->truck_speed(), speed) : speed;
   float sec = edge->length() * speedfactor_[s];
-  if(constraints_->HasConstraints())
-  {  
+  if (constraints_->HasConstraints()) {
     auto c = Cost(sec * factor, sec);
     constraints_->ComputeConstraintsForEdge(c, edge, tile, seconds, sec + seconds, true);
     return c;
@@ -511,8 +510,8 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
   return {sec * factor, sec};
 }
 Cost TruckCost::EdgeCostReverse(const baldr::DirectedEdge* edge,
-                        const baldr::GraphTile* tile,
-                        const uint32_t seconds) const {
+                                const baldr::GraphTile* tile,
+                                const uint32_t seconds) const {
   auto speed = std::min(tile->GetSpeed(edge, flow_mask_, seconds), (uint32_t)top_speed_);
   float factor = density_factor_[edge->density()];
   if (edge->truck_route() > 0) {
@@ -526,15 +525,13 @@ Cost TruckCost::EdgeCostReverse(const baldr::DirectedEdge* edge,
   // Use the lower or truck speed (ir present) and speed
   uint32_t s = (edge->truck_speed() > 0) ? std::min(edge->truck_speed(), speed) : speed;
   float sec = edge->length() * speedfactor_[s];
-  if(constraints_->HasConstraints())
-  {  
+  if (constraints_->HasConstraints()) {
     auto c = Cost(sec * factor, sec);
     constraints_->ComputeConstraintsForEdge(c, edge, tile, seconds, sec + seconds, false);
     return c;
   }
   return {sec * factor, sec};
-}         
-
+}
 
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
@@ -580,10 +577,9 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
     c.cost += seconds;
     c.secs += seconds;
   }
-  if(constraints_->HasConstraints())
-  {   
+  if (constraints_->HasConstraints()) {
     auto id = pred.endnode();
-    
+
     auto start = pred.cost().secs;
     constraints_->ComputeConstraintsForNode(c, id, start, start + c.secs, true);
     return c;
@@ -638,8 +634,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
     c.cost += seconds;
     c.secs += seconds;
   }
-  if(constraints_->HasConstraints())
-  {
+  if (constraints_->HasConstraints()) {
     constraints_->ComputeConstraintsForNode(c, pred->endnode(), 0, c.secs, false);
     return c;
   }
@@ -756,9 +751,10 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
         kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
                            .get_value_or(kDefaultUseTolls)));
 
-    // top_speed                           
-    pbf_costing_options->set_top_speed(rapidjson::get_optional<float>(*json_costing_options, "/top_speed")
-                           .get_value_or(kMaxSpeedKph));      
+    // top_speed
+    pbf_costing_options->set_top_speed(
+        rapidjson::get_optional<float>(*json_costing_options, "/top_speed")
+            .get_value_or(kMaxSpeedKph));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
