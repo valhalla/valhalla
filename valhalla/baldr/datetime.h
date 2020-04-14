@@ -9,6 +9,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <date/date.h>
@@ -31,7 +32,7 @@ struct tz_db_t {
   const date::time_zone* from_index(size_t index) const;
 
 protected:
-  std::vector<std::string> names;
+  std::unordered_map<std::string, size_t> names;
   const date::tzdb& db;
 };
 
@@ -85,11 +86,14 @@ uint64_t seconds_since_epoch(const std::string& date_time, const date::time_zone
  * @param   seconds       seconds since epoch
  * @param   origin_tz     timezone for origin
  * @param   dest_tz       timezone for dest
+ * @param   cache         a cache for timezone sys_info lookup (since its expensive)
  * @return Returns the seconds difference between the 2 timezones.
  */
-int timezone_diff(const uint64_t seconds,
-                  const date::time_zone* origin_tz,
-                  const date::time_zone* dest_tz);
+int timezone_diff(
+    const uint64_t seconds,
+    const date::time_zone* origin_tz,
+    const date::time_zone* dest_tz,
+    std::unordered_map<const date::time_zone*, std::vector<date::sys_info>>* cache = nullptr);
 
 /**
  * Get the iso date time from seconds since epoch and timezone.
