@@ -612,7 +612,7 @@ struct tar {
       // do we record entry file or not
       if (!regular_files_only || (h->typeflag == '0' || h->typeflag == '\0')) {
         // tar doesn't automatically update path separators based on OS, so we need to do it...
-        std::string name{h->name};    
+        std::string name{h->name};
         std::replace(name.begin(), name.end(), opp_sep, filesystem::path::preferred_separator);
         contents.emplace(std::piecewise_construct, std::forward_as_tuple(name),
                          std::forward_as_tuple(position, size));
