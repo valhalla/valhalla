@@ -4,6 +4,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <parallel_hashmap/phmap.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
 
@@ -12,6 +14,36 @@
 #include "baldr/timedomain.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
+
+namespace {
+// use a cache to store already constructed sys_info's since they aren't cheap
+template <typename TP>
+const date::sys_info&
+from_cache(const TP& tp,
+           const date::time_zone* tz,
+           std::unordered_map<const date::time_zone*, std::vector<date::sys_info>>& cache) {
+  // check if we have anything for this timezone in the cache
+  auto tz_it = cache.find(tz);
+  if (tz_it != cache.cend()) {
+    // we have something in the cache, see if one of the infos has the particular time point in range
+    auto st = date::floor<std::chrono::seconds>(tp.get_sys_time());
+    auto info_it =
+        std::find_if(tz_it->second.begin(), tz_it->second.end(),
+                     [&st](const date::sys_info& info) { return info.begin <= st && st < info.end; });
+
+    // if it was in the cache we return it
+    if (info_it != tz_it->second.cend()) {
+      return *info_it;
+    }
+  }
+
+  // either this timezone is new or the right info for the range was missing so lets get it
+  auto& infos = tz_it == cache.cend() ? cache.emplace(tz, std::vector<date::sys_info>{}).first->second
+                                      : tz_it->second;
+  infos.emplace_back(tp.get_info());
+  return infos.back();
+}
+} // namespace
 
 using namespace valhalla::baldr;
 namespace valhalla {
@@ -102,7 +134,8 @@ uint64_t seconds_since_epoch(const std::string& date_time, const date::time_zone
 // so that DST can be take into account). Returns the difference in seconds.
 int timezone_diff(const uint64_t seconds,
                   const date::time_zone* origin_tz,
-                  const date::time_zone* dest_tz) {
+                  const date::time_zone* dest_tz,
+                  std::unordered_map<const date::time_zone*, std::vector<date::sys_info>>* cache) {
 
   if (!origin_tz || !dest_tz || origin_tz == dest_tz) {
     return 0;
@@ -113,9 +146,17 @@ int timezone_diff(const uint64_t seconds,
   const auto origin = date::make_zoned(origin_tz, tp);
   const auto dest = date::make_zoned(dest_tz, tp);
 
-  const auto origin_info = origin.get_info();
-  const auto dest_info = dest.get_info();
+  // if we have a cache use it
+  if (cache) {
+    const auto& origin_info = from_cache(origin, origin_tz, *cache);
+    const auto& dest_info = from_cache(dest, dest_tz, *cache);
+    return static_cast<int>(
+        std::chrono::duration_cast<std::chrono::seconds>(dest_info.offset - origin_info.offset)
+            .count());
+  }
 
+  const auto& origin_info = origin.get_info();
+  const auto& dest_info = dest.get_info();
   return static_cast<int>(
       std::chrono::duration_cast<std::chrono::seconds>(dest_info.offset - origin_info.offset)
           .count());
