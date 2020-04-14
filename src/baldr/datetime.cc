@@ -4,8 +4,6 @@
 #include <iostream>
 #include <sstream>
 
-#include <parallel_hashmap/phmap.h>
-
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
 
