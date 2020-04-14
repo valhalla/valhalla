@@ -36,6 +36,9 @@
    * FIXED: Fixed an issue for date ranges.  For example, for the range Jan 04 to Jan 02 we need to test to end of the year and then from the first of the year to the end date.  Also, fixed an emergency tag issue.  We should only set the use to emergency if all other access is off. [2290](https://github.com/valhalla/valhalla/pull/2290)
    * FIXED: Found a few issues with the initial ref and direction logic for ways.  We were overwriting the refs with directionals to the name_offset_map instead of concatenating them together.  Also, we did not allow for blank entries for GetTagTokens. [2298](https://github.com/valhalla/valhalla/pull/2298)
    * FIXED: Fixed an issue where MatchGuidanceViewJunctions is only looking at the first edge. Set the data_id for guidance views to the changeset id as it is already being populated. Also added test for guidance views. [2303](https://github.com/valhalla/valhalla/pull/2303)
+   * FIXED: Fixed a problem with live speeds where live speeds were being used to determine access, even when a live
+   speed (current time) route wasn't what was requested. [#2311](https://github.com/valhalla/valhalla/pull/2311)
+   * FIXED: Fix break/continue typo in search filtering [#2317](https://github.com/valhalla/valhalla/pull/2317)
 
 * **Enhancement**
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)
@@ -54,6 +57,8 @@
    * ADDED: Added reclassify_links, use_direction_on_ways, and allow_alt_name as config options.  If `use_direction_on_ways = true` then use `direction` and `int_direction` on the way to update the directional for the `ref` and `int_ref`.  Also, copy int_efs to the refs. [#2285](https://github.com/valhalla/valhalla/pull/2285)
    * ADDED: Add support for live traffic. [#2268](https://github.com/valhalla/valhalla/pull/2268)
    * ADDED: Implement per-location search filters for functional road class and forms of way. [#2289](https://github.com/valhalla/valhalla/pull/2289)
+   * ADDED: Approach, multi-cue, and length updates [#2313](https://github.com/valhalla/valhalla/pull/2313)
+   * ADDED: Speed up timezone differencing calculation if cache is provided. [#2316](https://github.com/valhalla/valhalla/pull/2316)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

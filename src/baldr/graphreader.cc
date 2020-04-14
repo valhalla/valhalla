@@ -340,13 +340,18 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 }
 
 // Constructor using separate tile files
-GraphReader::GraphReader(const boost::property_tree::ptree& pt)
+GraphReader::GraphReader(const boost::property_tree::ptree& pt,
+                         std::unique_ptr<tile_getter_t>&& tile_getter)
     : tile_extract_(get_extract_instance(pt)), tile_dir_(pt.get<std::string>("tile_dir", "")),
-      curlers_(std::make_unique<curler_pool_t>(pt.get<size_t>("max_concurrent_reader_users", 1),
-                                               pt.get<std::string>("user_agent", ""))),
-      tile_url_(pt.get<std::string>("tile_url", "")),
-      tile_url_gz_(pt.get<bool>("tile_url_gz", false)),
-      cache_(TileCacheFactory::createTileCache(pt)) {
+      tile_getter_(std::move(tile_getter)),
+      max_concurrent_users_(pt.get<size_t>("max_concurrent_reader_users", 1)),
+      tile_url_(pt.get<std::string>("tile_url", "")), cache_(TileCacheFactory::createTileCache(pt)) {
+  if (!tile_getter_ && !tile_url_.empty()) {
+    tile_getter_ = std::make_unique<curl_tile_getter_t>(max_concurrent_users_,
+                                                        pt.get<std::string>("user_agent", ""),
+                                                        pt.get<bool>("tile_url_gz", false));
+  }
+
   // validate tile url
   if (!tile_url_.empty() && tile_url_.find(GraphTile::kTilePathPattern) == std::string::npos)
     throw std::runtime_error("Not found tilePath pattern in tile url");
@@ -445,21 +450,20 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
                    traffic_ptr != tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
                                                                      : nullptr);
     if (!tile.header()) {
+      if (!tile_getter_) {
+        return nullptr;
+      }
+
       {
         std::lock_guard<std::mutex> lock(_404s_lock);
-        // See if we are configured for a url and if we are
-        if (tile_url_.empty() || _404s.find(base) != _404s.end()) {
+        if (_404s.find(base) != _404s.end()) {
           // LOG_DEBUG("Url cache miss " + GraphTile::FileSuffix(base));
           return nullptr;
         }
       }
 
-      {
-        scoped_curler_t curler(*curlers_);
-        // Get it from the url and cache it to disk if you can
-        tile = GraphTile::CacheTileURL(tile_url_, base, curler.get(), tile_url_gz_, tile_dir_);
-      }
-
+      // Get it from the url and cache it to disk if you can
+      tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_);
       if (!tile.header()) {
         std::lock_guard<std::mutex> lock(_404s_lock);
         _404s.insert(base);

@@ -404,8 +404,11 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const uint64_t current_time,
                        const uint32_t tz_index,
                        bool& has_time_restrictions) const {
-  if (tile->IsClosedDueToTraffic(edgeid))
-    return false;
+
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(edgeid))
+      return false;
+  }
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes in case the origin is inside
   // a not thru region and a heading selected an edge entering the
@@ -432,8 +435,10 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               bool& has_time_restrictions) const {
-  if (tile->IsClosedDueToTraffic(opp_edgeid))
-    return false;
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(opp_edgeid))
+      return false;
+  }
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kAutoAccess) ||
@@ -904,6 +909,10 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
                       const uint64_t current_time,
                       const uint32_t tz_index,
                       bool& has_time_restrictions) const {
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(edgeid))
+      return false;
+  }
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -930,6 +939,10 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const uint64_t current_time,
                              const uint32_t tz_index,
                              bool& has_time_restrictions) const {
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(opp_edgeid))
+      return false;
+  }
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kBusAccess) ||
@@ -1096,6 +1109,10 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
                       const uint64_t current_time,
                       const uint32_t tz_index,
                       bool& has_time_restrictions) const {
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(edgeid))
+      return false;
+  }
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -1124,6 +1141,10 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const uint64_t current_time,
                              const uint32_t tz_index,
                              bool& has_time_restrictions) const {
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(opp_edgeid))
+      return false;
+  }
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -1292,6 +1313,10 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
                        const uint64_t current_time,
                        const uint32_t tz_index,
                        bool& has_time_restrictions) const {
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(edgeid))
+      return false;
+  }
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -1320,6 +1345,10 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               bool& has_time_restrictions) const {
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(opp_edgeid))
+      return false;
+  }
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -1385,6 +1414,9 @@ public:
                        const uint64_t current_time,
                        const uint32_t tz_index,
                        bool& has_time_restrictions) const {
+
+    // Note: this profile ignores closures in live traffic, so that check is not
+    //       present, unlike other Allowed() implementations
     // Check access and return false (not allowed if no auto access is allowed in either
     // direction. Also disallow simple U-turns except at dead-end nodes.
     if (!((edge->forwardaccess() & kAutoAccess) || (edge->reverseaccess() & kAutoAccess)) ||

@@ -175,9 +175,14 @@ std::string build_valhalla_route_request(const map& map,
   }
 
   rapidjson::Value dt(rapidjson::kObjectType);
+  rapidjson::Value speed_types(rapidjson::kArrayType);
+  speed_types.PushBack("freeflow", allocator);
+  speed_types.PushBack("constrained", allocator);
+  speed_types.PushBack("predicted", allocator);
   if (datetime == "current") {
     dt.AddMember("type", 0, allocator);
     dt.AddMember("value", "current", allocator);
+    speed_types.PushBack("current", allocator);
   } else if (datetime != "") {
     dt.AddMember("type", 1, allocator);
     dt.AddMember("value", datetime, allocator);
@@ -185,8 +190,14 @@ std::string build_valhalla_route_request(const map& map,
 
   doc.AddMember("locations", locations, allocator);
   doc.AddMember("costing", costing, allocator);
-  if (datetime != "")
+  if (datetime != "") {
     doc.AddMember("date_time", dt, allocator);
+  }
+  rapidjson::Value costing_options(rapidjson::kObjectType);
+  rapidjson::Value co(rapidjson::kObjectType);
+  co.AddMember("speed_types", speed_types, allocator);
+  costing_options.AddMember(rapidjson::Value(costing, allocator), co, allocator);
+  doc.AddMember("costing_options", costing_options, allocator);
 
   rapidjson::StringBuffer sb;
   rapidjson::Writer<rapidjson::StringBuffer> writer(sb);

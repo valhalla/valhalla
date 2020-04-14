@@ -146,7 +146,6 @@
       "metric_lengths": [
         "<KILOMETERS> chilometri",
         "1 chilometro",
-        "un mezzo chilometro",
         "<METERS> metri",
         "meno di 10 metri"
       ],
@@ -154,8 +153,7 @@
         "<MILES> miglio",
         "1 miglio",
         "un mezzo miglio",
-        "<TENTHS_OF_MILE> decimi di miglio",
-        "un decimo di miglio",
+        "a quarter mile",
         "<FEET> piedi",
         "meno di 10 piedi"
       ],
@@ -1208,16 +1206,14 @@
       "metric_lengths": [
         "<KILOMETERS> chilometri",
         "1 chilometro",
-        "mezzo chilometro",
         "<METERS> metri",
         "meno di 10 metri"
       ],
       "us_customary_lengths": [
-        "<MILES> miglia",
+        "<MILES> miglio",
         "1 miglio",
         "un mezzo miglio",
-        "<TENTHS_OF_MILE> decimi di miglio",
-        "1 decimo di un miglio",
+        "a quarter mile",
         "<FEET> piedi",
         "meno di 10 piedi"
       ],
@@ -1602,16 +1598,14 @@
       "metric_lengths": [
         "<KILOMETERS> chilometri",
         "1 chilometro",
-        "mezzo chilometro",
         "<METERS> metri",
         "meno di 10 metri"
       ],
       "us_customary_lengths": [
-        "<MILES> miglia",
+        "<MILES> miglio",
         "1 miglio",
-        "mezzo miglio",
-        "<TENTHS_OF_MILE> decimi di miglio",
-        "un decimo di miglio",
+        "un mezzo miglio",
+        "a quarter mile",
         "<FEET> piedi",
         "meno di 10 piedi"
       ],
@@ -2075,11 +2069,53 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE>, poi <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE>, poi <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
       },
+      "metric_lengths": [
+        "<KILOMETERS> chilometri",
+        "1 chilometro",
+        "<METERS> metri",
+        "meno di 10 metri"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miglio",
+        "1 miglio",
+        "un mezzo miglio",
+        "a quarter mile",
+        "<FEET> piedi",
+        "meno di 10 piedi"
+      ],
       "example_phrases": {
         "0": [
           "Rimani sulla destra e prendi East Fayette Street, poi svolta a destra su North Gay Street."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> chilometri",
+        "1 chilometro",
+        "<METERS> metri",
+        "meno di 10 metri"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miglio",
+        "1 miglio",
+        "un mezzo miglio",
+        "a quarter mile",
+        "<FEET> piedi",
+        "meno di 10 piedi"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }

@@ -232,6 +232,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
                                                        const valhalla::Location& destination) {
   // Have to use multimodal for transit based routing
   if (routetype == "multimodal" || routetype == "transit") {
+    valhalla::midgard::logging::Log("algorithm::multimodal ", " [ANALYTICS] ");
     multi_modal_astar.set_interrupt(interrupt);
     return &multi_modal_astar;
   }
@@ -242,6 +243,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
+      valhalla::midgard::logging::Log("algorithm::timedep_forward ", " [ANALYTICS] ");
       timedep_forward.set_interrupt(interrupt);
       return &timedep_forward;
     }
@@ -253,6 +255,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
+      valhalla::midgard::logging::Log("algorithm::timedep_reverse ", " [ANALYTICS] ");
       timedep_reverse.set_interrupt(interrupt);
       return &timedep_reverse;
     }
@@ -266,11 +269,13 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     for (auto& edge2 : destination.path_edges()) {
       if (edge1.graph_id() == edge2.graph_id() ||
           reader->AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()))) {
+        valhalla::midgard::logging::Log("algorithm::astar ", " [ANALYTICS] ");
         astar.set_interrupt(interrupt);
         return &astar;
       }
     }
   }
+  valhalla::midgard::logging::Log("algorithm::bidirastar ", " [ANALYTICS] ");
   bidir_astar.set_interrupt(interrupt);
   return &bidir_astar;
 }
