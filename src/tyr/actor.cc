@@ -22,7 +22,7 @@ struct actor_t::pimpl_t {
       : reader(&graph_reader, [](baldr::GraphReader*) {}), loki_worker(config, reader),
         thor_worker(config, reader), odin_worker(config) {
   }
-  void set_interrupts(const std::function<void()>& interrupt_function) {
+  void set_interrupts(const std::function<void()>* interrupt_function) {
     loki_worker.set_interrupt(interrupt_function);
     thor_worker.set_interrupt(interrupt_function);
     odin_worker.set_interrupt(interrupt_function);
@@ -52,7 +52,7 @@ void actor_t::cleanup() {
 }
 
 std::string
-actor_t::route(const std::string& request_str, const std::function<void()>& interrupt, Api* api) {
+actor_t::route(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -78,7 +78,7 @@ actor_t::route(const std::string& request_str, const std::function<void()>& inte
 }
 
 std::string
-actor_t::locate(const std::string& request_str, const std::function<void()>& interrupt, Api* api) {
+actor_t::locate(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -98,7 +98,7 @@ actor_t::locate(const std::string& request_str, const std::function<void()>& int
 }
 
 std::string
-actor_t::matrix(const std::string& request_str, const std::function<void()>& interrupt, Api* api) {
+actor_t::matrix(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -120,7 +120,7 @@ actor_t::matrix(const std::string& request_str, const std::function<void()>& int
 }
 
 std::string actor_t::optimized_route(const std::string& request_str,
-                                     const std::function<void()>& interrupt,
+                                     const std::function<void()>* interrupt,
                                      Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
@@ -147,7 +147,7 @@ std::string actor_t::optimized_route(const std::string& request_str,
 }
 
 std::string
-actor_t::isochrone(const std::string& request_str, const std::function<void()>& interrupt, Api* api) {
+actor_t::isochrone(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -169,7 +169,7 @@ actor_t::isochrone(const std::string& request_str, const std::function<void()>& 
 }
 
 std::string actor_t::trace_route(const std::string& request_str,
-                                 const std::function<void()>& interrupt,
+                                 const std::function<void()>* interrupt,
                                  Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
@@ -196,7 +196,7 @@ std::string actor_t::trace_route(const std::string& request_str,
 }
 
 std::string actor_t::trace_attributes(const std::string& request_str,
-                                      const std::function<void()>& interrupt,
+                                      const std::function<void()>* interrupt,
                                       Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
@@ -219,7 +219,7 @@ std::string actor_t::trace_attributes(const std::string& request_str,
 }
 
 std::string
-actor_t::height(const std::string& request_str, const std::function<void()>& interrupt, Api* api) {
+actor_t::height(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -239,7 +239,7 @@ actor_t::height(const std::string& request_str, const std::function<void()>& int
 }
 
 std::string actor_t::transit_available(const std::string& request_str,
-                                       const std::function<void()>& interrupt,
+                                       const std::function<void()>* interrupt,
                                        Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
@@ -260,7 +260,7 @@ std::string actor_t::transit_available(const std::string& request_str,
 }
 
 std::string
-actor_t::expansion(const std::string& request_str, const std::function<void()>& interrupt, Api* api) {
+actor_t::expansion(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request

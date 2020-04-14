@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <string>
 
 #ifdef CURL_STATICLIB
 
@@ -44,6 +45,19 @@ size_t write_callback(char* in, size_t block_size, size_t blocks, std::vector<ch
   return block_size * blocks;
 }
 
+int progress_callback(void* data,
+                      curl_off_t dltotal,
+                      curl_off_t dlnow,
+                      curl_off_t ultotal,
+                      curl_off_t ulnow) {
+  auto interrupt = static_cast<const valhalla::baldr::curler_t::interrupt_t*>(data);
+  try {
+    (*interrupt)();
+  } catch (...) { return -1; }
+
+  return 0;
+}
+
 } // namespace
 
 namespace valhalla {
@@ -67,8 +81,21 @@ struct curler_t::pimpl_t {
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_SSL_VERIFYHOST, 0L),
                 "Failed to disable host verification ");
   }
+
   // TODO: retries?
-  std::vector<char> fetch(const std::string& url, long& http_code, bool gzipped) {
+  std::vector<char> fetch(const std::string& url,
+                          long& http_code,
+                          bool gzipped,
+                          const curler_t::interrupt_t* interrupt) const {
+    if (interrupt) {
+      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_XFERINFOFUNCTION, progress_callback),
+                  "Failed to set custom progress callback ");
+      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_XFERINFODATA, interrupt),
+                  "Failed to set custom progress data");
+      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_NOPROGRESS, 0L),
+                  "Failed to turn the progress callback on ");
+    }
+
     // use gzip compression in any case
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_ACCEPT_ENCODING, "gzip"),
                 "Failed to set content encoding header ");
@@ -95,13 +122,15 @@ struct curler_t::pimpl_t {
     // hand over the results
     return result;
   }
-  void assert_curl(CURLcode code, const std::string& msg) {
+
+  void assert_curl(CURLcode code, const std::string& msg) const {
     if (code != CURLE_OK) {
       std::string what = msg + error;
       LOG_ERROR(what);
       throw std::runtime_error(what);
     }
   }
+
   std::shared_ptr<CURL> connection;
   char error[CURL_ERROR_SIZE];
   std::string user_agent;
@@ -110,8 +139,11 @@ struct curler_t::pimpl_t {
 curler_t::curler_t(const std::string& user_agent) : pimpl(new pimpl_t(user_agent)) {
 }
 
-std::vector<char> curler_t::operator()(const std::string& url, long& http_code, bool gzipped) {
-  return pimpl->fetch(url, http_code, gzipped);
+std::vector<char> curler_t::operator()(const std::string& url,
+                                       long& http_code,
+                                       bool gzipped,
+                                       const curler_t::interrupt_t* interrupt) const {
+  return pimpl->fetch(url, http_code, gzipped, interrupt);
 }
 
 // curler_pool_t
@@ -153,7 +185,8 @@ namespace valhalla {
 namespace baldr {
 curler_t::curler_t(const std::string& user_agent) {
 }
-std::vector<char> curler_t::operator()(const std::string&, long&, bool gzipped) {
+std::vector<char> curler_t::
+operator()(const std::string&, long&, bool gzipped, const curler_t::interrupt_t*) const {
   LOG_ERROR("This version of libvalhalla was not built with CURL support");
   throw std::runtime_error("This version of libvalhalla was not built with CURL support");
 }
