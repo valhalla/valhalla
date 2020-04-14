@@ -482,7 +482,7 @@ void PopulateManeuver(Maneuver& maneuver,
                       bool unnamed_cycleway = false,
                       bool unnamed_mountain_bike_trail = false,
                       float basic_time = 0.0f,
-                      bool verbal_multi_cue = false) {
+                      bool imminent_verbal_multi_cue = false) {
 
   maneuver.set_type(type);
 
@@ -559,7 +559,7 @@ void PopulateManeuver(Maneuver& maneuver,
   maneuver.set_unnamed_cycleway(unnamed_cycleway);
   maneuver.set_unnamed_mountain_bike_trail(unnamed_mountain_bike_trail);
   maneuver.set_basic_time(basic_time);
-  maneuver.set_verbal_multi_cue(verbal_multi_cue);
+  maneuver.set_imminent_verbal_multi_cue(imminent_verbal_multi_cue);
 }
 
 TEST(Maneuversbuilder, TestLeftInternalStraightCombine) {

@@ -146,7 +146,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometer",
         "1 kilometer",
-        "en halv kilometer",
         "<METERS> meter",
         "mindre än 10 meter"
       ],
@@ -154,8 +153,7 @@
         "<MILES> miles",
         "1 mile",
         "en halv mile",
-        "<TENTHS_OF_MILE> tiondels mile",
-        "1 tiondels mile",
+        "a quarter mile",
         "<FEET> fot",
         "mindre än 10 fot"
       ],
@@ -1208,7 +1206,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometer",
         "1 kilometer",
-        "en halv kilometer",
         "<METERS> meter",
         "mindre än 10 meter"
       ],
@@ -1216,8 +1213,7 @@
         "<MILES> miles",
         "1 mile",
         "en halv mile",
-        "<TENTHS_OF_MILE> tiondels mile",
-        "1 tiondels mile",
+        "a quarter mile",
         "<FEET> fot",
         "mindre än 10 fot"
       ],
@@ -1602,7 +1598,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometer",
         "1 kilometer",
-        "en halv kilometer",
         "<METERS> meter",
         "mindre än 10 meter"
       ],
@@ -1610,8 +1605,7 @@
         "<MILES> miles",
         "1 mile",
         "en halv mile",
-        "<TENTHS_OF_MILE> tiondels mile",
-        "1 tiondels mile",
+        "a quarter mile",
         "<FEET> fot",
         "mindre än 10 fot"
       ],
@@ -2075,11 +2069,53 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> sedan <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> sedan <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
       },
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre än 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miles",
+        "1 mile",
+        "en halv mile",
+        "a quarter mile",
+        "<FEET> fot",
+        "mindre än 10 fot"
+      ],
       "example_phrases": {
         "0": [
           "Håll höger mot East Fayette Street. Sväng sedan höger mot North Gay Street."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometer",
+        "1 kilometer",
+        "<METERS> meter",
+        "mindre än 10 meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miles",
+        "1 mile",
+        "en halv mile",
+        "a quarter mile",
+        "<FEET> fot",
+        "mindre än 10 fot"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }

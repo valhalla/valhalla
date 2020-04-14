@@ -2,6 +2,7 @@
 #include "baldr/compression_utils.h"
 #include "baldr/datetime.h"
 #include "baldr/sign.h"
+#include "baldr/tilegetter.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/aabb2.h"
@@ -20,6 +21,7 @@
 #include <iostream>
 #include <locale>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace valhalla::midgard;
@@ -171,8 +173,7 @@ void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::st
 
 GraphTile GraphTile::CacheTileURL(const std::string& tile_url,
                                   const GraphId& graphid,
-                                  curler_t& curler,
-                                  bool gzipped,
+                                  tile_getter_t* tile_getter,
                                   const std::string& cache_location) {
   // Don't bother with invalid ids
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
@@ -180,27 +181,25 @@ GraphTile GraphTile::CacheTileURL(const std::string& tile_url,
   }
 
   auto uri = MakeSingleTileUrl(tile_url, graphid);
-  long http_code;
-  auto tile_data = curler(uri, http_code, gzipped);
-
-  if (http_code != 200)
+  auto result = tile_getter->get(uri);
+  if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
     return {};
-
+  }
   // try to cache it on disk so we dont have to keep fetching it from url
   if (!cache_location.empty()) {
-    auto suffix = FileSuffix(graphid.Tile_Base(), gzipped);
+    auto suffix = FileSuffix(graphid.Tile_Base(), tile_getter->gzipped());
     auto disk_location = cache_location + filesystem::path::preferred_separator + suffix;
-    SaveTileToFile(tile_data, disk_location);
+    SaveTileToFile(result.bytes_, disk_location);
   }
 
   // turn the memory into a tile
   auto tile = GraphTile();
-  if (gzipped) {
-    tile.DecompressTile(graphid, tile_data);
+  if (tile_getter->gzipped()) {
+    tile.DecompressTile(graphid, result.bytes_);
   } // we dont need to decompress so just take ownership of the data
   else {
     tile.graphtile_.reset(new std::vector<char>(0, 0));
-    *tile.graphtile_ = std::move(tile_data);
+    *tile.graphtile_ = std::move(result.bytes_);
     tile.Initialize(graphid, tile.graphtile_->data(), tile.graphtile_->size());
   }
 

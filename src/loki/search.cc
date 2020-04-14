@@ -523,7 +523,7 @@ struct bin_handler_t {
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
           // skip updating this candidate because it was prefiltered
           if (c_itr->prefiltered) {
-            break;
+            continue;
           }
           // how close is the input to this segment
           auto point = p_itr->project(u, v);

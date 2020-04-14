@@ -172,8 +172,8 @@ TEST(Traffic, BasicUpdates) {
       gurka::assert::osrm::expect_route(result, {"BD"});
       gurka::assert::raw::expect_eta(result, 28.8, 0.01);
     }
-    // Now do another route with the same (not restarted) actor to see if
-    // it's noticed the changes in the live traffic file
+    // Repeat the B->D route, but this time with no timestamp - this should
+    // disable using live traffc and the road should be open again.
     {
       auto result = gurka::route(map, "B", "D", "auto", "", clean_reader);
       gurka::assert::osrm::expect_route(result, {"BD"});
