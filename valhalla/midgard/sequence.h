@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-#include <valhalla/midgard/filesystem.h>
+#include <valhalla/filesystem.h>
 
 #ifdef _MSC_VER
 #include <io.h>
