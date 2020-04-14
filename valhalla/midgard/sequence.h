@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include <filesystem.h>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -21,6 +20,8 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#include <valhalla/midgard/filesystem.h>
 
 #ifdef _MSC_VER
 #include <io.h>
