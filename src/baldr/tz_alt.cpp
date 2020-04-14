@@ -3885,7 +3885,7 @@ current_zone()
 // See timezone_mapping structure for more info.
 static
 std::vector<detail::timezone_mapping>
-load_timezone_mappings_from_xml_file(const std::string& input_path)
+load_timezone_mappings_from_xml_file()
 {
     std::size_t line_num = 0;
     std::vector<detail::timezone_mapping> mappings;
