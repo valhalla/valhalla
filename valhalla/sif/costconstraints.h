@@ -41,16 +41,16 @@ struct CostConstraints
                 auto c = pbf_costing_options->add_costing_constraints();                
                 auto max_inclusive = rapidjson::get_optional<bool>(constraint, "/max_inclusive");
                 auto min_inclusive = rapidjson::get_optional<bool>(constraint, "/min_inclusive");
-                if(max_inclusive.has_value())
+                if(max_inclusive)
                     c->set_max_inclusive(max_inclusive.get());
-                if(min_inclusive.has_value())
+                if(min_inclusive)
                     c->set_min_inclusive(min_inclusive.get());
             
                 auto maxval = rapidjson::get_optional<double>(constraint, "/max_value");
                 auto minval = rapidjson::get_optional<double>(constraint, "/min_value");
-                if(maxval.has_value())
+                if(maxval)
                     c->set_max_value(maxval.get());
-                if(minval.has_value())
+                if(minval)
                     c->set_min_value(minval.get());
             }
         }       
