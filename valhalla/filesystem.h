@@ -21,6 +21,7 @@
 #include <unistd.h>
 #endif
 #include <vector>
+#include <stdexcept>
 
 namespace filesystem {
 

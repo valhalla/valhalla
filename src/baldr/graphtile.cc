@@ -418,14 +418,11 @@ std::string GraphTile::FileSuffix(const GraphId& graphid, bool gzipped) {
   // it was something else
   stream << graphid.level() * static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid()
          << ".gph" << (gzipped ? ".gz" : "");
-  // now update path separator based on OS..
-  auto s = stream.str(); 
-  std::replace(s.begin(), s.end(), '/', filesystem::path::preferred_separator);
-  return s;
+  return stream.str();
 }
 
 // Get the tile Id given the full path to the file.
-GraphId GraphTile::GetTileId(const std::string& fname_in) {
+GraphId GraphTile::GetTileId(const std::string& fname) {
   std::unordered_set<std::string::value_type> allowed{filesystem::path::preferred_separator,
                                                       '0',
                                                       '1',
@@ -436,10 +433,7 @@ GraphId GraphTile::GetTileId(const std::string& fname_in) {
                                                       '6',
                                                       '7',
                                                       '8',
-                                                      '9'};
-  auto fname = fname_in;
-   // now update path separator based on OS..
-  std::replace(fname.begin(), fname.end(), '/', filesystem::path::preferred_separator);                                                    
+                                                      '9'};                                              
   // we require slashes
   auto pos = fname.find_last_of(filesystem::path::preferred_separator);
   if (pos == fname.npos) {
