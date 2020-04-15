@@ -550,7 +550,7 @@ std::string thor_worker_t::offset_date(GraphReader& reader,
   uint64_t in_epoch = DateTime::seconds_since_epoch(in_dt, DateTime::get_tz_db().from_index(in_tz));
   double out_epoch = static_cast<double>(in_epoch) + offset;
   auto out_dt = DateTime::seconds_to_date(static_cast<uint64_t>(out_epoch + .5),
-                                          DateTime::get_tz_db().from_index(out_tz));
+                                          DateTime::get_tz_db().from_index(out_tz), false);
   return out_dt;
 }
 } // namespace thor
