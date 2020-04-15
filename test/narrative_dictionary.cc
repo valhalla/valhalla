@@ -18,11 +18,10 @@ const std::vector<std::string> kExpectedCardinalDirections = {"north",     "nort
                                                               "southeast", "south",     "southwest",
                                                               "west",      "northwest"};
 const std::vector<std::string> kExpectedMetricLengths = {"<KILOMETERS> kilometers", "1 kilometer",
-                                                         "a half kilometer", "<METERS> meters",
-                                                         "less than 10 meters"};
-const std::vector<std::string> kExpectedUsCustomaryLengths =
-    {"<MILES> miles",     "1 mile",      "a half mile",      "<TENTHS_OF_MILE> tenths of a mile",
-     "1 tenth of a mile", "<FEET> feet", "less than 10 feet"};
+                                                         "<METERS> meters", "less than 10 meters"};
+const std::vector<std::string> kExpectedUsCustomaryLengths = {"<MILES> miles", "1 mile",
+                                                              "a half mile",   "a quarter mile",
+                                                              "<FEET> feet",   "less than 10 feet"};
 const std::vector<std::string> kExpectedRelativeTwoDirections = {"left", "right"};
 const std::vector<std::string> kExpectedRelativeThreeDirections = {"left", "straight", "right"};
 const std::vector<std::string> kExpectedOrdinalValues = {"1st", "2nd", "3rd", "4th", "5th",
@@ -1417,6 +1416,34 @@ TEST(NarrativeDictionary, test_en_US_verbal_multi_cue) {
   // "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
   const auto& phrase_0 = dictionary.verbal_multi_cue_subset.phrases.at("0");
   validate(phrase_0, "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>");
+
+  // "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+  const auto& phrase_1 = dictionary.verbal_multi_cue_subset.phrases.at("1");
+  validate(phrase_1, "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>");
+
+  // metric_lengths
+  const auto& metric_lengths = dictionary.verbal_multi_cue_subset.metric_lengths;
+  validate(metric_lengths, kExpectedMetricLengths);
+
+  // us_customary_lengths
+  const auto& us_customary_lengths = dictionary.verbal_multi_cue_subset.us_customary_lengths;
+  validate(us_customary_lengths, kExpectedUsCustomaryLengths);
+}
+
+TEST(NarrativeDictionary, test_en_US_approach_verbal_alert) {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+  const auto& phrase_0 = dictionary.approach_verbal_alert_subset.phrases.at("0");
+  validate(phrase_0, "In <LENGTH>, <CURRENT_VERBAL_CUE>");
+
+  // metric_lengths
+  const auto& metric_lengths = dictionary.approach_verbal_alert_subset.metric_lengths;
+  validate(metric_lengths, kExpectedMetricLengths);
+
+  // us_customary_lengths
+  const auto& us_customary_lengths = dictionary.approach_verbal_alert_subset.us_customary_lengths;
+  validate(us_customary_lengths, kExpectedUsCustomaryLengths);
 }
 
 } // namespace

@@ -146,7 +146,6 @@
       "metric_lengths": [
         "<KILOMETERS> किलोमीटर",
         "1 किलोमीटर",
-        "एक आधा किलोमीटर",
         "<METERS> मीटर",
         "कम से कम 10 मीटर"
       ],
@@ -154,8 +153,7 @@
         "<MILES> मील",
         "1 मील",
         "एक आधा मील",
-        "मील का <TENTHS_OF_MILE>/10 हिस्सा",
-        "मील का 1/10 हिस्सा",
+        "a quarter mile",
         "<FEET> फुट",
         "कम से कम 10 फुट"
       ],
@@ -1208,7 +1206,6 @@
       "metric_lengths": [
         "<KILOMETERS> किलोमीटर",
         "1 किलोमीटर",
-        "एक आधा किलोमीटर",
         "<METERS> मीटर",
         "कम से कम 10 मीटर"
       ],
@@ -1216,8 +1213,7 @@
         "<MILES> मील",
         "1 मील",
         "एक आधा मील",
-        "मील का <TENTHS_OF_MILE>/10 हिस्सा",
-        "मील का 1/10 हिस्सा",
+        "a quarter mile",
         "<FEET> फुट",
         "कम से कम 10 फुट"
       ],
@@ -1602,7 +1598,6 @@
       "metric_lengths": [
         "<KILOMETERS> किलोमीटर",
         "1 किलोमीटर",
-        "एक आधा किलोमीटर",
         "<METERS> मीटर",
         "कम से कम 10 मीटर"
       ],
@@ -1610,8 +1605,7 @@
         "<MILES> मील",
         "1 मील",
         "एक आधा मील",
-        "मील का <TENTHS_OF_MILE>/10 हिस्सा",
-        "मील का 1/10 हिस्सा",
+        "a quarter mile",
         "<FEET> फुट",
         "कम से कम 10 फुट"
       ],
@@ -2075,11 +2069,53 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> और फिर <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> और फिर <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
       },
+      "metric_lengths": [
+        "<KILOMETERS> किलोमीटर",
+        "1 किलोमीटर",
+        "<METERS> मीटर",
+        "कम से कम 10 मीटर"
+      ],
+      "us_customary_lengths": [
+        "<MILES> मील",
+        "1 मील",
+        "एक आधा मील",
+        "a quarter mile",
+        "<FEET> फुट",
+        "कम से कम 10 फुट"
+      ],
       "example_phrases": {
         "0": [
           "बाईं ओर East Fayette Street पर बने रहें. और फिर North Gay Street पर दाएँ मुड़ें."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> किलोमीटर",
+        "1 किलोमीटर",
+        "<METERS> मीटर",
+        "कम से कम 10 मीटर"
+      ],
+      "us_customary_lengths": [
+        "<MILES> मील",
+        "1 मील",
+        "एक आधा मील",
+        "a quarter mile",
+        "<FEET> फुट",
+        "कम से कम 10 फुट"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }
