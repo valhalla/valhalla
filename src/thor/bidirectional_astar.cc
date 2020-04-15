@@ -934,12 +934,17 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
   // Special case code if the last edge of the forward path is
   // the destination edge - update the elapsed time
   if (edgelabels_reverse_[idx2].predecessor() == kInvalidLabel) {
-    // destination is on a different edge than origin
+    // destination is on a different edge than origin because of that we know that the forward path
+    // did not care about partial distance along the edge when it found the edge so what we need to do
+    // is look at the second to last edge and use the reverse path (who does care about partial
+    // distance on the destination edge) to recompute the elapsed time and cost
     if (path.size() > 1) {
-      path.back().elapsed_time =
-          path[path.size() - 2].elapsed_time + edgelabels_reverse_[idx2].cost().secs;
-      path.back().elapsed_cost =
-          path[path.size() - 2].elapsed_cost + edgelabels_reverse_[idx2].cost().cost;
+      path.back().elapsed_time = path[path.size() - 2].elapsed_time +
+                                 edgelabels_reverse_[idx2].cost().secs +
+                                 edgelabels_forward_[idx1].transition_secs();
+      path.back().elapsed_cost = path[path.size() - 2].elapsed_cost +
+                                 edgelabels_reverse_[idx2].cost().cost +
+                                 edgelabels_forward_[idx1].transition_cost();
     } // origin and destination on the same edge
     else {
       path.back().elapsed_time = edgelabels_reverse_[idx2].cost().secs;
