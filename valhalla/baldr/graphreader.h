@@ -18,9 +18,6 @@
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/sequence.h>
-#if defined(_MSC_VER)
-#define stat _stat64
-#endif
 
 namespace valhalla {
 namespace baldr {
