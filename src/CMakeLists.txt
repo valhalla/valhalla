@@ -150,6 +150,7 @@ set(valhalla_hdrs
 
 set(valhalla_src
     worker.cc
+    filesystem.cc
     ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h
     ${valhalla_hdrs}
     ${libvalhalla_link_objects})

@@ -630,7 +630,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     while (state_ids.size() < container_.size()) {
       // Get the time at the last column of states
       const auto time = container_.size() - state_ids.size() - 1;
-      std::copy(vs_.SearchPath(time, false), vs_.PathEnd(), std::back_inserter(state_ids));
+      std::copy(vs_.SearchPathVS(time, false), vs_.PathEnd(), std::back_inserter(state_ids));
       const auto& winner = vs_.SearchWinner(time);
       if (winner.IsValid()) {
         accumulated_cost += vs_.AccumulatedCost(winner);

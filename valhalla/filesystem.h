@@ -20,6 +20,7 @@
 #else
 #include <unistd.h>
 #endif
+#include <stdexcept>
 #include <vector>
 
 namespace filesystem {
