@@ -299,7 +299,7 @@ void test_mid_break_through(const std::string& date_time) {
   check_dates(date_time.find(R"("type":)") != std::string::npos, response.options().locations(),
               *tester.reader);
 }
-/*
+
 TEST(MultiPointRoutesBreak, test_mid_break_no_time) {
   test_mid_break("}");
 }
@@ -347,7 +347,7 @@ TEST(MultiPointRoutesBreakThrough, test_mid_break_through_depart_at) {
 TEST(MultiPointRoutesBreakThrough, test_mid_break_through_arrive_by) {
   test_mid_break_through(R"(,"date_time":{"type":2,"value":"2016-07-03T08:06"}})");
 }
-*/
+
 TEST(MultiPointRoutesBreakThrough, test_mid_break_through_elapsed) {
   route_tester tester;
   std::string request =
