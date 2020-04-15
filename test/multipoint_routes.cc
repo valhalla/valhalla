@@ -348,6 +348,28 @@ TEST(MultiPointRoutesBreakThrough, test_mid_break_through_arrive_by) {
   test_mid_break_through(R"(,"date_time":{"type":2,"value":"2016-07-03T08:06"}})");
 }
 
+TEST(MultiPointRoutesBreakThrough, test_mid_break_through_elapsed) {
+  route_tester tester;
+  std::string request =
+      R"({"locations":[
+            {"lat": 52.1191920, "lon":5.1026068, "type": "break_through", "node_snap_tolerance": 0},
+            {"lat": 52.1189946, "lon": 5.1029042, "type": "break_through", "node_snap_tolerance": 0},
+            {"lat": 52.1192212, "lon": 5.1024556, "type": "break_through", "node_snap_tolerance": 0}], "costing":"auto"})";
+
+  auto response = tester.test(request);
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs();
+
+  // Should have two legs with two sets of directions
+  EXPECT_EQ(legs.size(), 2);
+  EXPECT_EQ(directions.size(), 2);
+  auto previous_elapsed_calculated = legs.rbegin()->node().rbegin()->elapsed_time() -
+                                     legs.rbegin()->node().rbegin()->transition_time();
+  auto previous_elapsed = std::next(legs.rbegin()->node().rbegin())->elapsed_time();
+  EXPECT_NEAR(previous_elapsed, previous_elapsed_calculated, 1);
+  EXPECT_NEAR(legs.rbegin()->node().rbegin()->elapsed_time(), 18.2, .2);
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
