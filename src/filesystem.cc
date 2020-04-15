@@ -1,5 +1,5 @@
 #include "filesystem.h"
 
-namespace filesystem{
+namespace filesystem {
 constexpr char path::preferred_separator;
 }
