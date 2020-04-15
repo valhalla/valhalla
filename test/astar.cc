@@ -1632,6 +1632,50 @@ TEST(ComplexRestriction, WalkVias) {
   }
 }
 
+TEST(Astar, BiDirTrivial) {
+  // Get access to tiles
+  boost::property_tree::ptree conf;
+  conf.put("tile_dir", "test/data/utrecht_tiles");
+  vb::GraphReader graph_reader(conf);
+
+  // Locations
+  std::vector<valhalla::baldr::Location> locations;
+  baldr::Location origin(valhalla::midgard::PointLL(5.12696, 52.09701),
+                         baldr::Location::StopType::BREAK);
+  locations.push_back(origin);
+  baldr::Location dest(valhalla::midgard::PointLL(5.12700, 52.09709),
+                       baldr::Location::StopType::BREAK);
+  locations.push_back(dest);
+
+  // Costing
+  valhalla::Options options;
+  create_costing_options(options);
+  std::shared_ptr<vs::DynamicCost> mode_costing[4];
+  std::shared_ptr<vs::DynamicCost> cost = vs::CreateAutoCost(Costing::auto_, options);
+  auto mode = cost->travel_mode();
+  mode_costing[static_cast<uint32_t>(mode)] = cost;
+
+  // Loki
+  const auto projections = vk::Search(locations, graph_reader, cost);
+  std::vector<PathLocation> path_location;
+  for (const auto& loc : locations) {
+    ASSERT_NO_THROW(
+        path_location.push_back(projections.at(loc));
+        PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), graph_reader);)
+        << "fail_invalid_origin";
+  }
+
+  vt::BidirectionalAStar astar;
+  auto path = astar
+                  .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
+                               graph_reader, mode_costing, mode)
+                  .front();
+
+  ASSERT_TRUE(path.size() == 1);
+  EXPECT_LT(path.front().elapsed_cost, 1);
+  EXPECT_LT(path.front().elapsed_time, 1);
+}
+
 class AstarTestEnv : public ::testing::Environment {
 public:
   void SetUp() override {
