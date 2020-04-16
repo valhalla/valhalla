@@ -91,8 +91,6 @@ std::string LoadFile(const std::string filename) {
   return ss.str();
 }
 
-const std::string kFixtureDir = VALHALLA_SOURCE_DIR "bench/meili/fixtures";
-
 const std::vector<std::string> kBenchmarkCases = {
     // Intersection matching test cases
     VALHALLA_SOURCE_DIR "bench/meili/fixtures/intersection_matching1.json",
@@ -107,7 +105,6 @@ static void BM_ManyCases(benchmark::State& state) {
   rapidjson::read_json(VALHALLA_SOURCE_DIR "bench/meili/config.json", config);
   valhalla::tyr::actor_t actor(config, true);
   const std::string& filename = kBenchmarkCases[state.range(0)];
-  std::cout << filename << std::endl;
   const std::string& test_case = LoadFile(filename);
   for (auto _ : state) {
     benchmark::DoNotOptimize(actor.trace_route(test_case));
