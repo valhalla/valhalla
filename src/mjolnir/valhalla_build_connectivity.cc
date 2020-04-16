@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
 
   // Get the config to see which coverage we are using
   boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.c_str(), pt);
+  rapidjson::read_json(config_file_path.string(), pt);
 
   // Get something we can use to fetch tiles
   valhalla::baldr::connectivity_map_t connectivity_map(pt.get_child("mjolnir"));
