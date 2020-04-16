@@ -349,6 +349,14 @@ TEST(MultiPointRoutesBreakThrough, test_mid_break_through_arrive_by) {
 }
 
 TEST(MultiPointRoutesBreakThrough, test_mid_break_through_elapsed) {
+  // The second leg of this route triggers a behavior in bidirectional a* where the forward path is 3
+  // edges and the reverse path is 1 edge. That 1 reverse path edge is the same edge as the last edge
+  // in the forward path. This is a special case in BidirectionalAstar::FormPath. Because the forward
+  // expansion only cares about trimming the first edge from the origin and the reverse expansion only
+  // cares about trimming the last edge up to the destination but we've gotten the destination edge
+  // from the forward expansion, which means that last edge is untrimmed. so we hit some special logic
+  // that says replace its cost and time with the trimmed edge from the reverse expansion but keep the
+  // turn cost onto it which only the forward expansion got
   route_tester tester;
   std::string request =
       R"({"locations":[
@@ -369,8 +377,8 @@ TEST(MultiPointRoutesBreakThrough, test_mid_break_through_elapsed) {
   // When we build trips/routes/legs we actually put the turncost at the end of A instead and it is
   // not included in the elapsed time (which is the time at the end of A)
   // So if the end of our route is at the end of B and we subtract the A's ending turncost from it the
-  // time we get should never be less than the elapsed time at the end of A because edge B should even
-  // without turncost have taken some non zero time to traverse
+  // time we get should never be less than the elapsed time at the end of A because edge B should,
+  // even without turncost, have taken some non zero time to traverse
   auto last_node = legs.rbegin()->node().rbegin();
   auto previous_node = std::next(last_node);
   EXPECT_LT(previous_node->elapsed_time(),

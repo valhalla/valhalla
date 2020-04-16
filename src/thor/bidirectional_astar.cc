@@ -952,7 +952,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
       LOG_WARN("Trivial route with bidirectional A* should not be allowed");
       // find the distance along the destination was
       double target = 0;
-      for (const auto e : origin.path_edges()) {
+      for (const auto& e : origin.path_edges()) {
         if (e.graph_id() == edgelabels_reverse_[idx2].edgeid()) {
           target = e.percent_along();
           break;
@@ -975,8 +975,8 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
       // which remove from the reverse cost which goes all the way to the start of the edge
       cost = edgelabels_reverse_[idx2].cost() - cost;
       // and we use that instead
-      path.back().elapsed_time = cost.secs;
-      path.back().elapsed_cost = cost.cost;
+      path.back().elapsed_time = std::max(cost.secs, 0.f);
+      path.back().elapsed_cost = std::max(cost.cost, 0.f);
     }
     return paths;
   }

@@ -1633,6 +1633,16 @@ TEST(ComplexRestriction, WalkVias) {
 }
 
 TEST(Astar, BiDirTrivial) {
+  // Normally the service does not allow a trivial path with bidirectional astar because it has some
+  // problems with those (oneways that make you go around the block to get to where you started?).
+  // However when reviewing the other special case of short bidirectional routes where the forward and
+  // backward search paths meet on the destination edge we found that the trivial path edge trimming
+  // was wrong. Specifically because the forward expansion only cares about trimming the first edge
+  // from the origin and the reverse expansion only cares about trimming the last edge up to the
+  // destination but the route is only one edge. This means that both the reverse path label and the
+  // forward path label both have trimmed the edge but not enough. So what we have to do is trim the
+  // whole edge based on what percentage of the edge is left between the origin and destination.
+
   // Get access to tiles
   boost::property_tree::ptree conf;
   conf.put("tile_dir", "test/data/utrecht_tiles");
