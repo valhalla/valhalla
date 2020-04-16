@@ -40,6 +40,7 @@
    speed (current time) route wasn't what was requested. [#2311](https://github.com/valhalla/valhalla/pull/2311)
    * FIXED: Fix break/continue typo in search filtering [#2317](https://github.com/valhalla/valhalla/pull/2317)
    * FIXED: Don't allow timezone information in the local date time string attached at each location. [2312](https://github.com/valhalla/valhalla/pull/2312)
+   * FIXED: Fix short route trimming in bidirectional astar [#2323](https://github.com/valhalla/valhalla/pull/2323)
 
 * **Enhancement**
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)
