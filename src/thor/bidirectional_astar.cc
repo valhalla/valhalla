@@ -947,38 +947,38 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
       path.back().elapsed_cost = path[path.size() - 2].elapsed_cost +
                                  edgelabels_reverse_[idx2].cost().cost +
                                  edgelabels_forward_[idx1].transition_cost();
-    } // origin and destination on the same edge
-    else {
-      LOG_WARN("Trivial route with bidirectional A* should not be allowed");
-      // find the distance along the destination was
-      double target = 0;
-      for (const auto& e : origin.path_edges()) {
-        if (e.graph_id() == edgelabels_reverse_[idx2].edgeid()) {
-          target = e.percent_along();
-          break;
-        }
-      }
-
-      // T is the total we find first by scaling R which is the reverse edge trimmed
-      // F is the forward edge trimmed. We then subtract F from T to get the section
-      // at the beginning. Finally we subtract that from R to get the section between
-      // the two locations
-      //           x                           x
-      //      T----------------------------------------
-      //      F    ------------------------------------
-      //      R---------------------------------
-
-      // we scale the cost to what it would be for the full length of the edge
-      auto cost = edgelabels_reverse_[idx1].cost() * static_cast<float>(1 / target);
-      // we then subtract the partial cost of the forward to get the piece before the origin
-      cost -= edgelabels_forward_[idx1].cost();
-      // which remove from the reverse cost which goes all the way to the start of the edge
-      cost = edgelabels_reverse_[idx2].cost() - cost;
-      // and we use that instead
-      path.back().elapsed_time = std::max(cost.secs, 0.f);
-      path.back().elapsed_cost = std::max(cost.cost, 0.f);
+      return paths;
     }
-    return paths;
+
+    // origin and destination on the same edge
+    LOG_WARN("Trivial route with bidirectional A* should not be allowed");
+    // find the destination edge that was used
+    for (const auto& e : origin.path_edges()) {
+      if (e.graph_id() == edgelabels_reverse_[idx2].edgeid()) {
+        // T is the total we find first by scaling R which is the reverse edge trimmed
+        // F is the forward edge trimmed. We then subtract F from T to get the section
+        // at the beginning. Finally we subtract that from R to get the section between
+        // the two locations
+        //           x                           x
+        //      T----------------------------------------
+        //      F    ------------------------------------
+        //      R---------------------------------
+
+        // we scale the cost to what it would be for the full length of the edge
+        auto cost = edgelabels_reverse_[idx1].cost() * static_cast<float>(1 / e.percent_along());
+        // we then subtract the partial cost of the forward to get the piece before the origin
+        cost -= edgelabels_forward_[idx1].cost();
+        // which remove from the reverse cost which goes all the way to the start of the edge
+        cost = edgelabels_reverse_[idx2].cost() - cost;
+        // and we use that instead
+        path.back().elapsed_time = std::max(cost.secs, 0.f);
+        path.back().elapsed_cost = std::max(cost.cost, 0.f);
+        return paths;
+      }
+    }
+
+    // This cannot happen because we only make labels from edge candidates in the destination location
+    throw std::logic_error("Could not find candidate edge used for destination label");
   }
 
   // Get the elapsed time at the end of the forward path. NOTE: PathInfo
