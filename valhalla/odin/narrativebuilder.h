@@ -38,6 +38,21 @@ public:
 
   void Build(const Options& options, std::list<Maneuver>& maneuvers);
 
+  /////////////////////////////////////////////////////////////////////////////
+  /**
+   * Returns the verbal alert approach instruction by combining the specified distance and the
+   * specified verbal cue.
+   *
+   * @param distance   The distance in user units (miles or kilometers) to process.
+   * @param verbal_cue The verbal cue to combine with specified distance.
+   *                   Example: "Turn right onto Main Street."
+   *
+   * @return the verbal alert approach instruction by combining the specified distance and the
+   *         specified verbal cue.
+   *         Example: "In a quarter mile, Turn Right onto Main Street."
+   */
+  std::string FormVerbalAlertApproachInstruction(float distance, const std::string& verbal_cue);
+
 protected:
   /////////////////////////////////////////////////////////////////////////////
   std::string FormStartInstruction(Maneuver& maneuver);
@@ -326,6 +341,7 @@ protected:
                                       uint32_t element_max_count = kVerbalPostElementMaxCount,
                                       const std::string& delim = kVerbalDelim);
 
+  /////////////////////////////////////////////////////////////////////////////
   std::string FormVerbalPostTransitionTransitInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
@@ -363,6 +379,17 @@ protected:
    * @return the length string of the specified maneuver.
    */
   std::string FormLength(Maneuver& maneuver,
+                         const std::vector<std::string>& metric_lengths,
+                         const std::vector<std::string>& us_customary_lengths);
+
+  /**
+   * Returns the length string of the specified distance.
+   *
+   * @param distance The distance in user units (miles or kilometers) to process.
+   *
+   * @return the length string of the specified distance.
+   */
+  std::string FormLength(float distance,
                          const std::vector<std::string>& metric_lengths,
                          const std::vector<std::string>& us_customary_lengths);
 

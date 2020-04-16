@@ -1,7 +1,7 @@
 What are Isochrone Maps?
 ------------------------
 
-Recently valhalla has gained the ability to return these amazing structures called isochrones. What's an isochrone? The word is a combination of two greek roots `iso` meaning equal and `chrono` meaning time. So indeed, an isochrone is a structure representing equal time. In our case it's a line that reprsents constant travel time about a given location. One can think of isochrone maps as somehwat similar to the familiar topographic maps except that instead of lines of constant height, lines are of constant travel time are depicted. For this reason other terms common in topography apply such as contours or isolines.
+Recently valhalla has gained the ability to return these amazing structures called isochrones. What's an isochrone? The word is a combination of two greek roots `iso` meaning equal and `chrono` meaning time. So indeed, an isochrone is a structure representing equal time. In our case it's a line that represents constant travel time about a given location. One can think of isochrone maps as somewhat similar to the familiar topographic maps except that instead of lines of constant height, lines are of constant travel time are depicted. For this reason other terms common in topography apply such as contours or isolines.
 
 ![Isochrone Map](images/isochrone.png "Melbourne Driving Isochrone Map")
 In this image the green, yellow, orange and red contour lines represent 15, 30, 45 and 60 minutes of driving time respectively.

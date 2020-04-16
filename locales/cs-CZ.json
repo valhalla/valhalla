@@ -146,7 +146,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometrů",
         "1 kilometr",
-        "půl kilometru",
         "<METERS> metrů",
         "méně než 10 metrů"
       ],
@@ -154,8 +153,7 @@
         "<MILES> mil",
         "1 míli",
         "půl míle",
-        "<TENTHS_OF_MILE> desetiny míle",
-        "1 desetinu míle",
+        "a quarter mile",
         "<FEET> stop",
         "méně než 10 stop"
       ],
@@ -1209,7 +1207,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometrů",
         "1 kilometr",
-        "půl kilometru",
         "<METERS> metrů",
         "méně než 10 metrů"
       ],
@@ -1217,8 +1214,7 @@
         "<MILES> mil",
         "1 míli",
         "půl míle",
-        "<TENTHS_OF_MILE> desetiny míle",
-        "1 desetinu míle",
+        "a quarter mile",
         "<FEET> stop",
         "méně než 10 stop"
       ],
@@ -1603,18 +1599,16 @@
       "metric_lengths": [
         "<KILOMETERS> kilometry",
         "1 kilometr",
-        "Půl kilometru",
         "<METERS> metrů",
         "Méně než 10 metrů"
       ],
       "us_customary_lengths": [
-        "<MILES> míle",
+        "<MILES> mil",
         "1 míli",
-        "Půl míle",
-        "<TENTHS_OF_MILE> desetin míle",
-        "1 desetinu míle",
+        "půl míle",
+        "a quarter mile",
         "<FEET> stop",
-        "Méně než 10 stop"
+        "méně než 10 stop"
       ],
       "example_phrases": {
         "0": [
@@ -2079,11 +2073,53 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> Potom <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> Potom <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
       },
+      "metric_lengths": [
+        "<KILOMETERS> kilometrů",
+        "1 kilometr",
+        "<METERS> metrů",
+        "méně než 10 metrů"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 míli",
+        "půl míle",
+        "a quarter mile",
+        "<FEET> stop",
+        "méně než 10 stop"
+      ],
       "example_phrases": {
         "0": [
           "Odbočte mírně vpravo na East Fayette Street. Potom Odbočte vpravo na North Gay Street."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometrů",
+        "1 kilometr",
+        "<METERS> metrů",
+        "méně než 10 metrů"
+      ],
+      "us_customary_lengths": [
+        "<MILES> mil",
+        "1 míli",
+        "půl míle",
+        "a quarter mile",
+        "<FEET> stop",
+        "méně než 10 stop"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }
