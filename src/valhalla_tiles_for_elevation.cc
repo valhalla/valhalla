@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
 
   // Get the config to see which coverage we are using
   boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.c_str(), pt);
+  rapidjson::read_json(config_file_path.string(), pt);
 
   // Get the base lat,lng of all 1 degree tiles that include a Valhalla tile
   auto lls = get_land_tiles(pt);

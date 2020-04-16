@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_GRAPHTILE_H_
 
 #include "filesystem.h"
+
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/complexrestriction.h>
@@ -24,6 +25,7 @@
 #include <valhalla/baldr/transitstop.h>
 #include <valhalla/baldr/transittransfer.h>
 #include <valhalla/baldr/turnlanes.h>
+
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
@@ -37,6 +39,7 @@
 namespace valhalla {
 namespace baldr {
 
+class tile_getter_t;
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
  */
@@ -70,14 +73,13 @@ public:
    * Construct a tile given a url for the tile using curl
    * @param  tile_url URL of tile
    * @param  graphid Tile Id
-   * @param  curler curler that will handle tile downloading
-   * @param  gzipped whether the file url will need the .gz extension
+   * @param  tile_getter object that will handle tile downloading
    * @return whether or not the tile could be cached to disk
    */
+
   static GraphTile CacheTileURL(const std::string& tile_url,
                                 const GraphId& graphid,
-                                curler_t& curler,
-                                bool gzipped,
+                                tile_getter_t* tile_getter,
                                 const std::string& cache_location);
 
   /**

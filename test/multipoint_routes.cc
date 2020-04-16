@@ -106,6 +106,9 @@ void check_dates(bool time_dependent,
     }
 
     if (l.has_date_time()) {
+      // should be localtime, ie no timezone
+      EXPECT_TRUE(l.date_time().find('+', l.date_time().find('T')) == std::string::npos &&
+                  l.date_time().find('-', l.date_time().find('T')) == std::string::npos);
       // get the timezone
       baldr::GraphId edge_id(l.path_edges().begin()->graph_id());
       const auto* tile = reader.GetGraphTile(edge_id);
