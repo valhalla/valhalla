@@ -64,6 +64,7 @@ endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   message(STATUS "Configuring in debug mode")
+  #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_DEBUG")
 elseif(CMAKE_BUILD_TYPE MATCHES Release)
   message(STATUS "Configuring in release mode")
 elseif(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)

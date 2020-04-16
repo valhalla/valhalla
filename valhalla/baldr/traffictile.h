@@ -12,6 +12,7 @@
 #include <exception>
 #include <string>
 #include <type_traits>
+#include <valhalla/baldr/graphconstants.h>
 #include <vector>
 #else
 #include <stdint.h>
@@ -30,6 +31,9 @@ using std::uint64_t;
 constexpr uint16_t INVALID_SPEED_AGE_BUCKET = 0;
 constexpr uint16_t MAX_SPEED_AGE_BUCKET = 15;
 constexpr uint16_t SPEED_AGE_BUCKET_SIZE = 2; // 2 minutes per bucket
+
+// Traffic speeds are encoded as 8 bits in `Speed` below
+constexpr uint32_t MAX_TRAFFIC_SPEED_KPH = 255;
 
 /**
  * Helper function to return the approximate age in seconds of a record based
@@ -108,7 +112,12 @@ static_assert(sizeof(Speed) == sizeof(uint16_t),
 #ifndef C_ONLY_INTERFACE
 namespace {
 static constexpr volatile Speed INVALID_SPEED{0, 0, INVALID_SPEED_AGE_BUCKET, 0};
-}
+
+// Assert these constants are the same
+// (We want to avoid including this file in graphconstants.h)
+static_assert(MAX_TRAFFIC_SPEED_KPH == valhalla::baldr::kMaxTrafficSpeed,
+              "Constants must be the same");
+} // namespace
 class Tile {
 public:
   Tile(char* tile_ptr)

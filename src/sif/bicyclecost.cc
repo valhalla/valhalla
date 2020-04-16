@@ -367,10 +367,10 @@ public:
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 
-  float speedfactor_[kMaxSpeedKph + 1]; // Cost factors based on speed in kph
-  float use_roads_;                     // Preference of using roads between 0 and 1
-  float road_factor_;                   // Road factor based on use_roads_
-  float avoid_bad_surfaces_;            // Preference of avoiding bad surfaces for the bike type
+  std::vector<float> speedfactor_; // Cost factors based on speed in kph
+  float use_roads_;                // Preference of using roads between 0 and 1
+  float road_factor_;              // Road factor based on use_roads_
+  float avoid_bad_surfaces_;       // Preference of avoiding bad surfaces for the bike type
 
   // Average speed (kph) on smooth, flat roads.
   float speed_;
@@ -488,6 +488,7 @@ BicycleCost::BicycleCost(const Costing costing, const Options& options)
 
   // Create speed cost table and penalty table (to avoid division in costing)
   float avoid_roads = (1.0f - use_roads_) * 0.75f + 0.25;
+  speedfactor_.resize(kMaxSpeedKph + 1, 0);
   speedfactor_[0] = kSecPerHour;
   speedpenalty_[0] = 0.0f;
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {

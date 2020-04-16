@@ -268,7 +268,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const {
-    return speedfactor_[kMaxSpeedKph];
+    return speedfactor_[kMaxAssumedSpeed];
   }
 
   /**
@@ -313,7 +313,7 @@ public:
   // We expose it within the source file for testing purposes
 public:
   VehicleType type_; // Vehicle type: car (default), motorcycle, etc
-  float speedfactor_[kMaxSpeedKph + 1];
+  std::vector<float> speedfactor_;
   float density_factor_[16]; // Density factor
   float ferry_factor_;       // Weighting to apply to ferry edges
   float toll_factor_;        // Factor applied when road has a toll
@@ -379,7 +379,11 @@ MotorcycleCost::MotorcycleCost(const Costing costing, const Options& options)
     surface_factor_ = static_cast<uint32_t>(kMaxTrailBiasFactor * (f * f));
   }
 
+#ifdef GLIBCXX_DEBUG
+#error defined works
+#endif
   // Create speed cost table
+  speedfactor_.resize(kMaxSpeedKph + 1, 0);
   speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
