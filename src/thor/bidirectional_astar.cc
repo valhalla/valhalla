@@ -953,7 +953,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     // origin and destination on the same edge
     LOG_WARN("Trivial route with bidirectional A* should not be allowed");
     // find the destination edge that was used
-    for (const auto& e : origin.path_edges()) {
+    for (const auto& e : dest.path_edges()) {
       if (e.graph_id() == edgelabels_reverse_[idx2].edgeid()) {
         // T is the total we find first by scaling R which is the reverse edge trimmed
         // F is the forward edge trimmed. We then subtract F from T to get the section
