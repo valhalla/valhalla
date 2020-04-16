@@ -325,6 +325,13 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
     }
   }
 
+  for (const auto& path : paths) {
+    for (const auto& edge : path) {
+      std::cout << edge.edgeid << "  elapsed : " << edge.elapsed_time << ", turn cost "
+                << edge.turn_cost << std::endl;
+    }
+  }
+
   // All or nothing
   if (paths.empty()) {
     throw valhalla_exception_t{442};

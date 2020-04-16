@@ -995,13 +995,6 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     previous_transition_cost.cost = edgelabel.transition_cost();
   }
 
-  for (const auto& path : paths) {
-    for (const auto& edge : path) {
-      std::cout << edge.edgeid << "  elapsed : " << edge.elapsed_time << ", turn cost "
-                << edge.turn_cost << std::endl;
-    }
-  }
-
   return paths;
 }
 
