@@ -1,0 +1,178 @@
+{
+  "mjolnir": {
+    "max_cache_size": 1000000000,
+    "tile_dir": "/data/valhalla",
+    "admin": "/data/valhalla/admin.sqlite",
+    "timezone": "/data/valhalla/tz_world.sqlite",
+    "transit_dir": "/data/valhalla/transit",
+    "logging": {
+      "type": "std_out",
+      "color": true
+    }
+  },
+  "additional_data": {
+    "elevation": "/data/valhalla/elevation/"
+  },
+  "loki": {
+    "actions":["locate","route","one_to_many","many_to_one","many_to_many","sources_to_targets","optimized_route","isochrone"],
+    "logging": {
+      "type": "std_out",
+      "color": true,
+      "long_request": 100.0
+    },
+    "service": {
+      "proxy": "ipc:///tmp/loki"
+    }
+  },
+  "skadi": {
+    "actions":["height"],
+    "logging": {
+      "type": "std_out",
+      "color": true,
+      "long_request": 5.0
+    },
+    "service": {
+      "proxy": "ipc:///tmp/skadi"
+    }
+  },
+  "thor": {
+    "logging": {
+      "type": "std_out",
+      "color": true,
+      "long_request": 110.0
+    },
+    "service": {
+      "proxy": "ipc:///tmp/thor"
+    }
+  },
+  "odin": {
+    "logging": {
+      "type": "std_out",
+      "color": true
+    },
+    "service": {
+      "proxy": "ipc:///tmp/odin"
+    }
+  },
+  "meili": {
+    "mode": "multimodal",
+    "customizable": ["mode", "search_radius"],
+    "verbose": false,
+    "default": {
+      "sigma_z": 4.07,
+      "gps_accuracy": 4.07,
+      "beta": 3,
+      "max_route_distance_factor": 3,
+      "max_route_time_factor": 3,
+      "breakage_distance": 2000,
+      "interpolation_distance": 10,
+      "search_radius": 40,
+      "max_search_radius": 100,
+      "geometry": false,
+      "route": true,
+      "turn_penalty_factor": 0
+    },
+    "auto": {
+      "turn_penalty_factor": 200,
+      "search_radius": 50
+    },
+    "pedestrian": {
+      "turn_penalty_factor": 100,
+      "search_radius": 25
+    },
+    "bicycle": {
+      "turn_penalty_factor": 140
+    },
+    "multimodal": {
+      "turn_penalty_factor": 70
+    },
+    "logging": {
+      "type": "std_out",
+      "color": true
+    },
+    "service": {
+      "proxy": "ipc:///tmp/meili"
+    },
+    "grid": {
+      "size": 500,
+      "cache_size": 64
+    }
+  },
+  "tyr": {
+    "logging": {
+      "type": "std_out",
+      "color": true,
+      "long_request": 100.0
+    },
+    "service": {
+      "proxy": "ipc:///tmp/tyr"
+    }
+  },
+  "httpd": {
+    "service": {
+      "listen": "tcp://*:8002",
+      "loopback": "ipc:///tmp/loopback"
+    }
+  },
+  "service_limits": {
+    "auto": {
+      "max_distance": 5000000.0,
+      "max_locations": 20,
+      "max_matrix_distance": 400000.0,
+      "max_matrix_locations": 50
+    },
+    "auto_shorter": {
+      "max_distance": 5000000.0,
+      "max_locations": 20,
+      "max_matrix_distance": 400000.0,
+      "max_matrix_locations": 50
+    },
+    "bicycle": {
+      "max_distance": 500000.0,
+      "max_locations": 50,
+      "max_matrix_distance": 200000.0,
+      "max_matrix_locations": 50
+    },
+    "bus": {
+      "max_distance": 5000000.0,
+      "max_locations": 50,
+      "max_matrix_distance": 400000.0,
+      "max_matrix_locations": 50
+    },
+    "multimodal": {
+      "max_distance": 500000.0,
+      "max_locations": 50,
+      "max_matrix_distance": 0.0,
+      "max_matrix_locations": 0
+    },
+    "pedestrian": {
+      "max_distance": 250000.0,
+      "max_locations": 50,
+      "max_matrix_distance": 200000.0,
+      "max_matrix_locations": 50,
+      "max_transit_walking_distance": 10000,
+      "min_transit_walking_distance": 1
+    },
+    "transit": {
+      "max_distance": 500000.0,
+      "max_locations": 50,
+      "max_matrix_distance": 200000.0,
+      "max_matrix_locations": 50
+    },
+    "truck": {
+      "max_distance": 5000000.0,
+      "max_locations": 20,
+      "max_matrix_distance": 400000.0,
+      "max_matrix_locations": 50
+    },
+    "skadi": {
+      "max_shape": 750000,
+      "min_resample": 10.0
+    },
+    "isochrone": {
+      "max_contours": 4,
+      "max_time": 120,
+      "max_locations": 1
+    }
+  }
+}
