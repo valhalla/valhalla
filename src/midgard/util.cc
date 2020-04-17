@@ -97,35 +97,28 @@ void trim_shape(float start,
                 std::vector<PointLL>& shape) {
   // clip up to the start point if the start_vertex is valid
   float along = 0.f;
-  auto current = shape.begin();
   if (start_vertex.IsValid()) {
-    while (!shape.empty() && (current != shape.end() - 1)) {
+    // find the spot at which we cross the distance threshold and stop
+    auto current = shape.begin();
+    for (; !shape.empty() && (current != shape.end() - 1) && along <= start; ++current) {
       along += (current + 1)->Distance(*current);
-      // just crossed it, replace the current vertex with the start position and erase
-      // shape up to the current vertex
-      if (along > start) {
-        along = start;
-        *current = start_vertex;
-        shape.erase(shape.begin(), current);
-        break;
-      }
-      ++current;
     }
+    // we found the spot to stop for the beginning of the shape so set it to the new beginning
+    *(--current) = start_vertex;
+    shape.erase(shape.begin(), current);
+    along = start;
   }
+
   // clip after the end point if the end vertex is valid
-  current = shape.begin();
   if (end_vertex.IsValid()) {
-    while (!shape.empty() && (current != shape.end() - 1)) {
+    // find the point at which we cross the distance threshold and stop
+    auto current = shape.begin();
+    for (; !shape.empty() && (current != shape.end() - 1) && along <= end; ++current) {
       along += (current + 1)->Distance(*current);
-      // just crossed it, replace the current vertex with the end vertex and erase
-      // shape after the current vertex
-      if (along > end) {
-        *(++current) = end_vertex;
-        shape.erase(++current, shape.end());
-        break;
-      }
-      ++current;
     }
+    // found the spot to stop for the end of the shape so set it to the new end
+    *(current) = end_vertex;
+    shape.erase(++current, shape.end());
   }
 }
 
