@@ -32,7 +32,7 @@ TEST(TimeTracking, routes) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_trimming_make",
                                {{"mjlonir.timezone", "/path/to/timezone.sqlite"}});
 
-  // grab start and end edges that we want to use
+  // grab start and end edges that we want to use for a route
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
   baldr::GraphId start_id, end_id;
   const baldr::DirectedEdge *start_edge, *end_edge;
@@ -41,8 +41,7 @@ TEST(TimeTracking, routes) {
   std::tie(end_id, end_edge, std::ignore, std::ignore) =
       gurka::findEdge(reader, map.nodes, "BC", "C");
 
-  // get a point on the shape that is super close to the end such that trimming would fail
-  // if we use imprecise length measurement on the edge
+  // we start by getting the shape for the two edges we want a route on
   const auto* tile = reader.GetGraphTile(start_id);
   auto start_shape = tile->edgeinfo(start_edge->edgeinfo_offset()).shape();
   if (!start_edge->forward())
@@ -52,14 +51,22 @@ TEST(TimeTracking, routes) {
     std::reverse(end_shape.begin(), end_shape.end());
   auto start_length = midgard::length<decltype(start_shape)>(start_shape);
   auto end_length = midgard::length<decltype(end_shape)>(end_shape);
+
+  // we expect that the actual length is shorter than the rounded off length
   EXPECT_LT(start_length, start_edge->length());
+  // we expect that the distance to the starting point of our route is within the
+  // margin of length rounding error to the end of the edge
   auto start = start_shape.back();
+  auto end = end_shape.back();
   start.first -= .000005f;
   EXPECT_LT(start.Distance(start_shape.back()), 0.5f);
+  // we expect that the percentage along the edge with respect to the actual length is less than 1
+  // meaning its not all the way at the end of the edge
   auto offset = start_shape.front().Distance(start) / start_length;
   EXPECT_LT(offset, 1.f);
+  // we expect that multiplying the percent along by the rounded length will result in a number that
+  // is larger than the actual length
   EXPECT_GT(offset * start_edge->length(), start_length);
-  auto end = end_shape.back();
 
   // fake a costing
   valhalla::Options options;
@@ -75,7 +82,11 @@ TEST(TimeTracking, routes) {
   valhalla::Location origin = fake_location(start_id, start, offset);
   valhalla::Location dest = fake_location(end_id, end, 1);
 
-  // build a leg with a tiny portion of the start edge and all of the end edge
+  // build a leg with a tiny portion of the start edge and all of the end edge. in previous versions
+  // of the code the shape trimming was not robust to the discrepancy between rounded off edge length
+  // and actual length of edge shape. this would lead to the trimmer not trimming anything at the
+  // beginning or end of the edge and you getting the whole shape when what you wanted was just a tiny
+  // sliver of the end of the edge
   thor::AttributesController c;
   valhalla::TripLeg leg;
   thor::TripLegBuilder::Build(c, reader, costings, path.cbegin(), path.cend(), origin, dest, {}, leg);
