@@ -7,6 +7,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include <assert.h>
 
 #ifdef INLINE_TEST
 #include "test/test.h"
@@ -589,6 +590,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
     // Compute elapsed time based on speed. Modulate cost with weighting factors.
+    assert(speed < speedfactor_.size());
     float sec = (edge->length() * speedfactor_[speed]);
     return {sec * ferry_factor_, sec};
   }
@@ -684,6 +686,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   float factor = 1.0f + grade_penalty[edge->weighted_grade()] + total_stress + surface_factor;
 
   // Compute elapsed time based on speed. Modulate cost with weighting factors.
+  assert(bike_speed < speedfactor_.size());
   float sec = (edge->length() * speedfactor_[bike_speed]);
   return {sec * factor, sec};
 }

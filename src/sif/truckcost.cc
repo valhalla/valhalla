@@ -6,6 +6,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include <assert.h>
 
 #ifdef INLINE_TEST
 #include "test/test.h"
@@ -491,6 +492,7 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   // Use the lower or truck speed (ir present) and speed
   uint32_t s = (edge->truck_speed() > 0) ? std::min(edge->truck_speed(), speed) : speed;
+  assert(s < speedfactor_.size());
   float sec = edge->length() * speedfactor_[s];
   return {sec * factor, sec};
 }

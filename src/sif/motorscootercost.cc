@@ -7,6 +7,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include <assert.h>
 
 #ifdef INLINE_TEST
 #include "test/test.h"
@@ -467,6 +468,7 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
   auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
 
   if (edge->use() == Use::kFerry) {
+    assert(speed < speedfactor_.size());
     float sec = (edge->length() * speedfactor_[speed]);
     return {sec * ferry_factor_, sec};
   }
@@ -484,6 +486,7 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor += kDestinationOnlyFactor;
   }
 
+  assert(scooter_speed < speedfactor_.size());
   float sec = (edge->length() * speedfactor_[scooter_speed]);
   return {sec * factor, sec};
 }

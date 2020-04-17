@@ -7,6 +7,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include <assert.h>
 
 #ifdef INLINE_TEST
 #include "test/test.h"
@@ -466,6 +467,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Special case for travel on a ferry
   if (edge->use() == Use::kFerry) {
     // Use the edge speed (should be the speed of the ferry)
+    assert(edge->speed() < speedfactor_.size());
     float sec = (edge->length() * speedfactor_[edge->speed()]);
     return {sec * ferry_factor_, sec};
   }
@@ -477,6 +479,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor += toll_factor_;
   }
 
+  assert(speed < speedfactor_.size());
   float sec = (edge->length() * speedfactor_[speed]);
   return {sec * factor, sec};
 }
