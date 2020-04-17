@@ -63,6 +63,10 @@ TEST(Traffic, SpeedValid) {
   speed.age_bucket = traffic::MAX_SPEED_AGE_BUCKET;
   EXPECT_TRUE(speed.valid());
   EXPECT_TRUE(speed.closed());
+
+  // Test wraparound
+  speed.speed_kmh = valhalla::baldr::traffic::MAX_TRAFFIC_SPEED_KPH + 1;
+  EXPECT_EQ(speed.speed_kmh, 0);
 }
 
 int main(int argc, char* argv[]) {
