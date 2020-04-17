@@ -311,7 +311,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       cut_segments(match_results, prev_idx, curr_idx, segments, new_segments);
 
       for (const auto& edge : new_segments)
-        std::cout << edge << std::endl;
+        std::cout << reader.encoded_edge_shape(edge.edgeid) << std::endl;
 
       if (!prev_match->is_break_point && !route.empty() && !route.back().discontinuity) {
         // have to merge route's last segment and segments' first segment together

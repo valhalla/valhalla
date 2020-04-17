@@ -307,16 +307,16 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     // node snap match. We collect the info together and search both prev edge end node and next
     // edge start node in the below loop
     std::array<std::tuple<const baldr::DirectedEdge*, baldr::GraphId, float>, 2> transition_infos{
-        {std::tuple<const baldr::DirectedEdge*, baldr::GraphId, float>{prev_de, prev_edge, 0.f},
-         std::tuple<const baldr::DirectedEdge*, baldr::GraphId, float>{next_opp_de, next_edge, 1.f}}};
+        {std::tuple<const baldr::DirectedEdge*, baldr::GraphId, float>{prev_de, prev_edge, 1.f},
+         std::tuple<const baldr::DirectedEdge*, baldr::GraphId, float>{next_opp_de, next_edge, 0.f}}};
 
     for (const auto& trans_info : transition_infos) {
-      const auto* de = std::get<0>(trans_info);
-      auto edge_id = std::get<1>(trans_info);
+      const auto* target_de = std::get<0>(trans_info);
+      auto target_edge_id = std::get<1>(trans_info);
       float distance_along = std::get<2>(trans_info);
 
-      if (de && edge.id.level() != de->endnode().level()) {
-        baldr::GraphId end_node = next_opp_de->endnode();
+      if (target_de && edge.id.level() != target_de->endnode().level()) {
+        baldr::GraphId end_node = target_de->endnode();
         for (const auto& trans : tile->GetNodeTransitions(end_node)) {
           // we only care about if the nodes are in the same level
           if (trans.endnode().level() != candidate_node.level()) {
@@ -332,7 +332,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
 
           return {edge.projected,
                   std::sqrt(edge.distance),
-                  edge_id,
+                  target_edge_id,
                   distance_along,
                   measurement.epoch_time(),
                   stateid,
