@@ -23,7 +23,7 @@ fake_location(const baldr::GraphId& edge_id, const midgard::PointLL& ll, float a
   return loc;
 }
 
-TEST(TimeTracking, routes) {
+TEST(Trimming, routes) {
 
   // build a very simple graph
   const std::string ascii_map = R"(AB----C)";
