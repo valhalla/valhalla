@@ -446,6 +446,11 @@ thor_worker_t::map_match(Api& request) {
         // (NOTE that, in between edges may have same edge id with the last edge) right before where
         // discontinuity occurs
         auto prev_match_result = match_result_itr++;
+        if (match_result_itr >= match_results.cend()) {
+          // Is there a way to handle this better than just failing?
+          throw valhalla_exception_t{442};
+        }
+
         // TODO: optimize this linear search away in the form path method
         bool loop_on_last_edge = std::find_if(first_edge, last_edge, [last_edge](const auto& edge) {
                                    return edge.edgeid == last_edge->edgeid;
