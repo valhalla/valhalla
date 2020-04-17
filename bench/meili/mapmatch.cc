@@ -104,8 +104,7 @@ static void BM_ManyCases(benchmark::State& state) {
   boost::property_tree::ptree config;
   rapidjson::read_json(VALHALLA_SOURCE_DIR "bench/meili/config.json", config);
   valhalla::tyr::actor_t actor(config, true);
-  const std::string& filename = kBenchmarkCases[state.range(0)];
-  const std::string& test_case = LoadFile(filename);
+  const std::string test_case(LoadFile(kBenchmarkCases[state.range(0)]));
   for (auto _ : state) {
     benchmark::DoNotOptimize(actor.trace_route(test_case));
   }
