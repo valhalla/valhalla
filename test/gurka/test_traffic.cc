@@ -125,13 +125,14 @@ TEST(Traffic, BasicUpdates) {
       tar.close = [](mtar_t* tar) -> int { return MTAR_ESUCCESS; };
 
       // Read every speed tile, and update it with fixed speed of 25km/h (original speeds are 10km/h)
+      baldr::GraphReader reader(map.config.get_child("mjolnir"));
       mtar_header_t tar_header;
       while ((mtar_read_header(&tar, &tar_header)) != MTAR_ENULLRECORD) {
         baldr::traffic::Tile tile(reinterpret_cast<char*>(tar.stream) + tar.pos +
                                   sizeof(mtar_raw_header_t_));
 
         baldr::GraphId tile_id(tile.header->tile_id);
-        auto BD = gurka::findEdge(map, tile_id, "BD", "D");
+        auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
 
         for (int i = 0; i < tile.header->directed_edge_count; i++) {
           (tile.speeds + i)->age_bucket = baldr::traffic::MAX_SPEED_AGE_BUCKET;

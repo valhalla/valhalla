@@ -42,6 +42,7 @@
    * FIXED: Fix a crash in trace_route due to iterating past the end of a vector. [2322](https://github.com/valhalla/valhalla/pull/2322)
    * FIXED: Don't allow timezone information in the local date time string attached at each location. [2312](https://github.com/valhalla/valhalla/pull/2312)
    * FIXED: Fix short route trimming in bidirectional astar [#2323](https://github.com/valhalla/valhalla/pull/2323)
+   * FIXED: Fix shape trimming in leg building for snap candidates that lie within the margin of rounding error [#2326](https://github.com/valhalla/valhalla/pull/2326)
 
 * **Enhancement**
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)
