@@ -1308,36 +1308,35 @@ TEST(Mapmatch, test_intersection_matching) {
   //    }
   //  }
 
-  std::vector<std::string> test_cases = {
-      R"({"shape":[
-                        {"lat": 52.0981267, "lon": 5.1296180, "type": "break",
-                        "node_snap_tolerance": 0},
-                        {"lat": 52.0981280, "lon": 5.1297250, "type": "break",
-                        "node_snap_tolerance":
-                        0}],
-                        "costing":"auto","shape_match":"map_snap"})",
-      //      R"({"shape":[
-      //                  {"lat": 52.0981346, "lon": 5.1300437, "type": "break",
-      //                  "node_snap_tolerance": 0},
-      //                  {"lat": 52.0981145, "lon": 5.1309431, "type": "break",
-      //                  "node_snap_tolerance": 5},
-      //                  {"lat": 52.0980642, "lon": 5.1314993, "type": "break",
-      //                  "node_snap_tolerance": 0},
-      //                  {"lat": 52.0971149, "lon": 5.1311002, "type": "break",
-      //                  "node_snap_tolerance":
-      //                  0}],"costing":"auto","shape_match":"map_snap"})",
-      R"({"shape":[
-                        {"lat": 52.0951641, "lon": 5.1285609, "type": "break",
-                        "node_snap_tolerance": 2},
-                       {"lat": 52.0952055, "lon": 5.1292756, "type": "break",
-                        "node_snap_tolerance": 0},
-                        {"lat": 52.0952580, "lon": 5.1301359, "type": "break",
-                        "node_snap_tolerance": 2},
-                        {"lat": 52.0952939, "lon": 5.1309020, "type": "break",
-                        "node_snap_tolerance": 0},
-                        {"lat": 52.0944788, "lon": 5.1304066, "type": "break",
-                        "node_snap_tolerance":
-                        2}],"costing":"auto","shape_match":"map_snap"})"};
+  std::vector<std::string> test_cases = {R"({"shape":[
+                               {"lat": 52.0981267, "lon": 5.1296180, "type": "break",
+                               "node_snap_tolerance": 0},
+                               {"lat": 52.0981280, "lon": 5.1297250, "type": "break",
+                               "node_snap_tolerance":
+                               0}],
+                               "costing":"auto","shape_match":"map_snap"})",
+                                         R"({"shape":[
+                                    {"lat": 52.0981346, "lon": 5.1300437, "type": "break",
+                                    "node_snap_tolerance": 5},
+                                    {"lat": 52.098124999999996, "lon": 5.130946, "type": "break",
+                                    "node_snap_tolerance": 5},
+                                    {"lat": 52.0980642, "lon": 5.1314993, "type": "break",
+                                    "node_snap_tolerance": 5},
+                                    {"lat": 52.098087, "lon": 5.131504, "type": "break",
+                                    "node_snap_tolerance":
+                                    5}],"costing":"auto","shape_match":"map_snap"})",
+                                         R"({"shape":[
+                              {"lat": 52.0951641, "lon": 5.1285609, "type": "break",
+                              "node_snap_tolerance": 5},
+                             {"lat": 52.0952055, "lon": 5.1292756, "type": "break",
+                              "node_snap_tolerance": 5},
+                              {"lat": 52.095252, "lon": 5.130135, "type": "break",
+                              "node_snap_tolerance": 5},
+                              {"lat": 52.095294, "lon": 5.130906, "type": "break",
+                              "node_snap_tolerance": 5},
+                              {"lat": 52.0944788, "lon": 5.1304066, "type": "break",
+                              "node_snap_tolerance":
+                              5}],"costing":"auto","shape_match":"map_snap"})"};
 
   api_tester tester;
   for (size_t i = 0; i < test_cases.size(); ++i) {

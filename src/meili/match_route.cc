@@ -236,23 +236,36 @@ void cut_segments(const std::vector<MatchResult>& match_results,
   for (int curr_idx = first_idx + 1; curr_idx <= last_idx; ++curr_idx) {
     const MatchResult& curr_match = match_results[curr_idx];
     const MatchResult& prev_match = match_results[prev_idx];
+
+    std::cout << "prev edgeid: " << prev_match.edgeid << " " << prev_match.distance_along
+              << ", and curr edgeid: " << curr_match.edgeid << " " << curr_match.distance_along
+              << std::endl;
+
+    // skip if we do not need to cut
     if (!curr_match.is_break_point && curr_idx != last_idx) {
       continue;
     }
-
+    // we want to handle to loop by locating the correct target edge by comparing the distance alone
     bool loop = prev_match.edgeid == curr_match.edgeid &&
                 prev_match.distance_along > curr_match.distance_along;
+    // if it is a loop, we start the search after the first edge
     auto last_segment = std::find_if(first_segment + static_cast<size_t>(loop), segments.end(),
                                      [&curr_match](const EdgeSegment& segment) {
                                        return (segment.edgeid == curr_match.edgeid);
                                      });
 
+    // we need to close the previous edge
     size_t old_size = new_segments.size();
     new_segments.insert(new_segments.cend(), first_segment, last_segment + 1);
     new_segments[old_size].first_match_idx = prev_idx;
-    new_segments[old_size].source = prev_match.distance_along;
+    // when the points got interpolated, we want to use the match results' distance along
+    // otherwise, we use the segment's source or target because if it is a node snap, the
+    // match result can only hold one candidate, we need either side of the node.
+    new_segments[old_size].source =
+        prev_match.HasState() ? first_segment->source : prev_match.distance_along;
     new_segments.back().last_match_idx = curr_idx;
-    new_segments.back().target = curr_match.distance_along;
+    new_segments.back().target =
+        curr_match.HasState() ? last_segment->target : curr_match.distance_along;
 
     first_segment = last_segment;
     prev_idx = curr_idx;
@@ -294,6 +307,11 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
                 << "  prev match on edge: " << reader.encoded_edge_shape(prev_match->edgeid) << " "
                 << "  curr prev match on edge: " << reader.encoded_edge_shape(match.edgeid)
                 << std::endl;
+
+      //      std::cout << "prev state id time: " << prev_state.stateid().time()
+      //                << ", id: " << prev_state.stateid().id() << "candidate: " << std::endl;
+      //      std::cout << "curr state id time: " << state.stateid().time()
+      //                << ", id: " << state.stateid().id() << ", candidate: " << std::endl;
 
       segments.clear();
       if (!MergeRoute(prev_state, state, segments) && !route.empty()) {
@@ -337,6 +355,10 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
           second_half.first_match_idx = route.back().first_match_idx;
         }
         route.pop_back();
+      }
+
+      for (const auto& segment : new_segments) {
+        assert(segment.source <= segment.target);
       }
 
       // TODO remove: the code is pretty mature we dont need this check its wasted cpu
