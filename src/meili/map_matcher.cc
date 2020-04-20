@@ -232,9 +232,13 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
              next_stateid = time + 1 < stateids.size() ? stateids[time + 1] : StateId();
   const auto& measurement = mapmatcher.state_container().measurement(time);
 
+  // this one couldnt be matched
   if (!stateid.IsValid()) {
     return CreateMatchResult(measurement);
   }
+
+  bool begins_discontinuity = false;
+  bool ends_discontinuity = false;
 
   // Find the last edge of the path from the previous state to the current state
   const auto& state = mapmatcher.state_container().state(stateid);
@@ -246,6 +250,10 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     if (rbegin != rend && rbegin->edgeid().Is_Valid()) {
       prev_edge = rbegin->edgeid();
     }
+  } // we didnt have a previous state and we arent the first one means there was a discontinuity
+    // behind us
+  else if (time > 0) {
+    ends_discontinuity = true;
   }
 
   // Find the first edge of the path from the current state to the next state
@@ -257,6 +265,10 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
         next_edge = label->edgeid();
       }
     }
+  } // we don't have a state after us and we arent the last one means there is a discontinuity in
+    // front of us
+  else if (time > 0) {
+    begins_discontinuity = true;
   }
 
   // bail early when no path exists on either side of this state
@@ -275,7 +287,9 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
               edge.percent_along,
               measurement.epoch_time(),
               stateid,
-              measurement.is_break_point()};
+              measurement.is_break_point(),
+              begins_discontinuity,
+              ends_discontinuity};
     }
 
     // the only matches we can make where the ids arent the same are at intersections
@@ -291,15 +305,29 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     // if the last edge of the previous route ends at this candidate node
     const auto* prev_de = graph_reader.directededge(prev_edge, tile);
     if (prev_de && prev_de->endnode() == candidate_node) {
-      return {edge.projected, std::sqrt(edge.distance),    prev_edge, 1.f, measurement.epoch_time(),
-              stateid,        measurement.is_break_point()};
+      return {edge.projected,
+              std::sqrt(edge.distance),
+              prev_edge,
+              1.f,
+              measurement.epoch_time(),
+              stateid,
+              measurement.is_break_point(),
+              begins_discontinuity,
+              ends_discontinuity};
     }
 
     // if the first edge of the next route starts at this candidate node
     const auto* next_opp_de = graph_reader.GetOpposingEdge(next_edge, tile);
     if (next_opp_de && next_opp_de->endnode() == candidate_node) {
-      return {edge.projected, std::sqrt(edge.distance),    next_edge, 0.f, measurement.epoch_time(),
-              stateid,        measurement.is_break_point()};
+      return {edge.projected,
+              std::sqrt(edge.distance),
+              next_edge,
+              0.f,
+              measurement.epoch_time(),
+              stateid,
+              measurement.is_break_point(),
+              begins_discontinuity,
+              ends_discontinuity};
     }
 
     // when the instersection match fails, we do a more labor intensive search at transitions
@@ -336,7 +364,9 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
                   distance_along,
                   measurement.epoch_time(),
                   stateid,
-                  measurement.is_break_point()};
+                  measurement.is_break_point(),
+                  begins_discontinuity,
+                  ends_discontinuity};
         }
       }
     }

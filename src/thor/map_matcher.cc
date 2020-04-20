@@ -160,7 +160,6 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
                      const std::vector<meili::EdgeSegment>& edge_segments,
                      const std::shared_ptr<sif::DynamicCost>* mode_costing,
                      const sif::TravelMode mode,
-                     std::vector<std::pair<GraphId, GraphId>>& disconnected_edges,
                      Options& options) {
 
   // We support either the epoch timestamp that came with the trace point or
@@ -208,9 +207,6 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     // Check if connected to prior edge
     bool disconnected =
         prev_segment != nullptr && prev_segment->edgeid.Is_Valid() && prev_segment->discontinuity;
-    if (disconnected) {
-      disconnected_edges.emplace_back(prior_edge, edge_id);
-    }
 
     bool break_point =
         edge_segment.first_match_idx >= 0 &&

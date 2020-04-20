@@ -96,7 +96,7 @@ std::string serializeTransitAvailable(const Api& request,
 std::string serializeTraceAttributes(
     const Api& request,
     const thor::AttributesController& controller,
-    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>>& results);
+    std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>& results);
 
 } // namespace tyr
 } // namespace valhalla

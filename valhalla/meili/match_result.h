@@ -26,11 +26,30 @@ struct MatchResult {
   double epoch_time;
   // Sequential state id
   StateId stateid;
-
+  // Whether or not this was a break or break_through type location
   bool is_break_point;
+  // Whether or not there is a discontinuity starting from this point
+  bool begins_discontinuity;
+  // Whether or not a discontinuity ends at this point
+  bool ends_discontinuity;
+  // An index into the full list of edges in the path even across discontinuities (for
+  // trace_attributes)
+  size_t edge_index;
 
   bool HasState() const {
     return stateid.IsValid();
+  }
+
+  enum class Type { kUnmatched, kInterpolated, kMatched };
+  Type GetType() const {
+    // Set the type based on edge id and state
+    if (edgeid.Is_Valid() && HasState()) {
+      return Type::kMatched;
+    } else if (edgeid.Is_Valid()) {
+      return Type::kInterpolated;
+    } else {
+      return Type::kUnmatched;
+    }
   }
 };
 

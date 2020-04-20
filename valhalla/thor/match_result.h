@@ -14,7 +14,6 @@ namespace thor {
 constexpr uint32_t kInvalidEdgeIndex = std::numeric_limits<uint32_t>::max();
 
 struct MatchResult : meili::MatchResult {
-  enum class Type { kUnmatched, kInterpolated, kMatched };
 
   MatchResult(meili::MatchResult result) : meili::MatchResult(std::move(result)) {
     // Set the type based on edge id and state

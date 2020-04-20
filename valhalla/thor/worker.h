@@ -73,7 +73,7 @@ protected:
                                           const Location& origin,
                                           const Location& destination);
   void route_match(Api& request);
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>> map_match(Api& request);
+  std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>> map_match(Api& request);
   void path_map_match(const std::vector<meili::MatchResult>& match_results,
                       const std::vector<PathInfo>& path_edges,
                       TripLeg& leg,
@@ -87,21 +87,17 @@ protected:
   std::string parse_costing(const Api& request);
   void parse_filter_attributes(const Api& request, bool is_strict_filter = false);
 
-  void
-  serilize_paths(const std::vector<PathInfo>& path_edges,
-                 const std::vector<meili::MatchResult>& match_results,
-                 const std::vector<std::pair<baldr::GraphId, baldr::GraphId>>& disconnected_edges,
-                 std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
-                     route_discontinuities,
-                 Options& options,
-                 Api& request);
-
-  void serilize_paths_new(
+  void build_route(
       const std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>&
           paths,
       const std::vector<meili::MatchResult>& match_results,
-      std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
-          route_discontinuities,
+      Options& options,
+      Api& request);
+
+  void build_trace(
+      const std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>&
+          paths,
+      std::vector<meili::MatchResult>& match_results,
       Options& options,
       Api& request);
 
