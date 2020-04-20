@@ -285,14 +285,15 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
     if (prev_match && prev_match->HasState()) {
       const auto &prev_state = mapmatcher.state_container().state(prev_match->stateid),
                  state = mapmatcher.state_container().state(match.stateid);
-      std::cout << "enter a new state:" << std::endl;
 
       // get the route between the two states by walking edge labels backwards
       // then reverse merge the segments together which are on the same edge so we have a
       // minimum number of segments. in this case we could at minimum end up with 1 segment
 
-      //      std::cout << reader.encoded_edge_shape(prev_match->edgeid) << " "
-      //                << reader.encoded_edge_shape(match.edgeid) << std::endl;
+      std::cout << "construct route: "
+                << "  prev match on edge: " << reader.encoded_edge_shape(prev_match->edgeid) << " "
+                << "  curr prev match on edge: " << reader.encoded_edge_shape(match.edgeid)
+                << std::endl;
 
       segments.clear();
       if (!MergeRoute(prev_state, state, segments) && !route.empty()) {
@@ -302,18 +303,19 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
         continue;
       }
 
-      for (const auto& edge : segments)
-        std::cout << edge << std::endl;
-
-      std::cout << " before cut " << std::endl;
+      //      std::cout << " before cut " << std::endl;
+      //      for (const auto& edge : segments)
+      //        std::cout << reader.encoded_edge_shape(edge.edgeid) << std::endl;
 
       new_segments.clear();
       cut_segments(match_results, prev_idx, curr_idx, segments, new_segments);
 
-      for (const auto& edge : new_segments)
-        std::cout << reader.encoded_edge_shape(edge.edgeid) << std::endl;
+      //      std::cout << " after cut " << std::endl;
+      //      for (const auto& edge : new_segments)
+      //        std::cout << reader.encoded_edge_shape(edge.edgeid) << std::endl;
 
-      if (!prev_match->is_break_point && !route.empty() && !route.back().discontinuity) {
+      if (!prev_match->is_break_point && !route.empty() && !route.back().discontinuity &&
+          route.back().edgeid == new_segments.front().edgeid) {
         // have to merge route's last segment and segments' first segment together
         EdgeSegment& first_half = route.back();
         EdgeSegment& second_half = new_segments.front();

@@ -471,18 +471,19 @@ void thor_worker_t::serilize_paths_new(
     add_path_edge(origin_location, origin_match);
     add_path_edge(destination_location, dest_match);
 
-    std::cout << "build legs with :"
-              << "origin dist along : " << origin_match.distance_along << ", "
-              << "(" << origin_match.lnglat.first << " , " << origin_match.lnglat.second << ")"
-              << " -----> "
-              << "destination dist along : " << dest_match.distance_along << ", "
-              << "(" << dest_match.lnglat.first << " , " << dest_match.lnglat.second << ")"
-              << std::endl;
-
-    for (const auto& edge_segment : path.second) {
-      std::cout << "\t leg edges are: " << reader->encoded_edge_shape(edge_segment->edgeid) << " ";
-    }
-    std::cout << std::endl;
+    //    std::cout << "build legs with :"
+    //              << "origin dist along : " << origin_match.distance_along << ", "
+    //              << "(" << origin_match.lnglat.first << " , " << origin_match.lnglat.second << ")"
+    //              << " -----> "
+    //              << "destination dist along : " << dest_match.distance_along << ", "
+    //              << "(" << dest_match.lnglat.first << " , " << dest_match.lnglat.second << ")"
+    //              << std::endl;
+    //
+    //    for (const auto& edge_segment : path.second) {
+    //      std::cout << "\t leg edges are: " << reader->encoded_edge_shape(edge_segment->edgeid) << "
+    //      ";
+    //    }
+    //    std::cout << std::endl;
 
     TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, path.first.cbegin(),
                           path.first.cend(), *origin_location, *destination_location,
