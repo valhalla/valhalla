@@ -248,6 +248,9 @@ Valhalla includes several microbenchmarks which you can build and run using:
     make benchmarks
     make run-benchmarks
 
+They are enabled by the `-DENABLE_BENCHMARKS=On` CMake flag and are currently only available for
+Linux and MacOS.
+
 Command Line Tools
 ------------------
 #### valhalla_run_route
