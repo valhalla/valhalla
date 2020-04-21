@@ -49,9 +49,9 @@ struct MatchResult : meili::MatchResult {
 };
 
 struct RouteDiscontinuity {
-  bool exists;
-  midgard::PointLL vertex;
-  float distance_along;
+  bool exists{false};
+  midgard::PointLL vertex{};
+  float distance_along{0.f};
 };
 
 } // namespace thor

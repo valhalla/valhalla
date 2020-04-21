@@ -257,6 +257,9 @@ void thor_worker_t::build_trace(
   const meili::MatchResult* dest_match = nullptr;
   for (const auto& path : paths) {
     // TODO: discontinuities map
+    const auto& first_segment = path.second.front();
+    const auto& first_match = match_results[first_segment->first_match_idx];
+    route_discontinuities[edge_index].first = {true, first_match.lnglat, first_match.distance_along};
 
     // remember the global edge index
     for (const auto& segment : path.second) {
@@ -277,6 +280,10 @@ void thor_worker_t::build_trace(
       }
       last_id = segment->edgeid;
     }
+
+    const auto& last_segment = path.second.back();
+    const auto& last_match = match_results[last_segment->last_match_idx];
+    route_discontinuities[edge_index].second = {true, last_match.lnglat, last_match.distance_along};
   }
 
   // couldnt find any match
