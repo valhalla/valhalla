@@ -8,28 +8,29 @@ namespace valhalla {
 
 namespace meili {
 
-CandidateQuery::CandidateQuery(baldr::GraphReader& graphreader) : reader_(graphreader) {
-}
-
-std::vector<std::vector<baldr::PathLocation>>
-CandidateQuery::QueryBulk(const std::vector<midgard::PointLL>& locations,
-                          float radius,
-                          sif::EdgeFilter filter) {
-  std::vector<std::vector<baldr::PathLocation>> results;
-  results.reserve(locations.size());
-  for (const auto& location : locations) {
-    results.push_back(Query(location, radius, filter));
+struct CandidateCollector {
+public:
+  explicit CandidateCollector(baldr::GraphReader& reader) : reader_(reader) {
   }
-  return results;
-}
+
+  template <typename edgeid_iterator_t>
+  std::vector<baldr::PathLocation> WithinSquaredDistance(const midgard::PointLL& location,
+                                                         float sq_search_radius,
+                                                         edgeid_iterator_t edgeid_begin,
+                                                         edgeid_iterator_t edgeid_end,
+                                                         const sif::EdgeFilter& filter) const;
+
+private:
+  baldr::GraphReader& reader_;
+};
 
 template <typename edgeid_iterator_t>
 std::vector<baldr::PathLocation>
-CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
-                                      float sq_search_radius,
-                                      edgeid_iterator_t edgeid_begin,
-                                      edgeid_iterator_t edgeid_end,
-                                      sif::EdgeFilter edgefilter) const {
+CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
+                                          float sq_search_radius,
+                                          edgeid_iterator_t edgeid_begin,
+                                          edgeid_iterator_t edgeid_end,
+                                          const sif::EdgeFilter& edgefilter) const {
   std::vector<baldr::PathLocation> candidates;
   std::unordered_set<baldr::GraphId> visited_nodes;
   midgard::projector_t projector(location);
@@ -125,6 +126,18 @@ CandidateQuery::WithinSquaredDistance(const midgard::PointLL& location,
   return candidates;
 }
 
+std::vector<std::vector<baldr::PathLocation>>
+CandidateQuery::QueryBulk(const std::vector<midgard::PointLL>& locations,
+                          float radius,
+                          sif::EdgeFilter filter) {
+  std::vector<std::vector<baldr::PathLocation>> results;
+  results.reserve(locations.size());
+  for (const auto& location : locations) {
+    results.push_back(Query(location, radius, filter));
+  }
+  return results;
+}
+
 // Add each road linestring's line segments into grid. Only one side
 // of directed edges is added
 void IndexBin(const baldr::GraphTile& tile,
@@ -160,12 +173,11 @@ void IndexBin(const baldr::GraphTile& tile,
 CandidateGridQuery::CandidateGridQuery(baldr::GraphReader& reader,
                                        float cell_width,
                                        float cell_height)
-    : CandidateQuery(reader), cell_width_(cell_width), cell_height_(cell_height), grid_cache_() {
+    : reader_(reader), cell_width_(cell_width), cell_height_(cell_height), grid_cache_() {
   bin_level_ = baldr::TileHierarchy::levels().rbegin()->second.level;
 }
 
-CandidateGridQuery::~CandidateGridQuery() {
-}
+CandidateGridQuery::~CandidateGridQuery() = default;
 
 inline const CandidateGridQuery::grid_t*
 CandidateGridQuery::GetGrid(const int32_t bin_id,
@@ -225,13 +237,8 @@ CandidateGridQuery::RangeQuery(const AABB2<midgard::PointLL>& range) const {
 std::vector<baldr::PathLocation> CandidateGridQuery::Query(const midgard::PointLL& location,
                                                            float sq_search_radius,
                                                            sif::EdgeFilter filter) const {
-  if (!location.IsValid()) {
-    throw std::invalid_argument("Expect a valid location");
-  }
-
-  const auto range = midgard::ExpandMeters(location, std::sqrt(sq_search_radius));
-  const auto edgeids = RangeQuery(range);
-  return WithinSquaredDistance(location, sq_search_radius, edgeids.begin(), edgeids.end(), filter);
+  CandidateCollector collector(reader_);
+  return Query(location, sq_search_radius, filter, collector);
 }
 
 } // namespace meili
