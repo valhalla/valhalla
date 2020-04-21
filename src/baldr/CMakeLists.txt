@@ -51,6 +51,7 @@ set(sources
     location.cc
     pathlocation.cc
     tilehierarchy.cc
+    tilecache.cc
     turn.cc
     streetname.cc
     streetnames.cc
