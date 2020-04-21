@@ -76,6 +76,7 @@ public:
    */
   void set_interrupt(const std::function<void()>* interrupt_callback) {
     interrupt_ = interrupt_callback;
+    graphreader_.SetInterrupt(interrupt_);
   }
 
 private:
