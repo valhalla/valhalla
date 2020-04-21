@@ -21,8 +21,8 @@ namespace {
 #define VALHALLA_SOURCE_DIR
 #endif
 
-constexpr float kGpsAccuracy = 4.07;
-constexpr float kSearchRadius = 50;
+constexpr float kGpsAccuracyMeters = 4.07;
+constexpr float kSearchRadiusMeters = 50;
 
 // Inline benchmarks for OfflineMatch
 
@@ -73,7 +73,7 @@ std::vector<Measurement> BuildMeasurements(float gps_accuracy, float search_radi
 
 BENCHMARK_DEFINE_F(OfflineMapmatchFixture, BasicOfflineMatch)(benchmark::State& state) {
   logging::Configure({{"type", ""}});
-  const auto& meas = BuildMeasurements(kGpsAccuracy, kSearchRadius);
+  const auto& meas = BuildMeasurements(kGpsAccuracyMeters, kSearchRadiusMeters);
   for (auto _ : state) {
     benchmark::DoNotOptimize(mapmatcher_->OfflineMatch(meas));
   }
