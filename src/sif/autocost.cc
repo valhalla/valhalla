@@ -8,7 +8,7 @@
 #include "midgard/constants.h"
 #include "midgard/util.h"
 #include "sif/dynamiccost.h"
-#include <assert.h>
+#include <cassert>
 
 #ifdef INLINE_TEST
 #include "test/test.h"

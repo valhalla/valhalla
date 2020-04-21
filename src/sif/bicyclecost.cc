@@ -7,7 +7,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
-#include <assert.h>
+#include <cassert>
 
 #ifdef INLINE_TEST
 #include "test/test.h"
