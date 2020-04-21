@@ -70,6 +70,7 @@ std::vector<Measurement> BuildMeasurements(float gps_accuracy, float search_radi
 }
 
 BENCHMARK_DEFINE_F(OfflineMapmatchFixture, BasicOfflineMatch)(benchmark::State& state) {
+  logging::Configure({{"type", ""}});
   const auto& meas = BuildMeasurements(kGpsAccuracy, kSearchRadius);
   for (auto _ : state) {
     benchmark::DoNotOptimize(mapmatcher_->OfflineMatch(meas));
@@ -101,6 +102,7 @@ const std::vector<std::string> kBenchmarkCases = {
 };
 
 static void BM_ManyCases(benchmark::State& state) {
+  logging::Configure({{"type", ""}});
   boost::property_tree::ptree config;
   rapidjson::read_json(VALHALLA_SOURCE_DIR "bench/meili/config.json", config);
   valhalla::tyr::actor_t actor(config, true);
