@@ -29,11 +29,13 @@ constexpr float kSearchRadius = 50;
 class OfflineMapmatchFixture : public benchmark::Fixture {
 public:
   void SetUp(const ::benchmark::State& state) {
+    (void)state;
     InitEngineConfig();
     InitMapMatcher();
   }
 
   void TearDown(const ::benchmark::State& state) {
+    (void)state;
     matcher_factory_->ClearCache();
     mapmatcher_->Clear();
     matcher_factory_.reset();
@@ -81,7 +83,7 @@ BENCHMARK_REGISTER_F(OfflineMapmatchFixture, BasicOfflineMatch);
 
 // Load fixture files, intended to mirror test cases defined in test/mapmatch.cc.
 
-std::string LoadFile(const std::string filename) {
+std::string LoadFile(const std::string& filename) {
   std::stringstream ss;
   std::string line;
   std::ifstream input_file;
