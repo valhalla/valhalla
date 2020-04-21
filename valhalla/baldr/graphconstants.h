@@ -4,6 +4,7 @@
 #include <limits>
 #include <string>
 #include <unordered_map>
+#include <algorithm>
 
 namespace valhalla {
 namespace baldr {
