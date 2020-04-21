@@ -228,7 +228,7 @@ public:
    * supposed to be halted
    * @param  interrupt    the function to be called which should throw
    */
-  virtual void set_interrupt(const std::function<void()>& interrupt) final;
+  virtual void set_interrupt(const std::function<void()>* interrupt);
 
 protected:
   const std::function<void()>* interrupt;

@@ -45,6 +45,8 @@
    * FIXED: Fix shape trimming in leg building for snap candidates that lie within the margin of rounding error [#2326](https://github.com/valhalla/valhalla/pull/2326)
 
 * **Enhancement**
+   * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
+   * ADDED: Cancellation of tile downloading. [#2319](https://github.com/valhalla/valhalla/pull/2319)
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)
    * ADDED: Allows more complicated routes in timedependent a-star before timing out [#2068](https://github.com/valhalla/valhalla/pull/2068)
    * ADDED: Guide signs and junction names [#2096](https://github.com/valhalla/valhalla/pull/2096)

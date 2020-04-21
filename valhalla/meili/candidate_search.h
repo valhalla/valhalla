@@ -22,33 +22,18 @@
 #include <valhalla/meili/grid_range_query.h>
 
 namespace valhalla {
-
 namespace meili {
 
 class CandidateQuery {
 public:
-  CandidateQuery(baldr::GraphReader& graphreader);
-
-  virtual ~CandidateQuery() {
-  }
+  virtual ~CandidateQuery() = default;
 
   virtual std::vector<baldr::PathLocation>
   Query(const midgard::PointLL& point, float radius, sif::EdgeFilter filter = nullptr) const = 0;
-
   virtual std::vector<std::vector<baldr::PathLocation>>
   QueryBulk(const std::vector<midgard::PointLL>& points,
             float radius,
             sif::EdgeFilter filter = nullptr);
-
-protected:
-  template <typename edgeid_iterator_t>
-  std::vector<baldr::PathLocation> WithinSquaredDistance(const midgard::PointLL& location,
-                                                         float sq_search_radius,
-                                                         edgeid_iterator_t edgeid_begin,
-                                                         edgeid_iterator_t edgeid_end,
-                                                         sif::EdgeFilter filter) const;
-
-  baldr::GraphReader& reader_;
 };
 
 class CandidateGridQuery final : public CandidateQuery {
@@ -57,11 +42,27 @@ public:
 
   CandidateGridQuery(baldr::GraphReader& reader, float cell_width, float cell_height);
 
-  ~CandidateGridQuery();
+  ~CandidateGridQuery() override;
 
   std::vector<baldr::PathLocation> Query(const midgard::PointLL& location,
                                          float sq_search_radius,
                                          sif::EdgeFilter filter) const override;
+
+  template <typename Collector>
+  auto Query(const midgard::PointLL& location,
+             float sq_search_radius,
+             sif::EdgeFilter filter,
+             const Collector& collector) const {
+    if (!location.IsValid()) {
+      throw std::invalid_argument("Expect a valid location");
+    }
+
+    const auto range = midgard::ExpandMeters(location, std::sqrt(sq_search_radius));
+    const auto edgeids = RangeQuery(range);
+
+    return collector.WithinSquaredDistance(location, sq_search_radius, edgeids.begin(), edgeids.end(),
+                                           filter);
+  }
 
   std::unordered_map<baldr::GraphId, grid_t>::size_type size() const {
     return grid_cache_.size();
@@ -87,6 +88,8 @@ private:
 
   // Grid cache - cached per "bin" within a graph tile
   mutable std::unordered_map<int32_t, grid_t> grid_cache_;
+
+  baldr::GraphReader& reader_;
 };
 
 } // namespace meili

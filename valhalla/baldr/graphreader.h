@@ -343,6 +343,12 @@ public:
   explicit GraphReader(const boost::property_tree::ptree& pt,
                        std::unique_ptr<tile_getter_t>&& tile_getter = nullptr);
 
+  void SetInterrupt(const tile_getter_t::interrupt_t* interrupt) {
+    if (tile_getter_) {
+      tile_getter_->set_interrupt(interrupt);
+    }
+  }
+
   /**
    * Test if tile exists
    * @param  graphid  GraphId of the tile to test (tile id and level).
