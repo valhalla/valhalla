@@ -256,11 +256,6 @@ void thor_worker_t::build_trace(
   const meili::MatchResult* origin_match = nullptr;
   const meili::MatchResult* dest_match = nullptr;
   for (const auto& path : paths) {
-    // TODO: discontinuities map
-    const auto& first_segment = path.second.front();
-    const auto& first_match = match_results[first_segment->first_match_idx];
-    route_discontinuities[edge_index].first = {true, first_match.lnglat, first_match.distance_along};
-
     // remember the global edge index
     for (const auto& segment : path.second) {
       if (segment->first_match_idx >= 0) {
@@ -281,9 +276,25 @@ void thor_worker_t::build_trace(
       last_id = segment->edgeid;
     }
 
+    // handle the end of a discontinuity, assumes that there is no start of a discontinuity that is
+    // handled below
+    const auto& first_segment = path.second.front();
+    const auto& first_match = match_results[first_segment->first_match_idx];
+    if (first_match.ends_discontinuity) {
+      route_discontinuities[first_match.edge_index] = {{true, first_match.lnglat,
+                                                        first_match.distance_along},
+                                                       {false, {}, 1.f}};
+    }
+
+    // handle the start of a discontinuity, could be on the same edge where we just ended one. in that
+    // case we only touch .second. if there was no discontinuity ending on this edge then we rely on
+    // the default initializer for .first when we index the map which sets the distance to 0.f
     const auto& last_segment = path.second.back();
-    const auto& last_match = match_results[last_segment->last_match_idx];
-    route_discontinuities[edge_index].second = {true, last_match.lnglat, last_match.distance_along};
+    const auto& last_match = match_results[last_segment->last_match_idx]; // cant use edge_index
+    if (last_match.begins_discontinuity) {
+      auto found = route_discontinuities[last_match.edge_index].second = {true, last_match.lnglat,
+                                                                          last_match.distance_along};
+    }
   }
 
   // couldnt find any match

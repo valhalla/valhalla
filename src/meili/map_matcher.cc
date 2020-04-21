@@ -28,6 +28,18 @@ inline float ClockDistance(const Measurement& left, const Measurement& right) {
                                                          : right.epoch_time() - left.epoch_time();
 }
 
+std::string print_result(const StateContainer& container,
+                         const std::vector<StateId>& original_state_ids) {
+  std::string result = R"({"type":"FeatureCollection","features":[)";
+  std::string fsep;
+  for (auto s : original_state_ids) {
+    result += fsep + container.geojson(s);
+    fsep = ",";
+  }
+  result += R"(]})";
+  return result;
+}
+
 struct Interpolation {
   midgard::PointLL projected;
   baldr::GraphId edgeid;
@@ -761,14 +773,8 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     // We'll keep it if we don't have a duplicate already
     auto found_path = std::find(best_paths.rbegin(), best_paths.rend(), match_results);
     if (found_path == best_paths.rend()) {
-      /*std::cout << "Result: " << best_paths.size() << std::endl;
-      std::cout << R"({"type":"FeatureCollection","features":[)";
-      std::string fsep = "";
-      for(auto s : original_state_ids) {
-        std::cout << fsep << container_.geojson(s);
-        fsep = ",";
-      }
-      std::cout << R"(]})" << std::endl;*/
+      LOG_INFO("Result " + std::to_string(best_paths.size()) +
+               print_result(container_, original_state_ids));
       best_paths.emplace_back(std::move(match_results));
     }
 

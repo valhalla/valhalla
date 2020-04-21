@@ -121,11 +121,11 @@ public:
     return static_cast<StateId::Time>(columns_.size());
   }
 
-  std::string geojson(const StateId& s) {
+  std::string geojson(const StateId& s) const {
     return geojson(state(s));
   }
 
-  std::string geojson(const State& s) {
+  std::string geojson(const State& s) const {
     std::stringstream ss;
     ss << std::setprecision(7) << std::fixed
        << R"({"type":"Feature","geometry":{"type":"Point","coordinates":[)";
