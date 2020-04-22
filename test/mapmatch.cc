@@ -107,13 +107,6 @@ const auto conf = json_to_pt(R"({
     }
   })");
 
-// we expose the algorithm so we can turn off shortcuts if we want to
-struct testable_thor_worker : public valhalla::thor::thor_worker_t {
-public:
-  using valhalla::thor::thor_worker_t::bidir_astar;
-  using valhalla::thor::thor_worker_t::thor_worker_t;
-};
-
 struct api_tester {
   api_tester()
       : conf_(conf), reader(new valhalla::baldr::GraphReader(conf.get_child("mjolnir"))),
@@ -144,7 +137,7 @@ struct api_tester {
   boost::property_tree::ptree conf_;
   std::shared_ptr<valhalla::baldr::GraphReader> reader;
   valhalla::loki::loki_worker_t loki_worker;
-  testable_thor_worker thor_worker;
+  valhalla::thor::thor_worker_t thor_worker;
   valhalla::odin::odin_worker_t odin_worker;
 };
 
@@ -1259,7 +1252,6 @@ TEST(Mapmatch, test_loop_matching) {
   };
 
   api_tester tester;
-  tester.thor_worker.bidir_astar.set_use_shortcuts(true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto route_case = R"({"locations)" + test_cases[i].substr(7);
     auto routed = tester.route(route_case);
