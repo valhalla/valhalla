@@ -1761,14 +1761,14 @@ public:
 namespace valhalla {
 namespace mjolnir {
 
-OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
-                              const std::vector<std::string>& input_files,
-                              const std::string& ways_file,
-                              const std::string& way_nodes_file,
-                              const std::string& access_file,
-                              const std::string& complex_restriction_from_file,
-                              const std::string& complex_restriction_to_file,
-                              const std::string& bss_nodes_file) {
+OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
+                                  const std::vector<std::string>& input_files,
+                                  const std::string& ways_file,
+                                  const std::string& way_nodes_file,
+                                  const std::string& access_file,
+                                  const std::string& complex_restriction_from_file,
+                                  const std::string& complex_restriction_to_file,
+                                  const std::string& bss_nodes_file) {
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
@@ -1780,7 +1780,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   OSMData osmdata{};
   graph_callback callback(pt, osmdata);
 
-  LOG_INFO("Parsing files: " + boost::algorithm::join(input_files, ", "));
+  LOG_INFO("Parsing files for ways: " + boost::algorithm::join(input_files, ", "));
 
   // hold open all the files so that if something else (like diff application)
   // needs to mess with them we wont have troubles with inodes changing underneath us
@@ -1789,18 +1789,6 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
     file_handles.emplace_back(input_file, std::ios::binary);
     if (!file_handles.back().is_open()) {
       throw std::runtime_error("Unable to open: " + input_file);
-    }
-  }
-
-  if (pt.get<bool>("import_bike_share_stations", false)) {
-    LOG_INFO("Parsing bss nodes...");
-    for (auto& file_handle : file_handles) {
-      callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
-          callback.last_relation_ = 0;
-      callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
-                     new sequence<OSMNode>(bss_nodes_file, true));
-      OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
-                            callback);
     }
   }
 
@@ -1830,6 +1818,50 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
     sequence<OSMAccess> access(access_file, false);
     access.sort([](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); });
   }
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+
+  LOG_INFO("Finished");
+
+  // Return OSM data
+  return osmdata;
+}
+
+OSMData PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
+                              const std::vector<std::string>& input_files,
+                              const std::string& ways_file,
+                              const std::string& way_nodes_file,
+                              const std::string& access_file,
+                              const std::string& complex_restriction_from_file,
+                              const std::string& complex_restriction_to_file,
+                              const std::string& bss_nodes_file) {
+  // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
+  // option 2: synchronize around adding things to a single osmdata. will have to test to see
+  // which is the least expensive (memory and speed). leaning towards option 2
+  unsigned int threads =
+      std::max(static_cast<unsigned int>(1),
+               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+
+  // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
+  OSMData osmdata{};
+  graph_callback callback(pt, osmdata);
+
+  LOG_INFO("Parsing files for relations: " + boost::algorithm::join(input_files, ", "));
+
+  // hold open all the files so that if something else (like diff application)
+  // needs to mess with them we wont have troubles with inodes changing underneath us
+  std::list<std::ifstream> file_handles;
+  for (const auto& input_file : input_files) {
+    file_handles.emplace_back(input_file, std::ios::binary);
+    if (!file_handles.back().is_open()) {
+      throw std::runtime_error("Unable to open: " + input_file);
+    }
+  }
+
+  callback.reset(new sequence<OSMWay>(ways_file, true),
+                 new sequence<OSMWayNode>(way_nodes_file, true),
+                 new sequence<OSMAccess>(access_file, true),
+                 new sequence<OSMRestriction>(complex_restriction_from_file, true),
+                 new sequence<OSMRestriction>(complex_restriction_to_file, true), nullptr);
 
   // Parse relations.
   LOG_INFO("Parsing relations...");
@@ -1861,17 +1893,43 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
     complex_restrictions_to.sort(
         [](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
   }
-
-  // we need to sort the refs so that we can easily (sequentially) update them
-  // during node processing, we use memory mapping here because otherwise we aren't
-  // using much mem, the scoping makes sure to let it go when done sorting
-  LOG_INFO("Sorting osm way node references by node id...");
-  {
-    sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-    way_nodes.sort(
-        [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid_ < b.node.osmid_; });
-  }
   LOG_INFO("Finished");
+  // Return OSM data
+  return osmdata;
+}
+
+OSMData PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
+                              const std::vector<std::string>& input_files,
+                              const std::string& ways_file,
+                              const std::string& way_nodes_file,
+                              const std::string& access_file,
+                              const std::string& complex_restriction_from_file,
+                              const std::string& complex_restriction_to_file,
+                              const std::string& bss_nodes_file) {
+  // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
+  // option 2: synchronize around adding things to a single osmdata. will have to test to see
+  // which is the least expensive (memory and speed). leaning towards option 2
+  unsigned int threads =
+      std::max(static_cast<unsigned int>(1),
+               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+
+  // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
+  OSMData osmdata{};
+  graph_callback callback(pt, osmdata);
+
+  LOG_INFO("Parsing files for nodes: " + boost::algorithm::join(input_files, ", "));
+
+  // hold open all the files so that if something else (like diff application)
+  // needs to mess with them we wont have troubles with inodes changing underneath us
+  std::list<std::ifstream> file_handles;
+  for (const auto& input_file : input_files) {
+    file_handles.emplace_back(input_file, std::ios::binary);
+    if (!file_handles.back().is_open()) {
+      throw std::runtime_error("Unable to open: " + input_file);
+    }
+  }
+
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // Parse node in all the input files. Skip any that are not marked from
   // being used in a way.
