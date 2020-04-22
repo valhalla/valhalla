@@ -356,15 +356,19 @@ void parse_locations(const rapidjson::Document& doc,
         location->mutable_ll()->set_lat(*lat);
         location->mutable_ll()->set_lng(*lon);
 
+        // trace attributes does not support legs or breaks at discontinuities
         auto stop_type_json = rapidjson::get_optional<std::string>(r_loc, "/type");
-        if (stop_type_json) {
+        if (options.action() == Options::trace_attributes) {
+          location->set_type(valhalla::Location::kVia);
+        } // other actions let you specify whatever type of stop you want
+        else if (stop_type_json) {
           if (*stop_type_json == std::string("through"))
             location->set_type(valhalla::Location::kThrough);
           else if (*stop_type_json == std::string("via"))
             location->set_type(valhalla::Location::kVia);
           else if (*stop_type_json == std::string("break_through"))
             location->set_type(valhalla::Location::kBreakThrough);
-        } // for map matching the default type is a through
+        } // and if you didnt set it it defaulted to break which is not the default for trace_route
         else if (options.action() == Options::trace_route) {
           location->set_type(valhalla::Location::kVia);
         }
