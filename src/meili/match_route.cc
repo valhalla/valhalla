@@ -80,11 +80,6 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
 
   for (auto prev_segment = segment_begin, segment = std::next(segment_begin); segment != segment_end;
        prev_segment = segment, segment++) {
-    //    std::cout << graphreader.encoded_edge_shape(prev_segment->edgeid) << " " <<
-    //    prev_segment->target
-    //              << " " << graphreader.encoded_edge_shape(segment->edgeid) << " " <<
-    //              segment->source
-    //              << std::endl;
 
     // Successive segments must be adjacent and no loop absolutely!
     if (prev_segment->edgeid == segment->edgeid) {
@@ -237,10 +232,6 @@ void cut_segments(const std::vector<MatchResult>& match_results,
     const MatchResult& curr_match = match_results[curr_idx];
     const MatchResult& prev_match = match_results[prev_idx];
 
-    std::cout << "prev edgeid: " << prev_match.edgeid << " " << prev_match.distance_along
-              << ", and curr edgeid: " << curr_match.edgeid << " " << curr_match.distance_along
-              << std::endl;
-
     // skip if we do not need to cut
     if (!curr_match.is_break_point && curr_idx != last_idx) {
       continue;
@@ -302,17 +293,6 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       // get the route between the two states by walking edge labels backwards
       // then reverse merge the segments together which are on the same edge so we have a
       // minimum number of segments. in this case we could at minimum end up with 1 segment
-
-      std::cout << "construct route: "
-                << "  prev match on edge: " << reader.encoded_edge_shape(prev_match->edgeid) << " "
-                << "  curr prev match on edge: " << reader.encoded_edge_shape(match.edgeid)
-                << std::endl;
-
-      //      std::cout << "prev state id time: " << prev_state.stateid().time()
-      //                << ", id: " << prev_state.stateid().id() << "candidate: " << std::endl;
-      //      std::cout << "curr state id time: " << state.stateid().time()
-      //                << ", id: " << state.stateid().id() << ", candidate: " << std::endl;
-
       segments.clear();
       if (!MergeRoute(prev_state, state, segments) && !route.empty()) {
         route.back().discontinuity = true;
@@ -321,20 +301,15 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
         continue;
       }
 
-      //      std::cout << " before cut " << std::endl;
-      //      for (const auto& edge : segments)
-      //        std::cout << reader.encoded_edge_shape(edge.edgeid) << std::endl;
-
+      // we need to cut segments where a match result is marked as a break
       new_segments.clear();
       cut_segments(match_results, prev_idx, curr_idx, segments, new_segments);
 
-      //      std::cout << " after cut " << std::endl;
-      //      for (const auto& edge : new_segments)
-      //        std::cout << reader.encoded_edge_shape(edge.edgeid) << std::endl;
-
+      // have to merge route's last segment and segments' first segment together if its not a
+      // discontinuity or a break
       if (!prev_match->is_break_point && !route.empty() && !route.back().discontinuity &&
           route.back().edgeid == new_segments.front().edgeid) {
-        // have to merge route's last segment and segments' first segment together
+
         EdgeSegment& first_half = route.back();
         EdgeSegment& second_half = new_segments.front();
 
@@ -357,14 +332,8 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
         route.pop_back();
       }
 
-      for (const auto& segment : new_segments) {
-        assert(segment.source <= segment.target);
-      }
-
-      // TODO remove: the code is pretty mature we dont need this check its wasted cpu
-      if (!ValidateRoute(mapmatcher.graphreader(), new_segments.begin(), new_segments.end(), tile)) {
-        throw std::runtime_error("Found invalid route");
-      }
+      // debug builds check that the route is valid
+      assert(ValidateRoute(mapmatcher.graphreader(), new_segments.begin(), new_segments.end(), tile));
 
       // from this match to the last match we may be on the same edge, we call merge here
       // instead of just appending this vector to the end of the route vector because
@@ -376,9 +345,6 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
     prev_match = &match;
     prev_idx = curr_idx;
   }
-
-  //  for (const auto& edge : route)
-  //    std::cout << edge << std::endl;
 
   return route;
 }

@@ -13,6 +13,7 @@
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/meili/map_matcher_factory.h>
+#include <valhalla/meili/match_result.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 #include <valhalla/sif/costfactory.h>
@@ -21,7 +22,6 @@
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/bidirectional_astar.h>
 #include <valhalla/thor/isochrone.h>
-#include <valhalla/thor/match_result.h>
 #include <valhalla/thor/multimodal.h>
 #include <valhalla/thor/timedep.h>
 #include <valhalla/thor/triplegbuilder.h>

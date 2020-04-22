@@ -227,8 +227,6 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
       paths.back().first.reserve(num_segments);
       paths.back().second.reserve(num_segments);
 
-      //      std::cout << "accumated: " << accumulated_elapsed.secs << ", elapsed: " << elapsed.secs
-      //                << std::endl;
       accumulated_elapsed += elapsed;
       elapsed = {};
     }
@@ -247,15 +245,11 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     if (elapsed.secs > 0) {
       transition_cost = costing->TransitionCost(directededge, nodeinfo, pred);
       elapsed += transition_cost;
-      //      std::cout << "prev edgeid " << pred.edgeid() << " , curr edgeid " << edge_id
-      //                << ", adding turn cost: " << transition_cost.secs
-      //                << ", elpased time: " << elapsed.secs << std::endl;
     }
 
     // Get time along the edge, handling partial distance along the first and last edge.
     elapsed += costing->EdgeCost(directededge, tile, second_of_week) *
                (edge_segment.target - edge_segment.source);
-    // std::cout << "elapsed after accumulateion: " << elapsed.secs << std::endl;
 
     if (use_timestamps) {
       // Use timestamps to update elapsed time. Use the timestamp at the interpolation
@@ -289,13 +283,6 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     const GraphTile* end_tile = matcher->graphreader().GetGraphTile(prior_node);
     nodeinfo = end_tile->node(prior_node);
   }
-
-  //  for (const auto& path : paths) {
-  //    for (const auto& edge : path.first) {
-  //      std::cout << edge.edgeid << "  elapsed : " << edge.elapsed_time << ", turn cost "
-  //                << edge.turn_cost << std::endl;
-  //    }
-  //  }
 
   return paths;
 }

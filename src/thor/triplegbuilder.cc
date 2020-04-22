@@ -12,13 +12,13 @@
 #include "baldr/graphconstants.h"
 #include "baldr/signinfo.h"
 #include "baldr/tilehierarchy.h"
+#include "meili/match_result.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "sif/costconstants.h"
 #include "thor/attributes_controller.h"
-#include "thor/match_result.h"
 #include "thor/triplegbuilder.h"
 
 #include <valhalla/proto/tripcommon.pb.h>

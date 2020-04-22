@@ -4,7 +4,6 @@
 #include "baldr/json.h"
 #include "odin/enhancedtrippath.h"
 #include "thor/attributes_controller.h"
-#include "thor/match_result.h"
 #include "tyr/serializers.h"
 
 using namespace valhalla;
