@@ -22,7 +22,7 @@
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/distanceapproximator.h"
@@ -256,7 +256,7 @@ void validate(
   // Our local copy of edges binned to tiles that they pass through (dont start or end in)
   tweeners_t tweeners;
   // Local Graphreader
-  GraphReader graph_reader(pt.get_child("mjolnir"));
+  DiskGraphReader graph_reader(pt.get_child("mjolnir"));
   // Get some things we need throughout
   auto numLevels = TileHierarchy::levels().size() + 1; // To account for transit
   auto transit_level = TileHierarchy::levels().rbegin()->second.level + 1;
@@ -293,7 +293,7 @@ void validate(
     auto tileid = tile_id.tileid();
 
     // Get the tile
-    GraphTileBuilder tilebuilder(graph_reader.tile_dir(), tile_id, false);
+    GraphTileBuilder tilebuilder(graph_reader.GetTileDir(), tile_id, false);
 
     // Update nodes and directed edges as needed
     std::vector<NodeInfo> nodes;
@@ -469,8 +469,8 @@ void validate(
 
     // Write the bins to it
     if (tile->header()->graphid().level() == TileHierarchy::levels().rbegin()->first) {
-      auto reloaded = GraphTile(graph_reader.tile_dir(), tile_id);
-      GraphTileBuilder::AddBins(graph_reader.tile_dir(), &reloaded, bins);
+      auto reloaded = GraphTile(graph_reader.GetTileDir(), tile_id);
+      GraphTileBuilder::AddBins(graph_reader.GetTileDir(), &reloaded, bins);
     }
 
     // Check if we need to clear the tile cache
@@ -552,7 +552,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
 
   // Create a randomized queue of tiles (at all levels) to work from
   std::deque<GraphId> tilequeue;
-  GraphReader reader(pt.get_child("mjolnir"));
+  DiskGraphReader reader(pt.get_child("mjolnir"));
   auto tileset = reader.GetTileSet();
   for (const auto& id : tileset) {
     tilequeue.emplace_back(id);

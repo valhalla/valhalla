@@ -1,6 +1,6 @@
 #include <string>
 
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/tilehierarchy.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
@@ -30,7 +30,7 @@ MapMatcherFactory::MapMatcherFactory(const boost::property_tree::ptree& root,
     : config_(root.get_child("meili")), graphreader_(graph_reader),
       max_grid_cache_size_(root.get<float>("meili.grid.cache_size")) {
   if (!graphreader_)
-    graphreader_.reset(new baldr::GraphReader(root.get_child("mjolnir")));
+    graphreader_.reset(new baldr::DiskGraphReader(root.get_child("mjolnir")));
   candidatequery_.reset(
       new CandidateGridQuery(*graphreader_, local_tile_size() / root.get<size_t>("meili.grid.size"),
                              local_tile_size() / root.get<size_t>("meili.grid.size")));

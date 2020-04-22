@@ -148,7 +148,7 @@ void try_path(GraphReader& reader,
 TEST(TimeDepPaths, test_depart_at_paths) {
   // Test setup
   loki_worker_t loki_worker(config);
-  GraphReader reader(config.get_child("mjolnir"));
+  DiskGraphReader reader(config.get_child("mjolnir"));
 
   // Simple path along oneway edge in the driveable direction - should return a single edge
   const auto test_request1 = R"({"locations":[{"lat":52.079079,"lon":5.115197},
@@ -165,7 +165,7 @@ TEST(TimeDepPaths, test_depart_at_paths) {
 TEST(TimeDepPaths, test_arrive_by_paths) {
   // Test setup
   loki_worker_t loki_worker(config);
-  GraphReader reader(config.get_child("mjolnir"));
+  DiskGraphReader reader(config.get_child("mjolnir"));
 
   // Simple path along oneway edge in the driveable direction - should return a single edge
   const auto test_request1 = R"({"locations":[{"lat":52.079079,"lon":5.115197},

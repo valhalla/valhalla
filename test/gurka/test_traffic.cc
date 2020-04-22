@@ -2,7 +2,7 @@
 #include "microtar.h"
 #include <gtest/gtest.h>
 
-#include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/diskgraphreader.h>
 #include <valhalla/baldr/traffictile.h>
 
 #include <boost/property_tree/ptree.hpp>
@@ -53,7 +53,7 @@ TEST(Traffic, BasicUpdates) {
     auto tar_open_result = mtar_open(&tar, traffic_extract.c_str(), "w");
     ASSERT_EQ(tar_open_result, MTAR_ESUCCESS);
 
-    baldr::GraphReader reader(map.config.get_child("mjolnir"));
+    baldr::DiskGraphReader reader(map.config.get_child("mjolnir"));
 
     auto tile_ids = reader.GetTileSet();
     // Traffic data works like this:
@@ -125,7 +125,7 @@ TEST(Traffic, BasicUpdates) {
       tar.close = [](mtar_t* tar) -> int { return MTAR_ESUCCESS; };
 
       // Read every speed tile, and update it with fixed speed of 25km/h (original speeds are 10km/h)
-      baldr::GraphReader reader(map.config.get_child("mjolnir"));
+      baldr::DiskGraphReader reader(map.config.get_child("mjolnir"));
       mtar_header_t tar_header;
       while ((mtar_read_header(&tar, &tar_header)) != MTAR_ENULLRECORD) {
         baldr::traffic::Tile tile(reinterpret_cast<char*>(tar.stream) + tar.pos +

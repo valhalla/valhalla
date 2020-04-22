@@ -5,6 +5,7 @@
 #include "midgard/pointll.h"
 #include "worker.h"
 
+#include "baldr/diskgraphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include <algorithm>
 #include <atomic>
@@ -169,7 +170,7 @@ valhalla::sif::cost_ptr_t create_costing() {
 void work(const boost::property_tree::ptree& config, std::promise<results_t>& promise) {
   // lambda to do the current job
   auto costing = create_costing();
-  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+  valhalla::baldr::DiskGraphReader reader(config.get_child("mjolnir"));
   auto search = [&reader, &costing](const job_t& job) {
     // so that we dont benefit from cache coherency
     reader.Clear();

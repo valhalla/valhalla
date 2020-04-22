@@ -489,7 +489,7 @@ make_clean_graphreader(const boost::property_tree::ptree& pt) {
   struct ResettingGraphReader : valhalla::baldr::GraphReader {
     ResettingGraphReader(boost::property_tree::ptree pt) : GraphReader(pt) {
       // Reset the statically initialized tile_extract_ member variable
-      tile_extract_.reset(new valhalla::baldr::GraphReader::tile_extract_t(pt));
+      tile_extract_.reset(new valhalla::baldr::DiskGraphReader::tile_extract_t(pt));
     }
   };
   return std::make_shared<ResettingGraphReader>(pt);

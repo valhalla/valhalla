@@ -4,7 +4,7 @@
 #include <cstdint>
 
 #include "baldr/graphconstants.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -208,7 +208,7 @@ int main(int argc, char* argv[]) {
   valhalla::midgard::logging::Configure({{"type", "std_err"}, {"color", "true"}});
 
   // get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::DiskGraphReader reader(pt.get_child("mjolnir"));
 
   // keep the global number of edges encountered at the point we encounter each tile
   // this allows an edge to have a sequential global id and makes storing it very small

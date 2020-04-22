@@ -269,7 +269,7 @@ TEST(Matrix, test_matrix) {
   loki_worker.matrix(request);
   adjust_scores(*request.mutable_options());
 
-  GraphReader reader(config.get_child("mjolnir"));
+  DiskGraphReader reader(config.get_child("mjolnir"));
 
   cost_ptr_t costing = CreateSimpleCost(request.options());
 
@@ -311,7 +311,7 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
   loki_worker.matrix(request);
   adjust_scores(*request.mutable_options());
 
-  GraphReader reader(config.get_child("mjolnir"));
+  DiskGraphReader reader(config.get_child("mjolnir"));
 
   cost_ptr_t costing = CreateSimpleCost(request.options());
 

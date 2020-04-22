@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "baldr/diskgraphreader.h"
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
@@ -150,7 +151,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       min_resample(config.get<float>("service_limits.skadi.min_resample")) {
   // If we weren't provided with a graph reader make our own
   if (!reader)
-    reader.reset(new baldr::GraphReader(config.get_child("mjolnir")));
+    reader.reset(new baldr::DiskGraphReader(config.get_child("mjolnir")));
 
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;

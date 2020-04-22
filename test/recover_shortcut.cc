@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
@@ -62,7 +62,7 @@ boost::property_tree::ptree get_conf() {
 
 TEST(RecoverShortcut, test_recover_shortcut_edges) {
   auto conf = get_conf();
-  GraphReader graphreader(conf.get_child("mjolnir"));
+  DiskGraphReader graphreader(conf.get_child("mjolnir"));
 
   size_t total = 0;
   size_t bad = 0;

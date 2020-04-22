@@ -5,7 +5,7 @@
 #include <unordered_set>
 
 #include "baldr/connectivity_map.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/json.h"
 #include "baldr/tilehierarchy.h"
@@ -114,7 +114,7 @@ namespace valhalla {
 namespace baldr {
 connectivity_map_t::connectivity_map_t(const boost::property_tree::ptree& pt) {
   // See what kind of tiles we are dealing with here by getting a graphreader
-  GraphReader reader(pt);
+  DiskGraphReader reader(pt);
   auto tiles = reader.GetTileSet();
   transit_level = TileHierarchy::levels().rbegin()->second.level + 1;
 

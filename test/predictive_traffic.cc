@@ -6,7 +6,7 @@
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/nodeinfo.h"
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
@@ -37,7 +37,7 @@ const auto config = json_to_pt(R"({
 // TODO - add this back in when updated data is available!
 TEST(PredictiveTraffic, DISABLED_test_predictive_traffic) {
   boost::property_tree::ptree hierarchy_properties = config.get_child("mjolnir");
-  GraphReader reader(hierarchy_properties);
+  DiskGraphReader reader(hierarchy_properties);
 
   uint32_t count = 0;
   auto level = TileHierarchy::levels().rbegin();
@@ -74,7 +74,7 @@ TEST(PredictiveTraffic, DISABLED_test_predictive_traffic) {
 }
 
 TEST(PredictiveTraffic, test_get_speed) {
-  GraphReader reader(config.get_child("mjolnir"));
+  DiskGraphReader reader(config.get_child("mjolnir"));
 
   // fixture traffic tile 0/003/196.gph
   GraphId id("0/3196/0");

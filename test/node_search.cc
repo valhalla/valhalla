@@ -6,7 +6,7 @@
 #include <unordered_set>
 
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/location.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
@@ -333,7 +333,7 @@ TEST(Search, test_single_node) {
   boost::property_tree::ptree conf;
   rapidjson::read_json(json, conf);
 
-  vb::GraphReader reader(conf);
+  vb::DiskGraphReader reader(conf);
   // this should only find the node a 0,0
   vm::AABB2<vm::PointLL> box{{-0.0025, -0.0025}, {0.0025, 0.0025}};
 
@@ -349,7 +349,7 @@ TEST(Search, test_small_node_block) {
   boost::property_tree::ptree conf;
   rapidjson::read_json(json, conf);
 
-  vb::GraphReader reader(conf);
+  vb::DiskGraphReader reader(conf);
   // this should find the four nodes which form a square at the lower left of
   // the grid. note that the definition of AABB2::Contains would exclude nodes
   // which lie on the right or top boundaries.
@@ -367,7 +367,7 @@ TEST(Search, test_node_at_tile_boundary) {
   boost::property_tree::ptree conf;
   rapidjson::read_json(json, conf);
 
-  vb::GraphReader reader(conf);
+  vb::DiskGraphReader reader(conf);
   // this should find node which is at the tile boundary
   vm::AABB2<vm::PointLL> box{{0.0, 0.250}, {0.001, 0.253}};
 
@@ -405,7 +405,7 @@ TEST(Search, test_opposite_in_another_tile) {
   boost::property_tree::ptree conf;
   rapidjson::read_json(json, conf);
 
-  vb::GraphReader reader(conf);
+  vb::DiskGraphReader reader(conf);
   // this should find the four nodes which form a square at the lower left of
   // the grid. note that the definition of AABB2::Contains would exclude nodes
   // which lie on the right or top boundaries.

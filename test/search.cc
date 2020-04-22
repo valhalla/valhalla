@@ -6,7 +6,7 @@
 #include <unordered_set>
 
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/location.h"
 #include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
@@ -166,7 +166,7 @@ void make_tile() {
     // Verify tiles
     boost::property_tree::ptree conf;
     conf.put("tile_dir", tile_dir);
-    valhalla::baldr::GraphReader reader(conf);
+    valhalla::baldr::DiskGraphReader reader(conf);
     auto tile = reader.GetGraphTile(tile_id);
     ASSERT_EQ(tile->header()->directededgecount(), 10);
   }
@@ -186,7 +186,7 @@ void search(valhalla::baldr::Location location,
   // make the config file
   boost::property_tree::ptree conf;
   conf.put("tile_dir", tile_dir);
-  valhalla::baldr::GraphReader reader(conf);
+  valhalla::baldr::DiskGraphReader reader(conf);
 
   // send it to pbf and back just in case something is wrong with that conversion
   valhalla::Location pbf;
@@ -224,7 +224,7 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
   // make the config file
   boost::property_tree::ptree conf;
   conf.put("tile_dir", tile_dir);
-  valhalla::baldr::GraphReader reader(conf);
+  valhalla::baldr::DiskGraphReader reader(conf);
 
   // send it to pbf and back just in case something is wrong with that conversion
   valhalla::Location pbf;

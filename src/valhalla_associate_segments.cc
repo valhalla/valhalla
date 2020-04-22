@@ -192,7 +192,7 @@ private:
   vm::PointLL lookup_end_coord(const vb::GraphId& edge_id);
   vm::PointLL lookup_start_coord(const vb::GraphId& edge_id);
 
-  vb::GraphReader m_reader;
+  vb::DiskGraphReader m_reader;
   vs::TravelMode m_travel_mode;
   std::shared_ptr<vt::AStarPathAlgorithm> m_path_algo;
   std::shared_ptr<vs::DynamicCost> m_costing;
@@ -823,7 +823,7 @@ void edge_association::add_tile(const std::string& file_name) {
   }
 
   // Get a tile builder ready for this tile
-  m_tile_builder.reset(new vj::GraphTileBuilder(m_reader.tile_dir(), base_id, false));
+  m_tile_builder.reset(new vj::GraphTileBuilder(m_reader.GetTileDir(), base_id, false));
   m_tile_builder->InitializeTrafficSegments();
 
   // Match the segments in this OSMLR tile

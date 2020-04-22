@@ -16,7 +16,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include "baldr/datetime.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
@@ -574,8 +574,8 @@ void build(const std::string& transit_dir,
            std::unordered_set<GraphId>::const_iterator tile_end,
            std::promise<builder_stats>& results) {
   // GraphReader for local level and for transit level.
-  GraphReader reader_local_level(pt);
-  GraphReader reader_transit_level(pt);
+  DiskGraphReader reader_local_level(pt);
+  DiskGraphReader reader_transit_level(pt);
 
   // Iterate through the tiles in the queue and find any that include stops
   for (; tile_start != tile_end; ++tile_start) {
@@ -594,11 +594,11 @@ void build(const std::string& transit_dir,
     // a writeable instance (deserialize it so we can add to it)
     lock.lock();
     const GraphTile* local_tile = reader_local_level.GetGraphTile(tile_id);
-    GraphTileBuilder tilebuilder_local(reader_local_level.tile_dir(), tile_id, true);
+    GraphTileBuilder tilebuilder_local(reader_local_level.GetTileDir(), tile_id, true);
 
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level() + 1, tile_id.id());
     const GraphTile* transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
-    GraphTileBuilder tilebuilder_transit(reader_transit_level.tile_dir(), transit_tile_id, true);
+    GraphTileBuilder tilebuilder_transit(reader_transit_level.GetTileDir(), transit_tile_id, true);
 
     lock.unlock();
 
@@ -672,7 +672,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
 
   // Get a list of tiles that are on both level 2 (local) and level 3 (transit)
   transit_dir->push_back(filesystem::path::preferred_separator);
-  GraphReader reader(hierarchy_properties);
+  DiskGraphReader reader(hierarchy_properties);
   auto local_level = TileHierarchy::levels().rbegin()->first;
   if (filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) +
                                filesystem::path::preferred_separator)) {
@@ -685,7 +685,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
               (transit_file_itr->path().string().size() - 4)) {
         auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
         GraphId local_graph_id(graph_id.tileid(), graph_id.level() - 1, graph_id.id());
-        if (GraphReader::DoesTileExist(hierarchy_properties, local_graph_id)) {
+        if (DiskGraphReader::DoesTileExist(hierarchy_properties, local_graph_id)) {
           const GraphTile* tile = reader.GetGraphTile(local_graph_id);
           tiles.emplace(local_graph_id);
           const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") +

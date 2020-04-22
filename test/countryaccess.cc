@@ -15,7 +15,7 @@
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/tilehierarchy.h"
 
 #include "test.h"
@@ -78,9 +78,9 @@ void CountryAccess(const std::string& config_file) {
   rapidjson::read_json(config_file, conf);
 
   // setup and purge
-  GraphReader graph_reader(conf.get_child("mjolnir"));
+  DiskGraphReader graph_reader(conf.get_child("mjolnir"));
   for (const auto& level : TileHierarchy::levels()) {
-    auto level_dir = graph_reader.tile_dir() + "/" + std::to_string(level.first);
+    auto level_dir = graph_reader.GetTileDir() + "/" + std::to_string(level.first);
     if (boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
       boost::filesystem::remove_all(level_dir);
     }
@@ -109,7 +109,7 @@ void CountryAccess(const std::string& config_file) {
   GraphId id(820099, 2, 0);
   GraphTile t("test/data/amsterdam_tiles", id);
 
-  GraphTileBuilder tilebuilder(graph_reader.tile_dir(), id, true);
+  GraphTileBuilder tilebuilder(graph_reader.GetTileDir(), id, true);
 
   for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
     NodeInfo& nodeinfo = tilebuilder.node_builder(i);
@@ -180,8 +180,8 @@ void CountryAccess(const std::string& config_file) {
   GraphId id2(820099, 2, 0);
   GraphTile t2("test/data/amsterdam_tiles", id2);
 
-  GraphReader graph_reader2(conf.get_child("mjolnir"));
-  GraphTileBuilder tilebuilder2(graph_reader2.tile_dir(), id2, true);
+  DiskGraphReader graph_reader2(conf.get_child("mjolnir"));
+  GraphTileBuilder tilebuilder2(graph_reader2.GetTileDir(), id2, true);
 
   for (uint32_t i = 0; i < tilebuilder2.header()->nodecount(); i++) {
     NodeInfo& nodeinfo = tilebuilder2.node_builder(i);

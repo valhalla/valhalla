@@ -8,7 +8,7 @@
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
@@ -39,7 +39,7 @@ constexpr uint32_t kAllPedestrianAccess = (kPedestrianAccess | kWheelchairAccess
  * @param  include_bicycle  Include edge if bicycle access in either direction.
  * @param  include_pedestrian  Include edge if pedestrian or wheelchair access in either direction.
  */
-void FilterTiles(GraphReader& reader,
+void FilterTiles(DiskGraphReader& reader,
                  std::unordered_map<GraphId, GraphId>& old_to_new,
                  const bool include_driving,
                  const bool include_bicycle,
@@ -63,7 +63,7 @@ void FilterTiles(GraphReader& reader,
   auto local_tiles = reader.GetTileSet(TileHierarchy::levels().rbegin()->second.level);
   for (const auto& tile_id : local_tiles) {
     // Create a new tilebuilder - should copy header information
-    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
+    GraphTileBuilder tilebuilder(reader.GetTileDir(), tile_id, false);
     n_original_nodes += tilebuilder.header()->nodecount();
     n_original_edges += tilebuilder.header()->directededgecount();
 
@@ -200,7 +200,7 @@ void FilterTiles(GraphReader& reader,
     } else {
       // Remove the tile - all nodes and edges were filtered
       std::string file_location =
-          reader.tile_dir() + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
+          reader.GetTileDir() + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
       remove(file_location.c_str());
       LOG_INFO("Remove file: " + file_location + " all edges were filtered");
     }
@@ -221,7 +221,7 @@ void FilterTiles(GraphReader& reader,
  * @param  reader  Graph reader.
  * @param  old_to_new  Map of original node Ids to new nodes Ids (after filtering).
  */
-void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& old_to_new) {
+void UpdateEndNodes(DiskGraphReader& reader, std::unordered_map<GraphId, GraphId>& old_to_new) {
   LOG_INFO("Update end nodes of directed edges");
 
   int found = 0;
@@ -238,7 +238,7 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
     }
 
     // Create a new tilebuilder - should copy header information
-    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
+    GraphTileBuilder tilebuilder(reader.GetTileDir(), tile_id, false);
 
     // Copy nodes (they do not change)
     std::vector<NodeInfo> nodes;
@@ -311,7 +311,7 @@ void GraphFilter::Filter(const boost::property_tree::ptree& pt) {
   std::unordered_map<baldr::GraphId, baldr::GraphId> old_to_new;
 
   // Construct GraphReader
-  GraphReader reader(pt.get_child("mjolnir"));
+  DiskGraphReader reader(pt.get_child("mjolnir"));
 
   // Filter edges (and nodes) by access
   FilterTiles(reader, old_to_new, include_driving, include_bicycle, include_pedestrian);

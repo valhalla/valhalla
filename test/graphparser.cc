@@ -1,4 +1,4 @@
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/sequence.h"
 #include "mjolnir/bssbuilder.h"
@@ -646,7 +646,7 @@ TEST(GraphParser, TestImportBssNode) {
                             ways_file, way_nodes_file, access_file, from_restriction_file,
                             to_restriction_file, bss_nodes_file);
 
-  GraphReader reader(conf.get_child("mjolnir"));
+  DiskGraphReader reader(conf.get_child("mjolnir"));
 
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                       from_restriction_file, to_restriction_file);

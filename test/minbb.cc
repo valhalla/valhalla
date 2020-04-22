@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 
@@ -22,7 +22,7 @@ boost::property_tree::ptree get_conf(const std::string& tile_dir) {
 }
 
 struct bb_tester {
-  GraphReader reader;
+  DiskGraphReader reader;
   AABB2<PointLL> bb;
   bb_tester(const std::string& tile_dir) : reader(get_conf(tile_dir).get_child("mjolnir")) {
     // to get the bb of the whole data set we can just look at nodes of all tiles

@@ -30,7 +30,7 @@
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_factory.h"
@@ -861,7 +861,7 @@ void GetHeadings(GraphTileBuilder& tile, NodeInfo& nodeinfo, uint32_t ntrans) {
 // Is the next edge from the end node of the directededge is internal or not.
 bool IsNextEdgeInternal(const DirectedEdge directededge,
                         GraphTileBuilder& tilebuilder,
-                        GraphReader& reader,
+                        DiskGraphReader& reader,
                         std::mutex& lock,
                         bool infer_internal_intersections) {
   // Get the tile at the startnode
@@ -871,7 +871,7 @@ bool IsNextEdgeInternal(const DirectedEdge directededge,
   bool b_diff_tile = false;
   if (tile.id() != directededge.endnode().Tile_Base()) {
     lock.lock();
-    tile = GraphTileBuilder(reader.tile_dir(), directededge.endnode(), true, false);
+    tile = GraphTileBuilder(reader.GetTileDir(), directededge.endnode(), true, false);
     b_diff_tile = true;
     lock.unlock();
   }
@@ -1443,7 +1443,7 @@ void enhance(const boost::property_tree::ptree& pt,
       GetCountryAccess(admin_db_handle);
 
   // Local Graphreader
-  GraphReader reader(hierarchy_properties);
+  DiskGraphReader reader(hierarchy_properties);
 
   // Default speeds (kph) in urban areas per road class
   // (TODO - get from property tree)
@@ -1483,7 +1483,7 @@ void enhance(const boost::property_tree::ptree& pt,
     }
 
     // Tile builder - serialize in existing tile so we can add admin names
-    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, true, false);
+    GraphTileBuilder tilebuilder(reader.GetTileDir(), tile_id, true, false);
     lock.unlock();
 
     // this will be our updated list of restrictions.
@@ -1874,7 +1874,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   std::deque<GraphId> tempqueue;
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
   auto local_level = TileHierarchy::levels().rbegin()->second.level;
-  GraphReader reader(hierarchy_properties);
+  DiskGraphReader reader(hierarchy_properties);
   auto local_tiles = reader.GetTileSet(local_level);
   for (const auto& tile_id : local_tiles) {
     tempqueue.emplace_back(tile_id);

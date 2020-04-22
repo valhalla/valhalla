@@ -16,7 +16,7 @@
 
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
 
@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
   std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ways_edges;
 
   // Iterate through tiles at the local level
-  GraphReader reader(pt.get_child("mjolnir"));
+  DiskGraphReader reader(pt.get_child("mjolnir"));
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // If tile exists add it to the queue
     GraphId edge_id(id, local_level, 0);

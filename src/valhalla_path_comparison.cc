@@ -11,7 +11,7 @@
 #include "worker.h"
 
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
 #include "loki/search.h"
@@ -268,7 +268,7 @@ int main(int argc, char* argv[]) {
   rapidjson::read_json(config.c_str(), pt);
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::DiskGraphReader reader(pt.get_child("mjolnir"));
 
   // Construct costing
   CostFactory<DynamicCost> factory;
