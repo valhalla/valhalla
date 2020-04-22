@@ -380,9 +380,6 @@ MotorcycleCost::MotorcycleCost(const Costing costing, const Options& options)
     surface_factor_ = static_cast<uint32_t>(kMaxTrailBiasFactor * (f * f));
   }
 
-#ifdef GLIBCXX_DEBUG
-#error defined works
-#endif
   // Create speed cost table
   speedfactor_.resize(kMaxSpeedKph + 1, 0);
   speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
