@@ -1,10 +1,10 @@
 #ifndef VALHALLA_BALDR_GRAPHCONSTANTS_H_
 #define VALHALLA_BALDR_GRAPHCONSTANTS_H_
 
+#include <algorithm>
 #include <limits>
 #include <string>
 #include <unordered_map>
-#include <algorithm>
 
 namespace valhalla {
 namespace baldr {
