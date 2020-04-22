@@ -52,7 +52,7 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
   Api request;
   try {
     // Set the interrupt function
-    service_worker_t::set_interrupt(interrupt_function);
+    service_worker_t::set_interrupt(&interrupt_function);
 
     // crack open the in progress request
     request.ParseFromArray(job.front().data(), job.front().size());

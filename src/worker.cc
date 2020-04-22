@@ -1372,8 +1372,8 @@ service_worker_t::service_worker_t() : interrupt(nullptr) {
 }
 service_worker_t::~service_worker_t() {
 }
-void service_worker_t::set_interrupt(const std::function<void()>& interrupt_function) {
-  interrupt = &interrupt_function;
+void service_worker_t::set_interrupt(const std::function<void()>* interrupt_function) {
+  interrupt = interrupt_function;
 }
 
 } // namespace valhalla
