@@ -206,7 +206,6 @@ bool MergeRoute(const State& source, const State& target, std::vector<EdgeSegmen
   auto label = route_rbegin;
 
   // Skip the first dummy edge std::prev(route_rend)
-
   for (; std::next(label) != route_rend; label++) {
     segments.emplace_back(label->edgeid(), label->source(), label->target());
   }

@@ -524,7 +524,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
  * @param out_edge the output edgeid (used for timezone lookup)
  * @return out_dt  the time at the out_edge in local time after the offset is applied to the in_dt
  */
-std::string thor_worker_t::offset_date(baldr::GraphReader& reader,
+std::string thor_worker_t::offset_date(GraphReader& reader,
                                        const std::string& in_dt,
                                        const GraphId& in_edge,
                                        float offset,

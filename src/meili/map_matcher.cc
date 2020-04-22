@@ -687,7 +687,6 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     original_state_ids.reserve(state_ids.size());
     for (auto s_itr = state_ids.rbegin(); s_itr != state_ids.rend(); ++s_itr) {
       original_state_ids.push_back(ts_.GetOrigin(*s_itr, *s_itr));
-      const auto& s = original_state_ids.back();
     }
 
     // Verify that stateids are in correct order
