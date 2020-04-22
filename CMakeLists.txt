@@ -29,6 +29,7 @@ option(ENABLE_COMPILER_WARNINGS "Build with compiler warnings" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 option(ENABLE_TESTS "Enable Valhalla tests" ON)
 option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPILER_WARNINGS=ON to take effect" OFF)
+option(ENABLE_BENCHMARKS "Enable microbenchmarking" ON)
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
 
@@ -123,7 +124,7 @@ if(NOT TARGET CURL::CURL)
       find_package(CURL REQUIRED)
     endif()
     set_target_properties(CURL::CURL PROPERTIES
-      #INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}" 
+      #INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
       INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
       INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
     if(NOT WIN32)
@@ -319,6 +320,11 @@ install(FILES COPYING CHANGELOG.md
 
 if(ENABLE_TESTS)
   add_subdirectory(test)
+endif()
+
+# NOTE(mookerji): Windows CI seems to break on the gbench build, so shelve Win32 support for now.
+if(ENABLE_BENCHMARKS AND NOT WIN32)
+  add_subdirectory(bench)
 endif()
 
 ## Packaging via CPack
