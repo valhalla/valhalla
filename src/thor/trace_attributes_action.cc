@@ -7,12 +7,12 @@
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/json.h"
+#include "meili/match_result.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "thor/attributes_controller.h"
-#include "meili/match_result.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
