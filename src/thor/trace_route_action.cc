@@ -313,7 +313,24 @@ void thor_worker_t::build_trace(
   std::vector<PathInfo> path_edges;
   path_edges.reserve(edge_index);
   for (const auto& path : paths) {
-    path_edges.insert(path_edges.begin(), path.first.begin(), path.first.end());
+    bool merge_last_edge =
+        !path_edges.empty() && path_edges.back().edgeid == path.first.front().edgeid;
+    path_edges.insert(path_edges.end(), path.first.begin() + merge_last_edge, path.first.end());
+  }
+
+  std::cout << "PATH EDGES!!!!!!!!!!!" << std::endl;
+  for (const auto& pe : path_edges) {
+    std::cout << pe.edgeid << std::endl;
+  }
+
+  std::cout << "DISCONTINUITIES!!!!!!!!!!" << std::endl;
+  for (const auto& d : route_discontinuities) {
+    std::cout << d.first << ":" << std::endl
+              << "    {d:" << d.second.first.distance_along << ",e:" << d.second.first.exists
+              << ",p:[" << d.second.first.vertex.first << "," << d.second.first.vertex.second << "]}"
+              << "    {d:" << d.second.second.distance_along << ",e:" << d.second.second.exists
+              << ",p:[" << d.second.second.vertex.first << "," << d.second.second.vertex.second
+              << "]}" << std::endl;
   }
 
   // Form the trip path based on mode costing, origin, destination, and path edges

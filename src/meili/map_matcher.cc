@@ -262,8 +262,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     if (rbegin != rend && rbegin->edgeid().Is_Valid()) {
       prev_edge = rbegin->edgeid();
     }
-  } // we didnt have a previous state and we arent the first one means there was a discontinuity
-    // behind us
+  } // no previous state and we arent the first one means there was a discontinuity behind us
   else if (time > 0) {
     ends_discontinuity = true;
   }
@@ -277,9 +276,8 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
         next_edge = label->edgeid();
       }
     }
-  } // we don't have a state after us and we arent the last one means there is a discontinuity in
-    // front of us
-  else if (time > 0) {
+  } // no state after us and we arent the last one means there is a discontinuity in front of us
+  else if (time + 1 < stateids.size()) {
     begins_discontinuity = true;
   }
 
@@ -721,6 +719,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     original_state_ids.reserve(state_ids.size());
     for (auto s_itr = state_ids.rbegin(); s_itr != state_ids.rend(); ++s_itr) {
       original_state_ids.push_back(ts_.GetOrigin(*s_itr, *s_itr));
+      const auto& s = original_state_ids.back();
     }
 
     // Verify that stateids are in correct order
@@ -773,8 +772,8 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     // We'll keep it if we don't have a duplicate already
     auto found_path = std::find(best_paths.rbegin(), best_paths.rend(), match_results);
     if (found_path == best_paths.rend()) {
-      LOG_INFO("Result " + std::to_string(best_paths.size()) +
-               print_result(container_, original_state_ids));
+      LOG_DEBUG("Result " + std::to_string(best_paths.size()));
+      LOG_DEBUG(print_result(container_, original_state_ids));
       best_paths.emplace_back(std::move(match_results));
     }
 

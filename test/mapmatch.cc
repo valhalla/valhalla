@@ -228,119 +228,118 @@ std::string make_test_case(PointLL& start, PointLL& end) {
          std::to_string(end.first) + "}]}";
 }
 
-// TEST(Mapmatch, test_matcher) {
-//  // generate a bunch of tests
-//  tyr::actor_t actor(conf, true);
-//  int tested = 0;
-//  while (tested < bound) {
-//    // get a route shape
-//    PointLL start, end;
-//    auto test_case = make_test_case(start, end);
-//    std::cout << test_case << std::endl;
-//    boost::property_tree::ptree route;
-//    std::string route_json;
-//    try {
-//      route_json = actor.route(test_case);
-//      route = json_to_pt(route_json);
-//    } catch (...) {
-//      std::cout << "route failed" << std::endl;
-//      continue;
-//    }
-//    auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
-//    auto shape = midgard::decode<std::vector<midgard::PointLL>>(encoded_shape);
-//    // skip any routes that have loops in them as edge walk fails in that case...
-//    // TODO: fix edge walk
-//    std::unordered_set<std::string> names;
-//    bool looped = false;
-//    const auto& maneuvers = route.get_child("trip.legs").front().second.get_child("maneuvers");
-//    for (const auto& maneuver : maneuvers) {
-//      if (maneuver.second.find("street_names") == maneuver.second.not_found())
-//        continue;
-//      for (const auto& name : maneuver.second.get_child("street_names"))
-//        looped = looped || !names.insert(name.second.get_value<std::string>()).second;
-//    }
-//    // get the edges along that route shape
-//    boost::property_tree::ptree walked;
-//    std::string walked_json;
-//
-//    try {
-//      walked_json = actor.trace_attributes(
-//          R"({"date_time":{"type":1,"value":"2019-10-31T18:30"},"costing":"auto","shape_match":"edge_walk","encoded_polyline":")"
-//          + json_escape(encoded_shape) + "\"}");
-//      walked = json_to_pt(walked_json);
-//    } catch (...) {
-//      std::cout << test_case << std::endl;
-//      std::cout << R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" +
-//                       json_escape(encoded_shape) + "\"}"
-//                << std::endl;
-//      FAIL() << "Edge walk failed with exact shape";
-//    }
-//
-//    // check the shape makes sense
-//    auto walked_encoded_shape = walked.get<std::string>("shape");
-//    auto walked_shape = midgard::decode<std::vector<midgard::PointLL>>(walked_encoded_shape);
-//
-//    /*EXPECT_EQ(walked_shape.size() , shape.size())
-//      << "Differing shape lengths " + std::to_string(shape.size()) +
-//         " != " + std::to_string(walked_shape.size()) + "\n" + encoded_shape +
-//         "\n" + walked_encoded_shape;*/
-//
-//    // build up some gps segments for simulation from the real shape
-//    std::vector<uint64_t> walked_edges;
-//    std::vector<gps_segment_t> segments;
-//    for (const auto& edge : walked.get_child("edges")) {
-//      walked_edges.push_back(edge.second.get<uint64_t>("id"));
-//      auto b = edge.second.get<size_t>("begin_shape_index");
-//      auto e = edge.second.get<size_t>("end_shape_index") + 1;
-//
-//      segments.emplace_back(
-//          gps_segment_t{std::vector<PointLL>(walked_shape.cbegin() + b, walked_shape.cbegin() + e),
-//                        static_cast<float>(edge.second.get<float>("speed") * 1e3) / 3600.f});
-//    }
-//
-//    // simulate gps from the route shape
-//    std::vector<float> accuracies;
-//    auto simulation = simulate_gps(segments, accuracies, 50, 75.f, 1);
-//    auto locations = to_locations(simulation, accuracies, 1);
-//    // get a trace-attributes from the simulated gps
-//    auto matched = json_to_pt(actor.trace_attributes(
-//        R"({"costing":"auto","shape_match":"map_snap","shape":)" + locations + "}"));
-//
-//    std::vector<uint64_t> matched_edges;
-//    int idx = 0;
-//    for (const auto& edge : matched.get_child("edges"))
-//      matched_edges.push_back(edge.second.get<uint64_t>("id"));
-//
-//    // because of noise we can have off by 1 happen at the beginning or end so we trim to make sure
-//    auto walked_it = std::search(walked_edges.begin(), walked_edges.end(), matched_edges.begin() +
-//    1,
-//                                 matched_edges.end() - 1);
-//    if (walked_it == walked_edges.end()) {
-//      if (looped) {
-//        std::cout << "route had a possible loop" << std::endl;
-//        continue;
-//      }
-//      auto decoded_match = midgard::decode<std::vector<PointLL>>(matched.get<std::string>("shape"));
-//      std::string geojson =
-//          R"({"type":"FeatureCollection","features":[{"geometry":{"type":"LineString","coordinates":[)";
-//      geojson += print(shape);
-//      geojson +=
-//          R"(]},"type":"Feature","properties":{"stroke":"#00ff00","stroke-width":2}},{"geometry":{"type":"LineString","coordinates":[)";
-//      geojson += print(simulation);
-//      geojson +=
-//          R"(]},"type":"Feature","properties":{"stroke":"#0000ff","stroke-width":2}},{"geometry":{"type":"LineString","coordinates":[)";
-//      geojson += print(decoded_match);
-//      geojson +=
-//          R"(]},"type":"Feature","properties":{"stroke":"#ff0000","stroke-width":2}},{"geometry":{"type":"MultiPoint","coordinates":[)";
-//      geojson += print(std::vector<PointLL>{start, end});
-//      geojson += R"(]},"type":"Feature","properties":{}}]})";
-//      std::cout << geojson << std::endl;
-//      FAIL() << "The match did not match the walk";
-//    }
-//    std::cout << "Iteration " << tested << " complete" << std::endl;
-//    ++tested;
-//  }
-//}
+TEST(Mapmatch, test_matcher) {
+  // generate a bunch of tests
+  tyr::actor_t actor(conf, true);
+  int tested = 0;
+  while (tested < bound) {
+    // get a route shape
+    PointLL start, end;
+    auto test_case = make_test_case(start, end);
+    std::cout << test_case << std::endl;
+    boost::property_tree::ptree route;
+    std::string route_json;
+    try {
+      route_json = actor.route(test_case);
+      route = json_to_pt(route_json);
+    } catch (...) {
+      std::cout << "route failed" << std::endl;
+      continue;
+    }
+    auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
+    auto shape = midgard::decode<std::vector<midgard::PointLL>>(encoded_shape);
+    // skip any routes that have loops in them as edge walk fails in that case...
+    // TODO: fix edge walk
+    std::unordered_set<std::string> names;
+    bool looped = false;
+    const auto& maneuvers = route.get_child("trip.legs").front().second.get_child("maneuvers");
+    for (const auto& maneuver : maneuvers) {
+      if (maneuver.second.find("street_names") == maneuver.second.not_found())
+        continue;
+      for (const auto& name : maneuver.second.get_child("street_names"))
+        looped = looped || !names.insert(name.second.get_value<std::string>()).second;
+    }
+    // get the edges along that route shape
+    boost::property_tree::ptree walked;
+    std::string walked_json;
+
+    try {
+      walked_json = actor.trace_attributes(
+          R"({"date_time":{"type":1,"value":"2019-10-31T18:30"},"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" +
+          json_escape(encoded_shape) + "\"}");
+      walked = json_to_pt(walked_json);
+    } catch (...) {
+      std::cout << test_case << std::endl;
+      std::cout << R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" +
+                       json_escape(encoded_shape) + "\"}"
+                << std::endl;
+      FAIL() << "Edge walk failed with exact shape";
+    }
+
+    // check the shape makes sense
+    auto walked_encoded_shape = walked.get<std::string>("shape");
+    auto walked_shape = midgard::decode<std::vector<midgard::PointLL>>(walked_encoded_shape);
+
+    /*EXPECT_EQ(walked_shape.size() , shape.size())
+      << "Differing shape lengths " + std::to_string(shape.size()) +
+         " != " + std::to_string(walked_shape.size()) + "\n" + encoded_shape +
+         "\n" + walked_encoded_shape;*/
+
+    // build up some gps segments for simulation from the real shape
+    std::vector<uint64_t> walked_edges;
+    std::vector<gps_segment_t> segments;
+    for (const auto& edge : walked.get_child("edges")) {
+      walked_edges.push_back(edge.second.get<uint64_t>("id"));
+      auto b = edge.second.get<size_t>("begin_shape_index");
+      auto e = edge.second.get<size_t>("end_shape_index") + 1;
+
+      segments.emplace_back(
+          gps_segment_t{std::vector<PointLL>(walked_shape.cbegin() + b, walked_shape.cbegin() + e),
+                        static_cast<float>(edge.second.get<float>("speed") * 1e3) / 3600.f});
+    }
+
+    // simulate gps from the route shape
+    std::vector<float> accuracies;
+    auto simulation = simulate_gps(segments, accuracies, 50, 75.f, 1);
+    auto locations = to_locations(simulation, accuracies, 1);
+    // get a trace-attributes from the simulated gps
+    auto matched = json_to_pt(actor.trace_attributes(
+        R"({"costing":"auto","shape_match":"map_snap","shape":)" + locations + "}"));
+
+    std::vector<uint64_t> matched_edges;
+    int idx = 0;
+    for (const auto& edge : matched.get_child("edges"))
+      matched_edges.push_back(edge.second.get<uint64_t>("id"));
+
+    // because of noise we can have off by 1 happen at the beginning or end so we trim to make sure
+    auto walked_it = std::search(walked_edges.begin(), walked_edges.end(), matched_edges.begin() + 1,
+                                 matched_edges.end() - 1);
+    if (walked_it == walked_edges.end()) {
+      if (looped) {
+        std::cout << "route had a possible loop" << std::endl;
+        continue;
+      }
+      auto decoded_match = midgard::decode<std::vector<PointLL>>(matched.get<std::string>("shape"));
+      std::string geojson =
+          R"({"type":"FeatureCollection","features":[{"geometry":{"type":"LineString","coordinates":[)";
+      geojson += print(shape);
+      geojson +=
+          R"(]},"type":"Feature","properties":{"stroke":"#00ff00","stroke-width":2}},{"geometry":{"type":"LineString","coordinates":[)";
+      geojson += print(simulation);
+      geojson +=
+          R"(]},"type":"Feature","properties":{"stroke":"#0000ff","stroke-width":2}},{"geometry":{"type":"LineString","coordinates":[)";
+      geojson += print(decoded_match);
+      geojson +=
+          R"(]},"type":"Feature","properties":{"stroke":"#ff0000","stroke-width":2}},{"geometry":{"type":"MultiPoint","coordinates":[)";
+      geojson += print(std::vector<PointLL>{start, end});
+      geojson += R"(]},"type":"Feature","properties":{}}]})";
+      std::cout << geojson << std::endl;
+      FAIL() << "The match did not match the walk";
+    }
+    std::cout << "Iteration " << tested << " complete" << std::endl;
+    ++tested;
+  }
+}
 
 TEST(Mapmatch, test_distance_only) {
   tyr::actor_t actor(conf, true);
@@ -734,11 +733,13 @@ TEST(Mapmatch, test_topk_validate) {
 TEST(Mapmatch, test_topk_fork_alternate) {
   // tests a fork in the road
   tyr::actor_t actor(conf, true);
-  auto matched = json_to_pt(actor.trace_attributes(
+  auto json = actor.trace_attributes(
       R"({"trace_options":{"search_radius":0},"costing":"auto","best_paths":2,"shape_match":"map_snap","shape":[
           {"lat":52.08511,"lon":5.15085,"accuracy":10,"time":2},
           {"lat":52.08533,"lon":5.15109,"accuracy":20,"time":4},
-          {"lat":52.08539,"lon":5.15100,"accuracy":20,"time":6}]})"));
+          {"lat":52.08539,"lon":5.15100,"accuracy":20,"time":6}]})");
+  std::cout << json << std::endl;
+  auto matched = json_to_pt(json);
 
   /*** Primary path - left at the fork
     {"type":"FeatureCollection","features":[
@@ -1397,7 +1398,7 @@ TEST(Mapmatch, interpolation) {
 } // namespace
 
 int main(int argc, char* argv[]) {
-  midgard::logging::Configure({{"type", ""}}); // silence logs
+  // midgard::logging::Configure({{"type", ""}}); // silence logs
   if (argc > 1 && std::string(argv[1]).find("gtest") == std::string::npos) {
     if (argc > 1)
       seed = std::stoi(argv[1]);
