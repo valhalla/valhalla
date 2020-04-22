@@ -12,30 +12,33 @@
 namespace valhalla {
 namespace mjolnir {
 
-// NOTE - for now parse and build must be run at the same time!
 // Stages of the Valhalla tile building pipeline
 enum class BuildStage : int8_t {
   kInvalid = -1,
   kInitialize = 0,
-  kParse = 1,
-  kBuild = 2,
-  kEnhance = 3,
-  kFilter = 4,
-  kTransit = 5,
-  kBss = 6,
-  kHierarchy = 7,
-  kShortcuts = 8,
-  kRestrictions = 9,
-  kElevation = 10,
-  kValidate = 11,
-  kCleanup = 12
+  kParseWays = 1,
+  kParseRelations = 2,
+  kParseNodes = 3,
+  kBuild = 4,
+  kEnhance = 5,
+  kFilter = 6,
+  kTransit = 7,
+  kBss = 8,
+  kHierarchy = 9,
+  kShortcuts = 10,
+  kRestrictions = 11,
+  kElevation = 12,
+  kValidate = 13,
+  kCleanup = 14
 };
 
 // Convert string to BuildStage
 inline BuildStage string_to_buildstage(const std::string& s) {
   static const std::unordered_map<std::string, BuildStage> stringToBuildStage =
       {{"initialize", BuildStage::kInitialize},
-       {"parse", BuildStage::kParse},
+       {"parseways", BuildStage::kParseWays},
+       {"parserelations", BuildStage::kParseRelations},
+       {"parsenodes", BuildStage::kParseNodes},
        {"build", BuildStage::kBuild},
        {"enhance", BuildStage::kEnhance},
        {"filter", BuildStage::kFilter},
@@ -56,7 +59,9 @@ inline BuildStage string_to_buildstage(const std::string& s) {
 inline std::string to_string(BuildStage stg) {
   static const std::unordered_map<uint8_t, std::string> BuildStageStrings =
       {{static_cast<int8_t>(BuildStage::kInitialize), "initialize"},
-       {static_cast<int8_t>(BuildStage::kParse), "parse"},
+       {static_cast<int8_t>(BuildStage::kParseWays), "parseways"},
+       {static_cast<int8_t>(BuildStage::kParseRelations), "parserelations"},
+       {static_cast<int8_t>(BuildStage::kParseNodes), "parsenodes"},
        {static_cast<int8_t>(BuildStage::kBuild), "build"},
        {static_cast<int8_t>(BuildStage::kEnhance), "enhance"},
        {static_cast<int8_t>(BuildStage::kFilter), "filter"},

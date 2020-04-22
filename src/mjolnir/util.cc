@@ -192,12 +192,12 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   // OSMData class
   OSMData osm_data;
 
-  // Parse OSM data
-  if (start_stage <= BuildStage::kParse && BuildStage::kParse <= end_stage) {
+  // Parse the ways
+  if (start_stage <= BuildStage::kParseWays && BuildStage::kParseWays <= end_stage) {
     // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
     // relations are defined within the PBFParser class
     osm_data =
-        PBFGraphParser::Parse(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
+        PBFGraphParser::ParseWays(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
                               access_bin, cr_from_bin, cr_to_bin, bss_nodes_bin);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
@@ -205,7 +205,45 @@ bool build_tile_set(const boost::property_tree::ptree& config,
       OSMPBF::Parser::free();
     }
 
-    // Write the OSMData to files if parsing is the end stage
+    // Write the OSMData to files if enhancing is the end stage
+    if (end_stage <= BuildStage::kEnhance) {
+      osm_data.write_to_temp_files(tile_dir);
+    }
+  }
+
+  // Parse OSM data
+  if (start_stage <= BuildStage::kParseRelations && BuildStage::kParseRelations <= end_stage) {
+    // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
+    // relations are defined within the PBFParser class
+    osm_data =
+        PBFGraphParser::ParseRelations(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
+                              access_bin, cr_from_bin, cr_to_bin, bss_nodes_bin);
+
+    // Free all protobuf memory - cannot use the protobuffer lib after this!
+    if (release_osmpbf_memory) {
+      OSMPBF::Parser::free();
+    }
+
+    // Write the OSMData to files if enhancing is the end stage
+    if (end_stage <= BuildStage::kEnhance) {
+      osm_data.write_to_temp_files(tile_dir);
+    }
+  }
+
+  // Parse OSM data
+  if (start_stage <= BuildStage::kParseNodes && BuildStage::kParseNodes <= end_stage) {
+    // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
+    // relations are defined within the PBFParser class
+    osm_data =
+        PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
+                              access_bin, cr_from_bin, cr_to_bin, bss_nodes_bin);
+
+    // Free all protobuf memory - cannot use the protobuffer lib after this!
+    if (release_osmpbf_memory) {
+      OSMPBF::Parser::free();
+    }
+
+    // Write the OSMData to files if enhancing is the end stage
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
@@ -227,7 +265,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
   if (start_stage <= BuildStage::kEnhance && BuildStage::kEnhance <= end_stage) {
-    // Read OSMData names from file if building tiles is the first stage
+    // Read OSMData names from file if enhancing tiles is the first stage
     if (start_stage == BuildStage::kEnhance) {
       osm_data.read_from_unique_names_file(tile_dir);
     }
