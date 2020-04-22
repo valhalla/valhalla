@@ -520,6 +520,7 @@ uint32_t second_of_week(uint32_t epoch_time, const date::time_zone* time_zone) {
   // get the seconds of the week
   return day * midgard::kSecondsPerDay + since_midnight.count();
 }
+
 } // namespace DateTime
 } // namespace baldr
 } // namespace valhalla
