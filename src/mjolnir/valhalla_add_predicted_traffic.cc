@@ -1,4 +1,4 @@
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/predictedspeeds.h"
 #include "baldr/rapidjson_utils.h"
 #include "filesystem.h"
@@ -412,7 +412,7 @@ int main(int argc, char** argv) {
   if (!summary)
     return EXIT_SUCCESS;
 
-  GraphReader reader(pt.get_child("mjolnir"));
+  DiskGraphReader reader(pt.get_child("mjolnir"));
   // Iterate through the tiles
   int shortcuts_with_speed = 0;
   int non_dr_with_speed = 0;

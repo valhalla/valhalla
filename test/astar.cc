@@ -4,7 +4,7 @@
 #include <fstream>
 
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/location.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
@@ -521,7 +521,7 @@ TEST(Astar, TestTrivialPathNoUturns) {
   boost::property_tree::ptree conf;
   conf.put("tile_dir", "test/data/utrecht_tiles");
   // setup and purge
-  vb::GraphReader graph_reader(conf);
+  vb::DiskGraphReader graph_reader(conf);
 
   // Locations
   std::vector<valhalla::baldr::Location> locations;
@@ -570,7 +570,7 @@ TEST(Astar, TestTrivialPathNoUturns) {
 
 struct route_tester {
   route_tester(const boost::property_tree::ptree& _conf)
-      : conf(_conf), reader(new GraphReader(conf.get_child("mjolnir"))), loki_worker(conf, reader),
+      : conf(_conf), reader(new DiskGraphReader(conf.get_child("mjolnir"))), loki_worker(conf, reader),
         thor_worker(conf, reader), odin_worker(conf) {
   }
   Api test(const std::string& request_json) {
@@ -1646,7 +1646,7 @@ TEST(Astar, BiDirTrivial) {
   // Get access to tiles
   boost::property_tree::ptree conf;
   conf.put("tile_dir", "test/data/utrecht_tiles");
-  vb::GraphReader graph_reader(conf);
+  vb::DiskGraphReader graph_reader(conf);
 
   // Locations
   std::vector<valhalla::baldr::Location> locations;

@@ -3,62 +3,41 @@
 
 #include <cstdint>
 #include <memory>
-#include <mutex>
 #include <string>
-#include <unordered_map>
+#include <functional>
 
-#include <boost/property_tree/ptree.hpp>
-
-#include <valhalla/baldr/curler.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
-#include <valhalla/baldr/tilegetter.h>
 #include <valhalla/baldr/tilehierarchy.h>
 
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/sequence.h>
 
 namespace valhalla {
 namespace baldr {
 
-class TileCache;
-
 /**
  * Class that manages access to GraphTiles.
- * Uses TileCache to keep a cache of tiles.
  */
 class GraphReader {
 public:
-  /**
-   * Constructor using tiles as separate files.
-   * @param pt  Property tree listing the configuration for the tile storage
-   * @param tile_getter Object responsible for getting tiles by url. If nullptr default implementation
-   * is in use.
-   */
-  explicit GraphReader(const boost::property_tree::ptree& pt,
-                       std::unique_ptr<tile_getter_t>&& tile_getter = nullptr);
-  ~GraphReader();
+  virtual ~GraphReader() = default;
 
-  void SetInterrupt(const tile_getter_t::interrupt_t* interrupt) {
-    if (tile_getter_) {
-      tile_getter_->set_interrupt(interrupt);
-    }
-  }
+  using TileLoadInterrupt = std::function<void()>;
+  virtual void SetInterrupt(const TileLoadInterrupt* interrupt) = 0;
 
   /**
    * Test if tile exists
    * @param  graphid  GraphId of the tile to test (tile id and level).
    */
-  bool DoesTileExist(const GraphId& graphid) const;
-  static bool DoesTileExist(const boost::property_tree::ptree& pt, const GraphId& graphid);
+  virtual bool DoesTileExist(const GraphId& graphid) const = 0;
 
   /**
    * Get a pointer to a graph tile object given a GraphId.
    * @param graphid  the graphid of the tile
    * @return GraphTile* a pointer to the graph tile
    */
-  const GraphTile* GetGraphTile(const GraphId& graphid);
+  virtual const GraphTile* GetGraphTile(const GraphId& graphid) = 0;
 
   /**
    * Get a pointer to a graph tile object given a GraphId. This method also
@@ -99,27 +78,25 @@ public:
   /**
    * Clears the cache
    */
-  void Clear();
+  virtual void Clear() = 0;
 
   /**
    * Tries to ensure the cache footprint below allowed maximum
    * In some cases may even remove the entire cache.
    */
-  void Trim();
+  virtual void Trim() = 0;
 
   /**
    * Returns the maximum number of threads that can
    * use the reader concurrently without blocking
    */
-  size_t MaxConcurrentUsers() const {
-    return max_concurrent_users_;
-  }
+  virtual size_t MaxConcurrentUsers() const = 0;
 
   /**
    * Lets you know if the cache is too large
    * @return true if the cache is over committed with respect to the limit
    */
-  bool OverCommitted() const;
+  virtual bool OverCommitted() const = 0;
 
   /**
    * Convenience method to get an opposing directed edge.
@@ -414,22 +391,14 @@ public:
    *          and transit tiles.
    *
    */
-  std::unordered_set<GraphId> GetTileSet() const;
+  virtual std::unordered_set<GraphId> GetTileSet() const = 0;
 
   /**
    * Gets back a set of available tiles on the specified level
    * @param  level  Level to get tile set.
    * @return  returns the list of available tiles on this level
    */
-  std::unordered_set<GraphId> GetTileSet(const uint8_t level) const;
-
-  /**
-   * Returns the tile directory.
-   * @return  Returns the tile directory.
-   */
-  const std::string& tile_dir() const {
-    return tile_dir_;
-  }
+  virtual std::unordered_set<GraphId> GetTileSet(const uint8_t level) const = 0;
 
   /**
    * Given an input bounding box, the reader will query the tile set to find the minimum
@@ -440,33 +409,6 @@ public:
    * @param bb   the input bounding box which is used to find begin nodes of edges
    */
   midgard::AABB2<midgard::PointLL> GetMinimumBoundingBox(const midgard::AABB2<midgard::PointLL>& bb);
-
-protected:
-  // (Tar) extract of tiles - the contents are empty if not being used
-  struct tile_extract_t {
-    tile_extract_t(const boost::property_tree::ptree& pt);
-    // TODO: dont remove constness, and actually make graphtile read only?
-    std::unordered_map<uint64_t, std::pair<char*, size_t>> tiles;
-    std::unordered_map<uint64_t, std::pair<char*, size_t>> traffic_tiles;
-    std::shared_ptr<midgard::tar> archive;
-    std::shared_ptr<midgard::tar> traffic_archive;
-  };
-  std::shared_ptr<const tile_extract_t> tile_extract_;
-  static std::shared_ptr<const GraphReader::tile_extract_t>
-  get_extract_instance(const boost::property_tree::ptree& pt);
-
-  // Information about where the tiles are kept
-  const std::string tile_dir_;
-
-  // Stuff for getting at remote tiles
-  std::unique_ptr<tile_getter_t> tile_getter_;
-  const size_t max_concurrent_users_;
-  const std::string tile_url_;
-
-  std::mutex _404s_lock;
-  std::unordered_set<GraphId> _404s;
-
-  std::unique_ptr<TileCache> cache_;
 };
 
 } // namespace baldr

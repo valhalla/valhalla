@@ -1,3 +1,4 @@
+#include "baldr/diskgraphreader.h"
 #include "tyr/actor.h"
 #include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
@@ -15,7 +16,7 @@ namespace tyr {
 
 struct actor_t::pimpl_t {
   pimpl_t(const boost::property_tree::ptree& config)
-      : reader(new baldr::GraphReader(config.get_child("mjolnir"))), loki_worker(config, reader),
+      : reader(new baldr::DiskGraphReader(config.get_child("mjolnir"))), loki_worker(config, reader),
         thor_worker(config, reader), odin_worker(config) {
   }
   pimpl_t(const boost::property_tree::ptree& config, baldr::GraphReader& graph_reader)

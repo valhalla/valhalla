@@ -1,7 +1,7 @@
 #include <cstdint>
 
 #include "baldr/connectivity_map.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/tilehierarchy.h"
 
 #include <boost/filesystem.hpp>
@@ -24,7 +24,7 @@ public:
 TEST(SimpleCache, QueryByPointOutOfRangeLL) {
   boost::property_tree::ptree pt;
   pt.put("tile_dir", "test/gphrdr_test");
-  GraphReader reader(pt);
+  DiskGraphReader reader(pt);
 
   // Latitude out of range
   EXPECT_TRUE(reader.GetGraphTile({60.0f, 100.0f}) == nullptr)

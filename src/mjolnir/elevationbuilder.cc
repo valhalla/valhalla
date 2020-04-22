@@ -9,7 +9,7 @@
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
@@ -43,7 +43,7 @@ void add_elevation(const boost::property_tree::ptree& pt,
                    const std::unique_ptr<const valhalla::skadi::sample>& sample,
                    std::promise<uint32_t>& result) {
   // Local Graphreader
-  GraphReader graphreader(pt.get_child("mjolnir"));
+  DiskGraphReader graphreader(pt.get_child("mjolnir"));
 
   // We usually end up accessing the same shape twice (once for each direction along an edge).
   // Use a cache to record elevation attributes based on the EdgeInfo offset. This includes
@@ -64,7 +64,7 @@ void add_elevation(const boost::property_tree::ptree& pt,
     lock.unlock();
 
     // Get the tile. Serialize the entire tile?
-    GraphTileBuilder tilebuilder(graphreader.tile_dir(), tile_id, true);
+    GraphTileBuilder tilebuilder(graphreader.GetTileDir(), tile_id, true);
 
     // Set the has_elevation flag. TODO - do we need to know if any elevation is actually
     // retrieved/used?
@@ -184,7 +184,7 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt) {
 
   // Create a randomized queue of tiles (at all levels) to work from
   std::deque<GraphId> tilequeue;
-  GraphReader reader(pt.get_child("mjolnir"));
+  DiskGraphReader reader(pt.get_child("mjolnir"));
   auto tileset = reader.GetTileSet();
   for (const auto& id : tileset) {
     tilequeue.emplace_back(id);

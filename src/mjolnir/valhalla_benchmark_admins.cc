@@ -32,7 +32,7 @@
 #include "baldr/admininfo.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/aabb2.h"
@@ -195,7 +195,7 @@ void Benchmark(const boost::property_tree::ptree& pt) {
 
   // Graphreader
   auto hierarchy_properties = pt.get_child("mjolnir");
-  GraphReader reader(hierarchy_properties);
+  DiskGraphReader reader(hierarchy_properties);
   auto local_level = TileHierarchy::levels().rbegin()->second.level;
   auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
 
@@ -205,7 +205,7 @@ void Benchmark(const boost::property_tree::ptree& pt) {
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // Get the admin polys if there is data for tiles that exist
     GraphId tile_id(id, local_level, 0);
-    if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
+    if (DiskGraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
       polys = GetAdminInfo(db_handle, drive_on_right, tiles.TileBounds(id));
       LOG_INFO("polys: " + std::to_string(polys.size()));
       if (polys.size() < 128) {

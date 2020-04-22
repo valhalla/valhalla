@@ -1,6 +1,6 @@
 #include "test.h"
 
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "loki/reach.h"
 #include "midgard/encoded.h"
@@ -78,7 +78,7 @@ GraphId begin_node(GraphReader& reader, const DirectedEdge* edge) {
 TEST(Reach, check_all_reach) {
   // get tile access
   auto conf = get_conf();
-  GraphReader reader(conf.get_child("mjolnir"));
+  DiskGraphReader reader(conf.get_child("mjolnir"));
 
   auto costing = create_costing();
   Reach reach_finder;

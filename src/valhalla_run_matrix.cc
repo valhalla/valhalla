@@ -12,7 +12,7 @@
 
 #include "config.h"
 
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/pathlocation.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::DiskGraphReader reader(pt.get_child("mjolnir"));
 
   // Construct costing
   CostFactory<DynamicCost> factory;

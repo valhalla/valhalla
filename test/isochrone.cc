@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
 #include "thor/worker.h"
@@ -90,7 +90,7 @@ TEST(Isochronies, Basic) {
   // Test setup
   loki_worker_t loki_worker(config);
   thor_worker_t thor_worker(config);
-  GraphReader reader(config.get_child("mjolnir"));
+  DiskGraphReader reader(config.get_child("mjolnir"));
 
 // Test auto isochrone with one contour
 // 32bit builds fail in release mode we'll look at this separately
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
   if (argc > 1) {
     loki_worker_t loki_worker(config);
     thor_worker_t thor_worker(config);
-    GraphReader reader(config.get_child("mjolnir"));
+    DiskGraphReader reader(config.get_child("mjolnir"));
     Api request;
     ParseApi(argv[1], Options::isochrone, request);
     loki_worker.isochrones(request);

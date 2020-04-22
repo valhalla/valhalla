@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "baldr/connectivity_map.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
 #include "loki/search.h"
@@ -579,7 +579,7 @@ int main(int argc, char* argv[]) {
     d1 += locations[i].latlng_.Distance(locations[i + 1].latlng_) * kKmPerMeter;
   }
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::DiskGraphReader reader(pt.get_child("mjolnir"));
 
   // Get the maximum distance for time dependent routes
   float max_timedep_distance =

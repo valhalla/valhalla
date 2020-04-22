@@ -15,7 +15,7 @@
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
@@ -552,7 +552,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
 }
 
 // Form shortcuts for tiles in this level.
-uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
+uint32_t FormShortcuts(DiskGraphReader& reader, const TileLevel& level) {
   // Iterate through the tiles at this level (TODO - can we mark the tiles
   // the tiles that shortcuts end within?)
   reader.Clear();
@@ -570,7 +570,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
 
     // Create GraphTileBuilder for the new tile
     GraphId new_tile(tileid, tile_level, 0);
-    GraphTileBuilder tilebuilder(reader.tile_dir(), new_tile, false);
+    GraphTileBuilder tilebuilder(reader.GetTileDir(), new_tile, false);
 
     // Since the old tile is not serialized we must copy any data that is not
     // dependent on edge Id into the new builders (e.g., node transitions)
@@ -719,7 +719,7 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
   // in one thread at a time
 
   // Get GraphReader
-  GraphReader reader(pt.get_child("mjolnir"));
+  DiskGraphReader reader(pt.get_child("mjolnir"));
 
   auto level = TileHierarchy::levels().rbegin();
   level++;

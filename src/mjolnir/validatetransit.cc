@@ -16,7 +16,7 @@
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
@@ -172,7 +172,7 @@ void validate(const boost::property_tree::ptree& pt,
               std::promise<validate_stats>& results) {
 
   uint32_t failure_count = 0;
-  GraphReader reader_transit_level(pt);
+  DiskGraphReader reader_transit_level(pt);
 
   std::unordered_multimap<std::string, std::string> passed_tests;
   std::unordered_multimap<std::string, std::string> failed_tests;
@@ -188,7 +188,7 @@ void validate(const boost::property_tree::ptree& pt,
     lock.lock();
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level() + 1, tile_id.id());
     const GraphTile* transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
-    GraphTileBuilder tilebuilder(reader_transit_level.tile_dir(), transit_tile_id, true);
+    GraphTileBuilder tilebuilder(reader_transit_level.GetTileDir(), transit_tile_id, true);
     lock.unlock();
 
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
@@ -479,7 +479,7 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
     }
     // Also bail if nothing inside
     transit_dir->push_back(filesystem::path::preferred_separator);
-    GraphReader reader(hierarchy_properties);
+    DiskGraphReader reader(hierarchy_properties);
     auto local_level = TileHierarchy::levels().rbegin()->first;
     if (boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) +
                                         filesystem::path::preferred_separator)) {

@@ -1,4 +1,4 @@
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "midgard/encoded.h"
 #include "midgard/util.h"
 #include "thor/triplegbuilder.h"
@@ -33,7 +33,7 @@ TEST(Trimming, routes) {
                                {{"mjlonir.timezone", "/path/to/timezone.sqlite"}});
 
   // grab start and end edges that we want to use for a route
-  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  baldr::DiskGraphReader reader(map.config.get_child("mjolnir"));
   baldr::GraphId start_id, end_id;
   const baldr::DirectedEdge *start_edge, *end_edge;
   std::tie(start_id, start_edge, std::ignore, std::ignore) =

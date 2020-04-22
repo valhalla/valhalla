@@ -19,7 +19,7 @@
 #include <boost/range/algorithm.hpp>
 
 #include "baldr/datetime.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
@@ -203,7 +203,6 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
                                const GraphTile& tile,
                                std::mutex& lock,
                                std::vector<OSMConnectionEdge> new_connections) {
-  // GraphTileBuilder tilebuilder_local(reader.tile_dir(), tile.header()->graphid(), true);
   auto local_level = TileHierarchy::levels().rbegin()->first;
 
   auto scoped_finally = make_finally([&tilebuilder_local, &tile, &lock]() {
@@ -415,7 +414,7 @@ void build(const boost::property_tree::ptree& pt,
            bss_by_tile_t::const_iterator tile_start,
            bss_by_tile_t::const_iterator tile_end) {
 
-  GraphReader reader_local_level(pt);
+  DiskGraphReader reader_local_level(pt);
   for (; tile_start != tile_end; ++tile_start) {
 
     const GraphTile* local_tile = nullptr;
@@ -425,7 +424,7 @@ void build(const boost::property_tree::ptree& pt,
 
       auto tile_id = tile_start->first;
       local_tile = reader_local_level.GetGraphTile(tile_id);
-      tilebuilder_local.reset(new GraphTileBuilder{reader_local_level.tile_dir(), tile_id, true});
+      tilebuilder_local.reset(new GraphTileBuilder{reader_local_level.GetTileDir(), tile_id, true});
     }
 
     auto new_connections = project(*local_tile, tile_start->second);
@@ -460,7 +459,7 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt, const std::string&
   // bss_by_tile_t bss_by_tile;
   bss_by_tile_t bss_by_tile;
 
-  GraphReader reader(pt.get_child("mjolnir"));
+  DiskGraphReader reader(pt.get_child("mjolnir"));
   auto local_level = TileHierarchy::levels().rbegin()->first;
   // Group the nodes by their tiles. In the next step, we will work on each tile only once
   for (const auto& node : osm_nodes) {

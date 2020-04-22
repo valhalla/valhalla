@@ -33,7 +33,7 @@ std::vector<PointLL> get_land_tiles(const boost::property_tree::ptree& pt) {
   std::set<int> land_tile_ids;
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
   auto local_level = TileHierarchy::levels().rbegin()->second.level;
-  GraphReader reader(hierarchy_properties);
+  DiskGraphReader reader(hierarchy_properties);
   auto local_tile_ids = reader.GetTileSet(local_level);
   for (const auto& tile_id : local_tile_ids) {
     // Convert the local tile to a 1 degree tile ID. Add to the set.

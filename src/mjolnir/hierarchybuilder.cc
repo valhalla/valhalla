@@ -15,7 +15,7 @@
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
@@ -123,7 +123,7 @@ bool OpposingEdgeInfoMatches(const GraphTile* tile, const DirectedEdge* edge) {
 }
 
 // Form tiles in the new level.
-void FormTilesInNewLevel(GraphReader& reader,
+void FormTilesInNewLevel(DiskGraphReader& reader,
                          const std::string& new_to_old_file,
                          const std::string& old_to_new_file) {
   // Use the sequence that associate new nodes to old nodes
@@ -179,7 +179,7 @@ void FormTilesInNewLevel(GraphReader& reader,
 
       // New tilebuilder for the next tile. Update current level.
       tile_id = nodea.Tile_Base();
-      tilebuilder = new GraphTileBuilder(reader.tile_dir(), tile_id, false);
+      tilebuilder = new GraphTileBuilder(reader.GetTileDir(), tile_id, false);
       current_level = nodea.level();
 
       // Set the base ll for this tile
@@ -493,7 +493,7 @@ void CreateNodeAssociations(GraphReader& reader,
 /**
  * Update end nodes of transit connection directed edges.
  */
-void UpdateTransitConnections(GraphReader& reader, const std::string& old_to_new_file) {
+void UpdateTransitConnections(DiskGraphReader& reader, const std::string& old_to_new_file) {
   // Use the sorted sequence that associates old nodes to new nodes
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
 
@@ -508,7 +508,7 @@ void UpdateTransitConnections(GraphReader& reader, const std::string& old_to_new
     }
 
     // Create a new tile builder
-    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
+    GraphTileBuilder tilebuilder(reader.GetTileDir(), tile_id, false);
 
     // Update end nodes of transit connection directed edges
     std::vector<NodeInfo> nodes;
@@ -592,7 +592,7 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt,
 
   // Construct GraphReader
   LOG_INFO("HierarchyBuilder");
-  GraphReader reader(pt.get_child("mjolnir"));
+  DiskGraphReader reader(pt.get_child("mjolnir"));
 
   // Association of old nodes to new nodes
   CreateNodeAssociations(reader, new_to_old_file, old_to_new_file);
@@ -606,7 +606,7 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt,
 
   // Remove any base tiles that no longer have any data (nodes and edges
   // only exist on arterial and highway levels)
-  RemoveUnusedLocalTiles(reader.tile_dir(), old_to_new_file);
+  RemoveUnusedLocalTiles(reader.GetTileDir(), old_to_new_file);
 
   // Update the end nodes to all transit connections in the transit hierarchy
   auto hierarchy_properties = pt.get_child("mjolnir");

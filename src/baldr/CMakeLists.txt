@@ -40,6 +40,7 @@ set(sources
     curler.cc
     datetime.cc
     directededge.cc
+    diskgraphreader.cc
     edgeinfo.cc
     graphid.cc
     graphreader.cc

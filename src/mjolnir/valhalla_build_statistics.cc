@@ -21,7 +21,7 @@
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/aabb2.h"
@@ -375,7 +375,7 @@ void build(const boost::property_tree::ptree& pt,
   // Our local class for gathering the stats
   statistics stats;
   // Local Graphreader
-  GraphReader graph_reader(pt.get_child("mjolnir"));
+  DiskGraphReader graph_reader(pt.get_child("mjolnir"));
 
   // Check for more tiles
   while (true) {
@@ -517,7 +517,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
     for (uint32_t id = 0; id < tiles.TileCount(); id++) {
       // If tile exists add it to the queue
       GraphId tile_id(id, level, 0);
-      if (GraphReader::DoesTileExist(tile_properties, tile_id)) {
+      if (DiskGraphReader::DoesTileExist(tile_properties, tile_id)) {
         tilequeue.emplace_back(std::move(tile_id));
       }
     }
@@ -528,7 +528,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
       for (uint32_t id = 0; id < tiles.TileCount(); id++) {
         // If tile exists add it to the queue
         GraphId tile_id(id, level, 0);
-        if (GraphReader::DoesTileExist(tile_properties, tile_id)) {
+        if (DiskGraphReader::DoesTileExist(tile_properties, tile_id)) {
           tilequeue.emplace_back(std::move(tile_id));
         }
       }

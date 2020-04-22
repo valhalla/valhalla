@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
 #include "odin/worker.h"
@@ -61,7 +61,7 @@ boost::property_tree::ptree get_conf() {
 
 struct route_tester {
   route_tester()
-      : conf(get_conf()), reader(new GraphReader(conf.get_child("mjolnir"))),
+      : conf(get_conf()), reader(new DiskGraphReader(conf.get_child("mjolnir"))),
         loki_worker(conf, reader), thor_worker(conf, reader), odin_worker(conf) {
   }
   Api test(const std::string& request_json) {

@@ -1,4 +1,4 @@
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "filesystem.h"
 
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
 
   valhalla::midgard::AABB2<valhalla::midgard::PointLL> bb{{result[0], result[1]},
                                                           {result[2], result[3]}};
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::DiskGraphReader reader(pt.get_child("mjolnir"));
   bb = reader.GetMinimumBoundingBox(bb);
 
   std::cout << std::fixed << std::setprecision(6) << bb.minx() << "," << bb.miny() << "," << bb.maxx()

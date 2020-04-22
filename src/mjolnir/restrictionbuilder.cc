@@ -14,7 +14,7 @@
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include "baldr/diskgraphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
 #include "baldr/timedomain.h"
@@ -244,7 +244,7 @@ void build(const std::string& complex_restriction_from_file,
   sequence<OSMRestriction> complex_restrictions_from(complex_restriction_from_file, false);
   sequence<OSMRestriction> complex_restrictions_to(complex_restriction_to_file, false);
 
-  GraphReader reader(hierarchy_properties);
+  DiskGraphReader reader(hierarchy_properties);
   DataQuality stats;
 
   // Iterate through the tiles in the queue and perform enhancements
@@ -269,7 +269,7 @@ void build(const std::string& complex_restriction_from_file,
     }
 
     // Tile builder - serialize in existing tile
-    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, true);
+    GraphTileBuilder tilebuilder(reader.GetTileDir(), tile_id, true);
     lock.unlock();
 
     std::unordered_multimap<GraphId, ComplexRestrictionBuilder> forward_tmp_cr;
@@ -605,7 +605,7 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
                                const std::string& complex_to_restrictions_file) {
 
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
-  GraphReader reader(hierarchy_properties);
+  DiskGraphReader reader(hierarchy_properties);
   auto level = TileHierarchy::levels().rbegin();
   for (; level != TileHierarchy::levels().rend(); ++level) {
     // Create a randomized queue of tiles to work from
