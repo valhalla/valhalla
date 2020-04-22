@@ -734,7 +734,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   // Elevation service options
   options.set_range(rapidjson::get(doc, "/range", false));
-  const uint32_t MAX_HEIGHT_PRECISION = 2;
+  constexpr uint32_t MAX_HEIGHT_PRECISION = 2;
   auto height_precision = rapidjson::get_optional<unsigned int>(doc, "/height_precision");
   if (height_precision && *height_precision <= MAX_HEIGHT_PRECISION) {
     options.set_height_precision(*height_precision);
