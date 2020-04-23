@@ -49,9 +49,49 @@ public:
   virtual ~graph_callback() {
   }
 
-  graph_callback(const boost::property_tree::ptree& pt, OSMData& osmdata)
+  graph_callback(const boost::property_tree::ptree& pt, OSMData& osmdata, bool read_data = false)
       : shape_(kMaxOSMNodeId), intersection_(kMaxOSMNodeId), osmdata_(osmdata), lua_(get_lua(pt)) {
 
+    if (read_data) {
+      std::cout << intersection_.max() << std::endl;
+
+      std::ifstream file("intersections.txt", std::ios::in | std::ios::binary);
+      if (!file.is_open()) {
+        return;
+      }
+
+      // Read the count and then the via ids
+      uint64_t count = 0;
+      file.read(reinterpret_cast<char*>(&count), sizeof(uint64_t));
+      std::vector<uint64_t> bm(count);
+      file.read(reinterpret_cast<char*>(bm.data()), count * sizeof(uint64_t));
+      file.close();
+
+      intersection_.set_bitmarkers(bm);
+
+      std::cout << bm.size() << std::endl;
+
+    }
+
+    if (read_data) {
+
+      std::ifstream file("shape.txt", std::ios::in | std::ios::binary);
+      if (!file.is_open()) {
+        return;
+      }
+
+      // Read the count and then the via ids
+      uint64_t count = 0;
+      file.read(reinterpret_cast<char*>(&count), sizeof(uint64_t));
+      std::vector<uint64_t> bm(count);
+      file.read(reinterpret_cast<char*>(bm.data()), count * sizeof(uint64_t));
+      file.close();
+
+      shape_.set_bitmarkers(bm);
+
+      std::cout << bm.size() << std::endl;
+
+    }
     current_way_node_index_ = last_node_ = last_way_ = last_relation_ = 0;
 
     highway_cutoff_rc_ = RoadClass::kPrimary;
@@ -1700,6 +1740,53 @@ public:
     loops_.shrink_to_fit();
   }
 
+
+  void output_idtable() {
+    /*std::ofstream intersections_file;
+
+    std::cout << intersection_.max() << std::endl;
+
+    std::vector<uint64_t> bitmarkers = intersection_.get_bitmarkers();
+
+    std::cout << (int)bitmarkers.size() << std::endl;
+
+
+    intersections_file.open("intersections.txt", std::ofstream::out | std::ofstream::trunc | std::ios::binary);
+    intersections_file.write((const char*)&bitmarkers, sizeof(bitmarkers));
+    intersections_file.close();*/
+
+    // Open file and truncate
+    // Open file and truncate
+    std::ofstream intersections("intersections.txt", std::ios::out | std::ios::binary | std::ios::trunc);
+    if (!intersections.is_open()) {
+      return;
+    }
+    std::vector<uint64_t> intersections_markers = intersection_.get_bitmarkers();
+
+    std::cout << intersections_markers.size() << std::endl;
+
+    // Write the count and then the via ids
+    uint64_t sz = intersections_markers.size();
+    intersections.write(reinterpret_cast<const char*>(&sz), sizeof(uint64_t));
+    intersections.write(reinterpret_cast<const char*>(intersections_markers.data()), intersections_markers.size() * sizeof(uint64_t));
+    intersections.close();
+
+    std::ofstream shape("shape.txt", std::ios::out | std::ios::binary | std::ios::trunc);
+    if (!shape.is_open()) {
+      return;
+    }
+    std::vector<uint64_t> shape_markers = shape_.get_bitmarkers();
+
+    std::cout << shape_markers.size() << std::endl;
+
+    // Write the count and then the via ids
+    sz = shape_markers.size();
+    shape.write(reinterpret_cast<const char*>(&sz), sizeof(uint64_t));
+    shape.write(reinterpret_cast<const char*>(shape_markers.data()), shape_markers.size() * sizeof(uint64_t));
+    shape.close();
+
+  }
+
   // Configuration option to include driveways
   bool include_driveways_;
 
@@ -1795,8 +1882,7 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   callback.reset(new sequence<OSMWay>(ways_file, true),
                  new sequence<OSMWayNode>(way_nodes_file, true),
                  new sequence<OSMAccess>(access_file, true),
-                 new sequence<OSMRestriction>(complex_restriction_from_file, true),
-                 new sequence<OSMRestriction>(complex_restriction_to_file, true), nullptr);
+                 nullptr,nullptr, nullptr);
   // Parse the ways and find all node Ids needed (those that are part of a
   // way's node list. Iterate through each pbf input file.
   LOG_INFO("Parsing ways...");
@@ -1809,6 +1895,7 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
                           callback);
   }
   callback.output_loops();
+  callback.output_idtable();
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
            std::to_string(osmdata.osm_way_node_count) + " nodes");
 
@@ -1818,7 +1905,6 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
     sequence<OSMAccess> access(access_file, false);
     access.sort([](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); });
   }
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   LOG_INFO("Finished");
 
@@ -1826,14 +1912,15 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   return osmdata;
 }
 
-OSMData PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
+void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
                               const std::vector<std::string>& input_files,
                               const std::string& ways_file,
                               const std::string& way_nodes_file,
                               const std::string& access_file,
                               const std::string& complex_restriction_from_file,
                               const std::string& complex_restriction_to_file,
-                              const std::string& bss_nodes_file) {
+                              const std::string& bss_nodes_file,
+                              OSMData& osmdata) {
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
@@ -1841,8 +1928,7 @@ OSMData PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
       std::max(static_cast<unsigned int>(1),
                pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
-  // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
-  OSMData osmdata{};
+    // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   graph_callback callback(pt, osmdata);
 
   LOG_INFO("Parsing files for relations: " + boost::algorithm::join(input_files, ", "));
@@ -1857,9 +1943,7 @@ OSMData PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
     }
   }
 
-  callback.reset(new sequence<OSMWay>(ways_file, true),
-                 new sequence<OSMWayNode>(way_nodes_file, true),
-                 new sequence<OSMAccess>(access_file, true),
+  callback.reset(nullptr, nullptr, nullptr,
                  new sequence<OSMRestriction>(complex_restriction_from_file, true),
                  new sequence<OSMRestriction>(complex_restriction_to_file, true), nullptr);
 
@@ -1876,7 +1960,6 @@ OSMData PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
   LOG_INFO("Finished with " + std::to_string(osmdata.restrictions.size()) + " simple restrictions");
   LOG_INFO("Finished with " + std::to_string(osmdata.lane_connectivity_map.size()) +
            " lane connections");
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // Sort complex restrictions. Keep this scoped so the file handles are closed when done sorting.
   LOG_INFO("Sorting complex restrictions by from id...");
@@ -1894,18 +1977,17 @@ OSMData PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
         [](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
   }
   LOG_INFO("Finished");
-  // Return OSM data
-  return osmdata;
 }
 
-OSMData PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
+void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
                               const std::vector<std::string>& input_files,
                               const std::string& ways_file,
                               const std::string& way_nodes_file,
                               const std::string& access_file,
                               const std::string& complex_restriction_from_file,
                               const std::string& complex_restriction_to_file,
-                              const std::string& bss_nodes_file) {
+                              const std::string& bss_nodes_file,
+                              OSMData& osmdata) {
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
@@ -1914,8 +1996,7 @@ OSMData PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
                pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
-  OSMData osmdata{};
-  graph_callback callback(pt, osmdata);
+  graph_callback callback(pt, osmdata, true);
 
   LOG_INFO("Parsing files for nodes: " + boost::algorithm::join(input_files, ", "));
 
@@ -1929,7 +2010,15 @@ OSMData PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
     }
   }
 
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  // we need to sort the refs so that we can easily (sequentially) update them
+  // during node processing, we use memory mapping here because otherwise we aren't
+  // using much mem, the scoping makes sure to let it go when done sorting
+  LOG_INFO("Sorting osm way node references by node id...");
+  {
+    sequence<OSMWayNode> way_nodes(way_nodes_file, false);
+    way_nodes.sort(
+        [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid_ < b.node.osmid_; });
+  }
 
   // Parse node in all the input files. Skip any that are not marked from
   // being used in a way.
@@ -1983,9 +2072,6 @@ OSMData PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   LOG_INFO("Number of reverse way refs = " + std::to_string(osmdata.way_ref_rev.size()));
   LOG_INFO("Unique Node Strings (names, refs, etc.) = " + std::to_string(osmdata.node_names.Size()));
   LOG_INFO("Unique Strings (names, refs, etc.) = " + std::to_string(osmdata.name_offset_map.Size()));
-
-  // Return OSM data
-  return osmdata;
 }
 
 } // namespace mjolnir

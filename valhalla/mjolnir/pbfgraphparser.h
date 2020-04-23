@@ -49,14 +49,15 @@ public:
    * @param  complex_restriction_to_file    where to store the to complex restrictions so they are not
    * in memory
    */
-  static OSMData ParseRelations(const boost::property_tree::ptree& pt,
+  static void  ParseRelations(const boost::property_tree::ptree& pt,
                        const std::vector<std::string>& input_files,
                        const std::string& ways_file,
                        const std::string& way_nodes_file,
                        const std::string& access_file,
                        const std::string& complex_restriction_from_file,
                        const std::string& complex_restriction_to_file,
-                       const std::string& bss_nodes_file);
+                       const std::string& bss_nodes_file,
+                       OSMData& osmdata);
 
   /**
    * Loads given input files
@@ -70,14 +71,15 @@ public:
    * @param  complex_restriction_to_file    where to store the to complex restrictions so they are not
    * in memory
    */
-  static OSMData ParseNodes(const boost::property_tree::ptree& pt,
+  static void  ParseNodes(const boost::property_tree::ptree& pt,
                        const std::vector<std::string>& input_files,
                        const std::string& ways_file,
                        const std::string& way_nodes_file,
                        const std::string& access_file,
                        const std::string& complex_restriction_from_file,
                        const std::string& complex_restriction_to_file,
-                       const std::string& bss_nodes_file);
+                       const std::string& bss_nodes_file,
+                       OSMData& osmdata);
 
 };
 
