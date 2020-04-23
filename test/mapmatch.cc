@@ -1247,19 +1247,19 @@ TEST(Mapmatch, test_intersection_matching) {
   std::vector<std::string> test_cases = {
       R"({"shape":[
           {"lat": 52.0981267, "lon": 5.1296180, "type": "break", "node_snap_tolerance": 0},
-          {"lat": 52.0981280, "lon": 5.1297250, "type": "break", "node_snap_tolerance":0}],
+          {"lat": 52.0981280, "lon": 5.1297250, "type": "break", "node_snap_tolerance": 0}],
           "costing":"auto","shape_match":"map_snap"})",
       R"({"shape":[
-          {"lat": 52.0981346, "lon": 5.1300437, "type": "break", node_snap_tolerance": 5},
-          {"lat": 52.098124999999996, "lon": 5.130946, "type": "break", "node_snap_tolerance": 5},
+          {"lat": 52.0981346, "lon": 5.1300437, "type": "break", "node_snap_tolerance": 5},
+          {"lat": 52.0981250, "lon": 5.1309460, "type": "break", "node_snap_tolerance": 5},
           {"lat": 52.0980642, "lon": 5.1314993, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.098087, "lon": 5.131504, "type": "break", "node_snap_tolerance": 5}],
+          {"lat": 52.0980870, "lon": 5.1315040, "type": "break", "node_snap_tolerance": 5}],
           "costing":"auto","shape_match":"map_snap"})",
       R"({"shape":[
           {"lat": 52.0951641, "lon": 5.1285609, "type": "break", "node_snap_tolerance": 5},
           {"lat": 52.0952055, "lon": 5.1292756, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.095252, "lon": 5.130135, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.095294, "lon": 5.130906, "type": "break", "node_snap_tolerance": 5},
+          {"lat": 52.0952520, "lon": 5.1301350, "type": "break", "node_snap_tolerance": 5},
+          {"lat": 52.0952940, "lon": 5.1309060, "type": "break", "node_snap_tolerance": 5},
           {"lat": 52.0944788, "lon": 5.1304066, "type": "break", "node_snap_tolerance": 5}],
           "costing":"auto","shape_match":"map_snap"})"};
 
@@ -1322,7 +1322,7 @@ TEST(Mapmatch, interpolation) {
 } // namespace
 
 int main(int argc, char* argv[]) {
-  // midgard::logging::Configure({{"type", ""}}); // silence logs
+  midgard::logging::Configure({{"type", ""}}); // silence logs
   if (argc > 1 && std::string(argv[1]).find("gtest") == std::string::npos) {
     if (argc > 1)
       seed = std::stoi(argv[1]);
