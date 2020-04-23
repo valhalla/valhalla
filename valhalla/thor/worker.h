@@ -45,14 +45,14 @@ public:
   virtual prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job,
                                                 void* request_info,
                                                 const std::function<void()>& interrupt) override;
+#endif
+  virtual void cleanup() override;
 
   static std::string offset_date(baldr::GraphReader& reader,
                                  const std::string& in_dt,
                                  const baldr::GraphId& in_edge,
                                  float offset,
                                  const baldr::GraphId& out_edge);
-#endif
-  virtual void cleanup() override;
 
   void route(Api& request);
   std::string matrix(Api& request);
@@ -76,11 +76,7 @@ protected:
                                           const Location& destination);
   void route_match(Api& request);
   std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>> map_match(Api& request);
-  void path_map_match(const std::vector<meili::MatchResult>& match_results,
-                      const std::vector<PathInfo>& path_edges,
-                      TripLeg& leg,
-                      std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
-                          route_discontinuities);
+
   void path_arrive_by(Api& api, const std::string& costing);
   void path_depart_at(Api& api, const std::string& costing);
 
