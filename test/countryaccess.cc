@@ -46,7 +46,7 @@ void write_config(const std::string& filename) {
     file << "{ \
       \"mjolnir\": { \
       \"concurrency\": 1, \
-       \"tile_dir\": \"test/data/parser_tiles/amsterdam_tiles\", \
+       \"tile_dir\": \"test/data/amsterdam_tiles\", \
         \"admin\": \"" VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite\", \
          \"timezone\": \"" VALHALLA_SOURCE_DIR "test/data/not_needed.sqlite\" \
       } \
