@@ -130,8 +130,10 @@ public:
           n.set_type(NodeType::kBikeShare);
           bss_nodes_->push_back(n);
           ++osmdata_.node_count;
+          return; // we are done.
         }
       }
+      return; // not found
     }
 
     // Check if it is in the list of nodes used by ways
@@ -1957,6 +1959,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
                                 const std::string& way_nodes_file,
                                 const std::string& intersections_file,
                                 const std::string& shapes_file,
+                                const std::string& bss_nodes_file,
                                 OSMData& osmdata) {
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
@@ -1979,6 +1982,19 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
       throw std::runtime_error("Unable to open: " + input_file);
     }
   }
+
+  if (pt.get<bool>("import_bike_share_stations", false)) {
+    LOG_INFO("Parsing bss nodes...");
+    for (auto& file_handle : file_handles) {
+      callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
+          callback.last_relation_ = 0;
+      callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
+                     new sequence<OSMNode>(bss_nodes_file, true));
+      OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
+                            callback);
+    }
+  }
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // we need to sort the refs so that we can easily (sequentially) update them
   // during node processing, we use memory mapping here because otherwise we aren't
