@@ -174,20 +174,14 @@ thor_worker_t::map_match(Api& request) {
   // Process each score/match result
   std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>> map_match_results;
   for (auto& result : topk_match_results) {
+    // There is no path so you're done
+    if (result.segments.empty()) {
+      throw std::exception{};
+    }
+
     // Form the path edges based on the matched points and populate disconnected edges
     auto paths = MapMatcher::FormPath(matcher.get(), result.results, result.segments, mode_costing,
                                       mode, options);
-
-    std::vector<PathInfo> path_edges;
-    path_edges.reserve(result.segments.size());
-    for (const auto& path : paths)
-      for (const auto& edge : path.first)
-        path_edges.push_back(edge);
-
-    // If we want a route but there actually isnt a path, we cant give you one
-    if (path_edges.empty()) {
-      throw std::exception{};
-    }
 
     // TODO: revisit this, should we always do this? can it go into the functions below?
     // OSRM map matching format has both the match points and the route, fill out the match points

@@ -304,8 +304,9 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
 
       // trivial routes (both states are the same point) will have no path
       // this seems to be an optimization from routing.cc
-      if (segments.empty())
+      if (segments.empty()) {
         continue;
+      }
 
       // we need to cut segments where a match result is marked as a break
       new_segments.clear();
