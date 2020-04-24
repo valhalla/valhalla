@@ -520,6 +520,7 @@ boost::property_tree::ptree get_conf(const char* tiles) {
 TEST(Astar, TestTrivialPathNoUturns) {
   boost::property_tree::ptree conf;
   conf.put("tile_dir", "test/data/utrecht_tiles");
+  conf.put<unsigned long>("mjolnir.id_table_size", 1000);
   // setup and purge
   vb::GraphReader graph_reader(conf);
 
@@ -1646,7 +1647,7 @@ TEST(Astar, BiDirTrivial) {
   // Get access to tiles
   boost::property_tree::ptree conf;
   conf.put("tile_dir", "test/data/utrecht_tiles");
-  conf.put("id_table_size", 1000);
+  conf.put<unsigned long>("mjolnir.id_table_size", 1000);
   vb::GraphReader graph_reader(conf);
 
   // Locations
