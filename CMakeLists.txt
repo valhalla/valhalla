@@ -7,7 +7,7 @@
 # This is secondary build configuration provided for convenient development
 # on Windows and using CMake-enabled IDEs.
 #
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
 include(FindPkgConfig)
@@ -32,6 +32,7 @@ option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPI
 option(ENABLE_BENCHMARKS "Enable microbenchmarking" ON)
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -75,6 +76,18 @@ else()
   message(STATUS "Unrecognized build type - will use cmake defaults")
 endif()
 
+function(create_source_groups prefix)
+  foreach(file ${ARGN})
+    get_filename_component(file "${file}" ABSOLUTE)
+    string(FIND "${file}" "${PROJECT_BINARY_DIR}/" pos)
+    if(pos EQUAL 0)
+      source_group(TREE "${PROJECT_BINARY_DIR}/" PREFIX "Generated Files" FILES "${file}")
+    else()
+      source_group(TREE "${PROJECT_SOURCE_DIR}/" PREFIX "${prefix}" FILES "${file}")
+    endif()
+  endforeach()
+endfunction()
+
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
   find_program(CCACHE_FOUND ccache)
   if(CCACHE_FOUND)
@@ -111,6 +124,7 @@ if(ENABLE_COVERAGE)
     COMMAND ${GENHTML_PATH} --prefix ${CMAKE_CURRENT_BINARY_DIR} --output-directory coverage --title "Test Coverage" --legend --show-details coverage.info
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/coverage.info)
+  set_target_properties(coverage PROPERTIES FOLDER "Tests")
 endif()
 
 ## Dependencies
@@ -152,6 +166,7 @@ if(CMAKE_VERSION VERSION_LESS 3.9)
   if(NOT TARGET protobuf::libprotobuf-lite)
     add_library(protobuf::libprotobuf-lite UNKNOWN IMPORTED)
     set_target_properties(protobuf::libprotobuf-lite PROPERTIES
+      FOLDER "Dependencies"
       INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
 
     if(EXISTS "${PROTOBUF_LIBRARY}")
@@ -265,6 +280,8 @@ if(ENABLE_TOOLS)
   foreach(program ${valhalla_programs})
     get_source_path(path ${program})
     add_executable(${program} ${path})
+    set_target_properties(${program} PROPERTIES FOLDER "Tools")
+    create_source_groups("Source Files" ${path})
     target_link_libraries(${program} Boost::program_options valhalla Threads::Threads Boost::filesystem Boost::system)
     if(WIN32)
       target_link_libraries(${program} ${CURL_LIBRARIES})
@@ -277,6 +294,8 @@ if(ENABLE_DATA_TOOLS)
   foreach(program ${valhalla_data_tools})
     get_source_path(path ${program})
     add_executable(${program} ${path})
+    create_source_groups("Source Files" ${path})
+    set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
     target_link_libraries(${program} valhalla Boost::program_options Threads::Threads Boost::filesystem Boost::system)
     if(WIN32)
       target_link_libraries(${program} ${CURL_LIBRARIES})
@@ -296,6 +315,8 @@ endif()
 if(ENABLE_SERVICES)
   foreach(program ${valhalla_services})
     add_executable(${program} src/${program}.cc)
+    create_source_groups("Source Files" src/${program}.cc)
+    set_target_properties(${program} PROPERTIES FOLDER "Services")
     target_link_libraries(${program} valhalla Boost::program_options Threads::Threads)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
