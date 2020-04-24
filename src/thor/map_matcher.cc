@@ -154,6 +154,9 @@ uint32_t MapMatcher::compute_origin_epoch(const std::vector<meili::EdgeSegment>&
   return origin_epoch;
 }
 
+// We can return multiple paths from here. Any time a MatchResult (trace point) is marked as a
+// break point or break_through point we will make a new leg and hence a new vector of path infos
+// also whenever there is a discontinuity there will be a new vector of path infos created
 std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>
 MapMatcher::FormPath(meili::MapMatcher* matcher,
                      const std::vector<meili::MatchResult>& results,
