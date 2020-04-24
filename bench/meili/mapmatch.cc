@@ -3,8 +3,8 @@
 
 #include <benchmark/benchmark.h>
 #include <boost/property_tree/ptree.hpp>
-#include <rapidjson/rapidjson.h>
 
+#include "baldr/rapidjson_utils.h"
 #include "meili/map_matcher_factory.h"
 #include "meili/measurement.h"
 #include "sif/costconstants.h"
