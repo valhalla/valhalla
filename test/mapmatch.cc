@@ -375,11 +375,6 @@ TEST(Mapmatch, test_trace_route_breaks) {
     auto matched = json_to_pt(actor.trace_route(test_cases[i]));
     const auto& legs = matched.get_child("trip.legs");
     EXPECT_EQ(legs.size(), test_answers[i]);
-
-    for (const auto& leg : legs) {
-      auto decoded_match =
-          midgard::decode<std::vector<PointLL>>(leg.second.get<std::string>("shape"));
-    }
   }
 }
 

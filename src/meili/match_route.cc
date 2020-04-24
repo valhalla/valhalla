@@ -1,3 +1,4 @@
+#include <cassert>
 #include <vector>
 
 #include "meili/geometry_helpers.h"
@@ -243,6 +244,7 @@ void cut_segments(const std::vector<MatchResult>& match_results,
                                      [&curr_match](const EdgeSegment& segment) {
                                        return (segment.edgeid == curr_match.edgeid);
                                      });
+    assert(last_segment != segments.cend());
 
     // we need to close the previous edge
     size_t old_size = new_segments.size();
@@ -299,6 +301,11 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
         prev_match = &match;
         continue;
       }
+
+      // trivial routes (both states are the same point) will have no path
+      // this seems to be an optimization from routing.cc
+      if (segments.empty())
+        continue;
 
       // we need to cut segments where a match result is marked as a break
       new_segments.clear();
