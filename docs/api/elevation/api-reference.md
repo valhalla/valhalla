@@ -16,6 +16,13 @@ An elevation service request takes the form of `servername/height?json={}`, wher
 
 There is an option to name your elevation request. You can do this by appending the following to your request `&id=`.  The `id` is returned with the response so a user could match to the corresponding request.
 
+### Height Precision
+By default, all height values are returned as integer values. This works fine for most cases. However, using integer precision when charting elevation results along a nearly flat road can lead to "stair step" changes in elevation. Height data can be returned with 1 or 2 digits decimal precision by specifying `height_precision`. 
+
+| Height precision | Description |
+| :--------- | :----------- |
+| `height_precision` | Specifies the precision (number of decimal places) of all returned height values. Values of `0`, `1`, or `2` are admissable. Defaults to 0 (integer precision). Any other value will result in integer precision (0 decimal places).
+
 ### Use a shape list for input locations
 
 The elevation request run locally takes the form of `localhost:8002/height?json={}`, where the JSON inputs inside the `{}` are described below.
@@ -49,10 +56,11 @@ Without the `range`, the result looks something like this, with only a `height`:
 
 ### Use an encoded polyline for input locations
 
-The `encoded_polyline` parameter is a string of a polyline-encoded, with **six degrees of precision**, shape and has the following parameters. Details on polyline encoding and decoding can be found [here](../../decoding.md).
+The `encoded_polyline` parameter is a string of a polyline-encoded, with **the specified precision**, shape and has the following parameters. Details on polyline encoding and decoding can be found [here](../../decoding.md).
 
 | Encoded polyline parameters | Description |
 | :--------- | :----------- |
+| `shape_format` | `polyline6` or `polyline5`. Specifies whether the polyline is encoded with 6 digit precision (polyline6) or 5 digit precision (polyline5). If `shape_format` is not specified, the encoded polyline is expected to be 6 digit precision.
 | `encoded_polyline` | A set of encoded latitude, longitude pairs of a line or shape.|
 
 Here is an example of the JSON payload for an `encoded_polyline` POST request:
@@ -63,7 +71,7 @@ Here is an example of the JSON payload for an `encoded_polyline` POST request:
 
 ### Get height and distance with the range parameter
 
-The `range` parameter is a boolean value that controls whether or not the returned array is one-dimensional (height only) or two-dimensional (with a range and height). This can be used to generate a graph along a route, because a 2D-array has values for x (the range) and y (the height) at each shape point. Steepness or gradient can also be computed from a profile request.
+The `range` parameter is a boolean value that controls whether or not the returned array is one-dimensional (height only) or two-dimensional (with a range and height). This can be used to generate a graph along a route, because a 2D-array has values for x (the range) and y (the height) at each shape point. Steepness or gradient can also be computed from a profile request (e.g. when range = `true`).
 
 The `range` is optional and assumed to be `false` if omitted.
 

@@ -67,6 +67,7 @@
    * ADDED: Approach, multi-cue, and length updates [#2313](https://github.com/valhalla/valhalla/pull/2313)
    * ADDED: Speed up timezone differencing calculation if cache is provided. [#2316](https://github.com/valhalla/valhalla/pull/2316)
    * ADDED: Added rapidjson/schema.h to baldr/rapidjson_util.h to make it available for use within valhalla. [#2330](https://github.com/valhalla/valhalla/issues/2330)
+   * ADDED: Support decimal precision for height values in elevation service. Also support polyline5 for encoded polylines input and output to elevation service. [2324](https://github.com/valhalla/valhalla/pull/2324)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

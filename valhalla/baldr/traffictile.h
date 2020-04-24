@@ -63,7 +63,7 @@ inline uint16_t valhalla_traffic_seconds_to_age_bucket(const int seconds) {
 
 struct Speed {
   uint16_t speed_kmh : 8;        // km/h - so max range is 0-255km/h
-  uint16_t congestion_level : 3; // some value from 0 to 7 to report back.  0 indicates low congestion
+  uint16_t congestion_level : 3; // 0 - unknown, 1-6 - low-high, 7 - unused
   uint16_t age_bucket : 4;       // Age bucket for the speed record (see SPEED_AGE_BUCKET_SIZE)
   uint16_t spare : 1;            // TODO: reserved for later use
 #ifndef C_ONLY_INTERFACE
