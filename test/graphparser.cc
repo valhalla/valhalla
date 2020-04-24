@@ -686,6 +686,7 @@ void DoConfig() {
     file.open(config_file, std::ios_base::trunc);
     file << "{ \
       \"mjolnir\": { \
+      \"id_table_size\": 1000, \
       \"tile_dir\": \"test/data/parser_tiles\" \
       } \
     }";

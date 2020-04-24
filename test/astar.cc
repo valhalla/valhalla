@@ -1646,6 +1646,7 @@ TEST(Astar, BiDirTrivial) {
   // Get access to tiles
   boost::property_tree::ptree conf;
   conf.put("tile_dir", "test/data/utrecht_tiles");
+  conf.put("id_table_size", 1000);
   vb::GraphReader graph_reader(conf);
 
   // Locations

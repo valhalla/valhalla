@@ -33,9 +33,6 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-// This value controls the initial size of the Id table. If this is exceeded
-// the table will be resized and a warning is generated (indicating we should
-// increase this value).
 constexpr uint64_t kMaxOSMNodeId = 6800000000;
 
 // Absurd classification.
@@ -54,7 +51,9 @@ public:
                  const std::string& intersections_file = "",
                  const std::string& shapes_file = "",
                  bool read_data = false)
-      : shape_(kMaxOSMNodeId), intersection_(kMaxOSMNodeId), osmdata_(osmdata), lua_(get_lua(pt)) {
+      : shape_(pt.get<unsigned long>("id_table_size", kMaxOSMNodeId)),
+        intersection_(pt.get<unsigned long>("id_table_size", kMaxOSMNodeId)), osmdata_(osmdata),
+        lua_(get_lua(pt)) {
 
     if (read_data) {
       std::ifstream file(intersections_file, std::ios::in | std::ios::binary);

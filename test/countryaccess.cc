@@ -46,6 +46,7 @@ void write_config(const std::string& filename) {
     file << "{ \
       \"mjolnir\": { \
       \"concurrency\": 1, \
+      \"id_table_size\": 1000, \
        \"tile_dir\": \"test/data/amsterdam_tiles\", \
         \"admin\": \"" VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite\", \
          \"timezone\": \"" VALHALLA_SOURCE_DIR "test/data/not_needed.sqlite\" \
