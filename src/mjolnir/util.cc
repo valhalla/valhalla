@@ -203,7 +203,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
                                          way_nodes_bin, access_bin, intersections_bin, shapes_bin);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
-    if (release_osmpbf_memory) {
+    if (release_osmpbf_memory && BuildStage::kParseWays == end_stage) {
       OSMPBF::Parser::free();
     }
 
@@ -227,7 +227,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
                                    osm_data);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
-    if (release_osmpbf_memory) {
+    if (release_osmpbf_memory && BuildStage::kParseRelations == end_stage) {
       OSMPBF::Parser::free();
     }
 
