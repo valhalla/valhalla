@@ -341,10 +341,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       // debug builds check that the route is valid
       assert(ValidateRoute(mapmatcher.graphreader(), new_segments.begin(), new_segments.end(), tile));
 
-      // from this match to the last match we may be on the same edge, we call merge here
-      // instead of just appending this vector to the end of the route vector because
-      // we may merge the last segment of route with the beginning segment of segments
-      // MergeEdgeSegments(route, segments.begin(), segments.end());
+      // after we figured out whether or not we need to merge the last one we keep the rest
       route.insert(route.end(), new_segments.cbegin(), new_segments.cend());
     }
 
