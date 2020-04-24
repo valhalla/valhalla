@@ -1,7 +1,5 @@
 #pragma once
 
-#include <valhalla/baldr/curler.h>
-
 #include <functional>
 #include <string>
 #include <vector>
