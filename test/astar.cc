@@ -141,7 +141,8 @@ void write_config(const std::string& filename,
     file.open(filename, std::ios_base::trunc);
     file << "{ \
       \"mjolnir\": { \
-      \"concurrency\": 1, \
+      \"concurrency\": 1, \"
+      \"id_table_size\": 1000, \
        \"tile_dir\": \"" +
                 tile_dir + "\", \
         \"admin\": \"" VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite\", \
