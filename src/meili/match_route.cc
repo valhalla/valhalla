@@ -218,7 +218,7 @@ bool MergeRoute(const State& source, const State& target, std::vector<EdgeSegmen
 
   // MergeEdgeSegments(route, segments.rbegin(), segments.rend());
   route.insert(route.end(), segments.crbegin(), segments.crend());
-  return true;
+  return !segments.empty();
 }
 
 void cut_segments(const std::vector<MatchResult>& match_results,
