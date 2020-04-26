@@ -141,12 +141,13 @@ void FormTilesInNewLevel(GraphReader& reader,
       // where a new node exists
       uint8_t lowest_level;
       auto f = find_nodes(old_to_new, base_node);
-      if (f.local_node.Is_Valid()) {
-        lowest_level = 2;
-      } else if (f.arterial_node.Is_Valid()) {
-        lowest_level = 1;
-      } else if (f.highway_node.Is_Valid()) {
-        lowest_level = 0;
+      uint8_t lowest_level =
+          f.local_node.Is_Valid()
+              ? 2
+              : (f.arterial_node.Is_Valid() ? 1 : (f.highway_node.Is_Valid() ? 0 : -1));
+      // This cant happen but the linter complains
+      if (lowest_level == -1) {
+        throw std::logic_error("Could not find valid node level");
       }
       return (lowest_level == current_level);
     } else if (directededge->bss_connection()) {

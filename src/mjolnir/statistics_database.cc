@@ -25,13 +25,9 @@ void statistics::build_db(const boost::property_tree::ptree& pt) {
 
   spatialite_init(0);
 
-  sqlite3* db_handle;
-  sqlite3_stmt* stmt;
-  uint32_t ret;
-  char* err_msg = NULL;
-  std::string sql;
-
-  ret =
+  sqlite3* db_handle = nullptr;
+  char* err_msg = nullptr;
+  auto ret =
       sqlite3_open_v2(database.c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("cannot open " + database);
@@ -47,7 +43,7 @@ void statistics::build_db(const boost::property_tree::ptree& pt) {
   LOG_INFO("Writing statistics database");
 
   // Turn on foreign keys
-  sql = "PRAGMA foreign_keys = ON";
+  std::string sql = "PRAGMA foreign_keys = ON";
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -58,6 +54,7 @@ void statistics::build_db(const boost::property_tree::ptree& pt) {
 
   LOG_INFO("Creating tables");
 
+  sqlite3_stmt* stmt = nullptr;
   create_tile_tables(db_handle, stmt);
   LOG_INFO("Created tile tables");
 
