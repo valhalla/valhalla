@@ -216,9 +216,8 @@ bool MergeRoute(const State& source, const State& target, std::vector<EdgeSegmen
     throw std::logic_error("The first edge must be an origin (invalid predecessor)");
   }
 
-  // MergeEdgeSegments(route, segments.rbegin(), segments.rend());
   route.insert(route.end(), segments.crbegin(), segments.crend());
-  return !segments.empty();
+  return true;
 }
 
 void cut_segments(const std::vector<MatchResult>& match_results,
@@ -295,16 +294,16 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       // then reverse merge the segments together which are on the same edge so we have a
       // minimum number of segments. in this case we could at minimum end up with 1 segment
       segments.clear();
-      if (!MergeRoute(prev_state, state, segments) && !route.empty()) {
-        route.back().discontinuity = true;
+      auto continuous = MergeRoute(prev_state, state, segments);
+      if (segments.empty()) {
+        // we are only discontinuous if we were explicitly told so by merge route
+        route.back().discontinuity = !continuous && !route.empty();
+        // we can get back routes with no segments if both points are using the same candidate
+        // TODO: we still need to mark the existing segment though potentially?
+        // TODO: update routing.cc to send back a 0 length route
+        // next pair
         prev_idx = curr_idx;
         prev_match = &match;
-        continue;
-      }
-
-      // trivial routes (both states are the same point) will have no path
-      // this seems to be an optimization from routing.cc
-      if (segments.empty()) {
         continue;
       }
 
