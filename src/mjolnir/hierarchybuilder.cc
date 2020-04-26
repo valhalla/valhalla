@@ -139,7 +139,6 @@ void FormTilesInNewLevel(GraphReader& reader,
         directededge->use() == Use::kPlatformConnection) {
       // Transit connection edges should live on the lowest class level
       // where a new node exists
-      uint8_t lowest_level;
       auto f = find_nodes(old_to_new, base_node);
       uint8_t lowest_level =
           f.local_node.Is_Valid()
