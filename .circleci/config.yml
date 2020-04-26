@@ -149,7 +149,7 @@ jobs:
       - run: make -C build -j4
       - run: make -C build utrecht_tiles
       - run: make -C build -j2 tests
-      - run: make -C build -j1 check
+      - run: make -C build -j2 check
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
       - save_cache:
