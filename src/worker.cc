@@ -624,11 +624,38 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_date_time("current");
   }
 
-  // parse map matching location input
+  // Set the output precision for shape/geometry (polyline encoding). Defaults to polyline6
+  // This also controls the input precision for encoded_polyline in height action
+  // TODO - is this just for OSRM compatibility?
+  options.set_shape_format(polyline6);
+  auto shape_format = rapidjson::get_optional<std::string>(doc, "/shape_format");
+  if (shape_format) {
+    if (*shape_format == "polyline6") {
+      options.set_shape_format(polyline6);
+    } else if (*shape_format == "polyline5") {
+      options.set_shape_format(polyline5);
+    } else if (*shape_format == "geojson") {
+      options.set_shape_format(geojson);
+    } else {
+      // Throw an error if shape format is invalid
+      throw valhalla_exception_t{164};
+    }
+  }
+
+  // parse map matching location input and encoded_polyline for height actions
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
   if (encoded_polyline) {
     options.set_encoded_polyline(*encoded_polyline);
-    auto decoded = midgard::decode<std::vector<midgard::PointLL>>(*encoded_polyline);
+
+    // Set the precision to use when decoding the polyline. For height actions (only)
+    // either polyline6 (default) or polyline5 are supported. All other actions only
+    // support polyline6 inputs at this time.
+    double precision = 1e-6;
+    if (options.action() == Options::height) {
+      precision = options.shape_format() == valhalla::polyline5 ? 1e-5 : 1e-6;
+    }
+
+    auto decoded = midgard::decode<std::vector<midgard::PointLL>>(*encoded_polyline, precision);
     for (const auto& ll : decoded) {
       auto* sll = options.mutable_shape()->Add();
       sll->mutable_ll()->set_lat(ll.lat());
@@ -702,27 +729,16 @@ void from_json(rapidjson::Document& doc, Options& options) {
     }
   }
 
-  // Set the output precision for shape/geometry (polyline encoding). Defaults to polyline6
-  // TODO - is this just for OSRM compatibility?
-  options.set_shape_format(polyline6);
-  auto shape_format = rapidjson::get_optional<std::string>(doc, "/shape_format");
-  if (shape_format) {
-    if (*shape_format == "polyline6") {
-      options.set_shape_format(polyline6);
-    } else if (*shape_format == "polyline5") {
-      options.set_shape_format(polyline5);
-    } else if (*shape_format == "geojson") {
-      options.set_shape_format(geojson);
-    } else {
-      // Throw an error if shape format is invalid
-      throw valhalla_exception_t{164};
-    }
-  }
-
   // TODO: remove this?
   options.set_do_not_track(rapidjson::get_optional<bool>(doc, "/healthcheck").get_value_or(false));
 
+  // Elevation service options
   options.set_range(rapidjson::get(doc, "/range", false));
+  constexpr uint32_t MAX_HEIGHT_PRECISION = 2;
+  auto height_precision = rapidjson::get_optional<unsigned int>(doc, "/height_precision");
+  if (height_precision && *height_precision <= MAX_HEIGHT_PRECISION) {
+    options.set_height_precision(*height_precision);
+  }
 
   options.set_verbose(rapidjson::get(doc, "/verbose", false));
 
@@ -1238,10 +1254,6 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
 }
 
 const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-const headers_t::value_type XML_MIME{"Content-type", "text/xml;charset=utf-8"};
-const headers_t::value_type GPX_MIME{"Content-type", "application/gpx+xml;charset=utf-8"};
 const headers_t::value_type ATTACHMENT{"Content-Disposition", "attachment; filename=route.gpx"};
 
 worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
@@ -1272,7 +1284,8 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
 
   worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(exception.http_code, exception.http_message, body.str(),
-                           headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
+                                                                         : worker::JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
 
@@ -1294,7 +1307,8 @@ worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
 
   worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
+                                                                         : worker::JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
   return result;
@@ -1314,38 +1328,41 @@ to_response(const baldr::json::MapPtr& map, http_request_info_t& request_info, c
 
   worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
+                                                                         : worker::JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
   return result;
 }
 
-worker_t::result_t
-to_response_json(const std::string& json, http_request_info_t& request_info, const Api& request) {
-  std::ostringstream stream;
-  // jsonp callback if need be
+worker_t::result_t to_response(const std::string& data,
+                               http_request_info_t& request_info,
+                               const Api& request,
+                               const worker::content_type& mime_type,
+                               const bool as_attachment) {
+
+  worker_t::result_t result{false, std::list<std::string>(), ""};
   if (request.options().has_jsonp()) {
+    std::ostringstream stream;
     stream << request.options().jsonp() << '(';
-  }
-  stream << json;
-  if (request.options().has_jsonp()) {
+    stream << data;
     stream << ')';
+
+    headers_t headers{CORS, worker::JS_MIME};
+    if (as_attachment)
+      headers.insert(ATTACHMENT);
+
+    http_response_t response(200, "OK", stream.str(), headers);
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+  } else {
+    headers_t headers{CORS, mime_type};
+    if (as_attachment)
+      headers.insert(ATTACHMENT);
+    http_response_t response(200, "OK", data, headers);
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
   }
-
-  worker_t::result_t result{false, std::list<std::string>(), ""};
-  http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options().has_jsonp() ? JS_MIME : JSON_MIME});
-  response.from_info(request_info);
-  result.messages.emplace_back(response.to_string());
-  return result;
-}
-
-worker_t::result_t
-to_response_xml(const std::string& xml, http_request_info_t& request_info, const Api&) {
-  worker_t::result_t result{false, std::list<std::string>(), ""};
-  http_response_t response(200, "OK", xml, headers_t{CORS, GPX_MIME, ATTACHMENT});
-  response.from_info(request_info);
-  result.messages.emplace_back(response.to_string());
   return result;
 }
 
@@ -1355,8 +1372,8 @@ service_worker_t::service_worker_t() : interrupt(nullptr) {
 }
 service_worker_t::~service_worker_t() {
 }
-void service_worker_t::set_interrupt(const std::function<void()>& interrupt_function) {
-  interrupt = &interrupt_function;
+void service_worker_t::set_interrupt(const std::function<void()>* interrupt_function) {
+  interrupt = interrupt_function;
 }
 
 } // namespace valhalla

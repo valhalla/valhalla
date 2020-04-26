@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstring>
 #include <dirent.h>
+#include <stdexcept>
 #include <iomanip>
 #include <memory>
 #include <string>

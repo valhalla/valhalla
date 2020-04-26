@@ -20,6 +20,8 @@
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 
+#include <deque>
+
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;

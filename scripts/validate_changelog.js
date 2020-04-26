@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 var linereader = require('readline').createInterface( {
     input: require('fs').createReadStream(require('path').join(__dirname, '..', 'CHANGELOG.md'))
 });

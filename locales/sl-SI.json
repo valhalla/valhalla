@@ -146,7 +146,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometrov",
         "1 kilometer",
-        "pol kilometra",
         "<METERS> metrov",
         "manj kot 10 metrov"
       ],
@@ -154,8 +153,7 @@
         "<MILES> milj",
         "1 miljo",
         "pol milje",
-        "<TENTHS_OF_MILE> desetink milje",
-        "1 desentinko milje",
+        "a quarter mile",
         "<FEET> čevljev",
         "Manj kot 10 čevljev"
       ],
@@ -1210,7 +1208,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometrov",
         "1 kilometer",
-        "pol kilometra",
         "<METERS> metrov",
         "manj kot 10 metrov"
       ],
@@ -1218,8 +1215,7 @@
         "<MILES> milj",
         "1 miljo",
         "pol milje",
-        "<TENTHS_OF_MILE> desetink milje",
-        "1 desentinko milje",
+        "a quarter mile",
         "<FEET> čevljev",
         "Manj kot 10 čevljev"
       ],
@@ -1604,7 +1600,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometrov",
         "1 kilometer",
-        "pol kilometra",
         "<METERS> metrov",
         "manj kot 10 metrov"
       ],
@@ -1612,8 +1607,7 @@
         "<MILES> milj",
         "1 miljo",
         "pol milje",
-        "<TENTHS_OF_MILE> desetink milje",
-        "1 desentinko milje",
+        "a quarter mile",
         "<FEET> čevljev",
         "Manj kot 10 čevljev"
       ],
@@ -2083,11 +2077,53 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> Nato <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> Nato <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
       },
+      "metric_lengths": [
+        "<KILOMETERS> kilometrov",
+        "1 kilometer",
+        "<METERS> metrov",
+        "manj kot 10 metrov"
+      ],
+      "us_customary_lengths": [
+        "<MILES> milj",
+        "1 miljo",
+        "pol milje",
+        "a quarter mile",
+        "<FEET> čevljev",
+        "Manj kot 10 čevljev"
+      ],
       "example_phrases": {
         "0": [
           "Držite se desno, da pridete na East Fayette Street. Nato zavijte desno na North Gay Street."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometrov",
+        "1 kilometer",
+        "<METERS> metrov",
+        "manj kot 10 metrov"
+      ],
+      "us_customary_lengths": [
+        "<MILES> milj",
+        "1 miljo",
+        "pol milje",
+        "a quarter mile",
+        "<FEET> čevljev",
+        "Manj kot 10 čevljev"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }

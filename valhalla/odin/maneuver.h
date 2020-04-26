@@ -206,8 +206,11 @@ public:
   bool unnamed_mountain_bike_trail() const;
   void set_unnamed_mountain_bike_trail(bool unnamed_mountain_bike_trail);
 
-  bool verbal_multi_cue() const;
-  void set_verbal_multi_cue(bool verbal_multi_cue);
+  bool imminent_verbal_multi_cue() const;
+  void set_imminent_verbal_multi_cue(bool imminent_verbal_multi_cue);
+  bool distant_verbal_multi_cue() const;
+  void set_distant_verbal_multi_cue(bool distant_verbal_multi_cue);
+  bool HasVerbalMultiCue() const;
 
   bool to_stay_on() const;
   void set_to_stay_on(bool to_stay_on);
@@ -342,7 +345,8 @@ protected:
   bool unnamed_walkway_;
   bool unnamed_cycleway_;
   bool unnamed_mountain_bike_trail_;
-  bool verbal_multi_cue_;
+  bool imminent_verbal_multi_cue_;
+  bool distant_verbal_multi_cue_;
   bool to_stay_on_;
   std::unique_ptr<StreetNames> roundabout_exit_street_names_;
   RelativeDirection merge_to_relative_direction_;

@@ -76,6 +76,12 @@ function(valhalla_module)
   set(library valhalla-${MODULE_NAME})
   add_library(${library} OBJECT ${MODULE_SOURCES} ${MODULE_HEADERS})
   add_library(valhalla::${MODULE_NAME} ALIAS ${library})
+  set_target_properties(${library} PROPERTIES FOLDER "Modules")
+
+  # Generate source groups so the files are properly sorted in IDEs like Xcode.
+  create_source_groups("Header Files" ${MODULE_HEADERS})
+  create_source_groups("Source Files" ${MODULE_SOURCES})
+
   target_compile_definitions(${library}
     PUBLIC
       $<$<BOOL:${MSVC}>:VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI>
@@ -149,6 +155,7 @@ set(valhalla_hdrs
 
 set(valhalla_src
     worker.cc
+    filesystem.cc
     ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h
     ${valhalla_hdrs}
     ${libvalhalla_link_objects})
@@ -159,6 +166,8 @@ if (ENABLE_SERVICES)
 endif()
 
 add_library(valhalla ${valhalla_src})
+set_target_properties(valhalla PROPERTIES FOLDER "Library")
+create_source_groups("Source Files" ${valhalla_src})
 
 target_compile_definitions(valhalla
   PUBLIC
@@ -214,6 +223,7 @@ else()
   if(UNIX)
     add_custom_target(${LIBVALHALLA_SO_LINK} ALL
       COMMAND ${CMAKE_COMMAND} -E create_symlink "${LIBVALHALLA_SO_LINK}.${VALHALLA_VERSION_MAJOR}" ${LIBVALHALLA_SO_LINK})
+    set_target_properties(${LIBVALHALLA_SO_LINK} PROPERTIES FOLDER "Library")
   endif()
 endif()
 
@@ -236,6 +246,7 @@ if(PKG_CONFIG_FOUND)
   add_executable(libvalhalla.pc EXCLUDE_FROM_ALL ../libvalhalla.pc.in)
   target_link_libraries(libvalhalla.pc valhalla)
   set_target_properties(libvalhalla.pc PROPERTIES LINKER_LANGUAGE PkgConfig)
+  set_target_properties(libvalhalla.pc PROPERTIES FOLDER "Library")
   install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} --build . --target libvalhalla.pc OUTPUT_QUIET ERROR_VARIABLE _err RESULT_VARIABLE _res)
   if(NOT \${_res} EQUAL 0)
     message(FATAL_ERROR \"Configuring libvalhalla.pc failed: \${_err}\")

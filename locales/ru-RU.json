@@ -146,7 +146,6 @@
       "metric_lengths": [
         "<KILOMETERS> километров",
         "1 километр",
-        "полкилометра",
         "<METERS> метров",
         "менее 10 метров"
       ],
@@ -154,8 +153,7 @@
         "<MILES> миль",
         "1 милю",
         "полмили",
-        "<TENTHS_OF_MILE> десятых мили",
-        "1 десятую мили",
+        "a quarter mile",
         "<FEET> футов",
         "менее 10 футов"
       ],
@@ -1209,7 +1207,6 @@
       "metric_lengths": [
         "<KILOMETERS> километров",
         "1 километр",
-        "полкилометра",
         "<METERS> метров",
         "менее 10 метров"
       ],
@@ -1217,8 +1214,7 @@
         "<MILES> миль",
         "1 милю",
         "полмили",
-        "<TENTHS_OF_MILE> десятых мили",
-        "1 десятую мили",
+        "a quarter mile",
         "<FEET> футов",
         "менее 10 футов"
       ],
@@ -1603,7 +1599,6 @@
       "metric_lengths": [
         "<KILOMETERS> километров",
         "1 километр",
-        "полкилометра",
         "<METERS> метров",
         "менее 10 метров"
       ],
@@ -1611,8 +1606,7 @@
         "<MILES> миль",
         "1 милю",
         "полмили",
-        "<TENTHS_OF_MILE> десятых мили",
-        "1 десятую мили",
+        "a quarter mile",
         "<FEET> футов",
         "менее 10 футов"
       ],
@@ -2079,11 +2073,53 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> Затем <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> Затем <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
       },
+      "metric_lengths": [
+        "<KILOMETERS> километров",
+        "1 километр",
+        "<METERS> метров",
+        "менее 10 метров"
+      ],
+      "us_customary_lengths": [
+        "<MILES> миль",
+        "1 милю",
+        "полмили",
+        "a quarter mile",
+        "<FEET> футов",
+        "менее 10 футов"
+      ],
       "example_phrases": {
         "0": [
           "Держитесь правее на East Fayette Street. Затем поверните направо на North Gay Street."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> километров",
+        "1 километр",
+        "<METERS> метров",
+        "менее 10 метров"
+      ],
+      "us_customary_lengths": [
+        "<MILES> миль",
+        "1 милю",
+        "полмили",
+        "a quarter mile",
+        "<FEET> футов",
+        "менее 10 футов"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }
