@@ -6,6 +6,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include <cassert>
 
 #ifdef INLINE_TEST
 #include "test/test.h"
@@ -298,7 +299,7 @@ public:
 
 public:
   VehicleType type_; // Vehicle type: tractor trailer
-  float speedfactor_[kMaxSpeedKph + 1];
+  std::vector<float> speedfactor_;
   float density_factor_[16]; // Density factor
   float toll_factor_;        // Factor applied when road has a toll
   float low_class_penalty_;  // Penalty (seconds) to go to residential or service road
@@ -341,6 +342,7 @@ TruckCost::TruckCost(const Costing costing, const Options& options)
   length_ = costing_options.length();
 
   // Create speed cost table
+  speedfactor_.resize(kMaxSpeedKph + 1, 0);
   speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
@@ -425,6 +427,10 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
                                const uint64_t current_time,
                                const uint32_t tz_index,
                                bool& has_time_restrictions) const {
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(edgeid))
+      return false;
+  }
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(edge->forwardaccess() & kTruckAccess) || (pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -448,6 +454,10 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                const uint64_t current_time,
                                const uint32_t tz_index,
                                bool& has_time_restrictions) const {
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(opp_edgeid))
+      return false;
+  }
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(opp_edge->forwardaccess() & kTruckAccess) || (pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -482,6 +492,7 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   // Use the lower or truck speed (ir present) and speed
   uint32_t s = (edge->truck_speed() > 0) ? std::min(edge->truck_speed(), speed) : speed;
+  assert(s < speedfactor_.size());
   float sec = edge->length() * speedfactor_[s];
   return {sec * factor, sec};
 }
@@ -496,8 +507,8 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
   Cost c = base_transition_cost(node, edge, pred, idx);
 
   // Penalty to transition onto low class roads.
-  if (edge->classification() == RoadClass::kResidential ||
-      edge->classification() == RoadClass::kServiceOther) {
+  if (edge->classification() == baldr::RoadClass::kResidential ||
+      edge->classification() == baldr::RoadClass::kServiceOther) {
     c.cost += low_class_penalty_;
   }
 
@@ -546,8 +557,8 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   Cost c = base_transition_cost(node, edge, pred, idx);
 
   // Penalty to transition onto low class roads.
-  if (edge->classification() == RoadClass::kResidential ||
-      edge->classification() == RoadClass::kServiceOther) {
+  if (edge->classification() == baldr::RoadClass::kResidential ||
+      edge->classification() == baldr::RoadClass::kServiceOther) {
     c.cost += low_class_penalty_;
   }
 
@@ -758,7 +769,7 @@ make_distributor_from_range(const ranged_default_t<float>& range) {
   return new std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
 }
 
-void testTruckCostParams() {
+TEST(TruckCost, testTruckCostParams) {
   constexpr unsigned testIterations = 250;
   constexpr unsigned seed = 0;
   std::mt19937 generator(seed);
@@ -769,91 +780,73 @@ void testTruckCostParams() {
   distributor.reset(make_distributor_from_range(kManeuverPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("maneuver_penalty", (*distributor)(generator)));
-    if (ctorTester->maneuver_penalty_ < kManeuverPenaltyRange.min ||
-        ctorTester->maneuver_penalty_ > kManeuverPenaltyRange.max) {
-      throw std::runtime_error("maneuver_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->maneuver_penalty_,
+                test::IsBetween(kManeuverPenaltyRange.min, kManeuverPenaltyRange.max));
   }
 
   // alley_penalty_
   distributor.reset(make_distributor_from_range(kAlleyPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("alley_penalty", (*distributor)(generator)));
-    if (ctorTester->alley_penalty_ < kAlleyPenaltyRange.min ||
-        ctorTester->alley_penalty_ > kAlleyPenaltyRange.max) {
-      throw std::runtime_error("alley_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->alley_penalty_,
+                test::IsBetween(kAlleyPenaltyRange.min, kAlleyPenaltyRange.max));
   }
 
   // destination_only_penalty_
   distributor.reset(make_distributor_from_range(kDestinationOnlyPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("destination_only_penalty", (*distributor)(generator)));
-    if (ctorTester->destination_only_penalty_ < kDestinationOnlyPenaltyRange.min ||
-        ctorTester->destination_only_penalty_ > kDestinationOnlyPenaltyRange.max) {
-      throw std::runtime_error("destination_only_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->destination_only_penalty_,
+                test::IsBetween(kDestinationOnlyPenaltyRange.min, kDestinationOnlyPenaltyRange.max));
   }
 
   // gate_cost_ (Cost.secs)
   distributor.reset(make_distributor_from_range(kGateCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("gate_cost", (*distributor)(generator)));
-    if (ctorTester->gate_cost_.secs < kGateCostRange.min ||
-        ctorTester->gate_cost_.secs > kGateCostRange.max) {
-      throw std::runtime_error("gate_cost_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->gate_cost_.secs, test::IsBetween(kGateCostRange.min, kGateCostRange.max));
   }
 
   // gate_penalty_ (Cost.cost)
   distributor.reset(make_distributor_from_range(kGatePenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("gate_penalty", (*distributor)(generator)));
-    if (ctorTester->gate_cost_.cost < kGatePenaltyRange.min ||
-        ctorTester->gate_cost_.cost > kGatePenaltyRange.max + kDefaultGateCost) {
-      throw std::runtime_error("gate_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->gate_cost_.cost,
+                test::IsBetween(kGatePenaltyRange.min, kGatePenaltyRange.max + kDefaultGateCost));
   }
 
   // tollbooth_cost_ (Cost.secs)
   distributor.reset(make_distributor_from_range(kTollBoothCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("toll_booth_cost", (*distributor)(generator)));
-    if (ctorTester->toll_booth_cost_.secs < kTollBoothCostRange.min ||
-        ctorTester->toll_booth_cost_.secs > kTollBoothCostRange.max) {
-      throw std::runtime_error("tollbooth_cost_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->toll_booth_cost_.secs,
+                test::IsBetween(kTollBoothCostRange.min, kTollBoothCostRange.max));
   }
 
   // tollbooth_penalty_ (Cost.cost)
   distributor.reset(make_distributor_from_range(kTollBoothPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("toll_booth_penalty", (*distributor)(generator)));
-    if (ctorTester->toll_booth_cost_.cost < kTollBoothPenaltyRange.min ||
-        ctorTester->toll_booth_cost_.cost > kTollBoothPenaltyRange.max + kDefaultTollBoothCost) {
-      throw std::runtime_error("tollbooth_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->toll_booth_cost_.cost,
+                test::IsBetween(kTollBoothPenaltyRange.min,
+                                kTollBoothPenaltyRange.max + kDefaultTollBoothCost));
   }
 
   // country_crossing_cost_ (Cost.secs)
   distributor.reset(make_distributor_from_range(kCountryCrossingCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("country_crossing_cost", (*distributor)(generator)));
-    if (ctorTester->country_crossing_cost_.secs < kCountryCrossingCostRange.min ||
-        ctorTester->country_crossing_cost_.secs > kCountryCrossingCostRange.max) {
-      throw std::runtime_error("country_crossing_cost_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->country_crossing_cost_.secs,
+                test::IsBetween(kCountryCrossingCostRange.min, kCountryCrossingCostRange.max));
   }
 
   // country_crossing_penalty_ (Cost.cost)
   distributor.reset(make_distributor_from_range(kCountryCrossingPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("country_crossing_penalty", (*distributor)(generator)));
-    if (ctorTester->country_crossing_cost_.cost < kCountryCrossingPenaltyRange.min ||
-        ctorTester->country_crossing_cost_.cost >
-            kCountryCrossingPenaltyRange.max + kDefaultCountryCrossingCost) {
-      throw std::runtime_error("country_crossing_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->country_crossing_cost_.cost,
+                test::IsBetween(kCountryCrossingPenaltyRange.min,
+                                kCountryCrossingPenaltyRange.max + kDefaultCountryCrossingCost));
   }
 
   // Ferry transition cost and ferry use not yet supported
@@ -862,66 +855,51 @@ void testTruckCostParams() {
   distributor.reset(make_distributor_from_range(kLowClassPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("low_class_penalty", (*distributor)(generator)));
-    if (ctorTester->low_class_penalty_ < kLowClassPenaltyRange.min ||
-        ctorTester->low_class_penalty_ > kLowClassPenaltyRange.max) {
-      throw std::runtime_error("low_class_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->low_class_penalty_,
+                test::IsBetween(kLowClassPenaltyRange.min, kLowClassPenaltyRange.max));
   }
 
   // weight_
   distributor.reset(make_distributor_from_range(kTruckWeightRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("weight", (*distributor)(generator)));
-    if (ctorTester->weight_ < kTruckWeightRange.min || ctorTester->weight_ > kTruckWeightRange.max) {
-      throw std::runtime_error("weight_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->weight_, test::IsBetween(kTruckWeightRange.min, kTruckWeightRange.max));
   }
 
   // axle_load_
   distributor.reset(make_distributor_from_range(kTruckAxleLoadRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("axle_load", (*distributor)(generator)));
-    if (ctorTester->axle_load_ < kTruckAxleLoadRange.min ||
-        ctorTester->axle_load_ > kTruckAxleLoadRange.max) {
-      throw std::runtime_error("axle_load_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->axle_load_,
+                test::IsBetween(kTruckAxleLoadRange.min, kTruckAxleLoadRange.max));
   }
 
   // height_
   distributor.reset(make_distributor_from_range(kTruckHeightRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("height", (*distributor)(generator)));
-    if (ctorTester->height_ < kTruckHeightRange.min || ctorTester->height_ > kTruckHeightRange.max) {
-      throw std::runtime_error("height_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->height_, test::IsBetween(kTruckHeightRange.min, kTruckHeightRange.max));
   }
 
   // width_
   distributor.reset(make_distributor_from_range(kTruckWidthRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("width", (*distributor)(generator)));
-    if (ctorTester->width_ < kTruckWidthRange.min || ctorTester->width_ > kTruckWidthRange.max) {
-      throw std::runtime_error("width_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->width_, test::IsBetween(kTruckWidthRange.min, kTruckWidthRange.max));
   }
 
   // length_
   distributor.reset(make_distributor_from_range(kTruckLengthRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("length", (*distributor)(generator)));
-    if (ctorTester->length_ < kTruckLengthRange.min || ctorTester->length_ > kTruckLengthRange.max) {
-      throw std::runtime_error("length_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->length_, test::IsBetween(kTruckLengthRange.min, kTruckLengthRange.max));
   }
 }
 } // namespace
 
-int main() {
-  test::suite suite("costing");
-
-  suite.test(TEST_CASE(testTruckCostParams));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
 
 #endif

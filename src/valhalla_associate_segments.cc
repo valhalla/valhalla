@@ -40,7 +40,7 @@ namespace pbf = opentraffic::osmlr;
 namespace bal = boost::algorithm;
 namespace bpo = boost::program_options;
 namespace bpt = boost::property_tree;
-namespace bfs = boost::filesystem;
+namespace bfs = filesystem;
 
 namespace std {
 std::string to_string(const vm::PointLL& p) {

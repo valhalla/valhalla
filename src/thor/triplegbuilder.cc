@@ -15,6 +15,7 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "midgard/util.h"
 #include "sif/costconstants.h"
 #include "thor/attributes_controller.h"
 #include "thor/match_result.h"
@@ -29,46 +30,6 @@ using namespace valhalla::sif;
 using namespace valhalla::thor;
 
 namespace {
-
-void TrimShape(std::vector<PointLL>& shape,
-               const float start,
-               const PointLL& start_vertex,
-               const float end,
-               const PointLL& end_vertex) {
-  // clip up to the start point if the start_vertex is valid
-  float along = 0.f;
-  auto current = shape.begin();
-  if (start_vertex.IsValid()) {
-    while (current != shape.end() - 1) {
-      along += (current + 1)->Distance(*current);
-      // just crossed it, replace the current vertex with the start position and erase
-      // shape up to the current vertex
-      if (along > start) {
-        along = start;
-        *current = start_vertex;
-        shape.erase(shape.begin(), current);
-        break;
-      }
-      ++current;
-    }
-  }
-
-  // clip after the end point if the end vertex is valid
-  current = shape.begin();
-  if (end_vertex.IsValid()) {
-    while (current != shape.end() - 1) {
-      along += (current + 1)->Distance(*current);
-      // just crossed it, replace the current vertex with the end vertex and erase
-      // shape after the current vertex
-      if (along > end) {
-        *(++current) = end_vertex;
-        shape.erase(++current, shape.end());
-        break;
-      }
-      ++current;
-    }
-  }
-}
 
 uint32_t
 GetAdminIndex(const AdminInfo& admin_info,
@@ -139,6 +100,8 @@ void SetShapeAttributes(const AttributesController& controller,
                         double edge_percentage) {
   if (trip_path.has_shape_attributes()) {
     // calculates total edge time and total edge length
+    // TODO: you can get this directly from the path edge by taking its cost and subtracting off
+    // the transition cost that it also now contains
     double edge_time =
         costing->EdgeCost(edge, tile, second_of_week).secs * edge_percentage; // seconds
     // TODO: get the measured length from shape (full shape) to increase precision
@@ -182,11 +145,15 @@ void SetBoundingBox(TripLeg& trip_path, std::vector<PointLL>& shape) {
 }
 
 // Associate RoadClass values to TripLeg proto
-constexpr TripLeg_RoadClass kTripLegRoadClass[] =
-    {TripLeg_RoadClass_kMotorway,    TripLeg_RoadClass_kTrunk,       TripLeg_RoadClass_kPrimary,
-     TripLeg_RoadClass_kSecondary,   TripLeg_RoadClass_kTertiary,    TripLeg_RoadClass_kUnclassified,
-     TripLeg_RoadClass_kResidential, TripLeg_RoadClass_kServiceOther};
-TripLeg_RoadClass GetTripLegRoadClass(const RoadClass road_class) {
+constexpr valhalla::RoadClass kTripLegRoadClass[] = {valhalla::RoadClass::kMotorway,
+                                                     valhalla::RoadClass::kTrunk,
+                                                     valhalla::RoadClass::kPrimary,
+                                                     valhalla::RoadClass::kSecondary,
+                                                     valhalla::RoadClass::kTertiary,
+                                                     valhalla::RoadClass::kUnclassified,
+                                                     valhalla::RoadClass::kResidential,
+                                                     valhalla::RoadClass::kServiceOther};
+valhalla::RoadClass GetRoadClass(const baldr::RoadClass road_class) {
   return kTripLegRoadClass[static_cast<int>(road_class)];
 }
 
@@ -518,6 +485,43 @@ void AddTransitNodes(TripLeg_Node* trip_node,
   }
 }
 
+void SetTripEdgeRoadClass(TripLeg_Edge* trip_edge,
+                          const DirectedEdge* directededge,
+                          const GraphTile* graphtile,
+                          GraphReader& graphreader) {
+  trip_edge->set_road_class(GetRoadClass(directededge->classification()));
+  // If this is a ramp it may have been reclassified in graph enhancer.
+  // To restore the original road class for motorway_links, we check if any of the adjacent edges is
+  // a motorway.
+  if (directededge->use() == Use::kRamp) {
+    const DirectedEdge* opposing_edge = graphreader.GetOpposingEdge(directededge, graphtile);
+    for (const auto* edge : {directededge, opposing_edge}) {
+      if (!edge || !graphreader.GetGraphTile(edge->endnode(), graphtile)) {
+        // If this edge was invalid or we couldn't get the opposing edge's tile, skip
+        continue;
+      }
+      // check edges leaving node
+      for (const auto& adjacent_edge : graphtile->GetDirectedEdges(edge->endnode())) {
+        if (adjacent_edge.classification() == baldr::RoadClass::kMotorway) {
+          trip_edge->set_road_class(valhalla::RoadClass::kMotorway);
+          return;
+        }
+      }
+      // check transition nodes too
+      auto transition_nodes = graphtile->GetNodeTransitions(edge->endnode());
+      for (const auto& transition : transition_nodes) {
+        auto trans_tile = graphreader.GetGraphTile(transition.endnode());
+        for (const auto& adjacent_edge : trans_tile->GetDirectedEdges(transition.endnode())) {
+          if (adjacent_edge.classification() == baldr::RoadClass::kMotorway) {
+            trip_edge->set_road_class(valhalla::RoadClass::kMotorway);
+            return;
+          }
+        }
+      }
+    }
+  }
+}
+
 /**
  * Add trip edge. (TODO more comments)
  * @param  controller         Controller to determine which attributes to set.
@@ -549,6 +553,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const bool drive_on_right,
                           TripLeg_Node* trip_node,
                           const GraphTile* graphtile,
+                          GraphReader& graphreader,
                           const uint32_t second_of_week,
                           const float length_percentage,
                           const uint32_t start_node_idx,
@@ -578,7 +583,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   LOG_TRACE(std::string("wayid=") + std::to_string(edgeinfo.wayid()));
 #endif
 
-  // Set the exits (if the directed edge has exit sign information) and if requested
+  // Set the signs (if the directed edge has sign information) and if requested
   if (directededge->sign()) {
     // Add the edge signs
     std::vector<SignInfo> edge_signs = graphtile->GetSigns(idx);
@@ -636,12 +641,21 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
+          case Sign::Type::kGuidanceViewJunction: {
+            if (controller.attributes.at(kEdgeSignGuidanceViewJunction)) {
+              auto* trip_sign_guidance_view_junction =
+                  trip_sign->mutable_guidance_view_junctions()->Add();
+              trip_sign_guidance_view_junction->set_text(sign.text());
+              trip_sign_guidance_view_junction->set_is_route_number(sign.is_route_num());
+            }
+            break;
+          }
         }
       }
     }
   }
 
-  // Process the named junctions
+  // Process the named junctions at nodes
   if (has_junction_name && start_tile) {
     // Add the node signs
     std::vector<SignInfo> node_signs = start_tile->GetSigns(start_node_idx, true);
@@ -673,7 +687,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   // Set road class if requested
   if (controller.attributes.at(kEdgeRoadClass)) {
-    trip_edge->set_road_class(GetTripLegRoadClass(directededge->classification()));
+    SetTripEdgeRoadClass(trip_edge, directededge, graphtile, graphreader);
   }
 
   // Set length if requested. Convert to km
@@ -901,6 +915,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_speed_limit(edgeinfo.speed_limit());
   }
 
+  if (controller.attributes.at(kEdgeDefaultSpeed)) {
+    trip_edge->set_default_speed(directededge->speed());
+  }
+
   if (controller.attributes.at(kEdgeTruckSpeed)) {
     trip_edge->set_truck_speed(directededge->truck_speed());
   }
@@ -1086,7 +1104,7 @@ void AddTripIntersectingEdge(const AttributesController& controller,
 
   // Set the road class for the intersecting edge if requested
   if (controller.attributes.at(kNodeIntersectingEdgeRoadClass)) {
-    itersecting_edge->set_road_class(GetTripLegRoadClass(intersecting_de->classification()));
+    itersecting_edge->set_road_class(GetRoadClass(intersecting_de->classification()));
   }
 }
 
@@ -1228,19 +1246,19 @@ void TripLegBuilder::Build(
     }
 
     float total = static_cast<float>(edge->length());
-    TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
+    trim_shape(start_pct * total, start_vrt, end_pct * total, end_vrt, shape);
 
     // Driving on right from the start of the edge?
     const GraphId start_node = graphreader.GetOpposingEdge(path_begin->edgeid)->endnode();
     bool drive_on_right = graphreader.nodeinfo(start_node)->drive_on_right();
 
     // Add trip edge
-    auto trip_edge =
-        AddTripEdge(controller, path_begin->edgeid, path_begin->trip_id, 0, path_begin->mode,
-                    travel_types[static_cast<int>(path_begin->mode)],
-                    mode_costing[static_cast<uint32_t>(path_begin->mode)], edge, drive_on_right,
-                    trip_path.add_node(), tile, origin_second_of_week, std::abs(end_pct - start_pct),
-                    startnode.id(), false, nullptr, path_begin->has_time_restrictions);
+    auto trip_edge = AddTripEdge(controller, path_begin->edgeid, path_begin->trip_id, 0,
+                                 path_begin->mode, travel_types[static_cast<int>(path_begin->mode)],
+                                 mode_costing[static_cast<uint32_t>(path_begin->mode)], edge,
+                                 drive_on_right, trip_path.add_node(), tile, graphreader,
+                                 origin_second_of_week, std::abs(end_pct - start_pct), startnode.id(),
+                                 false, nullptr, path_begin->has_time_restrictions);
 
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex)) {
@@ -1381,6 +1399,10 @@ void TripLegBuilder::Build(
       if (tz) {
         trip_node->set_time_zone(tz->name());
       }
+    }
+
+    if (controller.attributes.at(kNodeTransitionTime) && edge_itr->turn_cost > 0) {
+      trip_node->set_transition_time(edge_itr->turn_cost);
     }
 
     AddTransitNodes(trip_node, node, startnode, start_tile, graphtile, controller);
@@ -1562,8 +1584,8 @@ void TripLegBuilder::Build(
     float length_pct = (is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
     TripLeg_Edge* trip_edge =
         AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, costing, directededge,
-                    node->drive_on_right(), trip_node, graphtile, second_of_week, length_pct,
-                    startnode.id(), node->named_intersection(), start_tile,
+                    node->drive_on_right(), trip_node, graphtile, graphreader, second_of_week,
+                    length_pct, startnode.id(), node->named_intersection(), start_tile,
                     edge_itr->has_time_restrictions);
 
     // Get the shape and set shape indexes (directed edge forward flag
@@ -1600,8 +1622,8 @@ void TripLegBuilder::Build(
 
       // Trim the shape
       auto edge_length = static_cast<float>(directededge->length());
-      TrimShape(edge_shape, edge_begin_info.distance_along * edge_length, edge_begin_info.vertex,
-                edge_end_info.distance_along * edge_length, edge_end_info.vertex);
+      trim_shape(edge_begin_info.distance_along * edge_length, edge_begin_info.vertex,
+                 edge_end_info.distance_along * edge_length, edge_end_info.vertex, edge_shape);
       // Add edge shape to trip
       trip_shape.insert(trip_shape.end(),
                         (edge_shape.begin() + ((edge_begin_info.exists || is_first_edge) ? 0 : 1)),
@@ -1632,10 +1654,10 @@ void TripLegBuilder::Build(
       // Note: that this cannot be both the first and last edge, that special case is handled above
       // Trim the shape at the front for the first edge
       if (is_first_edge) {
-        TrimShape(edge_shape, start_pct * total, start_vrt, total, edge_shape.back());
+        trim_shape(start_pct * total, start_vrt, total, edge_shape.back(), edge_shape);
       } // And at the back if its the last edge
       else {
-        TrimShape(edge_shape, 0, edge_shape.front(), end_pct * total, end_vrt);
+        trim_shape(0, edge_shape.front(), end_pct * total, end_vrt, edge_shape);
       }
       // Keep the shape
       trip_shape.insert(trip_shape.end(), edge_shape.begin() + is_last_edge, edge_shape.end());

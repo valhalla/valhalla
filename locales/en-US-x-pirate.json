@@ -146,7 +146,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometers",
         "1 kilometer",
-        "a half kilometer",
         "<METERS> meters",
         "less than 10 meters"
       ],
@@ -154,8 +153,7 @@
         "<MILES> miles",
         "1 mile",
         "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
+        "a quarter mile",
         "<FEET> feet",
         "less than 10 feet"
       ],
@@ -1208,7 +1206,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometers",
         "1 kilometer",
-        "a half kilometer",
         "<METERS> meters",
         "less than 10 meters"
       ],
@@ -1216,8 +1213,7 @@
         "<MILES> miles",
         "1 mile",
         "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
+        "a quarter mile",
         "<FEET> feet",
         "less than 10 feet"
       ],
@@ -1430,10 +1426,10 @@
     },
     "sharp": {
       "phrases": {
-        "0": "Turn sharp <RELATIVE_DIRECTION> bucko.",
-        "1": "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.",
-        "2": "Arrr, turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "3": "Turn sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
+        "0": "Make a sharp <RELATIVE_DIRECTION> bucko.",
+        "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.",
+        "2": "Arrr, make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+        "3": "Make a sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -1446,25 +1442,25 @@
       ],
       "example_phrases": {
         "0": [
-          "Turn sharp left bucko."
+          "Make a sharp left bucko."
         ],
         "1": [
-          "Turn sharp right onto Flatbush Avenue ye scallywag."
+          "Make a sharp right onto Flatbush Avenue ye scallywag."
         ],
         "2": [
-          "Arrr, turn sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
+          "Arrr, make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
         ],
         "3": [
-          "Turn sharp right matey to stay on Sunstone Drive."
+          "Make a sharp right matey to stay on Sunstone Drive."
         ]
       }
     },
     "sharp_verbal": {
       "phrases": {
-        "0": "Turn sharp <RELATIVE_DIRECTION> bucko.",
-        "1": "Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.",
-        "2": "Arrr, turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-        "3": "Turn sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
+        "0": "Make a sharp <RELATIVE_DIRECTION> bucko.",
+        "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.",
+        "2": "Arrr, make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+        "3": "Make a sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -1477,16 +1473,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Turn sharp left bucko."
+          "Make a sharp left bucko."
         ],
         "1": [
-          "Turn sharp right onto Flatbush Avenue ye scallywag."
+          "Make a sharp right onto Flatbush Avenue ye scallywag."
         ],
         "2": [
-          "Arrr, turn sharp left onto North Bond Street, U.S. 1 Business."
+          "Arrr, make a sharp left onto North Bond Street, U.S. 1 Business."
         ],
         "3": [
-          "Turn sharp right matey to stay on Sunstone Drive."
+          "Make a sharp right matey to stay on Sunstone Drive."
         ]
       }
     },
@@ -1602,7 +1598,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometers",
         "1 kilometer",
-        "a half kilometer",
         "<METERS> meters",
         "less than 10 meters"
       ],
@@ -1610,8 +1605,7 @@
         "<MILES> miles",
         "1 mile",
         "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
+        "a quarter mile",
         "<FEET> feet",
         "less than 10 feet"
       ],
@@ -2075,11 +2069,53 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
       },
+      "metric_lengths": [
+        "<KILOMETERS> kilometers",
+        "1 kilometer",
+        "<METERS> meters",
+        "less than 10 meters"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miles",
+        "1 mile",
+        "a half mile",
+        "a quarter mile",
+        "<FEET> feet",
+        "less than 10 feet"
+      ],
       "example_phrases": {
         "0": [
           "Bear right onto East Fayette Street. Then Turn right onto North Gay Street."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilometers",
+        "1 kilometer",
+        "<METERS> meters",
+        "less than 10 meters"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miles",
+        "1 mile",
+        "a half mile",
+        "a quarter mile",
+        "<FEET> feet",
+        "less than 10 feet"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }

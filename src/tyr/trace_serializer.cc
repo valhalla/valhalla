@@ -1,5 +1,6 @@
 #include <cstdint>
 
+#include "baldr/graphconstants.h"
 #include "baldr/json.h"
 #include "odin/enhancedtrippath.h"
 #include "thor/attributes_controller.h"
@@ -70,8 +71,12 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
                           static_cast<uint64_t>(std::round(edge.truck_speed() * scale)));
       }
       if (edge.has_speed_limit() && (edge.speed_limit() > 0)) {
-        edge_map->emplace("speed_limit",
-                          static_cast<uint64_t>(std::round(edge.speed_limit() * scale)));
+        if (edge.speed_limit() == kUnlimitedSpeedLimit) {
+          edge_map->emplace("speed_limit", std::string("unlimited"));
+        } else {
+          edge_map->emplace("speed_limit",
+                            static_cast<uint64_t>(std::round(edge.speed_limit() * scale)));
+        }
       }
       if (edge.has_density()) {
         edge_map->emplace("density", static_cast<uint64_t>(edge.density()));
@@ -302,6 +307,9 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
         }
         if (node.has_time_zone()) {
           end_node_map->emplace("time_zone", node.time_zone());
+        }
+        if (node.has_transition_time()) {
+          end_node_map->emplace("transition_time", json::fp_t{node.transition_time(), 3});
         }
 
         // TODO transit info at node

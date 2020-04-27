@@ -7,9 +7,9 @@
 
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
-#include "midgard/sequence.h"
 
 #include "baldr/connectivity_map.h"
+#include "baldr/curl_tilegetter.h"
 #include "filesystem.h"
 
 using namespace valhalla::midgard;
@@ -23,44 +23,76 @@ constexpr size_t AVERAGE_MM_TILE_SIZE = 1024;         // 1k
 namespace valhalla {
 namespace baldr {
 
-struct GraphReader::tile_extract_t {
-  tile_extract_t(const boost::property_tree::ptree& pt) {
-    // if you really meant to load it
-    if (pt.get_optional<std::string>("tile_extract")) {
-      try {
-        // load the tar
-        archive.reset(new midgard::tar(pt.get<std::string>("tile_extract")));
-        // map files to graph ids
-        for (auto& c : archive->contents) {
-          try {
-            auto id = GraphTile::GetTileId(c.first);
-            tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
-          } catch (...) {
-            // skip files we dont understand
-          }
+GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt) {
+  // if you really meant to load it
+  if (pt.get_optional<std::string>("tile_extract")) {
+    try {
+      // load the tar
+      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract")));
+      // map files to graph ids
+      for (auto& c : archive->contents) {
+        try {
+          auto id = GraphTile::GetTileId(c.first);
+          tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
+        } catch (...) {
+          // It's possible to put non-tile files inside the tarfile.  As we're only
+          // parsing the file *name* as a GraphId here, we will just silently skip
+          // any file paths that can't be parsed by GraphId::GetTileId()
+          // If we end up with *no* recognizable tile files in the tarball at all,
+          // checks lower down will warn on that.
         }
-        // couldn't load it
-        if (tiles.empty()) {
-          LOG_WARN("Tile extract contained no usuable tiles");
-        } // loaded ok but with possibly bad blocks
-        else {
-          LOG_INFO("Tile extract successfully loaded with tile count: " +
-                   std::to_string(tiles.size()));
-          if (archive->corrupt_blocks) {
-            LOG_WARN("Tile extract had " + std::to_string(archive->corrupt_blocks) +
-                     " corrupt blocks");
-          }
-        }
-      } catch (const std::exception& e) {
-        LOG_ERROR(e.what());
-        LOG_WARN("Tile extract could not be loaded");
       }
+      // couldn't load it
+      if (tiles.empty()) {
+        LOG_WARN("Tile extract contained no usuable tiles");
+      } // loaded ok but with possibly bad blocks
+      else {
+        LOG_INFO("Tile extract successfully loaded with tile count: " + std::to_string(tiles.size()));
+        if (archive->corrupt_blocks) {
+          LOG_WARN("Tile extract had " + std::to_string(archive->corrupt_blocks) + " corrupt blocks");
+        }
+      }
+    } catch (const std::exception& e) {
+      LOG_ERROR(e.what());
+      LOG_WARN("Tile extract could not be loaded");
     }
   }
-  // TODO: dont remove constness, and actually make graphtile read only?
-  std::unordered_map<uint64_t, std::pair<char*, size_t>> tiles;
-  std::shared_ptr<midgard::tar> archive;
-};
+
+  if (pt.get_optional<std::string>("traffic_extract")) {
+    try {
+      // load the tar
+      traffic_archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract")));
+      // map files to graph ids
+      for (auto& c : traffic_archive->contents) {
+        try {
+          auto id = GraphTile::GetTileId(c.first);
+          traffic_tiles[id] = std::make_pair(const_cast<char*>(c.second.first), c.second.second);
+        } catch (...) {
+          // It's possible to put non-tile files inside the tarfile.  As we're only
+          // parsing the file *name* as a GraphId here, we will just silently skip
+          // any file paths that can't be parsed by GraphId::GetTileId()
+          // If we end up with *no* recognizable tile files in the tarball at all,
+          // checks lower down will warn on that.
+        }
+      }
+      // couldn't load it
+      if (traffic_tiles.empty()) {
+        LOG_WARN("Traffic tile extract contained no usuable tiles");
+      } // loaded ok but with possibly bad blocks
+      else {
+        LOG_INFO("Traffic tile extract successfully loaded with tile count: " +
+                 std::to_string(traffic_tiles.size()));
+        if (traffic_archive->corrupt_blocks) {
+          LOG_WARN("Traffic tile extract had " + std::to_string(traffic_archive->corrupt_blocks) +
+                   " corrupt blocks");
+        }
+      }
+    } catch (const std::exception& e) {
+      LOG_WARN(e.what());
+      LOG_WARN("Traffic tile extract could not be loaded");
+    }
+  }
+}
 
 std::shared_ptr<const GraphReader::tile_extract_t>
 GraphReader::get_extract_instance(const boost::property_tree::ptree& pt) {
@@ -309,13 +341,18 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 }
 
 // Constructor using separate tile files
-GraphReader::GraphReader(const boost::property_tree::ptree& pt)
+GraphReader::GraphReader(const boost::property_tree::ptree& pt,
+                         std::unique_ptr<tile_getter_t>&& tile_getter)
     : tile_extract_(get_extract_instance(pt)), tile_dir_(pt.get<std::string>("tile_dir", "")),
-      curlers_(std::make_unique<curler_pool_t>(pt.get<size_t>("max_concurrent_reader_users", 1),
-                                               pt.get<std::string>("user_agent", ""))),
-      tile_url_(pt.get<std::string>("tile_url", "")),
-      tile_url_gz_(pt.get<bool>("tile_url_gz", false)),
-      cache_(TileCacheFactory::createTileCache(pt)) {
+      tile_getter_(std::move(tile_getter)),
+      max_concurrent_users_(pt.get<size_t>("max_concurrent_reader_users", 1)),
+      tile_url_(pt.get<std::string>("tile_url", "")), cache_(TileCacheFactory::createTileCache(pt)) {
+  if (!tile_getter_ && !tile_url_.empty()) {
+    tile_getter_ = std::make_unique<curl_tile_getter_t>(max_concurrent_users_,
+                                                        pt.get<std::string>("user_agent", ""),
+                                                        pt.get<bool>("tile_url_gz", false));
+  }
+
   // validate tile url
   if (!tile_url_.empty() && tile_url_.find(GraphTile::kTilePathPattern) == std::string::npos)
     throw std::runtime_error("Not found tilePath pattern in tile url");
@@ -390,8 +427,12 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
       return nullptr;
     }
 
+    auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
+
     // This initializes the tile from mmap
-    GraphTile tile(base, t->second.first, t->second.second);
+    GraphTile tile(base, t->second.first, t->second.second,
+                   traffic_ptr != tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
+                                                                     : nullptr);
     if (!tile.header()) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
@@ -404,24 +445,26 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     return inserted;
   } // Try getting it from flat file
   else {
+    auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
     // Try to get it from disk and if we cant..
-    GraphTile tile(tile_dir_, base);
+    GraphTile tile(tile_dir_, base,
+                   traffic_ptr != tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
+                                                                     : nullptr);
     if (!tile.header()) {
+      if (!tile_getter_) {
+        return nullptr;
+      }
+
       {
         std::lock_guard<std::mutex> lock(_404s_lock);
-        // See if we are configured for a url and if we are
-        if (tile_url_.empty() || _404s.find(base) != _404s.end()) {
+        if (_404s.find(base) != _404s.end()) {
           // LOG_DEBUG("Url cache miss " + GraphTile::FileSuffix(base));
           return nullptr;
         }
       }
 
-      {
-        scoped_curler_t curler(*curlers_);
-        // Get it from the url and cache it to disk if you can
-        tile = GraphTile::CacheTileURL(tile_url_, base, curler.get(), tile_url_gz_, tile_dir_);
-      }
-
+      // Get it from the url and cache it to disk if you can
+      tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_);
       if (!tile.header()) {
         std::lock_guard<std::mutex> lock(_404s_lock);
         _404s.insert(base);

@@ -95,7 +95,7 @@ void DirectionsBuilder::Build(Api& api) {
         if (options.directions_type() == DirectionsType::instructions) {
           std::unique_ptr<NarrativeBuilder> narrative_builder =
               NarrativeBuilderFactory::Create(options, &etp);
-          narrative_builder->Build(options, &etp, maneuvers);
+          narrative_builder->Build(options, maneuvers);
         }
       }
 
@@ -291,6 +291,11 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
       }
     }
 
+    // Process the guidance views
+    for (const auto& guidance_view : maneuver.guidance_views()) {
+      trip_maneuver->add_guidance_views()->CopyFrom(guidance_view);
+    }
+
     // Roundabout exit count
     if (maneuver.roundabout_exit_count() > 0) {
       trip_maneuver->set_roundabout_exit_count(maneuver.roundabout_exit_count());
@@ -358,8 +363,8 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
     }
 
     // Verbal multi-cue
-    if (maneuver.verbal_multi_cue()) {
-      trip_maneuver->set_verbal_multi_cue(maneuver.verbal_multi_cue());
+    if (maneuver.HasVerbalMultiCue()) {
+      trip_maneuver->set_verbal_multi_cue(maneuver.HasVerbalMultiCue());
     }
 
     // To stay on

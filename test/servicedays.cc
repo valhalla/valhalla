@@ -26,9 +26,8 @@ void TryGetServiceDays(const std::string& begin_date,
 
   uint64_t days = get_service_days(b_d, e_d, b, dow_mask);
 
-  if (value != days)
-    throw std::runtime_error("Invalid bits set for service days. " + begin_date + " " + end_date +
-                             " " + std::to_string(days));
+  EXPECT_EQ(value, days) << "Invalid bits set for service days. " + begin_date + " " + end_date +
+                                " " + std::to_string(days);
 }
 
 void TryGetServiceDays(const std::string& tile_date,
@@ -48,9 +47,8 @@ void TryGetServiceDays(const std::string& tile_date,
 
   uint64_t days = get_service_days(b_d, e_d, t, dow_mask);
 
-  if (value != days)
-    throw std::runtime_error("Invalid bits set for service days. " + begin_date + " " + end_date +
-                             " " + std::to_string(days));
+  EXPECT_EQ(value, days) << "Invalid bits set for service days. " + begin_date + " " + end_date +
+                                " " + std::to_string(days);
 }
 
 void TryToIsoExtendedString(const std::string& date) {
@@ -59,8 +57,7 @@ void TryToIsoExtendedString(const std::string& date) {
   auto b = DateTime::days_from_pivot_date((DateTime::get_formatted_date(date)));
   date::sys_days the_d = date::sys_days(date::year_month_day(d + date::days(b)));
 
-  if (date != to_iso_extended_string(the_d))
-    throw std::runtime_error("invalid iso string" + to_iso_extended_string(the_d));
+  EXPECT_EQ(date, to_iso_extended_string(the_d));
 }
 
 void TryIsServiceDaysUsingShift(const std::string& begin_date,
@@ -83,9 +80,8 @@ void TryIsServiceDaysUsingShift(const std::string& begin_date,
       answer = true;
   }
 
-  if (value != answer)
-    throw std::runtime_error("Invalid bits set for service days using shift.  " + begin_date + " " +
-                             end_date + " " + std::to_string(days));
+  EXPECT_EQ(value, answer) << "Invalid bits set for service days using shift.  " + begin_date + " " +
+                                  end_date + " " + std::to_string(days);
 }
 
 void TryGetServiceDays(bool check_b_date,
@@ -105,13 +101,13 @@ void TryGetServiceDays(bool check_b_date,
   uint64_t days = get_service_days(bdate, edate, tile_date, dow_mask);
 
   if (check_b_date) {
-    if (value != days && begin_date != date && end_date != edate)
-      throw std::runtime_error("Invalid bits set for service days. Begin date != date. " +
-                               std::to_string(days));
+    // TODO: revisit the condition here
+    EXPECT_FALSE(value != days && begin_date != date && end_date != edate)
+        << "Invalid bits set for service days. Begin date != date. " + std::to_string(days);
   } else {
-    if (value != days && begin_date != bdate && end_date != date)
-      throw std::runtime_error("Invalid bits set for service days. End date != date. " +
-                               std::to_string(days));
+    // TODO: revisit the condition here
+    EXPECT_FALSE(value != days && begin_date != bdate && end_date != date)
+        << "Invalid bits set for service days. End date != date. " + std::to_string(days);
   }
 }
 
@@ -133,9 +129,8 @@ void TryRejectFeed(const std::string& begin_date,
 
   uint64_t days = get_service_days(b_d, e_d, tile_date, dow_mask);
 
-  if (value != days)
-    throw std::runtime_error("Feed should of been rejected. " + begin_date + " " + end_date + " " +
-                             std::to_string(days));
+  EXPECT_EQ(value, days) << "Feed should of been rejected. " + begin_date + " " + end_date + " " +
+                                std::to_string(days);
 }
 
 void TryAddServiceDays(uint64_t days,
@@ -153,8 +148,7 @@ void TryAddServiceDays(uint64_t days,
   date::sys_days a_d = date::sys_days(date::year_month_day(d + date::days(a)));
 
   uint64_t result = add_service_day(days, e_d, b, a_d);
-  if (value != result)
-    throw std::runtime_error("Invalid bits set for added service day. " + added_date);
+  EXPECT_EQ(value, result) << "Invalid bits set for added service day. " + added_date;
 }
 
 void TryRemoveServiceDays(uint64_t days,
@@ -172,8 +166,7 @@ void TryRemoveServiceDays(uint64_t days,
   date::sys_days r_d = date::sys_days(date::year_month_day(d + date::days(r)));
 
   uint64_t result = remove_service_day(days, e_d, b, r_d);
-  if (value != result)
-    throw std::runtime_error("Invalid bits set for added service day. " + removed_date);
+  EXPECT_EQ(value, result) << "Invalid bits set for added service day. " + removed_date;
 }
 
 void TryTestServiceEndDate(const std::string& begin_date,
@@ -192,13 +185,12 @@ void TryTestServiceEndDate(const std::string& begin_date,
 
   get_service_days(b_d, e_d, b, dow_mask);
 
-  if (e_d != n_d)
-    throw std::runtime_error("End date not cut off at 60 days.");
+  EXPECT_EQ(e_d, n_d) << "End date not cut off at 60 days.";
 }
 
 } // namespace
 
-void TestServiceDays() {
+TEST(ServiceDays, TestServiceDays) {
 
   uint32_t dow_mask = kDOWNone;
 
@@ -311,22 +303,17 @@ void TestServiceDays() {
   TryGetServiceDays("2016-08-03", "2016-10-28", "2016-12-28", dow_mask, 0);
 }
 
-void TestIsoString() {
+TEST(ServiceDays, TestIsoString) {
   TryToIsoExtendedString("2015-11-11");
   TryToIsoExtendedString("2018-09-13");
 }
 
-void TestIsServiceAvailable() {
+TEST(ServiceDays, TestIsServiceAvailable) {
   TryIsServiceDaysUsingShift("2015-11-11", "2016-01-09", "2016-01-09", 580999813345182728, true);
   TryIsServiceDaysUsingShift("2015-11-11", "2016-01-10", "2016-01-09", 580999813345182728, false);
 }
 
-int main(void) {
-  test::suite suite("servicedays");
-
-  suite.test(TEST_CASE(TestServiceDays));
-  suite.test(TEST_CASE(TestIsServiceAvailable));
-  suite.test(TEST_CASE(TestIsoString));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

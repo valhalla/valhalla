@@ -6,7 +6,6 @@
 #include "mjolnir/util.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 #include <future>
 #include <set>
@@ -62,45 +61,44 @@ SortGraph(const std::string& nodes_file, const std::string& edges_file, const ui
   size_t node_count = 0;
   Node last_node{};
   std::map<GraphId, size_t> tiles;
-  nodes.transform(
-      [&nodes, &edges, &run_index, &node_index, &node_count, &last_node, &tiles](Node& node) {
-        // remember if this was a new tile
-        if (node_index == 0 || node.graph_id != (--tiles.end())->first) {
-          tiles.insert({node.graph_id, node_index});
-          node.graph_id.set_id(0);
-          run_index = node_index;
-          ++node_count;
-        } // but is it a new node
-        else if (last_node.node.osmid_ != node.node.osmid_) {
-          node.graph_id.set_id(last_node.graph_id.id() + 1);
-          run_index = node_index;
-          ++node_count;
-        } // not new keep the same graphid
-        else {
-          node.graph_id.set_id(last_node.graph_id.id());
-        }
+  nodes.transform([&edges, &run_index, &node_index, &node_count, &last_node, &tiles](Node& node) {
+    // remember if this was a new tile
+    if (node_index == 0 || node.graph_id != (--tiles.end())->first) {
+      tiles.insert({node.graph_id, node_index});
+      node.graph_id.set_id(0);
+      run_index = node_index;
+      ++node_count;
+    } // but is it a new node
+    else if (last_node.node.osmid_ != node.node.osmid_) {
+      node.graph_id.set_id(last_node.graph_id.id() + 1);
+      run_index = node_index;
+      ++node_count;
+    } // not new keep the same graphid
+    else {
+      node.graph_id.set_id(last_node.graph_id.id());
+    }
 
-        // if this node marks the start of an edge, go tell the edge where the first node in the
-        // series is
-        if (node.is_start()) {
-          auto element = edges[node.start_of];
-          auto edge = *element;
-          edge.sourcenode_ = run_index;
-          element = edge;
-        }
-        // if this node marks the end of an edge, go tell the edge where the first node in the
-        // series is
-        if (node.is_end()) {
-          auto element = edges[node.end_of];
-          auto edge = *element;
-          edge.targetnode_ = run_index;
-          element = edge;
-        }
+    // if this node marks the start of an edge, go tell the edge where the first node in the
+    // series is
+    if (node.is_start()) {
+      auto element = edges[node.start_of];
+      auto edge = *element;
+      edge.sourcenode_ = run_index;
+      element = edge;
+    }
+    // if this node marks the end of an edge, go tell the edge where the first node in the
+    // series is
+    if (node.is_end()) {
+      auto element = edges[node.end_of];
+      auto edge = *element;
+      edge.targetnode_ = run_index;
+      element = edge;
+    }
 
-        // next node
-        last_node = node;
-        ++node_index;
-      });
+    // next node
+    last_node = node;
+    ++node_index;
+  });
 
   LOG_INFO("Finished with " + std::to_string(node_count) + " graph nodes");
   return tiles;
@@ -113,7 +111,8 @@ void ConstructEdges(const OSMData& osmdata,
                     const std::string& nodes_file,
                     const std::string& edges_file,
                     const float tilesize,
-                    const std::function<GraphId(const OSMNode&)>& graph_id_predicate) {
+                    const std::function<GraphId(const OSMNode&)>& graph_id_predicate,
+                    bool infer_turn_channels) {
   LOG_INFO("Creating graph edges from ways...");
 
   // so we can read ways and nodes and write edges
@@ -145,14 +144,14 @@ void ConstructEdges(const OSMData& osmdata,
     bool valid = true;
     for (auto ni = current_way_node_index; ni <= last_way_node_index; ni++) {
       const auto wn = (*way_nodes[ni]).node;
-      if (wn.lat_ == 0.0 && wn.lng_ == 0.0) {
-        LOG_ERROR("Cannot find node " + std::to_string(wn.osmid_) + " in way " +
-                  std::to_string(way.way_id()));
+      if (wn.lat_ == kInvalidLatitude && wn.lng_ == kInvalidLongitude) {
+        LOG_WARN("Node " + std::to_string(wn.osmid_) + " in way " + std::to_string(way.way_id()) +
+                 " has not had coordinates initialized");
         valid = false;
       }
     }
     if (!valid) {
-      LOG_ERROR("Do not add edge!");
+      LOG_WARN("Do not add edge!");
       current_way_node_index = last_way_node_index + 1;
       continue;
     }
@@ -182,6 +181,10 @@ void ConstructEdges(const OSMData& osmdata,
             (way.link() && Length(edge.llindex_, way_node.node) < kMaxInternalLength);
         way_node.node.link_edge_ = way.link();
         way_node.node.non_link_edge_ = !way.link() && (way.auto_forward() || way.auto_backward());
+
+        // if this is data has turn_channels set then we need to use the flag.
+        if (!infer_turn_channels && way.turn_channel())
+          edge.attributes.turn_channel = true;
 
         uint32_t size = static_cast<uint32_t>(edges.size());
         if (!edge.attributes.way_begin)
@@ -397,7 +400,10 @@ void BuildTileSet(const std::string& ways_file,
   sequence<OSMRestriction> complex_restrictions_to(complex_restriction_to_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
-  bool commercial_data = pt.get<bool>("commercial_data", false);
+  bool infer_internal_intersections =
+      pt.get<bool>("data_processing.infer_internal_intersections", true);
+  bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
+
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
   if (!database) {
@@ -551,21 +557,22 @@ void BuildTileSet(const std::string& ways_file,
           } else if (!forward && w.backward_tagged_speed()) {
             speed = w.backward_speed();
           }
-          if (speed > kMaxSpeedKph) {
+          if (speed > kMaxAssumedSpeed) {
             LOG_WARN("Speed = " + std::to_string(speed) + " wayId= " + std::to_string(w.way_id()));
-            speed = kMaxSpeedKph;
+            speed = kMaxAssumedSpeed;
           }
           uint32_t speed_limit = w.speed_limit();
-          if (speed_limit > kMaxSpeedKph) {
+          if (speed_limit > kMaxAssumedSpeed && speed_limit != kUnlimitedSpeedLimit) {
             LOG_WARN("Speed limit = " + std::to_string(speed_limit) +
                      " wayId= " + std::to_string(w.way_id()));
-            speed_limit = kMaxSpeedKph;
+            speed_limit = kMaxAssumedSpeed;
           }
+
           uint32_t truck_speed = w.truck_speed();
-          if (truck_speed > kMaxSpeedKph) {
+          if (truck_speed > kMaxAssumedSpeed) {
             LOG_WARN("Truck Speed = " + std::to_string(truck_speed) +
                      " wayId= " + std::to_string(w.way_id()));
-            truck_speed = kMaxSpeedKph;
+            truck_speed = kMaxAssumedSpeed;
           }
 
           // Cul du sac
@@ -742,8 +749,9 @@ void BuildTileSet(const std::string& ways_file,
             directededge.set_use(Use::kRamp);
           }
 
-          if (commercial_data && w.internal())
+          if (!infer_internal_intersections && w.internal()) {
             directededge.set_internal(true);
+          }
 
           // Update the node's best class
           bestclass = std::min(bestclass, directededge.classification());
@@ -760,7 +768,7 @@ void BuildTileSet(const std::string& ways_file,
           // and directed edge if forward access and auto use
           // and directed edge is a link and not (link count=2 and driveforward count=1)
           //    OR node is a fork
-          //    OR we added guide signs
+          //    OR we added guide signs or guidance views
           if (!signs.empty() && (directededge.forwardaccess() & kAutoAccess) &&
               ((directededge.link() &&
                 (!((bundle.link_count == 2) && (bundle.driveforward_count == 1)))) ||
@@ -1144,9 +1152,11 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
 
   // Make the edges and nodes in the graph
   ConstructEdges(osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                 tl->second.tiles.TileSize(), [&level](const OSMNode& node) {
+                 tl->second.tiles.TileSize(),
+                 [&level](const OSMNode& node) {
                    return TileHierarchy::GetGraphId({node.lng_, node.lat_}, level);
-                 });
+                 },
+                 pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
 
   // Line up the nodes and then re-map the edges that the edges to them
   auto tiles = SortGraph(nodes_file, edges_file, level);
@@ -1155,13 +1165,14 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   // edge list needs to be modified
   DataQuality stats;
   if (pt.get<bool>("mjolnir.reclassify_links", true)) {
-    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file);
+    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file,
+                    pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
   } else {
     LOG_WARN("Not reclassifying link graph edges");
   }
 
   // Reclassify ferry connection edges - use the highway classification cutoff
-  RoadClass rc = RoadClass::kPrimary;
+  baldr::RoadClass rc = baldr::RoadClass::kPrimary;
   for (auto& level : TileHierarchy::levels()) {
     if (level.second.name == "highway") {
       rc = level.second.importance;
@@ -1405,7 +1416,47 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
     }
   }
 
-  return has_guide;
+  ////////////////////////////////////////////////////////////////////////////
+  // GUIDANCE VIEWS
+
+  bool has_guidance_view = false;
+  if (forward && way.fwd_jct_base_index() > 0) {
+    std::vector<std::string> names =
+        GetTagTokens(osmdata.name_offset_map.name(way.fwd_jct_base_index()), '|');
+    // route number set to true for kGuidanceViewJct type means base type
+    for (auto& name : names) {
+      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, true, name);
+      has_guidance_view = true;
+    }
+  } else if (!forward && way.bwd_jct_base_index() > 0) {
+    std::vector<std::string> names =
+        GetTagTokens(osmdata.name_offset_map.name(way.bwd_jct_base_index()), '|');
+    // route number set to true for kGuidanceViewJct type means base type
+    for (auto& name : names) {
+      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, true, name);
+      has_guidance_view = true;
+    }
+  }
+
+  if (forward && way.fwd_jct_overlay_index() > 0) {
+    std::vector<std::string> names =
+        GetTagTokens(osmdata.name_offset_map.name(way.fwd_jct_overlay_index()), '|');
+    // route number set to false for kGuidanceViewJct type means overlay type
+    for (auto& name : names) {
+      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, false, name);
+      has_guidance_view = true;
+    }
+  } else if (!forward && way.bwd_jct_overlay_index() > 0) {
+    std::vector<std::string> names =
+        GetTagTokens(osmdata.name_offset_map.name(way.bwd_jct_overlay_index()), '|');
+    // route number set to false for kGuidanceViewJct type means overlay type
+    for (auto& name : names) {
+      exit_list.emplace_back(Sign::Type::kGuidanceViewJunction, false, name);
+      has_guidance_view = true;
+    }
+  }
+
+  return (has_guide || has_guidance_view);
 }
 
 } // namespace mjolnir

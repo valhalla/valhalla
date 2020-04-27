@@ -44,12 +44,14 @@ public:
   std::string height(Api& request);
   std::string transit_available(Api& request);
 
+  void set_interrupt(const std::function<void()>* interrupt) override;
+
 protected:
   void parse_locations(
       google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
       boost::optional<valhalla_exception_t> required_exception = valhalla_exception_t{110});
   void parse_trace(Api& request);
-  void parse_costing(Api& request);
+  void parse_costing(Api& request, bool allow_none = false);
   void locations_from_shape(Api& request);
 
   void init_locate(Api& request);

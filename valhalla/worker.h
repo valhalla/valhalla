@@ -29,6 +29,7 @@ bool FilterAction_Enum_Parse(const std::string& action, FilterAction* a);
 const std::string& FilterAction_Enum_Name(const FilterAction action);
 bool DirectionsType_Enum_Parse(const std::string& dtype, DirectionsType* t);
 bool PreferredSide_Enum_Parse(const std::string& pside, valhalla::Location::PreferredSide* p);
+bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc);
 
 const std::unordered_map<unsigned, std::string>
     error_codes{// loki project 1xx
@@ -166,6 +167,15 @@ void ParseApi(const prime_server::http_request_t& http_request, Api& api);
 #endif
 
 #ifdef HAVE_HTTP
+
+namespace worker {
+using content_type = prime_server::headers_t::value_type;
+const content_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
+const content_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
+const content_type XML_MIME{"Content-type", "text/xml;charset=utf-8"};
+const content_type GPX_MIME{"Content-type", "application/gpx+xml;charset=utf-8"};
+} // namespace worker
+
 prime_server::worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
                                                prime_server::http_request_info_t& request_info,
                                                const Api& options);
@@ -175,12 +185,12 @@ prime_server::worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
 prime_server::worker_t::result_t to_response(const baldr::json::MapPtr& map,
                                              prime_server::http_request_info_t& request_info,
                                              const Api& options);
-prime_server::worker_t::result_t to_response_json(const std::string& json,
-                                                  prime_server::http_request_info_t& request_info,
-                                                  const Api& options);
-prime_server::worker_t::result_t to_response_xml(const std::string& xml,
-                                                 prime_server::http_request_info_t& request_info,
-                                                 const Api& options);
+prime_server::worker_t::result_t
+to_response(const std::string& data,
+            prime_server::http_request_info_t& request_info,
+            const Api& options,
+            const worker::content_type& content_type = worker::JSON_MIME,
+            const bool as_attachment = false);
 #endif
 
 class service_worker_t {
@@ -218,7 +228,7 @@ public:
    * supposed to be halted
    * @param  interrupt    the function to be called which should throw
    */
-  virtual void set_interrupt(const std::function<void()>& interrupt) final;
+  virtual void set_interrupt(const std::function<void()>* interrupt);
 
 protected:
   const std::function<void()>* interrupt;

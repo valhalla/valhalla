@@ -5,6 +5,7 @@
 #include "loki/reach.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
+#include "sif/autocost.h"
 
 #include <algorithm>
 #include <boost/property_tree/ptree.hpp>
@@ -13,8 +14,19 @@ using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
+namespace vs = valhalla::sif;
 
 namespace {
+
+std::shared_ptr<vs::DynamicCost> create_costing() {
+  Options options;
+  const rapidjson::Document doc;
+  sif::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
+  sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
+                                   options.add_costing_options());
+  options.add_costing_options();
+  return vs::CreateAutoCost(Costing::auto_, options);
+}
 
 boost::property_tree::ptree get_conf() {
   std::stringstream ss;
@@ -63,14 +75,13 @@ GraphId begin_node(GraphReader& reader, const DirectedEdge* edge) {
   return opp_edge->endnode();
 }
 
-void check_all_reach() {
+TEST(Reach, check_all_reach) {
   // get tile access
   auto conf = get_conf();
   GraphReader reader(conf.get_child("mjolnir"));
 
-  // use basic car filters
-  auto edge_filter = [](const DirectedEdge* e) { return e->forwardaccess() & kAutoAccess; };
-  auto node_filter = [](const NodeInfo* n) { return !(n->access() & kAutoAccess); };
+  auto costing = create_costing();
+  Reach reach_finder;
 
   // look at all the edges
   for (auto tile_id : reader.GetTileSet()) {
@@ -80,7 +91,7 @@ void check_all_reach() {
          edge_id.id() < tile->header()->directededgecount(); ++edge_id) {
       // use the simple method to find the reach for the edge in both directions
       const auto* edge = tile->directededge(edge_id);
-      auto reach = SimpleReach(edge, 50, reader, edge_filter, node_filter, kInbound | kOutbound);
+      auto reach = reach_finder(edge, edge_id, 50, reader, costing, kInbound | kOutbound);
 
       // shape is nice to have
       auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
@@ -96,25 +107,22 @@ void check_all_reach() {
       const auto* end = t->node(edge->endnode());
 
       // if you have non zero reach but you dont have access, something is wrong
-      if ((reach.outbound > 0 || reach.inbound > 0) && !(edge->forwardaccess() & kAutoAccess) &&
-          !(edge->reverseaccess() & kAutoAccess)) {
-        throw std::logic_error("This edge should have 0 reach as its not accessable: " +
-                               std::to_string(edge_id.value) + " " + shape_str);
-      }
+      EXPECT_FALSE((reach.outbound > 0 || reach.inbound > 0) &&
+                   !(edge->forwardaccess() & kAutoAccess) && !(edge->reverseaccess() & kAutoAccess))
+          << "This edge should have 0 reach as its not accessable: " + std::to_string(edge_id.value) +
+                 " " + shape_str;
 
       // if inbound is 0 and outbound is not then it must be an edge leaving a dead end
       // meaning a begin node that is not accessable
-      if (reach.inbound == 0 && reach.outbound > 0 && !node_filter(begin)) {
-        throw std::logic_error("Only outbound reach should mean an edge that leaves a dead end: " +
-                               std::to_string(edge_id.value) + " " + shape_str);
-      }
+      EXPECT_FALSE(reach.inbound == 0 && reach.outbound > 0 && !costing->GetNodeFilter()(begin))
+          << "Only outbound reach should mean an edge that leaves a dead end: " +
+                 std::to_string(edge_id.value) + " " + shape_str;
 
       // if outbound is 0 and inbound is not then it must be an edge entering a dead end
       // meaning an end node that is not accessable
-      if (reach.inbound > 0 && reach.outbound == 0 && !node_filter(end)) {
-        throw std::logic_error("Only inbound reach should mean an edge that enters a dead end: " +
-                               std::to_string(edge_id.value) + " " + shape_str);
-      }
+      EXPECT_FALSE(reach.inbound > 0 && reach.outbound == 0 && !costing->GetNodeFilter()(end))
+          << "Only inbound reach should mean an edge that enters a dead end: " +
+                 std::to_string(edge_id.value) + " " + shape_str;
     }
   }
 }
@@ -122,11 +130,7 @@ void check_all_reach() {
 } // namespace
 
 int main(int argc, char* argv[]) {
-  test::suite suite("reach");
-
   logging::Configure({{"type", ""}});
-
-  suite.test(TEST_CASE(check_all_reach));
-
-  return suite.tear_down();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

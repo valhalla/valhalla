@@ -6,6 +6,7 @@
 #include "meili/routing.h"
 #include "meili/transition_cost_model.h"
 #include "midgard/distanceapproximator.h"
+#include <array>
 
 namespace {
 
@@ -34,6 +35,7 @@ struct Interpolation {
   float route_distance;
   float route_time;
   float edge_distance;
+  std::vector<EdgeSegment>::const_iterator segment;
 
   float sortcost(const EmissionCostModel& emission_model,
                  const TransitionCostModel& transition_model,
@@ -60,9 +62,12 @@ inline MatchResult CreateMatchResult(const Measurement& measurement, const Inter
 Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
                                      const Measurement& measurement,
                                      std::vector<EdgeSegment>::const_iterator begin,
+                                     float begin_source_offset,
                                      std::vector<EdgeSegment>::const_iterator end,
                                      float match_measurement_distance,
-                                     float match_measurement_time) {
+                                     float match_measurement_time,
+                                     const midgard::PointLL& left_most_projected_point,
+                                     const midgard::PointLL& right_most_projected_point) {
   const baldr::GraphTile* tile(nullptr);
   midgard::projector_t projector(measurement.lnglat());
 
@@ -72,7 +77,6 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
 
   // Invalid edgeid indicates that no interpolation found
   Interpolation best_interp;
-
   for (auto segment = begin; segment != end; segment++) {
     const auto directededge = mapmatcher.graphreader().directededge(segment->edgeid, tile);
     if (!directededge) {
@@ -95,6 +99,18 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
       offset = 1.f - offset;
     }
 
+    // clip distance along and projection to the match boundaries
+    if (segment == begin && offset < begin_source_offset) {
+      offset = begin_source_offset;
+      sq_distance = projector.approx.DistanceSquared(left_most_projected_point);
+      projected_point = left_most_projected_point;
+    }
+    if (segment == end - 1 && offset > segment->target) {
+      offset = segment->target;
+      sq_distance = projector.approx.DistanceSquared(right_most_projected_point);
+      projected_point = right_most_projected_point;
+    }
+
     // Distance from the projected point to the segment begin, or
     // segment begin if we walk reversely
     const auto distance_to_segment_ends =
@@ -108,8 +124,8 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
     auto edge_percent = segment->target - segment->source;
     auto route_time = mapmatcher.costing()->EdgeCost(directededge, tile).secs * edge_percent;
 
-    Interpolation interp{projected_point, segment->edgeid, sq_distance,
-                         route_distance,  route_time,      offset};
+    Interpolation interp{projected_point, segment->edgeid, sq_distance, route_distance,
+                         route_time,      offset,          segment};
 
     const auto cost =
         interp.sortcost(mapmatcher.emission_cost_model(), mapmatcher.transition_cost_model(),
@@ -132,7 +148,9 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
 std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
                                                  const std::vector<Measurement>& measurements,
                                                  const StateId& stateid,
-                                                 const StateId& next_stateid) {
+                                                 const StateId& next_stateid,
+                                                 const midgard::PointLL& first_projection,
+                                                 const midgard::PointLL& last_projection) {
   // Nothing to do here
   if (measurements.empty()) {
     return {};
@@ -141,6 +159,7 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
   // can't interpolate these because they don't happen between two valid states or
   // we weren't able to get a downstream route
   std::vector<MatchResult> results;
+  results.reserve(measurements.size());
   if (!stateid.IsValid() || !next_stateid.IsValid()) {
     for (const auto& measurement : measurements) {
       results.push_back(CreateMatchResult(measurement));
@@ -152,27 +171,31 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
                                               mapmatcher.state_container().state(next_stateid));
 
   // for each point that needs interpolated
+  std::vector<EdgeSegment>::const_iterator left_most_segment = route.begin();
+  float left_most_offset = route.empty() ? 0.f : route.begin()->source;
+  midgard::PointLL left_most_projection = first_projection;
+
   for (const auto& measurement : measurements) {
     const auto& match_measurement = mapmatcher.state_container().measurement(stateid.time());
     const auto match_measurement_distance = GreatCircleDistance(measurement, match_measurement);
     const auto match_measurement_time = ClockDistance(measurement, match_measurement);
+
     // interpolate this point along the route
-    const auto& interp = InterpolateMeasurement(mapmatcher, measurement, route.begin(), route.end(),
-                                                match_measurement_distance, match_measurement_time);
+    const auto interp =
+        InterpolateMeasurement(mapmatcher, measurement, left_most_segment, left_most_offset,
+                               route.end(), match_measurement_distance, match_measurement_time,
+                               left_most_projection, last_projection);
+
+    // shift the point at which we are allowed to start interpolating from to the right
+    // so that its on the interpolation point this way the next interpolation happens after
+    if (interp.edgeid.Is_Valid()) {
+      left_most_segment = interp.segment;
+      left_most_offset = interp.edge_distance;
+      left_most_projection = interp.projected;
+    }
 
     // if it was able to do the interpolation
     if (interp.edgeid.Is_Valid()) {
-      // dont allow subsequent points to get interpolated before this point
-      // we do this by editing the route to start where this point was interpolated
-      auto itr = std::find_if(route.begin(), route.end(),
-                              [&interp](const EdgeSegment& e) { return e.edgeid == interp.edgeid; });
-      itr = std::find_if(itr, route.end(), [&interp](const EdgeSegment& e) {
-        return e.edgeid == interp.edgeid && e.target > interp.edge_distance;
-      });
-      if (itr != route.end()) {
-        itr->source = interp.edge_distance;
-        route.erase(route.begin(), itr);
-      }
       // keep the interpolated match result
       results.push_back(CreateMatchResult(measurement, interp));
     } // couldnt interpolate this point
@@ -260,6 +283,40 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     if (next_opp_de && next_opp_de->endnode() == candidate_node) {
       return {edge.projected, std::sqrt(edge.distance), next_edge, 0.f, measurement.epoch_time(),
               stateid};
+    }
+
+    // when the instersection match fails, we do a more labor intensive search at transitions
+    // for both prev_edge's ending node and next_edge's starting node and see if we could do a
+    // node snap match. We collect the info together and search both prev edge end node and next
+    // edge start node in the below loop
+    std::array<std::tuple<const baldr::DirectedEdge*, baldr::GraphId, float>, 2> transition_infos{
+        {std::tuple<const baldr::DirectedEdge*, baldr::GraphId, float>{prev_de, prev_edge, 0.f},
+         std::tuple<const baldr::DirectedEdge*, baldr::GraphId, float>{next_opp_de, next_edge, 1.f}}};
+
+    for (const auto& trans_info : transition_infos) {
+      const auto* de = std::get<0>(trans_info);
+      auto edge_id = std::get<1>(trans_info);
+      float distance_along = std::get<2>(trans_info);
+
+      if (de && edge.id.level() != de->endnode().level()) {
+        baldr::GraphId end_node = next_opp_de->endnode();
+        for (const auto& trans : tile->GetNodeTransitions(end_node)) {
+          // we only care about if the nodes are in the same level
+          if (trans.endnode().level() != candidate_node.level()) {
+            continue;
+          }
+
+          // bail when nodes are the same level node is not a sibling of the target node
+          end_node = trans.endnode();
+          tile = graph_reader.GetGraphTile(end_node);
+          if (tile == nullptr || end_node != candidate_node) {
+            break;
+          }
+
+          return {edge.projected, std::sqrt(edge.distance), edge_id,
+                  distance_along, measurement.epoch_time(), stateid};
+        }
+      }
     }
   }
 
@@ -550,6 +607,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   Clear();
 
   std::vector<MatchResults> best_paths;
+  best_paths.reserve(k);
 
   // Nothing to do
   if (measurements.empty()) {
@@ -563,14 +621,16 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   auto interpolated = AppendMeasurements(measurements);
 
   // For k paths
+  std::vector<StateId> state_ids;
+  state_ids.reserve(container_.size());
   while (best_paths.size() < k && !found_broken_path) {
     // Get the states for the kth best path in reversed order then fix the order
-    std::vector<StateId> state_ids;
+    state_ids.clear();
     double accumulated_cost = 0.f;
     while (state_ids.size() < container_.size()) {
       // Get the time at the last column of states
       const auto time = container_.size() - state_ids.size() - 1;
-      std::copy(vs_.SearchPath(time, false), vs_.PathEnd(), std::back_inserter(state_ids));
+      std::copy(vs_.SearchPathVS(time, false), vs_.PathEnd(), std::back_inserter(state_ids));
       const auto& winner = vs_.SearchWinner(time);
       if (winner.IsValid()) {
         accumulated_cost += vs_.AccumulatedCost(winner);
@@ -594,6 +654,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
 
     // Get back the real state ids in order
     std::vector<StateId> original_state_ids;
+    original_state_ids.reserve(state_ids.size());
     for (auto s_itr = state_ids.rbegin(); s_itr != state_ids.rend(); ++s_itr) {
       original_state_ids.push_back(ts_.GetOrigin(*s_itr, *s_itr));
     }
@@ -615,9 +676,10 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
 
     // Insert the interpolated results into the result list
     std::vector<MatchResult> best_path;
+    best_path.reserve(measurements.size());
     for (StateId::Time time = 0; time < original_state_ids.size(); time++) {
       // Add in this states result
-      best_path.emplace_back(std::move(results[time]));
+      best_path.emplace_back(results[time]);
 
       // See if there were any interpolated points with this state move on if not
       const auto it = interpolated.find(time);
@@ -629,12 +691,15 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
       const auto& this_stateid = original_state_ids[time];
       const auto& next_stateid =
           time + 1 < original_state_ids.size() ? original_state_ids[time + 1] : StateId();
-      const auto& interpolated_results =
-          InterpolateMeasurements(*this, it->second, this_stateid, next_stateid);
+
+      midgard::PointLL first_projection = results[time].lnglat;
+      midgard::PointLL last_projection = results[time + 1].lnglat;
+      const auto interpolated_results =
+          InterpolateMeasurements(*this, it->second, this_stateid, next_stateid, first_projection,
+                                  last_projection);
 
       // Copy the interpolated match results into the final set
-      std::copy(interpolated_results.cbegin(), interpolated_results.cend(),
-                std::back_inserter(best_path));
+      best_path.insert(best_path.cend(), interpolated_results.cbegin(), interpolated_results.cend());
     }
 
     // Construct a result

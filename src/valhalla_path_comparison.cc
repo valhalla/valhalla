@@ -61,7 +61,7 @@ void print_edge(GraphReader& reader,
     auto node_id = pred_edge->endnode();
     auto node_tile = reader.GetGraphTile(node_id);
     auto node = node_tile->node(node_id);
-    EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, 0.0f, static_cast<TravelMode>(0), 0);
+    EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, 0.0f, static_cast<TravelMode>(0), 0, {});
     std::cout << "-------Transition-------\n";
     std::cout << "Pred GraphId: " << pred_id << std::endl;
     Cost trans_cost = costing->TransitionCost(edge, node, pred_label);
@@ -81,7 +81,7 @@ void print_edge(GraphReader& reader,
   std::cout << "------------------------\n\n";
 }
 
-void walk_edges(const std::string& shape, GraphReader& reader, cost_ptr_t cost_ptr) {
+void walk_edges(const std::string& shape, GraphReader& reader, const cost_ptr_t& cost_ptr) {
   TravelMode mode = cost_ptr->travel_mode();
   cost_ptr_t mode_costing[10];
   mode_costing[static_cast<uint32_t>(mode)] = cost_ptr;
@@ -103,7 +103,7 @@ void walk_edges(const std::string& shape, GraphReader& reader, cost_ptr_t cost_p
   std::vector<baldr::Location> locations;
   locations.push_back({shape_pts.front()});
   locations.push_back({shape_pts.back()});
-  const auto projections = Search(locations, reader, cost_ptr.get());
+  const auto projections = Search(locations, reader, cost_ptr);
   std::vector<PathLocation> path_location;
   valhalla::Options options;
   for (const auto& loc : locations) {
@@ -220,7 +220,7 @@ int main(int argc, char* argv[]) {
         for (const auto& location : path.second) {
           // Get the location from the ptree
           // TODO - this was copied from the defunct Location::FromPtree
-          const auto& pt = path.second;
+          const auto& pt = location.second;
           float lat = pt.get<float>("lat");
           if (lat < -90.0f || lat > 90.0f) {
             throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
@@ -279,7 +279,7 @@ int main(int argc, char* argv[]) {
   } else {
     throw std::runtime_error("No costing method found");
   }
-  cost_ptr_t cost_ptr = factory.Create(costing, request.options());
+  cost_ptr_t cost_ptr = factory.Create(request.options());
 
   // If a shape is entered use edge walking
   if (!map_match) {

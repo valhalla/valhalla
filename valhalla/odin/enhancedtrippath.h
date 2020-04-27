@@ -142,7 +142,7 @@ public:
     return mutable_edge_->speed();
   }
 
-  ::valhalla::TripLeg_RoadClass road_class() const {
+  ::valhalla::RoadClass road_class() const {
     return mutable_edge_->road_class();
   }
 
@@ -315,6 +315,10 @@ public:
     return mutable_edge_->speed_limit();
   }
 
+  float default_speed() const {
+    return mutable_edge_->default_speed();
+  }
+
   float truck_speed() const {
     return mutable_edge_->truck_speed();
   }
@@ -464,7 +468,7 @@ public:
     return mutable_intersecting_edge_->use();
   }
 
-  ::valhalla::TripLeg_RoadClass road_class() const {
+  ::valhalla::RoadClass road_class() const {
     return mutable_intersecting_edge_->road_class();
   }
 
@@ -557,7 +561,7 @@ public:
     return mutable_node_->type();
   }
 
-  uint32_t elapsed_time() const {
+  double elapsed_time() const {
     return mutable_node_->elapsed_time();
   }
 
@@ -571,6 +575,14 @@ public:
 
   const std::string& time_zone() const {
     return mutable_node_->time_zone();
+  }
+
+  bool has_transition_time() const {
+    return mutable_node_->has_transition_time();
+  }
+
+  double transition_time() const {
+    return mutable_node_->transition_time();
   }
 
   bool HasIntersectingEdges() const;
@@ -592,7 +604,7 @@ public:
 
   bool HasForwardTraversableSignificantRoadClassXEdge(uint32_t from_heading,
                                                       const TripLeg_TravelMode travel_mode,
-                                                      TripLeg_RoadClass path_road_class);
+                                                      RoadClass path_road_class);
 
   bool HasWiderForwardTraversableIntersectingEdge(uint32_t from_heading,
                                                   const TripLeg_TravelMode travel_mode);
@@ -606,7 +618,7 @@ public:
                              uint32_t from_heading,
                              const TripLeg_TravelMode travel_mode);
 
-  bool HasSpecifiedRoadClassXEdge(const TripLeg_RoadClass road_class);
+  bool HasSpecifiedRoadClassXEdge(const RoadClass road_class);
 
   uint32_t GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading);
 

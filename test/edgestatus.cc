@@ -1,8 +1,9 @@
-#include "test.h"
 
+#include "thor/edgestatus.h"
 #include "baldr/graphtile.h"
 #include "config.h"
-#include "thor/edgestatus.h"
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -12,15 +13,14 @@ namespace {
 
 void TryGet(const EdgeStatus& edgestatus, const GraphId& edgeid, const EdgeSet expected) {
   EdgeStatusInfo r = edgestatus.Get(edgeid);
-  if (r.set() != expected)
-    throw runtime_error("EdgeStatus get test failed");
+  EXPECT_EQ(r.set(), expected);
 }
 
 struct test_tile : public GraphTile {
   using GraphTile::header_;
 };
 
-void TestStatus() {
+TEST(EdgeStatus, TestStatus) {
   EdgeStatus edgestatus;
 
   // Dummy tile header
@@ -53,26 +53,22 @@ void TestStatus() {
   TryGet(edgestatus, GraphId(555, 2, 1), EdgeSet::kPermanent);
   TryGet(edgestatus, GraphId(555, 3, 1), EdgeSet::kPermanent);
 
-  // Clear and make sure all status are kUnreached
+  // Clear and make sure all status are kUnreachedOrReset
   edgestatus.clear();
-  TryGet(edgestatus, GraphId(555, 1, 100100), EdgeSet::kUnreached);
-  TryGet(edgestatus, GraphId(555, 2, 100100), EdgeSet::kUnreached);
-  TryGet(edgestatus, GraphId(555, 3, 100100), EdgeSet::kUnreached);
-  TryGet(edgestatus, GraphId(555, 1, 55555), EdgeSet::kUnreached);
-  TryGet(edgestatus, GraphId(555, 2, 55555), EdgeSet::kUnreached);
-  TryGet(edgestatus, GraphId(555, 3, 55555), EdgeSet::kUnreached);
-  TryGet(edgestatus, GraphId(555, 1, 1), EdgeSet::kUnreached);
-  TryGet(edgestatus, GraphId(555, 2, 1), EdgeSet::kUnreached);
-  TryGet(edgestatus, GraphId(555, 3, 1), EdgeSet::kUnreached);
+  TryGet(edgestatus, GraphId(555, 1, 100100), EdgeSet::kUnreachedOrReset);
+  TryGet(edgestatus, GraphId(555, 2, 100100), EdgeSet::kUnreachedOrReset);
+  TryGet(edgestatus, GraphId(555, 3, 100100), EdgeSet::kUnreachedOrReset);
+  TryGet(edgestatus, GraphId(555, 1, 55555), EdgeSet::kUnreachedOrReset);
+  TryGet(edgestatus, GraphId(555, 2, 55555), EdgeSet::kUnreachedOrReset);
+  TryGet(edgestatus, GraphId(555, 3, 55555), EdgeSet::kUnreachedOrReset);
+  TryGet(edgestatus, GraphId(555, 1, 1), EdgeSet::kUnreachedOrReset);
+  TryGet(edgestatus, GraphId(555, 2, 1), EdgeSet::kUnreachedOrReset);
+  TryGet(edgestatus, GraphId(555, 3, 1), EdgeSet::kUnreachedOrReset);
 }
 
 } // namespace
 
-int main() {
-  test::suite suite("edgestatus");
-
-  // Test setting status, getting status, and clearing
-  suite.test(TEST_CASE(TestStatus));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

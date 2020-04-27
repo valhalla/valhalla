@@ -148,23 +148,26 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
                                                const valhalla::Location& destination,
                                                std::pair<int32_t, float>& best_path) {
 
-  LOG_WARN(std::string("Expanding edge_id ") + std::to_string(meta.edge_id.id()) + " from node " +
-           std::to_string(pred.endnode().id()));
-  // Skip shortcut edges for time dependent routes. Also skip this edge if permanently labeled
-  // (best path already found to this directed edge), if no access is allowed to this edge
-  // (based on costing method), or if a complex restriction exists.
+  // Skip this edge if permanently labeled (best path already found to this
+  // directed edge)
+  if (meta.edge_status->set() == EdgeSet::kPermanent) {
+    return true; // This is an edge we _could_ have expanded, so return true
+  }
+  // Skip shortcut edges for time dependent routes, if no access is allowed to this edge
+  // (based on costing method)
   bool has_time_restrictions = false;
-  if (meta.edge->is_shortcut() || meta.edge_status->set() == EdgeSet::kPermanent ||
+  if (meta.edge->is_shortcut() ||
       !costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, nodeinfo->timezone(),
                          has_time_restrictions) ||
-      costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, localtime,
-                           nodeinfo->timezone())) {
+      costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
+                           localtime, nodeinfo->timezone())) {
     return false;
   }
 
   // Compute the cost to the end of this edge
   auto edge_cost = costing_->EdgeCost(meta.edge, tile, seconds_of_week);
-  Cost newcost = pred.cost() + edge_cost + costing_->TransitionCost(meta.edge, nodeinfo, pred);
+  auto transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
+  Cost newcost = pred.cost() + edge_cost + transition_cost;
 
   // If this edge is a destination, subtract the partial/remainder cost
   // (cost from the dest. location to the end of the edge).
@@ -201,7 +204,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       adjacencylist_->decrease(meta.edge_status->index(), newsortcost);
-      lab.Update(pred_idx, newcost, newsortcost, has_time_restrictions);
+      lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
     }
     return true;
   }
@@ -223,7 +226,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   // Add to the adjacency list and edge labels.
   uint32_t idx = edgelabels_.size();
   edgelabels_.emplace_back(pred_idx, meta.edge_id, meta.edge, newcost, sortcost, dist, mode_, 0,
-                           has_time_restrictions);
+                           transition_cost, has_time_restrictions);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   adjacencylist_->add(idx);
   return true;
@@ -259,20 +262,18 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
-  // Set seconds from beginning of the week
-  seconds_of_week_ = DateTime::day_of_week(origin.date_time()) * midgard::kSecondsPerDay +
-                     DateTime::seconds_from_midnight(origin.date_time());
-
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
   uint32_t density = SetDestination(graphreader, destination);
-  SetOrigin(graphreader, origin, destination, seconds_of_week_);
+  // Call SetOrigin with kFreeFlowSecondOfDay for now since we don't yet have
+  // a timezone for converting a date_time of "current" to seconds_of_week
+  SetOrigin(graphreader, origin, destination, kInvalidSecondsOfWeek);
 
   // Set the origin timezone to be the timezone at the end node
   origin_tz_index_ = edgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_[0].endnode());
   if (origin_tz_index_ == 0) {
     // TODO - do not throw exception at this time
-    LOG_ERROR("Could not get the timezone at the origin");
+    LOG_WARN("Could not get the timezone at the origin");
   }
 
   // Set route start time (seconds from epoch)
@@ -280,6 +281,9 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
       DateTime::seconds_since_epoch(origin.date_time(),
                                     DateTime::get_tz_db().from_index(origin_tz_index_));
 
+  // Set seconds from beginning of the week
+  seconds_of_week_ = DateTime::day_of_week(origin.date_time()) * midgard::kSecondsPerDay +
+                     DateTime::seconds_from_midnight(origin.date_time());
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
 

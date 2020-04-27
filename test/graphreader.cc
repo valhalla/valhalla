@@ -1,12 +1,13 @@
-#include "test.h"
 #include <cstdint>
 
 #include "baldr/connectivity_map.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 
-#include <boost/filesystem.hpp>
 #include <fcntl.h>
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -20,61 +21,66 @@ public:
   using SimpleTileCache::SimpleTileCache;
 };
 
-test_cache make_cache(size_t cache_size) {
-  return {cache_size};
-}
-
-void TestOutOfRangeLL() {
+TEST(SimpleCache, QueryByPointOutOfRangeLL) {
   boost::property_tree::ptree pt;
   pt.put("tile_dir", "test/gphrdr_test");
   GraphReader reader(pt);
 
   // Latitude out of range
-  if (reader.GetGraphTile({60.0f, 100.0f}) != nullptr)
-    throw std::runtime_error("Out of range LL should return nullptr");
+  EXPECT_TRUE(reader.GetGraphTile({60.0f, 100.0f}) == nullptr)
+      << "Out of range LL should return nullptr";
 
   // Out of range longitude
-  if (reader.GetGraphTile({460.0f, 60.0f}) != nullptr)
-    throw std::runtime_error("Out of range LL should return nullptr");
+  EXPECT_TRUE(reader.GetGraphTile({460.0f, 60.0f}) == nullptr)
+      << "Out of range LL should return nullptr";
 }
 
-void TestCacheLimits() {
-  if (make_cache(0).OverCommitted())
-    throw std::runtime_error("Cache should be over committed");
+test_cache make_cache(size_t cache_size) {
+  return {cache_size};
+}
 
-  if (make_cache(1).OverCommitted())
-    throw std::runtime_error("Cache should be under committed");
+TEST(SimpleCache, CacheLimitsZeroSizeOvercommited) {
+  EXPECT_FALSE(make_cache(0).OverCommitted());
+}
 
+TEST(SimpleCache, CacheLimitsMinSizeOvercommited) {
+  EXPECT_FALSE(make_cache(1).OverCommitted());
+}
+
+TEST(SimpleCache, CacheLimitsOvercommitBasic) {
   auto cache = make_cache(10);
-  cache.cache_size_ = cache.max_cache_size_ + 1;
-  if (!cache.OverCommitted())
-    throw std::runtime_error("Cache should be over committed");
-  cache.Clear();
-  if (cache.OverCommitted())
-    throw std::runtime_error("Cache should be under committed");
+  cache.cache_size_ = 20;
+  EXPECT_TRUE(cache.OverCommitted());
 
   cache.cache_size_ = 1;
   cache.max_cache_size_ = 0;
-  if (!cache.OverCommitted())
-    throw std::runtime_error("Cache should be over committed");
+  EXPECT_TRUE(cache.OverCommitted());
+}
+
+TEST(SimpleCache, CacheLimitsNoOvercommitAfterClear) {
+  auto cache = make_cache(10);
+  cache.cache_size_ = cache.max_cache_size_ + 1;
+  EXPECT_TRUE(cache.OverCommitted());
+  cache.Clear();
+  EXPECT_FALSE(cache.OverCommitted());
 }
 
 void touch_tile(const uint32_t tile_id, const std::string& tile_dir) {
   auto suffix = GraphTile::FileSuffix({tile_id, 2, 0});
   auto fullpath = tile_dir + '/' + suffix;
-  boost::filesystem::create_directories(boost::filesystem::path(fullpath).parent_path());
+  filesystem::create_directories(filesystem::path(fullpath).parent_path());
   int fd = open(fullpath.c_str(), O_CREAT | O_WRONLY, 0644);
   if (fd >= 0)
     close(fd);
 }
 
-void TestConnectivityMap() {
+TEST(ConnectivityMap, Basic) {
   // get the property tree to create some tiles
   boost::property_tree::ptree pt;
   pt.put("tile_dir", "test/gphrdr_test");
   std::string tile_dir = pt.get<std::string>("tile_dir");
   const auto& level = TileHierarchy::levels().find(2)->second;
-  boost::filesystem::remove_all(tile_dir);
+  filesystem::remove_all(tile_dir);
 
   // looks like this (XX) means no tile there:
   /*
@@ -109,22 +115,16 @@ void TestConnectivityMap() {
 
   // check that it looks right
   connectivity_map_t conn(pt);
-  if (conn.get_color({a0, 2, 0}) != conn.get_color({a1, 2, 0}))
-    throw std::runtime_error("a's should be connected");
-  if (conn.get_color({a0, 2, 0}) != conn.get_color({a2, 2, 0}))
-    throw std::runtime_error("a's should be connected");
-  if (conn.get_color({a1, 2, 0}) != conn.get_color({a2, 2, 0}))
-    throw std::runtime_error("a's should be connected");
-  if (conn.get_color({d0, 2, 0}) != conn.get_color({d1, 2, 0}))
-    throw std::runtime_error("d's should be connected");
-  if (conn.get_color({c0, 2, 0}) == conn.get_color({a1, 2, 0}))
-    throw std::runtime_error("c is disjoint");
-  if (conn.get_color({b0, 2, 0}) == conn.get_color({a0, 2, 0}))
-    throw std::runtime_error("b is disjoint");
-  if (conn.get_color({a2, 2, 0}) == conn.get_color({d0, 2, 0}))
-    throw std::runtime_error("a is disjoint from d");
 
-  boost::filesystem::remove_all(tile_dir);
+  EXPECT_EQ(conn.get_color({a0, 2, 0}), conn.get_color({a1, 2, 0})) << "a's should be connected";
+  EXPECT_EQ(conn.get_color({a0, 2, 0}), conn.get_color({a2, 2, 0})) << "a's should be connected";
+  EXPECT_EQ(conn.get_color({a1, 2, 0}), conn.get_color({a2, 2, 0})) << "a's should be connected";
+  EXPECT_EQ(conn.get_color({d0, 2, 0}), conn.get_color({d1, 2, 0})) << "d's should be connected";
+  EXPECT_NE(conn.get_color({c0, 2, 0}), conn.get_color({a1, 2, 0})) << "c is disjoint";
+  EXPECT_NE(conn.get_color({b0, 2, 0}), conn.get_color({a0, 2, 0})) << "b is disjoint";
+  EXPECT_NE(conn.get_color({a2, 2, 0}), conn.get_color({d0, 2, 0})) << "a is disjoint from d";
+
+  filesystem::remove_all(tile_dir);
 }
 
 struct TestGraphTile : public GraphTile {
@@ -137,16 +137,12 @@ struct TestGraphTile : public GraphTile {
 };
 
 static void CheckGraphTile(const GraphTile* tile, const GraphId& expected_id, size_t expected_size) {
-  test::assert_bool(tile != nullptr, "Wrong tile: nullptr");
-
-  test::assert_bool(tile->header()->graphid().value == expected_id.value,
-                    "Wrong tile id " + std::to_string(tile->header()->graphid().value));
-
-  test::assert_bool(tile->header()->end_offset() == expected_size,
-                    "Wrong tile size " + std::to_string(tile->header()->end_offset()));
+  ASSERT_NE(tile, nullptr);
+  EXPECT_EQ(tile->header()->graphid().value, expected_id.value);
+  EXPECT_EQ(tile->header()->end_offset(), expected_size);
 }
 
-void Test_SimpleTileCache_Clear() {
+TEST(SimpleCache, Clear) {
   SimpleTileCache cache(400);
 
   GraphId id1(100, 2, 0);
@@ -154,21 +150,21 @@ void Test_SimpleTileCache_Clear() {
   const GraphTile* inserted1 = cache.Put(id1, tile1, 123);
   CheckGraphTile(inserted1, id1, 123);
 
-  test::assert_bool(!cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_FALSE(cache.OverCommitted());
 
   GraphId id2(300, 1, 0);
   TestGraphTile tile2(id2, 200);
   const GraphTile* inserted2 = cache.Put(id2, tile2, 200);
   CheckGraphTile(inserted2, id2, 200);
 
-  test::assert_bool(!cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_FALSE(cache.OverCommitted());
 
   GraphId id3(1000, 0, 0);
   TestGraphTile tile3(id3, 500);
   const GraphTile* inserted3 = cache.Put(id3, tile3, 500);
   CheckGraphTile(inserted3, id3, 500);
 
-  test::assert_bool(cache.OverCommitted(), "expecting overcommit");
+  EXPECT_TRUE(cache.OverCommitted());
 
   // Check if inserted values are correct
 
@@ -179,24 +175,24 @@ void Test_SimpleTileCache_Clear() {
   const auto* returned3 = cache.Get({1000, 0, 0});
   CheckGraphTile(returned3, id3, 500);
 
-  test::assert_bool(cache.Contains(id1), "tile3 not found");
-  test::assert_bool(cache.Contains(id2), "tile1 not found");
-  test::assert_bool(cache.Contains(id3), "tile2 not found");
+  EXPECT_TRUE(cache.Contains(id1));
+  EXPECT_TRUE(cache.Contains(id2));
+  EXPECT_TRUE(cache.Contains(id3));
 
   cache.Clear();
 
-  test::assert_bool(!cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_FALSE(cache.OverCommitted());
 
-  test::assert_bool(!cache.Contains(id1), "tile3 not found");
-  test::assert_bool(!cache.Contains(id2), "tile1 not found");
-  test::assert_bool(!cache.Contains(id3), "tile2 not found");
+  EXPECT_FALSE(cache.Contains(id1));
+  EXPECT_FALSE(cache.Contains(id2));
+  EXPECT_FALSE(cache.Contains(id3));
 
-  test::assert_bool(cache.Get(id1) == nullptr, "tile1 get should return null");
-  test::assert_bool(cache.Get(id2) == nullptr, "tile3 get should return null");
-  test::assert_bool(cache.Get(id3) == nullptr, "tile3 get should return null");
+  EXPECT_EQ(cache.Get(id1), nullptr);
+  EXPECT_EQ(cache.Get(id2), nullptr);
+  EXPECT_EQ(cache.Get(id3), nullptr);
 }
 
-void Test_SimpleTileCache_Trim() {
+TEST(SimpleCache, Trim) {
   SimpleTileCache cache(400);
 
   GraphId id1(100, 2, 0);
@@ -204,21 +200,21 @@ void Test_SimpleTileCache_Trim() {
   const GraphTile* inserted1 = cache.Put(id1, tile1, 123);
   CheckGraphTile(inserted1, id1, 123);
 
-  test::assert_bool(!cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_FALSE(cache.OverCommitted());
 
   GraphId id2(300, 1, 0);
   TestGraphTile tile2(id2, 200);
   const GraphTile* inserted2 = cache.Put(id2, tile2, 200);
   CheckGraphTile(inserted2, id2, 200);
 
-  test::assert_bool(!cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_FALSE(cache.OverCommitted());
 
   GraphId id3(1000, 0, 0);
   TestGraphTile tile3(id3, 500);
   const GraphTile* inserted3 = cache.Put(id3, tile3, 500);
   CheckGraphTile(inserted3, id3, 500);
 
-  test::assert_bool(cache.OverCommitted(), "expecting overcommit");
+  EXPECT_TRUE(cache.OverCommitted());
 
   // Check if inserted values are correct
 
@@ -229,44 +225,41 @@ void Test_SimpleTileCache_Trim() {
   const auto* returned3 = cache.Get({1000, 0, 0});
   CheckGraphTile(returned3, id3, 500);
 
-  test::assert_bool(cache.Contains(id1), "tile3 not found");
-  test::assert_bool(cache.Contains(id2), "tile1 not found");
-  test::assert_bool(cache.Contains(id3), "tile2 not found");
+  EXPECT_TRUE(cache.Contains(id1));
+  EXPECT_TRUE(cache.Contains(id2));
+  EXPECT_TRUE(cache.Contains(id3));
 
   cache.Trim();
 
-  test::assert_bool(!cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_FALSE(cache.OverCommitted());
 
-  test::assert_bool(!cache.Contains(id1), "tile3 not found");
-  test::assert_bool(!cache.Contains(id2), "tile1 not found");
-  test::assert_bool(!cache.Contains(id3), "tile2 not found");
+  EXPECT_FALSE(cache.Contains(id1));
+  EXPECT_FALSE(cache.Contains(id2));
+  EXPECT_FALSE(cache.Contains(id3));
 
-  test::assert_bool(cache.Get(id1) == nullptr, "tile1 get should return null");
-  test::assert_bool(cache.Get(id2) == nullptr, "tile3 get should return null");
-  test::assert_bool(cache.Get(id3) == nullptr, "tile3 get should return null");
+  EXPECT_EQ(cache.Get(id1), nullptr);
+  EXPECT_EQ(cache.Get(id2), nullptr);
+  EXPECT_EQ(cache.Get(id3), nullptr);
 }
 
-void Test_TileCacheLRU_HARD_Creation() {
+TEST(CacheLruHard, Creation) {
   TileCacheLRU zero_limit_cache(0, TileCacheLRU::MemoryLimitControl::HARD);
   TileCacheLRU cache(1023, TileCacheLRU::MemoryLimitControl::HARD);
   TileCacheLRU big_cache(1073741824, TileCacheLRU::MemoryLimitControl::HARD);
 }
 
-void Test_TileCacheLRU_HARD_InsertSingleItemBiggerThanCacheSize() {
+TEST(CacheLruHard, InsertSingleItemBiggerThanCacheSize) {
   TileCacheLRU cache(1023, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId id1(100, 2, 0);
   TestGraphTile tile1(id1, 2000);
 
-  test::assert_throw<std::runtime_error,
-                     std::function<void()>>([&]() { cache.Put(id1, tile1, 2000); },
-                                            "no exception triggered");
-
-  test::assert_bool(cache.Get(id1) == nullptr, "not expecting to have tile1 inserted");
-  test::assert_bool(!cache.Contains(id1), "tile1 existence check should fail");
+  EXPECT_THROW(cache.Put(id1, tile1, 2000), std::runtime_error);
+  EXPECT_EQ(cache.Get(id1), nullptr);
+  EXPECT_FALSE(cache.Contains(id1));
 }
 
-void Test_TileCacheLRU_HARD_InsertCacheFullOneshot() {
+TEST(CacheLruHard, InsertCacheFullOneshot) {
   const size_t tile1_size = 1234;
 
   TileCacheLRU cache(tile1_size, TileCacheLRU::MemoryLimitControl::HARD);
@@ -277,13 +270,13 @@ void Test_TileCacheLRU_HARD_InsertCacheFullOneshot() {
   const auto* inserted1 = cache.Put(tile1_id, tile1, tile1_size);
 
   CheckGraphTile(inserted1, tile1_id, tile1_size);
-  test::assert_bool(!cache.OverCommitted(), "should not be overcommited");
+  EXPECT_FALSE(cache.OverCommitted());
 
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
 }
 
-void Test_TileCacheLRU_HARD_InsertCacheFull() {
+TEST(CacheLruHard, InsertCacheFull) {
   TileCacheLRU cache(10000, TileCacheLRU::MemoryLimitControl::HARD);
 
   const size_t tile1_size = 4000;
@@ -298,15 +291,15 @@ void Test_TileCacheLRU_HARD_InsertCacheFull() {
   const auto* inserted2 = cache.Put(tile2_id, tile2, tile2_size);
   CheckGraphTile(inserted2, tile2_id, tile2_size);
 
-  test::assert_bool(!cache.OverCommitted(), "should not be overcommited");
+  EXPECT_FALSE(cache.OverCommitted());
 
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile2_size);
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(cache.Contains(tile2_id), "tile1 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
 }
 
-void Test_TileCacheLRU_HARD_InsertNoEviction() {
+TEST(CacheLruHard, InsertNoEviction) {
   TileCacheLRU cache(1023, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId id1(100, 2, 0);
@@ -335,14 +328,13 @@ void Test_TileCacheLRU_HARD_InsertNoEviction() {
   const auto* returned3 = cache.Get({1000, 0, 0});
   CheckGraphTile(returned3, id3, 500);
 
-  // Make sure tiles we have not cached are not found
-
-  test::assert_bool(!(cache.Get({1345, 1, 0}) != nullptr || cache.Get({100, 1, 0}) != nullptr ||
-                      cache.Get({0, 0, 0}) != nullptr),
-                    "Cache returned entry that has never been inserted");
+  // Make sure tiles we have never cached are not found
+  EXPECT_EQ(cache.Get({1345, 1, 0}), nullptr);
+  EXPECT_EQ(cache.Get({100, 1, 0}), nullptr);
+  EXPECT_EQ(cache.Get({0, 0, 0}), nullptr);
 }
 
-void Test_TileCacheLRU_HARD_InsertWithEvictionBasic() {
+TEST(CacheLruHard, InsertWithEvictionBasic) {
   TileCacheLRU cache(500, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId tile1_id(1000, 1, 0);
@@ -357,9 +349,9 @@ void Test_TileCacheLRU_HARD_InsertWithEvictionBasic() {
   const size_t tile3_size = 45;
   cache.Put(tile3_id, TestGraphTile(tile3_id, tile3_size), tile3_size);
 
-  test::assert_bool(cache.Contains(tile3_id), "tile3 not found");
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
+  EXPECT_TRUE(cache.Contains(tile3_id));
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
 
   // Add an insertion which now requires the eviction
   // The first inserted items should be evicted here (id1)
@@ -368,10 +360,10 @@ void Test_TileCacheLRU_HARD_InsertWithEvictionBasic() {
   const size_t tile4_size = 20;
   cache.Put(tile4_id, TestGraphTile(tile4_id, tile4_size), tile4_size);
 
-  test::assert_bool(!cache.Contains(tile1_id), "tile1 is not evicted");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
-  test::assert_bool(cache.Contains(tile3_id), "tile3 not found");
-  test::assert_bool(cache.Contains(tile4_id), "tile4 not found");
+  EXPECT_FALSE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
+  EXPECT_TRUE(cache.Contains(tile3_id));
+  EXPECT_TRUE(cache.Contains(tile4_id));
 
   // Now we access an entry that would be evicted next
   // to promote its position in the LRU list and change eviction order
@@ -385,21 +377,21 @@ void Test_TileCacheLRU_HARD_InsertWithEvictionBasic() {
 
   // Expecting the next eviction of tile3 since tile1 has been just accessed
 
-  test::assert_bool(!cache.Contains(tile1_id), "tile1 is not evicted");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
-  test::assert_bool(!cache.Contains(tile3_id), "tile3 is not evicted");
-  test::assert_bool(cache.Contains(tile4_id), "tile4 not found");
-  test::assert_bool(cache.Contains(tile4_id), "tile5 not found");
+  EXPECT_FALSE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
+  EXPECT_FALSE(cache.Contains(tile3_id));
+  EXPECT_TRUE(cache.Contains(tile4_id));
+  EXPECT_TRUE(cache.Contains(tile5_id));
 
-  test::assert_bool(cache.Get(tile1_id) == nullptr, "tile1 get should return null");
-  test::assert_bool(cache.Get(tile3_id) == nullptr, "tile3 get should return null");
+  EXPECT_EQ(cache.Get(tile1_id), nullptr);
+  EXPECT_EQ(cache.Get(tile3_id), nullptr);
 
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile2_size);
   CheckGraphTile(cache.Get(tile4_id), tile4_id, tile4_size);
   CheckGraphTile(cache.Get(tile5_id), tile5_id, tile5_size);
 }
 
-void Test_TileCacheLRU_HARD_OverwriteSameSize() {
+TEST(CacheLruHard, OverwriteSameSize) {
   TileCacheLRU cache(500, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId tile1_id(1000, 1, 0);
@@ -420,12 +412,12 @@ void Test_TileCacheLRU_HARD_OverwriteSameSize() {
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile2_size);
   CheckGraphTile(cache.Get(tile3_id), tile3_id, tile3_size);
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
-  test::assert_bool(cache.Contains(tile3_id), "tile3 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
+  EXPECT_TRUE(cache.Contains(tile3_id));
 }
 
-void Test_TileCacheLRU_HARD_OverwriteSmallerSize() {
+TEST(CacheLruHard, OverwriteSmallerSize) {
   TileCacheLRU cache(500, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId tile1_id(1000, 1, 0);
@@ -446,12 +438,12 @@ void Test_TileCacheLRU_HARD_OverwriteSmallerSize() {
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile2_size);
   CheckGraphTile(cache.Get(tile3_id), tile3_id, tile4_size);
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
-  test::assert_bool(cache.Contains(tile3_id), "tile3 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
+  EXPECT_TRUE(cache.Contains(tile3_id));
 }
 
-void Test_TileCacheLRU_HARD_OverwriteBiggerSizeNoEviction() {
+TEST(CacheLruHard, OverwriteBiggerSizeNoEviction) {
   TileCacheLRU cache(500, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId tile1_id(1000, 1, 0);
@@ -472,12 +464,12 @@ void Test_TileCacheLRU_HARD_OverwriteBiggerSizeNoEviction() {
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile2_size);
   CheckGraphTile(cache.Get(tile3_id), tile3_id, tile4_size);
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
-  test::assert_bool(cache.Contains(tile3_id), "tile3 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
+  EXPECT_TRUE(cache.Contains(tile3_id));
 }
 
-void Test_TileCacheLRU_HARD_OverwriteBiggerSizeEvictionOne() {
+TEST(CacheLruHard, OverwriteBiggerSizeEvictionOne) {
   TileCacheLRU cache(500, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId tile1_id(1000, 1, 0);
@@ -492,9 +484,9 @@ void Test_TileCacheLRU_HARD_OverwriteBiggerSizeEvictionOne() {
   const size_t tile3_size = 45;
   cache.Put(tile3_id, TestGraphTile(tile3_id, tile3_size), tile3_size);
 
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
-  test::assert_bool(cache.Contains(tile3_id), "tile3 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
+  EXPECT_TRUE(cache.Contains(tile3_id));
 
   // Add an insertion which now requires the eviction
   // The first inserted items should be evicted here (id1)
@@ -503,16 +495,16 @@ void Test_TileCacheLRU_HARD_OverwriteBiggerSizeEvictionOne() {
   const size_t tile4_size = 260;
   cache.Put(tile2_id, TestGraphTile(tile2_id, tile4_size), tile4_size);
 
-  test::assert_bool(!cache.Contains(tile1_id), "tile1 is not evicted");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
-  test::assert_bool(cache.Contains(tile3_id), "tile3 not found");
+  EXPECT_FALSE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
+  EXPECT_TRUE(cache.Contains(tile3_id));
 
-  test::assert_bool(cache.Get(tile1_id) == nullptr, "tile1 should be evicted");
+  EXPECT_EQ(cache.Get(tile1_id), nullptr);
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile4_size);
   CheckGraphTile(cache.Get(tile3_id), tile3_id, tile3_size);
 }
 
-void Test_TileCacheLRU_HARD_OverwriteBiggerSizeEvictionMultiple() {
+TEST(CacheLruHard, OverwriteBiggerSizeEvictionMultiple) {
   TileCacheLRU cache(500, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId tile1_id(1000, 1, 0);
@@ -527,9 +519,9 @@ void Test_TileCacheLRU_HARD_OverwriteBiggerSizeEvictionMultiple() {
   const size_t tile3_size = 45;
   cache.Put(tile3_id, TestGraphTile(tile3_id, tile3_size), tile3_size);
 
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
-  test::assert_bool(cache.Contains(tile3_id), "tile3 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
+  EXPECT_TRUE(cache.Contains(tile3_id));
 
   // Add an insertion which now requires the eviction
   // The first inserted items should be evicted here (id1)
@@ -539,16 +531,16 @@ void Test_TileCacheLRU_HARD_OverwriteBiggerSizeEvictionMultiple() {
   const size_t tile4_size = 480;
   cache.Put(tile2_id, TestGraphTile(tile2_id, tile4_size), tile4_size);
 
-  test::assert_bool(!cache.Contains(tile1_id), "tile1 is not evicted");
-  test::assert_bool(!cache.Contains(tile3_id), "tile3 is not evicted");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
+  EXPECT_FALSE(cache.Contains(tile1_id));
+  EXPECT_FALSE(cache.Contains(tile3_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
 
-  test::assert_bool(cache.Get(tile1_id) == nullptr, "tile1 should be evicted");
-  test::assert_bool(cache.Get(tile3_id) == nullptr, "tile3 should be evicted");
+  EXPECT_EQ(cache.Get(tile1_id), nullptr);
+  EXPECT_EQ(cache.Get(tile3_id), nullptr);
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile4_size);
 }
 
-void Test_TileCacheLRU_HARD_InsertWithEvictionEntireCache() {
+TEST(CacheLruHard, InsertWithEvictionEntireCache) {
   TileCacheLRU cache(1000, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId tile1_id(1000, 1, 0);
@@ -563,18 +555,18 @@ void Test_TileCacheLRU_HARD_InsertWithEvictionEntireCache() {
   const size_t tile3_size = 900;
   cache.Put(tile3_id, TestGraphTile(tile3_id, tile3_size), tile3_size);
 
-  test::assert_bool(cache.Contains(tile3_id), "tile3 not found");
-  test::assert_bool(!cache.Contains(tile1_id), "tile1 found");
-  test::assert_bool(!cache.Contains(tile2_id), "tile2 found");
+  EXPECT_TRUE(cache.Contains(tile3_id));
+  EXPECT_FALSE(cache.Contains(tile1_id));
+  EXPECT_FALSE(cache.Contains(tile2_id));
 
   const auto* returned3 = cache.Get(tile3_id);
   CheckGraphTile(returned3, tile3_id, tile3_size);
 
-  test::assert_bool(cache.Get(tile1_id) == nullptr, "tile1 get should return null");
-  test::assert_bool(cache.Get(tile2_id) == nullptr, "tile2 get should return null");
+  EXPECT_EQ(cache.Get(tile1_id), nullptr);
+  EXPECT_EQ(cache.Get(tile2_id), nullptr);
 }
 
-void Test_TileCacheLRU_HARD_MixedInsertOverwrite() {
+TEST(CacheLruHard, MixedInsertOverwrite) {
   TileCacheLRU cache(4000, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId tile1_id(1000, 1, 0);
@@ -609,7 +601,7 @@ void Test_TileCacheLRU_HARD_MixedInsertOverwrite() {
   CheckGraphTile(cache.Get(tile5_id), tile5_id, tile5_size);
 }
 
-void Test_TileCacheLRU_HARD_MixedInsertOverwriteEvict() {
+TEST(CacheLruHard, MixedInsertOverwriteEvict) {
   TileCacheLRU cache(500, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId tile1_id(1000, 1, 0);
@@ -627,9 +619,9 @@ void Test_TileCacheLRU_HARD_MixedInsertOverwriteEvict() {
   const size_t tile3_size = 45;
   cache.Put(tile3_id, TestGraphTile(tile3_id, tile3_size), tile3_size);
 
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
-  test::assert_bool(cache.Contains(tile3_id), "tile3 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
+  EXPECT_TRUE(cache.Contains(tile3_id));
 
   // Add an insertion which now requires the eviction
   // Expecting id2 to get evicted
@@ -638,16 +630,16 @@ void Test_TileCacheLRU_HARD_MixedInsertOverwriteEvict() {
   const size_t tile4_size = 255;
   cache.Put(tile3_id, TestGraphTile(tile3_id, tile4_size), tile4_size);
 
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(!cache.Contains(tile2_id), "tile2 is not evicted");
-  test::assert_bool(cache.Contains(tile3_id), "tile3 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_FALSE(cache.Contains(tile2_id));
+  EXPECT_TRUE(cache.Contains(tile3_id));
 
-  test::assert_bool(cache.Get(tile2_id) == nullptr, "tile2 should be evicted");
+  EXPECT_EQ(cache.Get(tile2_id), nullptr);
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
   CheckGraphTile(cache.Get(tile3_id), tile3_id, tile4_size);
 }
 
-void Test_TileCacheLRU_HARD_ClearBasic() {
+TEST(CacheLruHard, ClearBasic) {
   TileCacheLRU cache(2000, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId tile1_id(10, 1, 0);
@@ -660,18 +652,18 @@ void Test_TileCacheLRU_HARD_ClearBasic() {
 
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile2_size);
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
 
   cache.Clear();
 
-  test::assert_bool(!cache.Contains(tile1_id), "tile1 found");
-  test::assert_bool(!cache.Contains(tile2_id), "tile2 found");
-  test::assert_bool(cache.Get(tile1_id) == nullptr, "not expecting ot get tile1");
-  test::assert_bool(cache.Get(tile2_id) == nullptr, "not expecting ot get tile2");
+  EXPECT_FALSE(cache.Contains(tile1_id));
+  EXPECT_FALSE(cache.Contains(tile2_id));
+  EXPECT_EQ(cache.Get(tile1_id), nullptr);
+  EXPECT_EQ(cache.Get(tile2_id), nullptr);
 }
 
-void Test_TileCacheLRU_HARD_TrimBasic() {
+TEST(CacheLruHard, TrimBasic) {
   // Trim should not have any effect on the cache with hard memory limit policy
   TileCacheLRU cache(2000, TileCacheLRU::MemoryLimitControl::HARD);
 
@@ -685,130 +677,130 @@ void Test_TileCacheLRU_HARD_TrimBasic() {
 
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile2_size);
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
 
   cache.Trim();
 
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile2_size);
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
 }
 
-void Test_TileCacheLRU_SOFT_InsertBecomeOvercommittedTrim() {
+TEST(CacheLruSoft, InsertBecomeOvercommittedTrim) {
   TileCacheLRU cache(2000, TileCacheLRU::MemoryLimitControl::SOFT);
 
   GraphId tile1_id(10, 1, 0);
   const size_t tile1_size = 1500;
   cache.Put(tile1_id, TestGraphTile(tile1_id, tile1_size), tile1_size);
 
-  test::assert_bool(!cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_FALSE(cache.OverCommitted());
 
   GraphId tile2_id(300, 2, 0);
   const size_t tile2_size = 2000;
   cache.Put(tile2_id, TestGraphTile(tile2_id, tile2_size), tile2_size);
 
-  test::assert_bool(cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_TRUE(cache.OverCommitted());
 
   GraphId tile3_id(500, 1, 0);
   const size_t tile3_size = 100;
   cache.Put(tile3_id, TestGraphTile(tile3_id, tile3_size), tile3_size);
 
-  test::assert_bool(cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_TRUE(cache.OverCommitted());
 
   // With soft memory limit strategy there should not be any evictions here
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile2_size);
   CheckGraphTile(cache.Get(tile3_id), tile3_id, tile3_size);
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
-  test::assert_bool(cache.Contains(tile3_id), "tile3 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
+  EXPECT_TRUE(cache.Contains(tile3_id));
 
   cache.Trim();
 
-  test::assert_bool(cache.Get(tile1_id) == nullptr, "not expecting ot get tile1");
-  test::assert_bool(cache.Get(tile2_id) == nullptr, "not expecting ot get tile2");
+  EXPECT_EQ(cache.Get(tile1_id), nullptr);
+  EXPECT_EQ(cache.Get(tile2_id), nullptr);
   CheckGraphTile(cache.Get(tile3_id), tile3_id, tile3_size);
-  test::assert_bool(!cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(!cache.Contains(tile2_id), "tile2 found");
-  test::assert_bool(cache.Contains(tile3_id), "tile3 found");
+  EXPECT_FALSE(cache.Contains(tile1_id));
+  EXPECT_FALSE(cache.Contains(tile2_id));
+  EXPECT_TRUE(cache.Contains(tile3_id));
 }
 
-void Test_TileCacheLRU_SOFT_InsertBecomeOvercommittedClear() {
+TEST(CacheLruSoft, InsertBecomeOvercommittedClear) {
   TileCacheLRU cache(2000, TileCacheLRU::MemoryLimitControl::SOFT);
 
   GraphId tile1_id(10, 1, 0);
   const size_t tile1_size = 1500;
   cache.Put(tile1_id, TestGraphTile(tile1_id, tile1_size), tile1_size);
 
-  test::assert_bool(!cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_FALSE(cache.OverCommitted());
 
   GraphId tile2_id(300, 2, 0);
   const size_t tile2_size = 2000;
   cache.Put(tile2_id, TestGraphTile(tile2_id, tile2_size), tile2_size);
 
-  test::assert_bool(cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_TRUE(cache.OverCommitted());
 
   GraphId tile3_id(500, 1, 0);
   const size_t tile3_size = 100;
   cache.Put(tile3_id, TestGraphTile(tile3_id, tile3_size), tile3_size);
 
-  test::assert_bool(cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_TRUE(cache.OverCommitted());
 
   // With soft memory limit strategy there should not be any evictions here
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile2_size);
   CheckGraphTile(cache.Get(tile3_id), tile3_id, tile3_size);
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
-  test::assert_bool(cache.Contains(tile3_id), "tile3 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
+  EXPECT_TRUE(cache.Contains(tile3_id));
 
   cache.Clear();
 
   // Expecting clear to remove everything
-  test::assert_bool(!cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_FALSE(cache.OverCommitted());
 
-  test::assert_bool(cache.Get(tile1_id) == nullptr, "not expecting ot get tile1");
-  test::assert_bool(cache.Get(tile2_id) == nullptr, "not expecting ot get tile2");
-  test::assert_bool(cache.Get(tile3_id) == nullptr, "not expecting ot get tile1");
-  test::assert_bool(!cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(!cache.Contains(tile2_id), "tile2 found");
-  test::assert_bool(!cache.Contains(tile3_id), "tile3 found");
+  EXPECT_EQ(cache.Get(tile1_id), nullptr);
+  EXPECT_EQ(cache.Get(tile2_id), nullptr);
+  EXPECT_EQ(cache.Get(tile3_id), nullptr);
+  EXPECT_FALSE(cache.Contains(tile1_id));
+  EXPECT_FALSE(cache.Contains(tile2_id));
+  EXPECT_FALSE(cache.Contains(tile3_id));
 }
 
-void Test_TileCacheLRU_SOFT_UndercommittedTrim() {
+TEST(CacheLruSoft, UndercommittedTrim) {
   TileCacheLRU cache(5000, TileCacheLRU::MemoryLimitControl::SOFT);
 
   GraphId tile1_id(10, 1, 0);
   const size_t tile1_size = 300;
   cache.Put(tile1_id, TestGraphTile(tile1_id, tile1_size), tile1_size);
 
-  test::assert_bool(!cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_FALSE(cache.OverCommitted());
 
   GraphId tile2_id(300, 2, 0);
   const size_t tile2_size = 2000;
   cache.Put(tile2_id, TestGraphTile(tile2_id, tile2_size), tile2_size);
 
-  test::assert_bool(!cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_FALSE(cache.OverCommitted());
 
   // With soft memory limit strategy there should not be any evictions here
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile2_size);
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
 
   cache.Trim();
 
-  test::assert_bool(!cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_FALSE(cache.OverCommitted());
 
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile2_size);
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
 }
 
-void Test_TileCacheLRU_SOFT_InsertWithEvictionBasic() {
+TEST(CacheLruSoft, InsertWithEvictionBasic) {
   TileCacheLRU cache(500, TileCacheLRU::MemoryLimitControl::SOFT);
 
   GraphId tile1_id(1000, 1, 0);
@@ -827,7 +819,7 @@ void Test_TileCacheLRU_SOFT_InsertWithEvictionBasic() {
   const size_t tile4_size = 270;
   cache.Put(tile4_id, TestGraphTile(tile4_id, tile4_size), tile4_size);
 
-  test::assert_bool(cache.OverCommitted(), "should be overcommit");
+  EXPECT_TRUE(cache.OverCommitted());
 
   // Now we access an entry that would be evicted next
   // to promote its position in the LRU list and change eviction order
@@ -836,89 +828,52 @@ void Test_TileCacheLRU_SOFT_InsertWithEvictionBasic() {
   // should evict tiles 2 and 3
   cache.Trim();
 
-  test::assert_bool(!cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_FALSE(cache.OverCommitted());
 
-  test::assert_bool(cache.Contains(tile1_id), "tile1 is not evicted");
-  test::assert_bool(!cache.Contains(tile2_id), "tile2 not found");
-  test::assert_bool(!cache.Contains(tile3_id), "tile3 is not evicted");
-  test::assert_bool(cache.Contains(tile4_id), "tile4 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_FALSE(cache.Contains(tile2_id));
+  EXPECT_FALSE(cache.Contains(tile3_id));
+  EXPECT_TRUE(cache.Contains(tile4_id));
 
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
   CheckGraphTile(cache.Get(tile4_id), tile4_id, tile4_size);
-  test::assert_bool(cache.Get(tile2_id) == nullptr, "tile1 get should return null");
-  test::assert_bool(cache.Get(tile3_id) == nullptr, "tile3 get should return null");
+  EXPECT_EQ(cache.Get(tile2_id), nullptr);
+  EXPECT_EQ(cache.Get(tile3_id), nullptr);
 }
 
-void Test_TileCacheLRU_SOFT_TrimOnExactlyFullCache() {
+TEST(CacheLruSoft, TrimOnExactlyFullCache) {
   TileCacheLRU cache(100000, TileCacheLRU::MemoryLimitControl::SOFT);
 
   GraphId tile1_id(10, 1, 0);
   const size_t tile1_size = 60000;
   cache.Put(tile1_id, TestGraphTile(tile1_id, tile1_size), tile1_size);
 
-  test::assert_bool(!cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_FALSE(cache.OverCommitted());
 
   GraphId tile2_id(300, 2, 0);
   const size_t tile2_size = 40000;
   cache.Put(tile2_id, TestGraphTile(tile2_id, tile2_size), tile2_size);
 
-  test::assert_bool(!cache.OverCommitted(), "unexpected overcommit");
+  EXPECT_FALSE(cache.OverCommitted());
 
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile2_size);
-  test::assert_bool(cache.Contains(tile1_id), "tile1 not found");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 not found");
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
 
   cache.Trim();
 
   // Not expecting any evictions if the cache does not cross the memory limit
-  test::assert_bool(!cache.OverCommitted(), "unexpected overcommit");
-  test::assert_bool(cache.Contains(tile1_id), "tile1 evicted but shouldn't");
-  test::assert_bool(cache.Contains(tile2_id), "tile2 evicted but shouldn't");
+  EXPECT_FALSE(cache.OverCommitted());
+  EXPECT_TRUE(cache.Contains(tile1_id));
+  EXPECT_TRUE(cache.Contains(tile2_id));
   CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
   CheckGraphTile(cache.Get(tile2_id), tile2_id, tile2_size);
 }
 
 } // namespace
 
-int main() {
-  test::suite suite("graphtile");
-
-  suite.test(TEST_CASE(TestOutOfRangeLL));
-
-  suite.test(TEST_CASE(TestConnectivityMap));
-
-  // SimpleTileCahe unit tests
-  suite.test(TEST_CASE(TestCacheLimits));
-  suite.test(TEST_CASE(Test_SimpleTileCache_Clear));
-  suite.test(TEST_CASE(Test_SimpleTileCache_Trim));
-
-  // LRU tile cache unit tests
-  suite.test(TEST_CASE(Test_TileCacheLRU_HARD_Creation));
-  suite.test(TEST_CASE(Test_TileCacheLRU_HARD_InsertSingleItemBiggerThanCacheSize));
-  suite.test(TEST_CASE(Test_TileCacheLRU_HARD_InsertNoEviction));
-  suite.test(TEST_CASE(Test_TileCacheLRU_HARD_InsertCacheFullOneshot));
-  suite.test(TEST_CASE(Test_TileCacheLRU_HARD_InsertCacheFull));
-  suite.test(TEST_CASE(Test_TileCacheLRU_HARD_InsertWithEvictionBasic));
-  suite.test(TEST_CASE(Test_TileCacheLRU_HARD_InsertWithEvictionEntireCache));
-
-  suite.test(TEST_CASE(Test_TileCacheLRU_HARD_MixedInsertOverwrite));
-  suite.test(TEST_CASE(Test_TileCacheLRU_HARD_MixedInsertOverwriteEvict));
-
-  suite.test(TEST_CASE(Test_TileCacheLRU_HARD_OverwriteSameSize));
-  suite.test(TEST_CASE(Test_TileCacheLRU_HARD_OverwriteSmallerSize));
-  suite.test(TEST_CASE(Test_TileCacheLRU_HARD_OverwriteBiggerSizeNoEviction));
-  suite.test(TEST_CASE(Test_TileCacheLRU_HARD_OverwriteBiggerSizeEvictionOne));
-  suite.test(TEST_CASE(Test_TileCacheLRU_HARD_OverwriteBiggerSizeEvictionMultiple));
-
-  suite.test(TEST_CASE(Test_TileCacheLRU_HARD_ClearBasic));
-  suite.test(TEST_CASE(Test_TileCacheLRU_HARD_TrimBasic));
-
-  suite.test(TEST_CASE(Test_TileCacheLRU_SOFT_InsertBecomeOvercommittedTrim));
-  suite.test(TEST_CASE(Test_TileCacheLRU_SOFT_InsertBecomeOvercommittedClear));
-  suite.test(TEST_CASE(Test_TileCacheLRU_SOFT_UndercommittedTrim));
-  suite.test(TEST_CASE(Test_TileCacheLRU_SOFT_InsertWithEvictionBasic));
-  suite.test(TEST_CASE(Test_TileCacheLRU_SOFT_TrimOnExactlyFullCache));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

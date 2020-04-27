@@ -1,5 +1,3 @@
-#include "test.h"
-
 #include <iostream>
 #include <random>
 #include <utility>
@@ -18,6 +16,8 @@
 #include "thor/worker.h"
 #include "tyr/actor.h"
 #include "worker.h"
+
+#include "test.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -150,7 +150,7 @@ std::string json_escape(const std::string& unescaped) {
   return escaped;
 }
 
-int seed = 521;
+int seed = 527;
 int bound = 81;
 
 std::string make_test_case(PointLL& start, PointLL& end) {
@@ -171,7 +171,7 @@ std::string make_test_case(PointLL& start, PointLL& end) {
          std::to_string(end.first) + "}]}";
 }
 
-void test_matcher() {
+TEST(Mapmatch, test_matcher) {
   // generate a bunch of tests
   tyr::actor_t actor(conf, true);
   int tested = 0;
@@ -216,17 +216,17 @@ void test_matcher() {
       std::cout << R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" +
                        json_escape(encoded_shape) + "\"}"
                 << std::endl;
-      throw std::logic_error("Edge walk failed with exact shape");
+      FAIL() << "Edge walk failed with exact shape";
     }
 
     // check the shape makes sense
     auto walked_encoded_shape = walked.get<std::string>("shape");
     auto walked_shape = midgard::decode<std::vector<midgard::PointLL>>(walked_encoded_shape);
-    /*if (walked_shape.size() != shape.size()) {
-      throw std::logic_error("Differing shape lengths " + std::to_string(shape.size()) +
-                             " != " + std::to_string(walked_shape.size()) + "\n" + encoded_shape +
-                             "\n" + walked_encoded_shape);
-    }*/
+
+    /*EXPECT_EQ(walked_shape.size() , shape.size())
+      << "Differing shape lengths " + std::to_string(shape.size()) +
+         " != " + std::to_string(walked_shape.size()) + "\n" + encoded_shape +
+         "\n" + walked_encoded_shape;*/
 
     // build up some gps segments for simulation from the real shape
     std::vector<uint64_t> walked_edges;
@@ -274,14 +274,14 @@ void test_matcher() {
       geojson += print(std::vector<PointLL>{start, end});
       geojson += R"(]},"type":"Feature","properties":{}}]})";
       std::cout << geojson << std::endl;
-      throw std::logic_error("The match did not match the walk");
+      FAIL() << "The match did not match the walk";
     }
     std::cout << "Iteration " << tested << " complete" << std::endl;
     ++tested;
   }
 }
 
-void test_distance_only() {
+TEST(Mapmatch, test_distance_only) {
   tyr::actor_t actor(conf, true);
   auto matched = json_to_pt(actor.trace_attributes(
       R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":1,"turn_penalty_factor":0},
@@ -293,11 +293,11 @@ void test_distance_only() {
   for (const auto& edge : matched.get_child("edges"))
     for (const auto& name : edge.second.get_child("names"))
       names.insert(name.second.get_value<std::string>());
-  if (names.find("Jan Pieterszoon Coenstraat") == names.end())
-    throw std::logic_error("Using distance only it should have taken a small detour");
+  EXPECT_NE(names.find("Jan Pieterszoon Coenstraat"), names.end())
+      << "Using distance only it should have taken a small detour";
 }
 
-void test_trace_route_breaks() {
+TEST(Mapmatch, test_trace_route_breaks) {
   std::vector<std::string> test_cases = {
       R"({"costing":"auto","shape_match":"map_snap","shape":[
           {"lat":52.09110,"lon":5.09806,"type":"break"},
@@ -323,9 +323,7 @@ void test_trace_route_breaks() {
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto matched = json_to_pt(actor.trace_route(test_cases[i]));
     const auto& legs = matched.get_child("trip.legs");
-    if (legs.size() != test_answers[i])
-      throw std::logic_error("Expected " + std::to_string(test_answers[i]) + " legs but got " +
-                             std::to_string(legs.size()));
+    EXPECT_EQ(legs.size(), test_answers[i]);
 
     for (const auto& leg : legs) {
       auto decoded_match =
@@ -334,7 +332,7 @@ void test_trace_route_breaks() {
   }
 }
 
-void test_edges_discontinuity_with_multi_routes() {
+TEST(Mapmatch, test_edges_discontinuity_with_multi_routes) {
   // here everything is a leg and the discontinuities are the routes
   // we have to use osrm format because valhalla format doesnt support multi route
   std::vector<std::string> test_cases = {
@@ -427,30 +425,26 @@ void test_edges_discontinuity_with_multi_routes() {
   for (size_t i = 0; i < test_cases.size(); ++i) {
     api_tester tester;
     auto response = tester.match(test_cases[i]);
-    if (response.trip().routes_size() != std::get<0>(test_answers[i])) {
-      throw std::logic_error("Expected " + std::to_string(std::get<0>(test_answers[i])) +
-                             " routes but got " + std::to_string(response.trip().routes_size()));
-    }
+    EXPECT_EQ(response.trip().routes_size(), std::get<0>(test_answers[i]));
+
     size_t leg_count = 0;
     for (const auto& route : response.trip().routes()) {
       leg_count += route.legs_size();
       for (const auto& leg : route.legs()) {
-        if (leg.location(0).has_date_time() && !std::get<2>(test_answers[i])) {
-          throw std::logic_error("Found a leg with a start time when it shouldnt have had one");
-        }
-        if (!leg.location(0).has_date_time() && std::get<2>(test_answers[i])) {
-          throw std::logic_error("Found a leg without a start time when it should have had one");
+        if (leg.location(0).has_date_time()) {
+          EXPECT_TRUE(std::get<2>(test_answers[i]))
+              << "Found a leg with a start time when it shouldnt have had one";
+        } else {
+          EXPECT_FALSE(std::get<2>(test_answers[i]))
+              << "Found a leg without a start time when it should have had one";
         }
       }
     }
-    if (leg_count != std::get<1>(test_answers[i])) {
-      throw std::logic_error("Expected " + std::to_string(std::get<1>(test_answers[i])) +
-                             " legs in total but got " + std::to_string(leg_count));
-    }
+    EXPECT_EQ(leg_count, std::get<1>(test_answers[i]));
   }
 }
 
-void test_disconnected_edges_expect_no_route() {
+TEST(Mapmatch, test_disconnected_edges_expect_no_route) {
   std::vector<std::string> test_cases = {R"({"costing":"auto","shape_match":"map_snap","shape":[
         {"lat":52.0630834,"lon":5.1037227,"type":"break"},
         {"lat":52.0633099,"lon":5.1047193,"type":"break"},
@@ -462,15 +456,11 @@ void test_disconnected_edges_expect_no_route() {
   for (size_t i = 0; i < test_cases.size(); ++i) {
     try {
       auto matched = json_to_pt(actor.trace_route(test_cases[i]));
-    } catch (...) {
-      if (illegal_path++ != i) {
-        throw std::logic_error("Expected no route but got one");
-      }
-    }
+    } catch (...) { EXPECT_EQ(illegal_path++, i) << "Expected no route but got one"; }
   }
 }
 
-void test_matching_indices_and_waypoint_indices() {
+TEST(Mapmatch, test_matching_indices_and_waypoint_indices) {
   std::vector<std::string> test_cases = {
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
         {"lat": 52.068882, "lon": 5.120852, "type": "break"},
@@ -524,17 +514,16 @@ void test_matching_indices_and_waypoint_indices() {
         // handle the tracepoint null case
         continue;
       }
-      if (result != answers[i][j]) {
-        throw std::logic_error{"expect matching_index and waypoint_index: (" + answers[i][j].first +
-                               "," + answers[i][j].second + "), " + "but got: (" + result.first +
-                               "," + result.second + ")"};
-      }
+      EXPECT_EQ(result, answers[i][j]) << "expect matching_index and waypoint_index: (" +
+                                              answers[i][j].first + "," + answers[i][j].second +
+                                              "), " + "but got: (" + result.first + "," +
+                                              result.second + ")";
       ++j;
     }
   }
 }
 
-void test_time_rejection() {
+TEST(Mapmatch, test_time_rejection) {
   tyr::actor_t actor(conf, true);
   auto matched = json_to_pt(actor.trace_attributes(
       R"({"trace_options":{"max_route_distance_factor":10,"max_route_time_factor":3,"turn_penalty_factor":0},
@@ -546,12 +535,11 @@ void test_time_rejection() {
   for (const auto& edge : matched.get_child("edges"))
     for (const auto& name : edge.second.get_child("names"))
       names.insert(name.second.get_value<std::string>());
-  if (names.find("Jan Pieterszoon Coenstraat") != names.end()) {
-    throw std::logic_error("Using time it should not take a small detour");
-  }
+  EXPECT_EQ(names.find("Jan Pieterszoon Coenstraat"), names.end())
+      << "Using time it should not take a small detour";
 }
 
-void test32bit() {
+TEST(Mapmatch, test32bit) {
   tyr::actor_t actor(conf, true);
   std::string test_case =
       R"({"costing":"auto","locations":[{"lat":52.096672,"lon":5.110825},
@@ -563,7 +551,7 @@ void test32bit() {
   actor.route(test_case);
 }
 
-void test_trace_route_edge_walk_expected_error_code() {
+TEST(Mapmatch, test_trace_route_edge_walk_expected_error_code) {
   // tests expected error_code for trace_route edge_walk
   auto expected_error_code = 443;
   tyr::actor_t actor(conf, true);
@@ -578,19 +566,16 @@ void test_trace_route_edge_walk_expected_error_code() {
          {"lat":52.08863,"lon":5.15253,"accuracy":30,"time":10},
          {"lat":52.08851,"lon":5.15249,"accuracy":30,"time":12}]})"));
   } catch (const valhalla_exception_t& e) {
-    if (e.code != expected_error_code) {
-      throw std::logic_error("Expected error code=" + std::to_string(expected_error_code) +
-                             " | found=" + std::to_string(e.code));
-    }
+    EXPECT_EQ(e.code, expected_error_code);
     // If we get here then all good - return
     return;
   }
 
-  // If we get here then throw an exception
-  throw std::logic_error("Expected trace_route edge_walk exception was not found");
+  // If we get here then fail the test!
+  FAIL() << "Expected trace_route edge_walk exception was not found";
 }
 
-void test_trace_route_map_snap_expected_error_code() {
+TEST(Mapmatch, test_trace_route_map_snap_expected_error_code) {
   // tests expected error_code for trace_route edge_walk
   auto expected_error_code = 442;
   tyr::actor_t actor(conf, true);
@@ -605,19 +590,16 @@ void test_trace_route_map_snap_expected_error_code() {
          {"lat":52.08863,"lon":5.15253,"radius":5,"time":10},
          {"lat":52.08851,"lon":5.15249,"radius":5,"time":12}]})"));
   } catch (const valhalla_exception_t& e) {
-    if (e.code != expected_error_code) {
-      throw std::logic_error("Expected error code=" + std::to_string(expected_error_code) +
-                             " | found=" + std::to_string(e.code));
-    }
+    EXPECT_EQ(e.code, expected_error_code);
     // If we get here then all good - return
     return;
   }
 
-  // If we get here then throw an exception
-  throw std::logic_error("Expected trace_route map_snap exception was not found");
+  // If we get here then fail the test!
+  FAIL() << "Expected trace_route map_snap exception was not found";
 }
 
-void test_trace_attributes_edge_walk_expected_error_code() {
+TEST(Mapmatch, test_trace_attributes_edge_walk_expected_error_code) {
   // tests expected error_code for trace_attributes edge_walk
   auto expected_error_code = 443;
   tyr::actor_t actor(conf, true);
@@ -632,19 +614,16 @@ void test_trace_attributes_edge_walk_expected_error_code() {
          {"lat":52.08863,"lon":5.15253,"accuracy":30,"time":10},
          {"lat":52.08851,"lon":5.15249,"accuracy":30,"time":12}]})"));
   } catch (const valhalla_exception_t& e) {
-    if (e.code != expected_error_code) {
-      throw std::logic_error("Expected error code=" + std::to_string(expected_error_code) +
-                             " | found=" + std::to_string(e.code));
-    }
+    EXPECT_EQ(e.code, expected_error_code);
     // If we get here then all good - return
     return;
   }
 
-  // If we get here then throw an exception
-  throw std::logic_error("Expected trace_attributes edge_walk exception was not found");
+  // If we get here then fail the test!
+  FAIL() << "Expected trace_attributes edge_walk exception was not found";
 }
 
-void test_trace_attributes_map_snap_expected_error_code() {
+TEST(Mapmatch, test_trace_attributes_map_snap_expected_error_code) {
   // tests expected error_code for trace_attributes edge_walk
   auto expected_error_code = 444;
   tyr::actor_t actor(conf, true);
@@ -659,19 +638,16 @@ void test_trace_attributes_map_snap_expected_error_code() {
          {"lat":52.08863,"lon":5.15253,"radius":5,"time":10},
          {"lat":52.08851,"lon":5.15249,"radius":5,"time":12}]})"));
   } catch (const valhalla_exception_t& e) {
-    if (e.code != expected_error_code) {
-      throw std::logic_error("Expected error code=" + std::to_string(expected_error_code) +
-                             " | found=" + std::to_string(e.code));
-    }
+    EXPECT_EQ(e.code, expected_error_code);
     // If we get here then all good - return
     return;
   }
 
-  // If we get here then throw an exception
-  throw std::logic_error("Expected trace_attributes map_snap exception was not found");
+  // If we get here then fail the test!
+  FAIL() << "Expected trace_attributes map_snap exception was not found";
 }
 
-void test_topk_validate() {
+TEST(Mapmatch, test_topk_validate) {
   // tests a fork in the road
   tyr::actor_t actor(conf, true);
 
@@ -690,11 +666,11 @@ void test_topk_validate() {
       R"({"costing":"auto","best_paths":4,"shape_match":"map_snap","shape":[
          {"lat":52.09579,"lon":5.13137,"accuracy":5,"time":2},
          {"lat":52.09652,"lon":5.13184,"accuracy":5,"time":4}]})"));
-  if (matched.get_child("alternate_paths").size() > 0)
-    throw std::logic_error("There should be only one result");
+
+  EXPECT_EQ(matched.get_child("alternate_paths").size(), 0) << "There should be only one result";
 }
 
-void test_topk_fork_alternate() {
+TEST(Mapmatch, test_topk_fork_alternate) {
   // tests a fork in the road
   tyr::actor_t actor(conf, true);
   auto matched = json_to_pt(actor.trace_attributes(
@@ -721,10 +697,10 @@ void test_topk_fork_alternate() {
     std::string streets;
     for (const auto& n : names)
       streets += n + ", ";
-    throw std::logic_error("The most obvious result is stay left but got: " + streets);
+    FAIL() << "The most obvious result is stay left but got: " + streets;
   }
-  if (matched.get<float>("confidence_score") != 1.0f)
-    throw std::logic_error("Confidence of the first result is always 1");
+  EXPECT_EQ(matched.get<float>("confidence_score"), 1.0f)
+      << "Confidence of the first result is always 1";
 
   /*** Alternate path - right at the fork
     {"type":"FeatureCollection","features":[
@@ -745,16 +721,15 @@ void test_topk_fork_alternate() {
     std::string streets;
     for (const auto& n : names)
       streets += n + ", ";
-    throw std::logic_error("The second most obvious result is stay right but got: " + streets);
+    FAIL() << "The second most obvious result is stay right but got: " + streets;
   }
-  if (alternate.get<float>("confidence_score") >= 1.0f)
-    throw std::logic_error("Confidence of the second result is always less than 1");
-  if (matched.get<float>("raw_score") >= alternate.get<float>("raw_score"))
-    throw std::logic_error(
-        "The raw score of the first result is always less than that of the second");
+  EXPECT_LT(alternate.get<float>("confidence_score"), 1.0f)
+      << "Confidence of the second result is always less than 1";
+  EXPECT_LT(matched.get<float>("raw_score"), alternate.get<float>("raw_score"))
+      << "The raw score of the first result is always less than that of the second";
 }
 
-void test_topk_loop_alternate() {
+TEST(Mapmatch, test_topk_loop_alternate) {
   // tests a loop in the road
   tyr::actor_t actor(conf, true);
   auto matched = json_to_pt(actor.trace_attributes(
@@ -789,11 +764,11 @@ void test_topk_loop_alternate() {
     std::string streets;
     for (const auto& n : names)
       streets += n + ", ";
-    throw std::logic_error("The most obvious result is stay left on the same road - but got: " +
-                           streets);
+    FAIL() << "The most obvious result is stay left on the same road - but got: " + streets;
   }
-  if (matched.get<float>("confidence_score") != 1.0f)
-    throw std::logic_error("Confidence of the first result is always 1");
+
+  EXPECT_EQ(matched.get<float>("confidence_score"), 1.0f)
+      << "Confidence of the first result is always 1";
 
   /*** Alternate path - loop around to the right
     {"type":"FeatureCollection","features":[
@@ -821,17 +796,15 @@ void test_topk_loop_alternate() {
     std::string streets;
     for (const auto& n : names)
       streets += n + ", ";
-    throw std::logic_error("The second most obvious result is loop around to the right - but got: " +
-                           streets);
+    FAIL() << "The second most obvious result is loop around to the right - but got: " + streets;
   }
-  if (alternate.get<float>("confidence_score") >= 1.0f)
-    throw std::logic_error("Confidence of the second result is always less than 1");
-  if (matched.get<float>("raw_score") >= alternate.get<float>("raw_score"))
-    throw std::logic_error(
-        "The raw score of the first result is always less than that of the second");
+  EXPECT_LT(alternate.get<float>("confidence_score"), 1.0f)
+      << "Confidence of the second result is always less than 1";
+  EXPECT_LT(matched.get<float>("raw_score"), alternate.get<float>("raw_score"))
+      << "The raw score of the first result is always less than that of the second";
 }
 
-void test_topk_frontage_alternate() {
+TEST(Mapmatch, test_topk_frontage_alternate) {
   // tests a parallel frontage road
   tyr::actor_t actor(conf, true);
   auto matched = json_to_pt(actor.trace_attributes(
@@ -870,11 +843,10 @@ void test_topk_frontage_alternate() {
     std::string streets;
     for (const auto& n : names)
       streets += n + ", ";
-    throw std::logic_error("The most obvious result is stay straight on the same road - but got: " +
-                           streets);
+    FAIL() << "The most obvious result is stay straight on the same road - but got: " + streets;
   }
-  if (matched.get<float>("confidence_score") != 1.0f)
-    throw std::logic_error("Confidence of the first result is always 1");
+  EXPECT_EQ(matched.get<float>("confidence_score"), 1.0f)
+      << "Confidence of the first result is always 1";
 
   /*** Alternate path - use one way frontage road
     {"type":"FeatureCollection","features":[
@@ -909,17 +881,16 @@ void test_topk_frontage_alternate() {
     std::string streets;
     for (const auto& n : names)
       streets += n + ", ";
-    throw std::logic_error(
-        "The second most obvious result is frontage road to the right - but got: " + streets);
+    FAIL() << "The second most obvious result is frontage road to the right - but got: " + streets;
   }
-  if (alternate.get<float>("confidence_score") >= 1.0f)
-    throw std::logic_error("Confidence of the second result is always less than 1");
-  if (matched.get<float>("raw_score") >= alternate.get<float>("raw_score"))
-    throw std::logic_error(
-        "The raw score of the first result is always less than that of the second");
+
+  EXPECT_LT(alternate.get<float>("confidence_score"), 1.0f)
+      << "Confidence of the second result is always less than 1";
+  EXPECT_LT(matched.get<float>("raw_score"), alternate.get<float>("raw_score"))
+      << "The raw score of the first result is always less than that of the second";
 }
 
-void test_now_matches() {
+TEST(Mapmatch, test_now_matches) {
   tyr::actor_t actor(conf, true);
 
   // once with map matching
@@ -937,7 +908,7 @@ void test_now_matches() {
   actor.trace_route(test_case);
 }
 
-void test_leg_duration_trimming() {
+TEST(Mapmatch, test_leg_duration_trimming) {
   std::vector<std::vector<std::string>> test_cases = {
       // 2 routes, one leg per route
       {R"([{"lat": 52.0865058, "lon": 5.1201, "type": "break", "node_snap_tolerance":0},
@@ -1014,27 +985,216 @@ void test_leg_duration_trimming() {
     printf("\n%s\n", match_test_case.c_str());
 
     // they should not disagree (unless the map match is very vague)
-    if (route_api.trip().routes_size() != match_api.trip().routes_size())
-      throw std::logic_error("Number of routes differs");
+    EXPECT_EQ(route_api.trip().routes_size(), match_api.trip().routes_size())
+        << "Number of routes differs";
+
     for (size_t i = 0; i < route_api.trip().routes_size(); ++i) {
       const auto& rlegs = route_api.trip().routes(i).legs();
       const auto& mlegs = match_api.trip().routes(i).legs();
-      if (rlegs.size() != mlegs.size())
-        throw std::logic_error("Number of legs differs");
+      EXPECT_EQ(rlegs.size(), mlegs.size()) << "Number of legs differs";
       printf("Route %zu\n", i);
       for (size_t j = 0; j < rlegs.size(); ++j) {
         auto rtime = rlegs.Get(j).node().rbegin()->elapsed_time();
         auto mtime = mlegs.Get(j).node().rbegin()->elapsed_time();
         printf("r: %.2f %s\n", rtime, rlegs.Get(j).shape().c_str());
         printf("m: %.2f %s\n", mtime, mlegs.Get(j).shape().c_str());
-        if (!valhalla::midgard::equal(rtime, mtime, 0.1))
-          throw std::logic_error("Leg time differs");
+        EXPECT_NEAR(rtime, mtime, 0.1) << "Leg time differs";
       }
     }
   }
 }
 
-void test_intersection_matching() {
+TEST(Mapmatch, test_discontinuity_on_same_edge) {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0948884, "lon": 5.1112737, "type": "break"},
+          {"lat": 52.0949312, "lon": 5.1118285, "type": "break"},
+          {"lat": 52.1054861, "lon": 5.1289207, "type": "break"},
+          {"lat": 52.0948920, "lon": 5.1113874, "type": "break"},
+          {"lat": 52.0949182, "lon": 5.1116986, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0962541, "lon": 5.1129487, "type": "break"},
+          {"lat": 52.0959946, "lon": 5.1120336, "type": "break"},
+          {"lat": 52.1054861, "lon": 5.1289207, "type": "break"},
+          {"lat": 52.0961760, "lon": 5.1126547, "type": "break"},
+          {"lat": 52.0960736, "lon": 5.1123291, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0963956, "lon": 5.1133696, "type": "break"},
+          {"lat": 52.0959223, "lon": 5.1118128, "type": "break"},
+          {"lat": 52.1108625, "lon": 5.1325334, "type": "break"},
+          {"lat": 52.0962053, "lon": 5.1128136, "type": "break"},
+          {"lat": 52.0960736, "lon": 5.1123291, "type": "break"},
+          {"lat": 52.0963029, "lon": 5.1131075, "type": "break"},
+          {"lat": 52.0959906, "lon": 5.1120590, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0956110, "lon": 5.0978352, "type": "break"},
+          {"lat": 52.0956407, "lon": 5.0974388, "type": "break"},
+          {"lat": 52.0956612, "lon": 5.0971513, "type": "break"},
+          {"lat": 52.0956258, "lon": 5.0973227, "type": "break"},
+          {"lat": 52.0956068, "lon": 5.0976801, "type": "break"},
+          {"lat": 52.0956105, "lon": 5.0975165, "type": "break"},
+          {"lat": 52.0956333, "lon": 5.0972287, "type": "break"}]})"};
+
+  std::vector<int> test_ans_num_routes{2, 2, 3, 2};
+  std::vector<std::vector<int>> test_ans_num_legs{{1, 1}, {1, 1}, {1, 1, 1}, {2, 2}};
+  std::vector<std::vector<float>> test_ans_leg_duration{{3.955, 2.226},
+                                                        {7.095, 2.562},
+                                                        {12.214, 3.728, 8.184},
+                                                        {7.456, 2.931, 1.324, 2.37}};
+
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& routes = matched.get_child("matchings");
+    EXPECT_EQ(routes.size(), test_ans_num_routes[i]);
+    int j = 0, k = 0;
+    for (const auto& route : routes) {
+      const auto& legs = route.second.get_child("legs");
+      ASSERT_EQ(legs.size(), test_ans_num_legs[i][j++])
+          << "Expected " + std::to_string(test_ans_num_legs[i][j - 1]) + " legs but got " +
+                 std::to_string(legs.size());
+      for (const auto& leg : legs) {
+        float duration = leg.second.get<float>("duration");
+        ASSERT_NEAR(duration, test_ans_leg_duration[i][k++], .1)
+            << "Expected legs with duration " + std::to_string(test_ans_leg_duration[i][k - 1]) +
+                   " but got " + std::to_string(duration);
+      }
+    }
+  }
+}
+
+TEST(Mapmatch, test_discontinuity_duration_trimming) {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.1055358, "lon": 5.1208866, "type": "break"},
+          {"lat": 52.1044362, "lon": 5.1259572, "type": "break"},
+          {"lat": 52.1130862, "lon": 5.1445529, "type": "break"},
+          {"lat": 52.1130460, "lon": 5.1444851, "type": "break"},
+          {"lat": 52.1130186, "lon": 5.1444687, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.1047614, "lon": 5.1245468, "type": "break"},
+          {"lat": 52.1022218, "lon": 5.1299002, "type": "break"},
+          {"lat": 52.1131029, "lon": 5.1440879, "type": "break"},
+          {"lat": 52.1131350, "lon": 5.1440195, "type": "break"},
+          {"lat": 52.1131857, "lon": 5.1439104, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.1089306, "lon": 5.1226142, "type": "break"},
+          {"lat": 52.1060622, "lon": 5.1256574, "type": "break"},
+          {"lat": 52.0873837, "lon": 5.1442371, "type": "break"},
+          {"lat": 52.0872970, "lon": 5.1439155, "type": "break"},
+          {"lat": 52.0872151, "lon": 5.1436803, "type": "break"}]})"};
+
+  std::vector<int> test_ans_num_routes{2, 2, 2};
+  std::vector<std::vector<int>> test_ans_num_legs{{1, 2}, {1, 2}, {1, 2}};
+  std::vector<std::vector<float>> test_ans_leg_duration{{26.459, 0.97, 0.454},
+                                                        {48.6, 0.64, 0.961},
+                                                        {220.778, 2.431, 1.899}};
+
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& routes = matched.get_child("matchings");
+    EXPECT_EQ(routes.size(), test_ans_num_routes[i]);
+    int j = 0, k = 0;
+    for (const auto& route : routes) {
+      const auto& legs = route.second.get_child("legs");
+      ASSERT_EQ(legs.size(), test_ans_num_legs[i][j++])
+          << "Expected " + std::to_string(test_ans_num_legs[i][j - 1]) + " legs but got " +
+                 std::to_string(legs.size());
+      for (const auto& leg : legs) {
+        float duration = leg.second.get<float>("duration");
+        ASSERT_NEAR(duration, test_ans_leg_duration[i][k++], .1)
+            << "Expected legs with duration " + std::to_string(test_ans_leg_duration[i][k - 1]) +
+                   " but got " + std::to_string(duration);
+      }
+    }
+  }
+}
+
+TEST(Mapmatch, test_transition_matching) {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                {"lat": 52.1003455, "lon": 5.1194303, "type": "break"},
+                {"lat": 52.1003954, "lon": 5.1190220, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+                {"lat": 52.1011859, "lon": 5.1209135, "type": "break"},
+                {"lat": 52.1009284, "lon": 5.1204603, "type": "break"}]})",
+  };
+
+  std::vector<int> test_ans_num_routes{1, 1};
+  std::vector<float> durations{3.4, 5.0};
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& routes = matched.get_child("matchings");
+    EXPECT_EQ(routes.size(), test_ans_num_routes[i]);
+    for (const auto& route : routes) {
+      const auto& legs = route.second.get_child("legs");
+      for (const auto& leg : legs) {
+        float duration = leg.second.get<float>("duration");
+        ASSERT_NEAR(duration, durations[i], .1) << "Expected legs with duration " +
+                                                       std::to_string(durations[i]) + " but got " +
+                                                       std::to_string(duration);
+      }
+    }
+  }
+}
+
+TEST(Mapmatch, test_loop_matching) {
+  // NOTE THAT: test case 0 and 3 has discontinuity on loops
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0992698, "lon": 5.1071285, "type": "break"},
+          {"lat": 52.0990768, "lon": 5.1069392, "type": "break"},
+          {"lat": 52.0995259, "lon": 5.1073563, "type": "break"},
+          {"lat": 52.1183497, "lon": 5.1171364, "type": "break"},
+          {"lat": 52.1181338, "lon": 5.1188697, "type": "break"},
+          {"lat": 52.1182095, "lon": 5.1170544, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.1181394, "lon": 5.1168568, "type": "break"},
+          {"lat": 52.1181338, "lon": 5.1188697, "type": "break"},
+          {"lat": 52.1183749, "lon": 5.1173171, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.1185567, "lon": 5.1226105, "type": "break"},
+          {"lat": 52.1189432, "lon": 5.1244406, "type": "break"},
+          {"lat": 52.1183977, "lon": 5.1223398, "type": "break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.1207253, "lon": 5.1163155, "type": "break"},
+          {"lat": 52.1206812, "lon": 5.1174006, "type": "break"},
+          {"lat": 52.1203074, "lon": 5.1155726, "type": "break"},
+          {"lat": 52.1188651, "lon": 5.0993882, "type": "break"},
+          {"lat": 52.1189673, "lon": 5.0990478, "type": "break"},
+          {"lat": 52.1186596, "lon": 5.0995430, "type": "break"}]})"};
+
+  std::vector<int> test_ans_num_routes{2, 1, 1, 2};
+  std::vector<std::vector<int>> test_ans_num_legs{{2, 2}, {2}, {2}, {2, 2}};
+  std::vector<std::vector<float>> test_ans_leg_duration{{4.106, 67.203, 45.13, 59.375},
+                                                        {48.24, 62.01},
+                                                        {26.082, 74.277},
+                                                        {12.911, 89.043, 3.382, 52.205}};
+
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& routes = matched.get_child("matchings");
+    EXPECT_EQ(routes.size(), test_ans_num_routes[i]);
+    int j = 0, k = 0;
+    for (const auto& route : routes) {
+      const auto& legs = route.second.get_child("legs");
+      ASSERT_EQ(legs.size(), test_ans_num_legs[i][j++])
+          << "Expected " + std::to_string(test_ans_num_legs[i][j - 1]) + " legs but got " +
+                 std::to_string(legs.size());
+      for (const auto& leg : legs) {
+        float duration = leg.second.get<float>("duration");
+        ASSERT_NEAR(duration, test_ans_leg_duration[i][k++], .1)
+            << "Expected legs with duration " + std::to_string(test_ans_leg_duration[i][k - 1]) +
+                   " but got " + std::to_string(duration);
+      }
+    }
+  }
+}
+
+TEST(Mapmatch, test_intersection_matching) {
   std::vector<std::string> test_cases = {
       R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
           {"lat": 52.0981267, "lon": 5.1296180, "type": "break"},
@@ -1060,69 +1220,79 @@ void test_intersection_matching() {
     const auto& routes = matched.get_child("matchings");
     for (const auto& route : routes) {
       const auto& legs = route.second.get_child("legs");
-      if (legs.size() != test_answers[i].first)
-        throw std::logic_error("Expected " + std::to_string(test_answers[i].first) +
-                               " legs but got " + std::to_string(legs.size()));
+      ASSERT_EQ(legs.size(), test_answers[i].first)
+          << "Expected " + std::to_string(test_answers[i].first) + " legs but got " +
+                 std::to_string(legs.size());
 
       int j = 0;
       for (const auto& leg : legs) {
         float distance = leg.second.get<float>("distance");
-        if (distance != test_answers[i].second[j++]) {
-          throw std::logic_error("Expected legs with distance" +
-                                 std::to_string(test_answers[i].second[j - 1]) + " but got " +
-                                 std::to_string(distance));
-        }
+        ASSERT_NEAR(distance, test_answers[i].second[j++], .1)
+            << "Expected legs with distance " + std::to_string(test_answers[i].second[j - 1]) +
+                   " but got " + std::to_string(distance);
       }
+    }
+  }
+}
+
+TEST(Mapmatch, test_degenerate_match) {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0981280, "lon": 5.1297250, "type": "break", "time":10},
+          {"lat": 52.0981280, "lon": 5.1297250, "type": "break", "time":169}],
+          "trace_options": {"interpolation_distance": 0}})",
+  };
+  tyr::actor_t actor(conf, true);
+
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& routes = matched.get_child("matchings");
+    for (const auto& route : routes) {
+      const auto& legs = route.second.get_child("legs");
+      for (const auto& leg : legs) {
+        double duration = leg.second.get<double>("duration");
+        ASSERT_TRUE(duration >= 0);
+      }
+    }
+  }
+}
+
+TEST(Mapmatch, interpolation) {
+  std::vector<std::string> test_cases = {
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.082829, "lon": 5.087129, "type": "break"},
+          {"lat": 52.082870, "lon": 5.086956, "type": "break"},
+          {"lat": 52.082870, "lon": 5.086960, "type": "break"},
+          {"lat": 52.082855, "lon": 5.087024, "type": "break"}]})",
+      R"({"trace_options": {"interpolation_distance": 20},
+          "costing":"auto","format":"osrm","shape_match":"map_snap","shape":[
+          {"lat": 52.0749799, "lon": 5.1141067, "type": "break"},
+          {"lat": 52.0750399, "lon": 5.1141172, "type": "break"},
+          {"lat": 52.0750431, "lon": 5.1141172, "type": "break"},
+          {"lat": 52.0750392, "lon": 5.1141197, "type": "break"}]})"};
+  tyr::actor_t actor(conf, true);
+
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
+    const auto& routes = matched.get_child("matchings");
+    ASSERT_EQ(1, routes.size());
+    for (const auto& route : routes) {
+      const auto& legs = route.second.get_child("legs");
+      ASSERT_EQ(3, legs.size());
     }
   }
 }
 } // namespace
 
 int main(int argc, char* argv[]) {
-  test::suite suite("map matcher");
   midgard::logging::Configure({{"type", ""}}); // silence logs
-  if (argc > 1)
-    seed = std::stoi(argv[1]);
-  if (argc > 2)
-    bound = std::stoi(argv[2]);
+  if (argc > 1 && std::string(argv[1]).find("gtest") == std::string::npos) {
+    if (argc > 1)
+      seed = std::stoi(argv[1]);
+    if (argc > 2)
+      bound = std::stoi(argv[2]);
+  }
 
-  suite.test(TEST_CASE(test32bit));
-
-  suite.test(TEST_CASE(test_matcher));
-
-  suite.test(TEST_CASE(test_trace_route_breaks));
-
-  suite.test(TEST_CASE(test_disconnected_edges_expect_no_route));
-
-  suite.test(TEST_CASE(test_distance_only));
-
-  suite.test(TEST_CASE(test_time_rejection));
-
-  suite.test(TEST_CASE(test_trace_route_edge_walk_expected_error_code));
-
-  suite.test(TEST_CASE(test_trace_route_map_snap_expected_error_code));
-
-  suite.test(TEST_CASE(test_trace_attributes_edge_walk_expected_error_code));
-
-  suite.test(TEST_CASE(test_trace_attributes_map_snap_expected_error_code));
-
-  suite.test(TEST_CASE(test_topk_validate));
-
-  suite.test(TEST_CASE(test_topk_fork_alternate));
-
-  suite.test(TEST_CASE(test_topk_loop_alternate));
-
-  suite.test(TEST_CASE(test_topk_frontage_alternate));
-
-  suite.test(TEST_CASE(test_leg_duration_trimming));
-
-  suite.test(TEST_CASE(test_matching_indices_and_waypoint_indices));
-
-  suite.test(TEST_CASE(test_now_matches));
-
-  suite.test(TEST_CASE(test_edges_discontinuity_with_multi_routes));
-
-  suite.test(TEST_CASE(test_intersection_matching));
-
-  return suite.tear_down();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

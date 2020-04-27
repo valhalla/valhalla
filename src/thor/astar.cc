@@ -156,13 +156,14 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
     bool has_time_restrictions = false;
     if (es->set() == EdgeSet::kPermanent ||
         !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
-        costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
+        costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, &edgestatus_)) {
       continue;
     }
 
     // Compute the cost to the end of this edge
     auto edge_cost = costing_->EdgeCost(directededge, tile);
-    Cost newcost = pred.cost() + edge_cost + costing_->TransitionCost(directededge, nodeinfo, pred);
+    auto transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
+    Cost newcost = pred.cost() + edge_cost + transition_cost;
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge).
@@ -198,7 +199,7 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
       }
       continue;
     }
@@ -219,7 +220,8 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
-    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_, 0);
+    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_, 0,
+                             transition_cost);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_->add(idx);
   }
@@ -450,7 +452,7 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
-    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d);
+    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, Cost{});
     // Set the origin flag
     edge_label.set_origin();
 
@@ -518,7 +520,8 @@ std::vector<PathInfo> AStarPathAlgorithm::FormPath(const uint32_t dest) {
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost().secs, edgelabel.edgeid(), 0,
-                      edgelabel.cost().cost, edgelabel.has_time_restriction());
+                      edgelabel.cost().cost, edgelabel.has_time_restriction(),
+                      edgelabel.transition_secs());
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {

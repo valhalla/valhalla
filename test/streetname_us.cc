@@ -1,10 +1,8 @@
 #include "baldr/streetname_us.h"
-#include "test.h"
 
-#include <algorithm>
 #include <memory>
-#include <utility>
-#include <vector>
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -13,14 +11,11 @@ namespace {
 
 void TryCtor(const std::string& text, const bool is_route_number) {
   StreetNameUs street_name(text, is_route_number);
-
-  if (text != street_name.value())
-    throw std::runtime_error("Incorrect street name text");
-  if (is_route_number != street_name.is_route_number())
-    throw std::runtime_error("Incorrect street name is_route_number");
+  EXPECT_EQ(text, street_name.value());
+  EXPECT_EQ(is_route_number, street_name.is_route_number());
 }
 
-void TestCtor() {
+TEST(StreetnameUs, TestCtor) {
   // Street name
   TryCtor("Main Street", false);
 
@@ -37,12 +32,10 @@ void TestCtor() {
 void TryEquals(const std::string& text, const bool is_route_number) {
   StreetNameUs lhs(text, is_route_number);
   StreetNameUs rhs(text, is_route_number);
-
-  if (!(lhs == rhs))
-    throw std::runtime_error("Incorrect equals return");
+  EXPECT_EQ(lhs, rhs);
 }
 
-void TestEquals() {
+TEST(StreetnameUs, TestEquals) {
   TryEquals("Main Street", false);
   TryEquals("PA 743", true);
   TryEquals("US 220 Business", true);
@@ -50,31 +43,28 @@ void TestEquals() {
 }
 
 void TryStartsWith(const StreetNameUs& street_name, const std::string& prefix) {
-  if (!street_name.StartsWith(prefix))
-    throw std::runtime_error(street_name.value() + ": Incorrect StartsWith");
+  EXPECT_TRUE(street_name.StartsWith(prefix)) << street_name.value() + " : " + prefix;
 }
 
-void TestStartsWith() {
+TEST(StreetnameUs, TestStartsWith) {
   TryStartsWith(StreetNameUs("I 81 South", true), "I ");
   TryStartsWith(StreetNameUs("North Main Street", false), "North");
 }
 
 void TryEndsWith(const StreetNameUs& street_name, const std::string& suffix) {
-  if (!street_name.EndsWith(suffix))
-    throw std::runtime_error(street_name.value() + ": Incorrect EndsWith");
+  EXPECT_TRUE(street_name.EndsWith(suffix)) << street_name.value() + " : " << suffix;
 }
 
-void TestEndsWith() {
+TEST(StreetnameUs, TestEndsWith) {
   TryEndsWith(StreetNameUs("I 81 South", true), "South");
   TryEndsWith(StreetNameUs("Main Street", false), "Street");
 }
 
 void TryGetPreDir(const StreetNameUs& street_name, const std::string& pre_dir) {
-  if (pre_dir != street_name.GetPreDir())
-    throw std::runtime_error(street_name.value() + ": Incorrect GetPreDir");
+  EXPECT_EQ(pre_dir, street_name.GetPreDir()) << street_name.value() + ": Incorrect GetPreDir";
 }
 
-void TestGetPreDir() {
+TEST(StreetnameUs, TestGetPreDir) {
   TryGetPreDir(StreetNameUs("North Main Street", false), "North ");
   TryGetPreDir(StreetNameUs("East Chestnut Avenue", false), "East ");
   TryGetPreDir(StreetNameUs("South Main Street", false), "South ");
@@ -83,11 +73,10 @@ void TestGetPreDir() {
 }
 
 void TryGetPostDir(const StreetNameUs& street_name, const std::string& post_dir) {
-  if (post_dir != street_name.GetPostDir())
-    throw std::runtime_error(street_name.value() + ": Incorrect GetPostDir");
+  EXPECT_EQ(post_dir, street_name.GetPostDir()) << street_name.value() + ": Incorrect GetPostDir";
 }
 
-void TestGetPostDir() {
+TEST(StreetnameUs, TestGetPostDir) {
   TryGetPostDir(StreetNameUs("US 220 North", true), " North");
   TryGetPostDir(StreetNameUs("US 22 East", true), " East");
   TryGetPostDir(StreetNameUs("I 81 South", true), " South");
@@ -100,11 +89,11 @@ void TestGetPostDir() {
 }
 
 void TryGetPostCardinalDir(const StreetNameUs& street_name, const std::string& post_dir) {
-  if (post_dir != street_name.GetPostCardinalDir())
-    throw std::runtime_error(street_name.value() + ": Incorrect GetPostCardinalDir");
+  EXPECT_EQ(post_dir, street_name.GetPostCardinalDir())
+      << street_name.value() + ": Incorrect GetPostCardinalDir";
 }
 
-void TestGetPostCardinalDir() {
+TEST(StreetnameUs, TestGetPostCardinalDir) {
   TryGetPostCardinalDir(StreetNameUs("US 220 North", true), " North");
   TryGetPostCardinalDir(StreetNameUs("US 22 East", true), " East");
   TryGetPostCardinalDir(StreetNameUs("I 81 South", true), " South");
@@ -113,11 +102,10 @@ void TestGetPostCardinalDir() {
 }
 
 void TryGetBaseName(const StreetNameUs& street_name, const std::string& base_name) {
-  if (base_name != street_name.GetBaseName())
-    throw std::runtime_error(street_name.value() + ": Incorrect GetBaseName");
+  EXPECT_EQ(base_name, street_name.GetBaseName()) << street_name.value() + ": Incorrect GetBaseName";
 }
 
-void TestGetBaseName() {
+TEST(StreetnameUs, TestGetBaseName) {
   TryGetBaseName(StreetNameUs("North Main Street", false), "Main Street");
   TryGetBaseName(StreetNameUs("East Chestnut Avenue", false), "Chestnut Avenue");
   TryGetBaseName(StreetNameUs("South Main Street", false), "Main Street");
@@ -138,12 +126,11 @@ void TestGetBaseName() {
 }
 
 void TryHasSameBaseName(const StreetNameUs& street_name, const StreetNameUs& rhs) {
-  if (!street_name.HasSameBaseName(rhs)) {
-    throw std::runtime_error(street_name.value() + ": Incorrect HasSameBaseName");
-  }
+  EXPECT_TRUE(street_name.HasSameBaseName(rhs))
+      << street_name.value() + ": Incorrect HasSameBaseName";
 }
 
-void TestHasSameBaseName() {
+TEST(StreetnameUs, TestHasSameBaseName) {
   TryHasSameBaseName(StreetNameUs("North Main Street", false), StreetNameUs("Main Street", false));
   TryHasSameBaseName(StreetNameUs("East Chestnut Avenue", false),
                      StreetNameUs("Chestnut Avenue", false));
@@ -174,35 +161,7 @@ void TestHasSameBaseName() {
 
 } // namespace
 
-int main() {
-  test::suite suite("streetname_us");
-
-  // Constructor
-  suite.test(TEST_CASE(TestCtor));
-
-  // Equals
-  suite.test(TEST_CASE(TestEquals));
-
-  // StartsWith
-  suite.test(TEST_CASE(TestStartsWith));
-
-  // EndsWith
-  suite.test(TEST_CASE(TestEndsWith));
-
-  // GetPreDir
-  suite.test(TEST_CASE(TestGetPreDir));
-
-  // GetPostDir
-  suite.test(TEST_CASE(TestGetPostDir));
-
-  // GetPostCardinalDir
-  suite.test(TEST_CASE(TestGetPostCardinalDir));
-
-  // GetBaseName
-  suite.test(TEST_CASE(TestGetBaseName));
-
-  // HasSameBaseName
-  suite.test(TEST_CASE(TestHasSameBaseName));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

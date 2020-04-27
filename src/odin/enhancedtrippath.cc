@@ -21,7 +21,7 @@ namespace {
 constexpr float kShortRemainingDistanceThreshold = 0.402f; // Kilometers (~quarter mile)
 constexpr int kSignificantRoadClassThreshold = 2;          // Max lower road class delta
 
-const std::string& TripLeg_RoadClass_Name(int v) {
+const std::string& RoadClass_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kMotorway"}, {1, "kTrunk"},        {2, "kPrimary"},     {3, "kSecondary"},
       {4, "kTertiary"}, {5, "kUnclassified"}, {6, "kResidential"}, {7, "kServiceOther"},
@@ -410,7 +410,7 @@ bool EnhancedTripLeg_Edge::IsUnnamedMountainBikeTrail() const {
 }
 
 bool EnhancedTripLeg_Edge::IsHighway() const {
-  return ((road_class() == TripLeg_RoadClass_kMotorway) && (!IsRampUse()));
+  return ((road_class() == RoadClass::kMotorway) && (!IsRampUse()));
 }
 
 bool EnhancedTripLeg_Edge::IsOneway() const {
@@ -681,6 +681,9 @@ std::string EnhancedTripLeg_Edge::ToString() const {
 
     str += " | junction_names=";
     str += SignElementsToString(this->sign().junction_names());
+
+    str += " | guidance_view_junctions=";
+    str += SignElementsToString(this->sign().guidance_view_junctions());
   }
 
   str += " | travel_mode=";
@@ -944,8 +947,8 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
   str += std::to_string(speed());
 
   str += delim;
-  str += "TripLeg_RoadClass_";
-  str += TripLeg_RoadClass_Name(road_class());
+  str += "RoadClass_";
+  str += RoadClass_Name(road_class());
 
   str += delim;
   str += std::to_string(begin_heading());
@@ -1005,6 +1008,9 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
 
   str += delim;
   str += SignElementsToParameterString(this->sign().junction_names());
+
+  str += delim;
+  str += SignElementsToParameterString(this->sign().guidance_view_junctions());
 
   str += delim;
   if (this->has_travel_mode()) {
@@ -1229,7 +1235,7 @@ bool EnhancedTripLeg_IntersectingEdge::IsTraversableOutbound(
 }
 
 bool EnhancedTripLeg_IntersectingEdge::IsHighway() const {
-  return ((road_class() == TripLeg_RoadClass_kMotorway) && !(use() == TripLeg_Use_kRampUse));
+  return ((road_class() == RoadClass::kMotorway) && !(use() == TripLeg_Use_kRampUse));
 }
 
 std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
@@ -1391,7 +1397,7 @@ bool EnhancedTripLeg_Node::HasForwardTraversableIntersectingEdge(
 bool EnhancedTripLeg_Node::HasForwardTraversableSignificantRoadClassXEdge(
     uint32_t from_heading,
     const TripLeg_TravelMode travel_mode,
-    TripLeg_RoadClass path_road_class) {
+    RoadClass path_road_class) {
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     auto xedge = GetIntersectingEdge(i);
@@ -1461,7 +1467,7 @@ bool EnhancedTripLeg_Node::HasSpecifiedTurnXEdge(const Turn::Type turn_type,
   return false;
 }
 
-bool EnhancedTripLeg_Node::HasSpecifiedRoadClassXEdge(const TripLeg_RoadClass road_class) {
+bool EnhancedTripLeg_Node::HasSpecifiedRoadClassXEdge(const RoadClass road_class) {
 
   // If no intersecting edges then return false
   if (!HasIntersectingEdges()) {

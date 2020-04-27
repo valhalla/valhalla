@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <sqlite3.h>
+
 #include <valhalla/midgard/pointll.h>
 
 namespace valhalla {
@@ -106,6 +108,13 @@ bool shapes_match(const std::vector<midgard::PointLL>& shape1,
 uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
 
 /**
+ * Loads spatialite extension for sqlite
+ * @param db_handle   the handle to the open sqlite database
+ * @return returns true if the module was successfully loaded
+ */
+bool load_spatialite(sqlite3* db_handle);
+
+/**
  * Build an entire valhalla tileset give a config file and some input pbfs. The
  * tile building process is split into stages. This method allows either the entire
  * tile building pipeline to run (default) or a subset of the stages to run.
@@ -113,12 +122,15 @@ uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
  * @param input_files   Tells what osm pbf files to build the tiles from
  * @param start_stage   Starting stage of the pipeline to run
  * @param end_stage     End stage of the pipeline to run
+ * @param release_osmpbf_memory Free PBF parsing libs after use.  Saves RAM, but makes libprotobuf
+ * unusable afterwards.  Set to false if you need to perform protobuf operations after building tiles.
  * @return Returns true if no errors occur, false if an error occurs.
  */
 bool build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage = BuildStage::kInitialize,
-                    const BuildStage end_stage = BuildStage::kValidate);
+                    const BuildStage end_stage = BuildStage::kValidate,
+                    const bool release_osmpbf_memory = true);
 
 } // namespace mjolnir
 } // namespace valhalla

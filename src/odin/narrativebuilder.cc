@@ -8,6 +8,7 @@
 #include <boost/format.hpp>
 
 #include "baldr/verbal_text_formatter.h"
+#include "midgard/constants.h"
 
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuver.h"
@@ -45,9 +46,7 @@ NarrativeBuilder::NarrativeBuilder(const Options& options,
       articulated_preposition_enabled_(false) {
 }
 
-void NarrativeBuilder::Build(const Options& options,
-                             const EnhancedTripLeg* etp,
-                             std::list<Maneuver>& maneuvers) {
+void NarrativeBuilder::Build(const Options& options, std::list<Maneuver>& maneuvers) {
   Maneuver* prev_maneuver = nullptr;
   for (auto& maneuver : maneuvers) {
     switch (maneuver.type()) {
@@ -456,6 +455,29 @@ void NarrativeBuilder::Build(const Options& options,
 
   // Iterate over maneuvers to form verbal multi-cue instructions
   FormVerbalMultiCue(maneuvers);
+}
+
+std::string NarrativeBuilder::FormVerbalAlertApproachInstruction(float distance,
+                                                                 const std::string& verbal_cue) {
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.approach_verbal_alert_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kLengthTag,
+                     FormLength(distance, dictionary_.approach_verbal_alert_subset.metric_lengths,
+                                dictionary_.approach_verbal_alert_subset.us_customary_lengths));
+  boost::replace_all(instruction, kCurrentVerbalCueTag, verbal_cue);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
 }
 
 std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
@@ -913,11 +935,11 @@ std::string NarrativeBuilder::FormVerbalContinueInstruction(Maneuver& maneuver,
 }
 
 std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
-  // "0": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION>.",
-  // "1": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-  // "2": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on
+  // "0": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION>.",
+  // "1": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+  // "2": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on
   // <STREET_NAMES>.",
-  // "3": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+  // "3": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
   const TurnSubset* subset = nullptr;
   switch (maneuver.type()) {
     case DirectionsLeg_Maneuver_Type_kSlightRight:
@@ -978,10 +1000,10 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
 std::string NarrativeBuilder::FormVerbalAlertTurnInstruction(Maneuver& maneuver,
                                                              uint32_t element_max_count,
                                                              const std::string& delim) {
-  // "0": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION>.",
-  // "1": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-  // "2": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-  // "3": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+  // "0": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION>.",
+  // "1": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+  // "2": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+  // "3": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
 
   return FormVerbalTurnInstruction(maneuver, element_max_count, delim);
 }
@@ -989,10 +1011,10 @@ std::string NarrativeBuilder::FormVerbalAlertTurnInstruction(Maneuver& maneuver,
 std::string NarrativeBuilder::FormVerbalTurnInstruction(Maneuver& maneuver,
                                                         uint32_t element_max_count,
                                                         const std::string& delim) {
-  // "0": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION>.",
-  // "1": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-  // "2": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-  // "3": "Turn/Bear/Turn sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+  // "0": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION>.",
+  // "1": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+  // "2": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
+  // "3": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
 
   const TurnSubset* subset = nullptr;
   switch (maneuver.type()) {
@@ -3509,14 +3531,24 @@ std::string NarrativeBuilder::FormLength(Maneuver& maneuver,
   }
 }
 
+std::string NarrativeBuilder::FormLength(float distance,
+                                         const std::vector<std::string>& metric_lengths,
+                                         const std::vector<std::string>& us_customary_lengths) {
+  switch (options_.units()) {
+    case Options::miles: {
+      return FormUsCustomaryLength(distance, us_customary_lengths);
+    }
+    default: { return FormMetricLength(distance, metric_lengths); }
+  }
+}
+
 std::string NarrativeBuilder::FormMetricLength(float kilometers,
                                                const std::vector<std::string>& metric_lengths) {
 
   // 0 "<KILOMETERS> kilometers"
   // 1 "1 kilometer"
-  // 2 "a half kilometer"
-  // 3 "<METERS> meters" (30-400 and 600-900 meters)
-  // 4 "less than 10 meters"
+  // 2 "<METERS> meters" (10-900 meters)
+  // 3 "less than 10 meters"
 
   std::string length_string;
   length_string.reserve(kLengthStringInitialCapacity);
@@ -3524,31 +3556,42 @@ std::string NarrativeBuilder::FormMetricLength(float kilometers,
   // Follow locale rules turning numbers into strings
   std::stringstream distance;
   distance.imbue(dictionary_.GetLocale());
-  // These will determine what we say
-  int tenths = std::round(kilometers * 10);
 
-  if (tenths > 10) {
-    // 0 "<KILOMETERS> kilometers"
-    length_string += metric_lengths.at(kKilometersIndex);
-    distance << std::setiosflags(std::ios::fixed) << std::setprecision(tenths % 10 > 0) << kilometers;
-  } else if (tenths == 10) {
-    // 1 "1 kilometer"
-    length_string += metric_lengths.at(kOneKilometerIndex);
-  } else if (tenths == 5) {
-    // 2 "a half kilometer"
-    length_string += metric_lengths.at(kHalfKilometerIndex);
-  } else {
-    int meters = std::round(kilometers * 1000);
-    if (meters > 94) {
-      // 3 "<METERS> meters" (100-400 and 600-900 meters)
-      length_string += metric_lengths.at(kMetersIndex);
-      distance << ((meters + 50) / 100) * 100;
-    } else if (meters > 9) {
-      // 3 "<METERS> meters" (10-90 meters)
-      length_string += metric_lengths.at(kMetersIndex);
-      distance << ((meters + 5) / 10) * 10;
+  float meters = std::round(kilometers * midgard::kMetersPerKm);
+  float rounded = 0.f;
+
+  // These will determine what we say
+  // For distances that will round to 1km or greater
+  if (meters > 949) {
+    if (kilometers > 3) {
+      // Round to integer for distances greater than 3km
+      rounded = std::round(kilometers);
     } else {
-      // 4 "less than 10 meters"
+      // Round to whole or half km for 1km to 3km distances
+      rounded = std::round(kilometers * 2) / 2;
+    }
+
+    if (rounded == 1.f) {
+      // "1 kilometer"
+      length_string += metric_lengths.at(kOneKilometerIndex);
+    } else {
+      // "<KILOMETERS> kilometers"
+      length_string += metric_lengths.at(kKilometersIndex);
+      // 1 digit of precision for float and 0 for int
+      distance << std::setiosflags(std::ios::fixed)
+               << std::setprecision(rounded != static_cast<int>(rounded)) << rounded;
+    }
+  } else {
+    if (meters > 94) {
+      // "<METERS> meters" (100-900 meters)
+      length_string += metric_lengths.at(kMetersIndex);
+      distance << (std::round(meters / 100) * 100);
+    } else if (meters > 9) {
+      // "<METERS> meters" (10-90 meters)
+      length_string += metric_lengths.at(kMetersIndex);
+      distance << (std::round(meters / 10) * 10);
+    } else {
+      // "less than 10 meters"
       length_string += metric_lengths.at(kSmallMetersIndex);
     }
   }
@@ -3568,10 +3611,9 @@ NarrativeBuilder::FormUsCustomaryLength(float miles,
   // 0  "<MILES> miles"
   // 1  "1 mile"
   // 2  "a half mile"
-  // 3  "<TENTHS_OF_MILE> tenths of a mile" (2-4, 6-9)
-  // 4  "1 tenth of a mile"
-  // 5  "<FEET> feet" (10-90, 100-500)
-  // 6  "less than 10 feet"
+  // 3  "a quarter mile"
+  // 4  "<FEET> feet" (10-90, 100-500)
+  // 5  "less than 10 feet"
 
   std::string length_string;
   length_string.reserve(kLengthStringInitialCapacity);
@@ -3579,38 +3621,44 @@ NarrativeBuilder::FormUsCustomaryLength(float miles,
   // Follow locale rules turning numbers into strings
   std::stringstream distance;
   distance.imbue(dictionary_.GetLocale());
-  // These will determine what we say
-  int tenths = std::round(miles * 10);
+  float feet = std::round(miles * midgard::kFeetPerMile);
+  float rounded = 0.f;
 
-  if (tenths > 10) {
-    // 0  "<MILES> miles"
-    length_string += us_customary_lengths.at(kMilesIndex);
-    distance << std::setiosflags(std::ios::fixed) << std::setprecision(tenths % 10 > 0) << miles;
-  } else if (tenths == 10) {
-    // 1  "1 mile"
-    length_string += us_customary_lengths.at(kOneMileIndex);
-  } else if (tenths == 5) {
-    // 2  "a half mile"
-    length_string += us_customary_lengths.at(kHalfMileIndex);
-  } else if (tenths > 1) {
-    // 3  "<TENTHS_OF_MILE> tenths of a mile" (2-4, 6-9)
-    length_string += us_customary_lengths.at(kTenthsOfMileIndex);
-    distance << tenths;
-  } else if (miles > 0.0973f && tenths == 1) {
-    // 4  "1 tenth of a mile"
-    length_string += us_customary_lengths.at(kOneTenthOfMileIndex);
-  } else {
-    int feet = std::round(miles * 5280);
-    if (feet > 94) {
-      // 5  "<FEET> feet" (100-500)
-      length_string += us_customary_lengths.at(kFeetIndex);
-      distance << ((feet + 50) / 100) * 100;
-    } else if (feet > 9) {
-      // 5  "<FEET> feet" (10-90)
-      length_string += us_customary_lengths.at(kFeetIndex);
-      distance << ((feet + 5) / 10) * 10;
+  // These will determine what we say
+  if (feet > 1000) {
+    if (miles > 2) {
+      rounded = std::round(miles);
+    } else if (miles >= 0.625) {
+      rounded = std::round(miles * 2) / 2;
     } else {
-      // 6  "less than 10 feet"
+      rounded = std::round(miles * 4) / 4;
+    }
+
+    if (rounded == 0.25f) {
+      // "a quarter mile"
+      length_string += us_customary_lengths.at(kQuarterMileIndex);
+    } else if (rounded == 0.5f) {
+      // "a half mile"
+      length_string += us_customary_lengths.at(kHalfMileIndex);
+    } else if (rounded == 1.f) {
+      // "1 mile"
+      length_string += us_customary_lengths.at(kOneMileIndex);
+    } else {
+      // "<MILES> miles"
+      length_string += us_customary_lengths.at(kMilesIndex);
+      distance << std::setiosflags(std::ios::fixed) << std::setprecision(rounded == 1.5f) << rounded;
+    }
+  } else {
+    if (feet > 94) {
+      // "<FEET> feet" (100-1000)
+      length_string += us_customary_lengths.at(kFeetIndex);
+      distance << (std::round(feet / 100) * 100);
+    } else if (feet > 9) {
+      // "<FEET> feet" (10-90)
+      length_string += us_customary_lengths.at(kFeetIndex);
+      distance << (std::round(feet / 10) * 10);
+    } else {
+      // "less than 10 feet"
       length_string += us_customary_lengths.at(kSmallFeetIndex);
     }
   }
@@ -3759,9 +3807,9 @@ void NarrativeBuilder::FormVerbalMultiCue(std::list<Maneuver>& maneuvers) {
   for (auto& maneuver : maneuvers) {
     if (prev_maneuver && IsVerbalMultiCuePossible(prev_maneuver, maneuver)) {
       // Set verbal pre transition instruction as a verbal multi-cue
+      prev_maneuver->set_imminent_verbal_multi_cue(true);
       prev_maneuver->set_verbal_pre_transition_instruction(
           FormVerbalMultiCue(prev_maneuver, maneuver));
-      prev_maneuver->set_verbal_multi_cue(true);
     }
 
     // Update previous maneuver
@@ -3771,6 +3819,7 @@ void NarrativeBuilder::FormVerbalMultiCue(std::list<Maneuver>& maneuvers) {
 
 std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver, Maneuver& next_maneuver) {
   // "0": "<CURRENT_VERBAL_CUE> Then <NEXT_VERBAL_CUE>"
+  // "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -3783,12 +3832,19 @@ std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver, Maneuver& n
                                     ? next_maneuver.verbal_transition_alert_instruction()
                                     : next_maneuver.verbal_pre_transition_instruction();
 
-  // Set instruction to the verbal multi-cue
-  instruction = dictionary_.verbal_multi_cue_subset.phrases.at("0");
+  // Set instruction to the proper verbal multi-cue
+  uint8_t phrase_id = 0;
+  if (maneuver->distant_verbal_multi_cue()) {
+    phrase_id = 1;
+  }
+  instruction = dictionary_.verbal_multi_cue_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kCurrentVerbalCueTag, current_verbal_cue);
   boost::replace_all(instruction, kNextVerbalCueTag, next_verbal_cue);
+  boost::replace_all(instruction, kLengthTag,
+                     FormLength(*maneuver, dictionary_.post_transition_verbal_subset.metric_lengths,
+                                dictionary_.post_transition_verbal_subset.us_customary_lengths));
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {

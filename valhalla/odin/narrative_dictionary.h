@@ -74,6 +74,7 @@ constexpr auto kPostTransitConnectionDestinationVerbalKey =
 constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kPostTransitTransitionVerbalKey = "instructions.post_transition_transit_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
+constexpr auto kApproachVerbalAlertKey = "instructions.approach_verbal_alert";
 constexpr auto kPosixLocaleKey = "posix_locale";
 
 // Variable keys
@@ -104,18 +105,16 @@ constexpr auto kMountainBikeTrailIndex = 2;
 // Metric length indexes
 constexpr auto kKilometersIndex = 0;
 constexpr auto kOneKilometerIndex = 1;
-constexpr auto kHalfKilometerIndex = 2;
-constexpr auto kMetersIndex = 3;
-constexpr auto kSmallMetersIndex = 4;
+constexpr auto kMetersIndex = 2;
+constexpr auto kSmallMetersIndex = 3;
 
 // US Customary length indexes
 constexpr auto kMilesIndex = 0;
 constexpr auto kOneMileIndex = 1;
 constexpr auto kHalfMileIndex = 2;
-constexpr auto kTenthsOfMileIndex = 3;
-constexpr auto kOneTenthOfMileIndex = 4;
-constexpr auto kFeetIndex = 5;
-constexpr auto kSmallFeetIndex = 6;
+constexpr auto kQuarterMileIndex = 3;
+constexpr auto kFeetIndex = 4;
+constexpr auto kSmallFeetIndex = 5;
 
 // Phrase tags
 constexpr auto kCardinalDirectionTag = "<CARDINAL_DIRECTION>";
@@ -221,6 +220,16 @@ struct PostTransitionVerbalSubset : PhraseSet {
 
 struct PostTransitionTransitVerbalSubset : PhraseSet {
   std::unordered_map<std::string, std::string> transit_stop_count_labels;
+};
+
+struct VerbalMultiCueSubset : PhraseSet {
+  std::vector<std::string> metric_lengths;
+  std::vector<std::string> us_customary_lengths;
+};
+
+struct ApproachVerbalAlertSubset : PhraseSet {
+  std::vector<std::string> metric_lengths;
+  std::vector<std::string> us_customary_lengths;
 };
 
 /**
@@ -347,8 +356,11 @@ public:
   // Post transition transit verbal
   PostTransitionTransitVerbalSubset post_transition_transit_verbal_subset;
 
-  // Verbal miulti-cue
-  PhraseSet verbal_multi_cue_subset;
+  // Verbal multi-cue
+  VerbalMultiCueSubset verbal_multi_cue_subset;
+
+  // Approach verbal alert
+  ApproachVerbalAlertSubset approach_verbal_alert_subset;
 
   // Posix locale
   std::string posix_locale;
@@ -532,6 +544,26 @@ protected:
    */
   void Load(PostTransitionTransitVerbalSubset& post_transition_transit_verbal_handle,
             const boost::property_tree::ptree& post_transition_transit_verbal_subset_pt);
+
+  /**
+   * Loads the specified 'verbal multi cue' instruction subset with the
+   * localized narrative instructions contained in the specified property tree.
+   *
+   * @param  verbal_multi_cue_handle  The 'verbal multi cue' structure to populate.
+   * @param  verbal_multi_cue_subset_pt  The 'verbal multi cue' property tree.
+   */
+  void Load(VerbalMultiCueSubset& verbal_multi_cue_handle,
+            const boost::property_tree::ptree& verbal_multi_cue_subset_pt);
+
+  /**
+   * Loads the specified 'approach verbal alert' instruction subset with the
+   * localized narrative instructions contained in the specified property tree.
+   *
+   * @param  approach_verbal_alert_handle  The 'approach verbal alert' structure to populate.
+   * @param  approach_verbal_alert_subset_pt  The 'approach verbal alert' property tree.
+   */
+  void Load(ApproachVerbalAlertSubset& approach_verbal_alert_handle,
+            const boost::property_tree::ptree& approach_verbal_alert_subset_pt);
 
   // Locale
   std::locale locale;

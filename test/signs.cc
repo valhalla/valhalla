@@ -78,9 +78,7 @@ void TryGetExitNumberString(const Signs& signs,
                             bool limit_by_consecutive_count,
                             const std::string& expectedString) {
 
-  if (signs.GetExitNumberString(max_count, limit_by_consecutive_count) != expectedString) {
-    throw std::runtime_error("Incorrect Exit Number String - expected: " + expectedString);
-  }
+  EXPECT_EQ(signs.GetExitNumberString(max_count, limit_by_consecutive_count), expectedString);
 }
 
 void TryGetExitBranchString(const Signs& signs,
@@ -88,9 +86,7 @@ void TryGetExitBranchString(const Signs& signs,
                             bool limit_by_consecutive_count,
                             const std::string& expectedString) {
 
-  if (signs.GetExitBranchString(max_count, limit_by_consecutive_count) != expectedString) {
-    throw std::runtime_error("Incorrect Exit Branch String - expected: " + expectedString);
-  }
+  EXPECT_EQ(signs.GetExitBranchString(max_count, limit_by_consecutive_count), expectedString);
 }
 
 void TryGetExitTowardString(const Signs& signs,
@@ -98,9 +94,7 @@ void TryGetExitTowardString(const Signs& signs,
                             bool limit_by_consecutive_count,
                             const std::string& expectedString) {
 
-  if (signs.GetExitTowardString(max_count, limit_by_consecutive_count) != expectedString) {
-    throw std::runtime_error("Incorrect Exit Toward String - expected: " + expectedString);
-  }
+  EXPECT_EQ(signs.GetExitTowardString(max_count, limit_by_consecutive_count), expectedString);
 }
 
 void TryGetExitNameString(const Signs& signs,
@@ -108,9 +102,7 @@ void TryGetExitNameString(const Signs& signs,
                           bool limit_by_consecutive_count,
                           const std::string& expectedString) {
 
-  if (signs.GetExitNameString(max_count, limit_by_consecutive_count) != expectedString) {
-    throw std::runtime_error("Incorrect Exit Name String - expected: " + expectedString);
-  }
+  EXPECT_EQ(signs.GetExitNameString(max_count, limit_by_consecutive_count), expectedString);
 }
 
 void TryGetGuideBranchString(const Signs& signs,
@@ -118,9 +110,7 @@ void TryGetGuideBranchString(const Signs& signs,
                              bool limit_by_consecutive_count,
                              const std::string& expectedString) {
 
-  if (signs.GetGuideBranchString(max_count, limit_by_consecutive_count) != expectedString) {
-    throw std::runtime_error("Incorrect Guide Branch String - expected: " + expectedString);
-  }
+  EXPECT_EQ(signs.GetGuideBranchString(max_count, limit_by_consecutive_count), expectedString);
 }
 
 void TryGetGuideTowardString(const Signs& signs,
@@ -128,9 +118,7 @@ void TryGetGuideTowardString(const Signs& signs,
                              bool limit_by_consecutive_count,
                              const std::string& expectedString) {
 
-  if (signs.GetGuideTowardString(max_count, limit_by_consecutive_count) != expectedString) {
-    throw std::runtime_error("Incorrect Guide Toward String - expected: " + expectedString);
-  }
+  EXPECT_EQ(signs.GetGuideTowardString(max_count, limit_by_consecutive_count), expectedString);
 }
 
 void TryGetJunctionNameString(const Signs& signs,
@@ -138,12 +126,10 @@ void TryGetJunctionNameString(const Signs& signs,
                               bool limit_by_consecutive_count,
                               const std::string& expectedString) {
 
-  if (signs.GetJunctionNameString(max_count, limit_by_consecutive_count) != expectedString) {
-    throw std::runtime_error("Incorrect Junction Name String - expected: " + expectedString);
-  }
+  EXPECT_EQ(signs.GetJunctionNameString(max_count, limit_by_consecutive_count), expectedString);
 }
 
-void TestGetExitTowardString_PA283_onto_PA743() {
+TEST(Signs, TestGetExitTowardString_PA283_onto_PA743) {
   // Create toward sign
   // Specify input in descending consecutive count order
   Signs signs =
@@ -157,7 +143,7 @@ void TestGetExitTowardString_PA283_onto_PA743() {
   TryGetExitTowardString(signs, 1, true, "Elizabethtown");
 }
 
-void TestGetExitNumberString_I81S_onto_US322W() {
+TEST(Signs, TestGetExitNumberString_I81S_onto_US322W) {
   // Create number sign
   // Specify input in descending consecutive count order
   Signs signs = GetExitNumberSigns({std::make_tuple("67B", 0, 1), std::make_tuple("67A", 0, 0)});
@@ -171,7 +157,7 @@ void TestGetExitNumberString_I81S_onto_US322W() {
   TryGetExitNumberString(signs, 1, true, "67B");
 }
 
-void TestGetExitBranchString_I81S_onto_US322W() {
+TEST(Signs, TestGetExitBranchString_I81S_onto_US322W) {
   // Create branch sign
   // Specify input in descending consecutive count order
   Signs signs =
@@ -194,7 +180,7 @@ void TestGetExitBranchString_I81S_onto_US322W() {
   TryGetExitBranchString(signs, 1, true, "US 322 West");
 }
 
-void TestGetExitTowardString_I81S_onto_US322W() {
+TEST(Signs, TestGetExitTowardString_I81S_onto_US322W) {
   // Create toward sign
   // Specify input in descending consecutive count order
   Signs signs =
@@ -210,7 +196,7 @@ void TestGetExitTowardString_I81S_onto_US322W() {
   TryGetExitTowardString(signs, 1, true, "Lewistown");
 }
 
-void TestGetExitNameString() {
+TEST(Signs, TestGetExitNameString) {
   // Create name sign
   // Specify input in descending consecutive count order
   Signs signs = GetExitNameSigns(
@@ -225,7 +211,7 @@ void TestGetExitNameString() {
   TryGetExitNameString(signs, 1, true, "Gettysburg Pike");
 }
 
-void TestGetGuideBranchString_LinglestownRoad_onto_US322W() {
+TEST(Signs, TestGetGuideBranchString_LinglestownRoad_onto_US322W) {
   // Create branch sign
   // Specify input in descending consecutive count order
   Signs signs = GetGuideBranchSigns(
@@ -242,7 +228,7 @@ void TestGetGuideBranchString_LinglestownRoad_onto_US322W() {
   TryGetGuideBranchString(signs, 1, true, "US 322 West");
 }
 
-void TestGetGuideTowardString_roundabout_toward_A1() {
+TEST(Signs, TestGetGuideTowardString_roundabout_toward_A1) {
   // Create toward sign
   // Specify input in descending consecutive count order
   Signs signs = GetGuideTowardSigns({std::make_tuple("A 1", 0, 1), std::make_tuple("Remscheid", 0, 1),
@@ -257,7 +243,7 @@ void TestGetGuideTowardString_roundabout_toward_A1() {
   TryGetGuideTowardString(signs, 1, true, "A 1");
 }
 
-void TestGetJunctionNameString() {
+TEST(Signs, TestGetJunctionNameString) {
   // Create named junction sign
   // Specify input in descending consecutive count order
   Signs signs = GetJunctionNameSigns(
@@ -274,32 +260,7 @@ void TestGetJunctionNameString() {
 
 } // namespace
 
-int main() {
-  test::suite suite("signs");
-
-  // GetExitTowardString_PA283_onto_PA743
-  suite.test(TEST_CASE(TestGetExitTowardString_PA283_onto_PA743));
-
-  // GetExitNumberString_I81S_onto_US322W
-  suite.test(TEST_CASE(TestGetExitNumberString_I81S_onto_US322W));
-
-  // GetExitBranchString_I81S_onto_US322W
-  suite.test(TEST_CASE(TestGetExitBranchString_I81S_onto_US322W));
-
-  // GetExitTowardString_I81S_onto_US322W
-  suite.test(TEST_CASE(TestGetExitTowardString_I81S_onto_US322W));
-
-  // GetExitNameString
-  suite.test(TEST_CASE(TestGetExitNameString));
-
-  // GetGuideBranchString_LinglestownRoad_onto_US322W
-  suite.test(TEST_CASE(TestGetGuideBranchString_LinglestownRoad_onto_US322W));
-
-  // GetGuideTowardString_roundabout_toward_A1
-  suite.test(TEST_CASE(TestGetGuideTowardString_roundabout_toward_A1));
-
-  // GetJunctionNameString
-  suite.test(TEST_CASE(TestGetJunctionNameString));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

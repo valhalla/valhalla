@@ -1,14 +1,13 @@
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
-#include "test.h"
 
 #include <cstdint>
-#include <set>
+
+#include "test.h"
 
 namespace {
 
-void TestJsonSerialize() {
-
+TEST(JSON, Serialize) {
   using namespace std;
   using namespace valhalla::baldr;
   stringstream result;
@@ -65,16 +64,19 @@ void TestJsonSerialize() {
             "message\":\"Found route between points\",\"via_indices\":[0,9],\"status\":0}";
 
   rapidjson::Document res, ans;
-  if (res != ans)
-    throw std::logic_error("Wrong json");
+
+  res.Parse(result.str());
+  EXPECT_FALSE(res.HasParseError());
+
+  ans.Parse(answer.str());
+  EXPECT_FALSE(ans.HasParseError());
+
+  EXPECT_EQ(res, ans) << "Wrong json";
 }
 
 } // namespace
 
-int main() {
-  test::suite suite("json");
-
-  suite.test(TEST_CASE(TestJsonSerialize));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

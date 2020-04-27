@@ -6,6 +6,7 @@ set(sources
   hierarchylimits.cc
   motorcyclecost.cc
   motorscootercost.cc
+  nocost.cc
   pedestriancost.cc
   transitcost.cc
   truckcost.cc
