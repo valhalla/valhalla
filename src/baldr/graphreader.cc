@@ -133,18 +133,23 @@ void SimpleTileCache::Clear() {
 }
 
 // Get a pointer to a graph tile object given a GraphId.
-const GraphTile* SimpleTileCache::Get(const GraphId& graphid) const {
+std::shared_ptr<const GraphTile> SimpleTileCache::Get(const GraphId& graphid) const {
   auto cached = cache_.find(graphid);
   if (cached != cache_.end()) {
-    return &cached->second;
+    return cached->second;
   }
   return nullptr;
 }
 
 // Puts a copy of a tile of into the cache.
-const GraphTile* SimpleTileCache::Put(const GraphId& graphid, const GraphTile& tile, size_t size) {
+void SimpleTileCache::Put(const GraphId& graphid,
+                          const std::shared_ptr<const GraphTile>& tile,
+                          size_t size) {
+  if (!tile) {
+    throw std::runtime_error("SimpleTileCache: tile is null");
+  }
   cache_size_ += size;
-  return &cache_.emplace(graphid, tile).first->second;
+  cache_.emplace(graphid, tile);
 }
 
 void SimpleTileCache::Trim() {
@@ -185,7 +190,7 @@ void TileCacheLRU::Trim() {
   TrimToFit(0);
 }
 
-const GraphTile* TileCacheLRU::Get(const GraphId& graphid) const {
+std::shared_ptr<const GraphTile> TileCacheLRU::Get(const GraphId& graphid) const {
   auto cached = cache_.find(graphid);
   if (cached == cache_.cend()) {
     return nullptr;
@@ -194,7 +199,7 @@ const GraphTile* TileCacheLRU::Get(const GraphId& graphid) const {
   const KeyValueIter& entry_iter = cached->second;
   MoveToLruHead(entry_iter);
 
-  return &entry_iter->tile;
+  return entry_iter->tile;
 }
 
 size_t TileCacheLRU::TrimToFit(const size_t required_size) {
@@ -202,7 +207,7 @@ size_t TileCacheLRU::TrimToFit(const size_t required_size) {
   while ((OverCommitted() || (max_cache_size_ - cache_size_) < required_size) &&
          !key_val_lru_list_.empty()) {
     const KeyValue& entry_to_evict = key_val_lru_list_.back();
-    const auto tile_size = entry_to_evict.tile.header()->end_offset();
+    const auto tile_size = entry_to_evict.tile->header()->end_offset();
     cache_size_ -= tile_size;
     freed_space += tile_size;
     cache_.erase(entry_to_evict.id);
@@ -215,8 +220,12 @@ void TileCacheLRU::MoveToLruHead(const KeyValueIter& entry_iter) const {
   key_val_lru_list_.splice(key_val_lru_list_.begin(), key_val_lru_list_, entry_iter);
 }
 
-const GraphTile*
-TileCacheLRU::Put(const GraphId& graphid, const GraphTile& tile, size_t new_tile_size) {
+void TileCacheLRU::Put(const GraphId& graphid,
+                       const std::shared_ptr<const GraphTile>& tile,
+                       size_t new_tile_size) {
+  if (!tile) {
+    throw std::runtime_error("TileCacheLRU: tile is null");
+  }
   if (new_tile_size > max_cache_size_) {
     throw std::runtime_error("TileCacheLRU: tile size is bigger than max cache size");
   }
@@ -235,7 +244,7 @@ TileCacheLRU::Put(const GraphId& graphid, const GraphTile& tile, size_t new_tile
     //  do we need to take it into account here? (can dramatically simplify the code)
     // note: SimpleTileCache does not handle the overwrite at the moment
     auto& entry_iter = cached->second;
-    const auto old_tile_size = entry_iter->tile.header()->end_offset();
+    const auto old_tile_size = entry_iter->tile->header()->end_offset();
 
     // do it before TrimToFit avoid its eviction to free space
     MoveToLruHead(entry_iter);
@@ -253,8 +262,6 @@ TileCacheLRU::Put(const GraphId& graphid, const GraphTile& tile, size_t new_tile
     cache_size_ -= old_tile_size;
   }
   cache_size_ += new_tile_size;
-
-  return &key_val_lru_list_.front().tile;
 }
 
 // ----------------------------------------------------------------------------
@@ -296,16 +303,17 @@ void SynchronizedTileCache::Trim() {
 }
 
 // Get a pointer to a graph tile object given a GraphId.
-const GraphTile* SynchronizedTileCache::Get(const GraphId& graphid) const {
+std::shared_ptr<const GraphTile> SynchronizedTileCache::Get(const GraphId& graphid) const {
   std::lock_guard<std::mutex> lock(mutex_ref_);
   return cache_.Get(graphid);
 }
 
 // Puts a copy of a tile of into the cache.
-const GraphTile*
-SynchronizedTileCache::Put(const GraphId& graphid, const GraphTile& tile, size_t size) {
+void SynchronizedTileCache::Put(const GraphId& graphid,
+                                const std::shared_ptr<const GraphTile>& tile,
+                                size_t size) {
   std::lock_guard<std::mutex> lock(mutex_ref_);
-  return cache_.Put(graphid, tile, size);
+  cache_.Put(graphid, tile, size);
 }
 
 // Constructs tile cache.
@@ -418,7 +426,7 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   auto base = graphid.Tile_Base();
   if (auto cached = cache_->Get(base)) {
     // LOG_DEBUG("Memory cache hit " + GraphTile::FileSuffix(base));
-    return cached;
+    return cached.get();
   }
 
   // Try getting it from the memmapped tar extract
@@ -433,10 +441,11 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
 
     // This initializes the tile from mmap
-    GraphTile tile(base, t->second.first, t->second.second,
-                   traffic_ptr != tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
-                                                                     : nullptr);
-    if (!tile.header()) {
+    auto tile = std::make_shared<GraphTile>(base, t->second.first, t->second.second,
+                                            traffic_ptr != tile_extract_->traffic_tiles.end()
+                                                ? traffic_ptr->second.first
+                                                : nullptr);
+    if (!tile->header()) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
     }
@@ -444,16 +453,17 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
 
     // Keep a copy in the cache and return it
     size_t size = AVERAGE_MM_TILE_SIZE; // tile.end_offset();  // TODO what size??
-    auto inserted = cache_->Put(base, tile, size);
-    return inserted;
+    cache_->Put(base, tile, size);
+    return tile.get();
   } // Try getting it from flat file
   else {
     auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
     // Try to get it from disk and if we cant..
-    GraphTile tile(tile_dir_, base,
-                   traffic_ptr != tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
-                                                                     : nullptr);
-    if (!tile.header()) {
+    auto tile = std::make_shared<const GraphTile>(tile_dir_, base,
+                                                  traffic_ptr != tile_extract_->traffic_tiles.end()
+                                                      ? traffic_ptr->second.first
+                                                      : nullptr);
+    if (!tile->header()) {
       if (!tile_getter_) {
         return nullptr;
       }
@@ -468,7 +478,7 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
 
       // Get it from the url and cache it to disk if you can
       tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_);
-      if (!tile.header()) {
+      if (!tile->header()) {
         std::lock_guard<std::mutex> lock(_404s_lock);
         _404s.insert(base);
         // LOG_DEBUG("Url cache miss " + GraphTile::FileSuffix(base));
@@ -480,9 +490,9 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     }
 
     // Keep a copy in the cache and return it
-    size_t size = tile.header()->end_offset();
-    auto inserted = cache_->Put(base, tile, size);
-    return inserted;
+    size_t size = tile->header()->end_offset();
+    cache_->Put(base, tile, size);
+    return tile.get();
   }
 }
 

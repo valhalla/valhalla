@@ -30,7 +30,8 @@ public:
 void assert_tile_equalish(const GraphTile& a,
                           const GraphTile& b,
                           size_t difference,
-                          const std::array<std::vector<GraphId>, kBinCount>& bins) {
+                          const std::array<std::vector<GraphId>, kBinCount>& bins,
+                          const std::string& msg) {
   // expected size
   ASSERT_EQ(a.header()->end_offset() + difference, b.header()->end_offset());
 
@@ -187,15 +188,15 @@ TEST(GraphTileBuilder, TestAddBins) {
     // load a tile
     GraphId id(test_tile.second, 2, 0);
     std::string no_bin_dir = VALHALLA_SOURCE_DIR "test/data/bin_tiles/no_bin";
-    GraphTile t(no_bin_dir, id);
-    EXPECT_TRUE(t.header()) << "Couldn't load test tile";
+    auto t = std::make_unique<const GraphTile>(no_bin_dir, id);
+    EXPECT_TRUE(t->header()) << "Couldn't load test tile";
 
     // alter the config to point to another dir
     std::string bin_dir = "test/data/bin_tiles/bin";
 
     // send blank bins
     std::array<std::vector<GraphId>, kBinCount> bins;
-    GraphTileBuilder::AddBins(bin_dir, &t, bins);
+    GraphTileBuilder::AddBins(bin_dir, t.get(), bins);
 
     // check the new tile is the same as the old one
     {
@@ -214,29 +215,32 @@ TEST(GraphTileBuilder, TestAddBins) {
     // send fake bins, we'll throw one in each bin
     for (auto& bin : bins)
       bin.emplace_back(test_tile.second, 2, 0);
-    GraphTileBuilder::AddBins(bin_dir, &t, bins);
+    GraphTileBuilder::AddBins(bin_dir, t.get(), bins);
     auto increase = bins.size() * sizeof(GraphId);
 
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins);
+    assert_tile_equalish(*t, GraphTile(bin_dir, id), increase, bins,
+                         "New tiles edgeinfo or names arent matching up: 1");
 
     // append some more
     for (auto& bin : bins)
       bin.emplace_back(test_tile.second, 2, 1);
-    GraphTileBuilder::AddBins(bin_dir, &t, bins);
+    GraphTileBuilder::AddBins(bin_dir, t.get(), bins);
     increase = bins.size() * sizeof(GraphId) * 2;
 
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins);
+    assert_tile_equalish(*t, GraphTile(bin_dir, id), increase, bins,
+                         "New tiles edgeinfo or names arent matching up: 2");
 
     // check that appending works
-    t = GraphTile(bin_dir, id);
-    GraphTileBuilder::AddBins(bin_dir, &t, bins);
+    t = std::make_unique<const GraphTile>(bin_dir, id);
+    GraphTileBuilder::AddBins(bin_dir, t.get(), bins);
     for (auto& bin : bins)
       bin.insert(bin.end(), bin.begin(), bin.end());
 
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins);
+    assert_tile_equalish(*t, GraphTile(bin_dir, id), increase, bins,
+                         "New tiles edgeinfo or names arent matching up: 3");
   }
 }
 

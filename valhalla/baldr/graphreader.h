@@ -62,14 +62,15 @@ public:
    * @param tile the graph tile
    * @param size size of the tile in memory
    */
-  virtual const GraphTile* Put(const GraphId& graphid, const GraphTile& tile, size_t size) = 0;
+  virtual void
+  Put(const GraphId& graphid, const std::shared_ptr<const GraphTile>& tile, size_t size) = 0;
 
   /**
    * Get a pointer to a graph tile object given a GraphId.
    * @param graphid  the graphid of the tile
    * @return GraphTile* a pointer to the graph tile
    */
-  virtual const GraphTile* Get(const GraphId& graphid) const = 0;
+  virtual std::shared_ptr<const GraphTile> Get(const GraphId& graphid) const = 0;
 
   /**
    * Lets you know if the cache is too large.
@@ -120,14 +121,15 @@ public:
    * @param tile the graph tile
    * @param size size of the tile in memory
    */
-  const GraphTile* Put(const GraphId& graphid, const GraphTile& tile, size_t size) override;
+  void
+  Put(const GraphId& graphid, const std::shared_ptr<const GraphTile>& tile, size_t size) override;
 
   /**
    * Get a pointer to a graph tile object given a GraphId.
    * @param graphid  the graphid of the tile
    * @return GraphTile* a pointer to the graph tile
    */
-  const GraphTile* Get(const GraphId& graphid) const override;
+  std::shared_ptr<const GraphTile> Get(const GraphId& graphid) const override;
 
   /**
    * Lets you know if the cache is too large.
@@ -148,7 +150,7 @@ public:
 
 protected:
   // The actual cached GraphTile objects
-  std::unordered_map<GraphId, GraphTile> cache_;
+  std::unordered_map<GraphId, std::shared_ptr<const GraphTile>> cache_;
 
   // The current cache size in bytes
   size_t cache_size_;
@@ -195,14 +197,16 @@ public:
    * @param tile the graph tile
    * @param size size of the tile in memory
    */
-  const GraphTile* Put(const GraphId& graphid, const GraphTile& tile, size_t tile_size) override;
+  void Put(const GraphId& graphid,
+           const std::shared_ptr<const GraphTile>& tile,
+           size_t tile_size) override;
 
   /**
    * Get a pointer to a graph tile object given a GraphId.
    * @param graphid  the graphid of the tile
    * @return GraphTile* a pointer to the graph tile
    */
-  const GraphTile* Get(const GraphId& graphid) const override;
+  std::shared_ptr<const GraphTile> Get(const GraphId& graphid) const override;
 
   /**
    * Lets you know if the cache is too large.
@@ -224,7 +228,7 @@ public:
 protected:
   struct KeyValue {
     GraphId id;
-    GraphTile tile;
+    std::shared_ptr<const GraphTile> tile;
   };
   using KeyValueIter = std::list<KeyValue>::iterator;
 
@@ -294,14 +298,15 @@ public:
    * @param tile the graph tile
    * @param size size of the tile in memory
    */
-  const GraphTile* Put(const GraphId& graphid, const GraphTile& tile, size_t size) override;
+  void
+  Put(const GraphId& graphid, const std::shared_ptr<const GraphTile>& tile, size_t size) override;
 
   /**
    * Get a pointer to a graph tile object given a GraphId.
    * @param graphid  the graphid of the tile
    * @return GraphTile* a pointer to the graph tile
    */
-  const GraphTile* Get(const GraphId& graphid) const override;
+  std::shared_ptr<const GraphTile> Get(const GraphId& graphid) const override;
 
   /**
    * Lets you know if the cache is too large.

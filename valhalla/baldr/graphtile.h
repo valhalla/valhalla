@@ -48,6 +48,9 @@ class tile_getter_t;
 class GraphTile {
 public:
   static const constexpr char* kTilePathPattern = "{tilePath}";
+  
+  // GraphTiles are noncopyable. Use a shared_ptr<GraphTile> if you need multiple references to one.
+  GraphTile(const GraphTile&) = delete;
 
   /**
    * Constructor
@@ -79,10 +82,10 @@ public:
    * @return whether or not the tile could be cached to disk
    */
 
-  static GraphTile CacheTileURL(const std::string& tile_url,
-                                const GraphId& graphid,
-                                tile_getter_t* tile_getter,
-                                const std::string& cache_location);
+  static std::shared_ptr<const GraphTile> CacheTileURL(const std::string& tile_url,
+                                                       const GraphId& graphid,
+                                                       tile_getter_t* tile_getter,
+                                                       const std::string& cache_location);
 
   /**
    * Construct a tile given a url for the tile using curl
@@ -658,7 +661,7 @@ public:
 
 protected:
   // Graph tile memory, this must be shared so that we can put it into cache
-  std::shared_ptr<std::vector<char>> graphtile_;
+  std::unique_ptr<std::vector<char>> graphtile_;
 
   // Header information for the tile
   GraphTileHeader* header_;
