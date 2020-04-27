@@ -106,7 +106,7 @@ set_target_properties(build_timezones PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/utrecht_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       -s initialize -e parseways
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
@@ -122,7 +122,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.
       --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       -s build -e cleanup
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_add_predicted_traffic
+  COMMAND $<TARGET_FILE:valhalla_add_predicted_traffic>
       --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","concurrency":1,"logging":{"type":""}}}'
       -t ${VALHALLA_SOURCE_DIR}/test/data/traffic_tiles/
   COMMENT "Building Utrecht Tiles..."
@@ -132,7 +132,7 @@ add_custom_target(utrecht_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/utrecht_ti
 set_target_properties(utrecht_tiles PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles/2/000/814/309.gph
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/whitelion_tiles","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk.osm.pbf
   COMMENT "Building Whitelion Tiles..."
@@ -142,7 +142,7 @@ add_custom_target(whitelion_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/whitelio
 set_target_properties(whitelion_tiles PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles_reverse/2/000/814/309.gph
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/whitelion_tiles_reverse","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk_reversed_oneway.osm.pbf
   COMMENT "Building reversed Whitelion Tiles..."
@@ -152,7 +152,7 @@ add_custom_target(reversed_whitelion_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data
 set_target_properties(reversed_whitelion_tiles PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/bayfront_singapore_tiles/1/033/043.gph
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/bayfront_singapore_tiles","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/bayfront_singapore.osm.pbf
       COMMENT "Building Singapore, Bayfront tiles..."
@@ -163,7 +163,7 @@ set_target_properties(bayfront_singapore_tiles PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/roma_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/roma_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/via_montebello_roma_italy.osm.pbf
   COMMENT "Building Roma Tiles..."
@@ -184,7 +184,7 @@ add_custom_target(paris_bss_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/paris_bs
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/melborne_tiles/0/001/251.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/melborne_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/melborne_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/melborne.osm.pbf
   COMMENT "Building Melborne Tiles..."
@@ -195,7 +195,7 @@ set_target_properties(melborne_tiles PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/ny_ar_tiles/2/000/752/104.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/ny_ar_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/ny_ar_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/ny-access-restriction.osm.pbf
   COMMENT "Building New York Access Restriction Tiles..."
@@ -206,7 +206,7 @@ set_target_properties(ny_ar_tiles PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/pa_ar_tiles/2/000/749/212.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/pa_ar_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/pa_ar_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/pa-access-restriction.osm.pbf
   COMMENT "Building PA Access Restriction Tiles..."
@@ -217,7 +217,7 @@ set_target_properties(pa_ar_tiles PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/074.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/nh_ar_tiles/
-  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+  COMMAND $<TARGET_FILE:valhalla_build_tiles>
       --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/nh_ar_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/nh-access-restriction.osm.pbf
   COMMENT "Building New Hampshire Access Restriction Tiles..."
@@ -259,7 +259,7 @@ foreach(test ${tests} ${cost_tests} ${tyr_tests})
   add_custom_command(OUTPUT ${test}.log
     COMMAND
       LOCPATH=${VALHALLA_SOURCE_DIR}/locales
-      /bin/bash -c "${CMAKE_CURRENT_BINARY_DIR}/${test} >& ${CMAKE_CURRENT_BINARY_DIR}/${test}.log \
+      /bin/bash -c "$<TARGET_FILE:${test}> >& ${CMAKE_CURRENT_BINARY_DIR}/${test}.log \
       && echo [PASS] ${test} \
       || ( exit=$? ; \
            echo [FAIL] ${test} ; \
