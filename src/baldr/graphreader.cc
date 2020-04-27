@@ -412,6 +412,18 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
          stat((file_location + ".gz").c_str(), &buffer) == 0;
 }
 
+class TarballGraphMemory final : public GraphMemory {
+public:
+  TarballGraphMemory(std::shared_ptr<midgard::tar> archive, std::pair<char*, size_t> position)
+      : archive_(std::move(archive)) {
+    data = position.first;
+    size = position.second;
+  }
+
+private:
+  const std::shared_ptr<midgard::tar> archive_;
+};
+
 // Get a pointer to a graph tile object given a GraphId. Return nullptr
 // if the tile is not found/empty
 const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
@@ -437,14 +449,16 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
     }
+    auto memory = std::make_unique<TarballGraphMemory>(tile_extract_->archive, t->second);
 
     auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
+    auto traffic_memory = traffic_ptr != tile_extract_->traffic_tiles.end()
+                              ? std::make_unique<TarballGraphMemory>(tile_extract_->traffic_archive,
+                                                                     traffic_ptr->second)
+                              : nullptr;
 
     // This initializes the tile from mmap
-    auto tile = std::make_shared<GraphTile>(base, t->second.first, t->second.second,
-                                            traffic_ptr != tile_extract_->traffic_tiles.end()
-                                                ? traffic_ptr->second.first
-                                                : nullptr);
+    auto tile = std::make_shared<GraphTile>(base, std::move(memory), std::move(traffic_memory));
     if (!tile->header()) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
@@ -458,11 +472,13 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   } // Try getting it from flat file
   else {
     auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
+    auto traffic_memory = traffic_ptr != tile_extract_->traffic_tiles.end()
+                              ? std::make_unique<TarballGraphMemory>(tile_extract_->traffic_archive,
+                                                                     traffic_ptr->second)
+                              : nullptr;
+
     // Try to get it from disk and if we cant..
-    auto tile = std::make_shared<const GraphTile>(tile_dir_, base,
-                                                  traffic_ptr != tile_extract_->traffic_tiles.end()
-                                                      ? traffic_ptr->second.first
-                                                      : nullptr);
+    auto tile = std::make_shared<const GraphTile>(tile_dir_, base, std::move(traffic_memory));
     if (!tile->header()) {
       if (!tile_getter_) {
         return nullptr;
@@ -478,7 +494,7 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
 
       // Get it from the url and cache it to disk if you can
       tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_);
-      if (!tile->header()) {
+      if (!tile || !tile->header()) {
         std::lock_guard<std::mutex> lock(_404s_lock);
         _404s.insert(base);
         // LOG_DEBUG("Url cache miss " + GraphTile::FileSuffix(base));

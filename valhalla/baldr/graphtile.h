@@ -10,6 +10,7 @@
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphmemory.h>
 #include <valhalla/baldr/graphtileheader.h>
 #include <valhalla/baldr/laneconnectivity.h>
 #include <valhalla/baldr/nodeinfo.h>
@@ -48,7 +49,7 @@ class tile_getter_t;
 class GraphTile {
 public:
   static const constexpr char* kTilePathPattern = "{tilePath}";
-  
+
   // GraphTiles are noncopyable. Use a shared_ptr<GraphTile> if you need multiple references to one.
   GraphTile(const GraphTile&) = delete;
 
@@ -63,7 +64,17 @@ public:
    * @param  tile_dir   Tile directory.
    * @param  graphid    GraphId (tileid and level)
    */
-  GraphTile(const std::string& tile_dir, const GraphId& graphid, char* traffic_ptr = nullptr);
+  GraphTile(const std::string& tile_dir,
+            const GraphId& graphid,
+            std::unique_ptr<const GraphMemory> traffic_memory = nullptr);
+
+  /**
+   * Constructor given the graph Id, pointer to the tile data, and the
+   * size of the tile data. This is used for memory mapped (mmap) tiles.
+   * @param  graphid  Tile Id.
+   * @param  ptr      Pointer to the start of the tile's data.
+   */
+  GraphTile(const GraphId& graphid, std::vector<char>&& memory);
 
   /**
    * Constructor given the graph Id, pointer to the tile data, and the
@@ -72,7 +83,9 @@ public:
    * @param  ptr      Pointer to the start of the tile's data.
    * @param  size     Size in bytes of the tile data.
    */
-  GraphTile(const GraphId& graphid, char* tile_ptr, size_t size, char* traffic_ptr = nullptr);
+  GraphTile(const GraphId& graphid,
+            std::unique_ptr<const GraphMemory> memory,
+            std::unique_ptr<const GraphMemory> traffic_memory = nullptr);
 
   /**
    * Construct a tile given a url for the tile using curl
@@ -660,8 +673,8 @@ public:
   }
 
 protected:
-  // Graph tile memory, this must be shared so that we can put it into cache
-  std::unique_ptr<std::vector<char>> graphtile_;
+  // Graph tile memory. A Graph tile owns its memory.
+  std::unique_ptr<const GraphMemory> memory_;
 
   // Header information for the tile
   GraphTileHeader* header_;
@@ -761,12 +774,10 @@ protected:
   TrafficTile traffic_tile;
 
   /**
-   * Set pointers to internal tile data structures.
+   * Initialize pointers to internal tile data structures.
    * @param  graphid    Graph Id for the tile.
-   * @param  tile_ptr   Pointer to the start of the tile.
-   * @param  tile_size  Tile size in bytes.
    */
-  void Initialize(const GraphId& graphid, char* tile_ptr, const size_t tile_size);
+  void Initialize(const GraphId& graphid);
 
   /**
    * For transit tiles, save off the pair<tileid,lineid> lookup via

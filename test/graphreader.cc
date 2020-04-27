@@ -127,10 +127,21 @@ TEST(ConnectivityMap, Basic) {
   filesystem::remove_all(tile_dir);
 }
 
+class TestGraphMemory final : public GraphMemory {
+public:
+  TestGraphMemory() : memory_(sizeof(GraphTileHeader)) {
+    data = const_cast<char*>(memory_.data());
+    size = memory_.size();
+  }
+
+private:
+  const std::vector<char> memory_;
+};
+
 struct TestGraphTile : public GraphTile {
   TestGraphTile(GraphId id, size_t size) {
-    graphtile_ = std::make_unique<std::vector<char>>(sizeof(GraphTileHeader));
-    header_ = reinterpret_cast<GraphTileHeader*>(graphtile_->data());
+    memory_ = std::make_unique<const TestGraphMemory>();
+    header_ = reinterpret_cast<GraphTileHeader*>(memory_->data);
     header_->set_graphid(id);
     header_->set_end_offset(size);
   }

@@ -20,6 +20,18 @@ namespace vb = valhalla::baldr;
 
 namespace {
 
+class SharedVectorGraphMemory final : public vb::GraphMemory {
+public:
+  SharedVectorGraphMemory(std::shared_ptr<const std::vector<char>> memory)
+      : memory_(std::move(memory)) {
+    data = const_cast<char*>(memory_->data());
+    size = memory_->size();
+  }
+
+private:
+  const std::shared_ptr<const std::vector<char>> memory_;
+};
+
 struct graph_tile_builder {
   void append_node(valhalla::midgard::PointLL& base_ll,
                    float lon,
@@ -59,9 +71,9 @@ struct graph_tile_builder {
     ptr += nodes_size;
     memcpy(ptr, edges.data(), edges_size);
 
-    auto res = memory.emplace(id, std::move(mem));
-    auto& mem2 = res.first->second;
-    tiles.emplace(id, std::make_shared<vb::GraphTile>(id, mem2.data(), mem2.size()));
+    auto res = memory.emplace(id, std::make_shared<std::vector<char>>(std::move(mem)));
+    auto mem2 = std::make_unique<SharedVectorGraphMemory>(res.first->second);
+    tiles.emplace(id, std::make_shared<vb::GraphTile>(id, std::move(mem2)));
     nodes.clear();
     edges.clear();
   }
@@ -69,7 +81,7 @@ struct graph_tile_builder {
   std::vector<vb::NodeInfo> nodes;
   std::vector<vb::DirectedEdge> edges;
 
-  std::unordered_map<vb::GraphId, std::vector<char>> memory;
+  std::unordered_map<vb::GraphId, std::shared_ptr<std::vector<char>>> memory;
   std::unordered_map<vb::GraphId, std::shared_ptr<vb::GraphTile>> tiles;
 };
 

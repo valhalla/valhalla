@@ -73,6 +73,17 @@ std::string GenerateTmpSuffix() {
 namespace valhalla {
 namespace baldr {
 
+class VectorGraphMemory final : public GraphMemory {
+public:
+  VectorGraphMemory(std::vector<char>&& memory) : memory_(std::move(memory)) {
+    data = const_cast<char*>(memory_.data());
+    size = memory_.size();
+  }
+
+private:
+  const std::vector<char> memory_;
+};
+
 // Default constructor
 GraphTile::GraphTile()
     : header_(nullptr), nodes_(nullptr), directededges_(nullptr), ext_directededges_(nullptr),
@@ -86,8 +97,10 @@ GraphTile::GraphTile()
 }
 
 // Constructor given a filename. Reads the graph data into memory.
-GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid, char* traffic_ptr)
-    : header_(nullptr), traffic_tile(traffic_ptr) {
+GraphTile::GraphTile(const std::string& tile_dir,
+                     const GraphId& graphid,
+                     std::unique_ptr<const GraphMemory> traffic_memory)
+    : header_(nullptr), traffic_tile(std::move(traffic_memory)) {
 
   // Don't bother with invalid ids
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level() || tile_dir.empty()) {
@@ -102,13 +115,15 @@ GraphTile::GraphTile(const std::string& tile_dir, const GraphId& graphid, char* 
     // Read binary file into memory. TODO - protect against failure to
     // allocate memory
     size_t filesize = file.tellg();
-    graphtile_ = std::make_unique<std::vector<char>>(filesize);
+
+    std::vector<char> data(filesize);
     file.seekg(0, std::ios::beg);
-    file.read(graphtile_->data(), filesize);
+    file.read(data.data(), filesize);
     file.close();
+    memory_ = std::make_unique<const VectorGraphMemory>(std::move(data));
 
     // Set pointers to internal data structures
-    Initialize(graphid, graphtile_->data(), graphtile_->size());
+    Initialize(graphid);
   } else {
     // try to load a gzipped tile
     std::ifstream file(file_location + ".gz", std::ios::in | std::ios::binary | std::ios::ate);
@@ -134,18 +149,18 @@ bool GraphTile::DecompressTile(const GraphId& graphid, std::vector<char>& compre
   };
 
   // for setting where to write the uncompressed data to
-  graphtile_ = std::make_unique<std::vector<char>>(0, 0);
-  auto dst_func = [this, &compressed](z_stream& s) -> int {
+  std::vector<char> data;
+  auto dst_func = [this, &data, &compressed](z_stream& s) -> int {
     // if the whole buffer wasn't used we are done
-    auto size = graphtile_->size();
+    auto size = data.size();
     if (s.total_out < size)
-      graphtile_->resize(s.total_out);
+      data.resize(s.total_out);
     // we need more space
     else {
       // assume we need 3.5x the space
-      graphtile_->resize(size + (compressed.size() * COMPRESSION_HINT));
+      data.resize(size + (compressed.size() * COMPRESSION_HINT));
       // set the pointer to the next spot
-      s.next_out = static_cast<Byte*>(static_cast<void*>(graphtile_->data() + size));
+      s.next_out = static_cast<Byte*>(static_cast<void*>(data.data() + size));
       s.avail_out = compressed.size() * COMPRESSION_HINT;
     }
     return Z_NO_FLUSH;
@@ -154,20 +169,28 @@ bool GraphTile::DecompressTile(const GraphId& graphid, std::vector<char>& compre
   // Decompress tile into memory
   if (!baldr::inflate(src_func, dst_func)) {
     LOG_ERROR("Failed to gunzip " + FileSuffix(graphid, SUFFIX_COMPRESSED));
-    graphtile_.reset();
+    memory_.reset();
     return false;
   }
+  memory_ = std::make_unique<const VectorGraphMemory>(std::move(data));
 
   // Set pointers to internal data structures
-  Initialize(graphid, graphtile_->data(), graphtile_->size());
+  Initialize(graphid);
   return true;
 }
 
-GraphTile::GraphTile(const GraphId& graphid, char* tile_ptr, size_t size, char* traffic_ptr)
-    : header_(nullptr), traffic_tile(traffic_ptr) {
+GraphTile::GraphTile(const GraphId& graphid, std::vector<char>&& memory)
+    : GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(memory))) {
+}
+
+GraphTile::GraphTile(const GraphId& graphid,
+                     std::unique_ptr<const GraphMemory> memory,
+                     std::unique_ptr<const GraphMemory> traffic_memory)
+    : header_(nullptr), traffic_tile(std::move(traffic_memory)) {
   // Initialize the internal tile data structures using a pointer to the
   // tile and the tile size
-  Initialize(graphid, tile_ptr, size);
+  memory_ = std::move(memory);
+  Initialize(graphid);
 }
 
 void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::string& disk_location) {
@@ -203,6 +226,7 @@ std::shared_ptr<const GraphTile> GraphTile::CacheTileURL(const std::string& tile
                                                          tile_getter_t* tile_getter,
                                                          const std::string& cache_location) {
   auto tile = std::make_shared<GraphTile>();
+
   // Don't bother with invalid ids
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
     return std::move(tile);
@@ -227,9 +251,8 @@ std::shared_ptr<const GraphTile> GraphTile::CacheTileURL(const std::string& tile
     tile->DecompressTile(graphid, result.bytes_);
   } // we dont need to decompress so just take ownership of the data
   else {
-    tile->graphtile_.reset(new std::vector<char>(0, 0));
-    *(tile->graphtile_) = std::move(result.bytes_);
-    tile->Initialize(graphid, tile->graphtile_->data(), tile->graphtile_->size());
+    tile->memory_ = std::make_unique<const VectorGraphMemory>(std::move(result.bytes_));
+    tile->Initialize(graphid);
   }
 
   return std::move(tile);
@@ -239,7 +262,14 @@ GraphTile::~GraphTile() {
 }
 
 // Set pointers to internal tile data structures
-void GraphTile::Initialize(const GraphId& graphid, char* tile_ptr, const size_t tile_size) {
+void GraphTile::Initialize(const GraphId& graphid) {
+  if (!memory_) {
+    throw std::runtime_error("Missing tile data");
+  }
+
+  char* const tile_ptr = memory_->data;
+  const size_t tile_size = memory_->size;
+
   if (tile_size < sizeof(GraphTileHeader))
     throw std::runtime_error("Invalid tile data size = " + std::to_string(tile_size) +
                              ". Tile file might me corrupted");
