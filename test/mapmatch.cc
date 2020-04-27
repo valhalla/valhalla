@@ -1321,18 +1321,24 @@ TEST(Mapmatch, duplicated_end_points) {
           {"lat": 52.1214847, "lon": 5.1011657, "type": "break"},
           {"lat": 52.1215641, "lon": 5.1010741, "type": "break"},
           {"lat": 52.1215641, "lon": 5.1010741, "type": "break"},
+          {"lat": 52.1215641, "lon": 5.1010741, "type": "break"},
+          {"lat": 52.1217638, "lon": 5.1011698, "type": "break"}],
+          "costing":"auto","format":"osrm","shape_match":"map_snap"})",
+      R"({"shape":[
+          {"lat": 52.1214847, "lon": 5.1011657, "type": "break"},
+          {"lat": 52.1215641, "lon": 5.1010741, "type": "break"},
+          {"lat": 52.1215641, "lon": 5.1010741, "type": "break"},
           {"lat": 52.1215641, "lon": 5.1010741, "type": "break"}],
           "costing":"auto","format":"osrm","shape_match":"map_snap"})"};
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
-    auto matched = json_to_pt(actor.trace_route(test_cases[i]));
-    const auto& routes = matched.get_child("matchings");
-    ASSERT_EQ(1, routes.size());
-    for (const auto& route : routes) {
-      const auto& legs = route.second.get_child("legs");
-      ASSERT_EQ(1, legs.size());
-    }
+    Api req_rep;
+    actor.trace_route(test_cases[i], nullptr, &req_rep);
+    // all of them should be a single route
+    ASSERT_EQ(1, req_rep.trip().routes_size());
+    // there should be locations - 1 legs in each route
+    ASSERT_EQ(req_rep.options().shape_size() - 1, req_rep.trip().routes(0).legs_size());
   }
 }
 } // namespace

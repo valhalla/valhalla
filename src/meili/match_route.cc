@@ -216,6 +216,26 @@ bool MergeRoute(const State& source, const State& target, std::vector<EdgeSegmen
     throw std::logic_error("The first edge must be an origin (invalid predecessor)");
   }
 
+  // TODO: why doesnt routing.cc return trivial routes? move this logic there
+  // Might be a trivial route
+  if (segments.empty()) {
+    // If we have no chance of making a trivial route bail
+    if (source.candidate().edges.empty() ||
+        source.stateid().id() >= source.candidate().edges.size()) {
+      return false;
+    }
+    // Make sure the identical candidate exists in both states
+    const auto& candidate = source.candidate().edges[source.stateid().id()];
+    if (std::find_if(target.candidate().edges.begin(), target.candidate().edges.end(),
+                     [&candidate](const baldr::PathLocation::PathEdge& e) {
+                       return e.id == candidate.id && e.percent_along == candidate.percent_along;
+                     }) == target.candidate().edges.end()) {
+      return false;
+    }
+    // Make a trivial route
+    segments.emplace_back(candidate.id, candidate.percent_along, candidate.percent_along);
+  }
+
   route.insert(route.end(), segments.crbegin(), segments.crend());
   return true;
 }
@@ -294,13 +314,9 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       // then reverse merge the segments together which are on the same edge so we have a
       // minimum number of segments. in this case we could at minimum end up with 1 segment
       segments.clear();
-      auto continuous = MergeRoute(prev_state, state, segments);
-      if (segments.empty()) {
-        // we are only discontinuous if we were explicitly told so by merge route
-        route.back().discontinuity = !continuous && !route.empty();
-        // we can get back routes with no segments if both points are using the same candidate
-        // TODO: we still need to mark the existing segment though potentially?
-        // TODO: update routing.cc to send back a 0 length route
+      if (!MergeRoute(prev_state, state, segments)) {
+        // we are only discontinuous but only if this isnt the beginning of the route
+        route.back().discontinuity = !route.empty();
         // next pair
         prev_idx = curr_idx;
         prev_match = &match;
