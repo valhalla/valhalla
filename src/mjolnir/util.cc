@@ -21,7 +21,6 @@
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/filesystem/operations.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla::midgard;
@@ -130,14 +129,33 @@ bool shapes_match(const std::vector<PointLL>& shape1, const std::vector<PointLL>
   }
 }
 
+bool load_spatialite(sqlite3* db_handle) {
+  sqlite3_enable_load_extension(db_handle, 1);
+  // we do a bunch of failover for changes to the module file name over the years
+  for (const auto& mod_name : std::vector<std::string>{"mod_spatialite", "mod_spatialite.so",
+                                                       "libspatialite", "libspatialite.so"}) {
+    std::string sql = "SELECT load_extension('" + mod_name + "')";
+    char* err_msg = nullptr;
+    if (sqlite3_exec(db_handle, sql.c_str(), nullptr, nullptr, &err_msg) == SQLITE_OK) {
+      LOG_INFO("SpatiaLite loaded as an extension");
+      return true;
+    } else {
+      LOG_WARN("load_extension() warning: " + std::string(err_msg));
+      sqlite3_free(err_msg);
+    }
+  }
+  LOG_ERROR("sqlite3 load_extension() failed to load spatialite module");
+  return false;
+}
+
 bool build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage,
                     const BuildStage end_stage,
                     const bool release_osmpbf_memory) {
   auto remove_temp_file = [](const std::string& fname) {
-    if (boost::filesystem::exists(fname)) {
-      boost::filesystem::remove(fname);
+    if (filesystem::exists(fname)) {
+      filesystem::remove(fname);
     }
   };
 
@@ -158,9 +176,9 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     // set up the directories and purge old tiles if starting at the parsing stage
     for (const auto& level : valhalla::baldr::TileHierarchy::levels()) {
       auto level_dir = tile_dir + std::to_string(level.first);
-      if (boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
+      if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
         LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
-        boost::filesystem::remove_all(level_dir);
+        filesystem::remove_all(level_dir);
       }
     }
 
@@ -168,13 +186,13 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     auto level_dir =
         tile_dir +
         std::to_string(valhalla::baldr::TileHierarchy::levels().rbegin()->second.level + 1);
-    if (boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
+    if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
       LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
-      boost::filesystem::remove_all(level_dir);
+      filesystem::remove_all(level_dir);
     }
 
     // Create the directory if it does not exist
-    boost::filesystem::create_directories(tile_dir);
+    filesystem::create_directories(tile_dir);
   }
 
   // Set up the temporary (*.bin) files used during processing

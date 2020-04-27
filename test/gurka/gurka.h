@@ -12,6 +12,7 @@
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
+#include "filesystem.h"
 #include "loki/worker.h"
 #include "mjolnir/util.h"
 #include "odin/worker.h"
@@ -19,7 +20,6 @@
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
-#include <boost/filesystem.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -526,9 +526,9 @@ map buildtiles(const nodelayout layout,
     throw std::runtime_error("Can't use / for tests, as we need to clean it out first");
   }
 
-  if (boost::filesystem::exists(workdir))
-    boost::filesystem::remove_all(workdir);
-  boost::filesystem::create_directories(workdir);
+  if (filesystem::exists(workdir))
+    filesystem::remove_all(workdir);
+  filesystem::create_directories(workdir);
 
   auto pbf_filename = workdir + "/map.pbf";
   std::cerr << "[          ] generating map PBF at " << pbf_filename << std::endl;

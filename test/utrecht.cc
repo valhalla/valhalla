@@ -1,9 +1,9 @@
+#include "filesystem.h"
 #include "midgard/sequence.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/pbfgraphparser.h"
 #include <cstdint>
 
-#include <boost/filesystem.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <fstream>
 
@@ -209,11 +209,11 @@ public:
   }
 
   void TearDown() override {
-    boost::filesystem::remove(ways_file);
-    boost::filesystem::remove(way_nodes_file);
-    boost::filesystem::remove(access_file);
-    boost::filesystem::remove(from_restriction_file);
-    boost::filesystem::remove(to_restriction_file);
+    filesystem::remove(ways_file);
+    filesystem::remove(way_nodes_file);
+    filesystem::remove(access_file);
+    filesystem::remove(from_restriction_file);
+    filesystem::remove(to_restriction_file);
   }
 };
 
