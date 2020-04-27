@@ -219,21 +219,15 @@ bool MergeRoute(const State& source, const State& target, std::vector<EdgeSegmen
   // TODO: why doesnt routing.cc return trivial routes? move this logic there
   // Might be a trivial route
   if (segments.empty()) {
+    return false; // this is a discontinuity for now
     // If we have no chance of making a trivial route bail
-    if (source.candidate().edges.empty() ||
-        source.stateid().id() >= source.candidate().edges.size()) {
-      return false;
-    }
-    // Make sure the identical candidate exists in both states
-    const auto& candidate = source.candidate().edges[source.stateid().id()];
-    if (std::find_if(target.candidate().edges.begin(), target.candidate().edges.end(),
-                     [&candidate](const baldr::PathLocation::PathEdge& e) {
-                       return e.id == candidate.id && e.percent_along == candidate.percent_along;
-                     }) == target.candidate().edges.end()) {
+    /*const auto& source_edge = source.candidate().edges.front();
+    const auto& target_edge = target.candidate().edges.front();
+    if (source_edge.id != target_edge.id || source_edge.percent_along != target_edge.percent_along) {
       return false;
     }
     // Make a trivial route
-    segments.emplace_back(candidate.id, candidate.percent_along, candidate.percent_along);
+    segments.emplace_back(source_edge.id, source_edge.percent_along, source_edge.percent_along);*/
   }
 
   route.insert(route.end(), segments.crbegin(), segments.crend());
