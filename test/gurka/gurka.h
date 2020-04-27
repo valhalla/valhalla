@@ -119,7 +119,7 @@ build_config(const std::string& tiledir,
          "trace_attributes",
          "transit_available"
        ],
-       "logging" : {"long_request" : 100}, 
+       "logging" : {"long_request" : 100},
        "service_defaults" : {
          "minimum_reachability" : 50,
          "radius" : 0,
@@ -175,9 +175,14 @@ std::string build_valhalla_route_request(const map& map,
   }
 
   rapidjson::Value dt(rapidjson::kObjectType);
+  rapidjson::Value speed_types(rapidjson::kArrayType);
+  speed_types.PushBack("freeflow", allocator);
+  speed_types.PushBack("constrained", allocator);
+  speed_types.PushBack("predicted", allocator);
   if (datetime == "current") {
     dt.AddMember("type", 0, allocator);
     dt.AddMember("value", "current", allocator);
+    speed_types.PushBack("current", allocator);
   } else if (datetime != "") {
     dt.AddMember("type", 1, allocator);
     dt.AddMember("value", datetime, allocator);
@@ -185,8 +190,14 @@ std::string build_valhalla_route_request(const map& map,
 
   doc.AddMember("locations", locations, allocator);
   doc.AddMember("costing", costing, allocator);
-  if (datetime != "")
+  if (datetime != "") {
     doc.AddMember("date_time", dt, allocator);
+  }
+  rapidjson::Value costing_options(rapidjson::kObjectType);
+  rapidjson::Value co(rapidjson::kObjectType);
+  co.AddMember("speed_types", speed_types, allocator);
+  costing_options.AddMember(rapidjson::Value(costing, allocator), co, allocator);
+  doc.AddMember("costing_options", costing_options, allocator);
 
   rapidjson::StringBuffer sb;
   rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
@@ -408,7 +419,7 @@ inline void build_pbf(const nodelayout& node_locations,
       tags.push_back({keyval.first, keyval.second});
     }
     osmium::builder::add_way(buffer, osmium::builder::attr::_id(way_osm_id_map[way.first]),
-                             osmium::builder::attr::_version(1),
+                             osmium::builder::attr::_version(1), osmium::builder::attr::_cid(1001),
                              osmium::builder::attr::_timestamp(std::time(nullptr)),
                              osmium::builder::attr::_nodes(nodeids),
                              osmium::builder::attr::_tags(tags));
@@ -538,9 +549,9 @@ map buildtiles(const nodelayout layout,
  *
  * @param reader a reader configured to read graph tiles
  * @param nodes a lookup table from node names to coordinates
- * @param tile_id the tile to search
  * @param way_name the way name you want a directed edge for
  * @param end_node the node that should be the target of the directed edge you want
+ * @param tile_id optional tile_id to limit the search to
  * @return the directed edge that matches, or nullptr if there was no match
  */
 std::tuple<const baldr::GraphId,
@@ -549,49 +560,42 @@ std::tuple<const baldr::GraphId,
            const baldr::DirectedEdge*>
 findEdge(valhalla::baldr::GraphReader& reader,
          const std::unordered_map<std::string, midgard::PointLL>& nodes,
-         const baldr::GraphId& tile_id,
          const std::string& way_name,
-         const std::string& end_node) {
-  auto* tile = reader.GetGraphTile(tile_id);
+         const std::string& end_node,
+         const baldr::GraphId& tile_id = baldr::GraphId{}) {
+  // if the tile was specified use it otherwise scan everything
+  auto tileset =
+      tile_id.Is_Valid() ? std::unordered_set<baldr::GraphId>{tile_id} : reader.GetTileSet();
 
+  // Iterate over all the tiles, there wont be many in unit tests..
   auto end_node_coordinates = nodes.at(end_node);
-
-  // Iterate over all directed edges to find one with the name we want
-  for (uint32_t i = 0; i < tile->header()->directededgecount(); i++) {
-    const auto* forward_directed_edge = tile->directededge(i);
-    // Now, see if the endnode for this edge is our end_node
-    auto de_endnode = forward_directed_edge->endnode();
-    auto de_endnode_coordinates = tile->get_node_ll(de_endnode);
-    const auto threshold = 0.00001; // Degrees.  About 1m at the equator
-    if (std::abs(de_endnode_coordinates.lng() - end_node_coordinates.lng()) < threshold &&
-        std::abs(de_endnode_coordinates.lat() - end_node_coordinates.lat()) < threshold) {
-      auto names = tile->GetNames(forward_directed_edge->edgeinfo_offset());
-      for (const auto& name : names) {
-        if (name == way_name) {
-          auto forward_edge_id = tile_id;
-          forward_edge_id.set_id(i);
-          auto reverse_edge_id = tile->GetOpposingEdgeId(forward_directed_edge);
-          auto* reverse_directed_edge = tile->directededge(i);
-          return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
-                                 reverse_directed_edge);
+  for (auto tile_id : tileset) {
+    auto* tile = reader.GetGraphTile(tile_id);
+    // Iterate over all directed edges to find one with the name we want
+    for (uint32_t i = 0; i < tile->header()->directededgecount(); i++) {
+      const auto* forward_directed_edge = tile->directededge(i);
+      // Now, see if the endnode for this edge is our end_node
+      auto de_endnode = forward_directed_edge->endnode();
+      auto de_endnode_coordinates = tile->get_node_ll(de_endnode);
+      const auto threshold = 0.00001; // Degrees.  About 1m at the equator
+      if (std::abs(de_endnode_coordinates.lng() - end_node_coordinates.lng()) < threshold &&
+          std::abs(de_endnode_coordinates.lat() - end_node_coordinates.lat()) < threshold) {
+        auto names = tile->GetNames(forward_directed_edge->edgeinfo_offset());
+        for (const auto& name : names) {
+          if (name == way_name) {
+            auto forward_edge_id = tile_id;
+            forward_edge_id.set_id(i);
+            auto reverse_edge_id = tile->GetOpposingEdgeId(forward_directed_edge);
+            auto* reverse_directed_edge = tile->directededge(i);
+            return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
+                                   reverse_directed_edge);
+          }
         }
       }
     }
   }
 
   return std::make_tuple(baldr::GraphId{}, nullptr, baldr::GraphId{}, nullptr);
-}
-
-std::tuple<const baldr::GraphId,
-           const baldr::DirectedEdge*,
-           const baldr::GraphId,
-           const baldr::DirectedEdge*>
-findEdge(const map& map,
-         const baldr::GraphId& tile_id,
-         const std::string& way_name,
-         const std::string& end_node) {
-  baldr::GraphReader reader(map.config.get_child("mjolnir"));
-  return findEdge(reader, map.nodes, tile_id, way_name, end_node);
 }
 
 /**
@@ -625,21 +629,10 @@ valhalla::Api route(const map& map,
   auto request_json = detail::build_valhalla_route_request(map, waypoints, costing, datetime);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
-  loki::loki_worker_t loki_worker(map.config, reader);
-  thor::thor_worker_t thor_worker(map.config, reader);
-  odin::odin_worker_t odin_worker(map.config);
-
-  valhalla::Api request;
-  valhalla::ParseApi(request_json, Options::route, request);
-  loki_worker.route(request);
-  thor_worker.route(request);
-  odin_worker.narrate(request);
-
-  loki_worker.cleanup();
-  thor_worker.cleanup();
-  odin_worker.cleanup();
-
-  return request;
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+  valhalla::Api api;
+  actor.route(request_json, nullptr, &api);
+  return api;
 }
 
 valhalla::Api route(const map& map,
@@ -649,6 +642,13 @@ valhalla::Api route(const map& map,
                     const std::string& datetime = "",
                     std::shared_ptr<valhalla::baldr::GraphReader> reader = {}) {
   return route(map, {from, to}, costing, datetime, reader);
+}
+
+valhalla::Api route(const map& map, const std::string& request_json) {
+  valhalla::tyr::actor_t actor(map.config, true);
+  valhalla::Api api;
+  actor.route(request_json, nullptr, &api);
+  return api;
 }
 
 valhalla::Api match(const map& map,
@@ -669,7 +669,9 @@ valhalla::Api match(const map& map,
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   valhalla::tyr::actor_t actor(map.config, true);
-  return actor.unserialized_trace_route(request_json);
+  valhalla::Api api;
+  actor.trace_route(request_json, nullptr, &api);
+  return api;
 }
 
 namespace assert {

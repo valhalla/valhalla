@@ -1910,8 +1910,8 @@ bool ManeuversBuilder::IsMergeManeuverType(Maneuver& maneuver,
   // consistent name with intersecting edge
   if (prev_edge && prev_edge->IsRampUse() && !curr_edge->IsRampUse() &&
       (curr_edge->IsHighway() ||
-       (((curr_edge->road_class() == TripLeg_RoadClass_kTrunk) ||
-         (curr_edge->road_class() == TripLeg_RoadClass_kPrimary)) &&
+       (((curr_edge->road_class() == RoadClass::kTrunk) ||
+         (curr_edge->road_class() == RoadClass::kPrimary)) &&
         curr_edge->IsOneway() && curr_edge->IsForward(maneuver.turn_degree()) &&
         node->HasIntersectingEdgeCurrNameConsistency()))) {
     maneuver.set_merge_to_relative_direction(
@@ -1944,8 +1944,8 @@ bool ManeuversBuilder::IsFork(int node_index,
     // and current edge is not a service road class
     // and an intersecting edge is a service road class
     // then not a fork
-    if (node->IsMotorwayJunction() && (curr_edge->road_class() != TripLeg_RoadClass_kServiceOther) &&
-        node->HasSpecifiedRoadClassXEdge(TripLeg_RoadClass_kServiceOther)) {
+    if (node->IsMotorwayJunction() && (curr_edge->road_class() != RoadClass::kServiceOther) &&
+        node->HasSpecifiedRoadClassXEdge(RoadClass::kServiceOther)) {
       return false;
     }
 
@@ -2740,7 +2740,7 @@ void ManeuversBuilder::MatchGuidanceViewJunctions(Maneuver& maneuver,
        ((node_index < maneuver.end_node_index()) && (edge_count < kOverlayEdgeMax));
        ++node_index, edge_count++) {
     // Loop over guidance view junctions
-    auto curr_edge = trip_path_->GetCurrEdge(maneuver.begin_node_index());
+    auto curr_edge = trip_path_->GetCurrEdge(node_index);
     if (curr_edge && (curr_edge->has_sign())) {
       // Process overlay guidance view junctions
       for (const auto& overlay_guidance_view_junction : curr_edge->sign().guidance_view_junctions()) {
@@ -2748,10 +2748,9 @@ void ManeuversBuilder::MatchGuidanceViewJunctions(Maneuver& maneuver,
         // If overlay(!is_route_number) guidance view junction and a pair...
         if (!overlay_guidance_view_junction.is_route_number() && is_pair(overlay_tokens) &&
             (base_prefix == overlay_tokens.at(0))) {
-          // TODO implement for real in the future
           DirectionsLeg_GuidanceView guidance_view;
-          guidance_view.set_data_id("z");
-          guidance_view.set_type("jct");
+          guidance_view.set_data_id(std::to_string(trip_path_->osm_changeset()));
+          guidance_view.set_type("jct"); // TODO implement for real in the future based on sign type
           guidance_view.set_base_id(base_prefix + base_suffix);
           guidance_view.add_overlay_ids(overlay_tokens.at(0) + overlay_tokens.at(1));
           maneuver.mutable_guidance_views()->emplace_back(guidance_view);

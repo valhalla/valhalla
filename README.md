@@ -150,6 +150,7 @@ Important build options include:
 | `-DENABLE_NODE_BINDINGS` (`ON` / `OFF`) | Build the node bindings (defaults to on)|
 | `-DENABLE_COMPILER_WARNINGS` (`ON` / `OFF`) | Build with common compiler warnings (defaults to off)|
 | `-DENABLE_WERROR` (`ON` / `OFF`) | Treat compiler warnings as errors  (defaults to off). Requires `-DENABLE_COMPILER_WARNINGS=ON` to take effect.|
+| `-DENABLE_BENCHMARKS` (`ON` / `OFF`) | Enable microbenchmarking  (defaults to on).|
 
 For more build options run the interactive GUI:
 
@@ -238,6 +239,17 @@ To run an individual test, `make run-<test name>` from the build directory or `.
 You may check some notes on [unit tests](docs/testing.md)
 
 Coverage reports are automatically generated using codecov for each pull request, but you can also build them locally by passing `-DENABLE_COVERAGE=On` and running `make coverage`.
+
+Benchmarks
+----------
+
+Valhalla includes several microbenchmarks which you can build and run using:
+
+    make benchmarks
+    make run-benchmarks
+
+They are enabled by the `-DENABLE_BENCHMARKS=On` CMake flag and are currently only available for
+Linux and MacOS.
 
 Command Line Tools
 ------------------

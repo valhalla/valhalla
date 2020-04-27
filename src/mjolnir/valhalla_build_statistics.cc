@@ -612,7 +612,7 @@ int main(int argc, char** argv) {
 
   // check the type of input
   boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.c_str(), pt);
+  rapidjson::read_json(config_file_path.string(), pt);
 
   // configure logging
   boost::optional<boost::property_tree::ptree&> logging_subtree =

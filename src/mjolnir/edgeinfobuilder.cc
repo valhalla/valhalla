@@ -36,9 +36,9 @@ void EdgeInfoBuilder::set_bike_network(const uint32_t bike_network) {
 void EdgeInfoBuilder::set_speed_limit(const uint32_t speed_limit) {
   if (speed_limit == kUnlimitedSpeedLimit) {
     w0_.speed_limit_ = kUnlimitedSpeedLimit;
-  } else if (speed_limit > kMaxSpeedKph) {
+  } else if (speed_limit > kMaxAssumedSpeed) {
     LOG_WARN("Exceeding maximum.  Speed limit: " + std::to_string(speed_limit));
-    w0_.speed_limit_ = kMaxSpeedKph;
+    w0_.speed_limit_ = kMaxAssumedSpeed;
   } else {
     w0_.speed_limit_ = speed_limit;
   }

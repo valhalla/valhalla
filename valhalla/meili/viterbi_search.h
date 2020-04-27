@@ -94,7 +94,7 @@ public:
   virtual double AccumulatedCost(const StateId& stateid) const = 0;
 
   bool HasStateId(const StateId& stateid) const;
-  StateIdIterator SearchPath(StateId::Time time, bool allow_breaks = true);
+  StateIdIterator SearchPathVS(StateId::Time time, bool allow_breaks = true);
   StateIdIterator PathEnd() const;
   const IEmissionCostModel& emission_cost_model() const;
   void set_emission_cost_model(const IEmissionCostModel& cost_model);

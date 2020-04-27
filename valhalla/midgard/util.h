@@ -252,9 +252,9 @@ template <class container_t> container_t trim_front(container_t& pts, const floa
  * @param  shape         Shape, as vector of PointLLs
  */
 void trim_shape(float start,
-                PointLL start_vertex,
+                PointLL start_vertex, // NOLINT
                 float end,
-                PointLL end_vertex,
+                PointLL end_vertex, // NOLINT
                 std::vector<PointLL>& shape);
 
 /**

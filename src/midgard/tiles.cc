@@ -345,6 +345,10 @@ template <class container_t>
 std::unordered_map<int32_t, std::unordered_set<unsigned short>>
 Tiles<coord_t>::Intersect(const container_t& linestring) const {
   std::unordered_map<int32_t, std::unordered_set<unsigned short>> intersection;
+  // protect against empty linestring
+  if (linestring.empty()) {
+    return {};
+  }
 
   // what to do when we want to mark a subdivision as containing a segment of this linestring
   const auto set_pixel = [this, &intersection](int32_t x, int32_t y) {

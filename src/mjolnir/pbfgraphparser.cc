@@ -1044,13 +1044,18 @@ public:
         std::vector<std::string> refs = GetTagTokens(ref);
         std::vector<std::string> directions = GetTagTokens(direction);
 
+        std::string tmp_ref;
         if (refs.size() == directions.size()) {
           for (uint32_t i = 0; i < refs.size(); i++) {
+            if (!tmp_ref.empty()) {
+              tmp_ref += ";";
+            }
             if (!directions.at(i).empty())
-              w.set_ref_index(osmdata_.name_offset_map.index(refs.at(i) + " " + directions.at(i)));
+              tmp_ref += refs.at(i) + " " + directions.at(i);
             else
-              w.set_ref_index(osmdata_.name_offset_map.index(refs.at(i)));
+              tmp_ref += refs.at(i);
           }
+          w.set_ref_index(osmdata_.name_offset_map.index(tmp_ref));
         } else
           w.set_ref_index(osmdata_.name_offset_map.index(ref));
       }
@@ -1063,18 +1068,23 @@ public:
         std::vector<std::string> int_refs = GetTagTokens(int_ref);
         std::vector<std::string> int_directions = GetTagTokens(int_direction);
 
+        std::string tmp_ref;
         if (int_refs.size() == int_directions.size()) {
           for (uint32_t i = 0; i < int_refs.size(); i++) {
+            if (!tmp_ref.empty()) {
+              tmp_ref += ";";
+            }
             if (!int_directions.at(i).empty())
-              w.set_int_ref_index(
-                  osmdata_.name_offset_map.index(int_refs.at(i) + " " + int_directions.at(i)));
+              tmp_ref += int_refs.at(i) + " " + int_directions.at(i);
             else
-              w.set_int_ref_index(osmdata_.name_offset_map.index(int_refs.at(i)));
+              tmp_ref += int_refs.at(i);
           }
+          w.set_int_ref_index(osmdata_.name_offset_map.index(tmp_ref));
         } else
           w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
       }
     }
+
     // add int_refs to the end of the refs for now.  makes sure that we don't add dups.
     if (use_direction_on_ways_ && w.int_ref_index()) {
       std::string tmp = osmdata_.name_offset_map.name(w.ref_index());

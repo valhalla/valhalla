@@ -106,6 +106,9 @@ void check_dates(bool time_dependent,
     }
 
     if (l.has_date_time()) {
+      // should be localtime, ie no timezone
+      EXPECT_TRUE(l.date_time().find('+', l.date_time().find('T')) == std::string::npos &&
+                  l.date_time().find('-', l.date_time().find('T')) == std::string::npos);
       // get the timezone
       baldr::GraphId edge_id(l.path_edges().begin()->graph_id());
       const auto* tile = reader.GetGraphTile(edge_id);
@@ -343,6 +346,44 @@ TEST(MultiPointRoutesBreakThrough, test_mid_break_through_depart_at) {
 
 TEST(MultiPointRoutesBreakThrough, test_mid_break_through_arrive_by) {
   test_mid_break_through(R"(,"date_time":{"type":2,"value":"2016-07-03T08:06"}})");
+}
+
+TEST(MultiPointRoutesBreakThrough, test_mid_break_through_elapsed) {
+  // The second leg of this route triggers a behavior in bidirectional a* where the forward path is 3
+  // edges and the reverse path is 1 edge. That 1 reverse path edge is the same edge as the last edge
+  // in the forward path. This is a special case in BidirectionalAstar::FormPath. Because the forward
+  // expansion only cares about trimming the first edge from the origin and the reverse expansion only
+  // cares about trimming the last edge up to the destination but we've gotten the destination edge
+  // from the forward expansion, which means that last edge is untrimmed. so we hit some special logic
+  // that says replace its cost and time with the trimmed edge from the reverse expansion but keep the
+  // turn cost onto it which only the forward expansion got
+  route_tester tester;
+  std::string request =
+      R"({"locations":[
+            {"lat": 52.1191920, "lon":5.1026068, "type": "break_through", "node_snap_tolerance": 0},
+            {"lat": 52.1189946, "lon": 5.1029042, "type": "break_through", "node_snap_tolerance": 0},
+            {"lat": 52.1192212, "lon": 5.1024556, "type": "break_through", "node_snap_tolerance": 0}], "costing":"auto"})";
+
+  auto response = tester.test(request);
+  const auto& legs = response.trip().routes(0).legs();
+  const auto& directions = response.directions().routes(0).legs();
+
+  // Should have two legs with two sets of directions
+  EXPECT_EQ(legs.size(), 2);
+  EXPECT_EQ(directions.size(), 2);
+  // So when we make path infos in the routing algorithms we always attach the turncost from edge A to
+  // B to the beginning of edge B and it is included in edge Bs elapsed time (which is the time at the
+  // end of B)
+  // When we build trips/routes/legs we actually put the turncost at the end of A instead and it is
+  // not included in the elapsed time (which is the time at the end of A)
+  // So if the end of our route is at the end of B and we subtract the A's ending turncost from it the
+  // time we get should never be less than the elapsed time at the end of A because edge B should,
+  // even without turncost, have taken some non zero time to traverse
+  auto last_node = legs.rbegin()->node().rbegin();
+  auto previous_node = std::next(last_node);
+  EXPECT_LT(previous_node->elapsed_time(),
+            last_node->elapsed_time() - previous_node->transition_time());
+  EXPECT_NEAR(legs.rbegin()->node().rbegin()->elapsed_time(), 18.2, .2);
 }
 
 } // namespace
