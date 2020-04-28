@@ -50,14 +50,17 @@ TEST(Filesystem, recursive_directory_listing) {
   // make a directory tree with these entries
   std::string s(1, filesystem::path::preferred_separator);
   std::vector<std::string> dirs{"foo", "foo" + s + "qux", "foo" + s + "quux"};
-  std::vector<std::string> files{"foo" + s + "bar", "foo" + s + "bar",
+  std::vector<std::string> files{"foo" + s + "bar", "foo" + s + "baz",
                                  "foo" + s + "quux" + s + "corge"};
 
   // create them
   for (const auto& d : dirs)
     try_mkdir(d.c_str());
-  for (const auto& f : files)
+  for (const auto& f : files) {
     std::fstream fs(f, std::ios::out);
+    filesystem::path p(f);
+    fs.write(p.filename().c_str(), p.filename().string().size());
+  }
   // unlike the posix find command the directory iterator doesnt give you access to
   // root or starting directory just the stuff under it so lets pop that off
   dirs.erase(dirs.begin());
@@ -67,10 +70,15 @@ TEST(Filesystem, recursive_directory_listing) {
       auto pos = std::remove(dirs.begin(), dirs.end(), i->path().string());
       ASSERT_NE(pos, dirs.end()) << "unexpected directory";
       dirs.erase(pos, dirs.end());
+      ASSERT_THROW(i->file_size(), std::runtime_error);
     } else if (i->is_regular_file()) {
       auto pos = std::remove(files.begin(), files.end(), i->path().string());
       ASSERT_NE(pos, files.end()) << "unexpected file";
       files.erase(pos, files.end());
+      // force it to stat the file
+      ASSERT_EQ(i->file_size(), i->path().filename().string().size());
+      // check the cached size
+      ASSERT_EQ(i->file_size(), i->path().filename().string().size());
     } else {
       FAIL() << "unexpected entry type";
     }
@@ -96,6 +104,35 @@ TEST(Filesystem, remove_any) {
   try_mkdir(".foobar");
   EXPECT_TRUE(filesystem::remove(".foobar"));
   EXPECT_FALSE(filesystem::exists(".foobar")) << ".foobar dir should have been deleted";
+}
+
+TEST(Filesystem, parent_path) {
+  std::vector<filesystem::path> in{{"/"},   {"/foo/bar"}, {"/foo/../"}, {"/foo/bar/../f"},
+                                   {"./f"}, {"foo/bar/f"}};
+  std::vector<filesystem::path> out{
+      {""}, {"/foo"}, {"/foo/.."}, {"/foo/bar/.."}, {"."}, {"foo/bar"},
+  };
+  for (const auto& i : in) {
+    auto a = i.parent_path();
+    EXPECT_EQ(a.string(), out[&i - &in.front()].string()) << "wrong parent path";
+  }
+}
+
+TEST(Filesystem, extension) {
+  std::vector<filesystem::path>
+      in{{"/foo/bar.txt"},      {"/foo/bar."},        {"/foo/bar"},         {"/foo/bar.txt/bar.cc"},
+         {"/foo/bar.txt/bar."}, {"/foo/bar.txt/bar"}, {"/foo/."},           {"/foo/.."},
+         {"/foo/.hidden"},      {"/foo/..bar"},       {"/foo/bar.baz.qux"}, {"..."},
+         {"/baz/.foo.bar"}};
+  std::vector<filesystem::path> out{{".txt"}, {"."}, {""},     {".cc"},  {"."}, {""},    {""},
+                                    {""},     {""},  {".bar"}, {".qux"}, {"."}, {".bar"}};
+  for (const auto& i : in) {
+    auto a = i.extension();
+    EXPECT_EQ(a.string(), out[&i - &in.front()].string()) << "wrong extension";
+  }
+}
+
+TEST(Filesystem, file_size) {
 }
 
 } // namespace

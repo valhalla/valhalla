@@ -10,7 +10,7 @@ executors:
 commands:
   install_macos_dependencies:
     steps:
-      - run: brew install protobuf cmake libtool boost-python libspatialite pkg-config lua curl wget czmq lz4 spatialite-tools unzip
+      - run: brew install protobuf cmake ccache libtool boost-python libspatialite pkg-config lua curl wget czmq lz4 spatialite-tools unzip
       - run:
           name: Install Node
           command: |
@@ -133,6 +133,7 @@ jobs:
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: node ./scripts/validate_changelog.js
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -146,8 +147,11 @@ jobs:
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
                 -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: make -C build -j4
+      - run: make -C build utrecht_tiles
       - run: make -C build -j2 tests
       - run: make -C build -j2 check
+      - run: make -C build -j2 benchmarks
+      - run: make -C build run-benchmarks
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
       - save_cache:
@@ -177,8 +181,11 @@ jobs:
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)"
       - run: make -C build -j4
-      - run: make -C build -j4 tests
+      - run: make -C build utrecht_tiles
+      - run: make -C build -j2 tests
       - run: make -C build -j2 check
+      - run: make -C build -j2 benchmarks
+      - run: make -C build run-benchmarks
       - save_cache:
           key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
           paths:
@@ -202,8 +209,11 @@ jobs:
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=Off
       - run: make -C build -j4
-      - run: make -C build -j4 tests
+      - run: make -C build utrecht_tiles
+      - run: make -C build -j2 tests
       - run: make -C build -j2 check
+      - run: make -C build -j2 benchmarks
+      - run: make -C build run-benchmarks
       - save_cache:
           key: ccache-release-linux-x86_32-{{ .Branch }}-{{ epoch }}
           paths:
@@ -226,8 +236,11 @@ jobs:
       - run: mkdir -p build
       - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
       - run: make -C build -j4
-      - run: make -C build -j4 tests
+      - run: make -C build utrecht_tiles
+      - run: make -C build -j2 tests
       - run: make -C build -j2 check
+      - run: make -C build -j2 benchmarks
+      - run: make -C build run-benchmarks
       - save_cache:
           key: ccache-release-macos-{{ .Branch }}-{{ epoch }}
           paths:

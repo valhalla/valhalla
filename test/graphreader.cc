@@ -3,8 +3,8 @@
 #include "baldr/connectivity_map.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 
-#include <boost/filesystem.hpp>
 #include <fcntl.h>
 
 #include "test.h"
@@ -68,7 +68,7 @@ TEST(SimpleCache, CacheLimitsNoOvercommitAfterClear) {
 void touch_tile(const uint32_t tile_id, const std::string& tile_dir) {
   auto suffix = GraphTile::FileSuffix({tile_id, 2, 0});
   auto fullpath = tile_dir + '/' + suffix;
-  boost::filesystem::create_directories(boost::filesystem::path(fullpath).parent_path());
+  filesystem::create_directories(filesystem::path(fullpath).parent_path());
   int fd = open(fullpath.c_str(), O_CREAT | O_WRONLY, 0644);
   if (fd >= 0)
     close(fd);
@@ -80,7 +80,7 @@ TEST(ConnectivityMap, Basic) {
   pt.put("tile_dir", "test/gphrdr_test");
   std::string tile_dir = pt.get<std::string>("tile_dir");
   const auto& level = TileHierarchy::levels().find(2)->second;
-  boost::filesystem::remove_all(tile_dir);
+  filesystem::remove_all(tile_dir);
 
   // looks like this (XX) means no tile there:
   /*
@@ -124,7 +124,7 @@ TEST(ConnectivityMap, Basic) {
   EXPECT_NE(conn.get_color({b0, 2, 0}), conn.get_color({a0, 2, 0})) << "b is disjoint";
   EXPECT_NE(conn.get_color({a2, 2, 0}), conn.get_color({d0, 2, 0})) << "a is disjoint from d";
 
-  boost::filesystem::remove_all(tile_dir);
+  filesystem::remove_all(tile_dir);
 }
 
 struct TestGraphTile : public GraphTile {

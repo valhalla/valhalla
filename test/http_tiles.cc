@@ -1,5 +1,6 @@
 #include "test.h"
 
+#include "baldr/curl_tilegetter.h"
 #include "baldr/graphtile.h"
 #include "baldr/rapidjson_utils.h"
 #include "tyr/actor.h"
@@ -12,7 +13,10 @@
 
 #include <ostream>
 #include <stdexcept>
+#include <string>
 #include <thread>
+#include <unordered_set>
+#include <vector>
 
 using namespace valhalla;
 
@@ -159,7 +163,8 @@ void test_tile_download(size_t tile_count, size_t curler_count, size_t thread_co
 
   const auto non_existent_tile_id = params.get_nonexistent_tile_id();
 
-  curler_pool_t curlers_(curler_count, "");
+  curl_tile_getter_t tile_getter(curler_count, "", params.is_gzipped_tile);
+  EXPECT_EQ(tile_getter.gzipped(), params.is_gzipped_tile);
 
   std::vector<std::thread> threads;
   threads.reserve(thread_count);
@@ -178,19 +183,13 @@ void test_tile_download(size_t tile_count, size_t curler_count, size_t thread_co
         auto tile_uri = params.tile_url_base;
         tile_uri += tile_name;
         tile_uri += params.request_params;
-
         {
-          scoped_curler_t curler(curlers_);
-          long http_code;
+          auto result = tile_getter.get(tile_uri);
 
-          auto tile_data = curler.get()(tile_uri, http_code, params.is_gzipped_tile);
-
-          if (http_code != 404) {
-            EXPECT_EQ(http_code, 200);
-            auto tile = GraphTile(GraphId(), tile_data.data(), tile_data.size());
+          if (result.status_ == tile_getter_t::status_code_t::SUCCESS) {
+            auto tile = GraphTile(GraphId(), result.bytes_.data(), result.bytes_.size());
             EXPECT_EQ(tile.id(), expected_tile_id);
           } else {
-            // The test is expecting to get 404 since the tile does not exist
             EXPECT_EQ(expected_tile_id, non_existent_tile_id);
           }
         }
@@ -210,7 +209,8 @@ void test_graphreader_tile_download(size_t tile_count, size_t curler_count, size
 
   const auto non_existent_tile_id = params.get_nonexistent_tile_id();
 
-  curler_pool_t curlers_(curler_count, "");
+  curl_tile_getter_t tile_getter(curler_count, "", params.is_gzipped_tile);
+  EXPECT_EQ(tile_getter.gzipped(), params.is_gzipped_tile);
 
   std::vector<std::thread> threads;
   threads.reserve(thread_count);
@@ -224,18 +224,13 @@ void test_graphreader_tile_download(size_t tile_count, size_t curler_count, size
 
         auto test_tile_index = tile_i % params.test_tile_names.size();
         auto expected_tile_id = params.test_tile_ids[test_tile_index];
+        auto tile =
+            GraphTile::CacheTileURL(params.full_tile_url_pattern, expected_tile_id, &tile_getter, "");
 
-        {
-          scoped_curler_t curler(curlers_);
-
-          auto tile = GraphTile::CacheTileURL(params.full_tile_url_pattern, expected_tile_id,
-                                              curler.get(), params.is_gzipped_tile, "");
-
-          if (expected_tile_id != non_existent_tile_id) {
-            EXPECT_EQ(tile.id(), expected_tile_id);
-          } else {
-            EXPECT_EQ(tile.header(), nullptr) << "Expected empty header";
-          }
+        if (expected_tile_id != non_existent_tile_id) {
+          EXPECT_EQ(tile.id(), expected_tile_id);
+        } else {
+          EXPECT_EQ(tile.header(), nullptr) << "Expected empty header";
         }
       }
     });
@@ -264,6 +259,51 @@ TEST(HttpTiles, test_curler_multiple_threads_contention) {
 
 TEST(HttpTiles, test_graphreader_multiple_threads) {
   test_graphreader_tile_download(8, 2, 4);
+}
+
+TEST(HttpTiles, test_interrupt) {
+  using namespace baldr;
+
+  TestTileDownloadData params;
+  const auto url_builder = [&params](size_t index) -> std::string {
+    auto test_tile_index = index % params.test_tile_names.size();
+    auto tile_name = params.test_tile_names[test_tile_index];
+    auto tile_uri = params.tile_url_base;
+    tile_uri += tile_name;
+    tile_uri += params.request_params;
+    return tile_uri;
+  };
+
+  const auto non_existent_tile_id = params.get_nonexistent_tile_id();
+  std::unordered_set<std::string> canceled_uris{url_builder(0), url_builder(2)};
+
+  curl_tile_getter_t tile_getter(2, "", params.is_gzipped_tile);
+  std::string tile_uri;
+  const curl_tile_getter_t::interrupt_t interrupt = [&tile_uri, &canceled_uris] {
+    if (canceled_uris.find(tile_uri) != canceled_uris.end()) {
+      throw std::runtime_error("Interrupt");
+    }
+  };
+
+  tile_getter.set_interrupt(&interrupt);
+  for (int tile_i = 0; tile_i < params.test_tile_ids.size(); ++tile_i) {
+    auto test_tile_index = tile_i % params.test_tile_names.size();
+    auto expected_tile_id = params.test_tile_ids[test_tile_index];
+
+    tile_uri = url_builder(tile_i);
+    if (canceled_uris.find(tile_uri) != canceled_uris.end()) {
+      EXPECT_THROW(tile_getter.get(tile_uri), std::runtime_error);
+      continue;
+    }
+
+    auto result = tile_getter.get(tile_uri);
+    if (result.status_ == tile_getter_t::status_code_t::SUCCESS) {
+      auto tile = GraphTile(GraphId(), result.bytes_.data(), result.bytes_.size());
+      EXPECT_EQ(tile.id(), expected_tile_id);
+    } else {
+      EXPECT_EQ(expected_tile_id, non_existent_tile_id);
+    }
+  }
 }
 
 class HttpTilesEnv : public ::testing::Environment {

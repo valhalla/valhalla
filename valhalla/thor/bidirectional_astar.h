@@ -195,12 +195,16 @@ protected:
    * using the opposing edges (so the path is traversed forward).
    * @param   graphreader  Graph tile reader (for getting opposing edges).
    * @param   options      Controls whether or not we get alternatives
+   * @param   origin       The origin location
+   * @param   destination  The destination location
    * @return  Returns the path infos, a list of GraphIds representing the
    *          directed edges along the path - ordered from origin to
    *          destination - along with travel modes and elapsed time.
    */
   std::vector<std::vector<PathInfo>> FormPath(baldr::GraphReader& graphreader,
-                                              const Options& options);
+                                              const Options& options,
+                                              const valhalla::Location& origin,
+                                              const valhalla::Location& dest);
 };
 
 // This function checks if the path formed by the two expanding trees

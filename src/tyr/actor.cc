@@ -18,7 +18,11 @@ struct actor_t::pimpl_t {
       : reader(new baldr::GraphReader(config.get_child("mjolnir"))), loki_worker(config, reader),
         thor_worker(config, reader), odin_worker(config) {
   }
-  void set_interrupts(const std::function<void()>& interrupt_function) {
+  pimpl_t(const boost::property_tree::ptree& config, baldr::GraphReader& graph_reader)
+      : reader(&graph_reader, [](baldr::GraphReader*) {}), loki_worker(config, reader),
+        thor_worker(config, reader), odin_worker(config) {
+  }
+  void set_interrupts(const std::function<void()>* interrupt_function) {
     loki_worker.set_interrupt(interrupt_function);
     thor_worker.set_interrupt(interrupt_function);
     odin_worker.set_interrupt(interrupt_function);
@@ -37,13 +41,18 @@ struct actor_t::pimpl_t {
 actor_t::actor_t(const boost::property_tree::ptree& config, bool auto_cleanup)
     : pimpl(new pimpl_t(config)), auto_cleanup(auto_cleanup) {
 }
+actor_t::actor_t(const boost::property_tree::ptree& config,
+                 baldr::GraphReader& reader,
+                 bool auto_cleanup)
+    : pimpl(new pimpl_t(config, reader)), auto_cleanup(auto_cleanup) {
+}
 
 void actor_t::cleanup() {
   pimpl->cleanup();
 }
 
-valhalla::Api actor_t::unserialized_route(const std::string& request_str,
-                                          const std::function<void()>& interrupt) {
+std::string
+actor_t::route(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -55,21 +64,21 @@ valhalla::Api actor_t::unserialized_route(const std::string& request_str,
   pimpl->thor_worker.route(request);
   // get some directions back from them
   pimpl->odin_worker.narrate(request);
+  // serialize them out to json string
+  auto bytes = tyr::serializeDirections(request);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();
   }
-  return request;
-}
-
-std::string actor_t::route(const std::string& request_str, const std::function<void()>& interrupt) {
-  auto request = unserialized_route(request_str, interrupt);
-  // serialize them out to json string
-  auto bytes = tyr::serializeDirections(request);
+  // give the caller a copy
+  if (api) {
+    api->Swap(&request);
+  }
   return bytes;
 }
 
-std::string actor_t::locate(const std::string& request_str, const std::function<void()>& interrupt) {
+std::string
+actor_t::locate(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -81,10 +90,15 @@ std::string actor_t::locate(const std::string& request_str, const std::function<
   if (auto_cleanup) {
     cleanup();
   }
+  // give the caller a copy
+  if (api) {
+    api->Swap(&request);
+  }
   return json;
 }
 
-std::string actor_t::matrix(const std::string& request_str, const std::function<void()>& interrupt) {
+std::string
+actor_t::matrix(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -98,11 +112,16 @@ std::string actor_t::matrix(const std::string& request_str, const std::function<
   if (auto_cleanup) {
     cleanup();
   }
+  // give the caller a copy
+  if (api) {
+    api->Swap(&request);
+  }
   return json;
 }
 
 std::string actor_t::optimized_route(const std::string& request_str,
-                                     const std::function<void()>& interrupt) {
+                                     const std::function<void()>* interrupt,
+                                     Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -120,11 +139,15 @@ std::string actor_t::optimized_route(const std::string& request_str,
   if (auto_cleanup) {
     cleanup();
   }
+  // give the caller a copy
+  if (api) {
+    api->Swap(&request);
+  }
   return bytes;
 }
 
-std::string actor_t::isochrone(const std::string& request_str,
-                               const std::function<void()>& interrupt) {
+std::string
+actor_t::isochrone(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -138,11 +161,16 @@ std::string actor_t::isochrone(const std::string& request_str,
   if (auto_cleanup) {
     cleanup();
   }
+  // give the caller a copy
+  if (api) {
+    api->Swap(&request);
+  }
   return json;
 }
 
-valhalla::Api actor_t::unserialized_trace_route(const std::string& request_str,
-                                                const std::function<void()>& interrupt) {
+std::string actor_t::trace_route(const std::string& request_str,
+                                 const std::function<void()>* interrupt,
+                                 Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -154,23 +182,22 @@ valhalla::Api actor_t::unserialized_trace_route(const std::string& request_str,
   pimpl->thor_worker.trace_route(request);
   // get some directions back from them
   pimpl->odin_worker.narrate(request);
+  // serialize them out to json string
+  auto bytes = tyr::serializeDirections(request);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();
   }
-  return request;
-}
-
-std::string actor_t::trace_route(const std::string& request_str,
-                                 const std::function<void()>& interrupt) {
-  auto request = unserialized_trace_route(request_str, interrupt);
-  // serialize them out to json string
-  auto bytes = tyr::serializeDirections(request);
+  // give the caller a copy
+  if (api) {
+    api->Swap(&request);
+  }
   return bytes;
 }
 
 std::string actor_t::trace_attributes(const std::string& request_str,
-                                      const std::function<void()>& interrupt) {
+                                      const std::function<void()>* interrupt,
+                                      Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -184,10 +211,15 @@ std::string actor_t::trace_attributes(const std::string& request_str,
   if (auto_cleanup) {
     cleanup();
   }
+  // give the caller a copy
+  if (api) {
+    api->Swap(&request);
+  }
   return json;
 }
 
-std::string actor_t::height(const std::string& request_str, const std::function<void()>& interrupt) {
+std::string
+actor_t::height(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -199,11 +231,16 @@ std::string actor_t::height(const std::string& request_str, const std::function<
   if (auto_cleanup) {
     cleanup();
   }
+  // give the caller a copy
+  if (api) {
+    api->Swap(&request);
+  }
   return json;
 }
 
 std::string actor_t::transit_available(const std::string& request_str,
-                                       const std::function<void()>& interrupt) {
+                                       const std::function<void()>* interrupt,
+                                       Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -215,11 +252,15 @@ std::string actor_t::transit_available(const std::string& request_str,
   if (auto_cleanup) {
     cleanup();
   }
+  // give the caller a copy
+  if (api) {
+    api->Swap(&request);
+  }
   return json;
 }
 
-std::string actor_t::expansion(const std::string& request_str,
-                               const std::function<void()>& interrupt) {
+std::string
+actor_t::expansion(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // parse the request
@@ -232,6 +273,10 @@ std::string actor_t::expansion(const std::string& request_str,
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();
+  }
+  // give the caller a copy
+  if (api) {
+    api->Swap(&request);
   }
   return json;
 }

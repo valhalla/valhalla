@@ -583,9 +583,61 @@ TEST(DateTime, TestSecondOfWeek) {
   EXPECT_EQ(a, e) << "Wrong second of week";
 }
 
+TEST(DateTime, DiffCaching) {
+  // no cache NY to LA
+  const auto& tzdb = DateTime::get_tz_db();
+  auto diff = DateTime::timezone_diff(1586660072, tzdb.from_index(110), tzdb.from_index(94));
+  EXPECT_EQ(diff, -3 * 60 * 60);
+
+  // with cache NY to LA
+  std::unordered_map<const date::time_zone*, std::vector<date::sys_info>> cache;
+  diff = DateTime::timezone_diff(1586660072, tzdb.from_index(110), tzdb.from_index(94), &cache);
+  EXPECT_EQ(diff, -3 * 60 * 60);
+
+  // for a really long route that crosses many timezone we end up doing a lot of tz diffing
+  // the tuple is: number of calls, origin tz index, destination tz index
+  // 0 is reserved for no timezone so we shift down by one to use them with the tzdb
+  using tc = std::tuple<int, int, int>;
+  std::vector<tc> test_cases = {
+      tc{6452, 335, 162},   tc{3645, 335, 168},   tc{5069, 335, 172},  tc{10504, 335, 178},
+      tc{1018, 335, 183},   tc{2135, 335, 185},   tc{12963, 335, 19},  tc{11185, 335, 192},
+      tc{3111, 335, 206},   tc{1376, 335, 215},   tc{879, 335, 224},   tc{15, 335, 225},
+      tc{6, 335, 282},      tc{2, 335, 283},      tc{42752, 335, 292}, tc{721, 335, 293},
+      tc{316, 335, 294},    tc{24172, 335, 295},  tc{40214, 335, 296}, tc{222265, 335, 297},
+      tc{34260, 335, 298},  tc{31236, 335, 299},  tc{41881, 335, 3},   tc{22906, 335, 300},
+      tc{3801, 335, 301},   tc{12679, 335, 302},  tc{10275, 335, 303}, tc{124, 335, 304},
+      tc{15081, 335, 305},  tc{70057, 335, 306},  tc{2644, 335, 307},  tc{25880, 335, 308},
+      tc{63690, 335, 310},  tc{236131, 335, 311}, tc{5204, 335, 312},  tc{198463, 335, 313},
+      tc{1734, 335, 314},   tc{24245, 335, 315},  tc{327, 335, 316},   tc{52221, 335, 317},
+      tc{47325, 335, 318},  tc{294048, 335, 319}, tc{31134, 335, 320}, tc{6659, 335, 321},
+      tc{162188, 335, 322}, tc{1293, 335, 324},   tc{1810, 335, 325},  tc{7024, 335, 326},
+      tc{22842, 335, 327},  tc{3140, 335, 328},   tc{3130, 335, 329},  tc{16, 335, 330},
+      tc{832, 335, 331},    tc{45630, 335, 332},  tc{14803, 335, 333}, tc{1678, 335, 334},
+      tc{952, 335, 336},    tc{26620, 335, 337},  tc{12772, 335, 5},   tc{20213, 335, 6},
+      tc{123, 335, 7},      tc{2, 335, 8},
+  };
+
+  // for each test case
+  uint64_t total_offset = 0;
+  for (const auto& test_case : test_cases) {
+    // the first part is how many iterations/calls to the diff method
+    for (int i = 0; i < std::get<0>(test_case); ++i) {
+      // the second two parts of the tuple are the origin tz index and the destination tz index
+      total_offset +=
+          DateTime::timezone_diff(1586579654 + i * 15, tzdb.from_index(std::get<1>(test_case)),
+                                  tzdb.from_index(std::get<2>(test_case)), &cache);
+    }
+  }
+  EXPECT_NE(total_offset, 0);
+  EXPECT_GE(cache.size(), test_cases.size());
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
+  // make this whole thing bail if it doesnt finish fast
+  alarm(20);
+
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

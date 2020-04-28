@@ -146,7 +146,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilomètres",
         "1 kilometre",
-        "un demi kilometre",
         "<METERS> mètres",
         "moins de 10 mètres"
       ],
@@ -154,8 +153,7 @@
         "<MILES> miles",
         "1 mile",
         "un demi mile",
-        "<TENTHS_OF_MILE> dixièmes de mile",
-        "1 dixième de mile",
+        "a quarter mile",
         "<FEET> pieds",
         "moins de 10 pieds"
       ],
@@ -1208,7 +1206,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilomètres",
         "1 kilomètre",
-        "un demi kilomètre",
         "<METERS> mètres",
         "moins de 10 mètres"
       ],
@@ -1216,8 +1213,7 @@
         "<MILES> miles",
         "1 mile",
         "un demi mile",
-        "<TENTHS_OF_MILE> dixièmes de mile",
-        "1 dixième de mile",
+        "a quarter mile",
         "<FEET> pieds",
         "moins de 10 pieds"
       ],
@@ -1602,7 +1598,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilomètres",
         "1 kilometre",
-        "un demi kilometre",
         "<METERS> mètres",
         "moins de 10 mètres"
       ],
@@ -1610,8 +1605,7 @@
         "<MILES> miles",
         "1 mile",
         "un demi mile",
-        "<TENTHS_OF_MILE> dixièmes de mile",
-        "1 dixième de mile",
+        "a quarter mile",
         "<FEET> pieds",
         "moins de 10 pieds"
       ],
@@ -2075,11 +2069,53 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> Ensuite, <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> Ensuite, <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
       },
+      "metric_lengths": [
+        "<KILOMETERS> kilomètres",
+        "1 kilometre",
+        "<METERS> mètres",
+        "moins de 10 mètres"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miles",
+        "1 mile",
+        "un demi mile",
+        "a quarter mile",
+        "<FEET> pieds",
+        "moins de 10 pieds"
+      ],
       "example_phrases": {
         "0": [
           "Serrez à droite sur East Fayette Street. Ensuite, Tournez à droite vers North Gay Street."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> kilomètres",
+        "1 kilometre",
+        "<METERS> mètres",
+        "moins de 10 mètres"
+      ],
+      "us_customary_lengths": [
+        "<MILES> miles",
+        "1 mile",
+        "un demi mile",
+        "a quarter mile",
+        "<FEET> pieds",
+        "moins de 10 pieds"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }

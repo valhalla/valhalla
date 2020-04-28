@@ -6,7 +6,6 @@
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include <algorithm>
-#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 #include <list>
 #include <set>
@@ -193,12 +192,12 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 // Output the tile to file. Stores as binary data.
 void GraphTileBuilder::StoreTileData() {
   // Get the name of the file
-  boost::filesystem::path filename(tile_dir_ + filesystem::path::preferred_separator +
-                                   GraphTile::FileSuffix(header_builder_.graphid()));
+  filesystem::path filename(tile_dir_ + filesystem::path::preferred_separator +
+                            GraphTile::FileSuffix(header_builder_.graphid()));
 
   // Make sure the directory exists on the system
-  if (!boost::filesystem::exists(filename.parent_path())) {
-    boost::filesystem::create_directories(filename.parent_path());
+  if (!filesystem::exists(filename.parent_path())) {
+    filesystem::create_directories(filename.parent_path());
   }
 
   // Open file and truncate
@@ -373,12 +372,12 @@ void GraphTileBuilder::StoreTileData() {
 void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
                               const std::vector<DirectedEdge>& directededges) {
   // Get the name of the file
-  boost::filesystem::path filename =
+  filesystem::path filename =
       tile_dir_ + filesystem::path::preferred_separator + GraphTile::FileSuffix(header_->graphid());
 
   // Make sure the directory exists on the system
-  if (!boost::filesystem::exists(filename.parent_path())) {
-    boost::filesystem::create_directories(filename.parent_path());
+  if (!filesystem::exists(filename.parent_path())) {
+    filesystem::create_directories(filename.parent_path());
   }
 
   // Open file. Truncate so we replace the contents.
@@ -950,10 +949,10 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   // rewrite the tile
-  boost::filesystem::path filename =
+  filesystem::path filename =
       tile_dir + filesystem::path::preferred_separator + GraphTile::FileSuffix(header.graphid());
-  if (!boost::filesystem::exists(filename.parent_path())) {
-    boost::filesystem::create_directories(filename.parent_path());
+  if (!filesystem::exists(filename.parent_path())) {
+    filesystem::create_directories(filename.parent_path());
   }
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   // open it
@@ -1011,12 +1010,12 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
   // with free flow or constrained flow speeds - so don't return if no speed profiles
 
   // Get the name of the file
-  boost::filesystem::path filename = tile_dir_ + filesystem::path::preferred_separator +
-                                     GraphTile::FileSuffix(header_builder_.graphid());
+  filesystem::path filename = tile_dir_ + filesystem::path::preferred_separator +
+                              GraphTile::FileSuffix(header_builder_.graphid());
 
   // Make sure the directory exists on the system
-  if (!boost::filesystem::exists(filename.parent_path()))
-    boost::filesystem::create_directories(filename.parent_path());
+  if (!filesystem::exists(filename.parent_path()))
+    filesystem::create_directories(filename.parent_path());
 
   // Open file and truncate
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);

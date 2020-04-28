@@ -236,6 +236,11 @@ void loki_worker_t::cleanup() {
   }
 }
 
+void loki_worker_t::set_interrupt(const std::function<void()>* interrupt_function) {
+  interrupt = interrupt_function;
+  reader->SetInterrupt(interrupt);
+}
+
 #ifdef HAVE_HTTP
 prime_server::worker_t::result_t
 loki_worker_t::work(const std::list<zmq::message_t>& job,
@@ -260,7 +265,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     }
 
     // Set the interrupt function
-    service_worker_t::set_interrupt(interrupt_function);
+    service_worker_t::set_interrupt(&interrupt_function);
 
     prime_server::worker_t::result_t result{true};
     // do request specific processing
@@ -271,7 +276,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
         result.messages.emplace_back(request.SerializeAsString());
         break;
       case Options::locate:
-        result = to_response_json(locate(request), info, request);
+        result = to_response(locate(request), info, request);
         break;
       case Options::sources_to_targets:
       case Options::optimized_route:
@@ -288,10 +293,10 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
         result.messages.emplace_back(request.SerializeAsString());
         break;
       case Options::height:
-        result = to_response_json(height(request), info, request);
+        result = to_response(height(request), info, request);
         break;
       case Options::transit_available:
-        result = to_response_json(transit_available(request), info, request);
+        result = to_response(transit_available(request), info, request);
         break;
       default:
         // apparently you wanted something that we figured we'd support but havent written yet

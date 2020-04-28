@@ -112,8 +112,9 @@ Maneuver::Maneuver()
       transit_connection_(false), rail_(false), bus_(false), fork_(false),
       begin_intersecting_edge_name_consistency_(false), intersecting_forward_edge_(false),
       tee_(false), unnamed_walkway_(false), unnamed_cycleway_(false),
-      unnamed_mountain_bike_trail_(false), verbal_multi_cue_(false), to_stay_on_(false),
-      drive_on_right_(true), has_time_restrictions_(false),
+      unnamed_mountain_bike_trail_(false), imminent_verbal_multi_cue_(false),
+      distant_verbal_multi_cue_(false), to_stay_on_(false), drive_on_right_(true),
+      has_time_restrictions_(false),
       bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
@@ -623,12 +624,24 @@ void Maneuver::set_unnamed_mountain_bike_trail(bool unnamed_mountain_bike_trail)
   unnamed_mountain_bike_trail_ = unnamed_mountain_bike_trail;
 }
 
-bool Maneuver::verbal_multi_cue() const {
-  return verbal_multi_cue_;
+bool Maneuver::imminent_verbal_multi_cue() const {
+  return imminent_verbal_multi_cue_;
 }
 
-void Maneuver::set_verbal_multi_cue(bool verbal_multi_cue) {
-  verbal_multi_cue_ = verbal_multi_cue;
+void Maneuver::set_imminent_verbal_multi_cue(bool imminent_verbal_multi_cue) {
+  imminent_verbal_multi_cue_ = imminent_verbal_multi_cue;
+}
+
+bool Maneuver::distant_verbal_multi_cue() const {
+  return distant_verbal_multi_cue_;
+}
+
+void Maneuver::set_distant_verbal_multi_cue(bool distant_verbal_multi_cue) {
+  distant_verbal_multi_cue_ = distant_verbal_multi_cue;
+}
+
+bool Maneuver::HasVerbalMultiCue() const {
+  return (imminent_verbal_multi_cue_ || distant_verbal_multi_cue_);
 }
 
 bool Maneuver::to_stay_on() const {
@@ -1002,8 +1015,11 @@ std::string Maneuver::ToString() const {
   man_str += " | basic_time=";
   man_str += std::to_string(basic_time_);
 
-  man_str += " | verbal_multi_cue=";
-  man_str += std::to_string(verbal_multi_cue_);
+  man_str += " | imminent_verbal_multi_cue=";
+  man_str += std::to_string(imminent_verbal_multi_cue_);
+
+  man_str += " | distant_verbal_multi_cue=";
+  man_str += std::to_string(distant_verbal_multi_cue_);
 
   man_str += " | travel_mode=";
   man_str += std::to_string(travel_mode_);
@@ -1179,7 +1195,7 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(basic_time_);
 
   man_str += delim;
-  man_str += std::to_string(verbal_multi_cue_);
+  man_str += std::to_string(imminent_verbal_multi_cue_);
 
   //  man_str += delim;
   //  man_str += "TripLeg_TravelMode_";
