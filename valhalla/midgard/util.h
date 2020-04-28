@@ -34,9 +34,6 @@ template <class T> struct ranged_default_t {
   }
 };
 
-// Intersection cases.
-enum IntersectCase { kWithin, kContains, kOutside, kIntersects };
-
 /**
  * Compute time (seconds) given a length (km) and speed (km per hour)
  * @param  length  distance in km.
