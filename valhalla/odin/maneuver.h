@@ -298,7 +298,7 @@ public:
   const std::vector<DirectionsLeg_GuidanceView>& guidance_views() const;
   std::vector<DirectionsLeg_GuidanceView>* mutable_guidance_views();
 
-  const DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type() const;
+  DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type() const;
   void set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType);
 
 #ifdef LOGGING_LEVEL_TRACE

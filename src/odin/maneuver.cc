@@ -882,7 +882,7 @@ std::vector<DirectionsLeg_GuidanceView>* Maneuver::mutable_guidance_views() {
   return &guidance_views_;
 }
 
-const DirectionsLeg_Maneuver_BssManeuverType Maneuver::bss_maneuver_type() const {
+DirectionsLeg_Maneuver_BssManeuverType Maneuver::bss_maneuver_type() const {
   return bss_maneuver_type_;
 }
 
