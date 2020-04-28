@@ -234,15 +234,13 @@ jobs:
       - run: brew install --build-from-source ./prime_server.rb
       - run: npm install --ignore-scripts
       - run: mkdir -p build
-      - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off -DENABLE_SANITIZER=On -DCMAKE_BUILD_TYPE=Debug
-      - run: make -C build utrecht_tiles mapmatch -j4
-      - run: cd build && test/mapmatch --gtest_filter=Mapmatch.test_intersection_matching
-        #- run: make -C build -j4
-        #- run: make -C build utrecht_tiles
-        #- run: make -C build -j2 tests
-        #- run: make -C build -j2 check
-        #- run: make -C build -j2 benchmarks
-        #- run: make -C build run-benchmarks
+      - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
+      - run: make -C build -j4
+      - run: make -C build utrecht_tiles
+      - run: make -C build -j2 tests
+      - run: make -C build -j2 check
+      - run: make -C build -j2 benchmarks
+      - run: make -C build run-benchmarks
       - save_cache:
           key: ccache-release-macos-{{ .Branch }}-{{ epoch }}
           paths:
