@@ -216,20 +216,6 @@ bool MergeRoute(const State& source, const State& target, std::vector<EdgeSegmen
     throw std::logic_error("The first edge must be an origin (invalid predecessor)");
   }
 
-  // TODO: why doesnt routing.cc return trivial routes? move this logic there
-  // Might be a trivial route
-  if (segments.empty()) {
-    return false; // this is a discontinuity for now
-    // If we have no chance of making a trivial route bail
-    /*const auto& source_edge = source.candidate().edges.front();
-    const auto& target_edge = target.candidate().edges.front();
-    if (source_edge.id != target_edge.id || source_edge.percent_along != target_edge.percent_along) {
-      return false;
-    }
-    // Make a trivial route
-    segments.emplace_back(source_edge.id, source_edge.percent_along, source_edge.percent_along);*/
-  }
-
   route.insert(route.end(), segments.crbegin(), segments.crend());
   return true;
 }
@@ -315,6 +301,15 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
         prev_idx = curr_idx;
         prev_match = &match;
         continue;
+      }
+
+      // TODO: why doesnt routing.cc return trivial routes? move this logic there
+      // This signifies a route where the source and target are the same location
+      if (segments.empty()) {
+        // Make a trivial route
+        const auto& match_result = match_results[curr_idx];
+        segments.emplace_back(match_result.edgeid, match_result.distance_along,
+                              match_result.distance_along);
       }
 
       // we need to cut segments where a match result is marked as a break

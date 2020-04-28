@@ -172,8 +172,8 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
                                                  const std::vector<Measurement>& measurements,
                                                  const StateId& stateid,
                                                  const StateId& next_stateid,
-                                                 const midgard::PointLL& first_projection,
-                                                 const midgard::PointLL& last_projection) {
+                                                 const MatchResult& first_result,
+                                                 const MatchResult& last_result) {
   // Nothing to do here
   if (measurements.empty()) {
     return {};
@@ -190,6 +190,7 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
     return results;
   }
 
+  // get the path between the two uninterpolated states
   std::vector<EdgeSegment> route;
   MergeRoute(mapmatcher.state_container().state(stateid),
              mapmatcher.state_container().state(next_stateid), route);
@@ -197,9 +198,19 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
   // for each point that needs interpolated
   std::vector<EdgeSegment>::const_iterator left_most_segment = route.begin();
   float left_most_offset = route.empty() ? 0.f : route.begin()->source;
-  midgard::PointLL left_most_projection = first_projection;
+  midgard::PointLL left_most_projection = first_result.lnglat;
 
   for (const auto& measurement : measurements) {
+    // its possible that both states were the same point which means no path to interpolate on
+    // this means the interpolation is also the same point
+    if (route.empty()) {
+      results.push_back({first_result.lnglat, first_result.distance_from, first_result.edgeid,
+                         first_result.distance_along, measurement.epoch_time(), StateId(),
+                         measurement.is_break_point()});
+      continue;
+    }
+
+    // we need some info about the measurement to figure out what the best interpolation would be
     const auto& match_measurement = mapmatcher.state_container().measurement(stateid.time());
     const auto match_measurement_distance = GreatCircleDistance(measurement, match_measurement);
     const auto match_measurement_time = ClockDistance(measurement, match_measurement);
@@ -208,7 +219,7 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
     const auto interp =
         InterpolateMeasurement(mapmatcher, measurement, left_most_segment, left_most_offset,
                                route.end(), match_measurement_distance, match_measurement_time,
-                               left_most_projection, last_projection);
+                               left_most_projection, last_result.lnglat);
 
     // shift the point at which we are allowed to start interpolating from to the right
     // so that its on the interpolation point this way the next interpolation happens after
@@ -722,11 +733,11 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
       const auto& next_stateid =
           time + 1 < original_state_ids.size() ? original_state_ids[time + 1] : StateId();
 
-      midgard::PointLL first_projection = results[time].lnglat;
-      midgard::PointLL last_projection = results[time + 1].lnglat;
+      const auto& first_result = results[time];
+      const auto& last_result = results[time + 1];
       const auto interpolated_results =
-          InterpolateMeasurements(*this, it->second, this_stateid, next_stateid, first_projection,
-                                  last_projection);
+          InterpolateMeasurements(*this, it->second, this_stateid, next_stateid, first_result,
+                                  last_result);
 
       // Copy the interpolated match results into the final set
       best_path.insert(best_path.cend(), interpolated_results.cbegin(), interpolated_results.cend());

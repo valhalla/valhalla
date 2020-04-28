@@ -84,7 +84,7 @@ const auto conf = json_to_pt(R"({
     },
     "thor":{"logging":{"long_request": 110}},
     "skadi":{"actons":["height"],"logging":{"long_request": 5}},
-    "meili":{"customizable": ["turn_penalty_factor","max_route_distance_factor","max_route_time_factor","search_radius"],
+    "meili":{"customizable": ["turn_penalty_factor","max_route_distance_factor","max_route_time_factor","search_radius","interpolation_distance"],
              "mode":"auto","grid":{"cache_size":100240,"size":500},
              "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,"interpolation_distance":10,
              "max_route_distance_factor":5,"max_route_time_factor":5,"max_search_radius":200,"route":true,
@@ -1319,6 +1319,15 @@ TEST(Mapmatch, duplicated_end_points) {
   std::vector<std::string> test_cases = {
       R"({"shape":[
           {"lat": 52.1214847, "lon": 5.1011657, "type": "break"},
+          {"lat": 52.1214847, "lon": 5.1011657, "type": "break"},
+          {"lat": 52.1214847, "lon": 5.1011657, "type": "break"},
+          {"lat": 52.1215641, "lon": 5.1010741, "type": "break"},
+          {"lat": 52.1215641, "lon": 5.1010741, "type": "break"},
+          {"lat": 52.1215641, "lon": 5.1010741, "type": "break"},
+          {"lat": 52.1217638, "lon": 5.1011698, "type": "break"}],
+          "costing":"auto","format":"osrm","shape_match":"map_snap"})",
+      R"({"shape":[
+          {"lat": 52.1214847, "lon": 5.1011657, "type": "break"},
           {"lat": 52.1215641, "lon": 5.1010741, "type": "break"},
           {"lat": 52.1215641, "lon": 5.1010741, "type": "break"},
           {"lat": 52.1215641, "lon": 5.1010741, "type": "break"},
@@ -1329,6 +1338,26 @@ TEST(Mapmatch, duplicated_end_points) {
           {"lat": 52.1215641, "lon": 5.1010741, "type": "break"},
           {"lat": 52.1215641, "lon": 5.1010741, "type": "break"},
           {"lat": 52.1215641, "lon": 5.1010741, "type": "break"}],
+          "costing":"auto","format":"osrm","shape_match":"map_snap"})",
+      R"({"shape":[
+          {"lat": 52.1214847, "lon": 5.1011657, "type": "break"},
+          {"lat": 52.1214847, "lon": 5.1011657, "type": "break"},
+          {"lat": 52.1214847, "lon": 5.1011657, "type": "break"},
+          {"lat": 52.1215641, "lon": 5.1010741, "type": "break"},
+          {"lat": 52.1215641, "lon": 5.1010741, "type": "break"},
+          {"lat": 52.1215641, "lon": 5.1010741, "type": "break"}],
+          "costing":"auto","format":"osrm","shape_match":"map_snap",
+          "trace_options": {"interpolation_distance": 0}})",
+      R"({"shape":[
+          {"lat": 52.09531,"lon": 5.11413, "type": "break"},
+          {"lat": 52.09531,"lon": 5.11413, "type": "break"},
+          {"lat": 52.09531,"lon": 5.11413, "type": "break"}],
+          "costing":"auto","format":"osrm","shape_match":"map_snap",
+          "trace_options": {"interpolation_distance": 0}})",
+      R"({"shape":[
+          {"lat": 52.09531,"lon": 5.11413, "type": "break"},
+          {"lat": 52.09531,"lon": 5.11413, "type": "break"},
+          {"lat": 52.09531,"lon": 5.11413, "type": "break"}],
           "costing":"auto","format":"osrm","shape_match":"map_snap"})"};
 
   tyr::actor_t actor(conf, true);
