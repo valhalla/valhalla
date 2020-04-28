@@ -234,7 +234,7 @@ jobs:
       - run: brew install --build-from-source ./prime_server.rb
       - run: npm install --ignore-scripts
       - run: mkdir -p build
-      - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
+      - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off -DCMAKE_BUILD_TYPE=RelWithDebInfo
       - run: cd build && make utrecht_tiles mapmatch -j4
       - run: cd build && make run-mapmatch
         #      - run: make -C build -j4
