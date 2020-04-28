@@ -40,7 +40,6 @@
 #include <valhalla/proto/trip.pb.h>
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -154,10 +153,10 @@ void write_config(const std::string& filename,
 
 void make_tile() {
 
-  if (boost::filesystem::exists(test_dir))
-    boost::filesystem::remove_all(test_dir);
+  if (filesystem::exists(test_dir))
+    filesystem::remove_all(test_dir);
 
-  boost::filesystem::create_directories(test_dir);
+  filesystem::create_directories(test_dir);
 
   boost::property_tree::ptree conf;
   write_config(config_file, test_dir);

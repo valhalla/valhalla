@@ -1,8 +1,6 @@
 #ifndef VALHALLA_BALDR_GRAPHTILE_H_
 #define VALHALLA_BALDR_GRAPHTILE_H_
 
-#include "filesystem.h"
-
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/complexrestriction.h>
@@ -19,6 +17,7 @@
 #include <valhalla/baldr/predictedspeeds.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/signinfo.h>
+#include <valhalla/baldr/traffictile.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transitroute.h>
 #include <valhalla/baldr/transitschedule.h>
@@ -30,7 +29,7 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
 
-#include <valhalla/baldr/traffictile.h>
+#include <valhalla/filesystem.h>
 
 #include <cstdint>
 #include <iterator>
