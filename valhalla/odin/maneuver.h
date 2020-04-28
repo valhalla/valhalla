@@ -78,12 +78,12 @@ public:
   void set_length(float length);
 
   // Seconds
-  uint32_t time() const;
-  void set_time(uint32_t time);
+  double time() const;
+  void set_time(double time);
 
   // len/speed on each edge with no stop impact in seconds
-  uint32_t basic_time() const;
-  void set_basic_time(uint32_t basic_time);
+  double basic_time() const;
+  void set_basic_time(double basic_time);
 
   uint32_t turn_degree() const;
   void set_turn_degree(uint32_t turn_degree);
@@ -206,8 +206,11 @@ public:
   bool unnamed_mountain_bike_trail() const;
   void set_unnamed_mountain_bike_trail(bool unnamed_mountain_bike_trail);
 
-  bool verbal_multi_cue() const;
-  void set_verbal_multi_cue(bool verbal_multi_cue);
+  bool imminent_verbal_multi_cue() const;
+  void set_imminent_verbal_multi_cue(bool imminent_verbal_multi_cue);
+  bool distant_verbal_multi_cue() const;
+  void set_distant_verbal_multi_cue(bool distant_verbal_multi_cue);
+  bool HasVerbalMultiCue() const;
 
   bool to_stay_on() const;
   void set_to_stay_on(bool to_stay_on);
@@ -292,6 +295,9 @@ public:
   const VerbalTextFormatter* verbal_formatter() const;
   void set_verbal_formatter(std::unique_ptr<VerbalTextFormatter>&& verbal_formatter);
 
+  const std::vector<DirectionsLeg_GuidanceView>& guidance_views() const;
+  std::vector<DirectionsLeg_GuidanceView>* mutable_guidance_views();
+
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
 
@@ -304,9 +310,9 @@ protected:
   std::unique_ptr<StreetNames> begin_street_names_;
   std::unique_ptr<StreetNames> cross_street_names_;
   std::string instruction_;
-  float length_;        // Kilometers
-  uint32_t time_;       // Seconds
-  uint32_t basic_time_; // len/speed on each edge with no stop impact in seconds
+  float length_;      // Kilometers
+  double time_;       // Seconds
+  double basic_time_; // len/speed on each edge with no stop impact in seconds
   uint32_t turn_degree_;
   RelativeDirection begin_relative_direction_;
   DirectionsLeg_Maneuver_CardinalDirection begin_cardinal_direction_;
@@ -339,7 +345,8 @@ protected:
   bool unnamed_walkway_;
   bool unnamed_cycleway_;
   bool unnamed_mountain_bike_trail_;
-  bool verbal_multi_cue_;
+  bool imminent_verbal_multi_cue_;
+  bool distant_verbal_multi_cue_;
   bool to_stay_on_;
   std::unique_ptr<StreetNames> roundabout_exit_street_names_;
   RelativeDirection merge_to_relative_direction_;
@@ -377,6 +384,8 @@ protected:
   TripLeg_TransitType transit_type_;
 
   std::unique_ptr<VerbalTextFormatter> verbal_formatter_;
+
+  std::vector<DirectionsLeg_GuidanceView> guidance_views_;
 };
 
 } // namespace odin

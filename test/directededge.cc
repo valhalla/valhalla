@@ -1,6 +1,7 @@
-#include "test.h"
 
 #include "baldr/directededge.h"
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -11,14 +12,11 @@ constexpr size_t kDirectedEdgeExpectedSize = 48;
 
 namespace {
 
-void test_sizeof() {
-  if (sizeof(DirectedEdge) != kDirectedEdgeExpectedSize)
-    throw std::runtime_error("DirectedEdge size should be " +
-                             std::to_string(kDirectedEdgeExpectedSize) + " bytes" + " but is " +
-                             std::to_string(sizeof(DirectedEdge)));
+TEST(DirectedEdge, test_sizeof) {
+  EXPECT_EQ(sizeof(DirectedEdge), kDirectedEdgeExpectedSize);
 }
 
-void TestWriteRead() {
+TEST(DirectedEdge, TestWriteRead) {
   // Test building a directed edge and reading back values
   DirectedEdge directededge;
   directededge.set_turntype(0, Turn::Type::kStraight);
@@ -26,138 +24,89 @@ void TestWriteRead() {
   directededge.set_turntype(3, Turn::Type::kRight);
   directededge.set_turntype(2, Turn::Type::kSharpRight);
   directededge.set_turntype(5, Turn::Type::kSharpLeft);
-  if (directededge.turntype(0) != Turn::Type::kStraight) {
-    throw runtime_error("DirectedEdge turn type for localidx 0 test failed");
-  }
-  if (directededge.turntype(3) != Turn::Type::kRight) {
-    throw runtime_error("DirectedEdge turn type for localidx 3 test failed");
-  }
-  if (directededge.turntype(5) != Turn::Type::kSharpLeft) {
-    throw runtime_error("DirectedEdge turn type for localidx 5 test failed");
-  }
-  if (directededge.turntype(1) != Turn::Type::kLeft) {
-    throw runtime_error("DirectedEdge turn type for localidx 1 test failed");
-  }
-  if (directededge.turntype(2) != Turn::Type::kSharpRight) {
-    throw runtime_error("DirectedEdge turn type for localidx 2 test failed");
-  }
+
+  EXPECT_EQ(directededge.turntype(0), Turn::Type::kStraight);
+  EXPECT_EQ(directededge.turntype(3), Turn::Type::kRight);
+  EXPECT_EQ(directededge.turntype(5), Turn::Type::kSharpLeft);
+  EXPECT_EQ(directededge.turntype(1), Turn::Type::kLeft);
+  EXPECT_EQ(directededge.turntype(2), Turn::Type::kSharpRight);
 
   directededge.set_stopimpact(5, 7);
   directededge.set_stopimpact(1, 4);
   directededge.set_stopimpact(3, 0);
-  if (directededge.stopimpact(3) != 0) {
-    throw runtime_error("DirectedEdge stopimpact for localidx 3 test failed");
-  }
-  if (directededge.stopimpact(5) != 7) {
-    throw runtime_error("DirectedEdge stopimpact for localidx 5 test failed");
-  }
-  if (directededge.stopimpact(1) != 4) {
-    throw runtime_error("DirectedEdge stopimpact for localidx 1 test failed");
-  }
+
+  EXPECT_EQ(directededge.stopimpact(3), 0);
+  EXPECT_EQ(directededge.stopimpact(5), 7);
+  EXPECT_EQ(directededge.stopimpact(1), 4);
 
   // name consistency should be false by default
-  if (directededge.name_consistency(2) != false) {
-    throw runtime_error("DirectedEdge name_consistency for idx 2 test failed");
-  }
+  EXPECT_FALSE(directededge.name_consistency(2));
 
   directededge.set_name_consistency(4, true);
   directededge.set_name_consistency(1, false);
   directededge.set_name_consistency(7, true);
   directededge.set_name_consistency(6, true);
-  if (directededge.name_consistency(4) != true) {
-    throw runtime_error("DirectedEdge name_consistency for idx 4 test failed");
-  }
-  if (directededge.name_consistency(1) != false) {
-    throw runtime_error("DirectedEdge name_consistency for idx 1 test failed");
-  }
-  if (directededge.name_consistency(7) != true) {
-    throw runtime_error("DirectedEdge name_consistency for idx 7 test failed");
-  }
-  if (directededge.name_consistency(6) != true) {
-    throw runtime_error("DirectedEdge name_consistency for idx 6 test failed");
-  }
+
+  EXPECT_TRUE(directededge.name_consistency(4));
+  EXPECT_FALSE(directededge.name_consistency(1));
+  EXPECT_TRUE(directededge.name_consistency(7));
+  EXPECT_TRUE(directededge.name_consistency(6));
 
   // Overwrite idx 6 with false
   directededge.set_name_consistency(6, false);
-  if (directededge.name_consistency(6) != false) {
-    throw runtime_error("DirectedEdge name_consistency overwrite idx 6 test failed");
-  }
+  EXPECT_FALSE(directededge.name_consistency(6)) << "overwrite test failed";
 }
 
-void TestMaxSlope() {
+TEST(DirectedEdge, TestMaxSlope) {
   // Test setting max slope and reading back values
   DirectedEdge edge;
+
   edge.set_max_up_slope(5.0f);
-  if (edge.max_up_slope() != 5) {
-    throw runtime_error("DirectedEdge max_up_slope test 1 failed");
-  }
+  EXPECT_EQ(edge.max_up_slope(), 5);
+
   edge.set_max_up_slope(15.0f);
-  if (edge.max_up_slope() != 15) {
-    throw runtime_error("DirectedEdge max_up_slope test 2 failed");
-  }
+  EXPECT_EQ(edge.max_up_slope(), 15);
+
   edge.set_max_up_slope(-5.0f);
-  if (edge.max_up_slope() != 0) {
-    throw runtime_error("DirectedEdge max_up_slope test 3 failed");
-  }
+  EXPECT_EQ(edge.max_up_slope(), 0);
+
   edge.set_max_up_slope(25.0f);
-  if (edge.max_up_slope() != 28) {
-    throw runtime_error("DirectedEdge max_up_slope test 4 failed");
-  }
+  EXPECT_EQ(edge.max_up_slope(), 28);
+
   edge.set_max_up_slope(71.5f);
-  if (edge.max_up_slope() != 72) {
-    throw runtime_error("DirectedEdge max_up_slope test 5 failed");
-  }
+  EXPECT_EQ(edge.max_up_slope(), 72);
+
   edge.set_max_up_slope(88.0f);
-  if (edge.max_up_slope() != 76) {
-    throw runtime_error("DirectedEdge max_up_slope test 6 failed");
-  }
+  EXPECT_EQ(edge.max_up_slope(), 76);
+
   edge.set_max_up_slope(15.7f);
-  if (edge.max_up_slope() != 16) {
-    throw runtime_error("DirectedEdge max_up_slope test 7 failed");
-  }
+  EXPECT_EQ(edge.max_up_slope(), 16);
 
   edge.set_max_down_slope(-5.5f);
-  if (edge.max_down_slope() != -6) {
-    throw runtime_error("DirectedEdge max_down_slope test 1 failed");
-  }
+  EXPECT_EQ(edge.max_down_slope(), -6);
+
   edge.set_max_down_slope(-15.0f);
-  if (edge.max_down_slope() != -15) {
-    throw runtime_error("DirectedEdge max_down_slope test 2 failed");
-  }
+  EXPECT_EQ(edge.max_down_slope(), -15);
+
   edge.set_max_down_slope(5.0f);
-  if (edge.max_down_slope() != 0) {
-    throw runtime_error("edge max_down_slope test 3 failed");
-  }
+  EXPECT_EQ(edge.max_down_slope(), 0);
+
   edge.set_max_down_slope(-25.0f);
-  if (edge.max_down_slope() != -28) {
-    throw runtime_error("DirectedEdge max_down_slope test 4 failed");
-  }
+  EXPECT_EQ(edge.max_down_slope(), -28);
+
   edge.set_max_down_slope(-71.5f);
-  if (edge.max_down_slope() != -72) {
-    throw runtime_error("DirectedEdge max_down_slope test 5 failed");
-  }
+  EXPECT_EQ(edge.max_down_slope(), -72);
+
   edge.set_max_down_slope(-88.0f);
-  if (edge.max_down_slope() != -76) {
-    throw runtime_error("DirectedEdge max_down_slope test 6 failed");
-  }
+  EXPECT_EQ(edge.max_down_slope(), -76);
+
   edge.set_max_down_slope(-15.7f);
-  if (edge.max_down_slope() != -16) {
-    throw runtime_error("DirectedEdge max_down_slope test 7 failed");
-  }
+  EXPECT_EQ(edge.max_down_slope(), -16);
 }
 
 } // namespace
 
-int main(void) {
-  test::suite suite("directededge");
-
-  suite.test(TEST_CASE(test_sizeof));
-
-  // Write to file and read into DirectedEdge
-  suite.test(TEST_CASE(TestWriteRead));
-
-  // Test max slopes
-  suite.test(TEST_CASE(TestMaxSlope));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

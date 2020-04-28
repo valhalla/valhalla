@@ -89,7 +89,7 @@ void loki_worker_t::init_matrix(Api& request) {
 void loki_worker_t::matrix(Api& request) {
   init_matrix(request);
   auto& options = *request.mutable_options();
-  auto costing_name = Costing_Enum_Name(options.costing());
+  const auto& costing_name = Costing_Enum_Name(options.costing());
 
   if (costing_name == "multimodal") {
     throw valhalla_exception_t{140, Options_Action_Enum_Name(options.action())};
@@ -115,7 +115,7 @@ void loki_worker_t::matrix(Api& request) {
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
-    const auto searched = loki::Search(sources_targets, *reader, costing.get());
+    const auto searched = loki::Search(sources_targets, *reader, costing);
     for (size_t i = 0; i < sources_targets.size(); ++i) {
       const auto& l = sources_targets[i];
       const auto& projection = searched.at(l);

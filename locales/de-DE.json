@@ -146,18 +146,16 @@
       "metric_lengths": [
         "<KILOMETERS> Kilometer",
         "einen Kilometer",
-        "einen halben Kilometer",
         "<METERS> Meter",
         "weniger als 10 Meter"
       ],
       "us_customary_lengths": [
-        "<MILES> miles",
-        "1 mile",
-        "a half mile",
-        "<TENTHS_OF_MILE> tenths of a mile",
-        "1 tenth of a mile",
-        "<FEET> feet",
-        "less than 10 feet"
+        "<MILES> Meilen",
+        "eine Meile",
+        "eine halbe Meile",
+        "a quarter mile",
+        "<FEET> Fuß",
+        "weniger als 10 Fuß"
       ],
       "example_phrases": {
         "0": [
@@ -1208,7 +1206,6 @@
       "metric_lengths": [
         "<KILOMETERS> Kilometer",
         "einen Kilometer",
-        "einen halben Kilometer",
         "<METERS> Meter",
         "weniger als 10 Meter"
       ],
@@ -1216,8 +1213,7 @@
         "<MILES> Meilen",
         "eine Meile",
         "eine halbe Meile",
-        "<TENTHS_OF_MILE> Zehntel der Meile",
-        "ein Zehntel der Meile",
+        "a quarter mile",
         "<FEET> Fuß",
         "weniger als 10 Fuß"
       ],
@@ -1446,16 +1442,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Turn sharp right."
+          "Make a sharp right."
         ],
         "1": [
-          "Turn sharp left onto Arlen Road."
+          "Make a sharp left onto Arlen Road."
         ],
         "2": [
-          "Turn sharp right onto Belair Road/US 1 Business. Continue on US 1 Business."
+          "Make a sharp right onto Belair Road/US 1 Business. Continue on US 1 Business."
         ],
         "3": [
-          "Turn sharp left to stay on US 15 South."
+          "Make a sharp left to stay on US 15 South."
         ]
       }
     },
@@ -1477,16 +1473,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Turn sharp right."
+          "Make a sharp right."
         ],
         "1": [
-          "Turn sharp left onto Arlen Road."
+          "Make a sharp left onto Arlen Road."
         ],
         "2": [
-          "Turn sharp right onto Belair Road, U.S. 1 Business."
+          "Make a sharp right onto Belair Road, U.S. 1 Business."
         ],
         "3": [
-          "Turn sharp left to stay on U.S. 15 South."
+          "Make a sharp left to stay on U.S. 15 South."
         ]
       }
     },
@@ -1599,7 +1595,6 @@
       "metric_lengths": [
         "<KILOMETERS> Kilometer",
         "einen Kilometer",
-        "einen halben Kilometer",
         "<METERS> Meter",
         "weniger als 10 Meter"
       ],
@@ -1607,8 +1602,7 @@
         "<MILES> Meilen",
         "eine Meile",
         "eine halbe Meile",
-        "<TENTHS_OF_MILE> Zehntel der Meile",
-        "ein Zehntel der Meile",
+        "a quarter mile",
         "<FEET> Fuß",
         "weniger als 10 Fuß"
       ],
@@ -2072,11 +2066,53 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> Dann <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> Dann <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
       },
+      "metric_lengths": [
+        "<KILOMETERS> Kilometer",
+        "einen Kilometer",
+        "<METERS> Meter",
+        "weniger als 10 Meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> Meilen",
+        "eine Meile",
+        "eine halbe Meile",
+        "a quarter mile",
+        "<FEET> Fuß",
+        "weniger als 10 Fuß"
+      ],
       "example_phrases": {
         "0": [
           "Bear right onto East Fayette Street. Then Turn right onto North Gay Street."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> Kilometer",
+        "einen Kilometer",
+        "<METERS> Meter",
+        "weniger als 10 Meter"
+      ],
+      "us_customary_lengths": [
+        "<MILES> Meilen",
+        "eine Meile",
+        "eine halbe Meile",
+        "a quarter mile",
+        "<FEET> Fuß",
+        "weniger als 10 Fuß"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
         ]
       }
     }

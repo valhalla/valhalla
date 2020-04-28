@@ -1,10 +1,10 @@
-#include "test.h"
-
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/costfactory.h"
 #include "sif/pedestriancost.h"
 #include <valhalla/proto/options.pb.h>
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla;
@@ -26,16 +26,17 @@ void create_costing_options(Options& options) {
   ParseHOVCostOptions(doc, "/costing_options/hov", options.add_costing_options());
   ParseTaxiCostOptions(doc, "/costing_options/taxi", options.add_costing_options());
   ParseMotorScooterCostOptions(doc, "/costing_options/motor_scooter", options.add_costing_options());
-  options.add_costing_options();
+  options.add_costing_options(); // multimodal
   ParsePedestrianCostOptions(doc, "/costing_options/pedestrian", options.add_costing_options());
   ParseTransitCostOptions(doc, "/costing_options/transit", options.add_costing_options());
   ParseTruckCostOptions(doc, "/costing_options/truck", options.add_costing_options());
   ParseMotorcycleCostOptions(doc, "/costing_options/motorcycle", options.add_costing_options());
   ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter", options.add_costing_options());
   ParseAutoDataFixCostOptions(doc, "/costing_options/auto_data_fix", options.add_costing_options());
+  ParseNoCostOptions(doc, "/costing_options/none", options.add_costing_options());
 }
 
-void test_register() {
+TEST(Factory, Register) {
   Options options;
   create_costing_options(options);
 
@@ -46,14 +47,15 @@ void test_register() {
   factory.Register(Costing::pedestrian, CreatePedestrianCost);
   // TODO: then ask for some odin::Options& options
   auto car = factory.Create(Costing::auto_, options);
+  options.set_costing(Costing::bicycle);
+  auto bike = factory.Create(options);
 }
+
+// TODO: add many more tests!
+
 } // namespace
 
-int main(void) {
-  test::suite suite("factory");
-
-  suite.test(TEST_CASE(test_register));
-  // TODO: many more
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

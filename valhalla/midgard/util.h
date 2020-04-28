@@ -246,6 +246,21 @@ trim_polyline(const iterator_t& begin, const iterator_t& end, float source, floa
 template <class container_t> container_t trim_front(container_t& pts, const float dist);
 
 /**
+ * Trims shape (in-place) from start and end vertices.
+ *
+ * @param  start         Distance at the start
+ * @param  start_vertex  Starting point
+ * @param  end           Distance at the end
+ * @param  end_vertex    Ending point
+ * @param  shape         Shape, as vector of PointLLs
+ */
+void trim_shape(float start,
+                PointLL start_vertex, // NOLINT
+                float end,
+                PointLL end_vertex, // NOLINT
+                std::vector<PointLL>& shape);
+
+/**
  * Estimate the angle of the tangent at a point along a discretised curve. We attempt
  * to mostly use the shape coming into the point on the curve but if there
  * isn't enough there we will use the shape coming out of the it.
@@ -389,6 +404,20 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
  */
 std::vector<PointLL>
 resample_polyline(const std::vector<PointLL>& polyline, const float length, const float resolution);
+
+/**
+ * Resample a polyline at uniform intervals using more accurate spherical interpolation between
+ * points. The length and number of samples is specified. The interval is computed based on
+ * the number of samples and the algorithm guarantees that the secified number of samples
+ * is exactly produced.
+ * @param polyline   the list/vector of points in the line
+ * @param length     Length (meters) of the polyline
+ * @param n          Number of samples (includes the first and last point)
+ * @return Returns a vector of resampled points.
+ */
+std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<PointLL>& polyline,
+                                                         const double length,
+                                                         const uint32_t n);
 
 /**
  * A class to wrap a primitive array in something iterable which is useful for loops mostly

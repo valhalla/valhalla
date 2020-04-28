@@ -1,5 +1,4 @@
 #include "loki/node_search.h"
-#include "test.h"
 #include <cstdint>
 
 #include "baldr/rapidjson_utils.h"
@@ -13,16 +12,17 @@
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
 
+#include "test.h"
+
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 
+#include "filesystem.h"
 #include "mjolnir/directededgebuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/graphvalidator.h"
-#include <boost/filesystem.hpp>
 
 namespace vj = valhalla::mjolnir;
-namespace bfs = boost::filesystem;
 
 namespace {
 
@@ -273,8 +273,8 @@ void graph_builder::write_tiles(uint8_t level) const {
 
 void make_tile() {
   // make sure that all the old tiles are gone before trying to make new ones.
-  if (bfs::is_directory(test_tile_dir)) {
-    bfs::remove_all(test_tile_dir);
+  if (filesystem::is_directory(test_tile_dir)) {
+    filesystem::remove_all(test_tile_dir);
   }
 
   graph_builder builder;
@@ -325,7 +325,7 @@ void make_tile() {
   vj::GraphValidator::Validate(conf);
 }
 
-void test_single_node() {
+TEST(Search, test_single_node) {
   // make the config file
   std::stringstream json;
   json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
@@ -338,12 +338,10 @@ void test_single_node() {
 
   auto nodes = valhalla::loki::nodes_in_bbox(box, reader);
 
-  if (nodes.size() != 1) {
-    throw std::runtime_error("Expecting to find one node, but got " + std::to_string(nodes.size()));
-  }
+  EXPECT_EQ(nodes.size(), 1) << "Expecting to find one node";
 }
 
-void test_small_node_block() {
+TEST(Search, test_small_node_block) {
   // make the config file
   std::stringstream json;
   json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
@@ -358,12 +356,10 @@ void test_small_node_block() {
 
   auto nodes = valhalla::loki::nodes_in_bbox(box, reader);
 
-  if (nodes.size() != 4) {
-    throw std::runtime_error("Expecting to find four nodes, but got " + std::to_string(nodes.size()));
-  }
+  EXPECT_EQ(nodes.size(), 4) << "Expecting to find four nodes";
 }
 
-void test_node_at_tile_boundary() {
+TEST(Search, test_node_at_tile_boundary) {
   // make the config file
   std::stringstream json;
   json << "{ \"tile_dir\": \"" << test_tile_dir << "\" }";
@@ -376,12 +372,10 @@ void test_node_at_tile_boundary() {
 
   auto nodes = valhalla::loki::nodes_in_bbox(box, reader);
 
-  if (nodes.size() != 1) {
-    throw std::runtime_error("Expecting to find one node, but got " + std::to_string(nodes.size()));
-  }
+  EXPECT_EQ(nodes.size(), 1) << "Expecting to find one node";
 }
 
-void test_opposite_in_another_tile() {
+TEST(Search, test_opposite_in_another_tile) {
   /* this tests that the code is able to find the start node of an edge which is
    * a "tweener" and for which the end node is in another tile. this requires
    * that the search look in the end node's tile to look up the opposite edge in
@@ -418,21 +412,24 @@ void test_opposite_in_another_tile() {
 
   auto nodes = valhalla::loki::nodes_in_bbox(box, reader);
 
-  if (nodes.size() != 1) {
-    throw std::runtime_error("Expecting to find one node, but got " + std::to_string(nodes.size()));
-  }
+  EXPECT_EQ(nodes.size(), 1) << "Expecting to find one node";
 }
 
-} // anonymous namespace
+// Setup and tearown will be called only once for the entire suite
+class Env : public ::testing::Environment {
+public:
+  void SetUp() override {
+    make_tile();
+  }
 
-int main() {
-  test::suite suite("node_search");
+  void TearDown() override {
+  }
+};
 
-  suite.test(TEST_CASE(make_tile));
-  suite.test(TEST_CASE(test_single_node));
-  suite.test(TEST_CASE(test_small_node_block));
-  suite.test(TEST_CASE(test_node_at_tile_boundary));
-  suite.test(TEST_CASE(test_opposite_in_another_tile));
+} // namespace
 
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::AddGlobalTestEnvironment(new Env);
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

@@ -60,27 +60,28 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
   }
 }
 
-void loki_worker_t::parse_costing(Api& api) {
+void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   auto& options = *api.mutable_options();
   // using the costing we can determine what type of edge filtering to use
-  if (!options.has_costing()) {
+  if (!options.has_costing() || (!allow_none && options.costing() == Costing::none_)) {
     throw valhalla_exception_t{124};
   }
 
-  auto costing_type = options.costing();
-  auto costing_str = Costing_Enum_Name(costing_type);
-
+  const auto& costing_str = Costing_Enum_Name(options.costing());
   if (!options.do_not_track()) {
     valhalla::midgard::logging::Log("costing_type::" + costing_str, " [ANALYTICS] ");
   }
 
-  // TODO - have a way of specifying mode at the location
-  if (costing_type == Costing::multimodal) {
-    costing_type = Costing::pedestrian;
-  }
-
   try {
-    costing = factory.Create(costing_type, options);
+    // For the begin and end of multimodal we expect you to be walking
+    if (options.costing() == Costing::multimodal) {
+      options.set_costing(Costing::pedestrian);
+      costing = factory.Create(options);
+      options.set_costing(Costing::multimodal);
+    } // otherwise use the provided costing
+    else {
+      costing = factory.Create(options);
+    }
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
   // See if we have avoids and take care of them
@@ -92,7 +93,7 @@ void loki_worker_t::parse_costing(Api& api) {
   if (options.avoid_locations_size()) {
     try {
       auto avoid_locations = PathLocation::fromPBF(options.avoid_locations());
-      auto results = loki::Search(avoid_locations, *reader, costing.get());
+      auto results = loki::Search(avoid_locations, *reader, costing);
       std::unordered_set<uint64_t> avoids;
       for (const auto& result : results) {
         for (const auto& edge : result.second.edges) {
@@ -235,6 +236,11 @@ void loki_worker_t::cleanup() {
   }
 }
 
+void loki_worker_t::set_interrupt(const std::function<void()>* interrupt_function) {
+  interrupt = interrupt_function;
+  reader->SetInterrupt(interrupt);
+}
+
 #ifdef HAVE_HTTP
 
 prime_server::worker_t::result_t
@@ -260,7 +266,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     }
 
     // Set the interrupt function
-    service_worker_t::set_interrupt(interrupt_function);
+    service_worker_t::set_interrupt(&interrupt_function);
 
     prime_server::worker_t::result_t result{true};
     // do request specific processing
@@ -271,7 +277,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
         result.messages.emplace_back(request.SerializeAsString());
         break;
       case Options::locate:
-        result = to_response_json(locate(request), info, request);
+        result = to_response(locate(request), info, request);
         break;
       case Options::sources_to_targets:
       case Options::optimized_route:
@@ -288,10 +294,10 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
         result.messages.emplace_back(request.SerializeAsString());
         break;
       case Options::height:
-        result = to_response_json(height(request), info, request);
+        result = to_response(height(request), info, request);
         break;
       case Options::transit_available:
-        result = to_response_json(transit_available(request), info, request);
+        result = to_response(transit_available(request), info, request);
         break;
       default:
         // apparently you wanted something that we figured we'd support but havent written yet

@@ -128,6 +128,11 @@ public:
     l->set_radius(pl.radius_);
     l->set_search_cutoff(pl.radius_ > pl.search_cutoff_ ? pl.radius_ : pl.search_cutoff_);
     l->set_street_side_tolerance(pl.street_side_tolerance_);
+    l->mutable_search_filter()->set_min_road_class(pl.search_filter_.min_road_class_);
+    l->mutable_search_filter()->set_max_road_class(pl.search_filter_.max_road_class_);
+    l->mutable_search_filter()->set_exclude_tunnel(pl.search_filter_.exclude_tunnel_);
+    l->mutable_search_filter()->set_exclude_bridge(pl.search_filter_.exclude_bridge_);
+    l->mutable_search_filter()->set_exclude_ramp(pl.search_filter_.exclude_ramp_);
 
     auto* path_edges = l->mutable_path_edges();
     for (const auto& e : pl.edges) {
@@ -183,8 +188,10 @@ public:
       side = PreferredSide::SAME;
     else if (loc.preferred_side() == valhalla::Location::opposite)
       side = PreferredSide::OPPOSITE;
+
+    SearchFilter search_filter = SearchFilter();
     Location l({loc.ll().lng(), loc.ll().lat()}, stop_type, loc.minimum_reachability(),
-               loc.minimum_reachability(), loc.radius(), side);
+               loc.minimum_reachability(), loc.radius(), side, search_filter);
 
     if (loc.has_name()) {
       l.name_ = loc.name();
@@ -225,6 +232,13 @@ public:
     if (loc.has_street_side_tolerance()) {
       l.street_side_tolerance_ = loc.street_side_tolerance();
     }
+    if (loc.has_search_filter()) {
+      l.search_filter_.min_road_class_ = loc.search_filter().min_road_class();
+      l.search_filter_.max_road_class_ = loc.search_filter().max_road_class();
+      l.search_filter_.exclude_tunnel_ = loc.search_filter().exclude_tunnel();
+      l.search_filter_.exclude_bridge_ = loc.search_filter().exclude_bridge();
+      l.search_filter_.exclude_ramp_ = loc.search_filter().exclude_ramp();
+    }
     return l;
   }
 
@@ -246,6 +260,7 @@ public:
     // for regular routing we dont really care about inbound reach for the origin or outbound reach
     // for the destination so we remove that requirement
     if (route_reach && pls.size() > 1) {
+      // TODO Why only set min_reach for front/back? For routing, `pls` is only ever just size 2?
       pls.front().min_inbound_reach_ = 0;
       pls.back().min_outbound_reach_ = 0;
     }

@@ -186,12 +186,21 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
   std::vector<PathInfo> path;
   GraphId prior_edge, prior_node;
   EdgeLabel pred;
+  auto prev_segment_target = std::numeric_limits<float>::max();
 
   // Build the path
   size_t interpolated_index = 0;
   for (const auto& edge_segment : edge_segments) {
-    // Skip edges that are the same as the prior edge
-    if (edge_segment.edgeid == prior_edge) {
+    // Skip edges that are the same as the prior edge if they are not disconnected,
+    // Note that, when the prior edge and current edge has the same edgeid and the current
+    // source is smaller than prior target, it indicates discontinuity. see follow:
+    //
+    //                   current_source
+    //    prior_source           |    prior_target
+    //          |                |         |
+    //  X---------------------------------------------X
+    //                      Edge
+    if (edge_segment.edgeid == prior_edge && prev_segment_target <= edge_segment.source) {
       continue;
     }
 
@@ -217,10 +226,10 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     }
 
     // get the cost of traversing the node, there is no turn cost the first time
-    Cost turn_cost{};
+    Cost transition_cost{};
     if (elapsed.secs > 0 && !disconnected) {
-      turn_cost = costing->TransitionCost(directededge, nodeinfo, pred);
-      elapsed += turn_cost;
+      transition_cost = costing->TransitionCost(directededge, nodeinfo, pred);
+      elapsed += transition_cost;
     }
 
     // Get time along the edge, handling partial distance along the first and last edge.
@@ -245,16 +254,17 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     }
 
     // Update the prior_edge and nodeinfo. TODO (protect against invalid tile)
+    prev_segment_target = edge_segment.target;
     prior_edge = edge_id;
     prior_node = directededge->endnode();
     const GraphTile* end_tile = matcher->graphreader().GetGraphTile(prior_node);
     nodeinfo = end_tile->node(prior_node);
 
     // Update the predecessor EdgeLabel (for transition costing in the next round);
-    pred = {kInvalidLabel, edge_id, directededge, elapsed, 0, 0, mode, 0};
+    pred = {kInvalidLabel, edge_id, directededge, elapsed, 0, 0, mode, 0, {}};
 
     // Add to the PathInfo
-    path.emplace_back(mode, elapsed.secs, edge_id, 0, elapsed.cost, false, turn_cost.secs);
+    path.emplace_back(mode, elapsed.secs, edge_id, 0, elapsed.cost, false, transition_cost.secs);
   }
 
   return path;

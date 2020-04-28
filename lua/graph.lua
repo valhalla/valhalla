@@ -1340,7 +1340,13 @@ function filter_tags_generic(kv)
     use = 0 --general road, no special use
   end
 
-  if kv["access"] == "emergency" or kv["emergency"] == "yes" then
+  if (kv["access"] == "emergency" or kv["emergency"] == "yes") and
+      kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and
+      kv["truck_forward"] == "false" and kv["truck_backward"] == "false" and
+      kv["bus_forward"] == "false" and kv["bus_backward"] == "false" and
+      kv["bike_forward"] == "false" and kv["bike_backward"] == "false" and
+      kv["moped_forward"] == "false" and kv["moped_backward"] == "false" and
+      kv["motorcycle_forward"] == "false" and kv["motorcycle_backward"] == "false" then
     use = 7
   end
 
@@ -1454,7 +1460,14 @@ function filter_tags_generic(kv)
   kv["name:en"] = kv["name:en"]
   kv["alt_name"] = kv["alt_name"]
   kv["official_name"] = kv["official_name"]
-  kv["max_speed"] = normalize_speed(kv["maxspeed"])
+
+  if kv["maxspeed"] == "none" then
+    --- special case unlimited speed limit (german autobahn)
+    kv["max_speed"] = "unlimited"
+  else
+    kv["max_speed"] = normalize_speed(kv["maxspeed"])
+  end
+
   kv["advisory_speed"] = normalize_speed(kv["maxspeed:advisory"])
   kv["average_speed"] = normalize_speed(kv["maxspeed:practical"])
   kv["backward_speed"] = normalize_speed(kv["maxspeed:backward"])

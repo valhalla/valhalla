@@ -94,12 +94,12 @@ public:
   virtual double AccumulatedCost(const StateId& stateid) const = 0;
 
   bool HasStateId(const StateId& stateid) const;
-  StateIdIterator SearchPath(StateId::Time time, bool allow_breaks = true);
+  StateIdIterator SearchPathVS(StateId::Time time, bool allow_breaks = true);
   StateIdIterator PathEnd() const;
   const IEmissionCostModel& emission_cost_model() const;
-  void set_emission_cost_model(const IEmissionCostModel cost_model);
+  void set_emission_cost_model(const IEmissionCostModel& cost_model);
   const ITransitionCostModel& transition_cost_model() const;
-  void set_transition_cost_model(const ITransitionCostModel cost_model);
+  void set_transition_cost_model(const ITransitionCostModel& cost_model);
 
 protected:
   // Calculate transition cost from left state to right state

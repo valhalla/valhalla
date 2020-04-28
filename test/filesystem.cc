@@ -1,11 +1,12 @@
 #include "filesystem.h"
-#include "test.h"
 
 #include <algorithm>
 #include <fstream>
 #include <string>
 #include <sys/stat.h>
 #include <vector>
+
+#include "test.h"
 
 // TODO: move this out of the test and into the filesystem replacement
 // and then remove filesystem from mjolnir as well
@@ -23,41 +24,43 @@ constexpr int perm755 = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
 
 namespace {
 
-void exists() {
+TEST(Filesystem, exists) {
   // drop a file
   { std::fstream fs(".touched_file", std::ios::out); }
   // check this dir is there
-  if (!filesystem::exists("."))
-    throw std::logic_error("the current directory doesnt exist?");
-  if (!filesystem::exists(".touched_file"))
-    throw std::logic_error("couldn't create a file?");
+  EXPECT_TRUE(filesystem::exists(".")) << "the current directory doesnt exist?";
+  EXPECT_TRUE(filesystem::exists(".touched_file")) << "couldn't create a file?";
 }
-void directory() {
-  if (!filesystem::is_directory("."))
-    throw std::logic_error("the current directory isnt a directory?");
-  if (!filesystem::is_directory("."))
-    throw std::logic_error("the current directory isnt a directory?");
+
+TEST(Filesystem, directory) {
+  // todo: any specific reason it was repeated 2 times?
+  EXPECT_TRUE(filesystem::is_directory(".")) << "the current directory isnt a directory?";
+  EXPECT_TRUE(filesystem::is_directory(".")) << "the current directory isnt a directory?";
 }
-void regular_file() {
-  if (!filesystem::is_regular_file(".touched_file"))
-    throw std::logic_error("the current directory isnt a directory?");
+
+TEST(Filesystem, regular_file) {
+  EXPECT_TRUE(filesystem::is_regular_file(".touched_file"));
 }
+
 void try_mkdir(const std::string& p) {
-  if (mkdir(p.c_str(), perm755))
-    throw std::runtime_error("couldnt create directory");
+  EXPECT_EQ(mkdir(p.c_str(), perm755), 0) << "couldnt create directory";
 }
-void recursive_directory_listing() {
+
+TEST(Filesystem, recursive_directory_listing) {
   // make a directory tree with these entries
   std::string s(1, filesystem::path::preferred_separator);
   std::vector<std::string> dirs{"foo", "foo" + s + "qux", "foo" + s + "quux"};
-  std::vector<std::string> files{"foo" + s + "bar", "foo" + s + "bar",
+  std::vector<std::string> files{"foo" + s + "bar", "foo" + s + "baz",
                                  "foo" + s + "quux" + s + "corge"};
 
   // create them
   for (const auto& d : dirs)
     try_mkdir(d.c_str());
-  for (const auto& f : files)
+  for (const auto& f : files) {
     std::fstream fs(f, std::ios::out);
+    filesystem::path p(f);
+    fs.write(p.filename().c_str(), p.filename().string().size());
+  }
   // unlike the posix find command the directory iterator doesnt give you access to
   // root or starting directory just the stuff under it so lets pop that off
   dirs.erase(dirs.begin());
@@ -65,57 +68,76 @@ void recursive_directory_listing() {
   for (filesystem::recursive_directory_iterator i("foo"), end; i != end; ++i) {
     if (i->is_directory()) {
       auto pos = std::remove(dirs.begin(), dirs.end(), i->path().string());
-      if (pos == dirs.end())
-        throw std::logic_error("unexpected directory");
+      ASSERT_NE(pos, dirs.end()) << "unexpected directory";
       dirs.erase(pos, dirs.end());
+      ASSERT_THROW(i->file_size(), std::runtime_error);
     } else if (i->is_regular_file()) {
       auto pos = std::remove(files.begin(), files.end(), i->path().string());
-      if (pos == files.end())
-        throw std::logic_error("unexpected file");
+      ASSERT_NE(pos, files.end()) << "unexpected file";
       files.erase(pos, files.end());
+      // force it to stat the file
+      ASSERT_EQ(i->file_size(), i->path().filename().string().size());
+      // check the cached size
+      ASSERT_EQ(i->file_size(), i->path().filename().string().size());
     } else {
-      throw std::logic_error("unexpected entry type");
+      FAIL() << "unexpected entry type";
     }
   }
   // if we didnt get everything we have a problem
-  if (!dirs.empty() || !files.empty())
-    throw std::logic_error("we could find all files or dirs");
+  EXPECT_TRUE(dirs.empty());
+  EXPECT_TRUE(files.empty());
 
   // cleanup the stuff we made, 2 tests in one ;o)
-  if (!filesystem::remove_all("foo"))
-    throw std::logic_error("why cant we delete the stuff we just made");
+  EXPECT_TRUE(filesystem::remove_all("foo")) << "why cant we delete the stuff we just made";
 }
 
-void remove_any() {
+TEST(Filesystem, remove_any) {
   // delete non existant thing
-  if (filesystem::remove(".foobar"))
-    throw std::logic_error(".foobar should not exist");
+  EXPECT_FALSE(filesystem::remove(".foobar")) << ".foobar should not exist";
 
   // make and delete a file
   { std::fstream fs(".foobar", std::ios::out); }
-  if (!filesystem::remove(".foobar") || filesystem::exists(".foobar"))
-    throw std::logic_error(".foobar file should have been deleted");
+  EXPECT_TRUE(filesystem::remove(".foobar"));
+  EXPECT_FALSE(filesystem::exists(".foobar")) << ".foobar file should have been deleted";
 
   // make and delete a file
   try_mkdir(".foobar");
-  if (!filesystem::remove(".foobar") || filesystem::exists(".foobar"))
-    throw std::logic_error(".foobar dir should have been deleted");
+  EXPECT_TRUE(filesystem::remove(".foobar"));
+  EXPECT_FALSE(filesystem::exists(".foobar")) << ".foobar dir should have been deleted";
+}
+
+TEST(Filesystem, parent_path) {
+  std::vector<filesystem::path> in{{"/"},   {"/foo/bar"}, {"/foo/../"}, {"/foo/bar/../f"},
+                                   {"./f"}, {"foo/bar/f"}};
+  std::vector<filesystem::path> out{
+      {""}, {"/foo"}, {"/foo/.."}, {"/foo/bar/.."}, {"."}, {"foo/bar"},
+  };
+  for (const auto& i : in) {
+    auto a = i.parent_path();
+    EXPECT_EQ(a.string(), out[&i - &in.front()].string()) << "wrong parent path";
+  }
+}
+
+TEST(Filesystem, extension) {
+  std::vector<filesystem::path>
+      in{{"/foo/bar.txt"},      {"/foo/bar."},        {"/foo/bar"},         {"/foo/bar.txt/bar.cc"},
+         {"/foo/bar.txt/bar."}, {"/foo/bar.txt/bar"}, {"/foo/."},           {"/foo/.."},
+         {"/foo/.hidden"},      {"/foo/..bar"},       {"/foo/bar.baz.qux"}, {"..."},
+         {"/baz/.foo.bar"}};
+  std::vector<filesystem::path> out{{".txt"}, {"."}, {""},     {".cc"},  {"."}, {""},    {""},
+                                    {""},     {""},  {".bar"}, {".qux"}, {"."}, {".bar"}};
+  for (const auto& i : in) {
+    auto a = i.extension();
+    EXPECT_EQ(a.string(), out[&i - &in.front()].string()) << "wrong extension";
+  }
+}
+
+TEST(Filesystem, file_size) {
 }
 
 } // namespace
 
-int main() {
-  test::suite suite("filesystem");
-
-  suite.test(TEST_CASE(exists));
-
-  suite.test(TEST_CASE(directory));
-
-  suite.test(TEST_CASE(regular_file));
-
-  suite.test(TEST_CASE(recursive_directory_listing));
-
-  suite.test(TEST_CASE(remove_any));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

@@ -23,18 +23,20 @@ public:
     kExitName,
     kGuideBranch,
     kGuideToward,
-    kJunctionName
+    kJunctionName,
+    kGuidanceViewJunction
   };
 
   /**
    * Constructor given arguments.
    * @param  idx  Directed edge or node index to which this sign applies.
    * @param  type Sign type.
-   * @param  rn   Boolean indicating whether this sign indicates a route number.
+   * @param  rn_type   Boolean indicating whether this sign indicates a route number or the guidance
+   * view type.
    * @param  text_offset  Offset to text in the names/text table.
    */
-  Sign(const uint32_t idx, const Sign::Type& type, const bool rn, const uint32_t text_offset)
-      : index_(idx), type_(static_cast<uint32_t>(type)), is_route_num_(rn), tagged_(0),
+  Sign(const uint32_t idx, const Sign::Type& type, const bool rn_type, const uint32_t text_offset)
+      : index_(idx), type_(static_cast<uint32_t>(type)), route_num_type_(rn_type), tagged_(0),
         text_offset_(text_offset) {
   }
 
@@ -64,11 +66,13 @@ public:
   }
 
   /**
-   * Does this sign record indicate a route number.
-   * @return  Returns true if the sign record is a route number.
+   * Does this sign record indicate a route number or the guidance view type.
+   * @return  Returns true if the sign record is a route number or if this is a
+   * guidance view sign returning true indicates that we are a base image and false
+   * if we are a overlay image
    */
-  bool is_route_num() const {
-    return is_route_num_;
+  bool route_num_type() const {
+    return route_num_type_;
   }
 
   /**
@@ -100,7 +104,7 @@ public:
 protected:
   uint32_t index_ : 22; // kMaxTileEdgeCount in nodeinfo.h: 22 bits
   uint32_t type_ : 8;
-  uint32_t is_route_num_ : 1;
+  uint32_t route_num_type_ : 1;
   uint32_t tagged_ : 1; // For future use to support "tagged" text strings.
                         // Similar to EdgeInfo, for compatibility any tagged strings
                         // will be skipped until code is available to properly use them.

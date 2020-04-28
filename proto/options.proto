@@ -45,6 +45,7 @@ enum Costing {
   motorcycle = 10;
   auto_data_fix = 11;
   taxi = 12;
+  none_ = 13;
 }
 
 message CostingOptions {
@@ -182,4 +183,6 @@ message Options {
   optional ShapeFormat shape_format = 38 [default = polyline6];           // Shape format (defaults to polyline6 encoding)
   optional uint32 alternates = 39;                                        // Maximum number of alternate routes that can be returned
   optional float interpolation_distance = 40;                             // Map-matching interpolation distance beyond which trace points are merged
+  optional bool guidance_views = 41;                                      // Whether to return guidance_views in the response
+  optional uint32 height_precision = 42 [default = 0];                    // Number of digits precision for heights returned
 }

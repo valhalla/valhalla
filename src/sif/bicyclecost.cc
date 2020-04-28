@@ -7,6 +7,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include <cassert>
 
 #ifdef INLINE_TEST
 #include "test/test.h"
@@ -367,10 +368,10 @@ public:
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 
-  float speedfactor_[kMaxSpeedKph + 1]; // Cost factors based on speed in kph
-  float use_roads_;                     // Preference of using roads between 0 and 1
-  float road_factor_;                   // Road factor based on use_roads_
-  float avoid_bad_surfaces_;            // Preference of avoiding bad surfaces for the bike type
+  std::vector<float> speedfactor_; // Cost factors based on speed in kph
+  float use_roads_;                // Preference of using roads between 0 and 1
+  float road_factor_;              // Road factor based on use_roads_
+  float avoid_bad_surfaces_;       // Preference of avoiding bad surfaces for the bike type
 
   // Average speed (kph) on smooth, flat roads.
   float speed_;
@@ -447,7 +448,7 @@ BicycleCost::BicycleCost(const Costing costing, const Options& options)
   get_base_costs(costing_options);
 
   // Get the bicycle type - enter as string and convert to enum
-  std::string bicycle_type = costing_options.transport_type();
+  const std::string& bicycle_type = costing_options.transport_type();
   if (bicycle_type == "Cross") {
     type_ = BicycleType::kCross;
   } else if (bicycle_type == "Road") {
@@ -488,6 +489,7 @@ BicycleCost::BicycleCost(const Costing costing, const Options& options)
 
   // Create speed cost table and penalty table (to avoid division in costing)
   float avoid_roads = (1.0f - use_roads_) * 0.75f + 0.25;
+  speedfactor_.resize(kMaxSpeedKph + 1, 0);
   speedfactor_[0] = kSecPerHour;
   speedpenalty_[0] = 0.0f;
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
@@ -588,6 +590,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
     // Compute elapsed time based on speed. Modulate cost with weighting factors.
+    assert(speed < speedfactor_.size());
     float sec = (edge->length() * speedfactor_[speed]);
     return {sec * ferry_factor_, sec};
   }
@@ -683,6 +686,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   float factor = 1.0f + grade_penalty[edge->weighted_grade()] + total_stress + surface_factor;
 
   // Compute elapsed time based on speed. Modulate cost with weighting factors.
+  assert(bike_speed < speedfactor_.size());
   float sec = (edge->length() * speedfactor_[bike_speed]);
   return {sec * factor, sec};
 }
@@ -1008,7 +1012,7 @@ make_distributor_from_range(const ranged_default_t<float>& range) {
   return new std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
 }
 
-void testBicycleCostParams() {
+TEST(BicycleCost, testBicycleCostParams) {
   constexpr unsigned testIterations = 250;
   constexpr unsigned seed = 0;
   std::mt19937 generator(seed);
@@ -1019,20 +1023,16 @@ void testBicycleCostParams() {
   distributor.reset(make_distributor_from_range(kManeuverPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("maneuver_penalty", (*distributor)(generator)));
-    if (ctorTester->maneuver_penalty_ < kManeuverPenaltyRange.min ||
-        ctorTester->maneuver_penalty_ > kManeuverPenaltyRange.max) {
-      throw std::runtime_error("maneuver_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->maneuver_penalty_,
+                test::IsBetween(ctorTester->maneuver_penalty_, kManeuverPenaltyRange.max));
   }
 
   // alley_penalty_
   distributor.reset(make_distributor_from_range(kAlleyPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("alley_penalty", (*distributor)(generator)));
-    if (ctorTester->alley_penalty_ < kAlleyPenaltyRange.min ||
-        ctorTester->alley_penalty_ > kAlleyPenaltyRange.max) {
-      throw std::runtime_error("alley_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->alley_penalty_,
+                test::IsBetween(kAlleyPenaltyRange.min, kAlleyPenaltyRange.max));
   }
 
   // destination_only_penalty_
@@ -1040,40 +1040,31 @@ void testBicycleCostParams() {
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(
         make_bicyclecost_from_json("destination_only_penalty", (*distributor)(generator)));
-    if (ctorTester->destination_only_penalty_ < kDestinationOnlyPenaltyRange.min ||
-        ctorTester->destination_only_penalty_ > kDestinationOnlyPenaltyRange.max) {
-      throw std::runtime_error("destination_only_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->destination_only_penalty_,
+                test::IsBetween(kDestinationOnlyPenaltyRange.min, kDestinationOnlyPenaltyRange.max));
   }
 
   // gate_cost_ (Cost.secs)
   distributor.reset(make_distributor_from_range(kGateCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("gate_cost", (*distributor)(generator)));
-    if (ctorTester->gate_cost_.secs < kGateCostRange.min ||
-        ctorTester->gate_cost_.secs > kGateCostRange.max) {
-      throw std::runtime_error("gate_cost_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->gate_cost_.secs, test::IsBetween(kGateCostRange.min, kGateCostRange.max));
   }
 
   // gate_penalty_ (Cost.cost)
   distributor.reset(make_distributor_from_range(kGatePenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("gate_penalty", (*distributor)(generator)));
-    if (ctorTester->gate_cost_.cost < kGatePenaltyRange.min ||
-        ctorTester->gate_cost_.cost > kGatePenaltyRange.max + kDefaultGateCost) {
-      throw std::runtime_error("gate_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->gate_cost_.cost,
+                test::IsBetween(kGatePenaltyRange.min, kGatePenaltyRange.max + kDefaultGateCost));
   }
 
   // country_crossing_cost_ (Cost.secs)
   distributor.reset(make_distributor_from_range(kCountryCrossingCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("country_crossing_cost", (*distributor)(generator)));
-    if (ctorTester->country_crossing_cost_.secs < kCountryCrossingCostRange.min ||
-        ctorTester->country_crossing_cost_.secs > kCountryCrossingCostRange.max) {
-      throw std::runtime_error("country_crossing_cost_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->country_crossing_cost_.secs,
+                test::IsBetween(kCountryCrossingCostRange.min, kCountryCrossingCostRange.max));
   }
 
   // country_crossing_penalty_ (Cost.cost)
@@ -1081,21 +1072,17 @@ void testBicycleCostParams() {
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(
         make_bicyclecost_from_json("country_crossing_penalty", (*distributor)(generator)));
-    if (ctorTester->country_crossing_cost_.cost < kCountryCrossingPenaltyRange.min ||
-        ctorTester->country_crossing_cost_.cost >
-            kCountryCrossingPenaltyRange.max + kDefaultCountryCrossingCost) {
-      throw std::runtime_error("country_crossing_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->country_crossing_cost_.cost,
+                test::IsBetween(kCountryCrossingPenaltyRange.min,
+                                kCountryCrossingPenaltyRange.max + kDefaultCountryCrossingCost));
   }
 
   // ferry_cost_ (Cost.secs)
   distributor.reset(make_distributor_from_range(kFerryCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("ferry_cost", (*distributor)(generator)));
-    if (ctorTester->ferry_transition_cost_.secs < kFerryCostRange.min ||
-        ctorTester->ferry_transition_cost_.secs > kFerryCostRange.max) {
-      throw std::runtime_error("ferry_cost_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->ferry_transition_cost_.secs,
+                test::IsBetween(kFerryCostRange.min, kFerryCostRange.max));
   }
 
   /**
@@ -1103,18 +1090,14 @@ void testBicycleCostParams() {
    distributor.reset(make_distributor_from_range(kUseFerryRange));
    for (unsigned i = 0; i < testIterations; ++i) {
      ctorTester.reset(make_bicyclecost_from_json("use_ferry", (*distributor)(generator)));
-     if (ctorTester->use_ferry_ < kUseFerryRange.min || ctorTester->use_ferry_ > kUseFerryRange.max) {
-       throw std::runtime_error("use_ferry_ is not within it's range");
-     }
+EXPECT_THAT(ctorTester->use_ferry_ , test::IsBetween( kUseFerryRange.min ,kUseFerryRange.max));
    }
 
    // use_hills
    distributor.reset(make_distributor_from_range(kUseHillsRange));
    for (unsigned i = 0; i < testIterations; ++i) {
      ctorTester.reset(make_bicyclecost_from_json("use_hills", (*distributor)(generator)));
-     if (ctorTester->use_hills < kUseHillsRange.min || ctorTester->use_hills > kUseHillsRange.max) {
-       throw std::runtime_error("use_hills is not within it's range");
-     }
+     EXPECT_THAT(ctorTester->use_hills , test::IsBetween( kUseHillsRange.min ,kUseHillsRange.max));
    }
    */
 
@@ -1122,9 +1105,7 @@ void testBicycleCostParams() {
   distributor.reset(make_distributor_from_range(kUseRoadRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("use_roads", (*distributor)(generator)));
-    if (ctorTester->use_roads_ < kUseRoadRange.min || ctorTester->use_roads_ > kUseRoadRange.max) {
-      throw std::runtime_error("use_roads_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->use_roads_, test::IsBetween(kUseRoadRange.min, kUseRoadRange.max));
   }
 
   // speed_
@@ -1133,20 +1114,15 @@ void testBicycleCostParams() {
   distributor.reset(make_distributor_from_range(kRoadCyclingSpeedRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("cycling_speed", (*distributor)(generator)));
-    if (ctorTester->speed_ < kRoadCyclingSpeedRange.min ||
-        ctorTester->speed_ > kRoadCyclingSpeedRange.max) {
-      throw std::runtime_error("speed_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->speed_,
+                test::IsBetween(kRoadCyclingSpeedRange.min, kRoadCyclingSpeedRange.max));
   }
 }
 } // namespace
 
-int main() {
-  test::suite suite("costing");
-
-  suite.test(TEST_CASE(testBicycleCostParams));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
 
 #endif

@@ -135,7 +135,7 @@ bool IViterbiSearch::HasStateId(const StateId& stateid) const {
   return added_states_.find(stateid) != added_states_.end();
 }
 
-StateIdIterator IViterbiSearch::SearchPath(StateId::Time time, bool allow_breaks) {
+StateIdIterator IViterbiSearch::SearchPathVS(StateId::Time time, bool allow_breaks) {
   return stateid_iterator(*this, time, SearchWinner(time), allow_breaks);
 }
 
@@ -147,7 +147,7 @@ const IEmissionCostModel& IViterbiSearch::emission_cost_model() const {
   return emission_cost_model_;
 }
 
-void IViterbiSearch::set_emission_cost_model(const IEmissionCostModel cost_model) {
+void IViterbiSearch::set_emission_cost_model(const IEmissionCostModel& cost_model) {
   emission_cost_model_ = cost_model;
 }
 
@@ -155,7 +155,7 @@ const ITransitionCostModel& IViterbiSearch::transition_cost_model() const {
   return transition_cost_model_;
 }
 
-void IViterbiSearch::set_transition_cost_model(const ITransitionCostModel cost_model) {
+void IViterbiSearch::set_transition_cost_model(const ITransitionCostModel& cost_model) {
   transition_cost_model_ = cost_model;
 }
 

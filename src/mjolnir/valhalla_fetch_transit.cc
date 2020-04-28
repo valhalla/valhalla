@@ -12,7 +12,6 @@
 #include <unordered_set>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
@@ -27,11 +26,11 @@
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
 
+#include "filesystem.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/servicedays.h"
 #include "mjolnir/transitpbf.h"
-
-#include <valhalla/proto/transit.pb.h>
+#include "valhalla/proto/transit.pb.h"
 
 using namespace boost::property_tree;
 using namespace valhalla::midgard;
@@ -765,8 +764,8 @@ void fetch_tiles(const ptree& pt,
     Transit tile;
     auto file_name = GraphTile::FileSuffix(current);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
-    boost::filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") +
-                                           filesystem::path::preferred_separator + file_name;
+    filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") +
+                                    filesystem::path::preferred_separator + file_name;
 
     // tiles are wrote out with .pbf or .pbf.n ext
     uint32_t ext = 0;
@@ -1071,7 +1070,7 @@ void stitch_tiles(const ptree& pt,
                std::to_string(needed.size()) + " stops");
 
       file_name = prefix + "." + std::to_string(ext++);
-    } while (boost::filesystem::exists(file_name));
+    } while (filesystem::exists(file_name));
   }
 }
 
@@ -1155,13 +1154,13 @@ int main(int argc, char** argv) {
   curl_global_cleanup();
 
   // figure out which transit tiles even exist
-  boost::filesystem::recursive_directory_iterator transit_file_itr(
+  filesystem::recursive_directory_iterator transit_file_itr(
       pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
       std::to_string(TileHierarchy::levels().rbegin()->first));
-  boost::filesystem::recursive_directory_iterator end_file_itr;
+  filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
-    if (boost::filesystem::is_regular(transit_file_itr->path()) &&
+    if (filesystem::is_regular_file(transit_file_itr->path()) &&
         transit_file_itr->path().extension() == ".pbf") {
       all_tiles.emplace(GraphTile::GetTileId(transit_file_itr->path().string()));
     }

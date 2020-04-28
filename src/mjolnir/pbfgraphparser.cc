@@ -76,7 +76,11 @@ public:
     }
 
     include_driveways_ = pt.get<bool>("include_driveways", true);
-    commercial_data_ = pt.get<bool>("commercial_data", false);
+    infer_internal_intersections_ =
+        pt.get<bool>("data_processing.infer_internal_intersections", true);
+    infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
+    use_direction_on_ways_ = pt.get<bool>("data_processing.use_direction_on_ways", false);
+    allow_alt_name_ = pt.get<bool>("data_processing.allow_alt_name", false);
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
@@ -373,6 +377,7 @@ public:
 
     OSMAccess access{wayid};
     bool has_user_tags = false;
+    std::string ref, int_ref, direction, int_direction;
 
     const auto& surface_exists = results.find("surface");
     bool has_surface_tag = (surface_exists != results.end());
@@ -385,9 +390,10 @@ public:
         ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
 
     for (const auto& tag : results) {
-
-      if (tag.first == "internal_intersection" && commercial_data_) {
+      if (tag.first == "internal_intersection" && !infer_internal_intersections_) {
         w.set_internal(tag.second == "true" ? true : false);
+      } else if (tag.first == "turn_channel" && !infer_turn_channels_) {
+        w.set_turn_channel(tag.second == "true" ? true : false);
       } else if (tag.first == "road_class") {
         RoadClass roadclass = (RoadClass)std::stoi(tag.second);
         switch (roadclass) {
@@ -575,8 +581,6 @@ public:
         w.set_roundabout(tag.second == "true" ? true : false);
       } else if (tag.first == "link") {
         w.set_link(tag.second == "true" ? true : false);
-      } else if (tag.first == "link_type") {
-        w.set_turn_channel(tag.second == "slip" ? true : false);
       } else if (tag.first == "ferry") {
         w.set_ferry(tag.second == "true" ? true : false);
       } else if (tag.first == "rail") {
@@ -620,19 +624,24 @@ public:
         name = tag.second;
       } else if (tag.first == "name:en" && !tag.second.empty()) {
         w.set_name_en_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "alt_name" && !tag.second.empty()) {
+      } else if (tag.first == "alt_name" && !tag.second.empty() && allow_alt_name_) {
         w.set_alt_name_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "official_name" && !tag.second.empty()) {
         w.set_official_name_index(osmdata_.name_offset_map.index(tag.second));
-
       } else if (tag.first == "max_speed") {
         try {
-          max_speed = std::stof(tag.second);
-          has_max_speed = true;
+          if (tag.second == "unlimited") {
+            // this way has an unlimited speed limit (german autobahn)
+            max_speed = kUnlimitedSpeedLimit;
+          } else {
+            max_speed = std::stof(tag.second);
+          }
           w.set_tagged_speed(true);
+          has_max_speed = true;
         } catch (const std::out_of_range& oor) {
           LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
         }
+
       } else if (tag.first == "average_speed") {
         try {
           average_speed = std::stof(tag.second);
@@ -676,13 +685,20 @@ public:
       }
 
       // motor_vehicle:conditional=no @ (16:30-07:00)
-      else if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional" ||
-               tag.first == "bicycle:conditional" || tag.first == "motorcycle:conditional" ||
-               tag.first == "foot:conditional" || tag.first == "pedestrian:conditional" ||
-               tag.first == "hgv:conditional" || tag.first == "moped:conditional" ||
-               tag.first == "mofa:conditional" || tag.first == "psv:conditional" ||
-               tag.first == "taxi:conditional" || tag.first == "bus:conditional" ||
-               tag.first == "hov:conditional" || tag.first == "emergency:conditional") {
+      else if (tag.first.substr(0, 20) == "motorcar:conditional" ||
+               tag.first.substr(0, 25) == "motor_vehicle:conditional" ||
+               tag.first.substr(0, 19) == "bicycle:conditional" ||
+               tag.first.substr(0, 22) == "motorcycle:conditional" ||
+               tag.first.substr(0, 16) == "foot:conditional" ||
+               tag.first.substr(0, 22) == "pedestrian:conditional" ||
+               tag.first.substr(0, 15) == "hgv:conditional" ||
+               tag.first.substr(0, 17) == "moped:conditional" ||
+               tag.first.substr(0, 16) == "mofa:conditional" ||
+               tag.first.substr(0, 15) == "psv:conditional" ||
+               tag.first.substr(0, 16) == "taxi:conditional" ||
+               tag.first.substr(0, 15) == "bus:conditional" ||
+               tag.first.substr(0, 15) == "hov:conditional" ||
+               tag.first.substr(0, 21) == "emergency:conditional") {
 
         std::vector<std::string> tokens = GetTagTokens(tag.second, '@');
         std::string tmp = tokens.at(0);
@@ -698,31 +714,33 @@ public:
         if (tokens.size() == 2 && tmp.size()) {
 
           uint16_t mode = 0;
-          if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional") {
+          if (tag.first.substr(0, 20) == "motorcar:conditional" ||
+              tag.first.substr(0, 25) == "motor_vehicle:conditional") {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                     kHOVAccess | kMopedAccess | kMotorcycleAccess);
-          } else if (tag.first == "bicycle:conditional") {
+          } else if (tag.first.substr(0, 19) == "bicycle:conditional") {
             mode = kBicycleAccess;
-          } else if (tag.first == "foot:conditional" || tag.first == "pedestrian:conditional") {
+          } else if (tag.first.substr(0, 16) == "foot:conditional" ||
+                     tag.first.substr(0, 22) == "pedestrian:conditional") {
             mode = (kPedestrianAccess | kWheelchairAccess);
-          } else if (tag.first == "hgv:conditional") {
+          } else if (tag.first.substr(0, 15) == "hgv:conditional") {
             mode = kTruckAccess;
-          } else if (tag.first == "moped:conditional" || tag.first == "mofa:conditional") {
+          } else if (tag.first.substr(0, 17) == "moped:conditional" ||
+                     tag.first.substr(0, 16) == "mofa:conditional") {
             mode = kMopedAccess;
-          } else if (tag.first == "motorcycle:conditional") {
+          } else if (tag.first.substr(0, 22) == "motorcycle:conditional") {
             mode = kMotorcycleAccess;
-          } else if (tag.first == "psv:conditional") {
+          } else if (tag.first.substr(0, 15) == "psv:conditional") {
             mode = (kTaxiAccess | kBusAccess);
-          } else if (tag.first == "taxi:conditional") {
+          } else if (tag.first.substr(0, 16) == "taxi:conditional") {
             mode = kTaxiAccess;
-          } else if (tag.first == "bus:conditional") {
+          } else if (tag.first.substr(0, 15) == "bus:conditional") {
             mode = kBusAccess;
-          } else if (tag.first == "hov:conditional") {
+          } else if (tag.first.substr(0, 15) == "hov:conditional") {
             mode = kHOVAccess;
-          } else if (tag.first == "emergency:conditional") {
+          } else if (tag.first.substr(0, 21) == "emergency:conditional") {
             mode = kEmergencyAccess;
           }
-
           std::string tmp = tokens.at(1);
           boost::algorithm::trim(tmp);
           std::vector<std::string> conditions = GetTagTokens(tmp, ';');
@@ -796,10 +814,19 @@ public:
       }
 
       else if (tag.first == "ref" && !tag.second.empty()) {
-        w.set_ref_index(osmdata_.name_offset_map.index(tag.second));
+        if (!use_direction_on_ways_)
+          w.set_ref_index(osmdata_.name_offset_map.index(tag.second));
+        else
+          ref = tag.second;
       } else if (tag.first == "int_ref" && !tag.second.empty()) {
-        w.set_int_ref_index(osmdata_.name_offset_map.index(tag.second));
-
+        if (!use_direction_on_ways_)
+          w.set_int_ref_index(osmdata_.name_offset_map.index(tag.second));
+        else
+          int_ref = tag.second;
+      } else if (tag.first == "direction" && !tag.second.empty() && use_direction_on_ways_) {
+        direction = tag.second;
+      } else if (tag.first == "int_direction" && !tag.second.empty() && use_direction_on_ways_) {
+        int_direction = tag.second;
       } else if (tag.first == "sac_scale") {
         std::string value = tag.second;
         boost::algorithm::to_lower(value);
@@ -1011,7 +1038,95 @@ public:
       } else if (tag.first == "turn:lanes:backward") {
         // Turn lanes in the reverse direction
         w.set_bwd_turn_lanes_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:base" ||
+                 tag.first == "guidance_view:jct:base:forward") {
+        w.set_fwd_jct_base_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:overlay" ||
+                 tag.first == "guidance_view:jct:overlay:forward") {
+        w.set_fwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:base:backward") {
+        w.set_bwd_jct_base_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:overlay:backward") {
+        w.set_bwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
       }
+    }
+
+    if (use_direction_on_ways_ && !ref.empty()) {
+      if (direction.empty()) {
+        w.set_ref_index(osmdata_.name_offset_map.index(ref));
+      } else {
+        std::vector<std::string> refs = GetTagTokens(ref);
+        std::vector<std::string> directions = GetTagTokens(direction);
+
+        std::string tmp_ref;
+        if (refs.size() == directions.size()) {
+          for (uint32_t i = 0; i < refs.size(); i++) {
+            if (!tmp_ref.empty()) {
+              tmp_ref += ";";
+            }
+            if (!directions.at(i).empty())
+              tmp_ref += refs.at(i) + " " + directions.at(i);
+            else
+              tmp_ref += refs.at(i);
+          }
+          w.set_ref_index(osmdata_.name_offset_map.index(tmp_ref));
+        } else
+          w.set_ref_index(osmdata_.name_offset_map.index(ref));
+      }
+    }
+
+    if (use_direction_on_ways_ && !int_ref.empty()) {
+      if (int_direction.empty()) {
+        w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
+      } else {
+        std::vector<std::string> int_refs = GetTagTokens(int_ref);
+        std::vector<std::string> int_directions = GetTagTokens(int_direction);
+
+        std::string tmp_ref;
+        if (int_refs.size() == int_directions.size()) {
+          for (uint32_t i = 0; i < int_refs.size(); i++) {
+            if (!tmp_ref.empty()) {
+              tmp_ref += ";";
+            }
+            if (!int_directions.at(i).empty())
+              tmp_ref += int_refs.at(i) + " " + int_directions.at(i);
+            else
+              tmp_ref += int_refs.at(i);
+          }
+          w.set_int_ref_index(osmdata_.name_offset_map.index(tmp_ref));
+        } else
+          w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
+      }
+    }
+
+    // add int_refs to the end of the refs for now.  makes sure that we don't add dups.
+    if (use_direction_on_ways_ && w.int_ref_index()) {
+      std::string tmp = osmdata_.name_offset_map.name(w.ref_index());
+
+      std::vector<std::string> rs = GetTagTokens(tmp);
+      std::vector<std::string> is = GetTagTokens(osmdata_.name_offset_map.name(w.int_ref_index()));
+      bool bFound = false;
+
+      for (auto& i : is) {
+        for (auto& r : rs) {
+          if (i == r) {
+            bFound = true;
+            break;
+          }
+        }
+        if (!bFound) {
+          if (!tmp.empty()) {
+            tmp += ";";
+          }
+          tmp += i;
+        }
+        bFound = false;
+      }
+      if (!tmp.empty()) {
+        w.set_ref_index(osmdata_.name_offset_map.index(tmp));
+      }
+      // no matter what, clear out the int_ref.
+      w.set_int_ref_index(0);
     }
 
     // Process mtb tags.
@@ -1153,7 +1268,8 @@ public:
       w.set_speed(average_speed);
     } else if (has_advisory_speed) {
       w.set_speed(advisory_speed);
-    } else if (has_max_speed) {
+    } else if (has_max_speed && max_speed != kUnlimitedSpeedLimit) {
+      // don't use unlimited speed limit for default edge speed
       w.set_speed(max_speed);
     } else if (has_default_speed && !w.forward_tagged_speed() && !w.backward_tagged_speed()) {
       w.set_speed(default_speed);
@@ -1679,8 +1795,21 @@ public:
   // Configuration option to include driveways
   bool include_driveways_;
 
-  // Configuration option for commercial data sets
-  bool commercial_data_;
+  // Configuration option indicating whether or not to infer internal intersections during the graph
+  // enhancer phase or use the internal_intersection key from the pbf
+  bool infer_internal_intersections_;
+
+  // Configuration option indicating whether or not to infer turn channels during the graph
+  // enhancer phase or use the turn_channel key from the pbf
+  bool infer_turn_channels_;
+
+  // Configuration option indicating whether or not to process the direction key on the ways or
+  // utilize the guidance relation tags during the parsing phase
+  bool use_direction_on_ways_;
+
+  // Configuration option indicating whether or not to process the alt_name key on the ways during the
+  // parsing phase
+  bool allow_alt_name_;
 
   // Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
   RoadClass highway_cutoff_rc_;

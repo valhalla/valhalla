@@ -4,8 +4,8 @@
 #include <iostream>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem/operations.hpp>
 
+#include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/osmdata.h"
 #include "mjolnir/util.h"
@@ -205,8 +205,8 @@ bool write_node_names(const std::string& filename, const UniqueNames& names) {
   std::vector<uint32_t> lengths(name_count);
   std::vector<char> namebuf;
   for (uint32_t n = 0; n < name_count; ++n) {
-    const auto str = names.name(n + 1); // Add 1 since the first name is blank
-    lengths[n] = str.length() + 1;      // Add 1 for the null terminator
+    const auto& str = names.name(n + 1); // Add 1 since the first name is blank
+    lengths[n] = str.length() + 1;       // Add 1 for the null terminator
 
     // Copy the string to the namebuf and add a terminator
     std::copy(str.c_str(), str.c_str() + str.length(), back_inserter(namebuf));
@@ -236,8 +236,8 @@ bool write_unique_names(const std::string& filename, const UniqueNames& names) {
   std::vector<uint32_t> lengths(name_count);
   std::vector<char> namebuf;
   for (uint32_t n = 0; n < name_count; ++n) {
-    const auto str = names.name(n + 1); // Add 1 since the first name is blank
-    lengths[n] = str.length() + 1;      // Add 1 for the null terminator
+    const auto& str = names.name(n + 1); // Add 1 since the first name is blank
+    lengths[n] = str.length() + 1;       // Add 1 for the null terminator
 
     // Copy the string to the namebuf and add a terminator
     std::copy(str.c_str(), str.c_str() + str.length(), back_inserter(namebuf));
@@ -599,8 +599,8 @@ void OSMData::add_to_name_map(const uint32_t member_id,
 
 void OSMData::cleanup_temp_files(const std::string& tile_dir) {
   auto remove_temp_file = [](const std::string& fname) {
-    if (boost::filesystem::exists(fname)) {
-      boost::filesystem::remove(fname);
+    if (filesystem::exists(fname)) {
+      filesystem::remove(fname);
     }
   };
 

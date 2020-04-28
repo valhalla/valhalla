@@ -18,7 +18,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
@@ -103,15 +102,19 @@ struct enhancer_stats {
  * @param  density       Relative road density.
  * @param  urban_rc_speed Array of default speeds vs. road class for urban areas
  * @param  rc_speed Array of default speeds vs. road class
+ * @param  infer_turn_channels flag indicating if we should infer tc.
  *
  */
-void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint32_t* urban_rc_speed) {
+void UpdateSpeed(DirectedEdge& directededge,
+                 const uint32_t density,
+                 const uint32_t* urban_rc_speed,
+                 bool infer_turn_channels) {
 
   // Update speed on ramps (if not a tagged speed) and turn channels
   if (directededge.link()) {
     uint32_t speed = directededge.speed();
     Use use = directededge.use();
-    if (use == Use::kTurnChannel) {
+    if (use == Use::kTurnChannel && infer_turn_channels) {
       speed = static_cast<uint32_t>((speed * kTurnChannelFactor) + 0.5f);
     } else if ((use == Use::kRamp) && (directededge.speed_type() != SpeedType::kTagged)) {
       // If no tagged speed set ramp speed to slightly lower than speed
@@ -859,7 +862,7 @@ bool IsNextEdgeInternal(const DirectedEdge directededge,
                         GraphTileBuilder& tilebuilder,
                         GraphReader& reader,
                         std::mutex& lock,
-                        bool commercial_data) {
+                        bool infer_internal_intersections) {
   // Get the tile at the startnode
   GraphTileBuilder tile = tilebuilder;
   // Get the tile at the end node. and find inbound heading of the candidate
@@ -899,7 +902,7 @@ bool IsNextEdgeInternal(const DirectedEdge directededge,
     if (tilebuilder.edgeinfo(directededge.edgeinfo_offset()).wayid() ==
         tile.edgeinfo(diredge.edgeinfo_offset()).wayid()) {
 
-      if (commercial_data)
+      if (!infer_internal_intersections)
         return diredge.internal();
       else
         return IsIntersectionInternal(&tile, reader, lock, directededge.endnode(), nodeinfo, diredge,
@@ -1220,7 +1223,6 @@ uint32_t GetStopImpact(uint32_t from,
 
   // TODO: possibly increase stop impact at large intersections (more edges)
   // or if several are high class
-
   // Reduce stop impact from a turn channel or when only links
   // (ramps and turn channels) are involved. Exception - sharp turns.
   Turn::Type turn_type = Turn::GetType(turn_degree);
@@ -1244,7 +1246,8 @@ uint32_t GetStopImpact(uint32_t from,
     } else if (count > 3) {
       stop_impact += 2;
     }
-  } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp) {
+  } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp &&
+             !edges[from].internal() && !edges[to].internal()) {
     // Increase stop impact on merge
     if (is_sharp) {
       stop_impact += 3;
@@ -1253,6 +1256,7 @@ uint32_t GetStopImpact(uint32_t from,
     } else {
       stop_impact += 2;
     }
+
   } else if (edges[from].use() == Use::kTurnChannel) {
     // Penalize sharp turns
     if (is_sharp) {
@@ -1264,6 +1268,26 @@ uint32_t GetStopImpact(uint32_t from,
     } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
       stop_impact -= 1;
     }
+  }
+  // add to the stop impact when transitioning from higher to lower class road and we are not on a TC
+  // or ramp penalize lefts when driving on the right.
+  else if (nodeinfo.drive_on_right() &&
+           (turn_type == Turn::Type::kSharpLeft || turn_type == Turn::Type::kLeft) &&
+           from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
+           edges[to].use() != Use::kTurnChannel) {
+    if (nodeinfo.traffic_signal()) {
+      stop_impact += 2;
+    } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
+      stop_impact++;
+    // penalize rights when driving on the left.
+  } else if (!nodeinfo.drive_on_right() &&
+             (turn_type == Turn::Type::kSharpRight || turn_type == Turn::Type::kRight) &&
+             from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
+             edges[to].use() != Use::kTurnChannel) {
+    if (nodeinfo.traffic_signal()) {
+      stop_impact += 2;
+    } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
+      stop_impact++;
   }
   // Clamp to kMaxStopImpact
   return (stop_impact <= kMaxStopImpact) ? stop_impact : kMaxStopImpact;
@@ -1399,7 +1423,12 @@ void enhance(const boost::property_tree::ptree& pt,
   sequence<OSMAccess> access_tags(access_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
-  bool commercial_data = pt.get<bool>("commercial_data", false);
+  bool infer_internal_intersections =
+      pt.get<bool>("data_processing.infer_internal_intersections", true);
+
+  bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
+
+  bool apply_country_overrides = pt.get<bool>("data_processing.apply_country_overrides", true);
 
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
@@ -1584,8 +1613,7 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // only process country access logic if the iso country codes match.
-        if (country_code == end_node_code) {
-
+        if (apply_country_overrides && country_code == end_node_code) {
           // country access logic.
           // if the (auto, bike, foot, etc) tag flag is set in the OSMAccess
           // struct, then this means that it has been set by a user of the
@@ -1684,7 +1712,7 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // Update speed.
-        UpdateSpeed(directededge, density, urban_rc_speed);
+        UpdateSpeed(directededge, density, urban_rc_speed, infer_turn_channels);
 
         // Update the named flag
         auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNamesAndTypes();
@@ -1713,7 +1741,8 @@ void enhance(const boost::property_tree::ptree& pt,
           // find the edge that has the same wayid as the current DE
           // if it is internal, then add turn lanes for this edge and not the internal one
           // if not internal, then do not add turn lanes for this DE and leave them on the next one.
-          if (!IsNextEdgeInternal(directededge, tilebuilder, reader, lock, commercial_data)) {
+          if (!IsNextEdgeInternal(directededge, tilebuilder, reader, lock,
+                                  infer_internal_intersections)) {
             directededge.set_turnlanes(false);
           }
         }
@@ -1723,8 +1752,9 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Test if an internal intersection edge. Must do this after setting
         // opposing edge index
-        if (!commercial_data && IsIntersectionInternal(&tilebuilder, reader, lock, startnode,
-                                                       nodeinfo, directededge, j)) {
+        if (infer_internal_intersections &&
+            IsIntersectionInternal(&tilebuilder, reader, lock, startnode, nodeinfo, directededge,
+                                   j)) {
           directededge.set_internal(true);
         }
 
