@@ -51,6 +51,18 @@ struct MatchResult {
       return Type::kUnmatched;
     }
   }
+
+  // Stream output
+  friend std::ostream& operator<<(std::ostream& os, const MatchResult& r) {
+    os << std::fixed << std::setprecision(3);
+    os << "lnglat: " << r.lnglat.lng() << "," << r.lnglat.lat()
+       << ", distance_from: " << r.distance_from << ", edgeid: " << r.edgeid
+       << ", distance_along: " << r.distance_along << ", epoch_time: " << r.epoch_time
+       << ", stateid: " << r.stateid.value() << ", is_break_point:" << r.is_break_point
+       << ", begins_discontinuity:" << r.begins_discontinuity
+       << ", ends_discontinuity:" << r.ends_discontinuity << ", edge_index: " << r.edge_index;
+    return os;
+  }
 };
 
 struct EdgeSegment {
@@ -76,9 +88,9 @@ struct EdgeSegment {
   // Stream output
   friend std::ostream& operator<<(std::ostream& os, const EdgeSegment& segment) {
     os << std::fixed << std::setprecision(3);
-    os << "edgeid: " << segment.edgeid << " source : " << segment.source
-       << ", target : " << segment.target << ", first match idx : " << segment.first_match_idx
-       << ", last match idx : " << segment.last_match_idx
+    os << "edgeid: " << segment.edgeid << ", source: " << segment.source
+       << ", target: " << segment.target << ", first match idx: " << segment.first_match_idx
+       << ", last match idx: " << segment.last_match_idx
        << ", discontinuity: " << segment.discontinuity;
     return os;
   }
@@ -131,6 +143,19 @@ struct MatchResults {
   float score;
   std::vector<uint64_t>::const_iterator e1;
   std::vector<uint64_t>::const_iterator e2;
+
+  // Stream output
+  friend std::ostream& operator<<(std::ostream& os, const MatchResults& mrs) {
+    os << "MatchResults:" << std::endl;
+    for (const auto& r : mrs.results) {
+      os << r << std::endl;
+    }
+    os << "EdgeSegments:" << std::endl;
+    for (const auto& s : mrs.segments) {
+      os << s << std::endl;
+    }
+    return os;
+  }
 };
 
 } // namespace meili

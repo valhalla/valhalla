@@ -738,6 +738,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     // Construct a result
     auto segments = ConstructRoute(*this, best_path, graphreader_);
     MatchResults match_results(std::move(best_path), std::move(segments), accumulated_cost);
+    std::cout << match_results << std::endl;
 
     // We'll keep it if we don't have a duplicate already
     auto found_path = std::find(best_paths.rbegin(), best_paths.rend(), match_results);
