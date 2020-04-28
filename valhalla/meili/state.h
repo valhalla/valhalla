@@ -122,12 +122,15 @@ public:
   }
 
   std::string geojson(const StateId& s) const {
-    return geojson(state(s));
+    if (s.IsValid()) {
+      return geojson(state(s));
+    }
+    return R"({"type":"Feature","geometry":null,"properties":{}})";
   }
 
   std::string geojson(const State& s) const {
     std::stringstream ss;
-    ss << std::setprecision(7) << std::fixed
+    ss << std::setprecision(6) << std::fixed
        << R"({"type":"Feature","geometry":{"type":"Point","coordinates":[)";
     ss << s.candidate().edges[0].projected.lng() << ',' << s.candidate().edges[0].projected.lat()
        << "]}";
