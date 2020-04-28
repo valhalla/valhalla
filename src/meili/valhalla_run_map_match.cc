@@ -1,6 +1,7 @@
-#include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
+#include <glog/logging.h>
 
+#include "baldr/rapidjson_utils.h"
 #include "meili/map_matcher_factory.h"
 #include "meili/measurement.h"
 
@@ -36,8 +37,9 @@ ReadMeasurements(istream_t& istream, float default_gps_accuracy, float default_s
 }
 
 int main(int argc, char* argv[]) {
+  google::InitGoogleLogging(argv[0]);
   if (argc < 2) {
-    std::cout << "usage: map_matching CONFIG" << std::endl;
+    LOG(ERROR) << "usage: map_matching CONFIG";
     return 1;
   }
 
@@ -45,9 +47,7 @@ int main(int argc, char* argv[]) {
   rapidjson::read_json(argv[1], config);
   const std::string modename = config.get<std::string>("meili.mode");
   valhalla::Costing costing;
-  if (!valhalla::Costing_Enum_Parse(modename, &costing)) {
-    throw std::runtime_error("No costing method found");
-  }
+  CHECK(!valhalla::Costing_Enum_Parse(modename, &costing)) << "No costing method found";
 
   MapMatcherFactory matcher_factory(config);
   auto mapmatcher = matcher_factory.Create(costing);

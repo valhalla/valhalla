@@ -25,3 +25,6 @@
 [submodule "third_party/benchmark"]
 	path = third_party/benchmark
 	url = https://github.com/google/benchmark
+[submodule "third_party/glog"]
+	path = third_party/glog
+	url = https://github.com/google/glog
