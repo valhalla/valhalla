@@ -232,6 +232,9 @@ elseif(NOT Boost_FOUND)
 endif()
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
+## Add external logging
+add_subdirectory(third_party/glog)
+
 ## libvalhalla
 add_subdirectory(src)
 
