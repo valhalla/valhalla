@@ -193,7 +193,7 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
   // get the path between the two uninterpolated states
   std::vector<EdgeSegment> route;
   MergeRoute(mapmatcher.state_container().state(stateid),
-             mapmatcher.state_container().state(next_stateid), route);
+             mapmatcher.state_container().state(next_stateid), route, last_result);
 
   // for each point that needs interpolated
   std::vector<EdgeSegment>::const_iterator left_most_segment = route.begin();
@@ -201,15 +201,6 @@ std::vector<MatchResult> InterpolateMeasurements(const MapMatcher& mapmatcher,
   midgard::PointLL left_most_projection = first_result.lnglat;
 
   for (const auto& measurement : measurements) {
-    // its possible that both states were the same point which means no path to interpolate on
-    // this means the interpolation is also the same point
-    if (route.empty()) {
-      results.push_back({first_result.lnglat, first_result.distance_from, first_result.edgeid,
-                         first_result.distance_along, measurement.epoch_time(), StateId(),
-                         measurement.is_break_point()});
-      continue;
-    }
-
     // we need some info about the measurement to figure out what the best interpolation would be
     const auto& match_measurement = mapmatcher.state_container().measurement(stateid.time());
     const auto match_measurement_distance = GreatCircleDistance(measurement, match_measurement);
@@ -473,7 +464,8 @@ void MapMatcher::Clear() {
   container_.Clear();
 }
 
-void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result) {
+void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result,
+                                    const std::vector<MatchResult>& results) {
   if (result.empty()) {
     return;
   }
@@ -487,7 +479,7 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result) {
     for (const auto& right_candidate : container_.column(time + 1)) {
       std::vector<EdgeSegment> edges;
       if (!ts_.IsRemoved(right_candidate.stateid()) &&
-          MergeRoute(left_used_candidate, right_candidate, edges)) {
+          MergeRoute(left_used_candidate, right_candidate, edges, results[time + 1])) {
         paths_from_winner.emplace(right_candidate.stateid(), std::move(edges));
       }
     }
@@ -513,7 +505,7 @@ void MapMatcher::RemoveRedundancies(const std::vector<StateId>& result) {
         // If there is no route its not really unique since we dont need discontinuities
         std::vector<EdgeSegment> edges;
         if (ts_.IsRemoved(right_candidate.stateid()) ||
-            !MergeRoute(left_unused_candidate, right_candidate, edges)) {
+            !MergeRoute(left_unused_candidate, right_candidate, edges, results[time + 1])) {
           continue;
         }
 
@@ -759,7 +751,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     // also we want to avoid removing path for the last best path
     if (!found_broken_path && best_paths.size() < k) {
       // Remove all the candidates pairs whose paths are redundant with this one
-      RemoveRedundancies(original_state_ids);
+      RemoveRedundancies(original_state_ids, results);
       // Remove this particular sequence of stateids
       ts_.RemovePath(state_ids);
       // Prepare for a fresh search in the next search iteration

@@ -85,8 +85,8 @@ private:
 
   StateId::Time AppendMeasurement(const Measurement& measurement, const float sq_max_search_radius);
 
-  void RemoveRedundancies(const std::vector<StateId>& result);
-  // void RemoveRedundancies(const MatchResults& path, std::vector<StateId>& result);
+  void RemoveRedundancies(const std::vector<StateId>& result,
+                          const std::vector<MatchResult>& results);
 
   boost::property_tree::ptree config_;
 
@@ -112,7 +112,10 @@ private:
   TransitionCostModel transition_cost_model_;
 };
 
-bool MergeRoute(const State& source, const State& target, std::vector<EdgeSegment>& route);
+bool MergeRoute(const State& source,
+                const State& target,
+                std::vector<EdgeSegment>& route,
+                const MatchResult& target_result);
 
 std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
                                         const std::vector<MatchResult>& match_results,

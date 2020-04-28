@@ -194,7 +194,10 @@ bool EdgeSegment::Adjoined(baldr::GraphReader& graphreader, const EdgeSegment& o
   }
 }
 
-bool MergeRoute(const State& source, const State& target, std::vector<EdgeSegment>& route) {
+bool MergeRoute(const State& source,
+                const State& target,
+                std::vector<EdgeSegment>& route,
+                const MatchResult& target_result) {
   const auto route_rbegin = source.RouteBegin(target), route_rend = source.RouteEnd();
 
   // No route, discontinuity
@@ -214,6 +217,13 @@ bool MergeRoute(const State& source, const State& target, std::vector<EdgeSegmen
   // Make sure the first edge has an invalid predecessor
   if (label->predecessor() != baldr::kInvalidLabel) {
     throw std::logic_error("The first edge must be an origin (invalid predecessor)");
+  }
+
+  // TODO: why doesnt routing.cc return trivial routes? move this logic there
+  // This is route where the source and target are the same location so we make a trivial route
+  if (segments.empty()) {
+    segments.emplace_back(target_result.edgeid, target_result.distance_along,
+                          target_result.distance_along);
   }
 
   route.insert(route.end(), segments.crbegin(), segments.crend());
@@ -294,22 +304,13 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       // then reverse merge the segments together which are on the same edge so we have a
       // minimum number of segments. in this case we could at minimum end up with 1 segment
       segments.clear();
-      if (!MergeRoute(prev_state, state, segments)) {
+      if (!MergeRoute(prev_state, state, segments, match)) {
         // we are only discontinuous but only if this isnt the beginning of the route
         route.back().discontinuity = !route.empty();
         // next pair
         prev_idx = curr_idx;
         prev_match = &match;
         continue;
-      }
-
-      // TODO: why doesnt routing.cc return trivial routes? move this logic there
-      // This signifies a route where the source and target are the same location
-      if (segments.empty()) {
-        // Make a trivial route
-        const auto& match_result = match_results[curr_idx];
-        segments.emplace_back(match_result.edgeid, match_result.distance_along,
-                              match_result.distance_along);
       }
 
       // we need to cut segments where a match result is marked as a break
