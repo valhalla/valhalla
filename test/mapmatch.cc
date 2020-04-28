@@ -1373,7 +1373,7 @@ TEST(Mapmatch, duplicated_end_points) {
 } // namespace
 
 int main(int argc, char* argv[]) {
-  midgard::logging::Configure({{"type", ""}}); // silence logs
+  // midgard::logging::Configure({{"type", ""}}); // silence logs
   if (argc > 1 && std::string(argv[1]).find("gtest") == std::string::npos) {
     if (argc > 1)
       seed = std::stoi(argv[1]);
