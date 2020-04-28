@@ -1,43 +1,9 @@
 #include "test.h"
-#include <cstdint>
-#include <fstream>
 
-#include "baldr/graphid.h"
-#include "baldr/graphreader.h"
-#include "baldr/location.h"
-#include "baldr/rapidjson_utils.h"
-#include "baldr/tilehierarchy.h"
-#include "filesystem.h"
-#include "loki/search.h"
 #include "loki/worker.h"
-#include "midgard/pointll.h"
-#include "midgard/vector2.h"
-#include "mjolnir/graphbuilder.h"
-#include "mjolnir/graphenhancer.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/graphvalidator.h"
-#include "mjolnir/pbfgraphparser.h"
-#include "odin/directionsbuilder.h"
 #include "odin/worker.h"
-#include "sif/costconstants.h"
-#include "sif/dynamiccost.h"
-#include "sif/pedestriancost.h"
-#include "thor/astar.h"
-#include "thor/attributes_controller.h"
-#include "thor/bidirectional_astar.h"
-#include "thor/pathalgorithm.h"
-#include "thor/timedep.h"
-#include "thor/triplegbuilder.h"
 #include "thor/worker.h"
-#include "tyr/serializers.h"
 
-#include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/options.pb.h>
-#include <valhalla/proto/trip.pb.h>
-
-#include <boost/algorithm/string/join.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <algorithm> // std::copy
@@ -49,12 +15,8 @@
 namespace bpt = boost::property_tree;
 
 using namespace valhalla;
-namespace vm = valhalla::midgard;
-namespace vb = valhalla::baldr;
-namespace vs = valhalla::sif;
 namespace vt = valhalla::thor;
 namespace vk = valhalla::loki;
-namespace vj = valhalla::mjolnir;
 namespace vo = valhalla::odin;
 
 #include "mjolnir/directededgebuilder.h"
