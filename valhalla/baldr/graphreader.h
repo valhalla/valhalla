@@ -2,17 +2,22 @@
 #define VALHALLA_BALDR_GRAPHREADER_H_
 
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
 
 #include <boost/property_tree/ptree.hpp>
+
 #include <valhalla/baldr/curler.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/tilegetter.h>
 #include <valhalla/baldr/tilehierarchy.h>
+
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/sequence.h>
 
 namespace valhalla {
 namespace baldr {
@@ -331,9 +336,18 @@ class GraphReader {
 public:
   /**
    * Constructor using tiles as separate files.
-   * @param pt  Property tree listing the configuration for the tile storage.
+   * @param pt  Property tree listing the configuration for the tile storage
+   * @param tile_getter Object responsible for getting tiles by url. If nullptr default implementation
+   * is in use.
    */
-  GraphReader(const boost::property_tree::ptree& pt);
+  explicit GraphReader(const boost::property_tree::ptree& pt,
+                       std::unique_ptr<tile_getter_t>&& tile_getter = nullptr);
+
+  void SetInterrupt(const tile_getter_t::interrupt_t* interrupt) {
+    if (tile_getter_) {
+      tile_getter_->set_interrupt(interrupt);
+    }
+  }
 
   /**
    * Test if tile exists
@@ -405,7 +419,7 @@ public:
    * use the reader concurrently without blocking
    */
   size_t MaxConcurrentUsers() const {
-    return curlers_->size();
+    return max_concurrent_users_;
   }
 
   /**
@@ -738,7 +752,14 @@ public:
 
 protected:
   // (Tar) extract of tiles - the contents are empty if not being used
-  struct tile_extract_t;
+  struct tile_extract_t {
+    tile_extract_t(const boost::property_tree::ptree& pt);
+    // TODO: dont remove constness, and actually make graphtile read only?
+    std::unordered_map<uint64_t, std::pair<char*, size_t>> tiles;
+    std::unordered_map<uint64_t, std::pair<char*, size_t>> traffic_tiles;
+    std::shared_ptr<midgard::tar> archive;
+    std::shared_ptr<midgard::tar> traffic_archive;
+  };
   std::shared_ptr<const tile_extract_t> tile_extract_;
   static std::shared_ptr<const GraphReader::tile_extract_t>
   get_extract_instance(const boost::property_tree::ptree& pt);
@@ -747,9 +768,9 @@ protected:
   const std::string tile_dir_;
 
   // Stuff for getting at remote tiles
-  std::unique_ptr<curler_pool_t> curlers_;
+  std::unique_ptr<tile_getter_t> tile_getter_;
+  const size_t max_concurrent_users_;
   const std::string tile_url_;
-  const bool tile_url_gz_;
 
   std::mutex _404s_lock;
   std::unordered_set<GraphId> _404s;

@@ -19,3 +19,9 @@
 [submodule "third_party/protozero"]
 	path = third_party/protozero
 	url = https://github.com/mapbox/protozero.git
+[submodule "third_party/microtar"]
+	path = third_party/microtar
+	url = https://github.com/rxi/microtar.git
+[submodule "third_party/benchmark"]
+	path = third_party/benchmark
+	url = https://github.com/google/benchmark

@@ -6,7 +6,6 @@
 #include "mjolnir/util.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 #include <future>
 #include <set>
@@ -558,22 +557,22 @@ void BuildTileSet(const std::string& ways_file,
           } else if (!forward && w.backward_tagged_speed()) {
             speed = w.backward_speed();
           }
-          if (speed > kMaxSpeedKph) {
+          if (speed > kMaxAssumedSpeed) {
             LOG_WARN("Speed = " + std::to_string(speed) + " wayId= " + std::to_string(w.way_id()));
-            speed = kMaxSpeedKph;
+            speed = kMaxAssumedSpeed;
           }
           uint32_t speed_limit = w.speed_limit();
-          if (speed_limit > kMaxSpeedKph && speed_limit != kUnlimitedSpeedLimit) {
+          if (speed_limit > kMaxAssumedSpeed && speed_limit != kUnlimitedSpeedLimit) {
             LOG_WARN("Speed limit = " + std::to_string(speed_limit) +
                      " wayId= " + std::to_string(w.way_id()));
-            speed_limit = kMaxSpeedKph;
+            speed_limit = kMaxAssumedSpeed;
           }
 
           uint32_t truck_speed = w.truck_speed();
-          if (truck_speed > kMaxSpeedKph) {
+          if (truck_speed > kMaxAssumedSpeed) {
             LOG_WARN("Truck Speed = " + std::to_string(truck_speed) +
                      " wayId= " + std::to_string(w.way_id()));
-            truck_speed = kMaxSpeedKph;
+            truck_speed = kMaxAssumedSpeed;
           }
 
           // Cul du sac
@@ -1173,7 +1172,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   }
 
   // Reclassify ferry connection edges - use the highway classification cutoff
-  RoadClass rc = RoadClass::kPrimary;
+  baldr::RoadClass rc = baldr::RoadClass::kPrimary;
   for (auto& level : TileHierarchy::levels()) {
     if (level.second.name == "highway") {
       rc = level.second.importance;

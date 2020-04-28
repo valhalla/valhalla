@@ -422,5 +422,57 @@ std::vector<baldr::GraphId> nodes_in_bbox(const vm::AABB2<vm::PointLL>& bbox,
   return nodes;
 }
 
+std::vector<baldr::GraphId> edges_in_bbox(const vm::AABB2<vm::PointLL>& bbox,
+                                          baldr::GraphReader& reader) {
+
+  auto tiles = vb::TileHierarchy::levels().rbegin()->second.tiles;
+  const uint8_t bin_level = vb::TileHierarchy::levels().rbegin()->second.level;
+
+  // if the bbox only touches the edge of the tile or bin, then we need to
+  // include neighbouring bins as well, in case both the edge and its opposite
+  // were tie-broken into a bin which doesn't intersect the original bbox.
+  auto expanded_bboxes = expand_bbox_across_boundaries(bbox, tiles);
+  auto intersections = merge_intersections(expanded_bboxes, tiles);
+
+  // we cache the last tile lookup, since the nodes and tweeners arrays are in
+  // order then this guarantees the smallest number of times we have to look up
+  // a new tile from the reader.
+  tile_cache cache(reader);
+
+  std::vector<vb::GraphId> edge_ids;
+  for (const auto& entry : intersections) {
+    vb::GraphId tile_id(entry.first, bin_level, 0);
+    // tile might not exist - the Tiles::Intersect routine returns all tiles
+    // which might intersect, regardless of whether any of them exist.
+    auto& tile = cache(tile_id);
+    if (!tile.exists()) {
+      continue;
+    }
+
+    for (auto bin_id : entry.second) {
+      for (auto edge_id : tile.tile()->GetBin(bin_id)) {
+        edge_ids.push_back(edge_id);
+      }
+    }
+  }
+
+  // erase the duplicates by sorting
+  {
+    std::sort(edge_ids.begin(), edge_ids.end(), [](const auto a, const auto b) {
+      // This ordering means when we iterate over this list, it'll be
+      // cache friendly, in-memory-order
+      if (a.level() == b.level())
+        return a.tileid() < b.tileid();
+      if (a.tileid() == b.tileid())
+        return a.id() < b.id();
+      return a.level() < b.level();
+    });
+    auto uniq_end = std::unique(edge_ids.begin(), edge_ids.end());
+    edge_ids.erase(uniq_end, edge_ids.end());
+  }
+
+  return edge_ids;
+}
+
 } // namespace loki
 } // namespace valhalla

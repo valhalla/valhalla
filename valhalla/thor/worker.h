@@ -56,6 +56,8 @@ public:
   std::string trace_attributes(Api& request);
   std::string expansion(Api& request);
 
+  void set_interrupt(const std::function<void()>* interrupt) override;
+
 protected:
   std::vector<std::vector<thor::PathInfo>> get_path(PathAlgorithm* path_algorithm,
                                                     Location& origin,

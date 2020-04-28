@@ -224,10 +224,10 @@ void test_viterbi_search(const std::vector<Column>& columns) {
         print_trellis_diagram_vertically(columns);
 
         std::cout << "PATH OF NA" << std::endl;
-        print_path_reversely(columns, na.SearchPath(time), na.PathEnd());
+        print_path_reversely(columns, na.SearchPathVS(time), na.PathEnd());
 
         std::cout << "PATH OF VS" << std::endl;
-        print_path_reversely(columns, vs.SearchPath(time), vs.PathEnd());
+        print_path_reversely(columns, vs.SearchPathVS(time), vs.PathEnd());
       }
       EXPECT_EQ(na.AccumulatedCost(na_winner), vs.AccumulatedCost(vs_winner))
           << "costs should be both optimal";
@@ -447,7 +447,7 @@ void test_viterbisearch_brute_force(const std::vector<Column>& columns, IViterbi
     validate_path(columns, pc.path());
 
     std::vector<StateId> vs_path, original_state_ids;
-    std::copy(vs.SearchPath(time), vs.PathEnd(), std::back_inserter(vs_path));
+    std::copy(vs.SearchPathVS(time), vs.PathEnd(), std::back_inserter(vs_path));
     for (auto s_itr = vs_path.rbegin(); s_itr != vs_path.rend(); ++s_itr)
       original_state_ids.push_back(ts.GetOrigin(*s_itr, *s_itr));
     validate_path(columns, original_state_ids);

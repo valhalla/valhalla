@@ -1,7 +1,6 @@
 #include "loki/search.h"
 #include <cstdint>
 
-#include <boost/filesystem.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <unordered_set>
 
@@ -10,6 +9,7 @@
 #include "baldr/location.h"
 #include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
 #include "sif/nocost.h"
@@ -49,8 +49,8 @@ std::pair<GraphId, PointLL> c({tile_id.tileid(), tile_id.level(), 2}, {.01, .01}
 std::pair<GraphId, PointLL> d({tile_id.tileid(), tile_id.level(), 3}, {.2, .1});
 
 void clean_tiles() {
-  if (boost::filesystem::is_directory(tile_dir)) {
-    boost::filesystem::remove_all(tile_dir);
+  if (filesystem::is_directory(tile_dir)) {
+    filesystem::remove_all(tile_dir);
   }
 }
 

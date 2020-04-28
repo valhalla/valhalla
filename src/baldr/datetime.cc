@@ -13,28 +13,59 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 
+namespace {
+// use a cache to store already constructed sys_info's since they aren't cheap
+template <typename TP>
+const date::sys_info&
+from_cache(const TP& tp,
+           const date::time_zone* tz,
+           std::unordered_map<const date::time_zone*, std::vector<date::sys_info>>& cache) {
+  // check if we have anything for this timezone in the cache
+  auto tz_it = cache.find(tz);
+  if (tz_it != cache.cend()) {
+    // we have something in the cache, see if one of the infos has the particular time point in range
+    auto st = date::floor<std::chrono::seconds>(tp.get_sys_time());
+    auto info_it =
+        std::find_if(tz_it->second.begin(), tz_it->second.end(),
+                     [&st](const date::sys_info& info) { return info.begin <= st && st < info.end; });
+
+    // if it was in the cache we return it
+    if (info_it != tz_it->second.cend()) {
+      return *info_it;
+    }
+  }
+
+  // either this timezone is new or the right info for the range was missing so lets get it
+  auto& infos = tz_it == cache.cend() ? cache.emplace(tz, std::vector<date::sys_info>{}).first->second
+                                      : tz_it->second;
+  infos.emplace_back(tp.get_info());
+  return infos.back();
+}
+} // namespace
+
 using namespace valhalla::baldr;
 namespace valhalla {
 namespace baldr {
 namespace DateTime {
 
 tz_db_t::tz_db_t() : db(date::get_tzdb()) {
-  // load up the tz data
-  for (const auto& z : db.zones) {
-    names.push_back(z.name());
+  // NOTE: outside of this class 0 is reserved for invalid timezone
+  // so we offset each index by 1 to get into the valid range 1-300 or so
+  for (size_t i = 0; i < db.zones.size(); ++i) {
+    names.emplace(db.zones[i].name(), i + 1);
   }
 }
 
 size_t tz_db_t::to_index(const std::string& zone) const {
-  auto it = std::find(names.cbegin(), names.cend(), zone);
+  auto it = names.find(zone);
   if (it == names.cend()) {
     return 0;
   }
-  return (it - names.cbegin()) + 1;
+  return it->second;
 }
 
 const date::time_zone* tz_db_t::from_index(size_t index) const {
-  if (index < 1 || index > names.size()) {
+  if (index < 1 || index > db.zones.size()) {
     return nullptr;
   }
   return &db.zones[index - 1];
@@ -101,7 +132,8 @@ uint64_t seconds_since_epoch(const std::string& date_time, const date::time_zone
 // so that DST can be take into account). Returns the difference in seconds.
 int timezone_diff(const uint64_t seconds,
                   const date::time_zone* origin_tz,
-                  const date::time_zone* dest_tz) {
+                  const date::time_zone* dest_tz,
+                  std::unordered_map<const date::time_zone*, std::vector<date::sys_info>>* cache) {
 
   if (!origin_tz || !dest_tz || origin_tz == dest_tz) {
     return 0;
@@ -112,13 +144,20 @@ int timezone_diff(const uint64_t seconds,
   const auto origin = date::make_zoned(origin_tz, tp);
   const auto dest = date::make_zoned(dest_tz, tp);
 
-  auto duration = std::chrono::duration_cast<std::chrono::seconds>(origin.get_local_time() -
-                                                                   dest.get_local_time());
-  if (origin.get_info().offset < dest.get_info().offset) {
-    return abs(duration.count());
-  } else {
-    return -1 * abs(duration.count());
+  // if we have a cache use it
+  if (cache) {
+    const auto& origin_info = from_cache(origin, origin_tz, *cache);
+    const auto& dest_info = from_cache(dest, dest_tz, *cache);
+    return static_cast<int>(
+        std::chrono::duration_cast<std::chrono::seconds>(dest_info.offset - origin_info.offset)
+            .count());
   }
+
+  const auto& origin_info = origin.get_info();
+  const auto& dest_info = dest.get_info();
+  return static_cast<int>(
+      std::chrono::duration_cast<std::chrono::seconds>(dest_info.offset - origin_info.offset)
+          .count());
 }
 
 std::string
@@ -246,6 +285,7 @@ bool is_conditional_active(const bool type,
   std::chrono::seconds dur(current_time);
   std::chrono::time_point<std::chrono::system_clock> tp(dur);
 
+  uint32_t e_year = 0, b_year = 0;
   const auto in_local_time = date::make_zoned(time_zone, tp);
   auto date = date::floor<date::days>(in_local_time.get_local_time());
   auto d = date::year_month_day(date);
@@ -317,6 +357,7 @@ bool is_conditional_active(const bool type,
       e_day_dow = unsigned((date::year_month(e_d.year(), e_d.month()) / date::last).day());
     }
 
+    bool edge_case = false; // Jan 04 to Jan 01
     // month only
     if (type == kYMD && (b_month && e_month) && (!b_day_dow && !e_day_dow && !b_week && !b_week) &&
         b_month == e_month) {
@@ -332,10 +373,10 @@ bool is_conditional_active(const bool type,
       return (dow_in_range && dt_in_range);
     } else if (type == kYMD && b_month && b_day_dow) {
 
-      uint32_t e_year = int(d.year()), b_year = int(d.year());
+      e_year = int(d.year()), b_year = int(d.year());
       if (b_month == e_month) {
         if (b_day_dow > e_day_dow) { // Mar 15 - Mar 1
-          e_year = int(d.year()) + 1;
+          edge_case = true;
         }
       } else if (b_month > e_month) { // Oct 10 - Mar 3
         if (b_month > unsigned(d.month())) {
@@ -353,10 +394,10 @@ bool is_conditional_active(const bool type,
                e_day_dow) { // kNthDow types can have a mix of ymd and nthdow. (e.g. Dec Su[-1]-Mar
                             // 3 Sat 15:00-17:00)
 
-      uint32_t e_year = int(d.year()), b_year = int(d.year());
+      e_year = int(d.year()), b_year = int(d.year());
       if (b_month == e_month) {
         if (b_day_dow > e_day_dow) { // Mar 15 - Mar 1
-          e_year = int(d.year()) + 1;
+          edge_case = true;
         }
       } else if (b_month > e_month) { // Oct 10 - Mar 3
         if (b_month > unsigned(d.month())) {
@@ -426,8 +467,30 @@ bool is_conditional_active(const bool type,
     auto local_dt = date::make_zoned(time_zone, date::local_days(d));
     auto e_in_local_time = date::make_zoned(time_zone, date::local_days(end_date));
 
-    dt_in_range = (b_in_local_time.get_local_time() <= local_dt.get_local_time() &&
-                   local_dt.get_local_time() <= e_in_local_time.get_local_time());
+    if (edge_case) {
+
+      // Jan 04 to Jan 02.  We need to test to end of the year and then from the first of the
+      // year to the end date.
+
+      // begin date = Jan 04, 2021
+      // end date = Jan 02, 2021
+      date::year_month_day new_ed =
+          date::year_month_day(date::year(b_year), date::month(12), date::day(31));
+      auto new_e_in_local_time = date::make_zoned(time_zone, date::local_days(new_ed));
+
+      date::year_month_day new_bd =
+          date::year_month_day(date::year(b_year), date::month(1), date::day(1));
+      auto new_b_in_local_time = date::make_zoned(time_zone, date::local_days(new_bd));
+
+      // we need to check Jan 04, 2021 to Dec 31, 2021 and Jan 01, 2021 to Jan 02, 2021
+      dt_in_range = (((b_in_local_time.get_local_time() <= local_dt.get_local_time() &&
+                       local_dt.get_local_time() <= new_e_in_local_time.get_local_time())) ||
+                     ((new_b_in_local_time.get_local_time() <= local_dt.get_local_time() &&
+                       local_dt.get_local_time() <= e_in_local_time.get_local_time())));
+    } else {
+      dt_in_range = (b_in_local_time.get_local_time() <= local_dt.get_local_time() &&
+                     local_dt.get_local_time() <= e_in_local_time.get_local_time());
+    }
 
     bool time_in_range = false;
 

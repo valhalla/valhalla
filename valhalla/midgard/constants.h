@@ -20,6 +20,7 @@ constexpr uint32_t kSecondsPerDay = 86400;
 constexpr uint32_t kSecondsPerWeek = 604800;
 
 // Distance constants
+constexpr float kFeetPerMile = 5280.0f;
 constexpr float kFeetPerMeter = 3.2808399f;
 constexpr float kMetersPerKm = 1000.0f;
 constexpr float kKmPerMeter = 0.001f;
