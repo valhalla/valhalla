@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/filesystem/operations.hpp>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
@@ -117,7 +116,7 @@ Transit read_pbf(const GraphId& id, const std::string& transit_dir, std::string&
   return transit;
 }
 
-void write_pbf(const Transit& tile, const boost::filesystem::path& transit_tile) {
+void write_pbf(const Transit& tile, const filesystem::path& transit_tile) {
   // check for empty stop pairs and routes.
   if (tile.stop_pairs_size() == 0 && tile.routes_size() == 0 && tile.shapes_size() == 0) {
     LOG_WARN(transit_tile.string() + " had no data and will not be stored");
@@ -125,8 +124,8 @@ void write_pbf(const Transit& tile, const boost::filesystem::path& transit_tile)
   }
 
   // write pbf to file
-  if (!boost::filesystem::exists(transit_tile.parent_path())) {
-    boost::filesystem::create_directories(transit_tile.parent_path());
+  if (!filesystem::exists(transit_tile.parent_path())) {
+    filesystem::create_directories(transit_tile.parent_path());
   }
   auto size = tile.ByteSize();
   valhalla::midgard::mem_map<char> buffer;

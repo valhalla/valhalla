@@ -8,10 +8,12 @@
 #include <valhalla/midgard/linesegment2.h>
 #include <valhalla/midgard/point2.h>
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace midgard {
+
+// Intersection cases.
+enum IntersectCase { kWithin, kContains, kOutside, kIntersects };
 
 /**
  * Ellipse. Methods to construct an ellipse, test if a line segment intersects,
@@ -63,6 +65,14 @@ public:
    *          false if outside the ellipse.
    */
   bool Contains(const coord_t& pt) const;
+
+  /**
+   * Get the center of the ellipse.
+   * @return Returns the center of the ellipse.
+   */
+  coord_t center() const {
+    return center_;
+  }
 
 private:
   coord_t center_;

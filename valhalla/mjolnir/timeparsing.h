@@ -1,20 +1,9 @@
-#ifndef VALHALLA_MJOLNIR_TIMEPARSING_H
-#define VALHALLA_MJOLNIR_TIMEPARSING_H
+#pragma once
 
 #include <cstdint>
-#include <ctime>
-#include <iomanip>
-#include <iostream>
-#include <locale>
-#include <memory>
-#include <sstream>
 #include <string>
 #include <vector>
 
-#include <boost/date_time/gregorian/gregorian.hpp>
-#include <boost/date_time/local_time/local_time.hpp>
-#include <boost/date_time/local_time/local_time_io.hpp>
-#include <boost/date_time/local_time/tz_database.hpp>
 #include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {
@@ -45,4 +34,3 @@ std::vector<uint64_t> get_time_range(const std::string& condition);
 
 } // namespace mjolnir
 } // namespace valhalla
-#endif // VALHALLA_MJOLNIR_TIMEPARSING_H
