@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
   rapidjson::read_json(argv[1], config);
   const std::string modename = config.get<std::string>("meili.mode");
   valhalla::Costing costing;
-  CHECK(!valhalla::Costing_Enum_Parse(modename, &costing)) << "No costing method found";
+  CHECK(valhalla::Costing_Enum_Parse(modename, &costing)) << "No costing method found";
 
   MapMatcherFactory matcher_factory(config);
   auto mapmatcher = matcher_factory.Create(costing);
