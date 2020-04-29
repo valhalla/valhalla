@@ -58,7 +58,8 @@ struct MatchResult {
     os << "lnglat: " << r.lnglat.lng() << "," << r.lnglat.lat() << std::setprecision(3)
        << ", distance_from: " << r.distance_from << ", edgeid: " << r.edgeid
        << ", distance_along: " << r.distance_along << ", epoch_time: " << r.epoch_time
-       << ", stateid: " << r.stateid.value() << ", is_break_point:" << r.is_break_point
+       << ", stateid.time: " << r.stateid.time() << ", stateid.id: " << r.stateid.id()
+       << ", is_break_point:" << r.is_break_point
        << ", begins_discontinuity:" << r.begins_discontinuity
        << ", ends_discontinuity:" << r.ends_discontinuity << ", edge_index: " << r.edge_index;
     return os;
