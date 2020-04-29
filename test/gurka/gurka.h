@@ -824,23 +824,17 @@ void expect_path_length(const valhalla::Api& result,
   EXPECT_EQ(result.trip().routes_size(), 1);
   EXPECT_EQ(result.trip().routes(0).legs_size(), 1);
 
-  const auto& route = result.trip().routes(0);
+  const auto& route = result.directions().routes(0).legs();
 
   float length_km = 0;
-  for (int legnum = 0; legnum < route.legs_size(); legnum++) {
-    const auto& leg = route.legs(legnum);
-    for (int nodenum = 0; nodenum < leg.node_size(); nodenum++) {
-      const auto& node = leg.node(nodenum);
-      if (node.has_edge()) {
-        length_km += node.edge().length();
-      }
-    }
+  for (const auto& leg : result.directions().routes(0).legs()) {
+    length_km += leg.summary().length();
   }
 
   if (error_margin == 0) {
-    EXPECT_FLOAT_EQ(length_km, expected_length_km);
+    EXPECT_FLOAT_EQ(static_cast<float>(length_km), expected_length_km);
   } else {
-    EXPECT_NEAR(length_km, expected_length_km, error_margin);
+    EXPECT_NEAR(static_cast<float>(length_km), expected_length_km, error_margin);
   }
 }
 
@@ -850,13 +844,11 @@ void expect_eta(const valhalla::Api& result,
   EXPECT_EQ(result.trip().routes_size(), 1);
   EXPECT_EQ(result.trip().routes(0).legs_size(), 1);
 
-  const auto& route = result.trip().routes(0);
+  const auto& route = result.directions().routes(0);
 
   double eta_sec = 0;
-  for (int legnum = 0; legnum < route.legs_size(); legnum++) {
-    const auto& leg = route.legs(legnum);
-    const auto& lastnode = leg.node(leg.node_size() - 1);
-    eta_sec += lastnode.elapsed_time();
+  for (const auto& leg : result.directions().routes(0).legs()) {
+    eta_sec += leg.summary().time();
   }
 
   if (error_margin == 0) {
