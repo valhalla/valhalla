@@ -27,12 +27,8 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
       if (prev_segment->target != segment->source) {
         LOG_ERROR("CASE 1: Found disconnected segments at " +
                   std::to_string(segment - segment_begin));
-        std::stringstream ss;
-        ss << *prev_segment;
-        LOG_ERROR(ss.str());
-        ss.str("");
-        ss << *segment;
-        LOG_ERROR(ss.str());
+        LOG_ERROR(static_cast<std::stringstream&&>(std::stringstream() << *prev_segment).str());
+        LOG_ERROR(static_cast<std::stringstream&&>(std::stringstream() << *segment).str());
         return false;
       }
     } else {
@@ -41,12 +37,8 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
             graphreader.AreEdgesConnectedForward(prev_segment->edgeid, segment->edgeid, tile))) {
         LOG_ERROR("CASE 2: Found disconnected segments at " +
                   std::to_string(segment - segment_begin));
-        std::stringstream ss;
-        ss << *prev_segment;
-        LOG_ERROR(ss.str());
-        ss.str("");
-        ss << *segment;
-        LOG_ERROR(ss.str());
+        LOG_ERROR(static_cast<std::stringstream&&>(std::stringstream() << *prev_segment).str());
+        LOG_ERROR(static_cast<std::stringstream&&>(std::stringstream() << *segment).str());
         return false;
       }
     }
