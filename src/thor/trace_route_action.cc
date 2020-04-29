@@ -323,7 +323,9 @@ void thor_worker_t::build_trace(
   add_path_edge(destination_location, dest_segment->edgeid, dest_segment->target, dest_match->lnglat,
                 dest_match->distance_from);
 
-  // Form the trip path based on mode costing, origin, destination, and path edges
+  // TODO: do we actually need to supply the via/through type locations?
+
+  // actually build the leg and add it to the route
   auto* leg = request.mutable_trip()->add_routes()->add_legs();
   thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, path_edges.begin(),
                               path_edges.end(), *origin_location, *destination_location,
@@ -380,6 +382,9 @@ void thor_worker_t::build_route(
     add_path_edge(destination_location, dest_segment->edgeid, dest_segment->target, dest_match.lnglat,
                   dest_match.distance_from);
 
+    // TODO: do we actually need to supply the via/through type locations?
+
+    // actually build the leg and add it to the route
     TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, path.first.cbegin(),
                           path.first.cend(), *origin_location, *destination_location,
                           std::list<valhalla::Location>{}, *route->mutable_legs()->Add(), interrupt);
