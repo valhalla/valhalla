@@ -333,6 +333,16 @@ void thor_worker_t::build_route(
   std::vector<PathInfo> edges;
   int route_index = 0;
   for (const auto& path : paths) {
+    std::cout << "Path:" << std::endl;
+    for (const auto& p : path.first) {
+      std::cout << p << std::endl;
+    }
+    std::cout << "EdgeSegments:" << std::endl;
+    for (const auto* s : path.second) {
+      std::cout << *s << std::endl;
+    }
+    std::cout << std::endl;
+
     if (route == nullptr) {
       route = request.mutable_trip()->mutable_routes()->Add();
       way_point_index = 0;

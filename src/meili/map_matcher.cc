@@ -743,8 +743,8 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     auto found_path = std::find(best_paths.rbegin(), best_paths.rend(), match_results);
     if (found_path == best_paths.rend()) {
       std::cout << match_results << std::endl;
-      LOG_INFO("Result " + std::to_string(best_paths.size()));
-      LOG_INFO(print_result(container_, original_state_ids));
+      LOG_DEBUG("Result " + std::to_string(best_paths.size()));
+      LOG_DEBUG(print_result(container_, original_state_ids));
       best_paths.emplace_back(std::move(match_results));
     }
 
