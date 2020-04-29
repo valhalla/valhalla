@@ -74,11 +74,6 @@ struct EdgeSegment {
               int the_last_match_idx = -1,
               bool disconnect = false);
 
-  std::vector<midgard::PointLL> Shape(baldr::GraphReader& graphreader) const;
-
-  bool Adjoined(baldr::GraphReader& graphreader, const EdgeSegment& other) const;
-
-  // TODO make them private
   baldr::GraphId edgeid;
   float source{0.f};
   float target{1.f};
