@@ -13,14 +13,20 @@ protected:
   static gurka::map map;
 
   static void SetUpTestSuite() {
-std::cout << "SetUp MtbAccess test" << std::endl;
     constexpr double gridsize = 100;
 
     // A--B
     const std::string ascii_map = R"(A----B----C)";
-    const gurka::ways ways =
-        {{"AB", {{"highway", "cycleway"}, {"sac_scale", "hiking"}, {"mtb:scale:uphill", "2"}}},
-         {"BC", {{"highway", "cycleway"}, {"sac_scale", "mountain_hiking"}, {"mtb:scale:uphill", "2"}}}};
+    const gurka::ways ways = {{"AB",
+                               {{"highway", "cycleway"},
+                                {"sac_scale", "mountain_hiking"},
+                                {"mtb:scale:uphill", "2"},
+                                {"foot", "designated"}}},
+                              {"BC",
+                               {{"highway", "cycleway"},
+                                {"sac_scale", "mountain_hiking"},
+                                {"mtb:scale:uphill", "2"},
+                                {"foot", "designated"}}}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/mtb_access");
