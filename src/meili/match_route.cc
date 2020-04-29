@@ -321,26 +321,10 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       // discontinuity or a break
       if (!prev_match->is_break_point && !route.empty() && !route.back().discontinuity &&
           route.back().edgeid == new_segments.front().edgeid) {
-
-        EdgeSegment& first_half = route.back();
-        EdgeSegment& second_half = new_segments.front();
-
-        // Before merge:               -1          prev_idx      prev_idx, last_match_idx
-        //                first_half    ------------------>      ------------------>  second_half
-        // After merge :               -1                                  last_match_idx
-        //                             ------------------------------------------->  second_half
-        if (first_half.first_match_idx == -1) {
-          second_half.source = 0.f;
-          second_half.first_match_idx = -1;
-        }
-        // Before merge:            first_match_idx, prev_idx   prev_idx,        -1
-        //                first_half    ------------------>      ------------------>  second_half
-        // After merge :             first_match_idx                             -1
-        //                              ------------------------------------------->  second_half
-        if (second_half.last_match_idx == -1) {
-          second_half.target = 1.f;
-          second_half.first_match_idx = route.back().first_match_idx;
-        }
+        // we modify the first segment of the new_segments accordingly to replace the previous
+        // one in the route.
+        new_segments.front().source = route.back().source;
+        new_segments.front().first_match_idx = route.back().first_match_idx;
         route.pop_back();
       }
 
