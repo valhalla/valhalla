@@ -66,6 +66,20 @@ TEST(Ellipse, TestContains) {
   TryContains(e, {3, -1}, true);
 }
 
+void TryCenter(const Ellipse<Point2>& a, const Point2& expected) {
+  EXPECT_EQ(a.center(), expected) << "Ellipse Center test failed: expected: " +
+                                         std::to_string(expected.x()) + "," +
+                                         std::to_string(expected.y());
+}
+
+TEST(Ellipse, TestCenter) {
+  Point2 center(3, 0);
+  Ellipse<Point2> e1({1, 1}, {5, -1}, 0.0f);
+  TryCenter(e1, center);
+  Ellipse<Point2> e2({1, 1}, {5, -1}, 145.0f);
+  TryCenter(e2, center);
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
