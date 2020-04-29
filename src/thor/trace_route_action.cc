@@ -39,14 +39,18 @@ constexpr size_t kRawScoreIndex = 1;
 constexpr size_t kMatchResultsIndex = 2;
 constexpr size_t kTripLegIndex = 3;
 
-void add_path_edge(valhalla::Location* l, const meili::MatchResult& m) {
+void add_path_edge(valhalla::Location* l,
+                   const GraphId& edge_id,
+                   float percent_along,
+                   const midgard::PointLL& ll,
+                   float distance) {
   l->mutable_path_edges()->Clear();
   auto* edge = l->mutable_path_edges()->Add();
-  edge->set_graph_id(m.edgeid);
-  edge->set_percent_along(m.distance_along);
-  edge->mutable_ll()->set_lng(m.lnglat.first);
-  edge->mutable_ll()->set_lat(m.lnglat.second);
-  edge->set_distance(m.distance_from);
+  edge->set_graph_id(edge_id);
+  edge->set_percent_along(percent_along);
+  edge->mutable_ll()->set_lng(ll.first);
+  edge->mutable_ll()->set_lat(ll.second);
+  edge->set_distance(distance);
   // NOTE: we dont need side of street here because the match is continuous we dont know if they were
   // starting a route from the side of the road or whatever so calling that out is not a good idea
   // edge->set_side_of_street();
@@ -242,26 +246,30 @@ void thor_worker_t::build_trace(
     Api& request) {
 
   // loop over all the segments to figure out which edge index belongs to with match result,
-  // to set the discontinuities and to remember the first and last matches we saw
+  // to set the discontinuities and to remember the first and last matches/segments we saw
   std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
   baldr::GraphId last_id;
   size_t edge_index = 0;
   const meili::MatchResult* origin_match = nullptr;
+  const meili::EdgeSegment* origin_segment = nullptr;
   const meili::MatchResult* dest_match = nullptr;
+  const meili::EdgeSegment* dest_segment = nullptr;
   for (const auto& path : paths) {
     // remember the global edge index
-    for (const auto& segment : path.second) {
+    for (const auto* segment : path.second) {
       if (segment->first_match_idx >= 0) {
+        if (!origin_segment) {
+          origin_segment = segment;
+        }
         match_results[segment->first_match_idx].edge_index = edge_index;
         if (!origin_match) {
           origin_match = &match_results[segment->first_match_idx];
         }
       }
       if (segment->last_match_idx >= 0) {
+        dest_segment = segment;
         match_results[segment->last_match_idx].edge_index = edge_index;
-        if (!dest_match) {
-          dest_match = &match_results[segment->last_match_idx];
-        }
+        dest_match = &match_results[segment->last_match_idx];
       }
       if (last_id != segment->edgeid) {
         ++edge_index;
@@ -294,14 +302,6 @@ void thor_worker_t::build_trace(
   if (!origin_match || !dest_match)
     throw valhalla_exception_t{442};
 
-  // initialize the origin and destination location for route
-  Location* origin_location = options.mutable_shape(origin_match - &match_results.front());
-  Location* destination_location = options.mutable_shape(dest_match - &match_results.front());
-
-  // we fake up something that looks like the output of loki
-  add_path_edge(origin_location, *origin_match);
-  add_path_edge(destination_location, *dest_match);
-
   // smash all the path edges into a single vector
   std::vector<PathInfo> path_edges;
   path_edges.reserve(edge_index);
@@ -310,6 +310,18 @@ void thor_worker_t::build_trace(
         !path_edges.empty() && path_edges.back().edgeid == path.first.front().edgeid;
     path_edges.insert(path_edges.end(), path.first.begin() + merge_last_edge, path.first.end());
   }
+
+  // initialize the origin and destination location for route
+  Location* origin_location = options.mutable_shape(origin_match - &match_results.front());
+  Location* destination_location = options.mutable_shape(dest_match - &match_results.front());
+
+  // we fake up something that looks like the output of loki. segment edge id and matchresult edge ids
+  // can disagree at node snaps but leg building requires that we refer to edges in the path. because
+  // of that, we use the segment to get edge and percent but we use matchresult for the snap location
+  add_path_edge(origin_location, origin_segment->edgeid, origin_segment->source, origin_match->lnglat,
+                origin_match->distance_from);
+  add_path_edge(destination_location, dest_segment->edgeid, dest_segment->target, dest_match->lnglat,
+                dest_match->distance_from);
 
   // Form the trip path based on mode costing, origin, destination, and path edges
   auto* leg = request.mutable_trip()->add_routes()->add_legs();
@@ -333,23 +345,15 @@ void thor_worker_t::build_route(
   std::vector<PathInfo> edges;
   int route_index = 0;
   for (const auto& path : paths) {
-    std::cout << "Path:" << std::endl;
-    for (const auto& p : path.first) {
-      std::cout << p << std::endl;
-    }
-    std::cout << "EdgeSegments:" << std::endl;
-    for (const auto* s : path.second) {
-      std::cout << *s << std::endl;
-    }
-    std::cout << std::endl;
-
     if (route == nullptr) {
       route = request.mutable_trip()->mutable_routes()->Add();
       way_point_index = 0;
     }
 
-    int origin_match_idx = path.second.front()->first_match_idx;
-    int dest_match_idx = path.second.back()->last_match_idx;
+    const auto* origin_segment = path.second.front();
+    int origin_match_idx = origin_segment->first_match_idx;
+    const auto* dest_segment = path.second.back();
+    int dest_match_idx = dest_segment->last_match_idx;
 
     for (int i = origin_match_idx; i <= dest_match_idx; ++i) {
       options.mutable_shape(i)->set_route_index(route_index);
@@ -365,11 +369,16 @@ void thor_worker_t::build_route(
     origin_location->set_shape_index(way_point_index);
     destination_location->set_shape_index(++way_point_index);
 
-    // we fake up something that looks like the output of loki
+    // we fake up something that looks like the output of loki. segment edge id and matchresult edge
+    // ids can disagree at node snaps but leg building requires that we refer to edges in the path.
+    // because of that, we use the segment to get edge and percent but we use matchresult for the snap
+    // location
     const auto& origin_match = match_results[origin_match_idx];
     const auto& dest_match = match_results[dest_match_idx];
-    add_path_edge(origin_location, origin_match);
-    add_path_edge(destination_location, dest_match);
+    add_path_edge(origin_location, origin_segment->edgeid, origin_segment->source,
+                  origin_match.lnglat, origin_match.distance_from);
+    add_path_edge(destination_location, dest_segment->edgeid, dest_segment->target, dest_match.lnglat,
+                  dest_match.distance_from);
 
     TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, path.first.cbegin(),
                           path.first.cend(), *origin_location, *destination_location,

@@ -742,7 +742,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     // We'll keep it if we don't have a duplicate already
     auto found_path = std::find(best_paths.rbegin(), best_paths.rend(), match_results);
     if (found_path == best_paths.rend()) {
-      std::cout << match_results << std::endl;
+      // std::cout << match_results << std::endl;
       LOG_DEBUG("Result " + std::to_string(best_paths.size()));
       LOG_DEBUG(print_result(container_, original_state_ids));
       best_paths.emplace_back(std::move(match_results));
