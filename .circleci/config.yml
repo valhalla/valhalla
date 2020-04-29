@@ -235,14 +235,12 @@ jobs:
       - run: npm install --ignore-scripts
       - run: mkdir -p build
       - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
-      - run: cd build && make utrecht_tiles mapmatch -j4
-      - run: cd build && make run-mapmatch
-        #      - run: make -C build -j4
-        #      - run: make -C build utrecht_tiles
-        #      - run: make -C build -j2 tests
-        #      - run: make -C build -j2 check
-        #      - run: make -C build -j2 benchmarks
-        #      - run: make -C build run-benchmarks
+      - run: make -C build -j4
+      - run: make -C build utrecht_tiles
+      - run: make -C build -j2 tests
+      - run: make -C build -j2 check
+      - run: make -C build -j2 benchmarks
+      - run: make -C build run-benchmarks
       - save_cache:
           key: ccache-release-macos-{{ .Branch }}-{{ epoch }}
           paths:
