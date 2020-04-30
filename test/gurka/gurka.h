@@ -559,7 +559,7 @@ std::tuple<const baldr::GraphId,
            const baldr::GraphId,
            const baldr::DirectedEdge*>
 findEdge(valhalla::baldr::GraphReader& reader,
-         const std::unordered_map<std::string, midgard::PointLL>& nodes,
+         const nodelayout& nodes,
          const std::string& way_name,
          const std::string& end_node,
          const baldr::GraphId& tile_id = baldr::GraphId{}) {
