@@ -44,6 +44,7 @@
    * FIXED: Fix short route trimming in bidirectional astar [#2323](https://github.com/valhalla/valhalla/pull/2323)
    * FIXED: Fix shape trimming in leg building for snap candidates that lie within the margin of rounding error [#2326](https://github.com/valhalla/valhalla/pull/2326)
    * FIXED: Fixes route duration underflow with traffic data [#2325](https://github.com/valhalla/valhalla/pull/2325)
+   * FIXED: Parse mtb:scale tags and set bicycle access if present [#2117](https://github.com/valhalla/valhalla/pull/2117)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
