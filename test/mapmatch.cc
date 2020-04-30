@@ -1318,6 +1318,12 @@ TEST(Mapmatch, interpolation) {
 TEST(Mapmatch, duplicated_end_points) {
   std::vector<std::string> test_cases = {
       R"({"shape":[
+          {"lat": 52.09617, "lon": 5.121475, "type": "break", "radius": 10},
+          {"lat": 52.09617, "lon": 5.121475, "type": "break", "radius": 10},
+          {"lat": 52.09617, "lon": 5.121475, "type": "break", "radius": 10}],
+          "costing":"auto","format":"osrm","shape_match":"map_snap",
+          "trace_options": {"interpolation_distance": 30}})",
+      R"({"shape":[
           {"lat": 52.1214847, "lon": 5.1011657, "type": "break"},
           {"lat": 52.1214847, "lon": 5.1011657, "type": "break"},
           {"lat": 52.1214847, "lon": 5.1011657, "type": "break"},
@@ -1373,7 +1379,7 @@ TEST(Mapmatch, duplicated_end_points) {
 } // namespace
 
 int main(int argc, char* argv[]) {
-  midgard::logging::Configure({{"type", ""}}); // silence logs
+  // midgard::logging::Configure({{"type", ""}}); // silence logs
   if (argc > 1 && std::string(argv[1]).find("gtest") == std::string::npos) {
     if (argc > 1)
       seed = std::stoi(argv[1]);

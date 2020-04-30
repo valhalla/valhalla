@@ -41,16 +41,18 @@ public:
 
     // Cache results
     label_idx_.clear();
-    uint16_t dest = 1; // dest at 0 is remained for the origin
+    uint16_t dest = 1; // dest at 0 is reserved for the origin
+    uint16_t found = 0;
     for (const auto& stateid : stateids) {
       const auto it = results.find(dest);
       if (it != results.end()) {
         label_idx_[stateid] = it->second;
+        ++found;
       }
-      dest++;
+      ++dest;
     }
-
     labelset_ = labelset;
+    LOG_DEBUG("Found " + std::to_string(found) + " destinations out of " + std::to_string(dest - 1));
   }
 
   const Label* last_label(const State& state) const {

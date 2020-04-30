@@ -98,6 +98,10 @@ bool MergeRoute(const State& source,
   // TODO: why doesnt routing.cc return trivial routes? move this logic there
   // This is route where the source and target are the same location so we make a trivial route
   if (segments.empty()) {
+    // TODO: fix FindMatchResults so we dont have to do this
+    if (!target_result.edgeid.Is_Valid()) {
+      return false; // throw std::logic_error("This cannot be invalid");
+    }
     segments.emplace_back(target_result.edgeid, target_result.distance_along,
                           target_result.distance_along);
   }

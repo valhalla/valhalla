@@ -261,8 +261,13 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     const auto& prev_state = mapmatcher.state_container().state(prev_stateid);
     // It must stay on the last edge of the route
     const auto rbegin = prev_state.RouteBegin(state), rend = prev_state.RouteEnd();
+    bool discontinuity = rbegin == rend;
     if (rbegin != rend && rbegin->edgeid().Is_Valid()) {
       prev_edge = rbegin->edgeid();
+    }
+    // TODO: Looks like the label was a node label
+    if (!discontinuity && !prev_edge.Is_Valid()) {
+      // throw std::logic_error("node route");
     }
   } // no previous state and we arent the first one means there was a discontinuity behind us
   else if (time > 0) {
@@ -273,10 +278,16 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
   baldr::GraphId next_edge;
   if (next_stateid.IsValid()) {
     const auto& next_state = mapmatcher.state_container().state(next_stateid);
-    for (auto label = state.RouteBegin(next_state); label != state.RouteEnd(); label++) {
-      if (label->edgeid().Is_Valid()) {
-        next_edge = label->edgeid();
+    auto begin = state.RouteBegin(next_state), end = state.RouteEnd();
+    bool discontinuity = begin == end;
+    for (; begin != end; begin++) {
+      if (begin->edgeid().Is_Valid()) {
+        next_edge = begin->edgeid();
       }
+    }
+    // TODO: Looks like the label was a node label
+    if (!discontinuity && !next_edge.Is_Valid()) {
+      // throw std::logic_error("node");
     }
   } // no state after us and we arent the last one means there is a discontinuity in front of us
   else if (time + 1 < stateids.size()) {
