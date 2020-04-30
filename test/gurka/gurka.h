@@ -44,13 +44,15 @@
 namespace valhalla {
 namespace gurka {
 
+using nodelayout = std::map<std::string, midgard::PointLL>;
+
 struct map {
   boost::property_tree::ptree config;
-  std::unordered_map<std::string, midgard::PointLL> nodes;
+  nodelayout nodes;
 };
 
-using ways = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
-using nodes = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
+using ways = std::map<std::string, std::map<std::string, std::string>>;
+using nodes = std::map<std::string, std::map<std::string, std::string>>;
 
 enum relation_member_type { node_member, way_member };
 struct relation_member {
@@ -60,12 +62,10 @@ struct relation_member {
 };
 struct relation {
   std::vector<relation_member> members;
-  std::unordered_map<std::string, std::string> tags;
+  std::map<std::string, std::string> tags;
 };
 
 using relations = std::vector<relation>;
-
-using nodelayout = std::unordered_map<std::string, midgard::PointLL>;
 
 namespace detail {
 
@@ -559,7 +559,7 @@ std::tuple<const baldr::GraphId,
            const baldr::GraphId,
            const baldr::DirectedEdge*>
 findEdge(valhalla::baldr::GraphReader& reader,
-         const std::unordered_map<std::string, midgard::PointLL>& nodes,
+         const nodelayout& nodes,
          const std::string& way_name,
          const std::string& end_node,
          const baldr::GraphId& tile_id = baldr::GraphId{}) {
