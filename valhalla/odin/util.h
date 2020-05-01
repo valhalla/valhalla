@@ -61,6 +61,15 @@ const locales_singleton_t& get_locales();
  */
 const std::unordered_map<std::string, std::string>& get_locales_json();
 
+/**
+ * Convert the input units, in either imperial or metric, into meters.
+ * @param   distance units to convert to meters
+ * @param   true if input units are in metric, false if they're in imperial
+ *          units.
+ * @return  the input units converted to meters
+ */
+float units_to_meters(float units, bool is_metric);
+
 } // namespace odin
 } // namespace valhalla
 #endif // VALHALLA_ODIN_UTIL_H_
