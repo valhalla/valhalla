@@ -12,7 +12,7 @@ The first step Meili does is decide which tracepoints its going to map match. Yo
 
 Whats in this matrix? For every input point that `AppendMeasurements` decides it will use in the routing calculations a column is made in the matrix. Each column can have 1 or more rows but they will not all have the same number of rows. Each row represents an edge candidate for a given trace point. An edge candidate is a snap point along an edge in the graph within the radius of the input trace point.
 
-![Model](figures/candidats.png)
+![Model](figures/candidates.png)
 
 The above is an image of the 4 magenta edge candidates for an input trace point with a 50m radius. `AppendMeasurements` eventually calls down into `CandidateQuery::Query` to get the list of candidates for a given trace point. It should be noted that `CandidateQuery` provides the same functionality `Loki::Search` does however there are some key differences. The main difference is that `CandidateQuery` keeps a fine resolution in-memory spatial index/cache of route network geometries. What this means is that it can have much higher throughput (once the cache is warm) than loki for high numbers of points. This is a key difference between map matching and routing use-cases. In routing we dont expect 1000s of way points but GPS traces are frequently reported at 1hz. Which means a 15 minute trace is already close to 1000 points. In the future we'd like to remove `CandidateQuery` and replace it with functionality from `Loki::Search` but at this time performance considerations keep us from doing so.
 
