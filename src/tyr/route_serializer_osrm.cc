@@ -8,6 +8,7 @@
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
+#include "midgard/util.h"
 
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"

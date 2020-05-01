@@ -11,7 +11,6 @@
 #include <date/tz.h>
 
 #include "locales.h"
-#include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "odin/util.h"
 
@@ -133,10 +132,6 @@ const locales_singleton_t& get_locales() {
 
 const std::unordered_map<std::string, std::string>& get_locales_json() {
   return locales_json;
-}
-
-float units_to_meters(float units, bool is_metric) {
-  return midgard::kMetersPerKm * (is_metric ? units : (units * midgard::kKmPerMile));
 }
 
 } // namespace odin

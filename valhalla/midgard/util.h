@@ -634,5 +634,18 @@ struct projector_t {
   double lng;
   DistanceApproximator approx;
 };
+
+/**
+ * Convert the input units, in either imperial or metric, into meters.
+ * @param   units (kms or miles), to convert to meters
+ * @param   true if input units are in metric, false if they're in imperial
+ *          units.
+ * @return  the input units converted to meters
+ */
+inline float units_to_meters(float units_km_or_mi, bool is_metric) {
+  return midgard::kMetersPerKm *
+         (is_metric ? units_km_or_mi : (units_km_or_mi * midgard::kKmPerMile));
+}
+
 } // namespace midgard
 } // namespace valhalla
