@@ -60,13 +60,13 @@ struct Interpolation {
   }
 };
 
-inline MatchResult CreateMatchResult(const Measurement& measurement) {
+inline MatchResult CreateMatchResult(const Measurement& measurement, StateId state_id = {}) {
   return {measurement.lnglat(),
           0.f,
           baldr::GraphId{},
           -1.f,
           measurement.epoch_time(),
-          StateId(),
+          state_id,
           measurement.is_break_point()};
 }
 
@@ -238,65 +238,111 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
                             const std::vector<StateId>& stateids,
                             StateId::Time time,
                             baldr::GraphReader& graph_reader) {
-  if (!(time < stateids.size())) {
-    throw std::runtime_error("reading stateid at time out of bounds");
-  }
+  // Either the time is invalid because of discontinuity or it matches the index
+  const auto& state_id = stateids[time];
+  assert(!state_id.IsValid() || state_id.time() == time);
 
-  const auto &prev_stateid = 0 < time ? stateids[time - 1] : StateId(), stateid = stateids[time],
-             next_stateid = time + 1 < stateids.size() ? stateids[time + 1] : StateId();
+  // If we have a discontinuity on either side of this point
   const auto& measurement = mapmatcher.state_container().measurement(time);
-
-  // this one couldnt be matched
-  if (!stateid.IsValid()) {
-    return CreateMatchResult(measurement);
+  if (!state_id.IsValid()) {
+    return CreateMatchResult(measurement, state_id);
   }
 
   bool begins_discontinuity = false;
   bool ends_discontinuity = false;
 
   // Find the last edge of the path from the previous state to the current state
-  const auto& state = mapmatcher.state_container().state(stateid);
   baldr::GraphId prev_edge;
-  if (prev_stateid.IsValid()) {
-    const auto& prev_state = mapmatcher.state_container().state(prev_stateid);
-    // It must stay on the last edge of the route
-    const auto rbegin = prev_state.RouteBegin(state), rend = prev_state.RouteEnd();
-    bool discontinuity = rbegin == rend;
-    if (rbegin != rend && rbegin->edgeid().Is_Valid()) {
-      prev_edge = rbegin->edgeid();
+  baldr::GraphId node_id;
+  // Because of node routing in meili we must loop back over the previous path. In most cases the loop
+  // is a single iteration but in rare cases (node to node trivial routes) we need to explore states
+  // that are older than the immediate previous state
+  for (StateId::Time t = time; t > 0 && !prev_edge.Is_Valid(); --t) {
+    // If there is no path from t - 1
+    const auto& prev_state_id = stateids[t - 1];
+    if (!prev_state_id.IsValid()) {
+      // Mark the discontinuity if this is the current time and the previous state was not routable
+      if (t == time) {
+        ends_discontinuity = true;
+      }
+      // Give up on finding a previous edge
+      break;
     }
-    // TODO: Looks like the label was a node label
-    if (!discontinuity && !prev_edge.Is_Valid()) {
-      // throw std::logic_error("node route");
+    const auto& prev_state = mapmatcher.state_container().state(prev_state_id);
+    const auto& state_id = stateids[t];
+    const auto& state = mapmatcher.state_container().state(state_id);
+    // Normally the last label of the route from previous to current state has a valid edge id. But it
+    // wont if the destination (current state candidate) was a node. In this case it will have a valid
+    // node id, but match results need edges so we keep looking backwards until we find an edge
+    auto rbegin = prev_state.RouteBegin(state), rend = prev_state.RouteEnd();
+    if (rbegin == rend)
+      break;
+    node_id = rbegin->nodeid();
+    while (rbegin != rend && !prev_edge.Is_Valid()) {
+      // the very first state will have an initial dummy label with invalid edge/node ids
+      const auto& label = *rbegin;
+      if (!label.edgeid().Is_Valid() && !label.nodeid().Is_Valid())
+        break;
+      prev_edge = label.edgeid();
+      rbegin++;
     }
-  } // no previous state and we arent the first one means there was a discontinuity behind us
-  else if (time > 0) {
-    ends_discontinuity = true;
   }
 
   // Find the first edge of the path from the current state to the next state
   baldr::GraphId next_edge;
-  if (next_stateid.IsValid()) {
-    const auto& next_state = mapmatcher.state_container().state(next_stateid);
-    auto begin = state.RouteBegin(next_state), end = state.RouteEnd();
-    bool discontinuity = begin == end;
-    for (; begin != end; begin++) {
-      if (begin->edgeid().Is_Valid()) {
-        next_edge = begin->edgeid();
+  // Because of node routing in meili we must loop over the next sets of paths. In most cases the loop
+  // is a single iteration but in rare cases (node to node trivial routes) we need to explore states
+  // that are newer than the immediate next state
+  for (StateId::Time t = time; t + 1 < stateids.size() && !next_edge.Is_Valid(); ++t) {
+    // If there is no path to t + 1
+    const auto& next_state_id = stateids[t + 1];
+    if (!next_state_id.IsValid()) {
+      // Mark the discontinuity if this is the current time and the next state was not routable
+      if (t == time) {
+        begins_discontinuity = true;
       }
+      // Give up on finding a next edge
+      break;
     }
-    // TODO: Looks like the label was a node label
-    if (!discontinuity && !next_edge.Is_Valid()) {
-      // throw std::logic_error("node");
+    const auto& next_state = mapmatcher.state_container().state(next_state_id);
+    const auto& state_id = stateids[t];
+    const auto& state = mapmatcher.state_container().state(state_id);
+    // Normally we need to loop back to the first label of the route from current to the next state
+    // and get its edge id. But its possible the origin (current state candidate) was a node which
+    // means the first label will only be a nodeid.  If we didnt find any edges after that (which is
+    // the case in a trivial node to node route) then we need to keep looking at more states into the
+    // future or until we hit a discontinuity
+    auto rbegin = state.RouteBegin(next_state), rend = state.RouteEnd();
+    if (rbegin == rend)
+      break;
+    while (rbegin != rend) {
+      // the very first state will have an initial dummy label with invalid edge/node ids
+      const auto& label = *rbegin;
+      if (!label.edgeid().Is_Valid() && !label.nodeid().Is_Valid())
+        break;
+      next_edge = label.edgeid();
+      node_id = label.nodeid();
+      rbegin++;
     }
-  } // no state after us and we arent the last one means there is a discontinuity in front of us
-  else if (time + 1 < stateids.size()) {
-    begins_discontinuity = true;
   }
 
-  // bail early when no path exists on either side of this state
-  if (!prev_edge.Is_Valid() && !next_edge.Is_Valid())
-    return {};
+  // if we got here without finding any edges one of two things could have happened. the first is that
+  // we had some candidates on this state but there were no paths to/from these states. the second is
+  // that there was a path but it was one where you route from a node in the graph to itself. in that
+  // case we dont really care what edge we use to go from the node to itself so just use any one that
+  // was a candidate on it
+  const auto& state = mapmatcher.state_container().state(state_id);
+  if (!prev_edge.Is_Valid() && !next_edge.Is_Valid()) {
+    // it wasnt a trivial node route
+    if (!node_id.Is_Valid()) {
+      return CreateMatchResult(measurement, state_id);
+    }
+    assert(!state.candidate().edges.empty());
+    const auto& candidate = state.candidate().edges.front();
+    return {candidate.projected,          std::sqrt(candidate.distance), candidate.id,
+            candidate.percent_along,      measurement.epoch_time(),      state_id,
+            measurement.is_break_point(), begins_discontinuity,          ends_discontinuity};
+  }
 
   // find which candidate was used for this state
   const baldr::GraphTile* tile = nullptr;
@@ -309,7 +355,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
               edge.id,
               edge.percent_along,
               measurement.epoch_time(),
-              stateid,
+              state_id,
               measurement.is_break_point(),
               begins_discontinuity,
               ends_discontinuity};
@@ -333,7 +379,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
               prev_edge,
               1.f,
               measurement.epoch_time(),
-              stateid,
+              state_id,
               measurement.is_break_point(),
               begins_discontinuity,
               ends_discontinuity};
@@ -347,7 +393,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
               next_edge,
               0.f,
               measurement.epoch_time(),
-              stateid,
+              state_id,
               measurement.is_break_point(),
               begins_discontinuity,
               ends_discontinuity};
@@ -386,7 +432,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
                   target_edge_id,
                   distance_along,
                   measurement.epoch_time(),
-                  stateid,
+                  state_id,
                   measurement.is_break_point(),
                   begins_discontinuity,
                   ends_discontinuity};
@@ -397,7 +443,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
 
   // we should never reach here, the above early exit checks whether there is no path on either side
   // of the given state we are finding a match for. perhaps we should throw?
-  return {};
+  return CreateMatchResult(measurement, state_id);
 }
 
 // Find the corresponding match results of a list of states
@@ -659,7 +705,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     return best_paths;
   }
 
-  bool found_broken_path = false;
+  bool found_discontinuity = false;
 
   // Separate the measurements we are using for matching from the ones we'll just interpolate
   auto interpolated = AppendMeasurements(measurements);
@@ -667,32 +713,36 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   // For k paths
   std::vector<StateId> state_ids;
   state_ids.reserve(container_.size());
-  while (best_paths.size() < k && !found_broken_path) {
+  while (best_paths.size() < k && !found_discontinuity) {
     // Get the states for the kth best path in reversed order then fix the order
     state_ids.clear();
     double accumulated_cost = 0.f;
     while (state_ids.size() < container_.size()) {
       // Get the time at the last column of states
       const auto time = container_.size() - state_ids.size() - 1;
+      // Find the most probable path
       std::copy(vs_.SearchPathVS(time, false), vs_.PathEnd(), std::back_inserter(state_ids));
+      // See what the last state was that we reached
       const auto& winner = vs_.SearchWinner(time);
+      // If we got all the way to the end there were no discontinuities and the cost is a normal value
       if (winner.IsValid()) {
         accumulated_cost += vs_.AccumulatedCost(winner);
-      } else {
+      } // We got a discontinuity before reaching the last state
+      else {
         // TODO need a sane constant cost for invalid state
         accumulated_cost += MAX_ACCUMULATED_COST;
-        found_broken_path = true;
+        found_discontinuity = true;
       }
 
+      // if we need to match more we add a penalty for connecting over the discontinuity
       if (state_ids.size() < container_.size()) {
-        found_broken_path = true;
-        // cost for disconnection
+        found_discontinuity = true;
         accumulated_cost += MAX_ACCUMULATED_COST;
       }
     }
 
-    // early quit if we found best paths
-    if (!best_paths.empty() && found_broken_path) {
+    // we dont return additional paths (alternatives) if the have discontinuities
+    if (!best_paths.empty() && found_discontinuity) {
       break;
     }
 
@@ -701,18 +751,6 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     original_state_ids.reserve(state_ids.size());
     for (auto s_itr = state_ids.rbegin(); s_itr != state_ids.rend(); ++s_itr) {
       original_state_ids.push_back(ts_.GetOrigin(*s_itr, *s_itr));
-    }
-
-    // Verify that stateids are in correct order
-    for (StateId::Time time = 0; time < original_state_ids.size(); time++) {
-      if (!original_state_ids[time].IsValid()) {
-        continue;
-      }
-      if (original_state_ids[time].time() != time) {
-        throw std::logic_error("got state with time " +
-                               std::to_string(original_state_ids[time].time()) + " at time " +
-                               std::to_string(time));
-      }
     }
 
     // Get the match result for each of the states
@@ -753,15 +791,15 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
     // We'll keep it if we don't have a duplicate already
     auto found_path = std::find(best_paths.rbegin(), best_paths.rend(), match_results);
     if (found_path == best_paths.rend()) {
-      LOG_DEBUG(static_cast<std::stringstream&&>(std::stringstream() << match_results).str());
-      LOG_DEBUG("Result " + std::to_string(best_paths.size()));
-      LOG_DEBUG(print_result(container_, original_state_ids));
+      LOG_TRACE(static_cast<std::stringstream&&>(std::stringstream() << match_results).str());
+      LOG_TRACE("Result " + std::to_string(best_paths.size()));
+      LOG_TRACE(print_result(container_, original_state_ids));
       best_paths.emplace_back(std::move(match_results));
     }
 
     // RemoveRedundancies doesn't work with broken paths yet,
     // also we want to avoid removing path for the last best path
-    if (!found_broken_path && best_paths.size() < k) {
+    if (!found_discontinuity && best_paths.size() < k) {
       // Remove all the candidates pairs whose paths are redundant with this one
       RemoveRedundancies(original_state_ids, results);
       // Remove this particular sequence of stateids

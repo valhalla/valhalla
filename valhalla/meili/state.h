@@ -52,7 +52,7 @@ public:
       ++dest;
     }
     labelset_ = labelset;
-    LOG_DEBUG("Found " + std::to_string(found) + " destinations out of " + std::to_string(dest - 1));
+    LOG_TRACE("Found " + std::to_string(found) + " destinations out of " + std::to_string(dest - 1));
   }
 
   const Label* last_label(const State& state) const {

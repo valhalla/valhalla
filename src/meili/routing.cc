@@ -236,14 +236,15 @@ void set_destinations(baldr::GraphReader& reader,
         continue;
       }
 
-      auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
       if (edge.begin_node()) {
+        auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
         const auto nodeid = edge_nodes.first;
         if (!nodeid.Is_Valid()) {
           continue;
         }
         node_dests[nodeid].insert(dest);
       } else if (edge.end_node()) {
+        auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
         const auto nodeid = edge_nodes.second;
         if (!nodeid.Is_Valid()) {
           continue;
@@ -478,7 +479,7 @@ find_shortest_path(baldr::GraphReader& reader,
   while (true) {
     uint32_t label_idx = labelset->pop();
     if (label_idx == baldr::kInvalidLabel) {
-      LOG_DEBUG("Exhausted labels without finding all destinations");
+      LOG_TRACE("Exhausted labels without finding all destinations");
       break;
     }
 
@@ -500,7 +501,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
       // Congrats!
       if (node_dests.empty() && edge_dests.empty()) {
-        LOG_DEBUG("The last node destination was found");
+        LOG_TRACE("The last node destination was found");
         break;
       }
 
@@ -524,7 +525,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
       // Congrats!
       if (edge_dests.empty() && node_dests.empty()) {
-        LOG_DEBUG("The last edge destination was found");
+        LOG_TRACE("The last edge destination was found");
         break;
       }
 

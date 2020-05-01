@@ -74,18 +74,15 @@ bool MergeRoute(const State& source,
                 const State& target,
                 std::vector<EdgeSegment>& route,
                 const MatchResult& target_result) {
+  // Discontinuity either from invalid state id or no paths on either side of this states candidates
   const auto route_rbegin = source.RouteBegin(target), route_rend = source.RouteEnd();
-
-  // No route, discontinuity
   if (route_rbegin == route_rend) {
     return false;
   }
 
-  std::vector<EdgeSegment> segments;
-
-  auto label = route_rbegin;
-
   // Skip the first dummy edge std::prev(route_rend)
+  std::vector<EdgeSegment> segments;
+  auto label = route_rbegin;
   for (; std::next(label) != route_rend; label++) {
     segments.emplace_back(label->edgeid(), label->source(), label->target());
   }
@@ -98,10 +95,7 @@ bool MergeRoute(const State& source,
   // TODO: why doesnt routing.cc return trivial routes? move this logic there
   // This is route where the source and target are the same location so we make a trivial route
   if (segments.empty()) {
-    // TODO: fix FindMatchResults so we dont have to do this
-    if (!target_result.edgeid.Is_Valid()) {
-      return false; // throw std::logic_error("This cannot be invalid");
-    }
+    assert(target_result.edgeid.Is_Valid());
     segments.emplace_back(target_result.edgeid, target_result.distance_along,
                           target_result.distance_along);
   }
