@@ -270,6 +270,13 @@ int main(int argc, char* argv[]) {
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
+  if (!map_match) {
+    valhalla::Options options;
+    for (int i = 0; i < valhalla::Costing_MAX; ++i) {
+      request.mutable_options()->add_costing_options();
+    }
+  }
+
   // Construct costing
   CostFactory<DynamicCost> factory;
   factory.RegisterStandardCostingModels();
@@ -279,6 +286,7 @@ int main(int argc, char* argv[]) {
   } else {
     throw std::runtime_error("No costing method found");
   }
+
   cost_ptr_t cost_ptr = factory.Create(request.options());
 
   // If a shape is entered use edge walking
