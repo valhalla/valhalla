@@ -126,7 +126,7 @@ void walk_edges(const std::string& shape, GraphReader& reader, const cost_ptr_t&
     PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
   }
   std::vector<PathInfo> path;
-    std::vector<PathLocation> correlated;
+  std::vector<PathLocation> correlated;
   bool rtn = RouteMatcher::FormPath(mode_costing, mode, reader, trace, options, path);
   if (!rtn) {
     std::cerr << "ERROR: RouteMatcher returned false - did not match complete shape." << std::endl;
