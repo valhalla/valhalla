@@ -637,7 +637,7 @@ struct projector_t {
 
 /**
  * Convert the input units, in either imperial or metric, into meters.
- * @param   units (kms or miles), to convert to meters
+ * @param   units_km_or_mi (kms or miles), to convert to meters
  * @param   true if input units are in metric, false if they're in imperial
  *          units.
  * @return  the input units converted to meters
