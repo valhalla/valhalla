@@ -42,6 +42,7 @@ public:
 
   const DirectionsLeg_Maneuver_Type& type() const;
   void set_type(const DirectionsLeg_Maneuver_Type& type);
+  bool IsStartType() const;
   bool IsDestinationType() const;
   bool IsMergeType() const;
 

@@ -129,6 +129,12 @@ void Maneuver::set_type(const DirectionsLeg_Maneuver_Type& type) {
   type_ = type;
 }
 
+bool Maneuver::IsStartType() const {
+  return ((type_ == DirectionsLeg_Maneuver_Type_kStart) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kStartLeft) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kStartRight));
+}
+
 bool Maneuver::IsDestinationType() const {
   return ((type_ == DirectionsLeg_Maneuver_Type_kDestination) ||
           (type_ == DirectionsLeg_Maneuver_Type_kDestinationLeft) ||
