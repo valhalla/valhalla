@@ -25,7 +25,7 @@ constexpr auto kInstructionInitialCapacity = 128;
 constexpr auto kLengthStringInitialCapacity = 32;
 
 // Basic time threshold in seconds for creating a verbal multi-cue
-constexpr auto kVerbalMultiCueTimeThreshold = 10;
+constexpr auto kVerbalMultiCueTimeThreshold = 12;
 
 constexpr float kVerbalPostMinimumRampLength = 2.0f; // Kilometers
 constexpr float kVerbalAlertMergePriorManeuverMinimumLength = kVerbalPostMinimumRampLength;
@@ -3857,7 +3857,7 @@ std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver, Maneuver& n
 bool NarrativeBuilder::IsVerbalMultiCuePossible(Maneuver* maneuver, Maneuver& next_maneuver) {
   // Current maneuver must have a verbal pre-transition instruction
   // Next maneuver must have a verbal transition alert or a verbal pre-transition instruction
-  // Current maneuver must be quick (basic time < 10 sec)
+  // Current maneuver must be quick (basic time < 12 sec)
   // Next maneuver must not be a merge
   // Current and next maneuvers must not be a rouandbout
   // Current and next maneuvers must not be transit or transit connection
