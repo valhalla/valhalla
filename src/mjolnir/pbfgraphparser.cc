@@ -33,6 +33,9 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
+// This value controls the initial size of the Id table. If this is exceeded
+// the table will be resized and a warning is generated (indicating we should
+// increase this value).
 constexpr uint64_t kMaxOSMNodeId = 6800000000;
 
 // Absurd classification.
