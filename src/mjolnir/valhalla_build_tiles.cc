@@ -22,7 +22,7 @@ namespace bpo = boost::program_options;
 // List the build stages
 void list_stages() {
   std::cout << "Build stage strings (in order)" << std::endl;
-  for (int i = static_cast<int>(BuildStage::kParseWays); i <= static_cast<int>(BuildStage::kCleanup);
+  for (int i = static_cast<int>(BuildStage::kInitialize); i <= static_cast<int>(BuildStage::kCleanup);
        ++i) {
     std::cout << "    " << to_string(static_cast<BuildStage>(i)) << std::endl;
   }
