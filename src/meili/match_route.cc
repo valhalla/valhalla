@@ -70,6 +70,16 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
   }
 }
 
+/**
+ * Here we return the vector of edge segments between the source and target states. If its a node to
+ * node route (meaning no realy edge is traversed) then we use the target_result to say what edge the
+ * segment should use
+ * @param source         source state to use to find the route
+ * @param target         target state which candidate in the next column to fetch the route for
+ * @param route          a place to put the edge segments as we create them
+ * @param target_result  in case we have a node to node route we have a no-op edge segment to return
+ * @return  the vector of segments reprsenting the route between source and target
+ */
 bool MergeRoute(const State& source,
                 const State& target,
                 std::vector<EdgeSegment>& route,
@@ -80,17 +90,17 @@ bool MergeRoute(const State& source,
     return false;
   }
 
-  // Skip the first dummy edge std::prev(route_rend)
+  // Here we dont iterate to the very last label (first edge of the route) because it is either
+  // a dummy (if source and target are the 0th and 1st states) or because its the last label of
+  // the previous pair of states
   std::vector<EdgeSegment> segments;
   auto label = route_rbegin;
   for (; std::next(label) != route_rend; label++) {
     segments.emplace_back(label->edgeid(), label->source(), label->target());
   }
 
-  // Make sure the first edge has an invalid predecessor
-  if (label->predecessor() != baldr::kInvalidLabel) {
-    throw std::logic_error("The first edge must be an origin (invalid predecessor)");
-  }
+  // If we looped all the way to the beginning then there should be no previous labels
+  assert(label->predecessor() == baldr::kInvalidLabel);
 
   // TODO: why doesnt routing.cc return trivial routes? move this logic there
   // This is route where the source and target are the same location so we make a trivial route
@@ -104,6 +114,16 @@ bool MergeRoute(const State& source,
   return true;
 }
 
+/**
+ * We need this method to cut segments at interpolated input trace points which were marked as break
+ * points. This method will split edge segments at those points.
+ * @param match_results  The matched points representing the matched input trace points
+ * @param first_idx      The index of the first match in the range
+ * @param last_idx       The index of the second match in the range
+ * @param segments       The segments over the range
+ * @param new_segments   The new vector of segments over the range (should be the same or more
+ * segments). This is a reference parameter to avoid constant allocation
+ */
 void cut_segments(const std::vector<MatchResult>& match_results,
                   int first_idx,
                   int last_idx,
@@ -147,9 +167,15 @@ void cut_segments(const std::vector<MatchResult>& match_results,
   }
 }
 
+/**
+ * This loops over all of the states in the match and returns the vector of edge segments representing
+ * the matched path.
+ * @param mapmatcher     The matcher with which the match was computed
+ * @param match_results  The matched points
+ * @return  The vector of edge segments representing the match path
+ */
 std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
-                                        const std::vector<MatchResult>& match_results,
-                                        baldr::GraphReader& reader) {
+                                        const std::vector<MatchResult>& match_results) {
   if (match_results.empty()) {
     return {};
   }

@@ -222,9 +222,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
         prev_segment != nullptr && prev_segment->edgeid.Is_Valid() && prev_segment->discontinuity;
 
     bool break_point =
-        edge_segment.first_match_idx >= 0 &&
-        (options.shape(edge_segment.first_match_idx).type() == Location::kBreak ||
-         options.shape(edge_segment.first_match_idx).type() == Location::kBreakThrough);
+        edge_segment.first_match_idx >= 0 && results[edge_segment.first_match_idx].is_break_point;
     bool new_leg = disconnected || !prev_segment || break_point;
     // if this is the first route or the first edge after the discontinuity or
     // user requested a new leg here
