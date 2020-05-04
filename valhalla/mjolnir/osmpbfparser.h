@@ -39,6 +39,8 @@
 // this describes the high-level OSM objects
 #include <valhalla/proto/osmformat.pb.h>
 
+#include <valhalla/midgard/small_flat_map.h>
+
 // extend the protobuf osmpbf namespace
 namespace OSMPBF {
 
@@ -53,7 +55,7 @@ enum Interest {
 };
 
 // Represents the key/values of an object
-using Tags = std::unordered_map<std::string, std::string>;
+using Tags = valhalla::midgard::SmallFlatMap<std::string, std::string>;
 
 // Member of a relation
 struct Member {

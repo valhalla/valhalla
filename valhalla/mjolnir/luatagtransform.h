@@ -10,12 +10,12 @@ extern "C" {
 #include <valhalla/mjolnir/osmdata.h>
 
 #include <string>
-#include <unordered_map>
+#include <valhalla/midgard/small_flat_map.h>
 
 namespace valhalla {
 namespace mjolnir {
 
-using Tags = std::unordered_map<std::string, std::string>;
+using Tags = midgard::SmallFlatMap<std::string, std::string>;
 
 /**
  */
