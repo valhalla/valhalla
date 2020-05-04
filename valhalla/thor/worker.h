@@ -75,6 +75,13 @@ protected:
                                           const Location& origin,
                                           const Location& destination);
   void route_match(Api& request);
+  /**
+   * Returns the results of the map match where the first float is the normalized
+   * match score (based on alternatives), the second is the raw score (the cost)
+   * and the final is the list of match results (how the trace points were matched)
+   * @param request   The request to map match (options.shape)
+   * @return the match results and scores
+   */
   std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>> map_match(Api& request);
 
   void path_arrive_by(Api& api, const std::string& costing);

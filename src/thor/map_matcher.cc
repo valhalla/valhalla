@@ -10,13 +10,56 @@
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
-namespace valhalla {
-namespace thor {
+namespace {
+struct interpolation_t {
+  valhalla::baldr::GraphId edge; // edge id
+  float total_distance;          // distance along the path
+  float edge_distance;           // ratio of the distance along the edge
+  size_t original_index;         // index into the original measurements
+  double epoch_time;             // seconds from epoch
+};
 
-std::vector<std::vector<MapMatcher::interpolation_t>>
-MapMatcher::interpolate_matches(const std::vector<meili::MatchResult>& matches,
-                                const std::vector<meili::EdgeSegment>& edges,
-                                meili::MapMatcher* matcher) {
+static uint32_t compute_origin_epoch(const std::vector<valhalla::meili::EdgeSegment>& edge_segments,
+                                     valhalla::meili::MapMatcher* matcher,
+                                     valhalla::Options& options) {
+  const GraphTile* tile = nullptr;
+  const DirectedEdge* directededge = nullptr;
+  const NodeInfo* nodeinfo = nullptr;
+
+  // We support either the epoch timestamp that came with the trace point or
+  // a local date time which we convert to epoch by finding the first timezone
+  uint32_t origin_epoch = 0;
+  for (const auto& s : edge_segments) {
+    if (!s.edgeid.Is_Valid() || !matcher->graphreader().GetGraphTile(s.edgeid, tile))
+      continue;
+    directededge = tile->directededge(s.edgeid);
+    if (matcher->graphreader().GetGraphTile(directededge->endnode(), tile)) {
+      // get the timezone
+      nodeinfo = tile->node(directededge->endnode());
+      const auto* tz = DateTime::get_tz_db().from_index(nodeinfo->timezone());
+      if (!tz)
+        continue;
+      // if its timestamp based need to signal that out to trip leg builder
+      if (!options.shape(0).has_date_time() && options.shape(0).time() != -1.0) {
+        options.mutable_shape(0)->set_date_time(
+            DateTime::seconds_to_date(options.shape(0).time(), tz, false));
+      }
+      // remember where we are starting
+      if (options.shape(0).has_date_time()) {
+        if (options.shape(0).date_time() == "current")
+          options.mutable_shape(0)->set_date_time(DateTime::iso_date_time(tz));
+        origin_epoch = DateTime::seconds_since_epoch(options.shape(0).date_time(), tz);
+      }
+      break;
+    }
+  }
+
+  return origin_epoch;
+}
+static std::vector<std::vector<interpolation_t>>
+interpolate_matches(const std::vector<valhalla::meili::MatchResult>& matches,
+                    const std::vector<valhalla::meili::EdgeSegment>& edges,
+                    valhalla::meili::MapMatcher* matcher) {
   // TODO: backtracking could have happened. maybe it really happened but maybe there were
   // positional inaccuracies. for now we should detect when there are backtracks and give up
   // otherwise the the timing reported here might be suspect
@@ -116,43 +159,10 @@ MapMatcher::interpolate_matches(const std::vector<meili::MatchResult>& matches,
   return interpolations;
 }
 
-uint32_t MapMatcher::compute_origin_epoch(const std::vector<meili::EdgeSegment>& edge_segments,
-                                          meili::MapMatcher* matcher,
-                                          valhalla::Options& options) {
-  const GraphTile* tile = nullptr;
-  const DirectedEdge* directededge = nullptr;
-  const NodeInfo* nodeinfo = nullptr;
+} // namespace
 
-  // We support either the epoch timestamp that came with the trace point or
-  // a local date time which we convert to epoch by finding the first timezone
-  uint32_t origin_epoch = 0;
-  for (const auto& s : edge_segments) {
-    if (!s.edgeid.Is_Valid() || !matcher->graphreader().GetGraphTile(s.edgeid, tile))
-      continue;
-    directededge = tile->directededge(s.edgeid);
-    if (matcher->graphreader().GetGraphTile(directededge->endnode(), tile)) {
-      // get the timezone
-      nodeinfo = tile->node(directededge->endnode());
-      const auto* tz = DateTime::get_tz_db().from_index(nodeinfo->timezone());
-      if (!tz)
-        continue;
-      // if its timestamp based need to signal that out to trip leg builder
-      if (!options.shape(0).has_date_time() && options.shape(0).time() != -1.0) {
-        options.mutable_shape(0)->set_date_time(
-            DateTime::seconds_to_date(options.shape(0).time(), tz, false));
-      }
-      // remember where we are starting
-      if (options.shape(0).has_date_time()) {
-        if (options.shape(0).date_time() == "current")
-          options.mutable_shape(0)->set_date_time(DateTime::iso_date_time(tz));
-        origin_epoch = DateTime::seconds_since_epoch(options.shape(0).date_time(), tz);
-      }
-      break;
-    }
-  }
-
-  return origin_epoch;
-}
+namespace valhalla {
+namespace thor {
 
 // We can return multiple paths from here. Any time a MatchResult (trace point) is marked as a
 // break point or break_through point we will make a new leg and hence a new vector of path infos
