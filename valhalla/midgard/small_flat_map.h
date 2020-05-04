@@ -34,5 +34,5 @@ struct SmallFlatMap : public std::vector<std::pair<KeyT, ValueT>> {
     return result->second;
   }
 };
-} // namespace mjolnir
+} // namespace midgard
 } // namespace valhalla
