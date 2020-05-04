@@ -251,23 +251,29 @@ public:
       return;
     }
 
-    // Transform tags. If no results that means the way does not have tags
-    // suitable for use in routing.
-    Tags results = lua_.Transform(OSMType::kWay, tags);
-    if (results.size() == 0) {
+    // Don't bother calling out to Lua for ways with no tags at all - they're
+    // not routable without any metadata on them.
+    if (tags.size() == 0) {
       return;
     }
 
     // Throw away closed features with following tags: building, landuse,
     // leisure, natural. See: http://wiki.openstreetmap.org/wiki/Key:area
     if (nodes[0] == nodes[nodes.size() - 1]) {
-      for (const auto& tag : results) {
+      for (const auto& tag : tags) {
         if (tag.first == "building" || tag.first == "landuse" || tag.first == "leisure" ||
             tag.first == "natural") {
           // LOG_INFO("Loop wayid " + std::to_string(osmid) + " Discard?");
           return;
         }
       }
+    }
+
+    // Transform tags. If no results that means the way does not have tags
+    // suitable for use in routing.
+    Tags results = lua_.Transform(OSMType::kWay, tags);
+    if (results.size() == 0) {
+      return;
     }
 
     // Throw away driveways if include_driveways_ is false
