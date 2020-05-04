@@ -245,31 +245,24 @@ void thor_worker_t::build_trace(
     Options& options,
     Api& request) {
 
-  // loop over all the segments to figure out which edge index belongs to with match result,
-  // to set the discontinuities and to remember the first and last matches/segments we saw
+  // couldnt find any match
+  if (paths.empty() || paths.front().second.empty())
+    throw valhalla_exception_t{442};
+
+  // here we enumerate the discontinuities and set the edge index of each input trace point
   std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
   baldr::GraphId last_id;
   size_t edge_index = 0;
-  const meili::MatchResult* origin_match = nullptr;
-  const meili::EdgeSegment* origin_segment = nullptr;
-  const meili::MatchResult* dest_match = nullptr;
-  const meili::EdgeSegment* dest_segment = nullptr;
   for (const auto& path : paths) {
-    // remember the global edge index
+    // remember the global edge index of every input point
     for (const auto* segment : path.second) {
-      if (segment->first_match_idx >= 0) {
-        if (!origin_segment) {
-          origin_segment = segment;
-        }
-        match_results[segment->first_match_idx].edge_index = edge_index;
-        if (!origin_match) {
-          origin_match = &match_results[segment->first_match_idx];
-        }
-      }
-      if (segment->last_match_idx >= 0) {
-        dest_segment = segment;
-        match_results[segment->last_match_idx].edge_index = edge_index;
-        dest_match = &match_results[segment->last_match_idx];
+      // they can be -1,-1 or l,-1 or -1,h or l,h
+      for (int low = (segment->first_match_idx >= 0 ? segment->first_match_idx
+                                                    : segment->last_match_idx),
+               high = (segment->last_match_idx >= 0 ? segment->last_match_idx
+                                                    : segment->first_match_idx);
+           low >= 0 && low <= high; ++low) {
+        match_results[low].edge_index = edge_index;
       }
       if (last_id != segment->edgeid) {
         ++edge_index;
@@ -279,7 +272,7 @@ void thor_worker_t::build_trace(
 
     // handle the end of a discontinuity, assumes that there is no start of a discontinuity that is
     // handled below
-    const auto& first_segment = path.second.front();
+    const auto* first_segment = path.second.front();
     const auto& first_match = match_results[first_segment->first_match_idx];
     if (first_match.ends_discontinuity) {
       route_discontinuities[first_match.edge_index] = {{true, first_match.lnglat,
@@ -290,17 +283,13 @@ void thor_worker_t::build_trace(
     // handle the start of a discontinuity, could be on the same edge where we just ended one. in that
     // case we only touch .second. if there was no discontinuity ending on this edge then we rely on
     // the default initializer for .first when we index the map which sets the distance to 0.f
-    const auto& last_segment = path.second.back();
+    const auto* last_segment = path.second.back();
     const auto& last_match = match_results[last_segment->last_match_idx]; // cant use edge_index
     if (last_match.begins_discontinuity) {
       auto found = route_discontinuities[last_match.edge_index].second = {true, last_match.lnglat,
                                                                           last_match.distance_along};
     }
   }
-
-  // couldnt find any match
-  if (!origin_match || !dest_match)
-    throw valhalla_exception_t{442};
 
   // smash all the path edges into a single vector
   std::vector<PathInfo> path_edges;
@@ -312,16 +301,22 @@ void thor_worker_t::build_trace(
   }
 
   // initialize the origin and destination location for route
-  Location* origin_location = options.mutable_shape(origin_match - &match_results.front());
-  Location* destination_location = options.mutable_shape(dest_match - &match_results.front());
+  const meili::EdgeSegment* origin_segment = paths.front().second.front();
+  std::cout << *origin_segment << std::endl;
+  const meili::MatchResult& origin_match = match_results[origin_segment->first_match_idx];
+  const meili::EdgeSegment* dest_segment = paths.back().second.back();
+  std::cout << *dest_segment << std::endl;
+  const meili::MatchResult& dest_match = match_results[dest_segment->last_match_idx];
+  Location* origin_location = options.mutable_shape(&origin_match - &match_results.front());
+  Location* destination_location = options.mutable_shape(&dest_match - &match_results.front());
 
   // we fake up something that looks like the output of loki. segment edge id and matchresult edge ids
   // can disagree at node snaps but leg building requires that we refer to edges in the path. because
   // of that, we use the segment to get edge and percent but we use matchresult for the snap location
-  add_path_edge(origin_location, origin_segment->edgeid, origin_segment->source, origin_match->lnglat,
-                origin_match->distance_from);
-  add_path_edge(destination_location, dest_segment->edgeid, dest_segment->target, dest_match->lnglat,
-                dest_match->distance_from);
+  add_path_edge(origin_location, origin_segment->edgeid, origin_segment->source, origin_match.lnglat,
+                origin_match.distance_from);
+  add_path_edge(destination_location, dest_segment->edgeid, dest_segment->target, dest_match.lnglat,
+                dest_match.distance_from);
 
   // TODO: do we actually need to supply the via/through type locations?
 
