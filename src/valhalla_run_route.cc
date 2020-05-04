@@ -206,6 +206,20 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
     const auto projections = Search(locations, reader, cost);
     std::vector<PathLocation> path_location;
     valhalla::Options options;
+
+    for (const auto& ll : shape) {
+      auto* sll = options.mutable_shape()->Add();
+      sll->mutable_ll()->set_lat(ll.lat());
+      sll->mutable_ll()->set_lng(ll.lng());
+      // set type to via by default
+      sll->set_type(valhalla::Location::kVia);
+    }
+    // first and last always get type break
+    if (options.shape_size()) {
+      options.mutable_shape(0)->set_type(valhalla::Location::kBreak);
+      options.mutable_shape(options.shape_size() - 1)->set_type(valhalla::Location::kBreak);
+    }
+
     for (const auto& loc : locations) {
       path_location.push_back(projections.at(loc));
       PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
