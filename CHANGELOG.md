@@ -57,6 +57,7 @@
    * ADDED: Add support for live traffic. [#2268](https://github.com/valhalla/valhalla/pull/2268)
    * ADDED: Implement per-location search filters for functional road class and forms of way. [#2289](https://github.com/valhalla/valhalla/pull/2289)
    * ADDED: Approach, multi-cue, and length updates [#2313](https://github.com/valhalla/valhalla/pull/2313)
+   * CHANGED: Speed up parsing by skipping Lua callout for building/landuse/etc ways [#2350](https://github.com/valhalla/valhalla/pull/2350)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
