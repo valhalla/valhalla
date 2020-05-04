@@ -25,7 +25,8 @@ constexpr auto kInstructionInitialCapacity = 128;
 constexpr auto kLengthStringInitialCapacity = 32;
 
 // Basic time threshold in seconds for creating a verbal multi-cue
-constexpr auto kVerbalMultiCueTimeThreshold = 12;
+constexpr auto kVerbalMultiCueTimeThreshold = 13;
+constexpr auto kVerbalMultiCueTimeStartManeuverThreshold = kVerbalMultiCueTimeThreshold * 3;
 
 constexpr float kVerbalPostMinimumRampLength = 2.0f; // Kilometers
 constexpr float kVerbalAlertMergePriorManeuverMinimumLength = kVerbalPostMinimumRampLength;
@@ -3805,9 +3806,57 @@ std::string NarrativeBuilder::FormStreetNames(const StreetNames& street_names,
 void NarrativeBuilder::FormVerbalMultiCue(std::list<Maneuver>& maneuvers) {
   Maneuver* prev_maneuver = nullptr;
   for (auto& maneuver : maneuvers) {
-    if (prev_maneuver && IsVerbalMultiCuePossible(prev_maneuver, maneuver)) {
+    if (prev_maneuver && IsVerbalMultiCuePossible(*prev_maneuver, maneuver)) {
+      // Determine if imminent or distant verbal multi-cue
+      // if previous maneuver has an intersecting traversable outbound edge
+      // in the same direction as the maneuver
+      switch (maneuver.type()) {
+        case DirectionsLeg_Maneuver_Type_kSlightRight:
+        case DirectionsLeg_Maneuver_Type_kRight:
+        case DirectionsLeg_Maneuver_Type_kSharpRight:
+        case DirectionsLeg_Maneuver_Type_kUturnRight:
+        case DirectionsLeg_Maneuver_Type_kRampRight:
+        case DirectionsLeg_Maneuver_Type_kExitRight:
+        case DirectionsLeg_Maneuver_Type_kStayRight: {
+          if (prev_maneuver->has_right_traversable_outbound_intersecting_edge()) {
+            prev_maneuver->set_distant_verbal_multi_cue(true);
+          } else {
+            prev_maneuver->set_imminent_verbal_multi_cue(true);
+          }
+          break;
+        }
+        case DirectionsLeg_Maneuver_Type_kSlightLeft:
+        case DirectionsLeg_Maneuver_Type_kLeft:
+        case DirectionsLeg_Maneuver_Type_kSharpLeft:
+        case DirectionsLeg_Maneuver_Type_kUturnLeft:
+        case DirectionsLeg_Maneuver_Type_kRampLeft:
+        case DirectionsLeg_Maneuver_Type_kExitLeft:
+        case DirectionsLeg_Maneuver_Type_kStayLeft: {
+          if (prev_maneuver->has_left_traversable_outbound_intersecting_edge()) {
+            prev_maneuver->set_distant_verbal_multi_cue(true);
+          } else {
+            prev_maneuver->set_imminent_verbal_multi_cue(true);
+          }
+          break;
+        }
+        case DirectionsLeg_Maneuver_Type_kDestination:
+        case DirectionsLeg_Maneuver_Type_kDestinationLeft:
+        case DirectionsLeg_Maneuver_Type_kDestinationRight: {
+          if (prev_maneuver->has_left_traversable_outbound_intersecting_edge() ||
+              prev_maneuver->has_right_traversable_outbound_intersecting_edge()) {
+            prev_maneuver->set_distant_verbal_multi_cue(true);
+          } else {
+            prev_maneuver->set_imminent_verbal_multi_cue(true);
+          }
+          break;
+        }
+        default: {
+          prev_maneuver->set_imminent_verbal_multi_cue(true);
+          break;
+        }
+      }
+
       // Set verbal pre transition instruction as a verbal multi-cue
-      prev_maneuver->set_imminent_verbal_multi_cue(true);
       prev_maneuver->set_verbal_pre_transition_instruction(
           FormVerbalMultiCue(prev_maneuver, maneuver));
     }
@@ -3854,23 +3903,31 @@ std::string NarrativeBuilder::FormVerbalMultiCue(Maneuver* maneuver, Maneuver& n
   return instruction;
 }
 
-bool NarrativeBuilder::IsVerbalMultiCuePossible(Maneuver* maneuver, Maneuver& next_maneuver) {
+bool NarrativeBuilder::IsVerbalMultiCuePossible(Maneuver& maneuver, Maneuver& next_maneuver) {
   // Current maneuver must have a verbal pre-transition instruction
   // Next maneuver must have a verbal transition alert or a verbal pre-transition instruction
-  // Current maneuver must be quick (basic time < 12 sec)
+  // Current maneuver must be within verbal multi-cue bounds
   // Next maneuver must not be a merge
-  // Current and next maneuvers must not be a rouandbout
+  // Current and next maneuvers must not be a roundabout
   // Current and next maneuvers must not be transit or transit connection
-  if (maneuver->HasVerbalPreTransitionInstruction() &&
+  if (maneuver.HasVerbalPreTransitionInstruction() &&
       (next_maneuver.HasVerbalTransitionAlertInstruction() ||
        next_maneuver.HasVerbalPreTransitionInstruction()) &&
-      maneuver->basic_time() < kVerbalMultiCueTimeThreshold && !next_maneuver.IsMergeType() &&
-      !maneuver->roundabout() && !next_maneuver.roundabout() && !maneuver->IsTransit() &&
-      !next_maneuver.IsTransit() && !maneuver->transit_connection() &&
+      IsWithinVerbalMultiCueBounds(maneuver) && !next_maneuver.IsMergeType() &&
+      !maneuver.roundabout() && !next_maneuver.roundabout() && !maneuver.IsTransit() &&
+      !next_maneuver.IsTransit() && !maneuver.transit_connection() &&
       !next_maneuver.transit_connection()) {
     return true;
   }
   return false;
+}
+
+bool NarrativeBuilder::IsWithinVerbalMultiCueBounds(Maneuver& maneuver) {
+  if (maneuver.IsStartType()) {
+    return (maneuver.basic_time() < kVerbalMultiCueTimeStartManeuverThreshold);
+  }
+  // Maneuver must be quick (basic time < 13 sec)
+  return (maneuver.basic_time() < kVerbalMultiCueTimeThreshold);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
