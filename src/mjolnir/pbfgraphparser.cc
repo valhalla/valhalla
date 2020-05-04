@@ -106,10 +106,12 @@ public:
       return;
     }
 
-    // Get tags if not already available
-    results = results ? results : lua_.Transform(OSMType::kNode, tags);
-    if (results->size() == 0) {
-      return;
+    // Get tags if not already available.  Don't bother calling Lua if there
+    // are no OSM tags to process.
+    if (tags.size() > 0) {
+      results = results ? results : lua_.Transform(OSMType::kNode, tags);
+    } else {
+      results = results ? results : Tags();
     }
 
     // unsorted extracts are just plain nasty, so they can bugger off!
@@ -128,6 +130,7 @@ public:
 
     // Create a new node and set its attributes
     OSMNode n;
+    n.set_access(0xfff); // By default, allow all access
     n.set_id(osmid);
     n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
     if (is_highway_junction) {
