@@ -678,7 +678,6 @@ void BicycleTrafficSignals(const std::string& config_file) {
   boost::filesystem::remove(bss_nodes_file);
   boost::filesystem::remove(intersections_file);
   boost::filesystem::remove(shapes_file);
-
 }
 
 void DoConfig() {
