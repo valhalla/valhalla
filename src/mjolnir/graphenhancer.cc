@@ -603,8 +603,31 @@ bool IsNotThruEdge(GraphReader& reader,
                    DirectedEdge& directededge) {
   // Add the end node to the expand list
   std::unordered_set<GraphId> visitedset; // Set of visited nodes
-  std::unordered_set<GraphId> expandset;  // Set of nodes to expand
-  expandset.insert(directededge.endnode());
+  std::vector<GraphId> expandset; // Set of nodes to expand - uses a vector for cache friendliness
+
+  // We'll use a simple bloom filter to try to avoid some of
+  // the .find() calls in the visited set - it won't get them all,
+  // but it will cut down the number of calls to that relatively
+  // expensive function
+  std::uint64_t visited_bloom = 0;
+  auto bloom_hash = std::hash<std::uint64_t>{};
+
+  // Pre-reserve space in the expandset.  Most of the time, we'll
+  // expand fewer nodes than this, so we'll avoid vector reallocation
+  // delays.  If a particular startnode expands further than this, it's
+  // fine, it'll just be a little slower because the expandset
+  // vector will need to grow.
+  constexpr int MAX_EXPECTED_OUTGOING_EDGES = 10;
+  expandset.reserve(kMaxNoThruTries * MAX_EXPECTED_OUTGOING_EDGES);
+
+  // Instead of removing elements from the expandset, we'll just keep
+  // a pointer to the "start" position - it's faster to just leave
+  // the nodes we've visited in memory at the start of the vector
+  // than to constantly keep the vector "correct" by removing items.
+  // Because we know that the expandset is of relatively small limited size,
+  // this approach is faster than the more generic erase(begin()) option
+  std::size_t expand_pos = 0;
+  expandset.push_back(directededge.endnode());
 
   // Expand edges until exhausted, the maximum number of expansions occur,
   // or end up back at the starting node. No node can be visited twice.
@@ -614,15 +637,18 @@ bool IsNotThruEdge(GraphReader& reader,
   const GraphTile* tile;
   for (uint32_t n = 0; n < kMaxNoThruTries; n++) {
     // If expand list is exhausted this is "not thru"
-    if (expandset.empty()) {
+    if (expand_pos == expandset.size()) {
       return true;
     }
 
     // Get the node off of the expand list and add it to the visited list.
-    // Expand edges from this node.
-    const GraphId expandnode = *expandset.cbegin();
-    expandset.erase(expandset.begin());
+    // Expand edges from this node.  Post-increment the index to the next
+    // item.
+    const GraphId expandnode = expandset[expand_pos++];
     visitedset.insert(expandnode);
+    // Add the expanded note to the bloom filter for faster
+    // "is not in set" checks lower down.
+    visited_bloom |= bloom_hash(expandnode);
     if (expandnode.Tile_Base() != prior_tile) {
       lock.lock();
       tile = reader.GetGraphTile(expandnode);
@@ -652,8 +678,17 @@ bool IsNotThruEdge(GraphReader& reader,
       }
 
       // Add to the end node to expand set if not already visited set
-      if (visitedset.find(diredge->endnode()) == visitedset.end()) {
-        expandset.insert(diredge->endnode());
+      auto endnode = diredge->endnode();
+      auto endnode_hash = bloom_hash(endnode);
+      // Use the bloom filter to quickly check if the endnode is *not* in the visited set.
+      // If the value is not in the bloom filter, we know that it's definitely not in
+      // the visitedset, and we can avoid the somewhat expensive visitedset.find() call.
+      // Because bloom filters return false-positives, we still need to do an explicit check if
+      // there is a hit.  Bloom filters do not return false negatives, so we can safely avoid
+      // the .find() call if the endnode is not found in the filter.
+      if ((visited_bloom & endnode_hash) != endnode_hash ||
+          visitedset.find(endnode) == visitedset.end()) {
+        expandset.push_back(diredge->endnode());
       }
     }
   }
