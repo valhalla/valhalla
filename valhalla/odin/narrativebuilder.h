@@ -529,7 +529,17 @@ protected:
    * @return true if a verbal multi-cue instruction should be formed for the
    *         two specified maneuvers.
    */
-  bool IsVerbalMultiCuePossible(Maneuver* maneuver, Maneuver& next_maneuver);
+  bool IsVerbalMultiCuePossible(Maneuver& maneuver, Maneuver& next_maneuver);
+
+  /**
+   * Returns true if the specified maneuver is within the mulit-cue bounds.
+   * The time bounds for a start maneuver is greater than other maneuver types.
+   *
+   * @param maneuver The current maneuver that must be short based on time.
+   *
+   * @return true if the specified maneuver is within the mulit-cue bounds.
+   */
+  bool IsWithinVerbalMultiCueBounds(Maneuver& maneuver);
 
   /**
    * Combines a simple preposition and a definite article for certain languages.
