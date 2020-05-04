@@ -1,14 +1,14 @@
 #include "config.h"
 
+#include "baldr/rapidjson_utils.h"
+#include "filesystem.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "worker.h"
 
-#include "baldr/rapidjson_utils.h"
 #include <algorithm>
 #include <atomic>
-#include <boost/filesystem/operations.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -24,7 +24,7 @@
 
 namespace bpo = boost::program_options;
 
-boost::filesystem::path config_file_path;
+filesystem::path config_file_path;
 size_t threads =
     std::max(static_cast<size_t>(std::thread::hardware_concurrency()), static_cast<size_t>(1));
 size_t batch = 1;
@@ -95,7 +95,7 @@ int ParseArguments(int argc, char* argv[]) {
   std::string search_type;
   options.add_options()("help,h", "Print this help message.")("version,v",
                                                               "Print the version of this software.")(
-      "config,c", boost::program_options::value<boost::filesystem::path>(&config_file_path),
+      "config,c", boost::program_options::value<filesystem::path>(&config_file_path),
       "Path to the json configuration file.")(
       "threads,t", boost::program_options::value<size_t>(&threads),
       "Concurrency to use.")("batch,b", boost::program_options::value<size_t>(&batch),
@@ -218,7 +218,7 @@ int main(int argc, char** argv) {
 
   // check what type of input we are getting
   boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.c_str(), pt);
+  rapidjson::read_json(config_file_path.string(), pt);
 
   // configure logging
   boost::optional<boost::property_tree::ptree&> logging_subtree =

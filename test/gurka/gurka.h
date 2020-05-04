@@ -12,6 +12,7 @@
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
+#include "filesystem.h"
 #include "loki/worker.h"
 #include "mjolnir/util.h"
 #include "odin/worker.h"
@@ -19,7 +20,6 @@
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
-#include <boost/filesystem.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -44,13 +44,15 @@
 namespace valhalla {
 namespace gurka {
 
+using nodelayout = std::map<std::string, midgard::PointLL>;
+
 struct map {
   boost::property_tree::ptree config;
-  std::unordered_map<std::string, midgard::PointLL> nodes;
+  nodelayout nodes;
 };
 
-using ways = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
-using nodes = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
+using ways = std::map<std::string, std::map<std::string, std::string>>;
+using nodes = std::map<std::string, std::map<std::string, std::string>>;
 
 enum relation_member_type { node_member, way_member };
 struct relation_member {
@@ -60,12 +62,10 @@ struct relation_member {
 };
 struct relation {
   std::vector<relation_member> members;
-  std::unordered_map<std::string, std::string> tags;
+  std::map<std::string, std::string> tags;
 };
 
 using relations = std::vector<relation>;
-
-using nodelayout = std::unordered_map<std::string, midgard::PointLL>;
 
 namespace detail {
 
@@ -526,9 +526,9 @@ map buildtiles(const nodelayout layout,
     throw std::runtime_error("Can't use / for tests, as we need to clean it out first");
   }
 
-  if (boost::filesystem::exists(workdir))
-    boost::filesystem::remove_all(workdir);
-  boost::filesystem::create_directories(workdir);
+  if (filesystem::exists(workdir))
+    filesystem::remove_all(workdir);
+  filesystem::create_directories(workdir);
 
   auto pbf_filename = workdir + "/map.pbf";
   std::cerr << "[          ] generating map PBF at " << pbf_filename << std::endl;
@@ -549,9 +549,9 @@ map buildtiles(const nodelayout layout,
  *
  * @param reader a reader configured to read graph tiles
  * @param nodes a lookup table from node names to coordinates
- * @param tile_id the tile to search
  * @param way_name the way name you want a directed edge for
  * @param end_node the node that should be the target of the directed edge you want
+ * @param tile_id optional tile_id to limit the search to
  * @return the directed edge that matches, or nullptr if there was no match
  */
 std::tuple<const baldr::GraphId,
@@ -559,50 +559,43 @@ std::tuple<const baldr::GraphId,
            const baldr::GraphId,
            const baldr::DirectedEdge*>
 findEdge(valhalla::baldr::GraphReader& reader,
-         const std::unordered_map<std::string, midgard::PointLL>& nodes,
-         const baldr::GraphId& tile_id,
+         const nodelayout& nodes,
          const std::string& way_name,
-         const std::string& end_node) {
-  auto* tile = reader.GetGraphTile(tile_id);
+         const std::string& end_node,
+         const baldr::GraphId& tile_id = baldr::GraphId{}) {
+  // if the tile was specified use it otherwise scan everything
+  auto tileset =
+      tile_id.Is_Valid() ? std::unordered_set<baldr::GraphId>{tile_id} : reader.GetTileSet();
 
+  // Iterate over all the tiles, there wont be many in unit tests..
   auto end_node_coordinates = nodes.at(end_node);
-
-  // Iterate over all directed edges to find one with the name we want
-  for (uint32_t i = 0; i < tile->header()->directededgecount(); i++) {
-    const auto* forward_directed_edge = tile->directededge(i);
-    // Now, see if the endnode for this edge is our end_node
-    auto de_endnode = forward_directed_edge->endnode();
-    auto de_endnode_coordinates = tile->get_node_ll(de_endnode);
-    const auto threshold = 0.00001; // Degrees.  About 1m at the equator
-    if (std::abs(de_endnode_coordinates.lng() - end_node_coordinates.lng()) < threshold &&
-        std::abs(de_endnode_coordinates.lat() - end_node_coordinates.lat()) < threshold) {
-      auto names = tile->GetNames(forward_directed_edge->edgeinfo_offset());
-      for (const auto& name : names) {
-        if (name == way_name) {
-          auto forward_edge_id = tile_id;
-          forward_edge_id.set_id(i);
-          auto reverse_edge_id = tile->GetOpposingEdgeId(forward_directed_edge);
-          auto* reverse_directed_edge = tile->directededge(i);
-          return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
-                                 reverse_directed_edge);
+  for (auto tile_id : tileset) {
+    auto* tile = reader.GetGraphTile(tile_id);
+    // Iterate over all directed edges to find one with the name we want
+    for (uint32_t i = 0; i < tile->header()->directededgecount(); i++) {
+      const auto* forward_directed_edge = tile->directededge(i);
+      // Now, see if the endnode for this edge is our end_node
+      auto de_endnode = forward_directed_edge->endnode();
+      auto de_endnode_coordinates = tile->get_node_ll(de_endnode);
+      const auto threshold = 0.00001; // Degrees.  About 1m at the equator
+      if (std::abs(de_endnode_coordinates.lng() - end_node_coordinates.lng()) < threshold &&
+          std::abs(de_endnode_coordinates.lat() - end_node_coordinates.lat()) < threshold) {
+        auto names = tile->GetNames(forward_directed_edge->edgeinfo_offset());
+        for (const auto& name : names) {
+          if (name == way_name) {
+            auto forward_edge_id = tile_id;
+            forward_edge_id.set_id(i);
+            auto reverse_edge_id = tile->GetOpposingEdgeId(forward_directed_edge);
+            auto* reverse_directed_edge = tile->directededge(i);
+            return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
+                                   reverse_directed_edge);
+          }
         }
       }
     }
   }
 
   return std::make_tuple(baldr::GraphId{}, nullptr, baldr::GraphId{}, nullptr);
-}
-
-std::tuple<const baldr::GraphId,
-           const baldr::DirectedEdge*,
-           const baldr::GraphId,
-           const baldr::DirectedEdge*>
-findEdge(const map& map,
-         const baldr::GraphId& tile_id,
-         const std::string& way_name,
-         const std::string& end_node) {
-  baldr::GraphReader reader(map.config.get_child("mjolnir"));
-  return findEdge(reader, map.nodes, tile_id, way_name, end_node);
 }
 
 /**
@@ -636,21 +629,10 @@ valhalla::Api route(const map& map,
   auto request_json = detail::build_valhalla_route_request(map, waypoints, costing, datetime);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
-  loki::loki_worker_t loki_worker(map.config, reader);
-  thor::thor_worker_t thor_worker(map.config, reader);
-  odin::odin_worker_t odin_worker(map.config);
-
-  valhalla::Api request;
-  valhalla::ParseApi(request_json, Options::route, request);
-  loki_worker.route(request);
-  thor_worker.route(request);
-  odin_worker.narrate(request);
-
-  loki_worker.cleanup();
-  thor_worker.cleanup();
-  odin_worker.cleanup();
-
-  return request;
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+  valhalla::Api api;
+  actor.route(request_json, nullptr, &api);
+  return api;
 }
 
 valhalla::Api route(const map& map,
@@ -664,7 +646,9 @@ valhalla::Api route(const map& map,
 
 valhalla::Api route(const map& map, const std::string& request_json) {
   valhalla::tyr::actor_t actor(map.config, true);
-  return actor.unserialized_route(request_json);
+  valhalla::Api api;
+  actor.route(request_json, nullptr, &api);
+  return api;
 }
 
 valhalla::Api match(const map& map,
@@ -685,7 +669,9 @@ valhalla::Api match(const map& map,
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   valhalla::tyr::actor_t actor(map.config, true);
-  return actor.unserialized_trace_route(request_json);
+  valhalla::Api api;
+  actor.trace_route(request_json, nullptr, &api);
+  return api;
 }
 
 namespace assert {

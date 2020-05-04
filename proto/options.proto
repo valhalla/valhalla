@@ -184,4 +184,5 @@ message Options {
   optional uint32 alternates = 39;                                        // Maximum number of alternate routes that can be returned
   optional float interpolation_distance = 40;                             // Map-matching interpolation distance beyond which trace points are merged
   optional bool guidance_views = 41;                                      // Whether to return guidance_views in the response
+  optional uint32 height_precision = 42 [default = 0];                    // Number of digits precision for heights returned
 }

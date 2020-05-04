@@ -9,6 +9,7 @@
 #include "midgard/logging.h"
 
 #include "baldr/connectivity_map.h"
+#include "baldr/curl_tilegetter.h"
 #include "filesystem.h"
 
 using namespace valhalla::midgard;

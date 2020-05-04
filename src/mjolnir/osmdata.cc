@@ -4,8 +4,8 @@
 #include <iostream>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem/operations.hpp>
 
+#include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/osmdata.h"
 #include "mjolnir/util.h"
@@ -599,8 +599,8 @@ void OSMData::add_to_name_map(const uint32_t member_id,
 
 void OSMData::cleanup_temp_files(const std::string& tile_dir) {
   auto remove_temp_file = [](const std::string& fname) {
-    if (boost::filesystem::exists(fname)) {
-      boost::filesystem::remove(fname);
+    if (filesystem::exists(fname)) {
+      filesystem::remove(fname);
     }
   };
 

@@ -7,6 +7,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include <cassert>
 
 #ifdef INLINE_TEST
 #include "test/test.h"
@@ -268,7 +269,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const {
-    return speedfactor_[kMaxSpeedKph];
+    return speedfactor_[kMaxAssumedSpeed];
   }
 
   /**
@@ -313,7 +314,7 @@ public:
   // We expose it within the source file for testing purposes
 public:
   VehicleType type_; // Vehicle type: car (default), motorcycle, etc
-  float speedfactor_[kMaxSpeedKph + 1];
+  std::vector<float> speedfactor_;
   float density_factor_[16]; // Density factor
   float ferry_factor_;       // Weighting to apply to ferry edges
   float toll_factor_;        // Factor applied when road has a toll
@@ -380,6 +381,7 @@ MotorcycleCost::MotorcycleCost(const Costing costing, const Options& options)
   }
 
   // Create speed cost table
+  speedfactor_.resize(kMaxSpeedKph + 1, 0);
   speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
@@ -462,6 +464,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Special case for travel on a ferry
   if (edge->use() == Use::kFerry) {
     // Use the edge speed (should be the speed of the ferry)
+    assert(edge->speed() < speedfactor_.size());
     float sec = (edge->length() * speedfactor_[edge->speed()]);
     return {sec * ferry_factor_, sec};
   }
@@ -473,6 +476,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor += toll_factor_;
   }
 
+  assert(speed < speedfactor_.size());
   float sec = (edge->length() * speedfactor_[speed]);
   return {sec * factor, sec};
 }

@@ -8,11 +8,11 @@
 #include "baldr/connectivity_map.h"
 #include "baldr/tilehierarchy.h"
 #include "config.h"
+#include "filesystem.h"
 
 using namespace valhalla::baldr;
 
 #include "baldr/rapidjson_utils.h"
-#include <boost/filesystem/operations.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -21,7 +21,7 @@ using namespace valhalla::baldr;
 namespace bpo = boost::program_options;
 using namespace valhalla::midgard;
 
-boost::filesystem::path config_file_path;
+filesystem::path config_file_path;
 std::vector<std::string> input_files;
 
 struct PPMObject {
@@ -44,8 +44,7 @@ bool ParseArguments(int argc, char* argv[]) {
 
   options.add_options()("help,h", "Print this help message.")("version,v",
                                                               "Print the version of this software.")(
-      "config,c",
-      boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
+      "config,c", boost::program_options::value<filesystem::path>(&config_file_path)->required(),
       "Path to the json configuration file.")
       // positional arguments
       ("input_files",
@@ -77,7 +76,7 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("config")) {
-    if (boost::filesystem::is_regular_file(config_file_path)) {
+    if (filesystem::is_regular_file(config_file_path)) {
       return true;
     } else {
       std::cerr << "Configuration file is required\n\n" << options << "\n\n";
@@ -112,7 +111,7 @@ int main(int argc, char** argv) {
 
   // Get the config to see which coverage we are using
   boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.c_str(), pt);
+  rapidjson::read_json(config_file_path.string(), pt);
 
   // Get something we can use to fetch tiles
   valhalla::baldr::connectivity_map_t connectivity_map(pt.get_child("mjolnir"));

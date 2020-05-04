@@ -27,6 +27,7 @@ if(NOT Boost_${PYTHON_LIB}_FOUND)
 else()
   python_add_module(python_valhalla python.cc)
   set_target_properties(python_valhalla PROPERTIES
+    FOLDER "Python Bindings"
     OUTPUT_NAME valhalla
     LINK_LIBRARIES "${PYTHON_LIBRARIES}"
     INCLUDE_DIRECTORIES "${PYTHON_INCLUDE_DIRS}")

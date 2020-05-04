@@ -8,6 +8,7 @@
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
+#include "midgard/util.h"
 
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
@@ -259,7 +260,7 @@ void route_summary(json::MapPtr& route,
   }
 
   // Convert distance to meters. Output distance and duration.
-  distance *= imperial ? 1609.344 : 1000.0;
+  distance = units_to_meters(distance, !imperial);
   route->emplace("distance", json::fp_t{distance, 3});
   route->emplace("duration", json::fp_t{duration, 3});
 
@@ -1222,7 +1223,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
                         arrive_maneuver, options);
 
       // Add mode, driving side, weight, distance, duration, name
-      double distance = maneuver.length() * (imperial ? 1609.344 : 1000.0);
+      double distance = units_to_meters(maneuver.length(), !imperial);
       double duration = maneuver.time();
 
       // Process drive_side, name, ref, mode, and prev_mode attributes if not the arrive maneuver
@@ -1326,7 +1327,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     // Add distance, duration, weight, and summary
     // Get a summary based on longest maneuvers.
     double duration = leg->summary().time();
-    double distance = leg->summary().length() * (imperial ? 1609.344 : 1000.0);
+    double distance = units_to_meters(leg->summary().length(), !imperial);
     output_leg->emplace("summary", summarize_leg(leg));
     output_leg->emplace("distance", json::fp_t{distance, 3});
     output_leg->emplace("duration", json::fp_t{duration, 3});

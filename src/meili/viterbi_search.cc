@@ -135,7 +135,7 @@ bool IViterbiSearch::HasStateId(const StateId& stateid) const {
   return added_states_.find(stateid) != added_states_.end();
 }
 
-StateIdIterator IViterbiSearch::SearchPath(StateId::Time time, bool allow_breaks) {
+StateIdIterator IViterbiSearch::SearchPathVS(StateId::Time time, bool allow_breaks) {
   return stateid_iterator(*this, time, SearchWinner(time), allow_breaks);
 }
 

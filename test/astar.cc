@@ -40,7 +40,6 @@
 #include <valhalla/proto/trip.pb.h>
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -130,7 +129,7 @@ const gurka::relations relations3 = {{{gurka::relation_member{gurka::way_member,
 const std::string test_dir = "test/data/fake_tiles_astar";
 const vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
 
-std::unordered_map<std::string, vm::PointLL> node_locations;
+gurka::nodelayout node_locations;
 
 const std::string config_file = "test/test_trivial_path";
 
@@ -154,10 +153,10 @@ void write_config(const std::string& filename,
 
 void make_tile() {
 
-  if (boost::filesystem::exists(test_dir))
-    boost::filesystem::remove_all(test_dir);
+  if (filesystem::exists(test_dir))
+    filesystem::remove_all(test_dir);
 
-  boost::filesystem::create_directories(test_dir);
+  filesystem::create_directories(test_dir);
 
   boost::property_tree::ptree conf;
   write_config(config_file, test_dir);
@@ -1430,9 +1429,9 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   {
     std::vector<uint32_t> expected;
     auto reader = get_graph_reader(test_dir);
-    auto e1 = gurka::findEdge(*reader, node_locations, tile_id, "nk", "k");
-    auto e2 = gurka::findEdge(*reader, node_locations, tile_id, "kh", "h");
-    auto e3 = gurka::findEdge(*reader, node_locations, tile_id, "hi", "i");
+    auto e1 = gurka::findEdge(*reader, node_locations, "nk", "k");
+    auto e2 = gurka::findEdge(*reader, node_locations, "kh", "h");
+    auto e3 = gurka::findEdge(*reader, node_locations, "hi", "i");
     expected.push_back(std::get<0>(e1).id());
     expected.push_back(std::get<0>(e2).id());
     expected.push_back(std::get<0>(e3).id());
@@ -1454,9 +1453,9 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   {
     std::vector<uint32_t> expected;
     auto reader = get_graph_reader(test_dir);
-    auto e1 = gurka::findEdge(*reader, node_locations, tile_id, "hi", "h");
-    auto e2 = gurka::findEdge(*reader, node_locations, tile_id, "kh", "k");
-    auto e3 = gurka::findEdge(*reader, node_locations, tile_id, "nk", "n");
+    auto e1 = gurka::findEdge(*reader, node_locations, "hi", "h");
+    auto e2 = gurka::findEdge(*reader, node_locations, "kh", "k");
+    auto e3 = gurka::findEdge(*reader, node_locations, "nk", "n");
     expected.push_back(std::get<0>(e1).id());
     expected.push_back(std::get<0>(e2).id());
     expected.push_back(std::get<0>(e3).id());
@@ -1510,7 +1509,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
   // from 18
   DirectedEdge edge_nk;
   {
-    auto result = gurka::findEdge(*reader, node_locations, tile_id, "nk", "k");
+    auto result = gurka::findEdge(*reader, node_locations, "nk", "k");
     ASSERT_NE(nullptr, std::get<1>(result));
     edge_nk = *std::get<1>(result);
     edge_nk.complex_restriction(true);
@@ -1519,7 +1518,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
   }
   DirectedEdge edge_kh;
   {
-    auto result = gurka::findEdge(*reader, node_locations, tile_id, "kh", "h");
+    auto result = gurka::findEdge(*reader, node_locations, "kh", "h");
     ASSERT_NE(nullptr, std::get<1>(result));
     edge_kh = *std::get<1>(result);
     edge_kh.complex_restriction(true);
@@ -1529,7 +1528,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
   }
   // Create our fwd_pred for the bridging check
   DirectedEdge edge_hi;
-  auto edge_hi_result = gurka::findEdge(*reader, node_locations, tile_id, "hi", "i");
+  auto edge_hi_result = gurka::findEdge(*reader, node_locations, "hi", "i");
   ASSERT_NE(nullptr, std::get<1>(edge_hi_result));
   edge_hi = *std::get<1>(edge_hi_result);
   edge_hi.complex_restriction(true);
@@ -1539,7 +1538,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
 
   DirectedEdge edge_il;
   {
-    auto result = gurka::findEdge(*reader, node_locations, tile_id, "il", "i");
+    auto result = gurka::findEdge(*reader, node_locations, "il", "i");
     ASSERT_NE(nullptr, std::get<1>(result));
     edge_il = *std::get<1>(result);
     edge_il.complex_restriction(true);
@@ -1630,6 +1629,60 @@ TEST(ComplexRestriction, WalkVias) {
               expected_vias.end())
         << "Did not walk expected vias";
   }
+}
+
+TEST(Astar, BiDirTrivial) {
+  // Normally the service does not allow a trivial path with bidirectional astar because it has some
+  // problems with those (oneways that make you go around the block to get to where you started?).
+  // However when reviewing the other special case of short bidirectional routes where the forward and
+  // backward search paths meet on the destination edge we found that the trivial path edge trimming
+  // was wrong. Specifically because the forward expansion only cares about trimming the first edge
+  // from the origin and the reverse expansion only cares about trimming the last edge up to the
+  // destination but the route is only one edge. This means that both the reverse path label and the
+  // forward path label both have trimmed the edge but not enough. So what we have to do is trim the
+  // whole edge based on what percentage of the edge is left between the origin and destination.
+
+  // Get access to tiles
+  boost::property_tree::ptree conf;
+  conf.put("tile_dir", "test/data/utrecht_tiles");
+  vb::GraphReader graph_reader(conf);
+
+  // Locations
+  std::vector<valhalla::baldr::Location> locations;
+  baldr::Location origin(valhalla::midgard::PointLL(5.12696, 52.09701),
+                         baldr::Location::StopType::BREAK);
+  locations.push_back(origin);
+  baldr::Location dest(valhalla::midgard::PointLL(5.12700, 52.09709),
+                       baldr::Location::StopType::BREAK);
+  locations.push_back(dest);
+
+  // Costing
+  valhalla::Options options;
+  create_costing_options(options);
+  std::shared_ptr<vs::DynamicCost> mode_costing[4];
+  std::shared_ptr<vs::DynamicCost> cost = vs::CreateAutoCost(Costing::auto_, options);
+  auto mode = cost->travel_mode();
+  mode_costing[static_cast<uint32_t>(mode)] = cost;
+
+  // Loki
+  const auto projections = vk::Search(locations, graph_reader, cost);
+  std::vector<PathLocation> path_location;
+  for (const auto& loc : locations) {
+    ASSERT_NO_THROW(
+        path_location.push_back(projections.at(loc));
+        PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), graph_reader);)
+        << "fail_invalid_origin";
+  }
+
+  vt::BidirectionalAStar astar;
+  auto path = astar
+                  .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
+                               graph_reader, mode_costing, mode)
+                  .front();
+
+  ASSERT_TRUE(path.size() == 1);
+  EXPECT_LT(path.front().elapsed_cost, 1);
+  EXPECT_LT(path.front().elapsed_time, 1);
 }
 
 class AstarTestEnv : public ::testing::Environment {

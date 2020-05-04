@@ -1,6 +1,6 @@
 #pragma once
 /**
- * NOTE: This is a slim version of std::filesystem (boost::filesytem) containing just
+ * NOTE: This is a slim version of std::filesystem (boost::filesystem) containing just
  * the parts that we need for recursive directory listing, file types and exists check
  * we've just stubbed out the interface such that its basically a subset of the official
  * version missing the stuff we dont make use of. it should work on posix and windows
@@ -10,9 +10,13 @@
 #include <cstdio>
 #include <cstring>
 #include <dirent.h>
+#include <iomanip>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <sys/stat.h>
+#include <vector>
+
 #ifdef _MSC_VER
 #include <direct.h> // _mkdir
 #include <fcntl.h>
@@ -20,7 +24,6 @@
 #else
 #include <unistd.h>
 #endif
-#include <vector>
 
 namespace filesystem {
 
@@ -31,6 +34,8 @@ public:
 #else
   static constexpr char preferred_separator = L'/';
 #endif
+  path() : path_name_(), separators_() {
+  }
   path(const char* path_name) : path(std::string(path_name)) {
   }
   path(const std::string& path_name) : path_name_(path_name), separators_() {
@@ -63,6 +68,21 @@ public:
     separators_.pop_back();
     return *this /= filename;
   }
+  path parent_path() const {
+    if (separators_.empty())
+      return path("");
+    return path(path_name_.substr(0, separators_.back()));
+  }
+  path extension() const {
+    // get the file name part and look for a .
+    auto file_name = filename().string();
+    auto pos = file_name.rfind('.');
+    // if we didnt find a . or the one we found was . or .. or .bashrc, then no extension
+    if (pos == std::string::npos || pos == 0 || file_name == "..")
+      return path("");
+    // otherwise we just take the last bit from the .
+    return path(file_name.substr(pos));
+  }
   bool operator==(const path& rhs) const {
     return path_name_ == rhs.path_name_;
   }
@@ -93,6 +113,22 @@ private:
   std::vector<size_t> separators_;
 };
 
+template <class CharT, class Traits>
+std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const path& p) {
+  // paths get quoted to handle space
+  os << std::quoted(p.string(), CharT('"'), CharT('\\'));
+  return os;
+}
+
+template <class CharT, class Traits>
+std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>& is, path& p) {
+  // paths get unquoted to handle space
+  std::string tmp;
+  if (is >> std::quoted(tmp, CharT('"'), CharT('\\')))
+    p = tmp;
+  return is;
+}
+
 class directory_iterator;
 class recursive_directory_iterator;
 class directory_entry {
@@ -103,13 +139,13 @@ public:
     return entry_ != nullptr;
   }
   bool is_directory() const {
-    return exists() && entry_->d_type == DT_DIR;
+    return entry_ && entry_->d_type == DT_DIR;
   }
   bool is_regular_file() const {
-    return exists() && entry_->d_type == DT_REG;
+    return entry_ && entry_->d_type == DT_REG;
   }
   bool is_symlink() const {
-    return exists() && entry_->d_type == DT_LNK;
+    return entry_ && entry_->d_type == DT_LNK;
   }
   const filesystem::path& path() const {
     return path_;
@@ -117,6 +153,22 @@ public:
   bool operator==(const directory_entry& rhs) const {
     return (!entry_ && !rhs.entry_) || memcmp(entry_.get(), rhs.entry_.get(), sizeof(dirent)) == 0;
   }
+  std::uintmax_t file_size() const {
+    if (entry_ && entry_->d_type == DT_DIR)
+      throw std::runtime_error("Cannot get the file_size of a directory");
+    // if we know the inode then we stat'd the file already and cached the size
+    if (entry_->d_ino)
+      return file_size_;
+    struct stat s;
+    if (stat(path_.c_str(), &s) == 0) {
+      entry_->d_ino = s.st_ino;
+      file_size_ = s.st_size;
+      return file_size_;
+    }
+    throw std::runtime_error("Cannot get the file_size of this directory_entry");
+  }
+
+  friend bool is_empty(const class path&);
 
 private:
   friend directory_iterator;
@@ -142,10 +194,11 @@ private:
       entry_->d_namlen = filename.string().size();
 #endif
       entry_->d_type = mode_to_type(s.st_mode);
+      file_size_ = s.st_size;
     }
   }
 
-  // On POXIX, d_type is char.
+  // On POSIX, d_type is char.
   // On Windows, d_type is int (values are larger than 8-bit integer).
   decltype(::dirent::d_type) mode_to_type(decltype(::stat::st_mode) mode) {
     if (S_ISREG(mode))
@@ -181,8 +234,13 @@ private:
           path_.replace_filename(entry_->d_name);
         // fix the type if its unknown
         struct stat s;
-        if (entry_->d_type == DT_UNKNOWN && stat(path_.c_str(), &s) == 0)
+        if (entry_->d_type == DT_UNKNOWN && stat(path_.c_str(), &s) == 0) {
           entry_->d_type = mode_to_type(s.st_mode);
+          entry_->d_ino = s.st_ino;
+          file_size_ = s.st_size;
+        } // if we didnt stat it then we dont set the inode and we dont know the size
+        else
+          entry_->d_ino = 0;
       }
     }
     return entry_.get();
@@ -190,6 +248,7 @@ private:
   std::shared_ptr<DIR> dir_;
   std::shared_ptr<dirent> entry_;
   filesystem::path path_;
+  mutable std::uintmax_t file_size_;
 };
 
 class directory_iterator {
@@ -286,6 +345,18 @@ inline bool is_regular_file(const path& p) {
   return directory_entry(p).is_regular_file();
 }
 
+inline bool is_empty(const path& p) {
+  try {
+    // if its a directory and we cant iterate then its empty OR
+    // its a file and it has no size
+    directory_entry entry(p);
+    return (entry.is_directory() && !entry.next()) || entry.file_size() == 0;
+  } // it can throw if the path is bogus
+  catch (...) {
+    return false;
+  }
+}
+
 inline bool create_directories(const path& p) {
   // name no work to do
   if (p.path_name_.empty())
@@ -319,7 +390,6 @@ inline bool create_directories(const path& p) {
 }
 
 inline void resize_file(const path& p, std::uintmax_t new_size) {
-
 #ifdef _MSC_VER
   auto truncate = [](char const* filepath, std::uintmax_t length) -> int {
     // _chsize expects value in range of signed long

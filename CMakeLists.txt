@@ -7,7 +7,7 @@
 # This is secondary build configuration provided for convenient development
 # on Windows and using CMake-enabled IDEs.
 #
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
 include(FindPkgConfig)
@@ -29,8 +29,10 @@ option(ENABLE_COMPILER_WARNINGS "Build with compiler warnings" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 option(ENABLE_TESTS "Enable Valhalla tests" ON)
 option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPILER_WARNINGS=ON to take effect" OFF)
+option(ENABLE_BENCHMARKS "Enable microbenchmarking" ON)
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -74,6 +76,18 @@ else()
   message(STATUS "Unrecognized build type - will use cmake defaults")
 endif()
 
+function(create_source_groups prefix)
+  foreach(file ${ARGN})
+    get_filename_component(file "${file}" ABSOLUTE)
+    string(FIND "${file}" "${PROJECT_BINARY_DIR}/" pos)
+    if(pos EQUAL 0)
+      source_group(TREE "${PROJECT_BINARY_DIR}/" PREFIX "Generated Files" FILES "${file}")
+    else()
+      source_group(TREE "${PROJECT_SOURCE_DIR}/" PREFIX "${prefix}" FILES "${file}")
+    endif()
+  endforeach()
+endfunction()
+
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
   find_program(CCACHE_FOUND ccache)
   if(CCACHE_FOUND)
@@ -110,6 +124,7 @@ if(ENABLE_COVERAGE)
     COMMAND ${GENHTML_PATH} --prefix ${CMAKE_CURRENT_BINARY_DIR} --output-directory coverage --title "Test Coverage" --legend --show-details coverage.info
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/coverage.info)
+  set_target_properties(coverage PROPERTIES FOLDER "Tests")
 endif()
 
 ## Dependencies
@@ -123,9 +138,12 @@ if(NOT TARGET CURL::CURL)
       find_package(CURL REQUIRED)
     endif()
     set_target_properties(CURL::CURL PROPERTIES
-      INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
+      #INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
       INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
       INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
+    if(NOT WIN32)
+      set_property(TARGET CURL::CURL APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}")
+    endif()
   endif()
 else()
   message(STATUS "Using curl from the outside")
@@ -148,6 +166,7 @@ if(CMAKE_VERSION VERSION_LESS 3.9)
   if(NOT TARGET protobuf::libprotobuf-lite)
     add_library(protobuf::libprotobuf-lite UNKNOWN IMPORTED)
     set_target_properties(protobuf::libprotobuf-lite PROPERTIES
+      FOLDER "Dependencies"
       INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
 
     if(EXISTS "${PROTOBUF_LIBRARY}")
@@ -196,7 +215,7 @@ endif()
 
 ## Mjolnir and associated executables
 if(ENABLE_DATA_TOOLS)
-  find_package(Boost 1.51 REQUIRED COMPONENTS date_time filesystem system program_options)
+  find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
   find_package(SQLite3 REQUIRED)
   find_package(SpatiaLite REQUIRED)
   find_package(Lua REQUIRED)
@@ -206,7 +225,7 @@ if(ENABLE_DATA_TOOLS)
     INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}")
 ## Top level executables
 elseif(ENABLE_TOOLS)
-  find_package(Boost 1.51 REQUIRED COMPONENTS filesystem system program_options)
+  find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
 ## Header only boost for the library without mjolnir
 elseif(NOT Boost_FOUND)
   find_package(Boost 1.51 REQUIRED)
@@ -261,7 +280,12 @@ if(ENABLE_TOOLS)
   foreach(program ${valhalla_programs})
     get_source_path(path ${program})
     add_executable(${program} ${path})
-    target_link_libraries(${program} Boost::program_options valhalla Threads::Threads Boost::filesystem Boost::system)
+    set_target_properties(${program} PROPERTIES FOLDER "Tools")
+    create_source_groups("Source Files" ${path})
+    target_link_libraries(${program} Boost::program_options valhalla)
+    if(WIN32)
+      target_link_libraries(${program} ${CURL_LIBRARIES})
+    endif()
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
@@ -270,7 +294,12 @@ if(ENABLE_DATA_TOOLS)
   foreach(program ${valhalla_data_tools})
     get_source_path(path ${program})
     add_executable(${program} ${path})
-    target_link_libraries(${program} valhalla Boost::program_options Threads::Threads Boost::filesystem Boost::system)
+    create_source_groups("Source Files" ${path})
+    set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
+    target_link_libraries(${program} valhalla Boost::program_options)
+    if(WIN32)
+      target_link_libraries(${program} ${CURL_LIBRARIES})
+    endif()
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 
@@ -286,7 +315,9 @@ endif()
 if(ENABLE_SERVICES)
   foreach(program ${valhalla_services})
     add_executable(${program} src/${program}.cc)
-    target_link_libraries(${program} valhalla Boost::program_options Threads::Threads)
+    create_source_groups("Source Files" src/${program}.cc)
+    set_target_properties(${program} PROPERTIES FOLDER "Services")
+    target_link_libraries(${program} valhalla Boost::program_options)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
@@ -310,6 +341,11 @@ install(FILES COPYING CHANGELOG.md
 
 if(ENABLE_TESTS)
   add_subdirectory(test)
+endif()
+
+# NOTE(mookerji): Windows CI seems to break on the gbench build, so shelve Win32 support for now.
+if(ENABLE_BENCHMARKS AND NOT WIN32)
+  add_subdirectory(bench)
 endif()
 
 ## Packaging via CPack
