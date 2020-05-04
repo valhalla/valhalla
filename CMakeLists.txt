@@ -199,7 +199,11 @@ if(ENABLE_DATA_TOOLS)
   find_package(Boost 1.51 REQUIRED COMPONENTS date_time filesystem system program_options)
   find_package(SQLite3 REQUIRED)
   find_package(SpatiaLite REQUIRED)
-  find_package(Lua REQUIRED)
+  # Prefer LuaJIT if it's available, but fallback to regular Lua if it's not found
+  find_package(LuaJIT)
+  if (NOT LUAJIT_FOUND)
+      find_package(Lua REQUIRED)
+  endif()
   add_library(Lua::Lua INTERFACE IMPORTED)
   set_target_properties(Lua::Lua PROPERTIES
     INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
@@ -271,6 +275,10 @@ if(ENABLE_DATA_TOOLS)
     get_source_path(path ${program})
     add_executable(${program} ${path})
     target_link_libraries(${program} valhalla Boost::program_options Threads::Threads Boost::filesystem Boost::system)
+    # Using LuaJIT on macOS requires a couple of extra linker flags
+    if (LUAJIT_FOUND AND APPLE)
+      target_link_options(${program} PUBLIC -pagezero_size 10000 -image_base 100000000)
+    endif()
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 

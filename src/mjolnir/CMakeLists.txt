@@ -9,14 +9,24 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
   DEPENDS ${VALHALLA_SOURCE_DIR}/lua/admin.lua
   VERBATIM)
 
+# If using LuaJIT, we must use `bit.*` functions, not `bit32.*` functions
+if (LUAJIT_FOUND)
+  file(READ ${VALHALLA_SOURCE_DIR}/lua/graph.lua GRAPH_LUA)
+  string(REPLACE bit32 bit GRAPH_LUAJIT ${GRAPH_LUA})
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/graph.lua ${GRAPH_LUAJIT})
+else()
+  file(COPY ${VALHALLA_SOURCE_DIR}/lua/graph.lua DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+
+
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
   COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
-      ${VALHALLA_SOURCE_DIR}/lua/graph.lua
+      ${CMAKE_CURRENT_BINARY_DIR}/graph.lua
       ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
       --variable-name lua_graph_lua
   WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
   COMMENT "Compiling lua/graph.lua to graph_lua_proc.h"
-  DEPENDS ${VALHALLA_SOURCE_DIR}/lua/graph.lua
+  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/graph.lua
   VERBATIM)
 
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/mjolnir/*.h)
