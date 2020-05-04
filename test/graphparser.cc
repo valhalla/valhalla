@@ -1,16 +1,16 @@
 #include "baldr/graphreader.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/sequence.h"
 #include "mjolnir/bssbuilder.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "test.h"
-#include <cstdint>
 
-#include "baldr/rapidjson_utils.h"
-#include <boost/filesystem.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <cstdint>
 #include <fstream>
 
 #include "baldr/directededge.h"
@@ -535,11 +535,11 @@ void Bike(const std::string& config_file) {
   EXPECT_TRUE(way_156539491.moped_forward());
   EXPECT_TRUE(way_156539491.bike_backward());
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(from_restriction_file);
-  boost::filesystem::remove(to_restriction_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(access_file);
+  filesystem::remove(from_restriction_file);
+  filesystem::remove(to_restriction_file);
 }
 
 void Bus(const std::string& config_file) {
@@ -678,6 +678,7 @@ void BicycleTrafficSignals(const std::string& config_file) {
   boost::filesystem::remove(bss_nodes_file);
   boost::filesystem::remove(intersections_file);
   boost::filesystem::remove(shapes_file);
+
 }
 
 void DoConfig() {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <valhalla/baldr/tilegetter.h>
+
 #include <array>
 #include <condition_variable>
 #include <memory>
@@ -18,15 +20,20 @@ struct curler_t {
    */
   explicit curler_t(const std::string& user_agent);
 
+  using interrupt_t = tile_getter_t::interrupt_t;
   /**
    * Fetch a url and return the bytes that we got
    *
    * @param  url                the url to fetch
    * @param  http_code          the code we got back when fetching
    * @param  gzipped            whether to request for gzip compressed data
+   * @param  interrupt          throws if request should be interrupted
    * @return the bytes we fetched
    */
-  std::vector<char> operator()(const std::string& url, long& http_code, bool gzipped);
+  std::vector<char> operator()(const std::string& url,
+                               long& http_code,
+                               bool gzipped,
+                               const interrupt_t* interrupt) const;
 
   /**
    * Allow only moves and forbid copies. We don't want

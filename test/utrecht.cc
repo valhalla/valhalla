@@ -1,9 +1,9 @@
+#include "filesystem.h"
 #include "midgard/sequence.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/pbfgraphparser.h"
 #include <cstdint>
 
-#include <boost/filesystem.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <fstream>
 

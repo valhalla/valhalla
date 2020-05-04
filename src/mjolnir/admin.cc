@@ -1,7 +1,8 @@
 #include "mjolnir/admin.h"
 #include "baldr/datetime.h"
+#include "filesystem.h"
 #include "midgard/logging.h"
-#include <boost/filesystem/operations.hpp>
+#include "mjolnir/util.h"
 #include <spatialite.h>
 #include <sqlite3.h>
 #include <unordered_map>
@@ -14,7 +15,7 @@ sqlite3* GetDBHandle(const std::string& database) {
 
   // Initialize the admin DB (if it exists)
   sqlite3* db_handle = nullptr;
-  if (!database.empty() && boost::filesystem::exists(database)) {
+  if (!database.empty() && filesystem::exists(database)) {
     spatialite_init(0);
     sqlite3_stmt* stmt = 0;
     char* err_msg = nullptr;
@@ -24,22 +25,13 @@ sqlite3* GetDBHandle(const std::string& database) {
     if (ret != SQLITE_OK) {
       LOG_ERROR("cannot open " + database);
       sqlite3_close(db_handle);
-      db_handle = nullptr;
-      return db_handle;
+      return nullptr;
     }
 
     // loading SpatiaLite as an extension
-    sqlite3_enable_load_extension(db_handle, 1);
-#if SQLITE_VERSION_NUMBER > 3008007
-    sql = "SELECT load_extension('mod_spatialite')";
-#else
-    sql = "SELECT load_extension('libspatialite')";
-#endif
-    ret = sqlite3_exec(db_handle, sql.c_str(), nullptr, nullptr, &err_msg);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("load_extension() error: " + std::string(err_msg));
-      sqlite3_free(err_msg);
+    if (!load_spatialite(db_handle)) {
       sqlite3_close(db_handle);
+      return nullptr;
     }
   }
   return db_handle;

@@ -40,7 +40,6 @@
 #include <valhalla/proto/trip.pb.h>
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -130,7 +129,7 @@ const gurka::relations relations3 = {{{gurka::relation_member{gurka::way_member,
 const std::string test_dir = "test/data/fake_tiles_astar";
 const vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
 
-std::unordered_map<std::string, vm::PointLL> node_locations;
+gurka::nodelayout node_locations;
 
 const std::string config_file = "test/test_trivial_path";
 
@@ -155,10 +154,10 @@ void write_config(const std::string& filename,
 
 void make_tile() {
 
-  if (boost::filesystem::exists(test_dir))
-    boost::filesystem::remove_all(test_dir);
+  if (filesystem::exists(test_dir))
+    filesystem::remove_all(test_dir);
 
-  boost::filesystem::create_directories(test_dir);
+  filesystem::create_directories(test_dir);
 
   boost::property_tree::ptree conf;
   write_config(config_file, test_dir);

@@ -12,6 +12,7 @@
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
+#include "filesystem.h"
 #include "loki/worker.h"
 #include "mjolnir/util.h"
 #include "odin/worker.h"
@@ -19,7 +20,6 @@
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
-#include <boost/filesystem.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -44,13 +44,15 @@
 namespace valhalla {
 namespace gurka {
 
+using nodelayout = std::map<std::string, midgard::PointLL>;
+
 struct map {
   boost::property_tree::ptree config;
-  std::unordered_map<std::string, midgard::PointLL> nodes;
+  nodelayout nodes;
 };
 
-using ways = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
-using nodes = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
+using ways = std::map<std::string, std::map<std::string, std::string>>;
+using nodes = std::map<std::string, std::map<std::string, std::string>>;
 
 enum relation_member_type { node_member, way_member };
 struct relation_member {
@@ -60,12 +62,10 @@ struct relation_member {
 };
 struct relation {
   std::vector<relation_member> members;
-  std::unordered_map<std::string, std::string> tags;
+  std::map<std::string, std::string> tags;
 };
 
 using relations = std::vector<relation>;
-
-using nodelayout = std::unordered_map<std::string, midgard::PointLL>;
 
 namespace detail {
 
@@ -526,9 +526,9 @@ map buildtiles(const nodelayout layout,
     throw std::runtime_error("Can't use / for tests, as we need to clean it out first");
   }
 
-  if (boost::filesystem::exists(workdir))
-    boost::filesystem::remove_all(workdir);
-  boost::filesystem::create_directories(workdir);
+  if (filesystem::exists(workdir))
+    filesystem::remove_all(workdir);
+  filesystem::create_directories(workdir);
 
   auto pbf_filename = workdir + "/map.pbf";
   std::cerr << "[          ] generating map PBF at " << pbf_filename << std::endl;
@@ -559,7 +559,7 @@ std::tuple<const baldr::GraphId,
            const baldr::GraphId,
            const baldr::DirectedEdge*>
 findEdge(valhalla::baldr::GraphReader& reader,
-         const std::unordered_map<std::string, midgard::PointLL>& nodes,
+         const nodelayout& nodes,
          const std::string& way_name,
          const std::string& end_node,
          const baldr::GraphId& tile_id = baldr::GraphId{}) {
@@ -631,7 +631,7 @@ valhalla::Api route(const map& map,
 
   valhalla::tyr::actor_t actor(map.config, *reader, true);
   valhalla::Api api;
-  actor.route(request_json, []() {}, &api);
+  actor.route(request_json, nullptr, &api);
   return api;
 }
 
@@ -647,7 +647,7 @@ valhalla::Api route(const map& map,
 valhalla::Api route(const map& map, const std::string& request_json) {
   valhalla::tyr::actor_t actor(map.config, true);
   valhalla::Api api;
-  actor.route(request_json, []() {}, &api);
+  actor.route(request_json, nullptr, &api);
   return api;
 }
 
@@ -670,7 +670,7 @@ valhalla::Api match(const map& map,
 
   valhalla::tyr::actor_t actor(map.config, true);
   valhalla::Api api;
-  actor.trace_route(request_json, []() {}, &api);
+  actor.trace_route(request_json, nullptr, &api);
   return api;
 }
 

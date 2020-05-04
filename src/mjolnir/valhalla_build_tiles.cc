@@ -7,7 +7,6 @@
 using namespace valhalla::mjolnir;
 
 #include "baldr/rapidjson_utils.h"
-#include <boost/filesystem/operations.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
