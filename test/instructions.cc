@@ -192,7 +192,8 @@ TEST(Instructions, validate_merge_instructions) {
   // Test merge left
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/merge_left.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Merge left onto US 322 East.", "", "Merge left onto U.S. 3 22 East.",
+                    "Merge left onto US 322 East.", "",
+                    "Merge left onto U.S. 3 22 East. Then You will arrive at U.S. 3 22 East.",
                     "Continue for 1,000 feet.");
 }
 
@@ -414,7 +415,7 @@ TEST(Instructions, validate_multi_cue_instructions) {
                      "test/pinpoints/instructions/multi_cue_start_turn_destination.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Turn left onto US 30/Lincoln Highway East.", "Turn left onto U.S. 30.",
-                    "Turn left onto U.S. 30, Lincoln Highway East. Then Turn right.",
+                    "Turn left onto U.S. 30, Lincoln Highway East. Then, in 500 feet, Turn right.",
                     "Continue for 500 feet.");
 
   maneuver_index = 2;
@@ -423,7 +424,8 @@ TEST(Instructions, validate_multi_cue_instructions) {
                      "test/pinpoints/instructions/multi_cue_start_turn_destination.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Turn right.", "Turn right.",
-                    "Turn right. Then Adidas Outlet will be on the left.", "Continue for 100 feet.");
+                    "Turn right. Then, in 100 feet, Adidas Outlet will be on the left.",
+                    "Continue for 100 feet.");
 }
 
 } // namespace
