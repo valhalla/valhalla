@@ -207,14 +207,14 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   EXPECT_TRUE((bike_network & kMcn) && (bike_network & kRcn) && way_75786176.bike_network() == 0)
       << "rcn and mtb not marked on way 75786176.";
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(from_restriction_file);
-  boost::filesystem::remove(to_restriction_file);
-  boost::filesystem::remove(bss_nodes_file);
-  boost::filesystem::remove(intersections_file);
-  boost::filesystem::remove(shapes_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(access_file);
+  filesystem::remove(from_restriction_file);
+  filesystem::remove(to_restriction_file);
+  filesystem::remove(bss_nodes_file);
+  filesystem::remove(intersections_file);
+  filesystem::remove(shapes_file);
 }
 
 void RemovableBollards(const std::string& config_file) {
@@ -255,14 +255,14 @@ void RemovableBollards(const std::string& config_file) {
                                kEmergencyAccess | kPedestrianAccess | kWheelchairAccess |
                                kBicycleAccess | kMopedAccess | kMotorcycleAccess);
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(from_restriction_file);
-  boost::filesystem::remove(to_restriction_file);
-  boost::filesystem::remove(bss_nodes_file);
-  boost::filesystem::remove(intersections_file);
-  boost::filesystem::remove(shapes_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(access_file);
+  filesystem::remove(from_restriction_file);
+  filesystem::remove(to_restriction_file);
+  filesystem::remove(bss_nodes_file);
+  filesystem::remove(intersections_file);
+  filesystem::remove(shapes_file);
 }
 
 void Exits(const std::string& config_file) {
@@ -311,14 +311,14 @@ void Exits(const std::string& config_file) {
   EXPECT_EQ(osmdata.node_names.name(node.exit_to_index()), "PA441")
       << "node exit_to not set correctly .";
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(from_restriction_file);
-  boost::filesystem::remove(to_restriction_file);
-  boost::filesystem::remove(bss_nodes_file);
-  boost::filesystem::remove(intersections_file);
-  boost::filesystem::remove(shapes_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(access_file);
+  filesystem::remove(from_restriction_file);
+  filesystem::remove(to_restriction_file);
+  filesystem::remove(bss_nodes_file);
+  filesystem::remove(intersections_file);
+  filesystem::remove(shapes_file);
 }
 
 void Baltimore(const std::string& config_file) {
@@ -438,14 +438,14 @@ void Baltimore(const std::string& config_file) {
       FAIL() << "98040438 restriction test failed.";
   }
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(from_restriction_file);
-  boost::filesystem::remove(to_restriction_file);
-  boost::filesystem::remove(bss_nodes_file);
-  boost::filesystem::remove(intersections_file);
-  boost::filesystem::remove(shapes_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(access_file);
+  filesystem::remove(from_restriction_file);
+  filesystem::remove(to_restriction_file);
+  filesystem::remove(bss_nodes_file);
+  filesystem::remove(intersections_file);
+  filesystem::remove(shapes_file);
 }
 
 void Bike(const std::string& config_file) {
@@ -615,14 +615,14 @@ void Bus(const std::string& config_file) {
   EXPECT_FALSE(way_225895737.bus_backward());
   EXPECT_FALSE(way_225895737.bike_backward());
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(from_restriction_file);
-  boost::filesystem::remove(to_restriction_file);
-  boost::filesystem::remove(bss_nodes_file);
-  boost::filesystem::remove(intersections_file);
-  boost::filesystem::remove(shapes_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(access_file);
+  filesystem::remove(from_restriction_file);
+  filesystem::remove(to_restriction_file);
+  filesystem::remove(bss_nodes_file);
+  filesystem::remove(intersections_file);
+  filesystem::remove(shapes_file);
 }
 
 void BicycleTrafficSignals(const std::string& config_file) {
@@ -670,14 +670,14 @@ void BicycleTrafficSignals(const std::string& config_file) {
       << "Bike rental at a shop not marked as intersection."
   */
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(from_restriction_file);
-  boost::filesystem::remove(to_restriction_file);
-  boost::filesystem::remove(bss_nodes_file);
-  boost::filesystem::remove(intersections_file);
-  boost::filesystem::remove(shapes_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(access_file);
+  filesystem::remove(from_restriction_file);
+  filesystem::remove(to_restriction_file);
+  filesystem::remove(bss_nodes_file);
+  filesystem::remove(intersections_file);
+  filesystem::remove(shapes_file);
 }
 
 void DoConfig() {
@@ -806,15 +806,15 @@ TEST(GraphParser, TestImportBssNode) {
   // in this case the bike share edge should be the last edge of this node
   check_edge_attribute(local_tile->directededge(edge_idx_2 + count_2 - 1));
 
-  boost::filesystem::remove(ways_file);
-  boost::filesystem::remove(way_nodes_file);
-  boost::filesystem::remove(bss_nodes_file);
-  boost::filesystem::remove(access_file);
-  boost::filesystem::remove(from_restriction_file);
-  boost::filesystem::remove(to_restriction_file);
-  boost::filesystem::remove(bss_nodes_file);
-  boost::filesystem::remove(intersections_file);
-  boost::filesystem::remove(shapes_file);
+  filesystem::remove(ways_file);
+  filesystem::remove(way_nodes_file);
+  filesystem::remove(bss_nodes_file);
+  filesystem::remove(access_file);
+  filesystem::remove(from_restriction_file);
+  filesystem::remove(to_restriction_file);
+  filesystem::remove(bss_nodes_file);
+  filesystem::remove(intersections_file);
+  filesystem::remove(shapes_file);
 }
 
 } // namespace

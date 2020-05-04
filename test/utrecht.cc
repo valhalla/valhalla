@@ -225,14 +225,14 @@ public:
   }
 
   void TearDown() override {
-    boost::filesystem::remove(ways_file);
-    boost::filesystem::remove(way_nodes_file);
-    boost::filesystem::remove(access_file);
-    boost::filesystem::remove(from_restriction_file);
-    boost::filesystem::remove(to_restriction_file);
-    boost::filesystem::remove(bss_file);
-    boost::filesystem::remove(intersections_file);
-    boost::filesystem::remove(shapes_file);
+    filesystem::remove(ways_file);
+    filesystem::remove(way_nodes_file);
+    filesystem::remove(access_file);
+    filesystem::remove(from_restriction_file);
+    filesystem::remove(to_restriction_file);
+    filesystem::remove(bss_file);
+    filesystem::remove(intersections_file);
+    filesystem::remove(shapes_file);
   }
 };
 
