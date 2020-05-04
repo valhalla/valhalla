@@ -237,6 +237,13 @@ protected:
    */
   bool RampLeadsToHighway(Maneuver& maneuver) const;
 
+  /**
+   * Mark maneuvers that have traversable outbound intersecting edges.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void SetTraversableOutboundIntersectingEdgeFlags(std::list<Maneuver>& maneuvers);
+
   const Options& options_;
   EnhancedTripLeg* trip_path_;
 };
