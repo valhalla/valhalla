@@ -71,7 +71,7 @@
    * ADDED: Added rapidjson/schema.h to baldr/rapidjson_util.h to make it available for use within valhalla. [#2330](https://github.com/valhalla/valhalla/issues/2330)
    * ADDED: Support decimal precision for height values in elevation service. Also support polyline5 for encoded polylines input and output to elevation service. [2324](https://github.com/valhalla/valhalla/pull/2324)
    * ADDED: Use both imminent and distant verbal multi-cue phrases. [2353](https://github.com/valhalla/valhalla/pull/2353)
-   * CHANGED: Sped up valhalla_build_tiles with a couple of key optimizations [#2349](https://github.com/valhalla/valhalla/pull/2349)
+   * CHANGED: Speed up graph enhancing by avoiding continuous unordered_set rebuilding [#2349](https://github.com/valhalla/valhalla/pull/2349)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
