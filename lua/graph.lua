@@ -661,7 +661,7 @@ end
 --normalize a speed value
 function normalize_speed(speed)
   --grab the number prefix
-  local num = numeric_prefix(speed, false)
+  local num = tonumber(numeric_prefix(speed, false))
 
   --check if the rest of the string ends in "mph" convert to kph
   if num then
@@ -688,28 +688,28 @@ function normalize_weight(weight)
     if num then
       if w:sub(-1) == "t" or w:sub(-5) == "tonne" or w:sub(-6) == "tonnes" then
         if (num .. "t" == w) or (num .. "tonne" == w) or (num .. "tonnes" == w) then
-          return round(num,2)
+          return round(tonumber(num),2)
         end
       end
 
       if w:sub(-3) == "ton" or w:sub(-4) == "tons" then
          if (num .. "ton" == w) or (num .. "tons" == w) then
-           return round(num,2)
+           return round(tonumber(num),2)
          end
       end
 
       if w:sub(-2) == "lb" or w:sub(-3) == "lbs" then
         if (num .. "lb" == w) or (num .. "lbs" == w) then
-          return round((num/2000),2) -- convert to tons
+          return round((tonumber(num)/2000),2) -- convert to tons
         end
       end
 
       if w:sub(-2) == "kg" then
         if (num .. "kg" == w) then
-          return round((num/1000),2)
+          return round((tonumber(num)/1000),2)
         end
       end
-      return round(num,2) --3.5
+      return round(tonumber(num),2) --3.5
     end
   end
   return nil
@@ -728,7 +728,7 @@ function normalize_measurement(measurement)
     if num then
       if m:sub(-1) == "m" or m:sub(-5) == "meter" or m:sub(-6) == "meters" then
         if (num .. "m" == m) or (num .. "meter" == m) or (num .. "meters" == m) then
-          return round(num,2)
+          return round(tonumber(num),2)
         end
       end
 
@@ -739,7 +739,7 @@ function normalize_measurement(measurement)
 
 --have to check for inches only
         if (num .. "in" == m) or (num .. "\"" == m) or (num .. "inches" == m) or (num .. "inch" == m) then
-          return round((num * 0.0254),2)
+          return round((tonumber(num) * 0.0254),2)
         end
 
         feet = num
@@ -755,10 +755,10 @@ function normalize_measurement(measurement)
 
         m = m:sub(index+1)
         inches = numeric_prefix(m, true)
-        num = round((feet * 0.3048) + (inches * 0.0254),2)
+        num = round((tonumber(feet) * 0.3048) + (tonumber(inches) * 0.0254),2)
       elseif m:sub(-2) == "ft" or m:sub(-1) == "\'" or m:sub(-4) == "feet" then
         feet = num
-        num = round((feet * 0.3048),2)
+        num = round((tonumber(feet) * 0.3048),2)
       else
         feet = num
         m = string.sub(measurement, string.len(tostring(feet))+1)
@@ -776,13 +776,13 @@ function normalize_measurement(measurement)
           m = m:sub(index+1)
           inches = numeric_prefix(m, true)
           if inches then
-            num = round((feet * 0.3048) + (inches * 0.0254),2)
+            num = round((tonumber(feet) * 0.3048) + (tonumber(inches) * 0.0254),2)
           else
-            num = round((feet * 0.3048),2)
+            num = round((tonumber(feet) * 0.3048),2)
           end
         end
       end
-      return round(num,2)
+      return round(tonumber(num),2)
     end
   end
   return nil
@@ -1499,19 +1499,19 @@ function filter_tags_generic(kv)
         kv["ref"] = kv["unsigned_ref"]
   end
 
-  lane_count = numeric_prefix(kv["lanes"],false)
+  lane_count = tonumber(numeric_prefix(kv["lanes"],false))
   if lane_count and lane_count > 15 then
     lane_count = nil
   end
   kv["lanes"] = lane_count
 
-  lane_count = numeric_prefix(kv["lanes:forward"],false)
+  lane_count = tonumber(numeric_prefix(kv["lanes:forward"],false))
   if lane_count and lane_count > 15 then
     lane_count = nil
   end
   kv["forward_lanes"] = lane_count
 
-  lane_count = numeric_prefix(kv["lanes:backward"],false)
+  lane_count = tonumber(numeric_prefix(kv["lanes:backward"],false))
   if lane_count and lane_count > 15 then
     lane_count = nil
   end
