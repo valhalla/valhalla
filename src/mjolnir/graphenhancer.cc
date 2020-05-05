@@ -605,13 +605,6 @@ bool IsNotThruEdge(GraphReader& reader,
   std::unordered_set<GraphId> visitedset; // Set of visited nodes
   std::vector<GraphId> expandset; // Set of nodes to expand - uses a vector for cache friendliness
 
-  // We'll use a simple bloom filter to try to avoid some of
-  // the .find() calls in the visited set - it won't get them all,
-  // but it will cut down the number of calls to that relatively
-  // expensive function
-  std::uint64_t visited_bloom = 0;
-  auto bloom_hash = std::hash<std::uint64_t>{};
-
   // Pre-reserve space in the expandset.  Most of the time, we'll
   // expand fewer nodes than this, so we'll avoid vector reallocation
   // delays.  If a particular startnode expands further than this, it's
@@ -646,9 +639,6 @@ bool IsNotThruEdge(GraphReader& reader,
     // item.
     const GraphId expandnode = expandset[expand_pos++];
     visitedset.insert(expandnode);
-    // Add the expanded note to the bloom filter for faster
-    // "is not in set" checks lower down.
-    visited_bloom |= bloom_hash(expandnode);
     if (expandnode.Tile_Base() != prior_tile) {
       lock.lock();
       tile = reader.GetGraphTile(expandnode);
@@ -679,16 +669,8 @@ bool IsNotThruEdge(GraphReader& reader,
 
       // Add to the end node to expand set if not already visited set
       auto endnode = diredge->endnode();
-      auto endnode_hash = bloom_hash(endnode);
-      // Use the bloom filter to quickly check if the endnode is *not* in the visited set.
-      // If the value is not in the bloom filter, we know that it's definitely not in
-      // the visitedset, and we can avoid the somewhat expensive visitedset.find() call.
-      // Because bloom filters return false-positives, we still need to do an explicit check if
-      // there is a hit.  Bloom filters do not return false negatives, so we can safely avoid
-      // the .find() call if the endnode is not found in the filter.
-      if ((visited_bloom & endnode_hash) != endnode_hash ||
-          visitedset.find(endnode) == visitedset.end()) {
-        expandset.push_back(diredge->endnode());
+      if (visitedset.find(endnode) == visitedset.end()) {
+        expandset.push_back(endnode);
       }
     }
   }
