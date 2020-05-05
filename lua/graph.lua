@@ -654,8 +654,8 @@ function numeric_prefix(num_str, allow_decimals)
     return nil
   end
 
-  --convert number portion of string to actual numeric type
-  return tonumber(num_str:sub(0, index))
+  --Returns the substring that's numeric at the start of num_str
+  return num_str:sub(0, index)
 end
 
 --normalize a speed value
