@@ -218,11 +218,7 @@ if(ENABLE_DATA_TOOLS)
   find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
   find_package(SQLite3 REQUIRED)
   find_package(SpatiaLite REQUIRED)
-  # Prefer LuaJIT if it's available, but fallback to regular Lua if it's not found
   find_package(LuaJIT)
-  if (NOT LUAJIT_FOUND)
-      find_package(Lua REQUIRED)
-  endif()
   add_library(Lua::Lua INTERFACE IMPORTED)
   set_target_properties(Lua::Lua PROPERTIES
     INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
