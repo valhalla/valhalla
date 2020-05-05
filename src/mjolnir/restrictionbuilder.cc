@@ -9,8 +9,6 @@
 #include <set>
 #include <thread>
 
-#include <boost/filesystem/operations.hpp>
-
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"

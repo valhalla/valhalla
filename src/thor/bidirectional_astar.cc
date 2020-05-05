@@ -532,7 +532,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Terminate if the cost threshold has been exceeded.
         if (fwd_pred.sortcost() + cost_diff_ > threshold_) {
-          return FormPath(graphreader, options);
+          return FormPath(graphreader, options, origin, destination);
         }
 
         // Check if the edge on the forward search connects to a settled edge on the
@@ -552,7 +552,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
                     std::to_string(edgelabels_reverse_.size()));
           return {};
         }
-        return FormPath(graphreader, options);
+        return FormPath(graphreader, options, origin, destination);
       }
     }
     if (expand_reverse) {
@@ -562,7 +562,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Terminate if the cost threshold has been exceeded.
         if (rev_pred.sortcost() > threshold_) {
-          return FormPath(graphreader, options);
+          return FormPath(graphreader, options, origin, destination);
         }
 
         // Check if the edge on the reverse search connects to a settled edge on the
@@ -582,7 +582,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
                     std::to_string(edgelabels_forward_.size()));
           return {};
         }
-        return FormPath(graphreader, options);
+        return FormPath(graphreader, options, origin, destination);
       }
     }
 
@@ -900,7 +900,9 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
 
 // Form the path from the adjacency list.
 std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& graphreader,
-                                                                const valhalla::Options&) {
+                                                                const valhalla::Options& options,
+                                                                const valhalla::Location& origin,
+                                                                const valhalla::Location& dest) {
   // Get the indexes where the connection occurs.
   uint32_t idx1 = edgestatus_forward_.Get(best_connection_.edgeid).index();
   uint32_t idx2 = edgestatus_reverse_.Get(best_connection_.opp_edgeid).index();
@@ -931,21 +933,54 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
   // Reverse the list
   std::reverse(path.begin(), path.end());
 
-  // Special case code if the last edge of the forward path is
-  // the destination edge - update the elapsed time
+  // Special case code if the last edge of the forward path is the destination edge
+  // which means we need to worry about partial distance on the edge
   if (edgelabels_reverse_[idx2].predecessor() == kInvalidLabel) {
-    // destination is on a different edge than origin
+    // the destination is on a different edge than origin but the forward path found it. because of
+    // that we know that the forward path did not care about partial distance along the edge. so the
+    // edge that it added was the full length (time and cost). so what we need to do is look at the
+    // second to last edge and use the reverse path (who does care about partial distance on the
+    // destination edge) to recompute the elapsed time and cost. dont forget the transition cost from
+    // the forward path
     if (path.size() > 1) {
-      path.back().elapsed_time =
-          path[path.size() - 2].elapsed_time + edgelabels_reverse_[idx2].cost().secs;
-      path.back().elapsed_cost =
-          path[path.size() - 2].elapsed_cost + edgelabels_reverse_[idx2].cost().cost;
-    } // origin and destination on the same edge
-    else {
-      path.back().elapsed_time = edgelabels_reverse_[idx2].cost().secs;
-      path.back().elapsed_cost = edgelabels_reverse_[idx2].cost().cost;
+      path.back().elapsed_time = path[path.size() - 2].elapsed_time +
+                                 edgelabels_reverse_[idx2].cost().secs +
+                                 edgelabels_forward_[idx1].transition_secs();
+      path.back().elapsed_cost = path[path.size() - 2].elapsed_cost +
+                                 edgelabels_reverse_[idx2].cost().cost +
+                                 edgelabels_forward_[idx1].transition_cost();
+      return paths;
     }
-    return paths;
+
+    // origin and destination on the same edge
+    LOG_WARN("Trivial route with bidirectional A* should not be allowed");
+    // find the destination edge that was used
+    for (const auto& e : dest.path_edges()) {
+      if (e.graph_id() == edgelabels_reverse_[idx2].edgeid()) {
+        // T is the total we find first by scaling R which is the reverse edge trimmed
+        // F is the forward edge trimmed. We then subtract F from T to get the section
+        // at the beginning. Finally we subtract that from R to get the section between
+        // the two locations
+        //           x                           x
+        //      T----------------------------------------
+        //      F    ------------------------------------
+        //      R---------------------------------
+
+        // we scale the cost to what it would be for the full length of the edge
+        auto cost = edgelabels_reverse_[idx1].cost() * static_cast<float>(1 / e.percent_along());
+        // we then subtract the partial cost of the forward to get the piece before the origin
+        cost -= edgelabels_forward_[idx1].cost();
+        // which remove from the reverse cost which goes all the way to the start of the edge
+        cost = edgelabels_reverse_[idx2].cost() - cost;
+        // and we use that instead
+        path.back().elapsed_time = std::max(cost.secs, 0.f);
+        path.back().elapsed_cost = std::max(cost.cost, 0.f);
+        return paths;
+      }
+    }
+
+    // This cannot happen because we only make labels from edge candidates in the destination location
+    throw std::logic_error("Could not find candidate edge used for destination label");
   }
 
   // Get the elapsed time at the end of the forward path. NOTE: PathInfo

@@ -41,6 +41,20 @@ constexpr uint64_t kMaxOSMNodeId = 6800000000;
 // Absurd classification.
 constexpr uint32_t kAbsurdRoadClass = 777777;
 
+// Convenience method to get a number from a string. Uses try/catch in case
+// stoi throws an exception
+int get_number(const std::string& tag, const std::string& value) {
+  int num = -1;
+  try {
+    num = stoi(value);
+  } catch (const std::invalid_argument& arg) {
+    LOG_DEBUG("invalid_argument thrown for " + tag + " value: " + value);
+  } catch (const std::out_of_range& oor) {
+    LOG_DEBUG("out_of_range exception thrown for " + tag + " value: " + value);
+  }
+  return num;
+}
+
 // Construct PBFGraphParser based on properties file and input PBF extract
 struct graph_callback : public OSMPBF::Callback {
 public:
@@ -67,6 +81,10 @@ public:
     infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
     use_direction_on_ways_ = pt.get<bool>("data_processing.use_direction_on_ways", false);
     allow_alt_name_ = pt.get<bool>("data_processing.allow_alt_name", false);
+
+    empty_node_results_ = lua_.Transform(OSMType::kNode, {});
+    empty_way_results_ = lua_.Transform(OSMType::kWay, {});
+    empty_relation_results_ = lua_.Transform(OSMType::kRelation, {});
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
@@ -86,8 +104,12 @@ public:
   node_callback(uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
     boost::optional<Tags> results = boost::none;
     if (bss_nodes_) {
-      // Get tags
-      results = lua_.Transform(OSMType::kNode, tags);
+      // Get tags - do't bother with Lua callout if the taglist is empty
+      if (tags.size() > 0) {
+        results = lua_.Transform(OSMType::kNode, tags);
+      } else {
+        results = empty_node_results_;
+      }
 
       for (auto& key_value : *results) {
         if (key_value.first == "amenity" && key_value.second == "bicycle_rental") {
@@ -106,10 +128,12 @@ public:
       return;
     }
 
-    // Get tags if not already available
-    results = results ? results : lua_.Transform(OSMType::kNode, tags);
-    if (results->size() == 0) {
-      return;
+    // Get tags if not already available.  Don't bother calling Lua if there
+    // are no OSM tags to process.
+    if (tags.size() > 0) {
+      results = results ? results : lua_.Transform(OSMType::kNode, tags);
+    } else {
+      results = results ? results : empty_node_results_;
     }
 
     // unsorted extracts are just plain nasty, so they can bugger off!
@@ -251,23 +275,23 @@ public:
       return;
     }
 
-    // Transform tags. If no results that means the way does not have tags
-    // suitable for use in routing.
-    Tags results = lua_.Transform(OSMType::kWay, tags);
-    if (results.size() == 0) {
-      return;
-    }
-
     // Throw away closed features with following tags: building, landuse,
     // leisure, natural. See: http://wiki.openstreetmap.org/wiki/Key:area
     if (nodes[0] == nodes[nodes.size() - 1]) {
-      for (const auto& tag : results) {
+      for (const auto& tag : tags) {
         if (tag.first == "building" || tag.first == "landuse" || tag.first == "leisure" ||
             tag.first == "natural") {
           // LOG_INFO("Loop wayid " + std::to_string(osmid) + " Discard?");
           return;
         }
       }
+    }
+
+    // Transform tags. If no results that means the way does not have tags
+    // suitable for use in routing.
+    Tags results = tags.size() == 0 ? empty_way_results_ : lua_.Transform(OSMType::kWay, tags);
+    if (results.size() == 0) {
+      return;
     }
 
     // Throw away driveways if include_driveways_ is false
@@ -1115,12 +1139,90 @@ public:
       w.set_int_ref_index(0);
     }
 
+    // Process mtb tags.
+    auto mtb_scale = results.find("mtb:scale");
+    bool has_mtb_scale = mtb_scale != results.end();
+    if (has_mtb_scale) {
+      int scale = get_number("mtb:scale", mtb_scale->second);
+      if (scale >= 0) {
+        // Set surface based on scale
+        uint32_t scale = stoi(mtb_scale->second);
+        if (scale == 0) {
+          w.set_surface(Surface::kDirt);
+        } else if (scale == 1) {
+          w.set_surface(Surface::kGravel);
+        } else {
+          w.set_surface(Surface::kPath);
+        }
+        has_surface = true;
+
+        // Set bicycle access to true for all but the highest scale.
+        bool access = scale < kMaxMtbScale;
+        if (access && !w.oneway_reverse()) {
+          w.set_bike_forward(true);
+        }
+        if (access && !w.oneway()) {
+          w.set_bike_backward(true);
+        }
+      }
+    }
+
+    auto mtb_uphill_scale = results.find("mtb:scale:uphill");
+    bool has_mtb_uphill_scale = mtb_uphill_scale != results.end();
+    if (has_mtb_uphill_scale) {
+      int scale = get_number("mtb:uphill:scale", mtb_uphill_scale->second);
+      if (scale >= 0) {
+        // Set surface based on scale (if no scale exists)
+        uint32_t scale = stoi(mtb_uphill_scale->second);
+        if (!has_mtb_scale) {
+          if (scale < 2) {
+            w.set_surface(Surface::kGravel);
+          } else {
+            w.set_surface(Surface::kPath);
+          }
+          has_surface = true;
+        }
+
+        // Set bicycle access to true for all but the highest scale.
+        bool access = scale < kMaxMtbUphillScale;
+        if (access && !w.oneway_reverse()) {
+          w.set_bike_forward(true);
+        }
+        if (access && !w.oneway()) {
+          w.set_bike_backward(true);
+        }
+      }
+    }
+
+    // IMBA scale
+    auto mtb_imba_scale = results.find("mtb:scale:imba");
+    bool has_mtb_imba = mtb_imba_scale != results.end();
+    if (has_mtb_imba) {
+      // Update bike access (only if neither mtb:scale nor mtb:scale:uphill is present)
+      if (!has_mtb_scale && !has_mtb_uphill_scale) {
+        if (!w.oneway_reverse()) {
+          w.set_bike_forward(true);
+        }
+        if (!w.oneway()) {
+          w.set_bike_backward(true);
+        }
+      }
+    }
+
+    // Only has MTB description - set bicycle access.
+    bool has_mtb_desc = results.find("mtb:description") != results.end();
+    if (has_mtb_desc && !has_mtb_scale && !has_mtb_uphill_scale && !has_mtb_imba) {
+      if (!w.oneway_reverse()) {
+        w.set_bike_forward(true);
+      }
+      if (!w.oneway()) {
+        w.set_bike_backward(true);
+      }
+    }
+
     // if no surface and tracktype but we have a sac_scale, set surface to path.
     if (!has_surface) {
-      if (results.find("sac_scale") != results.end() || results.find("mtb:scale") != results.end() ||
-          results.find("mtb:scale:imba") != results.end() ||
-          results.find("mtb:scale:uphill") != results.end() ||
-          results.find("mtb:description") != results.end()) {
+      if (results.find("sac_scale") != results.end()) {
         w.set_surface(Surface::kPath);
       } else {
         // If no surface has been set by a user, assign a surface based on Road Class and Use
@@ -1260,7 +1362,7 @@ public:
                                  const OSMPBF::Tags& tags,
                                  const std::vector<OSMPBF::Member>& members) override {
     // Get tags
-    Tags results = lua_.Transform(OSMType::kRelation, tags);
+    Tags results = tags.empty() ? empty_relation_results_ : lua_.Transform(OSMType::kRelation, tags);
     if (results.size() == 0) {
       return;
     }
@@ -1626,8 +1728,8 @@ public:
               restriction.set_from(from_way_id);
               restriction.set_vias(vias);
               // for bi-directional we need to create the restriction in reverse.  flip the to and
-              // from. also in order to avoid duplicate data in the from and to restrictions, we only
-              // need to store the mode, from, and to for the to_restrictions.
+              // from. also in order to avoid duplicate data in the from and to restrictions, we
+              // only need to store the mode, from, and to for the to_restrictions.
               to_restriction.set_from(restriction.to());
               to_restriction.set_to(from_way_id);
               to_restriction.set_modes(restriction.modes());
@@ -1754,6 +1856,11 @@ public:
 
   // bss nodes
   std::unique_ptr<sequence<OSMNode>> bss_nodes_;
+
+  // empty objects initialized with defaults to use when no tags are present on objects
+  Tags empty_node_results_;
+  Tags empty_way_results_;
+  Tags empty_relation_results_;
 };
 
 } // namespace

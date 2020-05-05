@@ -1,4 +1,7 @@
+#include <functional>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 
 #include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
@@ -111,15 +114,16 @@ TEST_F(ActorInterrupt, Route) {
   tyr::actor_t actor(conf);
   std::string request = R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
         {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})";
-  EXPECT_THROW(actor.route(request, []() -> void { throw test_exception_t{}; }), test_exception_t);
+  std::function<void()> interrupt = [] { throw test_exception_t{}; };
+  EXPECT_THROW(actor.route(request, &interrupt), test_exception_t);
 }
 
 TEST_F(ActorInterrupt, TraceAttributes) {
   tyr::actor_t actor(conf);
   std::string request = R"({"shape":[{"lat":40.546115,"lon":-76.385076},
         {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})";
-  EXPECT_THROW(actor.trace_attributes(request, []() -> void { throw test_exception_t{}; }),
-               test_exception_t);
+  std::function<void()> interrupt = [] { throw test_exception_t{}; };
+  EXPECT_THROW(actor.trace_attributes(request, &interrupt), test_exception_t);
 }
 
 // TODO: test the rest of them

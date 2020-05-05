@@ -21,8 +21,11 @@
 #include <utility>
 #include <vector>
 
+#include "filesystem.h"
+
 #ifdef _MSC_VER
 #include <io.h>
+#define stat _stat64
 #else
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -590,6 +593,9 @@ struct tar {
     // map the file
     mm.map(tar_file, s.st_size);
 
+    // determine opposite of preferred path separator (needed to update OS-specific path separator)
+    const char opp_sep = filesystem::path::preferred_separator == '/' ? '\\' : '/';
+
     // rip through the tar to see whats in it noting that most tars end with 2 empty blocks
     // but we can concatenate tars and get empty blocks in between so we'll just be pretty
     // lax about it and we'll count the ones we cant make sense of
@@ -606,7 +612,10 @@ struct tar {
       auto size = h->get_file_size();
       // do we record entry file or not
       if (!regular_files_only || (h->typeflag == '0' || h->typeflag == '\0')) {
-        contents.emplace(std::piecewise_construct, std::forward_as_tuple(std::string{h->name}),
+        // tar doesn't automatically update path separators based on OS, so we need to do it...
+        std::string name{h->name};
+        std::replace(name.begin(), name.end(), opp_sep, filesystem::path::preferred_separator);
+        contents.emplace(std::piecewise_construct, std::forward_as_tuple(name),
                          std::forward_as_tuple(position, size));
       }
       // every entry's data is rounded to the nearst header_t sized "block"

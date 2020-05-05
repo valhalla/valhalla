@@ -29,6 +29,51 @@ typedef struct {
 } mtar_raw_header_t_;
 
 /*************************************************************/
+// Helper function for updating the BD edge in the following test
+void update_bd_traffic_speed(valhalla::gurka::map& map, uint16_t new_speed) {
+  int fd = open(map.config.get<std::string>("mjolnir.traffic_extract").c_str(), O_RDWR);
+  struct stat s;
+  fstat(fd, &s);
+
+  mtar_t tar;
+  tar.pos = 0;
+  tar.stream = mmap(0, s.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  tar.read = [](mtar_t* tar, void* data, unsigned size) -> int {
+    memcpy(data, reinterpret_cast<char*>(tar->stream) + tar->pos, size);
+    return MTAR_ESUCCESS;
+  };
+  tar.write = [](mtar_t* tar, const void* data, unsigned size) -> int {
+    memcpy(reinterpret_cast<char*>(tar->stream) + tar->pos, data, size);
+    return MTAR_ESUCCESS;
+  };
+  tar.seek = [](mtar_t* tar, unsigned pos) -> int { return MTAR_ESUCCESS; };
+  tar.close = [](mtar_t* tar) -> int { return MTAR_ESUCCESS; };
+
+  // Read every speed tile, and update it with fixed speed of `new_speed` km/h (original speeds are
+  // 10km/h)
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  mtar_header_t tar_header;
+  while ((mtar_read_header(&tar, &tar_header)) != MTAR_ENULLRECORD) {
+    baldr::traffic::Tile tile(reinterpret_cast<char*>(tar.stream) + tar.pos +
+                              sizeof(mtar_raw_header_t_));
+
+    baldr::GraphId tile_id(tile.header->tile_id);
+    auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
+
+    for (int i = 0; i < tile.header->directed_edge_count; i++) {
+      (tile.speeds + i)->age_bucket = baldr::traffic::MAX_SPEED_AGE_BUCKET;
+      if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == i) {
+        (tile.speeds + i)->speed_kmh = 0;
+      } else {
+        (tile.speeds + i)->speed_kmh = new_speed;
+      }
+    }
+    mtar_next(&tar);
+  }
+  munmap(tar.stream, s.st_size);
+  close(fd);
+}
+
 TEST(Traffic, BasicUpdates) {
 
   const std::string ascii_map = R"(
@@ -105,47 +150,7 @@ TEST(Traffic, BasicUpdates) {
     // Make some updates to the traffic .tar file.
     // Mostly just updates ever edge in the file to 25km/h, except for one
     // specific edge (B->D) where we simulate a closure (speed=0, congestion high)
-    {
-      int fd = open(map.config.get<std::string>("mjolnir.traffic_extract").c_str(), O_RDWR);
-      struct stat s;
-      fstat(fd, &s);
-
-      mtar_t tar;
-      tar.pos = 0;
-      tar.stream = mmap(0, s.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-      tar.read = [](mtar_t* tar, void* data, unsigned size) -> int {
-        memcpy(data, reinterpret_cast<char*>(tar->stream) + tar->pos, size);
-        return MTAR_ESUCCESS;
-      };
-      tar.write = [](mtar_t* tar, const void* data, unsigned size) -> int {
-        memcpy(reinterpret_cast<char*>(tar->stream) + tar->pos, data, size);
-        return MTAR_ESUCCESS;
-      };
-      tar.seek = [](mtar_t* tar, unsigned pos) -> int { return MTAR_ESUCCESS; };
-      tar.close = [](mtar_t* tar) -> int { return MTAR_ESUCCESS; };
-
-      // Read every speed tile, and update it with fixed speed of 25km/h (original speeds are 10km/h)
-      mtar_header_t tar_header;
-      while ((mtar_read_header(&tar, &tar_header)) != MTAR_ENULLRECORD) {
-        baldr::traffic::Tile tile(reinterpret_cast<char*>(tar.stream) + tar.pos +
-                                  sizeof(mtar_raw_header_t_));
-
-        baldr::GraphId tile_id(tile.header->tile_id);
-        auto BD = gurka::findEdge(map, tile_id, "BD", "D");
-
-        for (int i = 0; i < tile.header->directed_edge_count; i++) {
-          (tile.speeds + i)->age_bucket = baldr::traffic::MAX_SPEED_AGE_BUCKET;
-          if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == i) {
-            (tile.speeds + i)->speed_kmh = 0;
-          } else {
-            (tile.speeds + i)->speed_kmh = 25;
-          }
-        }
-        mtar_next(&tar);
-      }
-      munmap(tar.stream, s.st_size);
-      close(fd);
-    }
+    update_bd_traffic_speed(map, 25);
     // Now do another route with the same (not restarted) actor to see if
     // it's noticed the changes in the live traffic file
     {
@@ -153,6 +158,15 @@ TEST(Traffic, BasicUpdates) {
       gurka::assert::osrm::expect_route(result, {"AB", "BC"});
       gurka::assert::raw::expect_eta(result, 145.5);
     }
+    // Next, set the speed to the highest possible to ensure nothing breaks
+    update_bd_traffic_speed(map, valhalla::baldr::kMaxSpeedKph);
+    {
+      auto result = gurka::route(map, "A", "C", "auto", "current", clean_reader);
+      gurka::assert::osrm::expect_route(result, {"AB", "BC"});
+      gurka::assert::raw::expect_eta(result, 15.617648);
+    }
+    // Back to previous speed
+    update_bd_traffic_speed(map, 25);
     // And verify that without the "current" timestamp, the live traffic
     // results aren't used
     {
