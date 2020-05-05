@@ -49,7 +49,7 @@ jobs:
     docker:
       - image: valhalla/valhalla:build-latest
     steps:
-      - run: apt-get install -y libluajit-5.1-dev luajit
+      - run: apt-get update && apt-get install -y libluajit-5.1-dev luajit
       - checkout
       - run:
           command: |
@@ -92,7 +92,7 @@ jobs:
     docker:
       - image: valhalla/valhalla:build-latest
     steps:
-      - run: apt-get install -y libluajit-5.1-dev luajit
+      - run: apt-get update && apt-get install -y libluajit-5.1-dev luajit
       - checkout
       - run:
           command: |
@@ -133,7 +133,7 @@ jobs:
     docker:
       - image: valhalla/valhalla:build-latest
     steps:
-      - run: apt-get install -y libluajit-5.1-dev luajit
+      - run: apt-get update && apt-get install -y libluajit-5.1-dev luajit
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: node ./scripts/validate_changelog.js
@@ -171,7 +171,7 @@ jobs:
     docker:
       - image: valhalla/valhalla:build-latest
     steps:
-      - run: apt-get install -y libluajit-5.1-dev luajit
+      - run: apt-get update && apt-get install -y libluajit-5.1-dev luajit
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
@@ -201,7 +201,7 @@ jobs:
     docker:
       - image: valhalla/valhalla:build-x86-latest
     steps:
-      - run: apt-get install -y libluajit-5.1-dev luajit
+      - run: apt-get update && apt-get install -y libluajit-5.1-dev luajit
       - checkout
       #- run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
