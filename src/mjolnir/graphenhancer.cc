@@ -668,9 +668,8 @@ bool IsNotThruEdge(GraphReader& reader,
       }
 
       // Add to the end node to expand set if not already visited set
-      auto endnode = diredge->endnode();
-      if (visitedset.find(endnode) == visitedset.end()) {
-        expandset.push_back(endnode);
+      if (visitedset.find(diredge->endnode()) == visitedset.end()) {
+        expandset.push_back(diredge->endnode());
       }
     }
   }
