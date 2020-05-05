@@ -2850,7 +2850,7 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_0_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_0(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Head east.", "", "Head east for a half mile.",
-                                  "");
+                                  "Continue for a half mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -2872,7 +2872,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_1_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Head southwest on 5th Avenue.", "",
-                                  "Head southwest on 5th Avenue for 700 feet.", "");
+                                  "Head southwest on 5th Avenue for 700 feet.",
+                                  "Continue for 700 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -2919,7 +2920,7 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_4_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_4(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Drive east.", "",
-                                  "Drive east for a half mile.", "");
+                                  "Drive east for a half mile.", "Continue for a half mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -2941,7 +2942,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_5_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_5(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Drive southwest on 5th Avenue.", "",
-                                  "Drive southwest on 5th Avenue for 700 feet.", "");
+                                  "Drive southwest on 5th Avenue for 700 feet.",
+                                  "Continue for 700 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -2988,7 +2990,7 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_8_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_8(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Walk east.", "", "Walk east for a half mile.",
-                                  "");
+                                  "Continue for a half mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3010,7 +3012,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_9_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_9(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest on 5th Avenue.", "",
-                                  "Walk southwest on 5th Avenue for 700 feet.", "");
+                                  "Walk southwest on 5th Avenue for 700 feet.",
+                                  "Continue for 700 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3032,7 +3035,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_9_unnamed_walkway_miles_en_US)
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_9_unnamed_walkway(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest on the walkway.", "",
-                                  "Walk southwest on the walkway for 200 feet.", "");
+                                  "Walk southwest on the walkway for 200 feet.",
+                                  "Continue for 200 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3079,7 +3083,7 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_16_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_16(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Bike east.", "", "Bike east for a half mile.",
-                                  "");
+                                  "Continue for a half mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3101,7 +3105,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_17_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_17(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Bike southwest on 5th Avenue.", "",
-                                  "Bike southwest on 5th Avenue for 700 feet.", "");
+                                  "Bike southwest on 5th Avenue for 700 feet.",
+                                  "Continue for 700 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3123,7 +3128,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_17_unnamed_cycleway_miles_en_U
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_17_unnamed_cycleway(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Bike east on the cycleway.", "",
-                                  "Bike east on the cycleway for 1.5 miles.", "");
+                                  "Bike east on the cycleway for 1.5 miles.",
+                                  "Continue for 1.5 miles.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3146,7 +3152,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_17_unnamed_mountain_bike_trail
   PopulateStartManeuverList_17_unnamed_mountain_bike_trail(expected_maneuvers, country_code,
                                                            state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Bike west on the mountain bike trail.", "",
-                                  "Bike west on the mountain bike trail for 700 feet.", "");
+                                  "Bike west on the mountain bike trail for 700 feet.",
+                                  "Continue for 700 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3193,7 +3200,7 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_0_kilometers_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_0(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Head east.", "", "Head east for 800 meters.",
-                                  "");
+                                  "Continue for 800 meters.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -3215,7 +3222,8 @@ TEST(NarrativeBuilder, TestBuildStartInstructions_1_kilometers_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateStartManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Head southwest on 5th Avenue.", "",
-                                  "Head southwest on 5th Avenue for 200 meters.", "");
+                                  "Head southwest on 5th Avenue for 200 meters.",
+                                  "Continue for 200 meters.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -4103,7 +4111,7 @@ TEST(NarrativeBuilder, TestBuildUturnInstructions_5_miles_en_US) {
                                           "Drive northeast on Jonestown Road/US 22.", "",
                                           "Drive northeast on Jonestown Road, U.S. 22 for 200 "
                                           "feet. Then Make a left U-turn at Devonshire Road.",
-                                          "");
+                                          "Continue for 200 feet.");
   SetExpectedManeuverInstructions(
       expected_maneuvers, "Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22.",
       "Make a left U-turn at Devonshire Road.",
@@ -6081,8 +6089,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_0(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Head southeast.", "Head southeast.",
-                                  "Head southeast.", "Continue for 200 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Head southeast.", "",
+                                  "Head southeast for 200 feet.", "Continue for 200 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6108,8 +6116,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_1(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Head west on Ferry Lane.",
-                                  "Head west on Ferry Lane.", "Head west on Ferry Lane.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Head west on Ferry Lane.", "",
+                                  "Head west on Ferry Lane for a quarter mile.",
                                   "Continue for a quarter mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -6138,8 +6146,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_2_miles_en_US) {
   PopulateExitFerryManeuverList_2(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers, "Head northeast on Cape May-Lewes Ferry Entrance/US 9. Continue on US 9.",
-      "Head northeast on Cape May-Lewes Ferry Entrance.",
-      "Head northeast on Cape May-Lewes Ferry Entrance, U.S. 9.", "Continue on U.S. 9 for 300 feet.");
+      "", "Head northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
+      "Continue on U.S. 9 for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6165,8 +6173,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_4_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_4(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Drive southeast.", "Drive southeast.",
-                                  "Drive southeast.", "Continue for 200 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Drive southeast.", "",
+                                  "Drive southeast for 200 feet.", "Continue for 200 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6192,8 +6200,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_5_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_5(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Drive west on Ferry Lane.",
-                                  "Drive west on Ferry Lane.", "Drive west on Ferry Lane.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Drive west on Ferry Lane.", "",
+                                  "Drive west on Ferry Lane for a quarter mile.",
                                   "Continue for a quarter mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -6222,8 +6230,7 @@ TEST(NarrativeBuilder, TestBuildExitFerry_6_miles_en_US) {
   PopulateExitFerryManeuverList_6(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers, "Drive northeast on Cape May-Lewes Ferry Entrance/US 9. Continue on US 9.",
-      "Drive northeast on Cape May-Lewes Ferry Entrance.",
-      "Drive northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
+      "", "Drive northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
       "Continue on U.S. 9 for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -6250,8 +6257,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_8_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_8(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Walk southeast.", "Walk southeast.",
-                                  "Walk southeast.", "Continue for 200 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Walk southeast.", "",
+                                  "Walk southeast for 200 feet.", "Continue for 200 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6277,8 +6284,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_9_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_9(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Walk west on Ferry Lane.",
-                                  "Walk west on Ferry Lane.", "Walk west on Ferry Lane.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Walk west on Ferry Lane.", "",
+                                  "Walk west on Ferry Lane for a quarter mile.",
                                   "Continue for a quarter mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -6307,8 +6314,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_10_miles_en_US) {
   PopulateExitFerryManeuverList_10(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers, "Walk northeast on Cape May-Lewes Ferry Entrance/US 9. Continue on US 9.",
-      "Walk northeast on Cape May-Lewes Ferry Entrance.",
-      "Walk northeast on Cape May-Lewes Ferry Entrance, U.S. 9.", "Continue on U.S. 9 for 300 feet.");
+      "", "Walk northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
+      "Continue on U.S. 9 for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6334,8 +6341,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_16_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_16(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Bike southeast.", "Bike southeast.",
-                                  "Bike southeast.", "Continue for 200 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Bike southeast.", "",
+                                  "Bike southeast for 200 feet.", "Continue for 200 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -6361,8 +6368,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_17_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateExitFerryManeuverList_17(expected_maneuvers, country_code, state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Bike west on Ferry Lane.",
-                                  "Bike west on Ferry Lane.", "Bike west on Ferry Lane.",
+  SetExpectedManeuverInstructions(expected_maneuvers, "Bike west on Ferry Lane.", "",
+                                  "Bike west on Ferry Lane for a quarter mile.",
                                   "Continue for a quarter mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
@@ -6391,8 +6398,8 @@ TEST(NarrativeBuilder, TestBuildExitFerry_18_miles_en_US) {
   PopulateExitFerryManeuverList_18(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers, "Bike northeast on Cape May-Lewes Ferry Entrance/US 9. Continue on US 9.",
-      "Bike northeast on Cape May-Lewes Ferry Entrance.",
-      "Bike northeast on Cape May-Lewes Ferry Entrance, U.S. 9.", "Continue on U.S. 9 for 300 feet.");
+      "", "Bike northeast on Cape May-Lewes Ferry Entrance, U.S. 9.",
+      "Continue on U.S. 9 for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }

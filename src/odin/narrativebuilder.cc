@@ -53,19 +53,18 @@ void NarrativeBuilder::Build(const Options& options, std::list<Maneuver>& maneuv
     switch (maneuver.type()) {
       case DirectionsLeg_Maneuver_Type_kStartRight:
       case DirectionsLeg_Maneuver_Type_kStart:
-      case DirectionsLeg_Maneuver_Type_kStartLeft: {
+      case DirectionsLeg_Maneuver_Type_kStartLeft:
+      case DirectionsLeg_Maneuver_Type_kFerryExit: {
+
         // Set instruction
         maneuver.set_instruction(FormStartInstruction(maneuver));
 
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(FormVerbalStartInstruction(maneuver));
 
-        // Set verbal post transition instruction only if there are
-        // begin street names
-        if (maneuver.HasBeginStreetNames()) {
-          maneuver.set_verbal_post_transition_instruction(
-              FormVerbalPostTransitionInstruction(maneuver, maneuver.HasBeginStreetNames()));
-        }
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            FormVerbalPostTransitionInstruction(maneuver, maneuver.HasBeginStreetNames()));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kDestinationRight:
@@ -287,22 +286,6 @@ void NarrativeBuilder::Build(const Options& options, std::list<Maneuver>& maneuv
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             FormVerbalPostTransitionInstruction(maneuver));
-        break;
-      }
-      case DirectionsLeg_Maneuver_Type_kFerryExit: {
-        // Set instruction
-        maneuver.set_instruction(FormExitFerryInstruction(maneuver));
-
-        // Set verbal transition alert instruction
-        maneuver.set_verbal_transition_alert_instruction(
-            FormVerbalAlertExitFerryInstruction(maneuver));
-
-        // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(FormVerbalExitFerryInstruction(maneuver));
-
-        // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
-            FormVerbalPostTransitionInstruction(maneuver, maneuver.HasBeginStreetNames()));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kTransitConnectionStart: {
@@ -543,11 +526,21 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalStartInstruction(Maneuver& maneuver,
+                                                         bool include_length,
                                                          uint32_t element_max_count,
                                                          const std::string& delim) {
   // "0": "Head <CARDINAL_DIRECTION> for <LENGTH>.",
   // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
   // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+  // "4": "Drive <CARDINAL_DIRECTION> for <LENGTH>.",
+  // "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
+  // "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+  // "8": "Walk <CARDINAL_DIRECTION> for <LENGTH>.",
+  // "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
+  // "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+  // "16": "Bike <CARDINAL_DIRECTION> for <LENGTH>.",
+  // "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
+  // "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2592,153 +2585,6 @@ std::string NarrativeBuilder::FormVerbalEnterFerryInstruction(Maneuver& maneuver
   // Replace phrase tags with values
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kFerryLabelTag, ferry_label);
-
-  // If enabled, form articulated prepositions
-  if (articulated_preposition_enabled_) {
-    FormArticulatedPrepositions(instruction);
-  }
-
-  return instruction;
-}
-
-std::string NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
-  // "0": "Head <CARDINAL_DIRECTION>.",
-  // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-  // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-  // "4": "Drive <CARDINAL_DIRECTION>.",
-  // "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-  // "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-  // "8": "Walk <CARDINAL_DIRECTION>.",
-  // "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-  // "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-  // "16": "Bike <CARDINAL_DIRECTION>.",
-  // "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-  // "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
-
-  // Set cardinal_direction value
-  std::string cardinal_direction =
-      dictionary_.exit_ferry_subset.cardinal_directions.at(maneuver.begin_cardinal_direction());
-
-  // Assign the street names
-  std::string street_names =
-      FormStreetNames(maneuver, maneuver.street_names(),
-                      &dictionary_.exit_ferry_subset.empty_street_name_labels, true);
-
-  // Assign the begin street names
-  std::string begin_street_names =
-      FormStreetNames(maneuver, maneuver.begin_street_names(),
-                      &dictionary_.exit_ferry_subset.empty_street_name_labels);
-
-  // Determine which phrase to use
-  uint8_t phrase_id = 0;
-  if (!begin_street_names.empty()) {
-    phrase_id = 2;
-  } else if (!street_names.empty()) {
-    phrase_id = 1;
-  }
-  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
-    phrase_id += 4;
-  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
-    phrase_id += 8;
-  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
-    phrase_id += 16;
-  }
-
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.exit_ferry_subset.phrases.at(std::to_string(phrase_id));
-
-  // Replace phrase tags with values
-  boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
-  boost::replace_all(instruction, kStreetNamesTag, street_names);
-  boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
-
-  // If enabled, form articulated prepositions
-  if (articulated_preposition_enabled_) {
-    FormArticulatedPrepositions(instruction);
-  }
-
-  return instruction;
-}
-
-std::string NarrativeBuilder::FormVerbalAlertExitFerryInstruction(Maneuver& maneuver,
-                                                                  uint32_t element_max_count,
-                                                                  const std::string& delim) {
-  // "0": "Head <CARDINAL_DIRECTION>.",
-  // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-  // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-  // "4": "Drive <CARDINAL_DIRECTION>.",
-  // "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-  // "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-  // "8": "Walk <CARDINAL_DIRECTION>.",
-  // "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-  // "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-  // "16": "Bike <CARDINAL_DIRECTION>.",
-  // "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-  // "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-
-  return FormVerbalExitFerryInstruction(maneuver, element_max_count, delim);
-}
-
-std::string NarrativeBuilder::FormVerbalExitFerryInstruction(Maneuver& maneuver,
-                                                             uint32_t element_max_count,
-                                                             const std::string& delim) {
-  // "0": "Head <CARDINAL_DIRECTION>.",
-  // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-  // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-  // "4": "Drive <CARDINAL_DIRECTION>.",
-  // "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-  // "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-  // "8": "Walk <CARDINAL_DIRECTION>.",
-  // "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-  // "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-  // "16": "Bike <CARDINAL_DIRECTION>.",
-  // "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-  // "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-
-  std::string instruction;
-  instruction.reserve(kInstructionInitialCapacity);
-
-  // Set cardinal_direction value
-  std::string cardinal_direction = dictionary_.exit_ferry_verbal_subset.cardinal_directions.at(
-      maneuver.begin_cardinal_direction());
-
-  // Assign the street names
-  std::string street_names =
-      FormStreetNames(maneuver, maneuver.street_names(),
-                      &dictionary_.exit_ferry_verbal_subset.empty_street_name_labels, true,
-                      element_max_count, delim, maneuver.verbal_formatter());
-
-  // Assign the begin street names
-  std::string begin_street_names =
-      FormStreetNames(maneuver, maneuver.begin_street_names(),
-                      &dictionary_.exit_ferry_verbal_subset.empty_street_name_labels, false,
-                      element_max_count, delim, maneuver.verbal_formatter());
-
-  // Determine which phrase to use
-  uint8_t phrase_id = 0;
-  if (!begin_street_names.empty()) {
-    phrase_id = 2;
-  } else if (!street_names.empty()) {
-    phrase_id = 1;
-  }
-  if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
-    phrase_id += 4;
-  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
-    phrase_id += 8;
-  } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
-    phrase_id += 16;
-  }
-
-  // Set instruction to the determined tagged phrase
-  instruction = dictionary_.exit_ferry_verbal_subset.phrases.at(std::to_string(phrase_id));
-
-  // Replace phrase tags with values
-  boost::replace_all(instruction, kCardinalDirectionTag, cardinal_direction);
-  boost::replace_all(instruction, kStreetNamesTag, street_names);
-  boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {

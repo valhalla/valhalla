@@ -58,6 +58,7 @@ protected:
   std::string FormStartInstruction(Maneuver& maneuver);
 
   std::string FormVerbalStartInstruction(Maneuver& maneuver,
+                                         bool include_length = false,
                                          uint32_t element_max_count = kVerbalPreElementMaxCount,
                                          const std::string& delim = kVerbalDelim);
 
@@ -273,18 +274,6 @@ protected:
   std::string FormVerbalEnterFerryInstruction(Maneuver& maneuver,
                                               uint32_t element_max_count = kVerbalPreElementMaxCount,
                                               const std::string& delim = kVerbalDelim);
-
-  /////////////////////////////////////////////////////////////////////////////
-  std::string FormExitFerryInstruction(Maneuver& maneuver);
-
-  std::string
-  FormVerbalAlertExitFerryInstruction(Maneuver& maneuver,
-                                      uint32_t element_max_count = kVerbalAlertElementMaxCount,
-                                      const std::string& delim = kVerbalDelim);
-
-  std::string FormVerbalExitFerryInstruction(Maneuver& maneuver,
-                                             uint32_t element_max_count = kVerbalPreElementMaxCount,
-                                             const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
   std::string FormTransitConnectionStartInstruction(Maneuver& maneuver);
