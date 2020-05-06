@@ -140,12 +140,6 @@ TEST(OpenLR, InternalReferencePoints) {
     }
   }
 
-  /*
-  locRef.intermediate.push_back(locRef.intermediate.front());
-  locRef.intermediate.push_back(locRef.intermediate.front());
-  locRef.intermediate.push_back(locRef.intermediate.front());
-   */
-
   locRef.lrps.insert(std::prev(std::prev(locRef.lrps.end())), locRef.lrps[1]);
   locRef.lrps.insert(std::prev(std::prev(locRef.lrps.end())), locRef.lrps[1]);
   locRef.lrps.insert(std::prev(std::prev(locRef.lrps.end())), locRef.lrps[1]);
