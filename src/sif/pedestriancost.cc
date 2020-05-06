@@ -19,7 +19,7 @@ namespace valhalla {
 namespace sif {
 
 // Default options/values
-namespace {
+namespace pedestrian {
 
 // Base transition costs
 // TODO - can we define these in dynamiccost.h and override here if they differ?
@@ -146,7 +146,7 @@ constexpr float kSacScaleCostFactor[] = {
     3.0f   // kDifficultAlpineHiking
 };
 
-} // namespace
+} // namespace pedestrian
 
 /**
  * Derived class providing dynamic edge costing for pedestrian routes.
@@ -651,7 +651,7 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   // TODO - consider using an array of "use factors" to avoid this conditional
-  float factor = 1.0f + kSacScaleCostFactor[static_cast<uint8_t>(edge->sac_scale())];
+  float factor = 1.0f + pedestrian::kSacScaleCostFactor[static_cast<uint8_t>(edge->sac_scale())];
   if (edge->use() == Use::kFootway || edge->use() == Use::kSidewalk) {
     factor *= walkway_factor_;
   } else if (edge->use() == Use::kAlley) {
@@ -661,12 +661,12 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
   } else if (edge->sidewalk_left() || edge->sidewalk_right()) {
     factor *= sidewalk_factor_;
   } else if (edge->roundabout()) {
-    factor *= kRoundaboutFactor;
+    factor *= pedestrian::kRoundaboutFactor;
   }
 
   // Slightly favor walkways/paths and penalize alleys and driveways.
-  float sec =
-      edge->length() * speedfactor_ * kSacScaleSpeedFactor[static_cast<uint8_t>(edge->sac_scale())];
+  float sec = edge->length() * speedfactor_ *
+              pedestrian::kSacScaleSpeedFactor[static_cast<uint8_t>(edge->sac_scale())];
   return {sec * factor, sec};
 }
 
@@ -686,7 +686,7 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // Costs for crossing an intersection.
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-    float seconds = kCrossingCosts[edge->stopimpact(idx)];
+    float seconds = pedestrian::kCrossingCosts[edge->stopimpact(idx)];
     c.secs += seconds;
     c.cost += seconds;
   }
@@ -712,7 +712,7 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
 
   // Costs for crossing an intersection.
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-    float seconds = kCrossingCosts[edge->stopimpact(idx)];
+    float seconds = pedestrian::kCrossingCosts[edge->stopimpact(idx)];
     c.secs += seconds;
     c.cost += seconds;
   }
@@ -731,44 +731,44 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
     // If specified, parse json and set pbf values
 
     // maneuver_penalty
-    pbf_costing_options->set_maneuver_penalty(kManeuverPenaltyRange(
+    pbf_costing_options->set_maneuver_penalty(pedestrian::kManeuverPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/maneuver_penalty")
-            .get_value_or(kDefaultManeuverPenalty)));
+            .get_value_or(pedestrian::kDefaultManeuverPenalty)));
 
     // destination_only_penalty
-    pbf_costing_options->set_destination_only_penalty(kDestinationOnlyPenaltyRange(
+    pbf_costing_options->set_destination_only_penalty(pedestrian::kDestinationOnlyPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/destination_only_penalty")
-            .get_value_or(kDefaultDestinationOnlyPenalty)));
+            .get_value_or(pedestrian::kDefaultDestinationOnlyPenalty)));
 
     // gate_penalty
-    pbf_costing_options->set_gate_penalty(
-        kGatePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_penalty")
-                              .get_value_or(kDefaultGatePenalty)));
+    pbf_costing_options->set_gate_penalty(pedestrian::kGatePenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/gate_penalty")
+            .get_value_or(pedestrian::kDefaultGatePenalty)));
 
     // alley_penalty
-    pbf_costing_options->set_alley_penalty(
-        kAlleyPenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
-                               .get_value_or(kDefaultAlleyPenalty)));
+    pbf_costing_options->set_alley_penalty(pedestrian::kAlleyPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
+            .get_value_or(pedestrian::kDefaultAlleyPenalty)));
 
     // country_crossing_cost
-    pbf_costing_options->set_country_crossing_cost(kCountryCrossingCostRange(
+    pbf_costing_options->set_country_crossing_cost(pedestrian::kCountryCrossingCostRange(
         rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_cost")
-            .get_value_or(kDefaultCountryCrossingCost)));
+            .get_value_or(pedestrian::kDefaultCountryCrossingCost)));
 
     // country_crossing_penalty
-    pbf_costing_options->set_country_crossing_penalty(kCountryCrossingPenaltyRange(
+    pbf_costing_options->set_country_crossing_penalty(pedestrian::kCountryCrossingPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_penalty")
-            .get_value_or(kDefaultCountryCrossingPenalty)));
+            .get_value_or(pedestrian::kDefaultCountryCrossingPenalty)));
 
     // ferry_cost
-    pbf_costing_options->set_ferry_cost(
-        kFerryCostRange(rapidjson::get_optional<float>(*json_costing_options, "/ferry_cost")
-                            .get_value_or(kDefaultFerryCost)));
+    pbf_costing_options->set_ferry_cost(pedestrian::kFerryCostRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/ferry_cost")
+            .get_value_or(pedestrian::kDefaultFerryCost)));
 
     // use_ferry
     pbf_costing_options->set_use_ferry(
-        kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
-                           .get_value_or(kDefaultUseFerry)));
+        pedestrian::kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
+                                       .get_value_or(pedestrian::kDefaultUseFerry)));
 
     // type (transport_type)
     pbf_costing_options->set_transport_type(
@@ -777,111 +777,114 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
     // Set type specific defaults, override with URL inputs
     if (pbf_costing_options->transport_type() == "wheelchair") {
       // max_distance
-      pbf_costing_options->set_max_distance(kMaxDistanceWheelchairRange(
+      pbf_costing_options->set_max_distance(pedestrian::kMaxDistanceWheelchairRange(
           rapidjson::get_optional<uint32_t>(*json_costing_options, "/max_distance")
-              .get_value_or(kMaxDistanceWheelchair)));
+              .get_value_or(pedestrian::kMaxDistanceWheelchair)));
 
       // walking_speed
-      pbf_costing_options->set_walking_speed(kSpeedWheelchairRange(
+      pbf_costing_options->set_walking_speed(pedestrian::kSpeedWheelchairRange(
           rapidjson::get_optional<float>(*json_costing_options, "/walking_speed")
-              .get_value_or(kDefaultSpeedWheelchair)));
+              .get_value_or(pedestrian::kDefaultSpeedWheelchair)));
 
       // step_penalty
-      pbf_costing_options->set_step_penalty(kStepPenaltyWheelchairRange(
+      pbf_costing_options->set_step_penalty(pedestrian::kStepPenaltyWheelchairRange(
           rapidjson::get_optional<float>(*json_costing_options, "/step_penalty")
-              .get_value_or(kDefaultStepPenaltyWheelchair)));
+              .get_value_or(pedestrian::kDefaultStepPenaltyWheelchair)));
 
       // max_grade
-      pbf_costing_options->set_max_grade(kMaxGradeWheelchairRange(
+      pbf_costing_options->set_max_grade(pedestrian::kMaxGradeWheelchairRange(
           rapidjson::get_optional<uint32_t>(*json_costing_options, "/max_grade")
-              .get_value_or(kDefaultMaxGradeWheelchair)));
+              .get_value_or(pedestrian::kDefaultMaxGradeWheelchair)));
 
     } else {
       // Assume type = foot
       // max_distance
-      pbf_costing_options->set_max_distance(kMaxDistanceFootRange(
+      pbf_costing_options->set_max_distance(pedestrian::kMaxDistanceFootRange(
           rapidjson::get_optional<uint32_t>(*json_costing_options, "/max_distance")
-              .get_value_or(kMaxDistanceFoot)));
+              .get_value_or(pedestrian::kMaxDistanceFoot)));
 
       // walking_speed
-      pbf_costing_options->set_walking_speed(
-          kSpeedFootRange(rapidjson::get_optional<float>(*json_costing_options, "/walking_speed")
-                              .get_value_or(kDefaultSpeedFoot)));
+      pbf_costing_options->set_walking_speed(pedestrian::kSpeedFootRange(
+          rapidjson::get_optional<float>(*json_costing_options, "/walking_speed")
+              .get_value_or(pedestrian::kDefaultSpeedFoot)));
 
       // step_penalty
-      pbf_costing_options->set_step_penalty(
-          kStepPenaltyFootRange(rapidjson::get_optional<float>(*json_costing_options, "/step_penalty")
-                                    .get_value_or(kDefaultStepPenaltyFoot)));
+      pbf_costing_options->set_step_penalty(pedestrian::kStepPenaltyFootRange(
+          rapidjson::get_optional<float>(*json_costing_options, "/step_penalty")
+              .get_value_or(pedestrian::kDefaultStepPenaltyFoot)));
 
       // max_grade
-      pbf_costing_options->set_max_grade(
-          kMaxGradeFootRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/max_grade")
-                                 .get_value_or(kDefaultMaxGradeFoot)));
+      pbf_costing_options->set_max_grade(pedestrian::kMaxGradeFootRange(
+          rapidjson::get_optional<uint32_t>(*json_costing_options, "/max_grade")
+              .get_value_or(pedestrian::kDefaultMaxGradeFoot)));
     }
 
     // max_hiking_difficulty
-    pbf_costing_options->set_max_hiking_difficulty(kMaxHikingDifficultyRange(
+    pbf_costing_options->set_max_hiking_difficulty(pedestrian::kMaxHikingDifficultyRange(
         rapidjson::get_optional<uint32_t>(*json_costing_options, "/max_hiking_difficulty")
-            .get_value_or(kDefaultMaxHikingDifficulty)));
+            .get_value_or(pedestrian::kDefaultMaxHikingDifficulty)));
 
     // mode_factor
-    pbf_costing_options->set_mode_factor(
-        kModeFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/mode_factor")
-                             .get_value_or(kModeFactor)));
+    pbf_costing_options->set_mode_factor(pedestrian::kModeFactorRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/mode_factor")
+            .get_value_or(pedestrian::kModeFactor)));
 
     // walkway_factor
-    pbf_costing_options->set_walkway_factor(
-        kWalkwayFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/walkway_factor")
-                                .get_value_or(kDefaultWalkwayFactor)));
+    pbf_costing_options->set_walkway_factor(pedestrian::kWalkwayFactorRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/walkway_factor")
+            .get_value_or(pedestrian::kDefaultWalkwayFactor)));
 
     // sidewalk_factor
-    pbf_costing_options->set_sidewalk_factor(
-        kSideWalkFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/sidewalk_factor")
-                                 .get_value_or(kDefaultSideWalkFactor)));
+    pbf_costing_options->set_sidewalk_factor(pedestrian::kSideWalkFactorRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/sidewalk_factor")
+            .get_value_or(pedestrian::kDefaultSideWalkFactor)));
 
     // alley_factor
-    pbf_costing_options->set_alley_factor(
-        kAlleyFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_factor")
-                              .get_value_or(kDefaultAlleyFactor)));
+    pbf_costing_options->set_alley_factor(pedestrian::kAlleyFactorRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/alley_factor")
+            .get_value_or(pedestrian::kDefaultAlleyFactor)));
 
     // driveway_factor
-    pbf_costing_options->set_driveway_factor(
-        kDrivewayFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/driveway_factor")
-                                 .get_value_or(kDefaultDrivewayFactor)));
+    pbf_costing_options->set_driveway_factor(pedestrian::kDrivewayFactorRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/driveway_factor")
+            .get_value_or(pedestrian::kDefaultDrivewayFactor)));
 
     // transit_start_end_max_distance
-    pbf_costing_options->set_transit_start_end_max_distance(kTransitStartEndMaxDistanceRange(
-        rapidjson::get_optional<uint32_t>(*json_costing_options, "/transit_start_end_max_distance")
-            .get_value_or(kTransitStartEndMaxDistance)));
+    pbf_costing_options->set_transit_start_end_max_distance(
+        pedestrian::kTransitStartEndMaxDistanceRange(
+            rapidjson::get_optional<uint32_t>(*json_costing_options,
+                                              "/transit_start_end_max_distance")
+                .get_value_or(pedestrian::kTransitStartEndMaxDistance)));
 
     // transit_transfer_max_distance
-    pbf_costing_options->set_transit_transfer_max_distance(kTransitTransferMaxDistanceRange(
-        rapidjson::get_optional<uint32_t>(*json_costing_options, "/transit_transfer_max_distance")
-            .get_value_or(kTransitTransferMaxDistance)));
+    pbf_costing_options->set_transit_transfer_max_distance(
+        pedestrian::kTransitTransferMaxDistanceRange(
+            rapidjson::get_optional<uint32_t>(*json_costing_options, "/transit_transfer_max_distance")
+                .get_value_or(pedestrian::kTransitTransferMaxDistance)));
 
   } else {
     // Set pbf values to defaults
-    pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
-    pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
-    pbf_costing_options->set_gate_penalty(kDefaultGatePenalty);
-    pbf_costing_options->set_alley_penalty(kDefaultAlleyPenalty);
-    pbf_costing_options->set_country_crossing_cost(kDefaultCountryCrossingCost);
-    pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
-    pbf_costing_options->set_ferry_cost(kDefaultFerryCost);
-    pbf_costing_options->set_use_ferry(kDefaultUseFerry);
+    pbf_costing_options->set_maneuver_penalty(pedestrian::kDefaultManeuverPenalty);
+    pbf_costing_options->set_destination_only_penalty(pedestrian::kDefaultDestinationOnlyPenalty);
+    pbf_costing_options->set_gate_penalty(pedestrian::kDefaultGatePenalty);
+    pbf_costing_options->set_alley_penalty(pedestrian::kDefaultAlleyPenalty);
+    pbf_costing_options->set_country_crossing_cost(pedestrian::kDefaultCountryCrossingCost);
+    pbf_costing_options->set_country_crossing_penalty(pedestrian::kDefaultCountryCrossingPenalty);
+    pbf_costing_options->set_ferry_cost(pedestrian::kDefaultFerryCost);
+    pbf_costing_options->set_use_ferry(pedestrian::kDefaultUseFerry);
     pbf_costing_options->set_transport_type("foot");
-    pbf_costing_options->set_max_distance(kMaxDistanceFoot);
-    pbf_costing_options->set_walking_speed(kDefaultSpeedFoot);
-    pbf_costing_options->set_step_penalty(kDefaultStepPenaltyFoot);
-    pbf_costing_options->set_max_grade(kDefaultMaxGradeFoot);
-    pbf_costing_options->set_max_hiking_difficulty(kDefaultMaxHikingDifficulty);
-    pbf_costing_options->set_mode_factor(kModeFactor);
-    pbf_costing_options->set_walkway_factor(kDefaultWalkwayFactor);
-    pbf_costing_options->set_sidewalk_factor(kDefaultSideWalkFactor);
-    pbf_costing_options->set_alley_factor(kDefaultAlleyFactor);
-    pbf_costing_options->set_driveway_factor(kDefaultDrivewayFactor);
-    pbf_costing_options->set_transit_start_end_max_distance(kTransitStartEndMaxDistance);
-    pbf_costing_options->set_transit_transfer_max_distance(kTransitTransferMaxDistance);
+    pbf_costing_options->set_max_distance(pedestrian::kMaxDistanceFoot);
+    pbf_costing_options->set_walking_speed(pedestrian::kDefaultSpeedFoot);
+    pbf_costing_options->set_step_penalty(pedestrian::kDefaultStepPenaltyFoot);
+    pbf_costing_options->set_max_grade(pedestrian::kDefaultMaxGradeFoot);
+    pbf_costing_options->set_max_hiking_difficulty(pedestrian::kDefaultMaxHikingDifficulty);
+    pbf_costing_options->set_mode_factor(pedestrian::kModeFactor);
+    pbf_costing_options->set_walkway_factor(pedestrian::kDefaultWalkwayFactor);
+    pbf_costing_options->set_sidewalk_factor(pedestrian::kDefaultSideWalkFactor);
+    pbf_costing_options->set_alley_factor(pedestrian::kDefaultAlleyFactor);
+    pbf_costing_options->set_driveway_factor(pedestrian::kDefaultDrivewayFactor);
+    pbf_costing_options->set_transit_start_end_max_distance(pedestrian::kTransitStartEndMaxDistance);
+    pbf_costing_options->set_transit_transfer_max_distance(pedestrian::kTransitTransferMaxDistance);
   }
 }
 

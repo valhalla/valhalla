@@ -22,7 +22,7 @@ namespace valhalla {
 namespace sif {
 
 // Default options/values
-namespace {
+namespace motorscooter {
 
 // Base transition costs (not toll booth penalties since scooters likely don't take toll roads)
 // TODO - can we define these in dynamiccost.h and override here if they differ?
@@ -145,7 +145,7 @@ constexpr float kGradeBasedSpeedFactor[] = {
 
 constexpr float kSurfaceSpeedFactors[] = {1.0f, 1.0f, 0.9f, 0.6f, 0.1f, 0.0f, 0.0f, 0.0f};
 
-} // namespace
+} // namespace motorscooter
 
 /**
  * Derived class providing dynamic edge costing for "direct" auto routes. This
@@ -325,7 +325,7 @@ public:
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
       if (edge->is_shortcut() || !(edge->forwardaccess() & kMopedAccess) ||
-          edge->surface() > kMinimumScooterSurface) {
+          edge->surface() > motorscooter::kMinimumScooterSurface) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -395,7 +395,7 @@ MotorScooterCost::MotorScooterCost(const Costing costing, const Options& options
   float use_hills = costing_options.use_hills();
   float avoid_hills = (1.0f - use_hills);
   for (uint32_t i = 0; i <= kMaxGradeFactor; ++i) {
-    grade_penalty_[i] = avoid_hills * kAvoidHillsStrength[i];
+    grade_penalty_[i] = avoid_hills * motorscooter::kAvoidHillsStrength[i];
   }
 
   // Set the road classification factor based on use_primary option - scales from
@@ -426,7 +426,7 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
-  if (edge->surface() > kMinimumScooterSurface) {
+  if (edge->surface() > motorscooter::kMinimumScooterSurface) {
     return false;
   }
   return DynamicCost::EvaluateRestrictions(kMopedAccess, edge, tile, edgeid, current_time, tz_index,
@@ -455,7 +455,7 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
   }
-  if (opp_edge->surface() > kMinimumScooterSurface) {
+  if (opp_edge->surface() > motorscooter::kMinimumScooterSurface) {
     return false;
   }
   return DynamicCost::EvaluateRestrictions(kMopedAccess, edge, tile, opp_edgeid, current_time,
@@ -474,16 +474,18 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   uint32_t scooter_speed =
-      (std::min(top_speed_, speed) * kSurfaceSpeedFactors[static_cast<uint32_t>(edge->surface())] *
-       kGradeBasedSpeedFactor[static_cast<uint32_t>(edge->weighted_grade())]);
+      (std::min(top_speed_, speed) *
+       motorscooter::kSurfaceSpeedFactors[static_cast<uint32_t>(edge->surface())] *
+       motorscooter::kGradeBasedSpeedFactor[static_cast<uint32_t>(edge->weighted_grade())]);
 
   float speed_penalty = (speed > top_speed_) ? (speed - top_speed_) * 0.05f : 0.0f;
-  float factor = 1.0f + (density_factor_[edge->density()] - 0.85f) +
-                 (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]) +
-                 grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] + speed_penalty;
+  float factor =
+      1.0f + (density_factor_[edge->density()] - 0.85f) +
+      (road_factor_ * motorscooter::kRoadClassFactor[static_cast<uint32_t>(edge->classification())]) +
+      grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] + speed_penalty;
 
   if (edge->destonly()) {
-    factor += kDestinationOnlyFactor;
+    factor += motorscooter::kDestinationOnlyFactor;
   }
 
   assert(scooter_speed < speedfactor_.size());
@@ -504,11 +506,11 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
   if (edge->stopimpact(idx) > 0) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      turn_cost = kTCCrossing;
+      turn_cost = motorscooter::kTCCrossing;
     } else {
       turn_cost = (node->drive_on_right())
-                      ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
-                      : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+                      ? motorscooter::kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
+                      : motorscooter::kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
 
     if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
@@ -548,11 +550,11 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
   if (edge->stopimpact(idx) > 0) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      turn_cost = kTCCrossing;
+      turn_cost = motorscooter::kTCCrossing;
     } else {
       turn_cost = (node->drive_on_right())
-                      ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
-                      : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+                      ? motorscooter::kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
+                      : motorscooter::kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
 
     if ((edge->use() != Use::kRamp && pred->use() == Use::kRamp) ||
@@ -588,78 +590,78 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
     // If specified, parse json and set pbf values
 
     // maneuver_penalty
-    pbf_costing_options->set_maneuver_penalty(kManeuverPenaltyRange(
+    pbf_costing_options->set_maneuver_penalty(motorscooter::kManeuverPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/maneuver_penalty")
-            .get_value_or(kDefaultManeuverPenalty)));
+            .get_value_or(motorscooter::kDefaultManeuverPenalty)));
 
     // destination_only_penalty
-    pbf_costing_options->set_destination_only_penalty(kDestinationOnlyPenaltyRange(
+    pbf_costing_options->set_destination_only_penalty(motorscooter::kDestinationOnlyPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/destination_only_penalty")
-            .get_value_or(kDefaultDestinationOnlyPenalty)));
+            .get_value_or(motorscooter::kDefaultDestinationOnlyPenalty)));
 
     // gate_cost
-    pbf_costing_options->set_gate_cost(
-        kGateCostRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_cost")
-                           .get_value_or(kDefaultGateCost)));
+    pbf_costing_options->set_gate_cost(motorscooter::kGateCostRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/gate_cost")
+            .get_value_or(motorscooter::kDefaultGateCost)));
 
     // gate_penalty
-    pbf_costing_options->set_gate_penalty(
-        kGatePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_penalty")
-                              .get_value_or(kDefaultGatePenalty)));
+    pbf_costing_options->set_gate_penalty(motorscooter::kGatePenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/gate_penalty")
+            .get_value_or(motorscooter::kDefaultGatePenalty)));
 
     // alley_penalty
-    pbf_costing_options->set_alley_penalty(
-        kAlleyPenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
-                               .get_value_or(kDefaultAlleyPenalty)));
+    pbf_costing_options->set_alley_penalty(motorscooter::kAlleyPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
+            .get_value_or(motorscooter::kDefaultAlleyPenalty)));
 
     // country_crossing_cost
-    pbf_costing_options->set_country_crossing_cost(kCountryCrossingCostRange(
+    pbf_costing_options->set_country_crossing_cost(motorscooter::kCountryCrossingCostRange(
         rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_cost")
-            .get_value_or(kDefaultCountryCrossingCost)));
+            .get_value_or(motorscooter::kDefaultCountryCrossingCost)));
 
     // country_crossing_penalty
-    pbf_costing_options->set_country_crossing_penalty(kCountryCrossingPenaltyRange(
+    pbf_costing_options->set_country_crossing_penalty(motorscooter::kCountryCrossingPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_penalty")
-            .get_value_or(kDefaultCountryCrossingPenalty)));
+            .get_value_or(motorscooter::kDefaultCountryCrossingPenalty)));
 
     // ferry_cost
-    pbf_costing_options->set_ferry_cost(
-        kFerryCostRange(rapidjson::get_optional<float>(*json_costing_options, "/ferry_cost")
-                            .get_value_or(kDefaultFerryCost)));
+    pbf_costing_options->set_ferry_cost(motorscooter::kFerryCostRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/ferry_cost")
+            .get_value_or(motorscooter::kDefaultFerryCost)));
 
     // use_ferry
-    pbf_costing_options->set_use_ferry(
-        kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
-                           .get_value_or(kDefaultUseFerry)));
+    pbf_costing_options->set_use_ferry(motorscooter::kUseFerryRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
+            .get_value_or(motorscooter::kDefaultUseFerry)));
 
     // top_speed
-    pbf_costing_options->set_top_speed(
-        kTopSpeedRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/top_speed")
-                           .get_value_or(kDefaultTopSpeed)));
+    pbf_costing_options->set_top_speed(motorscooter::kTopSpeedRange(
+        rapidjson::get_optional<uint32_t>(*json_costing_options, "/top_speed")
+            .get_value_or(motorscooter::kDefaultTopSpeed)));
 
     // use_hills
-    pbf_costing_options->set_use_hills(
-        kUseHillsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_hills")
-                           .get_value_or(kDefaultUseHills)));
+    pbf_costing_options->set_use_hills(motorscooter::kUseHillsRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/use_hills")
+            .get_value_or(motorscooter::kDefaultUseHills)));
 
     // use_primary
-    pbf_costing_options->set_use_primary(
-        kUsePrimaryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_primary")
-                             .get_value_or(kDefaultUsePrimary)));
+    pbf_costing_options->set_use_primary(motorscooter::kUsePrimaryRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/use_primary")
+            .get_value_or(motorscooter::kDefaultUsePrimary)));
   } else {
     // Set pbf values to defaults
-    pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
-    pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
-    pbf_costing_options->set_gate_cost(kDefaultGateCost);
-    pbf_costing_options->set_gate_penalty(kDefaultGatePenalty);
-    pbf_costing_options->set_alley_penalty(kDefaultAlleyPenalty);
-    pbf_costing_options->set_country_crossing_cost(kDefaultCountryCrossingCost);
-    pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
-    pbf_costing_options->set_ferry_cost(kDefaultFerryCost);
-    pbf_costing_options->set_use_ferry(kDefaultUseFerry);
-    pbf_costing_options->set_top_speed(kDefaultTopSpeed);
-    pbf_costing_options->set_use_hills(kDefaultUseHills);
-    pbf_costing_options->set_use_primary(kDefaultUsePrimary);
+    pbf_costing_options->set_maneuver_penalty(motorscooter::kDefaultManeuverPenalty);
+    pbf_costing_options->set_destination_only_penalty(motorscooter::kDefaultDestinationOnlyPenalty);
+    pbf_costing_options->set_gate_cost(motorscooter::kDefaultGateCost);
+    pbf_costing_options->set_gate_penalty(motorscooter::kDefaultGatePenalty);
+    pbf_costing_options->set_alley_penalty(motorscooter::kDefaultAlleyPenalty);
+    pbf_costing_options->set_country_crossing_cost(motorscooter::kDefaultCountryCrossingCost);
+    pbf_costing_options->set_country_crossing_penalty(motorscooter::kDefaultCountryCrossingPenalty);
+    pbf_costing_options->set_ferry_cost(motorscooter::kDefaultFerryCost);
+    pbf_costing_options->set_use_ferry(motorscooter::kDefaultUseFerry);
+    pbf_costing_options->set_top_speed(motorscooter::kDefaultTopSpeed);
+    pbf_costing_options->set_use_hills(motorscooter::kDefaultUseHills);
+    pbf_costing_options->set_use_primary(motorscooter::kDefaultUsePrimary);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
   }
 }

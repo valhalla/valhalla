@@ -109,7 +109,7 @@ void SetCountryAccess(DirectedEdge& directededge,
 
   // motorroad override.  Only applies to RC <= kPrimary.  If no override is found in the
   // country access, just use the defaults which is no bicycles, mopeds or pedestrians.
-  if (directededge.classification() <= RoadClass::kPrimary && user_access.motorroad_tag()) {
+  if (directededge.classification() <= baldr::RoadClass::kPrimary && user_access.motorroad_tag()) {
     if (country_access.at(static_cast<uint32_t>(AccessTypes::kMotorroad)) != -1) {
 
       forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kMotorroad)),
@@ -118,7 +118,7 @@ void SetCountryAccess(DirectedEdge& directededge,
                           f_oneway_vehicle, f_oneway_bicycle, user_access);
     } else {
       // do the trunk and trunk_link logic first
-      if (directededge.classification() == RoadClass::kTrunk) {
+      if (directededge.classification() == baldr::RoadClass::kTrunk) {
         if (directededge.link() &&
             country_access.at(static_cast<uint32_t>(AccessTypes::kTrunkLink)) != -1) {
 
@@ -148,7 +148,7 @@ void SetCountryAccess(DirectedEdge& directededge,
                           f_oneway_vehicle, f_oneway_bicycle, user_access);
     }
   } // trunk and trunk_link
-  else if (directededge.classification() == RoadClass::kTrunk) {
+  else if (directededge.classification() == baldr::RoadClass::kTrunk) {
     if (directededge.link() &&
         country_access.at(static_cast<uint32_t>(AccessTypes::kTrunkLink)) != -1) {
       forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kTrunkLink)),

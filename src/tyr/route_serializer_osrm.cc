@@ -129,6 +129,7 @@ inline unsigned getFittedZoom(Coordinate south_west, Coordinate north_east) {
   else
     return MIN_ZOOM;
 }
+} // namespace
 
 namespace osrm_serializers {
 /*
@@ -1405,4 +1406,3 @@ std::string serialize(valhalla::Api& api) {
 }
 
 } // namespace osrm_serializers
-} // namespace

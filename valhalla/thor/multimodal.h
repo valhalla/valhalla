@@ -11,6 +11,7 @@
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/graphtile.h>
 #include <valhalla/proto/tripcommon.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
@@ -22,6 +23,11 @@
 
 namespace valhalla {
 namespace thor {
+
+// Method to get an operator Id from a map of operator strings vs. Id.
+uint32_t GetOperatorId(const baldr::GraphTile* tile,
+                       uint32_t routeid,
+                       std::unordered_map<std::string, uint32_t>& operators);
 
 /**
  * Multi-modal pathfinding algorithm. Currently supports walking and

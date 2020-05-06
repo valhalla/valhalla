@@ -1,12 +1,6 @@
 #include "meili/transition_cost_model.h"
+#include "meili/geometry_helpers.h"
 #include "meili/routing.h"
-
-namespace {
-inline float GreatCircleDistance(const valhalla::meili::Measurement& left,
-                                 const valhalla::meili::Measurement& right) {
-  return left.lnglat().Distance(right.lnglat());
-}
-} // namespace
 
 namespace valhalla {
 namespace meili {
@@ -77,7 +71,7 @@ float TransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) co
     const auto& left_measurement = container_.measurement(lhs.time());
     const auto& right_measurement = container_.measurement(rhs.time());
     return CalculateTransitionCost(label->turn_cost(), label->cost().cost,
-                                   GreatCircleDistance(left_measurement, right_measurement),
+                                   helpers::GreatCircleDistance(left_measurement, right_measurement),
                                    label->cost().secs, ClockDistance(lhs.time(), rhs.time()));
   }
 
@@ -129,7 +123,8 @@ void TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) co
   const midgard::DistanceApproximator approximator(right_measurement.lnglat());
 
   auto max_route_distance =
-      std::min(GreatCircleDistance(left_measurement, right_measurement) * max_route_distance_factor_,
+      std::min(helpers::GreatCircleDistance(left_measurement, right_measurement) *
+                   max_route_distance_factor_,
                breakage_distance_);
   // Route, we have to make sure that the max distance is greater
   // than 0 otherwise we wont be able to get any labels into the

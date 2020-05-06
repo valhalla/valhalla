@@ -13,6 +13,8 @@
 namespace valhalla {
 namespace skadi {
 
+constexpr double NO_DATA_VALUE = -32768;
+
 class sample {
 public:
   // non-default-constructable and non-copyable

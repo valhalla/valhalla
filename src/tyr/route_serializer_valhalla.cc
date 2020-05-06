@@ -15,9 +15,8 @@ using namespace valhalla::odin;
 using namespace valhalla::baldr;
 using namespace std;
 
-namespace {
-
 namespace valhalla_serializers {
+namespace {
 /*
 valhalla output looks like this:
 {
@@ -560,6 +559,7 @@ legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directio
   }
   return legs;
 }
+} // namespace
 
 std::string serialize(const Api& api) {
   // build up the json object
@@ -580,4 +580,3 @@ std::string serialize(const Api& api) {
   return ss.str();
 }
 } // namespace valhalla_serializers
-} // namespace

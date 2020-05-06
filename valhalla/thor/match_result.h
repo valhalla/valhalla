@@ -12,6 +12,10 @@ namespace valhalla {
 namespace thor {
 
 constexpr uint32_t kInvalidEdgeIndex = std::numeric_limits<uint32_t>::max();
+constexpr size_t kConfidenceScoreIndex = 0;
+constexpr size_t kRawScoreIndex = 1;
+constexpr size_t kMatchResultsIndex = 2;
+constexpr size_t kTripLegIndex = 3;
 
 struct MatchResult : meili::MatchResult {
   enum class Type { kUnmatched, kInterpolated, kMatched };

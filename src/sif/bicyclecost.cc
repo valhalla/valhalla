@@ -22,7 +22,7 @@ namespace valhalla {
 namespace sif {
 
 // Default options/values
-namespace {
+namespace bicycle {
 
 // Base transition costs
 // TODO - can we define these in dynamiccost.h and override here if they differ?
@@ -206,7 +206,7 @@ constexpr ranged_default_t<float> kUseRoadRange{0.0f, kDefaultUseRoad, 1.0f};
 constexpr ranged_default_t<float> kUseFerryRange{0.0f, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHillsRange{0.0f, kDefaultUseHills, 1.0f};
 constexpr ranged_default_t<float> kAvoidBadSurfacesRange{0.0f, kDefaultAvoidBadSurfaces, 1.0f};
-} // namespace
+} // namespace bicycle
 
 /**
  * Derived class providing dynamic edge costing for bicycle routes.
@@ -461,18 +461,18 @@ BicycleCost::BicycleCost(const Costing costing, const Options& options)
 
   speed_ = costing_options.cycling_speed();
   avoid_bad_surfaces_ = costing_options.avoid_bad_surfaces();
-  minimal_surface_penalized_ = kWorstAllowedSurface[static_cast<uint32_t>(type_)];
+  minimal_surface_penalized_ = bicycle::kWorstAllowedSurface[static_cast<uint32_t>(type_)];
   worst_allowed_surface_ = avoid_bad_surfaces_ == 1.0f ? minimal_surface_penalized_ : Surface::kPath;
 
   // Set the surface speed factors for the bicycle type.
   if (type_ == BicycleType::kRoad) {
-    surface_speed_factor_ = kRoadSurfaceSpeedFactors;
+    surface_speed_factor_ = bicycle::kRoadSurfaceSpeedFactors;
   } else if (type_ == BicycleType::kHybrid) {
-    surface_speed_factor_ = kHybridSurfaceSpeedFactors;
+    surface_speed_factor_ = bicycle::kHybridSurfaceSpeedFactors;
   } else if (type_ == BicycleType::kCross) {
-    surface_speed_factor_ = kCrossSurfaceSpeedFactors;
+    surface_speed_factor_ = bicycle::kCrossSurfaceSpeedFactors;
   } else {
-    surface_speed_factor_ = kMountainSurfaceSpeedFactors;
+    surface_speed_factor_ = bicycle::kMountainSurfaceSpeedFactors;
   }
 
   // Willingness to use roads. Make sure this is within range [0, 1].
@@ -485,7 +485,8 @@ BicycleCost::BicycleCost(const Costing costing, const Options& options)
 
   // Set the speed penalty threshold and factor. With useroads = 1 the
   // threshold is 70 kph (near 50 MPH).
-  speed_penalty_threshold_ = kSpeedPenaltyThreshold + static_cast<uint32_t>(use_roads_ * 30.0f);
+  speed_penalty_threshold_ =
+      bicycle::kSpeedPenaltyThreshold + static_cast<uint32_t>(use_roads_ * 30.0f);
 
   // Create speed cost table and penalty table (to avoid division in costing)
   float avoid_roads = (1.0f - use_roads_) * 0.75f + 0.25;
@@ -510,7 +511,7 @@ BicycleCost::BicycleCost(const Costing costing, const Options& options)
   float use_hills = costing_options.use_hills();
   float avoid_hills = (1.0f - use_hills);
   for (uint32_t i = 0; i <= kMaxGradeFactor; i++) {
-    grade_penalty[i] = avoid_hills * kAvoidHillsStrength[i];
+    grade_penalty[i] = avoid_hills * bicycle::kAvoidHillsStrength[i];
   }
 }
 
@@ -584,7 +585,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
   if (edge->use() == Use::kSteps) {
     float sec = (edge->length() * speedfactor_[1]);
-    return {sec * kBicycleStepsFactor, sec};
+    return {sec * bicycle::kBicycleStepsFactor, sec};
   }
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
@@ -600,10 +601,10 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // depending on the bicycle type. Modulate speed based on weighted grade
   // (relative measure of elevation change along the edge)
   uint32_t bike_speed =
-      edge->dismount() ? kDismountSpeed
+      edge->dismount() ? bicycle::kDismountSpeed
                        : static_cast<uint32_t>(
                              (speed_ * surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
-                              kGradeBasedSpeedFactor[edge->weighted_grade()]) +
+                              bicycle::kGradeBasedSpeedFactor[edge->weighted_grade()]) +
                              0.5f);
 
   // Represents how stressful a roadway is without looking at grade or cycle accommodations
@@ -651,11 +652,12 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 
     // Designated truck routes add to roadway stress
     if (edge->truck_route()) {
-      roadway_stress += kTruckStress;
+      roadway_stress += bicycle::kTruckStress;
     }
 
     // Add in penalization for road classification
-    roadway_stress += road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
+    roadway_stress +=
+        road_factor_ * bicycle::kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
     // Then multiply by speed so that higher classified roads are more severely punished for being
     // fast.
     roadway_stress *= speedpenalty_[road_speed];
@@ -669,7 +671,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Favor bicycle networks very slightly.
   // TODO - do we need to differentiate between types of network?
   if (edge->bike_network() > 0) {
-    accommodation_factor *= kBicycleNetworkFactor;
+    accommodation_factor *= bicycle::kBicycleNetworkFactor;
   }
 
   // The stress of this road after accommodation but before grade
@@ -677,8 +679,8 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   float surface_factor = 0.0f;
   if (edge->surface() >= minimal_surface_penalized_) {
-    surface_factor =
-        avoid_bad_surfaces_ * kSurfaceFactors[static_cast<uint32_t>(edge->surface()) -
+    surface_factor = avoid_bad_surfaces_ *
+                     bicycle::kSurfaceFactors[static_cast<uint32_t>(edge->surface()) -
                                               static_cast<uint32_t>(minimal_surface_penalized_)];
   }
 
@@ -703,7 +705,7 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   // Accumulate cost and penalty
   float seconds = 0.0f;
   float penalty = 0.0f;
-  float class_factor = kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
+  float class_factor = bicycle::kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
 
   // Reduce penalty to make this turn if the road we are turning on has some kind of bicycle
   // accommodation
@@ -731,17 +733,18 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   if (edge->stopimpact(idx) > 0) {
     // Increase turn stress depending on the kind of turn that has to be made.
-    float turn_penalty = (node->drive_on_right())
-                             ? kRightSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))]
-                             : kLeftSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))];
+    float turn_penalty =
+        (node->drive_on_right())
+            ? bicycle::kRightSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))]
+            : bicycle::kLeftSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))];
     turn_stress += turn_penalty;
 
     // Take the higher of the turn degree cost and the crossing cost
     float turn_cost = (node->drive_on_right())
-                          ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
-                          : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
-    if (turn_cost < kTCCrossing && edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      turn_cost = kTCCrossing;
+                          ? bicycle::kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
+                          : bicycle::kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+    if (turn_cost < bicycle::kTCCrossing && edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+      turn_cost = bicycle::kTCCrossing;
     }
 
     // Transition time = stopimpact * turncost
@@ -787,7 +790,7 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
 
   // Reduce penalty to make this turn if the road we are turning on has some kind of bicycle
   // accommodation
-  float class_factor = kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
+  float class_factor = bicycle::kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
   float bike_accom = 1.0f;
   if (edge->use() == Use::kCycleway || edge->use() == Use::kFootway || edge->use() == Use::kPath) {
     bike_accom = 0.05f;
@@ -811,17 +814,18 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
   float turn_stress = 1.0f;
   if (edge->stopimpact(idx) > 0) {
     // Increase turn stress depending on the kind of turn that has to be made.
-    float turn_penalty = (node->drive_on_right())
-                             ? kRightSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))]
-                             : kLeftSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))];
+    float turn_penalty =
+        (node->drive_on_right())
+            ? bicycle::kRightSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))]
+            : bicycle::kLeftSideTurnPenalties[static_cast<uint32_t>(edge->turntype(idx))];
     turn_stress += turn_penalty;
 
     // Take the higher of the turn degree cost and the crossing cost
     float turn_cost = (node->drive_on_right())
-                          ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
-                          : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
-    if (turn_cost < kTCCrossing && edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-      turn_cost = kTCCrossing;
+                          ? bicycle::kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
+                          : bicycle::kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+    if (turn_cost < bicycle::kTCCrossing && edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+      turn_cost = bicycle::kTCCrossing;
     }
 
     // Transition time = stopimpact * turncost
@@ -861,69 +865,69 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
     // If specified, parse json and set pbf values
 
     // maneuver_penalty
-    pbf_costing_options->set_maneuver_penalty(kManeuverPenaltyRange(
+    pbf_costing_options->set_maneuver_penalty(bicycle::kManeuverPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/maneuver_penalty")
-            .get_value_or(kDefaultManeuverPenalty)));
+            .get_value_or(bicycle::kDefaultManeuverPenalty)));
 
     // destination_only_penalty
-    pbf_costing_options->set_destination_only_penalty(kDestinationOnlyPenaltyRange(
+    pbf_costing_options->set_destination_only_penalty(bicycle::kDestinationOnlyPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/destination_only_penalty")
-            .get_value_or(kDefaultDestinationOnlyPenalty)));
+            .get_value_or(bicycle::kDefaultDestinationOnlyPenalty)));
 
     // alley_penalty
-    pbf_costing_options->set_alley_penalty(
-        kAlleyPenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
-                               .get_value_or(kDefaultAlleyPenalty)));
+    pbf_costing_options->set_alley_penalty(bicycle::kAlleyPenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
+            .get_value_or(bicycle::kDefaultAlleyPenalty)));
 
     // gate_cost
     pbf_costing_options->set_gate_cost(
-        kGateCostRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_cost")
-                           .get_value_or(kDefaultGateCost)));
+        bicycle::kGateCostRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_cost")
+                                    .get_value_or(bicycle::kDefaultGateCost)));
 
     // gate_penalty
-    pbf_costing_options->set_gate_penalty(
-        kGatePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/gate_penalty")
-                              .get_value_or(kDefaultGatePenalty)));
+    pbf_costing_options->set_gate_penalty(bicycle::kGatePenaltyRange(
+        rapidjson::get_optional<float>(*json_costing_options, "/gate_penalty")
+            .get_value_or(bicycle::kDefaultGatePenalty)));
 
     // ferry_cost
     pbf_costing_options->set_ferry_cost(
-        kFerryCostRange(rapidjson::get_optional<float>(*json_costing_options, "/ferry_cost")
-                            .get_value_or(kDefaultFerryCost)));
+        bicycle::kFerryCostRange(rapidjson::get_optional<float>(*json_costing_options, "/ferry_cost")
+                                     .get_value_or(bicycle::kDefaultFerryCost)));
 
     // country_crossing_cost
-    pbf_costing_options->set_country_crossing_cost(kCountryCrossingCostRange(
+    pbf_costing_options->set_country_crossing_cost(bicycle::kCountryCrossingCostRange(
         rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_cost")
-            .get_value_or(kDefaultCountryCrossingCost)));
+            .get_value_or(bicycle::kDefaultCountryCrossingCost)));
 
     // country_crossing_penalty
-    pbf_costing_options->set_country_crossing_penalty(kCountryCrossingPenaltyRange(
+    pbf_costing_options->set_country_crossing_penalty(bicycle::kCountryCrossingPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/country_crossing_penalty")
-            .get_value_or(kDefaultCountryCrossingPenalty)));
+            .get_value_or(bicycle::kDefaultCountryCrossingPenalty)));
 
     // use_roads
     pbf_costing_options->set_use_roads(
-        kUseRoadRange(rapidjson::get_optional<float>(*json_costing_options, "/use_roads")
-                          .get_value_or(kDefaultUseRoad)));
+        bicycle::kUseRoadRange(rapidjson::get_optional<float>(*json_costing_options, "/use_roads")
+                                   .get_value_or(bicycle::kDefaultUseRoad)));
 
     // use_hills
     pbf_costing_options->set_use_hills(
-        kUseHillsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_hills")
-                           .get_value_or(kDefaultUseHills)));
+        bicycle::kUseHillsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_hills")
+                                    .get_value_or(bicycle::kDefaultUseHills)));
 
     // use_ferry
     pbf_costing_options->set_use_ferry(
-        kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
-                           .get_value_or(kDefaultUseFerry)));
+        bicycle::kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
+                                    .get_value_or(bicycle::kDefaultUseFerry)));
 
     // avoid_bad_surfaces
-    pbf_costing_options->set_avoid_bad_surfaces(kAvoidBadSurfacesRange(
+    pbf_costing_options->set_avoid_bad_surfaces(bicycle::kAvoidBadSurfacesRange(
         rapidjson::get_optional<float>(*json_costing_options, "/avoid_bad_surfaces")
-            .get_value_or(kDefaultAvoidBadSurfaces)));
+            .get_value_or(bicycle::kDefaultAvoidBadSurfaces)));
 
     // bicycle_type
     pbf_costing_options->set_transport_type(
         rapidjson::get_optional<std::string>(*json_costing_options, "/bicycle_type")
-            .get_value_or(kDefaultBicycleType));
+            .get_value_or(bicycle::kDefaultBicycleType));
 
     // convert string to enum, set ranges and defaults based on enum
     BicycleType type;
@@ -940,32 +944,33 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
     // This is the average speed on smooth, flat roads. If not present or outside the
     // valid range use a default speed based on the bicycle type.
     uint32_t t = static_cast<uint32_t>(type);
-    ranged_default_t<float> kCycleSpeedRange{kMinCyclingSpeed, kDefaultCyclingSpeed[t],
-                                             kMaxCyclingSpeed};
+    ranged_default_t<float> kCycleSpeedRange{bicycle::kMinCyclingSpeed,
+                                             bicycle::kDefaultCyclingSpeed[t],
+                                             bicycle::kMaxCyclingSpeed};
 
     // Set type specific defaults, override with URL inputs
     // cycling_speed
     pbf_costing_options->set_cycling_speed(
         kCycleSpeedRange(rapidjson::get_optional<float>(*json_costing_options, "/cycling_speed")
-                             .get_value_or(kDefaultCyclingSpeed[t])));
+                             .get_value_or(bicycle::kDefaultCyclingSpeed[t])));
 
   } else {
     // Set pbf values to defaults
-    pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
-    pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
-    pbf_costing_options->set_alley_penalty(kDefaultAlleyPenalty);
-    pbf_costing_options->set_gate_cost(kDefaultGateCost);
-    pbf_costing_options->set_gate_penalty(kDefaultGatePenalty);
-    pbf_costing_options->set_ferry_cost(kDefaultFerryCost);
-    pbf_costing_options->set_country_crossing_cost(kDefaultCountryCrossingCost);
-    pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
-    pbf_costing_options->set_use_roads(kDefaultUseRoad);
-    pbf_costing_options->set_use_hills(kDefaultUseHills);
-    pbf_costing_options->set_use_ferry(kDefaultUseFerry);
-    pbf_costing_options->set_avoid_bad_surfaces(kDefaultAvoidBadSurfaces);
-    pbf_costing_options->set_transport_type(kDefaultBicycleType);
+    pbf_costing_options->set_maneuver_penalty(bicycle::kDefaultManeuverPenalty);
+    pbf_costing_options->set_destination_only_penalty(bicycle::kDefaultDestinationOnlyPenalty);
+    pbf_costing_options->set_alley_penalty(bicycle::kDefaultAlleyPenalty);
+    pbf_costing_options->set_gate_cost(bicycle::kDefaultGateCost);
+    pbf_costing_options->set_gate_penalty(bicycle::kDefaultGatePenalty);
+    pbf_costing_options->set_ferry_cost(bicycle::kDefaultFerryCost);
+    pbf_costing_options->set_country_crossing_cost(bicycle::kDefaultCountryCrossingCost);
+    pbf_costing_options->set_country_crossing_penalty(bicycle::kDefaultCountryCrossingPenalty);
+    pbf_costing_options->set_use_roads(bicycle::kDefaultUseRoad);
+    pbf_costing_options->set_use_hills(bicycle::kDefaultUseHills);
+    pbf_costing_options->set_use_ferry(bicycle::kDefaultUseFerry);
+    pbf_costing_options->set_avoid_bad_surfaces(bicycle::kDefaultAvoidBadSurfaces);
+    pbf_costing_options->set_transport_type(bicycle::kDefaultBicycleType);
     pbf_costing_options->set_cycling_speed(
-        kDefaultCyclingSpeed[static_cast<uint32_t>(BicycleType::kHybrid)]);
+        bicycle::kDefaultCyclingSpeed[static_cast<uint32_t>(BicycleType::kHybrid)]);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
   }
 }
@@ -1060,20 +1065,21 @@ TEST(BicycleCost, testBicycleCostParams) {
   }
 
   // country_crossing_cost_ (Cost.secs)
-  distributor.reset(make_distributor_from_range(kCountryCrossingCostRange));
+  distributor.reset(make_distributor_from_range(bicycle::kCountryCrossingCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("country_crossing_cost", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->country_crossing_cost_.secs,
-                test::IsBetween(kCountryCrossingCostRange.min, kCountryCrossingCostRange.max));
+                test::IsBetween(bicycle::kCountryCrossingCostRange.min,
+                                kCountryCrossingCostRange.max));
   }
 
   // country_crossing_penalty_ (Cost.cost)
-  distributor.reset(make_distributor_from_range(kCountryCrossingPenaltyRange));
+  distributor.reset(make_distributor_from_range(bicycle::kCountryCrossingPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(
         make_bicyclecost_from_json("country_crossing_penalty", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->country_crossing_cost_.cost,
-                test::IsBetween(kCountryCrossingPenaltyRange.min,
+                test::IsBetween(bicycle::kCountryCrossingPenaltyRange.min,
                                 kCountryCrossingPenaltyRange.max + kDefaultCountryCrossingCost));
   }
 
@@ -1087,14 +1093,14 @@ TEST(BicycleCost, testBicycleCostParams) {
 
   /**
    // use_ferry_
-   distributor.reset(make_distributor_from_range(kUseFerryRange));
+   distributor.reset(make_distributor_from_range(bicycle::kUseFerryRange));
    for (unsigned i = 0; i < testIterations; ++i) {
      ctorTester.reset(make_bicyclecost_from_json("use_ferry", (*distributor)(generator)));
 EXPECT_THAT(ctorTester->use_ferry_ , test::IsBetween( kUseFerryRange.min ,kUseFerryRange.max));
    }
 
    // use_hills
-   distributor.reset(make_distributor_from_range(kUseHillsRange));
+   distributor.reset(make_distributor_from_range(bicycle::kUseHillsRange));
    for (unsigned i = 0; i < testIterations; ++i) {
      ctorTester.reset(make_bicyclecost_from_json("use_hills", (*distributor)(generator)));
      EXPECT_THAT(ctorTester->use_hills , test::IsBetween( kUseHillsRange.min ,kUseHillsRange.max));
@@ -1102,10 +1108,11 @@ EXPECT_THAT(ctorTester->use_ferry_ , test::IsBetween( kUseFerryRange.min ,kUseFe
    */
 
   // use_roads_
-  distributor.reset(make_distributor_from_range(kUseRoadRange));
+  distributor.reset(make_distributor_from_range(bicycle::kUseRoadRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_bicyclecost_from_json("use_roads", (*distributor)(generator)));
-    EXPECT_THAT(ctorTester->use_roads_, test::IsBetween(kUseRoadRange.min, kUseRoadRange.max));
+    EXPECT_THAT(ctorTester->use_roads_,
+                test::IsBetween(bicycle::kUseRoadRange.min, kUseRoadRange.max));
   }
 
   // speed_

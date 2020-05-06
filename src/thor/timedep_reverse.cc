@@ -12,12 +12,6 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
-// TODO - compute initial label count based on estimated route length
-constexpr uint64_t kInitialEdgeLabelCount = 500000;
-
-// Number of iterations to allow with no convergence to the destination
-constexpr uint32_t kMaxIterationsWithoutConvergence = 800000;
-
 // Default constructor
 TimeDepReverse::TimeDepReverse() : AStarPathAlgorithm() {
   mode_ = TravelMode::kDrive;

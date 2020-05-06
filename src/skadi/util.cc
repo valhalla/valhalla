@@ -1,4 +1,5 @@
 #include "skadi/util.h"
+#include "skadi/sample.h"
 #include <algorithm>
 
 namespace {
@@ -7,7 +8,6 @@ template <class T> T clamp(T val, const T low, const T high) {
   return std::min<T>(std::max<T>(val, low), high);
 }
 
-constexpr double NO_DATA_VALUE = -32768;
 } // namespace
 
 namespace valhalla {

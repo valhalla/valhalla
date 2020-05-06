@@ -170,7 +170,7 @@ void parse_primitive_block(char* unpack_buffer,
       for (const auto& node : primitive_group.nodes()) {
         double lon = 0.000000001 * (primblock.lon_offset() + (primblock.granularity() * node.lon()));
         double lat = 0.000000001 * (primblock.lat_offset() + (primblock.granularity() * node.lat()));
-        callback.node_callback(node.id(), lon, lat, get_tags<Node>(node, primblock));
+        callback.node_callback(node.id(), lon, lat, get_tags<OSMPBF::Node>(node, primblock));
         if (node.has_info() && node.info().has_changeset() && (interest & CHANGESETS) == CHANGESETS) {
           callback.changeset_callback(node.info().changeset());
         }
