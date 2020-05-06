@@ -17,7 +17,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller complexrest
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
-    idtable matrix minbb multipoint_routes names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary thor_worker timedep_paths timeparsing trivial_paths uniquenames utrecht)
+    idtable matrix minbb multipoint_routes names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary thor_worker timedep_paths timeparsing trivial_paths uniquenames utrecht lua)
   if(ENABLE_HTTP)
     list(APPEND tests http_tiles)
   endif()
