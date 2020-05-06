@@ -74,6 +74,7 @@
    * ADDED: Use both imminent and distant verbal multi-cue phrases. [2353](https://github.com/valhalla/valhalla/pull/2353)
    * CHANGED: Speed up graph enhancing by avoiding continuous unordered_set rebuilding [#2349](https://github.com/valhalla/valhalla/pull/2349)
    * CHANGED: Skip calling out to Lua for nodes/ways/relations with not tags - speeds up parsing. [#2351](https://github.com/valhalla/valhalla/pull/2351)
+   * ADDED: Ability to create OpenLR records from raw data. [2356](https://github.com/valhalla/valhalla/pull/2356)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
