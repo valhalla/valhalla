@@ -40,6 +40,11 @@ foreach(test ${tests})
     COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
   create_source_groups("Source Files" ${test}.cc)
   target_link_libraries(${test} valhalla gtest gmock pthread)
+  if (LUAJIT_FOUND AND APPLE)
+    # Using LuaJIT on macOS requires a couple of extra linker flags
+    # Any tool that needs interact with Lua will need these flags on macOS
+    target_link_options(${TESTNAME} PUBLIC -pagezero_size 10000 -image_base 100000000)
+  endif()
   target_include_directories(${test} SYSTEM PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
       ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
