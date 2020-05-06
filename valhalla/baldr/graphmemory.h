@@ -1,7 +1,4 @@
-#ifndef VALHALLA_BALDR_GRAPHMEMORY_H_
-#define VALHALLA_BALDR_GRAPHMEMORY_H_
-
-#include <memory>
+#pragma once
 
 namespace valhalla {
 namespace baldr {
@@ -20,5 +17,3 @@ public:
 
 } // namespace baldr
 } // namespace valhalla
-
-#endif // VALHALLA_BALDR_GRAPHMEMORY_H_
