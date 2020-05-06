@@ -1291,18 +1291,26 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "<LENGTH> <CARDINAL_DIRECTION>.",
-        "1": "<LENGTH> <CARDINAL_DIRECTION> på <STREET_NAMES>.",
-        "2": "<CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
-        "4": "Kör <LENGTH> <CARDINAL_DIRECTION>.",
-        "5": "Kör <LENGTH> <CARDINAL_DIRECTION> på <STREET_NAMES>.",
-        "6": "Kör <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
-        "8": "Gå <LENGTH> <CARDINAL_DIRECTION>.",
-        "9": "Gå <LENGTH> <CARDINAL_DIRECTION> på <STREET_NAMES>.",
-        "10": "Gå <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
+        "0": "<CARDINAL_DIRECTION>.",
+        "1": "<LENGTH> <CARDINAL_DIRECTION>.",
+        "2": "<CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "3": "<LENGTH> <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "4": "<CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
+        "5": "Kör <CARDINAL_DIRECTION>.",
+        "6": "Kör <LENGTH> <CARDINAL_DIRECTION>.",
+        "7": "Kör <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "8": "Kör <LENGTH> <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "9": "Kör <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
+        "10": "Gå <CARDINAL_DIRECTION>.",
+        "11": "Gå <LENGTH> <CARDINAL_DIRECTION>.",
+        "12": "Gå <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "13": "Gå <LENGTH> <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "14": "Gå <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
+        "15": "Cykla <CARDINAL_DIRECTION>.",
         "16": "Cykla <LENGTH> <CARDINAL_DIRECTION>.",
-        "17": "Cykla <LENGTH> <CARDINAL_DIRECTION> på <STREET_NAMES>.",
-        "18": "Cykla <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>."
+        "17": "Cykla <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "18": "Cykla <LENGTH> <CARDINAL_DIRECTION> på <STREET_NAMES>.",
+        "19": "Cykla <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
         "norrut",
@@ -1335,44 +1343,72 @@
       ],
       "example_phrases": {
         "0": [
-          "En halv mile österut.",
-          "1 kilometer norrut."
+          "Head east.",
+          "Head north."
         ],
         "1": [
-          "1 tiondels mile mot sydväst på 5th Avenue."
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
         ],
         "2": [
-          "Söderut på North Prince Street, U.S. 2 22."
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "4": [
-          "Kör en halv mile österut.",
-          "Kör 1 kilometer norrut."
+          "Head south on North Prince Street, U.S. 2 22."
         ],
         "5": [
-          "Kör en tiondels mile mot sydväst på 5th Avenue."
+          "Drive east.",
+          "Drive north."
         ],
         "6": [
-          "Kör söderut på North Prince Street, U.S. 2 22."
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
         ],
         "8": [
-          "Gå en halv mile österut.",
-          "Gå 1 kilometer norrut."
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "9": [
-          "Gå en tiondels mile mot sydväst på 5th Avenue."
+          "Drive south on North Prince Street, U.S. 2 22."
         ],
         "10": [
-          "Gå söderut på North Prince Street, U.S. 2 22."
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
         ],
         "16": [
-          "Cykla en halv mile österut.",
-          "Cykla 1 kilometer norrut."
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
         ],
         "17": [
-          "Cykla en tiondels mile mot sydväst på 5th Avenue."
+          "Bike southwest on 5th Avenue."
         ],
         "18": [
-          "Cykla söderut på North Prince Street, U.S. 2 22."
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
         ]
       }
     },

@@ -1292,18 +1292,26 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Двигайтесь на <CARDINAL_DIRECTION> <LENGTH>.",
-        "1": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
-        "2": "Двигайтесь на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
-        "4": "Едьте на <CARDINAL_DIRECTION> <LENGTH>.",
-        "5": "Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
-        "6": "Едьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
-        "8": "Идите на <CARDINAL_DIRECTION> <LENGTH>.",
-        "9": "Идите на <CARDINAL_DIRECTION> по <STREET_NAMES> for <LENGTH>.",
-        "10": "Идите на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "0": "Двигайтесь на <CARDINAL_DIRECTION>.",
+        "1": "Двигайтесь на <CARDINAL_DIRECTION> <LENGTH>.",
+        "2": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "3": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "4": "Двигайтесь на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "5": "Едьте на <CARDINAL_DIRECTION>.",
+        "6": "Едьте на <CARDINAL_DIRECTION> <LENGTH>.",
+        "7": "Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "8": "Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "9": "Едьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "10": "Идите на <CARDINAL_DIRECTION>.",
+        "11": "Идите на <CARDINAL_DIRECTION> <LENGTH>.",
+        "12": "Идите на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "13": "Идите на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "14": "Идите на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "15": "Едьте в на <CARDINAL_DIRECTION>.",
         "16": "Едьте в на <CARDINAL_DIRECTION> <LENGTH>.",
-        "17": "Едьте в на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
-        "18": "Едьте в на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>."
+        "17": "Едьте в на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "18": "Едьте в на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "19": "Едьте в на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
         "север",
@@ -1336,44 +1344,72 @@
       ],
       "example_phrases": {
         "0": [
-          "Двигайтесь на восток половину мили.",
-          "Двигайтесь на север один километр."
+          "Head east.",
+          "Head north."
         ],
         "1": [
-          "Двигайтесь на юго-восток по Пятой Авеню 1 десятую мили."
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
         ],
         "2": [
-          "Двигайтесь на юг по North Prince Street, U.S. 2 22."
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "4": [
-          "Едьте на east половину мили.",
-          "Едьте на for 1 километр."
+          "Head south on North Prince Street, U.S. 2 22."
         ],
         "5": [
-          "Едьте на юго-запад по Пятой Авеню 1 десятую мили."
+          "Drive east.",
+          "Drive north."
         ],
         "6": [
-          "Едьте на юг по North Prince Street, U.S. 2 22."
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
         ],
         "8": [
-          "Идите на восток половину мили.",
-          "Идите на север 1 километр."
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "9": [
-          "Идите на юго-запад по Пятой Авеню 1 десятую мили."
+          "Drive south on North Prince Street, U.S. 2 22."
         ],
         "10": [
-          "Идите на юг по North Prince Street, U.S. 2 22."
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
         ],
         "16": [
-          "Едьте на восток половину мили.",
-          "Едьте на север for 1 километр."
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
         ],
         "17": [
-          "Едьте на югозапад on 5th Avenue for 1 десятую мили."
+          "Bike southwest on 5th Avenue."
         ],
         "18": [
-          "Едьте на юг по North Prince Street, U.S. 2 22."
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
         ]
       }
     },

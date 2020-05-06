@@ -58,7 +58,6 @@ protected:
   std::string FormStartInstruction(Maneuver& maneuver);
 
   std::string FormVerbalStartInstruction(Maneuver& maneuver,
-                                         bool include_length = false,
                                          uint32_t element_max_count = kVerbalPreElementMaxCount,
                                          const std::string& delim = kVerbalDelim);
 

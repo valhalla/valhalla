@@ -1288,18 +1288,26 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "<LENGTH> Richtung <CARDINAL_DIRECTION>.",
-        "1": "<LENGTH> auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION>.",
-        "2": "<LENGTH> auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION>.",
-        "4": "<LENGTH> Richtung <CARDINAL_DIRECTION> fahren.",
-        "5": "<LENGTH> auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> fahren.",
-        "6": "<LENGTH> auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION> fahren.",
-        "8": "<LENGTH> Richtung <CARDINAL_DIRECTION> laufen.",
-        "9": "<LENGTH> auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> laufen.",
-        "10": "<LENGTH> auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION> laufen.",
+        "0": "Richtung <CARDINAL_DIRECTION>.",
+        "1": "<LENGTH> Richtung <CARDINAL_DIRECTION>.",
+        "2": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION>.",
+        "3": "<LENGTH> auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION>.",
+        "4": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION>.",
+        "5": "Richtung <CARDINAL_DIRECTION> fahren.",
+        "6": "<LENGTH> Richtung <CARDINAL_DIRECTION> fahren.",
+        "7": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> fahren.",
+        "8": "<LENGTH> auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> fahren.",
+        "9": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION> fahren.",
+        "10": "Richtung <CARDINAL_DIRECTION> laufen.",
+        "11": "<LENGTH> Richtung <CARDINAL_DIRECTION> laufen.",
+        "12": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> laufen.",
+        "13": "<LENGTH> auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> laufen.",
+        "14": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION> laufen.",
+        "15": "Richtung <CARDINAL_DIRECTION> radeln.",
         "16": "<LENGTH> Richtung <CARDINAL_DIRECTION> radeln.",
-        "17": "<LENGTH> auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> radeln.",
-        "18": "<LENGTH> auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION> radeln."
+        "17": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> radeln.",
+        "18": "<LENGTH> auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> radeln.",
+        "19": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION> radeln."
       },
       "cardinal_directions": [
         "Norden",
@@ -1332,43 +1340,71 @@
       ],
       "example_phrases": {
         "0": [
+          "Head east.",
+          "Head north."
+        ],
+        "1": [
           "Head east for a half mile.",
           "Head north for 1 kilometer."
         ],
-        "1": [
+        "2": [
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
           "Head southwest on 5th Avenue for 1 tenth of a mile."
         ],
-        "2": [
+        "4": [
           "Head south on North Prince Street, U.S. 2 22."
         ],
-        "4": [
+        "5": [
+          "Drive east.",
+          "Drive north."
+        ],
+        "6": [
           "Drive east for a half mile.",
           "Drive north for 1 kilometer."
         ],
-        "5": [
-          "Drive southwest on 5th Avenue for 1 tenth of a mile."
-        ],
-        "6": [
-          "Drive south on North Prince Street, U.S. 2 22."
+        "7": [
+          "Drive southwest on 5th Avenue."
         ],
         "8": [
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "9": [
+          "Drive south on North Prince Street, U.S. 2 22."
+        ],
+        "10": [
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
           "Walk east for a half mile.",
           "Walk north for 1 kilometer."
         ],
-        "9": [
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
           "Walk southwest on 5th Avenue for 1 tenth of a mile."
         ],
-        "10": [
+        "14": [
           "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
         ],
         "16": [
           "Bike east for a half mile.",
           "Bike north for 1 kilometer."
         ],
         "17": [
-          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+          "Bike southwest on 5th Avenue."
         ],
         "18": [
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
           "Bike south on North Prince Street, U.S. 2 22."
         ]
       }

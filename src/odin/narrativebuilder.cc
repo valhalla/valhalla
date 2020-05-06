@@ -514,9 +514,9 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalStartInstruction(Maneuver& maneuver,
-                                                         bool include_length,
                                                          uint32_t element_max_count,
                                                          const std::string& delim) {
+  // OLD
   // "0": "Head <CARDINAL_DIRECTION> for <LENGTH>.",
   // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
   // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
@@ -529,6 +529,28 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(Maneuver& maneuver,
   // "16": "Bike <CARDINAL_DIRECTION> for <LENGTH>.",
   // "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
   // "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+
+  // NEW
+  // "0": "Head <CARDINAL_DIRECTION>.",
+  // "1": "Head <CARDINAL_DIRECTION> for <LENGTH>.",
+  // "2": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+  // "3": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
+  // "4": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+  // "5": "Drive <CARDINAL_DIRECTION>.",
+  // "6": "Drive <CARDINAL_DIRECTION> for <LENGTH>.",
+  // "7": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+  // "8": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
+  // "9": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+  // "10": "Walk <CARDINAL_DIRECTION>.",
+  // "11": "Walk <CARDINAL_DIRECTION> for <LENGTH>.",
+  // "12": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+  // "13": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
+  // "14": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+  // "15": "Bike <CARDINAL_DIRECTION>.",
+  // "16": "Bike <CARDINAL_DIRECTION> for <LENGTH>.",
+  // "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+  // "18": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
+  // "19": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -551,18 +573,27 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(Maneuver& maneuver,
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
-  if (!street_names.empty()) {
-    phrase_id += 1;
-  }
-  if (!begin_street_names.empty()) {
-    phrase_id += 1;
-  }
+
+  // Set base phrase id per mode
   if (maneuver.travel_mode() == TripLeg_TravelMode_kDrive) {
-    phrase_id += 4;
+    phrase_id += 5;
   } else if (maneuver.travel_mode() == TripLeg_TravelMode_kPedestrian) {
-    phrase_id += 8;
+    phrase_id += 10;
   } else if (maneuver.travel_mode() == TripLeg_TravelMode_kBicycle) {
-    phrase_id += 16;
+    phrase_id += 15;
+  }
+
+  if (!street_names.empty()) {
+    // Increment phrase id for street names
+    phrase_id += 2;
+  }
+
+  if (!begin_street_names.empty()) {
+    // Increment phrase id for begin street names
+    phrase_id += 2;
+  } else if (maneuver.include_verbal_pre_transition_length()) {
+    // For non begin street names, increment phrase id for length
+    phrase_id += 1;
   }
 
   // Set instruction to the determined tagged phrase

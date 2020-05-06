@@ -1291,18 +1291,26 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "<LENGTH> के लिए <CARDINAL_DIRECTION> की ओर जाएं.",
-        "1": "<LENGTH> के लिए <STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर जाएं.",
-        "2": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर जाएं.",
-        "4": "<LENGTH> के लिए <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
-        "5": "<LENGTH> के लिए <STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
-        "6": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर ड्राइव करें.",
-        "8": "<LENGTH> के लिए <CARDINAL_DIRECTION> की ओर चलें.",
-        "9": "<LENGTH> के लिए <STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर चलें.",
-        "10": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर चलें.",
+        "0": "<CARDINAL_DIRECTION> की ओर जाएं.",
+        "1": "<LENGTH> के लिए <<CARDINAL_DIRECTION> की ओर जाएं.",
+        "2": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर जाएं.",
+        "3": "<LENGTH> के लिए <STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर जाएं.",
+        "4": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर जाएं.",
+        "5": "<CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "6": "<LENGTH> के लिए <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "7": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "8": "<LENGTH> के लिए <STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "9": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर ड्राइव करें.",
+        "10": "<CARDINAL_DIRECTION> की ओर चलें.",
+        "11": "<LENGTH> के लिए <CARDINAL_DIRECTION> की ओर चलें.",
+        "12": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर चलें.",
+        "13": "<LENGTH> के लिए <STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर चलें.",
+        "14": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर चलें.",
+        "15": "<CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
         "16": "<LENGTH> के लिए <CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
-        "17": "<LENGTH> के लिए <STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
-        "18": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर साइकिल चलाए."
+        "17": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
+        "18": "<LENGTH> के लिए <STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
+        "19": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर साइकिल चलाए."
       },
       "cardinal_directions": [
         "उत्तर",
@@ -1335,44 +1343,72 @@
       ],
       "example_phrases": {
         "0": [
-          "एक आधा मील के लिए पूर्व की ओर जाएं.",
-          "1 किलोमीटर के लिए उत्तर की ओर जाएं."
+          "Head east.",
+          "Head north."
         ],
         "1": [
-          "एक मील के दसवें के लिए 5th Avenue पर दक्षिण-पश्चिम की ओर जाएं."
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
         ],
         "2": [
-          "North Prince Street, U.S. 2 22 पर दक्षिण की ओर जाएं."
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "4": [
-          "एक आधा मील के लिए पूर्व की ओर ड्राइव करें.",
-          "1 किलोमीटर के लिए उत्तर की ओर ड्राइव करें."
+          "Head south on North Prince Street, U.S. 2 22."
         ],
         "5": [
-          "एक मील के दसवें के लिए 5th Avenue पर दक्षिण-पश्चिम की ओर ड्राइव करें"
+          "Drive east.",
+          "Drive north."
         ],
         "6": [
-          "North Prince Street, U.S. 2 22 पर दक्षिण की ओर ड्राइव करें."
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
         ],
         "8": [
-          "एक आधा मील के लिए पूर्व की ओर चलें.",
-          "1 किलोमीटर के लिए उत्तर की ओर चलें."
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "9": [
-          "एक मील के दसवें के लिए 5th Avenue पर दक्षिण-पश्चिम की ओर चलें."
+          "Drive south on North Prince Street, U.S. 2 22."
         ],
         "10": [
-          "North Prince Street, U.S. 2 22 पर दक्षिण की ओर चलें."
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
         ],
         "16": [
-          "एक आधा मील के लिए पूर्व की ओर साइकिल चलाए.",
-          "1 किलोमीटर के लिए उत्तर की ओर साइकिल चलाए."
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
         ],
         "17": [
-          "एक मील के दसवें के लिए 5th Avenue पर दक्षिण-पश्चिम की ओर साइकिल चलाए."
+          "Bike southwest on 5th Avenue."
         ],
         "18": [
-          "North Prince Street, U.S. 2 22 पर दक्षिण की ओर साइकिल चलाए."
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
         ]
       }
     },

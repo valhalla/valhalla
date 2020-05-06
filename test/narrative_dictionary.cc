@@ -50,18 +50,26 @@ const std::map<std::string, std::string> kExpectedStartPhrases =
      {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}};
 
 const std::map<std::string, std::string> kExpectedStartVerbalPhrases =
-    {{"0", "Head <CARDINAL_DIRECTION> for <LENGTH>."},
-     {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
-     {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-     {"4", "Drive <CARDINAL_DIRECTION> for <LENGTH>."},
-     {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
-     {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-     {"8", "Walk <CARDINAL_DIRECTION> for <LENGTH>."},
-     {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
-     {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+    {{"0", "Head <CARDINAL_DIRECTION>."},
+     {"1", "Head <CARDINAL_DIRECTION> for <LENGTH>."},
+     {"2", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"3", "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
+     {"4", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+     {"5", "Drive <CARDINAL_DIRECTION>."},
+     {"6", "Drive <CARDINAL_DIRECTION> for <LENGTH>."},
+     {"7", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"8", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
+     {"9", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+     {"10", "Walk <CARDINAL_DIRECTION>."},
+     {"11", "Walk <CARDINAL_DIRECTION> for <LENGTH>."},
+     {"12", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"13", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
+     {"14", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+     {"15", "Bike <CARDINAL_DIRECTION>."},
      {"16", "Bike <CARDINAL_DIRECTION> for <LENGTH>."},
-     {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
-     {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."}};
+     {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"18", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
+     {"19", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."}};
 
 const std::map<std::string, std::string> kExpectedExitPhrases =
     {{"0", "Take the exit on the <RELATIVE_DIRECTION>."},

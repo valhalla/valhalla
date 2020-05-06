@@ -1293,18 +1293,26 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Pojdite <LENGTH> <CARDINAL_DIRECTION>.",
-        "1": "Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.",
-        "2": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "4": "Peljite <LENGTH> <CARDINAL_DIRECTION>.",
-        "5": "Na <STREET_NAMES> peljite <LENGTH> <CARDINAL_DIRECTION>.",
-        "6": "Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
-        "8": "Pojdite <LENGTH> <CARDINAL_DIRECTION>.",
-        "9": "Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.",
-        "10": "Pojdite <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "0": "Pojdite <CARDINAL_DIRECTION>.",
+        "1": "Pojdite <LENGTH> <CARDINAL_DIRECTION>.",
+        "2": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "3": "Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.",
+        "4": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "5": "Peljite <CARDINAL_DIRECTION>.",
+        "6": "Peljite <LENGTH> <CARDINAL_DIRECTION>.",
+        "7": "Na <STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
+        "8": "Na <STREET_NAMES> peljite <LENGTH> <CARDINAL_DIRECTION>.",
+        "9": "Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
+        "10": "Pojdite <CARDINAL_DIRECTION>.",
+        "11": "Pojdite <LENGTH> <CARDINAL_DIRECTION>.",
+        "12": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "13": "Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.",
+        "14": "Pojdite <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "15": "Pojdite <CARDINAL_DIRECTION>.",
         "16": "Pojdite <LENGTH> <CARDINAL_DIRECTION>.",
-        "17": "Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.",
-        "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>."
+        "17": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "18": "Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.",
+        "19": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>."
       },
       "cardinal_directions": [
         "proti severu",
@@ -1337,44 +1345,72 @@
       ],
       "example_phrases": {
         "0": [
-          "Pojdite pol milje proti vzhodu.",
-          "Pojdite 1 kilometer proti severu."
+          "Head east.",
+          "Head north."
         ],
         "1": [
-          "Na 5th Avenue pojdite 1 desetinko milje proti jugovzhodu."
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
         ],
         "2": [
-          "Na North Prince Street, U.S. 2 22 pojdite proti jugu."
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "4": [
-          "Peljite pol milje proti vzhodu.",
-          "Peljite 1 kilometer proti severu."
+          "Head south on North Prince Street, U.S. 2 22."
         ],
         "5": [
-          "Na 5th Avenue peljite 1 desetinko milje proti jugozahodu."
+          "Drive east.",
+          "Drive north."
         ],
         "6": [
-          "Na North Prince Street, U.S. 2 22 peljite proti jugu."
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
         ],
         "8": [
-          "Pojdite pol milje proti vzhodu.",
-          "Pojdite 1 kilometer proti severu."
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "9": [
-          "Na 5th Avenue pojdite 1 desetinko milje proti jugozahodu."
+          "Drive south on North Prince Street, U.S. 2 22."
         ],
         "10": [
-          "Na North Prince Street, U.S. 2 22 pojdite proti jugu."
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
         ],
         "16": [
-          "Pojdite pol milje proti vzhodu.",
-          "Pojdite 1 kilometer proti severu."
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
         ],
         "17": [
-          "Na 5th Avenue pojdite 1 desetinko milje proti jugozahodu."
+          "Bike southwest on 5th Avenue."
         ],
         "18": [
-          "Na North Prince Street, U.S. 2 22 pojdite proti jugu."
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
         ]
       }
     },
