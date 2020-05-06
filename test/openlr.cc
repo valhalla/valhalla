@@ -200,6 +200,10 @@ TEST(OpenLR, CreateLinearReference) {
 
   // compare to the original reference before conversion
   EXPECT_EQ(line_location, converted);
+
+  // if positive or negative offset is too large it should throw
+  EXPECT_THROW(LineLocation(lrps, lrps[0].distance + 1, 0), std::invalid_argument);
+  EXPECT_THROW(LineLocation(lrps, 0, lrps[lrps.size() - 2].distance + 1), std::invalid_argument);
 }
 
 } // namespace

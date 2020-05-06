@@ -210,12 +210,10 @@ struct LineLocation {
                float positive_offset,
                float negative_offset)
       : lrps(lrps), poff(positive_offset), noff(negative_offset) {
-    if (static_cast<uint32_t>(256 * poff / lrps.front().distance) >
-        std::numeric_limits<uint8_t>::max())
+    if (poff > lrps.front().distance)
       throw std::invalid_argument("Positive offset out of range");
-    if (static_cast<uint32_t>(256 * noff / std::next(lrps.rbegin())->distance) >
-        std::numeric_limits<uint8_t>::max())
-      throw std::invalid_argument("Positive offset out of range");
+    if (noff > std::next(lrps.rbegin())->distance)
+      throw std::invalid_argument("Negative offset out of range");
   }
 
   PointLL getFirstCoordinate() const {
