@@ -26,25 +26,70 @@ struct MatchResult {
   double epoch_time;
   // Sequential state id
   StateId stateid;
+  // Whether or not this was a break or break_through type location
+  bool is_break_point;
+  // Whether or not there is a discontinuity starting from this point
+  bool begins_discontinuity;
+  // Whether or not a discontinuity ends at this point
+  bool ends_discontinuity;
+  // An index into the full list of edges in the path even across discontinuities (for
+  // trace_attributes)
+  size_t edge_index;
 
   bool HasState() const {
     return stateid.IsValid();
   }
+
+  enum class Type { kUnmatched, kInterpolated, kMatched };
+  Type GetType() const {
+    // Set the type based on edge id and state
+    if (edgeid.Is_Valid() && HasState()) {
+      return Type::kMatched;
+    } else if (edgeid.Is_Valid()) {
+      return Type::kInterpolated;
+    } else {
+      return Type::kUnmatched;
+    }
+  }
+
+  // Stream output
+  friend std::ostream& operator<<(std::ostream& os, const MatchResult& r) {
+    os << std::fixed << std::setprecision(6);
+    os << "lnglat: " << r.lnglat.lng() << "," << r.lnglat.lat() << std::setprecision(3)
+       << ", distance_from: " << r.distance_from << ", edgeid: " << r.edgeid
+       << ", distance_along: " << r.distance_along << ", epoch_time: " << r.epoch_time
+       << ", stateid.time: " << r.stateid.time() << ", stateid.id: " << r.stateid.id()
+       << ", is_break_point:" << r.is_break_point
+       << ", begins_discontinuity:" << r.begins_discontinuity
+       << ", ends_discontinuity:" << r.ends_discontinuity << ", edge_index: " << r.edge_index;
+    return os;
+  }
 };
 
 struct EdgeSegment {
-  EdgeSegment(baldr::GraphId the_edgeid, float the_source = 0.f, float the_target = 1.f);
+  EdgeSegment(baldr::GraphId the_edgeid,
+              float the_source = 0.f,
+              float the_target = 1.f,
+              int the_first_match_idx = -1,
+              int the_last_match_idx = -1,
+              bool disconnect = false);
 
-  std::vector<midgard::PointLL> Shape(baldr::GraphReader& graphreader) const;
-
-  bool Adjoined(baldr::GraphReader& graphreader, const EdgeSegment& other) const;
-
-  // TODO make them private
   baldr::GraphId edgeid;
+  float source{0.f};
+  float target{1.f};
+  int first_match_idx{-1};
+  int last_match_idx{-1};
+  bool discontinuity{false};
 
-  float source;
-
-  float target;
+  // Stream output
+  friend std::ostream& operator<<(std::ostream& os, const EdgeSegment& segment) {
+    os << std::fixed << std::setprecision(3);
+    os << "edgeid: " << segment.edgeid << ", source: " << segment.source
+       << ", target: " << segment.target << ", first match idx: " << segment.first_match_idx
+       << ", last match idx: " << segment.last_match_idx
+       << ", discontinuity: " << segment.discontinuity;
+    return os;
+  }
 };
 
 struct MatchResults {
@@ -94,6 +139,19 @@ struct MatchResults {
   float score;
   std::vector<uint64_t>::const_iterator e1;
   std::vector<uint64_t>::const_iterator e2;
+
+  // Stream output
+  friend std::ostream& operator<<(std::ostream& os, const MatchResults& mrs) {
+    os << "MatchResults:" << std::endl;
+    for (const auto& r : mrs.results) {
+      os << r << std::endl;
+    }
+    os << "EdgeSegments:" << std::endl;
+    for (const auto& s : mrs.segments) {
+      os << s << std::endl;
+    }
+    return os;
+  }
 };
 
 } // namespace meili
