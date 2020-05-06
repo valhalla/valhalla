@@ -7203,8 +7203,8 @@ TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_0_miles_en_US) 
   std::list<Maneuver> expected_maneuvers;
   PopulatePostTransitConnectionDestinationManeuverList_0(expected_maneuvers, country_code,
                                                          state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Head southwest.", "", "Head southwest.",
-                                  "Continue for 300 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Head southwest.", "",
+                                  "Head southwest for 300 feet.", "Continue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7231,10 +7231,9 @@ TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_1_miles_en_US) 
   std::list<Maneuver> expected_maneuvers;
   PopulatePostTransitConnectionDestinationManeuverList_1(expected_maneuvers, country_code,
                                                          state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Head southwest on 6th Avenue/Avenue of the Americas.", "",
-                                  "Head southwest on 6th Avenue, Avenue of the Americas.",
-                                  "Continue for 300 feet.");
+  SetExpectedManeuverInstructions(
+      expected_maneuvers, "Head southwest on 6th Avenue/Avenue of the Americas.", "",
+      "Head southwest on 6th Avenue, Avenue of the Americas for 300 feet.", "Continue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7264,7 +7263,8 @@ TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_2_miles_en_US) 
   SetExpectedManeuverInstructions(
       expected_maneuvers,
       "Head southwest on 6th Avenue/Avenue of the Americas. Continue on 6th Avenue.", "",
-      "Head southwest on 6th Avenue, Avenue of the Americas.", "Continue for 300 feet.");
+      "Head southwest on 6th Avenue, Avenue of the Americas.",
+      "Continue on 6th Avenue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7291,8 +7291,8 @@ TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_4_miles_en_US) 
   std::list<Maneuver> expected_maneuvers;
   PopulatePostTransitConnectionDestinationManeuverList_4(expected_maneuvers, country_code,
                                                          state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Drive southwest.", "", "Drive southwest.",
-                                  "Continue for 300 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Drive southwest.", "",
+                                  "Drive southwest for 300 feet.", "Continue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7319,10 +7319,10 @@ TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_5_miles_en_US) 
   std::list<Maneuver> expected_maneuvers;
   PopulatePostTransitConnectionDestinationManeuverList_5(expected_maneuvers, country_code,
                                                          state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Drive southwest on 6th Avenue/Avenue of the Americas.", "",
-                                  "Drive southwest on 6th Avenue, Avenue of the Americas.",
-                                  "Continue for 300 feet.");
+  SetExpectedManeuverInstructions(
+      expected_maneuvers, "Drive southwest on 6th Avenue/Avenue of the Americas.", "",
+      "Drive southwest on 6th Avenue, Avenue of the Americas for 300 feet.",
+      "Continue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7352,7 +7352,8 @@ TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_6_miles_en_US) 
   SetExpectedManeuverInstructions(
       expected_maneuvers,
       "Drive southwest on 6th Avenue/Avenue of the Americas. Continue on 6th Avenue.", "",
-      "Drive southwest on 6th Avenue, Avenue of the Americas.", "Continue for 300 feet.");
+      "Drive southwest on 6th Avenue, Avenue of the Americas.",
+      "Continue on 6th Avenue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7379,8 +7380,8 @@ TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_8_miles_en_US) 
   std::list<Maneuver> expected_maneuvers;
   PopulatePostTransitConnectionDestinationManeuverList_8(expected_maneuvers, country_code,
                                                          state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest.", "", "Walk southwest.",
-                                  "Continue for 300 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Walk southwest.", "",
+                                  "Walk southwest for 300 feet.", "Continue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7407,10 +7408,9 @@ TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_9_miles_en_US) 
   std::list<Maneuver> expected_maneuvers;
   PopulatePostTransitConnectionDestinationManeuverList_9(expected_maneuvers, country_code,
                                                          state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Walk southwest on 6th Avenue/Avenue of the Americas.", "",
-                                  "Walk southwest on 6th Avenue, Avenue of the Americas.",
-                                  "Continue for 300 feet.");
+  SetExpectedManeuverInstructions(
+      expected_maneuvers, "Walk southwest on 6th Avenue/Avenue of the Americas.", "",
+      "Walk southwest on 6th Avenue, Avenue of the Americas for 300 feet.", "Continue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7440,7 +7440,8 @@ TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_10_miles_en_US)
   SetExpectedManeuverInstructions(
       expected_maneuvers,
       "Walk southwest on 6th Avenue/Avenue of the Americas. Continue on 6th Avenue.", "",
-      "Walk southwest on 6th Avenue, Avenue of the Americas.", "Continue for 300 feet.");
+      "Walk southwest on 6th Avenue, Avenue of the Americas.",
+      "Continue on 6th Avenue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7467,8 +7468,8 @@ TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_16_miles_en_US)
   std::list<Maneuver> expected_maneuvers;
   PopulatePostTransitConnectionDestinationManeuverList_16(expected_maneuvers, country_code,
                                                           state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers, "Bike southwest.", "", "Bike southwest.",
-                                  "Continue for 300 feet.");
+  SetExpectedManeuverInstructions(expected_maneuvers, "Bike southwest.", "",
+                                  "Bike southwest for 300 feet.", "Continue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7495,10 +7496,9 @@ TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_17_miles_en_US)
   std::list<Maneuver> expected_maneuvers;
   PopulatePostTransitConnectionDestinationManeuverList_17(expected_maneuvers, country_code,
                                                           state_code);
-  SetExpectedManeuverInstructions(expected_maneuvers,
-                                  "Bike southwest on 6th Avenue/Avenue of the Americas.", "",
-                                  "Bike southwest on 6th Avenue, Avenue of the Americas.",
-                                  "Continue for 300 feet.");
+  SetExpectedManeuverInstructions(
+      expected_maneuvers, "Bike southwest on 6th Avenue/Avenue of the Americas.", "",
+      "Bike southwest on 6th Avenue, Avenue of the Americas for 300 feet.", "Continue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -7528,7 +7528,8 @@ TEST(NarrativeBuilder, TestBuildPostTransitConnectionDestination_18_miles_en_US)
   SetExpectedManeuverInstructions(
       expected_maneuvers,
       "Bike southwest on 6th Avenue/Avenue of the Americas. Continue on 6th Avenue.", "",
-      "Bike southwest on 6th Avenue, Avenue of the Americas.", "Continue for 300 feet.");
+      "Bike southwest on 6th Avenue, Avenue of the Americas.",
+      "Continue on 6th Avenue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
