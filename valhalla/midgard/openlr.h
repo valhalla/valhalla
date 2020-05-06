@@ -206,10 +206,10 @@ struct LineLocation {
     noff = (index < size) && flags[5] ? std::next(lrps.rbegin())->distance * raw[index++] / 256 : 0.f;
   }
 
-  LineLocation(const std::vector<LocationReferencePoint>& lrps,
-               float positive_offset,
-               float negative_offset)
-      : lrps(lrps), poff(positive_offset), noff(negative_offset) {
+  LineLocation(const std::vector<LocationReferencePoint>& lrps, float poff, float noff)
+      : lrps(lrps), poff(std::round(poff / lrps.at(0).distance * 256) / 256 * lrps.at(0).distance),
+        noff(std::round(noff / lrps.at(lrps.size() - 2).distance * 256) / 256 *
+             lrps.at(lrps.size() - 2).distance) {
     if (poff > lrps.front().distance)
       throw std::invalid_argument("Positive offset out of range");
     if (noff > std::next(lrps.rbegin())->distance)
@@ -282,11 +282,13 @@ struct LineLocation {
 
     // Offsets
     if (pofff) {
-      result.push_back(static_cast<std::int32_t>(256 * poff / first.distance) & 0xff);
+      result.push_back(static_cast<std::int32_t>(std::round(256 * poff / first.distance)) & 0xff);
     }
 
     if (nofff) {
-      result.push_back(static_cast<std::int32_t>(256 * noff / first.distance) & 0xff);
+      result.push_back(
+          static_cast<std::int32_t>(std::round(256 * noff / std::next(lrps.rbegin())->distance)) &
+          0xff);
     }
 
     return result;
