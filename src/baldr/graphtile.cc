@@ -150,7 +150,7 @@ bool GraphTile::DecompressTile(const GraphId& graphid, std::vector<char>& compre
 
   // for setting where to write the uncompressed data to
   std::vector<char> data;
-  auto dst_func = [this, &data, &compressed](z_stream& s) -> int {
+  auto dst_func = [&data, &compressed](z_stream& s) -> int {
     // if the whole buffer wasn't used we are done
     auto size = data.size();
     if (s.total_out < size)

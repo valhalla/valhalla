@@ -147,7 +147,7 @@ struct TestGraphTile : public GraphTile {
   }
 };
 
-static void CheckGraphTile(std::shared_ptr<const GraphTile> tile,
+static void CheckGraphTile(const std::shared_ptr<const GraphTile>& tile,
                            const GraphId& expected_id,
                            size_t expected_size) {
   ASSERT_NE(tile, nullptr);
