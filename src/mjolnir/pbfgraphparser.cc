@@ -380,6 +380,10 @@ public:
     bool has_average_speed = false, has_advisory_speed = false;
     bool has_surface = true;
     std::string name;
+    RoadClass roadclass;
+    bool has_controlled_access = false, has_limited_access_road = false;
+    bool has_multi_digitized = false;
+    uint32_t highest_route_type = 0;
 
     // Process tags
     OSMWay w{wayid};
@@ -404,7 +408,24 @@ public:
         w.set_internal(tag.second == "true" ? true : false);
       } else if (tag.first == "turn_channel" && !infer_turn_channels_) {
         w.set_turn_channel(tag.second == "true" ? true : false);
+      } else if (tag.first == "controlled_access") {
+        w.set_controlled_access(tag.second == "true" ? true : false);
+        has_controlled_access = w.controlled_access();
+      } else if (tag.first == "divider") {
+        w.set_divider(tag.second == "true" ? true : false);
+      } else if (tag.first == "limited_access_road") {
+        w.set_limited_access_road(tag.second == "true" ? true : false);
+        has_limited_access_road = w.limited_access_road();
+      } else if (tag.first == "multi_digitized") {
+        w.set_multi_digitized(tag.second == "true" ? true : false);
+        has_multi_digitized = w.multi_digitized();
+      } else if (tag.first == "speed_category") {
+        w.set_speed_category(tag.second);
+      } else if (tag.first == "highest_route_type") {
+        w.set_highest_route_type(tag.second);
+        highest_route_type = w.highest_route_type();
       } else if (tag.first == "road_class") {
+        roadclass = (RoadClass)std::stoi(tag.second);
         RoadClass roadclass = (RoadClass)std::stoi(tag.second);
         switch (roadclass) {
 
@@ -1271,6 +1292,36 @@ public:
             break;
         }
       }
+    }
+
+    // Updating the road classes
+    if (roadclass == RoadClass::kSecondary && has_controlled_access && has_multi_digitized) {
+      w.set_road_class(RoadClass::kMotorway);
+    }
+    if ((roadclass == RoadClass::kPrimary && !has_controlled_access && has_multi_digitized) ||
+        (roadclass == RoadClass::kSecondary && highest_route_type > 0 && !has_controlled_access &&
+         !has_multi_digitized)) {
+      w.set_road_class(RoadClass::kTrunk);
+    }
+    if (roadclass == RoadClass::kTrunk && highest_route_type == 3 && !has_controlled_access &&
+        !has_multi_digitized) {
+      w.set_road_class(RoadClass::kPrimary);
+    }
+    if (roadclass == RoadClass::kSecondary && !has_controlled_access &&
+        ((highest_route_type > 0 && !has_multi_digitized) || has_multi_digitized)) {
+      w.set_road_class(RoadClass::kPrimary);
+    }
+    if (roadclass == RoadClass::kTertiary && !has_controlled_access && highest_route_type >= 2 &&
+        (has_multi_digitized || !has_multi_digitized)) {
+      w.set_road_class(RoadClass::kPrimary);
+    }
+    if (roadclass == RoadClass::kSecondary && !has_limited_access_road && !has_multi_digitized) {
+      w.set_road_class(RoadClass::kSecondary);
+    }
+    if (roadclass == RoadClass::kTertiary &&
+        ((highest_route_type > 0 && !has_controlled_access && !has_multi_digitized) ||
+         (highest_route_type == 0 && has_multi_digitized))) {
+      w.set_road_class(RoadClass::kSecondary);
     }
 
     // set the speed
