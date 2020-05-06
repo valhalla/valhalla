@@ -144,6 +144,10 @@ TEST(OpenLR, InternalReferencePoints) {
   locRef.lrps.insert(std::prev(std::prev(locRef.lrps.end())), locRef.lrps[1]);
   locRef.lrps.insert(std::prev(std::prev(locRef.lrps.end())), locRef.lrps[1]);
   EXPECT_NEAR(locRef.getLength(), 5 * 12774.8, 1e-3) << "Distance incorrect.";
+
+  auto hex = " 0b 01 b5 01 22 b7 3e 10 fc da cc f4 08 80 10 f3 da "
+             "00 00 00 00 10 f3 da 00 00 00 00 10 f3 da 00 00 00 00 10 f3 da fc de 14 71 10 63 ab ab";
+  EXPECT_EQ(to_hex(locRef.toBinary()), hex) << "Incorrectly encoded reference";
 }
 
 TEST(OpenLR, OffsetsOverrun) {
