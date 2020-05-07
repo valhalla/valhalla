@@ -47,7 +47,7 @@ NarrativeBuilder::NarrativeBuilder(const Options& options,
       articulated_preposition_enabled_(false) {
 }
 
-void NarrativeBuilder::Build(const Options& options, std::list<Maneuver>& maneuvers) {
+void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
   Maneuver* prev_maneuver = nullptr;
   for (auto& maneuver : maneuvers) {
     switch (maneuver.type()) {
@@ -414,9 +414,11 @@ void NarrativeBuilder::Build(const Options& options, std::list<Maneuver>& maneuv
             FormVerbalAlertContinueInstruction(maneuver));
 
         // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            FormVerbalContinueInstruction(maneuver, options.units()));
-        // NOTE: No verbal post transition instruction
+        maneuver.set_verbal_pre_transition_instruction(FormVerbalContinueInstruction(maneuver));
+
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
     }
@@ -909,7 +911,6 @@ std::string NarrativeBuilder::FormVerbalAlertContinueInstruction(Maneuver& maneu
 }
 
 std::string NarrativeBuilder::FormVerbalContinueInstruction(Maneuver& maneuver,
-                                                            Options_Units units,
                                                             uint32_t element_max_count,
                                                             const std::string& delim) {
   // "0": "Continue for <LENGTH>.",

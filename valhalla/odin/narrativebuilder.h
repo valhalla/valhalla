@@ -36,7 +36,9 @@ public:
   NarrativeBuilder(const NarrativeBuilder&) = default;
   NarrativeBuilder& operator=(const NarrativeBuilder&) = default;
 
-  void Build(const Options& options, std::list<Maneuver>& maneuvers);
+  void Build(std::list<Maneuver>& maneuvers);
+
+  // A few of the form instruction methods need to be public to enable updates based on length
 
   /////////////////////////////////////////////////////////////////////////////
   /**
@@ -53,13 +55,19 @@ public:
    */
   std::string FormVerbalAlertApproachInstruction(float distance, const std::string& verbal_cue);
 
-protected:
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormStartInstruction(Maneuver& maneuver);
-
   std::string FormVerbalStartInstruction(Maneuver& maneuver,
                                          uint32_t element_max_count = kVerbalPreElementMaxCount,
                                          const std::string& delim = kVerbalDelim);
+
+  /////////////////////////////////////////////////////////////////////////////
+  std::string FormVerbalContinueInstruction(Maneuver& maneuver,
+                                            uint32_t element_max_count = kVerbalPreElementMaxCount,
+                                            const std::string& delim = kVerbalDelim);
+
+protected:
+  /////////////////////////////////////////////////////////////////////////////
+  std::string FormStartInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
   std::string FormDestinationInstruction(Maneuver& maneuver);
@@ -83,11 +91,6 @@ protected:
   FormVerbalAlertContinueInstruction(Maneuver& maneuver,
                                      uint32_t element_max_count = kVerbalAlertElementMaxCount,
                                      const std::string& delim = kVerbalDelim);
-
-  std::string FormVerbalContinueInstruction(Maneuver& maneuver,
-                                            Options_Units units,
-                                            uint32_t element_max_count = kVerbalPreElementMaxCount,
-                                            const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
   std::string FormTurnInstruction(Maneuver& maneuver);

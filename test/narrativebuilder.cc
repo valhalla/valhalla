@@ -270,7 +270,7 @@ void TryBuild(const Options& options,
               std::list<Maneuver>& expected_maneuvers,
               const EnhancedTripLeg* etp = nullptr) {
   std::unique_ptr<NarrativeBuilder> narrative_builder = NarrativeBuilderFactory::Create(options, etp);
-  narrative_builder->Build(options, maneuvers);
+  narrative_builder->Build(maneuvers);
 
   // Check maneuver list sizes
   ASSERT_EQ(maneuvers.size(), expected_maneuvers.size());
@@ -4025,7 +4025,7 @@ TEST(NarrativeBuilder, TestBuildContinueInstructions_0_miles_en_US) {
   std::list<Maneuver> expected_maneuvers;
   PopulateContinueManeuverList_0(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Continue.", "Continue.",
-                                  "Continue for 300 feet.", "");
+                                  "Continue for 300 feet.", "Continue for 300 feet.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
@@ -4053,7 +4053,8 @@ TEST(NarrativeBuilder, TestBuildContinueInstructions_1_miles_en_US) {
   PopulateContinueManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Continue on 10th Avenue.",
                                   "Continue on 10th Avenue.",
-                                  "Continue on 10th Avenue for a quarter mile.", "");
+                                  "Continue on 10th Avenue for a quarter mile.",
+                                  "Continue for a quarter mile.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
