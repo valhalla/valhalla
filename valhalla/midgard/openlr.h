@@ -161,7 +161,7 @@ struct LineLocation {
   LineLocation(const std::string& reference) {
     //  Line location data size: 16 + (n-2)*7 + [0/1/2] bytes
     if (reference.size() < 16)
-      throw std::invalid_argument("OpenLR reference is too small");
+      throw std::invalid_argument("OpenLR reference is too small " + reference);
 
     const auto raw = reinterpret_cast<const unsigned char*>(reference.data());
     const auto size = reference.size();
@@ -170,7 +170,7 @@ struct LineLocation {
     // Status, version 3, has attributes, ArF 'Circle or no area location'
     auto status = raw[index++] & 0x7f;
     if (status != 0x0b)
-      throw std::invalid_argument("OpenLR reference");
+      throw std::invalid_argument("OpenLR reference invalid status " + reference);
 
     // First location reference point
     auto longitude = integer2decimal(fixed<std::int32_t, 3>(raw, index));

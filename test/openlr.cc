@@ -174,8 +174,6 @@ TEST(OpenLR, CreateLinearReference) {
   unsigned char lowest_frc_next_point = 7;
   uint16_t bearing;
   for (const auto& p : points) {
-    // frc and fow are 3 bits wide, we dont use the last 2 bits for anything
-    unsigned char attribute1 = (frc << 3) | fow;
     // first or intermediate point
     if (&p != &points.back()) {
       bearing = static_cast<uint16_t>(p.Heading(*std::next(&p)));
