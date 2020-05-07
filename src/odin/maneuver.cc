@@ -116,7 +116,8 @@ Maneuver::Maneuver()
       distant_verbal_multi_cue_(false), to_stay_on_(false), drive_on_right_(true),
       has_time_restrictions_(false), has_right_traversable_outbound_intersecting_edge_(false),
       has_left_traversable_outbound_intersecting_edge_(false),
-      bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction) {
+      bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction),
+      include_verbal_pre_transition_length_(false) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
@@ -715,6 +716,14 @@ bool Maneuver::has_left_traversable_outbound_intersecting_edge() const {
 void Maneuver::set_has_left_traversable_outbound_intersecting_edge(
     bool has_left_traversable_outbound_intersecting_edge) {
   has_left_traversable_outbound_intersecting_edge_ = has_left_traversable_outbound_intersecting_edge;
+}
+
+bool Maneuver::include_verbal_pre_transition_length() const {
+  return include_verbal_pre_transition_length_;
+}
+
+void Maneuver::set_include_verbal_pre_transition_length(bool include_verbal_pre_transition_length) {
+  include_verbal_pre_transition_length_ = include_verbal_pre_transition_length;
 }
 
 TripLeg_TravelMode Maneuver::travel_mode() const {

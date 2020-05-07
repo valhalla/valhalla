@@ -215,15 +215,6 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   Load(enter_ferry_verbal_subset, narrative_pt.get_child(kEnterFerryVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
-  LOG_TRACE("Populate exit_ferry_subset...");
-  // Populate exit_ferry_subset
-  Load(exit_ferry_subset, narrative_pt.get_child(kExitFerryKey));
-
-  LOG_TRACE("Populate exit_ferry_verbal_subset...");
-  // Populate exit_ferry_verbal_subset
-  Load(exit_ferry_verbal_subset, narrative_pt.get_child(kExitFerryVerbalKey));
-
-  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate transit_connection_start_subset...");
   // Populate transit_connection_start_subset
   Load(transit_connection_start_subset, narrative_pt.get_child(kTransitConnectionStartKey));
@@ -298,17 +289,6 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   LOG_TRACE("Populate transit_transfer_verbal_subset...");
   // Populate transit_transfer_verbal_subset
   Load(transit_transfer_verbal_subset, narrative_pt.get_child(kTransitTransferVerbalKey));
-
-  /////////////////////////////////////////////////////////////////////////////
-  LOG_TRACE("Populate post_transit_connection_destination_subset...");
-  // Populate post_transit_connection_destination_subset
-  Load(post_transit_connection_destination_subset,
-       narrative_pt.get_child(kPostTransitConnectionDestinationKey));
-
-  LOG_TRACE("Populate post_transit_connection_destination_verbal_subset...");
-  // Populate post_transit_connection_destination_verbal_subset
-  Load(post_transit_connection_destination_verbal_subset,
-       narrative_pt.get_child(kPostTransitConnectionDestinationVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");

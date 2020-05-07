@@ -237,6 +237,9 @@ public:
   void set_has_left_traversable_outbound_intersecting_edge(
       bool has_left_traversable_outbound_intersecting_edge);
 
+  bool include_verbal_pre_transition_length() const;
+  void set_include_verbal_pre_transition_length(bool include_verbal_pre_transition_length);
+
   TripLeg_TravelMode travel_mode() const;
   void set_travel_mode(TripLeg_TravelMode travel_mode);
 
@@ -367,6 +370,7 @@ protected:
   bool has_time_restrictions_;
   bool has_right_traversable_outbound_intersecting_edge_;
   bool has_left_traversable_outbound_intersecting_edge_;
+  bool include_verbal_pre_transition_length_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support
