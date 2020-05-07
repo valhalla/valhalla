@@ -14,6 +14,8 @@ namespace OpenLR {
 
 namespace {
 
+constexpr double geom_scale = 100000;
+
 template <typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
 inline int sgn(const T val) {
   return (T(0) < val) - (val < T(0));
@@ -129,10 +131,10 @@ struct LocationReferencePoint {
                          unsigned char lfrcnp = 0)
       : longitude(!prev ? integer2decimal(decimal2integer(longitude))
                         : prev->longitude +
-                              (std::round((longitude - prev->longitude) * 100000) / 100000)),
-        latitude(!prev
-                     ? integer2decimal(decimal2integer(latitude))
-                     : prev->latitude + (std::round((latitude - prev->latitude) * 100000) / 100000)),
+                              (std::round((longitude - prev->longitude) * geom_scale) / geom_scale)),
+        latitude(!prev ? integer2decimal(decimal2integer(latitude))
+                       : prev->latitude +
+                             (std::round((latitude - prev->latitude) * geom_scale) / geom_scale)),
         bearing(integer2bearing(bearing2integer(bearing))), frc(frc), fow(fow),
         distance(integer2distance(distance2integer(distance))), lfrcnp(lfrcnp) {
   }
@@ -184,8 +186,8 @@ struct LineLocation {
 
     // Intermediate location reference points
     while (index + 7 + 6 <= size) {
-      longitude += fixed<std::int32_t, 2>(raw, index) / 100000;
-      latitude += fixed<std::int32_t, 2>(raw, index) / 100000;
+      longitude += fixed<std::int32_t, 2>(raw, index) / geom_scale;
+      latitude += fixed<std::int32_t, 2>(raw, index) / geom_scale;
       attribute1 = raw[index++];
       attribute2 = raw[index++];
       attribute3 = raw[index++];
@@ -194,8 +196,8 @@ struct LineLocation {
     }
 
     // Last location reference point
-    longitude += fixed<std::int32_t, 2>(raw, index) / 100000;
-    latitude += fixed<std::int32_t, 2>(raw, index) / 100000;
+    longitude += fixed<std::int32_t, 2>(raw, index) / geom_scale;
+    latitude += fixed<std::int32_t, 2>(raw, index) / geom_scale;
     attribute1 = raw[index++];
     auto attribute4 = raw[index++];
 
@@ -267,8 +269,8 @@ struct LineLocation {
     // Subsequent location reference points are offset lon lat from the first
     for (auto lrp = std::next(lrps.begin()); lrp != std::prev(lrps.end()); ++lrp) {
       // First longitude
-      append2(static_cast<std::int32_t>(std::round(100000 * (lrp->longitude - longitude))));
-      append2(static_cast<std::int32_t>(std::round(100000 * (lrp->latitude - latitude))));
+      append2(static_cast<std::int32_t>(std::round(geom_scale * (lrp->longitude - longitude))));
+      append2(static_cast<std::int32_t>(std::round(geom_scale * (lrp->latitude - latitude))));
       result.push_back(((lrp->frc & 0x7) << 3) | (lrp->fow & 0x7));
       result.push_back(((lrp->lfrcnp & 0x7) << 5) | (bearing2integer(lrp->bearing) & 0x1f));
       result.push_back(distance2integer(lrp->distance));
@@ -281,8 +283,8 @@ struct LineLocation {
     const auto pofff = poff != 0.f;
     const auto nofff = noff != 0.f;
     const auto& last = lrps.back();
-    append2(static_cast<std::int32_t>(std::round(100000 * (last.longitude - longitude))));
-    append2(static_cast<std::int32_t>(std::round(100000 * (last.latitude - latitude))));
+    append2(static_cast<std::int32_t>(std::round(geom_scale * (last.longitude - longitude))));
+    append2(static_cast<std::int32_t>(std::round(geom_scale * (last.latitude - latitude))));
     result.push_back(((last.frc & 0x7) << 3) | (last.fow & 0x7));
     result.push_back((pofff << 6) | (nofff << 5) | (bearing2integer(last.bearing) & 0x1f));
 
