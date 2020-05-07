@@ -202,6 +202,14 @@ TEST(OpenLR, CreateLinearReference) {
   // if positive or negative offset is too large it should throw
   EXPECT_THROW(LineLocation(lrps, lrps[0].distance + 1, 0), std::invalid_argument);
   EXPECT_THROW(LineLocation(lrps, 0, lrps[lrps.size() - 2].distance + 1), std::invalid_argument);
+
+  // make a short line location so that poff and noff must be 0
+  lrps.clear();
+  lrps.emplace_back(0, 0, 90, frc, fow, nullptr, 5, lowest_frc_next_point);
+  lrps.emplace_back(.000005, 0, 270, frc, fow, &lrps.back());
+  LineLocation short_location(lrps, 0, 0);
+  EXPECT_EQ(short_location.poff, 0.f);
+  EXPECT_EQ(short_location.noff, 0.f);
 }
 
 } // namespace
