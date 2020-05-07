@@ -546,7 +546,7 @@ std::string thor_worker_t::offset_date(GraphReader& reader,
     in_tz = node->timezone();
 
   // get the timezone of the output location
-  auto out_nodes = reader.GetDirectedEdgeNodes(in_edge, tile);
+  auto out_nodes = reader.GetDirectedEdgeNodes(out_edge, tile);
   uint32_t out_tz = 0;
   if (const auto* node = reader.nodeinfo(out_nodes.first, tile))
     out_tz = node->timezone();

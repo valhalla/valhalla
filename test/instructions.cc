@@ -192,7 +192,8 @@ TEST(Instructions, validate_merge_instructions) {
   // Test merge left
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/merge_left.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Merge left onto US 322 East.", "", "Merge left onto U.S. 3 22 East.",
+                    "Merge left onto US 322 East.", "",
+                    "Merge left onto U.S. 3 22 East. Then You will arrive at U.S. 3 22 East.",
                     "Continue for 1,000 feet.");
 }
 
@@ -399,9 +400,17 @@ TEST(Instructions, validate_multi_cue_instructions) {
   int expected_routes_size = 1;
   int expected_legs_size = 1;
   int expected_maneuvers_size = 4;
-  int maneuver_index = 0;
+  int maneuver_index = 1;
 
-  // Test the start verbal multi-cue instruction
+  // Test imminent turn
+  test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/multi_cue_imminent_turn.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Turn right onto Linden Road.", "Turn right onto Linden Road.",
+                    "Turn right onto Linden Road. Then Turn left onto West Caracas Avenue.",
+                    "Continue for 400 feet.");
+
+  maneuver_index = 0;
+  // Test the imminent start verbal multi-cue instruction
   test_instructions(
       {VALHALLA_SOURCE_DIR "test/pinpoints/instructions/multi_cue_start_turn_destination.pbf"},
       expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
@@ -409,21 +418,22 @@ TEST(Instructions, validate_multi_cue_instructions) {
       "Drive north on Hartman Bridge Road, Pennsylvania 8 96 for 200 feet. Then Turn left onto U.S. 30.");
 
   maneuver_index = 1;
-  // Test the turn verbal multi-cue instruction
+  // Test the distant turn verbal multi-cue instruction
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/multi_cue_start_turn_destination.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Turn left onto US 30/Lincoln Highway East.", "Turn left onto U.S. 30.",
-                    "Turn left onto U.S. 30, Lincoln Highway East. Then Turn right.",
+                    "Turn left onto U.S. 30, Lincoln Highway East. Then, in 500 feet, Turn right.",
                     "Continue for 500 feet.");
 
   maneuver_index = 2;
-  // Test the destination verbal multi-cue instruction
+  // Test the distant destination verbal multi-cue instruction
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/multi_cue_start_turn_destination.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Turn right.", "Turn right.",
-                    "Turn right. Then Adidas Outlet will be on the left.", "Continue for 100 feet.");
+                    "Turn right. Then, in 100 feet, Adidas Outlet will be on the left.",
+                    "Continue for 100 feet.");
 }
 
 } // namespace

@@ -42,6 +42,7 @@ public:
 
   const DirectionsLeg_Maneuver_Type& type() const;
   void set_type(const DirectionsLeg_Maneuver_Type& type);
+  bool IsStartType() const;
   bool IsDestinationType() const;
   bool IsMergeType() const;
 
@@ -130,8 +131,6 @@ public:
 
   bool portions_toll() const;
   void set_portions_toll(bool portionsToll);
-  bool has_time_restrictions() const;
-  void set_has_time_restrictions(bool has_time_restrictions);
 
   bool portions_unpaved() const;
   void set_portions_unpaved(bool portionsUnpaved);
@@ -226,6 +225,17 @@ public:
 
   bool drive_on_right() const;
   void set_drive_on_right(bool drive_on_right);
+
+  bool has_time_restrictions() const;
+  void set_has_time_restrictions(bool has_time_restrictions);
+
+  bool has_right_traversable_outbound_intersecting_edge() const;
+  void set_has_right_traversable_outbound_intersecting_edge(
+      bool has_right_traversable_outbound_intersecting_edge);
+
+  bool has_left_traversable_outbound_intersecting_edge() const;
+  void set_has_left_traversable_outbound_intersecting_edge(
+      bool has_left_traversable_outbound_intersecting_edge);
 
   TripLeg_TravelMode travel_mode() const;
   void set_travel_mode(TripLeg_TravelMode travel_mode);
@@ -355,6 +365,8 @@ protected:
   RelativeDirection merge_to_relative_direction_;
   bool drive_on_right_; // Defaults to true
   bool has_time_restrictions_;
+  bool has_right_traversable_outbound_intersecting_edge_;
+  bool has_left_traversable_outbound_intersecting_edge_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support

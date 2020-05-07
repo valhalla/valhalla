@@ -10,14 +10,22 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/meili/match_result.h>
 #include <valhalla/proto/trip.pb.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/thor/attributes_controller.h>
-#include <valhalla/thor/match_result.h>
 #include <valhalla/thor/pathinfo.h>
 
 namespace valhalla {
 namespace thor {
+
+// Allows you to trim shape for when you need to cut an edge for a discontinuity in map matching
+// or for a uturn in the middle of the edge
+struct RouteDiscontinuity {
+  bool exists;
+  midgard::PointLL vertex;
+  float distance_along;
+};
 
 /**
  * Algorithm to create a trip path output from a list of directed edges.

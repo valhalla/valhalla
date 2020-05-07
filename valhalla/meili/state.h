@@ -41,16 +41,18 @@ public:
 
     // Cache results
     label_idx_.clear();
-    uint16_t dest = 1; // dest at 0 is remained for the origin
+    uint16_t dest = 1; // dest at 0 is reserved for the origin
+    uint16_t found = 0;
     for (const auto& stateid : stateids) {
       const auto it = results.find(dest);
       if (it != results.end()) {
         label_idx_[stateid] = it->second;
+        ++found;
       }
-      dest++;
+      ++dest;
     }
-
     labelset_ = labelset;
+    LOG_TRACE("Found " + std::to_string(found) + " destinations out of " + std::to_string(dest - 1));
   }
 
   const Label* last_label(const State& state) const {
@@ -121,13 +123,16 @@ public:
     return static_cast<StateId::Time>(columns_.size());
   }
 
-  std::string geojson(const StateId& s) {
-    return geojson(state(s));
+  std::string geojson(const StateId& s) const {
+    if (s.IsValid()) {
+      return geojson(state(s));
+    }
+    return R"({"type":"Feature","geometry":null,"properties":{}})";
   }
 
-  std::string geojson(const State& s) {
+  std::string geojson(const State& s) const {
     std::stringstream ss;
-    ss << std::setprecision(7) << std::fixed
+    ss << std::setprecision(6) << std::fixed
        << R"({"type":"Feature","geometry":{"type":"Point","coordinates":[)";
     ss << s.candidate().edges[0].projected.lng() << ',' << s.candidate().edges[0].projected.lat()
        << "]}";

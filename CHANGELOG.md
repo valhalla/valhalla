@@ -1,4 +1,4 @@
-## Release Date: 2019-??-?? Valhalla 3.0.10
+## Release Date: 2020-05-?? Valhalla 3.1.0
 * **Bug Fix**
    * FIXED: Crazy ETAs.  If a way has forward speed with no backward speed and it is not oneway, then we must set the default speed.  The reverse logic applies as well.  If a way has no backward speed but has a forward speed and it is not a oneway, then set the default speed. [#2102](https://github.com/valhalla/valhalla/pull/2102)
    * FIXED: Map matching elapsed times spliced amongst different legs and discontinuities are now correct [#2104](https://github.com/valhalla/valhalla/pull/2104)
@@ -44,6 +44,10 @@
    * FIXED: Fix short route trimming in bidirectional astar [#2323](https://github.com/valhalla/valhalla/pull/2323)
    * FIXED: Fix shape trimming in leg building for snap candidates that lie within the margin of rounding error [#2326](https://github.com/valhalla/valhalla/pull/2326)
    * FIXED: Fixes route duration underflow with traffic data [#2325](https://github.com/valhalla/valhalla/pull/2325)
+   * FIXED: Parse mtb:scale tags and set bicycle access if present [#2117](https://github.com/valhalla/valhalla/pull/2117)
+   * FIXED: Fixed segfault.  Shape was missing from options for valhalla_path_comparison and valhalla_run_route.  Also, costing options was missing in valhalla_path_comparison. [#2343](https://github.com/valhalla/valhalla/pull/2343)
+   * FIXED: Handle decimal numbers with zero-value mantissa properly in Lua [#2355](https://github.com/valhalla/valhalla/pull/2355)
+   * FIXED: Many issues that resulted in discontinuities, failed matches or incorrect time/duration for map matching requests. [#2292](https://github.com/valhalla/valhalla/pull/2292)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
@@ -68,6 +72,10 @@
    * ADDED: Speed up timezone differencing calculation if cache is provided. [#2316](https://github.com/valhalla/valhalla/pull/2316)
    * ADDED: Added rapidjson/schema.h to baldr/rapidjson_util.h to make it available for use within valhalla. [#2330](https://github.com/valhalla/valhalla/issues/2330)
    * ADDED: Support decimal precision for height values in elevation service. Also support polyline5 for encoded polylines input and output to elevation service. [2324](https://github.com/valhalla/valhalla/pull/2324)
+   * ADDED: Use both imminent and distant verbal multi-cue phrases. [2353](https://github.com/valhalla/valhalla/pull/2353)
+   * CHANGED: Speed up graph enhancing by avoiding continuous unordered_set rebuilding [#2349](https://github.com/valhalla/valhalla/pull/2349)
+   * CHANGED: Skip calling out to Lua for nodes/ways/relations with not tags - speeds up parsing. [#2351](https://github.com/valhalla/valhalla/pull/2351)
+   * ADDED: Ability to create OpenLR records from raw data. [2356](https://github.com/valhalla/valhalla/pull/2356)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

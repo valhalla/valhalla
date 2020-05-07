@@ -102,6 +102,9 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Process the guidance view junctions
   ProcessGuidanceViewJunctions(maneuvers);
 
+  // Mark the maneuvers that have traversable outbound intersecting edges
+  SetTraversableOutboundIntersectingEdgeFlags(maneuvers);
+
 #ifdef LOGGING_LEVEL_TRACE
   int final_man_id = 1;
   LOG_TRACE("############################################");
@@ -2798,6 +2801,44 @@ bool ManeuversBuilder::RampLeadsToHighway(Maneuver& maneuver) const {
   }
   // Not a ramp
   return false;
+}
+
+void ManeuversBuilder::SetTraversableOutboundIntersectingEdgeFlags(std::list<Maneuver>& maneuvers) {
+  // Process each maneuver for traversable outbound intersecting edges
+  for (Maneuver& maneuver : maneuvers) {
+    bool found_first_edge_to_process = false;
+    for (int node_index = maneuver.begin_node_index(); node_index < maneuver.end_node_index();
+         ++node_index) {
+      if (!found_first_edge_to_process) {
+        auto curr_edge = trip_path_->GetCurrEdge(node_index);
+        // Skip the initial internal and turn channel edges
+        if (curr_edge->internal_intersection() || curr_edge->IsTurnChannelUse()) {
+          continue;
+        }
+        // we can process the next edge - set flag and continue
+        found_first_edge_to_process = true;
+        continue;
+      }
+      auto node = trip_path_->GetEnhancedNode(node_index);
+      auto prev_edge = trip_path_->GetPrevEdge(node_index);
+      if (node && prev_edge) {
+        IntersectingEdgeCounts xedge_counts;
+        node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                       prev_edge->travel_mode(), xedge_counts);
+        if (xedge_counts.right_traversable_outbound > 0) {
+          maneuver.set_has_right_traversable_outbound_intersecting_edge(true);
+        }
+        if (xedge_counts.left_traversable_outbound > 0) {
+          maneuver.set_has_left_traversable_outbound_intersecting_edge(true);
+        }
+        // If both are already marks then we can stop processing
+        if (maneuver.has_right_traversable_outbound_intersecting_edge() &&
+            maneuver.has_left_traversable_outbound_intersecting_edge()) {
+          break;
+        }
+      }
+    }
+  }
 }
 
 } // namespace odin

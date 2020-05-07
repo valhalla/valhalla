@@ -44,13 +44,15 @@
 namespace valhalla {
 namespace gurka {
 
+using nodelayout = std::map<std::string, midgard::PointLL>;
+
 struct map {
   boost::property_tree::ptree config;
-  std::unordered_map<std::string, midgard::PointLL> nodes;
+  nodelayout nodes;
 };
 
-using ways = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
-using nodes = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
+using ways = std::map<std::string, std::map<std::string, std::string>>;
+using nodes = std::map<std::string, std::map<std::string, std::string>>;
 
 enum relation_member_type { node_member, way_member };
 struct relation_member {
@@ -60,12 +62,10 @@ struct relation_member {
 };
 struct relation {
   std::vector<relation_member> members;
-  std::unordered_map<std::string, std::string> tags;
+  std::map<std::string, std::string> tags;
 };
 
 using relations = std::vector<relation>;
-
-using nodelayout = std::unordered_map<std::string, midgard::PointLL>;
 
 namespace detail {
 
@@ -559,7 +559,7 @@ std::tuple<const baldr::GraphId,
            const baldr::GraphId,
            const baldr::DirectedEdge*>
 findEdge(valhalla::baldr::GraphReader& reader,
-         const std::unordered_map<std::string, midgard::PointLL>& nodes,
+         const nodelayout& nodes,
          const std::string& way_name,
          const std::string& end_node,
          const baldr::GraphId& tile_id = baldr::GraphId{}) {
@@ -824,23 +824,17 @@ void expect_path_length(const valhalla::Api& result,
   EXPECT_EQ(result.trip().routes_size(), 1);
   EXPECT_EQ(result.trip().routes(0).legs_size(), 1);
 
-  const auto& route = result.trip().routes(0);
+  const auto& route = result.directions().routes(0).legs();
 
   float length_km = 0;
-  for (int legnum = 0; legnum < route.legs_size(); legnum++) {
-    const auto& leg = route.legs(legnum);
-    for (int nodenum = 0; nodenum < leg.node_size(); nodenum++) {
-      const auto& node = leg.node(nodenum);
-      if (node.has_edge()) {
-        length_km += node.edge().length();
-      }
-    }
+  for (const auto& leg : result.directions().routes(0).legs()) {
+    length_km += leg.summary().length();
   }
 
   if (error_margin == 0) {
-    EXPECT_FLOAT_EQ(length_km, expected_length_km);
+    EXPECT_FLOAT_EQ(static_cast<float>(length_km), expected_length_km);
   } else {
-    EXPECT_NEAR(length_km, expected_length_km, error_margin);
+    EXPECT_NEAR(static_cast<float>(length_km), expected_length_km, error_margin);
   }
 }
 
@@ -850,13 +844,11 @@ void expect_eta(const valhalla::Api& result,
   EXPECT_EQ(result.trip().routes_size(), 1);
   EXPECT_EQ(result.trip().routes(0).legs_size(), 1);
 
-  const auto& route = result.trip().routes(0);
+  const auto& route = result.directions().routes(0);
 
   double eta_sec = 0;
-  for (int legnum = 0; legnum < route.legs_size(); legnum++) {
-    const auto& leg = route.legs(legnum);
-    const auto& lastnode = leg.node(leg.node_size() - 1);
-    eta_sec += lastnode.elapsed_time();
+  for (const auto& leg : result.directions().routes(0).legs()) {
+    eta_sec += leg.summary().time();
   }
 
   if (error_margin == 0) {

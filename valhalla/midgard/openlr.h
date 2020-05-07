@@ -108,6 +108,44 @@ struct LocationReferencePoint {
         fow(static_cast<LocationReferencePoint::FormOfWay>(attribute1 & 0x07)) {
   }
 
+  /**
+   * Useful for generating an openlr record from non-openlr data. You can create LRPs with this
+   * constructor and then feed them to the special constructor for the LineLocation
+   * @param longitude
+   * @param latitude
+   * @param bearing
+   * @param frc
+   * @param fow
+   * @param distance
+   * @param lfrcnp
+   */
+  LocationReferencePoint(double longitude,
+                         double latitude,
+                         float bearing,
+                         unsigned char frc,
+                         FormOfWay fow,
+                         LocationReferencePoint* prev,
+                         float distance = 0.f,
+                         unsigned char lfrcnp = 0)
+      : longitude(!prev ? integer2decimal(decimal2integer(longitude))
+                        : prev->longitude +
+                              (std::round((longitude - prev->longitude) * 100000) / 10000)),
+        latitude(!prev ? integer2decimal(decimal2integer(latitude))
+                       : prev->latitude + (std::round((latitude - prev->latitude) * 100000) / 10000)),
+        bearing(integer2bearing(bearing2integer(bearing))), frc(frc), fow(fow),
+        distance(integer2distance(distance2integer(distance))), lfrcnp(lfrcnp) {
+  }
+
+  /**
+   * Strict equality here is ok because the floating point values came from integers
+   * @param lrp
+   * @return true if the provided lrp exactly matchs this lrp
+   */
+  bool operator==(const LocationReferencePoint& lrp) const {
+    return longitude == lrp.longitude && latitude == lrp.latitude && bearing == lrp.bearing &&
+           distance == lrp.distance && frc == lrp.frc && lfrcnp == lrp.lfrcnp && fow == lrp.fow;
+  }
+
   double longitude;
   double latitude;
   float bearing;        // 5.2.4. Bearing
@@ -123,7 +161,7 @@ struct LineLocation {
   LineLocation(const std::string& reference) {
     //  Line location data size: 16 + (n-2)*7 + [0/1/2] bytes
     if (reference.size() < 16)
-      throw std::invalid_argument("OpenLR reference is too small");
+      throw std::invalid_argument("OpenLR reference is too small " + reference);
 
     const auto raw = reinterpret_cast<const unsigned char*>(reference.data());
     const auto size = reference.size();
@@ -132,7 +170,7 @@ struct LineLocation {
     // Status, version 3, has attributes, ArF 'Circle or no area location'
     auto status = raw[index++] & 0x7f;
     if (status != 0x0b)
-      throw std::invalid_argument("OpenLR reference ");
+      throw std::invalid_argument("OpenLR reference invalid status " + reference);
 
     // First location reference point
     auto longitude = integer2decimal(fixed<std::int32_t, 3>(raw, index));
@@ -141,7 +179,7 @@ struct LineLocation {
     auto attribute2 = raw[index++];
     auto attribute3 = raw[index++];
 
-    first = {longitude, latitude, attribute1, attribute2, attribute3};
+    lrps.emplace_back(longitude, latitude, attribute1, attribute2, attribute3);
 
     // Intermediate location reference points
     while (index + 7 + 6 <= size) {
@@ -151,7 +189,7 @@ struct LineLocation {
       attribute2 = raw[index++];
       attribute3 = raw[index++];
 
-      intermediate.push_back({longitude, latitude, attribute1, attribute2, attribute3});
+      lrps.emplace_back(longitude, latitude, attribute1, attribute2, attribute3);
     }
 
     // Last location reference point
@@ -160,24 +198,34 @@ struct LineLocation {
     attribute1 = raw[index++];
     auto attribute4 = raw[index++];
 
-    last = {longitude, latitude, attribute1, attribute4};
+    lrps.emplace_back(longitude, latitude, attribute1, attribute4);
 
     // Offsets
     std::bitset<8> flags(attribute4);
-    poff = (index < size) && flags[6] ? first.distance * raw[index++] / 256 : 0.f;
-    noff = (index < size) && flags[5] ? first.distance * raw[index++] / 256 : 0.f;
+    poff = (index < size) && flags[6] ? lrps.front().distance * raw[index++] / 256 : 0.f;
+    noff = (index < size) && flags[5] ? std::next(lrps.rbegin())->distance * raw[index++] / 256 : 0.f;
+  }
+
+  LineLocation(const std::vector<LocationReferencePoint>& lrps, float poff, float noff)
+      : lrps(lrps), poff(std::round(poff / lrps.at(0).distance * 256) / 256 * lrps.at(0).distance),
+        noff(std::round(noff / lrps.at(lrps.size() - 2).distance * 256) / 256 *
+             lrps.at(lrps.size() - 2).distance) {
+    if (poff > lrps.front().distance)
+      throw std::invalid_argument("Positive offset out of range");
+    if (noff > std::next(lrps.rbegin())->distance)
+      throw std::invalid_argument("Negative offset out of range");
   }
 
   PointLL getFirstCoordinate() const {
-    return {first.longitude, first.latitude};
+    return {lrps.front().longitude, lrps.front().latitude};
   }
 
   PointLL getLastCoordinate() const {
-    return {last.longitude, last.latitude};
+    return {lrps.back().longitude, lrps.back().latitude};
   }
 
   float getLength() const {
-    return std::accumulate(intermediate.begin(), intermediate.end(), first.distance,
+    return std::accumulate(std::next(lrps.begin()), std::prev(lrps.end()), lrps[0].distance,
                            [](float distance, const LocationReferencePoint& lrp) {
                              return distance + lrp.distance;
                            });
@@ -201,6 +249,7 @@ struct LineLocation {
     result.push_back(0b00001011);
 
     // First location reference point
+    const auto& first = lrps.front();
     auto longitude = first.longitude;
     auto latitude = first.latitude;
     append3(decimal2integer(longitude));
@@ -209,21 +258,23 @@ struct LineLocation {
     result.push_back(((first.lfrcnp & 0x7) << 5) | (bearing2integer(first.bearing) & 0x1f));
     result.push_back(distance2integer(first.distance));
 
-    for (const auto& lrp : intermediate) {
+    // Subsequent location reference points are offset lon lat from the first
+    for (auto lrp = std::next(lrps.begin()); lrp != std::prev(lrps.end()); ++lrp) {
       // First longitude
-      append2(static_cast<std::int32_t>(std::round(100000 * (lrp.longitude - longitude))));
-      append2(static_cast<std::int32_t>(std::round(100000 * (lrp.latitude - latitude))));
-      result.push_back(((lrp.frc & 0x7) << 3) | (lrp.fow & 0x7));
-      result.push_back(((lrp.lfrcnp & 0x7) << 5) | (bearing2integer(lrp.bearing) & 0x1f));
-      result.push_back(distance2integer(lrp.distance));
+      append2(static_cast<std::int32_t>(std::round(100000 * (lrp->longitude - longitude))));
+      append2(static_cast<std::int32_t>(std::round(100000 * (lrp->latitude - latitude))));
+      result.push_back(((lrp->frc & 0x7) << 3) | (lrp->fow & 0x7));
+      result.push_back(((lrp->lfrcnp & 0x7) << 5) | (bearing2integer(lrp->bearing) & 0x1f));
+      result.push_back(distance2integer(lrp->distance));
 
-      longitude = lrp.longitude;
-      latitude = lrp.latitude;
+      longitude = lrp->longitude;
+      latitude = lrp->latitude;
     }
 
     // Last location reference point
     const auto pofff = poff != 0.f;
     const auto nofff = noff != 0.f;
+    const auto& last = lrps.back();
     append2(static_cast<std::int32_t>(std::round(100000 * (last.longitude - longitude))));
     append2(static_cast<std::int32_t>(std::round(100000 * (last.latitude - latitude))));
     result.push_back(((last.frc & 0x7) << 3) | (last.fow & 0x7));
@@ -231,19 +282,24 @@ struct LineLocation {
 
     // Offsets
     if (pofff) {
-      result.push_back(static_cast<std::int32_t>(256 * poff / first.distance) & 0xff);
+      result.push_back(static_cast<std::int32_t>(std::round(256 * poff / first.distance)) & 0xff);
     }
 
     if (nofff) {
-      result.push_back(static_cast<std::int32_t>(256 * noff / first.distance) & 0xff);
+      result.push_back(
+          static_cast<std::int32_t>(std::round(256 * noff / std::next(lrps.rbegin())->distance)) &
+          0xff);
     }
 
     return result;
   }
 
-  LocationReferencePoint first;
-  LocationReferencePoint last;
-  std::vector<LocationReferencePoint> intermediate;
+  bool operator==(const LineLocation& lloc) const {
+    return lrps.size() == lloc.lrps.size() && poff == lloc.poff && noff == lloc.noff &&
+           std::equal(lrps.begin(), lrps.end(), lloc.lrps.begin());
+  }
+
+  std::vector<LocationReferencePoint> lrps;
   float poff; // 5.2.9.1 Positive offset
   float noff; // 5.2.9.2 Negative offset
 };
