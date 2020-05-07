@@ -155,7 +155,7 @@ std::vector<OSMConnectionEdge> project(const GraphTile& local_tile,
       LOG_ERROR("Cannot find any edge to project");
       continue;
     }
- 
+
     // TODO - This is a temporary fix to address issues where the start node and end node
     // of the edge are not in the same tile. Skip these for now...
     if (osm_conn.startnode.tileid() != osm_conn.endnode.tileid()) {
