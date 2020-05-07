@@ -129,9 +129,10 @@ struct LocationReferencePoint {
                          unsigned char lfrcnp = 0)
       : longitude(!prev ? integer2decimal(decimal2integer(longitude))
                         : prev->longitude +
-                              (std::round((longitude - prev->longitude) * 100000) / 10000)),
-        latitude(!prev ? integer2decimal(decimal2integer(latitude))
-                       : prev->latitude + (std::round((latitude - prev->latitude) * 100000) / 10000)),
+                              (std::round((longitude - prev->longitude) * 100000) / 100000)),
+        latitude(!prev
+                     ? integer2decimal(decimal2integer(latitude))
+                     : prev->latitude + (std::round((latitude - prev->latitude) * 100000) / 100000)),
         bearing(integer2bearing(bearing2integer(bearing))), frc(frc), fow(fow),
         distance(integer2distance(distance2integer(distance))), lfrcnp(lfrcnp) {
   }
