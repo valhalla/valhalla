@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include <sstream>
 
 #include <benchmark/benchmark.h>
@@ -7,6 +8,7 @@
 #include "baldr/rapidjson_utils.h"
 #include "meili/map_matcher_factory.h"
 #include "meili/measurement.h"
+#include "midgard/logging.h"
 #include "sif/costconstants.h"
 #include "sif/costfactory.h"
 #include "tyr/actor.h"
