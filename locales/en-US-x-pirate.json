@@ -135,8 +135,10 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Aye, continue fer <LENGTH>.",
-        "1": "Heave ho on <STREET_NAMES> fer <LENGTH>."
+        "0": "Aye, continue.",
+        "1": "Aye, continue fer <LENGTH>.",
+        "2": "Heave ho on <STREET_NAMES>",
+        "3": "Heave ho on <STREET_NAMES> fer <LENGTH>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -159,10 +161,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Aye, continue fer 300 feet."
+          "Continue."
         ],
         "1": [
-          "Heave ho on 10th Avenue fer 3 tenths of a mile."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
         ]
       }
     },

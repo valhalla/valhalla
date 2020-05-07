@@ -135,8 +135,10 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Fortsätt <LENGTH>.",
-        "1": "Fortsätt <LENGTH> på <STREET_NAMES>."
+        "0": "Fortsätt.",
+        "1": "Fortsätt <LENGTH>.",
+        "2": "Fortsätt på <STREET_NAMES>.",
+        "3": "Fortsätt <LENGTH> på <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "gångbanan",
@@ -159,10 +161,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Fortsätt 300 fot."
+          "Continue."
         ],
         "1": [
-          "Fortsätt 3 tiondels mile på 10th Avenue."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
         ]
       }
     },

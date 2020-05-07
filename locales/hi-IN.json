@@ -135,8 +135,10 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "<LENGTH> के लिए जारी रहें.",
-        "1": "<STREET_NAMES> पर <LENGTH> के लिए जारी रहें."
+        "0": "जारी रहें.",
+        "1": "<LENGTH> के लिए जारी रहें.",
+        "2": "<STREET_NAMES> पर जारी रहें.",
+        "3": "<STREET_NAMES> पर <LENGTH> के लिए जारी रहें."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -159,10 +161,16 @@
       ],
       "example_phrases": {
         "0": [
-          "300 feet के लिए जारी रहें."
+          "Continue."
         ],
         "1": [
-          "10th Avenue पर एक मील के 3 दसवे अंश के लिए जारी रहें."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
         ]
       }
     },

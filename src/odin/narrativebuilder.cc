@@ -518,21 +518,6 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
 std::string NarrativeBuilder::FormVerbalStartInstruction(Maneuver& maneuver,
                                                          uint32_t element_max_count,
                                                          const std::string& delim) {
-  // OLD
-  // "0": "Head <CARDINAL_DIRECTION> for <LENGTH>.",
-  // "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-  // "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-  // "4": "Drive <CARDINAL_DIRECTION> for <LENGTH>.",
-  // "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-  // "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-  // "8": "Walk <CARDINAL_DIRECTION> for <LENGTH>.",
-  // "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-  // "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-  // "16": "Bike <CARDINAL_DIRECTION> for <LENGTH>.",
-  // "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-  // "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-
-  // NEW
   // "0": "Head <CARDINAL_DIRECTION>.",
   // "1": "Head <CARDINAL_DIRECTION> for <LENGTH>.",
   // "2": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
@@ -913,8 +898,10 @@ std::string NarrativeBuilder::FormVerbalAlertContinueInstruction(Maneuver& maneu
 std::string NarrativeBuilder::FormVerbalContinueInstruction(Maneuver& maneuver,
                                                             uint32_t element_max_count,
                                                             const std::string& delim) {
-  // "0": "Continue for <LENGTH>.",
-  // "1": "Continue on <STREET_NAMES> for <LENGTH>."
+  // "0": "Continue.",
+  // "1": "Continue for <LENGTH>.",
+  // "2": "Continue on <STREET_NAMES>.",
+  // "3": "Continue on <STREET_NAMES> for <LENGTH>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -925,10 +912,15 @@ std::string NarrativeBuilder::FormVerbalContinueInstruction(Maneuver& maneuver,
                       &dictionary_.continue_verbal_subset.empty_street_name_labels, true,
                       element_max_count, delim, maneuver.verbal_formatter());
 
-  // Determine which phrase to use
+  // Determine base phrase
   uint8_t phrase_id = 0;
   if (!street_names.empty()) {
-    phrase_id = 1;
+    phrase_id = 2;
+  }
+
+  if (maneuver.include_verbal_pre_transition_length()) {
+    // Increment phrase id for length
+    phrase_id += 1;
   }
 
   // Set instruction to the determined tagged phrase

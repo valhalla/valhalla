@@ -135,8 +135,10 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Continua durant <LENGTH>.",
-        "1": "Continua per <STREET_NAMES> durant <LENGTH>."
+        "0": "Continua.",
+        "1": "Continua durant <LENGTH>.",
+        "2": "Continua per <STREET_NAMES>.",
+        "3": "Continua per <STREET_NAMES> durant <LENGTH>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -159,10 +161,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Continua durant 300 peus."
+          "Continue."
         ],
         "1": [
-          "Continue per 10th Avenue durant 3 dècimes de milla."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
         ]
       }
     },

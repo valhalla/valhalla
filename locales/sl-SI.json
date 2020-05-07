@@ -135,8 +135,10 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Nadaljujte <LENGTH>.",
-        "1": "Po <STREET_NAMES> nadaljujte <LENGTH>."
+        "0": "Nadaljujte.",
+        "1": "Nadaljujte <LENGTH>.",
+        "2": "Nadaljujte po <STREET_NAMES>.",
+        "3": "Po <STREET_NAMES> nadaljujte <LENGTH>."
       },
       "empty_street_name_labels": [
         "pešpoti",
@@ -159,10 +161,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Nadaljujte 300 čevljev."
+          "Continue."
         ],
         "1": [
-          "Po 10th Avenue nadaljujte 3 desetinke milje."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
         ]
       }
     },

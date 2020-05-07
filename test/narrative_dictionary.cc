@@ -427,13 +427,21 @@ TEST(NarrativeDictionary, test_en_US_continue_verbal_alert) {
 TEST(NarrativeDictionary, test_en_US_continue_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
-  // "0": "Continue for <LENGTH>.",
+  // "0": "Continue.",
   const auto& phrase_0 = dictionary.continue_verbal_subset.phrases.at("0");
-  validate(phrase_0, "Continue for <LENGTH>.");
+  validate(phrase_0, "Continue.");
 
-  // "1": "Continue on <STREET_NAMES> for <LENGTH>."
+  // "1": "Continue for <LENGTH>.",
   const auto& phrase_1 = dictionary.continue_verbal_subset.phrases.at("1");
-  validate(phrase_1, "Continue on <STREET_NAMES> for <LENGTH>.");
+  validate(phrase_1, "Continue for <LENGTH>.");
+
+  // "2": "Continue on <STREET_NAMES>."
+  const auto& phrase_2 = dictionary.continue_verbal_subset.phrases.at("2");
+  validate(phrase_2, "Continue on <STREET_NAMES>.");
+
+  // "3": "Continue on <STREET_NAMES> for <LENGTH>."
+  const auto& phrase_3 = dictionary.continue_verbal_subset.phrases.at("3");
+  validate(phrase_3, "Continue on <STREET_NAMES> for <LENGTH>.");
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
   const auto& empty_street_name_labels = dictionary.continue_verbal_subset.empty_street_name_labels;

@@ -135,8 +135,10 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Continuez pendant <LENGTH>.",
-        "1": "Continuez sur <STREET_NAMES> pendant <LENGTH>."
+        "0": "Continuez.",
+        "1": "Continuez pendant <LENGTH>.",
+        "2": "Continuez sur <STREET_NAMES>.",
+        "3": "Continuez sur <STREET_NAMES> pendant <LENGTH>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -159,10 +161,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Continuez pendant 300 pieds."
+          "Continue."
         ],
         "1": [
-          "Continuez sur 10th Avenue pendant 3 dixièmes de mile."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
         ]
       }
     },

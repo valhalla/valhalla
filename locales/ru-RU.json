@@ -135,8 +135,10 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Проедьте <LENGTH>.",
-        "1": "Проедьте <LENGTH> по <STREET_NAMES>."
+        "0": "Продолжайте.",
+        "1": "Проедьте <LENGTH>.",
+        "2": "Продолжайте по <STREET_NAMES>.",
+        "3": "Проедьте <LENGTH> по <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -159,10 +161,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Проедьте 300 футов."
+          "Continue."
         ],
         "1": [
-          "Проедьте 3 десятых мили по 10th Avenue."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
         ]
       }
     },

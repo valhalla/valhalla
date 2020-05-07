@@ -135,8 +135,10 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Pokračujte <LENGTH>.",
-        "1": "Pokračujte <LENGTH> po <STREET_NAMES>."
+        "0": "Pokračujte.",
+        "1": "Pokračujte <LENGTH>.",
+        "2": "Pokračujte po <STREET_NAMES>.",
+        "3": "Pokračujte <LENGTH> po <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "chodníku",
@@ -159,10 +161,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Pokračujte 300 metrů."
+          "Continue."
         ],
         "1": [
-          "Pokračujte 3 desetiny míle po 10th Avenue."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
         ]
       }
     },

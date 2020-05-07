@@ -135,8 +135,10 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Continue por <LENGTH>.",
-        "1": "Continue em <STREET_NAMES> por <LENGTH>."
+        "0": "Continue.",
+        "1": "Continue por <LENGTH>.",
+        "2": "Continue em <STREET_NAMES>.",
+        "3": "Continue em <STREET_NAMES> por <LENGTH>."
       },
       "empty_street_name_labels": [
         "a calçada",
@@ -159,10 +161,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Continue por 300 metros."
+          "Continue."
         ],
         "1": [
-          "Continue em Avenida dos Aliados por 3 décimos de quilômetro."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
         ]
       }
     },

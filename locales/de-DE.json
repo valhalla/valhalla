@@ -135,8 +135,10 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "<LENGTH> weiter.",
-        "1": "<LENGTH> weiter auf <STREET_NAMES>."
+        "0": "Weiter.",
+        "1": "<LENGTH> weiter.",
+        "2": "Weiter auf <STREET_NAMES>.",
+        "3": "<LENGTH> weiter auf <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -159,10 +161,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Continue for 300 feet."
+          "Continue."
         ],
         "1": [
-          "Continue on 10th Avenue for 3 tenths of a mile."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
         ]
       }
     },
