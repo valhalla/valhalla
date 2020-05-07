@@ -174,8 +174,6 @@ TEST(OpenLR, CreateLinearReference) {
   unsigned char lowest_frc_next_point = 7;
   uint16_t bearing;
   for (const auto& p : points) {
-    // frc and fow are 3 bits wide, we dont use the last 2 bits for anything
-    unsigned char attribute1 = (frc << 3) | fow;
     // first or intermediate point
     if (&p != &points.back()) {
       bearing = static_cast<uint16_t>(p.Heading(*std::next(&p)));
@@ -204,6 +202,14 @@ TEST(OpenLR, CreateLinearReference) {
   // if positive or negative offset is too large it should throw
   EXPECT_THROW(LineLocation(lrps, lrps[0].distance + 1, 0), std::invalid_argument);
   EXPECT_THROW(LineLocation(lrps, 0, lrps[lrps.size() - 2].distance + 1), std::invalid_argument);
+
+  // make a short line location so that poff and noff must be 0
+  lrps.clear();
+  lrps.emplace_back(0, 0, 90, frc, fow, nullptr, 5, lowest_frc_next_point);
+  lrps.emplace_back(.000005, 0, 270, frc, fow, &lrps.back());
+  LineLocation short_location(lrps, 0, 0);
+  EXPECT_EQ(short_location.poff, 0.f);
+  EXPECT_EQ(short_location.noff, 0.f);
 }
 
 } // namespace
