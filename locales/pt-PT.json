@@ -135,8 +135,10 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Continue por <LENGTH>.",
-        "1": "Continue em <STREET_NAMES> por <LENGTH>."
+        "0": "Continue.",
+        "1": "Continue por <LENGTH>.",
+        "2": "Continue em <STREET_NAMES>.",
+        "3": "Continue em <STREET_NAMES> por <LENGTH>."
       },
       "empty_street_name_labels": [
         "a via pedonal",
@@ -159,10 +161,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Continue por 300 metros."
+          "Continue."
         ],
         "1": [
-          "Continue em Avenida dos Aliados por 3 décimos de quilómetro."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
         ]
       }
     },
@@ -516,144 +524,6 @@
         ],
         "29": [
           "Apanhe a saída White Marsh Boulevard para MD 43 East em direção a White Marsh."
-        ]
-      }
-    },
-    "exit_ferry": {
-      "phrases": {
-        "0": "Siga para <CARDINAL_DIRECTION>.",
-        "1": "Siga para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
-        "2": "Siga para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>. Continue em <STREET_NAMES>.",
-        "4": "Conduza para <CARDINAL_DIRECTION>.",
-        "5": "Conduza para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
-        "6": "Conduza para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>. Continue em <STREET_NAMES>.",
-        "8": "Caminhe para <CARDINAL_DIRECTION>.",
-        "9": "Caminhe para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
-        "10": "Caminhe para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>. Continue em <STREET_NAMES>.",
-        "16": "Pedale para <CARDINAL_DIRECTION>.",
-        "17": "Pedale para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
-        "18": "Pedale para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>. Continue em <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "norte",
-        "nordeste",
-        "este",
-        "sudeste",
-        "sul",
-        "sudoeste",
-        "oeste",
-        "noroeste"
-      ],
-      "empty_street_name_labels": [
-        "a via pedonal",
-        "a ciclovia",
-        "a pista de bicicleta de montanha"
-      ],
-      "example_phrases": {
-        "0": [
-          "Siga para sudeste."
-        ],
-        "1": [
-          "Siga para oeste em Avenida do Brasil"
-        ],
-        "2": [
-          "Siga para sul em Rua do Oriente/IC2. Continue em IC2."
-        ],
-        "4": [
-          "Conduza para sudeste."
-        ],
-        "5": [
-          "Conduza para oeste em Avenida do Brasil"
-        ],
-        "6": [
-          "Conduza para sul em Rua do Oriente/IC2. Continue em IC2."
-        ],
-        "8": [
-          "Caminhe para sudeste."
-        ],
-        "9": [
-          "Caminhe para oeste em Avenida do Brasil"
-        ],
-        "10": [
-          "Caminhe para sul em Rua do Oriente/IC2. Continue em IC2."
-        ],
-        "16": [
-          "Pedale para sudeste."
-        ],
-        "17": [
-          "Pedale para oeste em Avenida do Brasil"
-        ],
-        "18": [
-          "Pedale para sul em Rua do Oriente/IC2. Continue em IC2."
-        ]
-      }
-    },
-    "exit_ferry_verbal": {
-      "phrases": {
-        "0": "Siga para <CARDINAL_DIRECTION>.",
-        "1": "Siga para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
-        "2": "Siga para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
-        "4": "Conduza para <CARDINAL_DIRECTION>.",
-        "5": "Conduza para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
-        "6": "Conduza para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
-        "8": "Caminhe para <CARDINAL_DIRECTION>.",
-        "9": "Caminhe para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
-        "10": "Caminhe para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
-        "16": "Pedale para <CARDINAL_DIRECTION>.",
-        "17": "Pedale para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
-        "18": "Pedale para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "norte",
-        "nordeste",
-        "este",
-        "sudeste",
-        "sul",
-        "sudoeste",
-        "oeste",
-        "noroeste"
-      ],
-      "empty_street_name_labels": [
-        "a via pedonal",
-        "a ciclovia",
-        "a pista de bicicleta de montanha"
-      ],
-      "example_phrases": {
-        "0": [
-          "Siga para sudeste."
-        ],
-        "1": [
-          "Siga para oeste em Avenida do Brasil"
-        ],
-        "2": [
-          "Siga para sul em Avenida da Índia, Lisboa."
-        ],
-        "4": [
-          "Conduza para sudeste."
-        ],
-        "5": [
-          "Conduza para oeste em Avenida do Brasil"
-        ],
-        "6": [
-          "Conduza para sul em Avenida da Índia, Lisboa."
-        ],
-        "8": [
-          "Caminhe para sudeste."
-        ],
-        "9": [
-          "Caminhe para oeste em Avenida do Brasil"
-        ],
-        "10": [
-          "Caminhe para sul em Avenida da Índia, Lisboa."
-        ],
-        "16": [
-          "Pedale para sudeste."
-        ],
-        "17": [
-          "Pedale para oeste em Avenida do Brasil"
-        ],
-        "18": [
-          "Pedale para sul em Avenida da Índia, Lisboa."
         ]
       }
     },
@@ -1037,144 +907,6 @@
         ],
         "3": [
           "Junte-se à direita a A22 Oeste/Marinha Grande."
-        ]
-      }
-    },
-    "post_transit_connection_destination": {
-      "phrases": {
-        "0": "Siga para <CARDINAL_DIRECTION>.",
-        "1": "Siga para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
-        "2": "Siga para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>. Continue para <STREET_NAMES>.",
-        "4": "Conduza para <CARDINAL_DIRECTION>.",
-        "5": "Conduza para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
-        "6": "Conduza para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>. Continue para <STREET_NAMES>.",
-        "8": "Caminhe para <CARDINAL_DIRECTION>.",
-        "9": "Caminhe para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
-        "10": "Caminhe para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>. Continue para <STREET_NAMES>.",
-        "16": "Pedale para <CARDINAL_DIRECTION>.",
-        "17": "Pedale para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
-        "18": "Pedale para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>. Continue para <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "norte",
-        "nordeste",
-        "este",
-        "sudeste",
-        "sul",
-        "sudoeste",
-        "oeste",
-        "noroeste"
-      ],
-      "empty_street_name_labels": [
-        "a via pedonal",
-        "a ciclovia",
-        "a pista de bicicleta de montanha"
-      ],
-      "example_phrases": {
-        "0": [
-          "Siga para oeste."
-        ],
-        "1": [
-          "Siga para nordeste em Avenida 24 de Julho"
-        ],
-        "2": [
-          "Siga para sul em Rua do Oriente/IC2. Continue para A2."
-        ],
-        "4": [
-          "Conduza para oeste."
-        ],
-        "5": [
-          "Conduza para nordeste em Avenida 24 de Julho"
-        ],
-        "6": [
-          "Conduza para sul em Rua do Oriente/IC2. Continue para A2."
-        ],
-        "8": [
-          "Caminhe para oeste."
-        ],
-        "9": [
-          "Caminhe para nordeste em Avenida 24 de Julho"
-        ],
-        "10": [
-          "Caminhe para sul em Rua do Oriente. Continue para Avenida da Índia."
-        ],
-        "16": [
-          "Pedale para oeste."
-        ],
-        "17": [
-          "Pedale para nordeste em Avenida 24 de Julho"
-        ],
-        "18": [
-          "Pedale para sul em Rua do Oriente. Continue para Avenida da Índia."
-        ]
-      }
-    },
-    "post_transit_connection_destination_verbal": {
-      "phrases": {
-        "0": "Siga para <CARDINAL_DIRECTION>.",
-        "1": "Siga para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
-        "2": "Siga para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
-        "4": "Conduza para <CARDINAL_DIRECTION>.",
-        "5": "Conduza para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
-        "6": "Conduza para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
-        "8": "Caminhe para <CARDINAL_DIRECTION>.",
-        "9": "Caminhe para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
-        "10": "Caminhe para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
-        "16": "Pedale para <CARDINAL_DIRECTION>.",
-        "17": "Pedale para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
-        "18": "Pedale para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "norte",
-        "nordeste",
-        "este",
-        "sudeste",
-        "sul",
-        "sudoeste",
-        "oeste",
-        "noroeste"
-      ],
-      "empty_street_name_labels": [
-        "a via pedonal",
-        "a ciclovia",
-        "a pista de bicicleta de montanha"
-      ],
-      "example_phrases": {
-        "0": [
-          "Siga para oeste."
-        ],
-        "1": [
-          "Siga para nordeste em Avenida 24 de Julho"
-        ],
-        "2": [
-          "Siga para sul em Avenida da Índia, Lisboa."
-        ],
-        "4": [
-          "Conduza para oeste."
-        ],
-        "5": [
-          "Conduza para nordeste em Avenida 24 de Julho"
-        ],
-        "6": [
-          "Conduza para sul em Avenida da Índia, Lisboa."
-        ],
-        "8": [
-          "Caminhe para oeste."
-        ],
-        "9": [
-          "Caminhe para nordeste em Avenida 24 de Julho"
-        ],
-        "10": [
-          "Caminhe para sul em Avenida da Índia, Lisboa."
-        ],
-        "16": [
-          "Pedale para oeste."
-        ],
-        "17": [
-          "Pedale para nordeste em Avenida 24 de Julho"
-        ],
-        "18": [
-          "Pedale para sul em Avenida da Índia, Lisboa."
         ]
       }
     },
@@ -1567,18 +1299,26 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Siga para <CARDINAL_DIRECTION> por <LENGTH>.",
-        "1": "Siga para <CARDINAL_DIRECTION> em <STREET_NAMES> por <LENGTH>.",
-        "2": "Siga para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
-        "4": "Conduza para <CARDINAL_DIRECTION> por <LENGTH>.",
-        "5": "Conduza para <CARDINAL_DIRECTION> em <STREET_NAMES> por <LENGTH>.",
-        "6": "Conduza para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
-        "8": "Caminhe para <CARDINAL_DIRECTION> por <LENGTH>.",
-        "9": "Caminhe para <CARDINAL_DIRECTION> em <STREET_NAMES> por <LENGTH>.",
-        "10": "Caminhe para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
+        "0": "Siga para <CARDINAL_DIRECTION>.",
+        "1": "Siga para <CARDINAL_DIRECTION> por <LENGTH>.",
+        "2": "Siga para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "3": "Siga para <CARDINAL_DIRECTION> em <STREET_NAMES> por <LENGTH>.",
+        "4": "Siga para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
+        "5": "Conduza para <CARDINAL_DIRECTION>.",
+        "6": "Conduza para <CARDINAL_DIRECTION> por <LENGTH>.",
+        "7": "Conduza para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "8": "Conduza para <CARDINAL_DIRECTION> em <STREET_NAMES> por <LENGTH>.",
+        "9": "Conduza para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
+        "10": "Caminhe para <CARDINAL_DIRECTION>.",
+        "11": "Caminhe para <CARDINAL_DIRECTION> por <LENGTH>.",
+        "12": "Caminhe para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "13": "Caminhe para <CARDINAL_DIRECTION> em <STREET_NAMES> por <LENGTH>.",
+        "14": "Caminhe para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
+        "15": "Pedale para <CARDINAL_DIRECTION>.",
         "16": "Pedale para <CARDINAL_DIRECTION> por <LENGTH>.",
-        "17": "Pedale para <CARDINAL_DIRECTION> em <STREET_NAMES> por <LENGTH>.",
-        "18": "Pedale para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>."
+        "17": "Pedale para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "18": "Pedale para <CARDINAL_DIRECTION> em <STREET_NAMES> por <LENGTH>.",
+        "19": "Pedale para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
         "norte",
@@ -1611,44 +1351,72 @@
       ],
       "example_phrases": {
         "0": [
-          "Siga para este por meio quilómetro.",
-          "Siga para norte por 1 quilómetro."
+          "Head east.",
+          "Head north."
         ],
         "1": [
-          "Siga para sudoeste na Avenida 24 de Julho por 1 décimo de quilómetro."
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
         ],
         "2": [
-          "Siga para sul na Rua do Príncipe Real."
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "4": [
-          "Conduza para este por meia milha.",
-          "Conduza para norte por 1 quilómetro."
+          "Head south on North Prince Street, U.S. 2 22."
         ],
         "5": [
-          "Conduza para sudoeste em Avenida 24 de Julho por 1 décimo de milha."
+          "Drive east.",
+          "Drive north."
         ],
         "6": [
-          "Conduza para sul em Rua do Príncipe Real."
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
         ],
         "8": [
-          "Caminhe para este por meia milha.",
-          "Caminhe para norte por 1 quilómetro."
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "9": [
-          "Caminhe para sudoeste em Avenida 24 de Julho por 1 décimo de milha."
+          "Drive south on North Prince Street, U.S. 2 22."
         ],
         "10": [
-          "Caminhe para sul em Rua do Príncipe Real."
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
         ],
         "16": [
-          "Pedale para este por meia milha.",
-          "Pedale para norte por 1 quilómetro."
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
         ],
         "17": [
-          "Pedale para sudoeste em Avenida 24 de Julho por 1 décimo de milha."
+          "Bike southwest on 5th Avenue."
         ],
         "18": [
-          "Pedale para sul em Rua do Príncipe Real."
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
         ]
       }
     },

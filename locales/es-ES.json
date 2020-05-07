@@ -135,8 +135,10 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Continuar por <LENGTH>.",
-        "1": "Continuar en <STREET_NAMES> por <LENGTH>."
+        "0": "Continuar.",
+        "1": "Continuar por <LENGTH>.",
+        "2": "Continuar en <STREET_NAMES>.",
+        "3": "Continuar en <STREET_NAMES> por <LENGTH>."
       },
       "empty_street_name_labels": [
         "la acera",
@@ -159,10 +161,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Continuar por 300 pies."
+          "Continue."
         ],
         "1": [
-          "Continuar en 10th Avenue por 3 décimas de una milla."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
         ]
       }
     },
@@ -516,144 +524,6 @@
         ],
         "29": [
           "Tomar la salida White Marsh Boulevard en MD 43 East hacia White Marsh."
-        ]
-      }
-    },
-    "exit_ferry": {
-      "phrases": {
-        "0": "Dirigirse hacia el <CARDINAL_DIRECTION>.",
-        "1": "Dirigirse hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "2": "Dirigirse hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.",
-        "4": "Conducir hacia el <CARDINAL_DIRECTION>.",
-        "5": "Conducir hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "6": "Conducir hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.",
-        "8": "Caminar hacia el <CARDINAL_DIRECTION>.",
-        "9": "Caminar hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "10": "Caminar hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.",
-        "16": "Ir en bicicleta hacia el <CARDINAL_DIRECTION>.",
-        "17": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "18": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "norte",
-        "noreste",
-        "este",
-        "sureste",
-        "sur",
-        "suroeste",
-        "oeste",
-        "noroeste"
-      ],
-      "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
-      ],
-      "example_phrases": {
-        "0": [
-          "Dirigirse hacia el sureste."
-        ],
-        "1": [
-          "Dirigirse hacia el oeste en la vía del Ferry"
-        ],
-        "2": [
-          "Dirigirse hacia el sur en Summerfield Place/NY 114. Continuar en NY 114."
-        ],
-        "4": [
-          "Conducir hacia el sureste."
-        ],
-        "5": [
-          "Conducir hacia el oeste en la vía del Ferry"
-        ],
-        "6": [
-          "Conducir hacia el sur en Summerfield Place/NY 114. Continuar en NY 114."
-        ],
-        "8": [
-          "Caminar hacia el sureste."
-        ],
-        "9": [
-          "Caminar hacia el oeste en la vía del Ferry"
-        ],
-        "10": [
-          "Caminar hacia el sur en Summerfield Place/NY 114. Continuar en NY 114."
-        ],
-        "16": [
-          "Ir en bicicleta hacia el sureste."
-        ],
-        "17": [
-          "Ir en bicicleta hacia el oeste en la vía del Ferry"
-        ],
-        "18": [
-          "Ir en bicicleta hacia el sur en Summerfield Place/NY 114. Continuar en NY 114."
-        ]
-      }
-    },
-    "exit_ferry_verbal": {
-      "phrases": {
-        "0": "Dirigirse hacia el <CARDINAL_DIRECTION>.",
-        "1": "Dirigirse hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "2": "Dirigirse hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>.",
-        "4": "Conducir hacia el <CARDINAL_DIRECTION>.",
-        "5": "Conducir hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "6": "Conducir hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>.",
-        "8": "Caminar hacia el <CARDINAL_DIRECTION>.",
-        "9": "Caminar hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "10": "Caminar hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>.",
-        "16": "Ir en bicicleta hacia el <CARDINAL_DIRECTION>.",
-        "17": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "18": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "norte",
-        "noreste",
-        "este",
-        "sureste",
-        "sur",
-        "suroeste",
-        "oeste",
-        "noroeste"
-      ],
-      "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
-      ],
-      "example_phrases": {
-        "0": [
-          "Dirigirse hacia el sureste."
-        ],
-        "1": [
-          "Dirigirse hacia el oeste por la vía del Ferry"
-        ],
-        "2": [
-          "Dirigirse hacia el sur en Summerfield Place, New York 1 14."
-        ],
-        "4": [
-          "Conducir hacia el sureste."
-        ],
-        "5": [
-          "Conducir hacia el oeste en la vía del Ferry Lane"
-        ],
-        "6": [
-          "Conducir hacia el sur en Summerfield Place, New York 1 14."
-        ],
-        "8": [
-          "Caminar hacia el sureste."
-        ],
-        "9": [
-          "Caminar hacia el oeste en la vía del Ferry"
-        ],
-        "10": [
-          "Caminar hacia el sur en Summerfield Place, New York 1 14."
-        ],
-        "16": [
-          "Ir en bicicleta hacia el sureste."
-        ],
-        "17": [
-          "Ir en bicicleta hacia el oeste en la vía del Ferry"
-        ],
-        "18": [
-          "Ir en bicicleta haia el sur en Summerfield Place, New York 1 14."
         ]
       }
     },
@@ -1037,144 +907,6 @@
         ],
         "3": [
           "Empalme a la derecha en I 83 South."
-        ]
-      }
-    },
-    "post_transit_connection_destination": {
-      "phrases": {
-        "0": "Dirigirse hacia el <CARDINAL_DIRECTION>.",
-        "1": "Dirigirse hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "2": "Dirigirse hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.",
-        "4": "Conducir hacia el <CARDINAL_DIRECTION>.",
-        "5": "Conducir hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "6": "Conducir hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.",
-        "8": "Caminar hacia el <CARDINAL_DIRECTION>.",
-        "9": "Caminar hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "10": "Caminar hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>.",
-        "16": "Ir en bicicleta <CARDINAL_DIRECTION>.",
-        "17": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "18": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>. Continuar en <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "norte",
-        "noreste",
-        "este",
-        "sureste",
-        "sur",
-        "suroeste",
-        "oeste",
-        "noroeste"
-      ],
-      "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
-      ],
-      "example_phrases": {
-        "0": [
-          "Dirigirse hacia el oeste."
-        ],
-        "1": [
-          "Dirigirse hacia el noreste en Broadway"
-        ],
-        "2": [
-          "Dirigirse hacia el sur en Summerfield Place/NY 114. Continuar en NY 114."
-        ],
-        "4": [
-          "Conducir hacia el oeste."
-        ],
-        "5": [
-          "Conducir hacia el noreste on Broadway"
-        ],
-        "6": [
-          "Conducir hacia el sur en Summerfield Place/NY 114. Continuar en NY 114."
-        ],
-        "8": [
-          "Caminar hacia el oeste."
-        ],
-        "9": [
-          "Caminar hacia el noreste en Broadway"
-        ],
-        "10": [
-          "Caminar hacia el sur en Summerfield Place/NY 114. Continuar en NY 114."
-        ],
-        "16": [
-          "Ir en bicicleta hacia el oeste."
-        ],
-        "17": [
-          "Ir en bicicleta hacia el noreste en Broadway"
-        ],
-        "18": [
-          "Ir en bicicleta hacia el sur en Summerfield Place/NY 114. Continuar en NY 114."
-        ]
-      }
-    },
-    "post_transit_connection_destination_verbal": {
-      "phrases": {
-        "0": "Dirigirse hacia el <CARDINAL_DIRECTION>.",
-        "1": "Dirigirse hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "2": "Dirigirse hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>.",
-        "4": "Conducir hacia el <CARDINAL_DIRECTION>.",
-        "5": "Conducir hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "6": "Conducir hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>.",
-        "8": "Caminar hacia el <CARDINAL_DIRECTION>.",
-        "9": "Caminar hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "10": "Caminar hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>.",
-        "16": "Ir en bicicleta hacia el <CARDINAL_DIRECTION>.",
-        "17": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
-        "18": "Ir en bicicleta hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "norte",
-        "noreste",
-        "este",
-        "sureste",
-        "sur",
-        "suroeste",
-        "oeste",
-        "noroeste"
-      ],
-      "empty_street_name_labels": [
-        "la acera",
-        "la ciclovía",
-        "el sendero de bicicleta de montaña"
-      ],
-      "example_phrases": {
-        "0": [
-          "Dirigirse hacia el oeste."
-        ],
-        "1": [
-          "Dirigirse hacia el noreste en Broadway"
-        ],
-        "2": [
-          "Dirigirse hacia el sur en Summerfield Place, New York 1 14."
-        ],
-        "4": [
-          "Conducir hacia el oeste."
-        ],
-        "5": [
-          "Conducir hacia el noreste en Broadway"
-        ],
-        "6": [
-          "Conducir hacia el sur en Summerfield Place, New York 1 14."
-        ],
-        "8": [
-          "Caminar hacia el oeste."
-        ],
-        "9": [
-          "Caminar hacia el noreste en Broadway"
-        ],
-        "10": [
-          "Caminar sur on Summerfield Place, New York 1 14."
-        ],
-        "16": [
-          "Ir en bicicleta hacia el oeste."
-        ],
-        "17": [
-          "Ir en bicicleta hacia el noreste en Broadway"
-        ],
-        "18": [
-          "Ir en bicicleta sur en Summerfield Place, New York 1 14."
         ]
       }
     },
@@ -1567,18 +1299,26 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Ir hacia el <CARDINAL_DIRECTION> por <LENGTH>.",
-        "1": "Ir hacia el <CARDINAL_DIRECTION> en <STREET_NAMES> por <LENGTH>.",
-        "2": "Ir hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>.",
-        "4": "Conducir hacia el <CARDINAL_DIRECTION> por <LENGTH>.",
-        "5": "Conducir hacia el <CARDINAL_DIRECTION> en <STREET_NAMES> por <LENGTH>.",
-        "6": "Conducir hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>.",
-        "8": "Caminar hacia el <CARDINAL_DIRECTION> por <LENGTH>.",
-        "9": "Caminar hacia el <CARDINAL_DIRECTION> en <STREET_NAMES> por <LENGTH>.",
-        "10": "Caminar hacia el el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>.",
+        "0": "Ir hacia el <CARDINAL_DIRECTION>.",
+        "1": "Ir hacia el <CARDINAL_DIRECTION> por <LENGTH>.",
+        "2": "Ir hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
+        "3": "Ir hacia el <CARDINAL_DIRECTION> en <STREET_NAMES> por <LENGTH>.",
+        "4": "Ir hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>.",
+        "5": "Conducir hacia el <CARDINAL_DIRECTION>.",
+        "6": "Conducir hacia el <CARDINAL_DIRECTION> por <LENGTH>.",
+        "7": "Conducir hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
+        "8": "Conducir hacia el <CARDINAL_DIRECTION> en <STREET_NAMES> por <LENGTH>.",
+        "9": "Conducir hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>.",
+        "10": "Caminar hacia el <CARDINAL_DIRECTION>.",
+        "11": "Caminar hacia el <CARDINAL_DIRECTION> por <LENGTH>.",
+        "12": "Caminar hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
+        "13": "Caminar hacia el <CARDINAL_DIRECTION> en <STREET_NAMES> por <LENGTH>.",
+        "14": "Caminar hacia el el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>.",
+        "15": "Ir en bici hacia el <CARDINAL_DIRECTION>.",
         "16": "Ir en bici hacia el <CARDINAL_DIRECTION> por <LENGTH>.",
-        "17": "Ir en bici hacia el <CARDINAL_DIRECTION> en <STREET_NAMES> por <LENGTH>.",
-        "18": "Ir en bici hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>."
+        "17": "Ir en bici hacia el <CARDINAL_DIRECTION> en <STREET_NAMES>.",
+        "18": "Ir en bici hacia el <CARDINAL_DIRECTION> en <STREET_NAMES> por <LENGTH>.",
+        "19": "Ir en bici hacia el <CARDINAL_DIRECTION> en <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
         "norte",
@@ -1611,44 +1351,72 @@
       ],
       "example_phrases": {
         "0": [
-          "Ir hacia el este por media milla.",
-          "Ir hacia el norte por 1 kilómetro."
+          "Head east.",
+          "Head north."
         ],
         "1": [
-          "Ir hacia el soroeste en 5º Avenue por 1 décima de milla."
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
         ],
         "2": [
-          "Ir hacia el sur en North Prince Street, U.S. 2 22."
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "4": [
-          "Conducir hacia el este por media milla.",
-          "Conducir hacia el norte por 1 kilómetro."
+          "Head south on North Prince Street, U.S. 2 22."
         ],
         "5": [
-          "Conducir hacia el suroeste en 5th Avenue por 1 décima de milla."
+          "Drive east.",
+          "Drive north."
         ],
         "6": [
-          "Conducir hacia el sur en North Prince Street, U.S. 2 22."
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
         ],
         "8": [
-          "Caminar hacia el este por media milla.",
-          "Caminar hacia el norte por 1 kilómetro."
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "9": [
-          "Caminar hacia el suroeste en 5º Avenue por 1 décima de milla."
+          "Drive south on North Prince Street, U.S. 2 22."
         ],
         "10": [
-          "Caminar hacia el sur en North Prince Street, U.S. 2 22."
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
         ],
         "16": [
-          "Ir en bici hacia el este por media milla.",
-          "Ir en bici hacia el norte por 1 kilómetro."
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
         ],
         "17": [
-          "Ir en bici hacia el suroeste en 5º Avenue por 1 décima de milla."
+          "Bike southwest on 5th Avenue."
         ],
         "18": [
-          "Ir en bici hacia el sur en North Prince Street, U.S. 2 22."
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
         ]
       }
     },

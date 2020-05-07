@@ -135,8 +135,10 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Continue for <LENGTH>.",
-        "1": "Continue on <STREET_NAMES> for <LENGTH>."
+        "0": "Continue.",
+        "1": "Continue for <LENGTH>.",
+        "2": "Continue on <STREET_NAMES>.",
+        "3": "Continue on <STREET_NAMES> for <LENGTH>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -159,10 +161,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Continue for 300 feet."
+          "Continue."
         ],
         "1": [
-          "Continue on 10th Avenue for 3 tenths of a mile."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
         ]
       }
     },
@@ -516,144 +524,6 @@
         ],
         "29": [
           "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
-        ]
-      }
-    },
-    "exit_ferry": {
-      "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "4": "Drive <CARDINAL_DIRECTION>.",
-        "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "8": "Walk <CARDINAL_DIRECTION>.",
-        "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "16": "Bike <CARDINAL_DIRECTION>.",
-        "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "north",
-        "northeast",
-        "east",
-        "southeast",
-        "south",
-        "southwest",
-        "west",
-        "northwest"
-      ],
-      "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
-      ],
-      "example_phrases": {
-        "0": [
-          "Head southeast."
-        ],
-        "1": [
-          "Head west on Ferry Lane"
-        ],
-        "2": [
-          "Head south on Summerfield Place/NY 114. Continue on NY 114."
-        ],
-        "4": [
-          "Drive southeast."
-        ],
-        "5": [
-          "Drive west on Ferry Lane"
-        ],
-        "6": [
-          "Drive south on Summerfield Place/NY 114. Continue on NY 114."
-        ],
-        "8": [
-          "Walk southeast."
-        ],
-        "9": [
-          "Walk west on Ferry Lane"
-        ],
-        "10": [
-          "Walk south on Summerfield Place/NY 114. Continue on NY 114."
-        ],
-        "16": [
-          "Bike southeast."
-        ],
-        "17": [
-          "Bike west on Ferry Lane"
-        ],
-        "18": [
-          "Bike south on Summerfield Place/NY 114. Continue on NY 114."
-        ]
-      }
-    },
-    "exit_ferry_verbal": {
-      "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "4": "Drive <CARDINAL_DIRECTION>.",
-        "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "8": "Walk <CARDINAL_DIRECTION>.",
-        "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "16": "Bike <CARDINAL_DIRECTION>.",
-        "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "north",
-        "northeast",
-        "east",
-        "southeast",
-        "south",
-        "southwest",
-        "west",
-        "northwest"
-      ],
-      "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
-      ],
-      "example_phrases": {
-        "0": [
-          "Head southeast."
-        ],
-        "1": [
-          "Head west on Ferry Lane"
-        ],
-        "2": [
-          "Head south on Summerfield Place, New York 1 14."
-        ],
-        "4": [
-          "Drive southeast."
-        ],
-        "5": [
-          "Drive west on Ferry Lane"
-        ],
-        "6": [
-          "Drive south on Summerfield Place, New York 1 14."
-        ],
-        "8": [
-          "Walk southeast."
-        ],
-        "9": [
-          "Walk west on Ferry Lane"
-        ],
-        "10": [
-          "Walk south on Summerfield Place, New York 1 14."
-        ],
-        "16": [
-          "Bike southeast."
-        ],
-        "17": [
-          "Bike west on Ferry Lane"
-        ],
-        "18": [
-          "Bike south on Summerfield Place, New York 1 14."
         ]
       }
     },
@@ -1037,144 +907,6 @@
         ],
         "3": [
           "Merge right onto I 83 South."
-        ]
-      }
-    },
-    "post_transit_connection_destination": {
-      "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "4": "Drive <CARDINAL_DIRECTION>.",
-        "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "8": "Walk <CARDINAL_DIRECTION>.",
-        "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "16": "Bike <CARDINAL_DIRECTION>.",
-        "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "north",
-        "northeast",
-        "east",
-        "southeast",
-        "south",
-        "southwest",
-        "west",
-        "northwest"
-      ],
-      "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
-      ],
-      "example_phrases": {
-        "0": [
-          "Head west."
-        ],
-        "1": [
-          "Head northeast on Broadway"
-        ],
-        "2": [
-          "Head south on Summerfield Place/NY 114. Continue on NY 114."
-        ],
-        "4": [
-          "Drive west."
-        ],
-        "5": [
-          "Drive northeast on Broadway"
-        ],
-        "6": [
-          "Drive south on Summerfield Place/NY 114. Continue on NY 114."
-        ],
-        "8": [
-          "Walk west."
-        ],
-        "9": [
-          "Walk northeast on Broadway"
-        ],
-        "10": [
-          "Walk south on Summerfield Place/NY 114. Continue on NY 114."
-        ],
-        "16": [
-          "Bike west."
-        ],
-        "17": [
-          "Bike northeast on Broadway"
-        ],
-        "18": [
-          "Bike south on Summerfield Place/NY 114. Continue on NY 114."
-        ]
-      }
-    },
-    "post_transit_connection_destination_verbal": {
-      "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "4": "Drive <CARDINAL_DIRECTION>.",
-        "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "8": "Walk <CARDINAL_DIRECTION>.",
-        "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "16": "Bike <CARDINAL_DIRECTION>.",
-        "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "north",
-        "northeast",
-        "east",
-        "southeast",
-        "south",
-        "southwest",
-        "west",
-        "northwest"
-      ],
-      "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
-      ],
-      "example_phrases": {
-        "0": [
-          "Head west."
-        ],
-        "1": [
-          "Head northeast on Broadway"
-        ],
-        "2": [
-          "Head south on Summerfield Place, New York 1 14."
-        ],
-        "4": [
-          "Drive west."
-        ],
-        "5": [
-          "Drive northeast on Broadway"
-        ],
-        "6": [
-          "Drive south on Summerfield Place, New York 1 14."
-        ],
-        "8": [
-          "Walk west."
-        ],
-        "9": [
-          "Walk northeast on Broadway"
-        ],
-        "10": [
-          "Walk south on Summerfield Place, New York 1 14."
-        ],
-        "16": [
-          "Bike west."
-        ],
-        "17": [
-          "Bike northeast on Broadway"
-        ],
-        "18": [
-          "Bike south on Summerfield Place, New York 1 14."
         ]
       }
     },
@@ -1567,18 +1299,26 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Head <CARDINAL_DIRECTION> for <LENGTH>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "4": "Drive <CARDINAL_DIRECTION> for <LENGTH>.",
-        "5": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-        "6": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "8": "Walk <CARDINAL_DIRECTION> for <LENGTH>.",
-        "9": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-        "10": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "0": "Head <CARDINAL_DIRECTION>.",
+        "1": "Head <CARDINAL_DIRECTION> for <LENGTH>.",
+        "2": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "3": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
+        "4": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "5": "Drive <CARDINAL_DIRECTION>.",
+        "6": "Drive <CARDINAL_DIRECTION> for <LENGTH>.",
+        "7": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "8": "Drive <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
+        "9": "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "10": "Walk <CARDINAL_DIRECTION>.",
+        "11": "Walk <CARDINAL_DIRECTION> for <LENGTH>.",
+        "12": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "13": "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
+        "14": "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "15": "Bike <CARDINAL_DIRECTION>.",
         "16": "Bike <CARDINAL_DIRECTION> for <LENGTH>.",
-        "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
-        "18": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+        "17": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "18": "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>.",
+        "19": "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
         "north",
@@ -1611,43 +1351,71 @@
       ],
       "example_phrases": {
         "0": [
+          "Head east.",
+          "Head north."
+        ],
+        "1": [
           "Head east for a half mile.",
           "Head north for 1 kilometer."
         ],
-        "1": [
+        "2": [
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
           "Head southwest on 5th Avenue for 1 tenth of a mile."
         ],
-        "2": [
+        "4": [
           "Head south on North Prince Street, U.S. 2 22."
         ],
-        "4": [
+        "5": [
+          "Drive east.",
+          "Drive north."
+        ],
+        "6": [
           "Drive east for a half mile.",
           "Drive north for 1 kilometer."
         ],
-        "5": [
-          "Drive southwest on 5th Avenue for 1 tenth of a mile."
-        ],
-        "6": [
-          "Drive south on North Prince Street, U.S. 2 22."
+        "7": [
+          "Drive southwest on 5th Avenue."
         ],
         "8": [
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "9": [
+          "Drive south on North Prince Street, U.S. 2 22."
+        ],
+        "10": [
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
           "Walk east for a half mile.",
           "Walk north for 1 kilometer."
         ],
-        "9": [
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
           "Walk southwest on 5th Avenue for 1 tenth of a mile."
         ],
-        "10": [
+        "14": [
           "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
         ],
         "16": [
           "Bike east for a half mile.",
           "Bike north for 1 kilometer."
         ],
         "17": [
-          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+          "Bike southwest on 5th Avenue."
         ],
         "18": [
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
           "Bike south on North Prince Street, U.S. 2 22."
         ]
       }

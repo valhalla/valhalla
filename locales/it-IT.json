@@ -135,8 +135,10 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Continua per <LENGTH>.",
-        "1": "Continua su <STREET_NAMES> per <LENGTH>."
+        "0": "Continua.",
+        "1": "Continua per <LENGTH>.",
+        "2": "Continua su <STREET_NAMES>.",
+        "3": "Continua su <STREET_NAMES> per <LENGTH>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -159,10 +161,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Continua per 300 piedi."
+          "Continue."
         ],
         "1": [
-          "Continua su 10° Avenue per 3 decimi di miglio."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
         ]
       }
     },
@@ -516,144 +524,6 @@
         ],
         "29": [
           "Prendi l'uscita White Marsh Boulevard e prendi MD 43 East verso White Marsh."
-        ]
-      }
-    },
-    "exit_ferry": {
-      "phrases": {
-        "0": "Procedi in direzione <CARDINAL_DIRECTION>.",
-        "1": "Procedi in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
-        "2": "Procedi in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
-        "4": "Guida in direzione <CARDINAL_DIRECTION>.",
-        "5": "Guida in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
-        "6": "Guida in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
-        "8": "Vai a piedi in direzione <CARDINAL_DIRECTION>.",
-        "9": "Vai a piedi in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
-        "10": "Vai a piedi in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
-        "16": "Vai in bici in direzione <CARDINAL_DIRECTION>.",
-        "17": "Vai in bici in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
-        "18": "Vai in bici in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "nord",
-        "nordest",
-        "est",
-        "sudest",
-        "sud",
-        "sudovest",
-        "ovest",
-        "nordovest"
-      ],
-      "empty_street_name_labels": [
-        "il marciapiedi",
-        "la pista ciclabile",
-        "la pista per mountain bike"
-      ],
-      "example_phrases": {
-        "0": [
-          "Procedi in direzione sudest."
-        ],
-        "1": [
-          "Procedi in direzione ovest su Ferry Lane"
-        ],
-        "2": [
-          "Procedi in direzione sud su Summerfield Place/NY 114. Continua su NY 114."
-        ],
-        "4": [
-          "Guida in direzione sudest."
-        ],
-        "5": [
-          "Guida in direzione ovest su Ferry Lane"
-        ],
-        "6": [
-          "Guida in direzione sud su Summerfield Place/NY 114. Continua su NY 114."
-        ],
-        "8": [
-          "Vai a piedi in direzione sudest."
-        ],
-        "9": [
-          "Vai a piedi in direzione ovest su Ferry Lane"
-        ],
-        "10": [
-          "Vai a piedi in direzione sud su Summerfield Place/NY 114. Continua su NY 114."
-        ],
-        "16": [
-          "Vai in bici in direzione sudest."
-        ],
-        "17": [
-          "Vai in bici in direzione ovest su Ferry Lane"
-        ],
-        "18": [
-          "Vai in bici in direzione sud su Summerfield Place/NY 114. Continua su NY 114."
-        ]
-      }
-    },
-    "exit_ferry_verbal": {
-      "phrases": {
-        "0": "Procedi in direzione <CARDINAL_DIRECTION>.",
-        "1": "Procedi in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
-        "2": "Procedi in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>.",
-        "4": "Guida in direzione <CARDINAL_DIRECTION>.",
-        "5": "Guida in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
-        "6": "Guida in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>.",
-        "8": "Vai a piedi in direzione <CARDINAL_DIRECTION>.",
-        "9": "Vai a piedi in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
-        "10": "Vai a piedi in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>.",
-        "16": "Vai in bici in direzione <CARDINAL_DIRECTION>.",
-        "17": "Vai in bici in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
-        "18": "Vai in bici in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "nord",
-        "nordest",
-        "est",
-        "sudest",
-        "sud",
-        "sudovest",
-        "ovest",
-        "nordovest"
-      ],
-      "empty_street_name_labels": [
-        "il marciapiedi",
-        "la pista ciclabile",
-        "la pista per mountain bike"
-      ],
-      "example_phrases": {
-        "0": [
-          "Procedi in direzione sudest."
-        ],
-        "1": [
-          "Procedi in direzione ovest su Ferry Lane"
-        ],
-        "2": [
-          "Procedi in direzione sud su Summerfield Place, New York 1 14."
-        ],
-        "4": [
-          "Guida in direzione sudest."
-        ],
-        "5": [
-          "Guida in direzione ovest su Ferry Lane"
-        ],
-        "6": [
-          "Guida in direzione sud su Summerfield Place, New York 1 14."
-        ],
-        "8": [
-          "Vai a piedi in direzione sudest."
-        ],
-        "9": [
-          "Vai a piedi in direzione ovest su Ferry Lane"
-        ],
-        "10": [
-          "Vai a piedi in direzione sud su Summerfield Place, New York 1 14."
-        ],
-        "16": [
-          "Vai in bici in direzione sudest."
-        ],
-        "17": [
-          "Vai in bici in direzione ovest su Ferry Lane"
-        ],
-        "18": [
-          "Vai in bici in direzione sud su Summerfield Place, New York 1 14."
         ]
       }
     },
@@ -1037,144 +907,6 @@
         ],
         "3": [
           "Entra a destra in I 83 South."
-        ]
-      }
-    },
-    "post_transit_connection_destination": {
-      "phrases": {
-        "0": "Procedi in direzione <CARDINAL_DIRECTION>.",
-        "1": "Procedi in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
-        "2": "Procedi in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
-        "4": "Guida in direzione <CARDINAL_DIRECTION>.",
-        "5": "Guida in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
-        "6": "Guida in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
-        "8": "Vai a piedi in direzione <CARDINAL_DIRECTION>.",
-        "9": "Vai a piedi in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
-        "10": "Vai a piedi in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
-        "16": "Vai in bici in direzione <CARDINAL_DIRECTION>.",
-        "17": "Vai in bici in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
-        "18": "Vai in bici in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "nord",
-        "nordest",
-        "est",
-        "sudest",
-        "sud",
-        "sudovest",
-        "ovest",
-        "nordovest"
-      ],
-      "empty_street_name_labels": [
-        "il marciapiedi",
-        "la pista ciclabile",
-        "la pista per mountain bike"
-      ],
-      "example_phrases": {
-        "0": [
-          "Procedi in direzione ovest."
-        ],
-        "1": [
-          "Procedi in direzione nordest su Broadway"
-        ],
-        "2": [
-          "Procedi in direzione sud su Summerfield Place/NY 114. Continua su NY 114."
-        ],
-        "4": [
-          "Guida in direzione ovest."
-        ],
-        "5": [
-          "Guida in direzione nordest su Broadway"
-        ],
-        "6": [
-          "Guida in direzione sud su Summerfield Place/NY 114. Continua su NY 114."
-        ],
-        "8": [
-          "Vai a piedi in direzione ovest."
-        ],
-        "9": [
-          "Vai a piedi in direzione nordest su Broadway"
-        ],
-        "10": [
-          "Vai a piedi in direzione sud su Summerfield Place/NY 114. Continua su NY 114."
-        ],
-        "16": [
-          "Vai in bici in direzione ovest."
-        ],
-        "17": [
-          "Vai in bici in direzione nordest su Broadway"
-        ],
-        "18": [
-          "Vai in bici in direzione sud su Summerfield Place/NY 114. Continua su NY 114."
-        ]
-      }
-    },
-    "post_transit_connection_destination_verbal": {
-      "phrases": {
-        "0": "Procedi in direzione <CARDINAL_DIRECTION>.",
-        "1": "Procedi in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
-        "2": "Procedi in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>.",
-        "4": "Guida in direzione <CARDINAL_DIRECTION>.",
-        "5": "Guida in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
-        "6": "Guida in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>.",
-        "8": "Vai a piedi in direzione <CARDINAL_DIRECTION>.",
-        "9": "Vai a piedi in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
-        "10": "Vai a piedi in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>.",
-        "16": "Vai in bici in direzione <CARDINAL_DIRECTION>.",
-        "17": "Vai in bici in direzione <CARDINAL_DIRECTION> su <STREET_NAMES>.",
-        "18": "Vai in bici in direzione <CARDINAL_DIRECTION> su <BEGIN_STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "nord",
-        "nordest",
-        "est",
-        "sudest",
-        "sud",
-        "sudovest",
-        "ovest",
-        "nordovest"
-      ],
-      "empty_street_name_labels": [
-        "il marciapiedi",
-        "la pista ciclabile",
-        "la pista per mountain bike"
-      ],
-      "example_phrases": {
-        "0": [
-          "Procedi in direzione ovest."
-        ],
-        "1": [
-          "Procedi in direzione nordest su Broadway"
-        ],
-        "2": [
-          "Procedi in direzione sud su Summerfield Place, New York 1 14."
-        ],
-        "4": [
-          "Guida in direzione ovest."
-        ],
-        "5": [
-          "Guida in direzione nordest su Broadway"
-        ],
-        "6": [
-          "Guida in direzione sud su Summerfield Place, New York 1 14."
-        ],
-        "8": [
-          "Vai a piedi in direzione ovest."
-        ],
-        "9": [
-          "Vai a piedi in direzione nordest su Broadway"
-        ],
-        "10": [
-          "Vai a piedi in direzione sud su Summerfield Place, New York 1 14."
-        ],
-        "16": [
-          "Vai in bici in direzione ovest."
-        ],
-        "17": [
-          "Vai in bici in direzione nordest su Broadway"
-        ],
-        "18": [
-          "Vai in bici in direzione sud su Summerfield Place, New York 1 14."
         ]
       }
     },
@@ -1567,18 +1299,26 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Procedi in direzione <CARDINAL_DIRECTION> per <LENGTH>.",
-        "1": "Procedi in direzione <CARDINAL_DIRECTION> e prendi <STREET_NAMES> per <LENGTH>.",
-        "2": "Procedi in direzione <CARDINAL_DIRECTION> e prendi <BEGIN_STREET_NAMES>.",
-        "4": "Guida in direzione <CARDINAL_DIRECTION> per <LENGTH>.",
-        "5": "Guida in direzione <CARDINAL_DIRECTION> e prendi <STREET_NAMES> per <LENGTH>.",
-        "6": "Guida in direzione <CARDINAL_DIRECTION> e prendi <BEGIN_STREET_NAMES>.",
-        "8": "Vai a piedi in direzione <CARDINAL_DIRECTION> per <LENGTH>.",
-        "9": "Vai a piedi in direzione <CARDINAL_DIRECTION> e prendi <STREET_NAMES> per <LENGTH>.",
-        "10": "Vai a piedi in direzione <CARDINAL_DIRECTION> e prendi <BEGIN_STREET_NAMES>.",
+        "0": "Procedi in direzione <CARDINAL_DIRECTION>.",
+        "1": "Procedi in direzione <CARDINAL_DIRECTION> per <LENGTH>.",
+        "2": "Procedi in direzione <CARDINAL_DIRECTION> e prendi <STREET_NAMES>.",
+        "3": "Procedi in direzione <CARDINAL_DIRECTION> e prendi <STREET_NAMES> per <LENGTH>.",
+        "4": "Procedi in direzione <CARDINAL_DIRECTION> e prendi <BEGIN_STREET_NAMES>.",
+        "5": "Guida in direzione <CARDINAL_DIRECTION>.",
+        "6": "Guida in direzione <CARDINAL_DIRECTION> per <LENGTH>.",
+        "7": "Guida in direzione <CARDINAL_DIRECTION> e prendi <STREET_NAMES> per.",
+        "8": "Guida in direzione <CARDINAL_DIRECTION> e prendi <STREET_NAMES> per <LENGTH>.",
+        "9": "Guida in direzione <CARDINAL_DIRECTION> e prendi <BEGIN_STREET_NAMES>.",
+        "10": "Vai a piedi in direzione <CARDINAL_DIRECTION>.",
+        "11": "Vai a piedi in direzione <CARDINAL_DIRECTION> per <LENGTH>.",
+        "12": "Vai a piedi in direzione <CARDINAL_DIRECTION> e prendi <STREET_NAMES>.",
+        "13": "Vai a piedi in direzione <CARDINAL_DIRECTION> e prendi <STREET_NAMES> per <LENGTH>.",
+        "14": "Vai a piedi in direzione <CARDINAL_DIRECTION> e prendi <BEGIN_STREET_NAMES>.",
+        "15": "Vai in bici in direzione <CARDINAL_DIRECTION>.",
         "16": "Vai in bici in direzione <CARDINAL_DIRECTION> per <LENGTH>.",
-        "17": "Vai in bici in direzione <CARDINAL_DIRECTION> e prendi <STREET_NAMES> per <LENGTH>.",
-        "18": "Vai in bici in direzione <CARDINAL_DIRECTION> e prendi <BEGIN_STREET_NAMES>."
+        "17": "Vai in bici in direzione <CARDINAL_DIRECTION> e prendi <STREET_NAMES>.",
+        "18": "Vai in bici in direzione <CARDINAL_DIRECTION> e prendi <STREET_NAMES> per <LENGTH>.",
+        "19": "Vai in bici in direzione <CARDINAL_DIRECTION> e prendi <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
         "nord",
@@ -1611,44 +1351,72 @@
       ],
       "example_phrases": {
         "0": [
-          "Procedi in direzione est per mezzo miglio.",
-          "Procedi in direzione nord per 1 chilometro."
+          "Head east.",
+          "Head north."
         ],
         "1": [
-          "Procedi in direzione sudovest su quinta Avenue per un decimo di miglio."
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
         ],
         "2": [
-          "Procedi in direzione sud su North Prince Street, U.S. 2 22."
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "4": [
-          "Guida in direzione est per mezzo miglio.",
-          "Guida in direzione nord per 1 chilometro."
+          "Head south on North Prince Street, U.S. 2 22."
         ],
         "5": [
-          "Guida in direzione sudovest su quinta Avenue per un decimo di miglio."
+          "Drive east.",
+          "Drive north."
         ],
         "6": [
-          "Guida in direzione sud su North Prince Street, U.S. 2 22."
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
         ],
         "8": [
-          "Vai a piedi in direzione est per mezzo miglio.",
-          "Vai a piedi nord per 1 chilometro."
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "9": [
-          "Vai a piedi in direzione sudovest su quinta Avenue per un decimo di miglio."
+          "Drive south on North Prince Street, U.S. 2 22."
         ],
         "10": [
-          "Vai a piedi in direzione sud su North Prince Street, U.S. 2 22."
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
         ],
         "16": [
-          "Vai in bici in direzione est per mezzo miglio.",
-          "Vai in bici nord per 1 chilometro."
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
         ],
         "17": [
-          "Vai in bici in direzione sudovest su quinta Avenue per un decimo di miglio."
+          "Bike southwest on 5th Avenue."
         ],
         "18": [
-          "Vai in bici in direzione sud su North Prince Street, U.S. 2 22."
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
         ]
       }
     },
