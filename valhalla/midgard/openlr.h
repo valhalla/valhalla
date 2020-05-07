@@ -207,9 +207,14 @@ struct LineLocation {
   }
 
   LineLocation(const std::vector<LocationReferencePoint>& lrps, float poff, float noff)
-      : lrps(lrps), poff(std::round(poff / lrps.at(0).distance * 256) / 256 * lrps.at(0).distance),
-        noff(std::round(noff / lrps.at(lrps.size() - 2).distance * 256) / 256 *
-             lrps.at(lrps.size() - 2).distance) {
+      : lrps(lrps),
+        poff(lrps.at(0).distance > 0
+                 ? std::round(poff / lrps.at(0).distance * 256) / 256 * lrps.at(0).distance
+                 : 0.f),
+        noff(lrps.at(lrps.size() - 2).distance > 0
+                 ? std::round(noff / lrps.at(lrps.size() - 2).distance * 256) / 256 *
+                       lrps.at(lrps.size() - 2).distance
+                 : 0.f) {
     if (poff > lrps.front().distance)
       throw std::invalid_argument("Positive offset out of range");
     if (noff > std::next(lrps.rbegin())->distance)
