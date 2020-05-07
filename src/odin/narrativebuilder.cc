@@ -3969,7 +3969,7 @@ std::string NarrativeBuilder_ruRU::GetPluralCategory(size_t count) {
   }
   return kPluralCategoryOtherKey;
 }
-  
+
 std::string NarrativeBuilder::FormBssManeuverType(DirectionsLeg_Maneuver_BssManeuverType type) {
   switch (type) {
     case DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare: {
