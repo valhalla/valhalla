@@ -24,7 +24,7 @@ namespace {
 #endif
 
 float GetLocalTileSize() {
-  return (baldr::TileHierarchy::levels().rbegin()->second.tiles).TileSize();
+  return (TileHierarchy::levels().rbegin()->second.tiles).TileSize();
 }
 
 cost_ptr_t MakeCosting(std::string cost_mode) {
@@ -75,7 +75,7 @@ protected:
   TravelMode travelmode_;
 
   std::shared_ptr<GraphReader> graph_reader_;
-  std::shared_ptr<meili::CandidateGridQuery> index_;
+  std::shared_ptr<CandidateGridQuery> index_;
 };
 
 BENCHMARK_DEFINE_F(CandidateSearchFixture, BM_CandidateSearch)(benchmark::State& state) {
