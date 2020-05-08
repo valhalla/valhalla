@@ -27,7 +27,7 @@ float GetLocalTileSize() {
   return (TileHierarchy::levels().rbegin()->second.tiles).TileSize();
 }
 
-cost_ptr_t MakeCosting(std::string cost_mode) {
+cost_ptr_t MakeCosting(const std::string& cost_mode) {
   Options options;
   for (int i = 0; i < Costing_MAX; ++i) {
     options.add_costing_options();
