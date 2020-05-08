@@ -73,7 +73,7 @@ struct graph_tile_builder {
 
     auto res = memory.emplace(id, std::make_shared<std::vector<char>>(std::move(mem)));
     auto mem2 = std::make_unique<SharedVectorGraphMemory>(res.first->second);
-    tiles.emplace(id, std::make_shared<vb::GraphTile>(id, std::move(mem2)));
+    tiles.emplace(id, vb::GraphTile(id, std::move(mem2)));
     nodes.clear();
     edges.clear();
   }
@@ -82,7 +82,7 @@ struct graph_tile_builder {
   std::vector<vb::DirectedEdge> edges;
 
   std::unordered_map<vb::GraphId, std::shared_ptr<std::vector<char>>> memory;
-  std::unordered_map<vb::GraphId, std::shared_ptr<vb::GraphTile>> tiles;
+  std::unordered_map<vb::GraphId, vb::GraphTile> tiles;
 };
 
 boost::property_tree::ptree read_json(const std::string& json) {
@@ -95,10 +95,10 @@ boost::property_tree::ptree read_json(const std::string& json) {
 const boost::property_tree::ptree fake_config = read_json("{\"tile_dir\": \"/file/does/not/exist\"}");
 
 struct test_graph_reader : public vb::GraphReader {
-  test_graph_reader(const std::unordered_map<vb::GraphId, std::shared_ptr<vb::GraphTile>>& tiles)
+  test_graph_reader(std::unordered_map<vb::GraphId, vb::GraphTile>&& tiles)
       : GraphReader(fake_config) {
-    for (const auto& it : tiles)
-      cache_->Put(it.first, it.second, 0);
+    for (auto& it : tiles)
+      cache_->Put(it.first, std::move(it.second), 0);
   }
 };
 

@@ -221,21 +221,21 @@ void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::st
     filesystem::remove(tmp_location);
 }
 
-std::shared_ptr<const GraphTile> GraphTile::CacheTileURL(const std::string& tile_url,
-                                                         const GraphId& graphid,
-                                                         tile_getter_t* tile_getter,
-                                                         const std::string& cache_location) {
-  auto tile = std::make_shared<GraphTile>();
+GraphTile GraphTile::CacheTileURL(const std::string& tile_url,
+                                  const GraphId& graphid,
+                                  tile_getter_t* tile_getter,
+                                  const std::string& cache_location) {
+  GraphTile tile;
 
   // Don't bother with invalid ids
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
-    return std::move(tile);
+    return tile;
   }
 
   auto uri = MakeSingleTileUrl(tile_url, graphid);
   auto result = tile_getter->get(uri);
   if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
-    return std::move(tile);
+    return tile;
   }
   // try to cache it on disk so we dont have to keep fetching it from url
   if (!cache_location.empty()) {
@@ -248,14 +248,14 @@ std::shared_ptr<const GraphTile> GraphTile::CacheTileURL(const std::string& tile
 
   // turn the memory into a tile
   if (tile_getter->gzipped()) {
-    tile->DecompressTile(graphid, result.bytes_);
+    tile.DecompressTile(graphid, result.bytes_);
   } // we dont need to decompress so just take ownership of the data
   else {
-    tile->memory_ = std::make_unique<const VectorGraphMemory>(std::move(result.bytes_));
-    tile->Initialize(graphid);
+    tile.memory_ = std::make_unique<const VectorGraphMemory>(std::move(result.bytes_));
+    tile.Initialize(graphid);
   }
 
-  return std::move(tile);
+  return tile;
 }
 
 GraphTile::~GraphTile() {
