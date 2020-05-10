@@ -11,13 +11,13 @@ add_custom_target(run-benchmarks)
 set_target_properties(run-benchmarks PROPERTIES FOLDER "Benchmarks")
 
 # Benchmarks generally require utrecht test tiles to be present, so add this dependency by default.
-add_dependencies(benchmarks utrecht_tiles)
+#add_dependencies(benchmarks utrecht_tiles)
 
 # Macro for defining Google Benchmark microbenchmark targets
 macro (add_valhalla_benchmark target_file)
   set(target_name benchmark-${target_file})
-  add_executable(${target_name}
-    ${target_file}.cc)
+  add_executable(${target_name} ${target_file}.cc)
+  target_include_directories(${target_name} PRIVATE .)
   set_target_properties(${target_name} PROPERTIES FOLDER "Benchmarks")
   set_target_properties(${target_name}
     PROPERTIES

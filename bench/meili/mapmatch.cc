@@ -11,6 +11,10 @@
 #include "sif/costfactory.h"
 #include "tyr/actor.h"
 
+#include "bench/common/utils.h"
+
+using valhalla::bench::LoadFile;
+
 using namespace valhalla::midgard;
 using namespace valhalla::meili;
 using namespace valhalla::sif;
@@ -81,19 +85,6 @@ BENCHMARK_DEFINE_F(OfflineMapmatchFixture, BasicOfflineMatch)(benchmark::State& 
 }
 
 BENCHMARK_REGISTER_F(OfflineMapmatchFixture, BasicOfflineMatch);
-
-// Load fixture files, intended to mirror test cases defined in test/mapmatch.cc.
-
-std::string LoadFile(const std::string& filename) {
-  std::stringstream ss;
-  std::string line;
-  std::ifstream input_file;
-  input_file.open(filename.c_str());
-  while (std::getline(input_file, line)) {
-    ss << line;
-  }
-  return ss.str();
-}
 
 const std::vector<std::string> kBenchmarkCases = {
     // Intersection matching test cases

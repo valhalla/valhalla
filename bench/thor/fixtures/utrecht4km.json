@@ -1,0 +1,15 @@
+{
+  "locations": [
+    {
+      "lon": 5.08531221,
+      "lat": 52.0938563,
+      "type": "break"
+    },
+    {
+      "lon": 5.1117335,
+      "lat": 52.0851706,
+      "type": "break"
+    }
+  ],
+  "costing": "auto"
+}

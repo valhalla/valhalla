@@ -1,2 +1,4 @@
 add_valhalla_benchmark(costmatrix)
 add_valhalla_benchmark(routes)
+add_valhalla_benchmark(astar)
+add_valhalla_benchmark(routing)
