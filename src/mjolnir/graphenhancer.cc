@@ -18,6 +18,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include <boost/format.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>

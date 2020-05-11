@@ -164,10 +164,10 @@ TEST(OpenLR, TooSmallReference) {
 
 TEST(OpenLR, CreateLinearReference) {
   // make a reference directly using lrps
-  std::vector<PointLL> points{{-76.55015772558436, 40.482238379871575},
-                              {-76.55060287976856, 40.48275880818994},
-                              {-76.55108895828207, 40.489983794570605},
-                              {-76.54576249703334, 40.49195968608316}};
+  std::vector<PointLL> points{{-76.550157, 40.482238},
+                              {-76.550602, 40.482758},
+                              {-76.551088, 40.489983},
+                              {-76.545762, 40.491959}};
   std::vector<LocationReferencePoint> lrps;
   unsigned char frc = 0;
   auto fow = LocationReferencePoint::FormOfWay::MOTORWAY;
@@ -186,6 +186,8 @@ TEST(OpenLR, CreateLinearReference) {
       bearing %= 360;
       lrps.emplace_back(p.lng(), p.lat(), bearing, frc, fow, lrps.empty() ? nullptr : &lrps.back());
     }
+    EXPECT_NEAR(lrps.back().longitude, p.lng(), .00002);
+    EXPECT_NEAR(lrps.back().latitude, p.lat(), .00002);
     // try different frcs and fows for kicks
     ++frc;
     fow = static_cast<LocationReferencePoint::FormOfWay>(static_cast<uint8_t>(fow) + 1);
