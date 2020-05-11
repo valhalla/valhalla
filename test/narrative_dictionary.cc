@@ -50,18 +50,26 @@ const std::map<std::string, std::string> kExpectedStartPhrases =
      {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}};
 
 const std::map<std::string, std::string> kExpectedStartVerbalPhrases =
-    {{"0", "Head <CARDINAL_DIRECTION> for <LENGTH>."},
-     {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
-     {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-     {"4", "Drive <CARDINAL_DIRECTION> for <LENGTH>."},
-     {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
-     {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-     {"8", "Walk <CARDINAL_DIRECTION> for <LENGTH>."},
-     {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
-     {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+    {{"0", "Head <CARDINAL_DIRECTION>."},
+     {"1", "Head <CARDINAL_DIRECTION> for <LENGTH>."},
+     {"2", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"3", "Head <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
+     {"4", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+     {"5", "Drive <CARDINAL_DIRECTION>."},
+     {"6", "Drive <CARDINAL_DIRECTION> for <LENGTH>."},
+     {"7", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"8", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
+     {"9", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+     {"10", "Walk <CARDINAL_DIRECTION>."},
+     {"11", "Walk <CARDINAL_DIRECTION> for <LENGTH>."},
+     {"12", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"13", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
+     {"14", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
+     {"15", "Bike <CARDINAL_DIRECTION>."},
      {"16", "Bike <CARDINAL_DIRECTION> for <LENGTH>."},
-     {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
-     {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."}};
+     {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."},
+     {"18", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES> for <LENGTH>."},
+     {"19", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."}};
 
 const std::map<std::string, std::string> kExpectedExitPhrases =
     {{"0", "Take the exit on the <RELATIVE_DIRECTION>."},
@@ -183,34 +191,6 @@ const std::map<std::string, std::string> kExpectedEnterFerryVerbalPhrases =
      {"1", "Take the <STREET_NAMES>."},
      {"2", "Take the <STREET_NAMES> <FERRY_LABEL>."}};
 
-const std::map<std::string, std::string> kExpectedExitFerryPhrases =
-    {{"0", "Head <CARDINAL_DIRECTION>."},
-     {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-     {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
-     {"4", "Drive <CARDINAL_DIRECTION>."},
-     {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-     {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
-     {"8", "Walk <CARDINAL_DIRECTION>."},
-     {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-     {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
-     {"16", "Bike <CARDINAL_DIRECTION>."},
-     {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-     {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}};
-
-const std::map<std::string, std::string> kExpectedExitFerryVerbalPhrases =
-    {{"0", "Head <CARDINAL_DIRECTION>."},
-     {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-     {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-     {"4", "Drive <CARDINAL_DIRECTION>."},
-     {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-     {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-     {"8", "Walk <CARDINAL_DIRECTION>."},
-     {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-     {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-     {"16", "Bike <CARDINAL_DIRECTION>."},
-     {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-     {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."}};
-
 const std::map<std::string, std::string> kExpectedTransitConnectionStartPhrases =
     {{"0", "Enter the station."},
      {"1", "Enter the <TRANSIT_STOP>."},
@@ -252,34 +232,6 @@ const std::map<std::string, std::string> kExpectedArrivePhrases =
 
 const std::map<std::string, std::string> kExpectedArriveVerbalPhrases =
     {{"0", "Arrive at <TIME>."}, {"1", "Arrive at <TIME> at <TRANSIT_STOP>."}};
-
-const std::map<std::string, std::string> kExpectedPostTransitConnectionDestinationPhrases =
-    {{"0", "Head <CARDINAL_DIRECTION>."},
-     {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-     {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
-     {"4", "Drive <CARDINAL_DIRECTION>."},
-     {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-     {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
-     {"8", "Walk <CARDINAL_DIRECTION>."},
-     {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-     {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
-     {"16", "Bike <CARDINAL_DIRECTION>."},
-     {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-     {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}};
-
-const std::map<std::string, std::string> kExpectedPostTransitConnectionDestinationVerbalPhrases =
-    {{"0", "Head <CARDINAL_DIRECTION>."},
-     {"1", "Head <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-     {"2", "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-     {"4", "Drive <CARDINAL_DIRECTION>."},
-     {"5", "Drive <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-     {"6", "Drive <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-     {"8", "Walk <CARDINAL_DIRECTION>."},
-     {"9", "Walk <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-     {"10", "Walk <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."},
-     {"16", "Bike <CARDINAL_DIRECTION>."},
-     {"17", "Bike <CARDINAL_DIRECTION> on <STREET_NAMES>."},
-     {"18", "Bike <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."}};
 
 const NarrativeDictionary& GetNarrativeDictionary(const std::string& lang_tag) {
   // Get the locale dictionary
@@ -475,13 +427,21 @@ TEST(NarrativeDictionary, test_en_US_continue_verbal_alert) {
 TEST(NarrativeDictionary, test_en_US_continue_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
-  // "0": "Continue for <LENGTH>.",
+  // "0": "Continue.",
   const auto& phrase_0 = dictionary.continue_verbal_subset.phrases.at("0");
-  validate(phrase_0, "Continue for <LENGTH>.");
+  validate(phrase_0, "Continue.");
 
-  // "1": "Continue on <STREET_NAMES> for <LENGTH>."
+  // "1": "Continue for <LENGTH>.",
   const auto& phrase_1 = dictionary.continue_verbal_subset.phrases.at("1");
-  validate(phrase_1, "Continue on <STREET_NAMES> for <LENGTH>.");
+  validate(phrase_1, "Continue for <LENGTH>.");
+
+  // "2": "Continue on <STREET_NAMES>."
+  const auto& phrase_2 = dictionary.continue_verbal_subset.phrases.at("2");
+  validate(phrase_2, "Continue on <STREET_NAMES>.");
+
+  // "3": "Continue on <STREET_NAMES> for <LENGTH>."
+  const auto& phrase_3 = dictionary.continue_verbal_subset.phrases.at("3");
+  validate(phrase_3, "Continue on <STREET_NAMES> for <LENGTH>.");
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
   const auto& empty_street_name_labels = dictionary.continue_verbal_subset.empty_street_name_labels;
@@ -1108,36 +1068,6 @@ TEST(NarrativeDictionary, test_en_US_enter_ferry_verbal) {
   validate(dictionary.enter_ferry_verbal_subset.ferry_label, kExpectedFerryLabel);
 }
 
-TEST(NarrativeDictionary, test_en_US_exit_ferry) {
-  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
-
-  // Validate exit_ferry phrases
-  validate(dictionary.exit_ferry_subset.phrases, kExpectedExitFerryPhrases);
-
-  // cardinal_directions
-  const auto& cardinal_directions = dictionary.exit_ferry_subset.cardinal_directions;
-  validate(cardinal_directions, kExpectedCardinalDirections);
-
-  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
-  const auto& empty_street_name_labels = dictionary.exit_ferry_subset.empty_street_name_labels;
-  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
-}
-
-TEST(NarrativeDictionary, test_en_US_exit_ferry_verbal) {
-  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
-
-  // Validate exit_ferry_verbal phrases
-  validate(dictionary.exit_ferry_verbal_subset.phrases, kExpectedExitFerryVerbalPhrases);
-
-  // cardinal_directions
-  const auto& cardinal_directions = dictionary.exit_ferry_verbal_subset.cardinal_directions;
-  validate(cardinal_directions, kExpectedCardinalDirections);
-
-  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
-  const auto& empty_street_name_labels = dictionary.exit_ferry_verbal_subset.empty_street_name_labels;
-  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
-}
-
 TEST(NarrativeDictionary, test_en_US_transit_connection_start) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
@@ -1334,42 +1264,6 @@ TEST(NarrativeDictionary, test_en_US_transit_transfer_verbal) {
   // empty_transit_name_labels
   const auto& empty_transit_name_labels = dictionary.transit_subset.empty_transit_name_labels;
   validate(empty_transit_name_labels, kExpectedEmptyTransitNameLabels);
-}
-
-TEST(NarrativeDictionary, test_en_US_post_transit_connection_destination) {
-  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
-
-  // Validate post_transit_connection_destination phrases
-  validate(dictionary.post_transit_connection_destination_subset.phrases,
-           kExpectedPostTransitConnectionDestinationPhrases);
-
-  // cardinal_directions
-  const auto& cardinal_directions =
-      dictionary.post_transit_connection_destination_subset.cardinal_directions;
-  validate(cardinal_directions, kExpectedCardinalDirections);
-
-  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
-  const auto& empty_street_name_labels =
-      dictionary.post_transit_connection_destination_subset.empty_street_name_labels;
-  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
-}
-
-TEST(NarrativeDictionary, test_en_US_post_transit_connection_destination_verbal) {
-  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
-
-  // Validate post_transit_connection_destination_verbal phrases
-  validate(dictionary.post_transit_connection_destination_verbal_subset.phrases,
-           kExpectedPostTransitConnectionDestinationVerbalPhrases);
-
-  // cardinal_directions
-  const auto& cardinal_directions =
-      dictionary.post_transit_connection_destination_verbal_subset.cardinal_directions;
-  validate(cardinal_directions, kExpectedCardinalDirections);
-
-  // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
-  const auto& empty_street_name_labels =
-      dictionary.post_transit_connection_destination_verbal_subset.empty_street_name_labels;
-  validate(empty_street_name_labels, kExpectedEmptyStreetNameLabels);
 }
 
 TEST(NarrativeDictionary, test_en_US_post_transition_verbal) {

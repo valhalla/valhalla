@@ -164,18 +164,16 @@ TEST(OpenLR, TooSmallReference) {
 
 TEST(OpenLR, CreateLinearReference) {
   // make a reference directly using lrps
-  std::vector<PointLL> points{{-76.55015772558436, 40.482238379871575},
-                              {-76.55060287976856, 40.48275880818994},
-                              {-76.55108895828207, 40.489983794570605},
-                              {-76.54576249703334, 40.49195968608316}};
+  std::vector<PointLL> points{{-76.550157, 40.482238},
+                              {-76.550602, 40.482758},
+                              {-76.551088, 40.489983},
+                              {-76.545762, 40.491959}};
   std::vector<LocationReferencePoint> lrps;
   unsigned char frc = 0;
   auto fow = LocationReferencePoint::FormOfWay::MOTORWAY;
   unsigned char lowest_frc_next_point = 7;
   uint16_t bearing;
   for (const auto& p : points) {
-    // frc and fow are 3 bits wide, we dont use the last 2 bits for anything
-    unsigned char attribute1 = (frc << 3) | fow;
     // first or intermediate point
     if (&p != &points.back()) {
       bearing = static_cast<uint16_t>(p.Heading(*std::next(&p)));
@@ -188,6 +186,8 @@ TEST(OpenLR, CreateLinearReference) {
       bearing %= 360;
       lrps.emplace_back(p.lng(), p.lat(), bearing, frc, fow, lrps.empty() ? nullptr : &lrps.back());
     }
+    EXPECT_NEAR(lrps.back().longitude, p.lng(), .00002);
+    EXPECT_NEAR(lrps.back().latitude, p.lat(), .00002);
     // try different frcs and fows for kicks
     ++frc;
     fow = static_cast<LocationReferencePoint::FormOfWay>(static_cast<uint8_t>(fow) + 1);
@@ -204,6 +204,14 @@ TEST(OpenLR, CreateLinearReference) {
   // if positive or negative offset is too large it should throw
   EXPECT_THROW(LineLocation(lrps, lrps[0].distance + 1, 0), std::invalid_argument);
   EXPECT_THROW(LineLocation(lrps, 0, lrps[lrps.size() - 2].distance + 1), std::invalid_argument);
+
+  // make a short line location so that poff and noff must be 0
+  lrps.clear();
+  lrps.emplace_back(0, 0, 90, frc, fow, nullptr, 5, lowest_frc_next_point);
+  lrps.emplace_back(.000005, 0, 270, frc, fow, &lrps.back());
+  LineLocation short_location(lrps, 0, 0);
+  EXPECT_EQ(short_location.poff, 0.f);
+  EXPECT_EQ(short_location.noff, 0.f);
 }
 
 } // namespace

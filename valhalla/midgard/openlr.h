@@ -14,6 +14,8 @@ namespace OpenLR {
 
 namespace {
 
+constexpr double geom_scale = 100000;
+
 template <typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
 inline int sgn(const T val) {
   return (T(0) < val) - (val < T(0));
@@ -129,9 +131,10 @@ struct LocationReferencePoint {
                          unsigned char lfrcnp = 0)
       : longitude(!prev ? integer2decimal(decimal2integer(longitude))
                         : prev->longitude +
-                              (std::round((longitude - prev->longitude) * 100000) / 10000)),
+                              (std::round((longitude - prev->longitude) * geom_scale) / geom_scale)),
         latitude(!prev ? integer2decimal(decimal2integer(latitude))
-                       : prev->latitude + (std::round((latitude - prev->latitude) * 100000) / 10000)),
+                       : prev->latitude +
+                             (std::round((latitude - prev->latitude) * geom_scale) / geom_scale)),
         bearing(integer2bearing(bearing2integer(bearing))), frc(frc), fow(fow),
         distance(integer2distance(distance2integer(distance))), lfrcnp(lfrcnp) {
   }
@@ -161,7 +164,7 @@ struct LineLocation {
   LineLocation(const std::string& reference) {
     //  Line location data size: 16 + (n-2)*7 + [0/1/2] bytes
     if (reference.size() < 16)
-      throw std::invalid_argument("OpenLR reference is too small");
+      throw std::invalid_argument("OpenLR reference is too small " + reference);
 
     const auto raw = reinterpret_cast<const unsigned char*>(reference.data());
     const auto size = reference.size();
@@ -170,7 +173,7 @@ struct LineLocation {
     // Status, version 3, has attributes, ArF 'Circle or no area location'
     auto status = raw[index++] & 0x7f;
     if (status != 0x0b)
-      throw std::invalid_argument("OpenLR reference");
+      throw std::invalid_argument("OpenLR reference invalid status " + reference);
 
     // First location reference point
     auto longitude = integer2decimal(fixed<std::int32_t, 3>(raw, index));
@@ -183,8 +186,8 @@ struct LineLocation {
 
     // Intermediate location reference points
     while (index + 7 + 6 <= size) {
-      longitude += fixed<std::int32_t, 2>(raw, index) / 100000;
-      latitude += fixed<std::int32_t, 2>(raw, index) / 100000;
+      longitude += fixed<std::int32_t, 2>(raw, index) / geom_scale;
+      latitude += fixed<std::int32_t, 2>(raw, index) / geom_scale;
       attribute1 = raw[index++];
       attribute2 = raw[index++];
       attribute3 = raw[index++];
@@ -193,8 +196,8 @@ struct LineLocation {
     }
 
     // Last location reference point
-    longitude += fixed<std::int32_t, 2>(raw, index) / 100000;
-    latitude += fixed<std::int32_t, 2>(raw, index) / 100000;
+    longitude += fixed<std::int32_t, 2>(raw, index) / geom_scale;
+    latitude += fixed<std::int32_t, 2>(raw, index) / geom_scale;
     attribute1 = raw[index++];
     auto attribute4 = raw[index++];
 
@@ -207,9 +210,14 @@ struct LineLocation {
   }
 
   LineLocation(const std::vector<LocationReferencePoint>& lrps, float poff, float noff)
-      : lrps(lrps), poff(std::round(poff / lrps.at(0).distance * 256) / 256 * lrps.at(0).distance),
-        noff(std::round(noff / lrps.at(lrps.size() - 2).distance * 256) / 256 *
-             lrps.at(lrps.size() - 2).distance) {
+      : lrps(lrps),
+        poff(lrps.at(0).distance > 0
+                 ? std::round(poff / lrps.at(0).distance * 256) / 256 * lrps.at(0).distance
+                 : 0.f),
+        noff(lrps.at(lrps.size() - 2).distance > 0
+                 ? std::round(noff / lrps.at(lrps.size() - 2).distance * 256) / 256 *
+                       lrps.at(lrps.size() - 2).distance
+                 : 0.f) {
     if (poff > lrps.front().distance)
       throw std::invalid_argument("Positive offset out of range");
     if (noff > std::next(lrps.rbegin())->distance)
@@ -261,8 +269,8 @@ struct LineLocation {
     // Subsequent location reference points are offset lon lat from the first
     for (auto lrp = std::next(lrps.begin()); lrp != std::prev(lrps.end()); ++lrp) {
       // First longitude
-      append2(static_cast<std::int32_t>(std::round(100000 * (lrp->longitude - longitude))));
-      append2(static_cast<std::int32_t>(std::round(100000 * (lrp->latitude - latitude))));
+      append2(static_cast<std::int32_t>(std::round(geom_scale * (lrp->longitude - longitude))));
+      append2(static_cast<std::int32_t>(std::round(geom_scale * (lrp->latitude - latitude))));
       result.push_back(((lrp->frc & 0x7) << 3) | (lrp->fow & 0x7));
       result.push_back(((lrp->lfrcnp & 0x7) << 5) | (bearing2integer(lrp->bearing) & 0x1f));
       result.push_back(distance2integer(lrp->distance));
@@ -275,8 +283,8 @@ struct LineLocation {
     const auto pofff = poff != 0.f;
     const auto nofff = noff != 0.f;
     const auto& last = lrps.back();
-    append2(static_cast<std::int32_t>(std::round(100000 * (last.longitude - longitude))));
-    append2(static_cast<std::int32_t>(std::round(100000 * (last.latitude - latitude))));
+    append2(static_cast<std::int32_t>(std::round(geom_scale * (last.longitude - longitude))));
+    append2(static_cast<std::int32_t>(std::round(geom_scale * (last.latitude - latitude))));
     result.push_back(((last.frc & 0x7) << 3) | (last.fow & 0x7));
     result.push_back((pofff << 6) | (nofff << 5) | (bearing2integer(last.bearing) & 0x1f));
 

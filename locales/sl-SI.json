@@ -135,8 +135,10 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Nadaljujte <LENGTH>.",
-        "1": "Po <STREET_NAMES> nadaljujte <LENGTH>."
+        "0": "Nadaljujte.",
+        "1": "Nadaljujte <LENGTH>.",
+        "2": "Nadaljujte po <STREET_NAMES>.",
+        "3": "Po <STREET_NAMES> nadaljujte <LENGTH>."
       },
       "empty_street_name_labels": [
         "pešpoti",
@@ -159,10 +161,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Nadaljujte 300 čevljev."
+          "Continue."
         ],
         "1": [
-          "Po 10th Avenue nadaljujte 3 desetinke milje."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
         ]
       }
     },
@@ -516,144 +524,6 @@
         ],
         "29": [
           "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
-        ]
-      }
-    },
-    "exit_ferry": {
-      "phrases": {
-        "0": "Pojdite <CARDINAL_DIRECTION>.",
-        "1": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "2": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>.",
-        "4": "Peljite <CARDINAL_DIRECTION>.",
-        "5": "Na <STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
-        "6": "Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>.",
-        "8": "Pojdite <CARDINAL_DIRECTION>.",
-        "9": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "10": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>.",
-        "16": "Pojdite <CARDINAL_DIRECTION>.",
-        "17": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "proti severu",
-        "proti severovzhodu",
-        "proti vzhodu",
-        "proti jugovzhodu",
-        "proti jugu",
-        "proti jugozahodu",
-        "proti zahodu",
-        "proti severozahodu"
-      ],
-      "empty_street_name_labels": [
-        "pešpoti",
-        "kolesarski stezi",
-        "stezi za gorsko kolo"
-      ],
-      "example_phrases": {
-        "0": [
-          "Pojdite proti jugovzhodu."
-        ],
-        "1": [
-          "Na Ferry Lane pojdite proti zahodu."
-        ],
-        "2": [
-          "Na Summerfield Place/NY 114 pojdite proti jugu. Nadaljujte po NY 114."
-        ],
-        "4": [
-          "Peljite proti jugovzhodu."
-        ],
-        "5": [
-          "Na Ferry Lane peljite proti zahodu."
-        ],
-        "6": [
-          "Na Summerfield Place/NY 114 peljite proti jugu. Nadaljujte po NY 114."
-        ],
-        "8": [
-          "Pojdite proti jugovzhodu."
-        ],
-        "9": [
-          "Na Ferry Lane pojdite proti zahodu."
-        ],
-        "10": [
-          "Na Summerfield Place/NY 114 pojdite proti jugu. Nadaljujte po NY 114."
-        ],
-        "16": [
-          "Pojdite proti jugovzhodu."
-        ],
-        "17": [
-          "Na Ferry Lane pojdite proti zahodu."
-        ],
-        "18": [
-          "Na Summerfield Place/NY 114 pojdite proti jugu. Nadaljujte po NY 114."
-        ]
-      }
-    },
-    "exit_ferry_verbal": {
-      "phrases": {
-        "0": "Pojdite <CARDINAL_DIRECTION>.",
-        "1": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "2": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "4": "Peljite <CARDINAL_DIRECTION>.",
-        "5": "Na <STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
-        "6": "Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
-        "8": "Pojdite <CARDINAL_DIRECTION>.",
-        "9": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "10": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "16": "Pojdite <CARDINAL_DIRECTION>.",
-        "17": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>."
-      },
-      "cardinal_directions": [
-        "proti severu",
-        "proti severovzhodu",
-        "proti vzhodu",
-        "proti jugovzhodu",
-        "proti jugu",
-        "proti jugozahodu",
-        "proti zahodu",
-        "proti severozahodu"
-      ],
-      "empty_street_name_labels": [
-        "pešpoti",
-        "kolesarski stezi",
-        "stezi za gorsko kolo"
-      ],
-      "example_phrases": {
-        "0": [
-          "Pojdite proti jugovzhodu."
-        ],
-        "1": [
-          "Na Ferry Lane pojdite proti zahodu."
-        ],
-        "2": [
-          "Na Summerfield Place, New York 114 pojdite proti jugu."
-        ],
-        "4": [
-          "Peljite proti jugovzhodu."
-        ],
-        "5": [
-          "Na Ferry Lane peljite proti zahodu."
-        ],
-        "6": [
-          "Na Summerfield Place, New York 114 peljite proti jugu."
-        ],
-        "8": [
-          "Pojdite proti jugovzhodu."
-        ],
-        "9": [
-          "Na Ferry Lane pojdite proti zahodu."
-        ],
-        "10": [
-          "Na Summerfield Place, New York 114 pojdite proti jugu."
-        ],
-        "16": [
-          "Pojdite proti jugovzhodu."
-        ],
-        "17": [
-          "Na Ferry Lane pojdite proti zahodu."
-        ],
-        "18": [
-          "Na Summerfield Place, New York 114 pojdite proti jugu."
         ]
       }
     },
@@ -1037,144 +907,6 @@
         ],
         "3": [
           "Zapeljite desno na I 83 South."
-        ]
-      }
-    },
-    "post_transit_connection_destination": {
-      "phrases": {
-        "0": "Pojdite <CARDINAL_DIRECTION>.",
-        "1": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "2": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>.",
-        "4": "Peljite <CARDINAL_DIRECTION>.",
-        "5": "Na <STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
-        "6": "Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>.",
-        "8": "Pojdite <CARDINAL_DIRECTION>.",
-        "9": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "10": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>.",
-        "16": "Pojdite <CARDINAL_DIRECTION>.",
-        "17": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "proti severu",
-        "proti severovzhodu",
-        "proti vzhodu",
-        "proti jugovzhodu",
-        "proti jugu",
-        "proti jugozahodu",
-        "proti zahodu",
-        "proti severozahodu"
-      ],
-      "empty_street_name_labels": [
-        "pešpoti",
-        "kolesarski stezi",
-        "stezi za gorsko kolo"
-      ],
-      "example_phrases": {
-        "0": [
-          "Pojdite proti zahodu."
-        ],
-        "1": [
-          "Na Broadway pojdite proti severovzhodu."
-        ],
-        "2": [
-          "Na Summerfield Place/NY 114 pojdite proti jugu. Nadaljujte po NY 114."
-        ],
-        "4": [
-          "Peljite proti zahodu."
-        ],
-        "5": [
-          "Na Broadway peljite proti severovzhodu."
-        ],
-        "6": [
-          "Na Summerfield Place/NY 114 peljite proti jugu. Nadaljujte po NY 114."
-        ],
-        "8": [
-          "Pojdite proti zahodu."
-        ],
-        "9": [
-          "Na Broadway pojdite proti severovzhodu."
-        ],
-        "10": [
-          "Na Summerfield Place/NY 114 pojdite proti jugu. Nadaljujte po NY 114."
-        ],
-        "16": [
-          "Pojdite proti zahodu."
-        ],
-        "17": [
-          "Na Broadway pojdite proti severovzhodu."
-        ],
-        "18": [
-          "Na Summerfield Place/NY 114 pojdite proti jugu. Nadaljujte po NY 114."
-        ]
-      }
-    },
-    "post_transit_connection_destination_verbal": {
-      "phrases": {
-        "0": "Pojdite <CARDINAL_DIRECTION>.",
-        "1": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "2": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "4": "Peljite <CARDINAL_DIRECTION>.",
-        "5": "Na <STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
-        "6": "Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
-        "8": "Pojdite <CARDINAL_DIRECTION>.",
-        "9": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "10": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "16": "Pojdite <CARDINAL_DIRECTION>.",
-        "17": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>."
-      },
-      "cardinal_directions": [
-        "proti severu",
-        "proti severovzhodu",
-        "proti vzhodu",
-        "proti jugovzhodu",
-        "proti jugu",
-        "proti jugozahodu",
-        "proti zahodu",
-        "proti severozahodu"
-      ],
-      "empty_street_name_labels": [
-        "pešpoti",
-        "kolesarski stezi",
-        "stezi za gorsko kolo"
-      ],
-      "example_phrases": {
-        "0": [
-          "Pojdite proti zahodu."
-        ],
-        "1": [
-          "Na Broadway pojdite proti severovzhodu."
-        ],
-        "2": [
-          "Na Summerfield Place, New York pojdite proti jugu."
-        ],
-        "4": [
-          "Peljite proti zahodu."
-        ],
-        "5": [
-          "Na Broadway peljite proti severovzhodu."
-        ],
-        "6": [
-          "Na Summerfield Place, New York peljite proti jugu."
-        ],
-        "8": [
-          "Pojdite proti zahodu."
-        ],
-        "9": [
-          "Na Broadway pojdite proti severovzhodu."
-        ],
-        "10": [
-          "Na Summerfield Place, New York pojdite proti jugu."
-        ],
-        "16": [
-          "Pojdite proti zahodu."
-        ],
-        "17": [
-          "Na Broadway pojdite proti severovzhodu."
-        ],
-        "18": [
-          "Na Summerfield Place, New York 114 pojdite proti jugu."
         ]
       }
     },
@@ -1569,18 +1301,26 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Pojdite <LENGTH> <CARDINAL_DIRECTION>.",
-        "1": "Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.",
-        "2": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
-        "4": "Peljite <LENGTH> <CARDINAL_DIRECTION>.",
-        "5": "Na <STREET_NAMES> peljite <LENGTH> <CARDINAL_DIRECTION>.",
-        "6": "Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
-        "8": "Pojdite <LENGTH> <CARDINAL_DIRECTION>.",
-        "9": "Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.",
-        "10": "Pojdite <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "0": "Pojdite <CARDINAL_DIRECTION>.",
+        "1": "Pojdite <LENGTH> <CARDINAL_DIRECTION>.",
+        "2": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "3": "Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.",
+        "4": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "5": "Peljite <CARDINAL_DIRECTION>.",
+        "6": "Peljite <LENGTH> <CARDINAL_DIRECTION>.",
+        "7": "Na <STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
+        "8": "Na <STREET_NAMES> peljite <LENGTH> <CARDINAL_DIRECTION>.",
+        "9": "Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
+        "10": "Pojdite <CARDINAL_DIRECTION>.",
+        "11": "Pojdite <LENGTH> <CARDINAL_DIRECTION>.",
+        "12": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "13": "Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.",
+        "14": "Pojdite <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "15": "Pojdite <CARDINAL_DIRECTION>.",
         "16": "Pojdite <LENGTH> <CARDINAL_DIRECTION>.",
-        "17": "Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.",
-        "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>."
+        "17": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "18": "Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.",
+        "19": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>."
       },
       "cardinal_directions": [
         "proti severu",
@@ -1613,44 +1353,72 @@
       ],
       "example_phrases": {
         "0": [
-          "Pojdite pol milje proti vzhodu.",
-          "Pojdite 1 kilometer proti severu."
+          "Head east.",
+          "Head north."
         ],
         "1": [
-          "Na 5th Avenue pojdite 1 desetinko milje proti jugovzhodu."
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
         ],
         "2": [
-          "Na North Prince Street, U.S. 2 22 pojdite proti jugu."
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "4": [
-          "Peljite pol milje proti vzhodu.",
-          "Peljite 1 kilometer proti severu."
+          "Head south on North Prince Street, U.S. 2 22."
         ],
         "5": [
-          "Na 5th Avenue peljite 1 desetinko milje proti jugozahodu."
+          "Drive east.",
+          "Drive north."
         ],
         "6": [
-          "Na North Prince Street, U.S. 2 22 peljite proti jugu."
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
         ],
         "8": [
-          "Pojdite pol milje proti vzhodu.",
-          "Pojdite 1 kilometer proti severu."
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "9": [
-          "Na 5th Avenue pojdite 1 desetinko milje proti jugozahodu."
+          "Drive south on North Prince Street, U.S. 2 22."
         ],
         "10": [
-          "Na North Prince Street, U.S. 2 22 pojdite proti jugu."
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
         ],
         "16": [
-          "Pojdite pol milje proti vzhodu.",
-          "Pojdite 1 kilometer proti severu."
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
         ],
         "17": [
-          "Na 5th Avenue pojdite 1 desetinko milje proti jugozahodu."
+          "Bike southwest on 5th Avenue."
         ],
         "18": [
-          "Na North Prince Street, U.S. 2 22 pojdite proti jugu."
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
         ]
       }
     },
