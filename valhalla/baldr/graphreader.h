@@ -354,7 +354,6 @@ public:
    * @param  graphid  GraphId of the tile to test (tile id and level).
    */
   bool DoesTileExist(const GraphId& graphid) const;
-  static bool DoesTileExist(const boost::property_tree::ptree& pt, const GraphId& graphid);
 
   /**
    * Get a pointer to a graph tile object given a GraphId.
