@@ -206,7 +206,8 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       segments.clear();
       if (!MergeRoute(prev_state, state, segments, match)) {
         // we are only discontinuous but only if this isnt the beginning of the route
-        route.back().discontinuity = !route.empty();
+        if (!route.empty())
+          route.back().discontinuity = true;
         // next pair
         prev_idx = curr_idx;
         prev_match = &match;
