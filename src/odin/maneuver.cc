@@ -121,6 +121,7 @@ Maneuver::Maneuver()
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
   roundabout_exit_street_names_ = std::make_unique<StreetNames>();
+  roundabout_exit_begin_street_names_ = std::make_unique<StreetNames>();
 }
 
 const DirectionsLeg_Maneuver_Type& Maneuver::type() const {
@@ -672,6 +673,36 @@ bool Maneuver::HasRoundaboutExitStreetNames() const {
 
 void Maneuver::ClearRoundaboutExitStreetNames() {
   roundabout_exit_street_names_->clear();
+}
+
+const StreetNames& Maneuver::roundabout_exit_begin_street_names() const {
+  return *roundabout_exit_begin_street_names_;
+}
+
+void Maneuver::set_roundabout_exit_begin_street_names(
+    const std::vector<std::pair<std::string, bool>>& names) {
+  roundabout_exit_begin_street_names_ = std::make_unique<StreetNamesUs>(names);
+}
+
+void Maneuver::set_roundabout_exit_begin_street_names(
+    std::unique_ptr<StreetNames>&& roundabout_exit_begin_street_names) {
+  roundabout_exit_begin_street_names_ = std::move(roundabout_exit_begin_street_names);
+}
+
+bool Maneuver::HasRoundaboutExitBeginStreetNames() const {
+  return (!roundabout_exit_begin_street_names_->empty());
+}
+
+void Maneuver::ClearRoundaboutExitBeginStreetNames() {
+  roundabout_exit_begin_street_names_->clear();
+}
+
+const Signs& Maneuver::roundabout_exit_signs() const {
+  return roundabout_exit_signs_;
+}
+
+Signs* Maneuver::mutable_roundabout_exit_signs() {
+  return &roundabout_exit_signs_;
 }
 
 Maneuver::RelativeDirection Maneuver::merge_to_relative_direction() const {

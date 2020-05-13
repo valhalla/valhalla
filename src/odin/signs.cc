@@ -132,6 +132,29 @@ const std::string Signs::GetGuideTowardString(uint32_t max_count,
                       verbal_formatter);
 }
 
+const std::string Signs::GetGuideString(uint32_t max_count,
+                                        bool limit_by_consecutive_count,
+                                        std::string delim,
+                                        const VerbalTextFormatter* verbal_formatter) const {
+  std::string guide_string;
+  if (HasGuideBranch() && HasGuideToward() && ((max_count == 0) || (max_count > 1))) {
+    std::string guide_branch =
+        GetGuideBranchString(static_cast<uint32_t>(std::round(max_count / 2)),
+                             limit_by_consecutive_count, delim, verbal_formatter);
+    std::string guide_toward =
+        GetGuideTowardString(static_cast<uint32_t>(max_count / 2), limit_by_consecutive_count, delim,
+                             verbal_formatter);
+    guide_string = guide_branch + delim + guide_toward;
+  } else if (HasGuideBranch()) {
+    guide_string =
+        GetGuideBranchString(max_count, limit_by_consecutive_count, delim, verbal_formatter);
+  } else if (HasGuideToward()) {
+    guide_string =
+        GetGuideTowardString(max_count, limit_by_consecutive_count, delim, verbal_formatter);
+  }
+  return guide_string;
+}
+
 const std::vector<Sign>& Signs::junction_name_list() const {
   return junction_name_list_;
 }

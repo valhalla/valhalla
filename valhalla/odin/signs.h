@@ -72,6 +72,11 @@ public:
                                          std::string delim = "/",
                                          const VerbalTextFormatter* verbal_formatter = nullptr) const;
 
+  const std::string GetGuideString(uint32_t max_count = 0,
+                                   bool limit_by_consecutive_count = false,
+                                   std::string delim = "/",
+                                   const VerbalTextFormatter* verbal_formatter = nullptr) const;
+
   const std::vector<Sign>& junction_name_list() const;
   std::vector<Sign>* mutable_junction_name_list();
 

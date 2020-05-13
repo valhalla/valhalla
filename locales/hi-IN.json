@@ -353,7 +353,21 @@
     "enter_roundabout": {
       "phrases": {
         "0": "सर्कल प्रवेश करें.",
-        "1": "सर्कल प्रवेश करें और <ORDINAL_VALUE> निकास लें."
+        "1": "सर्कल प्रवेश करें और <ORDINAL_VALUE> निकास लें.",
+        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "पहला",
@@ -366,6 +380,11 @@
         "आठवाँ",
         "नौवां",
         "दसवां"
+      ],
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail"
       ],
       "example_phrases": {
         "0": [
@@ -382,13 +401,69 @@
           "सर्कल प्रवेश करें और आठवाँ निकास लें.",
           "सर्कल प्रवेश करें और नौवां निकास लें.",
           "सर्कल प्रवेश करें और दसवां निकास लें."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
         ]
       }
     },
     "enter_roundabout_verbal": {
       "phrases": {
         "0": "सर्कल प्रवेश करें.",
-        "1": "सर्कल प्रवेश करें और <ORDINAL_VALUE> निकास लें."
+        "1": "सर्कल प्रवेश करें और <ORDINAL_VALUE> निकास लें.",
+        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "पहला",
@@ -401,6 +476,11 @@
         "आठवाँ",
         "नौवां",
         "दसवां"
+      ],
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail"
       ],
       "example_phrases": {
         "0": [
@@ -417,6 +497,48 @@
           "सर्कल प्रवेश करें और आठवाँ निकास लें.",
           "सर्कल प्रवेश करें और नौवां निकास लें.",
           "सर्कल प्रवेश करें और दसवां निकास लें."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
         ]
       }
     },

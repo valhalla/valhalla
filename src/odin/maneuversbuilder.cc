@@ -2424,12 +2424,16 @@ void ManeuversBuilder::ProcessRoundaboutNames(std::list<Maneuver>& maneuvers) {
         }
       }
 
-      // Process roundabout exit names
+      // Process roundabout exit names and signs
       if (next_man->type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) {
         if (next_man->HasBeginStreetNames()) {
-          curr_man->set_roundabout_exit_street_names(next_man->begin_street_names().clone());
+          curr_man->set_roundabout_exit_begin_street_names(next_man->begin_street_names().clone());
+          curr_man->set_roundabout_exit_street_names(next_man->street_names().clone());
         } else {
           curr_man->set_roundabout_exit_street_names(next_man->street_names().clone());
+        }
+        if (next_man->HasSigns()) {
+          *(curr_man->mutable_roundabout_exit_signs()) = next_man->signs();
         }
       }
     }
