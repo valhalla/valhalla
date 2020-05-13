@@ -15,9 +15,10 @@ public:
   Measurement(const midgard::PointLL& lnglat,
               float gps_accuracy,
               float search_radius,
-              double epoch_time = -1.f)
+              double epoch_time = -1.f,
+              bool is_break_point = false)
       : lnglat_(lnglat), gps_accuracy_(gps_accuracy), search_radius_(search_radius),
-        epoch_time_(epoch_time) {
+        epoch_time_(epoch_time), is_break_point_(is_break_point) {
     if (gps_accuracy_ < 0.f) {
       throw std::invalid_argument("non-negative gps_accuracy required");
     }
@@ -50,6 +51,10 @@ public:
     return epoch_time_;
   }
 
+  bool is_break_point() const {
+    return is_break_point_;
+  }
+
 private:
   midgard::PointLL lnglat_;
 
@@ -58,6 +63,8 @@ private:
   float search_radius_;
 
   double epoch_time_;
+
+  bool is_break_point_;
 };
 
 } // namespace meili

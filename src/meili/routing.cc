@@ -174,7 +174,7 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
  * Set origin.
  */
 void set_origin(baldr::GraphReader& reader,
-                const std::vector<baldr::PathLocation>& destinations,
+                const std::vector<baldr::PathLocation>& origin,
                 uint16_t origin_idx,
                 const labelset_ptr_t& labelset,
                 const sif::TravelMode travelmode,
@@ -186,13 +186,13 @@ void set_origin(baldr::GraphReader& reader,
   // indicate it reaches the beginning of a route when constructing the
   // route
   const baldr::GraphTile* tile = nullptr;
-  for (const auto& edge : destinations[origin_idx].edges) {
+  for (const auto& edge : origin[origin_idx].edges) {
     if (!edge.id.Is_Valid()) {
       continue;
     }
 
-    auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
     if (edge.begin_node()) {
+      auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
       const auto nodeid = edge_nodes.first;
       if (nodeid.Is_Valid()) {
         // If both origin and destination are nodes, then always check
@@ -204,6 +204,7 @@ void set_origin(baldr::GraphReader& reader,
         labelset->put(nodeid, travelmode, edgelabel);
       }
     } else if (edge.end_node()) {
+      auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
       const auto nodeid = edge_nodes.second;
       if (nodeid.Is_Valid()) {
         // If both origin and destination are nodes, then always check
@@ -235,14 +236,15 @@ void set_destinations(baldr::GraphReader& reader,
         continue;
       }
 
-      auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
       if (edge.begin_node()) {
+        auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
         const auto nodeid = edge_nodes.first;
         if (!nodeid.Is_Valid()) {
           continue;
         }
         node_dests[nodeid].insert(dest);
       } else if (edge.end_node()) {
+        auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
         const auto nodeid = edge_nodes.second;
         if (!nodeid.Is_Valid()) {
           continue;
@@ -477,13 +479,14 @@ find_shortest_path(baldr::GraphReader& reader,
   while (true) {
     uint32_t label_idx = labelset->pop();
     if (label_idx == baldr::kInvalidLabel) {
-      // Exhausted labels without finding all destinations
+      LOG_TRACE("Exhausted labels without finding all destinations");
       break;
     }
 
     // Copy the Label since it is possible for it to be invalidated when new
     // labels are added.
     label = labelset->label(label_idx);
+    // Check if we are looking for a node destination on this label
     if (label.nodeid().Is_Valid()) {
       // If this node is a destination, path to destinations at this
       // node is found: remember them and remove this node from the
@@ -498,12 +501,14 @@ find_shortest_path(baldr::GraphReader& reader,
 
       // Congrats!
       if (node_dests.empty() && edge_dests.empty()) {
+        LOG_TRACE("The last node destination was found");
         break;
       }
 
       // Expand edges from this node
       expand(label.nodeid(), label_idx, false);
-    } else {
+    } // Check if this destination can be found on an edge
+    else {
       // Path to a destination along an edge is found: remember it and
       // remove the destination from the destination list
       const auto destination_idx = label.dest();
@@ -520,6 +525,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
       // Congrats!
       if (edge_dests.empty() && node_dests.empty()) {
+        LOG_TRACE("The last edge destination was found");
         break;
       }
 

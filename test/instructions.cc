@@ -415,7 +415,7 @@ TEST(Instructions, validate_multi_cue_instructions) {
       {VALHALLA_SOURCE_DIR "test/pinpoints/instructions/multi_cue_start_turn_destination.pbf"},
       expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
       "Drive north on Hartman Bridge Road/PA 896.", "",
-      "Drive north on Hartman Bridge Road, Pennsylvania 8 96 for 200 feet. Then Turn left onto U.S. 30.");
+      "Drive north on Hartman Bridge Road, Pennsylvania 8 96. Then Turn left onto U.S. 30.");
 
   maneuver_index = 1;
   // Test the distant turn verbal multi-cue instruction

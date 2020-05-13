@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // If tile exists add it to the queue
     GraphId edge_id(id, local_level, 0);
-    if (!reader.DoesTileExist(tile_properties, edge_id)) {
+    if (!reader.DoesTileExist(edge_id)) {
       continue;
     }
 

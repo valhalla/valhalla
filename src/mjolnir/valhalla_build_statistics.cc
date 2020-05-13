@@ -509,6 +509,8 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   // Graph tile properties
   auto tile_properties = pt.get_child("mjolnir");
 
+  GraphReader reader(tile_properties);
+
   // Create a randomized queue of tiles to work from
   std::deque<GraphId> tilequeue;
   for (const auto& tier : TileHierarchy::levels()) {
@@ -517,7 +519,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
     for (uint32_t id = 0; id < tiles.TileCount(); id++) {
       // If tile exists add it to the queue
       GraphId tile_id(id, level, 0);
-      if (GraphReader::DoesTileExist(tile_properties, tile_id)) {
+      if (reader.DoesTileExist(tile_id)) {
         tilequeue.emplace_back(std::move(tile_id));
       }
     }
@@ -528,7 +530,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
       for (uint32_t id = 0; id < tiles.TileCount(); id++) {
         // If tile exists add it to the queue
         GraphId tile_id(id, level, 0);
-        if (GraphReader::DoesTileExist(tile_properties, tile_id)) {
+        if (reader.DoesTileExist(tile_id)) {
           tilequeue.emplace_back(std::move(tile_id));
         }
       }

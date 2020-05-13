@@ -116,6 +116,10 @@ public:
     infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
     use_direction_on_ways_ = pt.get<bool>("data_processing.use_direction_on_ways", false);
     allow_alt_name_ = pt.get<bool>("data_processing.allow_alt_name", false);
+
+    empty_node_results_ = lua_.Transform(OSMType::kNode, {});
+    empty_way_results_ = lua_.Transform(OSMType::kWay, {});
+    empty_relation_results_ = lua_.Transform(OSMType::kRelation, {});
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
@@ -135,8 +139,12 @@ public:
   node_callback(uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
     boost::optional<Tags> results = boost::none;
     if (bss_nodes_) {
-      // Get tags
-      results = lua_.Transform(OSMType::kNode, tags);
+      // Get tags - do't bother with Lua callout if the taglist is empty
+      if (tags.size() > 0) {
+        results = lua_.Transform(OSMType::kNode, tags);
+      } else {
+        results = empty_node_results_;
+      }
 
       for (auto& key_value : *results) {
         if (key_value.first == "amenity" && key_value.second == "bicycle_rental") {
@@ -157,10 +165,12 @@ public:
       return;
     }
 
-    // Get tags if not already available
-    results = results ? results : lua_.Transform(OSMType::kNode, tags);
-    if (results->size() == 0) {
-      return;
+    // Get tags if not already available.  Don't bother calling Lua if there
+    // are no OSM tags to process.
+    if (tags.size() > 0) {
+      results = results ? results : lua_.Transform(OSMType::kNode, tags);
+    } else {
+      results = results ? results : empty_node_results_;
     }
 
     // unsorted extracts are just plain nasty, so they can bugger off!
@@ -302,23 +312,23 @@ public:
       return;
     }
 
-    // Transform tags. If no results that means the way does not have tags
-    // suitable for use in routing.
-    Tags results = lua_.Transform(OSMType::kWay, tags);
-    if (results.size() == 0) {
-      return;
-    }
-
     // Throw away closed features with following tags: building, landuse,
     // leisure, natural. See: http://wiki.openstreetmap.org/wiki/Key:area
     if (nodes[0] == nodes[nodes.size() - 1]) {
-      for (const auto& tag : results) {
+      for (const auto& tag : tags) {
         if (tag.first == "building" || tag.first == "landuse" || tag.first == "leisure" ||
             tag.first == "natural") {
           // LOG_INFO("Loop wayid " + std::to_string(osmid) + " Discard?");
           return;
         }
       }
+    }
+
+    // Transform tags. If no results that means the way does not have tags
+    // suitable for use in routing.
+    Tags results = tags.size() == 0 ? empty_way_results_ : lua_.Transform(OSMType::kWay, tags);
+    if (results.size() == 0) {
+      return;
     }
 
     // Throw away driveways if include_driveways_ is false
@@ -1389,7 +1399,7 @@ public:
                                  const OSMPBF::Tags& tags,
                                  const std::vector<OSMPBF::Member>& members) override {
     // Get tags
-    Tags results = lua_.Transform(OSMType::kRelation, tags);
+    Tags results = tags.empty() ? empty_relation_results_ : lua_.Transform(OSMType::kRelation, tags);
     if (results.size() == 0) {
       return;
     }
@@ -1911,6 +1921,11 @@ public:
 
   // bss nodes
   std::unique_ptr<sequence<OSMNode>> bss_nodes_;
+
+  // empty objects initialized with defaults to use when no tags are present on objects
+  Tags empty_node_results_;
+  Tags empty_way_results_;
+  Tags empty_relation_results_;
 };
 
 } // namespace

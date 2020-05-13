@@ -1,4 +1,5 @@
 #include "midgard/openlr.h"
+#include "midgard/pointll.h"
 
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
@@ -12,6 +13,7 @@
 
 namespace {
 
+using namespace valhalla::midgard;
 using namespace valhalla::midgard::OpenLR;
 
 std::string decode64(const std::string& val) {
@@ -71,12 +73,12 @@ TEST(OpenLR, Decode) {
 
     EXPECT_NEAR(locRef.getFirstCoordinate().lng(), fixture.expectedFirstCoordinateLongitude, 1e-5);
     EXPECT_NEAR(locRef.getFirstCoordinate().lat(), fixture.expectedFirstCoordinateLatitude, 1e-5);
-    EXPECT_NEAR(locRef.first.bearing, fixture.expectedFirstCoordinateBearing, 1e-5);
+    EXPECT_NEAR(locRef.lrps[0].bearing, fixture.expectedFirstCoordinateBearing, 1e-5);
     EXPECT_NEAR(locRef.getLastCoordinate().lng(), fixture.expectedLastCoordinateLongitude, 1e-5);
     EXPECT_NEAR(locRef.getLastCoordinate().lat(), fixture.expectedLastCoordinateLatitude, 1e-5);
-    EXPECT_NEAR(locRef.last.bearing, fixture.expectedLastCoordinateBearing, 1e-5);
+    EXPECT_NEAR(locRef.lrps.back().bearing, fixture.expectedLastCoordinateBearing, 1e-5);
 
-    EXPECT_NEAR(locRef.first.distance, fixture.expectedDistance, 1e-3);
+    EXPECT_NEAR(locRef.lrps[0].distance, fixture.expectedDistance, 1e-3);
     EXPECT_NEAR(locRef.poff, fixture.expectedPoff, 1e-3);
     EXPECT_NEAR(locRef.noff, fixture.expectedNoff, 1e-3);
 
@@ -85,13 +87,13 @@ TEST(OpenLR, Decode) {
     // values. TODO - this currently fails for 32 bit
 #if _WIN64 || __amd64__
     if (encode64(locRef.toBinary()) != fixture.descriptor) {
-      locRef.first.latitude = fixture.expectedFirstCoordinateLatitude;
-      locRef.first.longitude = fixture.expectedFirstCoordinateLongitude;
-      locRef.first.bearing = fixture.expectedFirstCoordinateBearing;
-      locRef.last.latitude = fixture.expectedLastCoordinateLatitude;
-      locRef.last.longitude = fixture.expectedLastCoordinateLongitude;
-      locRef.last.bearing = fixture.expectedLastCoordinateBearing;
-      locRef.first.distance = fixture.expectedDistance;
+      locRef.lrps[0].latitude = fixture.expectedFirstCoordinateLatitude;
+      locRef.lrps[0].longitude = fixture.expectedFirstCoordinateLongitude;
+      locRef.lrps[0].bearing = fixture.expectedFirstCoordinateBearing;
+      locRef.lrps.back().latitude = fixture.expectedLastCoordinateLatitude;
+      locRef.lrps.back().longitude = fixture.expectedLastCoordinateLongitude;
+      locRef.lrps.back().bearing = fixture.expectedLastCoordinateBearing;
+      locRef.lrps[0].distance = fixture.expectedDistance;
       locRef.poff = fixture.expectedPoff;
       locRef.noff = fixture.expectedNoff;
       EXPECT_EQ(encode64(locRef.toBinary()), fixture.descriptor);
@@ -106,29 +108,28 @@ TEST(OpenLR, InternalReferencePoints) {
   auto locRef = LineLocation(decode64(location));
 
   EXPECT_EQ(encode64(locRef.toBinary()), location);
-  EXPECT_EQ(locRef.intermediate.size(), 1) << "Incorrectly number of intermediate LRP";
+  EXPECT_EQ(locRef.lrps.size(), 3) << "Incorrectly number of intermediate LRP";
 
   EXPECT_NEAR(locRef.getFirstCoordinate().lng(), 2.400523, 1e-5);
   EXPECT_NEAR(locRef.getFirstCoordinate().lat(), 48.819069, 1e-5);
-  EXPECT_NEAR(locRef.first.bearing, 320.625, 1e-5);
-  EXPECT_NEAR(locRef.first.distance, 12774.8, 1e-3);
+  EXPECT_NEAR(locRef.lrps[0].bearing, 320.625, 1e-5);
+  EXPECT_NEAR(locRef.lrps[0].distance, 12774.8, 1e-3);
 
-  EXPECT_NEAR(locRef.intermediate[0].longitude, 2.269843, 1e-5);
-  EXPECT_NEAR(locRef.intermediate[0].latitude, 48.840829, 1e-5);
-  EXPECT_NEAR(locRef.intermediate[0].bearing, 219.375, 1e-5);
-  EXPECT_NEAR(locRef.intermediate[0].distance, 12774.8, 1e-3);
+  EXPECT_NEAR(locRef.lrps[1].longitude, 2.269843, 1e-5);
+  EXPECT_NEAR(locRef.lrps[1].latitude, 48.840829, 1e-5);
+  EXPECT_NEAR(locRef.lrps[1].bearing, 219.375, 1e-5);
+  EXPECT_NEAR(locRef.lrps[1].distance, 12774.8, 1e-3);
 
   EXPECT_NEAR(locRef.getLastCoordinate().lng(), 2.261823, 1e-5);
   EXPECT_NEAR(locRef.getLastCoordinate().lat(), 48.893158, 1e-5);
-  EXPECT_NEAR(locRef.last.bearing, 39.375, 1e-5);
+  EXPECT_NEAR(locRef.lrps.back().bearing, 39.375, 1e-5);
 
   EXPECT_NEAR(locRef.getLength(), 2 * 12774.8, 1e-3);
   EXPECT_NEAR(locRef.poff, 0, 1e-3);
   EXPECT_NEAR(locRef.noff, 0, 1e-3);
 
-  for (float poff = 0; poff < locRef.first.distance; poff += locRef.first.distance / 3) {
-    for (float noff = 0; noff < locRef.intermediate[0].distance;
-         noff += locRef.intermediate[0].distance / 3) {
+  for (float poff = 0; poff < locRef.lrps[0].distance; poff += locRef.lrps[0].distance / 3) {
+    for (float noff = 0; noff < locRef.lrps[1].distance; noff += locRef.lrps[1].distance / 3) {
       locRef.poff = poff;
       locRef.noff = noff;
       LineLocation tryRef(locRef.toBinary());
@@ -139,13 +140,13 @@ TEST(OpenLR, InternalReferencePoints) {
     }
   }
 
-  locRef.intermediate.push_back(locRef.intermediate.front());
-  locRef.intermediate.push_back(locRef.intermediate.front());
-  locRef.intermediate.push_back(locRef.intermediate.front());
+  locRef.lrps.insert(std::prev(std::prev(locRef.lrps.end())), locRef.lrps[1]);
+  locRef.lrps.insert(std::prev(std::prev(locRef.lrps.end())), locRef.lrps[1]);
+  locRef.lrps.insert(std::prev(std::prev(locRef.lrps.end())), locRef.lrps[1]);
   EXPECT_NEAR(locRef.getLength(), 5 * 12774.8, 1e-3) << "Distance incorrect.";
 
   auto hex = " 0b 01 b5 01 22 b7 3e 10 fc da cc f4 08 80 10 f3 da "
-             "00 00 00 00 10 f3 da 00 00 00 00 10 f3 da 00 00 00 00 10 f3 da fc de 14 71 10 63 aa aa";
+             "00 00 00 00 10 f3 da 00 00 00 00 10 f3 da 00 00 00 00 10 f3 da fc de 14 71 10 63 ab ab";
   EXPECT_EQ(to_hex(locRef.toBinary()), hex) << "Incorrectly encoded reference";
 }
 
@@ -159,6 +160,58 @@ TEST(OpenLR, OffsetsOverrun) {
 TEST(OpenLR, TooSmallReference) {
   auto location = "CwG1ASK3PhD82=";
   EXPECT_THROW(auto locRef = LineLocation(decode64(location)), std::invalid_argument);
+}
+
+TEST(OpenLR, CreateLinearReference) {
+  // make a reference directly using lrps
+  std::vector<PointLL> points{{-76.550157, 40.482238},
+                              {-76.550602, 40.482758},
+                              {-76.551088, 40.489983},
+                              {-76.545762, 40.491959}};
+  std::vector<LocationReferencePoint> lrps;
+  unsigned char frc = 0;
+  auto fow = LocationReferencePoint::FormOfWay::MOTORWAY;
+  unsigned char lowest_frc_next_point = 7;
+  uint16_t bearing;
+  for (const auto& p : points) {
+    // first or intermediate point
+    if (&p != &points.back()) {
+      bearing = static_cast<uint16_t>(p.Heading(*std::next(&p)));
+      auto distance = p.Distance(*std::next(&p));
+      lrps.emplace_back(p.lng(), p.lat(), bearing, frc, fow, lrps.empty() ? nullptr : &lrps.back(),
+                        distance, lowest_frc_next_point);
+    } // last point
+    else {
+      bearing += 180;
+      bearing %= 360;
+      lrps.emplace_back(p.lng(), p.lat(), bearing, frc, fow, lrps.empty() ? nullptr : &lrps.back());
+    }
+    EXPECT_NEAR(lrps.back().longitude, p.lng(), .00002);
+    EXPECT_NEAR(lrps.back().latitude, p.lat(), .00002);
+    // try different frcs and fows for kicks
+    ++frc;
+    fow = static_cast<LocationReferencePoint::FormOfWay>(static_cast<uint8_t>(fow) + 1);
+    --lowest_frc_next_point;
+  }
+  LineLocation line_location(lrps, 17.438, 13.721);
+
+  // do a round trip conversion
+  LineLocation converted(line_location.toBinary());
+
+  // compare to the original reference before conversion
+  EXPECT_EQ(line_location, converted);
+
+  // if positive or negative offset is too large it should throw
+  EXPECT_THROW(LineLocation(lrps, lrps[0].distance + 1, 0), std::invalid_argument);
+  EXPECT_THROW(LineLocation(lrps, 0, lrps[lrps.size() - 2].distance + 1), std::invalid_argument);
+
+  // make a short line location so that poff and noff must be 0
+  lrps.clear();
+  lrps.emplace_back(0, 0, 90, frc, fow, nullptr, 5, lowest_frc_next_point);
+  lrps.emplace_back(.000005, 0, 270, frc, fow, &lrps.back());
+  LineLocation short_location(lrps, 0, 0);
+  EXPECT_EQ(short_location.poff, 0.f);
+  EXPECT_EQ(short_location.noff, 0.f);
 }
 
 } // namespace

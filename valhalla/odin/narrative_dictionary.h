@@ -310,10 +310,6 @@ public:
   EnterFerrySubset enter_ferry_subset;
   EnterFerrySubset enter_ferry_verbal_subset;
 
-  // ExitFerry
-  StartSubset exit_ferry_subset;
-  StartSubset exit_ferry_verbal_subset;
-
   // TransitConnectionStart
   TransitConnectionSubset transit_connection_start_subset;
   TransitConnectionSubset transit_connection_start_verbal_subset;
@@ -345,10 +341,6 @@ public:
   // TransitTransfer
   TransitStopSubset transit_transfer_subset;
   TransitSubset transit_transfer_verbal_subset;
-
-  // PostTransitConnectionDestination
-  StartSubset post_transit_connection_destination_subset;
-  StartSubset post_transit_connection_destination_verbal_subset;
 
   // Post transition verbal
   PostTransitionVerbalSubset post_transition_verbal_subset;
