@@ -1,6 +1,9 @@
 #include "gurka.h"
 #include <gtest/gtest.h>
 
+#include "midgard/encoded.h"
+#include "midgard/util.h"
+
 using namespace valhalla;
 
 /*************************************************************/
@@ -29,6 +32,16 @@ TEST(Standalone, BasicMatch) {
                                                 DirectionsLeg_Maneuver_Type_kContinue,
                                                 DirectionsLeg_Maneuver_Type_kRight,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
+
+  // the shape is correct!?
+  float len = 0;
+  for (const auto& route : result.trip().routes()) {
+    for (const auto& leg : route.legs()) {
+      auto points = midgard::decode<std::vector<midgard::PointLL>>(leg.shape());
+      len += midgard::length(points);
+    }
+  }
+  EXPECT_NEAR(len, 100.f, 1.f);
 
   gurka::assert::raw::expect_path_length(result, 0.100, 0.001);
 }

@@ -5,13 +5,13 @@ namespace valhalla {
 namespace baldr {
 
 PathLocation::PathEdge::PathEdge(const GraphId& id,
-                                 const float dist,
+                                 const float percent_along,
                                  const midgard::PointLL& projected,
                                  const float score,
                                  const SideOfStreet sos,
                                  const unsigned int outbound_reach,
                                  const unsigned int inbound_reach)
-    : id(id), percent_along(dist), projected(projected), sos(sos), distance(score),
+    : id(id), percent_along(percent_along), projected(projected), sos(sos), distance(score),
       outbound_reach(outbound_reach), inbound_reach(inbound_reach) {
 }
 bool PathLocation::PathEdge::begin_node() const {

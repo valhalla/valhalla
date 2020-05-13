@@ -30,7 +30,7 @@ public:
   enum SideOfStreet { NONE = 0, LEFT, RIGHT };
   struct PathEdge {
     PathEdge(const GraphId& id,
-             const float dist,
+             const float percent_along,
              const midgard::PointLL& projected,
              const float score,
              const SideOfStreet sos = NONE,

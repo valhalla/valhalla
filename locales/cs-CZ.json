@@ -135,8 +135,10 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Pokračujte <LENGTH>.",
-        "1": "Pokračujte <LENGTH> po <STREET_NAMES>."
+        "0": "Pokračujte.",
+        "1": "Pokračujte <LENGTH>.",
+        "2": "Pokračujte po <STREET_NAMES>.",
+        "3": "Pokračujte <LENGTH> po <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "chodníku",
@@ -159,10 +161,16 @@
       ],
       "example_phrases": {
         "0": [
-          "Pokračujte 300 metrů."
+          "Continue."
         ],
         "1": [
-          "Pokračujte 3 desetiny míle po 10th Avenue."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
         ]
       }
     },
@@ -516,144 +524,6 @@
         ],
         "29": [
           "Použijte výjezd White Marsh Boulevard na MD 43 East směr White Marsh."
-        ]
-      }
-    },
-    "exit_ferry": {
-      "phrases": {
-        "0": "Vyjeďte na <CARDINAL_DIRECTION>.",
-        "1": "Vyjeďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "2": "Vyjeďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>. Pokračujte po <STREET_NAMES>.",
-        "4": "Jeďte na <CARDINAL_DIRECTION>.",
-        "5": "Jeďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "6": "Jeďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>. Pokračujte po <STREET_NAMES>.",
-        "8": "Jděte na <CARDINAL_DIRECTION>.",
-        "9": "Jděte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "10": "Jděte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>. Pokračujte po <STREET_NAMES>.",
-        "16": "Jeďte na <CARDINAL_DIRECTION>.",
-        "17": "Jeďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "18": "Jeďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>. Pokračujte po <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "sever",
-        "severovýchod",
-        "východ",
-        "jihovýchod",
-        "jih",
-        "jihozápad",
-        "západ",
-        "severozápad"
-      ],
-      "empty_street_name_labels": [
-        "chodníku",
-        "cyklostezce",
-        "stezce pro horská kola"
-      ],
-      "example_phrases": {
-        "0": [
-          "Vyjeďte na severovýchod."
-        ],
-        "1": [
-          "Vyjeďte na západ po Ferry Lane"
-        ],
-        "2": [
-          "Vyjeďte na jih po Summerfield Place/NY 114. Pokračujte po NY 114."
-        ],
-        "4": [
-          "Jeďte na severovýchod."
-        ],
-        "5": [
-          "Jeďte na západ po Ferry Lane"
-        ],
-        "6": [
-          "Jeďte na jih po Summerfield Place/NY 114. Pokračujte po NY 114."
-        ],
-        "8": [
-          "Jděte na severovýchod."
-        ],
-        "9": [
-          "Jděte na západ po Ferry Lane"
-        ],
-        "10": [
-          "Jděte na jih po Summerfield Place/NY 114. Pokračujte po NY 114."
-        ],
-        "16": [
-          "Jeďte na severovýchod."
-        ],
-        "17": [
-          "Jeďte na západ po Ferry Lane"
-        ],
-        "18": [
-          "Jeďte na jih po Summerfield Place/NY 114. Pokračujte po NY 114."
-        ]
-      }
-    },
-    "exit_ferry_verbal": {
-      "phrases": {
-        "0": "Vyjeďte na <CARDINAL_DIRECTION>.",
-        "1": "Vyjeďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "2": "Vyjeďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>.",
-        "4": "Jeďte na <CARDINAL_DIRECTION>.",
-        "5": "Jeďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "6": "Jeďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>.",
-        "8": "Jděte na <CARDINAL_DIRECTION>.",
-        "9": "Jděte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "10": "Jděte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>.",
-        "16": "Jeďte na <CARDINAL_DIRECTION>.",
-        "17": "Jeďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "18": "Jeďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "sever",
-        "severovýchod",
-        "východ",
-        "jihovýchod",
-        "jih",
-        "jihozápad",
-        "západ",
-        "severozápad"
-      ],
-      "empty_street_name_labels": [
-        "chodníku",
-        "cyklostezce",
-        "stezce pro horská kola"
-      ],
-      "example_phrases": {
-        "0": [
-          "Vyjeďte na severovýchod."
-        ],
-        "1": [
-          "Vyjeďte na západ po Ferry Lane"
-        ],
-        "2": [
-          "Vyjeďte na jih po Summerfield Place, New York 1 14."
-        ],
-        "4": [
-          "Jeďte na severovýchod."
-        ],
-        "5": [
-          "Jeďte na západ po Ferry Lane"
-        ],
-        "6": [
-          "Jeďte na jih po Summerfield Place, New York 1 14."
-        ],
-        "8": [
-          "Jděte na severovýchod."
-        ],
-        "9": [
-          "Jděte na západ po Ferry Lane"
-        ],
-        "10": [
-          "Jděte na jih po Summerfield Place, New York 1 14."
-        ],
-        "16": [
-          "Jeďte na severovýchod."
-        ],
-        "17": [
-          "Jeďte na západ po Ferry Lane"
-        ],
-        "18": [
-          "Jeďte na jih po Summerfield Place, New York 1 14."
         ]
       }
     },
@@ -1037,144 +907,6 @@
         ],
         "3": [
           "Připojte se vpravo na I 83 South."
-        ]
-      }
-    },
-    "post_transit_connection_destination": {
-      "phrases": {
-        "0": "Jděte na <CARDINAL_DIRECTION>.",
-        "1": "Jděte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "2": "Jděte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>. Pokračujte po <STREET_NAMES>.",
-        "4": "Jeďte na <CARDINAL_DIRECTION>.",
-        "5": "Jeďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "6": "Jeďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>. Pokračujte po <STREET_NAMES>.",
-        "8": "Jděte na <CARDINAL_DIRECTION>.",
-        "9": "Jděte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "10": "Jděte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>. Pokračujte po <STREET_NAMES>.",
-        "16": "Jeďte na <CARDINAL_DIRECTION>.",
-        "17": "Jeďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "18": "Jeďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>. Pokračujte po <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "sever",
-        "severovýchod",
-        "východ",
-        "jihovýchod",
-        "jih",
-        "jihozápad",
-        "západ",
-        "severozápad"
-      ],
-      "empty_street_name_labels": [
-        "chodníku",
-        "cyklostezce",
-        "stezce pro horská kola"
-      ],
-      "example_phrases": {
-        "0": [
-          "Jděte na západ."
-        ],
-        "1": [
-          "Jděte na severovýchod po Broadway"
-        ],
-        "2": [
-          "Jděte na jih po Summerfield Place/NY 114. Pokračujte po NY 114."
-        ],
-        "4": [
-          "Jeďte na západ."
-        ],
-        "5": [
-          "Jeďte na severovýchod po Broadway"
-        ],
-        "6": [
-          "Jeďte na jih po Summerfield Place/NY 114. Pokračujte po NY 114."
-        ],
-        "8": [
-          "Jděte na západ."
-        ],
-        "9": [
-          "Jděte na severovýchod po Broadway"
-        ],
-        "10": [
-          "Jděte na jih po Summerfield Place/NY 114. Pokračujte po NY 114."
-        ],
-        "16": [
-          "Jeďte na západ."
-        ],
-        "17": [
-          "Jeďte na severovýchod po Broadway"
-        ],
-        "18": [
-          "Jeďte na jih po Summerfield Place/NY 114. Pokračujte po NY 114."
-        ]
-      }
-    },
-    "post_transit_connection_destination_verbal": {
-      "phrases": {
-        "0": "Jděte na <CARDINAL_DIRECTION>.",
-        "1": "Jděte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "2": "Jděte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>.",
-        "4": "Jeďte na <CARDINAL_DIRECTION>.",
-        "5": "Jeďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "6": "Jeďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>.",
-        "8": "Jděte na <CARDINAL_DIRECTION>.",
-        "9": "Jděte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "10": "Jděte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>.",
-        "16": "Jeďte na <CARDINAL_DIRECTION>.",
-        "17": "Jeďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "18": "Jeďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "sever",
-        "severovýchod",
-        "východ",
-        "jihovýchod",
-        "jih",
-        "jihozápad",
-        "západ",
-        "severozápad"
-      ],
-      "empty_street_name_labels": [
-        "chodníku",
-        "cyklostezce",
-        "stezce pro horská kola"
-      ],
-      "example_phrases": {
-        "0": [
-          "Jděte na západ."
-        ],
-        "1": [
-          "Jděte na severovýchod po Broadway"
-        ],
-        "2": [
-          "Jděte na jih po Summerfield Place, New York 1 14."
-        ],
-        "4": [
-          "Jeďte na západ."
-        ],
-        "5": [
-          "Jeďte na severovýchod po Broadway"
-        ],
-        "6": [
-          "Jeďte na jih po Summerfield Place, New York 1 14."
-        ],
-        "8": [
-          "Jděte na západ."
-        ],
-        "9": [
-          "Jděte na severovýchod po Broadway"
-        ],
-        "10": [
-          "Jděte na jih po Summerfield Place, New York 1 14."
-        ],
-        "16": [
-          "Jeďte na západ."
-        ],
-        "17": [
-          "Jeďte na severovýchod po Broadway"
-        ],
-        "18": [
-          "Jeďte na jih po Summerfield Place, New York 1 14."
         ]
       }
     },
@@ -1568,18 +1300,26 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "<LENGTH> se pohybujte na <CARDINAL_DIRECTION>.",
-        "1": "<LENGTH> se pohybujte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "2": "Pohybujte se na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>.",
-        "4": "<LENGTH> jeďte na <CARDINAL_DIRECTION>.",
-        "5": "<LENGTH> jeďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "6": "Jeďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>.",
-        "8": "<LENGTH> jděte na <CARDINAL_DIRECTION>.",
-        "9": "<LENGTH> jděte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "10": "Jděte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>.",
+        "0": "Pohybujte se na <CARDINAL_DIRECTION>.",
+        "1": "<LENGTH> se pohybujte na <CARDINAL_DIRECTION>.",
+        "2": "Pohybujte se na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "3": "<LENGTH> se pohybujte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "4": "Pohybujte se na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>.",
+        "5": "Jeďte na <CARDINAL_DIRECTION>.",
+        "6": "<LENGTH> jeďte na <CARDINAL_DIRECTION>.",
+        "7": "Jeďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "8": "<LENGTH> jeďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "9": "Jeďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>.",
+        "10": "Jděte na <CARDINAL_DIRECTION>.",
+        "11": "<LENGTH> jděte na <CARDINAL_DIRECTION>.",
+        "12": "Jděte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "13": "<LENGTH> jděte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "14": "Jděte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>.",
+        "15": "Jeďte na <CARDINAL_DIRECTION>.",
         "16": "<LENGTH> jeďte na <CARDINAL_DIRECTION>.",
-        "17": "<LENGTH> jeďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
-        "18": "Jeďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>."
+        "17": "Jeďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "18": "<LENGTH> jeďte na <CARDINAL_DIRECTION> po <STREET_NAMES>.",
+        "19": "Jeďte na <CARDINAL_DIRECTION> po <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
         "sever",
@@ -1612,44 +1352,72 @@
       ],
       "example_phrases": {
         "0": [
-          "Půl míle se pohybujte na východ.",
-          "1 kilometr se pohybujte na sever."
+          "Head east.",
+          "Head north."
         ],
         "1": [
-          "1 desetinu míle se pohybujte na severozápad po 5th Avenue."
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
         ],
         "2": [
-          "Pohybujte se na jih po North Prince Street, U.S. 2 22."
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "4": [
-          "Půl míle jeďte na východ.",
-          "1 kilometr jeďte na sever."
+          "Head south on North Prince Street, U.S. 2 22."
         ],
         "5": [
-          "1 desetinu míle jeďte na jihozápad po 5th Avenue."
+          "Drive east.",
+          "Drive north."
         ],
         "6": [
-          "Jeďte na jih po North Prince Street, U.S. 2 22."
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
         ],
         "8": [
-          "Půl míle jděte na východ.",
-          "1 kilometr jděte na sever."
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "9": [
-          "1 desetinu jděte jeďte na jihozápad po 5th Avenue."
+          "Drive south on North Prince Street, U.S. 2 22."
         ],
         "10": [
-          "Jděte na jih po North Prince Street, U.S. 2 22."
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
         ],
         "16": [
-          "Půl míle jeďte na východ.",
-          "1 kilometr jeďte na sever."
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
         ],
         "17": [
-          "1 desetinu míle jeďte na jihozápad po 5th Avenue."
+          "Bike southwest on 5th Avenue."
         ],
         "18": [
-          "Jeďte na jih po North Prince Street, U.S. 2 22."
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
         ]
       }
     },

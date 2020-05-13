@@ -383,24 +383,6 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
          stat((file_location + ".gz").c_str(), &buffer) == 0;
 }
 
-bool GraphReader::DoesTileExist(const boost::property_tree::ptree& pt, const GraphId& graphid) {
-  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
-    return false;
-  }
-  // if you are using an extract only check that
-  auto extract = get_extract_instance(pt);
-  if (!extract->tiles.empty()) {
-    return extract->tiles.find(graphid) != extract->tiles.cend();
-  }
-  // otherwise check the disk
-  std::string file_location = pt.get<std::string>("tile_dir") +
-                              filesystem::path::preferred_separator +
-                              GraphTile::FileSuffix(graphid.Tile_Base());
-  struct stat buffer;
-  return stat(file_location.c_str(), &buffer) == 0 ||
-         stat((file_location + ".gz").c_str(), &buffer) == 0;
-}
-
 // Get a pointer to a graph tile object given a GraphId. Return nullptr
 // if the tile is not found/empty
 const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
