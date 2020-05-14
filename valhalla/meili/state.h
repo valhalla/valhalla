@@ -123,6 +123,14 @@ public:
     return static_cast<StateId::Time>(columns_.size());
   }
 
+  // Check to see if we have the minimum number of measurements and edge candidates to perform a map
+  // match. We need at least two measurements with a non-zero number of edge candidates.
+  bool HasMinimumCandidates() {
+    size_t num_nonempty =
+        std::count_if(columns_.begin(), columns_.end(), [](Column& col) { return !col.empty(); });
+    return size() > 1 && num_nonempty > 1;
+  }
+
   std::string geojson(const StateId& s) const {
     if (s.IsValid()) {
       return geojson(state(s));

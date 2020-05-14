@@ -711,9 +711,8 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
 
   // Separate the measurements we are using for matching from the ones we'll just interpolate
   auto interpolated = AppendMeasurements(measurements);
-  // Should no matching edge candidates be found for the minimum required number of points, throw a
-  // 443 - NoSegment error code.
-  if (interpolated.size() < 2) {
+  // Without minimum number of edge candidates, throw a 443 - NoSegment error code.
+  if (!container_.HasMinimumCandidates()) {
     throw valhalla_exception_t{443};
   }
 
