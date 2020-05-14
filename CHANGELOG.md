@@ -79,7 +79,8 @@
    * CHANGED: Switch to LuaJIT for lua scripting - speeds up file parsing [#2352](https://github.com/valhalla/valhalla/pull/2352)
    * ADDED: Ability to create OpenLR records from raw data. [2356](https://github.com/valhalla/valhalla/pull/2356)
    * ADDED: Revamp length phrases [2359](https://github.com/valhalla/valhalla/pull/2359)
-
+   * CHANGED: Do not allocate memory in skadi if we don't need it. [#2373](https://github.com/valhalla/valhalla/pull/2373)
+   
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
    * FIXED: Changed reachability computation to consider both directions of travel wrt candidate edges [#1965](https://github.com/valhalla/valhalla/pull/1965)
