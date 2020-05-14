@@ -93,7 +93,11 @@ void thor_worker_t::trace_route(Api& request) {
     case ShapeMatch::map_snap:
       try {
         map_match(request);
-      } catch (...) { throw valhalla_exception_t{442}; }
+      } catch (const valhalla_exception_t& e) {
+        throw e;
+      } catch (...) {
+        throw valhalla_exception_t{442};
+      }
       break;
     // If we think that we have the exact shape but there ends up being no Valhalla route match,
     // then we want to fallback to try and use meili map matching to match to local route
