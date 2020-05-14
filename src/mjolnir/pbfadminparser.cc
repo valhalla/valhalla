@@ -81,7 +81,7 @@ public:
                                  const OSMPBF::Tags& tags,
                                  const std::vector<OSMPBF::Member>& members) override {
     // Get tags
-    auto results = lua_.Transform(OSMType::kRelation, tags);
+    auto results = lua_.Transform(OSMType::kRelation, osmid, tags);
     if (results.size() == 0) {
       return;
     }

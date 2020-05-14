@@ -117,9 +117,9 @@ public:
     use_direction_on_ways_ = pt.get<bool>("data_processing.use_direction_on_ways", false);
     allow_alt_name_ = pt.get<bool>("data_processing.allow_alt_name", false);
 
-    empty_node_results_ = lua_.Transform(OSMType::kNode, {});
-    empty_way_results_ = lua_.Transform(OSMType::kWay, {});
-    empty_relation_results_ = lua_.Transform(OSMType::kRelation, {});
+    empty_node_results_ = lua_.Transform(OSMType::kNode, 0, {});
+    empty_way_results_ = lua_.Transform(OSMType::kWay, 0, {});
+    empty_relation_results_ = lua_.Transform(OSMType::kRelation, 0, {});
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
@@ -141,7 +141,7 @@ public:
     if (bss_nodes_) {
       // Get tags - do't bother with Lua callout if the taglist is empty
       if (tags.size() > 0) {
-        results = lua_.Transform(OSMType::kNode, tags);
+        results = lua_.Transform(OSMType::kNode, osmid, tags);
       } else {
         results = empty_node_results_;
       }
@@ -168,7 +168,7 @@ public:
     // Get tags if not already available.  Don't bother calling Lua if there
     // are no OSM tags to process.
     if (tags.size() > 0) {
-      results = results ? results : lua_.Transform(OSMType::kNode, tags);
+      results = results ? results : lua_.Transform(OSMType::kNode, osmid, tags);
     } else {
       results = results ? results : empty_node_results_;
     }
@@ -326,7 +326,7 @@ public:
 
     // Transform tags. If no results that means the way does not have tags
     // suitable for use in routing.
-    Tags results = tags.size() == 0 ? empty_way_results_ : lua_.Transform(OSMType::kWay, tags);
+    Tags results = tags.size() == 0 ? empty_way_results_ : lua_.Transform(OSMType::kWay, osmid, tags);
     if (results.size() == 0) {
       return;
     }
@@ -1399,7 +1399,8 @@ public:
                                  const OSMPBF::Tags& tags,
                                  const std::vector<OSMPBF::Member>& members) override {
     // Get tags
-    Tags results = tags.empty() ? empty_relation_results_ : lua_.Transform(OSMType::kRelation, tags);
+    Tags results =
+        tags.empty() ? empty_relation_results_ : lua_.Transform(OSMType::kRelation, osmid, tags);
     if (results.size() == 0) {
       return;
     }
