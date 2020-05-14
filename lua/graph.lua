@@ -636,12 +636,16 @@ function numeric_prefix(num_str, allow_decimals)
 
   --find where the numbers stop
   local index = 0
+  -- flag to say if we've seen a decimal dot already. we shouldn't allow two,
+  -- otherwise the call to tonumber() might fail.
+  local seen_dot = false
   for c in num_str:gmatch"." do
     if tonumber(c) == nil then
       if c == "." then
-        if allow_decimals == false then
+        if allow_decimals == false or seen_dot then
            break
         end
+        seen_dot = true
       else
         break
       end
