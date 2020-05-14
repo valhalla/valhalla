@@ -127,9 +127,11 @@ public:
   // Check to see if we have the minimum number of measurements and edge candidates to perform a map
   // match. We need at least two measurements with a non-zero number of edge candidates.
   bool HasMinimumCandidates() {
-    size_t num_nonempty =
-        std::count_if(columns_.begin(), columns_.end(), [](Column& col) { return !col.empty(); });
-    return size() > 1 && num_nonempty > 1;
+    if (size() < 2) {
+      return false;
+    }
+    return std::find_if(columns_.begin(), columns_.end(),
+                        [](Column& col) { return col.size() > 0; }) != columns_.end();
   }
 
   std::string geojson(const StateId& s) const {
