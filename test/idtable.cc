@@ -67,7 +67,7 @@ TEST(IdTable, Bounds) {
 }
 
 TEST(IdTable, X86) {
-  IdTable t(6800000000);
+  IdTable t(10000000000);
   uint64_t old_max = t.max();
 
   t.set(5528037441);
