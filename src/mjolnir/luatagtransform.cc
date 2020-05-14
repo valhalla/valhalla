@@ -97,7 +97,8 @@ Tags LuaTagTransform::Transform(OSMType type, const Tags& maptags) {
 
     // call lua
     if (lua_pcall(state_, 2, type == OSMType::kWay ? 4 : 2, 0)) {
-      LOG_ERROR("Failed to execute lua function for basic tag processing.");
+      LOG_ERROR("Failed to execute lua function for basic tag processing:" +
+                std::string(lua_tostring(state_, -1)));
     }
 
     // TODO:  if we dont care about it we stop looking.  Look for filter = 1

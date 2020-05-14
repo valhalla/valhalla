@@ -1611,13 +1611,13 @@ function filter_tags_generic(kv)
     bike_mask = 1
   end
   if rref or kv["rcn"] == "yes" then
-    bike_mask = bit32.bor(bike_mask, 2)
+    bike_mask = bit.bor(bike_mask, 2)
   end
   if lref or kv["lcn"] == "yes" then
-    bike_mask = bit32.bor(bike_mask, 4)
+    bike_mask = bit.bor(bike_mask, 4)
   end
   if kv["mtb"] == "yes" then
-    bike_mask = bit32.bor(bike_mask, 8)
+    bike_mask = bit.bor(bike_mask, 8)
   end
 
   kv["bike_national_ref"] = nref
@@ -1825,7 +1825,7 @@ function nodes_proc (kv, nokeys)
   end
 
   --store a mask denoting payment type
-  kv["payment_mask"] = bit32.bor(cash_payment, etc_payment)
+  kv["payment_mask"] = bit.bor(cash_payment, etc_payment)
 
   if kv["amenity"] == "bicycle_rental" or (kv["shop"] == "bicycle" and kv["service:bicycle:rental"] == "yes") then
     kv["bicycle_rental"] = "true"
@@ -1858,7 +1858,7 @@ function nodes_proc (kv, nokeys)
   end
 
   --store a mask denoting access
-  kv["access_mask"] = bit32.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov, moped, motorcycle, taxi)
+  kv["access_mask"] = bit.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov, moped, motorcycle, taxi)
 
   return 0, kv
 end
@@ -1929,11 +1929,11 @@ function rels_proc (kv, nokeys)
        end
 
        if kv["network"] == "ncn" then
-         bike_mask = bit32.bor(bike_mask, 1)
+         bike_mask = bit.bor(bike_mask, 1)
        elseif kv["network"] == "rcn" then
-         bike_mask = bit32.bor(bike_mask, 2)
+         bike_mask = bit.bor(bike_mask, 2)
        elseif kv["network"] == "lcn" then
-         bike_mask = bit32.bor(bike_mask, 4)
+         bike_mask = bit.bor(bike_mask, 4)
        end
 
        kv["bike_network_mask"] = bike_mask
