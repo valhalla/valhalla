@@ -1399,7 +1399,8 @@ public:
                                  const OSMPBF::Tags& tags,
                                  const std::vector<OSMPBF::Member>& members) override {
     // Get tags
-    Tags results = tags.empty() ? empty_relation_results_ : lua_.Transform(OSMType::kRelation, osmid, tags);
+    Tags results =
+        tags.empty() ? empty_relation_results_ : lua_.Transform(OSMType::kRelation, osmid, tags);
     if (results.size() == 0) {
       return;
     }

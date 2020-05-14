@@ -107,14 +107,15 @@ Tags LuaTagTransform::Transform(OSMType type, uint64_t osmid, const Tags& maptag
 
     // call lua
     if (lua_pcall(state_, 2, type == OSMType::kWay ? 4 : 2, 0)) {
-      const char *lua_error_message = lua_tostring(state_, 1);
+      const char* lua_error_message = lua_tostring(state_, 1);
       // if the Lua code fails hard, such as throwing an interpreter error or
       // running out of memory, then this indicates a programming logic error
       // and the program should stop with as informative an error message as
       // it's possible to give.
       throw std::runtime_error((boost::format("Failed to execute lua function "
-            "for basic tag processing in %1% %2%: %3%")
-          % to_string(type) % osmid % lua_error_message).str());
+                                              "for basic tag processing in %1% %2%: %3%") %
+                                to_string(type) % osmid % lua_error_message)
+                                   .str());
     }
 
     // TODO:  if we dont care about it we stop looking.  Look for filter = 1
