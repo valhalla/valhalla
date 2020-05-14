@@ -653,7 +653,8 @@
       "phrases": {
         "0": "Съезжайте с кольца.",
         "1": "Съезжайте с кольца на <STREET_NAMES>.",
-        "2": "Съезжайте с кольца на <BEGIN_STREET_NAMES>. Продолжайте двигаться по <STREET_NAMES>."
+        "2": "Съезжайте с кольца на <BEGIN_STREET_NAMES>. Продолжайте двигаться по <STREET_NAMES>.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -669,6 +670,9 @@
         ],
         "2": [
           "Съезжайте с кольца на Catoctin Mountain Highway/US 15. Продолжайте двигаться по US 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
         ]
       }
     },
@@ -676,7 +680,8 @@
       "phrases": {
         "0": "Съезжайте с кольца.",
         "1": "Съезжайте с кольца на <STREET_NAMES>.",
-        "2": "Съезжайте с кольца на <BEGIN_STREET_NAMES>. Продолжайте двигаться по <STREET_NAMES>."
+        "2": "Съезжайте с кольца на <BEGIN_STREET_NAMES>. Продолжайте двигаться по <STREET_NAMES>.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -692,6 +697,9 @@
         ],
         "2": [
           "Съезжайте с кольца на Catoctin Mountain Highway/US 15. Продолжайте двигаться по US 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
         ]
       }
     },

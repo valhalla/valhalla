@@ -653,7 +653,8 @@
       "phrases": {
         "0": "Saia da rotatória.",
         "1": "Saia da rotatória para <STREET_NAMES>.",
-        "2": "Saia da rotatória para <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>."
+        "2": "Saia da rotatória para <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "a calçada",
@@ -669,6 +670,9 @@
         ],
         "2": [
           "Saia da rotatória para Carvalhos/IC2, então continue em IC2."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
         ]
       }
     },
@@ -676,7 +680,8 @@
       "phrases": {
         "0": "Saia da rotatória.",
         "1": "Saia da rotatória para <STREET_NAMES>.",
-        "2": "Saia da rotatória para <BEGIN_STREET_NAMES>."
+        "2": "Saia da rotatória para <BEGIN_STREET_NAMES>.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "a calçada",
@@ -692,6 +697,9 @@
         ],
         "2": [
           "Saia da rotatória para Carvalhos/IC2."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
         ]
       }
     },

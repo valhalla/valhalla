@@ -2332,32 +2332,32 @@ std::string NarrativeBuilder::FormVerbalMergeInstruction(Maneuver& maneuver,
 std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver,
                                                              bool limit_by_consecutive_count,
                                                              uint32_t element_max_count) {
-  // {"0": "Enter the roundabout."},
-  // {"1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."},
-  // {"2",
-  // "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
-  // {"3",
+  // "0": "Enter the roundabout.",
+  // "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit.",
+  // "2",
+  // "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+  // "3",
   // "Enter the roundabout and take the <ORDINAL_VALUE> exit onto
-  // <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."},
-  // {"4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."},
-  // {"5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
-  // {"6",
+  // <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+  // "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+  // "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+  // "6",
   // "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on
-  // <ROUNDABOUT_EXIT_STREET_NAMES>."},
-  // {"7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>."},
-  // {"8": "Enter <STREET_NAMES>"},
-  // {"9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit."},
-  // {"10",
-  // "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
-  // {"11",
+  // <ROUNDABOUT_EXIT_STREET_NAMES>.",
+  // "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+  // "8": "Enter <STREET_NAMES>",
+  // "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+  // "10",
+  // "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+  // "11",
   // "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto
-  // <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."},
-  // {"12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."},
-  // {"13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
-  // {"14",
+  // <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+  // "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+  // "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+  // "14",
   // "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on
-  // <ROUNDABOUT_EXIT_STREET_NAMES>."},
-  // {"15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."}};
+  // <ROUNDABOUT_EXIT_STREET_NAMES>.",
+  // "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>.";
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2367,6 +2367,8 @@ std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver,
 
   std::string roundabout_exit_street_names;
   std::string roundabout_exit_begin_street_names;
+
+  // TODO - in the future this value will come from the options_ member variable
   bool option_roundabout_exits = true;
   // If we are creating roundabout exit maneuvers
   // then only assign the roundabout exit street names
@@ -2458,28 +2460,28 @@ NarrativeBuilder::FormVerbalAlertEnterRoundaboutInstruction(Maneuver& maneuver,
                                                             bool limit_by_consecutive_count,
                                                             uint32_t element_max_count,
                                                             const std::string& delim) {
-  // {"0": "Enter the roundabout."},
-  // {"1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."},
-  // {"2",
-  // "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
-  // {"3",
+  // "0": "Enter the roundabout.",
+  // "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit.",
+  // "2",
+  // "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+  // "3",
   // "Enter the roundabout and take the <ORDINAL_VALUE> exit onto
-  // <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."},
-  // {"4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."},
-  // {"5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
-  // {"6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."},
-  // {"7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>."},
-  // {"8": "Enter <STREET_NAMES>"},
-  // {"9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit."},
-  // {"10",
-  // "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
-  // {"11",
+  // <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+  // "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+  // "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+  // "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+  // "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+  // "8": "Enter <STREET_NAMES>",
+  // "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+  // "10",
+  // "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+  // "11",
   // "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto
-  // <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."},
-  // {"12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."},
-  // {"13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
-  // {"14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."},
-  // {"15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."}};
+  // <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+  // "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+  // "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+  // "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+  // "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>.";
 
   return FormVerbalEnterRoundaboutInstruction(maneuver, limit_by_consecutive_count, element_max_count,
                                               delim);
@@ -2489,28 +2491,28 @@ std::string NarrativeBuilder::FormVerbalEnterRoundaboutInstruction(Maneuver& man
                                                                    bool limit_by_consecutive_count,
                                                                    uint32_t element_max_count,
                                                                    const std::string& delim) {
-  // {"0": "Enter the roundabout."},
-  // {"1": "Enter the roundabout and take the <ORDINAL_VALUE> exit."},
-  // {"2",
-  // "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
-  // {"3",
+  // "0": "Enter the roundabout.",
+  // "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit.",
+  // "2",
+  // "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+  // "3",
   // "Enter the roundabout and take the <ORDINAL_VALUE> exit onto
-  // <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."},
-  // {"4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."},
-  // {"5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
-  // {"6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."},
-  // {"7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>."},
-  // {"8": "Enter <STREET_NAMES>"},
-  // {"9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit."},
-  // {"10",
-  // "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
-  // {"11",
+  // <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+  // "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+  // "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+  // "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+  // "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+  // "8": "Enter <STREET_NAMES>",
+  // "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+  // "10",
+  // "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+  // "11",
   // "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto
-  // <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."},
-  // {"12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."},
-  // {"13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
-  // {"14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."},
-  // {"15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."}};
+  // <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+  // "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+  // "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+  // "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+  // "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>.";
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2595,10 +2597,13 @@ std::string NarrativeBuilder::FormVerbalEnterRoundaboutInstruction(Maneuver& man
   return instruction;
 }
 
-std::string NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) {
+std::string NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver,
+                                                            bool limit_by_consecutive_count,
+                                                            uint32_t element_max_count) {
   // "0": "Exit the roundabout.",
   // "1": "Exit the roundabout onto <STREET_NAMES>.",
-  // "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+  // "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
+  // "3": "Exit the roundabout toward <TOWARD_SIGN>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2615,10 +2620,22 @@ std::string NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) 
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
-  if (!begin_street_names.empty()) {
-    phrase_id = 2;
-  } else if (!street_names.empty()) {
-    phrase_id = 1;
+  std::string guide_sign;
+
+  if (maneuver.HasGuideSign()) {
+    // Skip to the toward phrase - it takes priority over street names
+    phrase_id += 3;
+    // Assign guide sign
+    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count);
+  } else {
+    if (!street_names.empty()) {
+      // Increment for street name phrase
+      phrase_id += 1;
+    }
+    if (!begin_street_names.empty()) {
+      // Increment for begin street name phrase
+      phrase_id += 1;
+    }
   }
 
   // Set instruction to the determined tagged phrase
@@ -2627,6 +2644,7 @@ std::string NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) 
   // Replace phrase tags with values
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -2637,11 +2655,13 @@ std::string NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) 
 }
 
 std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(Maneuver& maneuver,
+                                                                  bool limit_by_consecutive_count,
                                                                   uint32_t element_max_count,
                                                                   const std::string& delim) {
   // "0": "Exit the roundabout.",
   // "1": "Exit the roundabout onto <STREET_NAMES>.",
-  // "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>."
+  // "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>.",
+  // "3": "Exit the roundabout toward <TOWARD_SIGN>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2660,10 +2680,23 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(Maneuver& mane
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
-  if (!begin_street_names.empty()) {
-    phrase_id = 2;
-  } else if (!street_names.empty()) {
-    phrase_id = 1;
+  std::string guide_sign;
+
+  if (maneuver.HasGuideSign()) {
+    // Skip to the toward phrase - it takes priority over street names
+    phrase_id += 3;
+    // Assign guide sign
+    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count, delim,
+                                                 maneuver.verbal_formatter());
+  } else {
+    if (!street_names.empty()) {
+      // Increment for street name phrase
+      phrase_id += 1;
+    }
+    if (!begin_street_names.empty()) {
+      // Increment for begin street name phrase
+      phrase_id += 1;
+    }
   }
 
   // Set instruction to the determined tagged phrase
@@ -2672,6 +2705,7 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(Maneuver& mane
   // Replace phrase tags with values
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {

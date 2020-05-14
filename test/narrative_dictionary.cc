@@ -212,12 +212,14 @@ const std::map<std::string, std::string> kExpectedEnterRoundaboutVerbalPhrases =
 const std::map<std::string, std::string> kExpectedExitRoundaboutPhrases =
     {{"0", "Exit the roundabout."},
      {"1", "Exit the roundabout onto <STREET_NAMES>."},
-     {"2", "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}};
+     {"2", "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
+     {"3", "Exit the roundabout toward <TOWARD_SIGN>."}};
 
 const std::map<std::string, std::string> kExpectedExitRoundaboutVerbalPhrases =
     {{"0", "Exit the roundabout."},
      {"1", "Exit the roundabout onto <STREET_NAMES>."},
-     {"2", "Exit the roundabout onto <BEGIN_STREET_NAMES>."}};
+     {"2", "Exit the roundabout onto <BEGIN_STREET_NAMES>."},
+     {"3", "Exit the roundabout toward <TOWARD_SIGN>."}};
 
 const std::map<std::string, std::string> kExpectedEnterFerryPhrases =
     {{"0", "Take the Ferry."},

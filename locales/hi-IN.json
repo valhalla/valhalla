@@ -653,7 +653,8 @@
       "phrases": {
         "0": "सर्कल से बाहर निकलें.",
         "1": "<STREET_NAMES> पर सर्कल से बाहर निकलें.",
-        "2": "<BEGIN_STREET_NAMES> पर सर्कल से बाहर निकलें. <STREET_NAMES> पर जारी रहें."
+        "2": "<BEGIN_STREET_NAMES> पर सर्कल से बाहर निकलें. <STREET_NAMES> पर जारी रहें.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -669,6 +670,9 @@
         ],
         "2": [
           "Catoctin Mountain Highway/US 15 पर सर्कल से बाहर निकलें. US 15 पर जारी रहें."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
         ]
       }
     },
@@ -676,7 +680,8 @@
       "phrases": {
         "0": "सर्कल से बाहर निकलें.",
         "1": "<STREET_NAMES> पर सर्कल से बाहर निकलें.",
-        "2": "<BEGIN_STREET_NAMES> पर सर्कल से बाहर निकलें."
+        "2": "<BEGIN_STREET_NAMES> पर सर्कल से बाहर निकलें.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -692,6 +697,9 @@
         ],
         "2": [
           "Catoctin Mountain Highway, U.S. 15 पर सर्कल से बाहर निकलें."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
         ]
       }
     },
