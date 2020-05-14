@@ -2,6 +2,7 @@
 #ifndef MMP_STATE_H_
 #define MMP_STATE_H_
 
+#include <algorithm>
 #include <unordered_map>
 #include <vector>
 
