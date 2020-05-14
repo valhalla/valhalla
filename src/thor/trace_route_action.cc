@@ -105,6 +105,7 @@ void thor_worker_t::trace_route(Api& request) {
     // then we want to fallback to try and use meili map matching to match to local route
     // network. No shortcuts are used and detailed information at every intersection becomes
     // available.
+    // clang-format off
     case ShapeMatch::walk_or_snap:
       try {
         route_match(request);
@@ -113,8 +114,13 @@ void thor_worker_t::trace_route(Api& request) {
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
           map_match(request);
-        } catch (...) { throw valhalla_exception_t{442}; }
+        } catch (const valhalla_exception_t& e) {
+          throw e;
+        } catch (...) {
+          throw valhalla_exception_t{442};
+        }
       }
+      // clang-format on
       break;
   }
 
