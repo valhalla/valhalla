@@ -2365,14 +2365,32 @@ std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver,
   // Assign the street names
   std::string street_names = FormStreetNames(maneuver, maneuver.street_names());
 
-  // Assign the roundabout exit street names
-  std::string roundabout_exit_street_names =
-      FormStreetNames(maneuver, maneuver.roundabout_exit_street_names(),
-                      &dictionary_.enter_roundabout_subset.empty_street_name_labels, true);
+  std::string roundabout_exit_street_names;
+  std::string roundabout_exit_begin_street_names;
+  bool option_roundabout_exits = true;
+  // If we are creating roundabout exit maneuvers
+  // then only assign the roundabout exit street names
+  if (option_roundabout_exits) {
+    if (maneuver.roundabout_exit_begin_street_names().empty()) {
+      // Use the street names
+      roundabout_exit_street_names =
+          FormStreetNames(maneuver, maneuver.roundabout_exit_street_names(),
+                          &dictionary_.enter_roundabout_subset.empty_street_name_labels, true);
+    } else {
+      // Use the begin street names
+      roundabout_exit_street_names =
+          FormStreetNames(maneuver, maneuver.roundabout_exit_begin_street_names());
+    }
+  } else {
+    // Assign the roundabout exit street names
+    roundabout_exit_street_names =
+        FormStreetNames(maneuver, maneuver.roundabout_exit_street_names(),
+                        &dictionary_.enter_roundabout_subset.empty_street_name_labels, true);
 
-  // Assign the roundabout exit begin street names
-  std::string roundabout_exit_begin_street_names =
-      FormStreetNames(maneuver, maneuver.roundabout_exit_begin_street_names());
+    // Assign the roundabout exit begin street names
+    roundabout_exit_begin_street_names =
+        FormStreetNames(maneuver, maneuver.roundabout_exit_begin_street_names());
+  }
 
   // Determine which phrase to use - start with unnamed roundabout base phrase
   uint8_t phrase_id = 0;
