@@ -16,7 +16,7 @@ TEST(Lua, ZeroMantissa) {
   // Check that decimals are properly parsed
   tags.insert({"highway", "primary"});
   tags.insert({"maxheight", "2.0"});
-  auto results = lua.Transform(mjolnir::OSMType::kWay, tags);
+  auto results = lua.Transform(mjolnir::OSMType::kWay, 1, tags);
   ASSERT_FLOAT_EQ(2.0f, std::stof(results["maxheight"]));
 }
 
@@ -95,7 +95,7 @@ TEST(Lua, NumberDoublePeriod) {
   mjolnir::Tags tags;
   tags.insert({"highway", "tertiary"});
   tags.insert({"maxheight", "3..35"});
-  auto results = lua.Transform(mjolnir::OSMType::kWay, tags);
+  auto results = lua.Transform(mjolnir::OSMType::kWay, 1, tags);
 
   // check that the maxheight isn't present...
   ASSERT_TRUE(results.count("maxheight") == 0);
