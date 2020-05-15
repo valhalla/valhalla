@@ -46,9 +46,9 @@ std::vector<Sign>* Signs::mutable_exit_number_list() {
 
 std::string Signs::GetExitNumberString(uint32_t max_count,
                                        bool limit_by_consecutive_count,
-                                       std::string delim,
+                                       const std::string& delim,
                                        const VerbalTextFormatter* verbal_formatter) const {
-  return ListToString(exit_number_list_, max_count, limit_by_consecutive_count, std::move(delim),
+  return ListToString(exit_number_list_, max_count, limit_by_consecutive_count, delim,
                       verbal_formatter);
 }
 
@@ -62,9 +62,9 @@ std::vector<Sign>* Signs::mutable_exit_branch_list() {
 
 std::string Signs::GetExitBranchString(uint32_t max_count,
                                        bool limit_by_consecutive_count,
-                                       std::string delim,
+                                       const std::string& delim,
                                        const VerbalTextFormatter* verbal_formatter) const {
-  return ListToString(exit_branch_list_, max_count, limit_by_consecutive_count, std::move(delim),
+  return ListToString(exit_branch_list_, max_count, limit_by_consecutive_count, delim,
                       verbal_formatter);
 }
 
@@ -78,9 +78,9 @@ std::vector<Sign>* Signs::mutable_exit_toward_list() {
 
 std::string Signs::GetExitTowardString(uint32_t max_count,
                                        bool limit_by_consecutive_count,
-                                       std::string delim,
+                                       const std::string& delim,
                                        const VerbalTextFormatter* verbal_formatter) const {
-  return ListToString(exit_toward_list_, max_count, limit_by_consecutive_count, std::move(delim),
+  return ListToString(exit_toward_list_, max_count, limit_by_consecutive_count, delim,
                       verbal_formatter);
 }
 
@@ -94,9 +94,9 @@ std::vector<Sign>* Signs::mutable_exit_name_list() {
 
 std::string Signs::GetExitNameString(uint32_t max_count,
                                      bool limit_by_consecutive_count,
-                                     std::string delim,
+                                     const std::string& delim,
                                      const VerbalTextFormatter* verbal_formatter) const {
-  return ListToString(exit_name_list_, max_count, limit_by_consecutive_count, std::move(delim),
+  return ListToString(exit_name_list_, max_count, limit_by_consecutive_count, delim,
                       verbal_formatter);
 }
 
@@ -110,9 +110,9 @@ std::vector<Sign>* Signs::mutable_guide_branch_list() {
 
 const std::string Signs::GetGuideBranchString(uint32_t max_count,
                                               bool limit_by_consecutive_count,
-                                              std::string delim,
+                                              const std::string& delim,
                                               const VerbalTextFormatter* verbal_formatter) const {
-  return ListToString(guide_branch_list_, max_count, limit_by_consecutive_count, std::move(delim),
+  return ListToString(guide_branch_list_, max_count, limit_by_consecutive_count, delim,
                       verbal_formatter);
 }
 
@@ -126,15 +126,15 @@ std::vector<Sign>* Signs::mutable_guide_toward_list() {
 
 const std::string Signs::GetGuideTowardString(uint32_t max_count,
                                               bool limit_by_consecutive_count,
-                                              std::string delim,
+                                              const std::string& delim,
                                               const VerbalTextFormatter* verbal_formatter) const {
-  return ListToString(guide_toward_list_, max_count, limit_by_consecutive_count, std::move(delim),
+  return ListToString(guide_toward_list_, max_count, limit_by_consecutive_count, delim,
                       verbal_formatter);
 }
 
 const std::string Signs::GetGuideString(uint32_t max_count,
                                         bool limit_by_consecutive_count,
-                                        std::string delim,
+                                        const std::string& delim,
                                         const VerbalTextFormatter* verbal_formatter) const {
   std::string guide_string;
   if (HasGuideBranch() && HasGuideToward() && ((max_count == 0) || (max_count > 1))) {
@@ -165,9 +165,9 @@ std::vector<Sign>* Signs::mutable_junction_name_list() {
 
 const std::string Signs::GetJunctionNameString(uint32_t max_count,
                                                bool limit_by_consecutive_count,
-                                               std::string delim,
+                                               const std::string& delim,
                                                const VerbalTextFormatter* verbal_formatter) const {
-  return ListToString(junction_name_list_, max_count, limit_by_consecutive_count, std::move(delim),
+  return ListToString(junction_name_list_, max_count, limit_by_consecutive_count, delim,
                       verbal_formatter);
 }
 
