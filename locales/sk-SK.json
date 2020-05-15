@@ -1820,29 +1820,29 @@
       ],
       "example_phrases": {
         "0": [
-          "Otočte se vlevo."
+          "Otočte sa vľavo."
         ],
         "1": [
-          "Otočte se vpravo na Bunker Hill Road."
+          "Otočte sa vpravo na Bunker Hill Road."
         ],
         "2": [
-          "Otočte se vlevo a zůstaňte na Bunker Hill Road."
+          "Otočte sa vľavo a zostaňte na Bunker Hill Road."
         ],
         "3": [
-          "Otočte se vlevo přes Devonshire Road."
+          "Otočte sa vľavo cez Devonshire Road."
         ],
         "4": [
-          "Otočte se vlevo přes Devonshire Road na Jonestown Road, U.S. 22."
+          "Otočte sa vľavo cez Devonshire Road na Jonestown Road, U.S. 22."
         ],
         "5": [
-          "Otočte se vlevo přes Devonshire Road a zůstaňte na Jonestown Road, U.S. 22."
+          "Otočte sa vľavo cez Devonshire Road a zůstaňte na Jonestown Road, U.S. 22."
         ]
       }
     },
     "verbal_multi_cue": {
       "phrases": {
         "0": "<CURRENT_VERBAL_CUE> Potom <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+        "1": "<CURRENT_VERBAL_CUE> Potom za <LENGTH>, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
         "<KILOMETERS> kilometrov",
@@ -1863,13 +1863,13 @@
           "Odbočte mírně vpravo na East Fayette Street. Potom Odbočte vpravo na North Gay Street."
         ],
         "1": [
-          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+          "Odbočte mírně vpravo na East Fayette Street. Potom za 500 metrov, Odbočte vpravo na North Gay Street."
         ]
       }
     },
     "approach_verbal_alert": {
       "phrases": {
-        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+        "0": "Po <LENGTH>, <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
         "<KILOMETERS> kilometrov",
@@ -1887,7 +1887,7 @@
       ],
       "example_phrases": {
         "0": [
-          "In a quarter mile, Turn right onto North Gay Street."
+          "Po štvrť míle, Odbočte vpravo na North Gay Street."
         ]
       }
     }
