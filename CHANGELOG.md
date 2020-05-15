@@ -80,6 +80,8 @@
    * ADDED: Ability to create OpenLR records from raw data. [2356](https://github.com/valhalla/valhalla/pull/2356)
    * ADDED: Revamp length phrases [2359](https://github.com/valhalla/valhalla/pull/2359)
    * CHANGED: Do not allocate memory in skadi if we don't need it. [#2373](https://github.com/valhalla/valhalla/pull/2373)
+   * ADDED: Add sk-SK.json (slovak) localization file. [2376](https://github.com/valhalla/valhalla/pull/2376)
+   * ADDED: Extend roundabout phrases. [2378](https://github.com/valhalla/valhalla/pull/2378)
    
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
