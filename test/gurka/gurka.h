@@ -836,11 +836,11 @@ void expect_instructions_at_maneuver_index(const valhalla::Api& result,
                                            int maneuver_index,
                                            const std::vector<std::string>& expected_instructions) {
 
-  EXPECT_EQ(result.directions().routes_size(), 1);
-  EXPECT_EQ(result.directions().routes(0).legs_size(), 1);
-  EXPECT_TRUE((maneuver_index >= 0) &&
+  ASSERT_EQ(result.directions().routes_size(), 1);
+  ASSERT_EQ(result.directions().routes(0).legs_size(), 1);
+  ASSERT_TRUE((maneuver_index >= 0) &&
               (maneuver_index < result.directions().routes(0).legs(0).maneuver_size()));
-  EXPECT_EQ(expected_instructions.size(), 4);
+  ASSERT_EQ(expected_instructions.size(), 4);
   const auto& maneuver = result.directions().routes(0).legs(0).maneuver(maneuver_index);
 
   EXPECT_EQ(maneuver.text_instruction(), expected_instructions.at(0));
