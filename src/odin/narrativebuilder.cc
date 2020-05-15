@@ -83,12 +83,14 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         break;
       }
       case DirectionsLeg_Maneuver_Type_kBecomes: {
-        // Set instruction
-        maneuver.set_instruction(FormBecomesInstruction(maneuver, prev_maneuver));
+        if (prev_maneuver) {
+          // Set instruction
+          maneuver.set_instruction(FormBecomesInstruction(maneuver, prev_maneuver));
 
-        // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            FormVerbalBecomesInstruction(maneuver, prev_maneuver));
+          // Set verbal pre transition instruction
+          maneuver.set_verbal_pre_transition_instruction(
+              FormVerbalBecomesInstruction(maneuver, prev_maneuver));
+        }
 
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(

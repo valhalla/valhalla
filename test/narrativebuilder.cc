@@ -3870,11 +3870,10 @@ TEST(NarrativeBuilder, TestBuildDestinationInstructions_0_miles_en_US) {
 
   // Add location info to trip path
   TripLeg path;
-  Location* location;
   // origin
-  location = path.add_location();
+  path.add_location();
   // destination
-  location = path.add_location();
+  path.add_location();
 
   EnhancedTripLeg etp(path);
   TryBuild(options, maneuvers, expected_maneuvers, &etp);
@@ -3909,7 +3908,7 @@ TEST(NarrativeBuilder, TestBuildDestinationInstructions_1_miles_en_US) {
   TripLeg path;
   Location* location;
   // origin
-  location = path.add_location();
+  path.add_location();
   // destination
   location = path.add_location();
   location->set_street("3206 Powelton Avenue");
@@ -3947,7 +3946,7 @@ TEST(NarrativeBuilder, TestBuildDestinationInstructions_2_miles_en_US) {
   TripLeg path;
   Location* location;
   // origin
-  location = path.add_location();
+  path.add_location();
   // destination
   location = path.add_location();
   location->set_side_of_street(Location::kRight);
@@ -3985,7 +3984,7 @@ TEST(NarrativeBuilder, TestBuildDestinationInstructions_3_miles_en_US) {
   TripLeg path;
   Location* location;
   // origin
-  location = path.add_location();
+  path.add_location();
   // destination
   location = path.add_location();
   location->set_name("Lancaster Brewing Company");
