@@ -1376,6 +1376,36 @@ TEST(Mapmatch, duplicated_end_points) {
     ASSERT_EQ(req_rep.options().shape_size() - 1, req_rep.trip().routes(0).legs_size());
   }
 }
+
+TEST(Mapmatch, no_edge_candidates) {
+  // clang-format off
+  std::vector<std::pair<size_t, std::string>> test_cases = {
+    {443, R"({"shape":[
+             {"lat":"52.0954408","lon":"5.1135341","type":"break","radius":15},
+             {"lat":"52.0954819","lon":"5.1135190","type":"break","radius":15}],
+              "costing":"auto","shape_match":"map_snap","format":"osrm",
+              "trace_options":{"interpolation_distance":0}})"},
+    {443, R"({"shape":[
+             {"lat":"52.0954408","lon":"5.1135341","type":"break","radius":15},
+             {"lat":"52.0954819","lon":"5.1135190","type":"break","radius":15},
+             {"lat":"52.0954010","lon":"5.1135599","type":"break","radius":15}],
+             "costing":"auto","shape_match":"map_snap","format":"osrm",
+             "trace_options":{"interpolation_distance":0}})"},
+    {442, R"({"shape":[
+             {"lat":"52.0954342","lon":"5.1140063","type":"break","radius":15},
+             {"lat":"52.0954819","lon":"5.1135190","type":"break","radius":15}],
+             "costing":"auto","shape_match":"map_snap","format":"osrm",
+             "trace_options":{"interpolation_distance":0}})"}
+  };
+  // clang-format on
+  tyr::actor_t actor(conf, true);
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    Api req_rep;
+    try {
+      actor.trace_route(test_cases[i].second, nullptr, &req_rep);
+    } catch (const valhalla::valhalla_exception_t& e) { ASSERT_EQ(e.code, test_cases[i].first); }
+  }
+}
 } // namespace
 
 int main(int argc, char* argv[]) {
