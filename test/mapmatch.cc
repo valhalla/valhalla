@@ -1380,6 +1380,7 @@ TEST(Mapmatch, duplicated_end_points) {
 TEST(Mapmatch, no_edge_candidates) {
   // clang-format off
   std::vector<std::pair<size_t, std::string>> test_cases = {
+    // First two cases are too far from the road to have candidates, so throw 443 NoSegment.
     {443, R"({"shape":[
              {"lat":"52.0954408","lon":"5.1135341","type":"break","radius":15},
              {"lat":"52.0954819","lon":"5.1135190","type":"break","radius":15}],
@@ -1391,6 +1392,7 @@ TEST(Mapmatch, no_edge_candidates) {
              {"lat":"52.0954010","lon":"5.1135599","type":"break","radius":15}],
              "costing":"auto","shape_match":"map_snap","format":"osrm",
              "trace_options":{"interpolation_distance":0}})"},
+    // Only a single point is too far, so we should throw 442 NoRoute.
     {442, R"({"shape":[
              {"lat":"52.0954342","lon":"5.1140063","type":"break","radius":15},
              {"lat":"52.0954819","lon":"5.1135190","type":"break","radius":15}],
