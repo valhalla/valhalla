@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <utility>
 
 #include "baldr/verbal_text_formatter.h"
