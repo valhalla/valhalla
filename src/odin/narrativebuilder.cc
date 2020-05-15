@@ -2378,8 +2378,7 @@ std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver,
     if (maneuver.roundabout_exit_begin_street_names().empty()) {
       // Use the street names
       roundabout_exit_street_names =
-          FormStreetNames(maneuver, maneuver.roundabout_exit_street_names(),
-                          &dictionary_.enter_roundabout_subset.empty_street_name_labels, true);
+          FormStreetNames(maneuver, maneuver.roundabout_exit_street_names());
     } else {
       // Use the begin street names
       roundabout_exit_street_names =
@@ -2387,6 +2386,7 @@ std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver,
     }
   } else {
     // Assign the roundabout exit street names
+    // We can use empty_street_name_labels when enter/exit maneuvers are combined
     roundabout_exit_street_names =
         FormStreetNames(maneuver, maneuver.roundabout_exit_street_names(),
                         &dictionary_.enter_roundabout_subset.empty_street_name_labels, true);
@@ -2525,11 +2525,20 @@ std::string NarrativeBuilder::FormVerbalEnterRoundaboutInstruction(Maneuver& man
                       &dictionary_.enter_roundabout_verbal_subset.empty_street_name_labels, false,
                       element_max_count, delim, maneuver.verbal_formatter());
 
+  // TODO - in the future this value will come from the options_ member variable
+  bool option_roundabout_exits = true;
+  bool enhance_empty_street_names = false;
+  // Only enhance empty street names if enter/exit are combined
+  if (!option_roundabout_exits) {
+    enhance_empty_street_names = true;
+  }
+
   // Assign the roundabout exit street names
   std::string roundabout_exit_street_names =
       FormStreetNames(maneuver, maneuver.roundabout_exit_street_names(),
-                      &dictionary_.enter_roundabout_verbal_subset.empty_street_name_labels, true,
-                      element_max_count, delim, maneuver.verbal_formatter());
+                      &dictionary_.enter_roundabout_verbal_subset.empty_street_name_labels,
+                      enhance_empty_street_names, element_max_count, delim,
+                      maneuver.verbal_formatter());
 
   // Assign the roundabout exit begin street names
   std::string roundabout_exit_begin_street_names =

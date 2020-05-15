@@ -428,6 +428,10 @@ void NarrativeDictionary::Load(EnterRoundaboutSubset& enter_roundabout_handle,
   // Populate ordinal_values
   enter_roundabout_handle.ordinal_values =
       as_vector<std::string>(enter_roundabout_subset_pt, kOrdinalValuesKey);
+
+  // Populate empty_street_name_labels
+  enter_roundabout_handle.empty_street_name_labels =
+      as_vector<std::string>(enter_roundabout_subset_pt, kEmptyStreetNameLabelsKey);
 }
 
 void NarrativeDictionary::Load(EnterFerrySubset& enter_ferry_handle,
