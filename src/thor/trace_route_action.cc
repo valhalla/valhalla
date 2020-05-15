@@ -91,14 +91,21 @@ void thor_worker_t::trace_route(Api& request) {
     // If non-exact shape points are used, then we need to correct this shape by sending them
     // through the map-matching algorithm to snap the points to the correct shape
     case ShapeMatch::map_snap:
+      // clang-format off
       try {
         map_match(request);
-      } catch (...) { throw valhalla_exception_t{442}; }
+      } catch (const valhalla_exception_t& e) {
+        throw e;
+      } catch (...) {
+        throw valhalla_exception_t{442};
+      }
+      // clang-format on
       break;
     // If we think that we have the exact shape but there ends up being no Valhalla route match,
     // then we want to fallback to try and use meili map matching to match to local route
     // network. No shortcuts are used and detailed information at every intersection becomes
     // available.
+    // clang-format off
     case ShapeMatch::walk_or_snap:
       try {
         route_match(request);
@@ -107,8 +114,13 @@ void thor_worker_t::trace_route(Api& request) {
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
           map_match(request);
-        } catch (...) { throw valhalla_exception_t{442}; }
+        } catch (const valhalla_exception_t& e) {
+          throw e;
+        } catch (...) {
+          throw valhalla_exception_t{442};
+        }
       }
+      // clang-format on
       break;
   }
 
