@@ -74,7 +74,7 @@ build_config(const std::string& tiledir,
              const std::unordered_map<std::string, std::string>& config_options) {
 
   const std::string default_config = R"(
-    {"mjolnir":{"tile_dir":"", "concurrency": 1},
+    {"mjolnir":{"id_table_size":1000,"tile_dir":"", "concurrency": 1},
      "thor":{
        "logging" : {"long_request" : 100}
      },

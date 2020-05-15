@@ -62,6 +62,28 @@ public:
     return maxosmid_;
   }
 
+  /**
+   * Gets the bit markers
+   * @return bit markers
+   */
+  inline std::vector<uint64_t> get_bitmarkers() {
+    return bitmarkers_;
+  }
+
+  /**
+   * Sets the bit markers
+   * Also, resizes the internal storage and adjusts maxosmid_
+   * @param  vector  bit markers
+   */
+  inline void set_bitmarkers(const std::vector<uint64_t>& bitmarkers) {
+
+    // Set this to the actual maximum as dictated by the storage
+    maxosmid_ = bitmarkers.size() * static_cast<uint64_t>(64) - 1;
+    // Create a vector to mark bits. Initialize to 0.
+    bitmarkers_.resize((maxosmid_ / 64) + 1, 0);
+    bitmarkers_ = bitmarkers;
+  }
+
 private:
   /**
    * Resizes the internal storage and adjusts maxosmid_ if needed

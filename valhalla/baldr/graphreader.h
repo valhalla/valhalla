@@ -343,7 +343,9 @@ public:
   explicit GraphReader(const boost::property_tree::ptree& pt,
                        std::unique_ptr<tile_getter_t>&& tile_getter = nullptr);
 
-  void SetInterrupt(const tile_getter_t::interrupt_t* interrupt) {
+  virtual ~GraphReader() = default;
+
+  virtual void SetInterrupt(const tile_getter_t::interrupt_t* interrupt) {
     if (tile_getter_) {
       tile_getter_->set_interrupt(interrupt);
     }
@@ -353,15 +355,14 @@ public:
    * Test if tile exists
    * @param  graphid  GraphId of the tile to test (tile id and level).
    */
-  bool DoesTileExist(const GraphId& graphid) const;
-  static bool DoesTileExist(const boost::property_tree::ptree& pt, const GraphId& graphid);
+  virtual bool DoesTileExist(const GraphId& graphid) const;
 
   /**
    * Get a pointer to a graph tile object given a GraphId.
    * @param graphid  the graphid of the tile
    * @return GraphTile* a pointer to the graph tile
    */
-  const GraphTile* GetGraphTile(const GraphId& graphid);
+  virtual const GraphTile* GetGraphTile(const GraphId& graphid);
 
   /**
    * Get a pointer to a graph tile object given a GraphId. This method also
@@ -402,7 +403,7 @@ public:
   /**
    * Clears the cache
    */
-  void Clear() {
+  virtual void Clear() {
     cache_->Clear();
   }
 
@@ -410,7 +411,7 @@ public:
    * Tries to ensure the cache footprint below allowed maximum
    * In some cases may even remove the entire cache.
    */
-  void Trim() {
+  virtual void Trim() {
     cache_->Trim();
   }
 
@@ -426,7 +427,7 @@ public:
    * Lets you know if the cache is too large
    * @return true if the cache is over committed with respect to the limit
    */
-  bool OverCommitted() const {
+  virtual bool OverCommitted() const {
     return cache_->OverCommitted();
   }
 

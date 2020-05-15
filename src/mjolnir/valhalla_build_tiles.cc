@@ -21,7 +21,7 @@ namespace bpo = boost::program_options;
 // List the build stages
 void list_stages() {
   std::cout << "Build stage strings (in order)" << std::endl;
-  for (int i = static_cast<int>(BuildStage::kParse); i <= static_cast<int>(BuildStage::kCleanup);
+  for (int i = static_cast<int>(BuildStage::kInitialize); i <= static_cast<int>(BuildStage::kCleanup);
        ++i) {
     std::cout << "    " << to_string(static_cast<BuildStage>(i)) << std::endl;
   }
@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
   LOG_INFO("Start stage = " + to_string(start_stage) + " End stage = " + to_string(end_stage));
 
   if (input_files.size() == 0 &&
-      (start_stage <= BuildStage::kParse && end_stage >= BuildStage::kParse)) {
+      (start_stage <= BuildStage::kParseNodes && end_stage >= BuildStage::kParseWays)) {
     std::cerr << "Input file is required\n\n" << options << "\n\n";
     return EXIT_FAILURE;
   }
