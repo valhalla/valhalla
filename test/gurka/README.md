@@ -178,6 +178,10 @@ in the `gurka::assert::raw` namespace:
 void expect_maneuvers(const valhalla::Api& result,
                       const std::vector<valhalla::DirectionsLeg_Maneuver_Type>& expected_maneuvers);
 
+void expect_instructions_at_maneuver_index(const valhalla::Api& result,
+                                           int maneuver_index,
+                                           const std::vector<std::string>& expected_instructions);
+
 void expect_path_length(const valhalla::Api& result,
                         const float expected_length_km,
                         const float error_margin = 0);
@@ -208,3 +212,4 @@ low-level helper functions available in case you want to do something a little m
   - `gurka::detail::build_config(workdir);` - builds a `boost::property_tree` for tile generation in `workdir`
   - `gurka::detail::map_to_coordinates(ascii_map, gridsize);` - calculates coordinates for all the A-Za-z0-9 nodes in the `ascii_map` given the `gridsize`
   - `gurka::detail::build_pbf(node_locations, ways, nodes, relations, pbf_filename);` - generates an OSM PBF for the nodes, ways, and relations you've defined.  The `nodemap` is the result of `gurka::detail::map_to_coordinates`
+

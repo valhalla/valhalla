@@ -353,7 +353,21 @@
     "enter_roundabout": {
       "phrases": {
         "0": "In den Kreisverkehr fahren.",
-        "1": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt nehmen."
+        "1": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt nehmen.",
+        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "1.",
@@ -367,40 +381,10 @@
         "9.",
         "10."
       ],
-      "example_phrases": {
-        "0": [
-          "Enter the roundabout."
-        ],
-        "1": [
-          "Enter the roundabout and take the 1st exit.",
-          "Enter the roundabout and take the 2nd exit.",
-          "Enter the roundabout and take the 3rd exit.",
-          "Enter the roundabout and take the 4th exit.",
-          "Enter the roundabout and take the 5th exit.",
-          "Enter the roundabout and take the 6th exit.",
-          "Enter the roundabout and take the 7th exit.",
-          "Enter the roundabout and take the 8th exit.",
-          "Enter the roundabout and take the 9th exit.",
-          "Enter the roundabout and take the 10th exit."
-        ]
-      }
-    },
-    "enter_roundabout_verbal": {
-      "phrases": {
-        "0": "In den Kreisverkehr fahren.",
-        "1": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt nehmen."
-      },
-      "ordinal_values": [
-        "erste",
-        "zweite",
-        "dritte",
-        "vierte",
-        "fünfte",
-        "sechste",
-        "siebte",
-        "achte",
-        "neunte",
-        "zehnte"
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail"
       ],
       "example_phrases": {
         "0": [
@@ -417,6 +401,144 @@
           "Enter the roundabout and take the 8th exit.",
           "Enter the roundabout and take the 9th exit.",
           "Enter the roundabout and take the 10th exit."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
+        ]
+      }
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "In den Kreisverkehr fahren.",
+        "1": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt nehmen.",
+        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+      },
+      "ordinal_values": [
+        "erste",
+        "zweite",
+        "dritte",
+        "vierte",
+        "fünfte",
+        "sechste",
+        "siebte",
+        "achte",
+        "neunte",
+        "zehnte"
+      ],
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the roundabout."
+        ],
+        "1": [
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
         ]
       }
     },
@@ -531,7 +653,8 @@
       "phrases": {
         "0": "Aus dem Kreisverkehr ausfahren.",
         "1": "Aus dem Kreisverkehr auf <STREET_NAMES> ausfahren.",
-        "2": "Aus dem Kreisverkehr auf <BEGIN_STREET_NAMES> ausfahren. Dann weiter auf <STREET_NAMES>."
+        "2": "Aus dem Kreisverkehr auf <BEGIN_STREET_NAMES> ausfahren. Dann weiter auf <STREET_NAMES>.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -547,6 +670,9 @@
         ],
         "2": [
           "Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
         ]
       }
     },
@@ -554,7 +680,8 @@
       "phrases": {
         "0": "Aus dem Kreisverkehr ausfahren.",
         "1": "Aus dem Kreisverkehr auf <STREET_NAMES> ausfahren.",
-        "2": "Aus dem Kreisverkehr auf <BEGIN_STREET_NAMES> ausfahren. Dann weiter auf <STREET_NAMES>."
+        "2": "Aus dem Kreisverkehr auf <BEGIN_STREET_NAMES> ausfahren. Dann weiter auf <STREET_NAMES>.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -570,6 +697,9 @@
         ],
         "2": [
           "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
         ]
       }
     },
