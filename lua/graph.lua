@@ -70,8 +70,8 @@ default_speed = {
 [3] = 60,
 [4] = 50,
 [5] = 40,
-[6] = 30,
-[7] = 20
+[6] = 35,
+[7] = 25
 }
 
 access = {
@@ -636,12 +636,16 @@ function numeric_prefix(num_str, allow_decimals)
 
   --find where the numbers stop
   local index = 0
+  -- flag to say if we've seen a decimal dot already. we shouldn't allow two,
+  -- otherwise the call to tonumber() might fail.
+  local seen_dot = false
   for c in num_str:gmatch"." do
     if tonumber(c) == nil then
       if c == "." then
-        if allow_decimals == false then
+        if allow_decimals == false or seen_dot then
            break
         end
+        seen_dot = true
       else
         break
       end
@@ -654,14 +658,14 @@ function numeric_prefix(num_str, allow_decimals)
     return nil
   end
 
-  --convert number portion of string to actual numeric type
-  return tonumber(num_str:sub(0, index))
+  --Returns the substring that's numeric at the start of num_str
+  return num_str:sub(0, index)
 end
 
 --normalize a speed value
 function normalize_speed(speed)
   --grab the number prefix
-  local num = numeric_prefix(speed, false)
+  local num = tonumber(numeric_prefix(speed, false))
 
   --check if the rest of the string ends in "mph" convert to kph
   if num then
@@ -688,28 +692,28 @@ function normalize_weight(weight)
     if num then
       if w:sub(-1) == "t" or w:sub(-5) == "tonne" or w:sub(-6) == "tonnes" then
         if (num .. "t" == w) or (num .. "tonne" == w) or (num .. "tonnes" == w) then
-          return round(num,2)
+          return round(tonumber(num),2)
         end
       end
 
       if w:sub(-3) == "ton" or w:sub(-4) == "tons" then
          if (num .. "ton" == w) or (num .. "tons" == w) then
-           return round(num,2)
+           return round(tonumber(num),2)
          end
       end
 
       if w:sub(-2) == "lb" or w:sub(-3) == "lbs" then
         if (num .. "lb" == w) or (num .. "lbs" == w) then
-          return round((num/2000),2) -- convert to tons
+          return round((tonumber(num)/2000),2) -- convert to tons
         end
       end
 
       if w:sub(-2) == "kg" then
         if (num .. "kg" == w) then
-          return round((num/1000),2)
+          return round((tonumber(num)/1000),2)
         end
       end
-      return round(num,2) --3.5
+      return round(tonumber(num),2) --3.5
     end
   end
   return nil
@@ -718,71 +722,62 @@ end
 function normalize_measurement(measurement)
 
   if measurement then
+    -- turn commas into dots to handle European-style decimal separators
+    measurement = measurement:gsub(",", ".")
 
-    local m = measurement:gsub("%s+", "")
-    --7'6" or 7ft6in
-    --7m
-    --7
-    --grab the number prefix
-    local num = numeric_prefix(m, true)
+    -- handle the simple case: it's just a plain number
+    local num = tonumber(measurement)
     if num then
-      if m:sub(-1) == "m" or m:sub(-5) == "meter" or m:sub(-6) == "meters" then
-        if (num .. "m" == m) or (num .. "meter" == m) or (num .. "meters" == m) then
-          return round(num,2)
-        end
+      return round(num, 2)
+    end
+
+    -- more complicated case, try some Lua patterns. they're almost like regular
+    -- expressions, so there'll probably be some unintended consequences!
+    --
+    -- because we want to parse compount expressions such as 3ft6in, then we use
+    -- an accumulator to sum up each term in meters. this has the unintended
+    -- side-effect that 10m6ft would also be valid... but whatever.
+    local sum = 0
+    local count = 0
+    for item, unit in measurement:gmatch("(%d+[.,]?%d*) *([a-zA-Z\"\']*)") do
+
+      -- just in case the pattern above matches some things that tonumber()
+      -- disagrees are valid numbers, we'll bail here if we don't get a valid
+      -- number.
+      item_num = tonumber(item)
+      if not item_num then
+        return nil
       end
 
-      local feet
-      local inches
+      -- case shouldn't matter for units, so just lower case everything before
+      -- comparing.
+      unit = unit:lower()
 
-      if m:sub(-2) == "in" or m:sub(-1) == "\"" or m:sub(-6) == "inches" or m:sub(-4) == "inch" then
-
---have to check for inches only
-        if (num .. "in" == m) or (num .. "\"" == m) or (num .. "inches" == m) or (num .. "inch" == m) then
-          return round((num * 0.0254),2)
-        end
-
-        feet = num
-        m = string.sub(measurement, string.len(tostring(feet))+1)
-
-        local index = 0
-        for c in m:gmatch"." do
-          if tonumber(c) ~= nil then
-            break
-          end
-          index = index + 1
-        end
-
-        m = m:sub(index+1)
-        inches = numeric_prefix(m, true)
-        num = round((feet * 0.3048) + (inches * 0.0254),2)
-      elseif m:sub(-2) == "ft" or m:sub(-1) == "\'" or m:sub(-4) == "feet" then
-        feet = num
-        num = round((feet * 0.3048),2)
+      if unit == "m" or unit == "meter" or unit == "meters" then
+        sum = sum + item_num
+      elseif unit == "cm" then
+        sum = sum + item_num * 0.01
+      elseif (unit == "ft" or unit == "feet" or unit == "foot" or
+              unit == "'") then
+        sum = sum + item_num * 0.3048
+      elseif (unit == "in" or unit == "inches" or unit == "inch" or
+              unit == "\"" or unit == "''") then
+        sum = sum + item_num * 0.0254
       else
-        feet = num
-        m = string.sub(measurement, string.len(tostring(feet))+1)
-
-        local index = 0
-        for c in m:gmatch"." do
-          if tonumber(c) ~= nil then
-            break
-          end
-          index = index + 1
-        end
-
-        if index ~= 0 then
---crappy data case.  7'6 or 7ft6
-          m = m:sub(index+1)
-          inches = numeric_prefix(m, true)
-          if inches then
-            num = round((feet * 0.3048) + (inches * 0.0254),2)
-          else
-            num = round((feet * 0.3048),2)
-          end
-        end
+        -- unknown unit! bail!
+        return nil
       end
-      return round(num,2)
+
+      -- increment counter, so we can check how many parts we parsed (mainly to
+      -- make sure it's not none at all).
+      count = count + 1
+    end
+
+    if count > 0 then
+      -- if we got here, then the units seem valid. yay! now we round to two
+      -- decimal digits, because precision of less than a centimeter seems
+      -- unnecessary.
+      return round(sum, 2)
     end
   end
   return nil
@@ -1269,6 +1264,11 @@ function filter_tags_generic(kv)
      return 1
    end
 
+   --toss where access=private and highway=service and service != driveway
+   if (kv["access"] == "private" and kv["highway"] == "service" and (kv["service"] == nil or kv["service"] ~= "driveway")) then
+     return 1
+   end
+
    delete_tags = { 'FIXME', 'note', 'source' }
 
    for i,k in ipairs(delete_tags) do
@@ -1335,7 +1335,13 @@ function filter_tags_generic(kv)
     use = 0 --general road, no special use
   end
 
-  if kv["access"] == "emergency" or kv["emergency"] == "yes" then
+  if (kv["access"] == "emergency" or kv["emergency"] == "yes") and
+      kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and
+      kv["truck_forward"] == "false" and kv["truck_backward"] == "false" and
+      kv["bus_forward"] == "false" and kv["bus_backward"] == "false" and
+      kv["bike_forward"] == "false" and kv["bike_backward"] == "false" and
+      kv["moped_forward"] == "false" and kv["moped_backward"] == "false" and
+      kv["motorcycle_forward"] == "false" and kv["motorcycle_backward"] == "false" then
     use = 7
   end
 
@@ -1449,7 +1455,14 @@ function filter_tags_generic(kv)
   kv["name:en"] = kv["name:en"]
   kv["alt_name"] = kv["alt_name"]
   kv["official_name"] = kv["official_name"]
-  kv["max_speed"] = normalize_speed(kv["maxspeed"])
+
+  if kv["maxspeed"] == "none" then
+    --- special case unlimited speed limit (german autobahn)
+    kv["max_speed"] = "unlimited"
+  else
+    kv["max_speed"] = normalize_speed(kv["maxspeed"])
+  end
+
   kv["advisory_speed"] = normalize_speed(kv["maxspeed:advisory"])
   kv["average_speed"] = normalize_speed(kv["maxspeed:practical"])
   kv["backward_speed"] = normalize_speed(kv["maxspeed:backward"])
@@ -1481,19 +1494,19 @@ function filter_tags_generic(kv)
         kv["ref"] = kv["unsigned_ref"]
   end
 
-  lane_count = numeric_prefix(kv["lanes"],false)
+  lane_count = tonumber(numeric_prefix(kv["lanes"],false))
   if lane_count and lane_count > 15 then
     lane_count = nil
   end
   kv["lanes"] = lane_count
 
-  lane_count = numeric_prefix(kv["lanes:forward"],false)
+  lane_count = tonumber(numeric_prefix(kv["lanes:forward"],false))
   if lane_count and lane_count > 15 then
     lane_count = nil
   end
   kv["forward_lanes"] = lane_count
 
-  lane_count = numeric_prefix(kv["lanes:backward"],false)
+  lane_count = tonumber(numeric_prefix(kv["lanes:backward"],false))
   if lane_count and lane_count > 15 then
     lane_count = nil
   end
@@ -1593,13 +1606,13 @@ function filter_tags_generic(kv)
     bike_mask = 1
   end
   if rref or kv["rcn"] == "yes" then
-    bike_mask = bit32.bor(bike_mask, 2)
+    bike_mask = bit.bor(bike_mask, 2)
   end
   if lref or kv["lcn"] == "yes" then
-    bike_mask = bit32.bor(bike_mask, 4)
+    bike_mask = bit.bor(bike_mask, 4)
   end
   if kv["mtb"] == "yes" then
-    bike_mask = bit32.bor(bike_mask, 8)
+    bike_mask = bit.bor(bike_mask, 8)
   end
 
   kv["bike_national_ref"] = nref
@@ -1807,7 +1820,7 @@ function nodes_proc (kv, nokeys)
   end
 
   --store a mask denoting payment type
-  kv["payment_mask"] = bit32.bor(cash_payment, etc_payment)
+  kv["payment_mask"] = bit.bor(cash_payment, etc_payment)
 
   if kv["amenity"] == "bicycle_rental" or (kv["shop"] == "bicycle" and kv["service:bicycle:rental"] == "yes") then
     kv["bicycle_rental"] = "true"
@@ -1815,14 +1828,32 @@ function nodes_proc (kv, nokeys)
 
   if kv["traffic_signals:direction"] == "forward" then
     kv["forward_signal"] = "true"
+
+    if kv["public_transport"] == nil and kv["name"] then
+       kv["junction"] = "named"
+    end
   end
 
   if kv["traffic_signals:direction"] == "backward" then
     kv["backward_signal"] = "true"
+
+    if kv["public_transport"] == nil and kv["name"] then
+       kv["junction"] = "named"
+    end
+  end
+
+  if kv["public_transport"] == nil and kv["name"] then
+    if kv["highway"] == "traffic_signals" then
+       if kv["junction"] ~= "yes" then
+          kv["junction"] = "named"
+       end
+    elseif kv["junction"] == "yes" or kv["reference_point"] == "yes" then
+       kv["junction"] = "named"
+    end
   end
 
   --store a mask denoting access
-  kv["access_mask"] = bit32.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov, moped, motorcycle, taxi)
+  kv["access_mask"] = bit.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov, moped, motorcycle, taxi)
 
   return 0, kv
 end
@@ -1893,11 +1924,11 @@ function rels_proc (kv, nokeys)
        end
 
        if kv["network"] == "ncn" then
-         bike_mask = bit32.bor(bike_mask, 1)
+         bike_mask = bit.bor(bike_mask, 1)
        elseif kv["network"] == "rcn" then
-         bike_mask = bit32.bor(bike_mask, 2)
+         bike_mask = bit.bor(bike_mask, 2)
        elseif kv["network"] == "lcn" then
-         bike_mask = bit32.bor(bike_mask, 4)
+         bike_mask = bit.bor(bike_mask, 4)
        end
 
        kv["bike_network_mask"] = bike_mask

@@ -61,7 +61,7 @@ void print_edge(GraphReader& reader,
     auto node_id = pred_edge->endnode();
     auto node_tile = reader.GetGraphTile(node_id);
     auto node = node_tile->node(node_id);
-    EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, 0.0f, static_cast<TravelMode>(0), 0);
+    EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, 0.0f, static_cast<TravelMode>(0), 0, {});
     std::cout << "-------Transition-------\n";
     std::cout << "Pred GraphId: " << pred_id << std::endl;
     Cost trans_cost = costing->TransitionCost(edge, node, pred_label);
@@ -75,49 +75,59 @@ void print_edge(GraphReader& reader,
   std::cout << "----------Edge----------\n";
   std::cout << "Edge GraphId: " << current_id << std::endl;
   std::cout << "Edge length: " << edge->length() << std::endl;
-  Cost edge_cost = costing->EdgeCost(edge, tile->GetSpeed(edge));
+  Cost edge_cost = costing->EdgeCost(edge, tile);
   edge_total += edge_cost;
   std::cout << "EdgeCost cost: " << edge_cost.cost << " secs: " << edge_cost.secs << "\n";
   std::cout << "------------------------\n\n";
 }
 
-void walk_edges(const std::string& shape, GraphReader& reader, cost_ptr_t cost_ptr) {
+void walk_edges(const std::string& shape, GraphReader& reader, const cost_ptr_t& cost_ptr) {
   TravelMode mode = cost_ptr->travel_mode();
   cost_ptr_t mode_costing[10];
   mode_costing[static_cast<uint32_t>(mode)] = cost_ptr;
 
-  // Decode the shape
+  // Get shape
   std::vector<PointLL> shape_pts = decode<std::vector<PointLL>>(shape);
   if (shape_pts.size() <= 1) {
     std::cerr << "Not enough shape points to compute the path...exiting" << std::endl;
   }
+  std::vector<Measurement> trace;
+  trace.reserve(shape_pts.size());
+  std::transform(shape_pts.begin(), shape_pts.end(), std::back_inserter(trace), [](const PointLL& p) {
+    return Measurement{p, 10, 10};
+  });
 
-  std::vector<Measurement> measurements;
-  measurements.reserve(shape_pts.size());
-  for (const auto& ll : shape_pts) {
-    measurements.emplace_back(Measurement{ll, 10, 10});
-  }
+  // Use the shape to form a single edge correlation at the start and end of
+  // the shape (using heading).
+  std::vector<valhalla::baldr::Location> locations{shape_pts.front(), shape_pts.back()};
+  locations.front().heading_ = std::round(PointLL::HeadingAlongPolyline(shape_pts, 30.f));
+  locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape_pts, 30.f));
 
-  // Add a location for the origin (first shape point) and destination (last
-  // shape point)
-  std::vector<baldr::Location> locations;
-  locations.push_back({shape_pts.front()});
-  locations.push_back({shape_pts.back()});
-  const auto projections =
-      Search(locations, reader, cost_ptr->GetEdgeFilter(), cost_ptr->GetNodeFilter());
+  std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
+  const auto projections = Search(locations, reader, cost);
   std::vector<PathLocation> path_location;
   valhalla::Options options;
-  for (const auto& loc : locations) {
-    try {
-      path_location.push_back(projections.at(loc));
-      PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
-    } catch (...) { return; }
+
+  for (const auto& ll : shape_pts) {
+    auto* sll = options.mutable_shape()->Add();
+    sll->mutable_ll()->set_lat(ll.lat());
+    sll->mutable_ll()->set_lng(ll.lng());
+    // set type to via by default
+    sll->set_type(valhalla::Location::kVia);
+  }
+  // first and last always get type break
+  if (options.shape_size()) {
+    options.mutable_shape(0)->set_type(valhalla::Location::kBreak);
+    options.mutable_shape(options.shape_size() - 1)->set_type(valhalla::Location::kBreak);
   }
 
-  std::vector<PathInfo> path_infos;
+  for (const auto& loc : locations) {
+    path_location.push_back(projections.at(loc));
+    PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
+  }
+  std::vector<PathInfo> path;
   std::vector<PathLocation> correlated;
-  bool rtn = RouteMatcher::FormPath(mode_costing, mode, reader, measurements, false,
-                                    options.locations(), path_infos);
+  bool rtn = RouteMatcher::FormPath(mode_costing, mode, reader, trace, options, path);
   if (!rtn) {
     std::cerr << "ERROR: RouteMatcher returned false - did not match complete shape." << std::endl;
   }
@@ -126,7 +136,7 @@ void walk_edges(const std::string& shape, GraphReader& reader, cost_ptr_t cost_p
   uint64_t current_osmid = 0;
   Cost edge_total;
   Cost trans_total;
-  for (const auto& path_info : path_infos) {
+  for (const auto& path_info : path) {
     // std::cout << "lat: " << result.lnglat.lat() << " lon: " << result.lnglat.lng() << std::endl;
     if (path_info.edgeid == current_id || path_info.edgeid == kInvalidGraphId) {
       continue;
@@ -222,7 +232,7 @@ int main(int argc, char* argv[]) {
         for (const auto& location : path.second) {
           // Get the location from the ptree
           // TODO - this was copied from the defunct Location::FromPtree
-          const auto& pt = path.second;
+          const auto& pt = location.second;
           float lat = pt.get<float>("lat");
           if (lat < -90.0f || lat > 90.0f) {
             throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
@@ -246,7 +256,8 @@ int main(int argc, char* argv[]) {
           loc.node_snap_tolerance_ = pt.get<float>("node_snap_tolerance", loc.node_snap_tolerance_);
           loc.way_id_ = pt.get_optional<long double>("way_id");
 
-          loc.minimum_reachability_ = pt.get<unsigned int>("minimum_reachability", 50);
+          loc.min_outbound_reach_ = loc.min_inbound_reach_ =
+              pt.get<unsigned int>("minimum_reachability", 50);
           loc.radius_ = pt.get<unsigned long>("radius", 0);
           locations.emplace_back(std::move(loc));
         }
@@ -271,16 +282,23 @@ int main(int argc, char* argv[]) {
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
+  if (!map_match) {
+    valhalla::Options options;
+    for (int i = 0; i < valhalla::Costing_MAX; ++i) {
+      request.mutable_options()->add_costing_options();
+    }
+  }
+
   // Construct costing
   CostFactory<DynamicCost> factory;
   factory.RegisterStandardCostingModels();
   valhalla::Costing costing;
-  if (valhalla::Costing_Parse(routetype, &costing)) {
+  if (valhalla::Costing_Enum_Parse(routetype, &costing)) {
     request.mutable_options()->set_costing(costing);
   } else {
     throw std::runtime_error("No costing method found");
   }
-  cost_ptr_t cost_ptr = factory.Create(costing, request.options());
+  cost_ptr_t cost_ptr = factory.Create(request.options());
 
   // If a shape is entered use edge walking
   if (!map_match) {

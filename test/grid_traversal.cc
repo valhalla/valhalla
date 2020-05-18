@@ -6,59 +6,44 @@
 #include "midgard/point2.h"
 
 #include "meili/grid_traversal.h"
+
 #include "test.h"
+
+namespace {
 
 using namespace valhalla;
 
-bool equal_squares(const std::vector<std::pair<int, int>>& s1,
-                   const std::vector<std::pair<int, int>>& s2) {
-  bool ok = s1.size() == s2.size();
-  if (!ok)
-    return false;
-
-  for (decltype(s1.size()) i = 0; i < s1.size(); i++) {
-    ok = s1[i].first == s2[i].first && s1[i].second == s2[i].second;
-    if (!ok)
-      return false;
+std::string result_to_str(const std::vector<std::pair<int, int>>& result) {
+  std::string result_str;
+  result_str = "(";
+  for (const auto& p : result) {
+    result_str += std::to_string(p.first);
+    result_str += " ";
+    result_str += std::to_string(p.second);
+    result_str += ", ";
   }
-
-  return true;
+  if (1 < result_str.size()) {
+    result_str.erase(result_str.size() - 2);
+  }
+  result_str += ")";
+  return result_str;
 }
 
 void assert_equal_squares(const std::vector<std::pair<int, int>>& got,
                           const std::vector<std::pair<int, int>>& expected,
                           const std::string& msg) {
-  std::string got_ss;
-  got_ss = "(";
-  for (const auto& p : got) {
-    got_ss += std::to_string(p.first);
-    got_ss += " ";
-    got_ss += std::to_string(p.second);
-    got_ss += ", ";
-  }
-  if (1 < got_ss.size()) {
-    got_ss.erase(got_ss.size() - 2);
-  }
-  got_ss += ")";
 
-  std::string expected_ss;
-  expected_ss = "(";
-  for (const auto& p : expected) {
-    expected_ss += std::to_string(p.first);
-    expected_ss += " ";
-    expected_ss += std::to_string(p.second);
-    expected_ss += ", ";
-  }
-  if (1 < expected_ss.size()) {
-    expected_ss.erase(expected_ss.size() - 2);
-  }
-  expected_ss += ")";
+  ASSERT_EQ(got, expected) << "got: " << result_to_str(got)
+                           << " expected: " << result_to_str(expected);
 
-  test::assert_bool(equal_squares(got, expected),
-                    msg + ". Expected " + expected_ss + ", but got " + got_ss);
+  ASSERT_EQ(got.size(), expected.size());
+  for (decltype(got.size()) i = 0; i < got.size(); i++) {
+    ASSERT_EQ(got[i].first, expected[i].first);
+    ASSERT_EQ(got[i].second, expected[i].second);
+  }
 }
 
-void TestGridTraversal() {
+TEST(GridTraversal, TestGridTraversal) {
   meili::GridTraversal<midgard::Point2> grid(0.1, 0.1, 0.3, 0.3, 3, 3);
   assert_equal_squares(grid.Traverse({0, 0}, {0.9, 0.9}),
                        std::vector<std::pair<int, int>>{{0, 0}, {1, 1}, {2, 2}},
@@ -159,10 +144,9 @@ void TestGridTraversal() {
                        "Real world example of segment intersecting grid");
 }
 
+} // namespace
+
 int main(int argc, char* argv[]) {
-  test::suite suite("grid traversal");
-
-  suite.test(TEST_CASE(TestGridTraversal));
-
-  return suite.tear_down();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

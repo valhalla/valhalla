@@ -24,30 +24,51 @@ void PopulateSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& s
   }
 }
 
-Signs GetNumberSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
+Signs GetExitNumberSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
   Signs signs;
   PopulateSigns(sign_items, signs.mutable_exit_number_list());
 
   return signs;
 }
 
-Signs GetBranchSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
+Signs GetExitBranchSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
   Signs signs;
   PopulateSigns(sign_items, signs.mutable_exit_branch_list());
 
   return signs;
 }
 
-Signs GetTowardSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
+Signs GetExitTowardSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
   Signs signs;
   PopulateSigns(sign_items, signs.mutable_exit_toward_list());
 
   return signs;
 }
 
-Signs GetNameSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
+Signs GetExitNameSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
   Signs signs;
   PopulateSigns(sign_items, signs.mutable_exit_name_list());
+
+  return signs;
+}
+
+Signs GetGuideBranchSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
+  Signs signs;
+  PopulateSigns(sign_items, signs.mutable_guide_branch_list());
+
+  return signs;
+}
+
+Signs GetGuideTowardSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
+  Signs signs;
+  PopulateSigns(sign_items, signs.mutable_guide_toward_list());
+
+  return signs;
+}
+
+Signs GetJunctionNameSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
+  Signs signs;
+  PopulateSigns(sign_items, signs.mutable_junction_name_list());
 
   return signs;
 }
@@ -57,9 +78,7 @@ void TryGetExitNumberString(const Signs& signs,
                             bool limit_by_consecutive_count,
                             const std::string& expectedString) {
 
-  if (signs.GetExitNumberString(max_count, limit_by_consecutive_count) != expectedString) {
-    throw std::runtime_error("Incorrect Exit Number String - expected: " + expectedString);
-  }
+  EXPECT_EQ(signs.GetExitNumberString(max_count, limit_by_consecutive_count), expectedString);
 }
 
 void TryGetExitBranchString(const Signs& signs,
@@ -67,9 +86,7 @@ void TryGetExitBranchString(const Signs& signs,
                             bool limit_by_consecutive_count,
                             const std::string& expectedString) {
 
-  if (signs.GetExitBranchString(max_count, limit_by_consecutive_count) != expectedString) {
-    throw std::runtime_error("Incorrect Exit Branch String - expected: " + expectedString);
-  }
+  EXPECT_EQ(signs.GetExitBranchString(max_count, limit_by_consecutive_count), expectedString);
 }
 
 void TryGetExitTowardString(const Signs& signs,
@@ -77,9 +94,7 @@ void TryGetExitTowardString(const Signs& signs,
                             bool limit_by_consecutive_count,
                             const std::string& expectedString) {
 
-  if (signs.GetExitTowardString(max_count, limit_by_consecutive_count) != expectedString) {
-    throw std::runtime_error("Incorrect Exit Toward String - expected: " + expectedString);
-  }
+  EXPECT_EQ(signs.GetExitTowardString(max_count, limit_by_consecutive_count), expectedString);
 }
 
 void TryGetExitNameString(const Signs& signs,
@@ -87,16 +102,38 @@ void TryGetExitNameString(const Signs& signs,
                           bool limit_by_consecutive_count,
                           const std::string& expectedString) {
 
-  if (signs.GetExitNameString(max_count, limit_by_consecutive_count) != expectedString) {
-    throw std::runtime_error("Incorrect Exit Name String - expected: " + expectedString);
-  }
+  EXPECT_EQ(signs.GetExitNameString(max_count, limit_by_consecutive_count), expectedString);
 }
 
-void TestGetExitTowardString_PA283_onto_PA743() {
+void TryGetGuideBranchString(const Signs& signs,
+                             uint32_t max_count,
+                             bool limit_by_consecutive_count,
+                             const std::string& expectedString) {
+
+  EXPECT_EQ(signs.GetGuideBranchString(max_count, limit_by_consecutive_count), expectedString);
+}
+
+void TryGetGuideTowardString(const Signs& signs,
+                             uint32_t max_count,
+                             bool limit_by_consecutive_count,
+                             const std::string& expectedString) {
+
+  EXPECT_EQ(signs.GetGuideTowardString(max_count, limit_by_consecutive_count), expectedString);
+}
+
+void TryGetJunctionNameString(const Signs& signs,
+                              uint32_t max_count,
+                              bool limit_by_consecutive_count,
+                              const std::string& expectedString) {
+
+  EXPECT_EQ(signs.GetJunctionNameString(max_count, limit_by_consecutive_count), expectedString);
+}
+
+TEST(Signs, TestGetExitTowardString_PA283_onto_PA743) {
   // Create toward sign
   // Specify input in descending consecutive count order
   Signs signs =
-      GetTowardSigns({std::make_tuple("Elizabethtown", 0, 1), std::make_tuple("Hershey", 0, 0)});
+      GetExitTowardSigns({std::make_tuple("Elizabethtown", 0, 1), std::make_tuple("Hershey", 0, 0)});
 
   TryGetExitTowardString(signs, 4, false, "Elizabethtown/Hershey");
   TryGetExitTowardString(signs, 2, false, "Elizabethtown/Hershey");
@@ -106,10 +143,10 @@ void TestGetExitTowardString_PA283_onto_PA743() {
   TryGetExitTowardString(signs, 1, true, "Elizabethtown");
 }
 
-void TestGetExitNumberString_I81S_onto_US322W() {
+TEST(Signs, TestGetExitNumberString_I81S_onto_US322W) {
   // Create number sign
   // Specify input in descending consecutive count order
-  Signs signs = GetNumberSigns({std::make_tuple("67B", 0, 1), std::make_tuple("67A", 0, 0)});
+  Signs signs = GetExitNumberSigns({std::make_tuple("67B", 0, 1), std::make_tuple("67A", 0, 0)});
 
   TryGetExitNumberString(signs, 4, false, "67B/67A");
   TryGetExitNumberString(signs, 2, false, "67B/67A");
@@ -120,13 +157,13 @@ void TestGetExitNumberString_I81S_onto_US322W() {
   TryGetExitNumberString(signs, 1, true, "67B");
 }
 
-void TestGetExitBranchString_I81S_onto_US322W() {
+TEST(Signs, TestGetExitBranchString_I81S_onto_US322W) {
   // Create branch sign
   // Specify input in descending consecutive count order
   Signs signs =
-      GetBranchSigns({std::make_tuple("US 322 West", 1, 2), std::make_tuple("US 22 West", 1, 1),
-                      std::make_tuple("US 22 East", 1, 0), std::make_tuple("PA 230 East", 1, 0),
-                      std::make_tuple("Cameron Street", 0, 0)});
+      GetExitBranchSigns({std::make_tuple("US 322 West", 1, 2), std::make_tuple("US 22 West", 1, 1),
+                          std::make_tuple("US 22 East", 1, 0), std::make_tuple("PA 230 East", 1, 0),
+                          std::make_tuple("Cameron Street", 0, 0)});
 
   TryGetExitBranchString(signs, 0, false,
                          "US 322 West/US 22 West/US 22 East/PA 230 East/Cameron Street");
@@ -143,12 +180,12 @@ void TestGetExitBranchString_I81S_onto_US322W() {
   TryGetExitBranchString(signs, 1, true, "US 322 West");
 }
 
-void TestGetExitTowardString_I81S_onto_US322W() {
+TEST(Signs, TestGetExitTowardString_I81S_onto_US322W) {
   // Create toward sign
   // Specify input in descending consecutive count order
   Signs signs =
-      GetTowardSigns({std::make_tuple("Lewistown", 0, 1), std::make_tuple("State College", 0, 1),
-                      std::make_tuple("Harrisburg", 0, 0)});
+      GetExitTowardSigns({std::make_tuple("Lewistown", 0, 1), std::make_tuple("State College", 0, 1),
+                          std::make_tuple("Harrisburg", 0, 0)});
 
   TryGetExitTowardString(signs, 4, false, "Lewistown/State College/Harrisburg");
   TryGetExitTowardString(signs, 2, false, "Lewistown/State College");
@@ -159,10 +196,10 @@ void TestGetExitTowardString_I81S_onto_US322W() {
   TryGetExitTowardString(signs, 1, true, "Lewistown");
 }
 
-void TestGetExitNameString() {
+TEST(Signs, TestGetExitNameString) {
   // Create name sign
   // Specify input in descending consecutive count order
-  Signs signs = GetNameSigns(
+  Signs signs = GetExitNameSigns(
       {std::make_tuple("Gettysburg Pike", 0, 1), std::make_tuple("Harrisburg Pike", 0, 0)});
 
   TryGetExitNameString(signs, 4, false, "Gettysburg Pike/Harrisburg Pike");
@@ -174,25 +211,56 @@ void TestGetExitNameString() {
   TryGetExitNameString(signs, 1, true, "Gettysburg Pike");
 }
 
+TEST(Signs, TestGetGuideBranchString_LinglestownRoad_onto_US322W) {
+  // Create branch sign
+  // Specify input in descending consecutive count order
+  Signs signs = GetGuideBranchSigns(
+      {std::make_tuple("US 322 West", 1, 1), std::make_tuple("US 22 West", 1, 0)});
+
+  TryGetGuideBranchString(signs, 0, false, "US 322 West/US 22 West");
+  TryGetGuideBranchString(signs, 4, false, "US 322 West/US 22 West");
+  TryGetGuideBranchString(signs, 2, false, "US 322 West/US 22 West");
+  TryGetGuideBranchString(signs, 1, false, "US 322 West");
+
+  TryGetGuideBranchString(signs, 0, true, "US 322 West");
+  TryGetGuideBranchString(signs, 4, true, "US 322 West");
+  TryGetGuideBranchString(signs, 2, true, "US 322 West");
+  TryGetGuideBranchString(signs, 1, true, "US 322 West");
+}
+
+TEST(Signs, TestGetGuideTowardString_roundabout_toward_A1) {
+  // Create toward sign
+  // Specify input in descending consecutive count order
+  Signs signs = GetGuideTowardSigns({std::make_tuple("A 1", 0, 1), std::make_tuple("Remscheid", 0, 1),
+                                     std::make_tuple("Wermelskirchen", 0, 0)});
+
+  TryGetGuideTowardString(signs, 4, false, "A 1/Remscheid/Wermelskirchen");
+  TryGetGuideTowardString(signs, 2, false, "A 1/Remscheid");
+  TryGetGuideTowardString(signs, 1, false, "A 1");
+
+  TryGetGuideTowardString(signs, 4, true, "A 1/Remscheid");
+  TryGetGuideTowardString(signs, 2, true, "A 1/Remscheid");
+  TryGetGuideTowardString(signs, 1, true, "A 1");
+}
+
+TEST(Signs, TestGetJunctionNameString) {
+  // Create named junction sign
+  // Specify input in descending consecutive count order
+  Signs signs = GetJunctionNameSigns(
+      {std::make_tuple("万年橋東", 0, 1), std::make_tuple("Mannenbashi East", 0, 0)});
+
+  TryGetJunctionNameString(signs, 4, false, "万年橋東/Mannenbashi East");
+  TryGetJunctionNameString(signs, 2, false, "万年橋東/Mannenbashi East");
+  TryGetJunctionNameString(signs, 1, false, "万年橋東");
+
+  TryGetJunctionNameString(signs, 4, true, "万年橋東");
+  TryGetJunctionNameString(signs, 2, true, "万年橋東");
+  TryGetJunctionNameString(signs, 1, true, "万年橋東");
+}
+
 } // namespace
 
-int main() {
-  test::suite suite("signs");
-
-  // GetExitTowardString_PA283_onto_PA743
-  suite.test(TEST_CASE(TestGetExitTowardString_PA283_onto_PA743));
-
-  // GetExitNumberString_I81S_onto_US322W
-  suite.test(TEST_CASE(TestGetExitNumberString_I81S_onto_US322W));
-
-  // GetExitBranchString_I81S_onto_US322W
-  suite.test(TEST_CASE(TestGetExitBranchString_I81S_onto_US322W));
-
-  // GetExitTowardString_I81S_onto_US322W
-  suite.test(TEST_CASE(TestGetExitTowardString_I81S_onto_US322W));
-
-  // GetExitNameString
-  suite.test(TEST_CASE(TestGetExitNameString));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

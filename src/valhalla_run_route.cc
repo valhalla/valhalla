@@ -4,6 +4,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <queue>
 #include <string>
@@ -33,6 +35,7 @@
 #include "thor/triplegbuilder.h"
 #include "worker.h"
 
+#include <valhalla/proto/api.pb.h>
 #include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
@@ -50,6 +53,11 @@ using namespace valhalla::meili;
 namespace bpo = boost::program_options;
 
 namespace {
+
+std::string get_env(const std::string& key) {
+  char* val = std::getenv(key.c_str());
+  return val == nullptr ? std::string("") : std::string(val);
+}
 
 // Default maximum distance between locations to choose a time dependent path algorithm
 const float kDefaultMaxTimeDependentDistance = 500000.0f;
@@ -121,7 +129,8 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
                                   const std::string& routetype,
                                   valhalla::Api& request) {
   auto t1 = std::chrono::high_resolution_clock::now();
-  auto paths = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
+  auto paths =
+      pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode, request.options());
   cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
 
   // If bidirectional A*, disable use of destination only edges on the first pass.
@@ -141,7 +150,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
       float expansion_within_factor = (using_astar) ? 4.0f : 2.0f;
       cost->RelaxHierarchyLimits(using_astar, expansion_within_factor);
       cost->set_allow_destination_only(true);
-      paths = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
+      paths = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode, request.options());
       data.incPasses();
     }
   }
@@ -150,6 +159,9 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
     return nullptr;
   }
   const auto& pathedges = paths.front();
+  LOG_INFO("Number of alternates requested=" + std::to_string(request.options().alternates()));
+  LOG_INFO("Number of paths=" + std::to_string(paths.size()));
+  LOG_INFO("Number of pathedges=" + std::to_string(pathedges.size()));
 
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
@@ -191,16 +203,29 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
     locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
 
     std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
-    const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+    const auto projections = Search(locations, reader, cost);
     std::vector<PathLocation> path_location;
     valhalla::Options options;
+
+    for (const auto& ll : shape) {
+      auto* sll = options.mutable_shape()->Add();
+      sll->mutable_ll()->set_lat(ll.lat());
+      sll->mutable_ll()->set_lng(ll.lng());
+      // set type to via by default
+      sll->set_type(valhalla::Location::kVia);
+    }
+    // first and last always get type break
+    if (options.shape_size()) {
+      options.mutable_shape(0)->set_type(valhalla::Location::kBreak);
+      options.mutable_shape(options.shape_size() - 1)->set_type(valhalla::Location::kBreak);
+    }
+
     for (const auto& loc : locations) {
       path_location.push_back(projections.at(loc));
       PathLocation::toPBF(path_location.back(), options.mutable_locations()->Add(), reader);
     }
     std::vector<PathInfo> path;
-    bool ret =
-        RouteMatcher::FormPath(mode_costing, mode, reader, trace, false, options.locations(), path);
+    bool ret = RouteMatcher::FormPath(mode_costing, mode, reader, trace, options, path);
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
     } else {
@@ -210,16 +235,32 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
 
   // Run again to see benefits of caching
   if (multi_run) {
-    uint32_t totalms = 0;
+    uint32_t total_get_best_path_ms = 0;
+    uint32_t total_trip_leg_builder_ms = 0;
     for (uint32_t i = 0; i < iterations; i++) {
       t1 = std::chrono::high_resolution_clock::now();
-      paths = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
+      paths = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode, request.options());
       t2 = std::chrono::high_resolution_clock::now();
-      totalms += std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+      total_get_best_path_ms +=
+          std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+      // Form trip leg
+      t1 = std::chrono::high_resolution_clock::now();
+      AttributesController controller;
+      valhalla::TripLeg trip_leg;
+      const auto& pathedges = paths.front();
+      TripLegBuilder::Build(controller, reader, mode_costing, pathedges.begin(), pathedges.end(),
+                            origin, dest, std::list<valhalla::Location>{}, trip_leg);
+      t2 = std::chrono::high_resolution_clock::now();
+      total_trip_leg_builder_ms +=
+          std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
       pathalgorithm->Clear();
     }
-    msecs = totalms / iterations;
+    msecs = total_get_best_path_ms / iterations;
     LOG_INFO("PathAlgorithm GetBestPath average: " + std::to_string(msecs) + " ms");
+    msecs = total_trip_leg_builder_ms / iterations;
+    LOG_INFO("TripLegBuilder average: " + std::to_string(msecs) + " ms");
   }
   return &request.trip().routes(0).legs(0);
 }
@@ -375,8 +416,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
           turn_lane_status = "NO_ACTIVE_TURN_LANES";
         }
         valhalla::midgard::logging::Log((boost::format("   %d: TURN_LANES: %s %s") % m %
-                                         prev_edge->TurnLanesToString(prev_edge->turn_lanes()) %
-                                         turn_lane_status)
+                                         prev_edge->TurnLanesToString() % turn_lane_status)
                                             .str(),
                                         " [NARRATIVE] ");
       }
@@ -487,12 +527,10 @@ int main(int argc, char* argv[]) {
   pos_options.add("config", 1);
 
   bpo::variables_map vm;
-
   try {
     bpo::store(bpo::command_line_parser(argc, argv).options(poptions).positional(pos_options).run(),
                vm);
     bpo::notify(vm);
-
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
@@ -523,7 +561,7 @@ int main(int argc, char* argv[]) {
   const auto& options = request.options();
 
   // Get type of route - this provides the costing method to use.
-  std::string routetype = valhalla::Costing_Name(options.costing());
+  const std::string& routetype = valhalla::Costing_Enum_Name(options.costing());
   LOG_INFO("routetype: " + routetype);
 
   // Locations
@@ -545,18 +583,15 @@ int main(int argc, char* argv[]) {
                                  std::unordered_map<std::string, std::string>>(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
-
   // Something to hold the statistics
   uint32_t n = locations.size() - 1;
   PathStatistics data({locations[0].latlng_.lat(), locations[0].latlng_.lng()},
                       {locations[n].latlng_.lat(), locations[n].latlng_.lng()});
-
   // Crow flies distance between locations (km)
   float d1 = 0.0f;
   for (uint32_t i = 0; i < n; i++) {
     d1 += locations[i].latlng_.Distance(locations[i + 1].latlng_) * kKmPerMeter;
   }
-
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
@@ -569,7 +604,6 @@ int main(int argc, char* argv[]) {
   // Construct costing
   CostFactory<DynamicCost> factory;
   factory.RegisterStandardCostingModels();
-
   // Get the costing method - pass the JSON configuration
   TravelMode mode;
   std::shared_ptr<DynamicCost> mode_costing[4];
@@ -584,7 +618,7 @@ int main(int argc, char* argv[]) {
   } else {
     // Assign costing method, override any config options that are in the
     // json request
-    std::shared_ptr<DynamicCost> cost = factory.Create(options.costing(), options);
+    std::shared_ptr<DynamicCost> cost = factory.Create(options);
     mode = cost->travel_mode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }
@@ -657,6 +691,23 @@ int main(int argc, char* argv[]) {
 
     // If successful get directions
     if (trip_path && trip_path->node_size() != 0) {
+
+      // Write the path.pbf if requested
+      if (get_env("SAVE_PATH_PBF") == "true") {
+        std::string path_bytes = request.SerializeAsString();
+        std::string pbf_filename = "path.pbf";
+        LOG_INFO("Writing TripPath to " + pbf_filename + " with size " +
+                 std::to_string(path_bytes.size()));
+        std::ofstream output_pbf(pbf_filename, std::ios::out | std::ios::trunc | std::ios::binary);
+        if (output_pbf.is_open() && path_bytes.size() > 0) {
+          output_pbf.write(&path_bytes[0], path_bytes.size());
+          output_pbf.close();
+        } else {
+          std::cerr << "Failed to write " << pbf_filename << std::endl;
+          return EXIT_FAILURE;
+        }
+      }
+
       // Try the the directions
       auto t1 = std::chrono::high_resolution_clock::now();
       const auto& trip_directions = DirectionsTest(request, origin, dest, data);

@@ -66,8 +66,16 @@ public:
    * Flag indicating the edge has predicted speed records.
    * @return  Returns true if this edge has predicted speed records.
    */
-  bool predicted_speed() const {
-    return predicted_speed_;
+  bool has_predicted_speed() const {
+    return has_predicted_speed_;
+  }
+
+  /**
+   * Indicates whether the edge has either predicted, free or constrained flow speeds.
+   * @return  Returns true if this edge has any flow speeds.
+   */
+  bool has_flow_speed() const {
+    return free_flow_speed_ > 0 || constrained_flow_speed_ > 0 || has_predicted_speed_;
   }
 
   /**
@@ -90,7 +98,7 @@ public:
    * Set the flag indicating the edge has predicted speed records.
    * @param p  True if this edge has predicted speed records
    */
-  void set_predicted_speed(const bool p);
+  void set_has_predicted_speed(const bool p);
 
   /**
    * Offset to the common edge data. The offset is from the start
@@ -123,19 +131,19 @@ public:
   void set_access_restriction(const uint32_t access);
 
   /**
-   * Does this directed edge have exit signs?
-   * @return  Returns true if the directed edge has exit signs,
+   * Does this directed edge have signs?
+   * @return  Returns true if the directed edge has signs,
    *          false if not.
    */
-  bool exitsign() const {
-    return exitsign_;
+  bool sign() const {
+    return sign_;
   }
 
   /**
-   * Sets the exit sign flag.
-   * @param  exit  True if this directed edge has exit signs, false if not.
+   * Sets the sign flag.
+   * @param  sign  True if this directed edge has signs, false if not.
    */
-  void set_exitsign(const bool exit);
+  void set_sign(const bool sign);
 
   /**
    * Does this directed edge have the lane connectivity?
@@ -1027,6 +1035,20 @@ public:
   void set_leaves_tile(const bool leaves_tile);
 
   /**
+   * Set the flag indicating whether this edge is a bike share station's connection
+   * @param  bss_connection  True if the edge is a bike share station's connection
+   */
+  void set_bss_connection(const bool bss_connection);
+
+  /**
+   * If this edge is a bike share station's connection?
+   * @return  Returns true if this edge is a bike share station's connection
+   */
+  bool bss_connection() const {
+    return bss_connection_;
+  }
+
+  /**
    * Create a json object representing this edge
    * @return  Returns the json object
    */
@@ -1038,7 +1060,7 @@ protected:
   uint64_t restrictions_ : 8;  // Restrictions - mask of local edge indexes at the end node
   uint64_t opp_index_ : 7;     // Opposing directed edge index
   uint64_t forward_ : 1;       // Is the edge info forward or reverse
-  uint32_t leaves_tile_ : 1;   // Does directed edge end in a different tile?
+  uint64_t leaves_tile_ : 1;   // Does directed edge end in a different tile?
   uint64_t ctry_crossing_ : 1; // Does the edge cross into new country
 
   // 2nd 8 byte word
@@ -1064,7 +1086,7 @@ protected:
   uint64_t toll_ : 1;                   // Edge is part of a toll road
   uint64_t roundabout_ : 1;             // Edge is part of a roundabout
   uint64_t truck_route_ : 1;            // Edge that is part of a truck route/network
-  uint64_t predicted_speed_ : 1;        // Does this edge have a predicted speed records?
+  uint64_t has_predicted_speed_ : 1;    // Does this edge have a predicted speed records?
 
   // 4th 8-byte word
   uint64_t forwardaccess_ : 12; // Access (bit mask) in forward direction (see graphconstants.h)
@@ -1081,14 +1103,15 @@ protected:
   uint64_t shoulder_ : 1;       // Does the edge have a shoulder?
   uint64_t lane_conn_ : 1;      // 1 if has lane connectivity, 0 otherwise
   uint64_t turnlanes_ : 1;      // Does this edge have turn lanes (end of edge)
-  uint64_t exitsign_ : 1;       // Exit signs exist for this edge
+  uint64_t sign_ : 1;           // Exit signs exist for this edge
   uint64_t internal_ : 1;       // Edge that is internal to an intersection
   uint64_t tunnel_ : 1;         // Is this edge part of a tunnel
   uint64_t bridge_ : 1;         // Is this edge part of a bridge?
   uint64_t traffic_signal_ : 1; // Traffic signal at end of the directed edge
   uint64_t seasonal_ : 1;       // Seasonal access (ex. no access in winter)
   uint64_t deadend_ : 1;        // Leads to a dead-end (no other driveable roads) TODO
-  uint64_t spare4_ : 10;
+  uint64_t bss_connection_ : 1; // Does this lead to(come out from) a bike share station?
+  uint64_t spare4_ : 9;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)

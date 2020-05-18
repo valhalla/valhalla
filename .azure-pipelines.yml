@@ -26,18 +26,8 @@ jobs:
       VCPKG_DIR: '$(Agent.WorkFolder)\vcpkg'
 
     steps:
-      - script: |
-          git config core.symlinks true
-          git reset --hard
-        displayName: 'Fix symlinks to third-party .proto files'
-
       - script: git submodule update --init --recursive
         displayName: 'Pull submodules'
-
-      - powershell: |
-          Get-Content -TotalCount 1 -Path .\proto\fileformat.proto
-          Get-Content -TotalCount 1 -Path .\proto\osmformat.proto
-        displayName: 'Check symlinks to third-party .proto files'
 
       - script: |
           git clone --depth 1 https://github.com/microsoft/vcpkg %VCPKG_DIR%
@@ -66,7 +56,7 @@ jobs:
 
       - script: |
           cmake --version
-          cmake -H$(Build.SourcesDirectory) -B%BUILD_DIR% -G "%GENERATOR%" -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_CCACHE=OFF -DENABLE_DATA_TOOLS=OFF -DENABLE_HTTP=OFF -DENABLE_NODE_BINDINGS=OFF -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_SERVICES=OFF -DENABLE_TOOLS=OFF
+          cmake -H$(Build.SourcesDirectory) -B%BUILD_DIR% -G "%GENERATOR%" -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_CCACHE=OFF -DENABLE_DATA_TOOLS=OFF -DENABLE_HTTP=OFF -DENABLE_NODE_BINDINGS=OFF -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_SERVICES=OFF -DENABLE_TOOLS=OFF -DENABLE_BENCHMARKS=OFF
         displayName: 'Run CMake to configure build'
 
       - script: |

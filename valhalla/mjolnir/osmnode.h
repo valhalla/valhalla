@@ -2,6 +2,7 @@
 #define VALHALLA_MJOLNIR_OSMNODE_H
 
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -40,7 +41,7 @@ struct OSMNode {
   uint64_t name_index_ : 21;
   uint64_t ref_index_ : 21;
   uint64_t exit_to_index_ : 21;
-  uint64_t spare1_ : 1;
+  uint64_t named_intersection_ : 1;
 
   OSMNode() {
     memset(this, 0, sizeof(OSMNode));
@@ -49,9 +50,12 @@ struct OSMNode {
   /**
    * Constructor with OSM node Id
    */
-  OSMNode(const uint64_t id) {
+  OSMNode(const uint64_t id,
+          const float lat = baldr::kInvalidLongitude,
+          const float lng = baldr::kInvalidLatitude) {
     memset(this, 0, sizeof(OSMNode));
     set_id(id);
+    set_latlng(lat, lng);
   }
 
   /**
@@ -252,6 +256,22 @@ struct OSMNode {
    */
   bool backward_signal() const {
     return backward_signal_;
+  }
+
+  /**
+   * Set the named intersection flag.
+   * @param  named  Is this a named intersection?
+   */
+  void set_named_intersection(const bool named) {
+    named_intersection_ = named;
+  }
+
+  /**
+   * Get the named intersection flag
+   * @return  Returns true if the node is a named intersection.
+   */
+  bool named_intersection() const {
+    return named_intersection_;
   }
 };
 

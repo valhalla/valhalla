@@ -19,4 +19,5 @@ valhalla_module(NAME midgard
   INCLUDE_DIRECTORIES
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
-      ${VALHALLA_SOURCE_DIR}/valhalla)
+      ${VALHALLA_SOURCE_DIR}/valhalla
+      $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>)

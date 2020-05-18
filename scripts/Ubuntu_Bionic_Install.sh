@@ -12,7 +12,7 @@ sudo apt install -y cmake make libtool pkg-config g++ gcc jq lcov protobuf-compi
 
 #if you plan to compile with data building support, see below for more info
 
-sudo apt install -y libgeos-dev libgeos++-dev liblua5.2-dev libspatialite-dev libsqlite3-dev lua5.2 wget
+sudo apt install -y libgeos-dev libgeos++-dev libluajit-5.1-dev libspatialite-dev libsqlite3-dev luajit wget
 if [[ $(grep -cF bionic /etc/lsb-release) > 0 ]]; then sudo apt install -y libsqlite3-mod-spatialite; fi
 
 
@@ -66,6 +66,8 @@ git submodule update --init --recursive
 make test -j8
 sudo make install
 
+echo -e "\nexport LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/" >> /etc/profile
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
 
 cd $HOME/valhalla
 

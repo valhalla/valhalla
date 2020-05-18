@@ -12,6 +12,7 @@ namespace {
 
 json::ArrayPtr serialize_range_height(const std::vector<float>& ranges,
                                       const std::vector<double>& heights,
+                                      const uint32_t precision,
                                       const double no_data_value) {
   auto array = json::array({});
   // for each posting
@@ -22,7 +23,7 @@ json::ArrayPtr serialize_range_height(const std::vector<float>& ranges,
     if (height == no_data_value) {
       element->push_back(nullptr);
     } else {
-      element->push_back({json::fp_t{height, 0}});
+      element->push_back({json::fp_t{height, precision}});
     }
     array->push_back(element);
     ++range;
@@ -30,7 +31,9 @@ json::ArrayPtr serialize_range_height(const std::vector<float>& ranges,
   return array;
 }
 
-json::ArrayPtr serialize_height(const std::vector<double>& heights, const double no_data_value) {
+json::ArrayPtr serialize_height(const std::vector<double>& heights,
+                                const uint32_t precision,
+                                const double no_data_value) {
   auto array = json::array({});
 
   for (const auto height : heights) {
@@ -38,7 +41,7 @@ json::ArrayPtr serialize_height(const std::vector<double>& heights, const double
     if (height == no_data_value) {
       array->push_back(nullptr);
     } else {
-      array->push_back({json::fp_t{height, 0}});
+      array->push_back({json::fp_t{height, precision}});
     }
   }
 
@@ -70,13 +73,17 @@ std::string serializeHeight(const Api& request,
                             const std::vector<float>& ranges) {
   auto json = json::map({});
 
+  // get the precision to use for returned heights
+  uint32_t precision = request.options().height_precision();
+
   // get the distances between the postings
   if (ranges.size()) {
-    json = json::map({{"range_height",
-                       serialize_range_height(ranges, heights, skadi::sample::get_no_data_value())}});
+    json = json::map({{"range_height", serialize_range_height(ranges, heights, precision,
+                                                              skadi::sample::get_no_data_value())}});
   } // just the postings
   else {
-    json = json::map({{"height", serialize_height(heights, skadi::sample::get_no_data_value())}});
+    json = json::map(
+        {{"height", serialize_height(heights, precision, skadi::sample::get_no_data_value())}});
   }
   // send back the shape as well
   if (request.options().has_encoded_polyline()) {

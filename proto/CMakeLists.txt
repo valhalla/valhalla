@@ -5,10 +5,10 @@ protobuf_generate_cpp(protobuff_srcs protobuff_hdrs
   options.proto
   tripcommon.proto
   trip.proto
-  fileformat.proto
-  osmformat.proto
   transit.proto
-  transit_fetch.proto)
+  transit_fetch.proto
+  ${VALHALLA_SOURCE_DIR}/third_party/OSM-binary/src/fileformat.proto
+  ${VALHALLA_SOURCE_DIR}/third_party/OSM-binary/src/osmformat.proto)
 
 valhalla_module(NAME proto
   SOURCES

@@ -28,6 +28,7 @@ enum DirectionsType {
 enum ShapeFormat {
   polyline5 = 0;
   polyline6 = 1;
+  geojson = 2;
 }
 
 enum Costing {
@@ -44,6 +45,7 @@ enum Costing {
   motorcycle = 10;
   auto_data_fix = 11;
   taxi = 12;
+  none_ = 13;
 }
 
 message CostingOptions {
@@ -101,6 +103,7 @@ message CostingOptions {
   repeated string filter_operator_ids = 52;
   optional FilterAction filter_route_action = 53;
   repeated string filter_route_ids = 54;
+  optional uint32 flow_mask = 55;
 }
 
 message AvoidEdge {
@@ -169,9 +172,9 @@ message Options {
   repeated Location trace = 27;                                           // Trace points for map matching
   optional ShapeMatch shape_match = 28 [default = walk_or_snap];          // The matching algorithm based on the type of input
   optional uint32 best_paths = 29 [default = 1];                          // The number of top k paths
-  optional float gps_accuracy = 30;                                       // The gps accuracy associated with the suppplied trace points
-  optional float search_radius = 31;                                      // The search radius associated with the suppplied trace points
-  optional float turn_penalty_factor = 32;                                // The turn penalty factor associated with the suppplied trace points
+  optional float gps_accuracy = 30;                                       // The gps accuracy associated with the supplied trace points
+  optional float search_radius = 31;                                      // The search radius associated with the supplied trace points
+  optional float turn_penalty_factor = 32;                                // The turn penalty factor associated with the supplied trace points
   optional FilterAction filter_action = 33;                               // The trace filter action - either exclude or include
   repeated string filter_attributes = 34;                                 // The filter list for trace attributes
   repeated AvoidEdge avoid_edges = 35;                                    // Avoid edges for any costing - derived from avoid_locations
@@ -179,4 +182,8 @@ message Options {
   optional bool use_timestamps = 37 [default = false];                    // Use timestamps to compute elapsed time for trace_route and trace_attributes
   optional ShapeFormat shape_format = 38 [default = polyline6];           // Shape format (defaults to polyline6 encoding)
   optional uint32 alternates = 39;                                        // Maximum number of alternate routes that can be returned
+  optional float interpolation_distance = 40;                             // Map-matching interpolation distance beyond which trace points are merged
+  optional bool guidance_views = 41;                                      // Whether to return guidance_views in the response
+  // 42 is reserved
+  optional uint32 height_precision = 43 [default = 0];                    // Number of digits precision for heights returned
 }

@@ -1,15 +1,11 @@
 #include <bitset>
-#include <fstream>
-#include <iostream>
+#include <ctime>
 #include <regex>
-#include <sstream>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
 
-#include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
 #include "midgard/logging.h"
@@ -249,6 +245,14 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
         }
       }
     }
+
+    std::size_t found = condition.find(",PH");
+    if (found != std::string::npos)
+      condition.erase(found, 3);
+
+    found = condition.find("PH,");
+    if (found != std::string::npos)
+      condition.erase(found, 3);
 
     std::vector<std::string> months_dow_times = GetTokens(condition, ' ');
 

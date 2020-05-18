@@ -8,6 +8,7 @@
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
+#include "midgard/util.h"
 
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
@@ -251,31 +252,44 @@ void route_summary(json::MapPtr& route,
                    const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
                    bool imperial) {
   // Compute total distance and duration
-  float duration = 0.0f;
-  float distance = 0.0f;
+  double duration = 0.0f;
+  double distance = 0.0f;
   for (const auto& leg : legs) {
     distance += leg.summary().length();
     duration += leg.summary().time();
   }
 
   // Convert distance to meters. Output distance and duration.
-  distance *= imperial ? 1609.34f : 1000.0f;
-  route->emplace("distance", json::fp_t{distance, 1});
-  route->emplace("duration", json::fp_t{duration, 1});
+  distance = units_to_meters(distance, !imperial);
+  route->emplace("distance", json::fp_t{distance, 3});
+  route->emplace("duration", json::fp_t{duration, 3});
 
   // TODO - support returning weight based on costing method
   // as well as returning the costing method
   float weight = duration;
-  route->emplace("weight", json::fp_t{weight, 1});
+  route->emplace("weight", json::fp_t{weight, 3});
   route->emplace("weight_name", std::string("Valhalla default"));
 }
 
+// Generate leg shape in geojson format.
+json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
+  auto geojson = json::map({});
+  auto coords = json::array({});
+  for (const auto& p : shape) {
+    coords->emplace_back(json::array({json::fp_t{p.lng(), 6}, json::fp_t{p.lat(), 6}}));
+  }
+  geojson->emplace("type", std::string("LineString"));
+  geojson->emplace("coordinates", coords);
+  return geojson;
+}
+
 // Generate full shape of the route.
-std::string full_shape(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
-                       const valhalla::Options& options) {
+std::vector<PointLL>
+full_shape(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
+           const valhalla::Options& options) {
   // If just one leg and it we want polyline6 then we just return the encoded leg shape
   if (legs.size() == 1 && options.shape_format() == polyline6) {
-    return legs.begin()->shape();
+    return midgard::decode<std::vector<PointLL>>(legs.begin()->shape());
   }
 
   // TODO: there is a tricky way to do this... since the end of each leg is the same as the
@@ -290,17 +304,17 @@ std::string full_shape(const google::protobuf::RepeatedPtrField<valhalla::Direct
     decoded.insert(decoded.end(), decoded.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
                    decoded_leg.end());
   }
-  int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
-  return midgard::encode(decoded, precision);
+  return decoded;
 }
 
 // Generate simplified shape of the route.
-std::string simplified_shape(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
-                             const valhalla::Options& options) {
+std::vector<PointLL>
+simplified_shape(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
+                 const valhalla::Options& options) {
   Coordinate south_west(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
   Coordinate north_east(std::numeric_limits<int>::min(), std::numeric_limits<int>::min());
 
-  std::vector<PointLL> full_shape;
+  std::vector<PointLL> simple_shape;
   std::unordered_set<size_t> indices;
 
   for (const auto& leg : legs) {
@@ -313,26 +327,45 @@ std::string simplified_shape(const google::protobuf::RepeatedPtrField<valhalla::
     }
 
     for (const auto& maneuver : leg.maneuver()) {
-      indices.emplace(full_shape.size() ? ((full_shape.size() - 1) + maneuver.begin_shape_index())
-                                        : maneuver.begin_shape_index());
+      indices.emplace(simple_shape.size() ? ((simple_shape.size() - 1) + maneuver.begin_shape_index())
+                                          : maneuver.begin_shape_index());
     }
 
-    full_shape.insert(full_shape.end(),
-                      full_shape.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
-                      decoded_leg.end());
+    simple_shape.insert(simple_shape.end(),
+                        simple_shape.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
+                        decoded_leg.end());
   }
 
   const auto zoom_level = std::min(MAX_ZOOM, getFittedZoom(south_west, north_east));
-  Polyline2<PointLL>::Generalize(full_shape, DOUGLAS_PEUCKER_THRESHOLDS[zoom_level], indices);
-  int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
+  Polyline2<PointLL>::Generalize(simple_shape, DOUGLAS_PEUCKER_THRESHOLDS[zoom_level], indices);
+  return simple_shape;
+}
 
-  return midgard::encode(full_shape, precision);
+void route_geometry(json::MapPtr& route,
+                    const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
+                    const valhalla::Options& options) {
+  // full geom = !has_generalize()
+  // simplified geom = has_generalize && generalize == 0
+  // no geom = has_generalize && generalize == -1
+  std::vector<PointLL> shape;
+  if (options.has_generalize() && options.generalize() == 0.0f) {
+    shape = simplified_shape(legs, options);
+  } else if (!options.has_generalize() || (options.has_generalize() && options.generalize() > 0.0f)) {
+    shape = full_shape(legs, options);
+  }
+
+  if (options.shape_format() == geojson) {
+    route->emplace("geometry", geojson_shape(shape));
+  } else {
+    int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
+    route->emplace("geometry", midgard::encode(shape, precision));
+  }
 }
 
 // Serialize waypoints for optimized route. Note that OSRM retains the
 // original location order, and stores an index for the waypoint index in
 // the optimized sequence.
-json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locs) {
+json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>& locs) {
   // Create a vector of indexes.
   uint32_t i = 0;
   std::vector<uint32_t> indexes;
@@ -349,7 +382,8 @@ json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Loca
   // waypoint index (which is the index in the optimized order).
   auto waypoints = json::array({});
   for (const auto& index : indexes) {
-    waypoints->emplace_back(osrm::waypoint(locs.Get(index), false, true, index));
+    locs.Mutable(index)->set_shape_index(index);
+    waypoints->emplace_back(osrm::waypoint(locs.Get(index), false, true));
   }
   return waypoints;
 }
@@ -392,10 +426,14 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // Add the node location (lon, lat). Use the last shape point for
     // the arrive step
     auto loc = json::array({});
-    PointLL ll = arrive_maneuver ? shape[shape.size() - 1] : shape[curr_edge->begin_shape_index()];
+    size_t shape_index = arrive_maneuver ? shape.size() - 1 : curr_edge->begin_shape_index();
+    PointLL ll = shape[shape_index];
     loc->emplace_back(json::fp_t{ll.lng(), 6});
     loc->emplace_back(json::fp_t{ll.lat(), 6});
     intersection->emplace("location", loc);
+    intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
+    if (node->has_transition_time())
+      intersection->emplace("duration", json::fp_t{node->transition_time(), 3});
 
     // Get bearings and access to outgoing intersecting edges. Do not add
     // any intersecting edges for the first depart intersection and for
@@ -463,8 +501,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       if (maneuver.portions_toll() || curr_edge->toll()) {
         classes.push_back("toll");
       }
-      // TODO We might want to have more specific logic for ramp
-      if ((curr_edge->road_class() == TripLeg_RoadClass_kMotorway) || curr_edge->IsRampUse()) {
+      if (curr_edge->road_class() == valhalla::RoadClass::kMotorway) {
         classes.push_back("motorway");
       }
       if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kFerryUse) {
@@ -605,14 +642,33 @@ std::string get_sign_element_nonrefs(
   return nonrefs;
 }
 
-// Add destinations along a step/maneuver. Constructs a destinations string.
-// Here are the destinations formats:
-//   1. <ref>
-//   2. <non-ref>
-//   3. <ref>: <non-ref>
-// Each <ref> or <non-ref> could have one or more items and will separated with ", "
-//   for example: "I 99, US 220, US 30: Altoona, Johnstown"
-std::string destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+// Compile and return the sign elements of the specified list
+// TODO we could enhance by limiting results by using consecutive count
+std::string get_sign_elements(const google::protobuf::RepeatedPtrField<
+                                  ::valhalla::DirectionsLeg_Maneuver_SignElement>& sign_elements,
+                              const std::string& delimiter = kSignElementDelimiter) {
+  std::string sign_elements_string;
+  for (const auto& sign_element : sign_elements) {
+    // If the sign_elements_string is not empty, append specified delimiter
+    if (!sign_elements_string.empty()) {
+      sign_elements_string += delimiter;
+    }
+    // Append sign element
+    sign_elements_string += sign_element.text();
+  }
+  return sign_elements_string;
+}
+
+bool exit_destinations_exist(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+  if ((sign.exit_onto_streets_size() > 0) || (sign.exit_toward_locations_size() > 0) ||
+      (sign.exit_names_size() > 0)) {
+    return true;
+  }
+  return false;
+}
+
+// Return the exit destinations
+std::string exit_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
 
   /////////////////////////////////////////////////////////////////////////////
   // Process the refs
@@ -668,6 +724,66 @@ std::string destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
   return destinations;
 }
 
+// Return the guide destinations
+std::string guide_destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process the refs
+  // Get the branch refs
+  std::string branch_refs = get_sign_element_refs(sign.guide_onto_streets());
+
+  // Get the toward refs
+  std::string toward_refs = get_sign_element_refs(sign.guide_toward_locations());
+
+  // Create the refs by combining the branch and toward ref lists
+  std::string refs = branch_refs;
+  // If needed, add the delimiter between the lists
+  if (!refs.empty() && !toward_refs.empty()) {
+    refs += kSignElementDelimiter;
+  }
+  refs += toward_refs;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process the nonrefs
+  // Get the branch nonrefs
+  std::string branch_nonrefs = get_sign_element_nonrefs(sign.guide_onto_streets());
+
+  // Get the towards nonrefs
+  std::string toward_nonrefs = get_sign_element_nonrefs(sign.guide_toward_locations());
+
+  // Create nonrefs by combining the branch, toward, name nonref lists
+  std::string nonrefs = branch_nonrefs;
+  // If needed, add the delimiter between the lists
+  if (!nonrefs.empty() && !toward_nonrefs.empty()) {
+    nonrefs += kSignElementDelimiter;
+  }
+  nonrefs += toward_nonrefs;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process the destinations
+  std::string destinations = refs;
+  if (!refs.empty() && !nonrefs.empty()) {
+    destinations += kDestinationsDelimiter;
+  }
+  destinations += nonrefs;
+
+  return destinations;
+}
+
+// Add destinations along a step/maneuver. Constructs a destinations string.
+// Here are the destinations formats:
+//   1. <ref>
+//   2. <non-ref>
+//   3. <ref>: <non-ref>
+// Each <ref> or <non-ref> could have one or more items and will separated with ", "
+//   for example: "I 99, US 220, US 30: Altoona, Johnstown"
+std::string destinations(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
+  if (exit_destinations_exist(sign)) {
+    return exit_destinations(sign);
+  }
+  return guide_destinations(sign);
+}
+
 // Get the turn modifier based on incoming edge bearing and outgoing edge
 // bearing.
 std::string turn_modifier(const uint32_t in_brg, const uint32_t out_brg) {
@@ -691,11 +807,15 @@ std::string turn_modifier(const uint32_t in_brg, const uint32_t out_brg) {
     case baldr::Turn::Type::kSlightLeft:
       return "slight left";
   }
+  auto num = static_cast<uint32_t>(turn_type);
+  throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+                           " Unhandled Turn::Type: " + std::to_string(num));
 }
 
 // Get the turn modifier based on the maneuver type
 // or if needed, the incoming edge bearing and outgoing edge bearing.
 std::string turn_modifier(const valhalla::DirectionsLeg::Maneuver& maneuver,
+                          valhalla::odin::EnhancedTripLeg* etp,
                           const uint32_t in_brg,
                           const uint32_t out_brg,
                           const bool arrive_maneuver) {
@@ -706,6 +826,7 @@ std::string turn_modifier(const valhalla::DirectionsLeg::Maneuver& maneuver,
     case valhalla::DirectionsLeg_Maneuver_Type_kSlightRight:
     case valhalla::DirectionsLeg_Maneuver_Type_kStayRight:
     case valhalla::DirectionsLeg_Maneuver_Type_kExitRight:
+    case valhalla::DirectionsLeg_Maneuver_Type_kMergeRight:
       return "slight right";
     case valhalla::DirectionsLeg_Maneuver_Type_kRight:
     case valhalla::DirectionsLeg_Maneuver_Type_kStartRight:
@@ -726,8 +847,9 @@ std::string turn_modifier(const valhalla::DirectionsLeg::Maneuver& maneuver,
     case valhalla::DirectionsLeg_Maneuver_Type_kDestinationLeft:
       return "left";
     case valhalla::DirectionsLeg_Maneuver_Type_kSlightLeft:
-    case valhalla::DirectionsLeg_Maneuver_Type_kExitLeft:
     case valhalla::DirectionsLeg_Maneuver_Type_kStayLeft:
+    case valhalla::DirectionsLeg_Maneuver_Type_kExitLeft:
+    case valhalla::DirectionsLeg_Maneuver_Type_kMergeLeft:
       return "slight left";
     case valhalla::DirectionsLeg_Maneuver_Type_kRampRight:
       if (Turn::GetType(GetTurnDegree(in_brg, out_brg)) == baldr::Turn::Type::kRight)
@@ -739,7 +861,6 @@ std::string turn_modifier(const valhalla::DirectionsLeg::Maneuver& maneuver,
         return "left";
       else
         return "slight left";
-    case valhalla::DirectionsLeg_Maneuver_Type_kMerge:
     case valhalla::DirectionsLeg_Maneuver_Type_kRoundaboutEnter:
     case valhalla::DirectionsLeg_Maneuver_Type_kRoundaboutExit:
     case valhalla::DirectionsLeg_Maneuver_Type_kFerryEnter:
@@ -801,7 +922,7 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
   std::string modifier;
   if (!depart_maneuver) {
-    modifier = turn_modifier(maneuver, in_brg, out_brg, arrive_maneuver);
+    modifier = turn_modifier(maneuver, etp, in_brg, out_brg, arrive_maneuver);
     if (!modifier.empty())
       osrm_man->emplace("modifier", modifier);
   }
@@ -844,7 +965,9 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
     bool fork = ((maneuver.type() == DirectionsLeg_Maneuver_Type_kStayStraight) ||
                  (maneuver.type() == DirectionsLeg_Maneuver_Type_kStayRight) ||
                  (maneuver.type() == DirectionsLeg_Maneuver_Type_kStayLeft));
-    if (maneuver.type() == DirectionsLeg_Maneuver_Type_kMerge) {
+    if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kMerge) ||
+        (maneuver.type() == DirectionsLeg_Maneuver_Type_kMergeLeft) ||
+        (maneuver.type() == DirectionsLeg_Maneuver_Type_kMergeRight)) {
       maneuver_type = "merge";
     } else if (fork) {
       maneuver_type = "fork";
@@ -915,15 +1038,25 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
 }
 
 // Method to get the geometry string for a maneuver.
-// TODO - encoding options
-std::string maneuver_geometry(const uint32_t begin_idx,
-                              const uint32_t end_idx,
-                              const std::vector<PointLL>& shape,
-                              const valhalla::Options& options) {
+void maneuver_geometry(json::MapPtr& step,
+                       const uint32_t begin_idx,
+                       const uint32_t end_idx,
+                       const std::vector<PointLL>& shape,
+                       bool is_arrive_maneuver,
+                       const valhalla::Options& options) {
   // Must add one to the end range since maneuver end shape index is exclusive
   std::vector<PointLL> maneuver_shape(shape.begin() + begin_idx, shape.begin() + end_idx + 1);
-  int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
-  return midgard::encode(maneuver_shape, precision);
+  // Last maneuver shape is a linestring with two identical points at the destination
+  if (is_arrive_maneuver) {
+    maneuver_shape.push_back(shape.back());
+  }
+
+  if (options.shape_format() == geojson) {
+    step->emplace("geometry", geojson_shape(maneuver_shape));
+  } else {
+    int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
+    step->emplace("geometry", midgard::encode(maneuver_shape, precision));
+  }
 }
 
 // Get the mode
@@ -951,6 +1084,9 @@ std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
       return "transit";
     }
   }
+  auto num = static_cast<int>(maneuver.travel_mode());
+  throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+                           " Unhandled travel_mode: " + std::to_string(num));
 }
 
 // Get the names and ref names
@@ -959,9 +1095,13 @@ names_and_refs(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   std::string names, refs;
 
   // Roundabouts need to use the roundabout_exit_street_names
+  // if a maneuver begin street name exists then use it otherwise use the maneuver street name
+  // TODO: in the future we may switch to use both
   auto& street_names = (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter)
                            ? maneuver.roundabout_exit_street_names()
-                           : maneuver.street_name();
+                           : (maneuver.begin_street_name_size() > 0) ? maneuver.begin_street_name()
+                                                                     : maneuver.street_name();
+
   for (const auto& name : street_names) {
     // Check if the name is a ref
     if (name.is_route_number()) {
@@ -1005,7 +1145,8 @@ summarize_leg(google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>::const
 
   // Create a list of named segments (maneuver name, index, distance items)
   std::vector<NamedSegment> named_segments;
-  for (const auto map_item : maneuver_summary_map) {
+  named_segments.reserve(maneuver_summary_map.size());
+  for (const auto& map_item : maneuver_summary_map) {
     named_segments.emplace_back(
         NamedSegment{map_item.first, map_item.second.first, map_item.second.second});
   }
@@ -1066,6 +1207,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     bool rotary = false;
     bool prev_rotary = false;
     auto steps = json::array({});
+    const DirectionsLeg_Maneuver* prev_maneuver = nullptr;
+    json::MapPtr prev_step;
     for (const auto& maneuver : leg->maneuver()) {
       auto step = json::map({});
       bool depart_maneuver = (maneuver_index == 0);
@@ -1076,12 +1219,12 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       // name change
 
       // Add geometry for this maneuver
-      step->emplace("geometry", maneuver_geometry(maneuver.begin_shape_index(),
-                                                  maneuver.end_shape_index(), shape, options));
+      maneuver_geometry(step, maneuver.begin_shape_index(), maneuver.end_shape_index(), shape,
+                        arrive_maneuver, options);
 
       // Add mode, driving side, weight, distance, duration, name
-      float distance = maneuver.length() * (imperial ? 1609.34f : 1000.0f);
-      float duration = maneuver.time();
+      double distance = units_to_meters(maneuver.length(), !imperial);
+      double duration = maneuver.time();
 
       // Process drive_side, name, ref, mode, and prev_mode attributes if not the arrive maneuver
       if (!arrive_maneuver) {
@@ -1097,9 +1240,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
       step->emplace("mode", mode);
       step->emplace("driving_side", drive_side);
-      step->emplace("duration", json::fp_t{duration, 1});
-      step->emplace("weight", json::fp_t{duration, 1});
-      step->emplace("distance", json::fp_t{distance, 1});
+      step->emplace("duration", json::fp_t{duration, 3});
+      step->emplace("weight", json::fp_t{duration, 3});
+      step->emplace("distance", json::fp_t{distance, 3});
       step->emplace("name", name);
       if (!ref.empty()) {
         step->emplace("ref", ref);
@@ -1117,15 +1260,54 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
                                   depart_maneuver, arrive_maneuver, prev_intersection_count, mode,
                                   prev_mode, rotary, prev_rotary));
 
-      // Add destinations and exits
+      // Add destinations
       const auto& sign = maneuver.sign();
       std::string dest = destinations(sign);
       if (!dest.empty()) {
         step->emplace("destinations", dest);
+        // If the maneuver is an exit roundabout
+        // and the previous maneuver is an enter roundabout
+        // then set the destinations on the previous step
+        if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) && prev_maneuver &&
+            (prev_maneuver->type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) && prev_step) {
+          prev_step->emplace("destinations", dest);
+        }
       }
+
+      // Add exits
       std::string ex = exits(sign);
       if (!ex.empty()) {
         step->emplace("exits", ex);
+      }
+
+      // Add junction_name if not the start maneuver
+      std::string junction_name = get_sign_elements(sign.junction_names());
+      if (!depart_maneuver && !junction_name.empty()) {
+        step->emplace("junction_name", junction_name);
+      }
+
+      // If the user requested guidance_views
+      if (options.guidance_views()) {
+        // Add guidance_views if not the start maneuver
+        if (!depart_maneuver && (maneuver.guidance_views_size() > 0)) {
+          auto guidance_views = json::array({});
+          for (const auto& gv : maneuver.guidance_views()) {
+            auto guidance_view = json::map({});
+            guidance_view->emplace("data_id", gv.data_id());
+            guidance_view->emplace("type", gv.type());
+            guidance_view->emplace("base_id", gv.base_id());
+            auto overlay_ids = json::array({});
+            for (const auto& overlay : gv.overlay_ids()) {
+              overlay_ids->emplace_back(overlay);
+            }
+            guidance_view->emplace("overlay_ids", overlay_ids);
+
+            // Append to guidance view list
+            guidance_views->emplace_back(guidance_view);
+          }
+          // Add guidance views to step
+          step->emplace("guidance_views", guidance_views);
+        }
       }
 
       // Add intersections
@@ -1136,18 +1318,20 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       steps->emplace_back(step);
       prev_rotary = rotary;
       prev_mode = mode;
+      prev_step = step;
+      prev_maneuver = &maneuver;
       maneuver_index++;
     } // end maneuver loop
     //#########################################################################
 
     // Add distance, duration, weight, and summary
     // Get a summary based on longest maneuvers.
-    float duration = leg->summary().time();
-    float distance = leg->summary().length() * (imperial ? 1609.34f : 1000.0f);
+    double duration = leg->summary().time();
+    double distance = units_to_meters(leg->summary().length(), !imperial);
     output_leg->emplace("summary", summarize_leg(leg));
-    output_leg->emplace("distance", json::fp_t{distance, 1});
-    output_leg->emplace("duration", json::fp_t{duration, 1});
-    output_leg->emplace("weight", json::fp_t{duration, 1});
+    output_leg->emplace("distance", json::fp_t{distance, 3});
+    output_leg->emplace("duration", json::fp_t{duration, 3});
+    output_leg->emplace("weight", json::fp_t{duration, 3});
 
     // Add steps to the leg
     output_leg->emplace("steps", steps);
@@ -1163,7 +1347,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 //     TripLeg protocol buffer
 //     DirectionsLeg protocol buffer
 std::string serialize(valhalla::Api& api) {
-  const auto& options = api.options();
+  auto& options = *api.mutable_options();
   auto json = json::map({});
 
   // If here then the route succeeded. Set status code to OK and serialize waypoints (locations).
@@ -1177,8 +1361,10 @@ std::string serialize(valhalla::Api& api) {
       json->emplace("waypoints", osrm::waypoints(api.trip()));
       break;
     case valhalla::Options::optimized_route:
-      json->emplace("waypoints", waypoints(options.locations()));
+      json->emplace("waypoints", waypoints(*options.mutable_locations()));
       break;
+    default:
+      throw std::runtime_error("Unknown route serialization action");
   }
 
   // Add each route
@@ -1192,16 +1378,12 @@ std::string serialize(valhalla::Api& api) {
     // Create a route to add to the array
     auto route = json::map({});
 
-    // full geom = !has_generalize()
-    // simplified geom = has_generalize && generalize == 0
-    // no geom = has_generalize && generalize == -1
-    if (options.has_generalize() && options.generalize() == 0.0f) {
-      route->emplace("geometry", simplified_shape(api.directions().routes(i).legs(), options));
-    } else if (!options.has_generalize() ||
-               (options.has_generalize() && options.generalize() > 0.0f)) {
-      // Get full shape for the route.
-      route->emplace("geometry", full_shape(api.directions().routes(i).legs(), options));
-    }
+    // TODO: phase 1, just hardcode score. phase 2: do real implementation
+    if (options.action() == valhalla::Options::trace_route)
+      route->emplace("confidence", json::fp_t{1, 1});
+
+    // Concatenated route geometry
+    route_geometry(route, api.directions().routes(i).legs(), options);
 
     // Other route summary information
     route_summary(route, api.directions().routes(i).legs(), imperial);

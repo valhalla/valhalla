@@ -1,6 +1,7 @@
 #include "sif/transitcost.h"
 
 #include "baldr/accessrestriction.h"
+#include "baldr/graphconstants.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "worker.h"
@@ -109,7 +110,8 @@ public:
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index) const;
+                       const uint32_t tz_index,
+                       bool& time_restricted) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -134,7 +136,8 @@ public:
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index) const;
+                              const uint32_t tz_index,
+                              bool& has_time_restrictions) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -143,15 +146,6 @@ public:
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const;
-
-  /**
-   * Get the cost to traverse the specified directed edge. Cost includes
-   * the time (seconds) to traverse the edge.
-   * @param   edge  Pointer to a directed edge.
-   * @param   speed A speed for a road segment/edge.
-   * @return  Returns the cost and time (seconds)
-   */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const;
 
   /**
    * Get the cost to traverse the specified directed edge using a transit
@@ -167,19 +161,30 @@ public:
                         const uint32_t curr_time) const;
 
   /**
+   * Transit costing only works on transit edges, hence we throw
+   * @param edge
+   * @param tile
+   * @param seconds
+   * @return
+   */
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphTile* tile,
+                        const uint32_t seconds) const {
+    throw std::runtime_error("TransitCost::EdgeCost only supports transit edges");
+  }
+
+  /**
    * Returns the cost to make the transition from the predecessor edge.
    * Defaults to 0. Costing models that wish to include edge transition
    * costs (i.e., intersection/turn costs) must override this method.
    * @param  edge  Directed edge (the to edge)
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  Predecessor edge information.
-   * @param  has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred,
-                              const bool has_traffic = false) const;
+                              const EdgeLabel& pred) const;
 
   /**
    * Returns the transfer cost between 2 transit stops.
@@ -531,7 +536,12 @@ bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
                           const baldr::GraphTile*& tile,
                           const baldr::GraphId& edgeid,
                           const uint64_t current_time,
-                          const uint32_t tz_index) const {
+                          const uint32_t tz_index,
+                          bool& has_time_restrictions) const {
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(edgeid))
+      return false;
+  }
   // TODO - obtain and check the access restrictions.
 
   if (exclude_stops_.size()) {
@@ -561,7 +571,8 @@ bool TransitCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                  const baldr::GraphTile*& tile,
                                  const baldr::GraphId& opp_edgeid,
                                  const uint64_t current_time,
-                                 const uint32_t tz_index) const {
+                                 const uint32_t tz_index,
+                                 bool& has_time_restrictions) const {
   // This method should not be called since time based routes do not use
   // bidirectional A*
   return false;
@@ -570,13 +581,6 @@ bool TransitCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // Check if access is allowed at the specified node.
 bool TransitCost::Allowed(const baldr::NodeInfo* node) const {
   return true;
-}
-
-// Returns the cost to traverse the edge and an estimate of the actual time
-// (in seconds) to traverse the edge.
-Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const {
-  LOG_ERROR("Wrong transit edge cost called");
-  return {0.0f, 0.0f};
 }
 
 // Get the cost to traverse the specified directed edge using a transit
@@ -602,8 +606,7 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
                                  const baldr::NodeInfo* node,
-                                 const EdgeLabel& pred,
-                                 const bool has_traffic) const {
+                                 const EdgeLabel& pred) const {
   if (pred.mode() == TravelMode::kPedestrian) {
     // Apply any mode-based penalties when boarding transit
     // Do we want any time cost to board?
@@ -648,6 +651,9 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
+    // TODO: farm more common stuff out to parent class
+    ParseCostOptions(*json_costing_options, pbf_costing_options);
+
     // If specified, parse json and set pbf values
 
     // mode_factor
@@ -692,7 +698,8 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
     auto filter_stop_action_str =
         rapidjson::get_optional<std::string>(*json_costing_options, "/filters/stops/action");
     FilterAction filter_stop_action;
-    if (filter_stop_action_str && FilterAction_Parse(*filter_stop_action_str, &filter_stop_action)) {
+    if (filter_stop_action_str &&
+        FilterAction_Enum_Parse(*filter_stop_action_str, &filter_stop_action)) {
       pbf_costing_options->set_filter_stop_action(filter_stop_action);
       // filter_stop_ids
       auto filter_stop_ids_json =
@@ -710,7 +717,7 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<std::string>(*json_costing_options, "/filters/operators/action");
     FilterAction filter_operator_action;
     if (filter_operator_action_str &&
-        FilterAction_Parse(*filter_operator_action_str, &filter_operator_action)) {
+        FilterAction_Enum_Parse(*filter_operator_action_str, &filter_operator_action)) {
       pbf_costing_options->set_filter_operator_action(filter_operator_action);
       // filter_operator_ids
       auto filter_operator_ids_json =
@@ -728,7 +735,7 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<std::string>(*json_costing_options, "/filters/routes/action");
     FilterAction filter_route_action;
     if (filter_route_action_str &&
-        FilterAction_Parse(*filter_route_action_str, &filter_route_action)) {
+        FilterAction_Enum_Parse(*filter_route_action_str, &filter_route_action)) {
       pbf_costing_options->set_filter_route_action(filter_route_action);
       // filter_route_ids
       auto filter_route_ids_json =
@@ -784,7 +791,7 @@ make_distributor_from_range(const ranged_default_t<float>& range) {
   return new std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
 }
 
-void testTransitCostParams() {
+TEST(TransitCost, testTransitCostParams) {
   constexpr unsigned testIterations = 250;
   constexpr unsigned seed = 0;
   std::mt19937 generator(seed);
@@ -795,68 +802,53 @@ void testTransitCostParams() {
   distributor.reset(make_distributor_from_range(kModeFactorRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("mode_factor", (*distributor)(generator)));
-    if (ctorTester->mode_factor_ < kModeFactorRange.min ||
-        ctorTester->mode_factor_ > kModeFactorRange.max) {
-      throw std::runtime_error("mode_factor_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->mode_factor_,
+                test::IsBetween(kModeFactorRange.min, kModeFactorRange.max));
   }
 
   // use_bus_
   distributor.reset(make_distributor_from_range(kUseBusRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("use_bus", (*distributor)(generator)));
-    if (ctorTester->use_bus_ < kUseBusRange.min || ctorTester->use_bus_ > kUseBusRange.max) {
-      throw std::runtime_error("use_bus_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->use_bus_, test::IsBetween(kUseBusRange.min, kUseBusRange.max));
   }
 
   // use_rail_
   distributor.reset(make_distributor_from_range(kUseRailRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("use_rail", (*distributor)(generator)));
-    if (ctorTester->use_rail_ < kUseRailRange.min || ctorTester->use_rail_ > kUseRailRange.max) {
-      throw std::runtime_error("use_rail_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->use_rail_, test::IsBetween(kUseRailRange.min, kUseRailRange.max));
   }
 
   // use_transfers_
   distributor.reset(make_distributor_from_range(kUseTransfersRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("use_transfers", (*distributor)(generator)));
-    if (ctorTester->use_transfers_ < kUseTransfersRange.min ||
-        ctorTester->use_transfers_ > kUseTransfersRange.max) {
-      throw std::runtime_error("use_transfers_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->use_transfers_,
+                test::IsBetween(kUseTransfersRange.min, kUseTransfersRange.max));
   }
 
   // transfer_cost_
   distributor.reset(make_distributor_from_range(kTransferCostRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("transfer_cost", (*distributor)(generator)));
-    if (ctorTester->transfer_cost_ < kTransferCostRange.min ||
-        ctorTester->transfer_cost_ > kTransferCostRange.max) {
-      throw std::runtime_error("transfer_cost_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->transfer_cost_,
+                test::IsBetween(kTransferCostRange.min, kTransferCostRange.max));
   }
 
   // transfer_penalty_
   distributor.reset(make_distributor_from_range(kTransferPenaltyRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_transitcost_from_json("transfer_penalty", (*distributor)(generator)));
-    if (ctorTester->transfer_penalty_ < kTransferPenaltyRange.min ||
-        ctorTester->transfer_penalty_ > kTransferPenaltyRange.max) {
-      throw std::runtime_error("transfer_penalty_ is not within it's range");
-    }
+    EXPECT_THAT(ctorTester->transfer_penalty_,
+                test::IsBetween(kTransferPenaltyRange.min, kTransferPenaltyRange.max));
   }
 }
 } // namespace
 
-int main() {
-  test::suite suite("costing");
-
-  suite.test(TEST_CASE(testTransitCostParams));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
 
 #endif

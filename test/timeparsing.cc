@@ -1,5 +1,3 @@
-#include "test.h"
-
 #include <algorithm>
 #include <bitset>
 #include <cstdint>
@@ -11,6 +9,8 @@
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
 #include "mjolnir/timeparsing.h"
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -26,7 +26,7 @@ std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) 
 }
 
 void TryConditionalRestrictions(const std::string& condition,
-                                const std::vector<uint64_t> expected_values) {
+                                const std::vector<uint64_t>& expected_values) {
 
   std::vector<uint64_t> results = get_time_range(condition);
 
@@ -41,10 +41,10 @@ void TryConditionalRestrictions(const std::string& condition,
     res.end_day() << " end week " << res.end_week() << " end hrs " <<
     res.end_hrs() << " end mins " << res.end_mins() << std::endl;*/
 
-    if (res.td_value() != expected_values.at(x))
-      throw std::runtime_error("Time domain " + condition +
-                               " test failed.  Expected: " + std::to_string(expected_values.at(x)) +
-                               " but received " + std::to_string(res.td_value()));
+    EXPECT_EQ(res.td_value(), expected_values.at(x))
+        << "Time domain " + condition +
+               " test failed.  Expected: " + std::to_string(expected_values.at(x)) +
+               " but received " + std::to_string(res.td_value());
   }
 }
 
@@ -67,25 +67,27 @@ void TryConditionalRestrictions(const std::string& condition,
 
   TimeDomain res = TimeDomain(results.at(index));
 
-  if (res.type() != type || res.dow() != dow || res.begin_month() != begin_month ||
-      res.begin_day_dow() != begin_day || res.begin_week() != begin_week ||
-      res.begin_hrs() != begin_hrs || res.begin_mins() != begin_mins ||
-      res.end_month() != end_month || res.end_day_dow() != end_day || res.end_week() != end_week ||
-      res.end_hrs() != end_hrs || res.end_mins() != end_mins) {
-    throw std::runtime_error(
-        "Time domain " + condition + " test failed.  Output: " + std::to_string(res.type()) + " " +
-        std::to_string(res.dow()) + " " + std::to_string(res.begin_month()) + " " +
-        std::to_string(res.begin_day_dow()) + " " + std::to_string(res.begin_week()) + " " +
-        std::to_string(res.begin_hrs()) + " " + std::to_string(res.begin_mins()) + " " +
-        std::to_string(res.end_month()) + " " + std::to_string(res.end_day_dow()) + " " +
-        std::to_string(res.end_week()) + " " + std::to_string(res.end_hrs()) + " " +
-        std::to_string(res.end_mins()));
+  EXPECT_EQ(res.type(), type);
+  EXPECT_EQ(res.dow(), dow);
+  EXPECT_EQ(res.begin_month(), begin_month);
+  EXPECT_EQ(res.begin_day_dow(), begin_day);
+  EXPECT_EQ(res.begin_week(), begin_week);
+  EXPECT_EQ(res.begin_hrs(), begin_hrs);
+  EXPECT_EQ(res.begin_mins(), begin_mins);
+  EXPECT_EQ(res.end_month(), end_month);
+  EXPECT_EQ(res.end_day_dow(), end_day);
+  EXPECT_EQ(res.end_week(), end_week);
+  EXPECT_EQ(res.end_hrs(), end_hrs);
+  EXPECT_EQ(res.end_mins(), end_mins);
+
+  if (::testing::Test::HasFailure()) {
+    std::cerr << "Time domain: " << condition << std::endl;
   }
 }
 
 } // namespace
 
-void TestConditionalRestrictions() {
+TEST(TimeParsing, TestConditionalRestrictions) {
 
   std::string str = "Mo-Fr 06:00-11:00,17:00-19:00;Sa 03:30-19:00";
   std::vector<std::string> conditions = GetTagTokens(str, ';');
@@ -331,9 +333,10 @@ void TestConditionalRestrictions() {
     }
   }
 
-  str = "Sun 09:00-16:00; Su[1]; Dec; Dec Su[-1] 15:00-17:00; Dec Su[-1] Th 15:00-17:00;"
-        "Dec Su[-1]; Dec Su[-1]-Mar 3 Sat;Mar 3-Dec Su[-1] Sat;Dec Su[-1]-Mar 3 Sat 15:00-17:00;"
-        "Mar 3-Dec Su[-1] Sat 15:00-17:00";
+  str =
+      "Sun 09:00-16:00; Su[1]; Dec; Dec Su[-1] 15:00-17:00; Dec Su[-1] Th 15:00-17:00;"
+      "Dec Su[-1]; Dec Su[-1]-Mar 3 Sat;Mar 3-Dec Su[-1] Sat;Dec Su[-1]-Mar 3 Sat 15:00-17:00;"
+      "Mar 3-Dec Su[-1] Sat 15:00-17:00; Mar 3-Dec Su[-1] Sat,PH 15:00-17:00; Mar 3-Dec Su[-1] PH,Sat 15:00-17:00";
   conditions = GetTagTokens(str, ';');
   for (uint32_t x = 0; x < conditions.size(); x++) {
     if (x == 0) { // Sun 09:00-16:00
@@ -386,14 +389,21 @@ void TestConditionalRestrictions() {
       expected_values.push_back(11382180904701825);
       TryConditionalRestrictions(conditions.at(x), expected_values);
       TryConditionalRestrictions(conditions.at(x), 0, 1, 64, 3, 3, 0, 15, 0, 12, 1, 5, 17, 0);
+    } else if (x == 10) { // Mar 3-Dec Su[-1] Sat,PH 15:00-17:00
+      std::vector<uint64_t> expected_values;
+      expected_values.push_back(11382180904701825);
+      TryConditionalRestrictions(conditions.at(x), expected_values);
+      TryConditionalRestrictions(conditions.at(x), 0, 1, 64, 3, 3, 0, 15, 0, 12, 1, 5, 17, 0);
+    } else if (x == 11) { // Mar 3-Dec Su[-1] PH,Sat 15:00-17:00
+      std::vector<uint64_t> expected_values;
+      expected_values.push_back(11382180904701825);
+      TryConditionalRestrictions(conditions.at(x), expected_values);
+      TryConditionalRestrictions(conditions.at(x), 0, 1, 64, 3, 3, 0, 15, 0, 12, 1, 5, 17, 0);
     }
   }
 }
 
-int main(void) {
-  test::suite suite("timeparsing");
-
-  suite.test(TEST_CASE(TestConditionalRestrictions));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

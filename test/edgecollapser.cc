@@ -1,4 +1,4 @@
-#include "test.h"
+
 #include <cstdint>
 #include <set>
 #include <string>
@@ -13,6 +13,8 @@
 #include "baldr/merge.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
+
+#include "test.h"
 
 namespace vb = valhalla::baldr;
 
@@ -50,6 +52,7 @@ struct graph_tile_builder {
     header->set_graphid(id);
     header->set_nodecount(nodes.size());
     header->set_directededgecount(edges.size());
+    header->set_end_offset(mem.size());
 
     ptr += sizeof(vb::GraphTileHeader);
     memcpy(ptr, nodes.data(), nodes_size);
@@ -87,7 +90,7 @@ struct test_graph_reader : public vb::GraphReader {
   }
 };
 
-void TestCollapseEdgeSimple() {
+TEST(EdgeCollapser, TestCollapseEdgeSimple) {
   vb::GraphId base_id = vb::TileHierarchy::GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
 
   // simplest graph with a collapsible node:
@@ -108,7 +111,7 @@ void TestCollapseEdgeSimple() {
   builder.append_edge(base_id + uint64_t(1), 1113);
 
   builder.commit_tile(base_id);
-  assert(builder.tiles.size() == 1);
+  EXPECT_EQ(builder.tiles.size(), 1);
 
   test_graph_reader reader(std::move(builder.tiles));
 
@@ -126,22 +129,17 @@ void TestCollapseEdgeSimple() {
                    [&](const vb::merge::path& p) {
                      count += 1;
                      for (auto id : p.m_edges) {
-                       if (edges.count(id) != 1) {
-                         throw std::runtime_error("Edge not found - either invalid or duplicate!");
-                       }
+                       EXPECT_EQ(edges.count(id), 1)
+                           << "Edge not found - either invalid or duplicate!";
                        edges.erase(id);
                      }
                    });
 
-  if (count != 2) {
-    throw std::runtime_error("Should have collapsed to 2 paths.");
-  }
-  if (!edges.empty()) {
-    throw std::runtime_error("Some edges left over!");
-  }
+  EXPECT_EQ(count, 2) << "Should have collapsed to 2 paths.";
+  EXPECT_TRUE(edges.empty()) << "Some edges left over!";
 }
 
-void TestCollapseEdgeJunction() {
+TEST(EdgeCollapser, TestCollapseEdgeJunction) {
   vb::GraphId base_id = vb::TileHierarchy::GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
 
   // simplest graph with a non-collapsible node:
@@ -169,7 +167,7 @@ void TestCollapseEdgeJunction() {
   builder.append_edge(base_id + uint64_t(1), 1113);
 
   builder.commit_tile(base_id);
-  assert(builder.tiles.size() == 1);
+  EXPECT_EQ(builder.tiles.size(), 1);
 
   test_graph_reader reader(std::move(builder.tiles));
 
@@ -187,22 +185,17 @@ void TestCollapseEdgeJunction() {
                    [&](const vb::merge::path& p) {
                      count += 1;
                      for (auto id : p.m_edges) {
-                       if (edges.count(id) != 1) {
-                         throw std::runtime_error("Edge not found - either invalid or duplicate!");
-                       }
+                       EXPECT_EQ(edges.count(id), 1)
+                           << "Edge not found - either invalid or duplicate!";
                        edges.erase(id);
                      }
                    });
 
-  if (count != 6) {
-    throw std::runtime_error("Should have not collapsed, leaving 6 original paths.");
-  }
-  if (!edges.empty()) {
-    throw std::runtime_error("Some edges left over!");
-  }
+  EXPECT_EQ(count, 6) << "Should have not collapsed, leaving 6 original paths.";
+  EXPECT_TRUE(edges.empty()) << "Some edges left over!";
 }
 
-void TestCollapseEdgeChain() {
+TEST(EdgeCollapser, TestCollapseEdgeChain) {
   vb::GraphId base_id = vb::TileHierarchy::GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
 
   // graph with 3 collapsible edges, all chained together. (e.g: think of the
@@ -227,7 +220,7 @@ void TestCollapseEdgeChain() {
   builder.append_edge(base_id + uint64_t(2), 1113);
 
   builder.commit_tile(base_id);
-  assert(builder.tiles.size() == 1);
+  EXPECT_EQ(builder.tiles.size(), 1);
 
   test_graph_reader reader(std::move(builder.tiles));
 
@@ -245,29 +238,19 @@ void TestCollapseEdgeChain() {
                    [&](const vb::merge::path& p) {
                      count += 1;
                      for (auto id : p.m_edges) {
-                       if (edges.count(id) != 1) {
-                         throw std::runtime_error("Edge not found - either invalid or duplicate!");
-                       }
+                       EXPECT_EQ(edges.count(id), 1)
+                           << "Edge not found - either invalid or duplicate!";
                        edges.erase(id);
                      }
                    });
 
-  if (count != 2) {
-    throw std::runtime_error("Should have collapsed to 2 paths.");
-  }
-  if (!edges.empty()) {
-    throw std::runtime_error("Some edges left over!");
-  }
+  EXPECT_EQ(count, 2) << "Should have collapsed to 2 paths.";
+  EXPECT_TRUE(edges.empty()) << "Some edges left over!";
 }
 
 } // anonymous namespace
 
-int main() {
-  test::suite suite("edgecollapser");
-
-  suite.test(TEST_CASE(TestCollapseEdgeSimple));
-  suite.test(TEST_CASE(TestCollapseEdgeJunction));
-  suite.test(TEST_CASE(TestCollapseEdgeChain));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

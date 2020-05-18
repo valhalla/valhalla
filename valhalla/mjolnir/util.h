@@ -7,38 +7,45 @@
 #include <unordered_map>
 #include <vector>
 
+#include <sqlite3.h>
+
 #include <valhalla/midgard/pointll.h>
 
 namespace valhalla {
 namespace mjolnir {
 
-// NOTE - for now parse and build must be run at the same time!
 // Stages of the Valhalla tile building pipeline
 enum class BuildStage : int8_t {
   kInvalid = -1,
   kInitialize = 0,
-  kParse = 1,
-  kBuild = 2,
-  kEnhance = 3,
-  kFilter = 4,
-  kTransit = 5,
-  kHierarchy = 6,
-  kShortcuts = 7,
-  kRestrictions = 8,
-  kElevation = 9,
-  kValidate = 10,
-  kCleanup = 11
+  kParseWays = 1,
+  kParseRelations = 2,
+  kParseNodes = 3,
+  kBuild = 4,
+  kEnhance = 5,
+  kFilter = 6,
+  kTransit = 7,
+  kBss = 8,
+  kHierarchy = 9,
+  kShortcuts = 10,
+  kRestrictions = 11,
+  kElevation = 12,
+  kValidate = 13,
+  kCleanup = 14
 };
 
 // Convert string to BuildStage
 inline BuildStage string_to_buildstage(const std::string& s) {
   static const std::unordered_map<std::string, BuildStage> stringToBuildStage =
       {{"initialize", BuildStage::kInitialize},
-       {"parse", BuildStage::kParse},
+       {"parseways", BuildStage::kParseWays},
+       {"parserelations", BuildStage::kParseRelations},
+       {"parsenodes", BuildStage::kParseNodes},
        {"build", BuildStage::kBuild},
        {"enhance", BuildStage::kEnhance},
        {"filter", BuildStage::kFilter},
        {"transit", BuildStage::kTransit},
+       {"bss", BuildStage::kBss},
        {"hierarchy", BuildStage::kHierarchy},
        {"shortcuts", BuildStage::kShortcuts},
        {"restrictions", BuildStage::kRestrictions},
@@ -54,11 +61,14 @@ inline BuildStage string_to_buildstage(const std::string& s) {
 inline std::string to_string(BuildStage stg) {
   static const std::unordered_map<uint8_t, std::string> BuildStageStrings =
       {{static_cast<int8_t>(BuildStage::kInitialize), "initialize"},
-       {static_cast<int8_t>(BuildStage::kParse), "parse"},
+       {static_cast<int8_t>(BuildStage::kParseWays), "parseways"},
+       {static_cast<int8_t>(BuildStage::kParseRelations), "parserelations"},
+       {static_cast<int8_t>(BuildStage::kParseNodes), "parsenodes"},
        {static_cast<int8_t>(BuildStage::kBuild), "build"},
        {static_cast<int8_t>(BuildStage::kEnhance), "enhance"},
        {static_cast<int8_t>(BuildStage::kFilter), "filter"},
        {static_cast<int8_t>(BuildStage::kTransit), "transit"},
+       {static_cast<int8_t>(BuildStage::kBss), "bss"},
        {static_cast<int8_t>(BuildStage::kHierarchy), "hierarchy"},
        {static_cast<int8_t>(BuildStage::kShortcuts), "shortcuts"},
        {static_cast<int8_t>(BuildStage::kRestrictions), "restrictions"},
@@ -103,6 +113,13 @@ bool shapes_match(const std::vector<midgard::PointLL>& shape1,
 uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
 
 /**
+ * Loads spatialite extension for sqlite
+ * @param db_handle   the handle to the open sqlite database
+ * @return returns true if the module was successfully loaded
+ */
+bool load_spatialite(sqlite3* db_handle);
+
+/**
  * Build an entire valhalla tileset give a config file and some input pbfs. The
  * tile building process is split into stages. This method allows either the entire
  * tile building pipeline to run (default) or a subset of the stages to run.
@@ -110,12 +127,15 @@ uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
  * @param input_files   Tells what osm pbf files to build the tiles from
  * @param start_stage   Starting stage of the pipeline to run
  * @param end_stage     End stage of the pipeline to run
+ * @param release_osmpbf_memory Free PBF parsing libs after use.  Saves RAM, but makes libprotobuf
+ * unusable afterwards.  Set to false if you need to perform protobuf operations after building tiles.
  * @return Returns true if no errors occur, false if an error occurs.
  */
 bool build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage = BuildStage::kInitialize,
-                    const BuildStage end_stage = BuildStage::kValidate);
+                    const BuildStage end_stage = BuildStage::kValidate,
+                    const bool release_osmpbf_memory = true);
 
 } // namespace mjolnir
 } // namespace valhalla

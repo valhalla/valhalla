@@ -76,7 +76,7 @@ void adjust_scores(Options& options) {
       }
 
       // subtract off the min score and cap at max so that path algorithm doesnt go too far
-      auto max_score = kMaxDistances.find(Costing_Name(options.costing()));
+      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing()));
       for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           candidate.set_distance(candidate.distance() - minScore);
@@ -134,13 +134,10 @@ void try_path(GraphReader& reader,
   valhalla::Location origin = request.options().locations(0);
   valhalla::Location dest = request.options().locations(1);
   auto pathedges = astar.GetBestPath(origin, dest, reader, mode_costing, mode).front();
-  if (pathedges.size() != expected_edgecount) {
-    throw std::runtime_error("Trivial path failed: expected edges: " +
-                             std::to_string(expected_edgecount));
-  }
+  EXPECT_EQ(pathedges.size(), expected_edgecount);
 }
 
-void test_trivial_paths() {
+TEST(TrivialPaths, test_trivial_paths) {
   // Test setup
   loki_worker_t loki_worker(config);
   GraphReader reader(config.get_child("mjolnir"));
@@ -175,10 +172,7 @@ void test_trivial_paths() {
 }
 
 int main(int argc, char* argv[]) {
-  test::suite suite("trivial_paths");
   // logging::Configure({{"type", ""}}); // silence logs
-
-  suite.test(TEST_CASE(test_trivial_paths));
-
-  return suite.tear_down();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

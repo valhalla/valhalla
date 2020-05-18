@@ -3,7 +3,6 @@
 #include "statistics.h"
 
 #include "baldr/rapidjson_utils.h"
-#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -24,6 +23,7 @@
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
@@ -34,7 +34,7 @@ using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace bpo = boost::program_options;
-boost::filesystem::path config_file_path;
+filesystem::path config_file_path;
 
 namespace {
 
@@ -263,8 +263,8 @@ void checkExitInfo(const GraphTile& tile,
       } else {
         // store exit info in case this is a fork
         std::string iso_code = tile->admin(startnodeinfo.admin_index())->country_iso();
-        tile_fork_signs.push_back({tile->id(), otheredge->exitsign()});
-        ctry_fork_signs.push_back({iso_code, otheredge->exitsign()});
+        tile_fork_signs.push_back({tile->id(), otheredge->sign()});
+        ctry_fork_signs.push_back({iso_code, otheredge->sign()});
       }
     }
     // If it was a fork, store the data appropriately
@@ -278,8 +278,8 @@ void checkExitInfo(const GraphTile& tile,
     } else {
       // Otherwise store original edge info as a normal exit
       std::string iso_code = tile->admin(startnodeinfo.admin_index())->country_iso();
-      stats.add_exitinfo({tile->id(), directededge.exitsign()});
-      stats.add_exitinfo({iso_code, directededge.exitsign()});
+      stats.add_exitinfo({tile->id(), directededge.sign()});
+      stats.add_exitinfo({iso_code, directededge.sign()});
     }
   }
 }
@@ -494,7 +494,7 @@ void build(const boost::property_tree::ptree& pt,
     // Check if we need to clear the tile cache
     lock.lock();
     if (graph_reader.OverCommitted()) {
-      graph_reader.Clear();
+      graph_reader.Trim();
     }
     lock.unlock();
   }
@@ -509,15 +509,17 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   // Graph tile properties
   auto tile_properties = pt.get_child("mjolnir");
 
+  GraphReader reader(tile_properties);
+
   // Create a randomized queue of tiles to work from
   std::deque<GraphId> tilequeue;
-  for (auto tier : TileHierarchy::levels()) {
+  for (const auto& tier : TileHierarchy::levels()) {
     auto level = tier.second.level;
     auto tiles = tier.second.tiles;
     for (uint32_t id = 0; id < tiles.TileCount(); id++) {
       // If tile exists add it to the queue
       GraphId tile_id(id, level, 0);
-      if (GraphReader::DoesTileExist(tile_properties, tile_id)) {
+      if (reader.DoesTileExist(tile_id)) {
         tilequeue.emplace_back(std::move(tile_id));
       }
     }
@@ -528,7 +530,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
       for (uint32_t id = 0; id < tiles.TileCount(); id++) {
         // If tile exists add it to the queue
         GraphId tile_id(id, level, 0);
-        if (GraphReader::DoesTileExist(tile_properties, tile_id)) {
+        if (reader.DoesTileExist(tile_id)) {
           tilequeue.emplace_back(std::move(tile_id));
         }
       }
@@ -577,8 +579,8 @@ bool ParseArguments(int argc, char* argv[]) {
   bpo::options_description options("Usage: valhalla_build_statistics --config conf/valhalla.json");
   options.add_options()("help,h",
                         "Print this help message")("config,c",
-                                                   boost::program_options::value<
-                                                       boost::filesystem::path>(&config_file_path)
+                                                   boost::program_options::value<filesystem::path>(
+                                                       &config_file_path)
                                                        ->required(),
                                                    "Path to the json configuration file.");
   bpo::variables_map vm;
@@ -595,7 +597,7 @@ bool ParseArguments(int argc, char* argv[]) {
     return true;
   }
   if (vm.count("config")) {
-    if (boost::filesystem::is_regular_file(config_file_path)) {
+    if (filesystem::is_regular_file(config_file_path)) {
       return true;
     } else {
       std::cerr << "Configuration file is required\n\n" << options << "\n\n";
@@ -612,7 +614,7 @@ int main(int argc, char** argv) {
 
   // check the type of input
   boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.c_str(), pt);
+  rapidjson::read_json(config_file_path.string(), pt);
 
   // configure logging
   boost::optional<boost::property_tree::ptree&> logging_subtree =

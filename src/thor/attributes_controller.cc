@@ -34,6 +34,10 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeSignExitBranch, true},
     {kEdgeSignExitToward, true},
     {kEdgeSignExitName, true},
+    {kEdgeSignGuideBranch, true},
+    {kEdgeSignGuideToward, true},
+    {kEdgeSignJunctionName, true},
+    {kEdgeSignGuidanceViewJunction, true},
     {kEdgeTravelMode, true},
     {kEdgeVehicleType, true},
     {kEdgePedestrianType, true},
@@ -66,6 +70,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeSpeedLimit, true},
     {kEdgeTruckSpeed, true},
     {kEdgeTruckRoute, true},
+    {kEdgeDefaultSpeed, true},
 
     // Node keys
     {kNodeIntersectingEdgeBeginHeading, true},
@@ -74,6 +79,8 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kNodeIntersectingEdgeDriveability, true},
     {kNodeIntersectingEdgeCyclability, true},
     {kNodeIntersectingEdgeWalkability, true},
+    {kNodeIntersectingEdgeUse, true},
+    {kNodeIntersectingEdgeRoadClass, true},
     {kNodeElapsedTime, true},
     {kNodeaAdminIndex, true},
     {kNodeType, true},
@@ -95,6 +102,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kNodeTransitEgressInfoName, true},
     {kNodeTransitEgressInfoLatLon, true},
     {kNodeTimeZone, true},
+    {kNodeTransitionTime, true},
 
     // Top level: admin list, full shape, and shape bounding box keys
     {kOsmChangeset, true},

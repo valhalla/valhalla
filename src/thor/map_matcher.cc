@@ -3,31 +3,69 @@
 #include <exception>
 #include <vector>
 
+#include "baldr/datetime.h"
 #include "thor/map_matcher.h"
+#include "thor/worker.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
-namespace valhalla {
-namespace thor {
-
+namespace {
 struct interpolation_t {
-  baldr::GraphId edge;   // edge id
-  float total_distance;  // distance along the path
-  float edge_distance;   // ratio of the distance along the edge
-  size_t original_index; // index into the original measurements
-  double epoch_time;     // seconds from epoch
+  valhalla::baldr::GraphId edge; // edge id
+  float total_distance;          // distance along the path
+  float edge_distance;           // ratio of the distance along the edge
+  size_t original_index;         // index into the original measurements
+  double epoch_time;             // seconds from epoch
 };
 
-std::list<std::vector<interpolation_t>>
-interpolate_matches(const std::vector<meili::MatchResult>& matches,
-                    const std::vector<meili::EdgeSegment>& edges,
-                    meili::MapMatcher* matcher) {
+static uint32_t compute_origin_epoch(const std::vector<valhalla::meili::EdgeSegment>& edge_segments,
+                                     valhalla::meili::MapMatcher* matcher,
+                                     valhalla::Options& options) {
+  const GraphTile* tile = nullptr;
+  const DirectedEdge* directededge = nullptr;
+  const NodeInfo* nodeinfo = nullptr;
+
+  // We support either the epoch timestamp that came with the trace point or
+  // a local date time which we convert to epoch by finding the first timezone
+  uint32_t origin_epoch = 0;
+  for (const auto& s : edge_segments) {
+    if (!s.edgeid.Is_Valid() || !matcher->graphreader().GetGraphTile(s.edgeid, tile))
+      continue;
+    directededge = tile->directededge(s.edgeid);
+    if (matcher->graphreader().GetGraphTile(directededge->endnode(), tile)) {
+      // get the timezone
+      nodeinfo = tile->node(directededge->endnode());
+      const auto* tz = DateTime::get_tz_db().from_index(nodeinfo->timezone());
+      if (!tz)
+        continue;
+      // if its timestamp based need to signal that out to trip leg builder
+      if (!options.shape(0).has_date_time() && options.shape(0).time() != -1.0) {
+        options.mutable_shape(0)->set_date_time(
+            DateTime::seconds_to_date(options.shape(0).time(), tz, false));
+      }
+      // remember where we are starting
+      if (options.shape(0).has_date_time()) {
+        if (options.shape(0).date_time() == "current")
+          options.mutable_shape(0)->set_date_time(DateTime::iso_date_time(tz));
+        origin_epoch = DateTime::seconds_since_epoch(options.shape(0).date_time(), tz);
+      }
+      break;
+    }
+  }
+
+  return origin_epoch;
+}
+static std::vector<std::vector<interpolation_t>>
+interpolate_matches(const std::vector<valhalla::meili::MatchResult>& matches,
+                    const std::vector<valhalla::meili::EdgeSegment>& edges,
+                    valhalla::meili::MapMatcher* matcher) {
   // TODO: backtracking could have happened. maybe it really happened but maybe there were
   // positional inaccuracies. for now we should detect when there are backtracks and give up
   // otherwise the the timing reported here might be suspect
   // find each set of continuous edges
-  std::list<std::vector<interpolation_t>> interpolations;
+  std::vector<std::vector<interpolation_t>> interpolations;
+  interpolations.reserve(edges.size());
   size_t idx = 0;
   for (auto begin_edge = edges.cbegin(), end_edge = edges.cbegin() + 1; begin_edge != edges.cend();
        begin_edge = end_edge, end_edge += 1) {
@@ -42,6 +80,7 @@ interpolate_matches(const std::vector<meili::MatchResult>& matches,
 
     // go through each edge and each match keeping the distance each point is along the entire trace
     std::vector<interpolation_t> interpolated;
+    interpolated.reserve(matches.size());
     size_t last_idx = idx;
     for (auto segment = begin_edge; segment != end_edge; ++segment) {
       float edge_length = matcher->graphreader()
@@ -120,71 +159,108 @@ interpolate_matches(const std::vector<meili::MatchResult>& matches,
   return interpolations;
 }
 
-// Form the path from the map-matching results. This path gets sent to
-// TripLegBuilder.
-std::vector<PathInfo>
+} // namespace
+
+namespace valhalla {
+namespace thor {
+
+// We can return multiple paths from here. Any time a MatchResult (trace point) is marked as a
+// break point or break_through point we will make a new leg and hence a new vector of path infos
+// also whenever there is a discontinuity there will be a new vector of path infos created
+std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>
 MapMatcher::FormPath(meili::MapMatcher* matcher,
                      const std::vector<meili::MatchResult>& results,
                      const std::vector<meili::EdgeSegment>& edge_segments,
                      const std::shared_ptr<sif::DynamicCost>* mode_costing,
                      const sif::TravelMode mode,
-                     std::vector<std::pair<GraphId, GraphId>>& disconnected_edges,
-                     const Options options) {
+                     Options& options) {
+
+  // We support either the epoch timestamp that came with the trace point or
+  // a local date time which we convert to epoch by finding the first timezone
+  uint32_t origin_epoch = compute_origin_epoch(edge_segments, matcher, options);
+  std::string date_time = options.shape(0).has_date_time() ? options.shape(0).date_time() : "";
+
+  // Interpolate match results if using timestamps for elapsed time
+  std::vector<std::vector<interpolation_t>> interpolations;
+  size_t last_interp_index = 0;
+  bool use_timestamps = options.use_timestamps();
+  if (use_timestamps) {
+    interpolations = interpolate_matches(results, edge_segments, matcher);
+    // This means there is a discontinuity. If so, fallback to using costing
+    if (interpolations.size() != 1)
+      use_timestamps = false;
+    else
+      last_interp_index = interpolations.front().back().original_index;
+  }
+
   // Set costing based on the mode
   const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
-  bool use_timestamps = options.use_timestamps();
-
   // Iterate through the matched path. Form PathInfo - populate elapsed time
   // Return an empty path (or throw exception) if path is not connected.
   Cost elapsed;
-  std::vector<PathInfo> path;
+  std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>> paths;
   GraphId prior_edge, prior_node;
-  const NodeInfo* nodeinfo = nullptr;
-  const DirectedEdge* directededge;
   EdgeLabel pred;
+  const meili::EdgeSegment* prev_segment = nullptr;
+  const GraphTile* tile = nullptr;
+  const DirectedEdge* directededge = nullptr;
+  const NodeInfo* nodeinfo = nullptr;
 
-  // Interpolate match results if using timestamps for elapsed time
-  std::list<std::vector<interpolation_t>> interpolations;
+  // Build the path
   size_t interpolated_index = 0;
-  size_t last_interp_index = 0;
-  if (use_timestamps) {
-    interpolations = interpolate_matches(results, edge_segments, matcher);
-    if (interpolations.size() > 1) {
-      // This means there is a discontinuity. If so, fallback to using costing
-      use_timestamps = false;
-    }
-    last_interp_index = interpolations.front().back().original_index;
-  }
-
+  size_t num_segments = edge_segments.size();
+  Cost accumulated_elapsed;
   for (const auto& edge_segment : edge_segments) {
-
-    // Skip edges that are the same as the prior edge
-    if (edge_segment.edgeid == prior_edge) {
-      continue;
-    }
 
     // Get the directed edge
     GraphId edge_id = edge_segment.edgeid;
-    const GraphTile* tile = matcher->graphreader().GetGraphTile(edge_id);
+    matcher->graphreader().GetGraphTile(edge_id, tile);
     directededge = tile->directededge(edge_id);
 
     // Check if connected to prior edge
-    if (prior_edge.Is_Valid() && !matcher->graphreader().AreEdgesConnected(prior_edge, edge_id)) {
-      disconnected_edges.emplace_back(prior_edge, edge_id);
+    bool disconnected =
+        prev_segment != nullptr && prev_segment->edgeid.Is_Valid() && prev_segment->discontinuity;
+
+    bool break_point =
+        edge_segment.first_match_idx >= 0 && results[edge_segment.first_match_idx].is_break_point;
+    bool new_leg = disconnected || !prev_segment || break_point;
+    // if this is the first route or the first edge after the discontinuity or
+    // user requested a new leg here
+    if (new_leg) {
+      if (!date_time.empty() && prev_segment) {
+        date_time = thor_worker_t::offset_date(matcher->graphreader(), date_time,
+                                               paths.back().first.front().edgeid, elapsed.secs,
+                                               paths.back().first.back().edgeid);
+        options.mutable_shape(edge_segment.first_match_idx)->set_date_time(date_time);
+      }
+
+      paths.emplace_back();
+      paths.back().first.reserve(num_segments);
+      paths.back().second.reserve(num_segments);
+
+      accumulated_elapsed += elapsed;
+      elapsed = {};
     }
 
-    // TODO: slight difference in time between route and trace_route
-    if (nodeinfo) {
-      // Get time along the edge, handling partial distance along the first and last edge.
-      // Add the transition cost at the begin node.
-      elapsed += costing->EdgeCost(directededge, tile->GetSpeed(directededge)) *
-                     (edge_segment.target - edge_segment.source) +
-                 costing->TransitionCost(directededge, nodeinfo, pred);
-    } else {
-      // Get time along the edge, handling partial distance along the first and last edge
-      elapsed += costing->EdgeCost(directededge, tile->GetSpeed(directededge)) *
-                 (edge_segment.target - edge_segment.source);
+    // Get seconds from beginning of the week accounting for any changes to timezone on the path
+    uint32_t second_of_week = kInvalidSecondsOfWeek;
+    if (origin_epoch != 0 && nodeinfo) {
+      second_of_week =
+          DateTime::second_of_week(origin_epoch +
+                                       static_cast<uint32_t>(accumulated_elapsed.secs + elapsed.secs),
+                                   DateTime::get_tz_db().from_index(nodeinfo->timezone()));
     }
+
+    // get the cost of traversing the node, there is no turn cost the first time
+    Cost transition_cost{};
+    if (elapsed.secs > 0) {
+      transition_cost = costing->TransitionCost(directededge, nodeinfo, pred);
+      elapsed += transition_cost;
+    }
+
+    // Get time along the edge, handling partial distance along the first and last edge.
+    elapsed += costing->EdgeCost(directededge, tile, second_of_week) *
+               (edge_segment.target - edge_segment.source);
 
     if (use_timestamps) {
       // Use timestamps to update elapsed time. Use the timestamp at the interpolation
@@ -203,20 +279,23 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
       elapsed.secs = results[idx].epoch_time - results[0].epoch_time;
     }
 
+    // Update the predecessor EdgeLabel (for transition costing in the next round);
+    pred = {kInvalidLabel, edge_id, directededge, elapsed, 0, 0, mode, 0, {}};
+
+    paths.back().first.emplace_back(
+        PathInfo{mode, elapsed.secs, edge_id, 0, elapsed.cost, false, transition_cost.secs});
+    paths.back().second.emplace_back(&edge_segment);
+    --num_segments;
+
     // Update the prior_edge and nodeinfo. TODO (protect against invalid tile)
+    prev_segment = &edge_segment;
     prior_edge = edge_id;
     prior_node = directededge->endnode();
     const GraphTile* end_tile = matcher->graphreader().GetGraphTile(prior_node);
     nodeinfo = end_tile->node(prior_node);
-
-    // Create a predecessor EdgeLabel (for transition costing)
-    pred = {kInvalidLabel, edge_id, directededge, {}, 0, 0, mode, 0};
-
-    // Add to the PathInfo
-    path.emplace_back(mode, elapsed.secs, edge_id, 0, elapsed.cost);
   }
 
-  return path;
+  return paths;
 }
 
 } // namespace thor

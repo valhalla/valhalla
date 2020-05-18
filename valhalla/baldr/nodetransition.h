@@ -32,9 +32,8 @@ public:
   }
 
   /**
-   * Get the index of the directed edge this sign applies to.
-   * @return  Returns the directed edge index (within the same tile
-   *          as the sign information).
+   * Get the id of the corresponding node on another hierarchy level
+   * @return  The corresponding node id on another level
    */
   GraphId endnode() const {
     return GraphId(endnode_);

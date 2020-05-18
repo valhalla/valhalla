@@ -19,27 +19,20 @@ constexpr size_t kSignExpectedSize = 8;
 
 namespace {
 
-void test_sizeof() {
-  if (sizeof(valhalla::baldr::Sign) != kSignExpectedSize)
-    throw std::runtime_error("Sign size should be " + std::to_string(kSignExpectedSize) + " bytes" +
-                             " but is " + std::to_string(sizeof(valhalla::baldr::Sign)));
+TEST(Sign, test_sizeof) {
+  EXPECT_EQ(sizeof(valhalla::baldr::Sign), kSignExpectedSize);
 }
 
 void TryCtor(const std::string& text, const bool is_route_number) {
   valhalla::odin::Sign sign(text, is_route_number);
   uint32_t consecutive_count = 0;
 
-  if (text != sign.text())
-    throw std::runtime_error("Incorrect sign text");
-
-  if (is_route_number != sign.is_route_number())
-    throw std::runtime_error("Incorrect sign is_route_number boolean");
-
-  if (consecutive_count != sign.consecutive_count())
-    throw std::runtime_error("Incorrect sign consecutive count");
+  EXPECT_EQ(text, sign.text());
+  EXPECT_EQ(is_route_number, sign.is_route_number());
+  EXPECT_EQ(consecutive_count, sign.consecutive_count());
 }
 
-void TestCtor() {
+TEST(Sign, TestCtor) {
   // Exit number
   TryCtor("51A", false);
 
@@ -56,8 +49,7 @@ void TestCtor() {
 void TryDescendingSortByConsecutiveCount(std::vector<valhalla::odin::Sign>& signs,
                                          const std::vector<valhalla::odin::Sign>& expectedSigns) {
 
-  if (signs.size() != expectedSigns.size())
-    throw std::runtime_error("DescendingSortByConsecutiveCount size mismatch");
+  EXPECT_EQ(signs.size(), expectedSigns.size()) << "DescendingSortByConsecutiveCount size mismatch";
 
   std::sort(signs.begin(), signs.end(),
             [](const valhalla::odin::Sign& lhs, const valhalla::odin::Sign& rhs) {
@@ -65,12 +57,12 @@ void TryDescendingSortByConsecutiveCount(std::vector<valhalla::odin::Sign>& sign
             });
 
   for (size_t x = 0, n = signs.size(); x < n; ++x) {
-    if (signs.at(x).consecutive_count() != expectedSigns.at(x).consecutive_count())
-      throw std::runtime_error("Incorrect DescendingSortByConsecutiveCount");
+    EXPECT_EQ(signs.at(x).consecutive_count(), expectedSigns.at(x).consecutive_count())
+        << "Incorrect DescendingSortByConsecutiveCount";
   }
 }
 
-void TestDescendingSortByConsecutiveCount_0_1() {
+TEST(Sign, TestDescendingSortByConsecutiveCount_0_1) {
   valhalla::odin::Sign signConsecutiveCount0("Elizabethtown", false);
 
   valhalla::odin::Sign signConsecutiveCount1("Hershey", false);
@@ -81,7 +73,7 @@ void TestDescendingSortByConsecutiveCount_0_1() {
   TryDescendingSortByConsecutiveCount(signs, {signConsecutiveCount1, signConsecutiveCount0});
 }
 
-void TestDescendingSortByConsecutiveCount_1_2() {
+TEST(Sign, TestDescendingSortByConsecutiveCount_1_2) {
   valhalla::odin::Sign signConsecutiveCount1("I 81 South", true);
   signConsecutiveCount1.set_consecutive_count(1);
 
@@ -93,7 +85,7 @@ void TestDescendingSortByConsecutiveCount_1_2() {
   TryDescendingSortByConsecutiveCount(signs, {signConsecutiveCount2, signConsecutiveCount1});
 }
 
-void TestDescendingSortByConsecutiveCount_2_4() {
+TEST(Sign, TestDescendingSortByConsecutiveCount_2_4) {
   valhalla::odin::Sign signConsecutiveCount2("51A", false);
   signConsecutiveCount2.set_consecutive_count(2);
 
@@ -105,7 +97,7 @@ void TestDescendingSortByConsecutiveCount_2_4() {
   TryDescendingSortByConsecutiveCount(signs, {signConsecutiveCount4, signConsecutiveCount2});
 }
 
-void TestDescendingSortByConsecutiveCount_0_1_2() {
+TEST(Sign, TestDescendingSortByConsecutiveCount_0_1_2) {
   valhalla::odin::Sign signConsecutiveCount0("Towson", false);
 
   valhalla::odin::Sign signConsecutiveCount1("Baltimore", false);
@@ -136,26 +128,7 @@ void TestDescendingSortByConsecutiveCount_0_1_2() {
 
 } // namespace
 
-int main() {
-  test::suite suite("sign");
-
-  // Constructor
-  suite.test(TEST_CASE(TestCtor));
-
-  // Test sizeof the structure
-  suite.test(TEST_CASE(test_sizeof));
-
-  // DescendingSortByConsecutiveCount_0_1
-  suite.test(TEST_CASE(TestDescendingSortByConsecutiveCount_0_1));
-
-  // DescendingSortByConsecutiveCount_1_2
-  suite.test(TEST_CASE(TestDescendingSortByConsecutiveCount_1_2));
-
-  // DescendingSortByConsecutiveCount_2_4
-  suite.test(TEST_CASE(TestDescendingSortByConsecutiveCount_2_4));
-
-  // DescendingSortByConsecutiveCount_0_1_2
-  suite.test(TEST_CASE(TestDescendingSortByConsecutiveCount_0_1_2));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

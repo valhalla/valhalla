@@ -54,6 +54,13 @@ public:
   static GraphId GetGraphId(const midgard::PointLL& pointll, const uint8_t level);
 
   /**
+   * Returns bounding box for the given GraphId .
+   * @param id corresponding GraphId.
+   * @return Bounding box of the tile which corresponding GraphId stands for.
+   */
+  static midgard::AABB2<midgard::PointLL> GetGraphIdBoundingBox(const GraphId& id);
+
+  /**
    * Returns all the GraphIds of the tiles which intersect the given bounding
    * box at that level.
    * @param bbox  Bounding box of tiles to find.

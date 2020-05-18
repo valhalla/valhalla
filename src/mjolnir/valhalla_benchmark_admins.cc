@@ -14,7 +14,8 @@
 #include "config.h"
 
 #include "baldr/rapidjson_utils.h"
-#include <boost/filesystem/operations.hpp>
+#include "filesystem.h"
+
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
@@ -23,11 +24,6 @@
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
-
-// sqlite must be included before spatialite
-#include <sqlite3.h>
-
-#include <spatialite.h>
 
 #include "baldr/admininfo.h"
 #include "baldr/graphconstants.h"
@@ -41,6 +37,10 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
+#include "mjolnir/util.h"
+
+// sqlite is included in util.h and must be before spatialite
+#include <spatialite.h>
 
 namespace bpo = boost::program_options;
 using namespace valhalla::midgard;
@@ -51,7 +51,7 @@ typedef boost::geometry::model::d2::point_xy<double> point_type;
 typedef boost::geometry::model::polygon<point_type> polygon_type;
 typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
 
-boost::filesystem::path config_file_path;
+filesystem::path config_file_path;
 
 std::unordered_map<uint32_t, multi_polygon_type>
 GetAdminInfo(sqlite3* db_handle,
@@ -160,34 +160,21 @@ void Benchmark(const boost::property_tree::ptree& pt) {
   auto database = pt.get_optional<std::string>("admin");
 
   sqlite3* db_handle = nullptr;
-  if (boost::filesystem::exists(*database)) {
+  if (filesystem::exists(*database)) {
     spatialite_init(0);
     sqlite3_stmt* stmt = 0;
-    char* err_msg = nullptr;
-    std::string sql;
     uint32_t ret = sqlite3_open_v2((*database).c_str(), &db_handle, SQLITE_OPEN_READONLY, nullptr);
     if (ret != SQLITE_OK) {
       LOG_ERROR("cannot open " + *database);
       sqlite3_close(db_handle);
-      db_handle = nullptr;
       return;
     }
 
     // loading SpatiaLite as an extension
-    sqlite3_enable_load_extension(db_handle, 1);
-#if SQLITE_VERSION_NUMBER > 3008007
-    sql = "SELECT load_extension('mod_spatialite')";
-#else
-    sql = "SELECT load_extension('libspatialite')";
-#endif
-    ret = sqlite3_exec(db_handle, sql.c_str(), nullptr, nullptr, &err_msg);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("load_extension() error: " + std::string(err_msg));
-      sqlite3_free(err_msg);
+    if (!valhalla::mjolnir::load_spatialite(db_handle)) {
       sqlite3_close(db_handle);
       return;
     }
-    LOG_INFO("SpatiaLite loaded as an extension");
   } else {
     LOG_ERROR("Admin db " + *database + " not found.");
     return;
@@ -205,7 +192,7 @@ void Benchmark(const boost::property_tree::ptree& pt) {
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // Get the admin polys if there is data for tiles that exist
     GraphId tile_id(id, local_level, 0);
-    if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
+    if (reader.DoesTileExist(tile_id)) {
       polys = GetAdminInfo(db_handle, drive_on_right, tiles.TileBounds(id));
       LOG_INFO("polys: " + std::to_string(polys.size()));
       if (polys.size() < 128) {
@@ -232,8 +219,7 @@ bool ParseArguments(int argc, char* argv[]) {
 
   options.add_options()("help,h", "Print this help message.")("version,v",
                                                               "Print the version of this software.")(
-      "config,c",
-      boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
+      "config,c", boost::program_options::value<filesystem::path>(&config_file_path)->required(),
       "Path to the json configuration file.");
 
   bpo::positional_options_description pos_options;
@@ -260,7 +246,7 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("config")) {
-    if (boost::filesystem::is_regular_file(config_file_path)) {
+    if (filesystem::is_regular_file(config_file_path)) {
       return true;
     } else {
       std::cerr << "Configuration file is required\n\n" << options << "\n\n";
@@ -276,7 +262,7 @@ int main(int argc, char** argv) {
 
   // Ccheck what type of input we are getting
   boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.c_str(), pt);
+  rapidjson::read_json(config_file_path.string(), pt);
 
   // Configure logging
   boost::optional<boost::property_tree::ptree&> logging_subtree =

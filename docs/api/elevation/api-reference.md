@@ -10,9 +10,18 @@ View an interactive demo [here](http://valhalla.github.io/demos/elevation).
 
 The elevation service currently has a single action, `/height?`, that can be requested. The `height` provides the elevation at a set of input locations, which are specified as either a `shape` or an `encoded_polyline`. The shape option uses an ordered list of one or more locations within a JSON array, while an encoded polyline stores multiple locations within a single string. If you include a `range` parameter and set it to `true`, both the height and cumulative distance are returned for each point.
 
+The elevation service also supports sampling the input shape or encoded polyline in uniform intervals along the path defined by the successive locations. If you include a `resample_distance` parameter with a distance in meters the elevation service will resample the input polyline at the requested resample_distance and return heights (and cumulative distance if requested) at the resampled locations. The resampled polyline is also returned.
+
 An elevation service request takes the form of `servername/height?json={}`, where the JSON inputs inside the ``{}`` includes location information and the optional range parameter.
 
 There is an option to name your elevation request. You can do this by appending the following to your request `&id=`.  The `id` is returned with the response so a user could match to the corresponding request.
+
+### Height Precision
+By default, all height values are returned as integer values. This works fine for most cases. However, using integer precision when charting elevation results along a nearly flat road can lead to "stair step" changes in elevation. Height data can be returned with 1 or 2 digits decimal precision by specifying `height_precision`. 
+
+| Height precision | Description |
+| :--------- | :----------- |
+| `height_precision` | Specifies the precision (number of decimal places) of all returned height values. Values of `0`, `1`, or `2` are admissable. Defaults to 0 (integer precision). Any other value will result in integer precision (0 decimal places).
 
 ### Use a shape list for input locations
 
@@ -47,10 +56,11 @@ Without the `range`, the result looks something like this, with only a `height`:
 
 ### Use an encoded polyline for input locations
 
-The `encoded_polyline` parameter is a string of a polyline-encoded, with **six degrees of precision**, shape and has the following parameters. Details on polyline encoding and decoding can be found [here](../../decoding.md).
+The `encoded_polyline` parameter is a string of a polyline-encoded, with **the specified precision**, shape and has the following parameters. Details on polyline encoding and decoding can be found [here](../../decoding.md).
 
 | Encoded polyline parameters | Description |
 | :--------- | :----------- |
+| `shape_format` | `polyline6` or `polyline5`. Specifies whether the polyline is encoded with 6 digit precision (polyline6) or 5 digit precision (polyline5). If `shape_format` is not specified, the encoded polyline is expected to be 6 digit precision.
 | `encoded_polyline` | A set of encoded latitude, longitude pairs of a line or shape.|
 
 Here is an example of the JSON payload for an `encoded_polyline` POST request:
@@ -61,13 +71,21 @@ Here is an example of the JSON payload for an `encoded_polyline` POST request:
 
 ### Get height and distance with the range parameter
 
-The `range` parameter is a boolean value that controls whether or not the returned array is one-dimensional (height only) or two-dimensional (with a range and height). This can be used to generate a graph along a route, because a 2D-array has values for x (the range) and y (the height) at each shape point. Steepness or gradient can also be computed from a profile request.
+The `range` parameter is a boolean value that controls whether or not the returned array is one-dimensional (height only) or two-dimensional (with a range and height). This can be used to generate a graph along a route, because a 2D-array has values for x (the range) and y (the height) at each shape point. Steepness or gradient can also be computed from a profile request (e.g. when range = `true`).
 
 The `range` is optional and assumed to be `false` if omitted.
 
 | Range parameters | Description |
 | :--------- | :----------- |
 | `range` | `true` or `false`. Defaults to `false`.|
+
+### Resampling
+
+The `resample_distance` parameter is a numeric value specifying the distance at which the input polyline is sampled in order to provide uniform distances between samples along the polyline.
+
+| Sampling parameter | Description |
+| :--------- | :----------- |
+| `resample_distance` | Numeric value indicating the sampling distance in meters. |
 
 ### Other request options
 

@@ -7,7 +7,7 @@
 # This is secondary build configuration provided for convenient development
 # on Windows and using CMake-enabled IDEs.
 #
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
 include(FindPkgConfig)
@@ -16,7 +16,7 @@ include(GNUInstallDirs)
 set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
 
-set(CMAKE_CXX_STANDARD 11 CACHE STRING "C++ language version to use (default is 11)")
+set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ language version to use (default is 14)")
 option(ENABLE_TOOLS "Enable Valhalla tools" ON)
 option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
@@ -25,12 +25,19 @@ option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
 option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" ON)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
+option(ENABLE_COMPILER_WARNINGS "Build with compiler warnings" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 option(ENABLE_TESTS "Enable Valhalla tests" ON)
+option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPILER_WARNINGS=ON to take effect" OFF)
+option(ENABLE_BENCHMARKS "Enable microbenchmarking" ON)
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 # colorize output
@@ -69,6 +76,18 @@ else()
   message(STATUS "Unrecognized build type - will use cmake defaults")
 endif()
 
+function(create_source_groups prefix)
+  foreach(file ${ARGN})
+    get_filename_component(file "${file}" ABSOLUTE)
+    string(FIND "${file}" "${PROJECT_BINARY_DIR}/" pos)
+    if(pos EQUAL 0)
+      source_group(TREE "${PROJECT_BINARY_DIR}/" PREFIX "Generated Files" FILES "${file}")
+    else()
+      source_group(TREE "${PROJECT_SOURCE_DIR}/" PREFIX "${prefix}" FILES "${file}")
+    endif()
+  endforeach()
+endfunction()
+
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
   find_program(CCACHE_FOUND ccache)
   if(CCACHE_FOUND)
@@ -105,21 +124,29 @@ if(ENABLE_COVERAGE)
     COMMAND ${GENHTML_PATH} --prefix ${CMAKE_CURRENT_BINARY_DIR} --output-directory coverage --title "Test Coverage" --legend --show-details coverage.info
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/coverage.info)
+  set_target_properties(coverage PROPERTIES FOLDER "Tests")
 endif()
 
 ## Dependencies
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 
-add_library(CURL::CURL INTERFACE IMPORTED)
-if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
-  if(NOT CURL_FOUND)
-    find_package(CURL REQUIRED)
+if(NOT TARGET CURL::CURL)
+  add_library(CURL::CURL INTERFACE IMPORTED)
+  if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
+    if(NOT CURL_FOUND)
+      find_package(CURL REQUIRED)
+    endif()
+    set_target_properties(CURL::CURL PROPERTIES
+      #INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
+      INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
+      INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
+    if(NOT WIN32)
+      set_property(TARGET CURL::CURL APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}")
+    endif()
   endif()
-  set_target_properties(CURL::CURL PROPERTIES
-    INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
-    INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
-    INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
+else()
+  message(STATUS "Using curl from the outside")
 endif()
 
 if(NOT Protobuf_FOUND)
@@ -139,6 +166,7 @@ if(CMAKE_VERSION VERSION_LESS 3.9)
   if(NOT TARGET protobuf::libprotobuf-lite)
     add_library(protobuf::libprotobuf-lite UNKNOWN IMPORTED)
     set_target_properties(protobuf::libprotobuf-lite PROPERTIES
+      FOLDER "Dependencies"
       INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
 
     if(EXISTS "${PROTOBUF_LIBRARY}")
@@ -163,7 +191,7 @@ endif()
 # Allow linking against full or lite version of Protobuf library
 # TODO: After switching to CMake 3.12+, replace with
 #       $<TARGET_EXISTS:protobuf::libprotobuf
-#       $<TARGET_EXISTS:protobuf::libprotobuf-lite 
+#       $<TARGET_EXISTS:protobuf::libprotobuf-lite
 if(TARGET protobuf::libprotobuf-lite)
   set(valhalla_protobuf_targets protobuf::libprotobuf-lite)
 elseif(TARGET protobuf::libprotobuf)
@@ -187,29 +215,31 @@ endif()
 
 ## Mjolnir and associated executables
 if(ENABLE_DATA_TOOLS)
-  find_package(Boost 1.51 REQUIRED COMPONENTS date_time filesystem system program_options)
+  find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
   find_package(SQLite3 REQUIRED)
   find_package(SpatiaLite REQUIRED)
-  find_package(Lua REQUIRED)
+  find_package(LuaJIT)
   add_library(Lua::Lua INTERFACE IMPORTED)
   set_target_properties(Lua::Lua PROPERTIES
     INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
     INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}")
 ## Top level executables
 elseif(ENABLE_TOOLS)
-  find_package(Boost 1.51 REQUIRED COMPONENTS filesystem system program_options)
+  find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
 ## Header only boost for the library without mjolnir
 elseif(NOT Boost_FOUND)
   find_package(Boost 1.51 REQUIRED)
 endif()
+add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
 ## libvalhalla
 add_subdirectory(src)
 
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
+  #TODO: need to make sure they actually have python
   add_subdirectory(src/bindings/python)
-  install(FILES COPYING ChangeLog
+  install(FILES COPYING CHANGELOG.md
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
     COMPONENT python)
 endif()
@@ -235,7 +265,7 @@ endfunction()
 ## Valhalla programs
 set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_benchmark_skadi
   valhalla_run_isochrone valhalla_run_route valhalla_benchmark_adjacency_list valhalla_run_matrix
-  valhalla_path_comparison valhalla_export_edges)
+  valhalla_path_comparison valhalla_export_edges valhalla_expand_bounding_box)
 
 ## Valhalla data tools
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
@@ -250,7 +280,12 @@ if(ENABLE_TOOLS)
   foreach(program ${valhalla_programs})
     get_source_path(path ${program})
     add_executable(${program} ${path})
-    target_link_libraries(${program} Boost::program_options valhalla Threads::Threads Boost::filesystem Boost::system)
+    set_target_properties(${program} PROPERTIES FOLDER "Tools")
+    create_source_groups("Source Files" ${path})
+    target_link_libraries(${program} Boost::program_options valhalla)
+    if(WIN32)
+      target_link_libraries(${program} ${CURL_LIBRARIES})
+    endif()
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
@@ -259,7 +294,16 @@ if(ENABLE_DATA_TOOLS)
   foreach(program ${valhalla_data_tools})
     get_source_path(path ${program})
     add_executable(${program} ${path})
-    target_link_libraries(${program} valhalla Boost::program_options Threads::Threads Boost::filesystem Boost::system)
+    create_source_groups("Source Files" ${path})
+    set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
+    target_link_libraries(${program} valhalla Boost::program_options)
+    if (LUAJIT_FOUND AND APPLE)
+      # Using LuaJIT on macOS requires a couple of extra linker flags
+      target_link_options(${program} PUBLIC -pagezero_size 10000 -image_base 100000000)
+    endif()
+    if(WIN32)
+      target_link_libraries(${program} ${CURL_LIBRARIES})
+    endif()
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 
@@ -275,7 +319,9 @@ endif()
 if(ENABLE_SERVICES)
   foreach(program ${valhalla_services})
     add_executable(${program} src/${program}.cc)
-    target_link_libraries(${program} valhalla Boost::program_options Threads::Threads)
+    create_source_groups("Source Files" src/${program}.cc)
+    set_target_properties(${program} PROPERTIES FOLDER "Services")
+    target_link_libraries(${program} valhalla Boost::program_options)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
@@ -293,12 +339,17 @@ install(
     WORLD_READ WORLD_EXECUTE
   COMPONENT runtime)
 
-install(FILES COPYING ChangeLog
+install(FILES COPYING CHANGELOG.md
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"
   COMPONENT runtime)
 
 if(ENABLE_TESTS)
   add_subdirectory(test)
+endif()
+
+# NOTE(mookerji): Windows CI seems to break on the gbench build, so shelve Win32 support for now.
+if(ENABLE_BENCHMARKS AND NOT WIN32)
+  add_subdirectory(bench)
 endif()
 
 ## Packaging via CPack

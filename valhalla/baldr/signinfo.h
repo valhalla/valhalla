@@ -20,7 +20,7 @@ public:
    * @param  text   Text string.
    */
   SignInfo(const Sign::Type& type, const bool rn, const std::string& text)
-      : is_route_num_(rn), type_(type), text_(text) {
+      : type_(type), is_route_num_(rn), text_(text) {
   }
 
   /**

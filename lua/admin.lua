@@ -25,6 +25,7 @@ drive_on_right = {
 ["Hong Kong"] = "false",
 ["India"] = "false",
 ["Indonesia"] = "false",
+["Ireland"] = "false",
 ["Isle of Man"] = "false",
 ["Jamaica"] = "false",
 ["Japan"] = "false",
@@ -78,6 +79,13 @@ drive_on_right = {
 ["Zimbabwe"] = "false"
 }
 
+allow_intersection_names = {
+["Japan"] = "true",
+["North Korea"] = "true",
+["South Korea"] = "true",
+["Nicaragua"] = "true"
+}
+
 --returns 1 if you should filter this way 0 otherwise
 function filter_tags_generic(kv)
 --  if (kv["boundary"] == "administrative" and
@@ -124,7 +132,7 @@ function rels_proc (kv, nokeys)
          kv["name"] ~= "Saint-Barthélemy" and  kv["name"] ~= "Saint-Martin" and kv["name"] ~= "Polynésie Française" and 
          kv["name"] ~= "Wallis-et-Futuna" and kv["name"] ~= "Nouvelle-Calédonie" and kv["name"] ~= "Île de Clipperton" and 
          kv["name"] ~= "Terres australes et antarctiques françaises" and kv["name:en"] ~= "Metropolitan France" and
-         kv["name:en"] ~= "Hong Kong") then
+         kv["name:en"] ~= "Hong Kong" and kv["name"] ~= "Metro Manila") then
         return 1, kv
      end
 
@@ -138,6 +146,10 @@ function rels_proc (kv, nokeys)
         elseif kv["name:en"] == "Abkhazia" or kv["name:en"] == "South Ossetia" then
           kv["admin_level"] = "4"
         end
+     end
+
+     if kv["name"] == "Metro Manila" then
+        kv["admin_level"] = "4"
      end
 
      if kv["admin_level"] == "3" then
@@ -179,6 +191,7 @@ function rels_proc (kv, nokeys)
      end
 
      kv["drive_on_right"] = drive_on_right[kv["name"]] or drive_on_right[kv["name:en"]] or "true"
+     kv["allow_intersection_names"] = allow_intersection_names[kv["name"]] or allow_intersection_names[kv["name:en"]] or "false"
 
      delete_tags = { 'FIXME', 'note', 'source' }
 

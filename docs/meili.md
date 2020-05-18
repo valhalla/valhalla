@@ -3,7 +3,7 @@ Meili, provides a set of algorithms and datastructures for map matching. It matc
 Documentation
 -------------
 
-1. [Service API](meili/service_api.md)
+1. [Overview](meili/overview.md)
 2. [Library API](meili/library_api.md)
 3. [Configuration](meili/configuration.md)
 4. [The Algorithms](meili/algorithms.md)

@@ -160,7 +160,7 @@ int main(int argc, char* argv[]) {
   factory.RegisterStandardCostingModels();
 
   // Get type of route - this provides the costing method to use.
-  std::string routetype = valhalla::Costing_Name(options.costing());
+  const std::string& routetype = valhalla::Costing_Enum_Name(options.costing());
   LOG_INFO("routetype: " + routetype);
 
   // Get the costing method - pass the JSON configuration
@@ -178,14 +178,14 @@ int main(int argc, char* argv[]) {
   } else {
     // Assign costing method, override any config options that are in the
     // json request
-    std::shared_ptr<DynamicCost> cost = factory.Create(options.costing(), options);
+    std::shared_ptr<DynamicCost> cost = factory.Create(options);
     mode = cost->travel_mode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }
 
   // Find locations
   std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
-  const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+  const auto projections = Search(locations, reader, cost);
   std::vector<PathLocation> path_location;
   for (const auto& loc : locations) {
     try {
@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
 
   // Find avoid locations
   std::vector<sif::AvoidEdge> avoid_edges;
-  const auto avoids = Search(avoid_locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+  const auto avoids = Search(avoid_locations, reader, cost);
   for (const auto& loc : avoid_locations) {
     for (auto& e : avoids.at(loc).edges) {
       avoid_edges.push_back({e.id, e.percent_along});

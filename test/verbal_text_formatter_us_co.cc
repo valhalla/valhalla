@@ -1,6 +1,7 @@
 #include "baldr/verbal_text_formatter_us_co.h"
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
+
 #include "test.h"
 
 using namespace std;
@@ -20,16 +21,12 @@ public:
   }
 };
 
-void TryProcessStatesTts(string source, string expected) {
+void TryProcessStatesTts(const string& source, const string& expected) {
   VerbalTextFormatterUsCoTest formatter_test("US", "CO");
-  string tts = formatter_test.ProcessStatesTts(source);
-  if (tts != expected) {
-    throw std::runtime_error("Incorrect ProcessStatesTts - EXPECTED: " + expected +
-                             "  |  FORMED: " + tts);
-  }
+  EXPECT_EQ(formatter_test.ProcessStatesTts(source), expected);
 }
 
-void TestProcessStatesTts() {
+TEST(VerbalTextFormatterUsCo, TestProcessStatesTts) {
   TryProcessStatesTts("AL 261", "Alabama 261");
   TryProcessStatesTts("AL-261", "Alabama 261");
   TryProcessStatesTts("Al 261", "Alabama 261");
@@ -92,15 +89,12 @@ void TestProcessStatesTts() {
   TryProcessStatesTts("WY 212", "Wyoming 212");
 }
 
-void TryFormat(string source, string expected) {
+void TryFormat(const string& source, const string& expected) {
   VerbalTextFormatterUsCoTest formatter_test("US", "CO");
-  string tts = formatter_test.Format(source);
-  if (tts != expected) {
-    throw std::runtime_error("Incorrect Format - EXPECTED: " + expected + "  |  FORMED: " + tts);
-  }
+  EXPECT_EQ(formatter_test.Format(source), expected);
 }
 
-void TestFormat() {
+TEST(VerbalTextFormatterUsCo, TestFormat) {
   TryFormat("I H1", "Interstate H1");
   TryFormat("I 5", "Interstate 5");
   TryFormat("I 35", "Interstate 35");
@@ -144,14 +138,7 @@ void TestFormat() {
 
 } // namespace
 
-int main() {
-  test::suite suite("verbal_text_formatter_us_co");
-
-  // ProcessStatesTts
-  suite.test(TEST_CASE(TestProcessStatesTts));
-
-  // Format
-  suite.test(TEST_CASE(TestFormat));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
