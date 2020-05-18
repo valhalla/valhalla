@@ -18,7 +18,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include <boost/filesystem/operations.hpp>
+#include <boost/format.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
@@ -68,6 +68,7 @@ constexpr float kDensityLatDeg = (kDensityRadius * kMetersPerKm) / kMetersPerDeg
 constexpr float kTurnChannelFactor = 1.25f;
 constexpr float kRampDensityFactor = 0.8f;
 constexpr float kRampFactor = 0.85f;
+constexpr float kRoundaboutFactor = 0.5f;
 
 // A little struct to hold stats information during each threads work
 struct enhancer_stats {
@@ -101,14 +102,20 @@ struct enhancer_stats {
  * @param  directededge  Directed edge to update.
  * @param  density       Relative road density.
  * @param  urban_rc_speed Array of default speeds vs. road class for urban areas
+ * @param  rc_speed Array of default speeds vs. road class
+ * @param  infer_turn_channels flag indicating if we should infer tc.
+ *
  */
-void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint32_t* urban_rc_speed) {
+void UpdateSpeed(DirectedEdge& directededge,
+                 const uint32_t density,
+                 const uint32_t* urban_rc_speed,
+                 bool infer_turn_channels) {
 
   // Update speed on ramps (if not a tagged speed) and turn channels
   if (directededge.link()) {
     uint32_t speed = directededge.speed();
     Use use = directededge.use();
-    if (use == Use::kTurnChannel) {
+    if (use == Use::kTurnChannel && infer_turn_channels) {
       speed = static_cast<uint32_t>((speed * kTurnChannelFactor) + 0.5f);
     } else if ((use == Use::kRamp) && (directededge.speed_type() != SpeedType::kTagged)) {
       // If no tagged speed set ramp speed to slightly lower than speed
@@ -167,6 +174,11 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
     if (density > 8) {
       uint32_t rc = static_cast<uint32_t>(directededge.classification());
       directededge.set_speed(urban_rc_speed[rc]);
+    }
+
+    if (directededge.roundabout()) {
+      uint32_t speed = directededge.speed(); // could be default or urban speed
+      directededge.set_speed(static_cast<uint32_t>((speed * kRoundaboutFactor) + 0.5f));
     }
 
     // Reduce speeds on parking aisles, driveways, and drive-thrus. These uses are
@@ -364,7 +376,6 @@ bool ProcessLanes(bool isLeft, bool endOnTurn, std::vector<uint16_t>& enhanced_t
 // Enhance the Turn lanes (if needed) and add them to the tile.
 void UpdateTurnLanes(const OSMData& osmdata,
                      const uint32_t idx,
-                     bool is_next_edge_internal,
                      DirectedEdge& directededge,
                      NodeInfo& startnodeinfo,
                      GraphTileBuilder& tilebuilder,
@@ -389,8 +400,8 @@ void UpdateTurnLanes(const OSMData& osmdata,
     auto index = tilebuilder.turnlanes_offset(idx);
     std::string turnlane_tags = osmdata.name_offset_map.name(index);
     std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
-
     std::vector<uint16_t> enhanced_tls = TurnLanes::lanemasks(str);
+
     bool bUpdated = false;
     // handle [left, none, none, right] --> [left, straight, straight, right]
     // handle [straight, none, [straight, right], right] --> [straight, straight, [straight, right],
@@ -424,11 +435,9 @@ void UpdateTurnLanes(const OSMData& osmdata,
     if (!bUpdated) {
       // handle [none, none, right] --> [straight, straight, right]
       enhanced_tls = TurnLanes::lanemasks(str);
-      std::vector<uint16_t>::reverse_iterator r_it = enhanced_tls.rbegin(); // note reverse iterator
-      std::vector<uint16_t>::reverse_iterator r_it_e = enhanced_tls.rend();
-      if (((*r_it & kTurnLaneRight) || (*r_it & kTurnLaneSharpRight) ||
-           (*r_it & kTurnLaneSlightRight)) &&
-          (*r_it_e == kTurnLaneEmpty || *r_it_e == kTurnLaneNone)) {
+      if (((enhanced_tls.back() & kTurnLaneRight) || (enhanced_tls.back() & kTurnLaneSharpRight) ||
+           (enhanced_tls.back() & kTurnLaneSlightRight)) &&
+          (enhanced_tls.front() == kTurnLaneEmpty || enhanced_tls.front() == kTurnLaneNone)) {
 
         std::set<Turn::Type> outgoing_turn_type;
         GetTurnTypes(directededge, idx, outgoing_turn_type, startnodeinfo, tilebuilder, reader, lock);
@@ -453,11 +462,10 @@ void UpdateTurnLanes(const OSMData& osmdata,
     if (!bUpdated) {
       // handle [straight, straight, none] --> [straight, straight, straight]
       enhanced_tls = TurnLanes::lanemasks(str);
-      std::vector<uint16_t>::iterator it = enhanced_tls.begin();
-      std::vector<uint16_t>::iterator it_e = enhanced_tls.end();
-      if ((*it & kTurnLaneThrough) && (*it_e == kTurnLaneEmpty || *it_e == kTurnLaneNone)) {
+      if ((enhanced_tls.front() & kTurnLaneThrough) &&
+          (enhanced_tls.back() == kTurnLaneEmpty || enhanced_tls.back() == kTurnLaneNone)) {
         uint16_t previous = 0u;
-        for (; it != enhanced_tls.end(); it++) {
+        for (auto it = enhanced_tls.begin(); it != enhanced_tls.end(); it++) {
           if ((*it & kTurnLaneThrough) && (previous == 0u || (previous & kTurnLaneThrough))) {
             previous = *it;
           } else if (previous && (*it == kTurnLaneEmpty || *it == kTurnLaneNone)) {
@@ -481,14 +489,12 @@ void UpdateTurnLanes(const OSMData& osmdata,
     if (!bUpdated) {
       // handle [none, straight, straight] --> [straight, straight, straight]
       enhanced_tls = TurnLanes::lanemasks(str);
-
-      std::vector<uint16_t>::reverse_iterator r_it = enhanced_tls.rbegin(); // note reverse iterator
-      std::vector<uint16_t>::reverse_iterator r_it_e = enhanced_tls.rend();
-
       uint16_t previous = 0u;
-      if ((*r_it & kTurnLaneThrough) && (*r_it_e == kTurnLaneEmpty || *r_it_e == kTurnLaneNone)) {
-        for (; r_it != enhanced_tls.rend(); r_it++) {
-          if ((*r_it & kTurnLaneThrough) && (previous == 0u || (previous & kTurnLaneThrough))) {
+      if ((enhanced_tls.back() & kTurnLaneThrough) &&
+          (enhanced_tls.front() == kTurnLaneEmpty || enhanced_tls.front() == kTurnLaneNone)) {
+        for (auto r_it = enhanced_tls.rbegin(); r_it != enhanced_tls.rend(); r_it++) {
+          if ((enhanced_tls.back() & kTurnLaneThrough) &&
+              (previous == 0u || (previous & kTurnLaneThrough))) {
             previous = *r_it;
           } else if (previous && (*r_it == kTurnLaneEmpty || *r_it == kTurnLaneNone)) {
             *r_it = kTurnLaneThrough;
@@ -598,8 +604,24 @@ bool IsNotThruEdge(GraphReader& reader,
                    DirectedEdge& directededge) {
   // Add the end node to the expand list
   std::unordered_set<GraphId> visitedset; // Set of visited nodes
-  std::unordered_set<GraphId> expandset;  // Set of nodes to expand
-  expandset.insert(directededge.endnode());
+  std::vector<GraphId> expandset; // Set of nodes to expand - uses a vector for cache friendliness
+
+  // Pre-reserve space in the expandset.  Most of the time, we'll
+  // expand fewer nodes than this, so we'll avoid vector reallocation
+  // delays.  If a particular startnode expands further than this, it's
+  // fine, it'll just be a little slower because the expandset
+  // vector will need to grow.
+  constexpr int MAX_EXPECTED_OUTGOING_EDGES = 10;
+  expandset.reserve(kMaxNoThruTries * MAX_EXPECTED_OUTGOING_EDGES);
+
+  // Instead of removing elements from the expandset, we'll just keep
+  // a pointer to the "start" position - it's faster to just leave
+  // the nodes we've visited in memory at the start of the vector
+  // than to constantly keep the vector "correct" by removing items.
+  // Because we know that the expandset is of relatively small limited size,
+  // this approach is faster than the more generic erase(begin()) option
+  std::size_t expand_pos = 0;
+  expandset.push_back(directededge.endnode());
 
   // Expand edges until exhausted, the maximum number of expansions occur,
   // or end up back at the starting node. No node can be visited twice.
@@ -609,14 +631,14 @@ bool IsNotThruEdge(GraphReader& reader,
   const GraphTile* tile;
   for (uint32_t n = 0; n < kMaxNoThruTries; n++) {
     // If expand list is exhausted this is "not thru"
-    if (expandset.empty()) {
+    if (expand_pos == expandset.size()) {
       return true;
     }
 
     // Get the node off of the expand list and add it to the visited list.
-    // Expand edges from this node.
-    const GraphId expandnode = *expandset.cbegin();
-    expandset.erase(expandset.begin());
+    // Expand edges from this node.  Post-increment the index to the next
+    // item.
+    const GraphId expandnode = expandset[expand_pos++];
     visitedset.insert(expandnode);
     if (expandnode.Tile_Base() != prior_tile) {
       lock.lock();
@@ -648,7 +670,7 @@ bool IsNotThruEdge(GraphReader& reader,
 
       // Add to the end node to expand set if not already visited set
       if (visitedset.find(diredge->endnode()) == visitedset.end()) {
-        expandset.insert(diredge->endnode());
+        expandset.push_back(diredge->endnode());
       }
     }
   }
@@ -856,7 +878,8 @@ void GetHeadings(GraphTileBuilder& tile, NodeInfo& nodeinfo, uint32_t ntrans) {
 bool IsNextEdgeInternal(const DirectedEdge directededge,
                         GraphTileBuilder& tilebuilder,
                         GraphReader& reader,
-                        std::mutex& lock) {
+                        std::mutex& lock,
+                        bool infer_internal_intersections) {
   // Get the tile at the startnode
   GraphTileBuilder tile = tilebuilder;
   // Get the tile at the end node. and find inbound heading of the candidate
@@ -895,8 +918,12 @@ bool IsNextEdgeInternal(const DirectedEdge directededge,
     // check if it is internal.
     if (tilebuilder.edgeinfo(directededge.edgeinfo_offset()).wayid() ==
         tile.edgeinfo(diredge.edgeinfo_offset()).wayid()) {
-      return IsIntersectionInternal(&tile, reader, lock, directededge.endnode(), nodeinfo, diredge,
-                                    i);
+
+      if (!infer_internal_intersections)
+        return diredge.internal();
+      else
+        return IsIntersectionInternal(&tile, reader, lock, directededge.endnode(), nodeinfo, diredge,
+                                      i);
     }
   }
   return false;
@@ -1166,7 +1193,7 @@ uint32_t GetStopImpact(uint32_t from,
   ///////////////////////////////////////////////////////////////////////////
 
   // Get the highest classification of other roads at the intersection
-  bool allramps = true;
+  bool all_ramps = true;
   const DirectedEdge* edge = &edges[0];
   // kUnclassified,  kResidential, and kServiceOther are grouped
   // together for the stop_impact logic.
@@ -1188,7 +1215,7 @@ uint32_t GetStopImpact(uint32_t from,
 
     // Check if not a ramp or turn channel
     if (!edge->link()) {
-      allramps = false;
+      all_ramps = false;
     }
   }
 
@@ -1213,7 +1240,6 @@ uint32_t GetStopImpact(uint32_t from,
 
   // TODO: possibly increase stop impact at large intersections (more edges)
   // or if several are high class
-
   // Reduce stop impact from a turn channel or when only links
   // (ramps and turn channels) are involved. Exception - sharp turns.
   Turn::Type turn_type = Turn::GetType(turn_degree);
@@ -1221,12 +1247,12 @@ uint32_t GetStopImpact(uint32_t from,
                    turn_type == Turn::Type::kReverse);
   bool is_slight = (turn_type == Turn::Type::kStraight || turn_type == Turn::Type::kSlightRight ||
                     turn_type == Turn::Type::kSlightLeft);
-  if (allramps) {
+  if (all_ramps) {
     if (is_sharp) {
       stop_impact += 2;
     } else if (is_slight) {
       stop_impact /= 2;
-    } else {
+    } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
       stop_impact -= 1;
     }
   } else if (edges[from].use() == Use::kRamp && edges[to].use() == Use::kRamp &&
@@ -1237,7 +1263,8 @@ uint32_t GetStopImpact(uint32_t from,
     } else if (count > 3) {
       stop_impact += 2;
     }
-  } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp) {
+  } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp &&
+             !edges[from].internal() && !edges[to].internal()) {
     // Increase stop impact on merge
     if (is_sharp) {
       stop_impact += 3;
@@ -1246,6 +1273,7 @@ uint32_t GetStopImpact(uint32_t from,
     } else {
       stop_impact += 2;
     }
+
   } else if (edges[from].use() == Use::kTurnChannel) {
     // Penalize sharp turns
     if (is_sharp) {
@@ -1254,11 +1282,30 @@ uint32_t GetStopImpact(uint32_t from,
       stop_impact += 1;
     } else if (is_slight) {
       stop_impact /= 2;
-    } else {
+    } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
       stop_impact -= 1;
     }
   }
-
+  // add to the stop impact when transitioning from higher to lower class road and we are not on a TC
+  // or ramp penalize lefts when driving on the right.
+  else if (nodeinfo.drive_on_right() &&
+           (turn_type == Turn::Type::kSharpLeft || turn_type == Turn::Type::kLeft) &&
+           from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
+           edges[to].use() != Use::kTurnChannel) {
+    if (nodeinfo.traffic_signal()) {
+      stop_impact += 2;
+    } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
+      stop_impact++;
+    // penalize rights when driving on the left.
+  } else if (!nodeinfo.drive_on_right() &&
+             (turn_type == Turn::Type::kSharpRight || turn_type == Turn::Type::kRight) &&
+             from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
+             edges[to].use() != Use::kTurnChannel) {
+    if (nodeinfo.traffic_signal()) {
+      stop_impact += 2;
+    } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
+      stop_impact++;
+  }
   // Clamp to kMaxStopImpact
   return (stop_impact <= kMaxStopImpact) ? stop_impact : kMaxStopImpact;
 }
@@ -1393,6 +1440,13 @@ void enhance(const boost::property_tree::ptree& pt,
   sequence<OSMAccess> access_tags(access_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
+  bool infer_internal_intersections =
+      pt.get<bool>("data_processing.infer_internal_intersections", true);
+
+  bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
+
+  bool apply_country_overrides = pt.get<bool>("data_processing.apply_country_overrides", true);
+
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
   if (!database) {
@@ -1416,7 +1470,7 @@ void enhance(const boost::property_tree::ptree& pt,
   // 25 MPH - tertiary
   // 20 MPH - residential and unclassified
   // 15 MPH - service/other
-  uint32_t urban_rc_speed[] = {89, 73, 57, 49, 40, 35, 35, 25};
+  uint32_t urban_rc_speed[] = {89, 73, 57, 49, 40, 35, 30, 20};
 
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0};
@@ -1576,8 +1630,7 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // only process country access logic if the iso country codes match.
-        if (country_code == end_node_code) {
-
+        if (apply_country_overrides && country_code == end_node_code) {
           // country access logic.
           // if the (auto, bike, foot, etc) tag flag is set in the OSMAccess
           // struct, then this means that it has been set by a user of the
@@ -1676,7 +1729,7 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // Update speed.
-        UpdateSpeed(directededge, density, urban_rc_speed);
+        UpdateSpeed(directededge, density, urban_rc_speed, infer_turn_channels);
 
         // Update the named flag
         auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNamesAndTypes();
@@ -1697,39 +1750,32 @@ void enhance(const boost::property_tree::ptree& pt,
           ProcessEdgeTransitions(j, directededge, edges, ntrans, nodeinfo, stats);
         }
 
-        // Check for not_thru edge (only on low importance edges). Exclude
-        // transit edges
-        if (directededge.classification() > RoadClass::kTertiary) {
-          if (IsNotThruEdge(reader, lock, startnode, directededge)) {
-            directededge.set_not_thru(true);
-            stats.not_thru++;
-          }
-        }
-
-        // since the internal flag is set, we are at either the prior or the next edge and we need to
+        // since the not thru flag is set, we are at either the prior or the next edge and we need to
         // see if we have an internal edge.
-        bool is_next_edge_internal = false;
-
-        if (directededge.internal() && directededge.turnlanes()) {
+        if (directededge.not_thru() && directededge.turnlanes()) {
 
           // get the outbound edges to the node
           // find the edge that has the same wayid as the current DE
           // if it is internal, then add turn lanes for this edge and not the internal one
           // if not internal, then do not add turn lanes for this DE and leave them on the next one.
-          if (!IsNextEdgeInternal(directededge, tilebuilder, reader, lock)) {
+          if (!IsNextEdgeInternal(directededge, tilebuilder, reader, lock,
+                                  infer_internal_intersections)) {
             directededge.set_turnlanes(false);
-          } else
-            is_next_edge_internal = true;
+          }
         }
 
         // may have been temporarily set in the builder.
-        directededge.set_internal(false);
+        directededge.set_not_thru(false);
 
         // Test if an internal intersection edge. Must do this after setting
         // opposing edge index
-        if (IsIntersectionInternal(&tilebuilder, reader, lock, startnode, nodeinfo, directededge,
+        if (infer_internal_intersections &&
+            IsIntersectionInternal(&tilebuilder, reader, lock, startnode, nodeinfo, directededge,
                                    j)) {
           directededge.set_internal(true);
+        }
+
+        if (directededge.internal()) {
           // never set turnlanes on an internal edge.
           directededge.set_turnlanes(false);
           stats.internalcount++;
@@ -1738,8 +1784,17 @@ void enhance(const boost::property_tree::ptree& pt,
         // Enhance and add turn lanes if not an internal edge.
         if (!directededge.internal() && directededge.turnlanes()) {
           // Update turn lanes.
-          UpdateTurnLanes(osmdata, nodeinfo.edge_index() + j, is_next_edge_internal, directededge,
-                          nodeinfo, tilebuilder, reader, lock, turn_lanes);
+          UpdateTurnLanes(osmdata, nodeinfo.edge_index() + j, directededge, nodeinfo, tilebuilder,
+                          reader, lock, turn_lanes);
+        }
+
+        // Check for not_thru edge (only on low importance edges). Exclude
+        // transit edges
+        if (directededge.classification() > RoadClass::kTertiary) {
+          if (IsNotThruEdge(reader, lock, startnode, directededge)) {
+            directededge.set_not_thru(true);
+            stats.not_thru++;
+          }
         }
 
         // Update access restrictions (update weight units)
@@ -1799,7 +1854,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
     // Check if we need to clear the tile cache
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
     lock.unlock();
   }

@@ -95,25 +95,28 @@ using namespace std;
 
 json::MapPtr summary(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs) {
 
-  uint64_t time = 0;
-  long double length = 0;
+  double time = 0;
+  double length = 0;
+  bool has_time_restrictions = false;
   AABB2<PointLL> bbox(10000.0f, 10000.0f, -10000.0f, -10000.0f);
   for (const auto& leg : legs) {
-    time += static_cast<uint64_t>(leg.summary().time());
+    time += leg.summary().time();
     length += leg.summary().length();
 
     AABB2<PointLL> leg_bbox(leg.summary().bbox().min_ll().lng(), leg.summary().bbox().min_ll().lat(),
                             leg.summary().bbox().max_ll().lng(), leg.summary().bbox().max_ll().lat());
     bbox.Expand(leg_bbox);
+    has_time_restrictions = has_time_restrictions || leg.summary().has_time_restrictions();
   }
 
   auto route_summary = json::map({});
-  route_summary->emplace("time", time);
+  route_summary->emplace("time", json::fp_t{time, 3});
   route_summary->emplace("length", json::fp_t{length, 3});
   route_summary->emplace("min_lat", json::fp_t{bbox.miny(), 6});
   route_summary->emplace("min_lon", json::fp_t{bbox.minx(), 6});
   route_summary->emplace("max_lat", json::fp_t{bbox.maxy(), 6});
   route_summary->emplace("max_lon", json::fp_t{bbox.maxx(), 6});
+  route_summary->emplace("has_time_restrictions", json::Value{has_time_restrictions});
   LOG_DEBUG("trip_time::" + std::to_string(time) + "s");
   return route_summary;
 }
@@ -242,6 +245,7 @@ travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver) {
                                            : make_pair("transit", i->second);
     }
   }
+  throw std::runtime_error("Unhandled case");
 }
 
 json::ArrayPtr
@@ -253,6 +257,7 @@ legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directio
     auto leg = json::map({});
     auto summary = json::map({});
     auto maneuvers = json::array({});
+    bool has_time_restrictions = false;
 
     for (const auto& maneuver : directions_leg.maneuver()) {
 
@@ -295,7 +300,7 @@ legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directio
       }
 
       // Time, length, and shape indexes
-      man->emplace("time", static_cast<uint64_t>(maneuver.time()));
+      man->emplace("time", json::fp_t{maneuver.time(), 3});
       man->emplace("length", json::fp_t{maneuver.length(), 3});
       man->emplace("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
       man->emplace("end_shape_index", static_cast<uint64_t>(maneuver.end_shape_index()));
@@ -306,6 +311,10 @@ legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directio
       }
       if (maneuver.portions_unpaved()) {
         man->emplace("rough", maneuver.portions_unpaved());
+      }
+      if (maneuver.has_time_restrictions()) {
+        man->emplace("has_time_restrictions", maneuver.has_time_restrictions());
+        has_time_restrictions = true;
       }
 
       // Process sign
@@ -537,12 +546,13 @@ legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directio
     if (directions_leg.maneuver_size() > 0) {
       leg->emplace("maneuvers", maneuvers);
     }
-    summary->emplace("time", static_cast<uint64_t>(directions_leg.summary().time()));
+    summary->emplace("time", json::fp_t{directions_leg.summary().time(), 3});
     summary->emplace("length", json::fp_t{directions_leg.summary().length(), 3});
     summary->emplace("min_lat", json::fp_t{directions_leg.summary().bbox().min_ll().lat(), 6});
     summary->emplace("min_lon", json::fp_t{directions_leg.summary().bbox().min_ll().lng(), 6});
     summary->emplace("max_lat", json::fp_t{directions_leg.summary().bbox().max_ll().lat(), 6});
     summary->emplace("max_lon", json::fp_t{directions_leg.summary().bbox().max_ll().lng(), 6});
+    summary->emplace("has_time_restrictions", json::Value{has_time_restrictions});
     leg->emplace("summary", summary);
     leg->emplace("shape", directions_leg.shape());
 
@@ -553,14 +563,14 @@ legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directio
 
 std::string serialize(const Api& api) {
   // build up the json object
-  auto json =
-      json::map({{"trip", json::map({{"locations", locations(api.directions().routes(0).legs())},
-                                     {"summary", summary(api.directions().routes(0).legs())},
-                                     {"legs", legs(api.directions().routes(0).legs())},
-                                     {"status_message", string("Found route between points")},
-                                     {"status", static_cast<uint64_t>(0)}, // 0 success
-                                     {"units", valhalla::Options_Units_Name(api.options().units())},
-                                     {"language", api.options().language()}})}});
+  auto json = json::map(
+      {{"trip", json::map({{"locations", locations(api.directions().routes(0).legs())},
+                           {"summary", summary(api.directions().routes(0).legs())},
+                           {"legs", legs(api.directions().routes(0).legs())},
+                           {"status_message", string("Found route between points")},
+                           {"status", static_cast<uint64_t>(0)}, // 0 success
+                           {"units", valhalla::Options_Units_Enum_Name(api.options().units())},
+                           {"language", api.options().language()}})}});
   if (api.options().has_id()) {
     json->emplace("id", api.options().id());
   }

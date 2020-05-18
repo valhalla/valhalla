@@ -42,7 +42,9 @@ public:
 
   const DirectionsLeg_Maneuver_Type& type() const;
   void set_type(const DirectionsLeg_Maneuver_Type& type);
+  bool IsStartType() const;
   bool IsDestinationType() const;
+  bool IsMergeType() const;
 
   const StreetNames& street_names() const;
   void set_street_names(const std::vector<std::pair<std::string, bool>>& names);
@@ -77,12 +79,12 @@ public:
   void set_length(float length);
 
   // Seconds
-  uint32_t time() const;
-  void set_time(uint32_t time);
+  double time() const;
+  void set_time(double time);
 
   // len/speed on each edge with no stop impact in seconds
-  uint32_t basic_time() const;
-  void set_basic_time(uint32_t basic_time);
+  double basic_time() const;
+  void set_basic_time(double basic_time);
 
   uint32_t turn_degree() const;
   void set_turn_degree(uint32_t turn_degree);
@@ -143,11 +145,19 @@ public:
   const Signs& signs() const;
   Signs* mutable_signs();
 
+  bool HasSigns() const;
+
   bool HasExitSign() const;
   bool HasExitNumberSign() const;
   bool HasExitBranchSign() const;
   bool HasExitTowardSign() const;
   bool HasExitNameSign() const;
+
+  bool HasGuideSign() const;
+  bool HasGuideBranchSign() const;
+  bool HasGuideTowardSign() const;
+
+  bool HasJunctionNameSign() const;
 
   uint32_t internal_right_turn_count() const;
   void set_internal_right_turn_count(uint32_t internal_right_turn_count);
@@ -195,8 +205,11 @@ public:
   bool unnamed_mountain_bike_trail() const;
   void set_unnamed_mountain_bike_trail(bool unnamed_mountain_bike_trail);
 
-  bool verbal_multi_cue() const;
-  void set_verbal_multi_cue(bool verbal_multi_cue);
+  bool imminent_verbal_multi_cue() const;
+  void set_imminent_verbal_multi_cue(bool imminent_verbal_multi_cue);
+  bool distant_verbal_multi_cue() const;
+  void set_distant_verbal_multi_cue(bool distant_verbal_multi_cue);
+  bool HasVerbalMultiCue() const;
 
   bool to_stay_on() const;
   void set_to_stay_on(bool to_stay_on);
@@ -206,6 +219,36 @@ public:
   void set_roundabout_exit_street_names(std::unique_ptr<StreetNames>&& roundabout_exit_street_names);
   bool HasRoundaboutExitStreetNames() const;
   void ClearRoundaboutExitStreetNames();
+
+  const StreetNames& roundabout_exit_begin_street_names() const;
+  void set_roundabout_exit_begin_street_names(const std::vector<std::pair<std::string, bool>>& names);
+  void set_roundabout_exit_begin_street_names(
+      std::unique_ptr<StreetNames>&& roundabout_exit_begin_street_names);
+  bool HasRoundaboutExitBeginStreetNames() const;
+  void ClearRoundaboutExitBeginStreetNames();
+
+  const Signs& roundabout_exit_signs() const;
+  Signs* mutable_roundabout_exit_signs();
+
+  RelativeDirection merge_to_relative_direction() const;
+  void set_merge_to_relative_direction(RelativeDirection merge_to_relative_direction);
+
+  bool drive_on_right() const;
+  void set_drive_on_right(bool drive_on_right);
+
+  bool has_time_restrictions() const;
+  void set_has_time_restrictions(bool has_time_restrictions);
+
+  bool has_right_traversable_outbound_intersecting_edge() const;
+  void set_has_right_traversable_outbound_intersecting_edge(
+      bool has_right_traversable_outbound_intersecting_edge);
+
+  bool has_left_traversable_outbound_intersecting_edge() const;
+  void set_has_left_traversable_outbound_intersecting_edge(
+      bool has_left_traversable_outbound_intersecting_edge);
+
+  bool include_verbal_pre_transition_length() const;
+  void set_include_verbal_pre_transition_length(bool include_verbal_pre_transition_length);
 
   TripLeg_TravelMode travel_mode() const;
   void set_travel_mode(TripLeg_TravelMode travel_mode);
@@ -275,6 +318,9 @@ public:
   const VerbalTextFormatter* verbal_formatter() const;
   void set_verbal_formatter(std::unique_ptr<VerbalTextFormatter>&& verbal_formatter);
 
+  const std::vector<DirectionsLeg_GuidanceView>& guidance_views() const;
+  std::vector<DirectionsLeg_GuidanceView>* mutable_guidance_views();
+
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
 
@@ -287,9 +333,9 @@ protected:
   std::unique_ptr<StreetNames> begin_street_names_;
   std::unique_ptr<StreetNames> cross_street_names_;
   std::string instruction_;
-  float length_;        // Kilometers
-  uint32_t time_;       // Seconds
-  uint32_t basic_time_; // len/speed on each edge with no stop impact in seconds
+  float length_;      // Kilometers
+  double time_;       // Seconds
+  double basic_time_; // len/speed on each edge with no stop impact in seconds
   uint32_t turn_degree_;
   RelativeDirection begin_relative_direction_;
   DirectionsLeg_Maneuver_CardinalDirection begin_cardinal_direction_;
@@ -322,9 +368,18 @@ protected:
   bool unnamed_walkway_;
   bool unnamed_cycleway_;
   bool unnamed_mountain_bike_trail_;
-  bool verbal_multi_cue_;
+  bool imminent_verbal_multi_cue_;
+  bool distant_verbal_multi_cue_;
   bool to_stay_on_;
   std::unique_ptr<StreetNames> roundabout_exit_street_names_;
+  std::unique_ptr<StreetNames> roundabout_exit_begin_street_names_;
+  Signs roundabout_exit_signs_;
+  RelativeDirection merge_to_relative_direction_;
+  bool drive_on_right_; // Defaults to true
+  bool has_time_restrictions_;
+  bool has_right_traversable_outbound_intersecting_edge_;
+  bool has_left_traversable_outbound_intersecting_edge_;
+  bool include_verbal_pre_transition_length_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support
@@ -357,6 +412,8 @@ protected:
   TripLeg_TransitType transit_type_;
 
   std::unique_ptr<VerbalTextFormatter> verbal_formatter_;
+
+  std::vector<DirectionsLeg_GuidanceView> guidance_views_;
 };
 
 } // namespace odin

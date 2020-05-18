@@ -40,7 +40,7 @@ namespace pbf = opentraffic::osmlr;
 namespace bal = boost::algorithm;
 namespace bpo = boost::program_options;
 namespace bpt = boost::property_tree;
-namespace bfs = boost::filesystem;
+namespace bfs = filesystem;
 
 namespace std {
 std::string to_string(const vm::PointLL& p) {
@@ -284,8 +284,8 @@ public:
                       const uint32_t tz_index) const;
   bool Allowed(const vb::NodeInfo* node) const;
   vs::Cost EdgeCost(const vb::DirectedEdge* edge, const uint32_t speed) const;
-  const vs::EdgeFilter GetEdgeFilter() const;
-  const vs::NodeFilter GetNodeFilter() const;
+  vs::EdgeFilter GetEdgeFilter() const;
+  vs::NodeFilter GetNodeFilter() const;
   float AStarCostFactor() const;
 };
 
@@ -330,11 +330,11 @@ vs::Cost DistanceOnlyCost::EdgeCost(const vb::DirectedEdge* edge, const uint32_t
   return {edge_len, edge_len};
 }
 
-const vs::EdgeFilter DistanceOnlyCost::GetEdgeFilter() const {
+vs::EdgeFilter DistanceOnlyCost::GetEdgeFilter() const {
   return [](const vb::DirectedEdge* edge) -> float { return allow_edge_pred(edge) ? 1.0f : 0.0f; };
 }
 
-const vs::NodeFilter DistanceOnlyCost::GetNodeFilter() const {
+vs::NodeFilter DistanceOnlyCost::GetNodeFilter() const {
   return [](const vb::NodeInfo*) -> bool { return false; };
 }
 

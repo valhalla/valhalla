@@ -9,6 +9,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
+#include <boost/optional.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
 #include <future>
 #include <thread>
@@ -35,10 +36,24 @@ namespace {
 // This value controls the initial size of the Id table. If this is exceeded
 // the table will be resized and a warning is generated (indicating we should
 // increase this value).
-constexpr uint64_t kMaxOSMNodeId = 6500000000;
+constexpr uint64_t kMaxOSMNodeId = 10000000000;
 
 // Absurd classification.
 constexpr uint32_t kAbsurdRoadClass = 777777;
+
+// Convenience method to get a number from a string. Uses try/catch in case
+// stoi throws an exception
+int get_number(const std::string& tag, const std::string& value) {
+  int num = -1;
+  try {
+    num = stoi(value);
+  } catch (const std::invalid_argument& arg) {
+    LOG_DEBUG("invalid_argument thrown for " + tag + " value: " + value);
+  } catch (const std::out_of_range& oor) {
+    LOG_DEBUG("out_of_range exception thrown for " + tag + " value: " + value);
+  }
+  return num;
+}
 
 // Construct PBFGraphParser based on properties file and input PBF extract
 struct graph_callback : public OSMPBF::Callback {
@@ -48,9 +63,44 @@ public:
   virtual ~graph_callback() {
   }
 
-  graph_callback(const boost::property_tree::ptree& pt, OSMData& osmdata)
-      : shape_(kMaxOSMNodeId), intersection_(kMaxOSMNodeId), osmdata_(osmdata), lua_(get_lua(pt)) {
+  graph_callback(const boost::property_tree::ptree& pt,
+                 OSMData& osmdata,
+                 const std::string& intersections_file = "",
+                 const std::string& shapes_file = "",
+                 bool read_data = false)
+      : shape_(pt.get<unsigned long>("id_table_size", kMaxOSMNodeId)),
+        intersection_(pt.get<unsigned long>("id_table_size", kMaxOSMNodeId)), osmdata_(osmdata),
+        lua_(get_lua(pt)) {
 
+    if (read_data) {
+      std::ifstream file(intersections_file, std::ios::in | std::ios::binary);
+      if (!file.is_open()) {
+        return;
+      }
+      // Read the count and then the via ids
+      uint64_t count = 0;
+      file.read(reinterpret_cast<char*>(&count), sizeof(uint64_t));
+      std::vector<uint64_t> bm(count);
+      file.read(reinterpret_cast<char*>(bm.data()), count * sizeof(uint64_t));
+      file.close();
+      intersection_.set_bitmarkers(bm);
+    }
+
+    if (read_data) {
+
+      std::ifstream file(shapes_file, std::ios::in | std::ios::binary);
+      if (!file.is_open()) {
+        return;
+      }
+
+      // Read the count and then the via ids
+      uint64_t count = 0;
+      file.read(reinterpret_cast<char*>(&count), sizeof(uint64_t));
+      std::vector<uint64_t> bm(count);
+      file.read(reinterpret_cast<char*>(bm.data()), count * sizeof(uint64_t));
+      file.close();
+      shape_.set_bitmarkers(bm);
+    }
     current_way_node_index_ = last_node_ = last_way_ = last_relation_ = 0;
 
     highway_cutoff_rc_ = RoadClass::kPrimary;
@@ -61,6 +111,15 @@ public:
     }
 
     include_driveways_ = pt.get<bool>("include_driveways", true);
+    infer_internal_intersections_ =
+        pt.get<bool>("data_processing.infer_internal_intersections", true);
+    infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
+    use_direction_on_ways_ = pt.get<bool>("data_processing.use_direction_on_ways", false);
+    allow_alt_name_ = pt.get<bool>("data_processing.allow_alt_name", false);
+
+    empty_node_results_ = lua_.Transform(OSMType::kNode, 0, {});
+    empty_way_results_ = lua_.Transform(OSMType::kWay, 0, {});
+    empty_relation_results_ = lua_.Transform(OSMType::kRelation, 0, {});
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
@@ -78,15 +137,40 @@ public:
 
   virtual void
   node_callback(uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
+    boost::optional<Tags> results = boost::none;
+    if (bss_nodes_) {
+      // Get tags - do't bother with Lua callout if the taglist is empty
+      if (tags.size() > 0) {
+        results = lua_.Transform(OSMType::kNode, osmid, tags);
+      } else {
+        results = empty_node_results_;
+      }
+
+      for (auto& key_value : *results) {
+        if (key_value.first == "amenity" && key_value.second == "bicycle_rental") {
+          // Create a new node and set its attributes
+          OSMNode n{osmid};
+          n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
+          n.set_type(NodeType::kBikeShare);
+          bss_nodes_->push_back(n);
+          ++osmdata_.node_count;
+          return; // we are done.
+        }
+      }
+      return; // not found
+    }
+
     // Check if it is in the list of nodes used by ways
     if (!shape_.get(osmid)) {
       return;
     }
 
-    // Get tags
-    Tags results = lua_.Transform(OSMType::kNode, tags);
-    if (results.size() == 0) {
-      return;
+    // Get tags if not already available.  Don't bother calling Lua if there
+    // are no OSM tags to process.
+    if (tags.size() > 0) {
+      results = results ? results : lua_.Transform(OSMType::kNode, osmid, tags);
+    } else {
+      results = results ? results : empty_node_results_;
     }
 
     // unsorted extracts are just plain nasty, so they can bugger off!
@@ -95,9 +179,13 @@ public:
     }
     last_node_ = osmid;
 
-    const auto& highway_junction = results.find("highway");
+    const auto& highway_junction = results->find("highway");
     bool is_highway_junction =
-        ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
+        ((highway_junction != results->end()) && (highway_junction->second == "motorway_junction"));
+
+    const auto& junction_name = results->find("junction");
+    bool has_junction_name =
+        ((junction_name != results->end()) && (junction_name->second == "named"));
 
     // Create a new node and set its attributes
     OSMNode n;
@@ -107,7 +195,7 @@ public:
       n.set_type(NodeType::kMotorWayJunction);
     }
 
-    for (const auto& tag : results) {
+    for (const auto& tag : *results) {
 
       if (tag.first == "highway") {
         n.set_traffic_signal(tag.second == "traffic_signals" ? true : false);
@@ -129,7 +217,7 @@ public:
           n.set_ref_index(osmdata_.node_names.index(tag.second));
           ++osmdata_.node_ref_count;
         }
-      } else if (is_highway_junction && (tag.first == "name")) {
+      } else if ((is_highway_junction || has_junction_name) && (tag.first == "name")) {
         bool hasTag = (tag.second.length() ? true : false);
         if (hasTag) {
           // Add the name to the unique node names list and store its index in the OSM node
@@ -170,6 +258,8 @@ public:
         }
       } else if (tag.first == "access_mask") {
         n.set_access(std::stoi(tag.second));
+      } else if (has_junction_name) {
+        n.set_named_intersection(true);
       }
 
       /* TODO: payment type.
@@ -222,23 +312,23 @@ public:
       return;
     }
 
-    // Transform tags. If no results that means the way does not have tags
-    // suitable for use in routing.
-    Tags results = lua_.Transform(OSMType::kWay, tags);
-    if (results.size() == 0) {
-      return;
-    }
-
     // Throw away closed features with following tags: building, landuse,
     // leisure, natural. See: http://wiki.openstreetmap.org/wiki/Key:area
     if (nodes[0] == nodes[nodes.size() - 1]) {
-      for (const auto& tag : results) {
+      for (const auto& tag : tags) {
         if (tag.first == "building" || tag.first == "landuse" || tag.first == "leisure" ||
             tag.first == "natural") {
           // LOG_INFO("Loop wayid " + std::to_string(osmid) + " Discard?");
           return;
         }
       }
+    }
+
+    // Transform tags. If no results that means the way does not have tags
+    // suitable for use in routing.
+    Tags results = tags.size() == 0 ? empty_way_results_ : lua_.Transform(OSMType::kWay, osmid, tags);
+    if (results.size() == 0) {
+      return;
     }
 
     // Throw away driveways if include_driveways_ is false
@@ -334,6 +424,7 @@ public:
 
     OSMAccess access{wayid};
     bool has_user_tags = false;
+    std::string ref, int_ref, direction, int_direction;
 
     const auto& surface_exists = results.find("surface");
     bool has_surface_tag = (surface_exists != results.end());
@@ -346,8 +437,11 @@ public:
         ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
 
     for (const auto& tag : results) {
-
-      if (tag.first == "road_class") {
+      if (tag.first == "internal_intersection" && !infer_internal_intersections_) {
+        w.set_internal(tag.second == "true" ? true : false);
+      } else if (tag.first == "turn_channel" && !infer_turn_channels_) {
+        w.set_turn_channel(tag.second == "true" ? true : false);
+      } else if (tag.first == "road_class") {
         RoadClass roadclass = (RoadClass)std::stoi(tag.second);
         switch (roadclass) {
 
@@ -534,8 +628,6 @@ public:
         w.set_roundabout(tag.second == "true" ? true : false);
       } else if (tag.first == "link") {
         w.set_link(tag.second == "true" ? true : false);
-      } else if (tag.first == "link_type") {
-        w.set_turn_channel(tag.second == "slip" ? true : false);
       } else if (tag.first == "ferry") {
         w.set_ferry(tag.second == "true" ? true : false);
       } else if (tag.first == "rail") {
@@ -579,19 +671,24 @@ public:
         name = tag.second;
       } else if (tag.first == "name:en" && !tag.second.empty()) {
         w.set_name_en_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "alt_name" && !tag.second.empty()) {
+      } else if (tag.first == "alt_name" && !tag.second.empty() && allow_alt_name_) {
         w.set_alt_name_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "official_name" && !tag.second.empty()) {
         w.set_official_name_index(osmdata_.name_offset_map.index(tag.second));
-
       } else if (tag.first == "max_speed") {
         try {
-          max_speed = std::stof(tag.second);
-          has_max_speed = true;
+          if (tag.second == "unlimited") {
+            // this way has an unlimited speed limit (german autobahn)
+            max_speed = kUnlimitedSpeedLimit;
+          } else {
+            max_speed = std::stof(tag.second);
+          }
           w.set_tagged_speed(true);
+          has_max_speed = true;
         } catch (const std::out_of_range& oor) {
           LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
         }
+
       } else if (tag.first == "average_speed") {
         try {
           average_speed = std::stof(tag.second);
@@ -635,13 +732,20 @@ public:
       }
 
       // motor_vehicle:conditional=no @ (16:30-07:00)
-      else if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional" ||
-               tag.first == "bicycle:conditional" || tag.first == "motorcycle:conditional" ||
-               tag.first == "foot:conditional" || tag.first == "pedestrian:conditional" ||
-               tag.first == "hgv:conditional" || tag.first == "moped:conditional" ||
-               tag.first == "mofa:conditional" || tag.first == "psv:conditional" ||
-               tag.first == "taxi:conditional" || tag.first == "bus:conditional" ||
-               tag.first == "hov:conditional" || tag.first == "emergency:conditional") {
+      else if (tag.first.substr(0, 20) == "motorcar:conditional" ||
+               tag.first.substr(0, 25) == "motor_vehicle:conditional" ||
+               tag.first.substr(0, 19) == "bicycle:conditional" ||
+               tag.first.substr(0, 22) == "motorcycle:conditional" ||
+               tag.first.substr(0, 16) == "foot:conditional" ||
+               tag.first.substr(0, 22) == "pedestrian:conditional" ||
+               tag.first.substr(0, 15) == "hgv:conditional" ||
+               tag.first.substr(0, 17) == "moped:conditional" ||
+               tag.first.substr(0, 16) == "mofa:conditional" ||
+               tag.first.substr(0, 15) == "psv:conditional" ||
+               tag.first.substr(0, 16) == "taxi:conditional" ||
+               tag.first.substr(0, 15) == "bus:conditional" ||
+               tag.first.substr(0, 15) == "hov:conditional" ||
+               tag.first.substr(0, 21) == "emergency:conditional") {
 
         std::vector<std::string> tokens = GetTagTokens(tag.second, '@');
         std::string tmp = tokens.at(0);
@@ -657,31 +761,33 @@ public:
         if (tokens.size() == 2 && tmp.size()) {
 
           uint16_t mode = 0;
-          if (tag.first == "motorcar:conditional" || tag.first == "motor_vehicle:conditional") {
+          if (tag.first.substr(0, 20) == "motorcar:conditional" ||
+              tag.first.substr(0, 25) == "motor_vehicle:conditional") {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                     kHOVAccess | kMopedAccess | kMotorcycleAccess);
-          } else if (tag.first == "bicycle:conditional") {
+          } else if (tag.first.substr(0, 19) == "bicycle:conditional") {
             mode = kBicycleAccess;
-          } else if (tag.first == "foot:conditional" || tag.first == "pedestrian:conditional") {
+          } else if (tag.first.substr(0, 16) == "foot:conditional" ||
+                     tag.first.substr(0, 22) == "pedestrian:conditional") {
             mode = (kPedestrianAccess | kWheelchairAccess);
-          } else if (tag.first == "hgv:conditional") {
+          } else if (tag.first.substr(0, 15) == "hgv:conditional") {
             mode = kTruckAccess;
-          } else if (tag.first == "moped:conditional" || tag.first == "mofa:conditional") {
+          } else if (tag.first.substr(0, 17) == "moped:conditional" ||
+                     tag.first.substr(0, 16) == "mofa:conditional") {
             mode = kMopedAccess;
-          } else if (tag.first == "motorcycle:conditional") {
+          } else if (tag.first.substr(0, 22) == "motorcycle:conditional") {
             mode = kMotorcycleAccess;
-          } else if (tag.first == "psv:conditional") {
+          } else if (tag.first.substr(0, 15) == "psv:conditional") {
             mode = (kTaxiAccess | kBusAccess);
-          } else if (tag.first == "taxi:conditional") {
+          } else if (tag.first.substr(0, 16) == "taxi:conditional") {
             mode = kTaxiAccess;
-          } else if (tag.first == "bus:conditional") {
+          } else if (tag.first.substr(0, 15) == "bus:conditional") {
             mode = kBusAccess;
-          } else if (tag.first == "hov:conditional") {
+          } else if (tag.first.substr(0, 15) == "hov:conditional") {
             mode = kHOVAccess;
-          } else if (tag.first == "emergency:conditional") {
+          } else if (tag.first.substr(0, 21) == "emergency:conditional") {
             mode = kEmergencyAccess;
           }
-
           std::string tmp = tokens.at(1);
           boost::algorithm::trim(tmp);
           std::vector<std::string> conditions = GetTagTokens(tmp, ';');
@@ -755,10 +861,19 @@ public:
       }
 
       else if (tag.first == "ref" && !tag.second.empty()) {
-        w.set_ref_index(osmdata_.name_offset_map.index(tag.second));
+        if (!use_direction_on_ways_)
+          w.set_ref_index(osmdata_.name_offset_map.index(tag.second));
+        else
+          ref = tag.second;
       } else if (tag.first == "int_ref" && !tag.second.empty()) {
-        w.set_int_ref_index(osmdata_.name_offset_map.index(tag.second));
-
+        if (!use_direction_on_ways_)
+          w.set_int_ref_index(osmdata_.name_offset_map.index(tag.second));
+        else
+          int_ref = tag.second;
+      } else if (tag.first == "direction" && !tag.second.empty() && use_direction_on_ways_) {
+        direction = tag.second;
+      } else if (tag.first == "int_direction" && !tag.second.empty() && use_direction_on_ways_) {
+        int_direction = tag.second;
       } else if (tag.first == "sac_scale") {
         std::string value = tag.second;
         boost::algorithm::to_lower(value);
@@ -970,15 +1085,181 @@ public:
       } else if (tag.first == "turn:lanes:backward") {
         // Turn lanes in the reverse direction
         w.set_bwd_turn_lanes_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:base" ||
+                 tag.first == "guidance_view:jct:base:forward") {
+        w.set_fwd_jct_base_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:overlay" ||
+                 tag.first == "guidance_view:jct:overlay:forward") {
+        w.set_fwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:base:backward") {
+        w.set_bwd_jct_base_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "guidance_view:jct:overlay:backward") {
+        w.set_bwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
+      }
+    }
+
+    if (use_direction_on_ways_ && !ref.empty()) {
+      if (direction.empty()) {
+        w.set_ref_index(osmdata_.name_offset_map.index(ref));
+      } else {
+        std::vector<std::string> refs = GetTagTokens(ref);
+        std::vector<std::string> directions = GetTagTokens(direction);
+
+        std::string tmp_ref;
+        if (refs.size() == directions.size()) {
+          for (uint32_t i = 0; i < refs.size(); i++) {
+            if (!tmp_ref.empty()) {
+              tmp_ref += ";";
+            }
+            if (!directions.at(i).empty())
+              tmp_ref += refs.at(i) + " " + directions.at(i);
+            else
+              tmp_ref += refs.at(i);
+          }
+          w.set_ref_index(osmdata_.name_offset_map.index(tmp_ref));
+        } else
+          w.set_ref_index(osmdata_.name_offset_map.index(ref));
+      }
+    }
+
+    if (use_direction_on_ways_ && !int_ref.empty()) {
+      if (int_direction.empty()) {
+        w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
+      } else {
+        std::vector<std::string> int_refs = GetTagTokens(int_ref);
+        std::vector<std::string> int_directions = GetTagTokens(int_direction);
+
+        std::string tmp_ref;
+        if (int_refs.size() == int_directions.size()) {
+          for (uint32_t i = 0; i < int_refs.size(); i++) {
+            if (!tmp_ref.empty()) {
+              tmp_ref += ";";
+            }
+            if (!int_directions.at(i).empty())
+              tmp_ref += int_refs.at(i) + " " + int_directions.at(i);
+            else
+              tmp_ref += int_refs.at(i);
+          }
+          w.set_int_ref_index(osmdata_.name_offset_map.index(tmp_ref));
+        } else
+          w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
+      }
+    }
+
+    // add int_refs to the end of the refs for now.  makes sure that we don't add dups.
+    if (use_direction_on_ways_ && w.int_ref_index()) {
+      std::string tmp = osmdata_.name_offset_map.name(w.ref_index());
+
+      std::vector<std::string> rs = GetTagTokens(tmp);
+      std::vector<std::string> is = GetTagTokens(osmdata_.name_offset_map.name(w.int_ref_index()));
+      bool bFound = false;
+
+      for (auto& i : is) {
+        for (auto& r : rs) {
+          if (i == r) {
+            bFound = true;
+            break;
+          }
+        }
+        if (!bFound) {
+          if (!tmp.empty()) {
+            tmp += ";";
+          }
+          tmp += i;
+        }
+        bFound = false;
+      }
+      if (!tmp.empty()) {
+        w.set_ref_index(osmdata_.name_offset_map.index(tmp));
+      }
+      // no matter what, clear out the int_ref.
+      w.set_int_ref_index(0);
+    }
+
+    // Process mtb tags.
+    auto mtb_scale = results.find("mtb:scale");
+    bool has_mtb_scale = mtb_scale != results.end();
+    if (has_mtb_scale) {
+      int scale = get_number("mtb:scale", mtb_scale->second);
+      if (scale >= 0) {
+        // Set surface based on scale
+        uint32_t scale = stoi(mtb_scale->second);
+        if (scale == 0) {
+          w.set_surface(Surface::kDirt);
+        } else if (scale == 1) {
+          w.set_surface(Surface::kGravel);
+        } else {
+          w.set_surface(Surface::kPath);
+        }
+        has_surface = true;
+
+        // Set bicycle access to true for all but the highest scale.
+        bool access = scale < kMaxMtbScale;
+        if (access && !w.oneway_reverse()) {
+          w.set_bike_forward(true);
+        }
+        if (access && !w.oneway()) {
+          w.set_bike_backward(true);
+        }
+      }
+    }
+
+    auto mtb_uphill_scale = results.find("mtb:scale:uphill");
+    bool has_mtb_uphill_scale = mtb_uphill_scale != results.end();
+    if (has_mtb_uphill_scale) {
+      int scale = get_number("mtb:uphill:scale", mtb_uphill_scale->second);
+      if (scale >= 0) {
+        // Set surface based on scale (if no scale exists)
+        uint32_t scale = stoi(mtb_uphill_scale->second);
+        if (!has_mtb_scale) {
+          if (scale < 2) {
+            w.set_surface(Surface::kGravel);
+          } else {
+            w.set_surface(Surface::kPath);
+          }
+          has_surface = true;
+        }
+
+        // Set bicycle access to true for all but the highest scale.
+        bool access = scale < kMaxMtbUphillScale;
+        if (access && !w.oneway_reverse()) {
+          w.set_bike_forward(true);
+        }
+        if (access && !w.oneway()) {
+          w.set_bike_backward(true);
+        }
+      }
+    }
+
+    // IMBA scale
+    auto mtb_imba_scale = results.find("mtb:scale:imba");
+    bool has_mtb_imba = mtb_imba_scale != results.end();
+    if (has_mtb_imba) {
+      // Update bike access (only if neither mtb:scale nor mtb:scale:uphill is present)
+      if (!has_mtb_scale && !has_mtb_uphill_scale) {
+        if (!w.oneway_reverse()) {
+          w.set_bike_forward(true);
+        }
+        if (!w.oneway()) {
+          w.set_bike_backward(true);
+        }
+      }
+    }
+
+    // Only has MTB description - set bicycle access.
+    bool has_mtb_desc = results.find("mtb:description") != results.end();
+    if (has_mtb_desc && !has_mtb_scale && !has_mtb_uphill_scale && !has_mtb_imba) {
+      if (!w.oneway_reverse()) {
+        w.set_bike_forward(true);
+      }
+      if (!w.oneway()) {
+        w.set_bike_backward(true);
       }
     }
 
     // if no surface and tracktype but we have a sac_scale, set surface to path.
     if (!has_surface) {
-      if (results.find("sac_scale") != results.end() || results.find("mtb:scale") != results.end() ||
-          results.find("mtb:scale:imba") != results.end() ||
-          results.find("mtb:scale:uphill") != results.end() ||
-          results.find("mtb:description") != results.end()) {
+      if (results.find("sac_scale") != results.end()) {
         w.set_surface(Surface::kPath);
       } else {
         // If no surface has been set by a user, assign a surface based on Road Class and Use
@@ -1034,7 +1315,8 @@ public:
       w.set_speed(average_speed);
     } else if (has_advisory_speed) {
       w.set_speed(advisory_speed);
-    } else if (has_max_speed) {
+    } else if (has_max_speed && max_speed != kUnlimitedSpeedLimit) {
+      // don't use unlimited speed limit for default edge speed
       w.set_speed(max_speed);
     } else if (has_default_speed && !w.forward_tagged_speed() && !w.backward_tagged_speed()) {
       w.set_speed(default_speed);
@@ -1047,12 +1329,18 @@ public:
 
     // I hope this does not happen, but it probably will (i.e., user sets forward speed
     // and not the backward speed and vice versa.)
-    if (w.forward_tagged_speed() && !w.backward_tagged_speed() && !w.oneway()) {
-      w.set_backward_speed(w.forward_speed());
-      w.set_backward_tagged_speed(true);
-    } else if (!w.forward_tagged_speed() && w.backward_tagged_speed() && !w.oneway()) {
-      w.set_forward_speed(w.backward_speed());
-      w.set_forward_tagged_speed(true);
+    if (w.forward_tagged_speed() && !w.backward_tagged_speed()) {
+      if (!w.oneway()) {
+        w.set_backward_speed(w.forward_speed());
+        w.set_backward_tagged_speed(true);
+      } else // fallback to default speed.
+        w.set_speed(default_speed);
+    } else if (!w.forward_tagged_speed() && w.backward_tagged_speed()) {
+      if (!w.oneway()) {
+        w.set_forward_speed(w.backward_speed());
+        w.set_forward_tagged_speed(true);
+      } else // fallback to default speed.
+        w.set_speed(default_speed);
     }
 
     // default to drive on right.
@@ -1111,7 +1399,8 @@ public:
                                  const OSMPBF::Tags& tags,
                                  const std::vector<OSMPBF::Member>& members) override {
     // Get tags
-    Tags results = lua_.Transform(OSMType::kRelation, tags);
+    Tags results =
+        tags.empty() ? empty_relation_results_ : lua_.Transform(OSMType::kRelation, osmid, tags);
     if (results.size() == 0) {
       return;
     }
@@ -1138,7 +1427,6 @@ public:
     uint32_t modes = 0;
 
     for (const auto& tag : results) {
-
       if (tag.first == "type") {
         if (tag.second == "restriction") {
           isRestriction = true;
@@ -1260,6 +1548,20 @@ public:
       }
     } // for (const auto& tag : results)
 
+    std::vector<std::string> net = GetTagTokens(network, ':');
+    bool special_network = false;
+    if (net.size() == 3) {
+      std::string value = net.at(2);
+      boost::algorithm::to_lower(value);
+
+      if (value == "turnpike" || value == "tp" || value == "fm" || value == "rm" || value == "loop" ||
+          value == "spur" || value == "truck" || value == "business" || value == "bypass" ||
+          value == "belt" || value == "alternate" || value == "alt" || value == "toll" ||
+          value == "cr" || value == "byway" || value == "scenic" || value == "connector" ||
+          value == "county")
+        special_network = true;
+    }
+
     if (isBicycle && isRoute && !network.empty()) {
       OSMBike bike;
       const uint32_t name_index = osmdata_.name_offset_map.index(name);
@@ -1278,15 +1580,27 @@ public:
         osmdata_.bike_relations.insert(BikeMultiMap::value_type(member.member_id, bike));
       }
 
-    } else if (isRoad && isRoute && !ref.empty() && !network.empty()) {
+    } else if (isRoad && isRoute && !network.empty() &&
+               ((net.size() == 2 && !ref.empty()) ||
+                (net.size() == 3 && net.at(0) == "US" && special_network))) {
 
-      std::vector<std::string> net = GetTagTokens(network, ':');
+      if (net.size() == 3 && net.at(2) == "Turnpike")
+        net[2] = "TP";
 
-      if (net.size() != 2) {
-        return;
-      }
+      std::string reference;
+      if (net.size() == 2 && !ref.empty()) {
+        if (ref.size() == 4 && net.at(1).size() == 2) { // NJTP
+          if (net.at(1) + "TP" == ref)
+            reference = ref;
+          else
+            return;
+        } else
+          reference = net.at(1) + " " + ref; // US 51 or I 95
+      } else if (special_network && !ref.empty())
+        reference = net.at(2) + " " + ref;
+      else
+        reference = net.at(1) + net.at(2); // PATP
 
-      std::string reference = net.at(1) + " " + ref; // US 51 or I 95
       bool bfound = false;
       for (const auto& member : members) {
         if (member.role.empty() || member.role == "forward" || member.role == "backward") {
@@ -1341,7 +1655,8 @@ public:
           from_way_id = member.member_id;
         } else if (member.role == "to" &&
                    member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
-          restriction.set_to(member.member_id);
+          if (!restriction.to())
+            restriction.set_to(member.member_id);
         } else if (member.role == "via" &&
                    member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_NODE) {
           if (vias.size()) { // mix of nodes and ways.  Not supported yet.
@@ -1451,8 +1766,8 @@ public:
               restriction.set_from(from_way_id);
               restriction.set_vias(vias);
               // for bi-directional we need to create the restriction in reverse.  flip the to and
-              // from. also in order to avoid duplicate data in the from and to restrictions, we only
-              // need to store the mode, from, and to for the to_restrictions.
+              // from. also in order to avoid duplicate data in the from and to restrictions, we
+              // only need to store the mode, from, and to for the to_restrictions.
               to_restriction.set_from(restriction.to());
               to_restriction.set_to(from_way_id);
               to_restriction.set_modes(restriction.modes());
@@ -1502,13 +1817,15 @@ public:
              sequence<OSMWayNode>* way_nodes,
              sequence<OSMAccess>* access,
              sequence<OSMRestriction>* complex_restrictions_from,
-             sequence<OSMRestriction>* complex_restrictions_to) {
+             sequence<OSMRestriction>* complex_restrictions_to,
+             sequence<OSMNode>* bss_nodes) {
     // reset the pointers (either null them out or set them to something valid)
     ways_.reset(ways);
     way_nodes_.reset(way_nodes);
     access_.reset(access);
     complex_restrictions_from_.reset(complex_restrictions_from);
     complex_restrictions_to_.reset(complex_restrictions_to);
+    bss_nodes_.reset(bss_nodes);
   }
 
   // Output list of wayids that have loops
@@ -1523,8 +1840,52 @@ public:
     loops_.shrink_to_fit();
   }
 
+  void output_idtables(const std::string& intersections_file, const std::string& shapes_file) {
+    // Open file and truncate
+    std::ofstream intersections(intersections_file,
+                                std::ios::out | std::ios::binary | std::ios::trunc);
+    if (!intersections.is_open()) {
+      return;
+    }
+    std::vector<uint64_t> intersections_markers = intersection_.get_bitmarkers();
+    // Write the count and then the via ids
+    uint64_t sz = intersections_markers.size();
+    intersections.write(reinterpret_cast<const char*>(&sz), sizeof(uint64_t));
+    intersections.write(reinterpret_cast<const char*>(intersections_markers.data()),
+                        intersections_markers.size() * sizeof(uint64_t));
+    intersections.close();
+
+    std::ofstream shape(shapes_file, std::ios::out | std::ios::binary | std::ios::trunc);
+    if (!shape.is_open()) {
+      return;
+    }
+    std::vector<uint64_t> shape_markers = shape_.get_bitmarkers();
+    // Write the count and then the via ids
+    sz = shape_markers.size();
+    shape.write(reinterpret_cast<const char*>(&sz), sizeof(uint64_t));
+    shape.write(reinterpret_cast<const char*>(shape_markers.data()),
+                shape_markers.size() * sizeof(uint64_t));
+    shape.close();
+  }
+
   // Configuration option to include driveways
   bool include_driveways_;
+
+  // Configuration option indicating whether or not to infer internal intersections during the graph
+  // enhancer phase or use the internal_intersection key from the pbf
+  bool infer_internal_intersections_;
+
+  // Configuration option indicating whether or not to infer turn channels during the graph
+  // enhancer phase or use the turn_channel key from the pbf
+  bool infer_turn_channels_;
+
+  // Configuration option indicating whether or not to process the direction key on the ways or
+  // utilize the guidance relation tags during the parsing phase
+  bool use_direction_on_ways_;
+
+  // Configuration option indicating whether or not to process the alt_name key on the ways during the
+  // parsing phase
+  bool allow_alt_name_;
 
   // Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
   RoadClass highway_cutoff_rc_;
@@ -1558,6 +1919,14 @@ public:
   std::unique_ptr<sequence<OSMRestriction>> complex_restrictions_from_;
   //  used to find out if a wayid is the to edge for a complex restriction
   std::unique_ptr<sequence<OSMRestriction>> complex_restrictions_to_;
+
+  // bss nodes
+  std::unique_ptr<sequence<OSMNode>> bss_nodes_;
+
+  // empty objects initialized with defaults to use when no tags are present on objects
+  Tags empty_node_results_;
+  Tags empty_way_results_;
+  Tags empty_relation_results_;
 };
 
 } // namespace
@@ -1565,13 +1934,13 @@ public:
 namespace valhalla {
 namespace mjolnir {
 
-OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
-                              const std::vector<std::string>& input_files,
-                              const std::string& ways_file,
-                              const std::string& way_nodes_file,
-                              const std::string& access_file,
-                              const std::string& complex_restriction_from_file,
-                              const std::string& complex_restriction_to_file) {
+OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
+                                  const std::vector<std::string>& input_files,
+                                  const std::string& ways_file,
+                                  const std::string& way_nodes_file,
+                                  const std::string& access_file,
+                                  const std::string& intersections_file,
+                                  const std::string& shapes_file) {
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
@@ -1582,12 +1951,8 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   OSMData osmdata{};
   graph_callback callback(pt, osmdata);
-  callback.reset(new sequence<OSMWay>(ways_file, true),
-                 new sequence<OSMWayNode>(way_nodes_file, true),
-                 new sequence<OSMAccess>(access_file, true),
-                 new sequence<OSMRestriction>(complex_restriction_from_file, true),
-                 new sequence<OSMRestriction>(complex_restriction_to_file, true));
-  LOG_INFO("Parsing files: " + boost::algorithm::join(input_files, ", "));
+
+  LOG_INFO("Parsing files for ways: " + boost::algorithm::join(input_files, ", "));
 
   // hold open all the files so that if something else (like diff application)
   // needs to mess with them we wont have troubles with inodes changing underneath us
@@ -1599,6 +1964,9 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
     }
   }
 
+  callback.reset(new sequence<OSMWay>(ways_file, true),
+                 new sequence<OSMWayNode>(way_nodes_file, true),
+                 new sequence<OSMAccess>(access_file, true), nullptr, nullptr, nullptr);
   // Parse the ways and find all node Ids needed (those that are part of a
   // way's node list. Iterate through each pbf input file.
   LOG_INFO("Parsing ways...");
@@ -1611,8 +1979,11 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
                           callback);
   }
   callback.output_loops();
+  callback.output_idtables(intersections_file, shapes_file);
+
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
            std::to_string(osmdata.osm_way_node_count) + " nodes");
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // we need to sort the access tags so that we can easily find them.
   LOG_INFO("Sorting osm access tags by way id...");
@@ -1620,6 +1991,43 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
     sequence<OSMAccess> access(access_file, false);
     access.sort([](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); });
   }
+
+  LOG_INFO("Finished");
+
+  // Return OSM data
+  return osmdata;
+}
+
+void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
+                                    const std::vector<std::string>& input_files,
+                                    const std::string& complex_restriction_from_file,
+                                    const std::string& complex_restriction_to_file,
+                                    OSMData& osmdata) {
+  // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
+  // option 2: synchronize around adding things to a single osmdata. will have to test to see
+  // which is the least expensive (memory and speed). leaning towards option 2
+  unsigned int threads =
+      std::max(static_cast<unsigned int>(1),
+               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+
+  // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
+  graph_callback callback(pt, osmdata);
+
+  LOG_INFO("Parsing files for relations: " + boost::algorithm::join(input_files, ", "));
+
+  // hold open all the files so that if something else (like diff application)
+  // needs to mess with them we wont have troubles with inodes changing underneath us
+  std::list<std::ifstream> file_handles;
+  for (const auto& input_file : input_files) {
+    file_handles.emplace_back(input_file, std::ios::binary);
+    if (!file_handles.back().is_open()) {
+      throw std::runtime_error("Unable to open: " + input_file);
+    }
+  }
+
+  callback.reset(nullptr, nullptr, nullptr,
+                 new sequence<OSMRestriction>(complex_restriction_from_file, true),
+                 new sequence<OSMRestriction>(complex_restriction_to_file, true), nullptr);
 
   // Parse relations.
   LOG_INFO("Parsing relations...");
@@ -1634,7 +2042,8 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   LOG_INFO("Finished with " + std::to_string(osmdata.restrictions.size()) + " simple restrictions");
   LOG_INFO("Finished with " + std::to_string(osmdata.lane_connectivity_map.size()) +
            " lane connections");
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr);
+
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // Sort complex restrictions. Keep this scoped so the file handles are closed when done sorting.
   LOG_INFO("Sorting complex restrictions by from id...");
@@ -1651,6 +2060,51 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
     complex_restrictions_to.sort(
         [](const OSMRestriction& a, const OSMRestriction& b) { return a < b; });
   }
+  LOG_INFO("Finished");
+}
+
+void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
+                                const std::vector<std::string>& input_files,
+                                const std::string& ways_file,
+                                const std::string& way_nodes_file,
+                                const std::string& intersections_file,
+                                const std::string& shapes_file,
+                                const std::string& bss_nodes_file,
+                                OSMData& osmdata) {
+  // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
+  // option 2: synchronize around adding things to a single osmdata. will have to test to see
+  // which is the least expensive (memory and speed). leaning towards option 2
+  unsigned int threads =
+      std::max(static_cast<unsigned int>(1),
+               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+
+  // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
+  graph_callback callback(pt, osmdata, intersections_file, shapes_file, true);
+
+  LOG_INFO("Parsing files for nodes: " + boost::algorithm::join(input_files, ", "));
+
+  // hold open all the files so that if something else (like diff application)
+  // needs to mess with them we wont have troubles with inodes changing underneath us
+  std::list<std::ifstream> file_handles;
+  for (const auto& input_file : input_files) {
+    file_handles.emplace_back(input_file, std::ios::binary);
+    if (!file_handles.back().is_open()) {
+      throw std::runtime_error("Unable to open: " + input_file);
+    }
+  }
+
+  if (pt.get<bool>("import_bike_share_stations", false)) {
+    LOG_INFO("Parsing bss nodes...");
+    for (auto& file_handle : file_handles) {
+      callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
+          callback.last_relation_ = 0;
+      callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
+                     new sequence<OSMNode>(bss_nodes_file, true));
+      OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
+                            callback);
+    }
+  }
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // we need to sort the refs so that we can easily (sequentially) update them
   // during node processing, we use memory mapping here because otherwise we aren't
@@ -1661,7 +2115,6 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
     way_nodes.sort(
         [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid_ < b.node.osmid_; });
   }
-  LOG_INFO("Finished");
 
   // Parse node in all the input files. Skip any that are not marked from
   // being used in a way.
@@ -1671,7 +2124,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
     // each time we parse nodes we have to run through the way nodes file from the beginning because
     // because osm node ids are only sorted at the single pbf file level
     callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr,
-                   nullptr);
+                   nullptr, nullptr);
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
     OSMPBF::Parser::parse(file_handle,
@@ -1680,7 +2133,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
                           callback);
   }
   uint64_t max_osm_id = callback.last_node_;
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) +
            " nodes contained in routable ways");
 
@@ -1715,9 +2168,6 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt,
   LOG_INFO("Number of reverse way refs = " + std::to_string(osmdata.way_ref_rev.size()));
   LOG_INFO("Unique Node Strings (names, refs, etc.) = " + std::to_string(osmdata.node_names.Size()));
   LOG_INFO("Unique Strings (names, refs, etc.) = " + std::to_string(osmdata.name_offset_map.Size()));
-
-  // Return OSM data
-  return osmdata;
 }
 
 } // namespace mjolnir

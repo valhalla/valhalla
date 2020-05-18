@@ -1,9 +1,7 @@
 #include <cstdint>
-#include <valhalla/proto/transit.pb.h>
 
 #include "baldr/rapidjson_utils.h"
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem/operations.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
@@ -19,9 +17,11 @@
 
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "mjolnir/servicedays.h"
+#include "valhalla/proto/transit.pb.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -63,14 +63,14 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
   std::size_t slash_found = file.find_last_of("/\\");
   std::string directory = file.substr(0, slash_found);
 
-  boost::filesystem::recursive_directory_iterator transit_file_itr(directory);
-  boost::filesystem::recursive_directory_iterator end_file_itr;
+  filesystem::recursive_directory_iterator transit_file_itr(directory);
+  filesystem::recursive_directory_iterator end_file_itr;
 
   LOG_INFO("Departures:");
 
   // for each tile.
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
-    if (boost::filesystem::is_regular(transit_file_itr->path())) {
+    if (filesystem::is_regular_file(transit_file_itr->path())) {
       std::string fname = transit_file_itr->path().string();
       std::string ext = transit_file_itr->path().extension().string();
       std::string file_name = fname.substr(0, fname.size() - ext.size());
@@ -227,12 +227,12 @@ void LogSchedule(const std::string& transit_dir,
   std::size_t slash_found = file.find_last_of("/\\");
   std::string directory = file.substr(0, slash_found);
 
-  boost::filesystem::recursive_directory_iterator transit_file_itr(directory);
-  boost::filesystem::recursive_directory_iterator end_file_itr;
+  filesystem::recursive_directory_iterator transit_file_itr(directory);
+  filesystem::recursive_directory_iterator end_file_itr;
 
   // for each tile.
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
-    if (boost::filesystem::is_regular(transit_file_itr->path())) {
+    if (filesystem::is_regular_file(transit_file_itr->path())) {
       std::string fname = transit_file_itr->path().string();
       std::string ext = transit_file_itr->path().extension().string();
       std::string file_name = fname.substr(0, fname.size() - ext.size());
@@ -396,12 +396,12 @@ int main(int argc, char* argv[]) {
     bpo::notify(vm);
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what();
-    return false;
+    return EXIT_FAILURE;
   }
 
   if (vm.count("help")) {
     std::cout << options << "\n";
-    return true;
+    return EXIT_SUCCESS;
   }
 
   for (const auto& arg : std::vector<std::string>{"o_onestop_id", "o_lat", "o_lng", "conf"}) {
@@ -420,8 +420,7 @@ int main(int argc, char* argv[]) {
 
   // Bail if no transit dir
   auto transit_dir = pt.get_optional<std::string>("mjolnir.transit_dir");
-  if (!transit_dir || !boost::filesystem::exists(*transit_dir) ||
-      !boost::filesystem::is_directory(*transit_dir)) {
+  if (!transit_dir || !filesystem::exists(*transit_dir) || !filesystem::is_directory(*transit_dir)) {
     LOG_INFO("Transit directory not found.");
     return 0;
   }
@@ -469,4 +468,6 @@ int main(int argc, char* argv[]) {
     LOG_INFO("Schedule:");
     LogSchedule(*transit_dir, originid, destid, tripid, time, transit, file_name, local_level);
   }
+
+  return EXIT_SUCCESS;
 }

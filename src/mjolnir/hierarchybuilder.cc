@@ -1,7 +1,6 @@
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -140,16 +139,20 @@ void FormTilesInNewLevel(GraphReader& reader,
         directededge->use() == Use::kPlatformConnection) {
       // Transit connection edges should live on the lowest class level
       // where a new node exists
-      uint8_t lowest_level;
       auto f = find_nodes(old_to_new, base_node);
-      if (f.local_node.Is_Valid()) {
+      uint8_t lowest_level;
+      if (f.local_node.Is_Valid())
         lowest_level = 2;
-      } else if (f.arterial_node.Is_Valid()) {
+      else if (f.arterial_node.Is_Valid())
         lowest_level = 1;
-      } else if (f.highway_node.Is_Valid()) {
+      else if (f.highway_node.Is_Valid())
         lowest_level = 0;
-      }
+      else
+        throw std::logic_error("Could not find valid node level");
       return (lowest_level == current_level);
+    } else if (directededge->bss_connection()) {
+      // Despite the road class, Bike Share Stations' connections are always at local level
+      return (2 == current_level);
     } else {
       return (TileHierarchy::get_level(directededge->classification()) == current_level);
     }
@@ -185,7 +188,7 @@ void FormTilesInNewLevel(GraphReader& reader,
 
       // Check if we need to clear the base/local tile cache
       if (reader.OverCommitted()) {
-        reader.Clear();
+        reader.Trim();
       }
     }
 
@@ -265,7 +268,7 @@ void FormTilesInNewLevel(GraphReader& reader,
       newedge.set_opp_index(0);
 
       // Get signs from the base directed edge
-      if (directededge->exitsign()) {
+      if (directededge->sign()) {
         std::vector<SignInfo> signs = tile->GetSigns(base_edge_id.id());
         if (signs.size() == 0) {
           LOG_ERROR("Base edge should have signs, but none found");
@@ -350,6 +353,16 @@ void FormTilesInNewLevel(GraphReader& reader,
 
     // Set the edge count for the new node
     node.set_edge_count(tilebuilder->directededges().size() - edge_count);
+
+    // Get named signs from the base node
+    if (baseni.named_intersection()) {
+      std::vector<SignInfo> signs = tile->GetSigns(base_node.id(), true);
+      if (signs.size() == 0) {
+        LOG_ERROR("Base node should have signs, but none found");
+      }
+      node.set_named_intersection(true);
+      tilebuilder->AddSigns(tilebuilder->nodes().size() - 1, signs);
+    }
   }
 
   // Delete the tile builder
@@ -430,9 +443,12 @@ void CreateNodeAssociations(GraphReader& reader,
         // Update the flag for the level of this edge (skip transit
         // connection edges)
         const DirectedEdge* directededge = tile->directededge(edgeid);
-        if (directededge->use() != Use::kTransitConnection &&
-            directededge->use() != Use::kEgressConnection &&
-            directededge->use() != Use::kPlatformConnection) {
+        if (directededge->bss_connection()) {
+          // Despite the road class, Bike Share Stations' connections are always at local level
+          levels[2] = true;
+        } else if (directededge->use() != Use::kTransitConnection &&
+                   directededge->use() != Use::kEgressConnection &&
+                   directededge->use() != Use::kPlatformConnection) {
           levels[TileHierarchy::get_level(directededge->classification())] = true;
         }
       }
@@ -469,7 +485,7 @@ void CreateNodeAssociations(GraphReader& reader,
 
     // Check if we need to clear the tile cache
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
   }
 }
@@ -595,8 +611,7 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt,
   // Update the end nodes to all transit connections in the transit hierarchy
   auto hierarchy_properties = pt.get_child("mjolnir");
   auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
-  if (transit_dir && boost::filesystem::exists(*transit_dir) &&
-      boost::filesystem::is_directory(*transit_dir)) {
+  if (transit_dir && filesystem::exists(*transit_dir) && filesystem::is_directory(*transit_dir)) {
     UpdateTransitConnections(reader, old_to_new_file);
   }
 

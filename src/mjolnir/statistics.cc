@@ -1,10 +1,9 @@
 #include <cstdint>
 
-#include "mjolnir/graphtilebuilder.h"
+#include "filesystem.h"
 #include "mjolnir/graphvalidator.h"
 #include "statistics.h"
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <fstream>
@@ -518,8 +517,8 @@ void statistics::RouletteData::GenerateTasks(const boost::property_tree::ptree& 
                     std::string("This node is either unreachable or unleavable. Edit the surrounding "
                                 "roads so that the node can be accessed properly")}})}})}});
   // write out to a file
-  if (boost::filesystem::exists("maproulette_tasks.geojson")) {
-    boost::filesystem::remove("maproulette_tasks.geojson");
+  if (filesystem::exists("maproulette_tasks.geojson")) {
+    filesystem::remove("maproulette_tasks.geojson");
   }
   std::ofstream file;
   file.open("maproulette_tasks.geojson");

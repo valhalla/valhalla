@@ -308,15 +308,15 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
 
       // Skip this edge if no access is allowed (based on costing method)
       // or if a complex restriction prevents transition onto this edge.
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0) ||
+      bool has_time_restrictions = false;
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
           costing_->Restricted(directededge, pred, edgelabels, tile, edgeid, true)) {
         continue;
       }
 
       // Get cost. Separate out transition cost.
       Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
-      Cost newcost =
-          pred.cost() + tc + costing_->EdgeCost(directededge, tile->GetSpeed(directededge));
+      Cost newcost = pred.cost() + tc + costing_->EdgeCost(directededge, tile);
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated along with new cost and distance.
@@ -325,7 +325,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
         if (newcost.cost < lab.cost().cost) {
           adj->decrease(es->index(), newcost.cost);
           lab.Update(pred_idx, newcost, newcost.cost, tc,
-                     pred.path_distance() + directededge->length());
+                     pred.path_distance() + directededge->length(), has_time_restrictions);
         }
         continue;
       }
@@ -343,7 +343,8 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       *es = {EdgeSet::kTemporary, idx};
       edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, mode_, tc,
                               pred.path_distance() + directededge->length(),
-                              (pred.not_thru_pruning() || !directededge->not_thru()));
+                              (pred.not_thru_pruning() || !directededge->not_thru()),
+                              has_time_restrictions);
       adj->add(idx);
     }
 
@@ -417,7 +418,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
     // If this edge has been reached then a shortest path has been found
     // to the end node of this directed edge.
     EdgeStatusInfo oppedgestatus = edgestate.Get(oppedge);
-    if (oppedgestatus.set() != EdgeSet::kUnreached) {
+    if (oppedgestatus.set() != EdgeSet::kUnreachedOrReset) {
       const auto& edgelabels = target_edgelabel_[target];
       uint32_t predidx = edgelabels[oppedgestatus.index()].predecessor();
       const BDEdgeLabel& opp_el = edgelabels[oppedgestatus.index()];
@@ -579,7 +580,9 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       // Skip this edge if no access is allowed (based on costing method)
       // or if a complex restriction prevents transition onto this edge.
       const DirectedEdge* opp_edge = t2->directededge(oppedge);
-      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0) ||
+      bool has_time_restrictions = false;
+      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0,
+                                    has_time_restrictions) ||
           costing_->Restricted(directededge, pred, edgelabels, tile, edgeid, false)) {
         continue;
       }
@@ -588,7 +591,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       // we can properly recover elapsed time on the reverse path.
       Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                 opp_pred_edge);
-      Cost newcost = pred.cost() + tc + costing_->EdgeCost(opp_edge, tile->GetSpeed(opp_edge));
+      Cost newcost = pred.cost() + tc + costing_->EdgeCost(opp_edge, tile);
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated along with new cost and distance.
@@ -597,7 +600,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
         if (newcost.cost < lab.cost().cost) {
           adj->decrease(es->index(), newcost.cost);
           lab.Update(pred_idx, newcost, newcost.cost, tc,
-                     pred.path_distance() + directededge->length());
+                     pred.path_distance() + directededge->length(), has_time_restrictions);
         }
         continue;
       }
@@ -607,7 +610,8 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       *es = {EdgeSet::kTemporary, idx};
       edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, mode_, tc,
                               pred.path_distance() + directededge->length(),
-                              (pred.not_thru_pruning() || !directededge->not_thru()));
+                              (pred.not_thru_pruning() || !directededge->not_thru()),
+                              has_time_restrictions);
       adj->add(idx);
 
       // Add to the list of targets that have reached this edge
@@ -700,7 +704,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       GraphId oppedge = graphreader.GetOpposingEdgeId(edgeid);
 
       // Get cost. Get distance along the remainder of this edge.
-      Cost edgecost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge));
+      Cost edgecost = costing_->EdgeCost(directededge, tile);
       Cost cost = edgecost * (1.0f - edge.percent_along());
       uint32_t d = std::round(directededge->length() * (1.0f - edge.percent_along()));
 
@@ -716,7 +720,8 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
-      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d, false);
+      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d, false,
+                             false);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
@@ -725,7 +730,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       uint32_t idx = source_edgelabel_[index].size();
       source_edgelabel_[index].push_back(std::move(edge_label));
       source_adjacency_[index]->add(idx);
-      source_edgestatus_[index].Set(edgeid, EdgeSet::kUnreached, idx, tile);
+      source_edgestatus_[index].Set(edgeid, EdgeSet::kUnreachedOrReset, idx, tile);
     }
     index++;
   }
@@ -786,7 +791,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Get cost. Get distance along the remainder of this edge.
       // Use the directed edge for costing, as this is the forward direction
       // along the destination edge.
-      Cost edgecost = costing_->EdgeCost(directededge, tile->GetSpeed(directededge));
+      Cost edgecost = costing_->EdgeCost(directededge, tile);
       Cost cost = edgecost * edge.percent_along();
       uint32_t d = std::round(directededge->length() * edge.percent_along());
 
@@ -803,7 +808,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
       BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_, ec, d,
-                             false);
+                             false, false);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
@@ -812,7 +817,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       uint32_t idx = target_edgelabel_[index].size();
       target_edgelabel_[index].push_back(std::move(edge_label));
       target_adjacency_[index]->add(idx);
-      target_edgestatus_[index].Set(opp_edge_id, EdgeSet::kUnreached, idx,
+      target_edgestatus_[index].Set(opp_edge_id, EdgeSet::kUnreachedOrReset, idx,
                                     graphreader.GetGraphTile(opp_edge_id));
       targets_[opp_edge_id].push_back(index);
     }

@@ -239,6 +239,69 @@ struct OSMWay {
   uint32_t bwd_turn_lanes_index() const {
     return bwd_turn_lanes_index_;
   }
+  /**
+   * Sets the index for forward jct base string.
+   * @param  idx  Index for the forward jct base string.
+   */
+  void set_fwd_jct_base_index(const uint32_t idx) {
+    fwd_jct_base_index_ = idx;
+  }
+
+  /**
+   * Get the forward jct base string index.
+   * @return  Returns the index for the forward jct base string.
+   */
+  uint32_t fwd_jct_base_index() const {
+    return fwd_jct_base_index_;
+  }
+
+  /**
+   * Sets the index for backward jct base string.
+   * @param  idx  Index for the backward jct base string.
+   */
+  void set_bwd_jct_base_index(const uint32_t idx) {
+    bwd_jct_base_index_ = idx;
+  }
+
+  /**
+   * Get the backward jct base string index.
+   * @return  Returns the index for the backward jct base string.
+   */
+  uint32_t bwd_jct_base_index() const {
+    return bwd_jct_base_index_;
+  }
+
+  /**
+   * Sets the index for forward jct overlay string.
+   * @param  idx  Index for the forward jct overlay string.
+   */
+  void set_fwd_jct_overlay_index(const uint32_t idx) {
+    fwd_jct_overlay_index_ = idx;
+  }
+
+  /**
+   * Get the forward jct overlay string index.
+   * @return  Returns the index for the forward jct overlay string.
+   */
+  uint32_t fwd_jct_overlay_index() const {
+    return fwd_jct_overlay_index_;
+  }
+
+  /**
+   * Sets the index for backward jct overlay string.
+   * @param  idx  Index for the backward jct overlay string.
+   */
+  void set_bwd_jct_overlay_index(const uint32_t idx) {
+    bwd_jct_overlay_index_ = idx;
+  }
+
+  /**
+   * Get the backward jct overlay string index.
+   * @return  Returns the index for the backward jct overlay string.
+   */
+  uint32_t bwd_jct_overlay_index() const {
+    return bwd_jct_overlay_index_;
+  }
 
   /**
    * Sets the index for destination.
@@ -770,6 +833,22 @@ struct OSMWay {
    */
   bool has_user_tags() const {
     return has_user_tags_;
+  }
+
+  /**
+   * Sets the internal flag.
+   * @param  internal   Is this part of a internal intersection?
+   */
+  void set_internal(const bool internal) {
+    internal_ = internal;
+  }
+
+  /**
+   * Get the internal flag.
+   * @return  Returns internal flag.
+   */
+  bool internal() const {
+    return internal_;
   }
 
   /**
@@ -1452,6 +1531,13 @@ struct OSMWay {
   uint32_t fwd_turn_lanes_index_;
   uint32_t bwd_turn_lanes_index_;
 
+  // Guidance views
+  uint32_t fwd_jct_base_index_;
+  uint32_t bwd_jct_base_index_;
+
+  uint32_t fwd_jct_overlay_index_;
+  uint32_t bwd_jct_overlay_index_;
+
   // Sign Destination information
   uint32_t destination_index_;
   uint32_t destination_forward_index_;
@@ -1509,7 +1595,8 @@ struct OSMWay {
   uint16_t wheelchair_tag_ : 1;
   uint32_t pedestrian_ : 1;
   uint32_t has_user_tags_ : 1;
-  uint32_t spare0_ : 5; // Spare
+  uint32_t internal_ : 1;
+  uint32_t spare0_ : 4; // Spare
 
   // Access
   uint16_t auto_forward_ : 1;

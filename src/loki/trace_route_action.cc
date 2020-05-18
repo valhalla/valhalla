@@ -155,9 +155,9 @@ void loki_worker_t::init_trace(Api& request) {
 
 void loki_worker_t::trace(Api& request) {
   init_trace(request);
-  auto costing = Costing_Name(request.options().costing());
+  const auto& costing = Costing_Enum_Name(request.options().costing());
   if (costing == "multimodal") {
-    throw valhalla_exception_t{140, Options_Action_Name(request.options().action())};
+    throw valhalla_exception_t{140, Options_Action_Enum_Name(request.options().action())};
   };
 }
 
@@ -184,7 +184,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
 
     // Project first and last shape point onto nearest edge(s). Clear current locations list
     // and set the path locations
-    auto projections = loki::Search(locations, *reader, edge_filter, node_filter);
+    auto projections = loki::Search(locations, *reader, costing);
     options.clear_locations();
     PathLocation::toPBF(projections.at(locations.front()), options.mutable_locations()->Add(),
                         *reader);

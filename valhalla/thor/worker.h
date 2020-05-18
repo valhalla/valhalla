@@ -13,6 +13,7 @@
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/meili/map_matcher_factory.h>
+#include <valhalla/meili/match_result.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 #include <valhalla/sif/costfactory.h>
@@ -21,7 +22,6 @@
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/bidirectional_astar.h>
 #include <valhalla/thor/isochrone.h>
-#include <valhalla/thor/match_result.h>
 #include <valhalla/thor/multimodal.h>
 #include <valhalla/thor/timedep.h>
 #include <valhalla/thor/triplegbuilder.h>
@@ -48,6 +48,12 @@ public:
 #endif
   virtual void cleanup() override;
 
+  static std::string offset_date(baldr::GraphReader& reader,
+                                 const std::string& in_dt,
+                                 const baldr::GraphId& in_edge,
+                                 float offset,
+                                 const baldr::GraphId& out_edge);
+
   void route(Api& request);
   std::string matrix(Api& request);
   void optimized_route(Api& request);
@@ -56,6 +62,8 @@ public:
   std::string trace_attributes(Api& request);
   std::string expansion(Api& request);
 
+  void set_interrupt(const std::function<void()>* interrupt) override;
+
 protected:
   std::vector<std::vector<thor::PathInfo>> get_path(PathAlgorithm* path_algorithm,
                                                     Location& origin,
@@ -63,18 +71,19 @@ protected:
                                                     const std::string& costing,
                                                     const Options& options);
   void log_admin(const TripLeg&);
-  sif::cost_ptr_t get_costing(const Costing costing, const Options& options);
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
                                           const Location& origin,
                                           const Location& destination);
   void route_match(Api& request);
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>>
-  map_match(Api& request, uint32_t best_paths = 1);
-  void path_map_match(const std::vector<meili::MatchResult>& match_results,
-                      const std::vector<PathInfo>& path_edges,
-                      TripLeg& leg,
-                      std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>&
-                          route_discontinuities);
+  /**
+   * Returns the results of the map match where the first float is the normalized
+   * match score (based on alternatives), the second is the raw score (the cost)
+   * and the final is the list of match results (how the trace points were matched)
+   * @param request   The request to map match (options.shape)
+   * @return the match results and scores
+   */
+  std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>> map_match(Api& request);
+
   void path_arrive_by(Api& api, const std::string& costing);
   void path_depart_at(Api& api, const std::string& costing);
 
@@ -82,6 +91,21 @@ protected:
   void parse_measurements(const Api& request);
   std::string parse_costing(const Api& request);
   void parse_filter_attributes(const Api& request, bool is_strict_filter = false);
+
+  void build_route(
+      const std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>&
+          paths,
+      const std::vector<meili::MatchResult>& match_results,
+      Options& options,
+      Api& request);
+
+  void build_trace(
+      const std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>&
+          paths,
+      std::vector<meili::MatchResult>& match_results,
+      Options& options,
+      Api& request);
+
   sif::TravelMode mode;
   std::vector<meili::Measurement> trace;
   sif::CostFactory<sif::DynamicCost> factory;

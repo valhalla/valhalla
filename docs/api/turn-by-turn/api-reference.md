@@ -42,6 +42,7 @@ To build a route, you need to specify two `break` locations. In addition, you ca
 | `search_cutoff` | The cutoff at which we will assume the input is too far away from civilisation to be worth correlating to the nearest graph elements |
 | `node_snap_tolerance` | During edge correlation this is the tolerance used to determine whether or not to snap to the intersection rather than along the street, if the snap location is within this distance from the intersection the intersection is used instead. The default is 5 meters |
 | `street_side_tolerance` | If your input coordinate is less than this tolerance away from the edge centerline then we set your side of street to none otherwise your side of street will be left or right depending on direction of travel |
+| `search_filter` | A set of optional filters to exclude candidate edges based on their attribution. The following exclusion filters are supported: <ul><li>`exclude_tunnel` (boolean, defaults to `false`): whether to exclude roads marked as tunnels</li><li>`exclude_bridge` (boolean, defaults to `false`): whether to exclude roads marked as bridges</li><li>`exclude_ramp` (boolean, defaults to `false`): whether to exclude link roads marked as ramps, note that some turn channels are also marked as ramps</li><li>`min_road_class` (string, defaults to `"service_other"`): lowest road class allowed</li><li>`max_road_class` (string, defaults to `"motorway"`): highest road class allowed</li></ul>Road classes from highest to lowest are: motorway, trunk, primary, secondary, tertiary, unclassified, residential, service_other.
 
 Optionally, you can include the following location information without impacting the routing. This information is carried through the request and returned as a convenience.
 
@@ -67,6 +68,7 @@ Valhalla's routing service uses dynamic, run-time costing to generate the route 
 | `auto_shorter` | Alternate costing for driving that provides a short path (though not guaranteed to be shortest distance) that obeys driving rules for access and turn restrictions. |
 | `bicycle` | Standard costing for travel by bicycle, with a slight preference for using [cycleways](http://wiki.openstreetmap.org/wiki/Key:cycleway) or roads with bicycle lanes. Bicycle routes follow regular roads when needed, but avoid roads without bicycle access. |
 | `bus` | Standard costing for bus routes. Bus costing inherits the auto costing behaviors, but checks for bus access on the roads. |
+| `truck` | Standard costing for trucks. Truck costing inherits the auto costing behaviors, but checks for truck access, width and height restrictions, and weight limits on the roads. |
 | `hov` | Standard costing for high-occupancy vehicle (HOV) routes. HOV costing inherits the auto costing behaviors, but checks for HOV lane access on the roads and favors those roads.|
 | `taxi` | Standard costing for taxi routes. Taxi costing inherits the auto costing behaviors, but checks for taxi lane access on the roads and favors those roads.|
 | `motor_scooter` | Standard costing for travel by motor scooter or moped.  By default, motor_scooter costing will avoid higher class roads unless the country overrides allows motor scooters on these roads.  Motor scooter routes follow regular roads when needed, but avoid roads without motor_scooter, moped, or mofa access. |
@@ -84,7 +86,7 @@ Costing methods can have several options that can be adjusted to develop the rou
 
 ##### Automobile and bus costing options
 
-These options are available for `auto`, `auto_shorter`, and `bus` costing methods.
+These options are available for `auto`, `auto_shorter`, `bus`, and `truck` costing methods.
 
 | Automobile options | Description |
 | :-------------------------- | :----------- |
@@ -98,6 +100,19 @@ These options are available for `auto`, `auto_shorter`, and `bus` costing method
 | `use_tolls` | This value indicates the willingness to take roads with tolls. This is a range of values between 0 and 1. Values near 0 attempt to avoid tolls and values near 1 will not attempt to avoid them. The default value is 0.5. Note that sometimes roads with tolls are required to complete a route so values of 0 are not guaranteed to avoid them entirely. |
 | `country_crossing_cost` | A cost applied when encountering an international border. This cost is added to the estimated and elapsed times. The default cost is 600 seconds. |
 | `country_crossing_penalty` | A penalty applied for a country crossing. This penalty can be used to create paths that avoid spanning country boundaries. The default penalty is 0. |
+
+###### Truck-specific costing options
+
+In addition to the above, the following options are available for `truck` costing.
+
+| Truck options | Description |
+| :-------------------------- | :----------- |
+| `height` | The height of the truck (in meters). |
+| `width` | The width of the truck (in meters). |
+| `length` | The length of the truck (in meters). |
+| `weight` | The weight of the truck (in metric tons). |
+| `axle_load` | The axle load of the truck (in metric tons). |
+| `hazmat` | A value indicating if the truck is carrying hazardous materials. |
 
 ##### Bicycle costing options
 The default bicycle costing is tuned toward road bicycles with a slight preference for using [cycleways](http://wiki.openstreetmap.org/wiki/Key:cycleway) or roads with bicycle lanes. Bicycle routes use regular roads where needed or where no direct bicycle lane options exist, but avoid roads without bicycle access. The costing model recognizes several factors unique to bicycle travel and offers several options for tuning bicycle routes. Several factors unique to travel by bicycle influence the resulting route.
@@ -174,7 +189,7 @@ These options are available for transit costing when the multimodal costing mode
 When using `filters`, you need to include a [Onestop ID](https://transit.land/documentation/onestop-id-scheme/) to identify the stop, routes, or operators to include or exclude in your query. Depending on how you are interacting with transit data from Transitland, there are different ways of obtaining the Onestop ID.
 
 - Turn-by-Turn API: Query a transit route query and parse the returned JSON maneuver  for `transit_info` to find `operator_onestop_id` and the route `onestop_id`. A `transit_stop` contains the `onestop_id` for the stop.
-- [Mobility Explorer](https://github.com/transitland/mobility-explorer): Click a single route, stop, or operator on the map, or use the drop-down menu to find the Onestop ID for routes and operators. The Onestop ID, among other details, is listed in the sidebar. 
+- [Mobility Explorer](https://github.com/transitland/mobility-explorer): Click a single route, stop, or operator on the map, or use the drop-down menu to find the Onestop ID for routes and operators. The Onestop ID, among other details, is listed in the sidebar.
 - [Transitland](https://transit.land/): Use the Transitland Datastore API to query directly for stops, routes, and operators using a number of options. For example, you can filter for only [subway routes](http://transit.land/api/v1/routes?vehicle_type=metro) or [bus routes](http://transit.land/api/v1/routes?vehicle_type=bus). See the [Transitland Datastore API documentation](https://transit.land/documentation/datastore/api-endpoints.html) for details.
 
 ##### Sample JSON payloads for multimodal requests with transit
@@ -343,6 +358,8 @@ kTransitConnectionStart = 33;
 kTransitConnectionTransfer = 34;
 kTransitConnectionDestination = 35;
 kPostTransitConnectionDestination = 36;
+kMergeRight = 37;
+kMergeLeft = 38;
 ```
 
 The maneuver `sign` may contain four lists of interchange sign elements as follows:

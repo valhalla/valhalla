@@ -10,13 +10,13 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/meili/match_result.h>
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/costmatrix.h>
-#include <valhalla/thor/match_result.h>
 #include <valhalla/tyr/actor.h>
 #include <valhalla/worker.h>
 
@@ -96,7 +96,7 @@ std::string serializeTransitAvailable(const Api& request,
 std::string serializeTraceAttributes(
     const Api& request,
     const thor::AttributesController& controller,
-    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>>& results);
+    std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>& results);
 
 } // namespace tyr
 } // namespace valhalla
@@ -107,10 +107,8 @@ namespace osrm {
  * Serialize a location into a osrm waypoint
  * http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
  */
-valhalla::baldr::json::MapPtr waypoint(const valhalla::Location& location,
-                                       bool is_tracepoint = false,
-                                       const bool is_optimized = false,
-                                       const int64_t waypoint_index = -1);
+valhalla::baldr::json::MapPtr
+waypoint(const valhalla::Location& location, bool is_tracepoint = false, bool is_optimized = false);
 
 /*
  * Serialize locations into osrm waypoints

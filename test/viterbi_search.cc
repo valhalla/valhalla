@@ -6,7 +6,10 @@
 
 #include "meili/topk_search.h"
 #include "meili/viterbi_search.h"
+
 #include "test.h"
+
+// Viterbi and topK search tests
 
 using namespace valhalla::meili;
 
@@ -69,9 +72,11 @@ void AddColumns(IViterbiSearch& vs, const std::vector<Column>& columns) {
     for (const auto& state : column) {
       StateId stateid(time, idx);
       const auto added = vs.AddStateId(stateid);
-      test::assert_bool(added, std::to_string(stateid.time()) + "/" + std::to_string(stateid.id()) +
-                                   " must be added");
-      test::assert_bool(vs.HasStateId(stateid), "must contain it");
+
+      ASSERT_TRUE(added) << std::to_string(stateid.time()) << "/" + std::to_string(stateid.id())
+                         << " must be added";
+
+      ASSERT_TRUE(vs.HasStateId(stateid)) << "must contain it";
       idx++;
     }
     time++;
@@ -98,7 +103,7 @@ protected:
   }
 
   float TransitionCost(const StateId& lhs, const StateId& rhs) const {
-    test::assert_bool(lhs.time() + 1 == rhs.time(), "left state should be earlier than right time");
+    EXPECT_EQ(lhs.time() + 1, rhs.time()) << "left state should be earlier than right time";
     const auto& state = GetState(lhs);
     const auto it = state.transition_costs.find(rhs.id());
     return it == state.transition_costs.end() ? kInvalidCost : NormalizeCost(it->second);
@@ -128,15 +133,18 @@ protected:
   }
 
   float TransitionCost(const StateId& lhs, const StateId& rhs) const {
-    test::assert_bool(lhs.time() + 1 == rhs.time(), "left state should be earlier than right time");
+    EXPECT_EQ(lhs.time() + 1, rhs.time()) << "left state should be earlier than right time";
     const auto& state = GetState(lhs);
     const auto it = state.transition_costs.find(rhs.id());
     return it == state.transition_costs.end() ? -1.f : it->second;
   }
 
   double CostSofar(double prev_cost_sofar, float transition_cost, float emission_cost) const {
-    test::assert_bool(0.f <= prev_cost_sofar && 0.f <= transition_cost && 0.f <= emission_cost,
-                      "all costs should be non-negative");
+    // all costs should be non-negative
+    EXPECT_GE(prev_cost_sofar, 0.f);
+    EXPECT_GE(transition_cost, 0.f);
+    EXPECT_GE(emission_cost, 0.f);
+
     return prev_cost_sofar + transition_cost + emission_cost;
   }
 
@@ -205,35 +213,31 @@ void test_viterbi_search(const std::vector<Column>& columns) {
     const auto& vs_winner = vs.SearchWinner(time);
 
     if (na_winner.IsValid()) {
-      test::assert_bool(vs_winner.IsValid(), "both winners should be valid");
+      EXPECT_TRUE(vs_winner.IsValid()) << "both winners should be valid";
 
-      test::assert_bool(na_winner.time() == time, "time should be matched");
+      EXPECT_EQ(na_winner.time(), time) << "time should be matched";
 
-      test::assert_bool(vs_winner.time() == time, "time should be matched");
+      EXPECT_EQ(vs_winner.time(), time) << "time should be matched";
 
       if (na.AccumulatedCost(na_winner) != vs.AccumulatedCost(vs_winner)) {
         std::cout << "GRAPH" << std::endl;
         print_trellis_diagram_vertically(columns);
 
         std::cout << "PATH OF NA" << std::endl;
-        print_path_reversely(columns, na.SearchPath(time), na.PathEnd());
+        print_path_reversely(columns, na.SearchPathVS(time), na.PathEnd());
 
         std::cout << "PATH OF VS" << std::endl;
-        print_path_reversely(columns, vs.SearchPath(time), vs.PathEnd());
+        print_path_reversely(columns, vs.SearchPathVS(time), vs.PathEnd());
       }
-
-      test::assert_bool(na.AccumulatedCost(na_winner) == vs.AccumulatedCost(vs_winner),
-                        "costs should be both optimal"
-                        "but got na = " +
-                            std::to_string(na.AccumulatedCost(na_winner)) +
-                            " and vs = " + std::to_string(vs.AccumulatedCost(vs_winner)));
+      EXPECT_EQ(na.AccumulatedCost(na_winner), vs.AccumulatedCost(vs_winner))
+          << "costs should be both optimal";
     } else {
-      test::assert_bool(!vs_winner.IsValid(), "both winners should not be found");
+      EXPECT_FALSE(vs_winner.IsValid()) << "both winners should not be found";
     }
   }
 }
 
-void TestViterbiSearch() {
+TEST(ViterbiSearch, TestViterbiSearch) {
   // small case for visualization
   {
     const auto& columns = generate_columns(
@@ -392,23 +396,21 @@ std::vector<PathWithCost> sort_all_paths(const std::vector<Column>& columns,
 }
 
 void validate_path(const std::vector<Column>& columns, const std::vector<StateId>& path) {
-  test::assert_bool(columns.size() == path.size(), "path size and columns size must be same");
+  EXPECT_EQ(columns.size(), path.size()) << "path size and columns size must be same";
 
   for (StateId::Time time = 0; time < path.size(); time++) {
-    test::assert_bool(path[time].IsValid(),
-                      "stateid in path must be valid at time " + std::to_string(time));
+    EXPECT_TRUE(path[time].IsValid())
+        << "stateid in path must be valid at time " + std::to_string(time);
 
-    test::assert_bool(time == path[time].time(),
-                      "path[time].time() != time " + std::to_string(path[time].time()));
+    EXPECT_EQ(time, path[time].time())
+        << "path[time].time() != time " + std::to_string(path[time].time());
 
-    test::assert_bool(path[time].id() < columns[time].size(),
-                      "stateid id must be < columns[time] but got " +
-                          std::to_string(path[time].time()) + "/" + std::to_string(path[time].id()));
+    EXPECT_LT(path[time].id(), columns[time].size());
 
     if (0 < time) {
       const auto& prev_state = get_state(columns, path[time - 1]);
       const auto it = prev_state.transition_costs.find(path[time].id());
-      test::assert_bool(it != prev_state.transition_costs.end(), "must be connected");
+      ASSERT_NE(it, prev_state.transition_costs.end()) << "must be connected";
     }
   }
 }
@@ -431,8 +433,8 @@ float total_cost(const std::vector<Column>& columns, const std::vector<StateId>&
 void test_viterbisearch_brute_force(const std::vector<Column>& columns, IViterbiSearch& vs) {
   const auto& pcs = sort_all_paths(columns);
   if (columns.empty()) {
-    test::assert_bool(pcs == std::vector<PathWithCost>{PathWithCost({}, 0.0)},
-                      "expect empty set from empty columns");
+    EXPECT_EQ(pcs, std::vector<PathWithCost>{PathWithCost({}, 0.0)})
+        << "expect empty set from empty columns";
     return;
   }
 
@@ -445,7 +447,7 @@ void test_viterbisearch_brute_force(const std::vector<Column>& columns, IViterbi
     validate_path(columns, pc.path());
 
     std::vector<StateId> vs_path, original_state_ids;
-    std::copy(vs.SearchPath(time), vs.PathEnd(), std::back_inserter(vs_path));
+    std::copy(vs.SearchPathVS(time), vs.PathEnd(), std::back_inserter(vs_path));
     for (auto s_itr = vs_path.rbegin(); s_itr != vs_path.rend(); ++s_itr)
       original_state_ids.push_back(ts.GetOrigin(*s_itr, *s_itr));
     validate_path(columns, original_state_ids);
@@ -455,17 +457,15 @@ void test_viterbisearch_brute_force(const std::vector<Column>& columns, IViterbi
     // std::cout << "top viterbi search : " << total_cost(columns, vs_path) << std::endl;
     // std::cout << std::endl;
 
-    test::assert_bool(c == pc.cost(), "total cost by brute force mush be correct");
-    test::assert_bool(c == total_cost(columns, original_state_ids),
-                      "total cost by viterbisearch must be " + std::to_string(c) + " but got " +
-                          std::to_string(total_cost(columns, original_state_ids)));
+    EXPECT_EQ(c, pc.cost()) << "total cost by brute force mush be correct";
+    EXPECT_EQ(c, total_cost(columns, original_state_ids)) << "Wrong total cost by viterbisearch";
 
     ts.RemovePath(vs_path);
     vs.ClearSearch();
   }
 }
 
-void TestTopKSearch() {
+TEST(ViterbiSearch, TestTopKSearch) {
 
   {
     ViterbiSearch vs;
@@ -537,11 +537,6 @@ void TestTopKSearch() {
 }
 
 int main(int argc, char* argv[]) {
-  test::suite suite("viterbi search & topk search");
-
-  suite.test(TEST_CASE(TestViterbiSearch));
-
-  suite.test(TEST_CASE(TestTopKSearch));
-
-  return suite.tear_down();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

@@ -38,7 +38,7 @@ public:
     return trip_path_.node(index);
   }
 
-  ::valhalla::TripLeg_Node* mutable_node(int index) {
+  ::valhalla::TripLeg_Node* mutable_node(int index) const {
     return trip_path_.mutable_node(index);
   }
 
@@ -90,9 +90,9 @@ public:
 
   std::unique_ptr<EnhancedTripLeg_Edge> GetPrevEdge(const int node_index, int delta = 1);
 
-  std::unique_ptr<EnhancedTripLeg_Edge> GetCurrEdge(const int node_index);
+  std::unique_ptr<EnhancedTripLeg_Edge> GetCurrEdge(const int node_index) const;
 
-  std::unique_ptr<EnhancedTripLeg_Edge> GetNextEdge(const int node_index, int delta = 1);
+  std::unique_ptr<EnhancedTripLeg_Edge> GetNextEdge(const int node_index, int delta = 1) const;
 
   bool IsValidNodeIndex(int node_index) const;
 
@@ -142,7 +142,7 @@ public:
     return mutable_edge_->speed();
   }
 
-  ::valhalla::TripLeg_RoadClass road_class() const {
+  ::valhalla::RoadClass road_class() const {
     return mutable_edge_->road_class();
   }
 
@@ -213,6 +213,10 @@ public:
 
   bool toll() const {
     return mutable_edge_->toll();
+  }
+
+  bool has_time_restrictions() const {
+    return mutable_edge_->has_time_restrictions();
   }
 
   bool unpaved() const {
@@ -311,6 +315,10 @@ public:
     return mutable_edge_->speed_limit();
   }
 
+  float default_speed() const {
+    return mutable_edge_->default_speed();
+  }
+
   float truck_speed() const {
     return mutable_edge_->truck_speed();
   }
@@ -398,8 +406,7 @@ public:
 
   std::string ToString() const;
 
-  std::string TurnLanesToString(
-      const ::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>& turn_lanes) const;
+  std::string TurnLanesToString() const;
 
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToParameterString() const;
@@ -453,9 +460,23 @@ public:
     return mutable_intersecting_edge_->walkability();
   }
 
+  bool has_use() const {
+    return mutable_intersecting_edge_->has_use();
+  }
+
+  ::valhalla::TripLeg_Use use() const {
+    return mutable_intersecting_edge_->use();
+  }
+
+  ::valhalla::RoadClass road_class() const {
+    return mutable_intersecting_edge_->road_class();
+  }
+
   bool IsTraversable(const TripLeg_TravelMode travel_mode) const;
 
   bool IsTraversableOutbound(const TripLeg_TravelMode travel_mode) const;
+
+  bool IsHighway() const;
 
   std::string ToString() const;
 
@@ -540,7 +561,7 @@ public:
     return mutable_node_->type();
   }
 
-  uint32_t elapsed_time() const {
+  double elapsed_time() const {
     return mutable_node_->elapsed_time();
   }
 
@@ -554,6 +575,14 @@ public:
 
   const std::string& time_zone() const {
     return mutable_node_->time_zone();
+  }
+
+  bool has_transition_time() const {
+    return mutable_node_->has_transition_time();
+  }
+
+  double transition_time() const {
+    return mutable_node_->transition_time();
   }
 
   bool HasIntersectingEdges() const;
@@ -573,16 +602,29 @@ public:
   bool HasForwardTraversableIntersectingEdge(uint32_t from_heading,
                                              const TripLeg_TravelMode travel_mode);
 
+  bool HasForwardTraversableSignificantRoadClassXEdge(uint32_t from_heading,
+                                                      const TripLeg_TravelMode travel_mode,
+                                                      RoadClass path_road_class);
+
+  bool HasWiderForwardTraversableIntersectingEdge(uint32_t from_heading,
+                                                  const TripLeg_TravelMode travel_mode);
+
+  bool HasWiderForwardTraversableHighwayXEdge(uint32_t from_heading,
+                                              const TripLeg_TravelMode travel_mode);
+
   bool HasTraversableOutboundIntersectingEdge(const TripLeg_TravelMode travel_mode);
 
   bool HasSpecifiedTurnXEdge(const baldr::Turn::Type turn_type,
                              uint32_t from_heading,
                              const TripLeg_TravelMode travel_mode);
 
+  bool HasSpecifiedRoadClassXEdge(const RoadClass road_class);
+
   uint32_t GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading);
 
   uint32_t GetStraightestTraversableIntersectingEdgeTurnDegree(uint32_t from_heading,
-                                                               const TripLeg_TravelMode travel_mode);
+                                                               const TripLeg_TravelMode travel_mode,
+                                                               TripLeg_Use* use = nullptr);
 
   bool IsStraightestTraversableIntersectingEdgeReversed(uint32_t from_heading,
                                                         const TripLeg_TravelMode travel_mode);

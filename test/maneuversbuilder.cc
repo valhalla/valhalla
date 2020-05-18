@@ -39,8 +39,8 @@ public:
     ManeuversBuilder::Combine(maneuvers);
   }
 
-  void CountAndSortExitSigns(std::list<Maneuver>& maneuvers) {
-    ManeuversBuilder::CountAndSortExitSigns(maneuvers);
+  void CountAndSortSigns(std::list<Maneuver>& maneuvers) {
+    ManeuversBuilder::CountAndSortSigns(maneuvers);
   }
 
   void SetSimpleDirectionalManeuverType(Maneuver& maneuver) {
@@ -91,13 +91,11 @@ void TrySetSimpleDirectionalManeuverType(uint32_t turn_degree, DirectionsLeg_Man
   maneuver.set_begin_node_index(1);
   maneuver.set_turn_degree(turn_degree);
   mbTest.SetSimpleDirectionalManeuverType(maneuver);
-  if (maneuver.type() != expected) {
-    throw std::runtime_error("Incorrect maneuver type for turn degree=" +
-                             std::to_string(turn_degree));
-  }
+  EXPECT_EQ(maneuver.type(), expected)
+      << "Incorrect maneuver type for turn degree=" + std::to_string(turn_degree);
 }
 
-void TestSetSimpleDirectionalManeuverType() {
+TEST(Maneuversbuilder, TestSetSimpleDirectionalManeuverType) {
   // Continue lower bound
   TrySetSimpleDirectionalManeuverType(350, DirectionsLeg_Maneuver_Type_kContinue);
   // Continue middle
@@ -161,11 +159,10 @@ void TestSetSimpleDirectionalManeuverType() {
 void TryDetermineCardinalDirection(uint32_t heading,
                                    DirectionsLeg_Maneuver_CardinalDirection expected) {
   ManeuversBuilderTest mbTest;
-  if (mbTest.DetermineCardinalDirection(heading) != expected)
-    throw std::runtime_error("Incorrect cardinal direction");
+  EXPECT_EQ(mbTest.DetermineCardinalDirection(heading), expected) << "Incorrect cardinal direction";
 }
 
-void TestDetermineCardinalDirection() {
+TEST(Maneuversbuilder, TestDetermineCardinalDirection) {
   // North lower bound
   TryDetermineCardinalDirection(337, DirectionsLeg_Maneuver_CardinalDirection_kNorth);
   // North middle
@@ -253,14 +250,13 @@ void TryDetermineRelativeDirection_Maneuver(uint32_t prev_heading,
   maneuver.set_begin_node_index(1);
   maneuver.set_turn_degree(valhalla::midgard::GetTurnDegree(prev_heading, curr_heading));
   mbTest.DetermineRelativeDirection(maneuver);
-  if (maneuver.begin_relative_direction() != expected) {
-    throw std::runtime_error(std::string("Incorrect relative direction: ") +
-                             std::to_string(static_cast<int>(maneuver.begin_relative_direction())) +
-                             " | expected: " + std::to_string(static_cast<int>(expected)));
-  }
+  EXPECT_EQ(maneuver.begin_relative_direction(), expected)
+      << std::string("Incorrect relative direction: ") +
+             std::to_string(static_cast<int>(maneuver.begin_relative_direction())) +
+             " | expected: " + std::to_string(static_cast<int>(expected));
 }
 
-void TestDetermineRelativeDirection_Maneuver() {
+TEST(Maneuversbuilder, TestDetermineRelativeDirection_Maneuver) {
   // Path straight, intersecting straight on the left - thus keep right
   TryDetermineRelativeDirection_Maneuver(0, 5, {355}, Maneuver::RelativeDirection::kKeepRight);
 
@@ -301,11 +297,11 @@ void TestDetermineRelativeDirection_Maneuver() {
 }
 
 void TryDetermineRelativeDirection(uint32_t turn_degree, Maneuver::RelativeDirection expected) {
-  if (ManeuversBuilderTest::DetermineRelativeDirection(turn_degree) != expected)
-    throw std::runtime_error("Incorrect relative direction");
+  EXPECT_EQ(ManeuversBuilderTest::DetermineRelativeDirection(turn_degree), expected)
+      << "Incorrect relative direction";
 }
 
-void TestDetermineRelativeDirection() {
+TEST(Maneuversbuilder, TestDetermineRelativeDirection) {
   // kKeepStraight lower bound
   TryDetermineRelativeDirection(330, Maneuver::RelativeDirection::kKeepStraight);
   // kKeepStraight middle
@@ -340,22 +336,13 @@ void TryCombine(ManeuversBuilderTest& mbTest,
                 std::list<Maneuver>& expected_maneuvers) {
   mbTest.Combine(maneuvers);
 
-  if (maneuvers.size() != expected_maneuvers.size())
-    throw std::runtime_error(
-        "Incorrect maneuver count: " + std::to_string(maneuvers.size()) +
-        " | Expected maneuver count=" + std::to_string(expected_maneuvers.size()));
+  EXPECT_EQ(maneuvers.size(), expected_maneuvers.size());
+
   for (auto man = maneuvers.begin(), expected_man = expected_maneuvers.begin();
        man != maneuvers.end(); ++man, ++expected_man) {
-    if (man->type() != expected_man->type())
-      throw std::runtime_error("Incorrect maneuver type: " + std::to_string(man->type()) +
-                               "  |  expected: " + std::to_string(expected_man->type()));
-    if (!equal<float>(man->length(), expected_man->length())) {
-      throw std::runtime_error("Incorrect maneuver distance=" + std::to_string(man->length()) +
-                               std::string(" | Expected distance=") +
-                               std::to_string(expected_man->length()));
-    }
-    if (man->time() != expected_man->time())
-      throw std::runtime_error("Incorrect maneuver time");
+    EXPECT_EQ(man->type(), expected_man->type());
+    EXPECT_NEAR(man->length(), expected_man->length(), .00001);
+    EXPECT_EQ(man->time(), expected_man->time()) << "Incorrect maneuver time";
   }
 }
 
@@ -364,7 +351,7 @@ void PopulateEdge(TripLeg_Edge* edge,
                   const std::vector<std::pair<std::string, bool>>& names,
                   float length,
                   float speed,
-                  TripLeg_RoadClass road_class,
+                  RoadClass road_class,
                   ::google::protobuf::uint32 begin_heading,
                   ::google::protobuf::uint32 end_heading,
                   ::google::protobuf::uint32 begin_shape_index,
@@ -456,7 +443,7 @@ void PopulateManeuver(Maneuver& maneuver,
                       const std::vector<std::pair<std::string, bool>>& street_names,
                       const std::vector<std::pair<std::string, bool>>& begin_street_names,
                       const std::vector<std::pair<std::string, bool>>& cross_street_names,
-                      std::string instruction,
+                      const std::string& instruction,
                       float distance,
                       uint32_t time,
                       uint32_t turn_degree,
@@ -487,15 +474,15 @@ void PopulateManeuver(Maneuver& maneuver,
                       bool fork = false,
                       bool begin_intersecting_edge_name_consistency = false,
                       bool intersecting_forward_edge = false,
-                      std::string verbal_transition_alert_instruction = "",
-                      std::string verbal_pre_transition_instruction = "",
-                      std::string verbal_post_transition_instruction = "",
+                      const std::string& verbal_transition_alert_instruction = "",
+                      const std::string& verbal_pre_transition_instruction = "",
+                      const std::string& verbal_post_transition_instruction = "",
                       bool tee = false,
                       bool unnamed_walkway = false,
                       bool unnamed_cycleway = false,
                       bool unnamed_mountain_bike_trail = false,
                       float basic_time = 0.0f,
-                      bool verbal_multi_cue = false) {
+                      bool imminent_verbal_multi_cue = false) {
 
   maneuver.set_type(type);
 
@@ -572,10 +559,10 @@ void PopulateManeuver(Maneuver& maneuver,
   maneuver.set_unnamed_cycleway(unnamed_cycleway);
   maneuver.set_unnamed_mountain_bike_trail(unnamed_mountain_bike_trail);
   maneuver.set_basic_time(basic_time);
-  maneuver.set_verbal_multi_cue(verbal_multi_cue);
+  maneuver.set_imminent_verbal_multi_cue(imminent_verbal_multi_cue);
 }
 
-void TestLeftInternalStraightCombine() {
+TEST(Maneuversbuilder, TestLeftInternalStraightCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -586,53 +573,53 @@ void TestLeftInternalStraightCombine() {
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743", 1}, {"PA 341 Truck", 1}}, 0.033835, 60.000000,
-               TripLeg_RoadClass_kSecondary, 158, 180, 0, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kSecondary, 158, 180, 0, 3, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:1
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743 South", 1}}, 0.181000, 60.000000,
-               TripLeg_RoadClass_kSecondary, 187, 192, 3, 8, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kSecondary, 187, 192, 3, 8, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:2
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743 South", 1}}, 0.079000, 60.000000,
-               TripLeg_RoadClass_kSecondary, 196, 196, 8, 10, TripLeg_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kSecondary, 196, 196, 8, 10, TripLeg_Traversability_kBoth, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:3
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743 South", 1}}, 0.160000, 60.000000,
-               TripLeg_RoadClass_kSecondary, 198, 198, 10, 13, TripLeg_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kSecondary, 198, 198, 10, 13, TripLeg_Traversability_kBoth, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:4 INTERNAL_INTERSECTION
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {}, 0.013000, 50.000000, TripLeg_RoadClass_kSecondary, 118, 118, 13, 14,
+  PopulateEdge(edge, {}, 0.013000, 50.000000, valhalla::RoadClass::kSecondary, 118, 118, 13, 14,
                TripLeg_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:5
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {}, 0.073000, 50.000000, TripLeg_RoadClass_kSecondary, 127, 127, 14, 15,
+  PopulateEdge(edge, {}, 0.073000, 50.000000, valhalla::RoadClass::kSecondary, 127, 127, 14, 15,
                TripLeg_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {},
                {{"PA 283 East", 1}}, {{"Lancaster", 0}}, {});
 
   // node:6
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {}, 0.432000, 50.000000, TripLeg_RoadClass_kSecondary, 127, 130, 15, 20,
+  PopulateEdge(edge, {}, 0.432000, 50.000000, valhalla::RoadClass::kSecondary, 127, 130, 15, 20,
                TripLeg_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:7
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"PA 283 East", 1}}, 0.176467, 105.000000, TripLeg_RoadClass_kMotorway, 134,
+  PopulateEdge(edge, {{"PA 283 East", 1}}, 0.176467, 105.000000, valhalla::RoadClass::kMotorway, 134,
                134, 20, 22, TripLeg_Traversability_kForward, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
                {}, {});
 
@@ -667,8 +654,8 @@ void TestLeftInternalStraightCombine() {
 
   maneuvers.emplace_back();
   Maneuver& maneuver4 = maneuvers.back();
-  PopulateManeuver(maneuver4, DirectionsLeg_Maneuver_Type_kMerge, {{"PA 283 East", 1}}, {}, {}, "",
-                   0.176467, 6, 4, Maneuver::RelativeDirection::kKeepStraight,
+  PopulateManeuver(maneuver4, DirectionsLeg_Maneuver_Type_kMergeLeft, {{"PA 283 East", 1}}, {}, {},
+                   "", 0.176467, 6, 4, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 134, 134, 7, 8, 20, 22, 0, 0,
                    0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
@@ -701,8 +688,8 @@ void TestLeftInternalStraightCombine() {
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver3 = expected_maneuvers.back();
-  PopulateManeuver(expected_maneuver3, DirectionsLeg_Maneuver_Type_kMerge, {{"PA 283 East", 1}}, {},
-                   {}, "", 0.176467, 6, 4, Maneuver::RelativeDirection::kKeepStraight,
+  PopulateManeuver(expected_maneuver3, DirectionsLeg_Maneuver_Type_kMergeLeft, {{"PA 283 East", 1}},
+                   {}, {}, "", 0.176467, 6, 4, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kSouthEast, 134, 134, 7, 8, 20, 22, 0, 0,
                    0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
@@ -716,7 +703,7 @@ void TestLeftInternalStraightCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
-void TestStraightInternalLeftCombine() {
+TEST(Maneuversbuilder, TestStraightInternalLeftCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -726,64 +713,64 @@ void TestStraightInternalLeftCombine() {
   // node:0
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"PA 283 West", 1}}, 0.511447, 105.000000, TripLeg_RoadClass_kMotorway, 315,
+  PopulateEdge(edge, {{"PA 283 West", 1}}, 0.511447, 105.000000, valhalla::RoadClass::kMotorway, 315,
                316, 0, 3, TripLeg_Traversability_kForward, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
                {}, {});
 
   // node:1
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {}, 0.397000, 50.000000, TripLeg_RoadClass_kSecondary, 322, 330, 3, 12,
+  PopulateEdge(edge, {}, 0.397000, 50.000000, valhalla::RoadClass::kSecondary, 322, 330, 3, 12,
                TripLeg_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {{"PA 743", 1}},
                {{"Hershey", 0}, {"Elizabethtown", 0}}, {});
 
   // node:2
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {}, 0.050000, 50.000000, TripLeg_RoadClass_kSecondary, 308, 292, 12, 17,
+  PopulateEdge(edge, {}, 0.050000, 50.000000, valhalla::RoadClass::kSecondary, 308, 292, 12, 17,
                TripLeg_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {},
                {{"PA 743 South", 1}}, {{"Elizabethtown", 0}}, {});
 
   // node:3 INTERNAL_INTERSECTION
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {}, 0.012000, 50.000000, TripLeg_RoadClass_kSecondary, 289, 289, 17, 18,
+  PopulateEdge(edge, {}, 0.012000, 50.000000, valhalla::RoadClass::kSecondary, 289, 289, 17, 18,
                TripLeg_Traversability_kForward, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:4
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743 South", 1}}, 0.160000, 60.000000,
-               TripLeg_RoadClass_kSecondary, 198, 198, 18, 21, TripLeg_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kSecondary, 198, 198, 18, 21, TripLeg_Traversability_kBoth, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:5
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743 South", 1}}, 0.084000, 60.000000,
-               TripLeg_RoadClass_kSecondary, 199, 198, 21, 23, TripLeg_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kSecondary, 199, 198, 21, 23, TripLeg_Traversability_kBoth, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:6
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743 South", 1}}, 0.113000, 60.000000,
-               TripLeg_RoadClass_kSecondary, 198, 198, 23, 24, TripLeg_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kSecondary, 198, 198, 23, 24, TripLeg_Traversability_kBoth, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:7
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743 South", 1}}, 0.129000, 60.000000,
-               TripLeg_RoadClass_kSecondary, 196, 196, 24, 25, TripLeg_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kSecondary, 196, 196, 24, 25, TripLeg_Traversability_kBoth, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:8
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Hershey Road", 0}, {"PA 743 North", 1}}, 0.000000, 60.000000,
-               TripLeg_RoadClass_kSecondary, 22, 19, 25, 25, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kSecondary, 22, 19, 25, 25, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(options, &etp);
@@ -881,7 +868,7 @@ void TestStraightInternalLeftCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
-void TestStraightInternalLeftInternalCombine() {
+TEST(Maneuversbuilder, TestStraightInternalLeftInternalCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -891,37 +878,37 @@ void TestStraightInternalLeftInternalCombine() {
   // node:0
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Broken Land Parkway", 0}}, 0.056148, 72.000000, TripLeg_RoadClass_kSecondary,
-               26, 24, 0, 2, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
-               {}, {});
+  PopulateEdge(edge, {{"Broken Land Parkway", 0}}, 0.056148, 72.000000,
+               valhalla::RoadClass::kSecondary, 26, 24, 0, 2, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:1
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Broken Land Parkway", 0}}, 0.081000, 72.000000, TripLeg_RoadClass_kSecondary,
-               24, 24, 2, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
-               {}, {});
+  PopulateEdge(edge, {{"Broken Land Parkway", 0}}, 0.081000, 72.000000,
+               valhalla::RoadClass::kSecondary, 24, 24, 2, 3, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:2 INTERNAL_INTERSECTION
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Broken Land Parkway", 0}}, 0.017000, 72.000000, TripLeg_RoadClass_kSecondary,
-               25, 25, 3, 4, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {},
-               {}, {});
+  PopulateEdge(edge, {{"Broken Land Parkway", 0}}, 0.017000, 72.000000,
+               valhalla::RoadClass::kSecondary, 25, 25, 3, 4, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:3 INTERNAL_INTERSECTION
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Snowden River Parkway", 0}}, 0.030000, 60.000000,
-               TripLeg_RoadClass_kSecondary, 291, 291, 4, 5, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kSecondary, 291, 291, 4, 5, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:4
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Patuxent Woods Drive", 0}}, 0.059840, 40.000000, TripLeg_RoadClass_kTertiary,
-               292, 270, 5, 8, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
-               {}, {});
+  PopulateEdge(edge, {{"Patuxent Woods Drive", 0}}, 0.059840, 40.000000,
+               valhalla::RoadClass::kTertiary, 292, 270, 5, 8, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(options, &etp);
@@ -986,7 +973,7 @@ void TestStraightInternalLeftInternalCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
-void TestStraightInternalStraightCombine() {
+TEST(Maneuversbuilder, TestStraightInternalStraightCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -997,71 +984,71 @@ void TestStraightInternalStraightCombine() {
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.120902, 80.000000,
-               TripLeg_RoadClass_kTrunk, 59, 94, 0, 5, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTrunk, 59, 94, 0, 5, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:1
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.086000, 80.000000,
-               TripLeg_RoadClass_kTrunk, 94, 94, 5, 8, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTrunk, 94, 94, 5, 8, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:2 INTERNAL_INTERSECTION
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.018000, 90.000000,
-               TripLeg_RoadClass_kTrunk, 96, 96, 8, 9, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0,
-               0, 0, 0, 1, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTrunk, 96, 96, 8, 9, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:3
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.099000, 80.000000,
-               TripLeg_RoadClass_kTrunk, 94, 95, 9, 12, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTrunk, 94, 95, 9, 12, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:4
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.774000, 80.000000,
-               TripLeg_RoadClass_kTrunk, 96, 88, 12, 28, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTrunk, 96, 88, 12, 28, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:5
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.123000, 80.000000,
-               TripLeg_RoadClass_kTrunk, 90, 90, 28, 32, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTrunk, 90, 90, 28, 32, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:6
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.009000, 80.000000,
-               TripLeg_RoadClass_kTrunk, 86, 86, 32, 33, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTrunk, 86, 86, 32, 33, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:7 INTERNAL_INTERSECTION
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.015000, 72.000000,
-               TripLeg_RoadClass_kTrunk, 93, 93, 33, 34, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTrunk, 93, 93, 33, 34, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:8
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.077000, 72.000000,
-               TripLeg_RoadClass_kTrunk, 90, 90, 34, 35, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTrunk, 90, 90, 34, 35, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:9
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.217965, 72.000000,
-               TripLeg_RoadClass_kTrunk, 90, 89, 35, 40, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTrunk, 90, 89, 35, 40, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(options, &etp);
@@ -1136,7 +1123,7 @@ void TestStraightInternalStraightCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
-void TestLeftInternalUturnCombine() {
+TEST(Maneuversbuilder, TestLeftInternalUturnCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1147,22 +1134,22 @@ void TestLeftInternalUturnCombine() {
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Jonestown Road", 0}, {"US 22", 1}}, 0.062923, 75.000000,
-               TripLeg_RoadClass_kPrimary, 36, 32, 0, 2, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kPrimary, 36, 32, 0, 2, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:1 TURN_CHANNNEL
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Devonshire Road", 0}}, 0.013000, 50.000000, TripLeg_RoadClass_kTertiary, 299,
-               299, 2, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {},
-               {});
+  PopulateEdge(edge, {{"Devonshire Road", 0}}, 0.013000, 50.000000, valhalla::RoadClass::kTertiary,
+               299, 299, 2, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {},
+               {}, {});
 
   // node:2
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Jonestown Road", 0}, {"US 22", 1}}, 0.059697, 75.000000,
-               TripLeg_RoadClass_kPrimary, 212, 221, 3, 5, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kPrimary, 212, 221, 3, 5, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(options, &etp);
@@ -1230,7 +1217,7 @@ void TestLeftInternalUturnCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
-void TestLeftInternalUturnProperDirectionCombine() {
+TEST(Maneuversbuilder, TestLeftInternalUturnProperDirectionCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1241,29 +1228,29 @@ void TestLeftInternalUturnProperDirectionCombine() {
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Pulaski Highway", 0}, {"US 40 East", 1}}, 0.067483, 75.000000,
-               TripLeg_RoadClass_kPrimary, 48, 52, 0, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kPrimary, 48, 52, 0, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:1 TURN_CHANNNEL
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Moravia Park Drive", 0}}, 0.019000, 60.000000, TripLeg_RoadClass_kSecondary,
-               317, 317, 3, 4, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {},
-               {}, {});
+  PopulateEdge(edge, {{"Moravia Park Drive", 0}}, 0.019000, 60.000000,
+               valhalla::RoadClass::kSecondary, 317, 317, 3, 4, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:2
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"US 40 West", 1}, {"Pulaski Highway", 0}}, 0.045000, 90.000000,
-               TripLeg_RoadClass_kTrunk, 229, 229, 4, 5, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTrunk, 229, 229, 4, 5, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:3
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Pulaski Highway", 0}, {"US 40 West", 1}}, 0.000000, 75.000000,
-               TripLeg_RoadClass_kPrimary, 229, 229, 5, 5, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kPrimary, 229, 229, 5, 5, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(options, &etp);
@@ -1331,7 +1318,7 @@ void TestLeftInternalUturnProperDirectionCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
-void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
+TEST(Maneuversbuilder, TestStraightInternalLeftInternalStraightInternalUturnCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1342,36 +1329,36 @@ void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 24", 1}, {"Vietnam Veterans Memorial Highway", 0}}, 0.071404, 89.000000,
-               TripLeg_RoadClass_kTrunk, 335, 334, 0, 2, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTrunk, 335, 334, 0, 2, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:1 TURN_CHANNNEL
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 24", 1}, {"Vietnam Veterans Memorial Highway", 0}}, 0.012000, 89.000000,
-               TripLeg_RoadClass_kTrunk, 334, 334, 2, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTrunk, 334, 334, 2, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:2
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Bel Air South Parkway", 0}}, 0.025000, 48.000000,
-               TripLeg_RoadClass_kSecondary, 245, 245, 3, 4, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kSecondary, 245, 245, 3, 4, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:3
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 24", 1}, {"Vietnam Veterans Memorial Highway", 0}}, 0.012000, 89.000000,
-               TripLeg_RoadClass_kTrunk, 153, 153, 4, 5, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTrunk, 153, 153, 4, 5, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:4
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 24", 1}, {"Vietnam Veterans Memorial Highway", 0}}, 0.070695, 89.000000,
-               TripLeg_RoadClass_kTrunk, 155, 156, 5, 9, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTrunk, 155, 156, 5, 9, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(options, &etp);
@@ -1440,7 +1427,7 @@ void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
-void TestInternalPencilPointUturnProperDirectionCombine() {
+TEST(Maneuversbuilder, TestInternalPencilPointUturnProperDirectionCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1451,13 +1438,13 @@ void TestInternalPencilPointUturnProperDirectionCombine() {
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Stonewall Shops Square", 0}}, 0.027386, 40.000000,
-               TripLeg_RoadClass_kUnclassified, 352, 343, 0, 2, TripLeg_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kUnclassified, 352, 343, 0, 2, TripLeg_Traversability_kBoth, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:1 TURN_CHANNNEL
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Old Carolina Road", 0}}, 0.019000, 50.000000, TripLeg_RoadClass_kTertiary,
+  PopulateEdge(edge, {{"Old Carolina Road", 0}}, 0.019000, 50.000000, valhalla::RoadClass::kTertiary,
                331, 331, 2, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, {}, {},
                {}, {});
 
@@ -1465,15 +1452,15 @@ void TestInternalPencilPointUturnProperDirectionCombine() {
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Stonewall Shops Square", 0}}, 0.021000, 50.000000,
-               TripLeg_RoadClass_kTertiary, 187, 187, 3, 4, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTertiary, 187, 187, 3, 4, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {});
 
   // node:3
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Stonewall Shops Square", 0}}, 0.025240, 40.000000,
-               TripLeg_RoadClass_kUnclassified, 162, 149, 4, 6, TripLeg_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kUnclassified, 162, 149, 4, 6, TripLeg_Traversability_kBoth, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(options, &etp);
@@ -1540,7 +1527,7 @@ void TestInternalPencilPointUturnProperDirectionCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
-void TestSimpleRightTurnChannelCombine() {
+TEST(Maneuversbuilder, TestSimpleRightTurnChannelCombine) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1551,21 +1538,21 @@ void TestSimpleRightTurnChannelCombine() {
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 43 East", 1}, {"White Marsh Boulevard", 0}}, 0.091237, 80.000000,
-               TripLeg_RoadClass_kTrunk, 59, 94, 0, 4, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, {}, {}, {}, {});
+               valhalla::RoadClass::kTrunk, 59, 94, 0, 4, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:1 TURN_CHANNNEL
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {}, 0.142000, 113.000000, TripLeg_RoadClass_kSecondary, 105, 179, 4, 11,
+  PopulateEdge(edge, {}, 0.142000, 113.000000, valhalla::RoadClass::kSecondary, 105, 179, 4, 11,
                TripLeg_Traversability_kBoth, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   // node:2
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Perry Hall Boulevard", 0}}, 0.065867, 64.000000, TripLeg_RoadClass_kSecondary,
-               188, 188, 11, 14, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {},
-               {}, {}, {});
+  PopulateEdge(edge, {{"Perry Hall Boulevard", 0}}, 0.065867, 64.000000,
+               valhalla::RoadClass::kSecondary, 188, 188, 11, 14, TripLeg_Traversability_kBoth, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
   EnhancedTripLeg etp(path);
   ManeuversBuilderTest mbTest(options, &etp);
@@ -1635,18 +1622,17 @@ void TestSimpleRightTurnChannelCombine() {
 void TryCountAndSortExitSigns(std::list<Maneuver>& maneuvers,
                               std::list<Maneuver>& expected_maneuvers) {
   ManeuversBuilderTest mbTest;
-  mbTest.CountAndSortExitSigns(maneuvers);
+  mbTest.CountAndSortSigns(maneuvers);
 
-  if (maneuvers.size() != expected_maneuvers.size())
-    throw std::runtime_error("Incorrect maneuver count");
+  ASSERT_EQ(maneuvers.size(), expected_maneuvers.size()) << "Incorrect maneuver count";
+
   for (auto man = maneuvers.begin(), expected_man = expected_maneuvers.begin();
        man != maneuvers.end(); ++man, ++expected_man) {
-    if (!(man->signs() == expected_man->signs()))
-      throw std::runtime_error("Maneuver signs do not match expected");
+    EXPECT_EQ(man->signs(), expected_man->signs()) << "Maneuver signs do not match expected";
   }
 }
 
-void TestCountAndSortExitSigns() {
+TEST(Maneuversbuilder, TestCountAndSortExitSigns) {
 
   ///////////////////////////////////////////////////////////////////////////
   // Create maneuver list
@@ -1684,8 +1670,8 @@ void TestCountAndSortExitSigns() {
 
   maneuvers.emplace_back();
   Maneuver& maneuver4 = maneuvers.back();
-  PopulateManeuver(maneuver4, DirectionsLeg_Maneuver_Type_kMerge, {{"US 322 West", 1}}, {}, {}, "",
-                   55.286610, 3319, 358, Maneuver::RelativeDirection::kKeepStraight,
+  PopulateManeuver(maneuver4, DirectionsLeg_Maneuver_Type_kMergeLeft, {{"US 322 West", 1}}, {}, {},
+                   "", 55.286610, 3319, 358, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorth, 351, 348, 4, 57, 31, 1303, 0, 0,
                    0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0);
 
@@ -1733,8 +1719,8 @@ void TestCountAndSortExitSigns() {
 
   expected_maneuvers.emplace_back();
   Maneuver& expected_maneuver4 = expected_maneuvers.back();
-  PopulateManeuver(expected_maneuver4, DirectionsLeg_Maneuver_Type_kMerge, {{"US 322 West", 1}}, {},
-                   {}, "", 55.286610, 3319, 358, Maneuver::RelativeDirection::kKeepStraight,
+  PopulateManeuver(expected_maneuver4, DirectionsLeg_Maneuver_Type_kMergeLeft, {{"US 322 West", 1}},
+                   {}, {}, "", 55.286610, 3319, 358, Maneuver::RelativeDirection::kKeepStraight,
                    DirectionsLeg_Maneuver_CardinalDirection_kNorth, 351, 348, 4, 57, 31, 1303, 0, 0,
                    0, 0, 0, 0, 0, 1, 0, {}, {}, {}, {}, 0, 0, 0);
 
@@ -1755,13 +1741,10 @@ void TryIsIntersectingForwardEdge(ManeuversBuilderTest& mbTest, int node_index, 
   bool intersecting_forward_link =
       mbTest.IsIntersectingForwardEdge(node_index, prev_edge.get(), curr_edge.get());
 
-  if (intersecting_forward_link != expected) {
-    throw std::runtime_error("Incorrect intersecting forward link value - expected: " +
-                             std::to_string(expected));
-  }
+  EXPECT_EQ(intersecting_forward_link, expected);
 }
 
-void TestPathRightXStraightIsIntersectingForwardEdge() {
+TEST(Maneuversbuilder, TestPathRightXStraightIsIntersectingForwardEdge) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1771,16 +1754,16 @@ void TestPathRightXStraightIsIntersectingForwardEdge() {
   // node:0
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.027827, 30.000000, TripLeg_RoadClass_kResidential, 250,
-               291, 0, 1, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
-               {}, TripLeg_TravelMode_kDrive);
+  PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.027827, 30.000000, valhalla::RoadClass::kResidential,
+               250, 291, 0, 1, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
+               {}, {}, TripLeg_TravelMode_kDrive);
 
   // node:1 Intersecting forward link
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.054344, 30.000000, TripLeg_RoadClass_kResidential, 20,
-               337, 1, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
-               {}, TripLeg_TravelMode_kDrive);
+  PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.054344, 30.000000, valhalla::RoadClass::kResidential,
+               20, 337, 1, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
+               {}, {}, TripLeg_TravelMode_kDrive);
   PopulateIntersectingEdge(node->add_intersecting_edge(), 289, 1, 1, TripLeg_Traversability_kBoth,
                            TripLeg_Traversability_kBoth, TripLeg_Traversability_kBoth);
 
@@ -1793,7 +1776,7 @@ void TestPathRightXStraightIsIntersectingForwardEdge() {
   TryIsIntersectingForwardEdge(mbTest, 1, true);
 }
 
-void TestPathLeftXStraightIsIntersectingForwardEdge() {
+TEST(Maneuversbuilder, TestPathLeftXStraightIsIntersectingForwardEdge) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1803,16 +1786,16 @@ void TestPathLeftXStraightIsIntersectingForwardEdge() {
   // node:0
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.047007, 30.000000, TripLeg_RoadClass_kResidential, 108,
-               108, 0, 1, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
-               {}, TripLeg_TravelMode_kDrive);
+  PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.047007, 30.000000, valhalla::RoadClass::kResidential,
+               108, 108, 0, 1, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
+               {}, {}, TripLeg_TravelMode_kDrive);
 
   // node:1 Intersecting forward link
   node = path.add_node();
   edge = node->mutable_edge();
-  PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.046636, 30.000000, TripLeg_RoadClass_kResidential, 20,
-               337, 1, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {},
-               {}, TripLeg_TravelMode_kDrive);
+  PopulateEdge(edge, {{"Raleigh Road", 0}}, 0.046636, 30.000000, valhalla::RoadClass::kResidential,
+               20, 337, 1, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {},
+               {}, {}, TripLeg_TravelMode_kDrive);
   PopulateIntersectingEdge(node->add_intersecting_edge(), 111, 1, 1, TripLeg_Traversability_kBoth,
                            TripLeg_Traversability_kBoth, TripLeg_Traversability_kBoth);
 
@@ -1825,7 +1808,7 @@ void TestPathLeftXStraightIsIntersectingForwardEdge() {
   TryIsIntersectingForwardEdge(mbTest, 1, true);
 }
 
-void TestPathSlightRightXSlightLeftIsIntersectingForwardEdge() {
+TEST(Maneuversbuilder, TestPathSlightRightXSlightLeftIsIntersectingForwardEdge) {
   Options options;
   TripLeg path;
   TripLeg_Node* node;
@@ -1836,15 +1819,15 @@ void TestPathSlightRightXSlightLeftIsIntersectingForwardEdge() {
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Horace Greeley Road", 0}}, 0.102593, 30.000000,
-               TripLeg_RoadClass_kResidential, 23, 13, 0, 6, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, TripLeg_TravelMode_kDrive);
+               valhalla::RoadClass::kResidential, 23, 13, 0, 6, TripLeg_Traversability_kBoth, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, TripLeg_TravelMode_kDrive);
 
   // node:1 Intersecting forward link
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Horace Greeley Road", 0}}, 0.205258, 30.000000,
-               TripLeg_RoadClass_kResidential, 35, 19, 6, 12, TripLeg_Traversability_kBoth, 0, 0, 0,
-               0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, TripLeg_TravelMode_kDrive);
+               valhalla::RoadClass::kResidential, 35, 19, 6, 12, TripLeg_Traversability_kBoth, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, TripLeg_TravelMode_kDrive);
   PopulateIntersectingEdge(node->add_intersecting_edge(), 355, 0, 0, TripLeg_Traversability_kBoth,
                            TripLeg_Traversability_kBoth, TripLeg_Traversability_kBoth);
 
@@ -1859,59 +1842,7 @@ void TestPathSlightRightXSlightLeftIsIntersectingForwardEdge() {
 
 } // namespace
 
-int main() {
-  test::suite suite("maneuversbuilder");
-
-  // SetSimpleDirectionalManeuverType
-  suite.test(TEST_CASE(TestSetSimpleDirectionalManeuverType));
-
-  // DetermineCardinalDirection
-  suite.test(TEST_CASE(TestDetermineCardinalDirection));
-
-  // DetermineRelativeDirection_Maneuver
-  suite.test(TEST_CASE(TestDetermineRelativeDirection_Maneuver));
-
-  // DetermineRelativeDirection
-  suite.test(TEST_CASE(TestDetermineRelativeDirection));
-
-  // LeftInternalStraightCombine
-  suite.test(TEST_CASE(TestLeftInternalStraightCombine));
-
-  // StraightInternalLeftCombine
-  suite.test(TEST_CASE(TestStraightInternalLeftCombine));
-
-  // StraightInternalLeftInternalCombine
-  suite.test(TEST_CASE(TestStraightInternalLeftInternalCombine));
-
-  // StraightInternalStraightCombine
-  suite.test(TEST_CASE(TestStraightInternalStraightCombine));
-
-  // LeftInternalUturnCombine
-  suite.test(TEST_CASE(TestLeftInternalUturnCombine));
-
-  // LeftInternalUturnProperDirectionCombine
-  suite.test(TEST_CASE(TestLeftInternalUturnProperDirectionCombine));
-
-  // StraightInternalLeftInternalStraightInternalUturnCombine
-  suite.test(TEST_CASE(TestStraightInternalLeftInternalStraightInternalUturnCombine));
-
-  // InternalPencilPointUturnProperDirectionCombine
-  suite.test(TEST_CASE(TestInternalPencilPointUturnProperDirectionCombine));
-
-  // SimpleRightTurnChannelCombine
-  suite.test(TEST_CASE(TestSimpleRightTurnChannelCombine));
-
-  // CountAndSortExitSigns
-  suite.test(TEST_CASE(TestCountAndSortExitSigns));
-
-  // PathRightXStraightIsIntersectingForwardEdge
-  suite.test(TEST_CASE(TestPathRightXStraightIsIntersectingForwardEdge));
-
-  // PathLeftXStraightIsIntersectingForwardEdge
-  suite.test(TEST_CASE(TestPathLeftXStraightIsIntersectingForwardEdge));
-
-  // PathSlightRightXSlightLeftIsIntersectingForwardEdge
-  suite.test(TEST_CASE(TestPathSlightRightXSlightLeftIsIntersectingForwardEdge));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

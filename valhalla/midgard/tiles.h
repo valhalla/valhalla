@@ -10,6 +10,7 @@
 
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/ellipse.h>
 
 namespace valhalla {
 namespace midgard {
@@ -334,13 +335,22 @@ public:
   };
 
   /**
-   * Get the list of tiles that lie within the specified bounding box.
-   * The method finds the center tile and spirals out by finding neighbors
-   * and recursively checking if tile is inside and checking/adding
-   * neighboring tiles
+   * Get the list of tiles that lie within the specified bounding box. Since tiles as well as the
+   * bounding box are both aligned to the axes we can simply find tiles by iterating over rows
+   * and columns of tiles from the minimum to maximum.
    * @param  boundingbox  Bounding box
+   * @return Returns a list of tiles that are within or intersect the bounding box.
    */
   std::vector<int32_t> TileList(const AABB2<coord_t>& boundingbox) const;
+
+  /**
+   * Get the list of tiles that lie within the specified ellipse. The method finds the tile
+   * at the ellipse center. It successively finds neighbors and checks if they are inside or
+   * intersect with the ellipse.
+   * @param  ellipse  Ellipse
+   * @return Returns a list of tiles that are within or intersect the ellipse.
+   */
+  std::vector<int32_t> TileList(const Ellipse<coord_t>& ellipse) const;
 
   /**
    * Color a "connectivity map" starting with a sparse map of uncolored tiles.
@@ -348,7 +358,8 @@ public:
    * value in the connectivity map.
    * @param  connectivity_map  map of tileid to color value
    */
-  void ColorMap(std::unordered_map<uint32_t, size_t>& connectivity_map) const;
+  void ColorMap(std::unordered_map<uint32_t, size_t>& connectivity_map,
+                const std::unordered_map<uint32_t, uint32_t>& not_neighbors = {}) const;
 
   /**
    * Intersect the linestring with the tiles to see which tiles and sub cells it intersects

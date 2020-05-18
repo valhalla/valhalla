@@ -53,7 +53,10 @@ std::vector<PointLL> loki_worker_t::init_height(Api& request) {
       }
       // re-encode it for display if they sent it encoded
       if (options.has_encoded_polyline()) {
-        options.set_encoded_polyline(midgard::encode(shape));
+        // Default to 6 digit precision unless polyline5 is specified
+        // NOTE: geojson is NOT support yet for height action
+        int precision = options.shape_format() == polyline5 ? 1e5 : 1e6;
+        options.set_encoded_polyline(midgard::encode(shape, precision));
       }
       resampled = true;
     }

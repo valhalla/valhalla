@@ -73,6 +73,8 @@ const std::string& DirectionsLeg_Maneuver_Type_Name(int v) {
       {34, "kTransitConnectionTransfer"},
       {35, "kTransitConnectionDestination"},
       {36, "kPostTransitConnectionDestination"},
+      {37, "kMergeRight"},
+      {38, "kMergeLeft"},
   };
   auto f = values.find(v);
   if (f == values.cend())
@@ -110,11 +112,16 @@ Maneuver::Maneuver()
       transit_connection_(false), rail_(false), bus_(false), fork_(false),
       begin_intersecting_edge_name_consistency_(false), intersecting_forward_edge_(false),
       tee_(false), unnamed_walkway_(false), unnamed_cycleway_(false),
-      unnamed_mountain_bike_trail_(false), verbal_multi_cue_(false), to_stay_on_(false) {
-  street_names_ = midgard::make_unique<StreetNames>();
-  begin_street_names_ = midgard::make_unique<StreetNames>();
-  cross_street_names_ = midgard::make_unique<StreetNames>();
-  roundabout_exit_street_names_ = midgard::make_unique<StreetNames>();
+      unnamed_mountain_bike_trail_(false), imminent_verbal_multi_cue_(false),
+      distant_verbal_multi_cue_(false), to_stay_on_(false), drive_on_right_(true),
+      has_time_restrictions_(false), has_right_traversable_outbound_intersecting_edge_(false),
+      has_left_traversable_outbound_intersecting_edge_(false),
+      include_verbal_pre_transition_length_(false) {
+  street_names_ = std::make_unique<StreetNames>();
+  begin_street_names_ = std::make_unique<StreetNames>();
+  cross_street_names_ = std::make_unique<StreetNames>();
+  roundabout_exit_street_names_ = std::make_unique<StreetNames>();
+  roundabout_exit_begin_street_names_ = std::make_unique<StreetNames>();
 }
 
 const DirectionsLeg_Maneuver_Type& Maneuver::type() const {
@@ -125,10 +132,22 @@ void Maneuver::set_type(const DirectionsLeg_Maneuver_Type& type) {
   type_ = type;
 }
 
+bool Maneuver::IsStartType() const {
+  return ((type_ == DirectionsLeg_Maneuver_Type_kStart) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kStartLeft) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kStartRight));
+}
+
 bool Maneuver::IsDestinationType() const {
   return ((type_ == DirectionsLeg_Maneuver_Type_kDestination) ||
           (type_ == DirectionsLeg_Maneuver_Type_kDestinationLeft) ||
           (type_ == DirectionsLeg_Maneuver_Type_kDestinationRight));
+}
+
+bool Maneuver::IsMergeType() const {
+  return ((type_ == DirectionsLeg_Maneuver_Type_kMerge) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kMergeLeft) ||
+          (type_ == DirectionsLeg_Maneuver_Type_kMergeRight));
 }
 
 const StreetNames& Maneuver::street_names() const {
@@ -136,7 +155,7 @@ const StreetNames& Maneuver::street_names() const {
 }
 
 void Maneuver::set_street_names(const std::vector<std::pair<std::string, bool>>& names) {
-  street_names_ = midgard::make_unique<StreetNamesUs>(names);
+  street_names_ = std::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_street_names(std::unique_ptr<StreetNames>&& street_names) {
@@ -196,7 +215,7 @@ const StreetNames& Maneuver::begin_street_names() const {
 }
 
 void Maneuver::set_begin_street_names(const std::vector<std::pair<std::string, bool>>& names) {
-  begin_street_names_ = midgard::make_unique<StreetNamesUs>(names);
+  begin_street_names_ = std::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_begin_street_names(std::unique_ptr<StreetNames>&& begin_street_names) {
@@ -216,7 +235,7 @@ const StreetNames& Maneuver::cross_street_names() const {
 }
 
 void Maneuver::set_cross_street_names(const std::vector<std::pair<std::string, bool>>& names) {
-  cross_street_names_ = midgard::make_unique<StreetNamesUs>(names);
+  cross_street_names_ = std::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_cross_street_names(std::unique_ptr<StreetNames>&& cross_street_names) {
@@ -254,19 +273,19 @@ void Maneuver::set_length(float length) {
   length_ = length;
 }
 
-uint32_t Maneuver::time() const {
+double Maneuver::time() const {
   return time_;
 }
 
-void Maneuver::set_time(uint32_t time) {
+void Maneuver::set_time(double time) {
   time_ = time;
 }
 
-uint32_t Maneuver::basic_time() const {
+double Maneuver::basic_time() const {
   return basic_time_;
 }
 
-void Maneuver::set_basic_time(uint32_t basic_time) {
+void Maneuver::set_basic_time(double basic_time) {
   basic_time_ = basic_time;
 }
 
@@ -431,6 +450,10 @@ Signs* Maneuver::mutable_signs() {
   return &signs_;
 }
 
+bool Maneuver::HasSigns() const {
+  return (HasExitSign() || HasGuideSign() || HasJunctionNameSign());
+}
+
 bool Maneuver::HasExitSign() const {
   return signs_.HasExit();
 }
@@ -449,6 +472,22 @@ bool Maneuver::HasExitTowardSign() const {
 
 bool Maneuver::HasExitNameSign() const {
   return signs_.HasExitName();
+}
+
+bool Maneuver::HasGuideSign() const {
+  return signs_.HasGuide();
+}
+
+bool Maneuver::HasGuideBranchSign() const {
+  return signs_.HasGuideBranch();
+}
+
+bool Maneuver::HasGuideTowardSign() const {
+  return signs_.HasGuideToward();
+}
+
+bool Maneuver::HasJunctionNameSign() const {
+  return signs_.HasJunctionName();
 }
 
 uint32_t Maneuver::internal_right_turn_count() const {
@@ -586,12 +625,24 @@ void Maneuver::set_unnamed_mountain_bike_trail(bool unnamed_mountain_bike_trail)
   unnamed_mountain_bike_trail_ = unnamed_mountain_bike_trail;
 }
 
-bool Maneuver::verbal_multi_cue() const {
-  return verbal_multi_cue_;
+bool Maneuver::imminent_verbal_multi_cue() const {
+  return imminent_verbal_multi_cue_;
 }
 
-void Maneuver::set_verbal_multi_cue(bool verbal_multi_cue) {
-  verbal_multi_cue_ = verbal_multi_cue;
+void Maneuver::set_imminent_verbal_multi_cue(bool imminent_verbal_multi_cue) {
+  imminent_verbal_multi_cue_ = imminent_verbal_multi_cue;
+}
+
+bool Maneuver::distant_verbal_multi_cue() const {
+  return distant_verbal_multi_cue_;
+}
+
+void Maneuver::set_distant_verbal_multi_cue(bool distant_verbal_multi_cue) {
+  distant_verbal_multi_cue_ = distant_verbal_multi_cue;
+}
+
+bool Maneuver::HasVerbalMultiCue() const {
+  return (imminent_verbal_multi_cue_ || distant_verbal_multi_cue_);
 }
 
 bool Maneuver::to_stay_on() const {
@@ -608,7 +659,7 @@ const StreetNames& Maneuver::roundabout_exit_street_names() const {
 
 void Maneuver::set_roundabout_exit_street_names(
     const std::vector<std::pair<std::string, bool>>& names) {
-  roundabout_exit_street_names_ = midgard::make_unique<StreetNamesUs>(names);
+  roundabout_exit_street_names_ = std::make_unique<StreetNamesUs>(names);
 }
 
 void Maneuver::set_roundabout_exit_street_names(
@@ -622,6 +673,87 @@ bool Maneuver::HasRoundaboutExitStreetNames() const {
 
 void Maneuver::ClearRoundaboutExitStreetNames() {
   roundabout_exit_street_names_->clear();
+}
+
+const StreetNames& Maneuver::roundabout_exit_begin_street_names() const {
+  return *roundabout_exit_begin_street_names_;
+}
+
+void Maneuver::set_roundabout_exit_begin_street_names(
+    const std::vector<std::pair<std::string, bool>>& names) {
+  roundabout_exit_begin_street_names_ = std::make_unique<StreetNamesUs>(names);
+}
+
+void Maneuver::set_roundabout_exit_begin_street_names(
+    std::unique_ptr<StreetNames>&& roundabout_exit_begin_street_names) {
+  roundabout_exit_begin_street_names_ = std::move(roundabout_exit_begin_street_names);
+}
+
+bool Maneuver::HasRoundaboutExitBeginStreetNames() const {
+  return (!roundabout_exit_begin_street_names_->empty());
+}
+
+void Maneuver::ClearRoundaboutExitBeginStreetNames() {
+  roundabout_exit_begin_street_names_->clear();
+}
+
+const Signs& Maneuver::roundabout_exit_signs() const {
+  return roundabout_exit_signs_;
+}
+
+Signs* Maneuver::mutable_roundabout_exit_signs() {
+  return &roundabout_exit_signs_;
+}
+
+Maneuver::RelativeDirection Maneuver::merge_to_relative_direction() const {
+  return merge_to_relative_direction_;
+}
+
+void Maneuver::set_merge_to_relative_direction(RelativeDirection merge_to_relative_direction) {
+  merge_to_relative_direction_ = merge_to_relative_direction;
+}
+
+bool Maneuver::drive_on_right() const {
+  return drive_on_right_;
+}
+
+void Maneuver::set_drive_on_right(bool drive_on_right) {
+  drive_on_right_ = drive_on_right;
+}
+
+bool Maneuver::has_time_restrictions() const {
+  return has_time_restrictions_;
+}
+
+void Maneuver::set_has_time_restrictions(bool has_time_restrictions) {
+  has_time_restrictions_ = has_time_restrictions;
+}
+
+bool Maneuver::has_right_traversable_outbound_intersecting_edge() const {
+  return has_right_traversable_outbound_intersecting_edge_;
+}
+
+void Maneuver::set_has_right_traversable_outbound_intersecting_edge(
+    bool has_right_traversable_outbound_intersecting_edge) {
+  has_right_traversable_outbound_intersecting_edge_ =
+      has_right_traversable_outbound_intersecting_edge;
+}
+
+bool Maneuver::has_left_traversable_outbound_intersecting_edge() const {
+  return has_left_traversable_outbound_intersecting_edge_;
+}
+
+void Maneuver::set_has_left_traversable_outbound_intersecting_edge(
+    bool has_left_traversable_outbound_intersecting_edge) {
+  has_left_traversable_outbound_intersecting_edge_ = has_left_traversable_outbound_intersecting_edge;
+}
+
+bool Maneuver::include_verbal_pre_transition_length() const {
+  return include_verbal_pre_transition_length_;
+}
+
+void Maneuver::set_include_verbal_pre_transition_length(bool include_verbal_pre_transition_length) {
+  include_verbal_pre_transition_length_ = include_verbal_pre_transition_length;
 }
 
 TripLeg_TravelMode Maneuver::travel_mode() const {
@@ -808,6 +940,14 @@ void Maneuver::set_verbal_formatter(std::unique_ptr<VerbalTextFormatter>&& verba
   verbal_formatter_ = std::move(verbal_formatter);
 }
 
+const std::vector<DirectionsLeg_GuidanceView>& Maneuver::guidance_views() const {
+  return guidance_views_;
+}
+
+std::vector<DirectionsLeg_GuidanceView>* Maneuver::mutable_guidance_views() {
+  return &guidance_views_;
+}
+
 #ifdef LOGGING_LEVEL_TRACE
 std::string Maneuver::ToString() const {
   std::string man_str;
@@ -933,8 +1073,11 @@ std::string Maneuver::ToString() const {
   man_str += " | basic_time=";
   man_str += std::to_string(basic_time_);
 
-  man_str += " | verbal_multi_cue=";
-  man_str += std::to_string(verbal_multi_cue_);
+  man_str += " | imminent_verbal_multi_cue=";
+  man_str += std::to_string(imminent_verbal_multi_cue_);
+
+  man_str += " | distant_verbal_multi_cue=";
+  man_str += std::to_string(distant_verbal_multi_cue_);
 
   man_str += " | travel_mode=";
   man_str += std::to_string(travel_mode_);
@@ -957,6 +1100,19 @@ std::string Maneuver::ToString() const {
   //  std::string verbal_depart_instruction_;
   //  std::string arrive_instruction_;
   //  std::string verbal_arrive_instruction_;
+
+  man_str += " | guidance_views=";
+  for (const auto& guidance_view : guidance_views_) {
+    man_str += "[";
+    man_str += " data_id=" + guidance_view.data_id();
+    man_str += " type=" + guidance_view.type();
+    man_str += " base_id=" + guidance_view.base_id();
+    man_str += " overlay_ids=";
+    for (const auto& overlay_id : guidance_view.overlay_ids()) {
+      man_str += overlay_id + " ";
+    }
+    man_str += "]";
+  }
 
   return man_str;
 }
@@ -1097,7 +1253,7 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(basic_time_);
 
   man_str += delim;
-  man_str += std::to_string(verbal_multi_cue_);
+  man_str += std::to_string(imminent_verbal_multi_cue_);
 
   //  man_str += delim;
   //  man_str += "TripLeg_TravelMode_";

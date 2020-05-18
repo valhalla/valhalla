@@ -11,10 +11,14 @@ message TripLeg {
   }
 
   message Sign {
-    repeated SignElement exit_numbers = 1;          // The list of exit numbers, example: 67B
-    repeated SignElement exit_onto_streets = 2;     // The list of exit branch street names, example: I 95 North
-    repeated SignElement exit_toward_locations = 3; // The list of exit toward locations, examples: New York or I 395 South
-    repeated SignElement exit_names = 4;            // The list of exit names - not used much in US, example: Gettysburg Pike
+    repeated SignElement exit_numbers = 1;            // The list of exit numbers, example: 67B
+    repeated SignElement exit_onto_streets = 2;       // The list of exit branch street names, examples: I 95 North or Baltimore-Washington Parkway
+    repeated SignElement exit_toward_locations = 3;   // The list of exit toward locations, examples: New York or I 395 South
+    repeated SignElement exit_names = 4;              // The list of exit names - not used much in US, example: Gettysburg Pike
+    repeated SignElement guide_onto_streets = 5;      // The list of guide branch street names, examples: US 22 West or Baltimore-Washington Parkway
+    repeated SignElement guide_toward_locations = 6;  // The list of guide toward locations, examples: Lewistown or US 15
+    repeated SignElement junction_names = 7;          // The list of junction names, examples: 万年橋東 or Mannenbashi East
+    repeated SignElement guidance_view_junctions = 8; // The list of guidance view junctions, examples: AB12345;1 or AB12345;E
   }
 
   enum Traversability {
@@ -22,17 +26,6 @@ message TripLeg {
     kForward = 1;
     kBackward = 2;
     kBoth = 3;
-  }
-
-  enum RoadClass {
-    kMotorway = 0;
-    kTrunk = 1;
-    kPrimary = 2;
-    kSecondary = 3;
-    kTertiary = 4;
-    kUnclassified = 5;
-    kResidential = 6;
-    kServiceOther = 7;
   }
 
   enum Use {
@@ -214,6 +207,8 @@ message TripLeg {
     optional int32 mean_elevation = 40;
     repeated TrafficSegment traffic_segment = 41;
     repeated TurnLane turn_lanes = 42;
+    optional bool has_time_restrictions = 43;
+    optional float default_speed = 44;       // km/h
   }
 
   message IntersectingEdge {
@@ -223,6 +218,8 @@ message TripLeg {
     optional Traversability driveability = 4;
     optional Traversability cyclability = 5;
     optional Traversability walkability = 6;
+    optional Use use = 7;
+    optional RoadClass road_class = 8;
   }
 
   message Node {
@@ -251,6 +248,7 @@ message TripLeg {
     optional TransitStationInfo transit_station_info = 8;
     optional TransitEgressInfo transit_egress_info = 9;
     optional string time_zone = 10;
+    optional double transition_time = 11;    // seconds spent transitioning through this node
   }
 
   message Admin {

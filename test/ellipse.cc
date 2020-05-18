@@ -2,12 +2,10 @@
 #include "midgard/point2.h"
 #include <cstdint>
 
-#include "test.h"
-
 #include "midgard/aabb2.h"
 #include "midgard/linesegment2.h"
-#include "midgard/vector2.h"
-#include <vector>
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::midgard;
@@ -18,13 +16,11 @@ void TryLineIntersection(const Ellipse<Point2>& a,
                          const LineSegment2<Point2>& line,
                          const uint32_t expected) {
   Point2 p1, p2;
-  if (a.Intersect(line, p1, p2) != expected) {
-    throw runtime_error("Ellipse: LineSegment intersect test failed: expected: " +
-                        std::to_string(expected));
-  }
+  EXPECT_EQ(a.Intersect(line, p1, p2), expected)
+      << "Ellipse: LineSegment intersect test failed: expected: " + std::to_string(expected);
 }
 
-void TestLineIntersection() {
+TEST(Ellipse, TestLineIntersection) {
   Ellipse<Point2> e({1, 1}, {5, -1}, 45.0f);
 
   // TODO - could check intersect points
@@ -36,13 +32,11 @@ void TestLineIntersection() {
 void TryAABBIntersection(const Ellipse<Point2>& a,
                          const AABB2<Point2>& box,
                          const IntersectCase expected) {
-  if (a.DoesIntersect(box) != expected) {
-    throw runtime_error("Ellipse AABB2 does intersect test failed: expected: " +
-                        std::to_string(expected));
-  }
+  EXPECT_EQ(a.DoesIntersect(box), expected)
+      << "Ellipse AABB2 does intersect test failed: expected: " + std::to_string(expected);
 }
 
-void TestAABBIntersection() {
+TEST(Ellipse, TestAABBIntersection) {
   Ellipse<Point2> e({1, 1}, {5, -1}, 45.0f);
 
   // Test for ellipse containing rectangle
@@ -59,12 +53,11 @@ void TestAABBIntersection() {
 }
 
 void TryContains(const Ellipse<Point2>& a, const Point2& pt, const bool expected) {
-  if (a.Contains(pt) != expected) {
-    throw runtime_error("Ellipse Contains test failed: expected: " + std::to_string(expected));
-  }
+  EXPECT_EQ(a.Contains(pt), expected)
+      << "Ellipse Contains test failed: expected: " + std::to_string(expected);
 }
 
-void TestContains() {
+TEST(Ellipse, TestContains) {
   Ellipse<Point2> e({1, 1}, {5, -1}, 45.0f);
   TryContains(e, {3, 0}, true);
   TryContains(e, {1, 0}, false);
@@ -73,19 +66,23 @@ void TestContains() {
   TryContains(e, {3, -1}, true);
 }
 
+void TryCenter(const Ellipse<Point2>& a, const Point2& expected) {
+  EXPECT_EQ(a.center(), expected) << "Ellipse Center test failed: expected: " +
+                                         std::to_string(expected.x()) + "," +
+                                         std::to_string(expected.y());
+}
+
+TEST(Ellipse, TestCenter) {
+  Point2 center(3, 0);
+  Ellipse<Point2> e1({1, 1}, {5, -1}, 0.0f);
+  TryCenter(e1, center);
+  Ellipse<Point2> e2({1, 1}, {5, -1}, 145.0f);
+  TryCenter(e2, center);
+}
+
 } // namespace
 
-int main() {
-  test::suite suite("ellipse");
-
-  // Tests if line segments intersect ellipse
-  suite.test(TEST_CASE(TestLineIntersection));
-
-  // Tests if line segments intersect ellipse
-  suite.test(TEST_CASE(TestAABBIntersection));
-
-  // Test if points contained within ellipse
-  suite.test(TEST_CASE(TestContains));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

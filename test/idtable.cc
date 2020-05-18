@@ -1,35 +1,33 @@
-#include "test.h"
-
 #include "mjolnir/idtable.h"
 #include <cstdint>
 #include <cstdlib>
 #include <unordered_set>
+
+#include "test.h"
+
+namespace {
 
 using namespace std;
 using namespace valhalla::mjolnir;
 
 constexpr uint64_t kTableSize = 40000;
 
-void TestSetGet() {
-
+TEST(IdTable, SetGet) {
   IdTable t(kTableSize);
 
   // set them all and check them all
   for (uint64_t i = 0; i < kTableSize; ++i) {
-    if (t.get(i))
-      throw std::logic_error("Bit should not be set");
+    EXPECT_FALSE(t.get(i));
     t.set(i);
-    if (!t.get(i))
-      throw std::logic_error("Bit should be set");
+    EXPECT_TRUE(t.get(i));
   }
+
   for (uint64_t i = 0; i < kTableSize; ++i) {
-    if (!t.get(i))
-      throw std::logic_error("Bit should be set");
+    EXPECT_TRUE(t.get(i));
   }
 }
 
-void TestRandom() {
-
+TEST(IdTable, Random) {
   // randomly set and then go get some
   IdTable t(kTableSize);
   std::unordered_set<uint64_t> ids;
@@ -40,42 +38,45 @@ void TestRandom() {
       t.set(r);
     }
   }
+
   for (uint64_t i = 0; i < kTableSize; ++i) {
     bool exists = ids.find(i) != ids.end();
-    if (exists != t.get(i))
-      throw std::logic_error("Bit has wrong value");
+    EXPECT_EQ(exists, t.get(i));
   }
 }
 
-void TestBounds() {
+TEST(IdTable, Bounds) {
   IdTable t(10);
 
-  for (int i = 60; i < 70; ++i)
-    if (t.get(i))
-      throw std::logic_error("No bits can be set when they are higher than max");
+  for (int i = 60; i < 70; ++i) {
+    EXPECT_FALSE(t.get(i)) << "No bits can be set when they are higher than max";
+  }
 
-  if (t.max() != 63)
-    throw std::logic_error("Max id should be 10");
+  EXPECT_EQ(t.max(), 63) << "Max id should be 10";
 
-  for (int i = 60; i < 70; ++i)
+  for (int i = 60; i < 70; ++i) {
     if (i % 2)
       t.set(i);
+  }
 
-  for (int i = 60; i < 70; ++i)
-    if (i % 2 != t.get(i))
-      throw std::logic_error("The odd ids should be set");
+  for (int i = 60; i < 70; ++i) {
+    EXPECT_EQ(t.get(i), i % 2) << "The odd ids should be set";
+  }
 
-  if (t.max() != 191)
-    throw std::logic_error("The max id should have been increased to 181");
+  EXPECT_EQ(t.max(), 191) << "The max id should have been increased to 191";
 }
 
-int main() {
-  test::suite suite("nodetable");
+TEST(IdTable, X86) {
+  IdTable t(10000000000);
+  uint64_t old_max = t.max();
 
-  // Test setting and getting on random sizes of bit tables
-  suite.test(TEST_CASE(TestSetGet));
-  suite.test(TEST_CASE(TestRandom));
-  suite.test(TEST_CASE(TestBounds));
+  t.set(5528037441);
+  EXPECT_EQ(t.max(), old_max) << "The max id shouldn't be changed";
+}
 
-  return suite.tear_down();
+} // namespace
+
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

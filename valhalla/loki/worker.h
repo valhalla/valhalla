@@ -44,12 +44,14 @@ public:
   std::string height(Api& request);
   std::string transit_available(Api& request);
 
+  void set_interrupt(const std::function<void()>* interrupt) override;
+
 protected:
   void parse_locations(
       google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
       boost::optional<valhalla_exception_t> required_exception = valhalla_exception_t{110});
   void parse_trace(Api& request);
-  void parse_costing(Api& request);
+  void parse_costing(Api& request, bool allow_none = false);
   void locations_from_shape(Api& request);
 
   void init_locate(Api& request);
@@ -62,8 +64,7 @@ protected:
 
   boost::property_tree::ptree config;
   sif::CostFactory<sif::DynamicCost> factory;
-  sif::EdgeFilter edge_filter;
-  sif::NodeFilter node_filter;
+  sif::cost_ptr_t costing;
   std::shared_ptr<baldr::GraphReader> reader;
   std::shared_ptr<baldr::connectivity_map_t> connectivity_map;
   std::string action_str;

@@ -3,9 +3,12 @@
 
 #include "baldr/accessrestriction.h"
 #include "baldr/directededge.h"
+#include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include "sif/dynamiccost.h"
+#include <cassert>
 
 #ifdef INLINE_TEST
 #include "test/test.h"
@@ -56,6 +59,9 @@ constexpr float kHOVFactor = 0.85f;
 // How much to favor taxi roads.
 constexpr float kTaxiFactor = 0.85f;
 
+// Do not avoid alleys by default
+constexpr float kDefaultAlleyFactor = 1.0f;
+
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
                                          kTCFavorableSharp, kTCReverse, kTCUnfavorableSharp,
@@ -64,11 +70,15 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
                                         kTCUnfavorableSharp, kTCReverse, kTCFavorableSharp,
                                         kTCFavorable,        kTCSlight};
 
+constexpr float kMinFactor = 0.1f;
+constexpr float kMaxFactor = 100000.0f;
+
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
                                                                kMaxPenalty};
 constexpr ranged_default_t<float> kAlleyPenaltyRange{0, kDefaultAlleyPenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
 constexpr ranged_default_t<float> kGateCostRange{0, kDefaultGateCost, kMaxPenalty};
 constexpr ranged_default_t<float> kGatePenaltyRange{0, kDefaultGatePenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kTollBoothCostRange{0, kDefaultTollBoothCost, kMaxPenalty};
@@ -83,14 +93,14 @@ constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 
 constexpr float kHighwayFactor[] = {
-    1.0f, // Motorway
-    0.5f, // Trunk
-    0.0f, // Primary
-    0.0f, // Secondary
-    0.0f, // Tertiary
-    0.0f, // Unclassified
-    0.0f, // Residential
-    0.0f  // Service, other
+    10.0f, // Motorway
+    0.5f,  // Trunk
+    0.0f,  // Primary
+    0.0f,  // Secondary
+    0.0f,  // Tertiary
+    0.0f,  // Unclassified
+    0.0f,  // Residential
+    0.0f   // Service, other
 };
 
 constexpr float kSurfaceFactor[] = {
@@ -160,7 +170,8 @@ public:
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index) const;
+                       const uint32_t tz_index,
+                       bool& has_time_restrictions) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -186,7 +197,8 @@ public:
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index) const;
+                              const uint32_t tz_index,
+                              bool& has_time_restrictions) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -199,13 +211,29 @@ public:
   }
 
   /**
+   * Only transit costings are valid for this method call, hence we throw
+   * @param edge
+   * @param departure
+   * @param curr_time
+   * @return
+   */
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::TransitDeparture* departure,
+                        const uint32_t curr_time) const {
+    throw std::runtime_error("AutoCost::EdgeCost does not support transit edges");
+  }
+
+  /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
-   * @param   edge  Pointer to a directed edge.
-   * @param   speed A speed for a road segment/edge.
+   * @param   edge    Pointer to a directed edge.
+   * @param   tile    Graph tile.
+   * @param   seconds Time of week in seconds.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphTile* tile,
+                        const uint32_t seconds) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -214,13 +242,11 @@ public:
    * @param  edge  Directed edge (the to edge)
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  Predecessor edge information.
-   * @param  has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred,
-                              const bool has_traffic = false) const;
+                              const EdgeLabel& pred) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -229,14 +255,12 @@ public:
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  the opposing current edge in the reverse tree.
    * @param  edge  the opposing predecessor in the reverse tree
-   * @param  has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge,
-                                     const bool has_traffic = false) const;
+                                     const baldr::DirectedEdge* edge) const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -247,7 +271,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const {
-    return speedfactor_[kMaxSpeedKph];
+    return speedfactor_[kMaxAssumedSpeed];
   }
 
   /**
@@ -291,9 +315,10 @@ public:
   // We expose it within the source file for testing purposes
 public:
   VehicleType type_; // Vehicle type: car (default), motorcycle, etc
-  float speedfactor_[kMaxSpeedKph + 1];
+  std::vector<float> speedfactor_;
   float density_factor_[16]; // Density factor
   float highway_factor_;     // Factor applied when road is a motorway or trunk
+  float alley_factor_;       // Avoid alleys factor.
   float toll_factor_;        // Factor applied when road has a toll
   float surface_factor_;     // How much the surface factors are applied.
 
@@ -314,7 +339,7 @@ AutoCost::AutoCost(const Costing costing, const Options& options)
   // Get the vehicle type - enter as string and convert to enum.
   // Used to set the surface factor - penalize some roads based on surface type.
   surface_factor_ = 0.5f;
-  std::string type = costing_options.transport_type();
+  const std::string& type = costing_options.transport_type();
   if (type == "motorcycle") {
     type_ = VehicleType::kMotorcycle;
     surface_factor_ = 1.0f;
@@ -332,6 +357,9 @@ AutoCost::AutoCost(const Costing costing, const Options& options)
   // Get the base transition costs
   get_base_costs(costing_options);
 
+  // Get alley factor from costing options.
+  alley_factor_ = costing_options.alley_factor();
+
   // Preference to use highways. Is a value from 0 to 1
   float use_highways_ = costing_options.use_highways();
   highway_factor_ = 1.0f - use_highways_;
@@ -341,10 +369,11 @@ AutoCost::AutoCost(const Costing costing, const Options& options)
   // use_tolls = 1 would reduce weighting slightly (a negative delta) while
   // use_tolls = 0 would penalize (positive delta to weighting factor).
   float use_tolls = costing_options.use_tolls();
-  toll_factor_ = use_tolls < 0.5f ? (2.0f - 4 * use_tolls) : // ranges from 2 to 0
+  toll_factor_ = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) : // ranges from 4 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
 
   // Create speed cost table
+  speedfactor_.resize(kMaxSpeedKph + 1, 0);
   speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
@@ -362,7 +391,13 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index) const {
+                       const uint32_t tz_index,
+                       bool& has_time_restrictions) const {
+
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(edgeid))
+      return false;
+  }
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes in case the origin is inside
   // a not thru region and a heading selected an edge entering the
@@ -375,24 +410,8 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  if (edge->access_restriction()) {
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(edgeid.id(), kAutoAccess);
-    for (const auto& restriction : restrictions) {
-      if (restriction.type() == AccessType::kTimedAllowed) {
-        // allowed at this range or allowed all the time
-        return (current_time && restriction.value())
-                   ? IsRestricted(restriction.value(), current_time, tz_index)
-                   : true;
-      } else if (restriction.type() == AccessType::kTimedDenied) {
-        // not allowed at this range or restricted all the time
-        return (current_time && restriction.value())
-                   ? !IsRestricted(restriction.value(), current_time, tz_index)
-                   : false;
-      }
-    }
-  }
-  return true;
+  return DynamicCost::EvaluateRestrictions(kAutoAccess, edge, tile, edgeid, current_time, tz_index,
+                                           has_time_restrictions);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -403,7 +422,12 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index) const {
+                              const uint32_t tz_index,
+                              bool& has_time_restrictions) const {
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(opp_edgeid))
+      return false;
+  }
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kAutoAccess) ||
@@ -414,28 +438,15 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  if (edge->access_restriction()) {
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(opp_edgeid.id(), kAutoAccess);
-    for (const auto& restriction : restrictions) {
-      if (restriction.type() == AccessType::kTimedAllowed) {
-        // allowed at this range or allowed all the time
-        return (current_time && restriction.value())
-                   ? IsRestricted(restriction.value(), current_time, tz_index)
-                   : true;
-      } else if (restriction.type() == AccessType::kTimedDenied) {
-        // not allowed at this range or restricted all the time
-        return (current_time && restriction.value())
-                   ? !IsRestricted(restriction.value(), current_time, tz_index)
-                   : false;
-      }
-    }
-  }
-  return true;
+  return DynamicCost::EvaluateRestrictions(kAutoAccess, edge, tile, opp_edgeid, current_time,
+                                           tz_index, has_time_restrictions);
 }
 
 // Get the cost to traverse the edge in seconds
-Cost AutoCost::EdgeCost(const DirectedEdge* edge, const uint32_t speed) const {
+Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphTile* tile,
+                        const uint32_t seconds) const {
+  auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
   float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
 
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
@@ -444,6 +455,11 @@ Cost AutoCost::EdgeCost(const DirectedEdge* edge, const uint32_t speed) const {
     factor += toll_factor_;
   }
 
+  if (edge->use() == Use::kAlley) {
+    factor *= alley_factor_;
+  }
+
+  assert(speed < speedfactor_.size());
   float sec = (edge->length() * speedfactor_[speed]);
   return Cost(sec * factor, sec);
 }
@@ -451,8 +467,7 @@ Cost AutoCost::EdgeCost(const DirectedEdge* edge, const uint32_t speed) const {
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred,
-                              const bool has_traffic) const {
+                              const EdgeLabel& pred) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
@@ -470,16 +485,23 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
 
+    if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
+        (edge->use() == Use::kRamp && pred.use() != Use::kRamp)) {
+      turn_cost += 1.5f;
+      if (edge->roundabout())
+        turn_cost += 0.5f;
+    }
+
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
-    if (has_traffic) {
-      c.cost += turn_cost * edge->stopimpact(idx);
-    } else {
-      float seconds = trans_density_factor_[node->density()] * turn_cost * edge->stopimpact(idx);
-      c.cost += seconds;
-      c.secs += seconds;
-    }
+    float seconds = turn_cost * edge->stopimpact(idx);
+    // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
+    if (!edge->has_flow_speed() || flow_mask_ == 0)
+      seconds *= trans_density_factor_[node->density()];
+
+    c.cost += seconds;
+    c.secs += seconds;
   }
   return c;
 }
@@ -491,8 +513,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost AutoCost::TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge,
-                                     const bool has_traffic) const {
+                                     const baldr::DirectedEdge* edge) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
@@ -507,7 +528,22 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
     }
-    float seconds = trans_density_factor_[node->density()] * edge->stopimpact(idx) * turn_cost;
+
+    if ((edge->use() != Use::kRamp && pred->use() == Use::kRamp) ||
+        (edge->use() == Use::kRamp && pred->use() != Use::kRamp)) {
+      turn_cost += 1.5f;
+      if (edge->roundabout())
+        turn_cost += 0.5f;
+    }
+
+    // Separate time and penalty when traffic is present. With traffic, edge speeds account for
+    // much of the intersection transition time (TODO - evaluate different elapsed time settings).
+    // Still want to add a penalty so routes avoid high cost intersections.
+    float seconds = turn_cost * edge->stopimpact(idx);
+    // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
+    if (!edge->has_flow_speed() || flow_mask_ == 0)
+      seconds *= trans_density_factor_[node->density()];
+
     c.secs += seconds;
     c.cost += seconds;
   }
@@ -520,6 +556,9 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
+    // TODO: farm more common stuff out to parent class
+    ParseCostOptions(*json_costing_options, pbf_costing_options);
+
     // If specified, parse json and set pbf values
 
     // type (transport_type)
@@ -535,6 +574,11 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_destination_only_penalty(kDestinationOnlyPenaltyRange(
         rapidjson::get_optional<float>(*json_costing_options, "/destination_only_penalty")
             .get_value_or(kDefaultDestinationOnlyPenalty)));
+
+    // alley_factor
+    pbf_costing_options->set_alley_factor(
+        kAlleyFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_factor")
+                              .get_value_or(kDefaultAlleyFactor)));
 
     // gate_cost
     pbf_costing_options->set_gate_cost(
@@ -590,12 +634,12 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(
         kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
                            .get_value_or(kDefaultUseTolls)));
-
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_transport_type("car");
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
     pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
+    pbf_costing_options->set_alley_factor(kDefaultAlleyFactor);
     pbf_costing_options->set_gate_cost(kDefaultGateCost);
     pbf_costing_options->set_gate_penalty(kDefaultGatePenalty);
     pbf_costing_options->set_toll_booth_cost(kDefaultTollBoothCost);
@@ -607,6 +651,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_ferry(kDefaultUseFerry);
     pbf_costing_options->set_use_highways(kDefaultUseHighways);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
+    pbf_costing_options->set_flow_mask(kDefaultFlowMask);
   }
 }
 
@@ -640,11 +685,15 @@ public:
   /**
    * Returns the cost to traverse the edge and an estimate of the actual time
    * (in seconds) to traverse the edge.
-   * @param  edge     Pointer to a directed edge.
-   * @param  speed    A speed for a road segment/edge.
+   * @param  edge      Pointer to a directed edge.
+   * @param  tile      Current tile.
+   * @param  seconds   Time of week in seconds.
    * @return  Returns the cost to traverse the edge.
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const {
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphTile* tile,
+                        const uint32_t seconds) const {
+    auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : 1.0f;
     return Cost(edge->length() * adjspeedfactor_[speed] * factor,
                 edge->length() * speedfactor_[speed]);
@@ -722,7 +771,8 @@ public:
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index) const;
+                       const uint32_t tz_index,
+                       bool& has_time_restrictions) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -748,7 +798,8 @@ public:
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index) const;
+                              const uint32_t tz_index,
+                              bool& has_time_restrictions) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -796,7 +847,12 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
                       const baldr::GraphTile*& tile,
                       const baldr::GraphId& edgeid,
                       const uint64_t current_time,
-                      const uint32_t tz_index) const {
+                      const uint32_t tz_index,
+                      bool& has_time_restrictions) const {
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(edgeid))
+      return false;
+  }
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -809,24 +865,8 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  if (edge->access_restriction()) {
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(edgeid.id(), kBusAccess);
-    for (const auto& restriction : restrictions) {
-      if (restriction.type() == AccessType::kTimedAllowed) {
-        // allowed at this range or allowed all the time
-        return (current_time && restriction.value())
-                   ? IsRestricted(restriction.value(), current_time, tz_index)
-                   : true;
-      } else if (restriction.type() == AccessType::kTimedDenied) {
-        // not allowed at this range or restricted all the time
-        return (current_time && restriction.value())
-                   ? !IsRestricted(restriction.value(), current_time, tz_index)
-                   : false;
-      }
-    }
-  }
-  return true;
+  return DynamicCost::EvaluateRestrictions(kBusAccess, edge, tile, edgeid, current_time, tz_index,
+                                           has_time_restrictions);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -837,7 +877,12 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const baldr::GraphTile*& tile,
                              const baldr::GraphId& opp_edgeid,
                              const uint64_t current_time,
-                             const uint32_t tz_index) const {
+                             const uint32_t tz_index,
+                             bool& has_time_restrictions) const {
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(opp_edgeid))
+      return false;
+  }
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kBusAccess) ||
@@ -848,25 +893,8 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  if (edge->access_restriction()) {
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(opp_edgeid.id(), kBusAccess);
-    for (const auto& restriction : restrictions) {
-      if (restriction.type() == AccessType::kTimedAllowed) {
-        // allowed at this range or allowed all the time
-        return (current_time && restriction.value())
-                   ? IsRestricted(restriction.value(), current_time, tz_index)
-                   : true;
-      } else if (restriction.type() == AccessType::kTimedDenied) {
-        // not allowed at this range or restricted all the time
-        return (current_time && restriction.value())
-                   ? !IsRestricted(restriction.value(), current_time, tz_index)
-                   : false;
-      }
-    }
-  }
-
-  return true;
+  return DynamicCost::EvaluateRestrictions(kBusAccess, edge, tile, opp_edgeid, current_time, tz_index,
+                                           has_time_restrictions);
 }
 
 void ParseBusCostOptions(const rapidjson::Document& doc,
@@ -924,7 +952,8 @@ public:
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index) const;
+                       const uint32_t tz_index,
+                       bool& has_time_restrictions) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -949,16 +978,21 @@ public:
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index) const;
+                              const uint32_t tz_index,
+                              bool& has_time_restrictions) const;
 
   /**
    * Returns the cost to traverse the edge and an estimate of the actual time
    * (in seconds) to traverse the edge.
-   * @param  edge     Pointer to a directed edge.
-   * @param  speed    A speed for a road segment/edge.
+   * @param  edge      Pointer to a directed edge.
+   * @param  tile      Current tile.
+   * @param  seconds   Time of week in seconds.
    * @return  Returns the cost to traverse the edge.
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const {
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphTile* tile,
+                        const uint32_t seconds) const {
+    auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
     if ((edge->forwardaccess() & kHOVAccess) && !(edge->forwardaccess() & kAutoAccess)) {
       factor *= kHOVFactor;
@@ -1013,7 +1047,12 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
                       const baldr::GraphTile*& tile,
                       const baldr::GraphId& edgeid,
                       const uint64_t current_time,
-                      const uint32_t tz_index) const {
+                      const uint32_t tz_index,
+                      bool& has_time_restrictions) const {
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(edgeid))
+      return false;
+  }
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -1027,24 +1066,9 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
-  if (edge->access_restriction()) {
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(edgeid.id(), kHOVAccess);
-    for (const auto& restriction : restrictions) {
-      if (restriction.type() == AccessType::kTimedAllowed) {
-        // allowed at this range or allowed all the time
-        return (current_time && restriction.value())
-                   ? IsRestricted(restriction.value(), current_time, tz_index)
-                   : true;
-      } else if (restriction.type() == AccessType::kTimedDenied) {
-        // not allowed at this range or restricted all the time
-        return (current_time && restriction.value())
-                   ? !IsRestricted(restriction.value(), current_time, tz_index)
-                   : false;
-      }
-    }
-  }
-  return true;
+
+  return DynamicCost::EvaluateRestrictions(kHOVAccess, edge, tile, edgeid, current_time, tz_index,
+                                           has_time_restrictions);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -1055,7 +1079,12 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const baldr::GraphTile*& tile,
                              const baldr::GraphId& opp_edgeid,
                              const uint64_t current_time,
-                             const uint32_t tz_index) const {
+                             const uint32_t tz_index,
+                             bool& has_time_restrictions) const {
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(opp_edgeid))
+      return false;
+  }
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -1068,24 +1097,8 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  if (edge->access_restriction()) {
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(opp_edgeid.id(), kHOVAccess);
-    for (const auto& restriction : restrictions) {
-      if (restriction.type() == AccessType::kTimedAllowed) {
-        // allowed at this range or allowed all the time
-        return (current_time && restriction.value())
-                   ? IsRestricted(restriction.value(), current_time, tz_index)
-                   : true;
-      } else if (restriction.type() == AccessType::kTimedDenied) {
-        // not allowed at this range or restricted all the time
-        return (current_time && restriction.value())
-                   ? !IsRestricted(restriction.value(), current_time, tz_index)
-                   : false;
-      }
-    }
-  }
-  return true;
+  return DynamicCost::EvaluateRestrictions(kHOVAccess, edge, tile, opp_edgeid, current_time, tz_index,
+                                           has_time_restrictions);
 }
 
 void ParseHOVCostOptions(const rapidjson::Document& doc,
@@ -1143,7 +1156,8 @@ public:
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index) const;
+                       const uint32_t tz_index,
+                       bool& has_time_restrictions) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -1168,16 +1182,21 @@ public:
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index) const;
+                              const uint32_t tz_index,
+                              bool& has_time_restrictions) const;
 
   /**
    * Returns the cost to traverse the edge and an estimate of the actual time
    * (in seconds) to traverse the edge.
-   * @param  edge     Pointer to a directed edge.
-   * @param  speed    A speed for a road segment/edge.
+   * @param  edge      Pointer to a directed edge.
+   * @param  tile      Current tile.
+   * @param  seconds   Time of week in seconds.
    * @return  Returns the cost to traverse the edge.
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const {
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphTile* tile,
+                        const uint32_t seconds) const {
+    auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
     if ((edge->forwardaccess() & kTaxiAccess) && !(edge->forwardaccess() & kAutoAccess)) {
       factor *= kTaxiFactor;
@@ -1232,7 +1251,12 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index) const {
+                       const uint32_t tz_index,
+                       bool& has_time_restrictions) const {
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(edgeid))
+      return false;
+  }
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -1246,24 +1270,9 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
-  if (edge->access_restriction()) {
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(edgeid.id(), kTaxiAccess);
-    for (const auto& restriction : restrictions) {
-      if (restriction.type() == AccessType::kTimedAllowed) {
-        // allowed at this range or allowed all the time
-        return (current_time && restriction.value())
-                   ? IsRestricted(restriction.value(), current_time, tz_index)
-                   : true;
-      } else if (restriction.type() == AccessType::kTimedDenied) {
-        // not allowed at this range or restricted all the time
-        return (current_time && restriction.value())
-                   ? !IsRestricted(restriction.value(), current_time, tz_index)
-                   : false;
-      }
-    }
-  }
-  return true;
+
+  return DynamicCost::EvaluateRestrictions(kTaxiAccess, edge, tile, edgeid, current_time, tz_index,
+                                           has_time_restrictions);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -1274,7 +1283,12 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index) const {
+                              const uint32_t tz_index,
+                              bool& has_time_restrictions) const {
+  if (flow_mask_ & kCurrentFlowMask) {
+    if (tile->IsClosedDueToTraffic(opp_edgeid))
+      return false;
+  }
   // TODO - obtain and check the access restrictions.
 
   // Check access, U-turn, and simple turn restriction.
@@ -1286,25 +1300,8 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
   }
-
-  if (edge->access_restriction()) {
-    const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(opp_edgeid.id(), kTaxiAccess);
-    for (const auto& restriction : restrictions) {
-      if (restriction.type() == AccessType::kTimedAllowed) {
-        // allowed at this range or allowed all the time
-        return (current_time && restriction.value())
-                   ? IsRestricted(restriction.value(), current_time, tz_index)
-                   : true;
-      } else if (restriction.type() == AccessType::kTimedDenied) {
-        // not allowed at this range or restricted all the time
-        return (current_time && restriction.value())
-                   ? !IsRestricted(restriction.value(), current_time, tz_index)
-                   : false;
-      }
-    }
-  }
-  return true;
+  return DynamicCost::EvaluateRestrictions(kHOVAccess, edge, tile, opp_edgeid, current_time, tz_index,
+                                           has_time_restrictions);
 }
 
 void ParseTaxiCostOptions(const rapidjson::Document& doc,
@@ -1355,7 +1352,11 @@ public:
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index) const {
+                       const uint32_t tz_index,
+                       bool& has_time_restrictions) const {
+
+    // Note: this profile ignores closures in live traffic, so that check is not
+    //       present, unlike other Allowed() implementations
     // Check access and return false (not allowed if no auto access is allowed in either
     // direction. Also disallow simple U-turns except at dead-end nodes.
     if (!((edge->forwardaccess() & kAutoAccess) || (edge->reverseaccess() & kAutoAccess)) ||
@@ -1417,151 +1418,189 @@ public:
   using AutoCost::country_crossing_cost_;
   using AutoCost::destination_only_penalty_;
   using AutoCost::ferry_transition_cost_;
+  using AutoCost::flow_mask_;
   using AutoCost::gate_cost_;
   using AutoCost::maneuver_penalty_;
   using AutoCost::toll_booth_cost_;
 };
 
-TestAutoCost* make_autocost_from_json(const std::string& property, float testVal) {
+template <class T>
+std::shared_ptr<TestAutoCost>
+make_autocost_from_json(const std::string& property, T testVal, const std::string& extra_json = "") {
   std::stringstream ss;
-  ss << R"({"costing_options":{"auto":{")" << property << R"(":)" << testVal << "}}}";
+  ss << R"({"costing_options":{"auto":{")" << property << R"(":)" << testVal << "}}" << extra_json
+     << "}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestAutoCost(valhalla::Costing::auto_, request.options());
+  return std::make_shared<TestAutoCost>(valhalla::Costing::auto_, request.options());
 }
 
-std::uniform_real_distribution<float>*
+std::uniform_real_distribution<float>
 make_distributor_from_range(const ranged_default_t<float>& range) {
   float rangeLength = range.max - range.min;
-  return new std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
+  return std::uniform_real_distribution<float>(range.min - rangeLength, range.max + rangeLength);
 }
 
-void testAutoCostParams() {
+TEST(AutoCost, testAutoCostParams) {
   constexpr unsigned testIterations = 250;
   constexpr unsigned seed = 0;
   std::mt19937 generator(seed);
-  std::shared_ptr<std::uniform_real_distribution<float>> distributor;
-  std::shared_ptr<TestAutoCost> ctorTester;
+  std::uniform_real_distribution<float> distributor;
+  std::shared_ptr<TestAutoCost> tester;
 
   // maneuver_penalty_
-  distributor.reset(make_distributor_from_range(kManeuverPenaltyRange));
+  distributor = make_distributor_from_range(kManeuverPenaltyRange);
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_autocost_from_json("maneuver_penalty", (*distributor)(generator)));
-    if (ctorTester->maneuver_penalty_ < kManeuverPenaltyRange.min ||
-        ctorTester->maneuver_penalty_ > kManeuverPenaltyRange.max) {
-      throw std::runtime_error("maneuver_penalty_ is not within it's range");
-    }
+    tester = make_autocost_from_json("maneuver_penalty", distributor(generator));
+    EXPECT_THAT(tester->maneuver_penalty_,
+                test::IsBetween(kManeuverPenaltyRange.min, kManeuverPenaltyRange.max));
   }
 
   // alley_penalty_
-  distributor.reset(make_distributor_from_range(kAlleyPenaltyRange));
+  distributor = make_distributor_from_range(kAlleyPenaltyRange);
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_autocost_from_json("alley_penalty", (*distributor)(generator)));
-    if (ctorTester->alley_penalty_ < kAlleyPenaltyRange.min ||
-        ctorTester->alley_penalty_ > kAlleyPenaltyRange.max) {
-      throw std::runtime_error("alley_penalty_ is not within it's range");
-    }
+    tester = make_autocost_from_json("alley_penalty", distributor(generator));
+    EXPECT_THAT(tester->alley_penalty_,
+                test::IsBetween(kAlleyPenaltyRange.min, kAlleyPenaltyRange.max));
+  }
+
+  // alley_factor_
+  distributor = make_distributor_from_range(kAlleyFactorRange);
+  for (unsigned i = 0; i < testIterations; ++i) {
+    tester = make_autocost_from_json("alley_factor", distributor(generator));
+    EXPECT_THAT(tester->alley_factor_, test::IsBetween(kAlleyFactorRange.min, kAlleyFactorRange.max));
   }
 
   // destination_only_penalty_
-  distributor.reset(make_distributor_from_range(kDestinationOnlyPenaltyRange));
+  distributor = make_distributor_from_range(kDestinationOnlyPenaltyRange);
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_autocost_from_json("destination_only_penalty", (*distributor)(generator)));
-    if (ctorTester->destination_only_penalty_ < kDestinationOnlyPenaltyRange.min ||
-        ctorTester->destination_only_penalty_ > kDestinationOnlyPenaltyRange.max) {
-      throw std::runtime_error("destination_only_penalty_ is not within it's range");
-    }
+    tester = make_autocost_from_json("destination_only_penalty", distributor(generator));
+    EXPECT_THAT(tester->destination_only_penalty_,
+                test::IsBetween(kDestinationOnlyPenaltyRange.min, kDestinationOnlyPenaltyRange.max));
   }
 
   // gate_cost_ (Cost.secs)
-  distributor.reset(make_distributor_from_range(kGateCostRange));
+  distributor = make_distributor_from_range(kGateCostRange);
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_autocost_from_json("gate_cost", (*distributor)(generator)));
-    if (ctorTester->gate_cost_.secs < kGateCostRange.min ||
-        ctorTester->gate_cost_.secs > kGateCostRange.max) {
-      throw std::runtime_error("gate_cost_ is not within it's range");
-    }
+    tester = make_autocost_from_json("gate_cost", distributor(generator));
+    EXPECT_THAT(tester->gate_cost_.secs, test::IsBetween(kGateCostRange.min, kGateCostRange.max));
   }
 
   // gate_penalty_ (Cost.cost)
-  distributor.reset(make_distributor_from_range(kGatePenaltyRange));
+  distributor = make_distributor_from_range(kGatePenaltyRange);
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_autocost_from_json("gate_penalty", (*distributor)(generator)));
-    if (ctorTester->gate_cost_.cost < kGatePenaltyRange.min ||
-        ctorTester->gate_cost_.cost > kGatePenaltyRange.max + kDefaultGateCost) {
-      throw std::runtime_error("gate_penalty_ is not within it's range");
-    }
+    tester = make_autocost_from_json("gate_penalty", distributor(generator));
+    EXPECT_THAT(tester->gate_cost_.cost,
+                test::IsBetween(kGatePenaltyRange.min, kGatePenaltyRange.max + kDefaultGateCost));
   }
 
   // tollbooth_cost_ (Cost.secs)
-  distributor.reset(make_distributor_from_range(kTollBoothCostRange));
+  distributor = make_distributor_from_range(kTollBoothCostRange);
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_autocost_from_json("toll_booth_cost", (*distributor)(generator)));
-    if (ctorTester->toll_booth_cost_.secs < kTollBoothCostRange.min ||
-        ctorTester->toll_booth_cost_.secs > kTollBoothCostRange.max) {
-      throw std::runtime_error("tollbooth_cost_ is not within it's range");
-    }
+    tester = make_autocost_from_json("toll_booth_cost", distributor(generator));
+    EXPECT_THAT(tester->toll_booth_cost_.secs,
+                test::IsBetween(kTollBoothCostRange.min, kTollBoothCostRange.max));
   }
 
   // tollbooth_penalty_ (Cost.cost)
-  distributor.reset(make_distributor_from_range(kTollBoothPenaltyRange));
+  distributor = make_distributor_from_range(kTollBoothPenaltyRange);
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_autocost_from_json("toll_booth_penalty", (*distributor)(generator)));
-    if (ctorTester->toll_booth_cost_.cost < kTollBoothPenaltyRange.min ||
-        ctorTester->toll_booth_cost_.cost > kTollBoothPenaltyRange.max + kDefaultTollBoothCost) {
-      throw std::runtime_error("tollbooth_penalty_ is not within it's range");
-    }
+    tester = make_autocost_from_json("toll_booth_penalty", distributor(generator));
+    EXPECT_THAT(tester->toll_booth_cost_.cost,
+                test::IsBetween(kTollBoothPenaltyRange.min,
+                                kTollBoothPenaltyRange.max + kDefaultTollBoothCost));
   }
 
   // country_crossing_cost_ (Cost.secs)
-  distributor.reset(make_distributor_from_range(kCountryCrossingCostRange));
+  distributor = make_distributor_from_range(kCountryCrossingCostRange);
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_autocost_from_json("country_crossing_cost", (*distributor)(generator)));
-    if (ctorTester->country_crossing_cost_.secs < kCountryCrossingCostRange.min ||
-        ctorTester->country_crossing_cost_.secs > kCountryCrossingCostRange.max) {
-      throw std::runtime_error("country_crossing_cost_ is not within it's range");
-    }
+    tester = make_autocost_from_json("country_crossing_cost", distributor(generator));
+    EXPECT_THAT(tester->country_crossing_cost_.secs,
+                test::IsBetween(kCountryCrossingCostRange.min, kCountryCrossingCostRange.max));
   }
 
   // country_crossing_penalty_ (Cost.cost)
-  distributor.reset(make_distributor_from_range(kCountryCrossingPenaltyRange));
+  distributor = make_distributor_from_range(kCountryCrossingPenaltyRange);
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_autocost_from_json("country_crossing_penalty", (*distributor)(generator)));
-    if (ctorTester->country_crossing_cost_.cost < kCountryCrossingPenaltyRange.min ||
-        ctorTester->country_crossing_cost_.cost >
-            kCountryCrossingPenaltyRange.max + kDefaultCountryCrossingCost) {
-      throw std::runtime_error("country_crossing_penalty_ is not within it's range");
-    }
+    tester = make_autocost_from_json("country_crossing_penalty", distributor(generator));
+    EXPECT_THAT(tester->country_crossing_cost_.cost,
+                test::IsBetween(kCountryCrossingPenaltyRange.min,
+                                kCountryCrossingPenaltyRange.max + kDefaultCountryCrossingCost));
   }
 
   // ferry_cost_ (Cost.secs)
-  distributor.reset(make_distributor_from_range(kFerryCostRange));
+  distributor = make_distributor_from_range(kFerryCostRange);
   for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_autocost_from_json("ferry_cost", (*distributor)(generator)));
-    if (ctorTester->ferry_transition_cost_.secs < kFerryCostRange.min ||
-        ctorTester->ferry_transition_cost_.secs > kFerryCostRange.max) {
-      throw std::runtime_error("ferry_cost_ is not within it's range");
-    }
+    tester = make_autocost_from_json("ferry_cost", distributor(generator));
+    EXPECT_THAT(tester->ferry_transition_cost_.secs,
+                test::IsBetween(kFerryCostRange.min, kFerryCostRange.max));
   }
+
   /**
    // use_ferry
-   distributor.reset(make_distributor_from_range(kUseFerryRange));
+   distributor = make_distributor_from_range(kUseFerryRange);
    for (unsigned i = 0; i < testIterations; ++i) {
-     ctorTester.reset(make_autocost_from_json("use_ferry", (*distributor)(generator)));
-     if (ctorTester->use_ferry < kUseFerryRange.min || ctorTester->use_ferry > kUseFerryRange.max) {
-       throw std::runtime_error("use_ferry is not within it's range");
-     }
+     tester = make_autocost_from_json("use_ferry", distributor(generator));
+     EXPECT_THAT(tester->use_ferry, test::IsBetween(
+       kUseFerryRange.min, kUseFerryRange.max));
    }
  **/
+
+  // flow_mask_
+  using tc = std::tuple<std::string, std::string, uint8_t>;
+  std::vector<tc>
+      speed_type_test_cases{tc{"", R"(,"date_time":{"type":0})", kDefaultFlowMask},
+                            tc{R"("")", R"(,"date_time":{"type":0})", kDefaultFlowMask},
+                            tc{"[]", R"(,"date_time":{"type":0})", 0},
+                            tc{R"(["foo"])", R"(,"date_time":{"type":0})", 0},
+                            tc{R"(["freeflow"])", R"(,"date_time":{"type":0})", kFreeFlowMask},
+                            tc{R"(["constrained"])", R"(,"date_time":{"type":0})",
+                               kConstrainedFlowMask},
+                            tc{R"(["predicted"])", R"(,"date_time":{"type":0})", kPredictedFlowMask},
+                            tc{R"(["current"])", R"(,"date_time":{"type":0})", kCurrentFlowMask},
+                            tc{R"(["freeflow","current","predicted"])", R"(,"date_time":{"type":0})",
+                               kFreeFlowMask | kCurrentFlowMask | kPredictedFlowMask},
+                            tc{R"(["freeflow","constrained","predicted","current"])",
+                               R"(,"date_time":{"type":0})", kDefaultFlowMask},
+                            tc{R"(["constrained","foo","predicted","freeflow"])",
+                               R"(,"date_time":{"type":0})",
+                               kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask},
+
+                            tc{"", "", kFreeFlowMask | kConstrainedFlowMask},
+                            tc{R"("")", "", kFreeFlowMask | kConstrainedFlowMask},
+                            tc{"[]", "", 0},
+                            tc{R"(["foo"])", "", 0},
+                            tc{R"(["freeflow"])", "", kFreeFlowMask},
+                            tc{R"(["constrained"])", "", kConstrainedFlowMask},
+                            tc{R"(["predicted"])", "", 0},
+                            tc{R"(["current"])", "", 0},
+                            tc{R"(["freeflow","current","predicted"])", "", kFreeFlowMask},
+                            tc{R"(["constrained","current","predicted"])", "", kConstrainedFlowMask},
+                            tc{R"(["freeflow","constrained","predicted","current"])", "",
+                               kFreeFlowMask | kConstrainedFlowMask},
+                            tc{R"(["constrained","foo","predicted","freeflow"])", "",
+                               kFreeFlowMask | kConstrainedFlowMask}};
+
+  for (size_t i = 0; i < speed_type_test_cases.size(); ++i) {
+    auto value = std::get<0>(speed_type_test_cases[i]);
+    auto extra_json = std::get<1>(speed_type_test_cases[i]);
+    auto expected = std::get<2>(speed_type_test_cases[i]);
+
+    std::string key("speed_types");
+    if (value.empty()) {
+      key = "foo";
+      value = R"("bar")";
+    }
+
+    tester = make_autocost_from_json(key, value, extra_json);
+    EXPECT_EQ(tester->flow_mask_, expected);
+  }
 }
 } // namespace
 
-int main() {
-  test::suite suite("costing");
-
-  suite.test(TEST_CASE(testAutoCostParams));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
 
 #endif

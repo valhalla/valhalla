@@ -30,11 +30,12 @@ public:
   enum SideOfStreet { NONE = 0, LEFT, RIGHT };
   struct PathEdge {
     PathEdge(const GraphId& id,
-             const float dist,
+             const float percent_along,
              const midgard::PointLL& projected,
              const float score,
              const SideOfStreet sos = NONE,
-             const unsigned int minimum_reachability = 0);
+             const unsigned int outbound_reach = 0,
+             const unsigned int inbound_reach = 0);
     // the directed edge it appears on
     GraphId id;
     // how far along the edge it is (as a percentage  from 0 - 1)
@@ -51,9 +52,10 @@ public:
     // a measure of how close the result is to the original input where the
     // lower the score the better the match, maybe there's a better word for this?
     float distance;
-    // minimum number of edges reachable from this edge, this is a lower limit
-    // it could be reachable from many many more edges than are reported here
-    unsigned int minimum_reachability;
+    // minimum number of nodes reachable from this edge
+    unsigned int outbound_reach;
+    // minimum number of nodes that can reach this edge
+    unsigned int inbound_reach;
   };
 
   // list of edges this location appears on within the graph
@@ -122,16 +124,23 @@ public:
     if (pl.way_id_) {
       l->set_way_id(*pl.way_id_);
     }
-    l->set_minimum_reachability(pl.minimum_reachability_);
+    l->set_minimum_reachability(std::max(pl.min_outbound_reach_, pl.min_inbound_reach_));
     l->set_radius(pl.radius_);
     l->set_search_cutoff(pl.radius_ > pl.search_cutoff_ ? pl.radius_ : pl.search_cutoff_);
     l->set_street_side_tolerance(pl.street_side_tolerance_);
+    l->mutable_search_filter()->set_min_road_class(pl.search_filter_.min_road_class_);
+    l->mutable_search_filter()->set_max_road_class(pl.search_filter_.max_road_class_);
+    l->mutable_search_filter()->set_exclude_tunnel(pl.search_filter_.exclude_tunnel_);
+    l->mutable_search_filter()->set_exclude_bridge(pl.search_filter_.exclude_bridge_);
+    l->mutable_search_filter()->set_exclude_ramp(pl.search_filter_.exclude_ramp_);
 
     auto* path_edges = l->mutable_path_edges();
     for (const auto& e : pl.edges) {
       auto* edge = path_edges->Add();
       edge->set_graph_id(e.id);
       edge->set_percent_along(e.percent_along);
+      edge->set_begin_node(e.percent_along == 0.0f);
+      edge->set_end_node(e.percent_along == 1.0f);
       edge->mutable_ll()->set_lng(e.projected.first);
       edge->mutable_ll()->set_lat(e.projected.second);
       edge->set_side_of_street(e.sos == PathLocation::LEFT
@@ -139,7 +148,8 @@ public:
                                    : (e.sos == PathLocation::RIGHT ? valhalla::Location::kRight
                                                                    : valhalla::Location::kNone));
       edge->set_distance(e.distance);
-      edge->set_minimum_reachability(e.minimum_reachability);
+      edge->set_outbound_reach(e.outbound_reach);
+      edge->set_inbound_reach(e.inbound_reach);
       for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
         edge->mutable_names()->Add()->assign(n);
       }
@@ -157,7 +167,8 @@ public:
                                    : (e.sos == PathLocation::RIGHT ? valhalla::Location::kRight
                                                                    : valhalla::Location::kNone));
       edge->set_distance(e.distance);
-      edge->set_minimum_reachability(e.minimum_reachability);
+      edge->set_outbound_reach(e.outbound_reach);
+      edge->set_inbound_reach(e.inbound_reach);
       for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
         edge->mutable_names()->Add()->assign(n);
       }
@@ -177,8 +188,10 @@ public:
       side = PreferredSide::SAME;
     else if (loc.preferred_side() == valhalla::Location::opposite)
       side = PreferredSide::OPPOSITE;
-    Location l({loc.ll().lng(), loc.ll().lat()}, stop_type, loc.minimum_reachability(), loc.radius(),
-               side);
+
+    SearchFilter search_filter = SearchFilter();
+    Location l({loc.ll().lng(), loc.ll().lat()}, stop_type, loc.minimum_reachability(),
+               loc.minimum_reachability(), loc.radius(), side, search_filter);
 
     if (loc.has_name()) {
       l.name_ = loc.name();
@@ -219,14 +232,37 @@ public:
     if (loc.has_street_side_tolerance()) {
       l.street_side_tolerance_ = loc.street_side_tolerance();
     }
+    if (loc.has_search_filter()) {
+      l.search_filter_.min_road_class_ = loc.search_filter().min_road_class();
+      l.search_filter_.max_road_class_ = loc.search_filter().max_road_class();
+      l.search_filter_.exclude_tunnel_ = loc.search_filter().exclude_tunnel();
+      l.search_filter_.exclude_bridge_ = loc.search_filter().exclude_bridge();
+      l.search_filter_.exclude_ramp_ = loc.search_filter().exclude_ramp();
+    }
     return l;
   }
 
+  /**
+   * Converts a list of pbf locations into a vector of custom class because loki hasnt moved to pbf
+   * yet
+   * @param locations
+   * @param route_reach   whether or not we should treat reach differently for the first and last
+   * locations
+   * @return
+   */
   static std::vector<Location>
-  fromPBF(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
+  fromPBF(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+          bool route_reach = false) {
     std::vector<Location> pls;
     for (const auto& l : locations) {
       pls.emplace_back(fromPBF(l));
+    }
+    // for regular routing we dont really care about inbound reach for the origin or outbound reach
+    // for the destination so we remove that requirement
+    if (route_reach && pls.size() > 1) {
+      // TODO Why only set min_reach for front/back? For routing, `pls` is only ever just size 2?
+      pls.front().min_inbound_reach_ = 0;
+      pls.back().min_outbound_reach_ = 0;
     }
     return pls;
   }

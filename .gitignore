@@ -32,6 +32,7 @@ valhalla_fetch_transit
 valhalla_pack_elevation
 genfiles/
 locales/*.UTF-8
+!locales/merge-en.sh
 py-compile
 *.la
 *.o
@@ -56,6 +57,7 @@ scripts/gdal-2.0.0.tar.gz
 /*build*/
 /CMakeSettings.json
 /.idea
+/.tidytmp
 
 # nodejs
 node_modules

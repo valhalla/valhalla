@@ -1,6 +1,7 @@
 coverage:
 
   ignore:
-    - rapidjson/.*
+    - third_party/.*
+    - bench/.*
 
 comment: off

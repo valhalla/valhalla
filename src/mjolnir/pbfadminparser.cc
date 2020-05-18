@@ -21,8 +21,10 @@ using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace {
-// Will throw an error if this is exceeded. Then we can increase.
-constexpr uint64_t kMaxOSMNodeId = 5500000000;
+// This value controls the initial size of the Id table. If this is exceeded
+// the table will be resized and a warning is generated (indicating we should
+// increase this value).
+constexpr uint64_t kMaxOSMNodeId = 10000000000;
 
 // Node equality
 const auto WayNodeEquals = [](const OSMWayNode& a, const OSMWayNode& b) {
@@ -79,7 +81,7 @@ public:
                                  const OSMPBF::Tags& tags,
                                  const std::vector<OSMPBF::Member>& members) override {
     // Get tags
-    auto results = lua_.Transform(OSMType::kRelation, tags);
+    auto results = lua_.Transform(OSMType::kRelation, osmid, tags);
     if (results.size() == 0) {
       return;
     }
@@ -96,6 +98,8 @@ public:
         admin.set_admin_level(std::stoi(tag.second));
       } else if (tag.first == "drive_on_right") {
         admin.set_drive_on_right(tag.second == "true" ? true : false);
+      } else if (tag.first == "allow_intersection_names") {
+        admin.set_allow_intersection_names(tag.second == "true" ? true : false);
       } else if (tag.first == "iso_code" && !tag.second.empty()) {
         admin.set_iso_code_index(osm_admin_data_.name_offset_map.index(tag.second));
       }

@@ -6,7 +6,6 @@
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include <algorithm>
-#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 #include <list>
 #include <set>
@@ -99,7 +98,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   // Create sign builders
   for (uint32_t i = 0; i < header_->signcount(); i++) {
     name_info.insert({signs_[i].text_offset()});
-    signs_builder_.emplace_back(signs_[i].edgeindex(), signs_[i].type(), signs_[i].is_route_num(),
+    signs_builder_.emplace_back(signs_[i].index(), signs_[i].type(), signs_[i].route_num_type(),
                                 signs_[i].text_offset());
   }
 
@@ -193,12 +192,12 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 // Output the tile to file. Stores as binary data.
 void GraphTileBuilder::StoreTileData() {
   // Get the name of the file
-  boost::filesystem::path filename(tile_dir_ + filesystem::path::preferred_separator +
-                                   GraphTile::FileSuffix(header_builder_.graphid()));
+  filesystem::path filename(tile_dir_ + filesystem::path::preferred_separator +
+                            GraphTile::FileSuffix(header_builder_.graphid()));
 
   // Make sure the directory exists on the system
-  if (!boost::filesystem::exists(filename.parent_path())) {
-    boost::filesystem::create_directories(filename.parent_path());
+  if (!filesystem::exists(filename.parent_path())) {
+    filesystem::create_directories(filename.parent_path());
   }
 
   // Open file and truncate
@@ -262,6 +261,7 @@ void GraphTileBuilder::StoreTileData() {
     header_builder_.set_transfercount(0);
 
     // Write the signs
+    std::stable_sort(signs_builder_.begin(), signs_builder_.end());
     header_builder_.set_signcount(signs_builder_.size());
     in_mem.write(reinterpret_cast<const char*>(signs_builder_.data()),
                  signs_builder_.size() * sizeof(Sign));
@@ -372,12 +372,12 @@ void GraphTileBuilder::StoreTileData() {
 void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
                               const std::vector<DirectedEdge>& directededges) {
   // Get the name of the file
-  boost::filesystem::path filename =
+  filesystem::path filename =
       tile_dir_ + filesystem::path::preferred_separator + GraphTile::FileSuffix(header_->graphid());
 
   // Make sure the directory exists on the system
-  if (!boost::filesystem::exists(filename.parent_path())) {
-    boost::filesystem::create_directories(filename.parent_path());
+  if (!filesystem::exists(filename.parent_path())) {
+    filesystem::create_directories(filename.parent_path());
   }
 
   // Open file. Truncate so we replace the contents.
@@ -949,10 +949,10 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   // rewrite the tile
-  boost::filesystem::path filename =
+  filesystem::path filename =
       tile_dir + filesystem::path::preferred_separator + GraphTile::FileSuffix(header.graphid());
-  if (!boost::filesystem::exists(filename.parent_path())) {
-    boost::filesystem::create_directories(filename.parent_path());
+  if (!filesystem::exists(filename.parent_path())) {
+    filesystem::create_directories(filename.parent_path());
   }
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   // open it
@@ -978,28 +978,27 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
 }
 
 // Add a predicted speed profile for a directed edge.
-void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx, const std::vector<int16_t>& profile) {
-  // Create the index builder on the first profile added. Resize to equal the count of
-  // directed edges
+void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx,
+                                         const std::vector<int16_t>& profile,
+                                         const size_t predicted_count_hint) {
+  if (profile.size() != kCoefficientCount)
+    throw std::runtime_error("GraphTileBuilder AddPredictedSpeed profile is not correct size: " +
+                             std::to_string(profile.size()));
+  if (idx >= header_->directededgecount())
+    throw std::runtime_error("GraphTileBuilder AddPredictedSpeed index is out of bounds");
+
+  // On the first call, create both the place to store the indices for each edge into the speed data
+  // But also preallocate space to hold the actual predicted data so the insert doesnt do reallocs
   if (speed_profile_offset_builder_.size() == 0) {
     speed_profile_offset_builder_.resize(header_->directededgecount());
+    speed_profile_builder_.reserve(predicted_count_hint * kCoefficientCount);
   }
 
-  if (idx < header_->directededgecount()) {
-    // Set the offset to the predicted speed profile for this directed edge
-    speed_profile_offset_builder_[idx] = speed_profile_builder_.size();
+  // Set the offset to the predicted speed profile for this directed edge
+  speed_profile_offset_builder_[idx] = speed_profile_builder_.size();
 
-    // Append the profile
-    if (profile.size() == kCoefficientCount) {
-      speed_profile_builder_.reserve(speed_profile_builder_.size() + kCoefficientCount);
-      speed_profile_builder_.insert(speed_profile_builder_.end(), profile.begin(), profile.end());
-    } else {
-      throw std::runtime_error("GraphTileBuilder AddPredictedSpeed profile is not correct size: " +
-                               std::to_string(profile.size()));
-    }
-  } else {
-    throw std::runtime_error("GraphTileBuilder AddPredictedSpeed index is out of bounds");
-  }
+  // Append the profile
+  speed_profile_builder_.insert(speed_profile_builder_.end(), profile.begin(), profile.end());
 }
 
 // Updates a tile with predictive speed data. Also updates directed edges with
@@ -1011,12 +1010,12 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
   // with free flow or constrained flow speeds - so don't return if no speed profiles
 
   // Get the name of the file
-  boost::filesystem::path filename = tile_dir_ + filesystem::path::preferred_separator +
-                                     GraphTile::FileSuffix(header_builder_.graphid());
+  filesystem::path filename = tile_dir_ + filesystem::path::preferred_separator +
+                              GraphTile::FileSuffix(header_builder_.graphid());
 
   // Make sure the directory exists on the system
-  if (!boost::filesystem::exists(filename.parent_path()))
-    boost::filesystem::create_directories(filename.parent_path());
+  if (!filesystem::exists(filename.parent_path()))
+    filesystem::create_directories(filename.parent_path());
 
   // Open file and truncate
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);

@@ -22,7 +22,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                                          const uint32_t localidx,
                                          const bool signal,
                                          const uint32_t restrictions,
-                                         const uint32_t bike_network)
+                                         const uint32_t bike_network,
+                                         const bool reclass_ferry)
     : DirectedEdge() {
   set_endnode(endnode);
   set_use(use);
@@ -48,9 +49,12 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
 
   set_truck_route(way.truck_route());
 
-  // Set destination only to true if either destination only or no thru traffic is set
-  set_dest_only(way.destination_only() || way.no_thru_traffic());
-
+  // Set destination only to true if the reclass_ferry is set to false and either destination only or
+  // no thru traffic is set. Adding the reclass_ferry check allows us to know if we should override
+  // the destination only attribution
+  set_dest_only(!reclass_ferry && (way.destination_only() || way.no_thru_traffic()));
+  if (reclass_ferry && (way.destination_only() || way.no_thru_traffic()))
+    LOG_DEBUG("Overriding dest_only attribution to false for ferry.");
   set_dismount(way.dismount());
   set_use_sidepath(way.use_sidepath());
   set_sac_scale(way.sac_scale());
@@ -67,7 +71,9 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_sidewalk_left(way.sidewalk_left());
   set_sidewalk_right(way.sidewalk_right());
 
-  set_speed_type(way.tagged_speed() ? SpeedType::kTagged : SpeedType::kClassified);
+  bool tagged_speed =
+      (way.tagged_speed() || way.forward_tagged_speed() || way.backward_tagged_speed());
+  set_speed_type(tagged_speed ? SpeedType::kTagged : SpeedType::kClassified);
 
   // Set forward flag and access modes (based on direction)
   set_forward(forward);

@@ -1,6 +1,6 @@
-#include "test.h"
-
 #include "baldr/transitroute.h"
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -11,101 +11,53 @@ constexpr size_t kTransitRouteExpectedSize = 40;
 
 namespace {
 
-void test_sizeof() {
-  if (sizeof(TransitRoute) != kTransitRouteExpectedSize)
-    throw std::runtime_error("TransitRoute size should be " +
-                             std::to_string(kTransitRouteExpectedSize) + " bytes" + " but is " +
-                             std::to_string(sizeof(TransitRoute)));
+TEST(TransitRoute, Sizeof) {
+  EXPECT_EQ(sizeof(TransitRoute), kTransitRouteExpectedSize);
 }
 
-void TestWriteRead() {
+TEST(TransitRoute, TestWriteRead) {
   // Test building a transit route and reading back values
   TransitType route_type = TransitType::kMetro;
   TransitRoute route(route_type, 111, 222, 333, 444, 555, 666, 777, 888, 999);
-  if (route.route_type() != route_type) {
-    throw runtime_error("TranstRoute route type failed");
-  }
-  if (route.one_stop_offset() != 111) {
-    throw runtime_error("TransitRoute one_stop_offset failed");
-  }
-  if (route.op_by_onestop_id_offset() != 222) {
-    throw runtime_error("TransitRoute op_by_onestop_id_offset failed");
-  }
-  if (route.op_by_name_offset() != 333) {
-    throw runtime_error("TransitRoute op_by_name_offset failed");
-  }
-  if (route.op_by_website_offset() != 444) {
-    throw runtime_error("TransitRoute op_by_website_offset failed");
-  }
-  if (route.route_color() != 555) {
-    throw runtime_error("TransitRoute route_color failed");
-  }
-  if (route.route_text_color() != 666) {
-    throw runtime_error("TransitRoute route_text_color failed");
-  }
-  if (route.short_name_offset() != 777) {
-    throw runtime_error("TransitRoute short_name_offset failed");
-  }
-  if (route.long_name_offset() != 888) {
-    throw runtime_error("TransitRoute long_name_offset failed");
-  }
-  if (route.desc_offset() != 999) {
-    throw runtime_error("TransitRoute desc_offset failed");
-  }
+
+  EXPECT_EQ(route.route_type(), route_type);
+  EXPECT_EQ(route.one_stop_offset(), 111);
+  EXPECT_EQ(route.op_by_onestop_id_offset(), 222);
+  EXPECT_EQ(route.op_by_name_offset(), 333);
+  EXPECT_EQ(route.op_by_website_offset(), 444);
+  EXPECT_EQ(route.route_color(), 555);
+  EXPECT_EQ(route.route_text_color(), 666);
+  EXPECT_EQ(route.short_name_offset(), 777);
+  EXPECT_EQ(route.long_name_offset(), 888);
+  EXPECT_EQ(route.desc_offset(), 999);
 
   // Test bounds for each text offset
-  try {
-    TransitRoute route(route_type, kMaxNameOffset + 1, 222, 333, 444, 555, 666, 777, 888, 999);
-    throw runtime_error("TransitRoute one_stop_offset limit check failed");
-  } catch (...) {
-    // Successfully caught exception indicating the bounds is checked
-  }
-  try {
-    TransitRoute route(route_type, 111, kMaxNameOffset + 1, 333, 444, 555, 666, 777, 888, 999);
-    throw runtime_error("TransitRoute op_by_onestop_id_offset limit check failed");
-  } catch (...) {
-    // Successfully caught exception indicating the bounds is checked
-  }
-  try {
-    TransitRoute route(route_type, 111, 222, kMaxNameOffset + 1, 444, 555, 666, 777, 888, 999);
-    throw runtime_error("TransitRoute op_by_name_offset limit check failed");
-  } catch (...) {
-    // Successfully caught exception indicating the bounds is checked
-  }
-  try {
-    TransitRoute route(route_type, 111, 222, 333, kMaxNameOffset + 1, 555, 666, 777, 888, 999);
-    throw runtime_error("TransitRoute op_by_website_offset limit check failed");
-  } catch (...) {
-    // Successfully caught exception indicating the bounds is checked
-  }
-  try {
-    TransitRoute route(route_type, 111, 222, 333, 444, 555, 666, kMaxNameOffset + 1, 888, 999);
-    throw runtime_error("TransitRoute short_name_offset limit check failed");
-  } catch (...) {
-    // Successfully caught exception indicating the bounds is checked
-  }
-  try {
-    TransitRoute route(route_type, 111, 222, 333, 444, 555, 666, 777, kMaxNameOffset + 1, 999);
-    throw runtime_error("TransitRoute long_name_offset limit check failed");
-  } catch (...) {
-    // Successfully caught exception indicating the bounds is checked
-  }
-  try {
-    TransitRoute route(route_type, 111, 222, 333, 444, 555, 666, 777, 888, kMaxNameOffset + 1);
-    throw runtime_error("TransitRoute desc_offset limit check failed");
-  } catch (...) {
-    // Successfully caught exception indicating the bounds is checked
-  }
+  EXPECT_THROW(TransitRoute route(route_type, kMaxNameOffset + 1, 222, 333, 444, 555, 666, 777, 888,
+                                  999),
+               std::runtime_error);
+  EXPECT_THROW(TransitRoute route(route_type, 111, kMaxNameOffset + 1, 333, 444, 555, 666, 777, 888,
+                                  999),
+               std::runtime_error);
+  EXPECT_THROW(TransitRoute route(route_type, 111, 222, kMaxNameOffset + 1, 444, 555, 666, 777, 888,
+                                  999),
+               std::runtime_error);
+  EXPECT_THROW(TransitRoute route(route_type, 111, 222, 333, kMaxNameOffset + 1, 555, 666, 777, 888,
+                                  999),
+               std::runtime_error);
+  EXPECT_THROW(TransitRoute route(route_type, 111, 222, 333, 444, 555, 666, kMaxNameOffset + 1, 888,
+                                  999),
+               std::runtime_error);
+  EXPECT_THROW(TransitRoute route(route_type, 111, 222, 333, 444, 555, 666, 777, kMaxNameOffset + 1,
+                                  999),
+               std::runtime_error);
+  EXPECT_THROW(TransitRoute route(route_type, 111, 222, 333, 444, 555, 666, 777, 888,
+                                  kMaxNameOffset + 1),
+               std::runtime_error);
 }
+
 } // namespace
 
-int main(void) {
-  test::suite suite("transitroute");
-
-  suite.test(TEST_CASE(test_sizeof));
-
-  // Write to file and read into TransitRoute
-  suite.test(TEST_CASE(TestWriteRead));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

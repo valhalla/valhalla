@@ -89,21 +89,21 @@ void loki_worker_t::init_matrix(Api& request) {
 void loki_worker_t::matrix(Api& request) {
   init_matrix(request);
   auto& options = *request.mutable_options();
-  auto costing = Costing_Name(options.costing());
+  const auto& costing_name = Costing_Enum_Name(options.costing());
 
-  if (costing == "multimodal") {
-    throw valhalla_exception_t{140, Options_Action_Name(options.action())};
+  if (costing_name == "multimodal") {
+    throw valhalla_exception_t{140, Options_Action_Enum_Name(options.action())};
   };
 
   // check that location size does not exceed max.
-  auto max = max_matrix_locations.find(costing)->second;
+  auto max = max_matrix_locations.find(costing_name)->second;
   if (options.sources_size() > max || options.targets_size() > max) {
     throw valhalla_exception_t{150, std::to_string(max)};
   };
 
   // check the distances
   auto max_location_distance = std::numeric_limits<float>::min();
-  check_distance(options.sources(), options.targets(), max_matrix_distance.find(costing)->second,
+  check_distance(options.sources(), options.targets(), max_matrix_distance.find(costing_name)->second,
                  max_location_distance);
 
   // correlate the various locations to the underlying graph
@@ -115,7 +115,7 @@ void loki_worker_t::matrix(Api& request) {
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
-    const auto searched = loki::Search(sources_targets, *reader, edge_filter, node_filter);
+    const auto searched = loki::Search(sources_targets, *reader, costing);
     for (size_t i = 0; i < sources_targets.size(); ++i) {
       const auto& l = sources_targets[i];
       const auto& projection = searched.at(l);

@@ -65,9 +65,9 @@ void DirectedEdge::set_endnode(const GraphId& endnode) {
 
 // Sets the free flow speed in KPH.
 void DirectedEdge::set_free_flow_speed(const uint32_t speed) {
-  if (speed > kMaxSpeedKph) {
+  if (speed > kMaxAssumedSpeed) {
     LOG_WARN("Exceeding maximum.  Free flow speed: " + std::to_string(speed));
-    free_flow_speed_ = kMaxSpeedKph;
+    free_flow_speed_ = kMaxAssumedSpeed;
   } else {
     free_flow_speed_ = speed;
   }
@@ -75,17 +75,17 @@ void DirectedEdge::set_free_flow_speed(const uint32_t speed) {
 
 // Sets the constrained flow speed in KPH.
 void DirectedEdge::set_constrained_flow_speed(const uint32_t speed) {
-  if (speed > kMaxSpeedKph) {
+  if (speed > kMaxAssumedSpeed) {
     LOG_WARN("Exceeding maximum.  Constrained flow speed: " + std::to_string(speed));
-    constrained_flow_speed_ = kMaxSpeedKph;
+    constrained_flow_speed_ = kMaxAssumedSpeed;
   } else {
     constrained_flow_speed_ = speed;
   }
 }
 
 // Set the flag indicating the edge has predicted speed records.
-void DirectedEdge::set_predicted_speed(const bool p) {
-  predicted_speed_ = p;
+void DirectedEdge::set_has_predicted_speed(const bool p) {
+  has_predicted_speed_ = p;
 }
 
 // ------------------  Data offsets and flags for extended data -------------//
@@ -106,9 +106,9 @@ void DirectedEdge::set_access_restriction(const uint32_t access) {
   access_restriction_ = access;
 }
 
-// Sets the exit flag.
-void DirectedEdge::set_exitsign(const bool exit) {
-  exitsign_ = exit;
+// Sets the sign flag.
+void DirectedEdge::set_sign(const bool exit) {
+  sign_ = exit;
 }
 
 // ------------------------- Geographic attributes ------------------------- //
@@ -313,9 +313,9 @@ void DirectedEdge::set_reverseaccess(const uint32_t modes) {
 
 // Sets the average speed in KPH.
 void DirectedEdge::set_speed(const uint32_t speed) {
-  if (speed > kMaxSpeedKph) {
+  if (speed > kMaxAssumedSpeed) {
     LOG_WARN("Exceeding maximum.  Average speed: " + std::to_string(speed));
-    speed_ = kMaxSpeedKph;
+    speed_ = kMaxAssumedSpeed;
   } else {
     speed_ = speed;
   }
@@ -323,9 +323,9 @@ void DirectedEdge::set_speed(const uint32_t speed) {
 
 // Sets the truck speed in KPH.
 void DirectedEdge::set_truck_speed(const uint32_t speed) {
-  if (speed > kMaxSpeedKph) {
+  if (speed > kMaxAssumedSpeed) {
     LOG_WARN("Exceeding maximum.  Truck speed: " + std::to_string(speed));
-    truck_speed_ = kMaxSpeedKph;
+    truck_speed_ = kMaxAssumedSpeed;
   } else {
     truck_speed_ = speed;
   }
@@ -539,6 +539,10 @@ void DirectedEdge::set_max_down_slope(const float slope) {
   }
 }
 
+void DirectedEdge::set_bss_connection(const bool bss_connection) {
+  bss_connection_ = bss_connection;
+}
+
 // Json representation
 json::MapPtr DirectedEdge::json() const {
   return json::map({
@@ -548,7 +552,7 @@ json::MapPtr DirectedEdge::json() const {
                      {"type", to_string(static_cast<SpeedType>(speed_type_))},
                      {"free_flow", static_cast<uint64_t>(free_flow_speed_)},
                      {"constrained_flow", static_cast<uint64_t>(constrained_flow_speed_)},
-                     {"predicted", static_cast<bool>(predicted_speed_)},
+                     {"predicted", static_cast<bool>(has_predicted_speed_)},
                  })},
       //{"opp_index", static_cast<bool>(opp_index_)},
       //{"edge_info_offset", static_cast<uint64_t>(edgeinfo_offset_)},
@@ -557,7 +561,7 @@ json::MapPtr DirectedEdge::json() const {
       {"start_restriction", access_json(start_restriction_)},
       {"end_restriction", access_json(end_restriction_)},
       {"part_of_complex_restriction", static_cast<bool>(complex_restriction_)},
-      {"has_exit_sign", static_cast<bool>(exitsign_)},
+      {"has_sign", static_cast<bool>(sign_)},
       {"toll", static_cast<bool>(toll_)},
       {"seasonal", static_cast<bool>(seasonal_)},
       {"destination_only", static_cast<bool>(dest_only_)},

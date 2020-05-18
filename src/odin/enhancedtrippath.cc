@@ -19,8 +19,9 @@ using namespace valhalla::baldr;
 
 namespace {
 constexpr float kShortRemainingDistanceThreshold = 0.402f; // Kilometers (~quarter mile)
+constexpr int kSignificantRoadClassThreshold = 2;          // Max lower road class delta
 
-const std::string& TripLeg_RoadClass_Name(int v) {
+const std::string& RoadClass_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kMotorway"}, {1, "kTrunk"},        {2, "kPrimary"},     {3, "kSecondary"},
       {4, "kTertiary"}, {5, "kUnclassified"}, {6, "kResidential"}, {7, "kServiceOther"},
@@ -164,6 +165,14 @@ const std::string& TripLeg_Sidewalk_Name(int v) {
   return f->second;
 }
 
+bool is_forward(uint32_t turn_degree) {
+  return ((turn_degree > 314) || (turn_degree < 46));
+}
+
+bool is_wider_forward(uint32_t turn_degree) {
+  return ((turn_degree > 304) || (turn_degree < 56));
+}
+
 } // namespace
 
 namespace valhalla {
@@ -176,26 +185,27 @@ EnhancedTripLeg::EnhancedTripLeg(TripLeg& trip_path) : trip_path_(trip_path) {
 }
 
 std::unique_ptr<EnhancedTripLeg_Node> EnhancedTripLeg::GetEnhancedNode(const int node_index) {
-  return midgard::make_unique<EnhancedTripLeg_Node>(mutable_node(node_index));
+  return std::make_unique<EnhancedTripLeg_Node>(mutable_node(node_index));
 }
 
 std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetPrevEdge(const int node_index, int delta) {
   int index = node_index - delta;
   if (IsValidNodeIndex(index)) {
-    return midgard::make_unique<EnhancedTripLeg_Edge>(mutable_node(index)->mutable_edge());
+    return std::make_unique<EnhancedTripLeg_Edge>(mutable_node(index)->mutable_edge());
   } else {
     return nullptr;
   }
 }
 
-std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetCurrEdge(const int node_index) {
+std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetCurrEdge(const int node_index) const {
   return GetNextEdge(node_index, 0);
 }
 
-std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetNextEdge(const int node_index, int delta) {
+std::unique_ptr<EnhancedTripLeg_Edge> EnhancedTripLeg::GetNextEdge(const int node_index,
+                                                                   int delta) const {
   int index = node_index + delta;
   if (IsValidNodeIndex(index) && !IsLastNodeIndex(index)) {
-    return midgard::make_unique<EnhancedTripLeg_Edge>(mutable_node(index)->mutable_edge());
+    return std::make_unique<EnhancedTripLeg_Edge>(mutable_node(index)->mutable_edge());
   } else {
     return nullptr;
   }
@@ -227,7 +237,7 @@ int EnhancedTripLeg::GetLastNodeIndex() const {
 }
 
 std::unique_ptr<EnhancedTripLeg_Admin> EnhancedTripLeg::GetAdmin(size_t index) {
-  return midgard::make_unique<EnhancedTripLeg_Admin>(mutable_admin(index));
+  return std::make_unique<EnhancedTripLeg_Admin>(mutable_admin(index));
 }
 
 std::string EnhancedTripLeg::GetCountryCode(int node_index) {
@@ -400,7 +410,7 @@ bool EnhancedTripLeg_Edge::IsUnnamedMountainBikeTrail() const {
 }
 
 bool EnhancedTripLeg_Edge::IsHighway() const {
-  return ((road_class() == TripLeg_RoadClass_kMotorway) && (!IsRampUse()));
+  return ((road_class() == RoadClass::kMotorway) && (!IsRampUse()));
 }
 
 bool EnhancedTripLeg_Edge::IsOneway() const {
@@ -409,11 +419,11 @@ bool EnhancedTripLeg_Edge::IsOneway() const {
 }
 
 bool EnhancedTripLeg_Edge::IsForward(uint32_t prev2curr_turn_degree) const {
-  return ((prev2curr_turn_degree > 314) || (prev2curr_turn_degree < 46));
+  return is_forward(prev2curr_turn_degree);
 }
 
 bool EnhancedTripLeg_Edge::IsWiderForward(uint32_t prev2curr_turn_degree) const {
-  return ((prev2curr_turn_degree > 304) || (prev2curr_turn_degree < 56));
+  return is_wider_forward(prev2curr_turn_degree);
 }
 
 bool EnhancedTripLeg_Edge::IsStraightest(uint32_t prev2curr_turn_degree,
@@ -556,6 +566,7 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
       case DirectionsLeg_Maneuver_Type_kExitLeft:
       case DirectionsLeg_Maneuver_Type_kRampLeft:
       case DirectionsLeg_Maneuver_Type_kDestinationLeft:
+      case DirectionsLeg_Maneuver_Type_kMergeLeft:
         return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
       case DirectionsLeg_Maneuver_Type_kSlightRight:
       case DirectionsLeg_Maneuver_Type_kExitRight:
@@ -564,9 +575,14 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
       case DirectionsLeg_Maneuver_Type_kSharpRight:
       case DirectionsLeg_Maneuver_Type_kUturnRight:
       case DirectionsLeg_Maneuver_Type_kDestinationRight:
+      case DirectionsLeg_Maneuver_Type_kMergeRight:
         return ActivateTurnLanesFromRight(turn_lane_direction, 1);
-      case DirectionsLeg_Maneuver_Type_kMerge: // TODO update when left/right assigned
-        return ActivateTurnLanesFromLeft(turn_lane_direction);
+      case DirectionsLeg_Maneuver_Type_kMerge:
+        if (drive_on_right()) {
+          return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+        } else {
+          return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+        }
       case DirectionsLeg_Maneuver_Type_kRoundaboutEnter:
       case DirectionsLeg_Maneuver_Type_kRoundaboutExit:
       case DirectionsLeg_Maneuver_Type_kFerryEnter:
@@ -656,6 +672,18 @@ std::string EnhancedTripLeg_Edge::ToString() const {
 
     str += " | exit_names=";
     str += SignElementsToString(this->sign().exit_names());
+
+    str += " | guide_onto_streets=";
+    str += SignElementsToString(this->sign().guide_onto_streets());
+
+    str += " | guide_toward_locations=";
+    str += SignElementsToString(this->sign().guide_toward_locations());
+
+    str += " | junction_names=";
+    str += SignElementsToString(this->sign().junction_names());
+
+    str += " | guidance_view_junctions=";
+    str += SignElementsToString(this->sign().guidance_view_junctions());
   }
 
   str += " | travel_mode=";
@@ -761,17 +789,16 @@ std::string EnhancedTripLeg_Edge::ToString() const {
 
   if (turn_lanes_size() > 0) {
     str += " | turn_lanes=";
-    str += TurnLanesToString(turn_lanes());
+    str += TurnLanesToString();
   }
 
   return str;
 }
 
-std::string EnhancedTripLeg_Edge::TurnLanesToString(
-    const ::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>& turn_lanes) const {
+std::string EnhancedTripLeg_Edge::TurnLanesToString() const {
   std::string str;
 
-  for (const auto& turn_lane : turn_lanes) {
+  for (const auto& turn_lane : turn_lanes()) {
     if (str.empty()) {
       str = "[ ";
     } else {
@@ -920,8 +947,8 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
   str += std::to_string(speed());
 
   str += delim;
-  str += "TripLeg_RoadClass_";
-  str += TripLeg_RoadClass_Name(road_class());
+  str += "RoadClass_";
+  str += RoadClass_Name(road_class());
 
   str += delim;
   str += std::to_string(begin_heading());
@@ -972,6 +999,18 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
 
   str += delim;
   str += SignElementsToParameterString(this->sign().exit_names());
+
+  str += delim;
+  str += SignElementsToParameterString(this->sign().guide_onto_streets());
+
+  str += delim;
+  str += SignElementsToParameterString(this->sign().guide_toward_locations());
+
+  str += delim;
+  str += SignElementsToParameterString(this->sign().junction_names());
+
+  str += delim;
+  str += SignElementsToParameterString(this->sign().guidance_view_junctions());
 
   str += delim;
   if (this->has_travel_mode()) {
@@ -1195,6 +1234,10 @@ bool EnhancedTripLeg_IntersectingEdge::IsTraversableOutbound(
   return false;
 }
 
+bool EnhancedTripLeg_IntersectingEdge::IsHighway() const {
+  return ((road_class() == RoadClass::kMotorway) && !(use() == TripLeg_Use_kRampUse));
+}
+
 std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
   std::string str;
   str.reserve(128);
@@ -1216,6 +1259,12 @@ std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
 
   str += " | walkability=";
   str += std::to_string(walkability());
+
+  str += " | use=";
+  str += std::to_string(use());
+
+  str += " | road_class=";
+  str += std::to_string(road_class());
 
   return str;
 }
@@ -1250,7 +1299,7 @@ bool EnhancedTripLeg_Node::HasIntersectingEdgeCurrNameConsistency() const {
 
 std::unique_ptr<EnhancedTripLeg_IntersectingEdge>
 EnhancedTripLeg_Node::GetIntersectingEdge(size_t index) {
-  return midgard::make_unique<EnhancedTripLeg_IntersectingEdge>(mutable_intersecting_edge(index));
+  return std::make_unique<EnhancedTripLeg_IntersectingEdge>(mutable_intersecting_edge(index));
 }
 
 void EnhancedTripLeg_Node::CalculateRightLeftIntersectingEdgeCounts(
@@ -1325,9 +1374,7 @@ void EnhancedTripLeg_Node::CalculateRightLeftIntersectingEdgeCounts(
 bool EnhancedTripLeg_Node::HasFowardIntersectingEdge(uint32_t from_heading) {
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
-    uint32_t intersecting_turn_degree =
-        GetTurnDegree(from_heading, intersecting_edge(i).begin_heading());
-    if ((intersecting_turn_degree > 314) || (intersecting_turn_degree < 46)) {
+    if (is_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading()))) {
       return true;
     }
   }
@@ -1339,11 +1386,54 @@ bool EnhancedTripLeg_Node::HasForwardTraversableIntersectingEdge(
     const TripLeg_TravelMode travel_mode) {
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
-    uint32_t intersecting_turn_degree =
-        GetTurnDegree(from_heading, intersecting_edge(i).begin_heading());
-    bool xedge_traversable_outbound = GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode);
-    if (((intersecting_turn_degree > 314) || (intersecting_turn_degree < 46)) &&
-        xedge_traversable_outbound) {
+    if (is_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading())) &&
+        GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasForwardTraversableSignificantRoadClassXEdge(
+    uint32_t from_heading,
+    const TripLeg_TravelMode travel_mode,
+    RoadClass path_road_class) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    // if the intersecting edge is forward
+    // and is traversable based on mode
+    // and is a significant road class as compared to the path road class
+    if (is_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading())) &&
+        xedge->IsTraversableOutbound(travel_mode) &&
+        ((xedge->road_class() - path_road_class) <= kSignificantRoadClassThreshold)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasWiderForwardTraversableIntersectingEdge(
+    uint32_t from_heading,
+    const TripLeg_TravelMode travel_mode) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    if (is_wider_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading())) &&
+        GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasWiderForwardTraversableHighwayXEdge(
+    uint32_t from_heading,
+    const TripLeg_TravelMode travel_mode) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    if (is_wider_forward(GetTurnDegree(from_heading, xedge->begin_heading())) &&
+        xedge->IsTraversableOutbound(travel_mode) && xedge->IsHighway()) {
       return true;
     }
   }
@@ -1377,23 +1467,45 @@ bool EnhancedTripLeg_Node::HasSpecifiedTurnXEdge(const Turn::Type turn_type,
   return false;
 }
 
+bool EnhancedTripLeg_Node::HasSpecifiedRoadClassXEdge(const RoadClass road_class) {
+
+  // If no intersecting edges then return false
+  if (!HasIntersectingEdges()) {
+    return false;
+  }
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    if (GetIntersectingEdge(i)->road_class() == road_class) {
+      // Return true there is a match
+      return true;
+    }
+  }
+  // No match found return false
+  return false;
+}
+
 // TODO: refactor to clean up code
 uint32_t EnhancedTripLeg_Node::GetStraightestTraversableIntersectingEdgeTurnDegree(
     uint32_t from_heading,
-    const TripLeg_TravelMode travel_mode) {
+    const TripLeg_TravelMode travel_mode,
+    TripLeg_Use* use) {
 
   uint32_t staightest_turn_degree = 180; // Initialize to reverse turn degree
   uint32_t staightest_delta = 180;       // Initialize to reverse delta
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
-    uint32_t intersecting_turn_degree =
-        GetTurnDegree(from_heading, intersecting_edge(i).begin_heading());
-    bool xedge_traversable_outbound = GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode);
+    auto xedge = GetIntersectingEdge(i);
+    uint32_t intersecting_turn_degree = GetTurnDegree(from_heading, xedge->begin_heading());
+    bool xedge_traversable_outbound = xedge->IsTraversableOutbound(travel_mode);
     uint32_t straight_delta = (intersecting_turn_degree > 180) ? (360 - intersecting_turn_degree)
                                                                : intersecting_turn_degree;
     if (xedge_traversable_outbound && (straight_delta < staightest_delta)) {
       staightest_delta = straight_delta;
       staightest_turn_degree = intersecting_turn_degree;
+      // If a use pointer was passed in and the intersecting edge has a use then set
+      if ((use != nullptr) && xedge->has_use()) {
+        *use = xedge->use();
+      }
     }
   }
   return staightest_turn_degree;

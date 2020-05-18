@@ -60,7 +60,7 @@ protected:
                                                  std::list<Maneuver>::iterator curr_man,
                                                  std::list<Maneuver>::iterator next_man);
 
-  void CountAndSortExitSigns(std::list<Maneuver>& maneuvers);
+  void CountAndSortSigns(std::list<Maneuver>& maneuvers);
 
   void ConfirmManeuverTypeAssignment(std::list<Maneuver>& maneuvers);
 
@@ -87,6 +87,10 @@ protected:
   bool IncludeUnnamedPrevEdge(int node_index,
                               EnhancedTripLeg_Edge* prev_edge,
                               EnhancedTripLeg_Edge* curr_edge) const;
+
+  Maneuver::RelativeDirection
+  DetermineMergeToRelativeDirection(EnhancedTripLeg_Node* node,
+                                    EnhancedTripLeg_Edge* prev_edge) const;
 
   bool IsMergeManeuverType(Maneuver& maneuver,
                            EnhancedTripLeg_Edge* prev_edge,
@@ -206,6 +210,39 @@ protected:
    * @param maneuvers The list of maneuvers to process.
    */
   void ProcessTurnLanes(std::list<Maneuver>& maneuvers);
+
+  /**
+   * Process the guidance view junctions at the maneuver point.
+   * Match the base to the overlay to form the "<prefix>_<base_suffix>_<overlay_suffix>".
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void ProcessGuidanceViewJunctions(std::list<Maneuver>& maneuvers);
+
+  /**
+   * Match the guidance view junctions for the specified base prefix and suffix.
+   *
+   * @param maneuver The maneuver to process.
+   * @param base_prefix The base prefix to match.
+   * @param base_suffix The base suffix to use with the composite image id.
+   */
+  void MatchGuidanceViewJunctions(Maneuver& maneuver,
+                                  const std::string& base_prefix,
+                                  const std::string& base_suffix);
+
+  /**
+   * Returns true if the specified maneuver is a ramp and leads to a highway.
+   *
+   * @return true if the specified maneuver is a ramp and leads to a highway.
+   */
+  bool RampLeadsToHighway(Maneuver& maneuver) const;
+
+  /**
+   * Mark maneuvers that have traversable outbound intersecting edges.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void SetTraversableOutboundIntersectingEdgeFlags(std::list<Maneuver>& maneuvers);
 
   const Options& options_;
   EnhancedTripLeg* trip_path_;

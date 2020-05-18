@@ -1,26 +1,53 @@
-version: 2
-jobs:
-  lint:
-    docker:
-      - image: valhalla/docker:build-2.6.1
-    steps:
-      - checkout
-      - run: apt-get update && apt-get -y install clang-tidy-5.0 clang-5.0 curl git nodejs
-      - run: nodejs ./scripts/validate_changelog.js
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
-      - run: git submodule sync && git submodule update --init
-      - restore_cache:
-          keys:
-            - ccache
-      - run: npm install --ignore-scripts
-      - run: mkdir build
-      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=On
-      - run: make -C build -j4
-      - run: cd build && ../scripts/tidy.sh && ../scripts/error_on_dirty.sh
+version: 2.1
 
+executors:
+  macos:
+    macos:
+      xcode: 11.1.0
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+
+commands:
+  install_macos_dependencies:
+    steps:
+      - run: brew install protobuf cmake ccache libtool boost-python libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
+      - run:
+          name: Install Node
+          command: |
+            set +e
+            touch $BASH_ENV
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
+            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
+            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+            echo 'nvm install v8.11.2' >> $BASH_ENV
+            echo 'nvm alias default v8.11.2' >> $BASH_ENV
+
+jobs:
+  build-base:
+    docker:
+      - image: docker:18.06.3-ce-git
+    steps:
+      - setup_remote_docker
+      - checkout
+      - run:
+          name: Build Valhalla base Dockerfile
+          command: |
+            docker build -f ./docker/Dockerfile-build --tag valhalla/valhalla:build-latest ./docker
+      - run:
+          name: Build Valhalla base Dockerfile x86
+          command: |
+            docker build -f ./docker/Dockerfile-build-x86 --tag valhalla/valhalla:build-x86-latest ./docker
+      - run:
+          name: Push Valhalla base image
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+              docker push valhalla/valhalla:build-latest
+              docker push valhalla/valhalla:build-x86-latest
+            fi
   build-release-binary-linux:
     docker:
-      - image: valhalla/docker:build-2.6.1
+      - image: valhalla/valhalla:build-latest
     steps:
       - checkout
       - run:
@@ -36,13 +63,18 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache
+            - ccache-release-linux-x86_64-{{ .Branch }}
+            - ccache-release-linux-x86_64
       - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
       - run: make -C build -j4
+      - save_cache:
+          key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
+          paths:
+            - ~/.ccache
       - run: make -C build install
       - run: make -C build package
       - run:
@@ -54,14 +86,10 @@ jobs:
             export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
             export BUILD_TYPE=Release
             ./scripts/publish.sh
-      - save_cache:
-          key: ccache
-          paths:
-            - ~/.ccache
 
   build-debug-binary-linux:
     docker:
-      - image: valhalla/docker:build-2.6.1
+      - image: valhalla/valhalla:build-latest
     steps:
       - checkout
       - run:
@@ -77,13 +105,18 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache
+            - ccache-debug-linux-x86_64-{{ .Branch }}
+            - ccache-debug-linux-x86_64
       - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
       - run: make -C build -j4
+      - save_cache:
+          key: ccache-debug-linux-x86_64-{{ .Branch }}-{{ epoch }}
+          paths:
+            - ~/.ccache
       - run: make -C build install
       - run: make -C build package
       - run:
@@ -93,145 +126,145 @@ jobs:
             export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
             export BUILD_TYPE=Debug
             ./scripts/publish.sh
-      - save_cache:
-          key: ccache
-          paths:
-            - ~/.ccache
 
-  build-debug:
+  lint-build-debug:
     docker:
-      - image: valhalla/docker:build-2.6.1
+      - image: valhalla/valhalla:build-latest
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: node ./scripts/validate_changelog.js
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache
+            - ccache-debug-linux-x86_64-{{ .Branch }}
+            - ccache-debug-linux-x86_64
       - run: npm install --ignore-scripts
       - run: mkdir build
-      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB
+      - run: |
+          # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
+          cd build \
+            && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
+                -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: make -C build -j4
-      - run: make -C build -j4 tests
+      - run: make -C build utrecht_tiles
+      - run: make -C build -j2 tests
       - run: make -C build -j2 check
+      - run: make -C build -j2 benchmarks
+      - run: make -C build run-benchmarks
+      # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
+      # for follow-up fixes
+      - save_cache:
+          key: ccache-debug-linux-x86_64-{{ .Branch }}-{{ epoch }}
+          paths:
+            - ~/.ccache
+      - run: scripts/clang-tidy-only-diff.sh 4
       - run: make -C build install
       - run: make -C build package
       - run: make -C build coverage
       - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
-      - save_cache:
-          key: ccache
-          paths:
-            - ~/.ccache
 
   build-release:
     docker:
-      - image: valhalla/docker:build-2.6.1
+      - image: valhalla/valhalla:build-latest
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache
+            - ccache-release-linux-x86_64-{{ .Branch }}
+            - ccache-release-linux-x86_64
       - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)"
       - run: make -C build -j4
-      - run: make -C build -j4 tests
+      - run: make -C build utrecht_tiles
+      - run: make -C build -j2 tests
       - run: make -C build -j2 check
-      - run: make -C build install
-      - run: make -C build package
+      - run: make -C build -j2 benchmarks
+      - run: make -C build run-benchmarks
       - save_cache:
-          key: ccache
+          key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
+      - run: make -C build install
+      - run: make -C build package
 
   build-release-x86:
     docker:
-      - image: valhalla/docker:build-x86-3.0.0
+      - image: valhalla/valhalla:build-x86-latest
     steps:
       - checkout
       #- run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache
+            - ccache-release-linux-x86_32-{{ .Branch }}
+            - ccache-release-linux-x86_32
       - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=Off
       - run: make -C build -j4
-      - run: make -C build -j4 tests
+      - run: make -C build utrecht_tiles
+      - run: make -C build -j2 tests
       - run: make -C build -j2 check
+      - run: make -C build -j2 benchmarks
+      - run: make -C build run-benchmarks
       - save_cache:
-          key: ccache
+          key: ccache-release-linux-x86_32-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
 
   build-osx:
-    macos:
-      xcode: "9.2.0"
-    environment:
-      HOMEBREW_NO_AUTO_UPDATE: 1
+    executor: macos
     steps:
-      - run: brew install protobuf --without-python@2
-      - run: brew upgrade python
-      - run: brew install cmake libtool boost-python libspatialite pkg-config lua jq curl wget czmq lz4 nvm
-      - run:
-          command: |
-            set +e
-            touch $BASH_ENV
-            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
-            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
-            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
-            echo 'nvm install v8.11.2' >> $BASH_ENV
-            echo 'nvm alias default v8.11.2' >> $BASH_ENV
+      - install_macos_dependencies
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
-      # - restore_cache:
-      #     keys:
-      #       - ccache
+      - restore_cache:
+          keys:
+            - ccache-release-macos-{{ .Branch }}
+            - ccache-release-macos
       - run: wget https://raw.githubusercontent.com/valhalla/homebrew-valhalla/master/Formula/prime_server.rb
       - run: brew install --build-from-source ./prime_server.rb
       - run: npm install --ignore-scripts
       - run: mkdir -p build
       - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
       - run: make -C build -j4
-      - run: make -C build -j4 tests
+      - run: make -C build utrecht_tiles
+      - run: make -C build -j2 tests
       - run: make -C build -j2 check
+      - run: make -C build -j2 benchmarks
+      - run: make -C build run-benchmarks
       - save_cache:
-          key: ccache
+          key: ccache-release-macos-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
 
   build-release-binary-osx:
-    macos:
-      xcode: "9.2.0"
-    environment:
-      HOMEBREW_NO_AUTO_UPDATE: 1
+    executor: macos
     steps:
-      - run: brew install protobuf --without-python@2
-      - run: brew upgrade python
-      - run: brew install cmake libtool boost-python libspatialite pkg-config lua jq curl wget czmq lz4 nvm
-      - run:
-          command: |
-            set +e
-            touch $BASH_ENV
-            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
-            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
-            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
-            echo 'nvm install v8.11.2' >> $BASH_ENV
-            echo 'nvm alias default v8.11.2' >> $BASH_ENV
+      - install_macos_dependencies
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache-release-macos-{{ .Branch }}
+            - ccache-release-macos
       - run: npm install --ignore-scripts
       - run: mkdir -p build
       - run: cd build && cmake .. -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
       - run: make -C build -j4
+      - save_cache:
+          key: ccache-release-macos-{{ .Branch }}-{{ epoch }}
+          paths:
+            - ~/.ccache
       - run:
           command: |
             export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
@@ -241,30 +274,24 @@ jobs:
             ./scripts/publish.sh
 
   build-debug-binary-osx:
-    macos:
-      xcode: "9.2.0"
-    environment:
-      HOMEBREW_NO_AUTO_UPDATE: 1
+    executor: macos
     steps:
-      - run: brew install protobuf --without-python@2
-      - run: brew upgrade python
-      - run: brew install cmake libtool boost-python libspatialite pkg-config lua jq curl wget czmq lz4 nvm
-      - run:
-          command: |
-            set +e
-            touch $BASH_ENV
-            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
-            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
-            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
-            echo 'nvm install v8.11.2' >> $BASH_ENV
-            echo 'nvm alias default v8.11.2' >> $BASH_ENV
+      - install_macos_dependencies
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache-debug-macos-{{ .Branch }}
+            - ccache-debug-macos
       - run: npm install --ignore-scripts
       - run: mkdir -p build
       - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PYTHON_BINDINGS=Off -DBUILD_SHARED_LIBS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
       - run: make -C build -j4
+      - save_cache:
+          key: ccache-debug-macos-{{ .Branch }}-{{ epoch }}
+          paths:
+            - ~/.ccache
       - run:
           command: |
             export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
@@ -277,8 +304,8 @@ workflows:
   version: 2
   build_test_publish:
     jobs:
-      - lint
-      - build-debug
+      - build-base
+      - lint-build-debug
       - build-release
       - build-release-x86
       - build-osx

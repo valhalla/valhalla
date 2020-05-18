@@ -2,65 +2,62 @@
 #include "midgard/aabb2.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
-#include "test.h"
 
 #include <random>
+
+#include "test.h"
 
 using namespace valhalla::midgard;
 
 namespace {
 
-void TestMaxId() {
-  if (Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), .25) != 1036799)
-    throw std::runtime_error("Unexpected maxid result");
-  if (Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 1) != 64799)
-    throw std::runtime_error("Unexpected maxid result");
-  if (Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 4) != 4049)
-    throw std::runtime_error("Unexpected maxid result");
-  if (Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), .33) != 595685)
-    throw std::runtime_error("Unexpected maxid result");
+TEST(Tiles, TestMaxId) {
+  EXPECT_EQ(Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), .25),
+            1036799);
+  EXPECT_EQ(Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 1),
+            64799);
+  EXPECT_EQ(Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 4), 4049);
+  EXPECT_EQ(Tiles<PointLL>::MaxTileId(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), .33),
+            595685);
 }
 
-void TestBase() {
+TEST(Tiles, TestBase) {
   Tiles<PointLL> tiles(AABB2<PointLL>(Point2(-180, -90), PointLL(180, 90)), 1);
   PointLL ll;
   // left bottom
   ll = tiles.Base(0);
-  if (!(ll.lng() == -180 && ll.lat() == -90)) {
-    throw std::runtime_error("Unexpected base result");
-  }
+  EXPECT_EQ(ll.lng(), -180);
+  EXPECT_EQ(ll.lat(), -90);
+
   ll = tiles.Base(1);
-  if (!(ll.lng() == -179 && ll.lat() == -90)) {
-    throw std::runtime_error("Unexpected base result");
-  }
+  EXPECT_EQ(ll.lng(), -179);
+  EXPECT_EQ(ll.lat(), -90);
+
   // right bottm
-  ll = tiles.Base(179);
-  if (!(ll.lng() == 180 && ll.lat() == -90)) {
-    throw std::runtime_error("Unexpected base result");
-  }
-  ll = tiles.Base(180);
-  if (!(ll.lng() == -180 && ll.lat() == -89)) {
-    throw std::runtime_error("Unexpected base result");
-  }
+  ll = tiles.Base(359);
+  EXPECT_EQ(ll.lng(), 179);
+  EXPECT_EQ(ll.lat(), -90);
+
+  ll = tiles.Base(360);
+  EXPECT_EQ(ll.lng(), -180);
+  EXPECT_EQ(ll.lat(), -89);
+
   // right top
-  ll = tiles.Base(180 * 180 - 1);
-  if (!(ll.lng() == 180 && ll.lat() == 90)) {
-    throw std::runtime_error("Unexpected base result");
-  }
+  ll = tiles.Base(360 * 180 - 1);
+  EXPECT_EQ(ll.lng(), 179);
+  EXPECT_EQ(ll.lat(), 89);
 }
 
-void TestRowCol() {
+TEST(Tiles, TestRowCol) {
   Tiles<PointLL> tiles(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 1);
 
   int32_t tileid1 = tiles.TileId(-76.5f, 40.5f);
   auto rc = tiles.GetRowColumn(tileid1);
   int32_t tileid2 = tiles.TileId(rc.second, rc.first);
-  if (tileid1 != tileid2) {
-    throw std::runtime_error("TileId does not match using row,col");
-  }
+  EXPECT_EQ(tileid1, tileid2) << "TileId does not match using row,col";
 }
 
-void TestNeighbors() {
+TEST(Tiles, TestNeighbors) {
   Tiles<PointLL> tiles(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 1);
 
   // Get a tile
@@ -70,105 +67,89 @@ void TestNeighbors() {
   // Test left neighbor
   int32_t tileid2 = tiles.LeftNeighbor(tileid1);
   auto rc2 = tiles.GetRowColumn(tileid2);
-  if (!tiles.AreNeighbors(tileid1, tileid2)) {
-    throw std::runtime_error("Left neighbor not identified as a neighbor");
-  }
-  if (rc1.first != rc2.first || (rc1.second - 1) != rc2.second) {
-    throw std::runtime_error("Left neighbor row,col not correct");
-  }
+
+  EXPECT_TRUE(tiles.AreNeighbors(tileid1, tileid2))
+      << "Left neighbor not identified as a neighbor " << tileid1 << " - " << tileid2;
+
+  EXPECT_EQ(rc1.first, rc2.first) << "Left neighbor row,col not correct";
+  EXPECT_EQ((rc1.second - 1), rc2.second) << "Left neighbor row,col not correct";
 
   // Test right neighbor
   tileid2 = tiles.RightNeighbor(tileid1);
   rc2 = tiles.GetRowColumn(tileid2);
-  if (!tiles.AreNeighbors(tileid1, tileid2)) {
-    throw std::runtime_error("Right neighbor not identified as a neighbor");
-  }
-  if (rc1.first != rc2.first || (rc1.second + 1) != rc2.second) {
-    throw std::runtime_error("Right neighbor row,col not correct");
-  }
+  EXPECT_TRUE(tiles.AreNeighbors(tileid1, tileid2))
+      << "Right neighbor not identified as a neighbor " << tileid1 << " - " << tileid2;
+
+  EXPECT_EQ(rc1.first, rc2.first) << "Right neighbor row,col not correct";
+  EXPECT_EQ((rc1.second + 1), rc2.second) << "Right neighbor row,col not correct";
 
   // Top neighbor
   tileid2 = tiles.TopNeighbor(tileid1);
   rc2 = tiles.GetRowColumn(tileid2);
-  if (!tiles.AreNeighbors(tileid1, tileid2)) {
-    throw std::runtime_error("Top neighbor not identified as a neighbor");
-  }
-  if ((rc1.first + 1) != rc2.first || rc1.second != rc2.second) {
-    throw std::runtime_error("Top neighbor row,col not correct");
-  }
+  EXPECT_TRUE(tiles.AreNeighbors(tileid1, tileid2))
+      << "Top neighbor not identified as a neighbor " << tileid1 << " - " << tileid2;
+
+  EXPECT_EQ((rc1.first + 1), rc2.first) << "Top neighbor row,col not correct";
+  EXPECT_EQ(rc1.second, rc2.second) << "Top neighbor row,col not correct";
 
   // Bottom neighbor
   tileid2 = tiles.BottomNeighbor(tileid1);
   rc2 = tiles.GetRowColumn(tileid2);
-  if (!tiles.AreNeighbors(tileid1, tileid2)) {
-    throw std::runtime_error("Bottom neighbor not identified as a neighbor");
-  }
-  if ((rc1.first - 1) != rc2.first || rc1.second != rc2.second) {
-    throw std::runtime_error("Bottom neighbor row,col not correct");
-  }
+  EXPECT_TRUE(tiles.AreNeighbors(tileid1, tileid2))
+      << "Bottom neighbor not identified as a neighbor " << tileid1 << " - " << tileid2;
+
+  EXPECT_EQ((rc1.first - 1), rc2.first) << "Bottom neighbor row,col not correct";
+  EXPECT_EQ(rc1.second, rc2.second) << "Bottom neighbor row,col not correct";
 }
 
-void TileList() {
+TEST(Tiles, TileList) {
   Tiles<PointLL> tiles(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 1);
 
   AABB2<PointLL> bbox(PointLL(-99.5f, 30.5f), PointLL(-90.5f, 39.5f));
   std::vector<int32_t> tilelist = tiles.TileList(bbox);
-  if (tilelist.size() != 100) {
-    throw std::runtime_error("Wrong number of tiles " + std::to_string(tilelist.size()) +
-                             " found in TileList");
-  }
+  EXPECT_EQ(tilelist.size(), 100) << "Wrong number of tiles in TileList";
 
   // Test crossing -180
   AABB2<PointLL> bbox2(PointLL(-183.5f, 30.5f), PointLL(-176.5f, 34.5f));
   tilelist = tiles.TileList(bbox2);
-  if (tilelist.size() != 40) {
-    throw std::runtime_error("Wrong number of tiles " + std::to_string(tilelist.size()) +
-                             " found in TileList crossing -180");
-  }
+  EXPECT_EQ(tilelist.size(), 40) << "Wrong number of tiles in TileList crossing -180";
 
   // Test crossing 180
   AABB2<PointLL> bbox3(PointLL(176.5f, 30.5f), PointLL(183.5f, 34.5f));
   tilelist = tiles.TileList(bbox3);
-  if (tilelist.size() != 40) {
-    throw std::runtime_error("Wrong number of tiles " + std::to_string(tilelist.size()) +
-                             " found in TileList crossing 180");
-  }
+  EXPECT_EQ(tilelist.size(), 40) << "Wrong number of tiles in TileList crossing 180";
 
   Tiles<PointLL> tiles2(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 0.25f);
   AABB2<PointLL> bbox4(PointLL(-76.489998f, 40.509998f), PointLL(-76.480003f, 40.520000f));
   tilelist = tiles.TileList(bbox4);
-  if (tilelist.size() != 1) {
-    throw std::runtime_error("Wrong number of tiles " + std::to_string(tilelist.size()) +
-                             " found in TileList");
-  }
+  EXPECT_EQ(tilelist.size(), 1) << "Wrong number of tiles found in TileList";
 }
 
 using intersect_t = std::unordered_map<int32_t, std::unordered_set<unsigned short>>;
 void assert_answer(const Tiles<Point2>& g, const std::list<Point2>& l, const intersect_t& expected) {
   auto answer = g.Intersect(l);
   // wrong number of tiles
-  if (answer.size() > expected.size())
-    throw std::logic_error("Expected no more than" + std::to_string(expected.size()) +
-                           " intersected tiles but got " + std::to_string(answer.size()));
+  EXPECT_LE(answer.size(), expected.size()) << "Incorrect number of inserted tiles";
+
   for (const auto& t : answer) {
     // missing tile
     auto i = expected.find(t.first);
-    if (i == expected.cend())
-      throw std::logic_error("Unexpected intersected tile " + std::to_string(t.first));
+    ASSERT_NE(i, expected.cend()) << "Unexpected intersected tile " + std::to_string(t.first);
     // wrong number of subdivisions
-    if (t.second.size() > i->second.size())
-      throw std::logic_error("in tile " + std::to_string(t.first) + " expected no more than " +
-                             std::to_string(i->second.size()) + " intersected subdivisions but got " +
-                             std::to_string(t.second.size()));
+    ASSERT_LE(t.second.size(), i->second.size())
+        << "in tile " + std::to_string(t.first) + " expected no more than " +
+               std::to_string(i->second.size()) + " intersected subdivisions but got " +
+               std::to_string(t.second.size());
+
     // missing subdivision
     for (const auto& s : t.second)
-      if (i->second.find(s) == i->second.cend())
-        throw std::logic_error("In tile " + std::to_string(t.first) +
-                               " unexpected intersected subdivision " + std::to_string(s));
+      ASSERT_NE(i->second.find(s), i->second.cend()) << "In tile " + std::to_string(t.first) +
+                                                            " unexpected intersected subdivision " +
+                                                            std::to_string(s);
   }
 }
 
-void test_intersect_linestring() {
+TEST(Tiles, test_intersect_linestring) {
   Tiles<Point2> t(AABB2<Point2>{-5, -5, 5, 5}, 2.5, 5);
 
   // nothing
@@ -286,32 +267,29 @@ void test_intersect_linestring() {
   std::vector<PointLL> shape{{9.5499754, 47.250248}, {9.55031681, 47.2501144}};
   auto intersection = ll.Intersect(shape);
   for (const auto& i : intersection)
-    if (i.first != 791318)
-      throw std::logic_error("This tile shouldn't be intersected: " + std::to_string(i.first));
+    EXPECT_EQ(i.first, 791318) << "This tile shouldn't be intersected";
 
   shape = {{130.399643, 33.6005592}, {130.399994, 33.5999985}};
   intersection = ll.Intersect(shape);
   size_t count = 0;
   for (const auto& i : intersection)
     count += i.second.size();
-  if (count > 2)
-    throw std::logic_error("Should not have " + std::to_string(count) +
-                           " intersections for this shape");
+  EXPECT_LE(count, 2) << "Unexpected number of intersections for this shape";
 }
 
-void test_random_linestring() {
+TEST(Tiles, test_random_linestring) {
   Tiles<Point2> t(AABB2<Point2>{-10, -10, 10, 10}, 1, 5);
   std::mt19937 generator;
   std::uniform_real_distribution<> distribution(-10, 10);
   for (int i = 0; i < 500; ++i) {
     std::vector<Point2> linestring;
+    linestring.reserve(100);
     for (int j = 0; j < 100; ++j)
       linestring.emplace_back(PointLL(distribution(generator), distribution(generator)));
     auto answer = t.Intersect(linestring);
-    for (auto tile : answer)
+    for (const auto& tile : answer)
       for (auto sub : tile.second)
-        if (sub > 24)
-          throw std::runtime_error("Non-existant bin!");
+        ASSERT_LE(sub, 24) << "Non-existant bin!";
   }
 }
 
@@ -376,25 +354,27 @@ template <class coord_t> void test_point(const Tiles<coord_t>& t, const coord_t&
       if (d < std::get<2>(last)) {
         // auto l = dist(to_global_sub(last, t), t, p);
         // auto c = dist(to_global_sub(r, t), t, p);
-        throw std::logic_error("Distances should be smallest first");
+        FAIL() << "Distances should be smallest first " << d << " " << std::get<2>(last);
       }
       // remember the last distance and how many we've seen
       last = r;
       ++size;
     } catch (const std::runtime_error& e) {
-      if (std::string(e.what()) != "Subdivisions were exhausted")
-        throw std::logic_error("Should have thrown only for running out of subdivisions");
+      EXPECT_EQ(std::string(e.what()), "Subdivisions were exhausted")
+          << "Should have thrown only for running out of subdivisions";
       break;
     }
   }
 
-  if (size != t.ncolumns() * t.nsubdivisions() * t.nrows() * t.nsubdivisions())
-    throw std::logic_error("Number of subdivisions didnt match");
-  if (zeros != 1 && zeros != 2 && zeros != 4)
-    throw std::logic_error("Only 1, 2 and 4 subdivisions can be 0 distance from the input point");
+  EXPECT_EQ(size, t.ncolumns() * t.nsubdivisions() * t.nrows() * t.nsubdivisions())
+      << "Number of subdivisions didnt match";
+
+  EXPECT_TRUE(zeros == 1 || zeros == 2 || zeros == 4)
+      << "Got: " << zeros
+      << " but only 1, 2 and 4 subdivisions can be 0 distance from the input point";
 }
 
-void test_closest_first() {
+TEST(Tiles, test_closest_first) {
 
   auto m = PointLL(8.99546623, -78.2651062).Distance({-91.2, 90});
   auto n = PointLL(8.99546623, -78.2651062).Distance({-92, 90});
@@ -402,19 +382,13 @@ void test_closest_first() {
   // test a simple 8x4 grid for polar and meridian wrapping
   Tiles<PointLL> t(AABB2<PointLL>{-180, -90, 180, 90}, 90, 2);
   auto y = t.ClosestFirst({179.99, -16.825});
-  if (to_global_sub(y(), t) != 15)
-    throw std::logic_error("Should have been 15");
-  if (to_global_sub(y(), t) != 8)
-    throw std::logic_error("Should have been wrapped to 8");
-  if (to_global_sub(y(), t) != 23)
-    throw std::logic_error("Should have been above to 23");
+  EXPECT_EQ(to_global_sub(y(), t), 15) << "Should have been 15";
+  EXPECT_EQ(to_global_sub(y(), t), 8) << "Should have been wrapped to 8";
+  EXPECT_EQ(to_global_sub(y(), t), 23) << "Should have been above to 23";
   y = t.ClosestFirst({-179.99, -16.825});
-  if (to_global_sub(y(), t) != 8)
-    throw std::logic_error("Should have been 8");
-  if (to_global_sub(y(), t) != 15)
-    throw std::logic_error("Should have been wrapped to 15");
-  if (to_global_sub(y(), t) != 16)
-    throw std::logic_error("Should have been above to 16");
+  EXPECT_EQ(to_global_sub(y(), t), 8) << "Should have been 8";
+  EXPECT_EQ(to_global_sub(y(), t), 15) << "Should have been wrapped to 15";
+  EXPECT_EQ(to_global_sub(y(), t), 16) << "Should have been above to 16";
 
   // check realistic antimeridian wrapping
   t = Tiles<PointLL>(AABB2<PointLL>{-180, -90, 180, 90}, .25, 5);
@@ -425,15 +399,15 @@ void test_closest_first() {
       (p.second - t.TileBounds().miny()) / t.TileBounds().Height() * t.nrows() * t.nsubdivisions();
   auto c = t.ClosestFirst(p);
   auto first = c();
-  if (to_global_sub(first, t) != py * t.ncolumns() * t.nsubdivisions() + px)
-    throw std::logic_error("Unexpected global subdivision");
-  if (std::get<2>(first) != 0)
-    throw std::logic_error("Unexpected distance");
+  EXPECT_EQ(to_global_sub(first, t), py * t.ncolumns() * t.nsubdivisions() + px)
+      << "Unexpected global subdivision";
+
+  EXPECT_EQ(std::get<2>(first), 0) << "Unexpected distance";
+
   auto second = c();
-  if (to_global_sub(second, t) != py * t.ncolumns() * t.nsubdivisions())
-    throw std::logic_error("Unexpected global subdivision");
-  if (std::get<2>(second) != p.Distance({-180, -16.825}))
-    throw std::logic_error("Unexpected distance");
+  EXPECT_EQ(to_global_sub(second, t), py * t.ncolumns() * t.nsubdivisions())
+      << "Unexpected global subdivision";
+  EXPECT_EQ(std::get<2>(second), p.Distance({-180, -16.825})) << "Unexpected distance";
 
   // try planar coordinate system
   Tiles<Point2> tp(AABB2<Point2>{-10, -10, 10, 10}, 1, 5);
@@ -465,104 +439,63 @@ void test_closest_first() {
   }
 }
 
-void test_intersect_bbox_world() {
+TEST(Tiles, test_intersect_bbox_world) {
   AABB2<PointLL> world_box{-180, -90, 180, 90};
   Tiles<PointLL> t(world_box, 90, 2);
   auto intersection = t.Intersect(world_box);
-  if (intersection.size() != t.TileCount()) {
-    throw std::runtime_error("Expected " + std::to_string(t.TileCount()) +
-                             " tiles returned from world-spanning intersection, but got " +
-                             std::to_string(intersection.size()) + " instead.");
-  }
+  EXPECT_EQ(intersection.size(), t.TileCount())
+      << "Expected " + std::to_string(t.TileCount()) +
+             " tiles returned from world-spanning intersection";
+
   auto nbins = t.nsubdivisions() * t.nsubdivisions();
   for (const auto& i : intersection) {
     const auto& bins = i.second;
-    if (bins.size() != nbins) {
-      throw std::runtime_error("Expected " + std::to_string(nbins) + " bins for tile " +
-                               std::to_string(i.first) + " but got " + std::to_string(bins.size()) +
-                               " instead.");
-    }
+    EXPECT_EQ(bins.size(), nbins) << "For tile " << i.first;
   }
 }
 
-void test_intersect_bbox_single() {
+TEST(Tiles, test_intersect_bbox_single) {
   AABB2<PointLL> world_box{-180, -90, 180, 90};
   Tiles<PointLL> t(world_box, 90, 2);
 
   AABB2<PointLL> single_box{1, 1, 2, 2};
   auto intersection = t.Intersect(single_box);
-  if (intersection.size() != 1) {
-    throw std::runtime_error("Expected one tile returned from world-spanning intersection, but got " +
-                             std::to_string(intersection.size()) + " instead.");
-  }
+  EXPECT_EQ(intersection.size(), 1) << "Expected one tile returned from world-spanning intersection";
+
   auto tile_id = intersection.begin()->first;
   auto bins = intersection.begin()->second;
   // expect tile id to be 6 because the point just up and right from the origin
   // should be in the 3rd column, 2nd row, so thats (ncols(=4) * row(=1)) +
   // col(=2).
-  if (tile_id != 6) {
-    throw std::runtime_error("Expected tile 6, but got tile " + std::to_string(tile_id));
-  }
+  EXPECT_EQ(tile_id, 6);
+
   // there should be a single result bin, which should be in the lower left
   // and therefore be bin 0.
-  if (bins.size() != 1) {
-    throw std::runtime_error("Expected a single bin, but got " + std::to_string(bins.size()) +
-                             " bins.");
-  }
+  EXPECT_EQ(bins.size(), 1);
+
   auto bin_id = *bins.begin();
-  if (bin_id != 0) {
-    throw std::runtime_error("Expected bin ID 0, but got " + std::to_string(bin_id) + " instead.");
-  }
+  EXPECT_EQ(bin_id, 0);
 }
 
-void test_intersect_bbox_rounding() {
+TEST(Tiles, test_intersect_bbox_rounding) {
   AABB2<PointLL> world_box{-180, -90, 180, 90};
   Tiles<PointLL> t(world_box, 0.25, 5);
 
   AABB2<PointLL> single_box{0.5, 0.5, 0.501, 0.501};
   auto intersection = t.Intersect(single_box);
-  if (intersection.size() != 1) {
-    throw std::runtime_error("Expected one tile returned from intersection, but got " +
-                             std::to_string(intersection.size()) + " instead.");
-  }
+  EXPECT_EQ(intersection.size(), 1) << "Expected one tile returned from intersection";
+
   auto bins = intersection.begin()->second;
   // expect only the lower left bin, 0
-  if (bins.size() != 1) {
-    throw std::runtime_error("Expected a single bin, but got " + std::to_string(bins.size()) +
-                             " bins.");
-  }
+  EXPECT_EQ(bins.size(), 1);
+
   auto bin_id = *bins.begin();
-  if (bin_id != 0) {
-    throw std::runtime_error("Expected bin ID 0, but got " + std::to_string(bin_id) + " instead.");
-  }
+  EXPECT_EQ(bin_id, 0);
 }
 
 } // namespace
 
-int main() {
-  test::suite suite("tiles");
-
-  // Test tile id to row, col and vice-versa
-  suite.test(TEST_CASE(TestRowCol));
-
-  // Test neighbors
-  suite.test(TEST_CASE(TestNeighbors));
-
-  // Test max. tile Id
-  suite.test(TEST_CASE(TestMaxId));
-
-  // Test tile list
-  suite.test(TEST_CASE(TileList));
-
-  suite.test(TEST_CASE(test_intersect_linestring));
-
-  suite.test(TEST_CASE(test_closest_first));
-
-  suite.test(TEST_CASE(test_random_linestring));
-
-  suite.test(TEST_CASE(test_intersect_bbox_world));
-  suite.test(TEST_CASE(test_intersect_bbox_single));
-  suite.test(TEST_CASE(test_intersect_bbox_rounding));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

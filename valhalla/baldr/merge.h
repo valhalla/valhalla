@@ -102,7 +102,7 @@ void merge(TileSet& tiles,
 
     // Clear cache if over committed
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
   }
 
@@ -129,7 +129,7 @@ void merge(TileSet& tiles,
 
     // Clear cache if over committed
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
   }
 }
