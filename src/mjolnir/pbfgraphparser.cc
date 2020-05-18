@@ -2016,7 +2016,7 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
 
   // Read the OSMData to files if the tile_dir is set.
   if (!tile_dir.empty())
-    osmdata.read_from_temp_files(tile_dir);
+    callback.osmdata_.read_from_temp_files(tile_dir);
 
   LOG_INFO("Parsing files for relations: " + boost::algorithm::join(input_files, ", "));
 
@@ -2089,7 +2089,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
 
   // Read the OSMData to files if the tile_dir is set.
   if (!tile_dir.empty())
-    osmdata.read_from_temp_files(tile_dir);
+    callback.osmdata_.read_from_temp_files(tile_dir);
 
   LOG_INFO("Parsing files for nodes: " + boost::algorithm::join(input_files, ", "));
 
