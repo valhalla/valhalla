@@ -43,6 +43,8 @@ public:
    * not in memory
    * @param  complex_restriction_to_file    where to store the to complex restrictions so they are not
    * in memory
+   * @param  tile_dir                       tile directory where we are to read the tmp files.  if not
+   * set then we will not read tmp files
    * @param  osmdata                        OSM data
    *
    */
@@ -50,6 +52,7 @@ public:
                              const std::vector<std::string>& input_files,
                              const std::string& complex_restriction_from_file,
                              const std::string& complex_restriction_to_file,
+                             const std::string& tile_dir,
                              OSMData& osmdata);
 
   /**
@@ -62,6 +65,8 @@ public:
    * memory
    * @param  shapes_file                    where to store the shape nodes so they are not in memory
    * @param  bss_nodes_file                 where to store the bss nodes so they are not in memory
+   * @param  tile_dir                       tile directory where we are to read the tmp files.  if not
+   * set then we will not read tmp files
    * @param  osmdata                        OSM data
    */
   static void ParseNodes(const boost::property_tree::ptree& pt,
@@ -71,6 +76,7 @@ public:
                          const std::string& intersections_file,
                          const std::string& shapes_file,
                          const std::string& bss_nodes_file,
+                         const std::string& tile_dir,
                          OSMData& osmdata);
 };
 

@@ -2002,6 +2002,7 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
                                     const std::vector<std::string>& input_files,
                                     const std::string& complex_restriction_from_file,
                                     const std::string& complex_restriction_to_file,
+                                    const std::string& tile_dir,
                                     OSMData& osmdata) {
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
@@ -2012,6 +2013,10 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   graph_callback callback(pt, osmdata);
+
+  // Read the OSMData to files if the tile_dir is set.
+  if (!tile_dir.empty())
+    osmdata.read_from_temp_files(tile_dir);
 
   LOG_INFO("Parsing files for relations: " + boost::algorithm::join(input_files, ", "));
 
@@ -2070,6 +2075,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
                                 const std::string& intersections_file,
                                 const std::string& shapes_file,
                                 const std::string& bss_nodes_file,
+                                const std::string& tile_dir,
                                 OSMData& osmdata) {
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
@@ -2080,6 +2086,10 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   graph_callback callback(pt, osmdata, intersections_file, shapes_file, true);
+
+  // Read the OSMData to files if the tile_dir is set.
+  if (!tile_dir.empty())
+    osmdata.read_from_temp_files(tile_dir);
 
   LOG_INFO("Parsing files for nodes: " + boost::algorithm::join(input_files, ", "));
 
