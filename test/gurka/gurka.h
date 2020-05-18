@@ -824,29 +824,32 @@ void expect_maneuvers(const valhalla::Api& result,
  *
  * @param result the result of a /route or /match request
  * @param maneuver_index the specified maneuver index to inspect
- * @param expected_instructions the set of four instructions expected in the DirectionsLeg for the
- *                              route at specified maneuver index.
- *                              The four instructions shall be in this order:
- *                                 text_instruction
- *                                 verbal_transition_alert_instruction
- *                                 verbal_pre_transition_instruction
- *                                 verbal_post_transition_instruction
+ * @param expected_text_instruction the expected text instruction
+ * @param expected_verbal_transition_alert_instruction the expected verbal transition alert
+ *                                                     instruction
+ * @param expected_verbal_pre_transition_instruction the expected verbal pre-transition instruction
+ * @param expected_verbal_post_transition_instruction the expected verbal post-transition instruction
  */
-void expect_instructions_at_maneuver_index(const valhalla::Api& result,
-                                           int maneuver_index,
-                                           const std::vector<std::string>& expected_instructions) {
+void expect_instructions_at_maneuver_index(
+    const valhalla::Api& result,
+    int maneuver_index,
+    const std::string& expected_text_instruction,
+    const std::string& expected_verbal_transition_alert_instruction,
+    const std::string& expected_verbal_pre_transition_instruction,
+    const std::string& expected_verbal_post_transition_instruction) {
 
   ASSERT_EQ(result.directions().routes_size(), 1);
   ASSERT_EQ(result.directions().routes(0).legs_size(), 1);
   ASSERT_TRUE((maneuver_index >= 0) &&
               (maneuver_index < result.directions().routes(0).legs(0).maneuver_size()));
-  ASSERT_EQ(expected_instructions.size(), 4);
   const auto& maneuver = result.directions().routes(0).legs(0).maneuver(maneuver_index);
 
-  EXPECT_EQ(maneuver.text_instruction(), expected_instructions.at(0));
-  EXPECT_EQ(maneuver.verbal_transition_alert_instruction(), expected_instructions.at(1));
-  EXPECT_EQ(maneuver.verbal_pre_transition_instruction(), expected_instructions.at(2));
-  EXPECT_EQ(maneuver.verbal_post_transition_instruction(), expected_instructions.at(3));
+  EXPECT_EQ(maneuver.text_instruction(), expected_text_instruction);
+  EXPECT_EQ(maneuver.verbal_transition_alert_instruction(),
+            expected_verbal_transition_alert_instruction);
+  EXPECT_EQ(maneuver.verbal_pre_transition_instruction(), expected_verbal_pre_transition_instruction);
+  EXPECT_EQ(maneuver.verbal_post_transition_instruction(),
+            expected_verbal_post_transition_instruction);
 }
 
 void expect_path_length(const valhalla::Api& result,
