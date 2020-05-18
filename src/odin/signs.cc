@@ -9,6 +9,11 @@
 
 using namespace valhalla::baldr;
 
+namespace {
+// The number of guide sign types (i.e. branch and toward)
+constexpr uint32_t kNumberOfGuideSignTypes = 2;
+} // namespace
+
 namespace valhalla {
 namespace odin {
 
@@ -138,12 +143,18 @@ const std::string Signs::GetGuideString(uint32_t max_count,
                                         const std::string& delim,
                                         const VerbalTextFormatter* verbal_formatter) const {
   std::string guide_string;
+  // If both branch and toward exist
+  // and either unlimited max count or max count is greater than 1
+  // then process guide sign info splitting between branch and toward signs
   if (HasGuideBranch() && HasGuideToward() && ((max_count == 0) || (max_count > 1))) {
+    // Round using floating point division
     std::string guide_branch =
-        GetGuideBranchString(static_cast<uint32_t>(std::round(max_count / 2)),
+        GetGuideBranchString(static_cast<uint32_t>(
+                                 std::round(static_cast<float>(max_count) / kNumberOfGuideSignTypes)),
                              limit_by_consecutive_count, delim, verbal_formatter);
+    // Truncate using integer division
     std::string guide_toward =
-        GetGuideTowardString(static_cast<uint32_t>(max_count / 2), limit_by_consecutive_count, delim,
+        GetGuideTowardString((max_count / kNumberOfGuideSignTypes), limit_by_consecutive_count, delim,
                              verbal_formatter);
     guide_string = guide_branch + delim + guide_toward;
   } else if (HasGuideBranch()) {
