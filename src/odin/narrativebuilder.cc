@@ -942,12 +942,17 @@ std::string NarrativeBuilder::FormVerbalContinueInstruction(Maneuver& maneuver,
   return instruction;
 }
 
-std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
+std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
+                                                  bool limit_by_consecutive_count,
+                                                  uint32_t element_max_count) {
   // "0": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION>.",
   // "1": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
   // "2": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on
   // <STREET_NAMES>.",
   // "3": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+  // "4": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
+  // "5": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+
   const TurnSubset* subset = nullptr;
   switch (maneuver.type()) {
     case DirectionsLeg_Maneuver_Type_kSlightRight:
@@ -978,14 +983,30 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
-  if (!street_names.empty()) {
-    phrase_id = 1;
-  }
-  if (!begin_street_names.empty()) {
-    phrase_id = 2;
-  }
-  if (maneuver.to_stay_on()) {
-    phrase_id = 3;
+  std::string junction_name;
+  std::string guide_sign;
+
+  if (maneuver.HasGuideSign()) {
+    // Set the toward phrase - it takes priority over street names and junction name
+    phrase_id = 5;
+    // Assign guide sign
+    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count);
+  } else if (maneuver.HasJunctionNameSign()) {
+    // Set the junction phrase - it takes priority over street names
+    phrase_id = 4;
+    // Assign guide sign
+    junction_name =
+        maneuver.signs().GetJunctionNameString(element_max_count, limit_by_consecutive_count);
+  } else {
+    if (!street_names.empty()) {
+      phrase_id = 1;
+    }
+    if (!begin_street_names.empty()) {
+      phrase_id = 2;
+    }
+    if (maneuver.to_stay_on()) {
+      phrase_id = 3;
+    }
   }
 
   // Set instruction to the determined tagged phrase
@@ -996,6 +1017,8 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
                      FormRelativeTwoDirection(maneuver.type(), subset->relative_directions));
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
+  boost::replace_all(instruction, kJunctionNameTag, junction_name);
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -1006,23 +1029,29 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalAlertTurnInstruction(Maneuver& maneuver,
+                                                             bool limit_by_consecutive_count,
                                                              uint32_t element_max_count,
                                                              const std::string& delim) {
   // "0": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION>.",
   // "1": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
   // "2": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
   // "3": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+  // "4": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
+  // "5": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 
-  return FormVerbalTurnInstruction(maneuver, element_max_count, delim);
+  return FormVerbalTurnInstruction(maneuver, limit_by_consecutive_count, element_max_count, delim);
 }
 
 std::string NarrativeBuilder::FormVerbalTurnInstruction(Maneuver& maneuver,
+                                                        bool limit_by_consecutive_count,
                                                         uint32_t element_max_count,
                                                         const std::string& delim) {
   // "0": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION>.",
   // "1": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
   // "2": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
   // "3": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+  // "4": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>."
+  // "5": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 
   const TurnSubset* subset = nullptr;
   switch (maneuver.type()) {
@@ -1057,14 +1086,32 @@ std::string NarrativeBuilder::FormVerbalTurnInstruction(Maneuver& maneuver,
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
-  if (!street_names.empty()) {
-    phrase_id = 1;
-  }
-  if (!begin_street_names.empty()) {
-    phrase_id = 2;
-  }
-  if (maneuver.to_stay_on()) {
-    phrase_id = 3;
+  std::string junction_name;
+  std::string guide_sign;
+
+  if (maneuver.HasGuideSign()) {
+    // Set the toward phrase - it takes priority over street names and junction name
+    phrase_id = 5;
+    // Assign guide sign
+    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count, delim,
+                                                 maneuver.verbal_formatter());
+  } else if (maneuver.HasJunctionNameSign()) {
+    // Set the junction phrase - it takes priority over street names
+    phrase_id = 4;
+    // Assign guide sign
+    junction_name =
+        maneuver.signs().GetJunctionNameString(element_max_count, limit_by_consecutive_count, delim,
+                                               maneuver.verbal_formatter());
+  } else {
+    if (!street_names.empty()) {
+      phrase_id = 1;
+    }
+    if (!begin_street_names.empty()) {
+      phrase_id = 2;
+    }
+    if (maneuver.to_stay_on()) {
+      phrase_id = 3;
+    }
   }
 
   // Set instruction to the determined tagged phrase
@@ -1075,6 +1122,8 @@ std::string NarrativeBuilder::FormVerbalTurnInstruction(Maneuver& maneuver,
                      FormRelativeTwoDirection(maneuver.type(), subset->relative_directions));
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
+  boost::replace_all(instruction, kJunctionNameTag, junction_name);
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -2416,7 +2465,7 @@ std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver,
     ordinal_value =
         dictionary_.enter_roundabout_subset.ordinal_values.at(maneuver.roundabout_exit_count() - 1);
   } else if (!roundabout_exit_street_names.empty() || !roundabout_exit_begin_street_names.empty() ||
-             maneuver.HasGuideSign()) {
+             maneuver.roundabout_exit_signs().HasGuide()) {
     // Skip to the non-ordinal phrase with additional info
     phrase_id += 4;
   }
@@ -2566,7 +2615,7 @@ std::string NarrativeBuilder::FormVerbalEnterRoundaboutInstruction(Maneuver& man
     ordinal_value = dictionary_.enter_roundabout_verbal_subset.ordinal_values.at(
         maneuver.roundabout_exit_count() - 1);
   } else if (!roundabout_exit_street_names.empty() || !roundabout_exit_begin_street_names.empty() ||
-             maneuver.HasGuideSign()) {
+             maneuver.roundabout_exit_signs().HasGuide()) {
     // Skip to the non-ordinal phrase with additional info
     phrase_id += 4;
   }

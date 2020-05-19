@@ -93,13 +93,18 @@ protected:
                                      const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormTurnInstruction(Maneuver& maneuver);
+  std::string FormTurnInstruction(Maneuver& maneuver,
+                                  bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+                                  uint32_t element_max_count = kElementMaxCount);
 
-  std::string FormVerbalAlertTurnInstruction(Maneuver& maneuver,
-                                             uint32_t element_max_count = kVerbalAlertElementMaxCount,
-                                             const std::string& delim = kVerbalDelim);
+  std::string
+  FormVerbalAlertTurnInstruction(Maneuver& maneuver,
+                                 bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+                                 uint32_t element_max_count = kVerbalAlertElementMaxCount,
+                                 const std::string& delim = kVerbalDelim);
 
   std::string FormVerbalTurnInstruction(Maneuver& maneuver,
+                                        bool limit_by_consecutive_count = kLimitByConseuctiveCount,
                                         uint32_t element_max_count = kVerbalPreElementMaxCount,
                                         const std::string& delim = kVerbalDelim);
 
