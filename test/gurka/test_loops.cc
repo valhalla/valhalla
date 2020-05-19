@@ -4,21 +4,16 @@
 using namespace valhalla;
 
 TEST(Standalone, FlatLoop) {
-  const std::string ascii_map = R"(
-      E----D----C
-                |
-                |
-                B
-                |
-           Z----A----Y
-  )";
-
+  // we create a way that doubles back on itself
+  const std::string ascii_map = R"(A---B)";
   const gurka::ways ways = {
-      {"ABCDEDB", {{"highway", "motorway"}}},
-      {"ZAY", {{"highway", "motorway"}}},
+      {"ABA", {{"highway", "motorway"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_opp_edge");
+
+  // then we test the invariant that any edge should be the opposing edge of its opposing edge
+  // edge == opposing(opposing(edge))
   valhalla::baldr::GraphReader reader(map.config.get_child("mjolnir"));
   for (auto tile_id : reader.GetTileSet()) {
     const auto* tile = reader.GetGraphTile(tile_id);
