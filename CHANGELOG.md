@@ -83,6 +83,7 @@
    * CHANGED: Map matching: throw error (443/NoSegment) when no candidate edges are available. [#2370](https://github.com/valhalla/valhalla/pull/2370/)
    * ADDED: Add sk-SK.json (slovak) localization file. [2376](https://github.com/valhalla/valhalla/pull/2376)
    * ADDED: Extend roundabout phrases. [2378](https://github.com/valhalla/valhalla/pull/2378)
+   * ADDED: More roundabout phrase tests. [2382](https://github.com/valhalla/valhalla/pull/2382)
    
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
