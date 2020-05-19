@@ -187,10 +187,7 @@ void set_origin(baldr::GraphReader& reader,
   // route
   const baldr::GraphTile* tile = nullptr;
   for (const auto& edge : origin[origin_idx].edges) {
-    if (!edge.id.Is_Valid()) {
-      continue;
-    }
-
+    LOG_INFO(" Origin: " + std::to_string(edge.id));
     if (edge.begin_node()) {
       auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
       const auto nodeid = edge_nodes.first;
@@ -232,10 +229,7 @@ void set_destinations(baldr::GraphReader& reader,
   const baldr::GraphTile* tile = nullptr;
   for (uint16_t dest = 0; dest < destinations.size(); dest++) {
     for (const auto& edge : destinations[dest].edges) {
-      if (!edge.id.Is_Valid()) {
-        continue;
-      }
-
+      LOG_INFO(" Destination: " + std::to_string(edge.id));
       if (edge.begin_node()) {
         auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
         const auto nodeid = edge_nodes.first;
@@ -250,7 +244,6 @@ void set_destinations(baldr::GraphReader& reader,
           continue;
         }
         node_dests[nodeid].insert(dest);
-
       } else {
         edge_dests[edge.id].insert(dest);
       }
@@ -469,17 +462,18 @@ find_shortest_path(baldr::GraphReader& reader,
     }
   };
 
-  // Load destinations
-  set_destinations(reader, destinations, node_dests, edge_dests);
-
   // Load origin to the queue of the labelset
   set_origin(reader, destinations, origin_idx, labelset, travelmode, costing, edgelabel);
 
+  // Load destinations
+  set_destinations(reader, destinations, node_dests, edge_dests);
+
+  // TODO: use faster unordered_map impl like matrix PR does
   std::unordered_map<uint16_t, uint32_t> results;
   while (true) {
     uint32_t label_idx = labelset->pop();
     if (label_idx == baldr::kInvalidLabel) {
-      LOG_TRACE("Exhausted labels without finding all destinations");
+      LOG_INFO("Exhausted labels without finding all destinations");
       break;
     }
 
@@ -501,7 +495,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
       // Congrats!
       if (node_dests.empty() && edge_dests.empty()) {
-        LOG_TRACE("The last node destination was found");
+        LOG_INFO("The last node destination was found");
         break;
       }
 
@@ -525,7 +519,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
       // Congrats!
       if (edge_dests.empty() && node_dests.empty()) {
-        LOG_TRACE("The last edge destination was found");
+        LOG_INFO("The last edge destination was found");
         break;
       }
 
