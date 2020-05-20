@@ -209,6 +209,16 @@ void ConstructEdges(const OSMData& osmdata,
 
         prev_edge = edge;
 
+        // Figure out if the way doubled back on itself and if so treat it like the way ended
+        /*bool duplicated = false;
+        OSMWayNode next_node;
+        while (current_way_node_index != last_way_node_index && way_node.node.duplicate_ &&
+               (next_node = *way_nodes[current_way_node_index + 1]).node.duplicate_) {
+          way_node = next_node;
+          ++current_way_node_index;
+          duplicated = true;
+        }*/
+
         // Start a new edge if this is not the last node in the way
         if (current_way_node_index != last_way_node_index) {
           edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);

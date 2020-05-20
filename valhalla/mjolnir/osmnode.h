@@ -31,7 +31,8 @@ struct OSMNode {
   uint64_t shortlink_ : 1; // Link edge < kMaxInternalLength
   uint64_t non_ferry_edge_ : 1;
   uint64_t ferry_edge_ : 1;
-  uint64_t spare_ : 3;
+  uint64_t duplicate_ : 1; // A node which is referenced multiple times on a way (or a turn around)
+  uint64_t spare_ : 2;
 
   // Lat,lng of the node
   float lng_;

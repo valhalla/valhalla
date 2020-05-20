@@ -288,6 +288,8 @@ public:
       sequence<OSMWayNode>::iterator element = (*way_nodes_)[current_way_node_index_];
       while (current_way_node_index_ < way_nodes_->size() &&
              (way_node = element = (*way_nodes_)[current_way_node_index_]).node.osmid_ == osmid) {
+        // we need to keep the duplicate flag that way parsing set
+        n.duplicate_ = way_node.node.duplicate_;
         way_node.node = n;
         element = way_node;
         ++current_way_node_index_;
@@ -374,6 +376,7 @@ public:
     // Add the refs to the reference list and mark the nodes that care about when processing nodes
     loop_nodes_.clear();
     for (size_t i = 0; i < nodes.size(); ++i) {
+      // if we've seen this as shape for another way then its an intersection (ie graph node)
       const auto& node = nodes[i];
       if (shape_.get(node)) {
         intersection_.set(node);
@@ -381,12 +384,22 @@ public:
       } else {
         ++osmdata_.node_count;
       }
-      way_nodes_->push_back({{node}, static_cast<uint32_t>(ways_->size()), static_cast<uint32_t>(i)});
       shape_.set(node);
+
+      // check whether or not the node is a duplicate or a turn around
+      // A turn around is the node at which a way doubles back on itself eg. way=node_0,node_1,node_0
+      OSMNode osm_node{node};
+      auto inserted = loop_nodes_.insert(std::make_pair(node, i));
+      osm_node.duplicate_ =
+          !inserted.second || (i != 0 && i != nodes.size() - 1 && nodes[i - 1] == nodes[i + 1]);
+
+      // keep the node
+      way_nodes_->push_back(
+          {osm_node, static_cast<uint32_t>(ways_->size()), static_cast<uint32_t>(i)});
+
       // If this way is a loop (node occurs twice) we can make our lives way easier if we simply
       // split it up into multiple edges in the graph. If a problem is hard, avoid the problem!
-      auto inserted = loop_nodes_.insert(std::make_pair(node, i));
-      if (inserted.second == false) {
+      if (!inserted.second) {
         // Walk through nodes between the 2 nodes that form the loop and see if
         // there are already intersections
         bool intsct = false;

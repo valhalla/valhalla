@@ -86,3 +86,33 @@ TEST(loops, split_lolli) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_split_lolli");
   check_opposing(map);
 }
+
+TEST(loops, eye) {
+  // we create a way that doubles back on itself
+  const std::string ascii_map = R"(
+          J----I
+         /      \
+  A--B--C        F--G--H
+         \      /
+          D----E)";
+  const gurka::ways ways = {
+      {"ABCDEFGHGFIJ", {{"highway", "motorway"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_split_lolli");
+  check_opposing(map);
+}
+
+TEST(loops, bubble) {
+  // we create a way that doubles back on itself
+  const std::string ascii_map = R"(
+          H----G
+         /      \
+  A--B--C--------D--E--F)";
+  const gurka::ways ways = {
+      {"ABCDEFEDGH", {{"highway", "motorway"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_split_lolli");
+  check_opposing(map);
+}
