@@ -351,17 +351,6 @@ public:
       LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
     }
 
-    // Check for ways that loop back on themselves (simple check) and add
-    // any wayids that have loops to a vector
-    if (nodes.size() > 2) {
-      for (size_t i = 2, j = 0; i < nodes.size(); i++, j++) {
-        if (nodes[i] == nodes[j]) {
-          loops_.push_back(osmid);
-          break;
-        }
-      }
-    }
-
     if (osmid > kMaxOSMWayId) {
       throw std::runtime_error("OSM way Id exceeds 32 bit maximum");
     }
@@ -1841,18 +1830,6 @@ public:
     bss_nodes_.reset(bss_nodes);
   }
 
-  // Output list of wayids that have loops
-  void output_loops() {
-    std::ofstream loop_file;
-    loop_file.open("loop_ways.txt", std::ofstream::out | std::ofstream::trunc);
-    for (auto& wayid : loops_) {
-      loop_file << wayid << std::endl;
-    }
-    loop_file.close();
-    loops_.clear();
-    loops_.shrink_to_fit();
-  }
-
   void output_idtables(const std::string& intersections_file, const std::string& shapes_file) {
     // Open file and truncate
     std::ofstream intersections(intersections_file,
@@ -1923,9 +1900,6 @@ public:
   uint64_t last_node_, last_way_, last_relation_;
   std::unordered_map<uint64_t, size_t> loop_nodes_;
 
-  // List of wayids with loops
-  std::vector<uint64_t> loops_;
-
   // user entered access
   std::unique_ptr<sequence<OSMAccess>> access_;
   // from complex restrictions
@@ -1991,7 +1965,6 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
                                                         OSMPBF::Interest::CHANGESETS),
                           callback);
   }
-  callback.output_loops();
   callback.output_idtables(intersections_file, shapes_file);
 
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
