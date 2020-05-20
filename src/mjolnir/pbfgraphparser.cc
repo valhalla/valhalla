@@ -376,7 +376,7 @@ public:
     // Add the refs to the reference list and mark the nodes that care about when processing nodes
     loop_nodes_.clear();
     for (size_t i = 0; i < nodes.size(); ++i) {
-      // if we've seen this as shape for another way then its an intersection (ie graph node)
+      // If we've seen this node anywhere else then its an intersection (ie graph node)
       const auto& node = nodes[i];
       if (shape_.get(node)) {
         intersection_.set(node);
@@ -386,14 +386,14 @@ public:
       }
       shape_.set(node);
 
-      // check whether or not the node is a duplicate or a turn around
+      // Check whether or not the node is a duplicate or a turn around
       // A turn around is the node at which a way doubles back on itself eg. way=node_0,node_1,node_0
       OSMNode osm_node{node};
       auto inserted = loop_nodes_.insert(std::make_pair(node, i));
       osm_node.duplicate_ =
           !inserted.second || (i != 0 && i != nodes.size() - 1 && nodes[i - 1] == nodes[i + 1]);
 
-      // keep the node
+      // Keep the node
       way_nodes_->push_back(
           {osm_node, static_cast<uint32_t>(ways_->size()), static_cast<uint32_t>(i)});
 
@@ -409,11 +409,11 @@ public:
             break;
           }
         }
+        // If there wasnt already an intersection we'll make one in the middle of the loop
         if (!intsct) {
           intersection_.set(
               nodes[(i + inserted.first->second) / 2]); // TODO: update osmdata_.*_count?
         }
-
         // Update the index in case the node is used again (a future loop)
         inserted.first->second = i;
       }
