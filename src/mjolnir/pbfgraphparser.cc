@@ -379,8 +379,8 @@ public:
       // A turn around is the node at which a way doubles back on itself eg. way=node_0,node_1,node_0
       OSMNode osm_node{node};
       auto inserted = loop_nodes_.insert(std::make_pair(node, i));
-      osm_node.duplicate_ =
-          !inserted.second || (i != 0 && i != nodes.size() - 1 && nodes[i - 1] == nodes[i + 1]);
+      bool is_turn_around = i != 0 && i != nodes.size() - 1 && nodes[i - 1] == nodes[i + 1];
+      osm_node.duplicate_ = !inserted.second || is_turn_around;
 
       // Keep the node
       way_nodes_->push_back(
