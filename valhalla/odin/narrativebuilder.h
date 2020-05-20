@@ -61,9 +61,11 @@ public:
                                          const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormVerbalContinueInstruction(Maneuver& maneuver,
-                                            uint32_t element_max_count = kVerbalPreElementMaxCount,
-                                            const std::string& delim = kVerbalDelim);
+  std::string
+  FormVerbalContinueInstruction(Maneuver& maneuver,
+                                bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+                                uint32_t element_max_count = kVerbalPreElementMaxCount,
+                                const std::string& delim = kVerbalDelim);
 
 protected:
   /////////////////////////////////////////////////////////////////////////////
@@ -85,10 +87,13 @@ protected:
                                            const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormContinueInstruction(Maneuver& maneuver);
+  std::string FormContinueInstruction(Maneuver& maneuver,
+                                      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+                                      uint32_t element_max_count = kElementMaxCount);
 
   std::string
   FormVerbalAlertContinueInstruction(Maneuver& maneuver,
+                                     bool limit_by_consecutive_count = kLimitByConseuctiveCount,
                                      uint32_t element_max_count = kVerbalAlertElementMaxCount,
                                      const std::string& delim = kVerbalDelim);
 

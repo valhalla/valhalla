@@ -830,9 +830,13 @@ std::string NarrativeBuilder::FormVerbalBecomesInstruction(Maneuver& maneuver,
   return instruction;
 }
 
-std::string NarrativeBuilder::FormContinueInstruction(Maneuver& maneuver) {
+std::string NarrativeBuilder::FormContinueInstruction(Maneuver& maneuver,
+                                                      bool limit_by_consecutive_count,
+                                                      uint32_t element_max_count) {
   // "0": "Continue.",
   // "1": "Continue on <STREET_NAMES>."
+  // "2": "Continue at <JUNCTION_NAME>."
+  // "3": "Continue toward <TOWARD_SIGN>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -844,7 +848,21 @@ std::string NarrativeBuilder::FormContinueInstruction(Maneuver& maneuver) {
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
-  if (!street_names.empty()) {
+  std::string junction_name;
+  std::string guide_sign;
+
+  if (maneuver.HasGuideSign()) {
+    // Set the toward phrase - it takes priority over street names and junction name
+    phrase_id = 3;
+    // Assign guide sign
+    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count);
+  } else if (maneuver.HasJunctionNameSign()) {
+    // Set the junction phrase - it takes priority over street names
+    phrase_id = 2;
+    // Assign guide sign
+    junction_name =
+        maneuver.signs().GetJunctionNameString(element_max_count, limit_by_consecutive_count);
+  } else if (!street_names.empty()) {
     phrase_id = 1;
   }
 
@@ -853,6 +871,8 @@ std::string NarrativeBuilder::FormContinueInstruction(Maneuver& maneuver) {
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kJunctionNameTag, junction_name);
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -863,10 +883,13 @@ std::string NarrativeBuilder::FormContinueInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalAlertContinueInstruction(Maneuver& maneuver,
+                                                                 bool limit_by_consecutive_count,
                                                                  uint32_t element_max_count,
                                                                  const std::string& delim) {
   // "0": "Continue.",
   // "1": "Continue on <STREET_NAMES>."
+  // "2": "Continue at <JUNCTION_NAME>."
+  // "3": "Continue toward <TOWARD_SIGN>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -879,7 +902,23 @@ std::string NarrativeBuilder::FormVerbalAlertContinueInstruction(Maneuver& maneu
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
-  if (!street_names.empty()) {
+  std::string junction_name;
+  std::string guide_sign;
+
+  if (maneuver.HasGuideSign()) {
+    // Set the toward phrase - it takes priority over street names and junction name
+    phrase_id = 3;
+    // Assign guide sign
+    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count, delim,
+                                                 maneuver.verbal_formatter());
+  } else if (maneuver.HasJunctionNameSign()) {
+    // Set the junction phrase - it takes priority over street names
+    phrase_id = 2;
+    // Assign guide sign
+    junction_name =
+        maneuver.signs().GetJunctionNameString(element_max_count, limit_by_consecutive_count, delim,
+                                               maneuver.verbal_formatter());
+  } else if (!street_names.empty()) {
     phrase_id = 1;
   }
 
@@ -888,6 +927,8 @@ std::string NarrativeBuilder::FormVerbalAlertContinueInstruction(Maneuver& maneu
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kJunctionNameTag, junction_name);
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -898,12 +939,17 @@ std::string NarrativeBuilder::FormVerbalAlertContinueInstruction(Maneuver& maneu
 }
 
 std::string NarrativeBuilder::FormVerbalContinueInstruction(Maneuver& maneuver,
+                                                            bool limit_by_consecutive_count,
                                                             uint32_t element_max_count,
                                                             const std::string& delim) {
   // "0": "Continue.",
   // "1": "Continue for <LENGTH>.",
   // "2": "Continue on <STREET_NAMES>.",
   // "3": "Continue on <STREET_NAMES> for <LENGTH>."
+  // "4": "Continue at <JUNCTION_NAME>."
+  // "5": "Continue at <JUNCTION_NAME> for <LENGTH>."
+  // "6": "Continue toward <TOWARD_SIGN>."
+  // "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -916,7 +962,23 @@ std::string NarrativeBuilder::FormVerbalContinueInstruction(Maneuver& maneuver,
 
   // Determine base phrase
   uint8_t phrase_id = 0;
-  if (!street_names.empty()) {
+  std::string junction_name;
+  std::string guide_sign;
+
+  if (maneuver.HasGuideSign()) {
+    // Set the toward phrase - it takes priority over street names and junction name
+    phrase_id = 6;
+    // Assign guide sign
+    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count, delim,
+                                                 maneuver.verbal_formatter());
+  } else if (maneuver.HasJunctionNameSign()) {
+    // Set the junction phrase - it takes priority over street names
+    phrase_id = 4;
+    // Assign guide sign
+    junction_name =
+        maneuver.signs().GetJunctionNameString(element_max_count, limit_by_consecutive_count, delim,
+                                               maneuver.verbal_formatter());
+  } else if (!street_names.empty()) {
     phrase_id = 2;
   }
 
@@ -933,6 +995,8 @@ std::string NarrativeBuilder::FormVerbalContinueInstruction(Maneuver& maneuver,
                      FormLength(maneuver, dictionary_.continue_verbal_subset.metric_lengths,
                                 dictionary_.continue_verbal_subset.us_customary_lengths));
   boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kJunctionNameTag, junction_name);
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
