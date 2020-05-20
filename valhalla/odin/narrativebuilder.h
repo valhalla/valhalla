@@ -109,21 +109,27 @@ protected:
                                         const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormUturnInstruction(Maneuver& maneuver);
+  std::string FormUturnInstruction(Maneuver& maneuver,
+                                   bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+                                   uint32_t element_max_count = kElementMaxCount);
 
   std::string
   FormVerbalAlertUturnInstruction(Maneuver& maneuver,
+                                  bool limit_by_consecutive_count = kLimitByConseuctiveCount,
                                   uint32_t element_max_count = kVerbalAlertElementMaxCount,
                                   const std::string& delim = kVerbalDelim);
 
   std::string FormVerbalUturnInstruction(Maneuver& maneuver,
+                                         bool limit_by_consecutive_count = kLimitByConseuctiveCount,
                                          uint32_t element_max_count = kVerbalPreElementMaxCount,
                                          const std::string& delim = kVerbalDelim);
 
   std::string FormVerbalUturnInstruction(uint8_t phrase_id,
                                          const std::string& relative_dir,
                                          const std::string& street_names,
-                                         const std::string& cross_street_names);
+                                         const std::string& cross_street_names,
+                                         const std::string& junction_name,
+                                         const std::string& guide_sign);
 
   /////////////////////////////////////////////////////////////////////////////
   std::string FormRampStraightInstruction(Maneuver& maneuver,
