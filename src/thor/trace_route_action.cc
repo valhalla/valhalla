@@ -353,6 +353,7 @@ void thor_worker_t::build_route(
   valhalla::TripRoute* route = nullptr;
   std::vector<PathInfo> edges;
   int route_index = 0;
+  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
   for (const auto& path : paths) {
     if (route == nullptr) {
       route = request.mutable_trip()->mutable_routes()->Add();
@@ -389,12 +390,32 @@ void thor_worker_t::build_route(
     add_path_edge(destination_location, dest_segment->edgeid, dest_segment->target, dest_match.lnglat,
                   dest_match.distance_from);
 
+    // TODO: maybe move this into form path...
+    // build up the discontinuities so we can trim shape where we do uturns
+    route_discontinuities.clear();
+    for (size_t i = 0; i < path.second.size() - 1; ++i) {
+      const auto* prev_segment = i > 0 ? path.second[i - 1] : nullptr;
+      const auto* segment = path.second[i];
+      const auto* next_segment = path.second[i + 1];
+      // if we uturn onto this edge we must trim the beginning and if we uturn off we trim the end
+      bool uturn_onto =
+          prev_segment && prev_segment->edgeid != segment->edgeid && prev_segment->target < 1.f;
+      bool uturn_off_of = segment->edgeid != next_segment->edgeid && segment->target < 1.f;
+      if (uturn_onto || uturn_off_of) {
+        route_discontinuities[i] = {{uturn_onto, match_results[segment->first_match_idx].lnglat,
+                                     segment->source},
+                                    {uturn_off_of, match_results[segment->last_match_idx].lnglat,
+                                     segment->target}};
+      }
+    }
+
     // TODO: do we actually need to supply the via/through type locations?
 
     // actually build the leg and add it to the route
     TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, path.first.cbegin(),
                           path.first.cend(), *origin_location, *destination_location,
-                          std::list<valhalla::Location>{}, *route->mutable_legs()->Add(), interrupt);
+                          std::list<valhalla::Location>{}, *route->mutable_legs()->Add(), interrupt,
+                          &route_discontinuities);
 
     if (path.second.back()->discontinuity) {
       ++route_index;

@@ -534,9 +534,7 @@ void SetTripEdgeRoadClass(TripLeg_Edge* trip_edge,
  * @param  trip_node          Trip node to add the edge information to.
  * @param  graphtile          Graph tile for accessing data.
  * @param  second_of_week     The time, from the beginning of the week in seconds at which
- *                               the path entered this edge
- * @param  length_percentage  Scale for the edge length for the partial distance
- *                               at begin and end edges
+ *                            the path entered this edge
  * @param  start_node_idx     The start node index
  * @param  has_junction_name  True if named junction exists, false otherwise
  * @param  start_tile         The start tile of the start node
@@ -555,7 +553,6 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const GraphTile* graphtile,
                           GraphReader& graphreader,
                           const uint32_t second_of_week,
-                          const float length_percentage,
                           const uint32_t start_node_idx,
                           const bool has_junction_name,
                           const GraphTile* start_tile,
@@ -688,12 +685,6 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Set road class if requested
   if (controller.attributes.at(kEdgeRoadClass)) {
     SetTripEdgeRoadClass(trip_edge, directededge, graphtile, graphreader);
-  }
-
-  // Set length if requested. Convert to km
-  if (controller.attributes.at(kEdgeLength)) {
-    float km = std::max((directededge->length() * kKmPerMeter * length_percentage), 0.001f);
-    trip_edge->set_length(km);
   }
 
   // Set speed if requested
@@ -1253,12 +1244,18 @@ void TripLegBuilder::Build(
     bool drive_on_right = graphreader.nodeinfo(start_node)->drive_on_right();
 
     // Add trip edge
-    auto trip_edge = AddTripEdge(controller, path_begin->edgeid, path_begin->trip_id, 0,
-                                 path_begin->mode, travel_types[static_cast<int>(path_begin->mode)],
-                                 mode_costing[static_cast<uint32_t>(path_begin->mode)], edge,
-                                 drive_on_right, trip_path.add_node(), tile, graphreader,
-                                 origin_second_of_week, std::abs(end_pct - start_pct), startnode.id(),
-                                 false, nullptr, path_begin->has_time_restrictions);
+    auto trip_edge =
+        AddTripEdge(controller, path_begin->edgeid, path_begin->trip_id, 0, path_begin->mode,
+                    travel_types[static_cast<int>(path_begin->mode)],
+                    mode_costing[static_cast<uint32_t>(path_begin->mode)], edge, drive_on_right,
+                    trip_path.add_node(), tile, graphreader, origin_second_of_week, startnode.id(),
+                    false, nullptr, path_begin->has_time_restrictions);
+
+    // Set length if requested. Convert to km
+    if (controller.attributes.at(kEdgeLength)) {
+      float km = std::max((edge->length() * kKmPerMeter * std::abs(end_pct - start_pct)), 0.001f);
+      trip_edge->set_length(km);
+    }
 
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex)) {
@@ -1580,18 +1577,20 @@ void TripLegBuilder::Build(
     }
 
     // Add edge to the trip node and set its attributes
-    auto is_last_edge = edge_itr == (path_end - 1);
-    float length_pct = (is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
     TripLeg_Edge* trip_edge =
         AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, costing, directededge,
                     node->drive_on_right(), trip_node, graphtile, graphreader, second_of_week,
-                    length_pct, startnode.id(), node->named_intersection(), start_tile,
+                    startnode.id(), node->named_intersection(), start_tile,
                     edge_itr->has_time_restrictions);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
     auto edgeinfo = graphtile->edgeinfo(directededge->edgeinfo_offset());
     uint32_t begin_index = (is_first_edge) ? 0 : trip_shape.size() - 1;
+
+    // some information regarding shape/length trimming
+    auto is_last_edge = edge_itr == (path_end - 1);
+    float length_pct = (is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
 
     // Process the shape for edges where a route discontinuity occurs
     if (route_discontinuities && !route_discontinuities->empty() &&
@@ -1620,6 +1619,9 @@ void TripLegBuilder::Build(
         edge_end_info.vertex = end_vrt;
       }
 
+      // Overwrite the trimming information for the edge length now that we know what it is
+      length_pct = edge_end_info.distance_along - edge_begin_info.distance_along;
+
       // Trim the shape
       auto edge_length = static_cast<float>(directededge->length());
       trim_shape(edge_begin_info.distance_along * edge_length, edge_begin_info.vertex,
@@ -1629,12 +1631,14 @@ void TripLegBuilder::Build(
                         (edge_shape.begin() + ((edge_begin_info.exists || is_first_edge) ? 0 : 1)),
                         edge_shape.end());
 
+      /*
       // Adjust the length of the trimmed edge if this is a route (check if through_location exist).
       // Do not want to trim the edge length if this is part of map matching (TODO - verify).
       if (!through_loc.empty()) {
         trip_edge->set_length(edge_length * kKmPerMeter *
                               (edge_end_info.distance_along - edge_begin_info.distance_along));
       }
+       */
 
       // If edge_begin_info.exists and is not the first edge then increment begin_index since
       // the previous end shape index should not equal the current begin shape index because
@@ -1668,6 +1672,13 @@ void TripLegBuilder::Build(
       } else {
         trip_shape.insert(trip_shape.end(), edgeinfo.shape().rbegin() + 1, edgeinfo.shape().rend());
       }
+    }
+
+    // Set length if requested. Convert to km
+    if (controller.attributes.at(kEdgeLength)) {
+      float km =
+          std::max((directededge->length() * kKmPerMeter * std::abs(end_pct - start_pct)), 0.001f);
+      trip_edge->set_length(km);
     }
 
     // Set begin shape index if requested

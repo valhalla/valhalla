@@ -59,11 +59,12 @@ TEST(Standalone, UturnMatch) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/uturn_match");
 
   auto result =
-      gurka::match(map, {"1", "2", "1"}, false, "auto", R"({"penalize_immediate_uturn":false})");
+      gurka::match(map, {"1", "2", "1", "2"}, false, "auto", R"({"penalize_immediate_uturn":false})");
 
   gurka::assert::osrm::expect_match(result, {"AB"});
   gurka::assert::raw::expect_maneuvers(result,
                                        {DirectionsLeg_Maneuver_Type_kStart,
+                                        DirectionsLeg_Maneuver_Type_kUturnRight, // left hand driving?
                                         DirectionsLeg_Maneuver_Type_kUturnRight, // left hand driving?
                                         DirectionsLeg_Maneuver_Type_kDestination});
 
@@ -75,7 +76,7 @@ TEST(Standalone, UturnMatch) {
       len += midgard::length(points);
     }
   }
-  EXPECT_NEAR(len, 60.f, 1.f);
+  EXPECT_NEAR(len, 90.f, 1.f);
 
-  gurka::assert::raw::expect_path_length(result, 0.060, 0.001);
+  gurka::assert::raw::expect_path_length(result, 0.090, 0.001);
 }
