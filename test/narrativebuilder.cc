@@ -1851,8 +1851,7 @@ void PopulateEnterRoundaboutManeuverList_0(std::list<Maneuver>& maneuvers,
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
-                   {{"US 15", 1}, {"MD 464", 1}}, {}, {}, "", 0.043000, 2, 41,
-                   Maneuver::RelativeDirection::kRight,
+                   {}, {}, {}, "", 0.043000, 2, 41, Maneuver::RelativeDirection::kRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 264, 167, 135, 139, 1457, 1464, 0,
                    0, 0, 0, 1, 0, 0, 0, 0, {}, {}, {}, {}, 1, 2, 0, 0, 1, 0, "", "", "", 0, 0, 0, 0,
                    2, 0);
@@ -1865,8 +1864,7 @@ void PopulateEnterRoundaboutManeuverList_1(std::list<Maneuver>& maneuvers,
   maneuvers.emplace_back();
   Maneuver& maneuver = maneuvers.back();
   PopulateManeuver(maneuver, country_code, state_code, DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
-                   {{"US 15", 1}, {"MD 464", 1}}, {}, {}, "", 0.043000, 2, 41,
-                   Maneuver::RelativeDirection::kRight,
+                   {}, {}, {}, "", 0.043000, 2, 41, Maneuver::RelativeDirection::kRight,
                    DirectionsLeg_Maneuver_CardinalDirection_kWest, 264, 167, 135, 139, 1457, 1464, 0,
                    0, 0, 0, 1, 0, 0, 0, 0, {}, {}, {}, {}, 1, 2, roundabout_exit_count, 0, 1, 0, "",
                    "", "", 0, 0, 0, 0, 2, 0);
@@ -3872,11 +3870,10 @@ TEST(NarrativeBuilder, TestBuildDestinationInstructions_0_miles_en_US) {
 
   // Add location info to trip path
   TripLeg path;
-  Location* location;
   // origin
-  location = path.add_location();
+  path.add_location();
   // destination
-  location = path.add_location();
+  path.add_location();
 
   EnhancedTripLeg etp(path);
   TryBuild(options, maneuvers, expected_maneuvers, &etp);
@@ -3911,7 +3908,7 @@ TEST(NarrativeBuilder, TestBuildDestinationInstructions_1_miles_en_US) {
   TripLeg path;
   Location* location;
   // origin
-  location = path.add_location();
+  path.add_location();
   // destination
   location = path.add_location();
   location->set_street("3206 Powelton Avenue");
@@ -3949,7 +3946,7 @@ TEST(NarrativeBuilder, TestBuildDestinationInstructions_2_miles_en_US) {
   TripLeg path;
   Location* location;
   // origin
-  location = path.add_location();
+  path.add_location();
   // destination
   location = path.add_location();
   location->set_side_of_street(Location::kRight);
@@ -3987,7 +3984,7 @@ TEST(NarrativeBuilder, TestBuildDestinationInstructions_3_miles_en_US) {
   TripLeg path;
   Location* location;
   // origin
-  location = path.add_location();
+  path.add_location();
   // destination
   location = path.add_location();
   location->set_name("Lancaster Brewing Company");

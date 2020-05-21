@@ -245,23 +245,32 @@ protected:
                                          const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormEnterRoundaboutInstruction(Maneuver& maneuver);
-
   std::string
-  FormVerbalAlertEnterRoundaboutInstruction(Maneuver& maneuver,
-                                            uint32_t element_max_count = kVerbalAlertElementMaxCount,
-                                            const std::string& delim = kVerbalDelim);
+  FormEnterRoundaboutInstruction(Maneuver& maneuver,
+                                 bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+                                 uint32_t element_max_count = kElementMaxCount);
+
+  std::string FormVerbalAlertEnterRoundaboutInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kVerbalAlertElementMaxCount,
+      const std::string& delim = kVerbalDelim);
 
   std::string
   FormVerbalEnterRoundaboutInstruction(Maneuver& maneuver,
+                                       bool limit_by_consecutive_count = kLimitByConseuctiveCount,
                                        uint32_t element_max_count = kVerbalPreElementMaxCount,
                                        const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormExitRoundaboutInstruction(Maneuver& maneuver);
+  std::string
+  FormExitRoundaboutInstruction(Maneuver& maneuver,
+                                bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+                                uint32_t element_max_count = kElementMaxCount);
 
   std::string
   FormVerbalExitRoundaboutInstruction(Maneuver& maneuver,
+                                      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
                                       uint32_t element_max_count = kVerbalPreElementMaxCount,
                                       const std::string& delim = kVerbalDelim);
 

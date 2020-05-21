@@ -163,23 +163,63 @@ const std::map<std::string, std::string> kExpectedMergeVerbalPhrases =
      {"2", "Merge onto <STREET_NAMES>."},
      {"3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."}};
 
-const std::map<std::string, std::string> kExpectedEnterRoundaboutPhrases =
-    {{"0", "Enter the roundabout."},
-     {"1", "Enter the roundabout and take the <ORDINAL_VALUE> exit."}};
+const std::map<std::string, std::string> kExpectedEnterRoundaboutPhrases = {
+    {"0", "Enter the roundabout."},
+    {"1", "Enter the roundabout and take the <ORDINAL_VALUE> exit."},
+    {"2",
+     "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
+    {"3",
+     "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."},
+    {"4", "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."},
+    {"5", "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
+    {"6",
+     "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."},
+    {"7", "Enter the roundabout and take the exit toward <TOWARD_SIGN>."},
+    {"8", "Enter <STREET_NAMES>"},
+    {"9", "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit."},
+    {"10",
+     "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
+    {"11",
+     "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."},
+    {"12", "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."},
+    {"13", "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
+    {"14",
+     "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>."},
+    {"15", "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."}};
 
-const std::map<std::string, std::string> kExpectedEnterRoundaboutVerbalPhrases =
-    {{"0", "Enter the roundabout."},
-     {"1", "Enter the roundabout and take the <ORDINAL_VALUE> exit."}};
+const std::map<std::string, std::string> kExpectedEnterRoundaboutVerbalPhrases = {
+    {"0", "Enter the roundabout."},
+    {"1", "Enter the roundabout and take the <ORDINAL_VALUE> exit."},
+    {"2",
+     "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
+    {"3",
+     "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."},
+    {"4", "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."},
+    {"5", "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
+    {"6", "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."},
+    {"7", "Enter the roundabout and take the exit toward <TOWARD_SIGN>."},
+    {"8", "Enter <STREET_NAMES>"},
+    {"9", "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit."},
+    {"10",
+     "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
+    {"11",
+     "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."},
+    {"12", "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."},
+    {"13", "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."},
+    {"14", "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."},
+    {"15", "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."}};
 
 const std::map<std::string, std::string> kExpectedExitRoundaboutPhrases =
     {{"0", "Exit the roundabout."},
      {"1", "Exit the roundabout onto <STREET_NAMES>."},
-     {"2", "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."}};
+     {"2", "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
+     {"3", "Exit the roundabout toward <TOWARD_SIGN>."}};
 
 const std::map<std::string, std::string> kExpectedExitRoundaboutVerbalPhrases =
     {{"0", "Exit the roundabout."},
      {"1", "Exit the roundabout onto <STREET_NAMES>."},
-     {"2", "Exit the roundabout onto <BEGIN_STREET_NAMES>."}};
+     {"2", "Exit the roundabout onto <BEGIN_STREET_NAMES>."},
+     {"3", "Exit the roundabout toward <TOWARD_SIGN>."}};
 
 const std::map<std::string, std::string> kExpectedEnterFerryPhrases =
     {{"0", "Take the Ferry."},
