@@ -93,7 +93,8 @@ build_config(const std::string& tiledir,
          "route": true,
          "search_radius": 50,
          "sigma_z": 4.07,
-         "turn_penalty_factor": 0
+         "turn_penalty_factor": 0,
+         "penalize_immediate_uturn": true
        },
        "customizable": [
          "mode",
@@ -104,7 +105,8 @@ build_config(const std::string& tiledir,
          "sigma_z",
          "beta",
          "max_route_distance_factor",
-         "max_route_time_factor"
+         "max_route_time_factor",
+         "penalize_immediate_uturn"
        ]
      },
      "loki":{
@@ -208,7 +210,8 @@ std::string build_valhalla_route_request(const map& map,
 std::string build_valhalla_match_request(const map& map,
                                          const std::vector<std::string>& waypoints,
                                          const bool break_at_points = false,
-                                         const std::string& costing = "auto") {
+                                         const std::string& costing = "auto",
+                                         const std::string& trace_options = "{}") {
 
   rapidjson::Document doc;
   doc.SetObject();
@@ -231,8 +234,15 @@ std::string build_valhalla_match_request(const map& map,
   rapidjson::StringBuffer sb;
   rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
   doc.Accept(writer);
-  std::cout << sb.GetString() << std::endl;
-  return sb.GetString();
+  std::string request = sb.GetString();
+  // inject more options directly
+  if (!trace_options.empty()) {
+    request.back() = ',';
+    request += R"("trace_options":)";
+    request += trace_options;
+    request.push_back('}');
+  }
+  return request;
 }
 
 std::vector<std::string> splitter(const std::string in_pattern, const std::string& content) {
@@ -654,7 +664,14 @@ valhalla::Api route(const map& map, const std::string& request_json) {
 valhalla::Api match(const map& map,
                     const std::vector<std::string>& waypoints,
                     const bool break_at_points,
-                    const std::string& costing) {
+                    const std::string& costing,
+                    const std::string& trace_options = "{}",
+                    std::shared_ptr<valhalla::baldr::GraphReader> reader = {}) {
+  if (!reader)
+    reader.reset(new valhalla::baldr::GraphReader(map.config.get_child("mjolnir")));
+  else
+    std::cerr << "[          ] Using pre-allocated baldr::GraphReader" << std::endl;
+
   std::cerr << "[          ] Matching with mjolnir.tile_dir = "
             << map.config.get<std::string>("mjolnir.tile_dir") << " with waypoints ";
   bool first = true;
@@ -665,10 +682,11 @@ valhalla::Api match(const map& map,
     first = false;
   };
   std::cerr << " with costing " << costing << std::endl;
-  auto request_json = detail::build_valhalla_match_request(map, waypoints, break_at_points, costing);
+  auto request_json =
+      detail::build_valhalla_match_request(map, waypoints, break_at_points, costing, trace_options);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
-  valhalla::tyr::actor_t actor(map.config, true);
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
   valhalla::Api api;
   actor.trace_route(request_json, nullptr, &api);
   return api;

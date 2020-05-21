@@ -187,7 +187,6 @@ void set_origin(baldr::GraphReader& reader,
   // route
   const baldr::GraphTile* tile = nullptr;
   for (const auto& edge : origin[origin_idx].edges) {
-    LOG_INFO(" Origin: " + std::to_string(edge.id));
     if (edge.begin_node()) {
       auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
       const auto nodeid = edge_nodes.first;
@@ -233,7 +232,6 @@ void set_destinations(baldr::GraphReader& reader,
   const baldr::GraphTile* tile = nullptr;
   for (uint16_t dest = 0; dest < destinations.size(); dest++) {
     for (const auto& edge : destinations[dest].edges) {
-      LOG_INFO(" Destination: " + std::to_string(edge.id));
       if (edge.begin_node()) {
         auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
         const auto nodeid = edge_nodes.first;
@@ -355,7 +353,8 @@ find_shortest_path(baldr::GraphReader& reader,
                    const Label* edgelabel,
                    const float turn_cost_table[181],
                    const float max_dist,
-                   const float max_time) {
+                   const float max_time,
+                   const bool penalize_uturn) {
   Label label;
   const sif::TravelMode travelmode = costing->travel_mode();
 
@@ -477,7 +476,7 @@ find_shortest_path(baldr::GraphReader& reader,
   while (true) {
     uint32_t label_idx = labelset->pop();
     if (label_idx == baldr::kInvalidLabel) {
-      LOG_INFO("Exhausted labels without finding all destinations");
+      LOG_TRACE("Exhausted labels without finding all destinations");
       break;
     }
 
@@ -499,7 +498,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
       // Congrats!
       if (node_dests.empty() && edge_dests.empty()) {
-        LOG_INFO("The last node destination was found");
+        LOG_TRACE("The last node destination was found");
         break;
       }
 
@@ -523,7 +522,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
       // Congrats!
       if (edge_dests.empty() && node_dests.empty()) {
-        LOG_INFO("The last edge destination was found");
+        LOG_TRACE("The last edge destination was found");
         break;
       }
 
@@ -545,9 +544,9 @@ find_shortest_path(baldr::GraphReader& reader,
           continue;
         }
 
-        // U-turn cost
+        // Immediate u-turn penality
         float turn_cost = label.turn_cost();
-        if (label.edgeid().Is_Valid() && label.edgeid() != origin_edge.id &&
+        if (penalize_uturn && label.edgeid().Is_Valid() && label.edgeid() != origin_edge.id &&
             label.opp_local_idx() == directed_edge->localedgeidx()) {
           turn_cost += turn_cost_table[0];
         }

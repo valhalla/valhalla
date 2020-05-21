@@ -58,7 +58,8 @@ TEST(Standalone, UturnMatch) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/uturn_match");
 
-  auto result = gurka::match(map, {"1", "2", "1"}, false, "auto");
+  auto result =
+      gurka::match(map, {"1", "2", "1"}, false, "auto", R"({"penalize_immediate_uturn":false})");
 
   gurka::assert::osrm::expect_match(result, {"AB"});
   gurka::assert::raw::expect_maneuvers(result,

@@ -68,22 +68,27 @@ boost::property_tree::ptree MapMatcherFactory::MergeConfig(const Options& option
   }
 
   // Check for overrides of matcher related directions options. Override these values in config.
-  if (options.search_radius() && customizable.find("search_radius") != customizable.end()) {
+  if (options.has_search_radius() && customizable.find("search_radius") != customizable.end()) {
     config.put<float>("search_radius", options.search_radius());
   }
-  if (options.turn_penalty_factor() &&
+  if (options.has_turn_penalty_factor() &&
       customizable.find("turn_penalty_factor") != customizable.end()) {
     config.put<float>("turn_penalty_factor", options.turn_penalty_factor());
   }
-  if (options.gps_accuracy() && customizable.find("gps_accuracy") != customizable.end()) {
+  if (options.has_gps_accuracy() && customizable.find("gps_accuracy") != customizable.end()) {
     config.put<float>("gps_accuracy", options.gps_accuracy());
   }
-  if (options.breakage_distance() && customizable.find("breakage_distance") != customizable.end()) {
+  if (options.has_breakage_distance() &&
+      customizable.find("breakage_distance") != customizable.end()) {
     config.put<float>("breakage_distance", options.breakage_distance());
   }
   if (options.has_interpolation_distance() &&
       customizable.find("interpolation_distance") != customizable.end()) {
     config.put<float>("interpolation_distance", options.interpolation_distance());
+  }
+  if (options.has_penalize_immediate_uturn() &&
+      customizable.find("penalize_immediate_uturn") != customizable.end()) {
+    config.put<bool>("penalize_immediate_uturn", options.penalize_immediate_uturn());
   }
 
   // Give it back
