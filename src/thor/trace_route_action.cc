@@ -262,7 +262,7 @@ void thor_worker_t::build_trace(
     throw valhalla_exception_t{442};
 
   // here we enumerate the discontinuities and set the edge index of each input trace point
-  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
+  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> route_discontinuities;
   baldr::GraphId last_id;
   size_t edge_index = 0;
   for (const auto& path : paths) {
@@ -353,7 +353,7 @@ void thor_worker_t::build_route(
   valhalla::TripRoute* route = nullptr;
   std::vector<PathInfo> edges;
   int route_index = 0;
-  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
+  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> route_discontinuities;
   for (const auto& path : paths) {
     if (route == nullptr) {
       route = request.mutable_trip()->mutable_routes()->Add();
@@ -390,7 +390,6 @@ void thor_worker_t::build_route(
     add_path_edge(destination_location, dest_segment->edgeid, dest_segment->target, dest_match.lnglat,
                   dest_match.distance_from);
 
-    // TODO: maybe move this into form path...
     // build up the discontinuities so we can trim shape where we do uturns
     route_discontinuities.clear();
     for (size_t i = 0; i < path.second.size() - 1; ++i) {

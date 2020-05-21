@@ -1115,8 +1115,7 @@ void TripLegBuilder::Build(
     const std::list<valhalla::Location>& through_loc,
     TripLeg& trip_path,
     const std::function<void()>* interrupt_callback,
-    std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
-        route_discontinuities,
+    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>* route_discontinuities,
     float trim_begin,
     float trim_end) {
   // Test interrupt prior to building trip path
@@ -1606,15 +1605,15 @@ void TripLegBuilder::Build(
       auto& edge_end_info = route_discontinuities->at(edge_index).second;
 
       // Handle partial shape for first edge
-      if (is_first_edge && !edge_begin_info.exists) {
-        edge_begin_info.exists = true;
+      if (is_first_edge && !edge_begin_info.trim) {
+        edge_begin_info.trim = true;
         edge_begin_info.distance_along = start_pct;
         edge_begin_info.vertex = start_vrt;
       }
 
       // Handle partial shape for last edge
-      if (is_last_edge && !edge_end_info.exists) {
-        edge_end_info.exists = true;
+      if (is_last_edge && !edge_end_info.trim) {
+        edge_end_info.trim = true;
         edge_end_info.distance_along = end_pct;
         edge_end_info.vertex = end_vrt;
       }
@@ -1628,22 +1627,13 @@ void TripLegBuilder::Build(
                  edge_end_info.distance_along * edge_length, edge_end_info.vertex, edge_shape);
       // Add edge shape to trip
       trip_shape.insert(trip_shape.end(),
-                        (edge_shape.begin() + ((edge_begin_info.exists || is_first_edge) ? 0 : 1)),
+                        (edge_shape.begin() + ((edge_begin_info.trim || is_first_edge) ? 0 : 1)),
                         edge_shape.end());
-
-      /*
-      // Adjust the length of the trimmed edge if this is a route (check if through_location exist).
-      // Do not want to trim the edge length if this is part of map matching (TODO - verify).
-      if (!through_loc.empty()) {
-        trip_edge->set_length(edge_length * kKmPerMeter *
-                              (edge_end_info.distance_along - edge_begin_info.distance_along));
-      }
-       */
 
       // If edge_begin_info.exists and is not the first edge then increment begin_index since
       // the previous end shape index should not equal the current begin shape index because
       // of discontinuity
-      if (edge_begin_info.exists && !is_first_edge) {
+      if (edge_begin_info.trim && !is_first_edge) {
         ++begin_index;
       }
 

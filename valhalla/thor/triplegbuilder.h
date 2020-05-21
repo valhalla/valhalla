@@ -21,8 +21,8 @@ namespace thor {
 
 // Allows you to trim shape for when you need to cut an edge for a discontinuity in map matching
 // or for a uturn in the middle of the edge
-struct RouteDiscontinuity {
-  bool exists;
+struct EdgeTrimmingInfo {
+  bool trim;
   midgard::PointLL vertex;
   float distance_along;
 };
@@ -63,7 +63,7 @@ public:
                     const std::list<valhalla::Location>& through_loc,
                     TripLeg& trip_path,
                     const std::function<void()>* interrupt_callback = nullptr,
-                    std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
+                    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>*
                         route_discontinuities = nullptr,
                     float trim_begin = 0,
                     float trim_end = 0);
