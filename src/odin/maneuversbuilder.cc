@@ -552,10 +552,8 @@ ManeuversBuilder::CombineInternalManeuver(std::list<Maneuver>& maneuvers,
   // Set begin shape index
   next_man->set_begin_shape_index(curr_man->begin_shape_index());
 
-  // Set signs, if needed
-  if (curr_man->HasSigns() && !next_man->HasSigns()) {
-    *(next_man->mutable_signs()) = curr_man->signs();
-  }
+  // NOTE: Do not copy signs from internal maneuver
+  //       It would produce invalid results
 
   if (start_man) {
     next_man->set_type(DirectionsLeg_Maneuver_Type_kStart);
