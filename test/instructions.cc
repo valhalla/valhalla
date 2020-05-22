@@ -475,13 +475,20 @@ TEST(Instructions, validate_turn_at_instructions) {
   int expected_maneuvers_size = 3;
   int maneuver_index = 1;
 
-  // Test turn right at
+  // Turn right at
   test_instructions(
       {VALHALLA_SOURCE_DIR "test/pinpoints/instructions/turn_right_at.pbf"}, expected_routes_size,
       expected_legs_size, expected_maneuvers_size, maneuver_index, "Turn right at 新橋三丁目交番前.",
       "Turn right at 新橋三丁目交番前.",
       "Turn right at 新橋三丁目交番前. Then, in 50 meters, You will arrive at your destination.",
       "Continue for 50 meters.");
+
+  // Turn left at
+  test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/turn_left_at.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Turn left at 銀座七丁目.", "Turn left at 銀座七丁目.",
+                    "Turn left at 銀座七丁目. Then You will arrive at 花椿通り.",
+                    "Continue for 20 meters.");
 }
 
 } // namespace
