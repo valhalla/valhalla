@@ -85,6 +85,7 @@
    * ADDED: Extend roundabout phrases. [#2378](https://github.com/valhalla/valhalla/pull/2378)
    * ADDED: More roundabout phrase tests. [#2382](https://github.com/valhalla/valhalla/pull/2382)
    * ADDED: The ability to allow immediate uturns at trace points in a map matching request [#2380](https://github.com/valhalla/valhalla/pull/2380)
+   * ADDED: Update the turn and continue phrases to include junction names and guide signs. [#2386](https://github.com/valhalla/valhalla/pull/2386)
    
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

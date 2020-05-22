@@ -37,7 +37,9 @@
         "0": "Odbočte mírně <RELATIVE_DIRECTION>.",
         "1": "Odbočte mírně <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "2": "Odbočte mírně <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Odbočte mírně <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>."
+        "3": "Odbočte mírně <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "chodník",
@@ -60,6 +62,12 @@
         ],
         "3": [
           "Odbočte mírně vlevo, abyste zůstali na US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -68,7 +76,9 @@
         "0": "Mírně <RELATIVE_DIRECTION>.",
         "1": "Mírně <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "2": "Mírně <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Mírně <RELATIVE_DIRECTION> a zůstaňte na <STREET_NAMES>."
+        "3": "Mírně <RELATIVE_DIRECTION> a zůstaňte na <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "chodník",
@@ -91,6 +101,12 @@
         ],
         "3": [
           "Mírně vlevo a zůstaňte na US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -117,7 +133,9 @@
     "continue": {
       "phrases": {
         "0": "Pokračujte.",
-        "1": "Pokračujte po <STREET_NAMES>."
+        "1": "Pokračujte po <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "chodníku",
@@ -130,6 +148,12 @@
         ],
         "1": [
           "Pokračujte po 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -138,7 +162,11 @@
         "0": "Pokračujte.",
         "1": "Pokračujte <LENGTH>.",
         "2": "Pokračujte po <STREET_NAMES>.",
-        "3": "Pokračujte <LENGTH> po <STREET_NAMES>."
+        "3": "Pokračujte <LENGTH> po <STREET_NAMES>.",
+        "4": "Continue at <JUNCTION_NAME>.",
+        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
+        "6": "Continue toward <TOWARD_SIGN>.",
+        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
       },
       "empty_street_name_labels": [
         "chodníku",
@@ -171,13 +199,27 @@
         ],
         "3": [
           "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
         ]
       }
     },
     "continue_verbal_alert": {
       "phrases": {
         "0": "Pokračujte.",
-        "1": "Pokračujte po <STREET_NAMES>."
+        "1": "Pokračujte po <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "chodníku",
@@ -190,6 +232,12 @@
         ],
         "1": [
           "Pokračujte po 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -1292,7 +1340,9 @@
         "0": "Odbočte ostře <RELATIVE_DIRECTION>.",
         "1": "Odbočte ostře <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "2": "Odbočte ostře <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Odbočte ostře <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>."
+        "3": "Odbočte ostře <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "chodník",
@@ -1315,6 +1365,12 @@
         ],
         "3": [
           "Odbočte ostře vpravo, abyste zůstali na Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1323,7 +1379,9 @@
         "0": "Odbočte ostře <RELATIVE_DIRECTION>.",
         "1": "Odbočte ostře <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "2": "Odbočte ostře <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Odbočte ostře <RELATIVE_DIRECTION> a zůstaňte na <STREET_NAMES>."
+        "3": "Odbočte ostře <RELATIVE_DIRECTION> a zůstaňte na <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "chodník",
@@ -1346,6 +1404,12 @@
         ],
         "3": [
           "Odbočte ostře vpravo a zůstaňte na Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1834,7 +1898,9 @@
         "0": "Odbočte <RELATIVE_DIRECTION>.",
         "1": "Odbočte <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "2": "Odbočte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Odbočte <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>."
+        "3": "Odbočte <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "chodník",
@@ -1857,6 +1923,12 @@
         ],
         "3": [
           "Odbočte vpravo, abyste zůstali na Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1865,7 +1937,9 @@
         "0": "Odbočte <RELATIVE_DIRECTION>.",
         "1": "Odbočte <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "2": "Odbočte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Pokračujte na <STREET_NAMES>.",
-        "3": "Odbočte <RELATIVE_DIRECTION> a zůstaňte na <STREET_NAMES>."
+        "3": "Odbočte <RELATIVE_DIRECTION> a zůstaňte na <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "chodník",
@@ -1888,6 +1962,12 @@
         ],
         "3": [
           "Odbočte vpravo a zůstaňte na Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1898,7 +1978,9 @@
         "2": "Otočte se <RELATIVE_DIRECTION> a zůstaňte na <STREET_NAMES>.",
         "3": "Otočte se <RELATIVE_DIRECTION> přes <CROSS_STREET_NAMES>.",
         "4": "Otočte se <RELATIVE_DIRECTION> přes <CROSS_STREET_NAMES> na <STREET_NAMES>.",
-        "5": "Otočte se <RELATIVE_DIRECTION> přes <CROSS_STREET_NAMES> a zůstaňte na <STREET_NAMES>."
+        "5": "Otočte se <RELATIVE_DIRECTION> přes <CROSS_STREET_NAMES> a zůstaňte na <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "chodník",
@@ -1927,6 +2009,12 @@
         ],
         "5": [
           "Otočte se vlevo přes Devonshire Road a zůstaňte na Jonestown Road/US 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },
@@ -1937,7 +2025,9 @@
         "2": "Otočte se <RELATIVE_DIRECTION> a zůstaňte na <STREET_NAMES>.",
         "3": "Otočte se <RELATIVE_DIRECTION> přes <CROSS_STREET_NAMES>.",
         "4": "Otočte se <RELATIVE_DIRECTION> přes <CROSS_STREET_NAMES> na <STREET_NAMES>.",
-        "5": "Otočte se <RELATIVE_DIRECTION> přes <CROSS_STREET_NAMES> a zůstaňte na <STREET_NAMES>."
+        "5": "Otočte se <RELATIVE_DIRECTION> přes <CROSS_STREET_NAMES> a zůstaňte na <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "chodník",
@@ -1966,6 +2056,12 @@
         ],
         "5": [
           "Otočte se vlevo přes Devonshire Road a zůstaňte na Jonestown Road, U.S. 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },

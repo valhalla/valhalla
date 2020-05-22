@@ -181,8 +181,6 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     throw valhalla_exception_t{212};
   }
 
-  LOG_INFO(std::string("trip_path_->node_size()=" + std::to_string(trip_path_->node_size())));
-
   // Process the Destination maneuver
   maneuvers.emplace_front();
   CreateDestinationManeuver(maneuvers.front());
@@ -554,10 +552,8 @@ ManeuversBuilder::CombineInternalManeuver(std::list<Maneuver>& maneuvers,
   // Set begin shape index
   next_man->set_begin_shape_index(curr_man->begin_shape_index());
 
-  // Set signs, if needed
-  if (curr_man->HasSigns() && !next_man->HasSigns()) {
-    *(next_man->mutable_signs()) = curr_man->signs();
-  }
+  // NOTE: Do not copy signs from internal maneuver
+  //       It would produce invalid results
 
   if (start_man) {
     next_man->set_type(DirectionsLeg_Maneuver_Type_kStart);
@@ -1461,9 +1457,7 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
         //                  prev_edge->GetNameList());
         //          std::unique_ptr<StreetNames> common_base_names = prev_edge_names
         //              ->FindCommonBaseNames(maneuver.street_names());
-        //          LOG_INFO("prev_edge_names->size()=" + std::to_string(prev_edge_names->size()));
-        //          LOG_INFO("common_base_names->size()=" +
-        //          std::to_string(common_base_names->size())); if (common_base_names->empty()) {
+        //          if (common_base_names->empty()) {
         //            maneuver.set_type(DirectionsLeg_Maneuver_Type_kBecomes);
         //            LOG_TRACE("ManeuverType=BECOMES");
         //          }
