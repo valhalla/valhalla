@@ -685,7 +685,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
               (transit_file_itr->path().string().size() - 4)) {
         auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
         GraphId local_graph_id(graph_id.tileid(), graph_id.level() - 1, graph_id.id());
-        if (GraphReader::DoesTileExist(hierarchy_properties, local_graph_id)) {
+        if (reader.DoesTileExist(local_graph_id)) {
           const GraphTile* tile = reader.GetGraphTile(local_graph_id);
           tiles.emplace(local_graph_id);
           const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") +
