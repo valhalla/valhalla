@@ -883,14 +883,22 @@ void expect_path_length(const valhalla::Api& result,
     }
   }
 
-  EXPECT_NEAR(static_cast<float>(length_km), expected_length_km, error_margin);
+  if (error_margin == 0) {
+    EXPECT_FLOAT_EQ(static_cast<float>(length_km), expected_length_km);
+  } else {
+    EXPECT_NEAR(static_cast<float>(length_km), expected_length_km, error_margin);
+  }
 
   length_km = 0;
   for (const auto& leg : result.directions().routes(0).legs()) {
     length_km += leg.summary().length();
   }
 
-  EXPECT_NEAR(static_cast<float>(length_km), expected_length_km, error_margin);
+  if (error_margin == 0) {
+    EXPECT_FLOAT_EQ(static_cast<float>(length_km), expected_length_km);
+  } else {
+    EXPECT_NEAR(static_cast<float>(length_km), expected_length_km, error_margin);
+  }
 }
 
 void expect_eta(const valhalla::Api& result,
@@ -903,7 +911,11 @@ void expect_eta(const valhalla::Api& result,
     eta_sec += leg.summary().time();
   }
 
-  EXPECT_NEAR(static_cast<float>(eta_sec), expected_eta_seconds, error_margin);
+  if (error_margin == 0) {
+    EXPECT_FLOAT_EQ(static_cast<float>(eta_sec), expected_eta_seconds);
+  } else {
+    EXPECT_NEAR(static_cast<float>(eta_sec), expected_eta_seconds, error_margin);
+  }
 }
 
 } // namespace raw
