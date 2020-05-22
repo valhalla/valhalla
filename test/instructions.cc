@@ -468,6 +468,22 @@ TEST(Instructions, validate_roundabout_unnamed_cycleway_instructions) {
       "Continue for 200 feet.");
 }
 
+TEST(Instructions, validate_turn_at_instructions) {
+
+  int expected_routes_size = 1;
+  int expected_legs_size = 1;
+  int expected_maneuvers_size = 3;
+  int maneuver_index = 1;
+
+  // Test turn right at
+  test_instructions(
+      {VALHALLA_SOURCE_DIR "test/pinpoints/instructions/turn_right_at.pbf"}, expected_routes_size,
+      expected_legs_size, expected_maneuvers_size, maneuver_index, "Turn right at 新橋三丁目交番前.",
+      "Turn right at 新橋三丁目交番前.",
+      "Turn right at 新橋三丁目交番前. Then, in 50 meters, You will arrive at your destination.",
+      "Continue for 50 meters.");
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
