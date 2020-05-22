@@ -1115,7 +1115,7 @@ void TripLegBuilder::Build(
     const std::list<valhalla::Location>& through_loc,
     TripLeg& trip_path,
     const std::function<void()>* interrupt_callback,
-    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>* route_discontinuities,
+    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>* edge_trimming,
     float trim_begin,
     float trim_end) {
   // Test interrupt prior to building trip path
@@ -1592,8 +1592,7 @@ void TripLegBuilder::Build(
     float length_pct = (is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
 
     // Process the shape for edges where a route discontinuity occurs
-    if (route_discontinuities && !route_discontinuities->empty() &&
-        route_discontinuities->count(edge_index) > 0) {
+    if (edge_trimming && !edge_trimming->empty() && edge_trimming->count(edge_index) > 0) {
       // Get edge shape and reverse it if directed edge is not forward.
       auto edge_shape = edgeinfo.shape();
       if (!directededge->forward()) {
@@ -1601,8 +1600,8 @@ void TripLegBuilder::Build(
       }
 
       // Grab the edge begin and end info
-      auto& edge_begin_info = route_discontinuities->at(edge_index).first;
-      auto& edge_end_info = route_discontinuities->at(edge_index).second;
+      auto& edge_begin_info = edge_trimming->at(edge_index).first;
+      auto& edge_end_info = edge_trimming->at(edge_index).second;
 
       // Handle partial shape for first edge
       if (is_first_edge && !edge_begin_info.trim) {

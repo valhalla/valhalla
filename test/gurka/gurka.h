@@ -12,8 +12,14 @@
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
+#include "baldr/rapidjson_utils.h"
 #include "filesystem.h"
 #include "loki/worker.h"
+#include "midgard/constants.h"
+#include "midgard/encoded.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "midgard/util.h"
 #include "mjolnir/util.h"
 #include "odin/worker.h"
 #include "thor/worker.h"
@@ -22,14 +28,6 @@
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-
-#include "rapidjson/document.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
-
-#include "midgard/constants.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
 
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
@@ -209,7 +207,7 @@ std::string build_valhalla_route_request(const map& map,
 
 std::string build_valhalla_match_request(const map& map,
                                          const std::vector<std::string>& waypoints,
-                                         const bool break_at_points = false,
+                                         const std::string& stop_type,
                                          const std::string& costing = "auto",
                                          const std::string& trace_options = "{}") {
 
@@ -222,9 +220,7 @@ std::string build_valhalla_match_request(const map& map,
     rapidjson::Value p(rapidjson::kObjectType);
     p.AddMember("lon", map.nodes.at(waypoint).lng(), allocator);
     p.AddMember("lat", map.nodes.at(waypoint).lat(), allocator);
-    if (break_at_points) {
-      p.AddMember("type", "break", allocator);
-    }
+    p.AddMember("type", stop_type, allocator);
     locations.PushBack(p, allocator);
   }
   doc.AddMember("shape", locations, allocator);
@@ -663,7 +659,7 @@ valhalla::Api route(const map& map, const std::string& request_json) {
 
 valhalla::Api match(const map& map,
                     const std::vector<std::string>& waypoints,
-                    const bool break_at_points,
+                    const std::string& stop_type,
                     const std::string& costing,
                     const std::string& trace_options = "{}",
                     std::shared_ptr<valhalla::baldr::GraphReader> reader = {}) {
@@ -683,7 +679,7 @@ valhalla::Api match(const map& map,
   };
   std::cerr << " with costing " << costing << std::endl;
   auto request_json =
-      detail::build_valhalla_match_request(map, waypoints, break_at_points, costing, trace_options);
+      detail::build_valhalla_match_request(map, waypoints, stop_type, costing, trace_options);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -823,13 +819,12 @@ void expect_maneuvers(const valhalla::Api& result,
                       const std::vector<valhalla::DirectionsLeg_Maneuver_Type>& expected_maneuvers) {
 
   EXPECT_EQ(result.directions().routes_size(), 1);
-  EXPECT_EQ(result.directions().routes(0).legs_size(), 1);
-
-  const auto& leg = result.directions().routes(0).legs(0);
 
   std::vector<valhalla::DirectionsLeg_Maneuver_Type> actual_maneuvers;
-  for (int i = 0; i < leg.maneuver_size(); i++) {
-    actual_maneuvers.push_back(leg.maneuver(i).type());
+  for (const auto& leg : result.directions().routes(0).legs()) {
+    for (const auto& maneuver : leg.maneuver()) {
+      actual_maneuvers.push_back(maneuver.type());
+    }
   }
 
   EXPECT_EQ(actual_maneuvers, expected_maneuvers)
@@ -874,6 +869,20 @@ void expect_path_length(const valhalla::Api& result,
                         const float expected_length_km,
                         const float error_margin = 0) {
   EXPECT_EQ(result.trip().routes_size(), 1);
+
+  double length_m = 0;
+  for (const auto& route : result.trip().routes()) {
+    for (const auto& leg : route.legs()) {
+      auto points = midgard::decode<std::vector<midgard::PointLL>>(leg.shape());
+      length_m += midgard::length(points);
+    }
+  }
+
+  if (error_margin == 0) {
+    EXPECT_FLOAT_EQ(static_cast<float>(length_m), expected_length_km * 1000);
+  } else {
+    EXPECT_NEAR(static_cast<float>(length_m), expected_length_km * 1000, 1.f);
+  }
 
   double length_km = 0;
   for (const auto& leg : result.trip().routes(0).legs()) {

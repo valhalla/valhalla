@@ -45,7 +45,7 @@ public:
    * @param through_loc           The list of through locations along this leg if any
    * @param trip_path             The leg we will fill out
    * @param interrupt_callback    A way to abort the processing in case the request was cancelled
-   * @param route_discontinuities Markers at places in the leg where there are discontinuities
+   * @param edge_trimming         Markers on edges with information on how to trim their shape
    * @param trim_begin            For map matching we have one long sequence of path infos regardless
    *                              of legs so we must supply an amount of elapsed time which we trim
    *                              from the beginning
@@ -64,7 +64,7 @@ public:
                     TripLeg& trip_path,
                     const std::function<void()>* interrupt_callback = nullptr,
                     std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>*
-                        route_discontinuities = nullptr,
+                        edge_trimming = nullptr,
                     float trim_begin = 0,
                     float trim_end = 0);
 };

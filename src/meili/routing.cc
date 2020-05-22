@@ -533,8 +533,8 @@ find_shortest_path(baldr::GraphReader& reader,
       // Expand origin: add segments from origin to destinations ahead
       // at the same edge as well as at the opposite edge to the queue
       const auto& origin = destinations[origin_idx];
-      bool allows_uturn = origin.stoptype_ == baldr::Location::StopType::BREAK ||
-                          origin.stoptype_ == baldr::Location::StopType::VIA;
+      bool allows_immediate_uturn = origin.stoptype_ == baldr::Location::StopType::BREAK ||
+                                    origin.stoptype_ == baldr::Location::StopType::VIA;
       for (const auto& origin_edge : origin.edges) {
         // The tile will be guaranteed to be directededge's tile in this loop
         const baldr::GraphTile* start_tile = nullptr;
@@ -547,7 +547,8 @@ find_shortest_path(baldr::GraphReader& reader,
         }
 
         // Disallow immediate u-turn
-        if (!allows_uturn && label.edgeid().Is_Valid() && label.edgeid() != origin_edge.id &&
+        if (!allows_immediate_uturn && label.edgeid().Is_Valid() &&
+            label.edgeid() != origin_edge.id &&
             label.opp_local_idx() == directed_edge->localedgeidx()) {
           continue;
         }

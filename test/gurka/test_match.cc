@@ -1,9 +1,6 @@
 #include "gurka.h"
 #include <gtest/gtest.h>
 
-#include "midgard/encoded.h"
-#include "midgard/util.h"
-
 using namespace valhalla;
 
 /*************************************************************/
@@ -25,23 +22,13 @@ TEST(Standalone, BasicMatch) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/basic_match");
 
-  auto result = gurka::match(map, {"1", "2", "3", "4", "5"}, false, "auto");
+  auto result = gurka::match(map, {"1", "2", "3", "4", "5"}, "via", "auto");
 
   gurka::assert::osrm::expect_match(result, {"AB", "BC", "CD"});
-  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
-                                                DirectionsLeg_Maneuver_Type_kContinue,
-                                                DirectionsLeg_Maneuver_Type_kRight,
-                                                DirectionsLeg_Maneuver_Type_kDestination});
-
-  // the shape is correct!?
-  float len = 0;
-  for (const auto& route : result.trip().routes()) {
-    for (const auto& leg : route.legs()) {
-      auto points = midgard::decode<std::vector<midgard::PointLL>>(leg.shape());
-      len += midgard::length(points);
-    }
-  }
-  EXPECT_NEAR(len, 100.f, 1.f);
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg::Maneuver::kStart,
+                                                DirectionsLeg::Maneuver::kContinue,
+                                                DirectionsLeg::Maneuver::kRight,
+                                                DirectionsLeg::Maneuver::kDestination});
 
   gurka::assert::raw::expect_path_length(result, 0.100, 0.001);
 }
@@ -57,27 +44,40 @@ TEST(Standalone, UturnMatch) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/uturn_match");
 
-  auto result =
-      gurka::match(map, {"1", "2", "1", "2"}, false, "auto", R"({"penalize_immediate_uturn":false})");
+  for (const auto& test_case : std::vector<std::pair<std::string, float>>{{"break", 90},
+                                                                          {"via", 90},
+                                                                          {"through", 210},
+                                                                          {"break_through", 210}}) {
 
-  gurka::assert::osrm::expect_match(result, {"AB"});
-  gurka::assert::raw::expect_maneuvers(result,
-                                       {DirectionsLeg_Maneuver_Type_kStart,
-                                        DirectionsLeg_Maneuver_Type_kUturnRight, // left hand driving?
-                                        DirectionsLeg_Maneuver_Type_kUturnRight, // left hand driving?
-                                        DirectionsLeg_Maneuver_Type_kDestination});
+    auto result = gurka::match(map, {"1", "2", "1", "2"}, test_case.first, "auto",
+                               R"({"penalize_immediate_uturn":false})");
 
-  // the shape is correct!?
-  float len = 0;
-  for (const auto& route : result.trip().routes()) {
-    for (const auto& leg : route.legs()) {
-      auto points = midgard::decode<std::vector<midgard::PointLL>>(leg.shape());
-      len += midgard::length(points);
+    // throughs or vias will make a uturn without a destination notification (left hand driving)
+    std::vector<DirectionsLeg::Maneuver::Type> expected_maneuvers{
+        DirectionsLeg::Maneuver::kStart,
+        DirectionsLeg::Maneuver::kUturnRight,
+        DirectionsLeg::Maneuver::kUturnRight,
+        DirectionsLeg::Maneuver::kDestination,
+    };
+    // break will have destination at the trace point
+    if (test_case.first == "break") {
+      expected_maneuvers = {
+          DirectionsLeg::Maneuver::kStart, DirectionsLeg::Maneuver::kDestination,
+          DirectionsLeg::Maneuver::kStart, DirectionsLeg::Maneuver::kDestination,
+          DirectionsLeg::Maneuver::kStart, DirectionsLeg::Maneuver::kDestination,
+      };
+    } // break through will have destinations at the trace points but will have to make uturns
+    else if (test_case.first == "break_through") {
+      expected_maneuvers = {
+          DirectionsLeg::Maneuver::kStart,       DirectionsLeg::Maneuver::kDestination,
+          DirectionsLeg::Maneuver::kStart,       DirectionsLeg::Maneuver::kUturnRight,
+          DirectionsLeg::Maneuver::kDestination, DirectionsLeg::Maneuver::kStart,
+          DirectionsLeg::Maneuver::kUturnRight,  DirectionsLeg::Maneuver::kDestination,
+      };
     }
+
+    gurka::assert::osrm::expect_match(result, {"AB"});
+    gurka::assert::raw::expect_maneuvers(result, expected_maneuvers);
+    gurka::assert::raw::expect_path_length(result, test_case.second / 1000, 0.001);
   }
-  EXPECT_NEAR(len, 90.f, 1.f);
-
-  EXPECT_NEAR(1.0, 1.0, 0.0);
-
-  gurka::assert::raw::expect_path_length(result, 0.090, 0.001);
 }

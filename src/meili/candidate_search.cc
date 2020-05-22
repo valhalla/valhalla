@@ -15,6 +15,7 @@ public:
 
   template <typename edgeid_iterator_t>
   std::vector<baldr::PathLocation> WithinSquaredDistance(const midgard::PointLL& location,
+                                                         baldr::Location::StopType stop_type,
                                                          float sq_search_radius,
                                                          edgeid_iterator_t edgeid_begin,
                                                          edgeid_iterator_t edgeid_end,
@@ -27,6 +28,7 @@ private:
 template <typename edgeid_iterator_t>
 std::vector<baldr::PathLocation>
 CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
+                                          baldr::Location::StopType stop_type,
                                           float sq_search_radius,
                                           edgeid_iterator_t edgeid_begin,
                                           edgeid_iterator_t edgeid_end,
@@ -70,7 +72,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
     float offset;
 
     baldr::GraphId snapped_node;
-    baldr::PathLocation correlated(baldr::Location(location, baldr::Location::StopType::BREAK));
+    baldr::PathLocation correlated(baldr::Location(location, stop_type));
 
     // For avoiding recomputing projection later
     const bool edge_included = !edgefilter || edgefilter(edge) != 0.f;
@@ -128,12 +130,17 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
 
 std::vector<std::vector<baldr::PathLocation>>
 CandidateQuery::QueryBulk(const std::vector<midgard::PointLL>& locations,
+                          const std::vector<baldr::Location::StopType>& stop_types,
                           float radius,
                           sif::EdgeFilter filter) {
+  if (locations.size() != stop_types.size())
+    throw std::logic_error("Mismatched number of measurements and their stop types");
   std::vector<std::vector<baldr::PathLocation>> results;
   results.reserve(locations.size());
+  auto stop_type = stop_types.begin();
   for (const auto& location : locations) {
-    results.push_back(Query(location, radius, filter));
+    results.push_back(Query(location, *stop_type, radius, filter));
+    ++stop_type;
   }
   return results;
 }
@@ -235,10 +242,11 @@ CandidateGridQuery::RangeQuery(const AABB2<midgard::PointLL>& range) const {
 }
 
 std::vector<baldr::PathLocation> CandidateGridQuery::Query(const midgard::PointLL& location,
+                                                           baldr::Location::StopType stop_type,
                                                            float sq_search_radius,
                                                            sif::EdgeFilter filter) const {
   CandidateCollector collector(reader_);
-  return Query(location, sq_search_radius, filter, collector);
+  return Query(location, stop_type, sq_search_radius, filter, collector);
 }
 
 } // namespace meili
