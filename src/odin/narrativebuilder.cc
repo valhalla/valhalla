@@ -1061,16 +1061,12 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
     // Assign guide sign
     junction_name =
         maneuver.signs().GetJunctionNameString(element_max_count, limit_by_consecutive_count);
-  } else {
-    if (!street_names.empty()) {
-      phrase_id = 1;
-    }
-    if (!begin_street_names.empty()) {
-      phrase_id = 2;
-    }
-    if (maneuver.to_stay_on()) {
-      phrase_id = 3;
-    }
+  } else if (maneuver.to_stay_on()) {
+    phrase_id = 3;
+  } else if (!begin_street_names.empty()) {
+    phrase_id = 2;
+  } else if (!street_names.empty()) {
+    phrase_id = 1;
   }
 
   // Set instruction to the determined tagged phrase
