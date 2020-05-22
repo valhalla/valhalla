@@ -491,6 +491,13 @@ TEST(Instructions, validate_turn_at_instructions) {
                     "Turn right at 万年橋東. Then You will arrive at your destination.",
                     "Continue for 50 meters.");
 
+  // Make a right U-turn at
+  test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/uturn_right_at.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Make a right U-turn at 銀座五丁目.", "Make a right U-turn at 銀座五丁目.",
+                    "Make a right U-turn at 銀座五丁目. Then You will arrive at 15.",
+                    "Continue for 30 meters.");
+
   // Turn left at
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/turn_left_at.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
