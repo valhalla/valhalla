@@ -37,7 +37,9 @@
         "0": "Mantenha-se <RELATIVE_DIRECTION>.",
         "1": "Mantenha-se <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "2": "Mantenha-se <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>.",
-        "3": "Mantenha-se <RELATIVE_DIRECTION> e continue em <STREET_NAMES>."
+        "3": "Mantenha-se <RELATIVE_DIRECTION> e continue em <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "a calçada",
@@ -60,6 +62,12 @@
         ],
         "3": [
           "Mantenha-se à esquerda e continue em a trilha de mountain bike."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -68,7 +76,9 @@
         "0": "Mantenha-se <RELATIVE_DIRECTION>.",
         "1": "Mantenha-se <RELATIVE_DIRECTION> para <STREET_NAMES>.",
         "2": "Mantenha-se <RELATIVE_DIRECTION> para <BEGIN_STREET_NAMES>.",
-        "3": "Mantenha-se <RELATIVE_DIRECTION> e continue em <STREET_NAMES>."
+        "3": "Mantenha-se <RELATIVE_DIRECTION> e continue em <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "a calçada",
@@ -91,6 +101,12 @@
         ],
         "3": [
           "Mantenha-se à esquerda e continue em A5 Sul."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -117,7 +133,9 @@
     "continue": {
       "phrases": {
         "0": "Continue.",
-        "1": "Continue em <STREET_NAMES>."
+        "1": "Continue em <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "a calçada",
@@ -130,6 +148,12 @@
         ],
         "1": [
           "Continue em Avenida dos Aliados."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -138,7 +162,11 @@
         "0": "Continue.",
         "1": "Continue por <LENGTH>.",
         "2": "Continue em <STREET_NAMES>.",
-        "3": "Continue em <STREET_NAMES> por <LENGTH>."
+        "3": "Continue em <STREET_NAMES> por <LENGTH>.",
+        "4": "Continue at <JUNCTION_NAME>.",
+        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
+        "6": "Continue toward <TOWARD_SIGN>.",
+        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
       },
       "empty_street_name_labels": [
         "a calçada",
@@ -171,13 +199,27 @@
         ],
         "3": [
           "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
         ]
       }
     },
     "continue_verbal_alert": {
       "phrases": {
         "0": "Continue.",
-        "1": "Continue em <STREET_NAMES>."
+        "1": "Continue em <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "a calçada",
@@ -190,6 +232,12 @@
         ],
         "1": [
           "Continue em Avenida dos Aliados."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -1291,7 +1339,9 @@
         "0": "Faça uma curva fechada <RELATIVE_DIRECTION>.",
         "1": "Faça uma curva fechada <RELATIVE_DIRECTION> para <STREET_NAMES>.",
         "2": "Faça uma curva fechada <RELATIVE_DIRECTION> para <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>.",
-        "3": "Faça uma curva fechada <RELATIVE_DIRECTION> e continue em <STREET_NAMES>."
+        "3": "Faça uma curva fechada <RELATIVE_DIRECTION> e continue em <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "a calçada",
@@ -1314,6 +1364,12 @@
         ],
         "3": [
           "Faça uma curva fechada à direita e continue em VCI."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1322,7 +1378,9 @@
         "0": "Faça uma curva fechada <RELATIVE_DIRECTION>.",
         "1": "Faça uma curva fechada <RELATIVE_DIRECTION> para <STREET_NAMES>.",
         "2": "Faça uma curva fechada <RELATIVE_DIRECTION> para <BEGIN_STREET_NAMES>.",
-        "3": "Faça uma curva fechada <RELATIVE_DIRECTION> e continue em <STREET_NAMES>."
+        "3": "Faça uma curva fechada <RELATIVE_DIRECTION> e continue em <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "a calçada",
@@ -1345,6 +1403,12 @@
         ],
         "3": [
           "Vire acentuadamente à direita e continue em VCI."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1830,7 +1894,9 @@
         "0": "Vire <RELATIVE_DIRECTION>.",
         "1": "Vire <RELATIVE_DIRECTION> para <STREET_NAMES>.",
         "2": "Vire <RELATIVE_DIRECTION> para <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>.",
-        "3": "Vire <RELATIVE_DIRECTION> para continuar em <STREET_NAMES>."
+        "3": "Vire <RELATIVE_DIRECTION> para continuar em <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "a calçada",
@@ -1853,6 +1919,12 @@
         ],
         "3": [
           "Vire à direita para continuar em Calçada de Carriche."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1861,7 +1933,9 @@
         "0": "Vire <RELATIVE_DIRECTION>.",
         "1": "Vire <RELATIVE_DIRECTION> para <STREET_NAMES>.",
         "2": "Vire <RELATIVE_DIRECTION> para <BEGIN_STREET_NAMES>.",
-        "3": "Vire <RELATIVE_DIRECTION> para continuar em <STREET_NAMES>."
+        "3": "Vire <RELATIVE_DIRECTION> para continuar em <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "a calçada",
@@ -1884,6 +1958,12 @@
         ],
         "3": [
           "Vire à direita para continuar em Calçada de Carriche."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1894,7 +1974,9 @@
         "2": "Faça o retorno <RELATIVE_DIRECTION> e continue em <STREET_NAMES>.",
         "3": "Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES>.",
         "4": "Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES> para <STREET_NAMES>.",
-        "5": "Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES> e continue em <STREET_NAMES>."
+        "5": "Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES> e continue em <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "a calçada",
@@ -1923,6 +2005,12 @@
         ],
         "5": [
           "Faça o retorno à esquerda em Ladeira do Seminário e continue em Rua do Brasil."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },
@@ -1933,7 +2021,9 @@
         "2": "Faça o retorno <RELATIVE_DIRECTION> e continue em <STREET_NAMES>.",
         "3": "Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES>.",
         "4": "Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES> para <STREET_NAMES>.",
-        "5": "Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES> e continue em <STREET_NAMES>."
+        "5": "Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES> e continue em <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "a calçada",
@@ -1962,6 +2052,12 @@
         ],
         "5": [
           "Faça o retorno à esquerda em Ladeira do Seminário e continue em Avenida do Brasil."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },
