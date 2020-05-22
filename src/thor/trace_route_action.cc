@@ -392,14 +392,15 @@ void thor_worker_t::build_route(
 
     // build up the discontinuities so we can trim shape where we do uturns
     route_discontinuities.clear();
-    for (size_t i = 0; i < path.second.size() - 1; ++i) {
+    for (size_t i = 0; i < path.second.size(); ++i) {
       const auto* prev_segment = i > 0 ? path.second[i - 1] : nullptr;
       const auto* segment = path.second[i];
-      const auto* next_segment = path.second[i + 1];
+      const auto* next_segment = i < path.second.size() - 1 ? path.second[i + 1] : nullptr;
       // if we uturn onto this edge we must trim the beginning and if we uturn off we trim the end
       bool uturn_onto =
           prev_segment && prev_segment->edgeid != segment->edgeid && prev_segment->target < 1.f;
-      bool uturn_off_of = segment->edgeid != next_segment->edgeid && segment->target < 1.f;
+      bool uturn_off_of =
+          next_segment && segment->edgeid != next_segment->edgeid && segment->target < 1.f;
       if (uturn_onto || uturn_off_of) {
         route_discontinuities[i] = {{uturn_onto, match_results[segment->first_match_idx].lnglat,
                                      segment->source},

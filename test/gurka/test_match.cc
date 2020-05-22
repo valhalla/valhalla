@@ -47,7 +47,6 @@ TEST(Standalone, BasicMatch) {
 }
 
 TEST(Standalone, UturnMatch) {
-  midgard::logging::GetLogger();
 
   const std::string ascii_map = "A--1--2--B";
 
@@ -77,6 +76,8 @@ TEST(Standalone, UturnMatch) {
     }
   }
   EXPECT_NEAR(len, 90.f, 1.f);
+
+  EXPECT_NEAR(1.0, 1.0, 0.0);
 
   gurka::assert::raw::expect_path_length(result, 0.090, 0.001);
 }

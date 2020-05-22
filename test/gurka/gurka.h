@@ -874,40 +874,36 @@ void expect_path_length(const valhalla::Api& result,
                         const float expected_length_km,
                         const float error_margin = 0) {
   EXPECT_EQ(result.trip().routes_size(), 1);
-  EXPECT_EQ(result.trip().routes(0).legs_size(), 1);
 
-  const auto& route = result.directions().routes(0).legs();
+  double length_km = 0;
+  for (const auto& leg : result.trip().routes(0).legs()) {
+    for (const auto& node : leg.node()) {
+      if (node.has_edge())
+        length_km += node.edge().length();
+    }
+  }
 
-  float length_km = 0;
+  EXPECT_NEAR(static_cast<float>(length_km), expected_length_km, error_margin);
+
+  length_km = 0;
   for (const auto& leg : result.directions().routes(0).legs()) {
     length_km += leg.summary().length();
   }
 
-  if (error_margin == 0) {
-    EXPECT_FLOAT_EQ(static_cast<float>(length_km), expected_length_km);
-  } else {
-    EXPECT_NEAR(static_cast<float>(length_km), expected_length_km, error_margin);
-  }
+  EXPECT_NEAR(static_cast<float>(length_km), expected_length_km, error_margin);
 }
 
 void expect_eta(const valhalla::Api& result,
                 const float expected_eta_seconds,
                 const float error_margin = 0) {
   EXPECT_EQ(result.trip().routes_size(), 1);
-  EXPECT_EQ(result.trip().routes(0).legs_size(), 1);
-
-  const auto& route = result.directions().routes(0);
 
   double eta_sec = 0;
   for (const auto& leg : result.directions().routes(0).legs()) {
     eta_sec += leg.summary().time();
   }
 
-  if (error_margin == 0) {
-    EXPECT_FLOAT_EQ(eta_sec, expected_eta_seconds);
-  } else {
-    EXPECT_NEAR(eta_sec, expected_eta_seconds, error_margin);
-  }
+  EXPECT_NEAR(static_cast<float>(eta_sec), expected_eta_seconds, error_margin);
 }
 
 } // namespace raw
