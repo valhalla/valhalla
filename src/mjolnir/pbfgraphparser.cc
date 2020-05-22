@@ -381,9 +381,9 @@ public:
     bool has_surface = true;
     std::string name;
     RoadClass roadclass;
-    bool has_controlled_access = false, has_limited_access_road = false;
-    bool has_multi_digitized = false;
-    uint32_t highest_route_type = 0;
+    bool has_controlled_access = false, has_divider = false;
+    bool has_limited_access_road = false, has_multi_digitized = false;
+    uint32_t speed_category = 0, highest_route_type = 0;
 
     // Process tags
     OSMWay w{wayid};
@@ -409,21 +409,19 @@ public:
       } else if (tag.first == "turn_channel" && !infer_turn_channels_) {
         w.set_turn_channel(tag.second == "true" ? true : false);
       } else if (tag.first == "controlled_access") {
-        w.set_controlled_access(tag.second == "true" ? true : false);
-        has_controlled_access = w.controlled_access();
+        has_controlled_access = (tag.second == "true" ? true : false);
       } else if (tag.first == "divider") {
-        w.set_divider(tag.second == "true" ? true : false);
+        has_divider = (tag.second == "true" ? true : false);
       } else if (tag.first == "limited_access_road") {
-        w.set_limited_access_road(tag.second == "true" ? true : false);
-        has_limited_access_road = w.limited_access_road();
+        has_limited_access_road = (tag.second == "true" ? true : false);
       } else if (tag.first == "multi_digitized") {
-        w.set_multi_digitized(tag.second == "true" ? true : false);
-        has_multi_digitized = w.multi_digitized();
+        has_multi_digitized = (tag.second == "true" ? true : false);
       } else if (tag.first == "speed_category") {
-        w.set_speed_category(tag.second);
+        std::stringstream ss(tag.second);
+        ss >> speed_category;
       } else if (tag.first == "highest_route_type") {
-        w.set_highest_route_type(tag.second);
-        highest_route_type = w.highest_route_type();
+        std::stringstream ss(tag.second);
+        ss >> highest_route_type;
       } else if (tag.first == "road_class") {
         roadclass = (RoadClass)std::stoi(tag.second);
         RoadClass roadclass = (RoadClass)std::stoi(tag.second);
@@ -1295,32 +1293,42 @@ public:
     }
 
     // Updating the road classes
-    if (roadclass == RoadClass::kSecondary && has_controlled_access && has_multi_digitized) {
+    // Route 3A example & Beacon Street example
+    if (roadclass == RoadClass::kTertiary &&
+        ((highest_route_type > 0 && !has_controlled_access && !has_multi_digitized) ||
+         (highest_route_type == 0 && has_multi_digitized))) {
+      w.set_road_class(RoadClass::kSecondary);
+    }
+    // Route 3 example
+    if (has_controlled_access && highest_route_type >= 3 && has_multi_digitized) {
       w.set_road_class(RoadClass::kMotorway);
     }
+    // Commonwealth Ave example & US 222 example
+    if (roadclass == RoadClass::kTertiary && highest_route_type >= 2 && !has_controlled_access) {
+      w.set_road_class(RoadClass::kPrimary);
+    }
+    // B13 example & PA 272 example
     if ((roadclass == RoadClass::kPrimary && !has_controlled_access && has_multi_digitized) ||
         (roadclass == RoadClass::kSecondary && highest_route_type > 0 && !has_controlled_access &&
          !has_multi_digitized)) {
       w.set_road_class(RoadClass::kTrunk);
     }
+    // 422 example & Bernestraße example
+    if (roadclass == RoadClass::kSecondary && highest_route_type > 0 && !has_controlled_access &&
+        !has_multi_digitized) {
+      w.set_road_class(RoadClass::kPrimary);
+    }
+    // Vorarlberger Strasse/16 example
     if (roadclass == RoadClass::kTrunk && highest_route_type == 3 && !has_controlled_access &&
         !has_multi_digitized) {
       w.set_road_class(RoadClass::kPrimary);
     }
-    if (roadclass == RoadClass::kSecondary && !has_controlled_access &&
-        ((highest_route_type > 0 && !has_multi_digitized) || has_multi_digitized)) {
+    // Avenida de San Cristóbal example
+    if (roadclass == RoadClass::kSecondary && !has_controlled_access && has_multi_digitized) {
       w.set_road_class(RoadClass::kPrimary);
     }
-    if (roadclass == RoadClass::kTertiary && !has_controlled_access && highest_route_type >= 2 &&
-        (has_multi_digitized || !has_multi_digitized)) {
-      w.set_road_class(RoadClass::kPrimary);
-    }
+    // Avenida del Mar example
     if (roadclass == RoadClass::kSecondary && !has_limited_access_road && !has_multi_digitized) {
-      w.set_road_class(RoadClass::kSecondary);
-    }
-    if (roadclass == RoadClass::kTertiary &&
-        ((highest_route_type > 0 && !has_controlled_access && !has_multi_digitized) ||
-         (highest_route_type == 0 && has_multi_digitized))) {
       w.set_road_class(RoadClass::kSecondary);
     }
 
