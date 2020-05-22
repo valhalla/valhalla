@@ -186,5 +186,4 @@ message Options {
   optional bool guidance_views = 41;                                      // Whether to return guidance_views in the response
   // 42 is reserved
   optional uint32 height_precision = 43 [default = 0];                    // Number of digits precision for heights returned
-  optional bool penalize_immediate_uturn = 44;                            // Whether not to penalize an immediate uturn at a map matching trace point
 }

@@ -86,10 +86,6 @@ boost::property_tree::ptree MapMatcherFactory::MergeConfig(const Options& option
       customizable.find("interpolation_distance") != customizable.end()) {
     config.put<float>("interpolation_distance", options.interpolation_distance());
   }
-  if (options.has_penalize_immediate_uturn() &&
-      customizable.find("penalize_immediate_uturn") != customizable.end()) {
-    config.put<bool>("penalize_immediate_uturn", options.penalize_immediate_uturn());
-  }
 
   // Give it back
   return config;

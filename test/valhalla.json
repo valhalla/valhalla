@@ -70,8 +70,7 @@
       "max_search_radius": 100,
       "geometry": false,
       "route": true,
-      "turn_penalty_factor": 0,
-      "penalize_immediate_uturn": true
+      "turn_penalty_factor": 0
     },
     "auto": {
       "turn_penalty_factor": 200,

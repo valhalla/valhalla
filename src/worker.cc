@@ -929,13 +929,6 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_interpolation_distance(*interpolation_distance);
   }
 
-  // if specified, get the trace penalize_immediate_uturn value in there
-  auto penalize_immediate_uturn =
-      rapidjson::get_optional<bool>(doc, "/trace_options/penalize_immediate_uturn");
-  if (penalize_immediate_uturn) {
-    options.set_penalize_immediate_uturn(*penalize_immediate_uturn);
-  }
-
   // if specified, get the filter_action value in there
   auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
   FilterAction filter_action;

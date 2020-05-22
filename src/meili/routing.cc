@@ -353,8 +353,7 @@ find_shortest_path(baldr::GraphReader& reader,
                    const Label* edgelabel,
                    const float turn_cost_table[181],
                    const float max_dist,
-                   const float max_time,
-                   const bool penalize_uturn) {
+                   const float max_time) {
   Label label;
   const sif::TravelMode travelmode = costing->travel_mode();
 
@@ -533,7 +532,10 @@ find_shortest_path(baldr::GraphReader& reader,
 
       // Expand origin: add segments from origin to destinations ahead
       // at the same edge as well as at the opposite edge to the queue
-      for (const auto& origin_edge : destinations[origin_idx].edges) {
+      const auto& origin = destinations[origin_idx];
+      bool allows_uturn = origin.stoptype_ == baldr::Location::StopType::BREAK ||
+                          origin.stoptype_ == baldr::Location::StopType::VIA;
+      for (const auto& origin_edge : origin.edges) {
         // The tile will be guaranteed to be directededge's tile in this loop
         const baldr::GraphTile* start_tile = nullptr;
         const auto* directed_edge = reader.directededge(origin_edge.id, start_tile);
@@ -544,14 +546,14 @@ find_shortest_path(baldr::GraphReader& reader,
           continue;
         }
 
-        // Immediate u-turn penality
-        float turn_cost = label.turn_cost();
-        if (penalize_uturn && label.edgeid().Is_Valid() && label.edgeid() != origin_edge.id &&
+        // Disallow immediate u-turn
+        if (!allows_uturn && label.edgeid().Is_Valid() && label.edgeid() != origin_edge.id &&
             label.opp_local_idx() == directed_edge->localedgeidx()) {
-          turn_cost += turn_cost_table[0];
+          continue;
         }
 
         // All destinations on this origin edge
+        float turn_cost = label.turn_cost();
         for (const auto other_dest : edge_dests[origin_edge.id]) {
           // All edges of this destination
           for (const auto& destination_edge : destinations[other_dest].edges) {

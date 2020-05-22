@@ -56,7 +56,7 @@ make_conf(const std::string& tile_dir, bool tile_url_gz, size_t curler_count) {
                "mode":"auto","grid":{"cache_size":100240,"size":500},
                "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,"interpolation_distance":10,
                "max_route_distance_factor":3,"max_route_time_factor":3,"max_search_radius":100,"route":true,
-               "search_radius":50,"sigma_z":4.07,"turn_penalty_factor":200,"penalize_immediate_uturn":true}},
+               "search_radius":50,"sigma_z":4.07,"turn_penalty_factor":200}},
       "service_limits": {
         "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
         "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},

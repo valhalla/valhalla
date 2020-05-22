@@ -98,7 +98,7 @@ config = {
   },
   'meili': {
     'mode': 'auto',
-    'customizable': ['mode', 'search_radius', 'turn_penalty_factor', 'gps_accuracy', 'interpolation_distance', 'sigma_z', 'beta', 'max_route_distance_factor', 'max_route_time_factor', 'penalize_immediate_uturn'],
+    'customizable': ['mode', 'search_radius', 'turn_penalty_factor', 'gps_accuracy', 'interpolation_distance', 'sigma_z', 'beta', 'max_route_distance_factor', 'max_route_time_factor'],
     'verbose': False,
     'default': {
       'sigma_z': 4.07,
@@ -112,8 +112,7 @@ config = {
       'search_radius': 50,
       'geometry': False,
       'route': True,
-      'turn_penalty_factor': 0,
-      'penalize_immediate_uturn': True
+      'turn_penalty_factor': 0
     },
     'auto': {
       'turn_penalty_factor': 200,
@@ -121,16 +120,13 @@ config = {
     },
     'pedestrian': {
       'turn_penalty_factor': 100,
-      'search_radius': 50,
-      'penalize_immediate_uturn': False
+      'search_radius': 50
     },
     'bicycle': {
-      'turn_penalty_factor': 140,
-      'penalize_immediate_uturn': False
+      'turn_penalty_factor': 140
     },
     'multimodal': {
-      'turn_penalty_factor': 70,
-      'penalize_immediate_uturn': False
+      'turn_penalty_factor': 70
     },
     'logging': {
       'type': 'std_out',

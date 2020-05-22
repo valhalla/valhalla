@@ -70,8 +70,7 @@
       "route": true,
       "search_radius": 50,
       "sigma_z": 4.07,
-      "turn_penalty_factor": 0,
-      "penalize_immediate_uturn": true
+      "turn_penalty_factor": 0
     },
     "grid": {
       "cache_size": 100240,

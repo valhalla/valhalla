@@ -274,8 +274,6 @@ using labelset_ptr_t = std::shared_ptr<LabelSet>;
  * @param turn_cost_table   array of turn costs based on turn angle
  * @param max_dist          how far to allow the expansion to run
  * @param max_time          how long to allow the expansion to run
- * @param penalize_uturn    whether or not to penalize an immidate uturn at the origin with repsect to
- *                          the edgelabel passed in above
  * @return a map of destination index to label index so that you can recover a path for any
  * destination
  */
@@ -290,8 +288,7 @@ find_shortest_path(baldr::GraphReader& reader,
                    const Label* edgelabel,
                    const float turn_cost_table[181],
                    const float max_dist,
-                   const float max_time,
-                   const bool penalize_uturn);
+                   const float max_time);
 
 // Route path iterator. Methods to assist recovering route paths from Labels.
 class RoutePathIterator : public std::iterator<std::forward_iterator_tag, const Label> {
