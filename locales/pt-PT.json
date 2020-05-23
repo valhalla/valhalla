@@ -354,7 +354,8 @@
       "phrases": {
         "0": "Apanhe o Barco.",
         "1": "Apanhe o <STREET_NAMES>.",
-        "2": "Apanhe o <FERRY_LABEL> <STREET_NAMES>."
+        "2": "Apanhe o <FERRY_LABEL> <STREET_NAMES>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "a via pedonal",
@@ -371,6 +372,9 @@
         ],
         "2": [
           "Apanhe o Barco Cacilhas - Cais do Sodré."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -378,7 +382,8 @@
       "phrases": {
         "0": "Apanhe o Barco.",
         "1": "Apanhe o <STREET_NAMES>.",
-        "2": "Apanhe o <FERRY_LABEL> <STREET_NAMES>."
+        "2": "Apanhe o <FERRY_LABEL> <STREET_NAMES>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "a via pedonal",
@@ -395,6 +400,9 @@
         ],
         "2": [
           "Apanhe o Barco Cacilhas - Cais do Sodré."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -1031,7 +1039,9 @@
         "0": "Junte-se.",
         "1": "Junte-se <RELATIVE_DIRECTION>.",
         "2": "Junte-se a <STREET_NAMES>.",
-        "3": "Junte-se <RELATIVE_DIRECTION> a <STREET_NAMES>."
+        "3": "Junte-se <RELATIVE_DIRECTION> a <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "à esquerda",
@@ -1054,6 +1064,12 @@
         ],
         "3": [
           "Junte-se à direita a A22 Oeste/Marinha Grande."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1062,7 +1078,9 @@
         "0": "Junte-se.",
         "1": "Junte-se <RELATIVE_DIRECTION>.",
         "2": "Junte-se a <STREET_NAMES>.",
-        "3": "Junte-se <RELATIVE_DIRECTION> a <STREET_NAMES>."
+        "3": "Junte-se <RELATIVE_DIRECTION> a <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "à esquerda",
@@ -1085,6 +1103,12 @@
         ],
         "3": [
           "Junte-se à direita a A22 Oeste/Marinha Grande."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },

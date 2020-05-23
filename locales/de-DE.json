@@ -354,7 +354,8 @@
       "phrases": {
         "0": "Die Fähre nehmen.",
         "1": "Die <STREET_NAMES> nehmen.",
-        "2": "Die <FERRY_LABEL> <STREET_NAMES> nehmen."
+        "2": "Die <FERRY_LABEL> <STREET_NAMES> nehmen.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -371,6 +372,9 @@
         ],
         "2": [
           "Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -378,7 +382,8 @@
       "phrases": {
         "0": "Die Fähre nehmen.",
         "1": "Die <STREET_NAMES> nehmen.",
-        "2": "Die <FERRY_LABEL> <STREET_NAMES> nehmen."
+        "2": "Die <FERRY_LABEL> <STREET_NAMES> nehmen.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -395,6 +400,9 @@
         ],
         "2": [
           "Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -1031,7 +1039,9 @@
         "0": "Einfädeln.",
         "1": "<RELATIVE_DIRECTION> einfädeln.",
         "2": "Auf <STREET_NAMES> einfädeln.",
-        "3": "<RELATIVE_DIRECTION> auf <STREET_NAMES> einfädeln."
+        "3": "<RELATIVE_DIRECTION> auf <STREET_NAMES> einfädeln.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "Links",
@@ -1054,6 +1064,12 @@
         ],
         "3": [
           "Merge right onto I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1062,7 +1078,9 @@
         "0": "Einfädeln.",
         "1": "<RELATIVE_DIRECTION> einfädeln.",
         "2": "Auf <STREET_NAMES> einfädeln.",
-        "3": "<RELATIVE_DIRECTION> auf <STREET_NAMES> einfädeln."
+        "3": "<RELATIVE_DIRECTION> auf <STREET_NAMES> einfädeln.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "Links",
@@ -1085,6 +1103,12 @@
         ],
         "3": [
           "Merge right onto I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },

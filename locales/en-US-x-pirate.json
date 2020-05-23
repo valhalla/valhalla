@@ -354,7 +354,8 @@
       "phrases": {
         "0": "Ahoy, me matey! Take the Black Pearl.",
         "1": "Ahoy, me matey! Take the <STREET_NAMES>.",
-        "2": "Ahoy, me matey! Take the <STREET_NAMES> <FERRY_LABEL>."
+        "2": "Ahoy, me matey! Take the <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -371,6 +372,9 @@
         ],
         "2": [
           "Ahoy, me matey! Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -378,7 +382,8 @@
       "phrases": {
         "0": "Ahoy, me matey! Take the Black Pearl.",
         "1": "Ahoy, me matey! Take the <STREET_NAMES>.",
-        "2": "Ahoy, me matey! Take the <STREET_NAMES> <FERRY_LABEL>."
+        "2": "Ahoy, me matey! Take the <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -395,6 +400,9 @@
         ],
         "2": [
           "Ahoy, me matey! Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -1031,7 +1039,9 @@
         "0": "Avast ye, merge.",
         "1": "Avast ye, merge to th' <RELATIVE_DIRECTION>.",
         "2": "Merge onto <STREET_NAMES> me matey.",
-        "3": "Merge to th' <RELATIVE_DIRECTION> onto <STREET_NAMES> me matey."
+        "3": "Merge to th' <RELATIVE_DIRECTION> onto <STREET_NAMES> me matey.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "port",
@@ -1054,6 +1064,12 @@
         ],
         "3": [
           "Merge to th' starboard onto I 83 South me matey."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1062,7 +1078,9 @@
         "0": "Avast ye, merge.",
         "1": "Avast ye, merge to th' <RELATIVE_DIRECTION>.",
         "2": "Merge onto <STREET_NAMES> me matey.",
-        "3": "Merge to th' <RELATIVE_DIRECTION> onto <STREET_NAMES> me matey."
+        "3": "Merge to th' <RELATIVE_DIRECTION> onto <STREET_NAMES> me matey.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "port",
@@ -1085,6 +1103,12 @@
         ],
         "3": [
           "Merge to th' starboard onto I 83 South me matey."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
