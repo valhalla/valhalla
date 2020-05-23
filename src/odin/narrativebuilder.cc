@@ -2903,10 +2903,13 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(Maneuver& mane
   return instruction;
 }
 
-std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
-  // "0": "Take the Ferry.",
-  // "1": "Take the <STREET_NAMES>.",
+std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver,
+                                                        bool limit_by_consecutive_count,
+                                                        uint32_t element_max_count) {
+  // "0": "Take the Ferry."
+  // "1": "Take the <STREET_NAMES>."
   // "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
+  // "3": "Take the ferry toward <TOWARD_SIGN>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2920,7 +2923,14 @@ std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
-  if (!street_names.empty()) {
+  std::string guide_sign;
+
+  if (maneuver.HasGuideSign()) {
+    // Skip to the toward phrase - it takes priority over street names
+    phrase_id = 3;
+    // Assign guide sign
+    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count);
+  } else if (!street_names.empty()) {
     phrase_id = 1;
     if (!HasLabel(street_names, ferry_label)) {
       phrase_id = 2;
@@ -2933,6 +2943,7 @@ std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
   // Replace phrase tags with values
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kFerryLabelTag, ferry_label);
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -2943,21 +2954,26 @@ std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalAlertEnterFerryInstruction(Maneuver& maneuver,
+                                                                   bool limit_by_consecutive_count,
                                                                    uint32_t element_max_count,
                                                                    const std::string& delim) {
-  // "0": "Take the Ferry.",
-  // "1": "Take the <STREET_NAMES>.",
+  // "0": "Take the Ferry."
+  // "1": "Take the <STREET_NAMES>."
   // "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
+  // "3": "Take the ferry toward <TOWARD_SIGN>."
 
-  return FormVerbalEnterFerryInstruction(maneuver, element_max_count, delim);
+  return FormVerbalEnterFerryInstruction(maneuver, limit_by_consecutive_count, element_max_count,
+                                         delim);
 }
 
 std::string NarrativeBuilder::FormVerbalEnterFerryInstruction(Maneuver& maneuver,
+                                                              bool limit_by_consecutive_count,
                                                               uint32_t element_max_count,
                                                               const std::string& delim) {
-  // "0": "Take the Ferry.",
-  // "1": "Take the <STREET_NAMES>.",
+  // "0": "Take the Ferry."
+  // "1": "Take the <STREET_NAMES>."
   // "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
+  // "3": "Take the ferry toward <TOWARD_SIGN>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2972,7 +2988,16 @@ std::string NarrativeBuilder::FormVerbalEnterFerryInstruction(Maneuver& maneuver
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
-  if (!street_names.empty()) {
+
+  std::string guide_sign;
+
+  if (maneuver.HasGuideSign()) {
+    // Skip to the toward phrase - it takes priority over street names
+    phrase_id = 3;
+    // Assign guide sign
+    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count, delim,
+                                                 maneuver.verbal_formatter());
+  } else if (!street_names.empty()) {
     phrase_id = 1;
     if (!HasLabel(street_names, ferry_label)) {
       phrase_id = 2;
@@ -2985,6 +3010,7 @@ std::string NarrativeBuilder::FormVerbalEnterFerryInstruction(Maneuver& maneuver
   // Replace phrase tags with values
   boost::replace_all(instruction, kStreetNamesTag, street_names);
   boost::replace_all(instruction, kFerryLabelTag, ferry_label);
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {

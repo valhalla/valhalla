@@ -291,16 +291,21 @@ protected:
                                       const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormEnterFerryInstruction(Maneuver& maneuver);
+  std::string FormEnterFerryInstruction(Maneuver& maneuver,
+                                        bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+                                        uint32_t element_max_count = kElementMaxCount);
 
   std::string
   FormVerbalAlertEnterFerryInstruction(Maneuver& maneuver,
+                                       bool limit_by_consecutive_count = kLimitByConseuctiveCount,
                                        uint32_t element_max_count = kVerbalAlertElementMaxCount,
                                        const std::string& delim = kVerbalDelim);
 
-  std::string FormVerbalEnterFerryInstruction(Maneuver& maneuver,
-                                              uint32_t element_max_count = kVerbalPreElementMaxCount,
-                                              const std::string& delim = kVerbalDelim);
+  std::string
+  FormVerbalEnterFerryInstruction(Maneuver& maneuver,
+                                  bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+                                  uint32_t element_max_count = kVerbalPreElementMaxCount,
+                                  const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
   std::string FormTransitConnectionStartInstruction(Maneuver& maneuver);
