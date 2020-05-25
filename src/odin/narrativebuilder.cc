@@ -2074,29 +2074,40 @@ std::string NarrativeBuilder::FormKeepInstruction(Maneuver& maneuver,
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
-  // Assign the street names
   std::string street_names;
+  std::string exit_number_sign;
+  std::string toward_sign;
 
-  // For ramps with branch sign info - we use the sign info to match what users are seeing
-  if (maneuver.ramp() && maneuver.HasExitBranchSign()) {
-    street_names =
-        maneuver.signs().GetExitBranchString(element_max_count, limit_by_consecutive_count);
+  // If they exist, process guide signs
+  if (maneuver.HasGuideSign()) {
+    // Assign guide sign
+    toward_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count);
   } else {
-    street_names =
-        FormStreetNames(maneuver, maneuver.street_names(),
-                        &dictionary_.keep_subset.empty_street_name_labels, true, element_max_count);
-
-    // If street names string is empty and the maneuver has sign branch info
-    // then assign the sign branch name to the street names string
-    if (street_names.empty() && maneuver.HasExitBranchSign()) {
+    // For ramps with branch sign info - we use the sign info to match what users are seeing
+    if (maneuver.ramp() && maneuver.HasExitBranchSign()) {
       street_names =
           maneuver.signs().GetExitBranchString(element_max_count, limit_by_consecutive_count);
+    } else {
+      street_names =
+          FormStreetNames(maneuver, maneuver.street_names(),
+                          &dictionary_.keep_subset.empty_street_name_labels, true, element_max_count);
+
+      // If street names string is empty and the maneuver has sign branch info
+      // then assign the sign branch name to the street names string
+      if (street_names.empty() && maneuver.HasExitBranchSign()) {
+        street_names =
+            maneuver.signs().GetExitBranchString(element_max_count, limit_by_consecutive_count);
+      }
+    }
+    // If it exists, process the exit toward sign
+    if (maneuver.HasExitTowardSign()) {
+      // Assign toward sign
+      toward_sign =
+          maneuver.signs().GetExitTowardString(element_max_count, limit_by_consecutive_count);
     }
   }
 
   // Determine which phrase to use
-  std::string exit_number_sign;
-  std::string exit_toward_sign;
   uint8_t phrase_id = 0;
   if (maneuver.HasExitNumberSign()) {
     phrase_id += 1;
@@ -2106,11 +2117,8 @@ std::string NarrativeBuilder::FormKeepInstruction(Maneuver& maneuver,
   if (!street_names.empty()) {
     phrase_id += 2;
   }
-  if (maneuver.HasExitTowardSign()) {
+  if (!toward_sign.empty()) {
     phrase_id += 4;
-    // Assign toward sign
-    exit_toward_sign =
-        maneuver.signs().GetExitTowardString(element_max_count, limit_by_consecutive_count);
   }
 
   // Set instruction to the determined tagged phrase
@@ -2122,7 +2130,7 @@ std::string NarrativeBuilder::FormKeepInstruction(Maneuver& maneuver,
                                                 dictionary_.keep_subset.relative_directions));
   boost::replace_all(instruction, kNumberSignTag, exit_number_sign);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
-  boost::replace_all(instruction, kTowardSignTag, exit_toward_sign);
+  boost::replace_all(instruction, kTowardSignTag, toward_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -2142,22 +2150,40 @@ std::string NarrativeBuilder::FormVerbalAlertKeepInstruction(Maneuver& maneuver,
   // "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
   // "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
 
-  // Assign the street names
-  std::string street_names =
-      FormStreetNames(maneuver, maneuver.street_names(),
-                      &dictionary_.keep_verbal_subset.empty_street_name_labels, true,
-                      element_max_count, delim, maneuver.verbal_formatter());
+  std::string street_names;
+  std::string exit_number_sign;
+  std::string toward_sign;
 
-  // If street names string is empty and the maneuver has sign branch info
-  // then assign the sign branch name to the street names string
-  if (street_names.empty() && maneuver.HasExitBranchSign()) {
-    street_names = maneuver.signs().GetExitBranchString(element_max_count, limit_by_consecutive_count,
-                                                        delim, maneuver.verbal_formatter());
+  // If they exist, process guide signs
+  if (maneuver.HasGuideSign()) {
+    // Assign guide sign
+    toward_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count,
+                                                  delim, maneuver.verbal_formatter());
+  } else {
+
+    // Assign the street names
+    street_names = FormStreetNames(maneuver, maneuver.street_names(),
+                                   &dictionary_.keep_verbal_subset.empty_street_name_labels, true,
+                                   element_max_count, delim, maneuver.verbal_formatter());
+
+    // If street names string is empty and the maneuver has sign branch info
+    // then assign the sign branch name to the street names string
+    if (street_names.empty() && maneuver.HasExitBranchSign()) {
+      street_names =
+          maneuver.signs().GetExitBranchString(element_max_count, limit_by_consecutive_count, delim,
+                                               maneuver.verbal_formatter());
+    }
+
+    // If it exists, process exit toward sign
+    if (maneuver.HasExitTowardSign()) {
+      // Assign toward sign
+      toward_sign =
+          maneuver.signs().GetExitTowardString(element_max_count, limit_by_consecutive_count, delim,
+                                               maneuver.verbal_formatter());
+    }
   }
 
   // Determine which phrase to use
-  std::string exit_number_sign;
-  std::string exit_toward_sign;
   uint8_t phrase_id = 0;
   if (maneuver.HasExitNumberSign()) {
     phrase_id += 1;
@@ -2166,19 +2192,15 @@ std::string NarrativeBuilder::FormVerbalAlertKeepInstruction(Maneuver& maneuver,
         maneuver.signs().GetExitNumberString(0, false, delim, maneuver.verbal_formatter());
   } else if (!street_names.empty()) {
     phrase_id += 2;
-  } else if (maneuver.HasExitTowardSign()) {
+  } else if (!toward_sign.empty()) {
     phrase_id += 4;
-    // Assign toward sign
-    exit_toward_sign =
-        maneuver.signs().GetExitTowardString(element_max_count, limit_by_consecutive_count, delim,
-                                             maneuver.verbal_formatter());
   }
 
   return FormVerbalKeepInstruction(phrase_id,
                                    FormRelativeThreeDirection(maneuver.type(),
                                                               dictionary_.keep_verbal_subset
                                                                   .relative_directions),
-                                   street_names, exit_number_sign, exit_toward_sign);
+                                   street_names, exit_number_sign, toward_sign);
 }
 
 std::string NarrativeBuilder::FormVerbalKeepInstruction(Maneuver& maneuver,
@@ -2196,22 +2218,38 @@ std::string NarrativeBuilder::FormVerbalKeepInstruction(Maneuver& maneuver,
   // "7": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> onto <STREET_NAMES> toward
   // <TOWARD_SIGN>."
 
-  // Assign the street names
-  std::string street_names =
-      FormStreetNames(maneuver, maneuver.street_names(),
-                      &dictionary_.keep_verbal_subset.empty_street_name_labels, true,
-                      element_max_count, delim, maneuver.verbal_formatter());
+  std::string exit_number_sign;
+  std::string toward_sign;
+  std::string street_names;
 
-  // If street names string is empty and the maneuver has sign branch info
-  // then assign the sign branch name to the street names string
-  if (street_names.empty() && maneuver.HasExitBranchSign()) {
-    street_names = maneuver.signs().GetExitBranchString(element_max_count, limit_by_consecutive_count,
-                                                        delim, maneuver.verbal_formatter());
+  // If they exist, process guide signs
+  if (maneuver.HasGuideSign()) {
+    // Assign guide sign
+    toward_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count,
+                                                  delim, maneuver.verbal_formatter());
+  } else {
+    // Assign the street names
+    street_names = FormStreetNames(maneuver, maneuver.street_names(),
+                                   &dictionary_.keep_verbal_subset.empty_street_name_labels, true,
+                                   element_max_count, delim, maneuver.verbal_formatter());
+
+    // If street names string is empty and the maneuver has sign branch info
+    // then assign the sign branch name to the street names string
+    if (street_names.empty() && maneuver.HasExitBranchSign()) {
+      street_names =
+          maneuver.signs().GetExitBranchString(element_max_count, limit_by_consecutive_count, delim,
+                                               maneuver.verbal_formatter());
+    }
+    // If it exists, process exit toward sign
+    if (maneuver.HasExitTowardSign()) {
+      // Assign toward sign
+      toward_sign =
+          maneuver.signs().GetExitTowardString(element_max_count, limit_by_consecutive_count, delim,
+                                               maneuver.verbal_formatter());
+    }
   }
 
   // Determine which phrase to use
-  std::string exit_number_sign;
-  std::string exit_toward_sign;
   uint8_t phrase_id = 0;
   if (maneuver.HasExitNumberSign()) {
     phrase_id += 1;
@@ -2222,26 +2260,22 @@ std::string NarrativeBuilder::FormVerbalKeepInstruction(Maneuver& maneuver,
   if (!street_names.empty()) {
     phrase_id += 2;
   }
-  if (maneuver.HasExitTowardSign()) {
+  if (!toward_sign.empty()) {
     phrase_id += 4;
-    // Assign toward sign
-    exit_toward_sign =
-        maneuver.signs().GetExitTowardString(element_max_count, limit_by_consecutive_count, delim,
-                                             maneuver.verbal_formatter());
   }
 
   return FormVerbalKeepInstruction(phrase_id,
                                    FormRelativeThreeDirection(maneuver.type(),
                                                               dictionary_.keep_verbal_subset
                                                                   .relative_directions),
-                                   street_names, exit_number_sign, exit_toward_sign);
+                                   street_names, exit_number_sign, toward_sign);
 }
 
 std::string NarrativeBuilder::FormVerbalKeepInstruction(uint8_t phrase_id,
                                                         const std::string& relative_dir,
                                                         const std::string& street_names,
                                                         const std::string& exit_number_sign,
-                                                        const std::string& exit_toward_sign) {
+                                                        const std::string& toward_sign) {
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
@@ -2253,7 +2287,7 @@ std::string NarrativeBuilder::FormVerbalKeepInstruction(uint8_t phrase_id,
   boost::replace_all(instruction, kRelativeDirectionTag, relative_dir);
   boost::replace_all(instruction, kNumberSignTag, exit_number_sign);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
-  boost::replace_all(instruction, kTowardSignTag, exit_toward_sign);
+  boost::replace_all(instruction, kTowardSignTag, toward_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -2839,7 +2873,7 @@ std::string NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver,
 
   if (maneuver.HasGuideSign()) {
     // Skip to the toward phrase - it takes priority over street names
-    phrase_id += 3;
+    phrase_id = 3;
     // Assign guide sign
     guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count);
   } else {
@@ -2899,7 +2933,7 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(Maneuver& mane
 
   if (maneuver.HasGuideSign()) {
     // Skip to the toward phrase - it takes priority over street names
-    phrase_id += 3;
+    phrase_id = 3;
     // Assign guide sign
     guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count, delim,
                                                  maneuver.verbal_formatter());
