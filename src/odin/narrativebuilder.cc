@@ -2405,17 +2405,36 @@ std::string NarrativeBuilder::FormVerbalKeepToStayOnInstruction(uint8_t phrase_i
   return instruction;
 }
 
-std::string NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {
-  // "0", "Merge.",
-  // "1", "Merge <RELATIVE_DIRECTION>.",
-  // "2", "Merge onto <STREET_NAMES>.",
-  // "3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+std::string NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver,
+                                                   bool limit_by_consecutive_count,
+                                                   uint32_t element_max_count) {
+  // "0": "Merge."
+  // "1": "Merge <RELATIVE_DIRECTION>."
+  // "2": "Merge onto <STREET_NAMES>."
+  // "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+  // "4": "Merge toward <TOWARD_SIGN>."
+  // "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
+  // Assign the street names
+  std::string street_names =
+      FormStreetNames(maneuver, maneuver.street_names(),
+                      &dictionary_.merge_subset.empty_street_name_labels, true);
+
   // Determine which phrase to use
   uint8_t phrase_id = 0;
+  std::string guide_sign;
+
+  if (maneuver.HasGuideSign()) {
+    // Skip to the toward phrase - it takes priority over street names
+    phrase_id = 4;
+    // Assign guide sign
+    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count);
+  } else if (!street_names.empty()) {
+    phrase_id = 2;
+  }
 
   // Check for merge relative direction
   std::string relative_direction;
@@ -2426,20 +2445,13 @@ std::string NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {
         FormRelativeTwoDirection(maneuver.type(), dictionary_.merge_subset.relative_directions);
   }
 
-  // Assign the street names
-  std::string street_names =
-      FormStreetNames(maneuver, maneuver.street_names(),
-                      &dictionary_.merge_subset.empty_street_name_labels, true);
-  if (!street_names.empty()) {
-    phrase_id += 2;
-  }
-
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.merge_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kRelativeDirectionTag, relative_direction);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -2450,29 +2462,52 @@ std::string NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalAlertMergeInstruction(Maneuver& maneuver,
+                                                              bool limit_by_consecutive_count,
                                                               uint32_t element_max_count,
                                                               const std::string& delim) {
-  // "0", "Merge.",
-  // "1", "Merge <RELATIVE_DIRECTION>.",
-  // "2", "Merge onto <STREET_NAMES>.",
-  // "3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+  // "0": "Merge."
+  // "1": "Merge <RELATIVE_DIRECTION>."
+  // "2": "Merge onto <STREET_NAMES>."
+  // "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+  // "4": "Merge toward <TOWARD_SIGN>."
+  // "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 
-  return FormVerbalMergeInstruction(maneuver, element_max_count, delim);
+  return FormVerbalMergeInstruction(maneuver, limit_by_consecutive_count, element_max_count, delim);
 }
 
 std::string NarrativeBuilder::FormVerbalMergeInstruction(Maneuver& maneuver,
+                                                         bool limit_by_consecutive_count,
                                                          uint32_t element_max_count,
                                                          const std::string& delim) {
-  // "0", "Merge.",
-  // "1", "Merge <RELATIVE_DIRECTION>.",
-  // "2", "Merge onto <STREET_NAMES>.",
-  // "3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+  // "0": "Merge."
+  // "1": "Merge <RELATIVE_DIRECTION>."
+  // "2": "Merge onto <STREET_NAMES>."
+  // "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+  // "4": "Merge toward <TOWARD_SIGN>."
+  // "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
+  // Assign the street names
+  std::string street_names =
+      FormStreetNames(maneuver, maneuver.street_names(),
+                      &dictionary_.merge_verbal_subset.empty_street_name_labels, true,
+                      element_max_count, delim, maneuver.verbal_formatter());
+
   // Determine which phrase to use
   uint8_t phrase_id = 0;
+  std::string guide_sign;
+
+  if (maneuver.HasGuideSign()) {
+    // Skip to the toward phrase - it takes priority over street names
+    phrase_id = 4;
+    // Assign guide sign
+    guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count, delim,
+                                                 maneuver.verbal_formatter());
+  } else if (!street_names.empty()) {
+    phrase_id = 2;
+  }
 
   // Check for merge relative direction
   std::string relative_direction;
@@ -2484,21 +2519,13 @@ std::string NarrativeBuilder::FormVerbalMergeInstruction(Maneuver& maneuver,
                                  dictionary_.merge_verbal_subset.relative_directions);
   }
 
-  // Assign the street names
-  std::string street_names =
-      FormStreetNames(maneuver, maneuver.street_names(),
-                      &dictionary_.merge_verbal_subset.empty_street_name_labels, true,
-                      element_max_count, delim, maneuver.verbal_formatter());
-  if (!street_names.empty()) {
-    phrase_id += 2;
-  }
-
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.merge_verbal_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kRelativeDirectionTag, relative_direction);
   boost::replace_all(instruction, kStreetNamesTag, street_names);
+  boost::replace_all(instruction, kTowardSignTag, guide_sign);
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {

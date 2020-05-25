@@ -249,14 +249,18 @@ protected:
                                                 const std::string& exit_toward_sign = "");
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormMergeInstruction(Maneuver& maneuver);
+  std::string FormMergeInstruction(Maneuver& maneuver,
+                                   bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+                                   uint32_t element_max_count = kElementMaxCount);
 
   std::string
   FormVerbalAlertMergeInstruction(Maneuver& maneuver,
+                                  bool limit_by_consecutive_count = kLimitByConseuctiveCount,
                                   uint32_t element_max_count = kVerbalAlertElementMaxCount,
                                   const std::string& delim = kVerbalDelim);
 
   std::string FormVerbalMergeInstruction(Maneuver& maneuver,
+                                         bool limit_by_consecutive_count = kLimitByConseuctiveCount,
                                          uint32_t element_max_count = kVerbalPreElementMaxCount,
                                          const std::string& delim = kVerbalDelim);
 
