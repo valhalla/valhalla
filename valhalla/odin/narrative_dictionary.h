@@ -139,6 +139,7 @@ constexpr auto kNumberSignTag = "<NUMBER_SIGN>";
 constexpr auto kBranchSignTag = "<BRANCH_SIGN>";
 constexpr auto kTowardSignTag = "<TOWARD_SIGN>";
 constexpr auto kNameSignTag = "<NAME_SIGN>";
+constexpr auto kJunctionNameTag = "<JUNCTION_NAME>";
 constexpr auto kFerryLabelTag = "<FERRY_LABEL>";
 constexpr auto kTransitPlatformTag = "<TRANSIT_STOP>";
 constexpr auto kStationLabelTag = "<STATION_LABEL>";
