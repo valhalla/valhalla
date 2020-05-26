@@ -354,7 +354,8 @@
       "phrases": {
         "0": "Prendi il traghetto.",
         "1": "Prendi <STREET_NAMES>.",
-        "2": "Prendi <STREET_NAMES> <FERRY_LABEL>."
+        "2": "Prendi <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -371,6 +372,9 @@
         ],
         "2": [
           "Prendi il Bridgeport - Port Jefferson traghetto."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -378,7 +382,8 @@
       "phrases": {
         "0": "Prendi il traghetto.",
         "1": "Prendi il <STREET_NAMES>.",
-        "2": "Prendi il <STREET_NAMES> <FERRY_LABEL>."
+        "2": "Prendi il <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -395,6 +400,9 @@
         ],
         "2": [
           "Prendi il traghetto Bridgeport - Port Jefferson."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -1031,7 +1039,9 @@
         "0": "Entra.",
         "1": "Entra a <RELATIVE_DIRECTION>.",
         "2": "Entra in <STREET_NAMES>.",
-        "3": "Entra a <RELATIVE_DIRECTION> in <STREET_NAMES>."
+        "3": "Entra a <RELATIVE_DIRECTION> in <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "sinistra",
@@ -1054,6 +1064,12 @@
         ],
         "3": [
           "Entra a destra in I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1062,7 +1078,9 @@
         "0": "Entra.",
         "1": "Entra a <RELATIVE_DIRECTION>.",
         "2": "Entra in <STREET_NAMES>.",
-        "3": "Entra a <RELATIVE_DIRECTION> in <STREET_NAMES>."
+        "3": "Entra a <RELATIVE_DIRECTION> in <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "sinistra",
@@ -1085,6 +1103,12 @@
         ],
         "3": [
           "Entra a destra in I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },

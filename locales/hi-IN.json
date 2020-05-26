@@ -354,7 +354,8 @@
       "phrases": {
         "0": "नौका लें.",
         "1": "<STREET_NAMES> लें.",
-        "2": "<STREET_NAMES> <FERRY_LABEL> नौका लें."
+        "2": "<STREET_NAMES> <FERRY_LABEL> नौका लें.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -371,6 +372,9 @@
         ],
         "2": [
           "Bridgeport - Port Jefferson नौका लें."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -378,7 +382,8 @@
       "phrases": {
         "0": "नौका लें.",
         "1": "<STREET_NAMES> लें.",
-        "2": "<STREET_NAMES> <FERRY_LABEL> नौका लें."
+        "2": "<STREET_NAMES> <FERRY_LABEL> नौका लें.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -395,6 +400,9 @@
         ],
         "2": [
           "Bridgeport - Port Jefferson नौका लें."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -1031,7 +1039,9 @@
         "0": "मिलें.",
         "1": "<RELATIVE_DIRECTION> मिलें.",
         "2": "<STREET_NAMES> पर मिलें.",
-        "3": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मिलें."
+        "3": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मिलें.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "बाएं",
@@ -1054,6 +1064,12 @@
         ],
         "3": [
           "I 83 South पर दाएँ मिलें."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1062,7 +1078,9 @@
         "0": "मिलें.",
         "1": "<RELATIVE_DIRECTION> मिलें.",
         "2": "<STREET_NAMES> पर मिलें.",
-        "3": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मिलें."
+        "3": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मिलें.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "बाएं",
@@ -1085,6 +1103,12 @@
         ],
         "3": [
           "I 83 South पर दाएँ मिलें."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
