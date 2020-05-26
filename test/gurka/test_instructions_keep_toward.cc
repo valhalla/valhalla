@@ -15,9 +15,9 @@ protected:
     constexpr double gridsize_metres = 1000;
 
     const std::string ascii_map = R"(
-                C--D
-          A--B<--G--H
-                E--F
+                C--D      J--K
+          A--B<--G--H--I<--N--O
+                E--F      L--M
     )";
 
     const gurka::ways ways = {{"AB", {{"highway", "motorway"}, {"name", ""}, {"ref", "A1"}}},
@@ -41,7 +41,32 @@ protected:
                                 {"ref", "B3"},
                                 {"destination", "New York;Philadelphia"},
                                 {"destination:ref", "B3"}}},
-                              {"GH", {{"highway", "motorway"}, {"name", ""}, {"ref", "B3"}}}};
+                              {"GH", {{"highway", "motorway"}, {"name", ""}, {"ref", "B3"}}},
+                              {"HI", {{"highway", "motorway"}, {"name", ""}, {"ref", "B3"}}},
+                              {"IJ",
+                               {{"highway", "motorway"},
+                                {"name", ""},
+                                {"ref", "C1"},
+                                {"junction:ref", "22A"},
+                                {"destination", "Harrisburg;Lancaster"},
+                                {"destination:ref", "C1"}}},
+                              {"JK", {{"highway", "motorway"}, {"name", ""}, {"ref", "C1"}}},
+                              {"IL",
+                               {{"highway", "motorway"},
+                                {"name", ""},
+                                {"ref", "C2"},
+                                {"junction:ref", "22C"},
+                                {"destination", "Baltimore;Washington"},
+                                {"destination:ref", "C2"}}},
+                              {"LM", {{"highway", "motorway"}, {"name", ""}, {"ref", "C2"}}},
+                              {"IN",
+                               {{"highway", "motorway"},
+                                {"name", ""},
+                                {"ref", "C3"},
+                                {"junction:ref", "22B"},
+                                {"destination", "New York;Philadelphia"},
+                                {"destination:ref", "C3"}}},
+                              {"NO", {{"highway", "motorway"}, {"name", ""}, {"ref", "C3"}}}};
 
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
@@ -115,4 +140,61 @@ TEST_F(InstructionsKeepToward, KeepStraightToward) {
                                             "Keep straight toward B3.",
                                             "Keep straight toward B3, New York.",
                                             "Continue for 4 kilometers.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Keep right to take exit number toward
+// "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+TEST_F(InstructionsKeepToward, KeepRightExitNumberToward) {
+  auto result = gurka::route(map, "H", "M", "auto");
+
+  // Verify maneuver types
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kStayRight,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+  int maneuver_index = 1;
+
+  // Verify the keep right to take exit number toward instructions
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, maneuver_index, "Keep right to take exit 22C toward C2/Baltimore/Washington.",
+      "Keep right to take exit 22C.", "Keep right to take exit 22C toward C2, Baltimore.",
+      "Continue for 4 kilometers.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Keep left to take exit number toward
+// "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+TEST_F(InstructionsKeepToward, KeepLeftExitNumberToward) {
+  auto result = gurka::route(map, "H", "K", "auto");
+
+  // Verify maneuver types
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kStayLeft,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+  int maneuver_index = 1;
+
+  // Verify the keep left to take exit number toward instructions
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, maneuver_index, "Keep left to take exit 22A toward C1/Harrisburg/Lancaster.",
+      "Keep left to take exit 22A.", "Keep left to take exit 22A toward C1, Harrisburg.",
+      "Continue for 4 kilometers.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Keep straight to take exit number toward
+// "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+TEST_F(InstructionsKeepToward, KeepStraightExitNumberToward) {
+  auto result = gurka::route(map, "H", "O", "auto");
+
+  // Verify maneuver types
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kStayStraight,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+  int maneuver_index = 1;
+
+  // Verify the keep straight to take exit number toward instructions
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, maneuver_index, "Keep straight to take exit 22B toward C3/New York/Philadelphia.",
+      "Keep straight to take exit 22B.", "Keep straight to take exit 22B toward C3, New York.",
+      "Continue for 4 kilometers.");
 }
