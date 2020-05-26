@@ -50,7 +50,7 @@ gurka::map InstructionsKeepToward::map = {};
 ///////////////////////////////////////////////////////////////////////////////
 // Keep right toward
 // "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
-TEST_F(InstructionsKeepToward, TurnRightToward) {
+TEST_F(InstructionsKeepToward, KeepRightToward) {
   auto result = gurka::route(map, "A", "F", "auto");
 
   // Verify maneuver types
