@@ -2461,13 +2461,14 @@ std::string NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver,
   uint8_t phrase_id = 0;
   std::string guide_sign;
 
-  if (maneuver.HasGuideSign()) {
-    // Skip to the toward phrase - it takes priority over street names
+  if (!street_names.empty()) {
+    // Street names take priority over toward phrase
+    phrase_id = 2;
+  } else if (maneuver.HasGuideSign()) {
+    // Use toward phrase if street names is empty
     phrase_id = 4;
     // Assign guide sign
     guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count);
-  } else if (!street_names.empty()) {
-    phrase_id = 2;
   }
 
   // Check for merge relative direction
@@ -2533,14 +2534,15 @@ std::string NarrativeBuilder::FormVerbalMergeInstruction(Maneuver& maneuver,
   uint8_t phrase_id = 0;
   std::string guide_sign;
 
-  if (maneuver.HasGuideSign()) {
-    // Skip to the toward phrase - it takes priority over street names
+  if (!street_names.empty()) {
+    // Street names take priority over toward phrase
+    phrase_id = 2;
+  } else if (maneuver.HasGuideSign()) {
+    // Use toward phrase if street names is empty
     phrase_id = 4;
     // Assign guide sign
     guide_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count, delim,
                                                  maneuver.verbal_formatter());
-  } else if (!street_names.empty()) {
-    phrase_id = 2;
   }
 
   // Check for merge relative direction
