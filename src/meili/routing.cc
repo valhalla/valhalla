@@ -546,7 +546,8 @@ find_shortest_path(baldr::GraphReader& reader,
           continue;
         }
 
-        // Disallow immediate u-turn
+        // If this location doesnt allow uturns AND this is the opposing edge of the edge label coming
+        // into the location THEN skip it because it would be a uturn
         if (!allows_immediate_uturn && label.edgeid().Is_Valid() &&
             label.edgeid() != origin_edge.id &&
             label.opp_local_idx() == directed_edge->localedgeidx()) {
