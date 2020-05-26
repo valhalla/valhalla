@@ -59,7 +59,7 @@ TEST_F(InstructionsKeepToward, KeepRightToward) {
                                                 DirectionsLeg_Maneuver_Type_kDestination});
   int maneuver_index = 1;
 
-  // Verify the turn right toward instructions
+  // Verify the keep right toward instructions
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, maneuver_index,
                                             "Keep right toward A66/Baltimore/Washington.",

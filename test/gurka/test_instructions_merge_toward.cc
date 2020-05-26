@@ -54,8 +54,7 @@ TEST_F(InstructionsMergeToward, MergeLeftToward) {
                                                 DirectionsLeg_Maneuver_Type_kDestination});
   int maneuver_index = 1;
 
-  // Verify the turn right toward
-  // instructions
+  // Verify the merge left toward instructions
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, maneuver_index,
                                             "Merge left toward A6/Harrisburg/Lancaster.",
