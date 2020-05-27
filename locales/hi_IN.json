@@ -1,0 +1,2755 @@
+{
+  "posix_locale": "hi_IN.UTF-8",
+  "aliases": [
+    "hi"
+  ],
+  "instructions": {
+    "arrive": {
+      "phrases": {
+        "0": "पहुंचें: <TIME>.",
+        "1": "<TRANSIT_STOP> पर पहुंचें: <TIME>."
+      },
+      "example_phrases": {
+        "0": [
+          "पहुंचें: 8:02 AM."
+        ],
+        "1": [
+          "8 St - NYU पर पहुंचें: 8:02 AM."
+        ]
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "<TIME> पर पहुंचें.",
+        "1": "<TRANSIT_STOP> पर <TIME> पर पहुंचें."
+      },
+      "example_phrases": {
+        "0": [
+          "8:02 AM पर पहुंचें."
+        ],
+        "1": [
+          "8 St - NYU पर 8:02 AM पर पहुंचें."
+        ]
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> ओर बढ़े.",
+        "1": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बढ़े.",
+        "2": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बढ़े. <STREET_NAMES> पर बने रहें.",
+        "3": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बने रहें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाएं ओर बढ़े.",
+          "दाएँ ओर बढ़े."
+        ],
+        "1": [
+          "बाएं ओर Arlen Road पर बढ़े.",
+          "दाएँ ओर Arlen Road पर बढ़े."
+        ],
+        "2": [
+          "बाएं ओर Arlen Road पर बढ़े. Arlen Road पर बने रहें.",
+          "दाएँ ओर Arlen Road पर बढ़े. Arlen Road पर बने रहें."
+        ],
+        "3": [
+          "बाएं ओर Arlen Road पर बने रहें.",
+          "दाएँ ओर Arlen Road पर बने रहें."
+        ]
+      }
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> ओर बढ़े.",
+        "1": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बढ़े.",
+        "2": "<RELATIVE_DIRECTION> ओर <BEGIN_STREET_NAMES> पर बढ़े.",
+        "3": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बने रहें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाएं ओर बढ़े.",
+          "दाएँ ओर बढ़े."
+        ],
+        "1": [
+          "बाएं ओर Arlen Road पर बढ़े.",
+          "दाएँ ओर Arlen Road पर बढ़े."
+        ],
+        "2": [
+          "बाएं ओर Belair Road/US 1 Business पर बढ़े.",
+          "दाएँ ओर Belair Road/US 1 Business पर बढ़े."
+        ],
+        "3": [
+          "बाएं ओर Arlen Road पर बने रहें.",
+          "दाएँ ओर Arlen Road पर बने रहें."
+        ]
+      }
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> <STREET_NAMES> बन जाती है."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street Arlen Road बन जाती है."
+        ]
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> <STREET_NAMES> बन जाती है."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street Arlen Road बन जाती है."
+        ]
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "जारी रहें.",
+        "1": "<STREET_NAMES> पर जारी रहें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "example_phrases": {
+        "0": [
+          "जारी रहें."
+        ],
+        "1": [
+          "Arlen Road पर जारी रहें."
+        ]
+      }
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "<LENGTH> के लिए जारी रहें.",
+        "1": "<STREET_NAMES> पर <LENGTH> के लिए जारी रहें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> किलोमीटर",
+        "1 किलोमीटर",
+        "एक आधा किलोमीटर",
+        "<METERS> मीटर",
+        "कम से कम 10 मीटर"
+      ],
+      "us_customary_lengths": [
+        "<MILES> मील",
+        "1 मील",
+        "एक आधा मील",
+        "मील का <TENTHS_OF_MILE>/10 हिस्सा",
+        "मील का 1/10 हिस्सा",
+        "<FEET> फुट",
+        "कम से कम 10 फुट"
+      ],
+      "example_phrases": {
+        "0": [
+          "1 mile के लिए जारी रहें.",
+          "a half mile के लिए जारी रहें."
+        ],
+        "1": [
+          "Arlen Road पर 1 mile के लिए जारी रहें.",
+          "Arlen Road पर a half mile के लिए जारी रहें."
+        ]
+      }
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "जारी रहें.",
+        "1": "<STREET_NAMES> पर जारी रहें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "example_phrases": {
+        "0": [
+          "जारी रहें."
+        ],
+        "1": [
+          "Arlen Road पर जारी रहें."
+        ]
+      }
+    },
+    "depart": {
+      "phrases": {
+        "0": "रवाना: <TIME>.",
+        "1": "<TRANSIT_STOP> से रवाना: <TIME>."
+      },
+      "example_phrases": {
+        "0": [
+          "रवाना: 8:02 AM."
+        ],
+        "1": [
+          "8 St - NYU से रवाना: 8:02 AM."
+        ]
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "रवाना <TIME>.",
+        "1": "<TRANSIT_STOP> से रवाना <TIME>."
+      },
+      "example_phrases": {
+        "0": [
+          "रवाना 8:02 AM."
+        ],
+        "1": [
+          "8 St - NYU से रवाना 8:02 AM."
+        ]
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "आप अपने गंतव्य पर पहुंच चुके हैं.",
+        "1": "आप <DESTINATION> पर पहुंच चुके हैं.",
+        "2": "आपका गंतव्य <RELATIVE_DIRECTION> तरफ है.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION> तरफ है."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "आप अपने गंतव्य पर पहुंच चुके हैं."
+        ],
+        "1": [
+          "आप Lancaster Brewing Company पर पहुंच चुके हैं."
+        ],
+        "2": [
+          "आपका गंतव्य बाएं तरफ है.",
+          "आपका गंतव्य दाएँ तरफ है."
+        ],
+        "3": [
+          "Lancaster Brewing Company बाएं तरफ है.",
+          "Lancaster Brewing Company दाएँ तरफ है."
+        ]
+      }
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "आप अपने गंतव्य पर पहुंच चुके हैं.",
+        "1": "आप <DESTINATION> पर पहुंच चुके हैं.",
+        "2": "आपका गंतव्य <RELATIVE_DIRECTION> तरफ है.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION> तरफ है."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "आप अपने गंतव्य पर पहुंच चुके हैं."
+        ],
+        "1": [
+          "आप Lancaster Brewing Company पर पहुंच चुके हैं."
+        ],
+        "2": [
+          "आपका गंतव्य बाएं तरफ है.",
+          "आपका गंतव्य दाएँ तरफ है."
+        ],
+        "3": [
+          "Lancaster Brewing Company बाएं तरफ है.",
+          "Lancaster Brewing Company दाएँ तरफ है."
+        ]
+      }
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "आप अपने गंतव्य पर पहुंच जाएगे.",
+        "1": "आप <DESTINATION> पर पहुंच जाएगे.",
+        "2": "आपका गंतव्य <RELATIVE_DIRECTION> तरफ होगा.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION> तरफ होगा."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "आप अपने गंतव्य पर पहुंच जाएगे."
+        ],
+        "1": [
+          "आप Lancaster Brewing Company पर पहुंच जाएगे."
+        ],
+        "2": [
+          "आपका गंतव्य बाएं तरफ होगा.",
+          "आपका गंतव्य दाएँ तरफ होगा."
+        ],
+        "3": [
+          "Lancaster Brewing Company बाएं तरफ होगा.",
+          "Lancaster Brewing Company दाएँ तरफ होगा."
+        ]
+      }
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "नौका लें.",
+        "1": "<STREET_NAMES> लें.",
+        "2": "<STREET_NAMES> <FERRY_LABEL> नौका लें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "ferry_label": "Ferry",
+      "example_phrases": {
+        "0": [
+          "नौका लें."
+        ],
+        "1": [
+          "Arlen Road लें."
+        ],
+        "2": [
+          "Arlen Road Ferry नौका लें."
+        ]
+      }
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "नौका लें.",
+        "1": "<STREET_NAMES> लें.",
+        "2": "<STREET_NAMES> <FERRY_LABEL> नौका लें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "ferry_label": "Ferry",
+      "example_phrases": {
+        "0": [
+          "नौका लें."
+        ],
+        "1": [
+          "Arlen Road लें."
+        ],
+        "2": [
+          "Arlen Road Ferry नौका लें."
+        ]
+      }
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "सर्कल प्रवेश करें.",
+        "1": "सर्कल प्रवेश करें और <ORDINAL_VALUE> निकास लें."
+      },
+      "ordinal_values": [
+        "पहला",
+        "दूसरा",
+        "तीसरा",
+        "चौथा",
+        "पांचवां",
+        "छठवां",
+        "सातवां",
+        "आठवाँ",
+        "नौवां",
+        "दसवां"
+      ],
+      "example_phrases": {
+        "0": [
+          "सर्कल प्रवेश करें."
+        ],
+        "1": [
+          "सर्कल प्रवेश करें और पहला निकास लें.",
+          "सर्कल प्रवेश करें और दूसरा निकास लें.",
+          "सर्कल प्रवेश करें और तीसरा निकास लें.",
+          "सर्कल प्रवेश करें और चौथा निकास लें.",
+          "सर्कल प्रवेश करें और पांचवां निकास लें.",
+          "सर्कल प्रवेश करें और छठवां निकास लें.",
+          "सर्कल प्रवेश करें और सातवां निकास लें.",
+          "सर्कल प्रवेश करें और आठवाँ निकास लें.",
+          "सर्कल प्रवेश करें और नौवां निकास लें.",
+          "सर्कल प्रवेश करें और दसवां निकास लें."
+        ]
+      }
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "सर्कल प्रवेश करें.",
+        "1": "सर्कल प्रवेश करें और <ORDINAL_VALUE> निकास लें."
+      },
+      "ordinal_values": [
+        "पहला",
+        "दूसरा",
+        "तीसरा",
+        "चौथा",
+        "पांचवां",
+        "छठवां",
+        "सातवां",
+        "आठवाँ",
+        "नौवां",
+        "दसवां"
+      ],
+      "example_phrases": {
+        "0": [
+          "सर्कल प्रवेश करें."
+        ],
+        "1": [
+          "सर्कल प्रवेश करें और पहला निकास लें.",
+          "सर्कल प्रवेश करें और दूसरा निकास लें.",
+          "सर्कल प्रवेश करें और तीसरा निकास लें.",
+          "सर्कल प्रवेश करें और चौथा निकास लें.",
+          "सर्कल प्रवेश करें और पांचवां निकास लें.",
+          "सर्कल प्रवेश करें और छठवां निकास लें.",
+          "सर्कल प्रवेश करें और सातवां निकास लें.",
+          "सर्कल प्रवेश करें और आठवाँ निकास लें.",
+          "सर्कल प्रवेश करें और नौवां निकास लें.",
+          "सर्कल प्रवेश करें और दसवां निकास लें."
+        ]
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> तरफ निकलें.",
+        "1": "<RELATIVE_DIRECTION> तरफ निकास <NUMBER_SIGN> लें.",
+        "2": "<RELATIVE_DIRECTION> तरफ निकास <BRANCH_SIGN> लें.",
+        "3": "<BRANCH_SIGN> पर <RELATIVE_DIRECTION> तरफ निकास <NUMBER_SIGN> लें.",
+        "4": "<TOWARD_SIGN> की ओर जाने के लिए <RELATIVE_DIRECTION> तरफ निकलें.",
+        "5": "<TOWARD_SIGN> की ओर जाने के लिए <RELATIVE_DIRECTION> तरफ निकास <NUMBER_SIGN> लें.",
+        "6": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ निकास <BRANCH_SIGN> लें.",
+        "7": "<BRANCH_SIGN> पर <TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ निकास <NUMBER_SIGN> लें.",
+        "8": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
+        "10": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> निकास से <BRANCH_SIGN> पर बाहर निकलें",
+        "12": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
+        "14": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
+        "15": "निकलें.",
+        "16": "निकास <NUMBER_SIGN> लें.",
+        "17": "निकास <BRANCH_SIGN> लें.",
+        "18": "<BRANCH_SIGN> पर निकास <NUMBER_SIGN> लें.",
+        "19": "<TOWARD_SIGN> की ओर जाने के लिए निकलें.",
+        "20": "<TOWARD_SIGN> की ओर जाने के लिए निकास <NUMBER_SIGN> लें.",
+        "21": "<TOWARD_SIGN> की ओर निकास <BRANCH_SIGN> लें.",
+        "22": "<BRANCH_SIGN> पर <TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> लें.",
+        "23": "<NAME_SIGN> से बाहर निकलें.",
+        "25": "<NAME_SIGN> निकास से <BRANCH_SIGN> पर बाहर निकलें",
+        "27": "<TOWARD_SIGN> की ओर <NAME_SIGN> से बाहर निकलें.",
+        "29": "<TOWARD_SIGN> की ओर <NAME_SIGN> से बाहर निकलें."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाएं तरफ निकलें.",
+          "दाएँ तरफ निकलें."
+        ],
+        "1": [
+          "बाएं तरफ निकास 67 B-A लें.",
+          "दाएँ तरफ निकास 67 B-A लें."
+        ],
+        "2": [
+          "बाएं तरफ निकास US 322 West लें.",
+          "दाएँ तरफ निकास US 322 West लें."
+        ],
+        "3": [
+          "US 322 West पर बाएं तरफ निकास 67 B-A लें.",
+          "US 322 West पर दाएँ तरफ निकास 67 B-A लें."
+        ],
+        "4": [
+          "Lewiston की ओर जाने के लिए बाएं तरफ निकलें.",
+          "Lewiston की ओर जाने के लिए दाएँ तरफ निकलें."
+        ],
+        "5": [
+          "Lewiston की ओर जाने के लिए बाएं तरफ निकास 67 B-A लें.",
+          "Lewiston की ओर जाने के लिए दाएँ तरफ निकास 67 B-A लें."
+        ],
+        "6": [
+          "Lewiston की ओर बाएं तरफ निकास US 322 West लें.",
+          "Lewiston की ओर दाएँ तरफ निकास US 322 West लें."
+        ],
+        "7": [
+          "US 322 West पर Lewiston की ओर बाएं तरफ निकास 67 B-A लें.",
+          "US 322 West पर Lewiston की ओर दाएँ तरफ निकास 67 B-A लें."
+        ],
+        "8": [
+          "बाएं तरफ White Marsh Boulevard से बाहर निकलें.",
+          "दाएँ तरफ White Marsh Boulevard से बाहर निकलें."
+        ],
+        "10": [
+          "बाएं तरफ White Marsh Boulevard निकास से US 322 West पर बाहर निकलें",
+          "दाएँ तरफ White Marsh Boulevard निकास से US 322 West पर बाहर निकलें"
+        ],
+        "12": [
+          "Lewiston की ओर बाएं तरफ White Marsh Boulevard से बाहर निकलें.",
+          "Lewiston की ओर दाएँ तरफ White Marsh Boulevard से बाहर निकलें."
+        ],
+        "14": [
+          "Lewiston की ओर बाएं तरफ White Marsh Boulevard से बाहर निकलें.",
+          "Lewiston की ओर दाएँ तरफ White Marsh Boulevard से बाहर निकलें."
+        ],
+        "15": [
+          "निकलें."
+        ],
+        "16": [
+          "निकास 67 B-A लें."
+        ],
+        "17": [
+          "निकास US 322 West लें."
+        ],
+        "18": [
+          "US 322 West पर निकास 67 B-A लें."
+        ],
+        "19": [
+          "Lewiston की ओर जाने के लिए निकलें."
+        ],
+        "20": [
+          "Lewiston की ओर जाने के लिए निकास 67 B-A लें."
+        ],
+        "21": [
+          "Lewiston की ओर निकास US 322 West लें."
+        ],
+        "22": [
+          "US 322 West पर Lewiston की ओर निकास 67 B-A लें."
+        ],
+        "23": [
+          "White Marsh Boulevard से बाहर निकलें."
+        ],
+        "25": [
+          "White Marsh Boulevard निकास से US 322 West पर बाहर निकलें"
+        ],
+        "27": [
+          "Lewiston की ओर White Marsh Boulevard से बाहर निकलें."
+        ],
+        "29": [
+          "Lewiston की ओर White Marsh Boulevard से बाहर निकलें."
+        ]
+      }
+    },
+    "exit_ferry": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> की ओर जाएं.",
+        "1": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर जाएं.",
+        "2": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर जाएं. <STREET_NAMES> पर जारी रहें.",
+        "4": "<CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "5": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "6": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर ड्राइव करें. <STREET_NAMES> पर जारी रहें.",
+        "8": "<CARDINAL_DIRECTION> की ओर चलें.",
+        "9": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर चलें.",
+        "10": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर चलें. <STREET_NAMES> पर जारी रहें.",
+        "16": "<CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
+        "17": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
+        "18": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर साइकिल चलाए. <STREET_NAMES> पर जारी रहें."
+      },
+      "cardinal_directions": [
+        "उत्तर",
+        "उत्तर-पूर्व",
+        "पूर्व",
+        "दक्षिण-पूर्व",
+        "दक्षिण",
+        "दक्षिण-पश्चिम",
+        "पश्चिम",
+        "उत्तर-पश्चिम"
+      ],
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "example_phrases": {
+        "0": [
+          "उत्तर की ओर जाएं.",
+          "उत्तर-पूर्व की ओर जाएं.",
+          "पूर्व की ओर जाएं.",
+          "दक्षिण-पूर्व की ओर जाएं.",
+          "दक्षिण की ओर जाएं.",
+          "दक्षिण-पश्चिम की ओर जाएं.",
+          "पश्चिम की ओर जाएं.",
+          "उत्तर-पश्चिम की ओर जाएं."
+        ],
+        "1": [
+          "Arlen Road पर उत्तर की ओर जाएं.",
+          "Arlen Road पर उत्तर-पूर्व की ओर जाएं.",
+          "Arlen Road पर पूर्व की ओर जाएं.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर जाएं.",
+          "Arlen Road पर दक्षिण की ओर जाएं.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर जाएं.",
+          "Arlen Road पर पश्चिम की ओर जाएं.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर जाएं."
+        ],
+        "2": [
+          "उत्तर की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "उत्तर-पूर्व की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "पूर्व की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "दक्षिण-पूर्व की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "दक्षिण की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "दक्षिण-पश्चिम की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "पश्चिम की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "उत्तर-पश्चिम की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें."
+        ],
+        "4": [
+          "उत्तर की ओर ड्राइव करें.",
+          "उत्तर-पूर्व की ओर ड्राइव करें.",
+          "पूर्व की ओर ड्राइव करें.",
+          "दक्षिण-पूर्व की ओर ड्राइव करें.",
+          "दक्षिण की ओर ड्राइव करें.",
+          "दक्षिण-पश्चिम की ओर ड्राइव करें.",
+          "पश्चिम की ओर ड्राइव करें.",
+          "उत्तर-पश्चिम की ओर ड्राइव करें."
+        ],
+        "5": [
+          "Arlen Road पर उत्तर की ओर ड्राइव करें.",
+          "Arlen Road पर उत्तर-पूर्व की ओर ड्राइव करें.",
+          "Arlen Road पर पूर्व की ओर ड्राइव करें.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर ड्राइव करें.",
+          "Arlen Road पर दक्षिण की ओर ड्राइव करें.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर ड्राइव करें.",
+          "Arlen Road पर पश्चिम की ओर ड्राइव करें.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर ड्राइव करें."
+        ],
+        "6": [
+          "उत्तर की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "उत्तर-पूर्व की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "पूर्व की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "दक्षिण-पूर्व की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "दक्षिण की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "दक्षिण-पश्चिम की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "पश्चिम की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "उत्तर-पश्चिम की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें."
+        ],
+        "8": [
+          "उत्तर की ओर चलें.",
+          "उत्तर-पूर्व की ओर चलें.",
+          "पूर्व की ओर चलें.",
+          "दक्षिण-पूर्व की ओर चलें.",
+          "दक्षिण की ओर चलें.",
+          "दक्षिण-पश्चिम की ओर चलें.",
+          "पश्चिम की ओर चलें.",
+          "उत्तर-पश्चिम की ओर चलें."
+        ],
+        "9": [
+          "Arlen Road पर उत्तर की ओर चलें.",
+          "Arlen Road पर उत्तर-पूर्व की ओर चलें.",
+          "Arlen Road पर पूर्व की ओर चलें.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर चलें.",
+          "Arlen Road पर दक्षिण की ओर चलें.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर चलें.",
+          "Arlen Road पर पश्चिम की ओर चलें.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर चलें."
+        ],
+        "10": [
+          "उत्तर की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "उत्तर-पूर्व की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "पूर्व की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "दक्षिण-पूर्व की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "दक्षिण की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "दक्षिण-पश्चिम की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "पश्चिम की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "उत्तर-पश्चिम की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें."
+        ],
+        "16": [
+          "उत्तर की ओर साइकिल चलाए.",
+          "उत्तर-पूर्व की ओर साइकिल चलाए.",
+          "पूर्व की ओर साइकिल चलाए.",
+          "दक्षिण-पूर्व की ओर साइकिल चलाए.",
+          "दक्षिण की ओर साइकिल चलाए.",
+          "दक्षिण-पश्चिम की ओर साइकिल चलाए.",
+          "पश्चिम की ओर साइकिल चलाए.",
+          "उत्तर-पश्चिम की ओर साइकिल चलाए."
+        ],
+        "17": [
+          "Arlen Road पर उत्तर की ओर साइकिल चलाए.",
+          "Arlen Road पर उत्तर-पूर्व की ओर साइकिल चलाए.",
+          "Arlen Road पर पूर्व की ओर साइकिल चलाए.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर साइकिल चलाए.",
+          "Arlen Road पर दक्षिण की ओर साइकिल चलाए.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर साइकिल चलाए.",
+          "Arlen Road पर पश्चिम की ओर साइकिल चलाए.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर साइकिल चलाए."
+        ],
+        "18": [
+          "उत्तर की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "उत्तर-पूर्व की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "पूर्व की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "दक्षिण-पूर्व की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "दक्षिण की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "दक्षिण-पश्चिम की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "पश्चिम की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "उत्तर-पश्चिम की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें."
+        ]
+      }
+    },
+    "exit_ferry_verbal": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> की ओर बढे़.",
+        "1": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर बढे़.",
+        "2": "<BEGIN_STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर बढे़.",
+        "4": "<CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "5": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "6": "<BEGIN_STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "8": "<CARDINAL_DIRECTION> की ओर चले़.",
+        "9": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर चले़.",
+        "10": "<BEGIN_STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर चले़.",
+        "16": "<CARDINAL_DIRECTION> की ओर साइकिल चलाएं.",
+        "17": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाएं.",
+        "18": "<BEGIN_STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाएं."
+      },
+      "cardinal_directions": [
+        "उत्तर",
+        "उत्तर-पूर्व",
+        "पूर्व",
+        "दक्षिण-पूर्व",
+        "दक्षिण",
+        "दक्षिण-पश्चिम",
+        "पश्चिम",
+        "उत्तर-पश्चिम"
+      ],
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "example_phrases": {
+        "0": [
+          "उत्तर की ओर बढे़.",
+          "उत्तर-पूर्व की ओर बढे़.",
+          "पूर्व की ओर बढे़.",
+          "दक्षिण-पूर्व की ओर बढे़.",
+          "दक्षिण की ओर बढे़.",
+          "दक्षिण-पश्चिम की ओर बढे़.",
+          "पश्चिम की ओर बढे़.",
+          "उत्तर-पश्चिम की ओर बढे़."
+        ],
+        "1": [
+          "Arlen Road पर उत्तर की ओर बढे़.",
+          "Arlen Road पर उत्तर-पूर्व की ओर बढे़.",
+          "Arlen Road पर पूर्व की ओर बढे़.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर बढे़.",
+          "Arlen Road पर दक्षिण की ओर बढे़.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर बढे़.",
+          "Arlen Road पर पश्चिम की ओर बढे़.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर बढे़."
+        ],
+        "2": [
+          "Belair Road/US 1 Business पर उत्तर की ओर बढे़.",
+          "Belair Road/US 1 Business पर उत्तर-पूर्व की ओर बढे़.",
+          "Belair Road/US 1 Business पर पूर्व की ओर बढे़.",
+          "Belair Road/US 1 Business पर दक्षिण-पूर्व की ओर बढे़.",
+          "Belair Road/US 1 Business पर दक्षिण की ओर बढे़.",
+          "Belair Road/US 1 Business पर दक्षिण-पश्चिम की ओर बढे़.",
+          "Belair Road/US 1 Business पर पश्चिम की ओर बढे़.",
+          "Belair Road/US 1 Business पर उत्तर-पश्चिम की ओर बढे़."
+        ],
+        "4": [
+          "उत्तर की ओर ड्राइव करें.",
+          "उत्तर-पूर्व की ओर ड्राइव करें.",
+          "पूर्व की ओर ड्राइव करें.",
+          "दक्षिण-पूर्व की ओर ड्राइव करें.",
+          "दक्षिण की ओर ड्राइव करें.",
+          "दक्षिण-पश्चिम की ओर ड्राइव करें.",
+          "पश्चिम की ओर ड्राइव करें.",
+          "उत्तर-पश्चिम की ओर ड्राइव करें."
+        ],
+        "5": [
+          "Arlen Road पर उत्तर की ओर ड्राइव करें.",
+          "Arlen Road पर उत्तर-पूर्व की ओर ड्राइव करें.",
+          "Arlen Road पर पूर्व की ओर ड्राइव करें.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर ड्राइव करें.",
+          "Arlen Road पर दक्षिण की ओर ड्राइव करें.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर ड्राइव करें.",
+          "Arlen Road पर पश्चिम की ओर ड्राइव करें.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर ड्राइव करें."
+        ],
+        "6": [
+          "Belair Road/US 1 Business पर उत्तर की ओर ड्राइव करें.",
+          "Belair Road/US 1 Business पर उत्तर-पूर्व की ओर ड्राइव करें.",
+          "Belair Road/US 1 Business पर पूर्व की ओर ड्राइव करें.",
+          "Belair Road/US 1 Business पर दक्षिण-पूर्व की ओर ड्राइव करें.",
+          "Belair Road/US 1 Business पर दक्षिण की ओर ड्राइव करें.",
+          "Belair Road/US 1 Business पर दक्षिण-पश्चिम की ओर ड्राइव करें.",
+          "Belair Road/US 1 Business पर पश्चिम की ओर ड्राइव करें.",
+          "Belair Road/US 1 Business पर उत्तर-पश्चिम की ओर ड्राइव करें."
+        ],
+        "8": [
+          "उत्तर की ओर चले़.",
+          "उत्तर-पूर्व की ओर चले़.",
+          "पूर्व की ओर चले़.",
+          "दक्षिण-पूर्व की ओर चले़.",
+          "दक्षिण की ओर चले़.",
+          "दक्षिण-पश्चिम की ओर चले़.",
+          "पश्चिम की ओर चले़.",
+          "उत्तर-पश्चिम की ओर चले़."
+        ],
+        "9": [
+          "Arlen Road पर उत्तर की ओर चले़.",
+          "Arlen Road पर उत्तर-पूर्व की ओर चले़.",
+          "Arlen Road पर पूर्व की ओर चले़.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर चले़.",
+          "Arlen Road पर दक्षिण की ओर चले़.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर चले़.",
+          "Arlen Road पर पश्चिम की ओर चले़.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर चले़."
+        ],
+        "10": [
+          "Belair Road/US 1 Business पर उत्तर की ओर चले़.",
+          "Belair Road/US 1 Business पर उत्तर-पूर्व की ओर चले़.",
+          "Belair Road/US 1 Business पर पूर्व की ओर चले़.",
+          "Belair Road/US 1 Business पर दक्षिण-पूर्व की ओर चले़.",
+          "Belair Road/US 1 Business पर दक्षिण की ओर चले़.",
+          "Belair Road/US 1 Business पर दक्षिण-पश्चिम की ओर चले़.",
+          "Belair Road/US 1 Business पर पश्चिम की ओर चले़.",
+          "Belair Road/US 1 Business पर उत्तर-पश्चिम की ओर चले़."
+        ],
+        "16": [
+          "उत्तर की ओर साइकिल चलाएं.",
+          "उत्तर-पूर्व की ओर साइकिल चलाएं.",
+          "पूर्व की ओर साइकिल चलाएं.",
+          "दक्षिण-पूर्व की ओर साइकिल चलाएं.",
+          "दक्षिण की ओर साइकिल चलाएं.",
+          "दक्षिण-पश्चिम की ओर साइकिल चलाएं.",
+          "पश्चिम की ओर साइकिल चलाएं.",
+          "उत्तर-पश्चिम की ओर साइकिल चलाएं."
+        ],
+        "17": [
+          "Arlen Road पर उत्तर की ओर साइकिल चलाएं.",
+          "Arlen Road पर उत्तर-पूर्व की ओर साइकिल चलाएं.",
+          "Arlen Road पर पूर्व की ओर साइकिल चलाएं.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर साइकिल चलाएं.",
+          "Arlen Road पर दक्षिण की ओर साइकिल चलाएं.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर साइकिल चलाएं.",
+          "Arlen Road पर पश्चिम की ओर साइकिल चलाएं.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर साइकिल चलाएं."
+        ],
+        "18": [
+          "Belair Road/US 1 Business पर उत्तर की ओर साइकिल चलाएं.",
+          "Belair Road/US 1 Business पर उत्तर-पूर्व की ओर साइकिल चलाएं.",
+          "Belair Road/US 1 Business पर पूर्व की ओर साइकिल चलाएं.",
+          "Belair Road/US 1 Business पर दक्षिण-पूर्व की ओर साइकिल चलाएं.",
+          "Belair Road/US 1 Business पर दक्षिण की ओर साइकिल चलाएं.",
+          "Belair Road/US 1 Business पर दक्षिण-पश्चिम की ओर साइकिल चलाएं.",
+          "Belair Road/US 1 Business पर पश्चिम की ओर साइकिल चलाएं.",
+          "Belair Road/US 1 Business पर उत्तर-पश्चिम की ओर साइकिल चलाएं."
+        ]
+      }
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "सर्कल से बाहर निकलें.",
+        "1": "<STREET_NAMES> पर सर्कल से बाहर निकलें.",
+        "2": "<BEGIN_STREET_NAMES> पर सर्कल से बाहर निकलें. <STREET_NAMES> पर जारी रहें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "example_phrases": {
+        "0": [
+          "सर्कल से बाहर निकलें."
+        ],
+        "1": [
+          "Arlen Road पर सर्कल से बाहर निकलें."
+        ],
+        "2": [
+          "Belair Road/US 1 Business पर सर्कल से बाहर निकलें. Arlen Road पर जारी रहें."
+        ]
+      }
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "सर्कल से बाहर निकलें.",
+        "1": "<STREET_NAMES> पर सर्कल से बाहर निकलें.",
+        "2": "<BEGIN_STREET_NAMES> पर सर्कल से बाहर निकलें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "example_phrases": {
+        "0": [
+          "सर्कल से बाहर निकलें."
+        ],
+        "1": [
+          "Arlen Road पर सर्कल से बाहर निकलें."
+        ],
+        "2": [
+          "Belair Road/US 1 Business पर सर्कल से बाहर निकलें."
+        ]
+      }
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> तरफ निकलें.",
+        "1": "<RELATIVE_DIRECTION> तरफ निकास <NUMBER_SIGN> लें.",
+        "2": "<RELATIVE_DIRECTION> तरफ निकास <BRANCH_SIGN> लें.",
+        "3": "<BRANCH_SIGN> पर <RELATIVE_DIRECTION> तरफ निकास <NUMBER_SIGN> लें.",
+        "4": "<TOWARD_SIGN> की ओर जाने के लिए <RELATIVE_DIRECTION> तरफ निकलें.",
+        "5": "<TOWARD_SIGN> की ओर जाने के लिए <RELATIVE_DIRECTION> तरफ निकास <NUMBER_SIGN> लें.",
+        "6": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ निकास <BRANCH_SIGN> लें.",
+        "7": "<BRANCH_SIGN> पर <TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ निकास <NUMBER_SIGN> लें.",
+        "8": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
+        "10": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> निकास से <BRANCH_SIGN> पर बाहर निकलें",
+        "12": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
+        "14": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
+        "15": "निकलें.",
+        "16": "निकास <NUMBER_SIGN> लें.",
+        "17": "निकास <BRANCH_SIGN> लें.",
+        "18": "<BRANCH_SIGN> पर निकास <NUMBER_SIGN> लें.",
+        "19": "<TOWARD_SIGN> की ओर जाने के लिए निकलें.",
+        "20": "<TOWARD_SIGN> की ओर जाने के लिए निकास <NUMBER_SIGN> लें.",
+        "21": "<TOWARD_SIGN> की ओर निकास <BRANCH_SIGN> लें.",
+        "22": "<BRANCH_SIGN> पर <TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> लें.",
+        "23": "<NAME_SIGN> से बाहर निकलें.",
+        "25": "<NAME_SIGN> निकास से <BRANCH_SIGN> पर बाहर निकलें",
+        "27": "<TOWARD_SIGN> की ओर <NAME_SIGN> से बाहर निकलें.",
+        "29": "<TOWARD_SIGN> की ओर <NAME_SIGN> से बाहर निकलें."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाएं तरफ निकलें.",
+          "दाएँ तरफ निकलें."
+        ],
+        "1": [
+          "बाएं तरफ निकास 67 B-A लें.",
+          "दाएँ तरफ निकास 67 B-A लें."
+        ],
+        "2": [
+          "बाएं तरफ निकास US 322 West लें.",
+          "दाएँ तरफ निकास US 322 West लें."
+        ],
+        "3": [
+          "US 322 West पर बाएं तरफ निकास 67 B-A लें.",
+          "US 322 West पर दाएँ तरफ निकास 67 B-A लें."
+        ],
+        "4": [
+          "Lewiston की ओर जाने के लिए बाएं तरफ निकलें.",
+          "Lewiston की ओर जाने के लिए दाएँ तरफ निकलें."
+        ],
+        "5": [
+          "Lewiston की ओर जाने के लिए बाएं तरफ निकास 67 B-A लें.",
+          "Lewiston की ओर जाने के लिए दाएँ तरफ निकास 67 B-A लें."
+        ],
+        "6": [
+          "Lewiston की ओर बाएं तरफ निकास US 322 West लें.",
+          "Lewiston की ओर दाएँ तरफ निकास US 322 West लें."
+        ],
+        "7": [
+          "US 322 West पर Lewiston की ओर बाएं तरफ निकास 67 B-A लें.",
+          "US 322 West पर Lewiston की ओर दाएँ तरफ निकास 67 B-A लें."
+        ],
+        "8": [
+          "बाएं तरफ White Marsh Boulevard से बाहर निकलें.",
+          "दाएँ तरफ White Marsh Boulevard से बाहर निकलें."
+        ],
+        "10": [
+          "बाएं तरफ White Marsh Boulevard निकास से US 322 West पर बाहर निकलें",
+          "दाएँ तरफ White Marsh Boulevard निकास से US 322 West पर बाहर निकलें"
+        ],
+        "12": [
+          "Lewiston की ओर बाएं तरफ White Marsh Boulevard से बाहर निकलें.",
+          "Lewiston की ओर दाएँ तरफ White Marsh Boulevard से बाहर निकलें."
+        ],
+        "14": [
+          "Lewiston की ओर बाएं तरफ White Marsh Boulevard से बाहर निकलें.",
+          "Lewiston की ओर दाएँ तरफ White Marsh Boulevard से बाहर निकलें."
+        ],
+        "15": [
+          "निकलें."
+        ],
+        "16": [
+          "निकास 67 B-A लें."
+        ],
+        "17": [
+          "निकास US 322 West लें."
+        ],
+        "18": [
+          "US 322 West पर निकास 67 B-A लें."
+        ],
+        "19": [
+          "Lewiston की ओर जाने के लिए निकलें."
+        ],
+        "20": [
+          "Lewiston की ओर जाने के लिए निकास 67 B-A लें."
+        ],
+        "21": [
+          "Lewiston की ओर निकास US 322 West लें."
+        ],
+        "22": [
+          "US 322 West पर Lewiston की ओर निकास 67 B-A लें."
+        ],
+        "23": [
+          "White Marsh Boulevard से बाहर निकलें."
+        ],
+        "25": [
+          "White Marsh Boulevard निकास से US 322 West पर बाहर निकलें"
+        ],
+        "27": [
+          "Lewiston की ओर White Marsh Boulevard से बाहर निकलें."
+        ],
+        "29": [
+          "Lewiston की ओर White Marsh Boulevard से बाहर निकलें."
+        ]
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "दोराहे पर <RELATIVE_DIRECTION> बने रहें.",
+        "1": "निकास <NUMBER_SIGN> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "2": "<STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "3": "निकास <NUMBER_SIGN> <STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "4": "<TOWARD_SIGN> की ओर निकास पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "5": "<TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "6": "<TOWARD_SIGN> की ओर <STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "7": "<TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> <STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "सीधे",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "दोराहे पर बाएं बने रहें.",
+          "दोराहे पर दाएँ बने रहें."
+        ],
+        "1": [
+          "निकास 67 B-A पकड़ने के लिए बाएं बने रहें.",
+          "निकास 67 B-A पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "2": [
+          "Arlen Road पकड़ने के लिए बाएं बने रहें.",
+          "Arlen Road पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "3": [
+          "निकास 67 B-A Arlen Road पकड़ने के लिए बाएं बने रहें.",
+          "निकास 67 B-A Arlen Road पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "4": [
+          "Lewiston की ओर निकास पकड़ने के लिए बाएं बने रहें.",
+          "Lewiston की ओर निकास पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "5": [
+          "Lewiston की ओर निकास 67 B-A पकड़ने के लिए बाएं बने रहें.",
+          "Lewiston की ओर निकास 67 B-A पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "6": [
+          "Lewiston की ओर Arlen Road पकड़ने के लिए बाएं बने रहें.",
+          "Lewiston की ओर Arlen Road पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "7": [
+          "Lewiston की ओर निकास 67 B-A Arlen Road पकड़ने के लिए बाएं बने रहें.",
+          "Lewiston की ओर निकास 67 B-A Arlen Road पकड़ने के लिए दाएँ बने रहें."
+        ]
+      }
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "<STREET_NAMES> की ओर बढ़ते रहने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "1": "<STREET_NAMES> की ओर निकास <NUMBER_SIGN> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "2": "<TOWARD_SIGN> जाने के लिए और <STREET_NAMES> की ओर बढ़ते रहने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "3": "<TOWARD_SIGN> जाने के लिए और निकास <NUMBER_SIGN> <STREET_NAMES> की ओर बढ़ते रहने के लिए <RELATIVE_DIRECTION> बने रहें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "सीधे",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "Arlen Road की ओर बढ़ते रहने के लिए बाएं बने रहें.",
+          "Arlen Road की ओर बढ़ते रहने के लिए दाएँ बने रहें."
+        ],
+        "1": [
+          "Arlen Road की ओर निकास 67 B-A पकड़ने के लिए बाएं बने रहें.",
+          "Arlen Road की ओर निकास 67 B-A पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "2": [
+          "Lewiston जाने के लिए और Arlen Road की ओर बढ़ते रहने के लिए बाएं बने रहें.",
+          "Lewiston जाने के लिए और Arlen Road की ओर बढ़ते रहने के लिए दाएँ बने रहें."
+        ],
+        "3": [
+          "Lewiston जाने के लिए और निकास 67 B-A Arlen Road की ओर बढ़ते रहने के लिए बाएं बने रहें.",
+          "Lewiston जाने के लिए और निकास 67 B-A Arlen Road की ओर बढ़ते रहने के लिए दाएँ बने रहें."
+        ]
+      }
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "<STREET_NAMES> की ओर बढ़ते रहने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "1": "<STREET_NAMES> की ओर निकास <NUMBER_SIGN> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "2": "<TOWARD_SIGN> जाने के लिए और <STREET_NAMES> की ओर बढ़ते रहने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "3": "<TOWARD_SIGN> जाने के लिए और निकास <NUMBER_SIGN> <STREET_NAMES> की ओर बढ़ते रहने के लिए <RELATIVE_DIRECTION> बने रहें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "सीधे",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "Arlen Road की ओर बढ़ते रहने के लिए बाएं बने रहें.",
+          "Arlen Road की ओर बढ़ते रहने के लिए दाएँ बने रहें."
+        ],
+        "1": [
+          "Arlen Road की ओर निकास 67 B-A पकड़ने के लिए बाएं बने रहें.",
+          "Arlen Road की ओर निकास 67 B-A पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "2": [
+          "Lewiston जाने के लिए और Arlen Road की ओर बढ़ते रहने के लिए बाएं बने रहें.",
+          "Lewiston जाने के लिए और Arlen Road की ओर बढ़ते रहने के लिए दाएँ बने रहें."
+        ],
+        "3": [
+          "Lewiston जाने के लिए और निकास 67 B-A Arlen Road की ओर बढ़ते रहने के लिए बाएं बने रहें.",
+          "Lewiston जाने के लिए और निकास 67 B-A Arlen Road की ओर बढ़ते रहने के लिए दाएँ बने रहें."
+        ]
+      }
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "दोराहे पर <RELATIVE_DIRECTION> बने रहें.",
+        "1": "निकास <NUMBER_SIGN> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "2": "<STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "3": "निकास <NUMBER_SIGN> <STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "4": "<TOWARD_SIGN> की ओर निकास पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "5": "<TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "6": "<TOWARD_SIGN> की ओर <STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "7": "<TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> <STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "सीधे",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "दोराहे पर बाएं बने रहें.",
+          "दोराहे पर दाएँ बने रहें."
+        ],
+        "1": [
+          "निकास 67 B-A पकड़ने के लिए बाएं बने रहें.",
+          "निकास 67 B-A पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "2": [
+          "Arlen Road पकड़ने के लिए बाएं बने रहें.",
+          "Arlen Road पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "3": [
+          "निकास 67 B-A Arlen Road पकड़ने के लिए बाएं बने रहें.",
+          "निकास 67 B-A Arlen Road पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "4": [
+          "Lewiston की ओर निकास पकड़ने के लिए बाएं बने रहें.",
+          "Lewiston की ओर निकास पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "5": [
+          "Lewiston की ओर निकास 67 B-A पकड़ने के लिए बाएं बने रहें.",
+          "Lewiston की ओर निकास 67 B-A पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "6": [
+          "Lewiston की ओर Arlen Road पकड़ने के लिए बाएं बने रहें.",
+          "Lewiston की ओर Arlen Road पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "7": [
+          "Lewiston की ओर निकास 67 B-A Arlen Road पकड़ने के लिए बाएं बने रहें.",
+          "Lewiston की ओर निकास 67 B-A Arlen Road पकड़ने के लिए दाएँ बने रहें."
+        ]
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "मिलें.",
+        "1": "<RELATIVE_DIRECTION> मिलें.",
+        "2": "<STREET_NAMES> पर मिलें.",
+        "3": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मिलें."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "example_phrases": {
+        "0": [
+          "मिलें."
+        ],
+        "1": [
+          "बाएं मिलें.",
+          "दाएँ मिलें."
+        ],
+        "2": [
+          "Arlen Road पर मिलें."
+        ],
+        "3": [
+          "Arlen Road पर बाएं मिलें.",
+          "Arlen Road पर दाएँ मिलें."
+        ]
+      }
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "मिलें.",
+        "1": "<RELATIVE_DIRECTION> मिलें.",
+        "2": "<STREET_NAMES> पर मिलें.",
+        "3": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मिलें."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "example_phrases": {
+        "0": [
+          "मिलें."
+        ],
+        "1": [
+          "बाएं मिलें.",
+          "दाएँ मिलें."
+        ],
+        "2": [
+          "Arlen Road पर मिलें."
+        ],
+        "3": [
+          "Arlen Road पर बाएं मिलें.",
+          "Arlen Road पर दाएँ मिलें."
+        ]
+      }
+    },
+    "post_transit_connection_destination": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> की ओर जाएं.",
+        "1": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर जाएं.",
+        "2": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर जाएं. <STREET_NAMES> पर जारी रहें.",
+        "4": "<CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "5": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "6": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर ड्राइव करें. <STREET_NAMES> पर जारी रहें.",
+        "8": "<CARDINAL_DIRECTION> की ओर चलें.",
+        "9": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर चलें.",
+        "10": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर चलें. <STREET_NAMES> पर जारी रहें.",
+        "16": "<CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
+        "17": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
+        "18": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर साइकिल चलाए. <STREET_NAMES> पर जारी रहें."
+      },
+      "cardinal_directions": [
+        "उत्तर",
+        "उत्तर-पूर्व",
+        "पूर्व",
+        "दक्षिण-पूर्व",
+        "दक्षिण",
+        "दक्षिण-पश्चिम",
+        "पश्चिम",
+        "उत्तर-पश्चिम"
+      ],
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "example_phrases": {
+        "0": [
+          "उत्तर की ओर जाएं.",
+          "उत्तर-पूर्व की ओर जाएं.",
+          "पूर्व की ओर जाएं.",
+          "दक्षिण-पूर्व की ओर जाएं.",
+          "दक्षिण की ओर जाएं.",
+          "दक्षिण-पश्चिम की ओर जाएं.",
+          "पश्चिम की ओर जाएं.",
+          "उत्तर-पश्चिम की ओर जाएं."
+        ],
+        "1": [
+          "Arlen Road पर उत्तर की ओर जाएं.",
+          "Arlen Road पर उत्तर-पूर्व की ओर जाएं.",
+          "Arlen Road पर पूर्व की ओर जाएं.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर जाएं.",
+          "Arlen Road पर दक्षिण की ओर जाएं.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर जाएं.",
+          "Arlen Road पर पश्चिम की ओर जाएं.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर जाएं."
+        ],
+        "2": [
+          "उत्तर की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "उत्तर-पूर्व की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "पूर्व की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "दक्षिण-पूर्व की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "दक्षिण की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "दक्षिण-पश्चिम की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "पश्चिम की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "उत्तर-पश्चिम की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें."
+        ],
+        "4": [
+          "उत्तर की ओर ड्राइव करें.",
+          "उत्तर-पूर्व की ओर ड्राइव करें.",
+          "पूर्व की ओर ड्राइव करें.",
+          "दक्षिण-पूर्व की ओर ड्राइव करें.",
+          "दक्षिण की ओर ड्राइव करें.",
+          "दक्षिण-पश्चिम की ओर ड्राइव करें.",
+          "पश्चिम की ओर ड्राइव करें.",
+          "उत्तर-पश्चिम की ओर ड्राइव करें."
+        ],
+        "5": [
+          "Arlen Road पर उत्तर की ओर ड्राइव करें.",
+          "Arlen Road पर उत्तर-पूर्व की ओर ड्राइव करें.",
+          "Arlen Road पर पूर्व की ओर ड्राइव करें.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर ड्राइव करें.",
+          "Arlen Road पर दक्षिण की ओर ड्राइव करें.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर ड्राइव करें.",
+          "Arlen Road पर पश्चिम की ओर ड्राइव करें.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर ड्राइव करें."
+        ],
+        "6": [
+          "उत्तर की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "उत्तर-पूर्व की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "पूर्व की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "दक्षिण-पूर्व की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "दक्षिण की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "दक्षिण-पश्चिम की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "पश्चिम की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "उत्तर-पश्चिम की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें."
+        ],
+        "8": [
+          "उत्तर की ओर चलें.",
+          "उत्तर-पूर्व की ओर चलें.",
+          "पूर्व की ओर चलें.",
+          "दक्षिण-पूर्व की ओर चलें.",
+          "दक्षिण की ओर चलें.",
+          "दक्षिण-पश्चिम की ओर चलें.",
+          "पश्चिम की ओर चलें.",
+          "उत्तर-पश्चिम की ओर चलें."
+        ],
+        "9": [
+          "Arlen Road पर उत्तर की ओर चलें.",
+          "Arlen Road पर उत्तर-पूर्व की ओर चलें.",
+          "Arlen Road पर पूर्व की ओर चलें.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर चलें.",
+          "Arlen Road पर दक्षिण की ओर चलें.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर चलें.",
+          "Arlen Road पर पश्चिम की ओर चलें.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर चलें."
+        ],
+        "10": [
+          "उत्तर की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "उत्तर-पूर्व की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "पूर्व की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "दक्षिण-पूर्व की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "दक्षिण की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "दक्षिण-पश्चिम की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "पश्चिम की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "उत्तर-पश्चिम की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें."
+        ],
+        "16": [
+          "उत्तर की ओर साइकिल चलाए.",
+          "उत्तर-पूर्व की ओर साइकिल चलाए.",
+          "पूर्व की ओर साइकिल चलाए.",
+          "दक्षिण-पूर्व की ओर साइकिल चलाए.",
+          "दक्षिण की ओर साइकिल चलाए.",
+          "दक्षिण-पश्चिम की ओर साइकिल चलाए.",
+          "पश्चिम की ओर साइकिल चलाए.",
+          "उत्तर-पश्चिम की ओर साइकिल चलाए."
+        ],
+        "17": [
+          "Arlen Road पर उत्तर की ओर साइकिल चलाए.",
+          "Arlen Road पर उत्तर-पूर्व की ओर साइकिल चलाए.",
+          "Arlen Road पर पूर्व की ओर साइकिल चलाए.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर साइकिल चलाए.",
+          "Arlen Road पर दक्षिण की ओर साइकिल चलाए.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर साइकिल चलाए.",
+          "Arlen Road पर पश्चिम की ओर साइकिल चलाए.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर साइकिल चलाए."
+        ],
+        "18": [
+          "उत्तर की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "उत्तर-पूर्व की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "पूर्व की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "दक्षिण-पूर्व की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "दक्षिण की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "दक्षिण-पश्चिम की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "पश्चिम की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "उत्तर-पश्चिम की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें."
+        ]
+      }
+    },
+    "post_transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> की ओर बढे़.",
+        "1": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर बढे़.",
+        "2": "<BEGIN_STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर बढे़.",
+        "4": "<CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "5": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "6": "<BEGIN_STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "8": "<CARDINAL_DIRECTION> की ओर चले़.",
+        "9": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर चले़.",
+        "10": "<BEGIN_STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर चले़.",
+        "16": "<CARDINAL_DIRECTION> की ओर साइकिल चलाएं.",
+        "17": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाएं.",
+        "18": "<BEGIN_STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाएं."
+      },
+      "cardinal_directions": [
+        "उत्तर",
+        "उत्तर-पूर्व",
+        "पूर्व",
+        "दक्षिण-पूर्व",
+        "दक्षिण",
+        "दक्षिण-पश्चिम",
+        "पश्चिम",
+        "उत्तर-पश्चिम"
+      ],
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "example_phrases": {
+        "0": [
+          "उत्तर की ओर बढे़.",
+          "उत्तर-पूर्व की ओर बढे़.",
+          "पूर्व की ओर बढे़.",
+          "दक्षिण-पूर्व की ओर बढे़.",
+          "दक्षिण की ओर बढे़.",
+          "दक्षिण-पश्चिम की ओर बढे़.",
+          "पश्चिम की ओर बढे़.",
+          "उत्तर-पश्चिम की ओर बढे़."
+        ],
+        "1": [
+          "Arlen Road पर उत्तर की ओर बढे़.",
+          "Arlen Road पर उत्तर-पूर्व की ओर बढे़.",
+          "Arlen Road पर पूर्व की ओर बढे़.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर बढे़.",
+          "Arlen Road पर दक्षिण की ओर बढे़.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर बढे़.",
+          "Arlen Road पर पश्चिम की ओर बढे़.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर बढे़."
+        ],
+        "2": [
+          "Belair Road/US 1 Business पर उत्तर की ओर बढे़.",
+          "Belair Road/US 1 Business पर उत्तर-पूर्व की ओर बढे़.",
+          "Belair Road/US 1 Business पर पूर्व की ओर बढे़.",
+          "Belair Road/US 1 Business पर दक्षिण-पूर्व की ओर बढे़.",
+          "Belair Road/US 1 Business पर दक्षिण की ओर बढे़.",
+          "Belair Road/US 1 Business पर दक्षिण-पश्चिम की ओर बढे़.",
+          "Belair Road/US 1 Business पर पश्चिम की ओर बढे़.",
+          "Belair Road/US 1 Business पर उत्तर-पश्चिम की ओर बढे़."
+        ],
+        "4": [
+          "उत्तर की ओर ड्राइव करें.",
+          "उत्तर-पूर्व की ओर ड्राइव करें.",
+          "पूर्व की ओर ड्राइव करें.",
+          "दक्षिण-पूर्व की ओर ड्राइव करें.",
+          "दक्षिण की ओर ड्राइव करें.",
+          "दक्षिण-पश्चिम की ओर ड्राइव करें.",
+          "पश्चिम की ओर ड्राइव करें.",
+          "उत्तर-पश्चिम की ओर ड्राइव करें."
+        ],
+        "5": [
+          "Arlen Road पर उत्तर की ओर ड्राइव करें.",
+          "Arlen Road पर उत्तर-पूर्व की ओर ड्राइव करें.",
+          "Arlen Road पर पूर्व की ओर ड्राइव करें.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर ड्राइव करें.",
+          "Arlen Road पर दक्षिण की ओर ड्राइव करें.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर ड्राइव करें.",
+          "Arlen Road पर पश्चिम की ओर ड्राइव करें.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर ड्राइव करें."
+        ],
+        "6": [
+          "Belair Road/US 1 Business पर उत्तर की ओर ड्राइव करें.",
+          "Belair Road/US 1 Business पर उत्तर-पूर्व की ओर ड्राइव करें.",
+          "Belair Road/US 1 Business पर पूर्व की ओर ड्राइव करें.",
+          "Belair Road/US 1 Business पर दक्षिण-पूर्व की ओर ड्राइव करें.",
+          "Belair Road/US 1 Business पर दक्षिण की ओर ड्राइव करें.",
+          "Belair Road/US 1 Business पर दक्षिण-पश्चिम की ओर ड्राइव करें.",
+          "Belair Road/US 1 Business पर पश्चिम की ओर ड्राइव करें.",
+          "Belair Road/US 1 Business पर उत्तर-पश्चिम की ओर ड्राइव करें."
+        ],
+        "8": [
+          "उत्तर की ओर चले़.",
+          "उत्तर-पूर्व की ओर चले़.",
+          "पूर्व की ओर चले़.",
+          "दक्षिण-पूर्व की ओर चले़.",
+          "दक्षिण की ओर चले़.",
+          "दक्षिण-पश्चिम की ओर चले़.",
+          "पश्चिम की ओर चले़.",
+          "उत्तर-पश्चिम की ओर चले़."
+        ],
+        "9": [
+          "Arlen Road पर उत्तर की ओर चले़.",
+          "Arlen Road पर उत्तर-पूर्व की ओर चले़.",
+          "Arlen Road पर पूर्व की ओर चले़.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर चले़.",
+          "Arlen Road पर दक्षिण की ओर चले़.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर चले़.",
+          "Arlen Road पर पश्चिम की ओर चले़.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर चले़."
+        ],
+        "10": [
+          "Belair Road/US 1 Business पर उत्तर की ओर चले़.",
+          "Belair Road/US 1 Business पर उत्तर-पूर्व की ओर चले़.",
+          "Belair Road/US 1 Business पर पूर्व की ओर चले़.",
+          "Belair Road/US 1 Business पर दक्षिण-पूर्व की ओर चले़.",
+          "Belair Road/US 1 Business पर दक्षिण की ओर चले़.",
+          "Belair Road/US 1 Business पर दक्षिण-पश्चिम की ओर चले़.",
+          "Belair Road/US 1 Business पर पश्चिम की ओर चले़.",
+          "Belair Road/US 1 Business पर उत्तर-पश्चिम की ओर चले़."
+        ],
+        "16": [
+          "उत्तर की ओर साइकिल चलाएं.",
+          "उत्तर-पूर्व की ओर साइकिल चलाएं.",
+          "पूर्व की ओर साइकिल चलाएं.",
+          "दक्षिण-पूर्व की ओर साइकिल चलाएं.",
+          "दक्षिण की ओर साइकिल चलाएं.",
+          "दक्षिण-पश्चिम की ओर साइकिल चलाएं.",
+          "पश्चिम की ओर साइकिल चलाएं.",
+          "उत्तर-पश्चिम की ओर साइकिल चलाएं."
+        ],
+        "17": [
+          "Arlen Road पर उत्तर की ओर साइकिल चलाएं.",
+          "Arlen Road पर उत्तर-पूर्व की ओर साइकिल चलाएं.",
+          "Arlen Road पर पूर्व की ओर साइकिल चलाएं.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर साइकिल चलाएं.",
+          "Arlen Road पर दक्षिण की ओर साइकिल चलाएं.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर साइकिल चलाएं.",
+          "Arlen Road पर पश्चिम की ओर साइकिल चलाएं.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर साइकिल चलाएं."
+        ],
+        "18": [
+          "Belair Road/US 1 Business पर उत्तर की ओर साइकिल चलाएं.",
+          "Belair Road/US 1 Business पर उत्तर-पूर्व की ओर साइकिल चलाएं.",
+          "Belair Road/US 1 Business पर पूर्व की ओर साइकिल चलाएं.",
+          "Belair Road/US 1 Business पर दक्षिण-पूर्व की ओर साइकिल चलाएं.",
+          "Belair Road/US 1 Business पर दक्षिण की ओर साइकिल चलाएं.",
+          "Belair Road/US 1 Business पर दक्षिण-पश्चिम की ओर साइकिल चलाएं.",
+          "Belair Road/US 1 Business पर पश्चिम की ओर साइकिल चलाएं.",
+          "Belair Road/US 1 Business पर उत्तर-पश्चिम की ओर साइकिल चलाएं."
+        ]
+      }
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> के लिए यात्रा."
+      },
+      "transit_stop_count_labels": {
+        "one": "stop",
+        "other": "स्टॉप"
+      },
+      "example_phrases": {
+        "0": [
+          "1 stop के लिए यात्रा.",
+          "1 stops के लिए यात्रा.",
+          "3 stop के लिए यात्रा.",
+          "3 stops के लिए यात्रा."
+        ]
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "<LENGTH> के लिए जारी रहें.",
+        "1": "<STREET_NAMES> पर <LENGTH> के लिए जारी रहें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> किलोमीटर",
+        "1 किलोमीटर",
+        "एक आधा किलोमीटर",
+        "<METERS> मीटर",
+        "कम से कम 10 मीटर"
+      ],
+      "us_customary_lengths": [
+        "<MILES> मील",
+        "1 मील",
+        "एक आधा मील",
+        "मील का <TENTHS_OF_MILE>/10 हिस्सा",
+        "मील का 1/10 हिस्सा",
+        "<FEET> फुट",
+        "कम से कम 10 फुट"
+      ],
+      "example_phrases": {
+        "0": [
+          "1 mile के लिए जारी रहें.",
+          "a half mile के लिए जारी रहें."
+        ],
+        "1": [
+          "Arlen Road पर 1 mile के लिए जारी रहें.",
+          "Arlen Road पर a half mile के लिए जारी रहें."
+        ]
+      }
+    },
+    "ramp": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> तरफ रैंप लें.",
+        "1": "<RELATIVE_DIRECTION> तरफ <BRANCH_SIGN> रैंप लें.",
+        "2": "<RELATIVE_DIRECTION> तरफ <TOWARD_SIGN> की ओर रैंप लें.",
+        "3": "<RELATIVE_DIRECTION> तरफ <TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप लें.",
+        "4": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> रैंप लें.",
+        "5": "रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "6": "<BRANCH_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "7": "<TOWARD_SIGN> की ओर रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "8": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "9": "<NAME_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "10": "रैंप लें.",
+        "11": "<BRANCH_SIGN> रैंप लें.",
+        "12": "<TOWARD_SIGN> की ओर रैंप लें.",
+        "13": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप लें.",
+        "14": "<NAME_SIGN> रैंप लें."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाएं तरफ रैंप लें.",
+          "दाएँ तरफ रैंप लें."
+        ],
+        "1": [
+          "बाएं तरफ US 322 West रैंप लें.",
+          "दाएँ तरफ US 322 West रैंप लें."
+        ],
+        "2": [
+          "बाएं तरफ Lewiston की ओर रैंप लें.",
+          "दाएँ तरफ Lewiston की ओर रैंप लें."
+        ],
+        "3": [
+          "बाएं तरफ Lewiston की ओर US 322 West रैंप लें.",
+          "दाएँ तरफ Lewiston की ओर US 322 West रैंप लें."
+        ],
+        "4": [
+          "बाएं तरफ White Marsh Boulevard रैंप लें.",
+          "दाएँ तरफ White Marsh Boulevard रैंप लें."
+        ],
+        "5": [
+          "रैंप पकड़ने के लिए बाएं मुड़ें.",
+          "रैंप पकड़ने के लिए दाएँ मुड़ें."
+        ],
+        "6": [
+          "US 322 West रैंप पकड़ने के लिए बाएं मुड़ें.",
+          "US 322 West रैंप पकड़ने के लिए दाएँ मुड़ें."
+        ],
+        "7": [
+          "Lewiston की ओर रैंप पकड़ने के लिए बाएं मुड़ें.",
+          "Lewiston की ओर रैंप पकड़ने के लिए दाएँ मुड़ें."
+        ],
+        "8": [
+          "Lewiston की ओर US 322 West रैंप पकड़ने के लिए बाएं मुड़ें.",
+          "Lewiston की ओर US 322 West रैंप पकड़ने के लिए दाएँ मुड़ें."
+        ],
+        "9": [
+          "White Marsh Boulevard रैंप पकड़ने के लिए बाएं मुड़ें.",
+          "White Marsh Boulevard रैंप पकड़ने के लिए दाएँ मुड़ें."
+        ],
+        "10": [
+          "रैंप लें."
+        ],
+        "11": [
+          "US 322 West रैंप लें."
+        ],
+        "12": [
+          "Lewiston की ओर रैंप लें."
+        ],
+        "13": [
+          "Lewiston की ओर US 322 West रैंप लें."
+        ],
+        "14": [
+          "White Marsh Boulevard रैंप लें."
+        ]
+      }
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "रैंप पकड़ने के लिए सीधे बने रहें.",
+        "1": "<BRANCH_SIGN> रैंप पकड़ने के लिए सीधे बने रहें.",
+        "2": "<TOWARD_SIGN> की ओर रैंप पकड़ने के लिए सीधे बने रहें.",
+        "3": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप पकड़ने के लिए सीधे बने रहें.",
+        "4": "<NAME_SIGN> रैंप पकड़ने के लिए सीधे बने रहें."
+      },
+      "example_phrases": {
+        "0": [
+          "रैंप पकड़ने के लिए सीधे बने रहें."
+        ],
+        "1": [
+          "US 322 West रैंप पकड़ने के लिए सीधे बने रहें."
+        ],
+        "2": [
+          "Lewiston की ओर रैंप पकड़ने के लिए सीधे बने रहें."
+        ],
+        "3": [
+          "Lewiston की ओर US 322 West रैंप पकड़ने के लिए सीधे बने रहें."
+        ],
+        "4": [
+          "White Marsh Boulevard रैंप पकड़ने के लिए सीधे बने रहें."
+        ]
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "रैंप पकड़ने के लिए सीधे बने रहें.",
+        "1": "<BRANCH_SIGN> रैंप पकड़ने के लिए सीधे बने रहें.",
+        "2": "<TOWARD_SIGN> की ओर रैंप पकड़ने के लिए सीधे बने रहें.",
+        "3": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप पकड़ने के लिए सीधे बने रहें.",
+        "4": "<NAME_SIGN> रैंप पकड़ने के लिए सीधे बने रहें."
+      },
+      "example_phrases": {
+        "0": [
+          "रैंप पकड़ने के लिए सीधे बने रहें."
+        ],
+        "1": [
+          "US 322 West रैंप पकड़ने के लिए सीधे बने रहें."
+        ],
+        "2": [
+          "Lewiston की ओर रैंप पकड़ने के लिए सीधे बने रहें."
+        ],
+        "3": [
+          "Lewiston की ओर US 322 West रैंप पकड़ने के लिए सीधे बने रहें."
+        ],
+        "4": [
+          "White Marsh Boulevard रैंप पकड़ने के लिए सीधे बने रहें."
+        ]
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> तरफ रैंप लें.",
+        "1": "<RELATIVE_DIRECTION> तरफ <BRANCH_SIGN> रैंप लें.",
+        "2": "<RELATIVE_DIRECTION> तरफ <TOWARD_SIGN> की ओर रैंप लें.",
+        "3": "<RELATIVE_DIRECTION> तरफ <TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप लें.",
+        "4": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> रैंप लें.",
+        "5": "रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "6": "<BRANCH_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "7": "<TOWARD_SIGN> की ओर रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "8": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "9": "<NAME_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "10": "रैंप लें.",
+        "11": "<BRANCH_SIGN> रैंप लें.",
+        "12": "<TOWARD_SIGN> की ओर रैंप लें.",
+        "13": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप लें.",
+        "14": "<NAME_SIGN> रैंप लें."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाएं तरफ रैंप लें.",
+          "दाएँ तरफ रैंप लें."
+        ],
+        "1": [
+          "बाएं तरफ US 322 West रैंप लें.",
+          "दाएँ तरफ US 322 West रैंप लें."
+        ],
+        "2": [
+          "बाएं तरफ Lewiston की ओर रैंप लें.",
+          "दाएँ तरफ Lewiston की ओर रैंप लें."
+        ],
+        "3": [
+          "बाएं तरफ Lewiston की ओर US 322 West रैंप लें.",
+          "दाएँ तरफ Lewiston की ओर US 322 West रैंप लें."
+        ],
+        "4": [
+          "बाएं तरफ White Marsh Boulevard रैंप लें.",
+          "दाएँ तरफ White Marsh Boulevard रैंप लें."
+        ],
+        "5": [
+          "रैंप पकड़ने के लिए बाएं मुड़ें.",
+          "रैंप पकड़ने के लिए दाएँ मुड़ें."
+        ],
+        "6": [
+          "US 322 West रैंप पकड़ने के लिए बाएं मुड़ें.",
+          "US 322 West रैंप पकड़ने के लिए दाएँ मुड़ें."
+        ],
+        "7": [
+          "Lewiston की ओर रैंप पकड़ने के लिए बाएं मुड़ें.",
+          "Lewiston की ओर रैंप पकड़ने के लिए दाएँ मुड़ें."
+        ],
+        "8": [
+          "Lewiston की ओर US 322 West रैंप पकड़ने के लिए बाएं मुड़ें.",
+          "Lewiston की ओर US 322 West रैंप पकड़ने के लिए दाएँ मुड़ें."
+        ],
+        "9": [
+          "White Marsh Boulevard रैंप पकड़ने के लिए बाएं मुड़ें.",
+          "White Marsh Boulevard रैंप पकड़ने के लिए दाएँ मुड़ें."
+        ],
+        "10": [
+          "रैंप लें."
+        ],
+        "11": [
+          "US 322 West रैंप लें."
+        ],
+        "12": [
+          "Lewiston की ओर रैंप लें."
+        ],
+        "13": [
+          "Lewiston की ओर US 322 West रैंप लें."
+        ],
+        "14": [
+          "White Marsh Boulevard रैंप लें."
+        ]
+      }
+    },
+    "sharp": {
+      "phrases": {
+        "0": "तेज <RELATIVE_DIRECTION> मुड़ें.",
+        "1": "<STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें.",
+        "2": "<BEGIN_STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें. <STREET_NAMES> पर बने रहें.",
+        "3": "<STREET_NAMES> पर बने रहने के लिए तेज <RELATIVE_DIRECTION> मुड़ें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "तेज बाएं मुड़ें.",
+          "तेज दाएँ मुड़ें."
+        ],
+        "1": [
+          "Arlen Road पर तेज बाएं मुड़ें.",
+          "Arlen Road पर तेज दाएँ मुड़ें."
+        ],
+        "2": [
+          "Belair Road/US 1 Business पर तेज बाएं मुड़ें. Arlen Road पर बने रहें.",
+          "Belair Road/US 1 Business पर तेज दाएँ मुड़ें. Arlen Road पर बने रहें."
+        ],
+        "3": [
+          "Arlen Road पर बने रहने के लिए तेज बाएं मुड़ें.",
+          "Arlen Road पर बने रहने के लिए तेज दाएँ मुड़ें."
+        ]
+      }
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "तेज <RELATIVE_DIRECTION> मुड़ें.",
+        "1": "<STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें.",
+        "2": "<BEGIN_STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें.",
+        "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "तेज बाएं मुड़ें.",
+          "तेज दाएँ मुड़ें."
+        ],
+        "1": [
+          "Arlen Road पर तेज बाएं मुड़ें.",
+          "Arlen Road पर तेज दाएँ मुड़ें."
+        ],
+        "2": [
+          "Belair Road/US 1 Business पर तेज बाएं मुड़ें.",
+          "Belair Road/US 1 Business पर तेज दाएँ मुड़ें."
+        ],
+        "3": [
+          "Arlen Road पर बने रहने के लिए बाएं मुड़ें.",
+          "Arlen Road पर बने रहने के लिए दाएँ मुड़ें."
+        ]
+      }
+    },
+    "start": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> की ओर जाएं.",
+        "1": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर जाएं.",
+        "2": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर जाएं. <STREET_NAMES> पर जारी रहें.",
+        "4": "<CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "5": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "6": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर ड्राइव करें. <STREET_NAMES> पर जारी रहें.",
+        "8": "<CARDINAL_DIRECTION> की ओर चलें.",
+        "9": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर चलें.",
+        "10": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर चलें. <STREET_NAMES> पर जारी रहें.",
+        "16": "<CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
+        "17": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
+        "18": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर साइकिल चलाए. <STREET_NAMES> पर जारी रहें."
+      },
+      "cardinal_directions": [
+        "उत्तर",
+        "उत्तर-पूर्व",
+        "पूर्व",
+        "दक्षिण-पूर्व",
+        "दक्षिण",
+        "दक्षिण-पश्चिम",
+        "पश्चिम",
+        "उत्तर-पश्चिम"
+      ],
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "example_phrases": {
+        "0": [
+          "उत्तर की ओर जाएं.",
+          "उत्तर-पूर्व की ओर जाएं.",
+          "पूर्व की ओर जाएं.",
+          "दक्षिण-पूर्व की ओर जाएं.",
+          "दक्षिण की ओर जाएं.",
+          "दक्षिण-पश्चिम की ओर जाएं.",
+          "पश्चिम की ओर जाएं.",
+          "उत्तर-पश्चिम की ओर जाएं."
+        ],
+        "1": [
+          "Arlen Road पर उत्तर की ओर जाएं.",
+          "Arlen Road पर उत्तर-पूर्व की ओर जाएं.",
+          "Arlen Road पर पूर्व की ओर जाएं.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर जाएं.",
+          "Arlen Road पर दक्षिण की ओर जाएं.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर जाएं.",
+          "Arlen Road पर पश्चिम की ओर जाएं.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर जाएं."
+        ],
+        "2": [
+          "उत्तर की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "उत्तर-पूर्व की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "पूर्व की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "दक्षिण-पूर्व की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "दक्षिण की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "दक्षिण-पश्चिम की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "पश्चिम की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें.",
+          "उत्तर-पश्चिम की ओर Belair Road/US 1 Business पर जाएं. Arlen Road पर जारी रहें."
+        ],
+        "4": [
+          "उत्तर की ओर ड्राइव करें.",
+          "उत्तर-पूर्व की ओर ड्राइव करें.",
+          "पूर्व की ओर ड्राइव करें.",
+          "दक्षिण-पूर्व की ओर ड्राइव करें.",
+          "दक्षिण की ओर ड्राइव करें.",
+          "दक्षिण-पश्चिम की ओर ड्राइव करें.",
+          "पश्चिम की ओर ड्राइव करें.",
+          "उत्तर-पश्चिम की ओर ड्राइव करें."
+        ],
+        "5": [
+          "Arlen Road पर उत्तर की ओर ड्राइव करें.",
+          "Arlen Road पर उत्तर-पूर्व की ओर ड्राइव करें.",
+          "Arlen Road पर पूर्व की ओर ड्राइव करें.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर ड्राइव करें.",
+          "Arlen Road पर दक्षिण की ओर ड्राइव करें.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर ड्राइव करें.",
+          "Arlen Road पर पश्चिम की ओर ड्राइव करें.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर ड्राइव करें."
+        ],
+        "6": [
+          "उत्तर की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "उत्तर-पूर्व की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "पूर्व की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "दक्षिण-पूर्व की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "दक्षिण की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "दक्षिण-पश्चिम की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "पश्चिम की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें.",
+          "उत्तर-पश्चिम की ओर Belair Road/US 1 Business पर ड्राइव करें. Arlen Road पर जारी रहें."
+        ],
+        "8": [
+          "उत्तर की ओर चलें.",
+          "उत्तर-पूर्व की ओर चलें.",
+          "पूर्व की ओर चलें.",
+          "दक्षिण-पूर्व की ओर चलें.",
+          "दक्षिण की ओर चलें.",
+          "दक्षिण-पश्चिम की ओर चलें.",
+          "पश्चिम की ओर चलें.",
+          "उत्तर-पश्चिम की ओर चलें."
+        ],
+        "9": [
+          "Arlen Road पर उत्तर की ओर चलें.",
+          "Arlen Road पर उत्तर-पूर्व की ओर चलें.",
+          "Arlen Road पर पूर्व की ओर चलें.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर चलें.",
+          "Arlen Road पर दक्षिण की ओर चलें.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर चलें.",
+          "Arlen Road पर पश्चिम की ओर चलें.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर चलें."
+        ],
+        "10": [
+          "उत्तर की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "उत्तर-पूर्व की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "पूर्व की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "दक्षिण-पूर्व की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "दक्षिण की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "दक्षिण-पश्चिम की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "पश्चिम की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें.",
+          "उत्तर-पश्चिम की ओर Belair Road/US 1 Business पर चलें. Arlen Road पर जारी रहें."
+        ],
+        "16": [
+          "उत्तर की ओर साइकिल चलाए.",
+          "उत्तर-पूर्व की ओर साइकिल चलाए.",
+          "पूर्व की ओर साइकिल चलाए.",
+          "दक्षिण-पूर्व की ओर साइकिल चलाए.",
+          "दक्षिण की ओर साइकिल चलाए.",
+          "दक्षिण-पश्चिम की ओर साइकिल चलाए.",
+          "पश्चिम की ओर साइकिल चलाए.",
+          "उत्तर-पश्चिम की ओर साइकिल चलाए."
+        ],
+        "17": [
+          "Arlen Road पर उत्तर की ओर साइकिल चलाए.",
+          "Arlen Road पर उत्तर-पूर्व की ओर साइकिल चलाए.",
+          "Arlen Road पर पूर्व की ओर साइकिल चलाए.",
+          "Arlen Road पर दक्षिण-पूर्व की ओर साइकिल चलाए.",
+          "Arlen Road पर दक्षिण की ओर साइकिल चलाए.",
+          "Arlen Road पर दक्षिण-पश्चिम की ओर साइकिल चलाए.",
+          "Arlen Road पर पश्चिम की ओर साइकिल चलाए.",
+          "Arlen Road पर उत्तर-पश्चिम की ओर साइकिल चलाए."
+        ],
+        "18": [
+          "उत्तर की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "उत्तर-पूर्व की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "पूर्व की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "दक्षिण-पूर्व की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "दक्षिण की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "दक्षिण-पश्चिम की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "पश्चिम की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें.",
+          "उत्तर-पश्चिम की ओर Belair Road/US 1 Business पर साइकिल चलाए. Arlen Road पर जारी रहें."
+        ]
+      }
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "<LENGTH> के लिए <CARDINAL_DIRECTION> की ओर जाएं.",
+        "1": "<LENGTH> के लिए <STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर जाएं.",
+        "2": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर जाएं.",
+        "4": "<LENGTH> के लिए <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "5": "<LENGTH> के लिए <STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "6": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर ड्राइव करें.",
+        "8": "<LENGTH> के लिए <CARDINAL_DIRECTION> की ओर चलें.",
+        "9": "<LENGTH> के लिए <STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर चलें.",
+        "10": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर चलें.",
+        "16": "<LENGTH> के लिए <CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
+        "17": "<LENGTH> के लिए <STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
+        "18": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर साइकिल चलाए."
+      },
+      "cardinal_directions": [
+        "उत्तर",
+        "उत्तर-पूर्व",
+        "पूर्व",
+        "दक्षिण-पूर्व",
+        "दक्षिण",
+        "दक्षिण-पश्चिम",
+        "पश्चिम",
+        "उत्तर-पश्चिम"
+      ],
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> किलोमीटर",
+        "1 किलोमीटर",
+        "एक आधा किलोमीटर",
+        "<METERS> मीटर",
+        "कम से कम 10 मीटर"
+      ],
+      "us_customary_lengths": [
+        "<MILES> मील",
+        "1 मील",
+        "एक आधा मील",
+        "मील का <TENTHS_OF_MILE>/10 हिस्सा",
+        "मील का 1/10 हिस्सा",
+        "<FEET> फुट",
+        "कम से कम 10 फुट"
+      ],
+      "example_phrases": {
+        "0": [
+          "1 mile के लिए उत्तर की ओर जाएं.",
+          "1 mile के लिए उत्तर-पूर्व की ओर जाएं.",
+          "1 mile के लिए पूर्व की ओर जाएं.",
+          "1 mile के लिए दक्षिण-पूर्व की ओर जाएं.",
+          "1 mile के लिए दक्षिण की ओर जाएं.",
+          "1 mile के लिए दक्षिण-पश्चिम की ओर जाएं.",
+          "1 mile के लिए पश्चिम की ओर जाएं.",
+          "1 mile के लिए उत्तर-पश्चिम की ओर जाएं.",
+          "a half mile के लिए उत्तर की ओर जाएं.",
+          "a half mile के लिए उत्तर-पूर्व की ओर जाएं.",
+          "a half mile के लिए पूर्व की ओर जाएं.",
+          "a half mile के लिए दक्षिण-पूर्व की ओर जाएं.",
+          "a half mile के लिए दक्षिण की ओर जाएं.",
+          "a half mile के लिए दक्षिण-पश्चिम की ओर जाएं.",
+          "a half mile के लिए पश्चिम की ओर जाएं.",
+          "a half mile के लिए उत्तर-पश्चिम की ओर जाएं."
+        ],
+        "1": [
+          "1 mile के लिए Arlen Road पर उत्तर की ओर जाएं.",
+          "1 mile के लिए Arlen Road पर उत्तर-पूर्व की ओर जाएं.",
+          "1 mile के लिए Arlen Road पर पूर्व की ओर जाएं.",
+          "1 mile के लिए Arlen Road पर दक्षिण-पूर्व की ओर जाएं.",
+          "1 mile के लिए Arlen Road पर दक्षिण की ओर जाएं.",
+          "1 mile के लिए Arlen Road पर दक्षिण-पश्चिम की ओर जाएं.",
+          "1 mile के लिए Arlen Road पर पश्चिम की ओर जाएं.",
+          "1 mile के लिए Arlen Road पर उत्तर-पश्चिम की ओर जाएं.",
+          "a half mile के लिए Arlen Road पर उत्तर की ओर जाएं.",
+          "a half mile के लिए Arlen Road पर उत्तर-पूर्व की ओर जाएं.",
+          "a half mile के लिए Arlen Road पर पूर्व की ओर जाएं.",
+          "a half mile के लिए Arlen Road पर दक्षिण-पूर्व की ओर जाएं.",
+          "a half mile के लिए Arlen Road पर दक्षिण की ओर जाएं.",
+          "a half mile के लिए Arlen Road पर दक्षिण-पश्चिम की ओर जाएं.",
+          "a half mile के लिए Arlen Road पर पश्चिम की ओर जाएं.",
+          "a half mile के लिए Arlen Road पर उत्तर-पश्चिम की ओर जाएं."
+        ],
+        "2": [
+          "उत्तर की ओर Belair Road/US 1 Business पर जाएं.",
+          "उत्तर-पूर्व की ओर Belair Road/US 1 Business पर जाएं.",
+          "पूर्व की ओर Belair Road/US 1 Business पर जाएं.",
+          "दक्षिण-पूर्व की ओर Belair Road/US 1 Business पर जाएं.",
+          "दक्षिण की ओर Belair Road/US 1 Business पर जाएं.",
+          "दक्षिण-पश्चिम की ओर Belair Road/US 1 Business पर जाएं.",
+          "पश्चिम की ओर Belair Road/US 1 Business पर जाएं.",
+          "उत्तर-पश्चिम की ओर Belair Road/US 1 Business पर जाएं."
+        ],
+        "4": [
+          "1 mile के लिए उत्तर की ओर ड्राइव करें.",
+          "1 mile के लिए उत्तर-पूर्व की ओर ड्राइव करें.",
+          "1 mile के लिए पूर्व की ओर ड्राइव करें.",
+          "1 mile के लिए दक्षिण-पूर्व की ओर ड्राइव करें.",
+          "1 mile के लिए दक्षिण की ओर ड्राइव करें.",
+          "1 mile के लिए दक्षिण-पश्चिम की ओर ड्राइव करें.",
+          "1 mile के लिए पश्चिम की ओर ड्राइव करें.",
+          "1 mile के लिए उत्तर-पश्चिम की ओर ड्राइव करें.",
+          "a half mile के लिए उत्तर की ओर ड्राइव करें.",
+          "a half mile के लिए उत्तर-पूर्व की ओर ड्राइव करें.",
+          "a half mile के लिए पूर्व की ओर ड्राइव करें.",
+          "a half mile के लिए दक्षिण-पूर्व की ओर ड्राइव करें.",
+          "a half mile के लिए दक्षिण की ओर ड्राइव करें.",
+          "a half mile के लिए दक्षिण-पश्चिम की ओर ड्राइव करें.",
+          "a half mile के लिए पश्चिम की ओर ड्राइव करें.",
+          "a half mile के लिए उत्तर-पश्चिम की ओर ड्राइव करें."
+        ],
+        "5": [
+          "1 mile के लिए Arlen Road पर उत्तर की ओर ड्राइव करें.",
+          "1 mile के लिए Arlen Road पर उत्तर-पूर्व की ओर ड्राइव करें.",
+          "1 mile के लिए Arlen Road पर पूर्व की ओर ड्राइव करें.",
+          "1 mile के लिए Arlen Road पर दक्षिण-पूर्व की ओर ड्राइव करें.",
+          "1 mile के लिए Arlen Road पर दक्षिण की ओर ड्राइव करें.",
+          "1 mile के लिए Arlen Road पर दक्षिण-पश्चिम की ओर ड्राइव करें.",
+          "1 mile के लिए Arlen Road पर पश्चिम की ओर ड्राइव करें.",
+          "1 mile के लिए Arlen Road पर उत्तर-पश्चिम की ओर ड्राइव करें.",
+          "a half mile के लिए Arlen Road पर उत्तर की ओर ड्राइव करें.",
+          "a half mile के लिए Arlen Road पर उत्तर-पूर्व की ओर ड्राइव करें.",
+          "a half mile के लिए Arlen Road पर पूर्व की ओर ड्राइव करें.",
+          "a half mile के लिए Arlen Road पर दक्षिण-पूर्व की ओर ड्राइव करें.",
+          "a half mile के लिए Arlen Road पर दक्षिण की ओर ड्राइव करें.",
+          "a half mile के लिए Arlen Road पर दक्षिण-पश्चिम की ओर ड्राइव करें.",
+          "a half mile के लिए Arlen Road पर पश्चिम की ओर ड्राइव करें.",
+          "a half mile के लिए Arlen Road पर उत्तर-पश्चिम की ओर ड्राइव करें."
+        ],
+        "6": [
+          "उत्तर की ओर Belair Road/US 1 Business पर ड्राइव करें.",
+          "उत्तर-पूर्व की ओर Belair Road/US 1 Business पर ड्राइव करें.",
+          "पूर्व की ओर Belair Road/US 1 Business पर ड्राइव करें.",
+          "दक्षिण-पूर्व की ओर Belair Road/US 1 Business पर ड्राइव करें.",
+          "दक्षिण की ओर Belair Road/US 1 Business पर ड्राइव करें.",
+          "दक्षिण-पश्चिम की ओर Belair Road/US 1 Business पर ड्राइव करें.",
+          "पश्चिम की ओर Belair Road/US 1 Business पर ड्राइव करें.",
+          "उत्तर-पश्चिम की ओर Belair Road/US 1 Business पर ड्राइव करें."
+        ],
+        "8": [
+          "1 mile के लिए उत्तर की ओर चलें.",
+          "1 mile के लिए उत्तर-पूर्व की ओर चलें.",
+          "1 mile के लिए पूर्व की ओर चलें.",
+          "1 mile के लिए दक्षिण-पूर्व की ओर चलें.",
+          "1 mile के लिए दक्षिण की ओर चलें.",
+          "1 mile के लिए दक्षिण-पश्चिम की ओर चलें.",
+          "1 mile के लिए पश्चिम की ओर चलें.",
+          "1 mile के लिए उत्तर-पश्चिम की ओर चलें.",
+          "a half mile के लिए उत्तर की ओर चलें.",
+          "a half mile के लिए उत्तर-पूर्व की ओर चलें.",
+          "a half mile के लिए पूर्व की ओर चलें.",
+          "a half mile के लिए दक्षिण-पूर्व की ओर चलें.",
+          "a half mile के लिए दक्षिण की ओर चलें.",
+          "a half mile के लिए दक्षिण-पश्चिम की ओर चलें.",
+          "a half mile के लिए पश्चिम की ओर चलें.",
+          "a half mile के लिए उत्तर-पश्चिम की ओर चलें."
+        ],
+        "9": [
+          "1 mile के लिए Arlen Road पर उत्तर की ओर चलें.",
+          "1 mile के लिए Arlen Road पर उत्तर-पूर्व की ओर चलें.",
+          "1 mile के लिए Arlen Road पर पूर्व की ओर चलें.",
+          "1 mile के लिए Arlen Road पर दक्षिण-पूर्व की ओर चलें.",
+          "1 mile के लिए Arlen Road पर दक्षिण की ओर चलें.",
+          "1 mile के लिए Arlen Road पर दक्षिण-पश्चिम की ओर चलें.",
+          "1 mile के लिए Arlen Road पर पश्चिम की ओर चलें.",
+          "1 mile के लिए Arlen Road पर उत्तर-पश्चिम की ओर चलें.",
+          "a half mile के लिए Arlen Road पर उत्तर की ओर चलें.",
+          "a half mile के लिए Arlen Road पर उत्तर-पूर्व की ओर चलें.",
+          "a half mile के लिए Arlen Road पर पूर्व की ओर चलें.",
+          "a half mile के लिए Arlen Road पर दक्षिण-पूर्व की ओर चलें.",
+          "a half mile के लिए Arlen Road पर दक्षिण की ओर चलें.",
+          "a half mile के लिए Arlen Road पर दक्षिण-पश्चिम की ओर चलें.",
+          "a half mile के लिए Arlen Road पर पश्चिम की ओर चलें.",
+          "a half mile के लिए Arlen Road पर उत्तर-पश्चिम की ओर चलें."
+        ],
+        "10": [
+          "उत्तर की ओर Belair Road/US 1 Business पर चलें.",
+          "उत्तर-पूर्व की ओर Belair Road/US 1 Business पर चलें.",
+          "पूर्व की ओर Belair Road/US 1 Business पर चलें.",
+          "दक्षिण-पूर्व की ओर Belair Road/US 1 Business पर चलें.",
+          "दक्षिण की ओर Belair Road/US 1 Business पर चलें.",
+          "दक्षिण-पश्चिम की ओर Belair Road/US 1 Business पर चलें.",
+          "पश्चिम की ओर Belair Road/US 1 Business पर चलें.",
+          "उत्तर-पश्चिम की ओर Belair Road/US 1 Business पर चलें."
+        ],
+        "16": [
+          "1 mile के लिए उत्तर की ओर साइकिल चलाए.",
+          "1 mile के लिए उत्तर-पूर्व की ओर साइकिल चलाए.",
+          "1 mile के लिए पूर्व की ओर साइकिल चलाए.",
+          "1 mile के लिए दक्षिण-पूर्व की ओर साइकिल चलाए.",
+          "1 mile के लिए दक्षिण की ओर साइकिल चलाए.",
+          "1 mile के लिए दक्षिण-पश्चिम की ओर साइकिल चलाए.",
+          "1 mile के लिए पश्चिम की ओर साइकिल चलाए.",
+          "1 mile के लिए उत्तर-पश्चिम की ओर साइकिल चलाए.",
+          "a half mile के लिए उत्तर की ओर साइकिल चलाए.",
+          "a half mile के लिए उत्तर-पूर्व की ओर साइकिल चलाए.",
+          "a half mile के लिए पूर्व की ओर साइकिल चलाए.",
+          "a half mile के लिए दक्षिण-पूर्व की ओर साइकिल चलाए.",
+          "a half mile के लिए दक्षिण की ओर साइकिल चलाए.",
+          "a half mile के लिए दक्षिण-पश्चिम की ओर साइकिल चलाए.",
+          "a half mile के लिए पश्चिम की ओर साइकिल चलाए.",
+          "a half mile के लिए उत्तर-पश्चिम की ओर साइकिल चलाए."
+        ],
+        "17": [
+          "1 mile के लिए Arlen Road पर उत्तर की ओर साइकिल चलाए.",
+          "1 mile के लिए Arlen Road पर उत्तर-पूर्व की ओर साइकिल चलाए.",
+          "1 mile के लिए Arlen Road पर पूर्व की ओर साइकिल चलाए.",
+          "1 mile के लिए Arlen Road पर दक्षिण-पूर्व की ओर साइकिल चलाए.",
+          "1 mile के लिए Arlen Road पर दक्षिण की ओर साइकिल चलाए.",
+          "1 mile के लिए Arlen Road पर दक्षिण-पश्चिम की ओर साइकिल चलाए.",
+          "1 mile के लिए Arlen Road पर पश्चिम की ओर साइकिल चलाए.",
+          "1 mile के लिए Arlen Road पर उत्तर-पश्चिम की ओर साइकिल चलाए.",
+          "a half mile के लिए Arlen Road पर उत्तर की ओर साइकिल चलाए.",
+          "a half mile के लिए Arlen Road पर उत्तर-पूर्व की ओर साइकिल चलाए.",
+          "a half mile के लिए Arlen Road पर पूर्व की ओर साइकिल चलाए.",
+          "a half mile के लिए Arlen Road पर दक्षिण-पूर्व की ओर साइकिल चलाए.",
+          "a half mile के लिए Arlen Road पर दक्षिण की ओर साइकिल चलाए.",
+          "a half mile के लिए Arlen Road पर दक्षिण-पश्चिम की ओर साइकिल चलाए.",
+          "a half mile के लिए Arlen Road पर पश्चिम की ओर साइकिल चलाए.",
+          "a half mile के लिए Arlen Road पर उत्तर-पश्चिम की ओर साइकिल चलाए."
+        ],
+        "18": [
+          "उत्तर की ओर Belair Road/US 1 Business पर साइकिल चलाए.",
+          "उत्तर-पूर्व की ओर Belair Road/US 1 Business पर साइकिल चलाए.",
+          "पूर्व की ओर Belair Road/US 1 Business पर साइकिल चलाए.",
+          "दक्षिण-पूर्व की ओर Belair Road/US 1 Business पर साइकिल चलाए.",
+          "दक्षिण की ओर Belair Road/US 1 Business पर साइकिल चलाए.",
+          "दक्षिण-पश्चिम की ओर Belair Road/US 1 Business पर साइकिल चलाए.",
+          "पश्चिम की ओर Belair Road/US 1 Business पर साइकिल चलाए.",
+          "उत्तर-पश्चिम की ओर Belair Road/US 1 Business पर साइकिल चलाए."
+        ]
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> लें. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN> की ओर <TRANSIT_NAME> लें. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "ट्राम",
+        "मेट्रो",
+        "ट्रेन",
+        "बस",
+        "नौका",
+        "केबलकार",
+        "गोंडोला",
+        "रज्जु रेल"
+      ],
+      "transit_stop_count_labels": {
+        "one": "stop",
+        "other": "स्टॉप"
+      },
+      "example_phrases": {
+        "0": [
+          "New Haven लें. (1 stop)",
+          "New Haven लें. (1 stops)",
+          "New Haven लें. (3 stop)",
+          "New Haven लें. (3 stops)"
+        ],
+        "1": [
+          "JAMAICA - 179 ST की ओर New Haven लें. (1 stop)",
+          "JAMAICA - 179 ST की ओर New Haven लें. (1 stops)",
+          "JAMAICA - 179 ST की ओर New Haven लें. (3 stop)",
+          "JAMAICA - 179 ST की ओर New Haven लें. (3 stops)"
+        ]
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "स्टेशन से बाहर निकलें.",
+        "1": "<TRANSIT_STOP> स्टेशन से बाहर निकलें..",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन से बाहर निकलें.."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "स्टेशन से बाहर निकलें."
+        ],
+        "1": [
+          "8 St - NYU स्टेशन से बाहर निकलें.."
+        ],
+        "2": [
+          "8 St - NYU Embarcadero Station स्टेशन से बाहर निकलें.."
+        ]
+      }
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "स्टेशन से बाहर निकलें.",
+        "1": "<TRANSIT_STOP> स्टेशन से बाहर निकलें..",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन से बाहर निकलें.."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "स्टेशन से बाहर निकलें."
+        ],
+        "1": [
+          "8 St - NYU स्टेशन से बाहर निकलें.."
+        ],
+        "2": [
+          "8 St - NYU Embarcadero Station स्टेशन से बाहर निकलें.."
+        ]
+      }
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "स्टेशन में प्रवेश करे़.",
+        "1": "<TRANSIT_STOP> स्टेशन में प्रवेश करे़.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन में प्रवेश करे़."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "स्टेशन में प्रवेश करे़."
+        ],
+        "1": [
+          "8 St - NYU स्टेशन में प्रवेश करे़."
+        ],
+        "2": [
+          "8 St - NYU Embarcadero Station स्टेशन में प्रवेश करे़."
+        ]
+      }
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "स्टेशन में प्रवेश करे़.",
+        "1": "<TRANSIT_STOP> स्टेशन में प्रवेश करे़.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन में प्रवेश करे़."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "स्टेशन में प्रवेश करे़."
+        ],
+        "1": [
+          "8 St - NYU स्टेशन में प्रवेश करे़."
+        ],
+        "2": [
+          "8 St - NYU Embarcadero Station स्टेशन में प्रवेश करे़."
+        ]
+      }
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "स्टेशन पर हस्तांतरण करे़.",
+        "1": "<TRANSIT_STOP> स्टेशन पर हस्तांतरण करे़.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन पर हस्तांतरण करे़."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "स्टेशन पर हस्तांतरण करे़."
+        ],
+        "1": [
+          "8 St - NYU स्टेशन पर हस्तांतरण करे़."
+        ],
+        "2": [
+          "8 St - NYU Embarcadero Station स्टेशन पर हस्तांतरण करे़."
+        ]
+      }
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "स्टेशन पर हस्तांतरण करे़.",
+        "1": "<TRANSIT_STOP> स्टेशन पर हस्तांतरण करे़.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन पर हस्तांतरण करे़."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "स्टेशन पर हस्तांतरण करे़."
+        ],
+        "1": [
+          "8 St - NYU स्टेशन पर हस्तांतरण करे़."
+        ],
+        "2": [
+          "8 St - NYU Embarcadero Station स्टेशन पर हस्तांतरण करे़."
+        ]
+      }
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> पर बने रहें. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN> की ओर <TRANSIT_NAME> पर बने रहें. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "ट्राम",
+        "मेट्रो",
+        "ट्रेन",
+        "बस",
+        "नौका",
+        "केबलकार",
+        "गोंडोला",
+        "रज्जु रेल"
+      ],
+      "transit_stop_count_labels": {
+        "one": "stop",
+        "other": "स्टॉप"
+      },
+      "example_phrases": {
+        "0": [
+          "New Haven पर बने रहें. (1 stop)",
+          "New Haven पर बने रहें. (1 stops)",
+          "New Haven पर बने रहें. (3 stop)",
+          "New Haven पर बने रहें. (3 stops)"
+        ],
+        "1": [
+          "JAMAICA - 179 ST की ओर New Haven पर बने रहें. (1 stop)",
+          "JAMAICA - 179 ST की ओर New Haven पर बने रहें. (1 stops)",
+          "JAMAICA - 179 ST की ओर New Haven पर बने रहें. (3 stop)",
+          "JAMAICA - 179 ST की ओर New Haven पर बने रहें. (3 stops)"
+        ]
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> पर बने रहें.",
+        "1": "<TRANSIT_HEADSIGN> की ओर <TRANSIT_NAME> पर बने रहें."
+      },
+      "empty_transit_name_labels": [
+        "ट्राम",
+        "मेट्रो",
+        "ट्रेन",
+        "बस",
+        "नौका",
+        "केबलकार",
+        "गोंडोला",
+        "रज्जु रेल"
+      ],
+      "example_phrases": {
+        "0": [
+          "New Haven पर बने रहें."
+        ],
+        "1": [
+          "JAMAICA - 179 ST की ओर New Haven पर बने रहें."
+        ]
+      }
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> लेने के लिए स्थानांतरण. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN> की ओर <TRANSIT_NAME> लेने के लिए स्थानांतरण. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "ट्राम",
+        "मेट्रो",
+        "ट्रेन",
+        "बस",
+        "नौका",
+        "केबलकार",
+        "गोंडोला",
+        "रज्जु रेल"
+      ],
+      "transit_stop_count_labels": {
+        "one": "stop",
+        "other": "स्टॉप"
+      },
+      "example_phrases": {
+        "0": [
+          "New Haven लेने के लिए स्थानांतरण. (1 stop)",
+          "New Haven लेने के लिए स्थानांतरण. (1 stops)",
+          "New Haven लेने के लिए स्थानांतरण. (3 stop)",
+          "New Haven लेने के लिए स्थानांतरण. (3 stops)"
+        ],
+        "1": [
+          "JAMAICA - 179 ST की ओर New Haven लेने के लिए स्थानांतरण. (1 stop)",
+          "JAMAICA - 179 ST की ओर New Haven लेने के लिए स्थानांतरण. (1 stops)",
+          "JAMAICA - 179 ST की ओर New Haven लेने के लिए स्थानांतरण. (3 stop)",
+          "JAMAICA - 179 ST की ओर New Haven लेने के लिए स्थानांतरण. (3 stops)"
+        ]
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> लेने के लिए स्थानांतरण.",
+        "1": "<TRANSIT_HEADSIGN> की ओर <TRANSIT_NAME> लेने के लिए स्थानांतरण."
+      },
+      "empty_transit_name_labels": [
+        "ट्राम",
+        "मेट्रो",
+        "ट्रेन",
+        "बस",
+        "नौका",
+        "केबलकार",
+        "गोंडोला",
+        "रज्जु रेल"
+      ],
+      "example_phrases": {
+        "0": [
+          "New Haven लेने के लिए स्थानांतरण."
+        ],
+        "1": [
+          "JAMAICA - 179 ST की ओर New Haven लेने के लिए स्थानांतरण."
+        ]
+      }
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> लें.",
+        "1": "<TRANSIT_HEADSIGN> की ओर <TRANSIT_NAME> लें."
+      },
+      "empty_transit_name_labels": [
+        "ट्राम",
+        "मेट्रो",
+        "ट्रेन",
+        "बस",
+        "नौका",
+        "केबलकार",
+        "गोंडोला",
+        "रज्जु रेल"
+      ],
+      "example_phrases": {
+        "0": [
+          "New Haven लें."
+        ],
+        "1": [
+          "JAMAICA - 179 ST की ओर New Haven लें."
+        ]
+      }
+    },
+    "turn": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> मुड़ें.",
+        "1": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें.",
+        "2": "<BEGIN_STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें. <STREET_NAMES> पर बने रहें.",
+        "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाएं मुड़ें.",
+          "दाएँ मुड़ें."
+        ],
+        "1": [
+          "Arlen Road पर बाएं मुड़ें.",
+          "Arlen Road पर दाएँ मुड़ें."
+        ],
+        "2": [
+          "Belair Road/US 1 Business पर बाएं मुड़ें. Arlen Road पर बने रहें.",
+          "Belair Road/US 1 Business पर दाएँ मुड़ें. Arlen Road पर बने रहें."
+        ],
+        "3": [
+          "Arlen Road पर बने रहने के लिए बाएं मुड़ें.",
+          "Arlen Road पर बने रहने के लिए दाएँ मुड़ें."
+        ]
+      }
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> मुड़ें.",
+        "1": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें.",
+        "2": "<BEGIN_STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें.",
+        "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाएं मुड़ें.",
+          "दाएँ मुड़ें."
+        ],
+        "1": [
+          "Arlen Road पर बाएं मुड़ें.",
+          "Arlen Road पर दाएँ मुड़ें."
+        ],
+        "2": [
+          "Belair Road/US 1 Business पर बाएं मुड़ें.",
+          "Belair Road/US 1 Business पर दाएँ मुड़ें."
+        ],
+        "3": [
+          "Arlen Road पर बने रहने के लिए बाएं मुड़ें.",
+          "Arlen Road पर बने रहने के लिए दाएँ मुड़ें."
+        ]
+      }
+    },
+    "uturn": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> यू-टर्न लें.",
+        "1": "<STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "2": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "3": "<CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "4": "<CROSS_STREET_NAMES> पर <STREET_NAMES> की ओर <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "5": "<STREET_NAMES> पर बने रहने के लिए <CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न ले."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाएं यू-टर्न लें.",
+          "दाएँ यू-टर्न लें."
+        ],
+        "1": [
+          "Arlen Road पर बाएं यू-टर्न लें.",
+          "Arlen Road पर दाएँ यू-टर्न लें."
+        ],
+        "2": [
+          "Arlen Road पर बने रहने के लिए बाएं यू-टर्न लें.",
+          "Arlen Road पर बने रहने के लिए दाएँ यू-टर्न लें."
+        ],
+        "3": [
+          "Devonshire Road पर बाएं यू-टर्न लें.",
+          "Devonshire Road पर दाएँ यू-टर्न लें."
+        ],
+        "4": [
+          "Devonshire Road पर Arlen Road की ओर बाएं यू-टर्न लें.",
+          "Devonshire Road पर Arlen Road की ओर दाएँ यू-टर्न लें."
+        ],
+        "5": [
+          "Arlen Road पर बने रहने के लिए Devonshire Road पर बाएं यू-टर्न ले.",
+          "Arlen Road पर बने रहने के लिए Devonshire Road पर दाएँ यू-टर्न ले."
+        ]
+      }
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> यू-टर्न लें.",
+        "1": "<STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "2": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "3": "<CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "4": "<CROSS_STREET_NAMES> पर <STREET_NAMES> की ओर <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "5": "<STREET_NAMES> पर बने रहने के लिए <CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न ले."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाएं यू-टर्न लें.",
+          "दाएँ यू-टर्न लें."
+        ],
+        "1": [
+          "Arlen Road पर बाएं यू-टर्न लें.",
+          "Arlen Road पर दाएँ यू-टर्न लें."
+        ],
+        "2": [
+          "Arlen Road पर बने रहने के लिए बाएं यू-टर्न लें.",
+          "Arlen Road पर बने रहने के लिए दाएँ यू-टर्न लें."
+        ],
+        "3": [
+          "Devonshire Road पर बाएं यू-टर्न लें.",
+          "Devonshire Road पर दाएँ यू-टर्न लें."
+        ],
+        "4": [
+          "Devonshire Road पर Arlen Road की ओर बाएं यू-टर्न लें.",
+          "Devonshire Road पर Arlen Road की ओर दाएँ यू-टर्न लें."
+        ],
+        "5": [
+          "Arlen Road पर बने रहने के लिए Devonshire Road पर बाएं यू-टर्न ले.",
+          "Arlen Road पर बने रहने के लिए Devonshire Road पर दाएँ यू-टर्न ले."
+        ]
+      }
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> और फिर <NEXT_VERBAL_CUE>"
+      },
+      "example_phrases": {
+        "0": [
+          "Bear right onto East Fayette Street. और फिर Turn right onto North Gay Street."
+        ]
+      }
+    }
+  }
+}
