@@ -63,7 +63,6 @@ TimeInfo::make(valhalla::Location& location, baldr::GraphReader& reader, int def
 
   // What second of the week is this (for historical traffic lookup)
   auto second_of_week = dt::second_of_week(local_time, tz);
-  second_of_week -= 27;
 
   // When is this route with respect to now this will let us appropriately use current flow traffic
   int64_t seconds_from_now = (then_date.get_local_time() - now_date.get_local_time()).count();
