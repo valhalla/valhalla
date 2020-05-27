@@ -13,7 +13,6 @@ set(sources
   multimodal.cc
   optimized_route_action.cc
   optimizer.cc
-  pathalgorithm.cc
   route_action.cc
   route_matcher.cc
   timedep_forward.cc

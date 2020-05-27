@@ -12,6 +12,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
+#include <valhalla/baldr/time_info.h>
 #include <valhalla/proto/tripcommon.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
@@ -145,8 +146,9 @@ protected:
    * @param reader             the reader for looking up timezone information
    * @returns                  time info for each location
    */
-  std::vector<TimeInfo> SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                                baldr::GraphReader& reader);
+  std::vector<baldr::TimeInfo>
+  SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+          baldr::GraphReader& reader);
 
   /**
    * Expand from the node along the forward search path.
@@ -162,7 +164,7 @@ protected:
                      const sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition,
-                     const TimeInfo& time_info);
+                     const baldr::TimeInfo& time_info);
 
   /**
    * Expand from the node along the reverse search path.
@@ -179,7 +181,7 @@ protected:
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
                      const bool from_transition,
-                     const TimeInfo& time_info);
+                     const baldr::TimeInfo& time_info);
 
   /**
    * Expand from the node using multimodal algorithm.
@@ -201,7 +203,7 @@ protected:
                                const std::shared_ptr<sif::DynamicCost>& pc,
                                const std::shared_ptr<sif::DynamicCost>& tc,
                                const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                               const TimeInfo& time_info);
+                               const baldr::TimeInfo& time_info);
 
   /**
    * Add edge(s) at each origin location to the adjacency list.

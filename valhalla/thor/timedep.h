@@ -1,6 +1,7 @@
 #ifndef VALHALLA_THOR_TIMEDEP_H_
 #define VALHALLA_THOR_TIMEDEP_H_
 
+#include <valhalla/baldr/time_info.h>
 #include <valhalla/thor/astar.h>
 
 namespace valhalla {
@@ -65,7 +66,7 @@ protected:
                      sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition,
-                     const TimeInfo& time_info,
+                     const baldr::TimeInfo& time_info,
                      const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);
 
@@ -76,7 +77,7 @@ protected:
                                  const uint32_t pred_idx,
                                  const EdgeMetadata& meta,
                                  const baldr::GraphTile* tile,
-                                 const TimeInfo& time_info,
+                                 const baldr::TimeInfo& time_info,
                                  const valhalla::Location& destination,
                                  std::pair<int32_t, float>& best_path);
 };
@@ -161,7 +162,7 @@ protected:
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
                      const bool from_transition,
-                     const TimeInfo& time_info,
+                     const baldr::TimeInfo& time_info,
                      const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);
 
@@ -173,7 +174,7 @@ protected:
                           const uint32_t pred_idx,
                           const EdgeMetadata& meta,
                           const baldr::GraphTile* tile,
-                          const TimeInfo& time_info,
+                          const baldr::TimeInfo& time_info,
                           const valhalla::Location& destination,
                           std::pair<int32_t, float>& best_path);
 

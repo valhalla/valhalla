@@ -11,6 +11,7 @@
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/time_info.h>
 #include <valhalla/proto/tripcommon.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
@@ -181,7 +182,7 @@ protected:
                      const std::shared_ptr<sif::DynamicCost>& pc,
                      const std::shared_ptr<sif::DynamicCost>& tc,
                      const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                     const TimeInfo& time_info);
+                     const baldr::TimeInfo& time_info);
 
   /**
    * Check if destination can be reached if walking is the last mode. Checks
