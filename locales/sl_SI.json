@@ -1,0 +1,2755 @@
+{
+  "posix_locale": "sl_SI.UTF-8",
+  "aliases": [
+    "sl"
+  ],
+  "instructions": {
+    "arrive": {
+      "phrases": {
+        "0": "Prihod: <TIME>.",
+        "1": "Prihod: <TIME> na <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Prihod: 8:02 AM."
+        ],
+        "1": [
+          "Prihod: 8:02 AM na 8 St - NYU."
+        ]
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Prihod ob <TIME>.",
+        "1": "Prihod ob <TIME> na <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Prihod ob 8:02 AM."
+        ],
+        "1": [
+          "Prihod ob 8:02 AM na 8 St - NYU."
+        ]
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Držite se <RELATIVE_DIRECTION>.",
+        "1": "Držite se <RELATIVE_DIRECTION>, da pridete na <STREET_NAMES>.",
+        "2": "Držite se <RELATIVE_DIRECTION>, da pridete na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>.",
+        "3": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Držite se levo.",
+          "Držite se desno."
+        ],
+        "1": [
+          "Držite se levo, da pridete na Arlen Road.",
+          "Držite se desno, da pridete na Arlen Road."
+        ],
+        "2": [
+          "Držite se levo, da pridete na Belair Road/US 1 Business. Nadaljujte po Arlen Road.",
+          "Držite se desno, da pridete na Belair Road/US 1 Business. Nadaljujte po Arlen Road."
+        ],
+        "3": [
+          "Držite se levo, da ostanete na Arlen Road.",
+          "Držite se desno, da ostanete na Arlen Road."
+        ]
+      }
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Držite se <RELATIVE_DIRECTION>.",
+        "1": "Držite se <RELATIVE_DIRECTION>, da pridete na <STREET_NAMES>.",
+        "2": "Držite se <RELATIVE_DIRECTION>, da pridete na <BEGIN_STREET_NAMES>.",
+        "3": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Držite se levo.",
+          "Držite se desno."
+        ],
+        "1": [
+          "Držite se levo, da pridete na Arlen Road.",
+          "Držite se desno, da pridete na Arlen Road."
+        ],
+        "2": [
+          "Držite se levo, da pridete na Belair Road/US 1 Business.",
+          "Držite se desno, da pridete na Belair Road/US 1 Business."
+        ],
+        "3": [
+          "Držite se levo, da ostanete na Arlen Road.",
+          "Držite se desno, da ostanete na Arlen Road."
+        ]
+      }
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> se spremeni v <STREET_NAMES>."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street se spremeni v Arlen Road."
+        ]
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> se spremeni v <STREET_NAMES>."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street se spremeni v Arlen Road."
+        ]
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Nadaljujte.",
+        "1": "Nadaljujte po <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "example_phrases": {
+        "0": [
+          "Nadaljujte."
+        ],
+        "1": [
+          "Nadaljujte po Arlen Road."
+        ]
+      }
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Nadaljujte <LENGTH>.",
+        "1": "Po <STREET_NAMES> nadaljujte <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometrov",
+        "1 kilometer",
+        "pol kilometra",
+        "<METERS> metrov",
+        "manj kot 10 metrov"
+      ],
+      "us_customary_lengths": [
+        "<MILES> milj",
+        "1 miljo",
+        "pol milje",
+        "<TENTHS_OF_MILE> desetink milje",
+        "1 desentinko milje",
+        "<FEET> čevljev",
+        "Manj kot 10 čevljev"
+      ],
+      "example_phrases": {
+        "0": [
+          "Nadaljujte 1 mile.",
+          "Nadaljujte a half mile."
+        ],
+        "1": [
+          "Po Arlen Road nadaljujte 1 mile.",
+          "Po Arlen Road nadaljujte a half mile."
+        ]
+      }
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Nadaljujte.",
+        "1": "Nadaljujte po <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "example_phrases": {
+        "0": [
+          "Nadaljujte."
+        ],
+        "1": [
+          "Nadaljujte po Arlen Road."
+        ]
+      }
+    },
+    "depart": {
+      "phrases": {
+        "0": "Odhod: <TIME>.",
+        "1": "Odhod: <TIME> s/z <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Odhod: 8:02 AM."
+        ],
+        "1": [
+          "Odhod: 8:02 AM s/z 8 St - NYU."
+        ]
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Odhod ob <TIME>.",
+        "1": "Odhod ob <TIME> s/z <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Odhod ob 8:02 AM."
+        ],
+        "1": [
+          "Odhod ob 8:02 AM s/z 8 St - NYU."
+        ]
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Prispeli ste na cilj.",
+        "1": "Prispeli ste na <DESTINATION>.",
+        "2": "Vaš cilj je na <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> je na <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Prispeli ste na cilj."
+        ],
+        "1": [
+          "Prispeli ste na Lancaster Brewing Company."
+        ],
+        "2": [
+          "Vaš cilj je na levo.",
+          "Vaš cilj je na desno."
+        ],
+        "3": [
+          "Lancaster Brewing Company je na levo.",
+          "Lancaster Brewing Company je na desno."
+        ]
+      }
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Prispeli ste na cilj.",
+        "1": "Prispeli ste na <DESTINATION>.",
+        "2": "Vaš cilj je na <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> je na <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Prispeli ste na cilj."
+        ],
+        "1": [
+          "Prispeli ste na Lancaster Brewing Company."
+        ],
+        "2": [
+          "Vaš cilj je na levo.",
+          "Vaš cilj je na desno."
+        ],
+        "3": [
+          "Lancaster Brewing Company je na levo.",
+          "Lancaster Brewing Company je na desno."
+        ]
+      }
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Prispeli boste na cilj.",
+        "1": "Prispeli boste na <DESTINATION>.",
+        "2": "Vaš cilj bo na <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> bo na <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Prispeli boste na cilj."
+        ],
+        "1": [
+          "Prispeli boste na Lancaster Brewing Company."
+        ],
+        "2": [
+          "Vaš cilj bo na levo.",
+          "Vaš cilj bo na desno."
+        ],
+        "3": [
+          "Lancaster Brewing Company bo na levo.",
+          "Lancaster Brewing Company bo na desno."
+        ]
+      }
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Pojdite na trajekt.",
+        "1": "Pojdite na <STREET_NAMES>.",
+        "2": "Pojdite na <FERRY_LABEL> <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "ferry_label": "Trajekt",
+      "example_phrases": {
+        "0": [
+          "Pojdite na trajekt."
+        ],
+        "1": [
+          "Pojdite na Arlen Road."
+        ],
+        "2": [
+          "Pojdite na Trajekt Arlen Road."
+        ]
+      }
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Pojdite na trajekt.",
+        "1": "Pojdite na <STREET_NAMES>.",
+        "2": "Pojdite na <FERRY_LABEL> <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "ferry_label": "Trajekt",
+      "example_phrases": {
+        "0": [
+          "Pojdite na trajekt."
+        ],
+        "1": [
+          "Pojdite na Arlen Road."
+        ],
+        "2": [
+          "Pojdite na Trajekt Arlen Road."
+        ]
+      }
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Pojdite v krožišče.",
+        "1": "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod."
+      },
+      "ordinal_values": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pojdite v krožišče."
+        ],
+        "1": [
+          "Pojdite v krožišče in uporabite 1. izhod.",
+          "Pojdite v krožišče in uporabite 2. izhod.",
+          "Pojdite v krožišče in uporabite 3. izhod.",
+          "Pojdite v krožišče in uporabite 4. izhod.",
+          "Pojdite v krožišče in uporabite 5. izhod.",
+          "Pojdite v krožišče in uporabite 6. izhod.",
+          "Pojdite v krožišče in uporabite 7. izhod.",
+          "Pojdite v krožišče in uporabite 8. izhod.",
+          "Pojdite v krožišče in uporabite 9. izhod.",
+          "Pojdite v krožišče in uporabite 10. izhod."
+        ]
+      }
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Pojdite v krožišče.",
+        "1": "Pojdite v krožišče in uporabite <ORDINAL_VALUE>. izhod."
+      },
+      "ordinal_values": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pojdite v krožišče."
+        ],
+        "1": [
+          "Pojdite v krožišče in uporabite 1. izhod.",
+          "Pojdite v krožišče in uporabite 2. izhod.",
+          "Pojdite v krožišče in uporabite 3. izhod.",
+          "Pojdite v krožišče in uporabite 4. izhod.",
+          "Pojdite v krožišče in uporabite 5. izhod.",
+          "Pojdite v krožišče in uporabite 6. izhod.",
+          "Pojdite v krožišče in uporabite 7. izhod.",
+          "Pojdite v krožišče in uporabite 8. izhod.",
+          "Pojdite v krožišče in uporabite 9. izhod.",
+          "Pojdite v krožišče in uporabite 10. izhod."
+        ]
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Zapeljite na izhod na <RELATIVE_DIRECTION>.",
+        "1": "Zapeljite na izhod <NUMBER_SIGN> na <RELATIVE_DIRECTION>.",
+        "2": "Zapeljite na izhod <BRANCH_SIGN> na <RELATIVE_DIRECTION>.",
+        "3": "Zapeljite na izhod <NUMBER_SIGN> na <RELATIVE_DIRECTION> in nato na <BRANCH_SIGN>.",
+        "4": "Zapeljite na izhod <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.",
+        "5": "Zapeljite na izhod <NUMBER_SIGN> na <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.",
+        "6": "Zapeljite na izhod <BRANCH_SIGN> na <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.",
+        "7": "Zapeljite na izhod <NUMBER_SIGN> na <RELATIVE_DIRECTION> in nato na <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "8": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION>.",
+        "10": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> in nato na <BRANCH_SIGN>.",
+        "12": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.",
+        "14": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> in nato na <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "15": "Zapeljite na izhod.",
+        "16": "Zapeljite na izhod <NUMBER_SIGN>.",
+        "17": "Zapeljite na izhod <BRANCH_SIGN>.",
+        "18": "Zapeljite na izhod <NUMBER_SIGN> in nato na <BRANCH_SIGN>.",
+        "19": "Zapeljite na izhod proti <TOWARD_SIGN>.",
+        "20": "Zapeljite na izhod <NUMBER_SIGN> proti <TOWARD_SIGN>.",
+        "21": "Zapeljite na izhod <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "22": "Zapeljite na izhod <NUMBER_SIGN> in nato na <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "23": "Zapeljite na izhod <NAME_SIGN>.",
+        "25": "Zapeljite na izhod <NAME_SIGN> in nato na <BRANCH_SIGN>.",
+        "27": "Zapeljite na izhod <NAME_SIGN> proti <TOWARD_SIGN>.",
+        "29": "Zapeljite na izhod <NAME_SIGN> in nato na <BRANCH_SIGN> proti <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Zapeljite na izhod na levo.",
+          "Zapeljite na izhod na desno."
+        ],
+        "1": [
+          "Zapeljite na izhod 67 B-A na levo.",
+          "Zapeljite na izhod 67 B-A na desno."
+        ],
+        "2": [
+          "Zapeljite na izhod US 322 West na levo.",
+          "Zapeljite na izhod US 322 West na desno."
+        ],
+        "3": [
+          "Zapeljite na izhod 67 B-A na levo in nato na US 322 West.",
+          "Zapeljite na izhod 67 B-A na desno in nato na US 322 West."
+        ],
+        "4": [
+          "Zapeljite na izhod levo proti Lewiston.",
+          "Zapeljite na izhod desno proti Lewiston."
+        ],
+        "5": [
+          "Zapeljite na izhod 67 B-A na levo proti Lewiston.",
+          "Zapeljite na izhod 67 B-A na desno proti Lewiston."
+        ],
+        "6": [
+          "Zapeljite na izhod US 322 West na levo proti Lewiston.",
+          "Zapeljite na izhod US 322 West na desno proti Lewiston."
+        ],
+        "7": [
+          "Zapeljite na izhod 67 B-A na levo in nato na US 322 West proti Lewiston.",
+          "Zapeljite na izhod 67 B-A na desno in nato na US 322 West proti Lewiston."
+        ],
+        "8": [
+          "Zapeljite na izhod White Marsh Boulevard na levo.",
+          "Zapeljite na izhod White Marsh Boulevard na desno."
+        ],
+        "10": [
+          "Zapeljite na izhod White Marsh Boulevard na levo in nato na US 322 West.",
+          "Zapeljite na izhod White Marsh Boulevard na desno in nato na US 322 West."
+        ],
+        "12": [
+          "Zapeljite na izhod White Marsh Boulevard na levo proti Lewiston.",
+          "Zapeljite na izhod White Marsh Boulevard na desno proti Lewiston."
+        ],
+        "14": [
+          "Zapeljite na izhod White Marsh Boulevard na levo in nato na US 322 West proti Lewiston.",
+          "Zapeljite na izhod White Marsh Boulevard na desno in nato na US 322 West proti Lewiston."
+        ],
+        "15": [
+          "Zapeljite na izhod."
+        ],
+        "16": [
+          "Zapeljite na izhod 67 B-A."
+        ],
+        "17": [
+          "Zapeljite na izhod US 322 West."
+        ],
+        "18": [
+          "Zapeljite na izhod 67 B-A in nato na US 322 West."
+        ],
+        "19": [
+          "Zapeljite na izhod proti Lewiston."
+        ],
+        "20": [
+          "Zapeljite na izhod 67 B-A proti Lewiston."
+        ],
+        "21": [
+          "Zapeljite na izhod US 322 West proti Lewiston."
+        ],
+        "22": [
+          "Zapeljite na izhod 67 B-A in nato na US 322 West proti Lewiston."
+        ],
+        "23": [
+          "Zapeljite na izhod White Marsh Boulevard."
+        ],
+        "25": [
+          "Zapeljite na izhod White Marsh Boulevard in nato na US 322 West."
+        ],
+        "27": [
+          "Zapeljite na izhod White Marsh Boulevard proti Lewiston."
+        ],
+        "29": [
+          "Zapeljite na izhod White Marsh Boulevard in nato na US 322 West proti Lewiston."
+        ]
+      }
+    },
+    "exit_ferry": {
+      "phrases": {
+        "0": "Pojdite <CARDINAL_DIRECTION>.",
+        "1": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "2": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>.",
+        "4": "Peljite <CARDINAL_DIRECTION>.",
+        "5": "Na <STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
+        "6": "Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>.",
+        "8": "Pojdite <CARDINAL_DIRECTION>.",
+        "9": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "10": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>.",
+        "16": "Pojdite <CARDINAL_DIRECTION>.",
+        "17": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "proti severu",
+        "proti severovzhodu",
+        "proti vzhodu",
+        "proti jugovzhodu",
+        "proti jugu",
+        "proti jugozahodu",
+        "proti zahodu",
+        "proti severozahodu"
+      ],
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pojdite proti severu.",
+          "Pojdite proti severovzhodu.",
+          "Pojdite proti vzhodu.",
+          "Pojdite proti jugovzhodu.",
+          "Pojdite proti jugu.",
+          "Pojdite proti jugozahodu.",
+          "Pojdite proti zahodu.",
+          "Pojdite proti severozahodu."
+        ],
+        "1": [
+          "Na Arlen Road pojdite proti severu.",
+          "Na Arlen Road pojdite proti severovzhodu.",
+          "Na Arlen Road pojdite proti vzhodu.",
+          "Na Arlen Road pojdite proti jugovzhodu.",
+          "Na Arlen Road pojdite proti jugu.",
+          "Na Arlen Road pojdite proti jugozahodu.",
+          "Na Arlen Road pojdite proti zahodu.",
+          "Na Arlen Road pojdite proti severozahodu."
+        ],
+        "2": [
+          "Na Belair Road/US 1 Business pojdite proti severu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu. Nadaljujte po Arlen Road."
+        ],
+        "4": [
+          "Peljite proti severu.",
+          "Peljite proti severovzhodu.",
+          "Peljite proti vzhodu.",
+          "Peljite proti jugovzhodu.",
+          "Peljite proti jugu.",
+          "Peljite proti jugozahodu.",
+          "Peljite proti zahodu.",
+          "Peljite proti severozahodu."
+        ],
+        "5": [
+          "Na Arlen Road peljite proti severu.",
+          "Na Arlen Road peljite proti severovzhodu.",
+          "Na Arlen Road peljite proti vzhodu.",
+          "Na Arlen Road peljite proti jugovzhodu.",
+          "Na Arlen Road peljite proti jugu.",
+          "Na Arlen Road peljite proti jugozahodu.",
+          "Na Arlen Road peljite proti zahodu.",
+          "Na Arlen Road peljite proti severozahodu."
+        ],
+        "6": [
+          "Na Belair Road/US 1 Business peljite proti severu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti severovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti vzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti jugovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti jugu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti jugozahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti zahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti severozahodu. Nadaljujte po Arlen Road."
+        ],
+        "8": [
+          "Pojdite proti severu.",
+          "Pojdite proti severovzhodu.",
+          "Pojdite proti vzhodu.",
+          "Pojdite proti jugovzhodu.",
+          "Pojdite proti jugu.",
+          "Pojdite proti jugozahodu.",
+          "Pojdite proti zahodu.",
+          "Pojdite proti severozahodu."
+        ],
+        "9": [
+          "Na Arlen Road pojdite proti severu.",
+          "Na Arlen Road pojdite proti severovzhodu.",
+          "Na Arlen Road pojdite proti vzhodu.",
+          "Na Arlen Road pojdite proti jugovzhodu.",
+          "Na Arlen Road pojdite proti jugu.",
+          "Na Arlen Road pojdite proti jugozahodu.",
+          "Na Arlen Road pojdite proti zahodu.",
+          "Na Arlen Road pojdite proti severozahodu."
+        ],
+        "10": [
+          "Na Belair Road/US 1 Business pojdite proti severu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu. Nadaljujte po Arlen Road."
+        ],
+        "16": [
+          "Pojdite proti severu.",
+          "Pojdite proti severovzhodu.",
+          "Pojdite proti vzhodu.",
+          "Pojdite proti jugovzhodu.",
+          "Pojdite proti jugu.",
+          "Pojdite proti jugozahodu.",
+          "Pojdite proti zahodu.",
+          "Pojdite proti severozahodu."
+        ],
+        "17": [
+          "Na Arlen Road pojdite proti severu.",
+          "Na Arlen Road pojdite proti severovzhodu.",
+          "Na Arlen Road pojdite proti vzhodu.",
+          "Na Arlen Road pojdite proti jugovzhodu.",
+          "Na Arlen Road pojdite proti jugu.",
+          "Na Arlen Road pojdite proti jugozahodu.",
+          "Na Arlen Road pojdite proti zahodu.",
+          "Na Arlen Road pojdite proti severozahodu."
+        ],
+        "18": [
+          "Na Belair Road/US 1 Business pojdite proti severu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu. Nadaljujte po Arlen Road."
+        ]
+      }
+    },
+    "exit_ferry_verbal": {
+      "phrases": {
+        "0": "Pojdite <CARDINAL_DIRECTION>.",
+        "1": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "2": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "4": "Peljite <CARDINAL_DIRECTION>.",
+        "5": "Na <STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
+        "6": "Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
+        "8": "Pojdite <CARDINAL_DIRECTION>.",
+        "9": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "10": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "16": "Pojdite <CARDINAL_DIRECTION>.",
+        "17": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>."
+      },
+      "cardinal_directions": [
+        "proti severu",
+        "proti severovzhodu",
+        "proti vzhodu",
+        "proti jugovzhodu",
+        "proti jugu",
+        "proti jugozahodu",
+        "proti zahodu",
+        "proti severozahodu"
+      ],
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pojdite proti severu.",
+          "Pojdite proti severovzhodu.",
+          "Pojdite proti vzhodu.",
+          "Pojdite proti jugovzhodu.",
+          "Pojdite proti jugu.",
+          "Pojdite proti jugozahodu.",
+          "Pojdite proti zahodu.",
+          "Pojdite proti severozahodu."
+        ],
+        "1": [
+          "Na Arlen Road pojdite proti severu.",
+          "Na Arlen Road pojdite proti severovzhodu.",
+          "Na Arlen Road pojdite proti vzhodu.",
+          "Na Arlen Road pojdite proti jugovzhodu.",
+          "Na Arlen Road pojdite proti jugu.",
+          "Na Arlen Road pojdite proti jugozahodu.",
+          "Na Arlen Road pojdite proti zahodu.",
+          "Na Arlen Road pojdite proti severozahodu."
+        ],
+        "2": [
+          "Na Belair Road/US 1 Business pojdite proti severu.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti jugu.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu."
+        ],
+        "4": [
+          "Peljite proti severu.",
+          "Peljite proti severovzhodu.",
+          "Peljite proti vzhodu.",
+          "Peljite proti jugovzhodu.",
+          "Peljite proti jugu.",
+          "Peljite proti jugozahodu.",
+          "Peljite proti zahodu.",
+          "Peljite proti severozahodu."
+        ],
+        "5": [
+          "Na Arlen Road peljite proti severu.",
+          "Na Arlen Road peljite proti severovzhodu.",
+          "Na Arlen Road peljite proti vzhodu.",
+          "Na Arlen Road peljite proti jugovzhodu.",
+          "Na Arlen Road peljite proti jugu.",
+          "Na Arlen Road peljite proti jugozahodu.",
+          "Na Arlen Road peljite proti zahodu.",
+          "Na Arlen Road peljite proti severozahodu."
+        ],
+        "6": [
+          "Na Belair Road/US 1 Business peljite proti severu.",
+          "Na Belair Road/US 1 Business peljite proti severovzhodu.",
+          "Na Belair Road/US 1 Business peljite proti vzhodu.",
+          "Na Belair Road/US 1 Business peljite proti jugovzhodu.",
+          "Na Belair Road/US 1 Business peljite proti jugu.",
+          "Na Belair Road/US 1 Business peljite proti jugozahodu.",
+          "Na Belair Road/US 1 Business peljite proti zahodu.",
+          "Na Belair Road/US 1 Business peljite proti severozahodu."
+        ],
+        "8": [
+          "Pojdite proti severu.",
+          "Pojdite proti severovzhodu.",
+          "Pojdite proti vzhodu.",
+          "Pojdite proti jugovzhodu.",
+          "Pojdite proti jugu.",
+          "Pojdite proti jugozahodu.",
+          "Pojdite proti zahodu.",
+          "Pojdite proti severozahodu."
+        ],
+        "9": [
+          "Na Arlen Road pojdite proti severu.",
+          "Na Arlen Road pojdite proti severovzhodu.",
+          "Na Arlen Road pojdite proti vzhodu.",
+          "Na Arlen Road pojdite proti jugovzhodu.",
+          "Na Arlen Road pojdite proti jugu.",
+          "Na Arlen Road pojdite proti jugozahodu.",
+          "Na Arlen Road pojdite proti zahodu.",
+          "Na Arlen Road pojdite proti severozahodu."
+        ],
+        "10": [
+          "Na Belair Road/US 1 Business pojdite proti severu.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti jugu.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu."
+        ],
+        "16": [
+          "Pojdite proti severu.",
+          "Pojdite proti severovzhodu.",
+          "Pojdite proti vzhodu.",
+          "Pojdite proti jugovzhodu.",
+          "Pojdite proti jugu.",
+          "Pojdite proti jugozahodu.",
+          "Pojdite proti zahodu.",
+          "Pojdite proti severozahodu."
+        ],
+        "17": [
+          "Na Arlen Road pojdite proti severu.",
+          "Na Arlen Road pojdite proti severovzhodu.",
+          "Na Arlen Road pojdite proti vzhodu.",
+          "Na Arlen Road pojdite proti jugovzhodu.",
+          "Na Arlen Road pojdite proti jugu.",
+          "Na Arlen Road pojdite proti jugozahodu.",
+          "Na Arlen Road pojdite proti zahodu.",
+          "Na Arlen Road pojdite proti severozahodu."
+        ],
+        "18": [
+          "Na Belair Road/US 1 Business pojdite proti severu.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti jugu.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu."
+        ]
+      }
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Zapustite krožišče.",
+        "1": "Iz krožišča pojdite na <STREET_NAMES>.",
+        "2": "Iz krožišča pojdite na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "example_phrases": {
+        "0": [
+          "Zapustite krožišče."
+        ],
+        "1": [
+          "Iz krožišča pojdite na Arlen Road."
+        ],
+        "2": [
+          "Iz krožišča pojdite na Belair Road/US 1 Business. Nadaljujte po Arlen Road."
+        ]
+      }
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Zapustite krožišče.",
+        "1": "Iz krožišča pojdite na <STREET_NAMES>.",
+        "2": "Iz krožišča pojdite na <BEGIN_STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "example_phrases": {
+        "0": [
+          "Zapustite krožišče."
+        ],
+        "1": [
+          "Iz krožišča pojdite na Arlen Road."
+        ],
+        "2": [
+          "Iz krožišča pojdite na Belair Road/US 1 Business."
+        ]
+      }
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Zapeljite na izhod na <RELATIVE_DIRECTION>.",
+        "1": "Zapeljite na izhod <NUMBER_SIGN> na <RELATIVE_DIRECTION>.",
+        "2": "Zapeljite na izhod <BRANCH_SIGN> na <RELATIVE_DIRECTION>.",
+        "3": "Zapeljite na izhod <NUMBER_SIGN> na <RELATIVE_DIRECTION> in nato na <BRANCH_SIGN>.",
+        "4": "Zapeljite na izhod <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.",
+        "5": "Zapeljite na izhod <NUMBER_SIGN> na <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.",
+        "6": "Zapeljite na izhod <BRANCH_SIGN> na <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.",
+        "7": "Zapeljite na izhod <NUMBER_SIGN> na <RELATIVE_DIRECTION> in nato na <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "8": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION>.",
+        "10": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> in nato na <BRANCH_SIGN>.",
+        "12": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.",
+        "14": "Zapeljite na izhod <NAME_SIGN> na <RELATIVE_DIRECTION> in nato na <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "15": "Zapeljite na izhod.",
+        "16": "Zapeljite na izhod <NUMBER_SIGN>.",
+        "17": "Zapeljite na izhod <BRANCH_SIGN>.",
+        "18": "Zapeljite na izhod <NUMBER_SIGN> in nato na <BRANCH_SIGN>.",
+        "19": "Zapeljite na izhod proti <TOWARD_SIGN>.",
+        "20": "Zapeljite na izhod <NUMBER_SIGN> proti <TOWARD_SIGN>.",
+        "21": "Zapeljite na izhod <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "22": "Zapeljite na izhod <NUMBER_SIGN> in nato na <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "23": "Zapeljite na izhod <NAME_SIGN>.",
+        "25": "Zapeljite na izhod <NAME_SIGN> in nato na <BRANCH_SIGN>.",
+        "27": "Zapeljite na izhod <NAME_SIGN> proti <TOWARD_SIGN>.",
+        "29": "Zapeljite na izhod <NAME_SIGN> in nato na <BRANCH_SIGN> proti <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Zapeljite na izhod na levo.",
+          "Zapeljite na izhod na desno."
+        ],
+        "1": [
+          "Zapeljite na izhod 67 B-A na levo.",
+          "Zapeljite na izhod 67 B-A na desno."
+        ],
+        "2": [
+          "Zapeljite na izhod US 322 West na levo.",
+          "Zapeljite na izhod US 322 West na desno."
+        ],
+        "3": [
+          "Zapeljite na izhod 67 B-A na levo in nato na US 322 West.",
+          "Zapeljite na izhod 67 B-A na desno in nato na US 322 West."
+        ],
+        "4": [
+          "Zapeljite na izhod levo proti Lewiston.",
+          "Zapeljite na izhod desno proti Lewiston."
+        ],
+        "5": [
+          "Zapeljite na izhod 67 B-A na levo proti Lewiston.",
+          "Zapeljite na izhod 67 B-A na desno proti Lewiston."
+        ],
+        "6": [
+          "Zapeljite na izhod US 322 West na levo proti Lewiston.",
+          "Zapeljite na izhod US 322 West na desno proti Lewiston."
+        ],
+        "7": [
+          "Zapeljite na izhod 67 B-A na levo in nato na US 322 West proti Lewiston.",
+          "Zapeljite na izhod 67 B-A na desno in nato na US 322 West proti Lewiston."
+        ],
+        "8": [
+          "Zapeljite na izhod White Marsh Boulevard na levo.",
+          "Zapeljite na izhod White Marsh Boulevard na desno."
+        ],
+        "10": [
+          "Zapeljite na izhod White Marsh Boulevard na levo in nato na US 322 West.",
+          "Zapeljite na izhod White Marsh Boulevard na desno in nato na US 322 West."
+        ],
+        "12": [
+          "Zapeljite na izhod White Marsh Boulevard na levo proti Lewiston.",
+          "Zapeljite na izhod White Marsh Boulevard na desno proti Lewiston."
+        ],
+        "14": [
+          "Zapeljite na izhod White Marsh Boulevard na levo in nato na US 322 West proti Lewiston.",
+          "Zapeljite na izhod White Marsh Boulevard na desno in nato na US 322 West proti Lewiston."
+        ],
+        "15": [
+          "Zapeljite na izhod."
+        ],
+        "16": [
+          "Zapeljite na izhod 67 B-A."
+        ],
+        "17": [
+          "Zapeljite na izhod US 322 West."
+        ],
+        "18": [
+          "Zapeljite na izhod 67 B-A in nato na US 322 West."
+        ],
+        "19": [
+          "Zapeljite na izhod proti Lewiston."
+        ],
+        "20": [
+          "Zapeljite na izhod 67 B-A proti Lewiston."
+        ],
+        "21": [
+          "Zapeljite na izhod US 322 West proti Lewiston."
+        ],
+        "22": [
+          "Zapeljite na izhod 67 B-A in nato na US 322 West proti Lewiston."
+        ],
+        "23": [
+          "Zapeljite na izhod White Marsh Boulevard."
+        ],
+        "25": [
+          "Zapeljite na izhod White Marsh Boulevard in nato na US 322 West."
+        ],
+        "27": [
+          "Zapeljite na izhod White Marsh Boulevard proti Lewiston."
+        ],
+        "29": [
+          "Zapeljite na izhod White Marsh Boulevard in nato na US 322 West proti Lewiston."
+        ]
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Na razcepu pojdite <RELATIVE_DIRECTION>.",
+        "1": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN>.",
+        "2": "Držite se <RELATIVE_DIRECTION>, da zapeljete na <STREET_NAMES>.",
+        "3": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in nato na <STREET_NAMES>.",
+        "4": "Držite se <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.",
+        "5": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> proti <TOWARD_SIGN>.",
+        "6": "Držite se <RELATIVE_DIRECTION>, da zapeljete na <STREET_NAMES> proti <TOWARD_SIGN>.",
+        "7": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in nato na <STREET_NAMES> proti <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "relative_directions": [
+        "levo",
+        "naravnost",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Na razcepu pojdite levo.",
+          "Na razcepu pojdite desno."
+        ],
+        "1": [
+          "Držite se levo, da zapeljete na izhod 67 B-A.",
+          "Držite se desno, da zapeljete na izhod 67 B-A."
+        ],
+        "2": [
+          "Držite se levo, da zapeljete na Arlen Road.",
+          "Držite se desno, da zapeljete na Arlen Road."
+        ],
+        "3": [
+          "Držite se levo, da zapeljete na izhod 67 B-A in nato na Arlen Road.",
+          "Držite se desno, da zapeljete na izhod 67 B-A in nato na Arlen Road."
+        ],
+        "4": [
+          "Držite se levo proti Lewiston.",
+          "Držite se desno proti Lewiston."
+        ],
+        "5": [
+          "Držite se levo, da zapeljete na izhod 67 B-A proti Lewiston.",
+          "Držite se desno, da zapeljete na izhod 67 B-A proti Lewiston."
+        ],
+        "6": [
+          "Držite se levo, da zapeljete na Arlen Road proti Lewiston.",
+          "Držite se desno, da zapeljete na Arlen Road proti Lewiston."
+        ],
+        "7": [
+          "Držite se levo, da zapeljete na izhod 67 B-A in nato na Arlen Road proti Lewiston.",
+          "Držite se desno, da zapeljete na izhod 67 B-A in nato na Arlen Road proti Lewiston."
+        ]
+      }
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Pojdite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
+        "1": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in ostanete na <STREET_NAMES>.",
+        "2": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES> proti <TOWARD_SIGN>.",
+        "3": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in ostanete na <STREET_NAMES> proti <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "relative_directions": [
+        "levo",
+        "naravnost",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pojdite levo, da ostanete na Arlen Road.",
+          "Pojdite desno, da ostanete na Arlen Road."
+        ],
+        "1": [
+          "Držite se levo, da zapeljete na izhod 67 B-A in ostanete na Arlen Road.",
+          "Držite se desno, da zapeljete na izhod 67 B-A in ostanete na Arlen Road."
+        ],
+        "2": [
+          "Držite se levo, da ostanete na Arlen Road proti Lewiston.",
+          "Držite se desno, da ostanete na Arlen Road proti Lewiston."
+        ],
+        "3": [
+          "Držite se levo, da zapeljete na izhod 67 B-A in ostanete na Arlen Road proti Lewiston.",
+          "Držite se desno, da zapeljete na izhod 67 B-A in ostanete na Arlen Road proti Lewiston."
+        ]
+      }
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Pojdite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
+        "1": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in ostanete na <STREET_NAMES>.",
+        "2": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES> proti <TOWARD_SIGN>.",
+        "3": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in ostanete na <STREET_NAMES> proti <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "relative_directions": [
+        "levo",
+        "naravnost",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pojdite levo, da ostanete na Arlen Road.",
+          "Pojdite desno, da ostanete na Arlen Road."
+        ],
+        "1": [
+          "Držite se levo, da zapeljete na izhod 67 B-A in ostanete na Arlen Road.",
+          "Držite se desno, da zapeljete na izhod 67 B-A in ostanete na Arlen Road."
+        ],
+        "2": [
+          "Držite se levo, da ostanete na Arlen Road proti Lewiston.",
+          "Držite se desno, da ostanete na Arlen Road proti Lewiston."
+        ],
+        "3": [
+          "Držite se levo, da zapeljete na izhod 67 B-A in ostanete na Arlen Road proti Lewiston.",
+          "Držite se desno, da zapeljete na izhod 67 B-A in ostanete na Arlen Road proti Lewiston."
+        ]
+      }
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Na razcepu pojdite <RELATIVE_DIRECTION>.",
+        "1": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN>.",
+        "2": "Držite se <RELATIVE_DIRECTION>, da zapeljete na <STREET_NAMES>.",
+        "3": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in nato na <STREET_NAMES>.",
+        "4": "Držite se <RELATIVE_DIRECTION> proti <TOWARD_SIGN>.",
+        "5": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> proti <TOWARD_SIGN>.",
+        "6": "Držite se <RELATIVE_DIRECTION>, da zapeljete na <STREET_NAMES> proti <TOWARD_SIGN>.",
+        "7": "Držite se <RELATIVE_DIRECTION>, da zapeljete na izhod <NUMBER_SIGN> in nato na <STREET_NAMES> proti <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "relative_directions": [
+        "levo",
+        "naravnost",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Na razcepu pojdite levo.",
+          "Na razcepu pojdite desno."
+        ],
+        "1": [
+          "Držite se levo, da zapeljete na izhod 67 B-A.",
+          "Držite se desno, da zapeljete na izhod 67 B-A."
+        ],
+        "2": [
+          "Držite se levo, da zapeljete na Arlen Road.",
+          "Držite se desno, da zapeljete na Arlen Road."
+        ],
+        "3": [
+          "Držite se levo, da zapeljete na izhod 67 B-A in nato na Arlen Road.",
+          "Držite se desno, da zapeljete na izhod 67 B-A in nato na Arlen Road."
+        ],
+        "4": [
+          "Držite se levo proti Lewiston.",
+          "Držite se desno proti Lewiston."
+        ],
+        "5": [
+          "Držite se levo, da zapeljete na izhod 67 B-A proti Lewiston.",
+          "Držite se desno, da zapeljete na izhod 67 B-A proti Lewiston."
+        ],
+        "6": [
+          "Držite se levo, da zapeljete na Arlen Road proti Lewiston.",
+          "Držite se desno, da zapeljete na Arlen Road proti Lewiston."
+        ],
+        "7": [
+          "Držite se levo, da zapeljete na izhod 67 B-A in nato na Arlen Road proti Lewiston.",
+          "Držite se desno, da zapeljete na izhod 67 B-A in nato na Arlen Road proti Lewiston."
+        ]
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Zapeljite na sosednjo pot.",
+        "1": "Zapeljite <RELATIVE_DIRECTION> na sosednjo pot.",
+        "2": "Zapeljite na <STREET_NAMES>.",
+        "3": "Zapeljite <RELATIVE_DIRECTION> na <STREET_NAMES>."
+      },
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "example_phrases": {
+        "0": [
+          "Zapeljite na sosednjo pot."
+        ],
+        "1": [
+          "Zapeljite levo na sosednjo pot.",
+          "Zapeljite desno na sosednjo pot."
+        ],
+        "2": [
+          "Zapeljite na Arlen Road."
+        ],
+        "3": [
+          "Zapeljite levo na Arlen Road.",
+          "Zapeljite desno na Arlen Road."
+        ]
+      }
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Zapeljite na sosednjo pot.",
+        "1": "Zapeljite <RELATIVE_DIRECTION> na sosednjo pot.",
+        "2": "Zapeljite na <STREET_NAMES>.",
+        "3": "Zapeljite <RELATIVE_DIRECTION> na <STREET_NAMES>."
+      },
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "example_phrases": {
+        "0": [
+          "Zapeljite na sosednjo pot."
+        ],
+        "1": [
+          "Zapeljite levo na sosednjo pot.",
+          "Zapeljite desno na sosednjo pot."
+        ],
+        "2": [
+          "Zapeljite na Arlen Road."
+        ],
+        "3": [
+          "Zapeljite levo na Arlen Road.",
+          "Zapeljite desno na Arlen Road."
+        ]
+      }
+    },
+    "post_transit_connection_destination": {
+      "phrases": {
+        "0": "Pojdite <CARDINAL_DIRECTION>.",
+        "1": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "2": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>.",
+        "4": "Peljite <CARDINAL_DIRECTION>.",
+        "5": "Na <STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
+        "6": "Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>.",
+        "8": "Pojdite <CARDINAL_DIRECTION>.",
+        "9": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "10": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>.",
+        "16": "Pojdite <CARDINAL_DIRECTION>.",
+        "17": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "proti severu",
+        "proti severovzhodu",
+        "proti vzhodu",
+        "proti jugovzhodu",
+        "proti jugu",
+        "proti jugozahodu",
+        "proti zahodu",
+        "proti severozahodu"
+      ],
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pojdite proti severu.",
+          "Pojdite proti severovzhodu.",
+          "Pojdite proti vzhodu.",
+          "Pojdite proti jugovzhodu.",
+          "Pojdite proti jugu.",
+          "Pojdite proti jugozahodu.",
+          "Pojdite proti zahodu.",
+          "Pojdite proti severozahodu."
+        ],
+        "1": [
+          "Na Arlen Road pojdite proti severu.",
+          "Na Arlen Road pojdite proti severovzhodu.",
+          "Na Arlen Road pojdite proti vzhodu.",
+          "Na Arlen Road pojdite proti jugovzhodu.",
+          "Na Arlen Road pojdite proti jugu.",
+          "Na Arlen Road pojdite proti jugozahodu.",
+          "Na Arlen Road pojdite proti zahodu.",
+          "Na Arlen Road pojdite proti severozahodu."
+        ],
+        "2": [
+          "Na Belair Road/US 1 Business pojdite proti severu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu. Nadaljujte po Arlen Road."
+        ],
+        "4": [
+          "Peljite proti severu.",
+          "Peljite proti severovzhodu.",
+          "Peljite proti vzhodu.",
+          "Peljite proti jugovzhodu.",
+          "Peljite proti jugu.",
+          "Peljite proti jugozahodu.",
+          "Peljite proti zahodu.",
+          "Peljite proti severozahodu."
+        ],
+        "5": [
+          "Na Arlen Road peljite proti severu.",
+          "Na Arlen Road peljite proti severovzhodu.",
+          "Na Arlen Road peljite proti vzhodu.",
+          "Na Arlen Road peljite proti jugovzhodu.",
+          "Na Arlen Road peljite proti jugu.",
+          "Na Arlen Road peljite proti jugozahodu.",
+          "Na Arlen Road peljite proti zahodu.",
+          "Na Arlen Road peljite proti severozahodu."
+        ],
+        "6": [
+          "Na Belair Road/US 1 Business peljite proti severu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti severovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti vzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti jugovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti jugu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti jugozahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti zahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti severozahodu. Nadaljujte po Arlen Road."
+        ],
+        "8": [
+          "Pojdite proti severu.",
+          "Pojdite proti severovzhodu.",
+          "Pojdite proti vzhodu.",
+          "Pojdite proti jugovzhodu.",
+          "Pojdite proti jugu.",
+          "Pojdite proti jugozahodu.",
+          "Pojdite proti zahodu.",
+          "Pojdite proti severozahodu."
+        ],
+        "9": [
+          "Na Arlen Road pojdite proti severu.",
+          "Na Arlen Road pojdite proti severovzhodu.",
+          "Na Arlen Road pojdite proti vzhodu.",
+          "Na Arlen Road pojdite proti jugovzhodu.",
+          "Na Arlen Road pojdite proti jugu.",
+          "Na Arlen Road pojdite proti jugozahodu.",
+          "Na Arlen Road pojdite proti zahodu.",
+          "Na Arlen Road pojdite proti severozahodu."
+        ],
+        "10": [
+          "Na Belair Road/US 1 Business pojdite proti severu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu. Nadaljujte po Arlen Road."
+        ],
+        "16": [
+          "Pojdite proti severu.",
+          "Pojdite proti severovzhodu.",
+          "Pojdite proti vzhodu.",
+          "Pojdite proti jugovzhodu.",
+          "Pojdite proti jugu.",
+          "Pojdite proti jugozahodu.",
+          "Pojdite proti zahodu.",
+          "Pojdite proti severozahodu."
+        ],
+        "17": [
+          "Na Arlen Road pojdite proti severu.",
+          "Na Arlen Road pojdite proti severovzhodu.",
+          "Na Arlen Road pojdite proti vzhodu.",
+          "Na Arlen Road pojdite proti jugovzhodu.",
+          "Na Arlen Road pojdite proti jugu.",
+          "Na Arlen Road pojdite proti jugozahodu.",
+          "Na Arlen Road pojdite proti zahodu.",
+          "Na Arlen Road pojdite proti severozahodu."
+        ],
+        "18": [
+          "Na Belair Road/US 1 Business pojdite proti severu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu. Nadaljujte po Arlen Road."
+        ]
+      }
+    },
+    "post_transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Pojdite <CARDINAL_DIRECTION>.",
+        "1": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "2": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "4": "Peljite <CARDINAL_DIRECTION>.",
+        "5": "Na <STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
+        "6": "Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
+        "8": "Pojdite <CARDINAL_DIRECTION>.",
+        "9": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "10": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "16": "Pojdite <CARDINAL_DIRECTION>.",
+        "17": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>."
+      },
+      "cardinal_directions": [
+        "proti severu",
+        "proti severovzhodu",
+        "proti vzhodu",
+        "proti jugovzhodu",
+        "proti jugu",
+        "proti jugozahodu",
+        "proti zahodu",
+        "proti severozahodu"
+      ],
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pojdite proti severu.",
+          "Pojdite proti severovzhodu.",
+          "Pojdite proti vzhodu.",
+          "Pojdite proti jugovzhodu.",
+          "Pojdite proti jugu.",
+          "Pojdite proti jugozahodu.",
+          "Pojdite proti zahodu.",
+          "Pojdite proti severozahodu."
+        ],
+        "1": [
+          "Na Arlen Road pojdite proti severu.",
+          "Na Arlen Road pojdite proti severovzhodu.",
+          "Na Arlen Road pojdite proti vzhodu.",
+          "Na Arlen Road pojdite proti jugovzhodu.",
+          "Na Arlen Road pojdite proti jugu.",
+          "Na Arlen Road pojdite proti jugozahodu.",
+          "Na Arlen Road pojdite proti zahodu.",
+          "Na Arlen Road pojdite proti severozahodu."
+        ],
+        "2": [
+          "Na Belair Road/US 1 Business pojdite proti severu.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti jugu.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu."
+        ],
+        "4": [
+          "Peljite proti severu.",
+          "Peljite proti severovzhodu.",
+          "Peljite proti vzhodu.",
+          "Peljite proti jugovzhodu.",
+          "Peljite proti jugu.",
+          "Peljite proti jugozahodu.",
+          "Peljite proti zahodu.",
+          "Peljite proti severozahodu."
+        ],
+        "5": [
+          "Na Arlen Road peljite proti severu.",
+          "Na Arlen Road peljite proti severovzhodu.",
+          "Na Arlen Road peljite proti vzhodu.",
+          "Na Arlen Road peljite proti jugovzhodu.",
+          "Na Arlen Road peljite proti jugu.",
+          "Na Arlen Road peljite proti jugozahodu.",
+          "Na Arlen Road peljite proti zahodu.",
+          "Na Arlen Road peljite proti severozahodu."
+        ],
+        "6": [
+          "Na Belair Road/US 1 Business peljite proti severu.",
+          "Na Belair Road/US 1 Business peljite proti severovzhodu.",
+          "Na Belair Road/US 1 Business peljite proti vzhodu.",
+          "Na Belair Road/US 1 Business peljite proti jugovzhodu.",
+          "Na Belair Road/US 1 Business peljite proti jugu.",
+          "Na Belair Road/US 1 Business peljite proti jugozahodu.",
+          "Na Belair Road/US 1 Business peljite proti zahodu.",
+          "Na Belair Road/US 1 Business peljite proti severozahodu."
+        ],
+        "8": [
+          "Pojdite proti severu.",
+          "Pojdite proti severovzhodu.",
+          "Pojdite proti vzhodu.",
+          "Pojdite proti jugovzhodu.",
+          "Pojdite proti jugu.",
+          "Pojdite proti jugozahodu.",
+          "Pojdite proti zahodu.",
+          "Pojdite proti severozahodu."
+        ],
+        "9": [
+          "Na Arlen Road pojdite proti severu.",
+          "Na Arlen Road pojdite proti severovzhodu.",
+          "Na Arlen Road pojdite proti vzhodu.",
+          "Na Arlen Road pojdite proti jugovzhodu.",
+          "Na Arlen Road pojdite proti jugu.",
+          "Na Arlen Road pojdite proti jugozahodu.",
+          "Na Arlen Road pojdite proti zahodu.",
+          "Na Arlen Road pojdite proti severozahodu."
+        ],
+        "10": [
+          "Na Belair Road/US 1 Business pojdite proti severu.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti jugu.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu."
+        ],
+        "16": [
+          "Pojdite proti severu.",
+          "Pojdite proti severovzhodu.",
+          "Pojdite proti vzhodu.",
+          "Pojdite proti jugovzhodu.",
+          "Pojdite proti jugu.",
+          "Pojdite proti jugozahodu.",
+          "Pojdite proti zahodu.",
+          "Pojdite proti severozahodu."
+        ],
+        "17": [
+          "Na Arlen Road pojdite proti severu.",
+          "Na Arlen Road pojdite proti severovzhodu.",
+          "Na Arlen Road pojdite proti vzhodu.",
+          "Na Arlen Road pojdite proti jugovzhodu.",
+          "Na Arlen Road pojdite proti jugu.",
+          "Na Arlen Road pojdite proti jugozahodu.",
+          "Na Arlen Road pojdite proti zahodu.",
+          "Na Arlen Road pojdite proti severozahodu."
+        ],
+        "18": [
+          "Na Belair Road/US 1 Business pojdite proti severu.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti jugu.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu."
+        ]
+      }
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Potujte <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "postanek",
+        "other": "postankov"
+      },
+      "example_phrases": {
+        "0": [
+          "Potujte 1 stop.",
+          "Potujte 1 stops.",
+          "Potujte 3 stop.",
+          "Potujte 3 stops."
+        ]
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Nadaljujte <LENGTH>.",
+        "1": "Po <STREET_NAMES> nadaljujte <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometrov",
+        "1 kilometer",
+        "pol kilometra",
+        "<METERS> metrov",
+        "manj kot 10 metrov"
+      ],
+      "us_customary_lengths": [
+        "<MILES> milj",
+        "1 miljo",
+        "pol milje",
+        "<TENTHS_OF_MILE> desetink milje",
+        "1 desentinko milje",
+        "<FEET> čevljev",
+        "Manj kot 10 čevljev"
+      ],
+      "example_phrases": {
+        "0": [
+          "Nadaljujte 1 mile.",
+          "Nadaljujte a half mile."
+        ],
+        "1": [
+          "Po Arlen Road nadaljujte 1 mile.",
+          "Po Arlen Road nadaljujte a half mile."
+        ]
+      }
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Zapeljite <RELATIVE_DIRECTION> na priključek.",
+        "1": "Zapeljite <RELATIVE_DIRECTION> na priključek <BRANCH_SIGN>.",
+        "2": "Zapeljite <RELATIVE_DIRECTION> na priključek proti <TOWARD_SIGN>.",
+        "3": "Zapeljite <RELATIVE_DIRECTION> na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "4": "Zapeljite <RELATIVE_DIRECTION> na priključek <NAME_SIGN>.",
+        "5": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek.",
+        "6": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <BRANCH_SIGN>.",
+        "7": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek proti <TOWARD_SIGN>.",
+        "8": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "9": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <NAME_SIGN>.",
+        "10": "Zapeljite na priključek.",
+        "11": "Zapeljite na priključek <BRANCH_SIGN>.",
+        "12": "Zapeljite na priključek proti <TOWARD_SIGN>.",
+        "13": "Zapeljite na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "14": "Zapeljite na priključek <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Zapeljite levo na priključek.",
+          "Zapeljite desno na priključek."
+        ],
+        "1": [
+          "Zapeljite levo na priključek US 322 West.",
+          "Zapeljite desno na priključek US 322 West."
+        ],
+        "2": [
+          "Zapeljite levo na priključek proti Lewiston.",
+          "Zapeljite desno na priključek proti Lewiston."
+        ],
+        "3": [
+          "Zapeljite levo na priključek US 322 West proti Lewiston.",
+          "Zapeljite desno na priključek US 322 West proti Lewiston."
+        ],
+        "4": [
+          "Zapeljite levo na priključek White Marsh Boulevard.",
+          "Zapeljite desno na priključek White Marsh Boulevard."
+        ],
+        "5": [
+          "Zavijte levo, da zapeljete na priključek.",
+          "Zavijte desno, da zapeljete na priključek."
+        ],
+        "6": [
+          "Zavijte levo, da zapeljete na priključek US 322 West.",
+          "Zavijte desno, da zapeljete na priključek US 322 West."
+        ],
+        "7": [
+          "Zavijte levo, da zapeljete na priključek proti Lewiston.",
+          "Zavijte desno, da zapeljete na priključek proti Lewiston."
+        ],
+        "8": [
+          "Zavijte levo, da zapeljete na priključek US 322 West proti Lewiston.",
+          "Zavijte desno, da zapeljete na priključek US 322 West proti Lewiston."
+        ],
+        "9": [
+          "Zavijte levo, da zapeljete na priključek White Marsh Boulevard.",
+          "Zavijte desno, da zapeljete na priključek White Marsh Boulevard."
+        ],
+        "10": [
+          "Zapeljite na priključek."
+        ],
+        "11": [
+          "Zapeljite na priključek US 322 West."
+        ],
+        "12": [
+          "Zapeljite na priključek proti Lewiston."
+        ],
+        "13": [
+          "Zapeljite na priključek US 322 West proti Lewiston."
+        ],
+        "14": [
+          "Zapeljite na priključek White Marsh Boulevard."
+        ]
+      }
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Nadaljujte naravnost, da zapeljete na priključek.",
+        "1": "Nadaljujte naravnost, da zapeljete na priključek <BRANCH_SIGN>.",
+        "2": "Nadaljujte naravnost, da zapeljete na priključek proti <TOWARD_SIGN>.",
+        "3": "Nadaljujte naravnost, da zapeljete na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "4": "Nadaljujte naravnost, da zapeljete na priključek <NAME_SIGN>."
+      },
+      "example_phrases": {
+        "0": [
+          "Nadaljujte naravnost, da zapeljete na priključek."
+        ],
+        "1": [
+          "Nadaljujte naravnost, da zapeljete na priključek US 322 West."
+        ],
+        "2": [
+          "Nadaljujte naravnost, da zapeljete na priključek proti Lewiston."
+        ],
+        "3": [
+          "Nadaljujte naravnost, da zapeljete na priključek US 322 West proti Lewiston."
+        ],
+        "4": [
+          "Nadaljujte naravnost, da zapeljete na priključek White Marsh Boulevard."
+        ]
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Nadaljujte naravnost, da zapeljete na priključek.",
+        "1": "Nadaljujte naravnost, da zapeljete na priključek <BRANCH_SIGN>.",
+        "2": "Nadaljujte naravnost, da zapeljete na priključek proti <TOWARD_SIGN>.",
+        "3": "Nadaljujte naravnost, da zapeljete na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "4": "Nadaljujte naravnost, da zapeljete na priključek <NAME_SIGN>."
+      },
+      "example_phrases": {
+        "0": [
+          "Nadaljujte naravnost, da zapeljete na priključek."
+        ],
+        "1": [
+          "Nadaljujte naravnost, da zapeljete na priključek US 322 West."
+        ],
+        "2": [
+          "Nadaljujte naravnost, da zapeljete na priključek proti Lewiston."
+        ],
+        "3": [
+          "Nadaljujte naravnost, da zapeljete na priključek US 322 West proti Lewiston."
+        ],
+        "4": [
+          "Nadaljujte naravnost, da zapeljete na priključek White Marsh Boulevard."
+        ]
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Zapeljite <RELATIVE_DIRECTION> na priključek.",
+        "1": "Zapeljite <RELATIVE_DIRECTION> na priključek <BRANCH_SIGN>.",
+        "2": "Zapeljite <RELATIVE_DIRECTION> na priključek proti <TOWARD_SIGN>.",
+        "3": "Zapeljite <RELATIVE_DIRECTION> na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "4": "Zapeljite <RELATIVE_DIRECTION> na priključek <NAME_SIGN>.",
+        "5": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek.",
+        "6": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <BRANCH_SIGN>.",
+        "7": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek proti <TOWARD_SIGN>.",
+        "8": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "9": "Zavijte <RELATIVE_DIRECTION>, da zapeljete na priključek <NAME_SIGN>.",
+        "10": "Zapeljite na priključek.",
+        "11": "Zapeljite na priključek <BRANCH_SIGN>.",
+        "12": "Zapeljite na priključek proti <TOWARD_SIGN>.",
+        "13": "Zapeljite na priključek <BRANCH_SIGN> proti <TOWARD_SIGN>.",
+        "14": "Zapeljite na priključek <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Zapeljite levo na priključek.",
+          "Zapeljite desno na priključek."
+        ],
+        "1": [
+          "Zapeljite levo na priključek US 322 West.",
+          "Zapeljite desno na priključek US 322 West."
+        ],
+        "2": [
+          "Zapeljite levo na priključek proti Lewiston.",
+          "Zapeljite desno na priključek proti Lewiston."
+        ],
+        "3": [
+          "Zapeljite levo na priključek US 322 West proti Lewiston.",
+          "Zapeljite desno na priključek US 322 West proti Lewiston."
+        ],
+        "4": [
+          "Zapeljite levo na priključek White Marsh Boulevard.",
+          "Zapeljite desno na priključek White Marsh Boulevard."
+        ],
+        "5": [
+          "Zavijte levo, da zapeljete na priključek.",
+          "Zavijte desno, da zapeljete na priključek."
+        ],
+        "6": [
+          "Zavijte levo, da zapeljete na priključek US 322 West.",
+          "Zavijte desno, da zapeljete na priključek US 322 West."
+        ],
+        "7": [
+          "Zavijte levo, da zapeljete na priključek proti Lewiston.",
+          "Zavijte desno, da zapeljete na priključek proti Lewiston."
+        ],
+        "8": [
+          "Zavijte levo, da zapeljete na priključek US 322 West proti Lewiston.",
+          "Zavijte desno, da zapeljete na priključek US 322 West proti Lewiston."
+        ],
+        "9": [
+          "Zavijte levo, da zapeljete na priključek White Marsh Boulevard.",
+          "Zavijte desno, da zapeljete na priključek White Marsh Boulevard."
+        ],
+        "10": [
+          "Zapeljite na priključek."
+        ],
+        "11": [
+          "Zapeljite na priključek US 322 West."
+        ],
+        "12": [
+          "Zapeljite na priključek proti Lewiston."
+        ],
+        "13": [
+          "Zapeljite na priključek US 322 West proti Lewiston."
+        ],
+        "14": [
+          "Zapeljite na priključek White Marsh Boulevard."
+        ]
+      }
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Zavijte ostro <RELATIVE_DIRECTION>.",
+        "1": "Zavijte ostro <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "2": "Zavijte ostro <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>.",
+        "3": "Zavijte ostro <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Zavijte ostro levo.",
+          "Zavijte ostro desno."
+        ],
+        "1": [
+          "Zavijte ostro levo na Arlen Road.",
+          "Zavijte ostro desno na Arlen Road."
+        ],
+        "2": [
+          "Zavijte ostro levo na Belair Road/US 1 Business. Nadaljujte po Arlen Road.",
+          "Zavijte ostro desno na Belair Road/US 1 Business. Nadaljujte po Arlen Road."
+        ],
+        "3": [
+          "Zavijte ostro levo, da ostanete na Arlen Road.",
+          "Zavijte ostro desno, da ostanete na Arlen Road."
+        ]
+      }
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Zavijte ostro <RELATIVE_DIRECTION>.",
+        "1": "Zavijte ostro <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "2": "Zavijte ostro <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.",
+        "3": "Zavijte ostro <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Zavijte ostro levo.",
+          "Zavijte ostro desno."
+        ],
+        "1": [
+          "Zavijte ostro levo na Arlen Road.",
+          "Zavijte ostro desno na Arlen Road."
+        ],
+        "2": [
+          "Zavijte ostro levo na Belair Road/US 1 Business.",
+          "Zavijte ostro desno na Belair Road/US 1 Business."
+        ],
+        "3": [
+          "Zavijte ostro levo, da ostanete na Arlen Road.",
+          "Zavijte ostro desno, da ostanete na Arlen Road."
+        ]
+      }
+    },
+    "start": {
+      "phrases": {
+        "0": "Pojdite <CARDINAL_DIRECTION>.",
+        "1": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "2": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>.",
+        "4": "Peljite <CARDINAL_DIRECTION>.",
+        "5": "Na <STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
+        "6": "Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>.",
+        "8": "Pojdite <CARDINAL_DIRECTION>.",
+        "9": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "10": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>.",
+        "16": "Pojdite <CARDINAL_DIRECTION>.",
+        "17": "Na <STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>. Nadaljujte po <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "proti severu",
+        "proti severovzhodu",
+        "proti vzhodu",
+        "proti jugovzhodu",
+        "proti jugu",
+        "proti jugozahodu",
+        "proti zahodu",
+        "proti severozahodu"
+      ],
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pojdite proti severu.",
+          "Pojdite proti severovzhodu.",
+          "Pojdite proti vzhodu.",
+          "Pojdite proti jugovzhodu.",
+          "Pojdite proti jugu.",
+          "Pojdite proti jugozahodu.",
+          "Pojdite proti zahodu.",
+          "Pojdite proti severozahodu."
+        ],
+        "1": [
+          "Na Arlen Road pojdite proti severu.",
+          "Na Arlen Road pojdite proti severovzhodu.",
+          "Na Arlen Road pojdite proti vzhodu.",
+          "Na Arlen Road pojdite proti jugovzhodu.",
+          "Na Arlen Road pojdite proti jugu.",
+          "Na Arlen Road pojdite proti jugozahodu.",
+          "Na Arlen Road pojdite proti zahodu.",
+          "Na Arlen Road pojdite proti severozahodu."
+        ],
+        "2": [
+          "Na Belair Road/US 1 Business pojdite proti severu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu. Nadaljujte po Arlen Road."
+        ],
+        "4": [
+          "Peljite proti severu.",
+          "Peljite proti severovzhodu.",
+          "Peljite proti vzhodu.",
+          "Peljite proti jugovzhodu.",
+          "Peljite proti jugu.",
+          "Peljite proti jugozahodu.",
+          "Peljite proti zahodu.",
+          "Peljite proti severozahodu."
+        ],
+        "5": [
+          "Na Arlen Road peljite proti severu.",
+          "Na Arlen Road peljite proti severovzhodu.",
+          "Na Arlen Road peljite proti vzhodu.",
+          "Na Arlen Road peljite proti jugovzhodu.",
+          "Na Arlen Road peljite proti jugu.",
+          "Na Arlen Road peljite proti jugozahodu.",
+          "Na Arlen Road peljite proti zahodu.",
+          "Na Arlen Road peljite proti severozahodu."
+        ],
+        "6": [
+          "Na Belair Road/US 1 Business peljite proti severu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti severovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti vzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti jugovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti jugu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti jugozahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti zahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business peljite proti severozahodu. Nadaljujte po Arlen Road."
+        ],
+        "8": [
+          "Pojdite proti severu.",
+          "Pojdite proti severovzhodu.",
+          "Pojdite proti vzhodu.",
+          "Pojdite proti jugovzhodu.",
+          "Pojdite proti jugu.",
+          "Pojdite proti jugozahodu.",
+          "Pojdite proti zahodu.",
+          "Pojdite proti severozahodu."
+        ],
+        "9": [
+          "Na Arlen Road pojdite proti severu.",
+          "Na Arlen Road pojdite proti severovzhodu.",
+          "Na Arlen Road pojdite proti vzhodu.",
+          "Na Arlen Road pojdite proti jugovzhodu.",
+          "Na Arlen Road pojdite proti jugu.",
+          "Na Arlen Road pojdite proti jugozahodu.",
+          "Na Arlen Road pojdite proti zahodu.",
+          "Na Arlen Road pojdite proti severozahodu."
+        ],
+        "10": [
+          "Na Belair Road/US 1 Business pojdite proti severu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu. Nadaljujte po Arlen Road."
+        ],
+        "16": [
+          "Pojdite proti severu.",
+          "Pojdite proti severovzhodu.",
+          "Pojdite proti vzhodu.",
+          "Pojdite proti jugovzhodu.",
+          "Pojdite proti jugu.",
+          "Pojdite proti jugozahodu.",
+          "Pojdite proti zahodu.",
+          "Pojdite proti severozahodu."
+        ],
+        "17": [
+          "Na Arlen Road pojdite proti severu.",
+          "Na Arlen Road pojdite proti severovzhodu.",
+          "Na Arlen Road pojdite proti vzhodu.",
+          "Na Arlen Road pojdite proti jugovzhodu.",
+          "Na Arlen Road pojdite proti jugu.",
+          "Na Arlen Road pojdite proti jugozahodu.",
+          "Na Arlen Road pojdite proti zahodu.",
+          "Na Arlen Road pojdite proti severozahodu."
+        ],
+        "18": [
+          "Na Belair Road/US 1 Business pojdite proti severu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu. Nadaljujte po Arlen Road.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu. Nadaljujte po Arlen Road."
+        ]
+      }
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Pojdite <LENGTH> <CARDINAL_DIRECTION>.",
+        "1": "Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.",
+        "2": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>.",
+        "4": "Peljite <LENGTH> <CARDINAL_DIRECTION>.",
+        "5": "Na <STREET_NAMES> peljite <LENGTH> <CARDINAL_DIRECTION>.",
+        "6": "Na <BEGIN_STREET_NAMES> peljite <CARDINAL_DIRECTION>.",
+        "8": "Pojdite <LENGTH> <CARDINAL_DIRECTION>.",
+        "9": "Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.",
+        "10": "Pojdite <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "16": "Pojdite <LENGTH> <CARDINAL_DIRECTION>.",
+        "17": "Na <STREET_NAMES> pojdite <LENGTH> <CARDINAL_DIRECTION>.",
+        "18": "Na <BEGIN_STREET_NAMES> pojdite <CARDINAL_DIRECTION>."
+      },
+      "cardinal_directions": [
+        "proti severu",
+        "proti severovzhodu",
+        "proti vzhodu",
+        "proti jugovzhodu",
+        "proti jugu",
+        "proti jugozahodu",
+        "proti zahodu",
+        "proti severozahodu"
+      ],
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> kilometrov",
+        "1 kilometer",
+        "pol kilometra",
+        "<METERS> metrov",
+        "manj kot 10 metrov"
+      ],
+      "us_customary_lengths": [
+        "<MILES> milj",
+        "1 miljo",
+        "pol milje",
+        "<TENTHS_OF_MILE> desetink milje",
+        "1 desentinko milje",
+        "<FEET> čevljev",
+        "Manj kot 10 čevljev"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pojdite 1 mile proti severu.",
+          "Pojdite 1 mile proti severovzhodu.",
+          "Pojdite 1 mile proti vzhodu.",
+          "Pojdite 1 mile proti jugovzhodu.",
+          "Pojdite 1 mile proti jugu.",
+          "Pojdite 1 mile proti jugozahodu.",
+          "Pojdite 1 mile proti zahodu.",
+          "Pojdite 1 mile proti severozahodu.",
+          "Pojdite a half mile proti severu.",
+          "Pojdite a half mile proti severovzhodu.",
+          "Pojdite a half mile proti vzhodu.",
+          "Pojdite a half mile proti jugovzhodu.",
+          "Pojdite a half mile proti jugu.",
+          "Pojdite a half mile proti jugozahodu.",
+          "Pojdite a half mile proti zahodu.",
+          "Pojdite a half mile proti severozahodu."
+        ],
+        "1": [
+          "Na Arlen Road pojdite 1 mile proti severu.",
+          "Na Arlen Road pojdite 1 mile proti severovzhodu.",
+          "Na Arlen Road pojdite 1 mile proti vzhodu.",
+          "Na Arlen Road pojdite 1 mile proti jugovzhodu.",
+          "Na Arlen Road pojdite 1 mile proti jugu.",
+          "Na Arlen Road pojdite 1 mile proti jugozahodu.",
+          "Na Arlen Road pojdite 1 mile proti zahodu.",
+          "Na Arlen Road pojdite 1 mile proti severozahodu.",
+          "Na Arlen Road pojdite a half mile proti severu.",
+          "Na Arlen Road pojdite a half mile proti severovzhodu.",
+          "Na Arlen Road pojdite a half mile proti vzhodu.",
+          "Na Arlen Road pojdite a half mile proti jugovzhodu.",
+          "Na Arlen Road pojdite a half mile proti jugu.",
+          "Na Arlen Road pojdite a half mile proti jugozahodu.",
+          "Na Arlen Road pojdite a half mile proti zahodu.",
+          "Na Arlen Road pojdite a half mile proti severozahodu."
+        ],
+        "2": [
+          "Na Belair Road/US 1 Business pojdite proti severu.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti jugu.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu."
+        ],
+        "4": [
+          "Peljite 1 mile proti severu.",
+          "Peljite 1 mile proti severovzhodu.",
+          "Peljite 1 mile proti vzhodu.",
+          "Peljite 1 mile proti jugovzhodu.",
+          "Peljite 1 mile proti jugu.",
+          "Peljite 1 mile proti jugozahodu.",
+          "Peljite 1 mile proti zahodu.",
+          "Peljite 1 mile proti severozahodu.",
+          "Peljite a half mile proti severu.",
+          "Peljite a half mile proti severovzhodu.",
+          "Peljite a half mile proti vzhodu.",
+          "Peljite a half mile proti jugovzhodu.",
+          "Peljite a half mile proti jugu.",
+          "Peljite a half mile proti jugozahodu.",
+          "Peljite a half mile proti zahodu.",
+          "Peljite a half mile proti severozahodu."
+        ],
+        "5": [
+          "Na Arlen Road peljite 1 mile proti severu.",
+          "Na Arlen Road peljite 1 mile proti severovzhodu.",
+          "Na Arlen Road peljite 1 mile proti vzhodu.",
+          "Na Arlen Road peljite 1 mile proti jugovzhodu.",
+          "Na Arlen Road peljite 1 mile proti jugu.",
+          "Na Arlen Road peljite 1 mile proti jugozahodu.",
+          "Na Arlen Road peljite 1 mile proti zahodu.",
+          "Na Arlen Road peljite 1 mile proti severozahodu.",
+          "Na Arlen Road peljite a half mile proti severu.",
+          "Na Arlen Road peljite a half mile proti severovzhodu.",
+          "Na Arlen Road peljite a half mile proti vzhodu.",
+          "Na Arlen Road peljite a half mile proti jugovzhodu.",
+          "Na Arlen Road peljite a half mile proti jugu.",
+          "Na Arlen Road peljite a half mile proti jugozahodu.",
+          "Na Arlen Road peljite a half mile proti zahodu.",
+          "Na Arlen Road peljite a half mile proti severozahodu."
+        ],
+        "6": [
+          "Na Belair Road/US 1 Business peljite proti severu.",
+          "Na Belair Road/US 1 Business peljite proti severovzhodu.",
+          "Na Belair Road/US 1 Business peljite proti vzhodu.",
+          "Na Belair Road/US 1 Business peljite proti jugovzhodu.",
+          "Na Belair Road/US 1 Business peljite proti jugu.",
+          "Na Belair Road/US 1 Business peljite proti jugozahodu.",
+          "Na Belair Road/US 1 Business peljite proti zahodu.",
+          "Na Belair Road/US 1 Business peljite proti severozahodu."
+        ],
+        "8": [
+          "Pojdite 1 mile proti severu.",
+          "Pojdite 1 mile proti severovzhodu.",
+          "Pojdite 1 mile proti vzhodu.",
+          "Pojdite 1 mile proti jugovzhodu.",
+          "Pojdite 1 mile proti jugu.",
+          "Pojdite 1 mile proti jugozahodu.",
+          "Pojdite 1 mile proti zahodu.",
+          "Pojdite 1 mile proti severozahodu.",
+          "Pojdite a half mile proti severu.",
+          "Pojdite a half mile proti severovzhodu.",
+          "Pojdite a half mile proti vzhodu.",
+          "Pojdite a half mile proti jugovzhodu.",
+          "Pojdite a half mile proti jugu.",
+          "Pojdite a half mile proti jugozahodu.",
+          "Pojdite a half mile proti zahodu.",
+          "Pojdite a half mile proti severozahodu."
+        ],
+        "9": [
+          "Na Arlen Road pojdite 1 mile proti severu.",
+          "Na Arlen Road pojdite 1 mile proti severovzhodu.",
+          "Na Arlen Road pojdite 1 mile proti vzhodu.",
+          "Na Arlen Road pojdite 1 mile proti jugovzhodu.",
+          "Na Arlen Road pojdite 1 mile proti jugu.",
+          "Na Arlen Road pojdite 1 mile proti jugozahodu.",
+          "Na Arlen Road pojdite 1 mile proti zahodu.",
+          "Na Arlen Road pojdite 1 mile proti severozahodu.",
+          "Na Arlen Road pojdite a half mile proti severu.",
+          "Na Arlen Road pojdite a half mile proti severovzhodu.",
+          "Na Arlen Road pojdite a half mile proti vzhodu.",
+          "Na Arlen Road pojdite a half mile proti jugovzhodu.",
+          "Na Arlen Road pojdite a half mile proti jugu.",
+          "Na Arlen Road pojdite a half mile proti jugozahodu.",
+          "Na Arlen Road pojdite a half mile proti zahodu.",
+          "Na Arlen Road pojdite a half mile proti severozahodu."
+        ],
+        "10": [
+          "Pojdite proti severu on Belair Road/US 1 Business.",
+          "Pojdite proti severovzhodu on Belair Road/US 1 Business.",
+          "Pojdite proti vzhodu on Belair Road/US 1 Business.",
+          "Pojdite proti jugovzhodu on Belair Road/US 1 Business.",
+          "Pojdite proti jugu on Belair Road/US 1 Business.",
+          "Pojdite proti jugozahodu on Belair Road/US 1 Business.",
+          "Pojdite proti zahodu on Belair Road/US 1 Business.",
+          "Pojdite proti severozahodu on Belair Road/US 1 Business."
+        ],
+        "16": [
+          "Pojdite 1 mile proti severu.",
+          "Pojdite 1 mile proti severovzhodu.",
+          "Pojdite 1 mile proti vzhodu.",
+          "Pojdite 1 mile proti jugovzhodu.",
+          "Pojdite 1 mile proti jugu.",
+          "Pojdite 1 mile proti jugozahodu.",
+          "Pojdite 1 mile proti zahodu.",
+          "Pojdite 1 mile proti severozahodu.",
+          "Pojdite a half mile proti severu.",
+          "Pojdite a half mile proti severovzhodu.",
+          "Pojdite a half mile proti vzhodu.",
+          "Pojdite a half mile proti jugovzhodu.",
+          "Pojdite a half mile proti jugu.",
+          "Pojdite a half mile proti jugozahodu.",
+          "Pojdite a half mile proti zahodu.",
+          "Pojdite a half mile proti severozahodu."
+        ],
+        "17": [
+          "Na Arlen Road pojdite 1 mile proti severu.",
+          "Na Arlen Road pojdite 1 mile proti severovzhodu.",
+          "Na Arlen Road pojdite 1 mile proti vzhodu.",
+          "Na Arlen Road pojdite 1 mile proti jugovzhodu.",
+          "Na Arlen Road pojdite 1 mile proti jugu.",
+          "Na Arlen Road pojdite 1 mile proti jugozahodu.",
+          "Na Arlen Road pojdite 1 mile proti zahodu.",
+          "Na Arlen Road pojdite 1 mile proti severozahodu.",
+          "Na Arlen Road pojdite a half mile proti severu.",
+          "Na Arlen Road pojdite a half mile proti severovzhodu.",
+          "Na Arlen Road pojdite a half mile proti vzhodu.",
+          "Na Arlen Road pojdite a half mile proti jugovzhodu.",
+          "Na Arlen Road pojdite a half mile proti jugu.",
+          "Na Arlen Road pojdite a half mile proti jugozahodu.",
+          "Na Arlen Road pojdite a half mile proti zahodu.",
+          "Na Arlen Road pojdite a half mile proti severozahodu."
+        ],
+        "18": [
+          "Na Belair Road/US 1 Business pojdite proti severu.",
+          "Na Belair Road/US 1 Business pojdite proti severovzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti vzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti jugovzhodu.",
+          "Na Belair Road/US 1 Business pojdite proti jugu.",
+          "Na Belair Road/US 1 Business pojdite proti jugozahodu.",
+          "Na Belair Road/US 1 Business pojdite proti zahodu.",
+          "Na Belair Road/US 1 Business pojdite proti severozahodu."
+        ]
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Pojdite na <TRANSIT_NAME> (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>).",
+        "1": "Pojdite na <TRANSIT_NAME> proti <TRANSIT_HEADSIGN> (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)."
+      },
+      "empty_transit_name_labels": [
+        "tramvaj",
+        "podzemno železnico",
+        "vlak",
+        "avtobus",
+        "trajekt",
+        "nihalko",
+        "kabinsko žičnico",
+        "žično vzpenjačo"
+      ],
+      "transit_stop_count_labels": {
+        "one": "postanek",
+        "other": "postankov"
+      },
+      "example_phrases": {
+        "0": [
+          "Pojdite na New Haven (1 stop).",
+          "Pojdite na New Haven (1 stops).",
+          "Pojdite na New Haven (3 stop).",
+          "Pojdite na New Haven (3 stops)."
+        ],
+        "1": [
+          "Pojdite na New Haven proti JAMAICA - 179 ST (1 stop).",
+          "Pojdite na New Haven proti JAMAICA - 179 ST (1 stops).",
+          "Pojdite na New Haven proti JAMAICA - 179 ST (3 stop).",
+          "Pojdite na New Haven proti JAMAICA - 179 ST (3 stops)."
+        ]
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Zapustite postajo.",
+        "1": "Zapustite <TRANSIT_STOP>.",
+        "2": "Zapustite <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "Postaja",
+      "example_phrases": {
+        "0": [
+          "Zapustite postajo."
+        ],
+        "1": [
+          "Zapustite 8 St - NYU."
+        ],
+        "2": [
+          "Zapustite Embarcadero Station 8 St - NYU."
+        ]
+      }
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Zapustite postajo.",
+        "1": "Zapustite <TRANSIT_STOP>.",
+        "2": "Zapustite <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "Postaja",
+      "example_phrases": {
+        "0": [
+          "Zapustite postajo."
+        ],
+        "1": [
+          "Zapustite 8 St - NYU."
+        ],
+        "2": [
+          "Zapustite Embarcadero Station 8 St - NYU."
+        ]
+      }
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Pojdite na postajo.",
+        "1": "Pojdite na <TRANSIT_STOP>.",
+        "2": "Pojdite na <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "Postaja",
+      "example_phrases": {
+        "0": [
+          "Pojdite na postajo."
+        ],
+        "1": [
+          "Pojdite na 8 St - NYU."
+        ],
+        "2": [
+          "Pojdite na Embarcadero Station 8 St - NYU."
+        ]
+      }
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Pojdite na postajo.",
+        "1": "Pojdite na <TRANSIT_STOP>.",
+        "2": "Pojdite na <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "Postaja",
+      "example_phrases": {
+        "0": [
+          "Pojdite na postajo."
+        ],
+        "1": [
+          "Pojdite na 8 St - NYU."
+        ],
+        "2": [
+          "Pojdite na Embarcadero Station 8 St - NYU."
+        ]
+      }
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Prestopite na postaji.",
+        "1": "Prestopite na <TRANSIT_STOP>.",
+        "2": "Prestopite na <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "Postaja",
+      "example_phrases": {
+        "0": [
+          "Prestopite na postaji."
+        ],
+        "1": [
+          "Prestopite na 8 St - NYU."
+        ],
+        "2": [
+          "Prestopite na Embarcadero Station 8 St - NYU."
+        ]
+      }
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Prestopite na postaji.",
+        "1": "Prestopite na <TRANSIT_STOP>.",
+        "2": "Prestopite na <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "Postaja",
+      "example_phrases": {
+        "0": [
+          "Prestopite na postaji."
+        ],
+        "1": [
+          "Prestopite na 8 St - NYU."
+        ],
+        "2": [
+          "Prestopite na Embarcadero Station 8 St - NYU."
+        ]
+      }
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Ostanite na <TRANSIT_NAME> (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>).",
+        "1": "Ostanite na <TRANSIT_NAME> proti <TRANSIT_HEADSIGN> (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)."
+      },
+      "empty_transit_name_labels": [
+        "tramvaj",
+        "podzemno železnico",
+        "vlak",
+        "avtobus",
+        "trajekt",
+        "nihalko",
+        "kabinsko žičnico",
+        "žično vzpenjačo"
+      ],
+      "transit_stop_count_labels": {
+        "one": "postanek",
+        "other": "postankov"
+      },
+      "example_phrases": {
+        "0": [
+          "Ostanite na New Haven (1 stop).",
+          "Ostanite na New Haven (1 stops).",
+          "Ostanite na New Haven (3 stop).",
+          "Ostanite na New Haven (3 stops)."
+        ],
+        "1": [
+          "Ostanite na New Haven proti JAMAICA - 179 ST (1 stop).",
+          "Ostanite na New Haven proti JAMAICA - 179 ST (1 stops).",
+          "Ostanite na New Haven proti JAMAICA - 179 ST (3 stop).",
+          "Ostanite na New Haven proti JAMAICA - 179 ST (3 stops)."
+        ]
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Ostanite na <TRANSIT_NAME>.",
+        "1": "Ostanite na <TRANSIT_NAME> proti <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "tramvaj",
+        "podzemno železnico",
+        "vlak",
+        "avtobus",
+        "trajekt",
+        "nihalko",
+        "kabinsko žičnico",
+        "žično vzpenjačo"
+      ],
+      "example_phrases": {
+        "0": [
+          "Ostanite na New Haven."
+        ],
+        "1": [
+          "Ostanite na New Haven proti JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Prestopite na <TRANSIT_NAME> (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>).",
+        "1": "Prestopite na <TRANSIT_NAME> proti <TRANSIT_HEADSIGN> (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)."
+      },
+      "empty_transit_name_labels": [
+        "tramvaj",
+        "podzemno železnico",
+        "vlak",
+        "avtobus",
+        "trajekt",
+        "nihalko",
+        "kabinsko žičnico",
+        "žično vzpenjačo"
+      ],
+      "transit_stop_count_labels": {
+        "one": "postanek",
+        "other": "postankov"
+      },
+      "example_phrases": {
+        "0": [
+          "Prestopite na New Haven (1 stop).",
+          "Prestopite na New Haven (1 stops).",
+          "Prestopite na New Haven (3 stop).",
+          "Prestopite na New Haven (3 stops)."
+        ],
+        "1": [
+          "Prestopite na New Haven proti JAMAICA - 179 ST (1 stop).",
+          "Prestopite na New Haven proti JAMAICA - 179 ST (1 stops).",
+          "Prestopite na New Haven proti JAMAICA - 179 ST (3 stop).",
+          "Prestopite na New Haven proti JAMAICA - 179 ST (3 stops)."
+        ]
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Prestopite na <TRANSIT_NAME>.",
+        "1": "Prestopite na <TRANSIT_NAME> proti <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "tramvaj",
+        "podzemno železnico",
+        "vlak",
+        "avtobus",
+        "trajekt",
+        "nihalko",
+        "kabinsko žičnico",
+        "žično vzpenjačo"
+      ],
+      "example_phrases": {
+        "0": [
+          "Prestopite na New Haven."
+        ],
+        "1": [
+          "Prestopite na New Haven proti JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Pojdite na <TRANSIT_NAME>.",
+        "1": "Pojdite na <TRANSIT_NAME> proti <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "tramvaj",
+        "podzemno železnico",
+        "vlak",
+        "avtobus",
+        "trajekt",
+        "nihalko",
+        "kabinsko žičnico",
+        "žično vzpenjačo"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pojdite na New Haven."
+        ],
+        "1": [
+          "Pojdite na New Haven proti JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "turn": {
+      "phrases": {
+        "0": "Zavijte <RELATIVE_DIRECTION>.",
+        "1": "Zavijte <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "2": "Zavijte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>.",
+        "3": "Zavijte <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Zavijte levo.",
+          "Zavijte desno."
+        ],
+        "1": [
+          "Zavijte levo na Arlen Road.",
+          "Zavijte desno na Arlen Road."
+        ],
+        "2": [
+          "Zavijte levo na Belair Road/US 1 Business. Nadaljujte po Arlen Road.",
+          "Zavijte desno na Belair Road/US 1 Business. Nadaljujte po Arlen Road."
+        ],
+        "3": [
+          "Zavijte levo, da ostanete na Arlen Road.",
+          "Zavijte desno, da ostanete na Arlen Road."
+        ]
+      }
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Zavijte <RELATIVE_DIRECTION>.",
+        "1": "Zavijte <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "2": "Zavijte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.",
+        "3": "Zavijte <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Zavijte levo.",
+          "Zavijte desno."
+        ],
+        "1": [
+          "Zavijte levo na Arlen Road.",
+          "Zavijte desno na Arlen Road."
+        ],
+        "2": [
+          "Zavijte levo na Belair Road/US 1 Business.",
+          "Zavijte desno na Belair Road/US 1 Business."
+        ],
+        "3": [
+          "Zavijte levo, da ostanete na Arlen Road.",
+          "Zavijte desno, da ostanete na Arlen Road."
+        ]
+      }
+    },
+    "uturn": {
+      "phrases": {
+        "0": "Polkrožno obrnite <RELATIVE_DIRECTION>.",
+        "1": "Polkrožno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "2": "Polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
+        "3": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>.",
+        "4": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "5": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Polkrožno obrnite levo.",
+          "Polkrožno obrnite desno."
+        ],
+        "1": [
+          "Polkrožno obrnite levo na Arlen Road.",
+          "Polkrožno obrnite desno na Arlen Road."
+        ],
+        "2": [
+          "Polkrožno obrnite levo, da ostanete na Arlen Road.",
+          "Polkrožno obrnite desno, da ostanete na Arlen Road."
+        ],
+        "3": [
+          "Pri Devonshire Road polkrožno obrnite levo.",
+          "Pri Devonshire Road polkrožno obrnite desno."
+        ],
+        "4": [
+          "Pri Devonshire Road polkrožno obrnite levo na Arlen Road.",
+          "Pri Devonshire Road polkrožno obrnite desno na Arlen Road."
+        ],
+        "5": [
+          "Pri Devonshire Road polkrožno obrnite levo, da ostanete na Arlen Road.",
+          "Pri Devonshire Road polkrožno obrnite desno, da ostanete na Arlen Road."
+        ]
+      }
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "Polkrožno obrnite <RELATIVE_DIRECTION>.",
+        "1": "Polkrožno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "2": "Polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
+        "3": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>.",
+        "4": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "5": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "pešpoti",
+        "kolesarski stezi",
+        "stezi za gorsko kolo"
+      ],
+      "relative_directions": [
+        "levo",
+        "desno"
+      ],
+      "example_phrases": {
+        "0": [
+          "Polkrožno obrnite levo.",
+          "Polkrožno obrnite desno."
+        ],
+        "1": [
+          "Polkrožno obrnite levo na Arlen Road.",
+          "Polkrožno obrnite desno na Arlen Road."
+        ],
+        "2": [
+          "Polkrožno obrnite levo, da ostanete na Arlen Road.",
+          "Polkrožno obrnite desno, da ostanete na Arlen Road."
+        ],
+        "3": [
+          "Pri Devonshire Road polkrožno obrnite levo.",
+          "Pri Devonshire Road polkrožno obrnite desno."
+        ],
+        "4": [
+          "Pri Devonshire Road polkrožno obrnite levo na Arlen Road.",
+          "Pri Devonshire Road polkrožno obrnite desno na Arlen Road."
+        ],
+        "5": [
+          "Pri Devonshire Road polkrožno obrnite levo, da ostanete na Arlen Road.",
+          "Pri Devonshire Road polkrožno obrnite desno, da ostanete na Arlen Road."
+        ]
+      }
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Nato <NEXT_VERBAL_CUE>"
+      },
+      "example_phrases": {
+        "0": [
+          "Bear right onto East Fayette Street. Nato Turn right onto North Gay Street."
+        ]
+      }
+    }
+  }
+}
