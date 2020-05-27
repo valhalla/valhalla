@@ -107,12 +107,12 @@ void CountryAccess(const std::string& config_file) {
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, cr_from_file,
-                                 cr_to_file, "", osmdata);
+                                 cr_to_file, conf.get<std::string>("mjolnir.tile_dir"), osmdata);
 
   PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
                              {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
-                             way_nodes_file, intersections_file, shapes_file, bss_nodes_file, "",
-                             osmdata);
+                             way_nodes_file, intersections_file, shapes_file, bss_nodes_file,
+                             conf.get<std::string>("mjolnir.tile_dir"), osmdata);
 
   // Build the graph using the OSMNodes and OSMWays from the parser
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file, cr_from_file,
