@@ -519,8 +519,13 @@ bool OSMData::write_to_temp_files(const std::string& tile_dir) {
 bool OSMData::read_from_temp_files(const std::string& tile_dir) {
   LOG_INFO("Read OSMData from temp files");
 
+  std::string tile_directory = tile_dir;
+  if (tile_directory.back() != filesystem::path::preferred_separator) {
+    tile_directory.push_back(filesystem::path::preferred_separator);
+  }
+
   // Open the count file
-  std::string countfile = tile_dir + count_file;
+  std::string countfile = tile_directory + count_file;
   std::ifstream file(countfile, std::ios::in | std::ios::binary);
   if (!file.is_open()) {
     LOG_ERROR("Failed to open input file: " + countfile);
@@ -539,16 +544,18 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
   file.close();
 
   // Read the other data
-  bool status = read_restrictions(tile_dir + restrictions_file, restrictions) &&
-                read_viaset(tile_dir + viaset_file, via_set) &&
-                read_access_restrictions(tile_dir + access_restrictions_file, access_restrictions) &&
-                read_bike_relations(tile_dir + bike_relations_file, bike_relations) &&
-                read_way_refs(tile_dir + way_ref_file, way_ref) &&
-                read_way_refs(tile_dir + way_ref_rev_file, way_ref_rev) &&
-                read_node_names(tile_dir + node_names_file, node_names) &&
-                read_unique_names(tile_dir + unique_names_file, name_offset_map) &&
-                read_lane_connectivity(tile_dir + lane_connectivity_file, lane_connectivity_map);
+  bool status =
+      read_restrictions(tile_directory + restrictions_file, restrictions) &&
+      read_viaset(tile_directory + viaset_file, via_set) &&
+      read_access_restrictions(tile_directory + access_restrictions_file, access_restrictions) &&
+      read_bike_relations(tile_directory + bike_relations_file, bike_relations) &&
+      read_way_refs(tile_directory + way_ref_file, way_ref) &&
+      read_way_refs(tile_directory + way_ref_rev_file, way_ref_rev) &&
+      read_node_names(tile_directory + node_names_file, node_names) &&
+      read_unique_names(tile_directory + unique_names_file, name_offset_map) &&
+      read_lane_connectivity(tile_directory + lane_connectivity_file, lane_connectivity_map);
   LOG_INFO("Done");
+  initialized = status;
   return status;
 }
 
