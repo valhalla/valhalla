@@ -1,0 +1,2755 @@
+{
+  "posix_locale": "pt_BR.UTF-8",
+  "aliases": [
+    "ptbr"
+  ],
+  "instructions": {
+    "arrive": {
+      "phrases": {
+        "0": "Chegada: <TIME>.",
+        "1": "Chegada: <TIME> a <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Chegada: 8:02 AM."
+        ],
+        "1": [
+          "Chegada: 8:02 AM a 8 St - NYU."
+        ]
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Chegada às <TIME>.",
+        "1": "Chegada às <TIME> a <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Chegada às 8:02 AM."
+        ],
+        "1": [
+          "Chegada às 8:02 AM a 8 St - NYU."
+        ]
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Mantenha-se <RELATIVE_DIRECTION>.",
+        "1": "Mantenha-se <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "2": "Mantenha-se <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>.",
+        "3": "Mantenha-se <RELATIVE_DIRECTION> e continue em <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Mantenha-se à esquerda.",
+          "Mantenha-se à direita."
+        ],
+        "1": [
+          "Mantenha-se à esquerda na Arlen Road.",
+          "Mantenha-se à direita na Arlen Road."
+        ],
+        "2": [
+          "Mantenha-se à esquerda na Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Mantenha-se à direita na Belair Road/US 1 Business, então continue em Arlen Road."
+        ],
+        "3": [
+          "Mantenha-se à esquerda e continue em Arlen Road.",
+          "Mantenha-se à direita e continue em Arlen Road."
+        ]
+      }
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Mantenha-se <RELATIVE_DIRECTION>.",
+        "1": "Mantenha-se <RELATIVE_DIRECTION> para <STREET_NAMES>.",
+        "2": "Mantenha-se <RELATIVE_DIRECTION> para <BEGIN_STREET_NAMES>.",
+        "3": "Mantenha-se <RELATIVE_DIRECTION> e continue em <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Mantenha-se à esquerda.",
+          "Mantenha-se à direita."
+        ],
+        "1": [
+          "Mantenha-se à esquerda para Arlen Road.",
+          "Mantenha-se à direita para Arlen Road."
+        ],
+        "2": [
+          "Mantenha-se à esquerda para Belair Road/US 1 Business.",
+          "Mantenha-se à direita para Belair Road/US 1 Business."
+        ],
+        "3": [
+          "Mantenha-se à esquerda e continue em Arlen Road.",
+          "Mantenha-se à direita e continue em Arlen Road."
+        ]
+      }
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> agora é <STREET_NAMES>."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street agora é Arlen Road."
+        ]
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> agora é <STREET_NAMES>."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street agora é Arlen Road."
+        ]
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Continue.",
+        "1": "Continue em <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue em Arlen Road."
+        ]
+      }
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Continue por <LENGTH>.",
+        "1": "Continue em <STREET_NAMES> por <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> quilómetros",
+        "1 quilómetro",
+        "meio quilómetro",
+        "<METERS> metros",
+        "menos que 10 metros"
+      ],
+      "us_customary_lengths": [
+        "<MILES> milhas",
+        "1 milha",
+        "meia milha",
+        "<TENTHS_OF_MILE> décimos de milha",
+        "1 décimo de milha",
+        "<FEET> pés",
+        "menos que 10 pés"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue por 1 mile.",
+          "Continue por a half mile."
+        ],
+        "1": [
+          "Continue em Arlen Road por 1 mile.",
+          "Continue em Arlen Road por a half mile."
+        ]
+      }
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Continue.",
+        "1": "Continue em <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue em Arlen Road."
+        ]
+      }
+    },
+    "depart": {
+      "phrases": {
+        "0": "Partida: <TIME>.",
+        "1": "Partida: <TIME> de <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Partida: 8:02 AM."
+        ],
+        "1": [
+          "Partida: 8:02 AM de 8 St - NYU."
+        ]
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Partida às <TIME>.",
+        "1": "Partida às <TIME> de <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Partida às 8:02 AM."
+        ],
+        "1": [
+          "Partida às 8:02 AM de 8 St - NYU."
+        ]
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Chegou ao seu destino.",
+        "1": "Chegou a <DESTINATION>.",
+        "2": "O seu destino fica <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> fica <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Chegou ao seu destino."
+        ],
+        "1": [
+          "Chegou a Lancaster Brewing Company."
+        ],
+        "2": [
+          "O seu destino fica à esquerda.",
+          "O seu destino fica à direita."
+        ],
+        "3": [
+          "Lancaster Brewing Company fica à esquerda.",
+          "Lancaster Brewing Company fica à direita."
+        ]
+      }
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Chegou ao seu destino.",
+        "1": "Chegou a <DESTINATION>.",
+        "2": "O seu destino fica <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> fica <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Chegou ao seu destino."
+        ],
+        "1": [
+          "Chegou a Lancaster Brewing Company."
+        ],
+        "2": [
+          "O seu destino fica à esquerda.",
+          "O seu destino fica à direita."
+        ],
+        "3": [
+          "Lancaster Brewing Company fica à esquerda.",
+          "Lancaster Brewing Company fica à direita."
+        ]
+      }
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Vai chegar ao seu destino.",
+        "1": "Vai chegar a <DESTINATION>.",
+        "2": "O seu destino ficará <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> ficará <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Vai chegar ao seu destino."
+        ],
+        "1": [
+          "Vai chegar a Lancaster Brewing Company."
+        ],
+        "2": [
+          "O seu destino ficará à esquerda.",
+          "O seu destino ficará à direita."
+        ],
+        "3": [
+          "Lancaster Brewing Company ficará à esquerda.",
+          "Lancaster Brewing Company ficará à direita."
+        ]
+      }
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Pegue a Balsa.",
+        "1": "Pegue a <STREET_NAMES>.",
+        "2": "Pegue a <FERRY_LABEL> <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "ferry_label": "Ferry",
+      "example_phrases": {
+        "0": [
+          "Pegue a Balsa."
+        ],
+        "1": [
+          "Pegue a Arlen Road."
+        ],
+        "2": [
+          "Pegue a Ferry Arlen Road."
+        ]
+      }
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Pegue a Balsa.",
+        "1": "Pegue a <STREET_NAMES>.",
+        "2": "Pegue a <FERRY_LABEL> <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "ferry_label": "Ferry",
+      "example_phrases": {
+        "0": [
+          "Pegue a Balsa."
+        ],
+        "1": [
+          "Pegue a Arlen Road."
+        ],
+        "2": [
+          "Pegue a Ferry Arlen Road."
+        ]
+      }
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Entre na rotatória.",
+        "1": "Entre na rotatória e saia na <ORDINAL_VALUE> saída."
+      },
+      "ordinal_values": [
+        "1ª",
+        "2ª",
+        "3ª",
+        "4ª",
+        "5ª",
+        "6ª",
+        "7ª",
+        "8ª",
+        "9ª",
+        "10ª"
+      ],
+      "example_phrases": {
+        "0": [
+          "Entre na rotatória."
+        ],
+        "1": [
+          "Entre na rotatória e saia na 1ª saída.",
+          "Entre na rotatória e saia na 2ª saída.",
+          "Entre na rotatória e saia na 3ª saída.",
+          "Entre na rotatória e saia na 4ª saída.",
+          "Entre na rotatória e saia na 5ª saída.",
+          "Entre na rotatória e saia na 6ª saída.",
+          "Entre na rotatória e saia na 7ª saída.",
+          "Entre na rotatória e saia na 8ª saída.",
+          "Entre na rotatória e saia na 9ª saída.",
+          "Entre na rotatória e saia na 10ª saída."
+        ]
+      }
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Entre na rotatória.",
+        "1": "Entre na rotatória e saia na <ORDINAL_VALUE> saída."
+      },
+      "ordinal_values": [
+        "1ª",
+        "2ª",
+        "3ª",
+        "4ª",
+        "5ª",
+        "6ª",
+        "7ª",
+        "8ª",
+        "9ª",
+        "10ª"
+      ],
+      "example_phrases": {
+        "0": [
+          "Entre na rotatória."
+        ],
+        "1": [
+          "Entre na rotatória e saia na 1ª saída.",
+          "Entre na rotatória e saia na 2ª saída.",
+          "Entre na rotatória e saia na 3ª saída.",
+          "Entre na rotatória e saia na 4ª saída.",
+          "Entre na rotatória e saia na 5ª saída.",
+          "Entre na rotatória e saia na 6ª saída.",
+          "Entre na rotatória e saia na 7ª saída.",
+          "Entre na rotatória e saia na 8ª saída.",
+          "Entre na rotatória e saia na 9ª saída.",
+          "Entre na rotatória e saia na 10ª saída."
+        ]
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Pegue a saída <RELATIVE_DIRECTION>.",
+        "1": "Pegue a saída <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Pegue a saída <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "3": "Pegue a saída <NUMBER_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN>.",
+        "4": "Pegue a saída <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
+        "5": "Pegue a saída <NUMBER_SIGN> <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
+        "6": "Pegue a saída <BRANCH_SIGN> <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
+        "7": "Pegue a saída <NUMBER_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "8": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "10": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN>.",
+        "12": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
+        "14": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "15": "Pegue a saída.",
+        "16": "Pegue a saída <NUMBER_SIGN>.",
+        "17": "Pegue a saída <BRANCH_SIGN>.",
+        "18": "Pegue a saída <NUMBER_SIGN> para <BRANCH_SIGN>.",
+        "19": "Pegue a saída em direção a <TOWARD_SIGN>.",
+        "20": "Pegue a saída <NUMBER_SIGN> em direção a <TOWARD_SIGN>.",
+        "21": "Pegue a saída <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "22": "Pegue a saída <NUMBER_SIGN> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "23": "Pegue a saída <NAME_SIGN>.",
+        "25": "Pegue a saída <NAME_SIGN> para <BRANCH_SIGN>.",
+        "27": "Pegue a saída <NAME_SIGN> em direção a <TOWARD_SIGN>.",
+        "29": "Pegue a saída <NAME_SIGN> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pegue a saída à esquerda.",
+          "Pegue a saída à direita."
+        ],
+        "1": [
+          "Pegue a saída 67 B-A à esquerda.",
+          "Pegue a saída 67 B-A à direita."
+        ],
+        "2": [
+          "Pegue a saída US 322 West à esquerda.",
+          "Pegue a saída US 322 West à direita."
+        ],
+        "3": [
+          "Pegue a saída 67 B-A à esquerda para US 322 West.",
+          "Pegue a saída 67 B-A à direita para US 322 West."
+        ],
+        "4": [
+          "Pegue a saída à esquerda em direção a Lewiston.",
+          "Pegue a saída à direita em direção a Lewiston."
+        ],
+        "5": [
+          "Pegue a saída 67 B-A à esquerda em direção a Lewiston.",
+          "Pegue a saída 67 B-A à direita em direção a Lewiston."
+        ],
+        "6": [
+          "Pegue a saída US 322 West à esquerda em direção a Lewiston.",
+          "Pegue a saída US 322 West à direita em direção a Lewiston."
+        ],
+        "7": [
+          "Pegue a saída 67 B-A à esquerda para US 322 West em direção a Lewiston.",
+          "Pegue a saída 67 B-A à direita para US 322 West em direção a Lewiston."
+        ],
+        "8": [
+          "Pegue a saída White Marsh Boulevard à esquerda.",
+          "Pegue a saída White Marsh Boulevard à direita."
+        ],
+        "10": [
+          "Pegue a saída White Marsh Boulevard à esquerda para US 322 West.",
+          "Pegue a saída White Marsh Boulevard à direita para US 322 West."
+        ],
+        "12": [
+          "Pegue a saída White Marsh Boulevard à esquerda em direção a Lewiston.",
+          "Pegue a saída White Marsh Boulevard à direita em direção a Lewiston."
+        ],
+        "14": [
+          "Pegue a saída White Marsh Boulevard à esquerda para US 322 West em direção a Lewiston.",
+          "Pegue a saída White Marsh Boulevard à direita para US 322 West em direção a Lewiston."
+        ],
+        "15": [
+          "Pegue a saída."
+        ],
+        "16": [
+          "Pegue a saída 67 B-A."
+        ],
+        "17": [
+          "Pegue a saída US 322 West."
+        ],
+        "18": [
+          "Pegue a saída 67 B-A para US 322 West."
+        ],
+        "19": [
+          "Pegue a saída em direção a Lewiston."
+        ],
+        "20": [
+          "Pegue a saída 67 B-A em direção a Lewiston."
+        ],
+        "21": [
+          "Pegue a saída US 322 West em direção a Lewiston."
+        ],
+        "22": [
+          "Pegue a saída 67 B-A para US 322 West em direção a Lewiston."
+        ],
+        "23": [
+          "Pegue a saída White Marsh Boulevard."
+        ],
+        "25": [
+          "Pegue a saída White Marsh Boulevard para US 322 West."
+        ],
+        "27": [
+          "Pegue a saída White Marsh Boulevard em direção a Lewiston."
+        ],
+        "29": [
+          "Pegue a saída White Marsh Boulevard para US 322 West em direção a Lewiston."
+        ]
+      }
+    },
+    "exit_ferry": {
+      "phrases": {
+        "0": "Siga para <CARDINAL_DIRECTION>.",
+        "1": "Siga para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "2": "Siga para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>, então continue para a <STREET_NAMES>.",
+        "4": "Dirija para <CARDINAL_DIRECTION>.",
+        "5": "Dirija para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "6": "Dirija para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>.",
+        "8": "Caminhe para <CARDINAL_DIRECTION>.",
+        "9": "Caminhe para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "10": "Caminhe para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>.",
+        "16": "Pedale para <CARDINAL_DIRECTION>.",
+        "17": "Pedale para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "18": "Pedale para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "norte",
+        "nordeste",
+        "este",
+        "sudeste",
+        "sul",
+        "sudoeste",
+        "oeste",
+        "noroeste"
+      ],
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "example_phrases": {
+        "0": [
+          "Siga para norte.",
+          "Siga para nordeste.",
+          "Siga para este.",
+          "Siga para sudeste.",
+          "Siga para sul.",
+          "Siga para sudoeste.",
+          "Siga para oeste.",
+          "Siga para noroeste."
+        ],
+        "1": [
+          "Siga para norte em Arlen Road.",
+          "Siga para nordeste em Arlen Road.",
+          "Siga para este em Arlen Road.",
+          "Siga para sudeste em Arlen Road.",
+          "Siga para sul em Arlen Road.",
+          "Siga para sudoeste em Arlen Road.",
+          "Siga para oeste em Arlen Road.",
+          "Siga para noroeste em Arlen Road."
+        ],
+        "2": [
+          "Siga para norte em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para nordeste em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para este em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para sudeste em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para sul em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para sudoeste em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para oeste em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para noroeste em Belair Road/US 1 Business, então continue para a Arlen Road."
+        ],
+        "4": [
+          "Dirija para norte.",
+          "Dirija para nordeste.",
+          "Dirija para este.",
+          "Dirija para sudeste.",
+          "Dirija para sul.",
+          "Dirija para sudoeste.",
+          "Dirija para oeste.",
+          "Dirija para noroeste."
+        ],
+        "5": [
+          "Dirija para norte em Arlen Road.",
+          "Dirija para nordeste em Arlen Road.",
+          "Dirija para este em Arlen Road.",
+          "Dirija para sudeste em Arlen Road.",
+          "Dirija para sul em Arlen Road.",
+          "Dirija para sudoeste em Arlen Road.",
+          "Dirija para oeste em Arlen Road.",
+          "Dirija para noroeste em Arlen Road."
+        ],
+        "6": [
+          "Dirija para norte em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para nordeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para este em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para sudeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para sul em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para sudoeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para oeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para noroeste em Belair Road/US 1 Business, então continue em Arlen Road."
+        ],
+        "8": [
+          "Caminhe para norte.",
+          "Caminhe para nordeste.",
+          "Caminhe para este.",
+          "Caminhe para sudeste.",
+          "Caminhe para sul.",
+          "Caminhe para sudoeste.",
+          "Caminhe para oeste.",
+          "Caminhe para noroeste."
+        ],
+        "9": [
+          "Caminhe para norte em Arlen Road.",
+          "Caminhe para nordeste em Arlen Road.",
+          "Caminhe para este em Arlen Road.",
+          "Caminhe para sudeste em Arlen Road.",
+          "Caminhe para sul em Arlen Road.",
+          "Caminhe para sudoeste em Arlen Road.",
+          "Caminhe para oeste em Arlen Road.",
+          "Caminhe para noroeste em Arlen Road."
+        ],
+        "10": [
+          "Caminhe para norte em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para nordeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para este em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para sudeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para sul em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para sudoeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para oeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para noroeste em Belair Road/US 1 Business, então continue em Arlen Road."
+        ],
+        "16": [
+          "Pedale para norte.",
+          "Pedale para nordeste.",
+          "Pedale para este.",
+          "Pedale para sudeste.",
+          "Pedale para sul.",
+          "Pedale para sudoeste.",
+          "Pedale para oeste.",
+          "Pedale para noroeste."
+        ],
+        "17": [
+          "Pedale para norte em Arlen Road.",
+          "Pedale para nordeste em Arlen Road.",
+          "Pedale para este em Arlen Road.",
+          "Pedale para sudeste em Arlen Road.",
+          "Pedale para sul em Arlen Road.",
+          "Pedale para sudoeste em Arlen Road.",
+          "Pedale para oeste em Arlen Road.",
+          "Pedale para noroeste em Arlen Road."
+        ],
+        "18": [
+          "Pedale para norte em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para nordeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para este em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para sudeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para sul em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para sudoeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para oeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para noroeste em Belair Road/US 1 Business, então continue em Arlen Road."
+        ]
+      }
+    },
+    "exit_ferry_verbal": {
+      "phrases": {
+        "0": "Siga para <CARDINAL_DIRECTION>.",
+        "1": "Siga para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "2": "Siga para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
+        "4": "Dirija para <CARDINAL_DIRECTION>.",
+        "5": "Dirija para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "6": "Dirija para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
+        "8": "Caminhe para <CARDINAL_DIRECTION>.",
+        "9": "Caminhe para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "10": "Caminhe para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
+        "16": "Pedale para <CARDINAL_DIRECTION>.",
+        "17": "Pedale para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "18": "Pedale para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "norte",
+        "nordeste",
+        "este",
+        "sudeste",
+        "sul",
+        "sudoeste",
+        "oeste",
+        "noroeste"
+      ],
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "example_phrases": {
+        "0": [
+          "Siga para norte.",
+          "Siga para nordeste.",
+          "Siga para este.",
+          "Siga para sudeste.",
+          "Siga para sul.",
+          "Siga para sudoeste.",
+          "Siga para oeste.",
+          "Siga para noroeste."
+        ],
+        "1": [
+          "Siga para norte em Arlen Road.",
+          "Siga para nordeste em Arlen Road.",
+          "Siga para este em Arlen Road.",
+          "Siga para sudeste em Arlen Road.",
+          "Siga para sul em Arlen Road.",
+          "Siga para sudoeste em Arlen Road.",
+          "Siga para oeste em Arlen Road.",
+          "Siga para noroeste em Arlen Road."
+        ],
+        "2": [
+          "Siga para norte em Belair Road/US 1 Business.",
+          "Siga para nordeste em Belair Road/US 1 Business.",
+          "Siga para este em Belair Road/US 1 Business.",
+          "Siga para sudeste em Belair Road/US 1 Business.",
+          "Siga para sul em Belair Road/US 1 Business.",
+          "Siga para sudoeste em Belair Road/US 1 Business.",
+          "Siga para oeste em Belair Road/US 1 Business.",
+          "Siga para noroeste em Belair Road/US 1 Business."
+        ],
+        "4": [
+          "Dirija para norte.",
+          "Dirija para nordeste.",
+          "Dirija para este.",
+          "Dirija para sudeste.",
+          "Dirija para sul.",
+          "Dirija para sudoeste.",
+          "Dirija para oeste.",
+          "Dirija para noroeste."
+        ],
+        "5": [
+          "Dirija para norte em Arlen Road.",
+          "Dirija para nordeste em Arlen Road.",
+          "Dirija para este em Arlen Road.",
+          "Dirija para sudeste em Arlen Road.",
+          "Dirija para sul em Arlen Road.",
+          "Dirija para sudoeste em Arlen Road.",
+          "Dirija para oeste em Arlen Road.",
+          "Dirija para noroeste em Arlen Road."
+        ],
+        "6": [
+          "Dirija para norte em Belair Road/US 1 Business.",
+          "Dirija para nordeste em Belair Road/US 1 Business.",
+          "Dirija para este em Belair Road/US 1 Business.",
+          "Dirija para sudeste em Belair Road/US 1 Business.",
+          "Dirija para sul em Belair Road/US 1 Business.",
+          "Dirija para sudoeste em Belair Road/US 1 Business.",
+          "Dirija para oeste em Belair Road/US 1 Business.",
+          "Dirija para noroeste em Belair Road/US 1 Business."
+        ],
+        "8": [
+          "Caminhe para norte.",
+          "Caminhe para nordeste.",
+          "Caminhe para este.",
+          "Caminhe para sudeste.",
+          "Caminhe para sul.",
+          "Caminhe para sudoeste.",
+          "Caminhe para oeste.",
+          "Caminhe para noroeste."
+        ],
+        "9": [
+          "Caminhe para norte em Arlen Road.",
+          "Caminhe para nordeste em Arlen Road.",
+          "Caminhe para este em Arlen Road.",
+          "Caminhe para sudeste em Arlen Road.",
+          "Caminhe para sul em Arlen Road.",
+          "Caminhe para sudoeste em Arlen Road.",
+          "Caminhe para oeste em Arlen Road.",
+          "Caminhe para noroeste em Arlen Road."
+        ],
+        "10": [
+          "Caminhe para norte em Belair Road/US 1 Business.",
+          "Caminhe para nordeste em Belair Road/US 1 Business.",
+          "Caminhe para este em Belair Road/US 1 Business.",
+          "Caminhe para sudeste em Belair Road/US 1 Business.",
+          "Caminhe para sul em Belair Road/US 1 Business.",
+          "Caminhe para sudoeste em Belair Road/US 1 Business.",
+          "Caminhe para oeste em Belair Road/US 1 Business.",
+          "Caminhe para noroeste em Belair Road/US 1 Business."
+        ],
+        "16": [
+          "Pedale para norte.",
+          "Pedale para nordeste.",
+          "Pedale para este.",
+          "Pedale para sudeste.",
+          "Pedale para sul.",
+          "Pedale para sudoeste.",
+          "Pedale para oeste.",
+          "Pedale para noroeste."
+        ],
+        "17": [
+          "Pedale para norte em Arlen Road.",
+          "Pedale para nordeste em Arlen Road.",
+          "Pedale para este em Arlen Road.",
+          "Pedale para sudeste em Arlen Road.",
+          "Pedale para sul em Arlen Road.",
+          "Pedale para sudoeste em Arlen Road.",
+          "Pedale para oeste em Arlen Road.",
+          "Pedale para noroeste em Arlen Road."
+        ],
+        "18": [
+          "Pedale para norte em Belair Road/US 1 Business.",
+          "Pedale para nordeste em Belair Road/US 1 Business.",
+          "Pedale para este em Belair Road/US 1 Business.",
+          "Pedale para sudeste em Belair Road/US 1 Business.",
+          "Pedale para sul em Belair Road/US 1 Business.",
+          "Pedale para sudoeste em Belair Road/US 1 Business.",
+          "Pedale para oeste em Belair Road/US 1 Business.",
+          "Pedale para noroeste em Belair Road/US 1 Business."
+        ]
+      }
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Saia da rotatória.",
+        "1": "Saia da rotatória para <STREET_NAMES>.",
+        "2": "Saia da rotatória para <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "example_phrases": {
+        "0": [
+          "Saia da rotatória."
+        ],
+        "1": [
+          "Saia da rotatória para Arlen Road."
+        ],
+        "2": [
+          "Saia da rotatória para Belair Road/US 1 Business, então continue em Arlen Road."
+        ]
+      }
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Saia da rotatória.",
+        "1": "Saia da rotatória para <STREET_NAMES>.",
+        "2": "Saia da rotatória para <BEGIN_STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "example_phrases": {
+        "0": [
+          "Saia da rotatória."
+        ],
+        "1": [
+          "Saia da rotatória para Arlen Road."
+        ],
+        "2": [
+          "Saia da rotatória para Belair Road/US 1 Business."
+        ]
+      }
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Pegue a saída <RELATIVE_DIRECTION>.",
+        "1": "Pegue a saída <NUMBER_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Pegue a saída <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "3": "Pegue a saída <NUMBER_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN>.",
+        "4": "Pegue a saída <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
+        "5": "Pegue a saída <NUMBER_SIGN> <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
+        "6": "Pegue a saída <BRANCH_SIGN> <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
+        "7": "Pegue a saída <NUMBER_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "8": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "10": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN>.",
+        "12": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
+        "14": "Pegue a saída <NAME_SIGN> <RELATIVE_DIRECTION> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "15": "Pegue a saída.",
+        "16": "Pegue a saída <NUMBER_SIGN>.",
+        "17": "Pegue a saída <BRANCH_SIGN>.",
+        "18": "Pegue a saída <NUMBER_SIGN> para <BRANCH_SIGN>.",
+        "19": "Pegue a saída em direção a <TOWARD_SIGN>.",
+        "20": "Pegue a saída <NUMBER_SIGN> em direção a <TOWARD_SIGN>.",
+        "21": "Pegue a saída <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "22": "Pegue a saída <NUMBER_SIGN> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "23": "Pegue a saída <NAME_SIGN>.",
+        "25": "Pegue a saída <NAME_SIGN> para <BRANCH_SIGN>.",
+        "27": "Pegue a saída <NAME_SIGN> em direção a <TOWARD_SIGN>.",
+        "29": "Pegue a saída <NAME_SIGN> para <BRANCH_SIGN> em direção a <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pegue a saída à esquerda.",
+          "Pegue a saída à direita."
+        ],
+        "1": [
+          "Pegue a saída 67 B-A à esquerda.",
+          "Pegue a saída 67 B-A à direita."
+        ],
+        "2": [
+          "Pegue a saída US 322 West à esquerda.",
+          "Pegue a saída US 322 West à direita."
+        ],
+        "3": [
+          "Pegue a saída 67 B-A à esquerda para US 322 West.",
+          "Pegue a saída 67 B-A à direita para US 322 West."
+        ],
+        "4": [
+          "Pegue a saída à esquerda em direção a Lewiston.",
+          "Pegue a saída à direita em direção a Lewiston."
+        ],
+        "5": [
+          "Pegue a saída 67 B-A à esquerda em direção a Lewiston.",
+          "Pegue a saída 67 B-A à direita em direção a Lewiston."
+        ],
+        "6": [
+          "Pegue a saída US 322 West à esquerda em direção a Lewiston.",
+          "Pegue a saída US 322 West à direita em direção a Lewiston."
+        ],
+        "7": [
+          "Pegue a saída 67 B-A à esquerda para US 322 West em direção a Lewiston.",
+          "Pegue a saída 67 B-A à direita para US 322 West em direção a Lewiston."
+        ],
+        "8": [
+          "Pegue a saída White Marsh Boulevard à esquerda.",
+          "Pegue a saída White Marsh Boulevard à direita."
+        ],
+        "10": [
+          "Pegue a saída White Marsh Boulevard à esquerda para US 322 West.",
+          "Pegue a saída White Marsh Boulevard à direita para US 322 West."
+        ],
+        "12": [
+          "Pegue a saída White Marsh Boulevard à esquerda em direção a Lewiston.",
+          "Pegue a saída White Marsh Boulevard à direita em direção a Lewiston."
+        ],
+        "14": [
+          "Pegue a saída White Marsh Boulevard à esquerda para US 322 West em direção a Lewiston.",
+          "Pegue a saída White Marsh Boulevard à direita para US 322 West em direção a Lewiston."
+        ],
+        "15": [
+          "Pegue a saída."
+        ],
+        "16": [
+          "Pegue a saída 67 B-A."
+        ],
+        "17": [
+          "Pegue a saída US 322 West."
+        ],
+        "18": [
+          "Pegue a saída 67 B-A para US 322 West."
+        ],
+        "19": [
+          "Pegue a saída em direção a Lewiston."
+        ],
+        "20": [
+          "Pegue a saída 67 B-A em direção a Lewiston."
+        ],
+        "21": [
+          "Pegue a saída US 322 West em direção a Lewiston."
+        ],
+        "22": [
+          "Pegue a saída 67 B-A para US 322 West em direção a Lewiston."
+        ],
+        "23": [
+          "Pegue a saída White Marsh Boulevard."
+        ],
+        "25": [
+          "Pegue a saída White Marsh Boulevard para US 322 West."
+        ],
+        "27": [
+          "Pegue a saída White Marsh Boulevard em direção a Lewiston."
+        ],
+        "29": [
+          "Pegue a saída White Marsh Boulevard para US 322 West em direção a Lewiston."
+        ]
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Mantenha-se <RELATIVE_DIRECTION> na bifurcação.",
+        "1": "Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN>.",
+        "2": "Mantenha-se <RELATIVE_DIRECTION> para pegar <STREET_NAMES>.",
+        "3": "Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN> para <STREET_NAMES>.",
+        "4": "Mantenha-se <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
+        "5": "Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN> em direção a <TOWARD_SIGN>.",
+        "6": "Mantenha-se <RELATIVE_DIRECTION> para pegar <STREET_NAMES> em direção a <TOWARD_SIGN>.",
+        "7": "Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN> para <STREET_NAMES> em direção a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "relative_directions": [
+        "à esquerda",
+        "em frente",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Mantenha-se à esquerda na bifurcação.",
+          "Mantenha-se à direita na bifurcação."
+        ],
+        "1": [
+          "Mantenha-se à esquerda para pegar a saída 67 B-A.",
+          "Mantenha-se à direita para pegar a saída 67 B-A."
+        ],
+        "2": [
+          "Mantenha-se à esquerda para pegar Arlen Road.",
+          "Mantenha-se à direita para pegar Arlen Road."
+        ],
+        "3": [
+          "Mantenha-se à esquerda para pegar a saída 67 B-A para Arlen Road.",
+          "Mantenha-se à direita para pegar a saída 67 B-A para Arlen Road."
+        ],
+        "4": [
+          "Mantenha-se à esquerda em direção a Lewiston.",
+          "Mantenha-se à direita em direção a Lewiston."
+        ],
+        "5": [
+          "Mantenha-se à esquerda para pegar a saída 67 B-A em direção a Lewiston.",
+          "Mantenha-se à direita para pegar a saída 67 B-A em direção a Lewiston."
+        ],
+        "6": [
+          "Mantenha-se à esquerda para pegar Arlen Road em direção a Lewiston.",
+          "Mantenha-se à direita para pegar Arlen Road em direção a Lewiston."
+        ],
+        "7": [
+          "Mantenha-se à esquerda para pegar a saída 67 B-A para Arlen Road em direção a Lewiston.",
+          "Mantenha-se à direita para pegar a saída 67 B-A para Arlen Road em direção a Lewiston."
+        ]
+      }
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Mantenha-se <RELATIVE_DIRECTION> e continue em <STREET_NAMES>.",
+        "1": "Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN> e continue em <STREET_NAMES>.",
+        "2": "Mantenha-se <RELATIVE_DIRECTION> e continue em <STREET_NAMES> em direção a <TOWARD_SIGN>.",
+        "3": "Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN> e continue em <STREET_NAMES> em direção a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "relative_directions": [
+        "à esquerda",
+        "em frente",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Mantenha-se à esquerda e continue em Arlen Road.",
+          "Mantenha-se à direita e continue em Arlen Road."
+        ],
+        "1": [
+          "Mantenha-se à esquerda para pegar a saída 67 B-A e continue em Arlen Road.",
+          "Mantenha-se à direita para pegar a saída 67 B-A e continue em Arlen Road."
+        ],
+        "2": [
+          "Mantenha-se à esquerda e continue em Arlen Road em direção a Lewiston.",
+          "Mantenha-se à direita e continue em Arlen Road em direção a Lewiston."
+        ],
+        "3": [
+          "Mantenha-se à esquerda para pegar a saída 67 B-A e continue em Arlen Road em direção a Lewiston.",
+          "Mantenha-se à direita para pegar a saída 67 B-A e continue em Arlen Road em direção a Lewiston."
+        ]
+      }
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Mantenha-se <RELATIVE_DIRECTION> e continue em <STREET_NAMES>.",
+        "1": "Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN> e continue em <STREET_NAMES>.",
+        "2": "Mantenha-se <RELATIVE_DIRECTION> e continue em <STREET_NAMES> em direção a <TOWARD_SIGN>.",
+        "3": "Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN> e continue em <STREET_NAMES> em direção a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "relative_directions": [
+        "à esquerda",
+        "em frente",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Mantenha-se à esquerda e continue em Arlen Road.",
+          "Mantenha-se à direita e continue em Arlen Road."
+        ],
+        "1": [
+          "Mantenha-se à esquerda para pegar a saída 67 B-A e continue em Arlen Road.",
+          "Mantenha-se à direita para pegar a saída 67 B-A e continue em Arlen Road."
+        ],
+        "2": [
+          "Mantenha-se à esquerda e continue em Arlen Road em direção a Lewiston.",
+          "Mantenha-se à direita e continue em Arlen Road em direção a Lewiston."
+        ],
+        "3": [
+          "Mantenha-se à esquerda para pegar a saída 67 B-A e continue em Arlen Road em direção a Lewiston.",
+          "Mantenha-se à direita para pegar a saída 67 B-A e continue em Arlen Road em direção a Lewiston."
+        ]
+      }
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Mantenha-se <RELATIVE_DIRECTION> na bifurcação.",
+        "1": "Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN>.",
+        "2": "Mantenha-se <RELATIVE_DIRECTION> para pegar <STREET_NAMES>.",
+        "3": "Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN> para <STREET_NAMES>.",
+        "4": "Mantenha-se <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
+        "5": "Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN> em direção a <TOWARD_SIGN>.",
+        "6": "Mantenha-se <RELATIVE_DIRECTION> para pegar <STREET_NAMES> em direção a <TOWARD_SIGN>.",
+        "7": "Mantenha-se <RELATIVE_DIRECTION> para pegar a saída <NUMBER_SIGN> para <STREET_NAMES> em direção a <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "relative_directions": [
+        "à esquerda",
+        "em frente",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Mantenha-se à esquerda na bifurcação.",
+          "Mantenha-se à direita na bifurcação."
+        ],
+        "1": [
+          "Mantenha-se à esquerda para pegar a saída 67 B-A.",
+          "Mantenha-se à direita para pegar a saída 67 B-A."
+        ],
+        "2": [
+          "Mantenha-se à esquerda para pegar Arlen Road.",
+          "Mantenha-se à direita para pegar Arlen Road."
+        ],
+        "3": [
+          "Mantenha-se à esquerda para pegar a saída 67 B-A para Arlen Road.",
+          "Mantenha-se à direita para pegar a saída 67 B-A para Arlen Road."
+        ],
+        "4": [
+          "Mantenha-se à esquerda em direção a Lewiston.",
+          "Mantenha-se à direita em direção a Lewiston."
+        ],
+        "5": [
+          "Mantenha-se à esquerda para pegar a saída 67 B-A em direção a Lewiston.",
+          "Mantenha-se à direita para pegar a saída 67 B-A em direção a Lewiston."
+        ],
+        "6": [
+          "Mantenha-se à esquerda para pegar Arlen Road em direção a Lewiston.",
+          "Mantenha-se à direita para pegar Arlen Road em direção a Lewiston."
+        ],
+        "7": [
+          "Mantenha-se à esquerda para pegar a saída 67 B-A para Arlen Road em direção a Lewiston.",
+          "Mantenha-se à direita para pegar a saída 67 B-A para Arlen Road em direção a Lewiston."
+        ]
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Entre.",
+        "1": "Entre <RELATIVE_DIRECTION>.",
+        "2": "Entre na <STREET_NAMES>.",
+        "3": "Entre <RELATIVE_DIRECTION> na <STREET_NAMES>."
+      },
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "example_phrases": {
+        "0": [
+          "Entre."
+        ],
+        "1": [
+          "Entre à esquerda.",
+          "Entre à direita."
+        ],
+        "2": [
+          "Entre na Arlen Road."
+        ],
+        "3": [
+          "Entre à esquerda na Arlen Road.",
+          "Entre à direita na Arlen Road."
+        ]
+      }
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Entre.",
+        "1": "Entre <RELATIVE_DIRECTION>.",
+        "2": "Entre na <STREET_NAMES>.",
+        "3": "Entre <RELATIVE_DIRECTION> na <STREET_NAMES>."
+      },
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "example_phrases": {
+        "0": [
+          "Entre."
+        ],
+        "1": [
+          "Entre à esquerda.",
+          "Entre à direita."
+        ],
+        "2": [
+          "Entre na Arlen Road."
+        ],
+        "3": [
+          "Entre à esquerda na Arlen Road.",
+          "Entre à direita na Arlen Road."
+        ]
+      }
+    },
+    "post_transit_connection_destination": {
+      "phrases": {
+        "0": "Siga para <CARDINAL_DIRECTION>.",
+        "1": "Siga para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "2": "Siga para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>, então continue para a <STREET_NAMES>.",
+        "4": "Dirija para <CARDINAL_DIRECTION>.",
+        "5": "Dirija para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "6": "Dirija para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>.",
+        "8": "Caminhe para <CARDINAL_DIRECTION>.",
+        "9": "Caminhe para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "10": "Caminhe para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>.",
+        "16": "Pedale para <CARDINAL_DIRECTION>.",
+        "17": "Pedale para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "18": "Pedale para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "norte",
+        "nordeste",
+        "este",
+        "sudeste",
+        "sul",
+        "sudoeste",
+        "oeste",
+        "noroeste"
+      ],
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "example_phrases": {
+        "0": [
+          "Siga para norte.",
+          "Siga para nordeste.",
+          "Siga para este.",
+          "Siga para sudeste.",
+          "Siga para sul.",
+          "Siga para sudoeste.",
+          "Siga para oeste.",
+          "Siga para noroeste."
+        ],
+        "1": [
+          "Siga para norte em Arlen Road.",
+          "Siga para nordeste em Arlen Road.",
+          "Siga para este em Arlen Road.",
+          "Siga para sudeste em Arlen Road.",
+          "Siga para sul em Arlen Road.",
+          "Siga para sudoeste em Arlen Road.",
+          "Siga para oeste em Arlen Road.",
+          "Siga para noroeste em Arlen Road."
+        ],
+        "2": [
+          "Siga para norte em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para nordeste em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para este em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para sudeste em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para sul em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para sudoeste em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para oeste em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para noroeste em Belair Road/US 1 Business, então continue para a Arlen Road."
+        ],
+        "4": [
+          "Dirija para norte.",
+          "Dirija para nordeste.",
+          "Dirija para este.",
+          "Dirija para sudeste.",
+          "Dirija para sul.",
+          "Dirija para sudoeste.",
+          "Dirija para oeste.",
+          "Dirija para noroeste."
+        ],
+        "5": [
+          "Dirija para norte em Arlen Road.",
+          "Dirija para nordeste em Arlen Road.",
+          "Dirija para este em Arlen Road.",
+          "Dirija para sudeste em Arlen Road.",
+          "Dirija para sul em Arlen Road.",
+          "Dirija para sudoeste em Arlen Road.",
+          "Dirija para oeste em Arlen Road.",
+          "Dirija para noroeste em Arlen Road."
+        ],
+        "6": [
+          "Dirija para norte em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para nordeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para este em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para sudeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para sul em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para sudoeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para oeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para noroeste em Belair Road/US 1 Business, então continue em Arlen Road."
+        ],
+        "8": [
+          "Caminhe para norte.",
+          "Caminhe para nordeste.",
+          "Caminhe para este.",
+          "Caminhe para sudeste.",
+          "Caminhe para sul.",
+          "Caminhe para sudoeste.",
+          "Caminhe para oeste.",
+          "Caminhe para noroeste."
+        ],
+        "9": [
+          "Caminhe para norte em Arlen Road.",
+          "Caminhe para nordeste em Arlen Road.",
+          "Caminhe para este em Arlen Road.",
+          "Caminhe para sudeste em Arlen Road.",
+          "Caminhe para sul em Arlen Road.",
+          "Caminhe para sudoeste em Arlen Road.",
+          "Caminhe para oeste em Arlen Road.",
+          "Caminhe para noroeste em Arlen Road."
+        ],
+        "10": [
+          "Caminhe para norte em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para nordeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para este em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para sudeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para sul em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para sudoeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para oeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para noroeste em Belair Road/US 1 Business, então continue em Arlen Road."
+        ],
+        "16": [
+          "Pedale para norte.",
+          "Pedale para nordeste.",
+          "Pedale para este.",
+          "Pedale para sudeste.",
+          "Pedale para sul.",
+          "Pedale para sudoeste.",
+          "Pedale para oeste.",
+          "Pedale para noroeste."
+        ],
+        "17": [
+          "Pedale para norte em Arlen Road.",
+          "Pedale para nordeste em Arlen Road.",
+          "Pedale para este em Arlen Road.",
+          "Pedale para sudeste em Arlen Road.",
+          "Pedale para sul em Arlen Road.",
+          "Pedale para sudoeste em Arlen Road.",
+          "Pedale para oeste em Arlen Road.",
+          "Pedale para noroeste em Arlen Road."
+        ],
+        "18": [
+          "Pedale para norte em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para nordeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para este em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para sudeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para sul em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para sudoeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para oeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para noroeste em Belair Road/US 1 Business, então continue em Arlen Road."
+        ]
+      }
+    },
+    "post_transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Siga para <CARDINAL_DIRECTION>.",
+        "1": "Siga para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "2": "Siga para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
+        "4": "Dirija para <CARDINAL_DIRECTION>.",
+        "5": "Dirija para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "6": "Dirija para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
+        "8": "Caminhe para <CARDINAL_DIRECTION>.",
+        "9": "Caminhe para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "10": "Caminhe para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
+        "16": "Pedale para <CARDINAL_DIRECTION>.",
+        "17": "Pedale para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "18": "Pedale para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "norte",
+        "nordeste",
+        "este",
+        "sudeste",
+        "sul",
+        "sudoeste",
+        "oeste",
+        "noroeste"
+      ],
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "example_phrases": {
+        "0": [
+          "Siga para norte.",
+          "Siga para nordeste.",
+          "Siga para este.",
+          "Siga para sudeste.",
+          "Siga para sul.",
+          "Siga para sudoeste.",
+          "Siga para oeste.",
+          "Siga para noroeste."
+        ],
+        "1": [
+          "Siga para norte em Arlen Road.",
+          "Siga para nordeste em Arlen Road.",
+          "Siga para este em Arlen Road.",
+          "Siga para sudeste em Arlen Road.",
+          "Siga para sul em Arlen Road.",
+          "Siga para sudoeste em Arlen Road.",
+          "Siga para oeste em Arlen Road.",
+          "Siga para noroeste em Arlen Road."
+        ],
+        "2": [
+          "Siga para norte em Belair Road/US 1 Business.",
+          "Siga para nordeste em Belair Road/US 1 Business.",
+          "Siga para este em Belair Road/US 1 Business.",
+          "Siga para sudeste em Belair Road/US 1 Business.",
+          "Siga para sul em Belair Road/US 1 Business.",
+          "Siga para sudoeste em Belair Road/US 1 Business.",
+          "Siga para oeste em Belair Road/US 1 Business.",
+          "Siga para noroeste em Belair Road/US 1 Business."
+        ],
+        "4": [
+          "Dirija para norte.",
+          "Dirija para nordeste.",
+          "Dirija para este.",
+          "Dirija para sudeste.",
+          "Dirija para sul.",
+          "Dirija para sudoeste.",
+          "Dirija para oeste.",
+          "Dirija para noroeste."
+        ],
+        "5": [
+          "Dirija para norte em Arlen Road.",
+          "Dirija para nordeste em Arlen Road.",
+          "Dirija para este em Arlen Road.",
+          "Dirija para sudeste em Arlen Road.",
+          "Dirija para sul em Arlen Road.",
+          "Dirija para sudoeste em Arlen Road.",
+          "Dirija para oeste em Arlen Road.",
+          "Dirija para noroeste em Arlen Road."
+        ],
+        "6": [
+          "Dirija para norte em Belair Road/US 1 Business.",
+          "Dirija para nordeste em Belair Road/US 1 Business.",
+          "Dirija para este em Belair Road/US 1 Business.",
+          "Dirija para sudeste em Belair Road/US 1 Business.",
+          "Dirija para sul em Belair Road/US 1 Business.",
+          "Dirija para sudoeste em Belair Road/US 1 Business.",
+          "Dirija para oeste em Belair Road/US 1 Business.",
+          "Dirija para noroeste em Belair Road/US 1 Business."
+        ],
+        "8": [
+          "Caminhe para norte.",
+          "Caminhe para nordeste.",
+          "Caminhe para este.",
+          "Caminhe para sudeste.",
+          "Caminhe para sul.",
+          "Caminhe para sudoeste.",
+          "Caminhe para oeste.",
+          "Caminhe para noroeste."
+        ],
+        "9": [
+          "Caminhe para norte em Arlen Road.",
+          "Caminhe para nordeste em Arlen Road.",
+          "Caminhe para este em Arlen Road.",
+          "Caminhe para sudeste em Arlen Road.",
+          "Caminhe para sul em Arlen Road.",
+          "Caminhe para sudoeste em Arlen Road.",
+          "Caminhe para oeste em Arlen Road.",
+          "Caminhe para noroeste em Arlen Road."
+        ],
+        "10": [
+          "Caminhe para norte em Belair Road/US 1 Business.",
+          "Caminhe para nordeste em Belair Road/US 1 Business.",
+          "Caminhe para este em Belair Road/US 1 Business.",
+          "Caminhe para sudeste em Belair Road/US 1 Business.",
+          "Caminhe para sul em Belair Road/US 1 Business.",
+          "Caminhe para sudoeste em Belair Road/US 1 Business.",
+          "Caminhe para oeste em Belair Road/US 1 Business.",
+          "Caminhe para noroeste em Belair Road/US 1 Business."
+        ],
+        "16": [
+          "Pedale para norte.",
+          "Pedale para nordeste.",
+          "Pedale para este.",
+          "Pedale para sudeste.",
+          "Pedale para sul.",
+          "Pedale para sudoeste.",
+          "Pedale para oeste.",
+          "Pedale para noroeste."
+        ],
+        "17": [
+          "Pedale para norte em Arlen Road.",
+          "Pedale para nordeste em Arlen Road.",
+          "Pedale para este em Arlen Road.",
+          "Pedale para sudeste em Arlen Road.",
+          "Pedale para sul em Arlen Road.",
+          "Pedale para sudoeste em Arlen Road.",
+          "Pedale para oeste em Arlen Road.",
+          "Pedale para noroeste em Arlen Road."
+        ],
+        "18": [
+          "Pedale para norte em Belair Road/US 1 Business.",
+          "Pedale para nordeste em Belair Road/US 1 Business.",
+          "Pedale para este em Belair Road/US 1 Business.",
+          "Pedale para sudeste em Belair Road/US 1 Business.",
+          "Pedale para sul em Belair Road/US 1 Business.",
+          "Pedale para sudoeste em Belair Road/US 1 Business.",
+          "Pedale para oeste em Belair Road/US 1 Business.",
+          "Pedale para noroeste em Belair Road/US 1 Business."
+        ]
+      }
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Viaje por <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "parada",
+        "other": "parades"
+      },
+      "example_phrases": {
+        "0": [
+          "Viaje por 1 stop.",
+          "Viaje por 1 stops.",
+          "Viaje por 3 stop.",
+          "Viaje por 3 stops."
+        ]
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Continue por <LENGTH>.",
+        "1": "Continue em <STREET_NAMES> por <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> quilómetros",
+        "1 quilómetro",
+        "meio quilómetro",
+        "<METERS> metros",
+        "menos que 10 metros"
+      ],
+      "us_customary_lengths": [
+        "<MILES> milhas",
+        "1 milha",
+        "meia milha",
+        "<TENTHS_OF_MILE> décimos de milha",
+        "1 décimo de milha",
+        "<FEET> pés",
+        "menos que 10 pés"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue por 1 mile.",
+          "Continue por a half mile."
+        ],
+        "1": [
+          "Continue em Arlen Road por 1 mile.",
+          "Continue em Arlen Road por a half mile."
+        ]
+      }
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Pegue a rampa <RELATIVE_DIRECTION>.",
+        "1": "Pegue a rampa <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Pegue a rampa <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
+        "3": "Pegue a rampa <BRANCH_SIGN> <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
+        "4": "Pegue a rampa <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "5": "Vire <RELATIVE_DIRECTION> para pegar a rampa.",
+        "6": "Vire <RELATIVE_DIRECTION> para pegar a rampa <BRANCH_SIGN>.",
+        "7": "Vire <RELATIVE_DIRECTION> para pegar a rampa em direção a <TOWARD_SIGN>.",
+        "8": "Vire <RELATIVE_DIRECTION> para pegar a rampa <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "9": "Vire <RELATIVE_DIRECTION> para pegar a rampa <NAME_SIGN>.",
+        "10": "Pegue a rampa.",
+        "11": "Pegue a rampa <BRANCH_SIGN>.",
+        "12": "Pegue a rampa em direção a <TOWARD_SIGN>.",
+        "13": "Pegue a rampa <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "14": "Pegue a rampa <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pegue a rampa à esquerda.",
+          "Pegue a rampa à direita."
+        ],
+        "1": [
+          "Pegue a rampa US 322 West à esquerda.",
+          "Pegue a rampa US 322 West à direita."
+        ],
+        "2": [
+          "Pegue a rampa à esquerda em direção a Lewiston.",
+          "Pegue a rampa à direita em direção a Lewiston."
+        ],
+        "3": [
+          "Pegue a rampa US 322 West à esquerda em direção a Lewiston.",
+          "Pegue a rampa US 322 West à direita em direção a Lewiston."
+        ],
+        "4": [
+          "Pegue a rampa White Marsh Boulevard à esquerda.",
+          "Pegue a rampa White Marsh Boulevard à direita."
+        ],
+        "5": [
+          "Vire à esquerda para pegar a rampa.",
+          "Vire à direita para pegar a rampa."
+        ],
+        "6": [
+          "Vire à esquerda para pegar a rampa US 322 West.",
+          "Vire à direita para pegar a rampa US 322 West."
+        ],
+        "7": [
+          "Vire à esquerda para pegar a rampa em direção a Lewiston.",
+          "Vire à direita para pegar a rampa em direção a Lewiston."
+        ],
+        "8": [
+          "Vire à esquerda para pegar a rampa US 322 West em direção a Lewiston.",
+          "Vire à direita para pegar a rampa US 322 West em direção a Lewiston."
+        ],
+        "9": [
+          "Vire à esquerda para pegar a rampa White Marsh Boulevard.",
+          "Vire à direita para pegar a rampa White Marsh Boulevard."
+        ],
+        "10": [
+          "Pegue a rampa."
+        ],
+        "11": [
+          "Pegue a rampa US 322 West."
+        ],
+        "12": [
+          "Pegue a rampa em direção a Lewiston."
+        ],
+        "13": [
+          "Pegue a rampa US 322 West em direção a Lewiston."
+        ],
+        "14": [
+          "Pegue a rampa White Marsh Boulevard."
+        ]
+      }
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Siga em frente para pegar a rampa.",
+        "1": "Siga em frente para pegar a rampa <BRANCH_SIGN>.",
+        "2": "Siga em frente para pegar a rampa em direção a <TOWARD_SIGN>.",
+        "3": "Siga em frente para pegar a rampa <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "4": "Siga em frente para pegar a rampa <NAME_SIGN>."
+      },
+      "example_phrases": {
+        "0": [
+          "Siga em frente para pegar a rampa."
+        ],
+        "1": [
+          "Siga em frente para pegar a rampa US 322 West."
+        ],
+        "2": [
+          "Siga em frente para pegar a rampa em direção a Lewiston."
+        ],
+        "3": [
+          "Siga em frente para pegar a rampa US 322 West em direção a Lewiston."
+        ],
+        "4": [
+          "Siga em frente para pegar a rampa White Marsh Boulevard."
+        ]
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Siga em frente para pegar a rampa.",
+        "1": "Siga em frente para pegar a rampa <BRANCH_SIGN>.",
+        "2": "Siga em frente para pegar a rampa em direção a <TOWARD_SIGN>.",
+        "3": "Siga em frente para pegar a rampa <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "4": "Siga em frente para pegar a rampa <NAME_SIGN>."
+      },
+      "example_phrases": {
+        "0": [
+          "Siga em frente para pegar a rampa."
+        ],
+        "1": [
+          "Siga em frente para pegar a rampa US 322 West."
+        ],
+        "2": [
+          "Siga em frente para pegar a rampa em direção a Lewiston."
+        ],
+        "3": [
+          "Siga em frente para pegar a rampa US 322 West em direção a Lewiston."
+        ],
+        "4": [
+          "Siga em frente para pegar a rampa White Marsh Boulevard."
+        ]
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Pegue a rampa <RELATIVE_DIRECTION>.",
+        "1": "Pegue a rampa <BRANCH_SIGN> <RELATIVE_DIRECTION>.",
+        "2": "Pegue a rampa <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
+        "3": "Pegue a rampa <BRANCH_SIGN> <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
+        "4": "Pegue a rampa <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "5": "Vire <RELATIVE_DIRECTION> para pegar a rampa.",
+        "6": "Vire <RELATIVE_DIRECTION> para pegar a rampa <BRANCH_SIGN>.",
+        "7": "Vire <RELATIVE_DIRECTION> para pegar a rampa em direção a <TOWARD_SIGN>.",
+        "8": "Vire <RELATIVE_DIRECTION> para pegar a rampa <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "9": "Vire <RELATIVE_DIRECTION> para pegar a rampa <NAME_SIGN>.",
+        "10": "Pegue a rampa.",
+        "11": "Pegue a rampa <BRANCH_SIGN>.",
+        "12": "Pegue a rampa em direção a <TOWARD_SIGN>.",
+        "13": "Pegue a rampa <BRANCH_SIGN> em direção a <TOWARD_SIGN>.",
+        "14": "Pegue a rampa <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pegue a rampa à esquerda.",
+          "Pegue a rampa à direita."
+        ],
+        "1": [
+          "Pegue a rampa US 322 West à esquerda.",
+          "Pegue a rampa US 322 West à direita."
+        ],
+        "2": [
+          "Pegue a rampa à esquerda em direção a Lewiston.",
+          "Pegue a rampa à direita em direção a Lewiston."
+        ],
+        "3": [
+          "Pegue a rampa US 322 West à esquerda em direção a Lewiston.",
+          "Pegue a rampa US 322 West à direita em direção a Lewiston."
+        ],
+        "4": [
+          "Pegue a rampa White Marsh Boulevard à esquerda.",
+          "Pegue a rampa White Marsh Boulevard à direita."
+        ],
+        "5": [
+          "Vire à esquerda para pegar a rampa.",
+          "Vire à direita para pegar a rampa."
+        ],
+        "6": [
+          "Vire à esquerda para pegar a rampa US 322 West.",
+          "Vire à direita para pegar a rampa US 322 West."
+        ],
+        "7": [
+          "Vire à esquerda para pegar a rampa em direção a Lewiston.",
+          "Vire à direita para pegar a rampa em direção a Lewiston."
+        ],
+        "8": [
+          "Vire à esquerda para pegar a rampa US 322 West em direção a Lewiston.",
+          "Vire à direita para pegar a rampa US 322 West em direção a Lewiston."
+        ],
+        "9": [
+          "Vire à esquerda para pegar a rampa White Marsh Boulevard.",
+          "Vire à direita para pegar a rampa White Marsh Boulevard."
+        ],
+        "10": [
+          "Pegue a rampa."
+        ],
+        "11": [
+          "Pegue a rampa US 322 West."
+        ],
+        "12": [
+          "Pegue a rampa em direção a Lewiston."
+        ],
+        "13": [
+          "Pegue a rampa US 322 West em direção a Lewiston."
+        ],
+        "14": [
+          "Pegue a rampa White Marsh Boulevard."
+        ]
+      }
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Faça uma curva fechada <RELATIVE_DIRECTION>.",
+        "1": "Faça uma curva fechada <RELATIVE_DIRECTION> para <STREET_NAMES>.",
+        "2": "Faça uma curva fechada <RELATIVE_DIRECTION> para <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>.",
+        "3": "Faça uma curva fechada <RELATIVE_DIRECTION> e continue em <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Faça uma curva fechada à esquerda.",
+          "Faça uma curva fechada à direita."
+        ],
+        "1": [
+          "Faça uma curva fechada à esquerda para Arlen Road.",
+          "Faça uma curva fechada à direita para Arlen Road."
+        ],
+        "2": [
+          "Faça uma curva fechada à esquerda para Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Faça uma curva fechada à direita para Belair Road/US 1 Business, então continue em Arlen Road."
+        ],
+        "3": [
+          "Faça uma curva fechada à esquerda e continue em Arlen Road.",
+          "Faça uma curva fechada à direita e continue em Arlen Road."
+        ]
+      }
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Faça uma curva fechada <RELATIVE_DIRECTION>.",
+        "1": "Faça uma curva fechada <RELATIVE_DIRECTION> para <STREET_NAMES>.",
+        "2": "Faça uma curva fechada <RELATIVE_DIRECTION> para <BEGIN_STREET_NAMES>.",
+        "3": "Faça uma curva fechada <RELATIVE_DIRECTION> e continue em <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Faça uma curva fechada à esquerda.",
+          "Faça uma curva fechada à direita."
+        ],
+        "1": [
+          "Faça uma curva fechada à esquerda para Arlen Road.",
+          "Faça uma curva fechada à direita para Arlen Road."
+        ],
+        "2": [
+          "Faça uma curva fechada à esquerda para Belair Road/US 1 Business.",
+          "Faça uma curva fechada à direita para Belair Road/US 1 Business."
+        ],
+        "3": [
+          "Faça uma curva fechada à esquerda e continue em Arlen Road.",
+          "Faça uma curva fechada à direita e continue em Arlen Road."
+        ]
+      }
+    },
+    "start": {
+      "phrases": {
+        "0": "Siga para <CARDINAL_DIRECTION>.",
+        "1": "Siga para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "2": "Siga para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>, então continue para a <STREET_NAMES>.",
+        "4": "Dirija para <CARDINAL_DIRECTION>.",
+        "5": "Dirija para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "6": "Dirija para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>.",
+        "8": "Caminhe para <CARDINAL_DIRECTION>.",
+        "9": "Caminhe para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "10": "Caminhe para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>.",
+        "16": "Pedale para <CARDINAL_DIRECTION>.",
+        "17": "Pedale para <CARDINAL_DIRECTION> em <STREET_NAMES>.",
+        "18": "Pedale para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "norte",
+        "nordeste",
+        "este",
+        "sudeste",
+        "sul",
+        "sudoeste",
+        "oeste",
+        "noroeste"
+      ],
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "example_phrases": {
+        "0": [
+          "Siga para norte.",
+          "Siga para nordeste.",
+          "Siga para este.",
+          "Siga para sudeste.",
+          "Siga para sul.",
+          "Siga para sudoeste.",
+          "Siga para oeste.",
+          "Siga para noroeste."
+        ],
+        "1": [
+          "Siga para norte em Arlen Road.",
+          "Siga para nordeste em Arlen Road.",
+          "Siga para este em Arlen Road.",
+          "Siga para sudeste em Arlen Road.",
+          "Siga para sul em Arlen Road.",
+          "Siga para sudoeste em Arlen Road.",
+          "Siga para oeste em Arlen Road.",
+          "Siga para noroeste em Arlen Road."
+        ],
+        "2": [
+          "Siga para norte em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para nordeste em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para este em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para sudeste em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para sul em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para sudoeste em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para oeste em Belair Road/US 1 Business, então continue para a Arlen Road.",
+          "Siga para noroeste em Belair Road/US 1 Business, então continue para a Arlen Road."
+        ],
+        "4": [
+          "Dirija para norte.",
+          "Dirija para nordeste.",
+          "Dirija para este.",
+          "Dirija para sudeste.",
+          "Dirija para sul.",
+          "Dirija para sudoeste.",
+          "Dirija para oeste.",
+          "Dirija para noroeste."
+        ],
+        "5": [
+          "Dirija para norte em Arlen Road.",
+          "Dirija para nordeste em Arlen Road.",
+          "Dirija para este em Arlen Road.",
+          "Dirija para sudeste em Arlen Road.",
+          "Dirija para sul em Arlen Road.",
+          "Dirija para sudoeste em Arlen Road.",
+          "Dirija para oeste em Arlen Road.",
+          "Dirija para noroeste em Arlen Road."
+        ],
+        "6": [
+          "Dirija para norte em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para nordeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para este em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para sudeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para sul em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para sudoeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para oeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Dirija para noroeste em Belair Road/US 1 Business, então continue em Arlen Road."
+        ],
+        "8": [
+          "Caminhe para norte.",
+          "Caminhe para nordeste.",
+          "Caminhe para este.",
+          "Caminhe para sudeste.",
+          "Caminhe para sul.",
+          "Caminhe para sudoeste.",
+          "Caminhe para oeste.",
+          "Caminhe para noroeste."
+        ],
+        "9": [
+          "Caminhe para norte em Arlen Road.",
+          "Caminhe para nordeste em Arlen Road.",
+          "Caminhe para este em Arlen Road.",
+          "Caminhe para sudeste em Arlen Road.",
+          "Caminhe para sul em Arlen Road.",
+          "Caminhe para sudoeste em Arlen Road.",
+          "Caminhe para oeste em Arlen Road.",
+          "Caminhe para noroeste em Arlen Road."
+        ],
+        "10": [
+          "Caminhe para norte em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para nordeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para este em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para sudeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para sul em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para sudoeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para oeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Caminhe para noroeste em Belair Road/US 1 Business, então continue em Arlen Road."
+        ],
+        "16": [
+          "Pedale para norte.",
+          "Pedale para nordeste.",
+          "Pedale para este.",
+          "Pedale para sudeste.",
+          "Pedale para sul.",
+          "Pedale para sudoeste.",
+          "Pedale para oeste.",
+          "Pedale para noroeste."
+        ],
+        "17": [
+          "Pedale para norte em Arlen Road.",
+          "Pedale para nordeste em Arlen Road.",
+          "Pedale para este em Arlen Road.",
+          "Pedale para sudeste em Arlen Road.",
+          "Pedale para sul em Arlen Road.",
+          "Pedale para sudoeste em Arlen Road.",
+          "Pedale para oeste em Arlen Road.",
+          "Pedale para noroeste em Arlen Road."
+        ],
+        "18": [
+          "Pedale para norte em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para nordeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para este em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para sudeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para sul em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para sudoeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para oeste em Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Pedale para noroeste em Belair Road/US 1 Business, então continue em Arlen Road."
+        ]
+      }
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Siga para <CARDINAL_DIRECTION> por <LENGTH>.",
+        "1": "Siga para <CARDINAL_DIRECTION> em <STREET_NAMES> por <LENGTH>.",
+        "2": "Siga para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
+        "4": "Dirija para <CARDINAL_DIRECTION> por <LENGTH>.",
+        "5": "Dirija para <CARDINAL_DIRECTION> em <STREET_NAMES> por <LENGTH>.",
+        "6": "Dirija para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
+        "8": "Caminhe para <CARDINAL_DIRECTION> por <LENGTH>.",
+        "9": "Caminhe para <CARDINAL_DIRECTION> em <STREET_NAMES> por <LENGTH>.",
+        "10": "Caminhe para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>.",
+        "16": "Pedale para <CARDINAL_DIRECTION> por <LENGTH>.",
+        "17": "Pedale para <CARDINAL_DIRECTION> em <STREET_NAMES> por <LENGTH>.",
+        "18": "Pedale para <CARDINAL_DIRECTION> em <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "norte",
+        "nordeste",
+        "este",
+        "sudeste",
+        "sul",
+        "sudoeste",
+        "oeste",
+        "noroeste"
+      ],
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> quilómetros",
+        "1 quilómetro",
+        "meio quilómetro",
+        "<METERS> metros",
+        "menos que 10 metros"
+      ],
+      "us_customary_lengths": [
+        "<MILES> milhas",
+        "1 milha",
+        "meia milha",
+        "<TENTHS_OF_MILE> décimos de milha",
+        "1 décimo de milha",
+        "<FEET> pés",
+        "menos que 10 pés"
+      ],
+      "example_phrases": {
+        "0": [
+          "Siga para norte por 1 mile.",
+          "Siga para norte por a half mile.",
+          "Siga para nordeste por 1 mile.",
+          "Siga para nordeste por a half mile.",
+          "Siga para este por 1 mile.",
+          "Siga para este por a half mile.",
+          "Siga para sudeste por 1 mile.",
+          "Siga para sudeste por a half mile.",
+          "Siga para sul por 1 mile.",
+          "Siga para sul por a half mile.",
+          "Siga para sudoeste por 1 mile.",
+          "Siga para sudoeste por a half mile.",
+          "Siga para oeste por 1 mile.",
+          "Siga para oeste por a half mile.",
+          "Siga para noroeste por 1 mile.",
+          "Siga para noroeste por a half mile."
+        ],
+        "1": [
+          "Siga para norte em Arlen Road por 1 mile.",
+          "Siga para norte em Arlen Road por a half mile.",
+          "Siga para nordeste em Arlen Road por 1 mile.",
+          "Siga para nordeste em Arlen Road por a half mile.",
+          "Siga para este em Arlen Road por 1 mile.",
+          "Siga para este em Arlen Road por a half mile.",
+          "Siga para sudeste em Arlen Road por 1 mile.",
+          "Siga para sudeste em Arlen Road por a half mile.",
+          "Siga para sul em Arlen Road por 1 mile.",
+          "Siga para sul em Arlen Road por a half mile.",
+          "Siga para sudoeste em Arlen Road por 1 mile.",
+          "Siga para sudoeste em Arlen Road por a half mile.",
+          "Siga para oeste em Arlen Road por 1 mile.",
+          "Siga para oeste em Arlen Road por a half mile.",
+          "Siga para noroeste em Arlen Road por 1 mile.",
+          "Siga para noroeste em Arlen Road por a half mile."
+        ],
+        "2": [
+          "Siga para norte em Belair Road/US 1 Business.",
+          "Siga para nordeste em Belair Road/US 1 Business.",
+          "Siga para este em Belair Road/US 1 Business.",
+          "Siga para sudeste em Belair Road/US 1 Business.",
+          "Siga para sul em Belair Road/US 1 Business.",
+          "Siga para sudoeste em Belair Road/US 1 Business.",
+          "Siga para oeste em Belair Road/US 1 Business.",
+          "Siga para noroeste em Belair Road/US 1 Business."
+        ],
+        "4": [
+          "Dirija para norte por 1 mile.",
+          "Dirija para norte por a half mile.",
+          "Dirija para nordeste por 1 mile.",
+          "Dirija para nordeste por a half mile.",
+          "Dirija para este por 1 mile.",
+          "Dirija para este por a half mile.",
+          "Dirija para sudeste por 1 mile.",
+          "Dirija para sudeste por a half mile.",
+          "Dirija para sul por 1 mile.",
+          "Dirija para sul por a half mile.",
+          "Dirija para sudoeste por 1 mile.",
+          "Dirija para sudoeste por a half mile.",
+          "Dirija para oeste por 1 mile.",
+          "Dirija para oeste por a half mile.",
+          "Dirija para noroeste por 1 mile.",
+          "Dirija para noroeste por a half mile."
+        ],
+        "5": [
+          "Dirija para norte em Arlen Road por 1 mile.",
+          "Dirija para norte em Arlen Road por a half mile.",
+          "Dirija para nordeste em Arlen Road por 1 mile.",
+          "Dirija para nordeste em Arlen Road por a half mile.",
+          "Dirija para este em Arlen Road por 1 mile.",
+          "Dirija para este em Arlen Road por a half mile.",
+          "Dirija para sudeste em Arlen Road por 1 mile.",
+          "Dirija para sudeste em Arlen Road por a half mile.",
+          "Dirija para sul em Arlen Road por 1 mile.",
+          "Dirija para sul em Arlen Road por a half mile.",
+          "Dirija para sudoeste em Arlen Road por 1 mile.",
+          "Dirija para sudoeste em Arlen Road por a half mile.",
+          "Dirija para oeste em Arlen Road por 1 mile.",
+          "Dirija para oeste em Arlen Road por a half mile.",
+          "Dirija para noroeste em Arlen Road por 1 mile.",
+          "Dirija para noroeste em Arlen Road por a half mile."
+        ],
+        "6": [
+          "Dirija para norte em Belair Road/US 1 Business.",
+          "Dirija para nordeste em Belair Road/US 1 Business.",
+          "Dirija para este em Belair Road/US 1 Business.",
+          "Dirija para sudeste em Belair Road/US 1 Business.",
+          "Dirija para sul em Belair Road/US 1 Business.",
+          "Dirija para sudoeste em Belair Road/US 1 Business.",
+          "Dirija para oeste em Belair Road/US 1 Business.",
+          "Dirija para noroeste em Belair Road/US 1 Business."
+        ],
+        "8": [
+          "Caminhe para norte por 1 mile.",
+          "Caminhe para norte por a half mile.",
+          "Caminhe para nordeste por 1 mile.",
+          "Caminhe para nordeste por a half mile.",
+          "Caminhe para este por 1 mile.",
+          "Caminhe para este por a half mile.",
+          "Caminhe para sudeste por 1 mile.",
+          "Caminhe para sudeste por a half mile.",
+          "Caminhe para sul por 1 mile.",
+          "Caminhe para sul por a half mile.",
+          "Caminhe para sudoeste por 1 mile.",
+          "Caminhe para sudoeste por a half mile.",
+          "Caminhe para oeste por 1 mile.",
+          "Caminhe para oeste por a half mile.",
+          "Caminhe para noroeste por 1 mile.",
+          "Caminhe para noroeste por a half mile."
+        ],
+        "9": [
+          "Caminhe para norte em Arlen Road por 1 mile.",
+          "Caminhe para norte em Arlen Road por a half mile.",
+          "Caminhe para nordeste em Arlen Road por 1 mile.",
+          "Caminhe para nordeste em Arlen Road por a half mile.",
+          "Caminhe para este em Arlen Road por 1 mile.",
+          "Caminhe para este em Arlen Road por a half mile.",
+          "Caminhe para sudeste em Arlen Road por 1 mile.",
+          "Caminhe para sudeste em Arlen Road por a half mile.",
+          "Caminhe para sul em Arlen Road por 1 mile.",
+          "Caminhe para sul em Arlen Road por a half mile.",
+          "Caminhe para sudoeste em Arlen Road por 1 mile.",
+          "Caminhe para sudoeste em Arlen Road por a half mile.",
+          "Caminhe para oeste em Arlen Road por 1 mile.",
+          "Caminhe para oeste em Arlen Road por a half mile.",
+          "Caminhe para noroeste em Arlen Road por 1 mile.",
+          "Caminhe para noroeste em Arlen Road por a half mile."
+        ],
+        "10": [
+          "Caminhe para norte em Belair Road/US 1 Business.",
+          "Caminhe para nordeste em Belair Road/US 1 Business.",
+          "Caminhe para este em Belair Road/US 1 Business.",
+          "Caminhe para sudeste em Belair Road/US 1 Business.",
+          "Caminhe para sul em Belair Road/US 1 Business.",
+          "Caminhe para sudoeste em Belair Road/US 1 Business.",
+          "Caminhe para oeste em Belair Road/US 1 Business.",
+          "Caminhe para noroeste em Belair Road/US 1 Business."
+        ],
+        "16": [
+          "Pedale para norte por 1 mile.",
+          "Pedale para norte por a half mile.",
+          "Pedale para nordeste por 1 mile.",
+          "Pedale para nordeste por a half mile.",
+          "Pedale para este por 1 mile.",
+          "Pedale para este por a half mile.",
+          "Pedale para sudeste por 1 mile.",
+          "Pedale para sudeste por a half mile.",
+          "Pedale para sul por 1 mile.",
+          "Pedale para sul por a half mile.",
+          "Pedale para sudoeste por 1 mile.",
+          "Pedale para sudoeste por a half mile.",
+          "Pedale para oeste por 1 mile.",
+          "Pedale para oeste por a half mile.",
+          "Pedale para noroeste por 1 mile.",
+          "Pedale para noroeste por a half mile."
+        ],
+        "17": [
+          "Pedale para norte em Arlen Road por 1 mile.",
+          "Pedale para norte em Arlen Road por a half mile.",
+          "Pedale para nordeste em Arlen Road por 1 mile.",
+          "Pedale para nordeste em Arlen Road por a half mile.",
+          "Pedale para este em Arlen Road por 1 mile.",
+          "Pedale para este em Arlen Road por a half mile.",
+          "Pedale para sudeste em Arlen Road por 1 mile.",
+          "Pedale para sudeste em Arlen Road por a half mile.",
+          "Pedale para sul em Arlen Road por 1 mile.",
+          "Pedale para sul em Arlen Road por a half mile.",
+          "Pedale para sudoeste em Arlen Road por 1 mile.",
+          "Pedale para sudoeste em Arlen Road por a half mile.",
+          "Pedale para oeste em Arlen Road por 1 mile.",
+          "Pedale para oeste em Arlen Road por a half mile.",
+          "Pedale para noroeste em Arlen Road por 1 mile.",
+          "Pedale para noroeste em Arlen Road por a half mile."
+        ],
+        "18": [
+          "Pedale para norte em Belair Road/US 1 Business.",
+          "Pedale para nordeste em Belair Road/US 1 Business.",
+          "Pedale para este em Belair Road/US 1 Business.",
+          "Pedale para sudeste em Belair Road/US 1 Business.",
+          "Pedale para sul em Belair Road/US 1 Business.",
+          "Pedale para sudoeste em Belair Road/US 1 Business.",
+          "Pedale para oeste em Belair Road/US 1 Business.",
+          "Pedale para noroeste em Belair Road/US 1 Business."
+        ]
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Pegue <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Pegue <TRANSIT_NAME> em direção a <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "elétrico",
+        "metro",
+        "comboio",
+        "autocarro",
+        "barco",
+        "trólei",
+        "gôndola",
+        "funicular"
+      ],
+      "transit_stop_count_labels": {
+        "one": "parada",
+        "other": "parades"
+      },
+      "example_phrases": {
+        "0": [
+          "Pegue New Haven. (1 stop)",
+          "Pegue New Haven. (1 stops)",
+          "Pegue New Haven. (3 stop)",
+          "Pegue New Haven. (3 stops)"
+        ],
+        "1": [
+          "Pegue New Haven em direção a JAMAICA - 179 ST. (1 stop)",
+          "Pegue New Haven em direção a JAMAICA - 179 ST. (1 stops)",
+          "Pegue New Haven em direção a JAMAICA - 179 ST. (3 stop)",
+          "Pegue New Haven em direção a JAMAICA - 179 ST. (3 stops)"
+        ]
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Saia da estação.",
+        "1": "Saia de <TRANSIT_STOP>.",
+        "2": "Saia da <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Saia da estação."
+        ],
+        "1": [
+          "Saia de 8 St - NYU."
+        ],
+        "2": [
+          "Saia da Embarcadero Station 8 St - NYU."
+        ]
+      }
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Saia da estação.",
+        "1": "Saia de <TRANSIT_STOP>.",
+        "2": "Saia da <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Saia da estação."
+        ],
+        "1": [
+          "Saia de 8 St - NYU."
+        ],
+        "2": [
+          "Saia da Embarcadero Station 8 St - NYU."
+        ]
+      }
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Entre na estação.",
+        "1": "Entre em <TRANSIT_STOP>.",
+        "2": "Entre na <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Entre na estação."
+        ],
+        "1": [
+          "Entre em 8 St - NYU."
+        ],
+        "2": [
+          "Entre na Embarcadero Station 8 St - NYU."
+        ]
+      }
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Entre na estação.",
+        "1": "Entre em <TRANSIT_STOP>.",
+        "2": "Entre na <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Entre na estação."
+        ],
+        "1": [
+          "Entre em 8 St - NYU."
+        ],
+        "2": [
+          "Entre na Embarcadero Station 8 St - NYU."
+        ]
+      }
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Mude na estação.",
+        "1": "Mude em <TRANSIT_STOP>.",
+        "2": "Mude na <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Mude na estação."
+        ],
+        "1": [
+          "Mude em 8 St - NYU."
+        ],
+        "2": [
+          "Mude na Embarcadero Station 8 St - NYU."
+        ]
+      }
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Mude na estação.",
+        "1": "Mude em <TRANSIT_STOP>.",
+        "2": "Mude na <STATION_LABEL> <TRANSIT_STOP>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Mude na estação."
+        ],
+        "1": [
+          "Mude em 8 St - NYU."
+        ],
+        "2": [
+          "Mude na Embarcadero Station 8 St - NYU."
+        ]
+      }
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Continue em <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Continue na <TRANSIT_NAME> em direção a <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "elétrico",
+        "metro",
+        "comboio",
+        "autocarro",
+        "barco",
+        "trólei",
+        "gôndola",
+        "funicular"
+      ],
+      "transit_stop_count_labels": {
+        "one": "parada",
+        "other": "parades"
+      },
+      "example_phrases": {
+        "0": [
+          "Continue em New Haven. (1 stop)",
+          "Continue em New Haven. (1 stops)",
+          "Continue em New Haven. (3 stop)",
+          "Continue em New Haven. (3 stops)"
+        ],
+        "1": [
+          "Continue na New Haven em direção a JAMAICA - 179 ST. (1 stop)",
+          "Continue na New Haven em direção a JAMAICA - 179 ST. (1 stops)",
+          "Continue na New Haven em direção a JAMAICA - 179 ST. (3 stop)",
+          "Continue na New Haven em direção a JAMAICA - 179 ST. (3 stops)"
+        ]
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Continue em <TRANSIT_NAME>.",
+        "1": "Continue na <TRANSIT_NAME> em direção a <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "elétrico",
+        "metro",
+        "comboio",
+        "autocarro",
+        "barco",
+        "trólei",
+        "gôndola",
+        "funicular"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue em New Haven."
+        ],
+        "1": [
+          "Continue na New Haven em direção a JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Mude para pegar <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Mude para pegar <TRANSIT_NAME> em direção a <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "elétrico",
+        "metro",
+        "comboio",
+        "autocarro",
+        "barco",
+        "trólei",
+        "gôndola",
+        "funicular"
+      ],
+      "transit_stop_count_labels": {
+        "one": "parada",
+        "other": "parades"
+      },
+      "example_phrases": {
+        "0": [
+          "Mude para pegar New Haven. (1 stop)",
+          "Mude para pegar New Haven. (1 stops)",
+          "Mude para pegar New Haven. (3 stop)",
+          "Mude para pegar New Haven. (3 stops)"
+        ],
+        "1": [
+          "Mude para pegar New Haven em direção a JAMAICA - 179 ST. (1 stop)",
+          "Mude para pegar New Haven em direção a JAMAICA - 179 ST. (1 stops)",
+          "Mude para pegar New Haven em direção a JAMAICA - 179 ST. (3 stop)",
+          "Mude para pegar New Haven em direção a JAMAICA - 179 ST. (3 stops)"
+        ]
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Mude para pegar <TRANSIT_NAME>.",
+        "1": "Mude para pegar <TRANSIT_NAME> em direção a <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "elétrico",
+        "metro",
+        "comboio",
+        "autocarro",
+        "barco",
+        "trólei",
+        "gôndola",
+        "funicular"
+      ],
+      "example_phrases": {
+        "0": [
+          "Mude para pegar New Haven."
+        ],
+        "1": [
+          "Mude para pegar New Haven em direção a JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Pegue <TRANSIT_NAME>.",
+        "1": "Pegue <TRANSIT_NAME> em direção a <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "elétrico",
+        "metro",
+        "comboio",
+        "autocarro",
+        "barco",
+        "trólei",
+        "gôndola",
+        "funicular"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pegue New Haven."
+        ],
+        "1": [
+          "Pegue New Haven em direção a JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "turn": {
+      "phrases": {
+        "0": "Vire <RELATIVE_DIRECTION>.",
+        "1": "Vire <RELATIVE_DIRECTION> para <STREET_NAMES>.",
+        "2": "Vire <RELATIVE_DIRECTION> para <BEGIN_STREET_NAMES>, então continue em <STREET_NAMES>.",
+        "3": "Vire <RELATIVE_DIRECTION> para continuar em <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Vire à esquerda.",
+          "Vire à direita."
+        ],
+        "1": [
+          "Vire à esquerda para Arlen Road.",
+          "Vire à direita para Arlen Road."
+        ],
+        "2": [
+          "Vire à esquerda para Belair Road/US 1 Business, então continue em Arlen Road.",
+          "Vire à direita para Belair Road/US 1 Business, então continue em Arlen Road."
+        ],
+        "3": [
+          "Vire à esquerda para continuar em Arlen Road.",
+          "Vire à direita para continuar em Arlen Road."
+        ]
+      }
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Vire <RELATIVE_DIRECTION>.",
+        "1": "Vire <RELATIVE_DIRECTION> para <STREET_NAMES>.",
+        "2": "Vire <RELATIVE_DIRECTION> para <BEGIN_STREET_NAMES>.",
+        "3": "Vire <RELATIVE_DIRECTION> para continuar em <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Vire à esquerda.",
+          "Vire à direita."
+        ],
+        "1": [
+          "Vire à esquerda para Arlen Road.",
+          "Vire à direita para Arlen Road."
+        ],
+        "2": [
+          "Vire à esquerda para Belair Road/US 1 Business.",
+          "Vire à direita para Belair Road/US 1 Business."
+        ],
+        "3": [
+          "Vire à esquerda para continuar em Arlen Road.",
+          "Vire à direita para continuar em Arlen Road."
+        ]
+      }
+    },
+    "uturn": {
+      "phrases": {
+        "0": "Faça o retorno <RELATIVE_DIRECTION>.",
+        "1": "Faça o retorno <RELATIVE_DIRECTION> para <STREET_NAMES>.",
+        "2": "Faça o retorno <RELATIVE_DIRECTION> e continue em <STREET_NAMES>.",
+        "3": "Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES>.",
+        "4": "Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES> para <STREET_NAMES>.",
+        "5": "Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES> e continue em <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Faça o retorno à esquerda.",
+          "Faça o retorno à direita."
+        ],
+        "1": [
+          "Faça o retorno à esquerda para Arlen Road.",
+          "Faça o retorno à direita para Arlen Road."
+        ],
+        "2": [
+          "Faça o retorno à esquerda e continue em Arlen Road.",
+          "Faça o retorno à direita e continue em Arlen Road."
+        ],
+        "3": [
+          "Faça o retorno à esquerda em Devonshire Road.",
+          "Faça o retorno à direita em Devonshire Road."
+        ],
+        "4": [
+          "Faça o retorno à esquerda em Devonshire Road para Arlen Road.",
+          "Faça o retorno à direita em Devonshire Road para Arlen Road."
+        ],
+        "5": [
+          "Faça o retorno à esquerda em Devonshire Road e continue em Arlen Road.",
+          "Faça o retorno à direita em Devonshire Road e continue em Arlen Road."
+        ]
+      }
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "Faça o retorno <RELATIVE_DIRECTION>.",
+        "1": "Faça o retorno <RELATIVE_DIRECTION> para <STREET_NAMES>.",
+        "2": "Faça o retorno <RELATIVE_DIRECTION> e continue em <STREET_NAMES>.",
+        "3": "Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES>.",
+        "4": "Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES> para <STREET_NAMES>.",
+        "5": "Faça o retorno <RELATIVE_DIRECTION> em <CROSS_STREET_NAMES> e continue em <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "a via pedonal",
+        "a ciclovia",
+        "a pista de bicicleta de montanha"
+      ],
+      "relative_directions": [
+        "à esquerda",
+        "à direita"
+      ],
+      "example_phrases": {
+        "0": [
+          "Faça o retorno à esquerda.",
+          "Faça o retorno à direita."
+        ],
+        "1": [
+          "Faça o retorno à esquerda para Arlen Road.",
+          "Faça o retorno à direita para Arlen Road."
+        ],
+        "2": [
+          "Faça o retorno à esquerda e continue em Arlen Road.",
+          "Faça o retorno à direita e continue em Arlen Road."
+        ],
+        "3": [
+          "Faça o retorno à esquerda em Devonshire Road.",
+          "Faça o retorno à direita em Devonshire Road."
+        ],
+        "4": [
+          "Faça o retorno à esquerda em Devonshire Road para Arlen Road.",
+          "Faça o retorno à direita em Devonshire Road para Arlen Road."
+        ],
+        "5": [
+          "Faça o retorno à esquerda em Devonshire Road e continue em Arlen Road.",
+          "Faça o retorno à direita em Devonshire Road e continue em Arlen Road."
+        ]
+      }
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Então, <NEXT_VERBAL_CUE>"
+      },
+      "example_phrases": {
+        "0": [
+          "Bear right onto East Fayette Street. Então, Turn right onto North Gay Street."
+        ]
+      }
+    }
+  }
+}
