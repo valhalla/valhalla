@@ -85,6 +85,8 @@
    * ADDED: Add sk-SK.json (slovak) localization file. [2376](https://github.com/valhalla/valhalla/pull/2376)
    * ADDED: Extend roundabout phrases. [2378](https://github.com/valhalla/valhalla/pull/2378)
    * ADDED: More roundabout phrase tests. [2382](https://github.com/valhalla/valhalla/pull/2382)
+   * ADDED: Update the turn and continue phrases to include junction names and guide signs. [2386](https://github.com/valhalla/valhalla/pull/2386)
+   * ADDED: Add the remaining guide sign toward phrases [2389](https://github.com/valhalla/valhalla/pull/2389)
    
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

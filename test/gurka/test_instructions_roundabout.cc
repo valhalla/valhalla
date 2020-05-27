@@ -12,7 +12,7 @@ protected:
   static gurka::map map;
 
   static void SetUpTestSuite() {
-    constexpr double gridsize = 100;
+    constexpr double gridsize_metres = 100;
 
     const std::string ascii_map = R"(
             I
@@ -45,7 +45,8 @@ protected:
          {"FG", {{"highway", "primary"}, {"ref", "A 1"}, {"direction", "East"}}},
          {"HI", {{"highway", "primary"}, {"name", ""}}}};
 
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {5.1079374, 52.0887174});
+    const auto layout =
+        gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_roundabouts",
                             {{"mjolnir.data_processing.use_direction_on_ways", "true"},
                              {"mjolnir.admin",

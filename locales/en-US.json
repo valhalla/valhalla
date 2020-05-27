@@ -37,7 +37,9 @@
         "0": "Bear <RELATIVE_DIRECTION>.",
         "1": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
         "2": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+        "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -60,6 +62,12 @@
         ],
         "3": [
           "Bear left to stay on US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -68,7 +76,9 @@
         "0": "Bear <RELATIVE_DIRECTION>.",
         "1": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
         "2": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-        "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+        "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -91,6 +101,12 @@
         ],
         "3": [
           "Bear left to stay on U.S. 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -117,7 +133,9 @@
     "continue": {
       "phrases": {
         "0": "Continue.",
-        "1": "Continue on <STREET_NAMES>."
+        "1": "Continue on <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -130,6 +148,12 @@
         ],
         "1": [
           "Continue on 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -138,7 +162,11 @@
         "0": "Continue.",
         "1": "Continue for <LENGTH>.",
         "2": "Continue on <STREET_NAMES>.",
-        "3": "Continue on <STREET_NAMES> for <LENGTH>."
+        "3": "Continue on <STREET_NAMES> for <LENGTH>.",
+        "4": "Continue at <JUNCTION_NAME>.",
+        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
+        "6": "Continue toward <TOWARD_SIGN>.",
+        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -171,13 +199,27 @@
         ],
         "3": [
           "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
         ]
       }
     },
     "continue_verbal_alert": {
       "phrases": {
         "0": "Continue.",
-        "1": "Continue on <STREET_NAMES>."
+        "1": "Continue on <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -190,6 +232,12 @@
         ],
         "1": [
           "Continue on 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -306,7 +354,8 @@
       "phrases": {
         "0": "Take the Ferry.",
         "1": "Take the <STREET_NAMES>.",
-        "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
+        "2": "Take the <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -323,6 +372,9 @@
         ],
         "2": [
           "Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -330,7 +382,8 @@
       "phrases": {
         "0": "Take the Ferry.",
         "1": "Take the <STREET_NAMES>.",
-        "2": "Take the <STREET_NAMES> <FERRY_LABEL>."
+        "2": "Take the <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -347,6 +400,9 @@
         ],
         "2": [
           "Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -983,7 +1039,9 @@
         "0": "Merge.",
         "1": "Merge <RELATIVE_DIRECTION>.",
         "2": "Merge onto <STREET_NAMES>.",
-        "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+        "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "left",
@@ -1006,6 +1064,12 @@
         ],
         "3": [
           "Merge right onto I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1014,7 +1078,9 @@
         "0": "Merge.",
         "1": "Merge <RELATIVE_DIRECTION>.",
         "2": "Merge onto <STREET_NAMES>.",
-        "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."
+        "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "left",
@@ -1037,6 +1103,12 @@
         ],
         "3": [
           "Merge right onto I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1291,7 +1363,9 @@
         "0": "Make a sharp <RELATIVE_DIRECTION>.",
         "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
         "2": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "3": "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+        "3": "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -1314,6 +1388,12 @@
         ],
         "3": [
           "Make a sharp right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1322,7 +1402,9 @@
         "0": "Make a sharp <RELATIVE_DIRECTION>.",
         "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
         "2": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-        "3": "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+        "3": "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -1345,6 +1427,12 @@
         ],
         "3": [
           "Make a sharp right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1830,7 +1918,9 @@
         "0": "Turn <RELATIVE_DIRECTION>.",
         "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
         "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+        "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -1853,6 +1943,12 @@
         ],
         "3": [
           "Turn right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1861,7 +1957,9 @@
         "0": "Turn <RELATIVE_DIRECTION>.",
         "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
         "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-        "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
+        "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -1884,6 +1982,12 @@
         ],
         "3": [
           "Turn right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1894,7 +1998,9 @@
         "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
         "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
         "4": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
-        "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
+        "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -1923,6 +2029,12 @@
         ],
         "5": [
           "Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },
@@ -1933,7 +2045,9 @@
         "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
         "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
         "4": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
-        "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
+        "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "the walkway",
@@ -1962,6 +2076,12 @@
         ],
         "5": [
           "Make a left U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },

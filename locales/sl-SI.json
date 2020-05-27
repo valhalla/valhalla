@@ -37,7 +37,9 @@
         "0": "Držite se <RELATIVE_DIRECTION>.",
         "1": "Držite se <RELATIVE_DIRECTION>, da pridete na <STREET_NAMES>.",
         "2": "Držite se <RELATIVE_DIRECTION>, da pridete na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>.",
-        "3": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+        "3": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -60,6 +62,12 @@
         ],
         "3": [
           "Držite se levo, da ostanete na US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -68,7 +76,9 @@
         "0": "Držite se <RELATIVE_DIRECTION>.",
         "1": "Držite se <RELATIVE_DIRECTION>, da pridete na <STREET_NAMES>.",
         "2": "Držite se <RELATIVE_DIRECTION>, da pridete na <BEGIN_STREET_NAMES>.",
-        "3": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+        "3": "Držite se <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -91,6 +101,12 @@
         ],
         "3": [
           "Držite se levo, da ostanete na U.S. 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -117,7 +133,9 @@
     "continue": {
       "phrases": {
         "0": "Nadaljujte.",
-        "1": "Nadaljujte po <STREET_NAMES>."
+        "1": "Nadaljujte po <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpoti",
@@ -130,6 +148,12 @@
         ],
         "1": [
           "Nadaljujte po 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -138,7 +162,11 @@
         "0": "Nadaljujte.",
         "1": "Nadaljujte <LENGTH>.",
         "2": "Nadaljujte po <STREET_NAMES>.",
-        "3": "Po <STREET_NAMES> nadaljujte <LENGTH>."
+        "3": "Po <STREET_NAMES> nadaljujte <LENGTH>.",
+        "4": "Continue at <JUNCTION_NAME>.",
+        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
+        "6": "Continue toward <TOWARD_SIGN>.",
+        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
       },
       "empty_street_name_labels": [
         "pešpoti",
@@ -171,13 +199,27 @@
         ],
         "3": [
           "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
         ]
       }
     },
     "continue_verbal_alert": {
       "phrases": {
         "0": "Nadaljujte.",
-        "1": "Nadaljujte po <STREET_NAMES>."
+        "1": "Nadaljujte po <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpoti",
@@ -190,6 +232,12 @@
         ],
         "1": [
           "Nadaljujte po 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -306,7 +354,8 @@
       "phrases": {
         "0": "Pojdite na trajekt.",
         "1": "Pojdite na <STREET_NAMES>.",
-        "2": "Pojdite na <FERRY_LABEL> <STREET_NAMES>."
+        "2": "Pojdite na <FERRY_LABEL> <STREET_NAMES>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -323,6 +372,9 @@
         ],
         "2": [
           "Pojdite na Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -330,7 +382,8 @@
       "phrases": {
         "0": "Pojdite na trajekt.",
         "1": "Pojdite na <STREET_NAMES>.",
-        "2": "Pojdite na <FERRY_LABEL> <STREET_NAMES>."
+        "2": "Pojdite na <FERRY_LABEL> <STREET_NAMES>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -347,6 +400,9 @@
         ],
         "2": [
           "Pojdite na Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -983,7 +1039,9 @@
         "0": "Zapeljite na sosednjo pot.",
         "1": "Zapeljite <RELATIVE_DIRECTION> na sosednjo pot.",
         "2": "Zapeljite na <STREET_NAMES>.",
-        "3": "Zapeljite <RELATIVE_DIRECTION> na <STREET_NAMES>."
+        "3": "Zapeljite <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "levo",
@@ -1006,6 +1064,12 @@
         ],
         "3": [
           "Zapeljite desno na I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1014,7 +1078,9 @@
         "0": "Zapeljite na sosednjo pot.",
         "1": "Zapeljite <RELATIVE_DIRECTION> na sosednjo pot.",
         "2": "Zapeljite na <STREET_NAMES>.",
-        "3": "Zapeljite <RELATIVE_DIRECTION> na <STREET_NAMES>."
+        "3": "Zapeljite <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "levo",
@@ -1037,6 +1103,12 @@
         ],
         "3": [
           "Zapeljite desno na I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1293,7 +1365,9 @@
         "0": "Zavijte ostro <RELATIVE_DIRECTION>.",
         "1": "Zavijte ostro <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "2": "Zavijte ostro <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>.",
-        "3": "Zavijte ostro <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+        "3": "Zavijte ostro <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -1316,6 +1390,12 @@
         ],
         "3": [
           "Zavijte ostro desno, da ostanete na Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1324,7 +1404,9 @@
         "0": "Zavijte ostro <RELATIVE_DIRECTION>.",
         "1": "Zavijte ostro <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "2": "Zavijte ostro <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "3": "Zavijte ostro <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+        "3": "Zavijte ostro <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -1347,6 +1429,12 @@
         ],
         "3": [
           "Zavijte ostro desno, da ostanete na Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1838,7 +1926,9 @@
         "0": "Zavijte <RELATIVE_DIRECTION>.",
         "1": "Zavijte <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "2": "Zavijte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>. Nadaljujte po <STREET_NAMES>.",
-        "3": "Zavijte <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+        "3": "Zavijte <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -1861,6 +1951,12 @@
         ],
         "3": [
           "Zavijte desno, da ostanete na Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1869,7 +1965,9 @@
         "0": "Zavijte <RELATIVE_DIRECTION>.",
         "1": "Zavijte <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "2": "Zavijte <RELATIVE_DIRECTION> na <BEGIN_STREET_NAMES>.",
-        "3": "Zavijte <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+        "3": "Zavijte <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -1892,6 +1990,12 @@
         ],
         "3": [
           "Zavijte desno, da ostanete na Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1902,7 +2006,9 @@
         "2": "Polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
         "3": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>.",
         "4": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "5": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+        "5": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -1931,6 +2037,12 @@
         ],
         "5": [
           "Pri Devonshire Road polkrožno obrnite levo, da ostanete na Jonestown Road/US 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },
@@ -1941,7 +2053,9 @@
         "2": "Polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
         "3": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>.",
         "4": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION> na <STREET_NAMES>.",
-        "5": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>."
+        "5": "Pri <CROSS_STREET_NAMES> polkrožno obrnite <RELATIVE_DIRECTION>, da ostanete na <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "pešpot",
@@ -1970,6 +2084,12 @@
         ],
         "5": [
           "Pri Devonshire Road polkrožno obrnite levo, da ostanete na Jonestown Road, U.S. 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },
