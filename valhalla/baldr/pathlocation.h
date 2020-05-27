@@ -175,14 +175,17 @@ public:
     }
   }
 
+  static baldr::Location::StopType fromPBF(valhalla::Location::Type type) {
+    if (type == valhalla::Location::kVia)
+      return Location::StopType::VIA;
+    else if (type == valhalla::Location::kBreak)
+      return Location::StopType::BREAK;
+    else if (type == valhalla::Location::kThrough)
+      return Location::StopType::THROUGH;
+    return Location::StopType::BREAK_THROUGH;
+  }
+
   static Location fromPBF(const valhalla::Location& loc) {
-    auto stop_type = Location::StopType::BREAK;
-    if (loc.type() == valhalla::Location::kThrough)
-      stop_type = Location::StopType::THROUGH;
-    else if (loc.type() == valhalla::Location::kVia)
-      stop_type = Location::StopType::VIA;
-    else if (loc.type() == valhalla::Location::kBreakThrough)
-      stop_type = Location::StopType::BREAK_THROUGH;
     auto side = PreferredSide::EITHER;
     if (loc.preferred_side() == valhalla::Location::same)
       side = PreferredSide::SAME;
@@ -190,7 +193,7 @@ public:
       side = PreferredSide::OPPOSITE;
 
     SearchFilter search_filter = SearchFilter();
-    Location l({loc.ll().lng(), loc.ll().lat()}, stop_type, loc.minimum_reachability(),
+    Location l({loc.ll().lng(), loc.ll().lat()}, fromPBF(loc.type()), loc.minimum_reachability(),
                loc.minimum_reachability(), loc.radius(), side, search_filter);
 
     if (loc.has_name()) {

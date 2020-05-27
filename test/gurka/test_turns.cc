@@ -19,7 +19,7 @@ TEST(Standalone, TurnStraight) {
   auto result = gurka::route(map, "A", "C", "auto");
 
   gurka::assert::osrm::expect_route(result, {"ABC"});
-  gurka::assert::raw::expect_path_length(result, 1.0);
+  gurka::assert::raw::expect_path_length(result, 1.0, .001);
 }
 /*************************************************************/
 
