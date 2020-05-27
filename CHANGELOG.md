@@ -88,6 +88,7 @@
    * ADDED: Update the turn and continue phrases to include junction names and guide signs. [2386](https://github.com/valhalla/valhalla/pull/2386)
    * ADDED: Add the remaining guide sign toward phrases [2389](https://github.com/valhalla/valhalla/pull/2389)
    * ADDED: The ability to allow immediate uturns at trace points in a map matching request [#2380](https://github.com/valhalla/valhalla/pull/2380)
+   * ADDED: Add utility functions to Signs. [#2390](https://github.com/valhalla/valhalla/pull/2390)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
