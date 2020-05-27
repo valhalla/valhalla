@@ -48,6 +48,7 @@
    * FIXED: Fixed segfault.  Shape was missing from options for valhalla_path_comparison and valhalla_run_route.  Also, costing options was missing in valhalla_path_comparison. [#2343](https://github.com/valhalla/valhalla/pull/2343)
    * FIXED: Handle decimal numbers with zero-value mantissa properly in Lua [#2355](https://github.com/valhalla/valhalla/pull/2355)
    * FIXED: Many issues that resulted in discontinuities, failed matches or incorrect time/duration for map matching requests. [#2292](https://github.com/valhalla/valhalla/pull/2292)
+   * FIXED: Seeing segfault when loading large osmdata data files before loading LuaJit. LuaJit fails to create luaL_newstate() Ref: [#2158](https://github.com/ntop/ntopng/issues/2158) Resolution is to load LuaJit before loading the data files. [#2383](https://github.com/valhalla/valhalla/pull/2383)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
@@ -81,12 +82,13 @@
    * ADDED: Revamp length phrases [#2359](https://github.com/valhalla/valhalla/pull/2359)
    * CHANGED: Do not allocate memory in skadi if we don't need it. [#2373](https://github.com/valhalla/valhalla/pull/2373)
    * CHANGED: Map matching: throw error (443/NoSegment) when no candidate edges are available. [#2370](https://github.com/valhalla/valhalla/pull/2370/)
-   * ADDED: Add sk-SK.json (slovak) localization file. [#2376](https://github.com/valhalla/valhalla/pull/2376)
-   * ADDED: Extend roundabout phrases. [#2378](https://github.com/valhalla/valhalla/pull/2378)
-   * ADDED: More roundabout phrase tests. [#2382](https://github.com/valhalla/valhalla/pull/2382)
+   * ADDED: Add sk-SK.json (slovak) localization file. [2376](https://github.com/valhalla/valhalla/pull/2376)
+   * ADDED: Extend roundabout phrases. [2378](https://github.com/valhalla/valhalla/pull/2378)
+   * ADDED: More roundabout phrase tests. [2382](https://github.com/valhalla/valhalla/pull/2382)
+   * ADDED: Update the turn and continue phrases to include junction names and guide signs. [2386](https://github.com/valhalla/valhalla/pull/2386)
+   * ADDED: Add the remaining guide sign toward phrases [2389](https://github.com/valhalla/valhalla/pull/2389)
    * ADDED: The ability to allow immediate uturns at trace points in a map matching request [#2380](https://github.com/valhalla/valhalla/pull/2380)
-   * ADDED: Update the turn and continue phrases to include junction names and guide signs. [#2386](https://github.com/valhalla/valhalla/pull/2386)
-   
+
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
    * FIXED: Changed reachability computation to consider both directions of travel wrt candidate edges [#1965](https://github.com/valhalla/valhalla/pull/1965)
