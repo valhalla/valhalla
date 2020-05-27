@@ -1,0 +1,2755 @@
+{
+  "posix_locale": "ru_RU.UTF-8",
+  "aliases": [
+    "ru"
+  ],
+  "instructions": {
+    "arrive": {
+      "phrases": {
+        "0": "Прибытие: <TIME>.",
+        "1": "Прибытие: <TIME> на <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Прибытие: 8:02 AM."
+        ],
+        "1": [
+          "Прибытие: 8:02 AM на 8 St - NYU."
+        ]
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Прибытие: <TIME>.",
+        "1": "Прибытие: <TIME> на <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Прибытие: 8:02 AM."
+        ],
+        "1": [
+          "Прибытие: 8:02 AM на 8 St - NYU."
+        ]
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Держитесь <RELATIVE_DIRECTION>.",
+        "1": "Держитесь <RELATIVE_DIRECTION> по <STREET_NAMES>.",
+        "2": "Держитесь <RELATIVE_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
+        "3": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Держитесь влево.",
+          "Держитесь вправо."
+        ],
+        "1": [
+          "Держитесь влево по Arlen Road.",
+          "Держитесь вправо по Arlen Road."
+        ],
+        "2": [
+          "Держитесь влево по Belair Road/US 1 Business. Продолжайте по Arlen Road.",
+          "Держитесь вправо по Belair Road/US 1 Business. Продолжайте по Arlen Road."
+        ],
+        "3": [
+          "Держитесь влево чтобы остаться на Arlen Road.",
+          "Держитесь вправо чтобы остаться на Arlen Road."
+        ]
+      }
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Держитесь <RELATIVE_DIRECTION>.",
+        "1": "Держитесь <RELATIVE_DIRECTION> по <STREET_NAMES>.",
+        "2": "Держитесь <RELATIVE_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
+        "3": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Держитесь влево.",
+          "Держитесь вправо."
+        ],
+        "1": [
+          "Держитесь влево по Arlen Road.",
+          "Держитесь вправо по Arlen Road."
+        ],
+        "2": [
+          "Держитесь влево по Belair Road/US 1 Business. Продолжайте по Arlen Road.",
+          "Держитесь вправо по Belair Road/US 1 Business. Продолжайте по Arlen Road."
+        ],
+        "3": [
+          "Держитесь влево чтобы остаться на Arlen Road.",
+          "Держитесь вправо чтобы остаться на Arlen Road."
+        ]
+      }
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> переходит в <STREET_NAMES>."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street переходит в Arlen Road."
+        ]
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> переходит в <STREET_NAMES>."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street переходит в Arlen Road."
+        ]
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Продолжайте.",
+        "1": "Продолжайте по <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "example_phrases": {
+        "0": [
+          "Продолжайте."
+        ],
+        "1": [
+          "Продолжайте по Arlen Road."
+        ]
+      }
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Продолжайте двигаться <LENGTH>.",
+        "1": "Продолжайте двигаться по <STREET_NAMES> <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> километров",
+        "1 километр",
+        "полкилометра",
+        "<METERS> метров",
+        "менее 10 метров"
+      ],
+      "us_customary_lengths": [
+        "<MILES> миль",
+        "1 милю",
+        "полмили",
+        "<TENTHS_OF_MILE> десятых мили",
+        "1 десятую мили",
+        "<FEET> футов",
+        "менее 10 футов"
+      ],
+      "example_phrases": {
+        "0": [
+          "Продолжайте двигаться 1 mile.",
+          "Продолжайте двигаться a half mile."
+        ],
+        "1": [
+          "Продолжайте двигаться по Arlen Road 1 mile.",
+          "Продолжайте двигаться по Arlen Road a half mile."
+        ]
+      }
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Продолжайте.",
+        "1": "Продолжайте по <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "example_phrases": {
+        "0": [
+          "Продолжайте."
+        ],
+        "1": [
+          "Продолжайте по Arlen Road."
+        ]
+      }
+    },
+    "depart": {
+      "phrases": {
+        "0": "Отправление: <TIME>.",
+        "1": "Отправление: <TIME> с <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Отправление: 8:02 AM."
+        ],
+        "1": [
+          "Отправление: 8:02 AM с 8 St - NYU."
+        ]
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Отправление: <TIME>.",
+        "1": "Отправление: <TIME> с <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Отправление: 8:02 AM."
+        ],
+        "1": [
+          "Отправление: 8:02 AM с 8 St - NYU."
+        ]
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Вы прибыли к месту назначения.",
+        "1": "Вы прибыли к <DESTINATION>.",
+        "2": "Место назначения <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> находится <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Вы прибыли к месту назначения."
+        ],
+        "1": [
+          "Вы прибыли к Lancaster Brewing Company."
+        ],
+        "2": [
+          "Место назначения влево.",
+          "Место назначения вправо."
+        ],
+        "3": [
+          "Lancaster Brewing Company находится влево.",
+          "Lancaster Brewing Company находится вправо."
+        ]
+      }
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Вы прибыли к месту назначения.",
+        "1": "Вы прибыли к <DESTINATION>.",
+        "2": "Место назначения <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> находится <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Вы прибыли к месту назначения."
+        ],
+        "1": [
+          "Вы прибыли к Lancaster Brewing Company."
+        ],
+        "2": [
+          "Место назначения влево.",
+          "Место назначения вправо."
+        ],
+        "3": [
+          "Lancaster Brewing Company находится влево.",
+          "Lancaster Brewing Company находится вправо."
+        ]
+      }
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Вы прибываете к месту назначения.",
+        "1": "Вы прибываете к <DESTINATION>.",
+        "2": "Место назначения будет <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> будет <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Вы прибываете к месту назначения."
+        ],
+        "1": [
+          "Вы прибываете к Lancaster Brewing Company."
+        ],
+        "2": [
+          "Место назначения будет влево.",
+          "Место назначения будет вправо."
+        ],
+        "3": [
+          "Lancaster Brewing Company будет влево.",
+          "Lancaster Brewing Company будет вправо."
+        ]
+      }
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Воспользуйтесь паромом.",
+        "1": "Воспользуйтесь паромом <STREET_NAMES>.",
+        "2": "Воспользуйтесь <STREET_NAMES> <FERRY_LABEL>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "ferry_label": "Ferry",
+      "example_phrases": {
+        "0": [
+          "Воспользуйтесь паромом."
+        ],
+        "1": [
+          "Воспользуйтесь паромом Arlen Road."
+        ],
+        "2": [
+          "Воспользуйтесь Arlen Road Ferry."
+        ]
+      }
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Воспользуйтесь паромом.",
+        "1": "Воспользуйтесь паромом <STREET_NAMES>.",
+        "2": "Воспользуйтесь <STREET_NAMES> <FERRY_LABEL>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "ferry_label": "Ferry",
+      "example_phrases": {
+        "0": [
+          "Воспользуйтесь паромом."
+        ],
+        "1": [
+          "Воспользуйтесь паромом Arlen Road."
+        ],
+        "2": [
+          "Воспользуйтесь Arlen Road Ferry."
+        ]
+      }
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Заедьте на кольцо.",
+        "1": "Заедьте на кольцо и съезжайте на <ORDINAL_VALUE> съезде."
+      },
+      "ordinal_values": [
+        "первом",
+        "втором",
+        "третьем",
+        "четвертом",
+        "пятом",
+        "шестом",
+        "седьмом",
+        "восьмом",
+        "девятом",
+        "десятом"
+      ],
+      "example_phrases": {
+        "0": [
+          "Заедьте на кольцо."
+        ],
+        "1": [
+          "Заедьте на кольцо и съезжайте на первом съезде.",
+          "Заедьте на кольцо и съезжайте на втором съезде.",
+          "Заедьте на кольцо и съезжайте на третьем съезде.",
+          "Заедьте на кольцо и съезжайте на четвертом съезде.",
+          "Заедьте на кольцо и съезжайте на пятом съезде.",
+          "Заедьте на кольцо и съезжайте на шестом съезде.",
+          "Заедьте на кольцо и съезжайте на седьмом съезде.",
+          "Заедьте на кольцо и съезжайте на восьмом съезде.",
+          "Заедьте на кольцо и съезжайте на девятом съезде.",
+          "Заедьте на кольцо и съезжайте на десятом съезде."
+        ]
+      }
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Заедьте на кольцо.",
+        "1": "Заедьте на кольцо и съезжайте на <ORDINAL_VALUE> съезде."
+      },
+      "ordinal_values": [
+        "первом",
+        "втором",
+        "третьем",
+        "четвертом",
+        "пятом",
+        "шестом",
+        "седьмом",
+        "восьмом",
+        "девятом",
+        "десятом"
+      ],
+      "example_phrases": {
+        "0": [
+          "Заедьте на кольцо."
+        ],
+        "1": [
+          "Заедьте на кольцо и съезжайте на первом съезде.",
+          "Заедьте на кольцо и съезжайте на втором съезде.",
+          "Заедьте на кольцо и съезжайте на третьем съезде.",
+          "Заедьте на кольцо и съезжайте на четвертом съезде.",
+          "Заедьте на кольцо и съезжайте на пятом съезде.",
+          "Заедьте на кольцо и съезжайте на шестом съезде.",
+          "Заедьте на кольцо и съезжайте на седьмом съезде.",
+          "Заедьте на кольцо и съезжайте на восьмом съезде.",
+          "Заедьте на кольцо и съезжайте на девятом съезде.",
+          "Заедьте на кольцо и съезжайте на десятом съезде."
+        ]
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Выезжайте <RELATIVE_DIRECTION>.",
+        "1": "Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN>.",
+        "2": "Выезжайте <RELATIVE_DIRECTION> через <BRANCH_SIGN>.",
+        "3": "Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN> на <BRANCH_SIGN>.",
+        "4": "Выезжайте <RELATIVE_DIRECTION> в строну <TOWARD_SIGN>.",
+        "5": "Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN> в строну <TOWARD_SIGN>.",
+        "6": "Выезжайте <RELATIVE_DIRECTION> через <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "7": "Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN> на <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "8": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN>.",
+        "10": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> на <BRANCH_SIGN>.",
+        "12": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> в сторону <TOWARD_SIGN>.",
+        "14": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> на <BRANCH_SIGN> в сторону <TOWARD_SIGN>.",
+        "15": "Выезжайте.",
+        "16": "Выезжайте через <NUMBER_SIGN>.",
+        "17": "Выезжайте через <BRANCH_SIGN>.",
+        "18": "Выезжайте через <NUMBER_SIGN> на <BRANCH_SIGN>.",
+        "19": "Выезжайте в строну <TOWARD_SIGN>.",
+        "20": "Выезжайте через <NUMBER_SIGN> в строну <TOWARD_SIGN>.",
+        "21": "Выезжайте через <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "22": "Выезжайте через <NUMBER_SIGN> на <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "23": "Выезжайте через <NAME_SIGN>.",
+        "25": "Выезжайте через <NAME_SIGN> на <BRANCH_SIGN>.",
+        "27": "Выезжайте через <NAME_SIGN> в сторону <TOWARD_SIGN>.",
+        "29": "Выезжайте через <NAME_SIGN> на <BRANCH_SIGN> в сторону <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Выезжайте влево.",
+          "Выезжайте вправо."
+        ],
+        "1": [
+          "Выезжайте влево через 67 B-A.",
+          "Выезжайте вправо через 67 B-A."
+        ],
+        "2": [
+          "Выезжайте влево через US 322 West.",
+          "Выезжайте вправо через US 322 West."
+        ],
+        "3": [
+          "Выезжайте влево через 67 B-A на US 322 West.",
+          "Выезжайте вправо через 67 B-A на US 322 West."
+        ],
+        "4": [
+          "Выезжайте влево в строну Lewiston.",
+          "Выезжайте вправо в строну Lewiston."
+        ],
+        "5": [
+          "Выезжайте влево через 67 B-A в строну Lewiston.",
+          "Выезжайте вправо через 67 B-A в строну Lewiston."
+        ],
+        "6": [
+          "Выезжайте влево через US 322 West в строну Lewiston.",
+          "Выезжайте вправо через US 322 West в строну Lewiston."
+        ],
+        "7": [
+          "Выезжайте влево через 67 B-A на US 322 West в строну Lewiston.",
+          "Выезжайте вправо через 67 B-A на US 322 West в строну Lewiston."
+        ],
+        "8": [
+          "Выезжайте влево через White Marsh Boulevard.",
+          "Выезжайте вправо через White Marsh Boulevard."
+        ],
+        "10": [
+          "Выезжайте влево через White Marsh Boulevard на US 322 West.",
+          "Выезжайте вправо через White Marsh Boulevard на US 322 West."
+        ],
+        "12": [
+          "Выезжайте влево через White Marsh Boulevard в сторону Lewiston.",
+          "Выезжайте вправо через White Marsh Boulevard в сторону Lewiston."
+        ],
+        "14": [
+          "Выезжайте влево через White Marsh Boulevard на US 322 West в сторону Lewiston.",
+          "Выезжайте вправо через White Marsh Boulevard на US 322 West в сторону Lewiston."
+        ],
+        "15": [
+          "Выезжайте."
+        ],
+        "16": [
+          "Выезжайте через 67 B-A."
+        ],
+        "17": [
+          "Выезжайте через US 322 West."
+        ],
+        "18": [
+          "Выезжайте через 67 B-A на US 322 West."
+        ],
+        "19": [
+          "Выезжайте в строну Lewiston."
+        ],
+        "20": [
+          "Выезжайте через 67 B-A в строну Lewiston."
+        ],
+        "21": [
+          "Выезжайте через US 322 West в строну Lewiston."
+        ],
+        "22": [
+          "Выезжайте через 67 B-A на US 322 West в строну Lewiston."
+        ],
+        "23": [
+          "Выезжайте через White Marsh Boulevard."
+        ],
+        "25": [
+          "Выезжайте через White Marsh Boulevard на US 322 West."
+        ],
+        "27": [
+          "Выезжайте через White Marsh Boulevard в сторону Lewiston."
+        ],
+        "29": [
+          "Выезжайте через White Marsh Boulevard на US 322 West в сторону Lewiston."
+        ]
+      }
+    },
+    "exit_ferry": {
+      "phrases": {
+        "0": "Двигайтесь на <CARDINAL_DIRECTION>.",
+        "1": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "2": "Двигайтесь на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжите по <STREET_NAMES>.",
+        "4": "Едьте на <CARDINAL_DIRECTION>.",
+        "5": "Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "6": "Едьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>.",
+        "8": "Идите на <CARDINAL_DIRECTION>.",
+        "9": "Идите на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "10": "Идите на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте идти по <STREET_NAMES>.",
+        "16": "Едьте на <CARDINAL_DIRECTION>.",
+        "17": "Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "18": "Едьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "север",
+        "северо-восток",
+        "восток",
+        "юго-восток",
+        "юг",
+        "юго-запад",
+        "запад",
+        "северо-запад"
+      ],
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "example_phrases": {
+        "0": [
+          "Двигайтесь на север.",
+          "Двигайтесь на северо-восток.",
+          "Двигайтесь на восток.",
+          "Двигайтесь на юго-восток.",
+          "Двигайтесь на юг.",
+          "Двигайтесь на юго-запад.",
+          "Двигайтесь на запад.",
+          "Двигайтесь на северо-запад."
+        ],
+        "1": [
+          "Двигайтесь на север по Arlen Road.",
+          "Двигайтесь на северо-восток по Arlen Road.",
+          "Двигайтесь на восток по Arlen Road.",
+          "Двигайтесь на юго-восток по Arlen Road.",
+          "Двигайтесь на юг по Arlen Road.",
+          "Двигайтесь на юго-запад по Arlen Road.",
+          "Двигайтесь на запад по Arlen Road.",
+          "Двигайтесь на северо-запад по Arlen Road."
+        ],
+        "2": [
+          "Двигайтесь на север по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на северо-восток по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на восток по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на юго-восток по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на юг по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на юго-запад по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на запад по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на северо-запад по Belair Road/US 1 Business. Продолжите по Arlen Road."
+        ],
+        "4": [
+          "Едьте на север.",
+          "Едьте на северо-восток.",
+          "Едьте на восток.",
+          "Едьте на юго-восток.",
+          "Едьте на юг.",
+          "Едьте на юго-запад.",
+          "Едьте на запад.",
+          "Едьте на северо-запад."
+        ],
+        "5": [
+          "Едьте на север по Arlen Road.",
+          "Едьте на северо-восток по Arlen Road.",
+          "Едьте на восток по Arlen Road.",
+          "Едьте на юго-восток по Arlen Road.",
+          "Едьте на юг по Arlen Road.",
+          "Едьте на юго-запад по Arlen Road.",
+          "Едьте на запад по Arlen Road.",
+          "Едьте на северо-запад по Arlen Road."
+        ],
+        "6": [
+          "Едьте на север по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юг по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road."
+        ],
+        "8": [
+          "Идите на север.",
+          "Идите на северо-восток.",
+          "Идите на восток.",
+          "Идите на юго-восток.",
+          "Идите на юг.",
+          "Идите на юго-запад.",
+          "Идите на запад.",
+          "Идите на северо-запад."
+        ],
+        "9": [
+          "Идите на север по Arlen Road.",
+          "Идите на северо-восток по Arlen Road.",
+          "Идите на восток по Arlen Road.",
+          "Идите на юго-восток по Arlen Road.",
+          "Идите на юг по Arlen Road.",
+          "Идите на юго-запад по Arlen Road.",
+          "Идите на запад по Arlen Road.",
+          "Идите на северо-запад по Arlen Road."
+        ],
+        "10": [
+          "Идите на север по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на северо-восток по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на восток по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на юго-восток по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на юг по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на юго-запад по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на запад по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на северо-запад по Belair Road/US 1 Business. Продолжайте идти по Arlen Road."
+        ],
+        "16": [
+          "Едьте на север.",
+          "Едьте на северо-восток.",
+          "Едьте на восток.",
+          "Едьте на юго-восток.",
+          "Едьте на юг.",
+          "Едьте на юго-запад.",
+          "Едьте на запад.",
+          "Едьте на северо-запад."
+        ],
+        "17": [
+          "Едьте на север по Arlen Road.",
+          "Едьте на северо-восток по Arlen Road.",
+          "Едьте на восток по Arlen Road.",
+          "Едьте на юго-восток по Arlen Road.",
+          "Едьте на юг по Arlen Road.",
+          "Едьте на юго-запад по Arlen Road.",
+          "Едьте на запад по Arlen Road.",
+          "Едьте на северо-запад по Arlen Road."
+        ],
+        "18": [
+          "Едьте на север по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юг по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road."
+        ]
+      }
+    },
+    "exit_ferry_verbal": {
+      "phrases": {
+        "0": "Двигайтесь на <CARDINAL_DIRECTION>.",
+        "1": "Двигайтесь на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
+        "2": "Двигайтесь на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте направляться вдоль <STREET_NAMES>.",
+        "4": "Едьте на <CARDINAL_DIRECTION>.",
+        "5": "Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
+        "6": "Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>.",
+        "8": "Идите <CARDINAL_DIRECTION>.",
+        "9": "Идите <CARDINAL_DIRECTION> на <STREET_NAMES>.",
+        "10": "Идите <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте идти по <STREET_NAMES>.",
+        "16": "Едьте на <CARDINAL_DIRECTION>.",
+        "17": "Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
+        "18": "Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "север",
+        "северо-восток",
+        "восток",
+        "юго-восток",
+        "юг",
+        "юго-запад",
+        "запад",
+        "северо-запад"
+      ],
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "example_phrases": {
+        "0": [
+          "Двигайтесь на север.",
+          "Двигайтесь на северо-восток.",
+          "Двигайтесь на восток.",
+          "Двигайтесь на юго-восток.",
+          "Двигайтесь на юг.",
+          "Двигайтесь на юго-запад.",
+          "Двигайтесь на запад.",
+          "Двигайтесь на северо-запад."
+        ],
+        "1": [
+          "Двигайтесь на север на Arlen Road.",
+          "Двигайтесь на северо-восток на Arlen Road.",
+          "Двигайтесь на восток на Arlen Road.",
+          "Двигайтесь на юго-восток на Arlen Road.",
+          "Двигайтесь на юг на Arlen Road.",
+          "Двигайтесь на юго-запад на Arlen Road.",
+          "Двигайтесь на запад на Arlen Road.",
+          "Двигайтесь на северо-запад на Arlen Road."
+        ],
+        "2": [
+          "Двигайтесь на север на Belair Road/US 1 Business. Продолжайте направляться вдоль Arlen Road.",
+          "Двигайтесь на северо-восток на Belair Road/US 1 Business. Продолжайте направляться вдоль Arlen Road.",
+          "Двигайтесь на восток на Belair Road/US 1 Business. Продолжайте направляться вдоль Arlen Road.",
+          "Двигайтесь на юго-восток на Belair Road/US 1 Business. Продолжайте направляться вдоль Arlen Road.",
+          "Двигайтесь на юг на Belair Road/US 1 Business. Продолжайте направляться вдоль Arlen Road.",
+          "Двигайтесь на юго-запад на Belair Road/US 1 Business. Продолжайте направляться вдоль Arlen Road.",
+          "Двигайтесь на запад на Belair Road/US 1 Business. Продолжайте направляться вдоль Arlen Road.",
+          "Двигайтесь на северо-запад на Belair Road/US 1 Business. Продолжайте направляться вдоль Arlen Road."
+        ],
+        "4": [
+          "Едьте на север.",
+          "Едьте на северо-восток.",
+          "Едьте на восток.",
+          "Едьте на юго-восток.",
+          "Едьте на юг.",
+          "Едьте на юго-запад.",
+          "Едьте на запад.",
+          "Едьте на северо-запад."
+        ],
+        "5": [
+          "Едьте на север на Arlen Road.",
+          "Едьте на северо-восток на Arlen Road.",
+          "Едьте на восток на Arlen Road.",
+          "Едьте на юго-восток на Arlen Road.",
+          "Едьте на юг на Arlen Road.",
+          "Едьте на юго-запад на Arlen Road.",
+          "Едьте на запад на Arlen Road.",
+          "Едьте на северо-запад на Arlen Road."
+        ],
+        "6": [
+          "Едьте на север на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-восток на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на восток на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-восток на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юг на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-запад на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на запад на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-запад на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road."
+        ],
+        "8": [
+          "Идите север.",
+          "Идите северо-восток.",
+          "Идите восток.",
+          "Идите юго-восток.",
+          "Идите юг.",
+          "Идите юго-запад.",
+          "Идите запад.",
+          "Идите северо-запад."
+        ],
+        "9": [
+          "Идите север на Arlen Road.",
+          "Идите северо-восток на Arlen Road.",
+          "Идите восток на Arlen Road.",
+          "Идите юго-восток на Arlen Road.",
+          "Идите юг на Arlen Road.",
+          "Идите юго-запад на Arlen Road.",
+          "Идите запад на Arlen Road.",
+          "Идите северо-запад на Arlen Road."
+        ],
+        "10": [
+          "Идите север на Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите северо-восток на Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите восток на Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите юго-восток на Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите юг на Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите юго-запад на Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите запад на Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите северо-запад на Belair Road/US 1 Business. Продолжайте идти по Arlen Road."
+        ],
+        "16": [
+          "Едьте на север.",
+          "Едьте на северо-восток.",
+          "Едьте на восток.",
+          "Едьте на юго-восток.",
+          "Едьте на юг.",
+          "Едьте на юго-запад.",
+          "Едьте на запад.",
+          "Едьте на северо-запад."
+        ],
+        "17": [
+          "Едьте на север на Arlen Road.",
+          "Едьте на северо-восток на Arlen Road.",
+          "Едьте на восток на Arlen Road.",
+          "Едьте на юго-восток на Arlen Road.",
+          "Едьте на юг на Arlen Road.",
+          "Едьте на юго-запад на Arlen Road.",
+          "Едьте на запад на Arlen Road.",
+          "Едьте на северо-запад на Arlen Road."
+        ],
+        "18": [
+          "Едьте на север на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-восток на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на восток на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-восток на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юг на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-запад на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на запад на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-запад на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road."
+        ]
+      }
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Съезжайте с кольца.",
+        "1": "Съезжайте с кольца на <STREET_NAMES>.",
+        "2": "Съезжайте с кольца на <BEGIN_STREET_NAMES>. Продолжайте двигаться по <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "example_phrases": {
+        "0": [
+          "Съезжайте с кольца."
+        ],
+        "1": [
+          "Съезжайте с кольца на Arlen Road."
+        ],
+        "2": [
+          "Съезжайте с кольца на Belair Road/US 1 Business. Продолжайте двигаться по Arlen Road."
+        ]
+      }
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Съезжайте с кольца.",
+        "1": "Съезжайте с кольца на <STREET_NAMES>.",
+        "2": "Съезжайте с кольца на <BEGIN_STREET_NAMES>. Продолжайте двигаться по <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "example_phrases": {
+        "0": [
+          "Съезжайте с кольца."
+        ],
+        "1": [
+          "Съезжайте с кольца на Arlen Road."
+        ],
+        "2": [
+          "Съезжайте с кольца на Belair Road/US 1 Business. Продолжайте двигаться по Arlen Road."
+        ]
+      }
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Выезжайте <RELATIVE_DIRECTION>.",
+        "1": "Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN>.",
+        "2": "Выезжайте <RELATIVE_DIRECTION> через <BRANCH_SIGN>.",
+        "3": "Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN> на <BRANCH_SIGN>.",
+        "4": "Выезжайте <RELATIVE_DIRECTION> в строну <TOWARD_SIGN>.",
+        "5": "Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN> в строну <TOWARD_SIGN>.",
+        "6": "Выезжайте <RELATIVE_DIRECTION> через <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "7": "Выезжайте <RELATIVE_DIRECTION> через <NUMBER_SIGN> на <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "8": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN>.",
+        "10": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> на <BRANCH_SIGN>.",
+        "12": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> в сторону <TOWARD_SIGN>.",
+        "14": "Выезжайте <RELATIVE_DIRECTION> через <NAME_SIGN> на <BRANCH_SIGN> в сторону <TOWARD_SIGN>.",
+        "15": "Выезжайте.",
+        "16": "Выезжайте через <NUMBER_SIGN>.",
+        "17": "Выезжайте через <BRANCH_SIGN>.",
+        "18": "Выезжайте через <NUMBER_SIGN> на <BRANCH_SIGN>.",
+        "19": "Выезжайте в строну <TOWARD_SIGN>.",
+        "20": "Выезжайте через <NUMBER_SIGN> в строну <TOWARD_SIGN>.",
+        "21": "Выезжайте через <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "22": "Выезжайте через <NUMBER_SIGN> на <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "23": "Выезжайте через <NAME_SIGN>.",
+        "25": "Выезжайте через <NAME_SIGN> на <BRANCH_SIGN>.",
+        "27": "Выезжайте через <NAME_SIGN> в сторону <TOWARD_SIGN>.",
+        "29": "Выезжайте через <NAME_SIGN> на <BRANCH_SIGN> в сторону <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Выезжайте влево.",
+          "Выезжайте вправо."
+        ],
+        "1": [
+          "Выезжайте влево через 67 B-A.",
+          "Выезжайте вправо через 67 B-A."
+        ],
+        "2": [
+          "Выезжайте влево через US 322 West.",
+          "Выезжайте вправо через US 322 West."
+        ],
+        "3": [
+          "Выезжайте влево через 67 B-A на US 322 West.",
+          "Выезжайте вправо через 67 B-A на US 322 West."
+        ],
+        "4": [
+          "Выезжайте влево в строну Lewiston.",
+          "Выезжайте вправо в строну Lewiston."
+        ],
+        "5": [
+          "Выезжайте влево через 67 B-A в строну Lewiston.",
+          "Выезжайте вправо через 67 B-A в строну Lewiston."
+        ],
+        "6": [
+          "Выезжайте влево через US 322 West в строну Lewiston.",
+          "Выезжайте вправо через US 322 West в строну Lewiston."
+        ],
+        "7": [
+          "Выезжайте влево через 67 B-A на US 322 West в строну Lewiston.",
+          "Выезжайте вправо через 67 B-A на US 322 West в строну Lewiston."
+        ],
+        "8": [
+          "Выезжайте влево через White Marsh Boulevard.",
+          "Выезжайте вправо через White Marsh Boulevard."
+        ],
+        "10": [
+          "Выезжайте влево через White Marsh Boulevard на US 322 West.",
+          "Выезжайте вправо через White Marsh Boulevard на US 322 West."
+        ],
+        "12": [
+          "Выезжайте влево через White Marsh Boulevard в сторону Lewiston.",
+          "Выезжайте вправо через White Marsh Boulevard в сторону Lewiston."
+        ],
+        "14": [
+          "Выезжайте влево через White Marsh Boulevard на US 322 West в сторону Lewiston.",
+          "Выезжайте вправо через White Marsh Boulevard на US 322 West в сторону Lewiston."
+        ],
+        "15": [
+          "Выезжайте."
+        ],
+        "16": [
+          "Выезжайте через 67 B-A."
+        ],
+        "17": [
+          "Выезжайте через US 322 West."
+        ],
+        "18": [
+          "Выезжайте через 67 B-A на US 322 West."
+        ],
+        "19": [
+          "Выезжайте в строну Lewiston."
+        ],
+        "20": [
+          "Выезжайте через 67 B-A в строну Lewiston."
+        ],
+        "21": [
+          "Выезжайте через US 322 West в строну Lewiston."
+        ],
+        "22": [
+          "Выезжайте через 67 B-A на US 322 West в строну Lewiston."
+        ],
+        "23": [
+          "Выезжайте через White Marsh Boulevard."
+        ],
+        "25": [
+          "Выезжайте через White Marsh Boulevard на US 322 West."
+        ],
+        "27": [
+          "Выезжайте через White Marsh Boulevard в сторону Lewiston."
+        ],
+        "29": [
+          "Выезжайте через White Marsh Boulevard на US 322 West в сторону Lewiston."
+        ]
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "На развилке держитесь <RELATIVE_DIRECTION>.",
+        "1": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN>.",
+        "2": "Держитесь <RELATIVE_DIRECTION>, чтобы попасть на <STREET_NAMES>.",
+        "3": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN> на <STREET_NAMES>.",
+        "4": "Держитесь <RELATIVE_DIRECTION> в сторону <TOWARD_SIGN>.",
+        "5": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN> в сторону <TOWARD_SIGN>.",
+        "6": "Держитесь <RELATIVE_DIRECTION>, чтобы попасть на <STREET_NAMES> в сторону <TOWARD_SIGN>.",
+        "7": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN> на <STREET_NAMES> в сторону <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "relative_directions": [
+        "влево",
+        "прямо",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "На развилке держитесь влево.",
+          "На развилке держитесь вправо."
+        ],
+        "1": [
+          "Держитесь влево, чтобы выехать через 67 B-A.",
+          "Держитесь вправо, чтобы выехать через 67 B-A."
+        ],
+        "2": [
+          "Держитесь влево, чтобы попасть на Arlen Road.",
+          "Держитесь вправо, чтобы попасть на Arlen Road."
+        ],
+        "3": [
+          "Держитесь влево, чтобы выехать через 67 B-A на Arlen Road.",
+          "Держитесь вправо, чтобы выехать через 67 B-A на Arlen Road."
+        ],
+        "4": [
+          "Держитесь влево в сторону Lewiston.",
+          "Держитесь вправо в сторону Lewiston."
+        ],
+        "5": [
+          "Держитесь влево, чтобы выехать через 67 B-A в сторону Lewiston.",
+          "Держитесь вправо, чтобы выехать через 67 B-A в сторону Lewiston."
+        ],
+        "6": [
+          "Держитесь влево, чтобы попасть на Arlen Road в сторону Lewiston.",
+          "Держитесь вправо, чтобы попасть на Arlen Road в сторону Lewiston."
+        ],
+        "7": [
+          "Держитесь влево, чтобы выехать через 67 B-A на Arlen Road в сторону Lewiston.",
+          "Держитесь вправо, чтобы выехать через 67 B-A на Arlen Road в сторону Lewiston."
+        ]
+      }
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
+        "1": "Держитесь <RELATIVE_DIRECTION> чтобы выехать через <NUMBER_SIGN> и остаться на <STREET_NAMES>.",
+        "2": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES> в сторону <TOWARD_SIGN>.",
+        "3": "Держитесь <RELATIVE_DIRECTION> чтобы выехать через <NUMBER_SIGN> и остаться на <STREET_NAMES> в сторону <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "relative_directions": [
+        "влево",
+        "прямо",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Держитесь влево чтобы остаться на Arlen Road.",
+          "Держитесь вправо чтобы остаться на Arlen Road."
+        ],
+        "1": [
+          "Держитесь влево чтобы выехать через 67 B-A и остаться на Arlen Road.",
+          "Держитесь вправо чтобы выехать через 67 B-A и остаться на Arlen Road."
+        ],
+        "2": [
+          "Держитесь влево чтобы остаться на Arlen Road в сторону Lewiston.",
+          "Держитесь вправо чтобы остаться на Arlen Road в сторону Lewiston."
+        ],
+        "3": [
+          "Держитесь влево чтобы выехать через 67 B-A и остаться на Arlen Road в сторону Lewiston.",
+          "Держитесь вправо чтобы выехать через 67 B-A и остаться на Arlen Road в сторону Lewiston."
+        ]
+      }
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
+        "1": "Держитесь <RELATIVE_DIRECTION> чтобы выехать через <NUMBER_SIGN> и остаться на <STREET_NAMES>.",
+        "2": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES> в сторону <TOWARD_SIGN>.",
+        "3": "Держитесь <RELATIVE_DIRECTION> чтобы выехать через <NUMBER_SIGN> и остаться на <STREET_NAMES> в сторону <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "relative_directions": [
+        "влево",
+        "прямо",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Держитесь влево чтобы остаться на Arlen Road.",
+          "Держитесь вправо чтобы остаться на Arlen Road."
+        ],
+        "1": [
+          "Держитесь влево чтобы выехать через 67 B-A и остаться на Arlen Road.",
+          "Держитесь вправо чтобы выехать через 67 B-A и остаться на Arlen Road."
+        ],
+        "2": [
+          "Держитесь влево чтобы остаться на Arlen Road в сторону Lewiston.",
+          "Держитесь вправо чтобы остаться на Arlen Road в сторону Lewiston."
+        ],
+        "3": [
+          "Держитесь влево чтобы выехать через 67 B-A и остаться на Arlen Road в сторону Lewiston.",
+          "Держитесь вправо чтобы выехать через 67 B-A и остаться на Arlen Road в сторону Lewiston."
+        ]
+      }
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "На развилке держитесь <RELATIVE_DIRECTION>.",
+        "1": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN>.",
+        "2": "Держитесь <RELATIVE_DIRECTION>, чтобы попасть на <STREET_NAMES>.",
+        "3": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN> на <STREET_NAMES>.",
+        "4": "Держитесь <RELATIVE_DIRECTION> в сторону <TOWARD_SIGN>.",
+        "5": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN> в сторону <TOWARD_SIGN>.",
+        "6": "Держитесь <RELATIVE_DIRECTION>, чтобы попасть на <STREET_NAMES> в сторону <TOWARD_SIGN>.",
+        "7": "Держитесь <RELATIVE_DIRECTION>, чтобы выехать через <NUMBER_SIGN> на <STREET_NAMES> в сторону <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "relative_directions": [
+        "влево",
+        "прямо",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "На развилке держитесь влево.",
+          "На развилке держитесь вправо."
+        ],
+        "1": [
+          "Держитесь влево, чтобы выехать через 67 B-A.",
+          "Держитесь вправо, чтобы выехать через 67 B-A."
+        ],
+        "2": [
+          "Держитесь влево, чтобы попасть на Arlen Road.",
+          "Держитесь вправо, чтобы попасть на Arlen Road."
+        ],
+        "3": [
+          "Держитесь влево, чтобы выехать через 67 B-A на Arlen Road.",
+          "Держитесь вправо, чтобы выехать через 67 B-A на Arlen Road."
+        ],
+        "4": [
+          "Держитесь влево в сторону Lewiston.",
+          "Держитесь вправо в сторону Lewiston."
+        ],
+        "5": [
+          "Держитесь влево, чтобы выехать через 67 B-A в сторону Lewiston.",
+          "Держитесь вправо, чтобы выехать через 67 B-A в сторону Lewiston."
+        ],
+        "6": [
+          "Держитесь влево, чтобы попасть на Arlen Road в сторону Lewiston.",
+          "Держитесь вправо, чтобы попасть на Arlen Road в сторону Lewiston."
+        ],
+        "7": [
+          "Держитесь влево, чтобы выехать через 67 B-A на Arlen Road в сторону Lewiston.",
+          "Держитесь вправо, чтобы выехать через 67 B-A на Arlen Road в сторону Lewiston."
+        ]
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Выезжайте.",
+        "1": "Выезжайте <RELATIVE_DIRECTION>.",
+        "2": "Выезжайте на <STREET_NAMES>.",
+        "3": "Выезжайте <RELATIVE_DIRECTION> на <STREET_NAMES>."
+      },
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "example_phrases": {
+        "0": [
+          "Выезжайте."
+        ],
+        "1": [
+          "Выезжайте влево.",
+          "Выезжайте вправо."
+        ],
+        "2": [
+          "Выезжайте на Arlen Road."
+        ],
+        "3": [
+          "Выезжайте влево на Arlen Road.",
+          "Выезжайте вправо на Arlen Road."
+        ]
+      }
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Выезжайте.",
+        "1": "Выезжайте <RELATIVE_DIRECTION>.",
+        "2": "Выезжайте на <STREET_NAMES>.",
+        "3": "Выезжайте <RELATIVE_DIRECTION> на <STREET_NAMES>."
+      },
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "example_phrases": {
+        "0": [
+          "Выезжайте."
+        ],
+        "1": [
+          "Выезжайте влево.",
+          "Выезжайте вправо."
+        ],
+        "2": [
+          "Выезжайте на Arlen Road."
+        ],
+        "3": [
+          "Выезжайте влево на Arlen Road.",
+          "Выезжайте вправо на Arlen Road."
+        ]
+      }
+    },
+    "post_transit_connection_destination": {
+      "phrases": {
+        "0": "Двигайтесь на <CARDINAL_DIRECTION>.",
+        "1": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "2": "Двигайтесь на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжите по <STREET_NAMES>.",
+        "4": "Едьте на <CARDINAL_DIRECTION>.",
+        "5": "Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "6": "Едьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>.",
+        "8": "Идите на <CARDINAL_DIRECTION>.",
+        "9": "Идите на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "10": "Идите на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте идти по <STREET_NAMES>.",
+        "16": "Едьте на <CARDINAL_DIRECTION>.",
+        "17": "Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "18": "Едьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "север",
+        "северо-восток",
+        "восток",
+        "юго-восток",
+        "юг",
+        "юго-запад",
+        "запад",
+        "северо-запад"
+      ],
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "example_phrases": {
+        "0": [
+          "Двигайтесь на север.",
+          "Двигайтесь на северо-восток.",
+          "Двигайтесь на восток.",
+          "Двигайтесь на юго-восток.",
+          "Двигайтесь на юг.",
+          "Двигайтесь на юго-запад.",
+          "Двигайтесь на запад.",
+          "Двигайтесь на северо-запад."
+        ],
+        "1": [
+          "Двигайтесь на север по Arlen Road.",
+          "Двигайтесь на северо-восток по Arlen Road.",
+          "Двигайтесь на восток по Arlen Road.",
+          "Двигайтесь на юго-восток по Arlen Road.",
+          "Двигайтесь на юг по Arlen Road.",
+          "Двигайтесь на юго-запад по Arlen Road.",
+          "Двигайтесь на запад по Arlen Road.",
+          "Двигайтесь на северо-запад по Arlen Road."
+        ],
+        "2": [
+          "Двигайтесь на север по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на северо-восток по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на восток по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на юго-восток по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на юг по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на юго-запад по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на запад по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на северо-запад по Belair Road/US 1 Business. Продолжите по Arlen Road."
+        ],
+        "4": [
+          "Едьте на север.",
+          "Едьте на северо-восток.",
+          "Едьте на восток.",
+          "Едьте на юго-восток.",
+          "Едьте на юг.",
+          "Едьте на юго-запад.",
+          "Едьте на запад.",
+          "Едьте на северо-запад."
+        ],
+        "5": [
+          "Едьте на север по Arlen Road.",
+          "Едьте на северо-восток по Arlen Road.",
+          "Едьте на восток по Arlen Road.",
+          "Едьте на юго-восток по Arlen Road.",
+          "Едьте на юг по Arlen Road.",
+          "Едьте на юго-запад по Arlen Road.",
+          "Едьте на запад по Arlen Road.",
+          "Едьте на северо-запад по Arlen Road."
+        ],
+        "6": [
+          "Едьте на север по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юг по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road."
+        ],
+        "8": [
+          "Идите на север.",
+          "Идите на северо-восток.",
+          "Идите на восток.",
+          "Идите на юго-восток.",
+          "Идите на юг.",
+          "Идите на юго-запад.",
+          "Идите на запад.",
+          "Идите на северо-запад."
+        ],
+        "9": [
+          "Идите на север по Arlen Road.",
+          "Идите на северо-восток по Arlen Road.",
+          "Идите на восток по Arlen Road.",
+          "Идите на юго-восток по Arlen Road.",
+          "Идите на юг по Arlen Road.",
+          "Идите на юго-запад по Arlen Road.",
+          "Идите на запад по Arlen Road.",
+          "Идите на северо-запад по Arlen Road."
+        ],
+        "10": [
+          "Идите на север по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на северо-восток по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на восток по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на юго-восток по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на юг по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на юго-запад по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на запад по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на северо-запад по Belair Road/US 1 Business. Продолжайте идти по Arlen Road."
+        ],
+        "16": [
+          "Едьте на север.",
+          "Едьте на северо-восток.",
+          "Едьте на восток.",
+          "Едьте на юго-восток.",
+          "Едьте на юг.",
+          "Едьте на юго-запад.",
+          "Едьте на запад.",
+          "Едьте на северо-запад."
+        ],
+        "17": [
+          "Едьте на север по Arlen Road.",
+          "Едьте на северо-восток по Arlen Road.",
+          "Едьте на восток по Arlen Road.",
+          "Едьте на юго-восток по Arlen Road.",
+          "Едьте на юг по Arlen Road.",
+          "Едьте на юго-запад по Arlen Road.",
+          "Едьте на запад по Arlen Road.",
+          "Едьте на северо-запад по Arlen Road."
+        ],
+        "18": [
+          "Едьте на север по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юг по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road."
+        ]
+      }
+    },
+    "post_transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Двигайтесь на <CARDINAL_DIRECTION>.",
+        "1": "Двигайтесь на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
+        "2": "Двигайтесь на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте направляться вдоль <STREET_NAMES>.",
+        "4": "Едьте на <CARDINAL_DIRECTION>.",
+        "5": "Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
+        "6": "Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>.",
+        "8": "Идите <CARDINAL_DIRECTION>.",
+        "9": "Идите <CARDINAL_DIRECTION> на <STREET_NAMES>.",
+        "10": "Идите <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте идти по <STREET_NAMES>.",
+        "16": "Едьте на <CARDINAL_DIRECTION>.",
+        "17": "Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
+        "18": "Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "север",
+        "северо-восток",
+        "восток",
+        "юго-восток",
+        "юг",
+        "юго-запад",
+        "запад",
+        "северо-запад"
+      ],
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "example_phrases": {
+        "0": [
+          "Двигайтесь на север.",
+          "Двигайтесь на северо-восток.",
+          "Двигайтесь на восток.",
+          "Двигайтесь на юго-восток.",
+          "Двигайтесь на юг.",
+          "Двигайтесь на юго-запад.",
+          "Двигайтесь на запад.",
+          "Двигайтесь на северо-запад."
+        ],
+        "1": [
+          "Двигайтесь на север на Arlen Road.",
+          "Двигайтесь на северо-восток на Arlen Road.",
+          "Двигайтесь на восток на Arlen Road.",
+          "Двигайтесь на юго-восток на Arlen Road.",
+          "Двигайтесь на юг на Arlen Road.",
+          "Двигайтесь на юго-запад на Arlen Road.",
+          "Двигайтесь на запад на Arlen Road.",
+          "Двигайтесь на северо-запад на Arlen Road."
+        ],
+        "2": [
+          "Двигайтесь на север на Belair Road/US 1 Business. Продолжайте направляться вдоль Arlen Road.",
+          "Двигайтесь на северо-восток на Belair Road/US 1 Business. Продолжайте направляться вдоль Arlen Road.",
+          "Двигайтесь на восток на Belair Road/US 1 Business. Продолжайте направляться вдоль Arlen Road.",
+          "Двигайтесь на юго-восток на Belair Road/US 1 Business. Продолжайте направляться вдоль Arlen Road.",
+          "Двигайтесь на юг на Belair Road/US 1 Business. Продолжайте направляться вдоль Arlen Road.",
+          "Двигайтесь на юго-запад на Belair Road/US 1 Business. Продолжайте направляться вдоль Arlen Road.",
+          "Двигайтесь на запад на Belair Road/US 1 Business. Продолжайте направляться вдоль Arlen Road.",
+          "Двигайтесь на северо-запад на Belair Road/US 1 Business. Продолжайте направляться вдоль Arlen Road."
+        ],
+        "4": [
+          "Едьте на север.",
+          "Едьте на северо-восток.",
+          "Едьте на восток.",
+          "Едьте на юго-восток.",
+          "Едьте на юг.",
+          "Едьте на юго-запад.",
+          "Едьте на запад.",
+          "Едьте на северо-запад."
+        ],
+        "5": [
+          "Едьте на север на Arlen Road.",
+          "Едьте на северо-восток на Arlen Road.",
+          "Едьте на восток на Arlen Road.",
+          "Едьте на юго-восток на Arlen Road.",
+          "Едьте на юг на Arlen Road.",
+          "Едьте на юго-запад на Arlen Road.",
+          "Едьте на запад на Arlen Road.",
+          "Едьте на северо-запад на Arlen Road."
+        ],
+        "6": [
+          "Едьте на север на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-восток на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на восток на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-восток на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юг на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-запад на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на запад на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-запад на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road."
+        ],
+        "8": [
+          "Идите север.",
+          "Идите северо-восток.",
+          "Идите восток.",
+          "Идите юго-восток.",
+          "Идите юг.",
+          "Идите юго-запад.",
+          "Идите запад.",
+          "Идите северо-запад."
+        ],
+        "9": [
+          "Идите север на Arlen Road.",
+          "Идите северо-восток на Arlen Road.",
+          "Идите восток на Arlen Road.",
+          "Идите юго-восток на Arlen Road.",
+          "Идите юг на Arlen Road.",
+          "Идите юго-запад на Arlen Road.",
+          "Идите запад на Arlen Road.",
+          "Идите северо-запад на Arlen Road."
+        ],
+        "10": [
+          "Идите север на Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите северо-восток на Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите восток на Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите юго-восток на Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите юг на Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите юго-запад на Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите запад на Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите северо-запад на Belair Road/US 1 Business. Продолжайте идти по Arlen Road."
+        ],
+        "16": [
+          "Едьте на север.",
+          "Едьте на северо-восток.",
+          "Едьте на восток.",
+          "Едьте на юго-восток.",
+          "Едьте на юг.",
+          "Едьте на юго-запад.",
+          "Едьте на запад.",
+          "Едьте на северо-запад."
+        ],
+        "17": [
+          "Едьте на север на Arlen Road.",
+          "Едьте на северо-восток на Arlen Road.",
+          "Едьте на восток на Arlen Road.",
+          "Едьте на юго-восток на Arlen Road.",
+          "Едьте на юг на Arlen Road.",
+          "Едьте на юго-запад на Arlen Road.",
+          "Едьте на запад на Arlen Road.",
+          "Едьте на северо-запад на Arlen Road."
+        ],
+        "18": [
+          "Едьте на север на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-восток на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на восток на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-восток на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юг на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-запад на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на запад на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-запад на Belair Road/US 1 Business. Продолжайте ехать по Arlen Road."
+        ]
+      }
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Проедьте <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "остановка",
+        "other": "остановок"
+      },
+      "example_phrases": {
+        "0": [
+          "Проедьте 1 stop.",
+          "Проедьте 1 stops.",
+          "Проедьте 3 stop.",
+          "Проедьте 3 stops."
+        ]
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Продолжайте двигаться <LENGTH>.",
+        "1": "Продолжайте двигаться по <STREET_NAMES> <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> километров",
+        "1 километр",
+        "полкилометра",
+        "<METERS> метров",
+        "менее 10 метров"
+      ],
+      "us_customary_lengths": [
+        "<MILES> миль",
+        "1 милю",
+        "полмили",
+        "<TENTHS_OF_MILE> десятых мили",
+        "1 десятую мили",
+        "<FEET> футов",
+        "менее 10 футов"
+      ],
+      "example_phrases": {
+        "0": [
+          "Продолжайте двигаться 1 mile.",
+          "Продолжайте двигаться a half mile."
+        ],
+        "1": [
+          "Продолжайте двигаться по Arlen Road 1 mile.",
+          "Продолжайте двигаться по Arlen Road a half mile."
+        ]
+      }
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Двигайтесь в сторону съезда <RELATIVE_DIRECTION>.",
+        "1": "Двигайтесь в сторону съезда <BRANCH_SIGN>, который находится <RELATIVE_DIRECTION>.",
+        "2": "Двигайтесь в сторону съезда <RELATIVE_DIRECTION> в строну <TOWARD_SIGN>.",
+        "3": "Двигайтесь в сторону съезда <BRANCH_SIGN> <RELATIVE_DIRECTION> в строну <TOWARD_SIGN>.",
+        "4": "Двигайтесь в сторону съезда <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "5": "Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд.",
+        "6": "Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд <BRANCH_SIGN>.",
+        "7": "Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд в строну <TOWARD_SIGN>.",
+        "8": "Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "9": "Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд <NAME_SIGN>.",
+        "10": "Двигайтесь в сторону съезда.",
+        "11": "Двигайтесь в сторону съезда <BRANCH_SIGN>, который находится.",
+        "12": "Двигайтесь в сторону съезда в строну <TOWARD_SIGN>.",
+        "13": "Двигайтесь в сторону съезда <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "14": "Двигайтесь в сторону съезда <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Двигайтесь в сторону съезда влево.",
+          "Двигайтесь в сторону съезда вправо."
+        ],
+        "1": [
+          "Двигайтесь в сторону съезда US 322 West, который находится влево.",
+          "Двигайтесь в сторону съезда US 322 West, который находится вправо."
+        ],
+        "2": [
+          "Двигайтесь в сторону съезда влево в строну Lewiston.",
+          "Двигайтесь в сторону съезда вправо в строну Lewiston."
+        ],
+        "3": [
+          "Двигайтесь в сторону съезда US 322 West влево в строну Lewiston.",
+          "Двигайтесь в сторону съезда US 322 West вправо в строну Lewiston."
+        ],
+        "4": [
+          "Двигайтесь в сторону съезда White Marsh Boulevard влево.",
+          "Двигайтесь в сторону съезда White Marsh Boulevard вправо."
+        ],
+        "5": [
+          "Поверните влево чтобы попасть на съезд.",
+          "Поверните вправо чтобы попасть на съезд."
+        ],
+        "6": [
+          "Поверните влево чтобы попасть на съезд US 322 West.",
+          "Поверните вправо чтобы попасть на съезд US 322 West."
+        ],
+        "7": [
+          "Поверните влево чтобы попасть на съезд в строну Lewiston.",
+          "Поверните вправо чтобы попасть на съезд в строну Lewiston."
+        ],
+        "8": [
+          "Поверните влево чтобы попасть на съезд US 322 West в строну Lewiston.",
+          "Поверните вправо чтобы попасть на съезд US 322 West в строну Lewiston."
+        ],
+        "9": [
+          "Поверните влево чтобы попасть на съезд White Marsh Boulevard.",
+          "Поверните вправо чтобы попасть на съезд White Marsh Boulevard."
+        ],
+        "10": [
+          "Двигайтесь в сторону съезда."
+        ],
+        "11": [
+          "Двигайтесь в сторону съезда US 322 West, который находится."
+        ],
+        "12": [
+          "Двигайтесь в сторону съезда в строну Lewiston."
+        ],
+        "13": [
+          "Двигайтесь в сторону съезда US 322 West в строну Lewiston."
+        ],
+        "14": [
+          "Двигайтесь в сторону съезда White Marsh Boulevard."
+        ]
+      }
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Двигайтесь прямо чтобы попасть на съезд.",
+        "1": "Двигайтесь прямо чтобы попасть на съезд <BRANCH_SIGN>.",
+        "2": "Двигайтесь прямо чтобы попасть на съезд в строну <TOWARD_SIGN>.",
+        "3": "Двигайтесь прямо чтобы попасть съезд <BRANCH_SIGN> в направлении <TOWARD_SIGN>.",
+        "4": "Двигайтесь прямо чтобы попасть на съезд <NAME_SIGN>."
+      },
+      "example_phrases": {
+        "0": [
+          "Двигайтесь прямо чтобы попасть на съезд."
+        ],
+        "1": [
+          "Двигайтесь прямо чтобы попасть на съезд US 322 West."
+        ],
+        "2": [
+          "Двигайтесь прямо чтобы попасть на съезд в строну Lewiston."
+        ],
+        "3": [
+          "Двигайтесь прямо чтобы попасть съезд US 322 West в направлении Lewiston."
+        ],
+        "4": [
+          "Двигайтесь прямо чтобы попасть на съезд White Marsh Boulevard."
+        ]
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Двигайтесь прямо чтобы попасть на съезд.",
+        "1": "Двигайтесь прямо чтобы попасть на съезд <BRANCH_SIGN>.",
+        "2": "Двигайтесь прямо чтобы попасть на съезд в строну <TOWARD_SIGN>.",
+        "3": "Двигайтесь прямо чтобы попасть съезд <BRANCH_SIGN> в направлении <TOWARD_SIGN>.",
+        "4": "Двигайтесь прямо чтобы попасть на съезд <NAME_SIGN>."
+      },
+      "example_phrases": {
+        "0": [
+          "Двигайтесь прямо чтобы попасть на съезд."
+        ],
+        "1": [
+          "Двигайтесь прямо чтобы попасть на съезд US 322 West."
+        ],
+        "2": [
+          "Двигайтесь прямо чтобы попасть на съезд в строну Lewiston."
+        ],
+        "3": [
+          "Двигайтесь прямо чтобы попасть съезд US 322 West в направлении Lewiston."
+        ],
+        "4": [
+          "Двигайтесь прямо чтобы попасть на съезд White Marsh Boulevard."
+        ]
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Двигайтесь в сторону съезда <RELATIVE_DIRECTION>.",
+        "1": "Двигайтесь в сторону съезда <BRANCH_SIGN>, который находится <RELATIVE_DIRECTION>.",
+        "2": "Двигайтесь в сторону съезда <RELATIVE_DIRECTION> в строну <TOWARD_SIGN>.",
+        "3": "Двигайтесь в сторону съезда <BRANCH_SIGN> <RELATIVE_DIRECTION> в строну <TOWARD_SIGN>.",
+        "4": "Двигайтесь в сторону съезда <NAME_SIGN> <RELATIVE_DIRECTION>.",
+        "5": "Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд.",
+        "6": "Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд <BRANCH_SIGN>.",
+        "7": "Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд в строну <TOWARD_SIGN>.",
+        "8": "Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "9": "Поверните <RELATIVE_DIRECTION> чтобы попасть на съезд <NAME_SIGN>.",
+        "10": "Двигайтесь в сторону съезда.",
+        "11": "Двигайтесь в сторону съезда <BRANCH_SIGN>, который находится.",
+        "12": "Двигайтесь в сторону съезда в строну <TOWARD_SIGN>.",
+        "13": "Двигайтесь в сторону съезда <BRANCH_SIGN> в строну <TOWARD_SIGN>.",
+        "14": "Двигайтесь в сторону съезда <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Двигайтесь в сторону съезда влево.",
+          "Двигайтесь в сторону съезда вправо."
+        ],
+        "1": [
+          "Двигайтесь в сторону съезда US 322 West, который находится влево.",
+          "Двигайтесь в сторону съезда US 322 West, который находится вправо."
+        ],
+        "2": [
+          "Двигайтесь в сторону съезда влево в строну Lewiston.",
+          "Двигайтесь в сторону съезда вправо в строну Lewiston."
+        ],
+        "3": [
+          "Двигайтесь в сторону съезда US 322 West влево в строну Lewiston.",
+          "Двигайтесь в сторону съезда US 322 West вправо в строну Lewiston."
+        ],
+        "4": [
+          "Двигайтесь в сторону съезда White Marsh Boulevard влево.",
+          "Двигайтесь в сторону съезда White Marsh Boulevard вправо."
+        ],
+        "5": [
+          "Поверните влево чтобы попасть на съезд.",
+          "Поверните вправо чтобы попасть на съезд."
+        ],
+        "6": [
+          "Поверните влево чтобы попасть на съезд US 322 West.",
+          "Поверните вправо чтобы попасть на съезд US 322 West."
+        ],
+        "7": [
+          "Поверните влево чтобы попасть на съезд в строну Lewiston.",
+          "Поверните вправо чтобы попасть на съезд в строну Lewiston."
+        ],
+        "8": [
+          "Поверните влево чтобы попасть на съезд US 322 West в строну Lewiston.",
+          "Поверните вправо чтобы попасть на съезд US 322 West в строну Lewiston."
+        ],
+        "9": [
+          "Поверните влево чтобы попасть на съезд White Marsh Boulevard.",
+          "Поверните вправо чтобы попасть на съезд White Marsh Boulevard."
+        ],
+        "10": [
+          "Двигайтесь в сторону съезда."
+        ],
+        "11": [
+          "Двигайтесь в сторону съезда US 322 West, который находится."
+        ],
+        "12": [
+          "Двигайтесь в сторону съезда в строну Lewiston."
+        ],
+        "13": [
+          "Двигайтесь в сторону съезда US 322 West в строну Lewiston."
+        ],
+        "14": [
+          "Двигайтесь в сторону съезда White Marsh Boulevard."
+        ]
+      }
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Резко поверните <RELATIVE_DIRECTION>.",
+        "1": "Резко поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Резко поверните <RELATIVE_DIRECTION> на<BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
+        "3": "Резко поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Резко поверните влево.",
+          "Резко поверните вправо."
+        ],
+        "1": [
+          "Резко поверните влево на Arlen Road.",
+          "Резко поверните вправо на Arlen Road."
+        ],
+        "2": [
+          "Резко поверните влево наBelair Road/US 1 Business. Продолжайте по Arlen Road.",
+          "Резко поверните вправо наBelair Road/US 1 Business. Продолжайте по Arlen Road."
+        ],
+        "3": [
+          "Резко поверните влево чтобы остаться на Arlen Road.",
+          "Резко поверните вправо чтобы остаться на Arlen Road."
+        ]
+      }
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Резко поверните <RELATIVE_DIRECTION>.",
+        "1": "Резко поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Резко поверните <RELATIVE_DIRECTION> на<BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
+        "3": "Резко поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Резко поверните влево.",
+          "Резко поверните вправо."
+        ],
+        "1": [
+          "Резко поверните влево на Arlen Road.",
+          "Резко поверните вправо на Arlen Road."
+        ],
+        "2": [
+          "Резко поверните влево наBelair Road/US 1 Business. Продолжайте по Arlen Road.",
+          "Резко поверните вправо наBelair Road/US 1 Business. Продолжайте по Arlen Road."
+        ],
+        "3": [
+          "Резко поверните влево чтобы остаться на Arlen Road.",
+          "Резко поверните вправо чтобы остаться на Arlen Road."
+        ]
+      }
+    },
+    "start": {
+      "phrases": {
+        "0": "Двигайтесь на <CARDINAL_DIRECTION>.",
+        "1": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "2": "Двигайтесь на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжите по <STREET_NAMES>.",
+        "4": "Едьте на <CARDINAL_DIRECTION>.",
+        "5": "Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "6": "Едьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>.",
+        "8": "Идите на <CARDINAL_DIRECTION>.",
+        "9": "Идите на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "10": "Идите на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте идти по <STREET_NAMES>.",
+        "16": "Едьте на <CARDINAL_DIRECTION>.",
+        "17": "Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "18": "Едьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "север",
+        "северо-восток",
+        "восток",
+        "юго-восток",
+        "юг",
+        "юго-запад",
+        "запад",
+        "северо-запад"
+      ],
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "example_phrases": {
+        "0": [
+          "Двигайтесь на север.",
+          "Двигайтесь на северо-восток.",
+          "Двигайтесь на восток.",
+          "Двигайтесь на юго-восток.",
+          "Двигайтесь на юг.",
+          "Двигайтесь на юго-запад.",
+          "Двигайтесь на запад.",
+          "Двигайтесь на северо-запад."
+        ],
+        "1": [
+          "Двигайтесь на север по Arlen Road.",
+          "Двигайтесь на северо-восток по Arlen Road.",
+          "Двигайтесь на восток по Arlen Road.",
+          "Двигайтесь на юго-восток по Arlen Road.",
+          "Двигайтесь на юг по Arlen Road.",
+          "Двигайтесь на юго-запад по Arlen Road.",
+          "Двигайтесь на запад по Arlen Road.",
+          "Двигайтесь на северо-запад по Arlen Road."
+        ],
+        "2": [
+          "Двигайтесь на север по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на северо-восток по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на восток по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на юго-восток по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на юг по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на юго-запад по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на запад по Belair Road/US 1 Business. Продолжите по Arlen Road.",
+          "Двигайтесь на северо-запад по Belair Road/US 1 Business. Продолжите по Arlen Road."
+        ],
+        "4": [
+          "Едьте на север.",
+          "Едьте на северо-восток.",
+          "Едьте на восток.",
+          "Едьте на юго-восток.",
+          "Едьте на юг.",
+          "Едьте на юго-запад.",
+          "Едьте на запад.",
+          "Едьте на северо-запад."
+        ],
+        "5": [
+          "Едьте на север по Arlen Road.",
+          "Едьте на северо-восток по Arlen Road.",
+          "Едьте на восток по Arlen Road.",
+          "Едьте на юго-восток по Arlen Road.",
+          "Едьте на юг по Arlen Road.",
+          "Едьте на юго-запад по Arlen Road.",
+          "Едьте на запад по Arlen Road.",
+          "Едьте на северо-запад по Arlen Road."
+        ],
+        "6": [
+          "Едьте на север по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юг по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road."
+        ],
+        "8": [
+          "Идите на север.",
+          "Идите на северо-восток.",
+          "Идите на восток.",
+          "Идите на юго-восток.",
+          "Идите на юг.",
+          "Идите на юго-запад.",
+          "Идите на запад.",
+          "Идите на северо-запад."
+        ],
+        "9": [
+          "Идите на север по Arlen Road.",
+          "Идите на северо-восток по Arlen Road.",
+          "Идите на восток по Arlen Road.",
+          "Идите на юго-восток по Arlen Road.",
+          "Идите на юг по Arlen Road.",
+          "Идите на юго-запад по Arlen Road.",
+          "Идите на запад по Arlen Road.",
+          "Идите на северо-запад по Arlen Road."
+        ],
+        "10": [
+          "Идите на север по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на северо-восток по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на восток по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на юго-восток по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на юг по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на юго-запад по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на запад по Belair Road/US 1 Business. Продолжайте идти по Arlen Road.",
+          "Идите на северо-запад по Belair Road/US 1 Business. Продолжайте идти по Arlen Road."
+        ],
+        "16": [
+          "Едьте на север.",
+          "Едьте на северо-восток.",
+          "Едьте на восток.",
+          "Едьте на юго-восток.",
+          "Едьте на юг.",
+          "Едьте на юго-запад.",
+          "Едьте на запад.",
+          "Едьте на северо-запад."
+        ],
+        "17": [
+          "Едьте на север по Arlen Road.",
+          "Едьте на северо-восток по Arlen Road.",
+          "Едьте на восток по Arlen Road.",
+          "Едьте на юго-восток по Arlen Road.",
+          "Едьте на юг по Arlen Road.",
+          "Едьте на юго-запад по Arlen Road.",
+          "Едьте на запад по Arlen Road.",
+          "Едьте на северо-запад по Arlen Road."
+        ],
+        "18": [
+          "Едьте на север по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-восток по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юг по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на юго-запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road.",
+          "Едьте на северо-запад по Belair Road/US 1 Business. Продолжайте ехать по Arlen Road."
+        ]
+      }
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Двигайтесь на <CARDINAL_DIRECTION> <LENGTH>.",
+        "1": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "2": "Двигайтесь на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "4": "Едьте на <CARDINAL_DIRECTION> <LENGTH>.",
+        "5": "Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "6": "Едьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "8": "Идите на <CARDINAL_DIRECTION> <LENGTH>.",
+        "9": "Идите на <CARDINAL_DIRECTION> по <STREET_NAMES> for <LENGTH>.",
+        "10": "Идите на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "16": "Едьте в на <CARDINAL_DIRECTION> <LENGTH>.",
+        "17": "Едьте в на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "18": "Едьте в на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "север",
+        "северо-восток",
+        "восток",
+        "юго-восток",
+        "юг",
+        "юго-запад",
+        "запад",
+        "северо-запад"
+      ],
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> километров",
+        "1 километр",
+        "полкилометра",
+        "<METERS> метров",
+        "менее 10 метров"
+      ],
+      "us_customary_lengths": [
+        "<MILES> миль",
+        "1 милю",
+        "полмили",
+        "<TENTHS_OF_MILE> десятых мили",
+        "1 десятую мили",
+        "<FEET> футов",
+        "менее 10 футов"
+      ],
+      "example_phrases": {
+        "0": [
+          "Двигайтесь на север 1 mile.",
+          "Двигайтесь на север a half mile.",
+          "Двигайтесь на северо-восток 1 mile.",
+          "Двигайтесь на северо-восток a half mile.",
+          "Двигайтесь на восток 1 mile.",
+          "Двигайтесь на восток a half mile.",
+          "Двигайтесь на юго-восток 1 mile.",
+          "Двигайтесь на юго-восток a half mile.",
+          "Двигайтесь на юг 1 mile.",
+          "Двигайтесь на юг a half mile.",
+          "Двигайтесь на юго-запад 1 mile.",
+          "Двигайтесь на юго-запад a half mile.",
+          "Двигайтесь на запад 1 mile.",
+          "Двигайтесь на запад a half mile.",
+          "Двигайтесь на северо-запад 1 mile.",
+          "Двигайтесь на северо-запад a half mile."
+        ],
+        "1": [
+          "Двигайтесь на север по Arlen Road 1 mile.",
+          "Двигайтесь на север по Arlen Road a half mile.",
+          "Двигайтесь на северо-восток по Arlen Road 1 mile.",
+          "Двигайтесь на северо-восток по Arlen Road a half mile.",
+          "Двигайтесь на восток по Arlen Road 1 mile.",
+          "Двигайтесь на восток по Arlen Road a half mile.",
+          "Двигайтесь на юго-восток по Arlen Road 1 mile.",
+          "Двигайтесь на юго-восток по Arlen Road a half mile.",
+          "Двигайтесь на юг по Arlen Road 1 mile.",
+          "Двигайтесь на юг по Arlen Road a half mile.",
+          "Двигайтесь на юго-запад по Arlen Road 1 mile.",
+          "Двигайтесь на юго-запад по Arlen Road a half mile.",
+          "Двигайтесь на запад по Arlen Road 1 mile.",
+          "Двигайтесь на запад по Arlen Road a half mile.",
+          "Двигайтесь на северо-запад по Arlen Road 1 mile.",
+          "Двигайтесь на северо-запад по Arlen Road a half mile."
+        ],
+        "2": [
+          "Двигайтесь на север по Belair Road/US 1 Business.",
+          "Двигайтесь на северо-восток по Belair Road/US 1 Business.",
+          "Двигайтесь на восток по Belair Road/US 1 Business.",
+          "Двигайтесь на юго-восток по Belair Road/US 1 Business.",
+          "Двигайтесь на юг по Belair Road/US 1 Business.",
+          "Двигайтесь на юго-запад по Belair Road/US 1 Business.",
+          "Двигайтесь на запад по Belair Road/US 1 Business.",
+          "Двигайтесь на северо-запад по Belair Road/US 1 Business."
+        ],
+        "4": [
+          "Едьте на север 1 mile.",
+          "Едьте на север a half mile.",
+          "Едьте на северо-восток 1 mile.",
+          "Едьте на северо-восток a half mile.",
+          "Едьте на восток 1 mile.",
+          "Едьте на восток a half mile.",
+          "Едьте на юго-восток 1 mile.",
+          "Едьте на юго-восток a half mile.",
+          "Едьте на юг 1 mile.",
+          "Едьте на юг a half mile.",
+          "Едьте на юго-запад 1 mile.",
+          "Едьте на юго-запад a half mile.",
+          "Едьте на запад 1 mile.",
+          "Едьте на запад a half mile.",
+          "Едьте на северо-запад 1 mile.",
+          "Едьте на северо-запад a half mile."
+        ],
+        "5": [
+          "Едьте на север по Arlen Road 1 mile.",
+          "Едьте на север по Arlen Road a half mile.",
+          "Едьте на северо-восток по Arlen Road 1 mile.",
+          "Едьте на северо-восток по Arlen Road a half mile.",
+          "Едьте на восток по Arlen Road 1 mile.",
+          "Едьте на восток по Arlen Road a half mile.",
+          "Едьте на юго-восток по Arlen Road 1 mile.",
+          "Едьте на юго-восток по Arlen Road a half mile.",
+          "Едьте на юг по Arlen Road 1 mile.",
+          "Едьте на юг по Arlen Road a half mile.",
+          "Едьте на юго-запад по Arlen Road 1 mile.",
+          "Едьте на юго-запад по Arlen Road a half mile.",
+          "Едьте на запад по Arlen Road 1 mile.",
+          "Едьте на запад по Arlen Road a half mile.",
+          "Едьте на северо-запад по Arlen Road 1 mile.",
+          "Едьте на северо-запад по Arlen Road a half mile."
+        ],
+        "6": [
+          "Едьте на север по Belair Road/US 1 Business.",
+          "Едьте на северо-восток по Belair Road/US 1 Business.",
+          "Едьте на восток по Belair Road/US 1 Business.",
+          "Едьте на юго-восток по Belair Road/US 1 Business.",
+          "Едьте на юг по Belair Road/US 1 Business.",
+          "Едьте на юго-запад по Belair Road/US 1 Business.",
+          "Едьте на запад по Belair Road/US 1 Business.",
+          "Едьте на северо-запад по Belair Road/US 1 Business."
+        ],
+        "8": [
+          "Идите на север 1 mile.",
+          "Идите на север a half mile.",
+          "Идите на северо-восток 1 mile.",
+          "Идите на северо-восток a half mile.",
+          "Идите на восток 1 mile.",
+          "Идите на восток a half mile.",
+          "Идите на юго-восток 1 mile.",
+          "Идите на юго-восток a half mile.",
+          "Идите на юг 1 mile.",
+          "Идите на юг a half mile.",
+          "Идите на юго-запад 1 mile.",
+          "Идите на юго-запад a half mile.",
+          "Идите на запад 1 mile.",
+          "Идите на запад a half mile.",
+          "Идите на северо-запад 1 mile.",
+          "Идите на северо-запад a half mile."
+        ],
+        "9": [
+          "Идите на север по Arlen Road for 1 mile.",
+          "Идите на север по Arlen Road for a half mile.",
+          "Идите на северо-восток по Arlen Road for 1 mile.",
+          "Идите на северо-восток по Arlen Road for a half mile.",
+          "Идите на восток по Arlen Road for 1 mile.",
+          "Идите на восток по Arlen Road for a half mile.",
+          "Идите на юго-восток по Arlen Road for 1 mile.",
+          "Идите на юго-восток по Arlen Road for a half mile.",
+          "Идите на юг по Arlen Road for 1 mile.",
+          "Идите на юг по Arlen Road for a half mile.",
+          "Идите на юго-запад по Arlen Road for 1 mile.",
+          "Идите на юго-запад по Arlen Road for a half mile.",
+          "Идите на запад по Arlen Road for 1 mile.",
+          "Идите на запад по Arlen Road for a half mile.",
+          "Идите на северо-запад по Arlen Road for 1 mile.",
+          "Идите на северо-запад по Arlen Road for a half mile."
+        ],
+        "10": [
+          "Идите на север по Belair Road/US 1 Business.",
+          "Идите на северо-восток по Belair Road/US 1 Business.",
+          "Идите на восток по Belair Road/US 1 Business.",
+          "Идите на юго-восток по Belair Road/US 1 Business.",
+          "Идите на юг по Belair Road/US 1 Business.",
+          "Идите на юго-запад по Belair Road/US 1 Business.",
+          "Идите на запад по Belair Road/US 1 Business.",
+          "Идите на северо-запад по Belair Road/US 1 Business."
+        ],
+        "16": [
+          "Едьте в на север 1 mile.",
+          "Едьте в на север a half mile.",
+          "Едьте в на северо-восток 1 mile.",
+          "Едьте в на северо-восток a half mile.",
+          "Едьте в на восток 1 mile.",
+          "Едьте в на восток a half mile.",
+          "Едьте в на юго-восток 1 mile.",
+          "Едьте в на юго-восток a half mile.",
+          "Едьте в на юг 1 mile.",
+          "Едьте в на юг a half mile.",
+          "Едьте в на юго-запад 1 mile.",
+          "Едьте в на юго-запад a half mile.",
+          "Едьте в на запад 1 mile.",
+          "Едьте в на запад a half mile.",
+          "Едьте в на северо-запад 1 mile.",
+          "Едьте в на северо-запад a half mile."
+        ],
+        "17": [
+          "Едьте в на север по Arlen Road 1 mile.",
+          "Едьте в на север по Arlen Road a half mile.",
+          "Едьте в на северо-восток по Arlen Road 1 mile.",
+          "Едьте в на северо-восток по Arlen Road a half mile.",
+          "Едьте в на восток по Arlen Road 1 mile.",
+          "Едьте в на восток по Arlen Road a half mile.",
+          "Едьте в на юго-восток по Arlen Road 1 mile.",
+          "Едьте в на юго-восток по Arlen Road a half mile.",
+          "Едьте в на юг по Arlen Road 1 mile.",
+          "Едьте в на юг по Arlen Road a half mile.",
+          "Едьте в на юго-запад по Arlen Road 1 mile.",
+          "Едьте в на юго-запад по Arlen Road a half mile.",
+          "Едьте в на запад по Arlen Road 1 mile.",
+          "Едьте в на запад по Arlen Road a half mile.",
+          "Едьте в на северо-запад по Arlen Road 1 mile.",
+          "Едьте в на северо-запад по Arlen Road a half mile."
+        ],
+        "18": [
+          "Едьте в на север по Belair Road/US 1 Business.",
+          "Едьте в на северо-восток по Belair Road/US 1 Business.",
+          "Едьте в на восток по Belair Road/US 1 Business.",
+          "Едьте в на юго-восток по Belair Road/US 1 Business.",
+          "Едьте в на юг по Belair Road/US 1 Business.",
+          "Едьте в на юго-запад по Belair Road/US 1 Business.",
+          "Едьте в на запад по Belair Road/US 1 Business.",
+          "Едьте в на северо-запад по Belair Road/US 1 Business."
+        ]
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Воспользуйтесь <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Воспользуйтесь <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "трамваем",
+        "метро",
+        "поездом",
+        "автобусом",
+        "паромом",
+        "вагоном фуникулера",
+        "гондолой",
+        "фуникулером"
+      ],
+      "transit_stop_count_labels": {
+        "one": "остановка",
+        "other": "остановок"
+      },
+      "example_phrases": {
+        "0": [
+          "Воспользуйтесь New Haven. (1 stop)",
+          "Воспользуйтесь New Haven. (1 stops)",
+          "Воспользуйтесь New Haven. (3 stop)",
+          "Воспользуйтесь New Haven. (3 stops)"
+        ],
+        "1": [
+          "Воспользуйтесь New Haven в сторону JAMAICA - 179 ST. (1 stop)",
+          "Воспользуйтесь New Haven в сторону JAMAICA - 179 ST. (1 stops)",
+          "Воспользуйтесь New Haven в сторону JAMAICA - 179 ST. (3 stop)",
+          "Воспользуйтесь New Haven в сторону JAMAICA - 179 ST. (3 stops)"
+        ]
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Выйдите на станции.",
+        "1": "Выйдите на станции <TRANSIT_STOP>.",
+        "2": "Выйдите на станции <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Выйдите на станции."
+        ],
+        "1": [
+          "Выйдите на станции 8 St - NYU."
+        ],
+        "2": [
+          "Выйдите на станции 8 St - NYU Embarcadero Station."
+        ]
+      }
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Выйдите на станции.",
+        "1": "Выйдите на станции <TRANSIT_STOP>.",
+        "2": "Выйдите на станции <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Выйдите на станции."
+        ],
+        "1": [
+          "Выйдите на станции 8 St - NYU."
+        ],
+        "2": [
+          "Выйдите на станции 8 St - NYU Embarcadero Station."
+        ]
+      }
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Зайдите на станцию.",
+        "1": "Зайдите на станции <TRANSIT_STOP>.",
+        "2": "Зайдите на станции <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Зайдите на станцию."
+        ],
+        "1": [
+          "Зайдите на станции 8 St - NYU."
+        ],
+        "2": [
+          "Зайдите на станции 8 St - NYU Embarcadero Station."
+        ]
+      }
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Зайдите на станцию.",
+        "1": "Зайдите на станции <TRANSIT_STOP>.",
+        "2": "Зайдите на станции <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Зайдите на станцию."
+        ],
+        "1": [
+          "Зайдите на станции 8 St - NYU."
+        ],
+        "2": [
+          "Зайдите на станции 8 St - NYU Embarcadero Station."
+        ]
+      }
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Перейдите на станцию.",
+        "1": "Перейдите на станцию <TRANSIT_STOP>.",
+        "2": "Перейдите на станцию <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Перейдите на станцию."
+        ],
+        "1": [
+          "Перейдите на станцию 8 St - NYU."
+        ],
+        "2": [
+          "Перейдите на станцию 8 St - NYU Embarcadero Station."
+        ]
+      }
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Перейдите на станцию.",
+        "1": "Перейдите на станцию <TRANSIT_STOP>.",
+        "2": "Перейдите на станцию <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "Перейдите на станцию."
+        ],
+        "1": [
+          "Перейдите на станцию 8 St - NYU."
+        ],
+        "2": [
+          "Перейдите на станцию 8 St - NYU Embarcadero Station."
+        ]
+      }
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Оставайтесь в <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Оставайтесь в <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "трамваем",
+        "метро",
+        "поездом",
+        "автобусом",
+        "паромом",
+        "вагоном фуникулера",
+        "гондолой",
+        "фуникулером"
+      ],
+      "transit_stop_count_labels": {
+        "one": "остановка",
+        "other": "остановок"
+      },
+      "example_phrases": {
+        "0": [
+          "Оставайтесь в New Haven. (1 stop)",
+          "Оставайтесь в New Haven. (1 stops)",
+          "Оставайтесь в New Haven. (3 stop)",
+          "Оставайтесь в New Haven. (3 stops)"
+        ],
+        "1": [
+          "Оставайтесь в New Haven в сторону JAMAICA - 179 ST. (1 stop)",
+          "Оставайтесь в New Haven в сторону JAMAICA - 179 ST. (1 stops)",
+          "Оставайтесь в New Haven в сторону JAMAICA - 179 ST. (3 stop)",
+          "Оставайтесь в New Haven в сторону JAMAICA - 179 ST. (3 stops)"
+        ]
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Оставайтесь в <TRANSIT_NAME>.",
+        "1": "Оставайтесь в <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "трамваем",
+        "метро",
+        "поездом",
+        "автобусом",
+        "паромом",
+        "вагоном фуникулера",
+        "гондолой",
+        "фуникулером"
+      ],
+      "example_phrases": {
+        "0": [
+          "Оставайтесь в New Haven."
+        ],
+        "1": [
+          "Оставайтесь в New Haven в сторону JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Перейдите чтобы попасть на <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Перейдите чтобы попасть на <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "трамваем",
+        "метро",
+        "поездом",
+        "автобусом",
+        "паромом",
+        "вагоном фуникулера",
+        "гондолой",
+        "фуникулером"
+      ],
+      "transit_stop_count_labels": {
+        "one": "остановка",
+        "other": "остановок"
+      },
+      "example_phrases": {
+        "0": [
+          "Перейдите чтобы попасть на New Haven. (1 stop)",
+          "Перейдите чтобы попасть на New Haven. (1 stops)",
+          "Перейдите чтобы попасть на New Haven. (3 stop)",
+          "Перейдите чтобы попасть на New Haven. (3 stops)"
+        ],
+        "1": [
+          "Перейдите чтобы попасть на New Haven в сторону JAMAICA - 179 ST. (1 stop)",
+          "Перейдите чтобы попасть на New Haven в сторону JAMAICA - 179 ST. (1 stops)",
+          "Перейдите чтобы попасть на New Haven в сторону JAMAICA - 179 ST. (3 stop)",
+          "Перейдите чтобы попасть на New Haven в сторону JAMAICA - 179 ST. (3 stops)"
+        ]
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Перейдите чтобы попасть на <TRANSIT_NAME>.",
+        "1": "Перейдите чтобы попасть на <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "трамваем",
+        "метро",
+        "поездом",
+        "автобусом",
+        "паромом",
+        "вагоном фуникулера",
+        "гондолой",
+        "фуникулером"
+      ],
+      "example_phrases": {
+        "0": [
+          "Перейдите чтобы попасть на New Haven."
+        ],
+        "1": [
+          "Перейдите чтобы попасть на New Haven в сторону JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Воспользуйтесь <TRANSIT_NAME>.",
+        "1": "Воспользуйтесь <TRANSIT_NAME> в сторону <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "трамваем",
+        "метро",
+        "поездом",
+        "автобусом",
+        "паромом",
+        "вагоном фуникулера",
+        "гондолой",
+        "фуникулером"
+      ],
+      "example_phrases": {
+        "0": [
+          "Воспользуйтесь New Haven."
+        ],
+        "1": [
+          "Воспользуйтесь New Haven в сторону JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "turn": {
+      "phrases": {
+        "0": "Поверните <RELATIVE_DIRECTION>.",
+        "1": "Поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
+        "3": "Поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Поверните влево.",
+          "Поверните вправо."
+        ],
+        "1": [
+          "Поверните влево на Arlen Road.",
+          "Поверните вправо на Arlen Road."
+        ],
+        "2": [
+          "Поверните влево на Belair Road/US 1 Business. Продолжайте по Arlen Road.",
+          "Поверните вправо на Belair Road/US 1 Business. Продолжайте по Arlen Road."
+        ],
+        "3": [
+          "Поверните влево чтобы остаться на Arlen Road.",
+          "Поверните вправо чтобы остаться на Arlen Road."
+        ]
+      }
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Поверните <RELATIVE_DIRECTION>.",
+        "1": "Поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
+        "3": "Поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Поверните влево.",
+          "Поверните вправо."
+        ],
+        "1": [
+          "Поверните влево на Arlen Road.",
+          "Поверните вправо на Arlen Road."
+        ],
+        "2": [
+          "Поверните влево на Belair Road/US 1 Business. Продолжайте по Arlen Road.",
+          "Поверните вправо на Belair Road/US 1 Business. Продолжайте по Arlen Road."
+        ],
+        "3": [
+          "Поверните влево чтобы остаться на Arlen Road.",
+          "Поверните вправо чтобы остаться на Arlen Road."
+        ]
+      }
+    },
+    "uturn": {
+      "phrases": {
+        "0": "Развернитесь <RELATIVE_DIRECTION>.",
+        "1": "Развернитесь <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Развернитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
+        "3": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES>.",
+        "4": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы попасть на <STREET_NAMES>.",
+        "5": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы остаться <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Развернитесь влево.",
+          "Развернитесь вправо."
+        ],
+        "1": [
+          "Развернитесь влево на Arlen Road.",
+          "Развернитесь вправо на Arlen Road."
+        ],
+        "2": [
+          "Развернитесь влево чтобы остаться на Arlen Road.",
+          "Развернитесь вправо чтобы остаться на Arlen Road."
+        ],
+        "3": [
+          "Развернитесь влево на Devonshire Road.",
+          "Развернитесь вправо на Devonshire Road."
+        ],
+        "4": [
+          "Развернитесь влево на Devonshire Road чтобы попасть на Arlen Road.",
+          "Развернитесь вправо на Devonshire Road чтобы попасть на Arlen Road."
+        ],
+        "5": [
+          "Развернитесь влево на Devonshire Road чтобы остаться Arlen Road.",
+          "Развернитесь вправо на Devonshire Road чтобы остаться Arlen Road."
+        ]
+      }
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "Развернитесь <RELATIVE_DIRECTION>.",
+        "1": "Развернитесь <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Развернитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
+        "3": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES>.",
+        "4": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы попасть на <STREET_NAMES>.",
+        "5": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы остаться <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "аллее",
+        "велосипедная дорожке",
+        "горной велосипедной тропе"
+      ],
+      "relative_directions": [
+        "влево",
+        "вправо"
+      ],
+      "example_phrases": {
+        "0": [
+          "Развернитесь влево.",
+          "Развернитесь вправо."
+        ],
+        "1": [
+          "Развернитесь влево на Arlen Road.",
+          "Развернитесь вправо на Arlen Road."
+        ],
+        "2": [
+          "Развернитесь влево чтобы остаться на Arlen Road.",
+          "Развернитесь вправо чтобы остаться на Arlen Road."
+        ],
+        "3": [
+          "Развернитесь влево на Devonshire Road.",
+          "Развернитесь вправо на Devonshire Road."
+        ],
+        "4": [
+          "Развернитесь влево на Devonshire Road чтобы попасть на Arlen Road.",
+          "Развернитесь вправо на Devonshire Road чтобы попасть на Arlen Road."
+        ],
+        "5": [
+          "Развернитесь влево на Devonshire Road чтобы остаться Arlen Road.",
+          "Развернитесь вправо на Devonshire Road чтобы остаться Arlen Road."
+        ]
+      }
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Затем <NEXT_VERBAL_CUE>"
+      },
+      "example_phrases": {
+        "0": [
+          "Bear right onto East Fayette Street. Затем Turn right onto North Gay Street."
+        ]
+      }
+    }
+  }
+}
