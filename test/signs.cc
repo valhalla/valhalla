@@ -138,6 +138,22 @@ void TryGetGuideString(const Signs& signs,
   EXPECT_EQ(signs.GetGuideString(max_count, limit_by_consecutive_count), expectedString);
 }
 
+void TryGetGuideSigns(const Signs& signs,
+                      uint32_t max_count,
+                      bool limit_by_consecutive_count,
+                      const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
+  std::vector<Sign> expected_signs;
+  PopulateSigns(sign_items, &expected_signs);
+  ASSERT_THAT(signs.GetGuideSigns(max_count, limit_by_consecutive_count), expected_signs);
+}
+
+void TryTrimSigns(const std::vector<Sign>& signs,
+                  const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
+  std::vector<Sign> expected_signs;
+  PopulateSigns(sign_items, &expected_signs);
+  ASSERT_THAT(signs, expected_signs);
+}
+
 void TryGetJunctionNameString(const Signs& signs,
                               uint32_t max_count,
                               bool limit_by_consecutive_count,
@@ -390,6 +406,177 @@ TEST(Signs, TestGetJunctionNameString) {
   TryGetJunctionNameString(signs, 4, true, "万年橋東");
   TryGetJunctionNameString(signs, 2, true, "万年橋東");
   TryGetJunctionNameString(signs, 1, true, "万年橋東");
+}
+
+TEST(Signs, TestGetGuideSigns_BranchOnly) {
+  // Create guide sign
+  // Specify input in descending consecutive count order
+  auto US_322_West = std::make_tuple("US 322 West", 1, 1);
+  auto US_22_West = std::make_tuple("US 22 West", 1, 0);
+  auto Freedom_Highway = std::make_tuple("Freedom Highway", 0, 0);
+  auto Valhalla_Highway = std::make_tuple("Valhalla Highway", 0, 0);
+
+  Signs signs = GetGuideSigns({US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway}, {});
+
+  TryGetGuideSigns(signs, 0, false, {US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway});
+  // Try with max_count > length of branch list
+  TryGetGuideSigns(signs, 10, false, {US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway});
+  TryGetGuideSigns(signs, 4, false, {US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway});
+  TryGetGuideSigns(signs, 3, false, {US_322_West, US_22_West, Freedom_Highway});
+  TryGetGuideSigns(signs, 2, false, {US_322_West, US_22_West});
+  TryGetGuideSigns(signs, 1, false, {US_322_West});
+
+  TryGetGuideSigns(signs, 0, true, {US_322_West});
+  TryGetGuideSigns(signs, 4, true, {US_322_West});
+  TryGetGuideSigns(signs, 3, true, {US_322_West});
+  TryGetGuideSigns(signs, 2, true, {US_322_West});
+  TryGetGuideSigns(signs, 1, true, {US_322_West});
+}
+
+TEST(Signs, TestGetGuideSigns_TowardOnly) {
+  // Create guide sign
+  // Specify input in descending consecutive count order
+  auto A_1 = std::make_tuple("A 1", 1, 1);
+  auto Remscheid = std::make_tuple("Remscheid", 0, 1);
+  auto Wermelskirchen = std::make_tuple("Wermelskirchen", 0, 0);
+  auto Huckeswagen = std::make_tuple("Hückeswagen", 0, 0);
+
+  Signs signs = GetGuideSigns({}, {A_1, Remscheid, Wermelskirchen, Huckeswagen});
+
+  TryGetGuideSigns(signs, 0, false, {A_1, Remscheid, Wermelskirchen, Huckeswagen});
+  // Try with max_count > length of toward list
+  TryGetGuideSigns(signs, 10, false, {A_1, Remscheid, Wermelskirchen, Huckeswagen});
+  TryGetGuideSigns(signs, 4, false, {A_1, Remscheid, Wermelskirchen, Huckeswagen});
+  TryGetGuideSigns(signs, 3, false, {A_1, Remscheid, Wermelskirchen});
+  TryGetGuideSigns(signs, 2, false, {A_1, Remscheid});
+  TryGetGuideSigns(signs, 1, false, {A_1});
+
+  TryGetGuideSigns(signs, 0, true, {A_1, Remscheid});
+  TryGetGuideSigns(signs, 4, true, {A_1, Remscheid});
+  TryGetGuideSigns(signs, 3, true, {A_1, Remscheid});
+  TryGetGuideSigns(signs, 2, true, {A_1, Remscheid});
+  TryGetGuideSigns(signs, 1, true, {A_1});
+}
+
+TEST(Signs, TestGetGuideSigns_NoConsecutiveCount) {
+  // Create guide sign
+  // Specify input in descending consecutive count order
+  auto US_322_West = std::make_tuple("US 322 West", 1, 0);
+  auto US_22_West = std::make_tuple("US 22 West", 1, 0);
+  auto Freedom_Highway = std::make_tuple("Freedom Highway", 0, 0);
+  auto Valhalla_Highway = std::make_tuple("Valhalla Highway", 0, 0);
+  auto A_1 = std::make_tuple("A 1", 1, 0);
+  auto Remscheid = std::make_tuple("Remscheid", 0, 0);
+  auto Wermelskirchen = std::make_tuple("Wermelskirchen", 0, 0);
+  auto Huckeswagen = std::make_tuple("Hückeswagen", 0, 0);
+
+  Signs signs = GetGuideSigns({US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway},
+                              {A_1, Remscheid, Wermelskirchen, Huckeswagen});
+
+  TryGetGuideSigns(signs, 0, false,
+                   {US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway, A_1, Remscheid,
+                    Wermelskirchen, Huckeswagen});
+  TryGetGuideSigns(signs, 4, false, {US_322_West, US_22_West, A_1, Remscheid});
+  TryGetGuideSigns(signs, 3, false, {US_322_West, US_22_West, A_1});
+  TryGetGuideSigns(signs, 2, false, {US_322_West, A_1});
+  TryGetGuideSigns(signs, 1, false, {US_322_West});
+
+  TryGetGuideSigns(signs, 0, true,
+                   {US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway, A_1, Remscheid,
+                    Wermelskirchen, Huckeswagen});
+  TryGetGuideSigns(signs, 4, true, {US_322_West, US_22_West, A_1, Remscheid});
+  TryGetGuideSigns(signs, 3, true, {US_322_West, US_22_West, A_1});
+  TryGetGuideSigns(signs, 2, true, {US_322_West, A_1});
+  TryGetGuideSigns(signs, 1, true, {US_322_West});
+}
+
+TEST(Signs, TestGetGuideSigns_SingleConsecutiveCount) {
+  // Create guide sign
+  // Specify input in descending consecutive count order
+  auto US_322_West = std::make_tuple("US 322 West", 1, 1);
+  auto US_22_West = std::make_tuple("US 22 West", 1, 0);
+  auto Freedom_Highway = std::make_tuple("Freedom Highway", 0, 0);
+  auto Valhalla_Highway = std::make_tuple("Valhalla Highway", 0, 0);
+  auto A_1 = std::make_tuple("A 1", 1, 1);
+  auto Remscheid = std::make_tuple("Remscheid", 0, 0);
+  auto Wermelskirchen = std::make_tuple("Wermelskirchen", 0, 0);
+  auto Huckeswagen = std::make_tuple("Hückeswagen", 0, 0);
+
+  Signs signs = GetGuideSigns({US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway},
+                              {A_1, Remscheid, Wermelskirchen, Huckeswagen});
+
+  TryGetGuideSigns(signs, 0, false,
+                   {US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway, A_1, Remscheid,
+                    Wermelskirchen, Huckeswagen});
+  TryGetGuideSigns(signs, 4, false, {US_322_West, US_22_West, A_1, Remscheid});
+  TryGetGuideSigns(signs, 3, false, {US_322_West, US_22_West, A_1});
+  TryGetGuideSigns(signs, 2, false, {US_322_West, A_1});
+  TryGetGuideSigns(signs, 1, false, {US_322_West});
+
+  TryGetGuideSigns(signs, 0, true, {US_322_West, A_1});
+  TryGetGuideSigns(signs, 4, true, {US_322_West, A_1});
+  TryGetGuideSigns(signs, 3, true, {US_322_West, A_1});
+  TryGetGuideSigns(signs, 2, true, {US_322_West, A_1});
+  TryGetGuideSigns(signs, 1, true, {US_322_West});
+}
+
+TEST(Signs, TestGetGuideSigns_MultipleConsecutiveCount) {
+  // Create guide sign
+  // Specify input in descending consecutive count order
+  auto US_322_West = std::make_tuple("US 322 West", 1, 2);
+  auto US_22_West = std::make_tuple("US 22 West", 1, 2);
+  auto Freedom_Highway = std::make_tuple("Freedom Highway", 0, 1);
+  auto Valhalla_Highway = std::make_tuple("Valhalla Highway", 0, 0);
+  auto A_1 = std::make_tuple("A 1", 1, 2);
+  auto Remscheid = std::make_tuple("Remscheid", 0, 2);
+  auto Wermelskirchen = std::make_tuple("Wermelskirchen", 0, 1);
+  auto Huckeswagen = std::make_tuple("Hückeswagen", 0, 0);
+
+  Signs signs = GetGuideSigns({US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway},
+                              {A_1, Remscheid, Wermelskirchen, Huckeswagen});
+
+  TryGetGuideSigns(signs, 0, false,
+                   {US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway, A_1, Remscheid,
+                    Wermelskirchen, Huckeswagen});
+  TryGetGuideSigns(signs, 4, false, {US_322_West, US_22_West, A_1, Remscheid});
+  TryGetGuideSigns(signs, 3, false, {US_322_West, US_22_West, A_1});
+  TryGetGuideSigns(signs, 2, false, {US_322_West, A_1});
+  TryGetGuideSigns(signs, 1, false, {US_322_West});
+
+  TryGetGuideSigns(signs, 0, true, {US_322_West, US_22_West, A_1, Remscheid});
+  TryGetGuideSigns(signs, 4, true, {US_322_West, US_22_West, A_1, Remscheid});
+  TryGetGuideSigns(signs, 3, true, {US_322_West, US_22_West, A_1});
+  TryGetGuideSigns(signs, 2, true, {US_322_West, A_1});
+  TryGetGuideSigns(signs, 1, true, {US_322_West});
+}
+
+TEST(Signs, TestTrimSigns) {
+  auto US_322_West = std::make_tuple("US 322 West", 1, 2);
+  auto US_22_West = std::make_tuple("US 22 West", 1, 2);
+  auto Freedom_Highway = std::make_tuple("Freedom Highway", 0, 1);
+  auto Valhalla_Highway = std::make_tuple("Valhalla Highway", 0, 0);
+
+  std::vector<Sign> signs;
+  PopulateSigns({US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway}, &signs);
+
+  // Test defaults (max_count = 0, limit_by_consecutive_count = false)
+  TryTrimSigns(Signs::TrimSigns(signs), {US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway});
+  // max_count > input list size
+  TryTrimSigns(Signs::TrimSigns(signs, 10, false),
+               {US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway});
+  TryTrimSigns(Signs::TrimSigns(signs, 0, false),
+               {US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway});
+  TryTrimSigns(Signs::TrimSigns(signs, 4, false),
+               {US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway});
+  TryTrimSigns(Signs::TrimSigns(signs, 3, false), {US_322_West, US_22_West, Freedom_Highway});
+  TryTrimSigns(Signs::TrimSigns(signs, 2, false), {US_322_West, US_22_West});
+  TryTrimSigns(Signs::TrimSigns(signs, 1, false), {US_322_West});
+
+  TryTrimSigns(Signs::TrimSigns(signs, 10, true), {US_322_West, US_22_West});
+  TryTrimSigns(Signs::TrimSigns(signs, 4, true), {US_322_West, US_22_West});
+  TryTrimSigns(Signs::TrimSigns(signs, 3, true), {US_322_West, US_22_West});
+  TryTrimSigns(Signs::TrimSigns(signs, 2, true), {US_322_West, US_22_West});
+  TryTrimSigns(Signs::TrimSigns(signs, 1, false), {US_322_West});
 }
 
 } // namespace
