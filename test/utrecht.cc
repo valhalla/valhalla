@@ -216,13 +216,12 @@ public:
 
     PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                    {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                                   from_restriction_file, to_restriction_file,
-                                   conf.get<std::string>("mjolnir.tile_dir"), osmdata);
+                                   from_restriction_file, to_restriction_file, osmdata);
 
     PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
                                {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
                                ways_file, way_nodes_file, intersections_file, shapes_file, bss_file,
-                               conf.get<std::string>("mjolnir.tile_dir"), osmdata);
+                               osmdata);
   }
 
   void TearDown() override {

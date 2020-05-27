@@ -237,7 +237,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     // Read the OSM protocol buffer file. Callbacks for relations are defined within the PBFParser
     // class
     PBFGraphParser::ParseRelations(config.get_child("mjolnir"), input_files, cr_from_bin, cr_to_bin,
-                                   tile_dir, osm_data);
+                                   osm_data);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
     if (release_osmpbf_memory && BuildStage::kParseRelations == end_stage) {
@@ -255,7 +255,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     // Read the OSM protocol buffer file. Callbacks for nodes
     // are defined within the PBFParser class
     PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
-                               intersections_bin, shapes_bin, bss_nodes_bin, tile_dir, osm_data);
+                               intersections_bin, shapes_bin, bss_nodes_bin, osm_data);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
     if (release_osmpbf_memory) {
