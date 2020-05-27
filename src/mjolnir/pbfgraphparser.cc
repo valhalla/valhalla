@@ -1995,6 +1995,7 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   LOG_INFO("Finished");
 
   // Return OSM data
+  osmdata.initialized = true;
   return osmdata;
 }
 
@@ -2014,8 +2015,8 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   graph_callback callback(pt, osmdata);
 
-  // Read the OSMData to files if the tile_dir is set.
-  if (!tile_dir.empty())
+  // Read the OSMData to files if not initialized.
+  if (!osmdata.initialized)
     callback.osmdata_.read_from_temp_files(tile_dir);
 
   LOG_INFO("Parsing files for relations: " + boost::algorithm::join(input_files, ", "));
@@ -2087,8 +2088,8 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   graph_callback callback(pt, osmdata, intersections_file, shapes_file, true);
 
-  // Read the OSMData to files if the tile_dir is set.
-  if (!tile_dir.empty())
+  // Read the OSMData to files if not initialized.
+  if (!osmdata.initialized)
     callback.osmdata_.read_from_temp_files(tile_dir);
 
   LOG_INFO("Parsing files for nodes: " + boost::algorithm::join(input_files, ", "));

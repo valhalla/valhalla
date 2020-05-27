@@ -549,6 +549,7 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
                 read_unique_names(tile_dir + unique_names_file, name_offset_map) &&
                 read_lane_connectivity(tile_dir + lane_connectivity_file, lane_connectivity_map);
   LOG_INFO("Done");
+  initialized = status;
   return status;
 }
 
