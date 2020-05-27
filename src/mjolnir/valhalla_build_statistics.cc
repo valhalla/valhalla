@@ -3,7 +3,6 @@
 #include "statistics.h"
 
 #include "baldr/rapidjson_utils.h"
-#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -24,6 +23,7 @@
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
@@ -34,7 +34,7 @@ using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace bpo = boost::program_options;
-boost::filesystem::path config_file_path;
+filesystem::path config_file_path;
 
 namespace {
 
@@ -509,6 +509,8 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   // Graph tile properties
   auto tile_properties = pt.get_child("mjolnir");
 
+  GraphReader reader(tile_properties);
+
   // Create a randomized queue of tiles to work from
   std::deque<GraphId> tilequeue;
   for (const auto& tier : TileHierarchy::levels()) {
@@ -517,7 +519,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
     for (uint32_t id = 0; id < tiles.TileCount(); id++) {
       // If tile exists add it to the queue
       GraphId tile_id(id, level, 0);
-      if (GraphReader::DoesTileExist(tile_properties, tile_id)) {
+      if (reader.DoesTileExist(tile_id)) {
         tilequeue.emplace_back(std::move(tile_id));
       }
     }
@@ -528,7 +530,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
       for (uint32_t id = 0; id < tiles.TileCount(); id++) {
         // If tile exists add it to the queue
         GraphId tile_id(id, level, 0);
-        if (GraphReader::DoesTileExist(tile_properties, tile_id)) {
+        if (reader.DoesTileExist(tile_id)) {
           tilequeue.emplace_back(std::move(tile_id));
         }
       }
@@ -577,8 +579,8 @@ bool ParseArguments(int argc, char* argv[]) {
   bpo::options_description options("Usage: valhalla_build_statistics --config conf/valhalla.json");
   options.add_options()("help,h",
                         "Print this help message")("config,c",
-                                                   boost::program_options::value<
-                                                       boost::filesystem::path>(&config_file_path)
+                                                   boost::program_options::value<filesystem::path>(
+                                                       &config_file_path)
                                                        ->required(),
                                                    "Path to the json configuration file.");
   bpo::variables_map vm;
@@ -595,7 +597,7 @@ bool ParseArguments(int argc, char* argv[]) {
     return true;
   }
   if (vm.count("config")) {
-    if (boost::filesystem::is_regular_file(config_file_path)) {
+    if (filesystem::is_regular_file(config_file_path)) {
       return true;
     } else {
       std::cerr << "Configuration file is required\n\n" << options << "\n\n";

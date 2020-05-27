@@ -1,4 +1,8 @@
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
+set_target_properties(gtest PROPERTIES FOLDER "Dependencies")
+set_target_properties(gtest_main PROPERTIES FOLDER "Dependencies")
+set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
+set_target_properties(gmock_main PROPERTIES FOLDER "Dependencies")
 
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller complexrestriction countryaccess datetime directededge
@@ -13,7 +17,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller complexrest
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
-    idtable matrix minbb multipoint_routes names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary thor_worker timedep_paths timeparsing trivial_paths uniquenames utrecht)
+    idtable matrix minbb multipoint_routes names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary thor_worker timedep_paths timeparsing trivial_paths uniquenames utrecht lua)
   if(ENABLE_HTTP)
     list(APPEND tests http_tiles)
   endif()
@@ -32,8 +36,15 @@ endif()
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
   set_target_properties(${test} PROPERTIES
+    FOLDER "Tests"
     COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
+  create_source_groups("Source Files" ${test}.cc)
   target_link_libraries(${test} valhalla gtest gmock pthread)
+  if (LUAJIT_FOUND AND APPLE)
+    # Using LuaJIT on macOS requires a couple of extra linker flags
+    # Any tool that needs interact with Lua will need these flags on macOS
+    target_link_options(${test} PUBLIC -pagezero_size 10000 -image_base 100000000)
+  endif()
   target_include_directories(${test} SYSTEM PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
       ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
@@ -43,7 +54,9 @@ set(cost_tests autocost bicyclecost motorcyclecost motorscootercost pedestrianco
 foreach(test ${cost_tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc)
   set_target_properties(${test} PROPERTIES
+    FOLDER "Tests"
     COMPILE_DEFINITIONS INLINE_TEST)
+  create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc)
   target_link_libraries(${test} valhalla gtest gmock pthread)
 endforeach()
 
@@ -57,11 +70,25 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 add_custom_target(build_timezones DEPENDS ${CMAKE_BINARY_DIR}/test/data/tz.sqlite)
+set_target_properties(build_timezones PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/utrecht_tiles/
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+      -s initialize -e parseways
+      ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
+  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+      -s parserelations -e parserelations
+      ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
+  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+      -s parsenodes -e parsenodes
+      ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
+  COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
+      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+      -s build -e cleanup
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_add_predicted_traffic
       --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","concurrency":1,"logging":{"type":""}}}'
@@ -70,83 +97,92 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic build_timezones ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf)
 add_custom_target(utrecht_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/0/003/196.gph)
+set_target_properties(utrecht_tiles PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles/2/000/814/309.gph
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"tile_dir":"test/data/whitelion_tiles","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/whitelion_tiles","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk.osm.pbf
   COMMENT "Building Whitelion Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk.osm.pbf)
 add_custom_target(whitelion_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles/2/000/814/309.gph)
+set_target_properties(whitelion_tiles PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles_reverse/2/000/814/309.gph
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"tile_dir":"test/data/whitelion_tiles_reverse","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/whitelion_tiles_reverse","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk_reversed_oneway.osm.pbf
   COMMENT "Building reversed Whitelion Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/whitelion_bristol_uk_reversed_oneway.osm.pbf)
 add_custom_target(reversed_whitelion_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/whitelion_tiles_reverse/2/000/814/309.gph)
+set_target_properties(reversed_whitelion_tiles PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/bayfront_singapore_tiles/1/033/043.gph
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"tile_dir":"test/data/bayfront_singapore_tiles","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/bayfront_singapore_tiles","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/bayfront_singapore.osm.pbf
       COMMENT "Building Singapore, Bayfront tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles ${VALHALLA_SOURCE_DIR}/test/data/bayfront_singapore.osm.pbf)
 add_custom_target(bayfront_singapore_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/bayfront_singapore_tiles/1/033/043.gph)
+set_target_properties(bayfront_singapore_tiles PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/roma_tiles/
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"tile_dir":"test/data/roma_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/roma_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/via_montebello_roma_italy.osm.pbf
   COMMENT "Building Roma Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic build_timezones ${VALHALLA_SOURCE_DIR}/test/data/via_montebello_roma_italy.osm.pbf)
 add_custom_target(roma_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/roma_tiles/1/047/352.gph)
+set_target_properties(roma_tiles PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/melborne_tiles/0/001/251.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/melborne_tiles/
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"tile_dir":"test/data/melborne_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/melborne_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/melborne.osm.pbf
   COMMENT "Building Melborne Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic build_timezones ${VALHALLA_SOURCE_DIR}/test/data/melborne.osm.pbf)
 add_custom_target(melborne_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/melborne_tiles/0/001/251.gph)
+set_target_properties(melborne_tiles PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/ny_ar_tiles/2/000/752/104.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/ny_ar_tiles/
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"tile_dir":"test/data/ny_ar_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/ny_ar_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/ny-access-restriction.osm.pbf
   COMMENT "Building New York Access Restriction Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles build_timezones ${VALHALLA_SOURCE_DIR}/test/data/ny-access-restriction.osm.pbf)
 add_custom_target(ny_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/ny_ar_tiles/2/000/752/104.gph)
+set_target_properties(ny_ar_tiles PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/pa_ar_tiles/2/000/749/212.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/pa_ar_tiles/
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"tile_dir":"test/data/pa_ar_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/pa_ar_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/pa-access-restriction.osm.pbf
   COMMENT "Building PA Access Restriction Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles build_timezones ${VALHALLA_SOURCE_DIR}/test/data/pa-access-restriction.osm.pbf)
 add_custom_target(pa_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/pa_ar_tiles/2/000/749/212.gph)
+set_target_properties(pa_ar_tiles PROPERTIES FOLDER "Tests")
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/074.gph
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/nh_ar_tiles/
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"tile_dir":"test/data/nh_ar_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/nh_ar_tiles","timezone":"test/data/tz.sqlite","hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
       ${VALHALLA_SOURCE_DIR}/test/data/nh-access-restriction.osm.pbf
   COMMENT "Building New Hampshire Access Restriction Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles build_timezones ${VALHALLA_SOURCE_DIR}/test/data/nh-access-restriction.osm.pbf)
 add_custom_target(nh_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/074.gph)
+set_target_properties(nh_ar_tiles PROPERTIES FOLDER "Tests")
 
 
 file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.json")
@@ -161,6 +197,7 @@ add_custom_command(OUTPUT .locales.timestamp
   COMMENT "Compile locale definition files..."
   VERBATIM)
 add_custom_target(localedef DEPENDS .locales.timestamp)
+set_target_properties(localedef PROPERTIES FOLDER "Tests")
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/test/data)
 add_custom_command(OUTPUT test/data/sample/N00
@@ -172,6 +209,7 @@ add_custom_command(OUTPUT test/data/sample/N00
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   COMMENT "Creating test directories")
 add_custom_target(test_directories DEPENDS test/data/sample/N00)
+set_target_properties(test_directories PROPERTIES FOLDER "Tests")
 
 
 ## Test run targets
@@ -189,6 +227,7 @@ foreach(test ${tests} ${cost_tests})
     DEPENDS ${test}
     VERBATIM)
   add_custom_target(run-${test} DEPENDS ${test}.log)
+  set_target_properties(run-${test} PROPERTIES FOLDER "Tests")
 endforeach()
 
 ## Run test dependencies
@@ -238,6 +277,7 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
       python_valhalla
     VERBATIM)
   add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)
+  set_target_properties(run-python_valhalla PROPERTIES FOLDER "Python Bindings")
   set(python_tests python_valhalla)
 endif()
 
@@ -262,6 +302,7 @@ if(ENABLE_NODE_BINDINGS)
       ${VALHALLA_SOURCE_DIR}/test/traffic_matcher_tiles
     VERBATIM)
   add_custom_target(run-node_valhalla DEPENDS node_valhalla.log)
+  set_target_properties(run-node_valhalla PROPERTIES FOLDER "Node Bindings")
 endif()
 
 ## High-level targets
@@ -272,5 +313,7 @@ else()
 endif()
 
 add_custom_target(check DEPENDS ${test_targets})
+set_target_properties(check PROPERTIES FOLDER "Tests")
 add_custom_target(tests DEPENDS ${tests} ${cost_tests})
+set_target_properties(tests PROPERTIES FOLDER "Tests")
 add_subdirectory(gurka)

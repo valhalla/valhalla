@@ -163,7 +163,7 @@ TEST(TimeTracking, routes) {
       start.first % start.second % end.first % end.second;
   valhalla::Api api;
   tyr::actor_t actor(map.config, reader);
-  actor.route(req.str(), []() -> void {}, &api);
+  actor.route(req.str(), nullptr, &api);
 
   // check the timings
   std::vector<double> times;
@@ -184,7 +184,7 @@ TEST(TimeTracking, routes) {
       boost::format(
           R"({"costing":"auto","date_time":{"type":1,"value":"1982-12-08T17:17"},"locations":[{"lon":%1%,"lat":%2%},{"lon":%3%,"lat":%4%}]})") %
       start.first % start.second % end.first % end.second;
-  actor.route(req.str(), []() -> void {}, &api);
+  actor.route(req.str(), nullptr, &api);
 
   // check the timings
   times.clear();
@@ -205,7 +205,7 @@ TEST(TimeTracking, routes) {
       boost::format(
           R"({"costing":"auto","date_time":{"type":2,"value":"1982-12-08T17:17"},"locations":[{"lon":%1%,"lat":%2%},{"lon":%3%,"lat":%4%}]})") %
       start.first % start.second % end.first % end.second;
-  actor.route(req.str(), []() -> void {}, &api);
+  actor.route(req.str(), nullptr, &api);
 
   // check the timings
   times.clear();

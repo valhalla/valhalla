@@ -1,7 +1,6 @@
 #include "mjolnir/bssbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 
-#include <boost/filesystem/operations.hpp>
 #include <fstream>
 #include <future>
 #include <iostream>

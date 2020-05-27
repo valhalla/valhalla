@@ -12,6 +12,7 @@
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
+#include "filesystem.h"
 #include "loki/worker.h"
 #include "mjolnir/util.h"
 #include "odin/worker.h"
@@ -19,7 +20,6 @@
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
-#include <boost/filesystem.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -44,13 +44,15 @@
 namespace valhalla {
 namespace gurka {
 
+using nodelayout = std::map<std::string, midgard::PointLL>;
+
 struct map {
   boost::property_tree::ptree config;
-  std::unordered_map<std::string, midgard::PointLL> nodes;
+  nodelayout nodes;
 };
 
-using ways = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
-using nodes = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
+using ways = std::map<std::string, std::map<std::string, std::string>>;
+using nodes = std::map<std::string, std::map<std::string, std::string>>;
 
 enum relation_member_type { node_member, way_member };
 struct relation_member {
@@ -60,12 +62,10 @@ struct relation_member {
 };
 struct relation {
   std::vector<relation_member> members;
-  std::unordered_map<std::string, std::string> tags;
+  std::map<std::string, std::string> tags;
 };
 
 using relations = std::vector<relation>;
-
-using nodelayout = std::unordered_map<std::string, midgard::PointLL>;
 
 namespace detail {
 
@@ -74,7 +74,7 @@ build_config(const std::string& tiledir,
              const std::unordered_map<std::string, std::string>& config_options) {
 
   const std::string default_config = R"(
-    {"mjolnir":{"tile_dir":"", "concurrency": 1},
+    {"mjolnir":{"id_table_size":1000,"tile_dir":"", "concurrency": 1},
      "thor":{
        "logging" : {"long_request" : 100}
      },
@@ -526,9 +526,9 @@ map buildtiles(const nodelayout layout,
     throw std::runtime_error("Can't use / for tests, as we need to clean it out first");
   }
 
-  if (boost::filesystem::exists(workdir))
-    boost::filesystem::remove_all(workdir);
-  boost::filesystem::create_directories(workdir);
+  if (filesystem::exists(workdir))
+    filesystem::remove_all(workdir);
+  filesystem::create_directories(workdir);
 
   auto pbf_filename = workdir + "/map.pbf";
   std::cerr << "[          ] generating map PBF at " << pbf_filename << std::endl;
@@ -559,7 +559,7 @@ std::tuple<const baldr::GraphId,
            const baldr::GraphId,
            const baldr::DirectedEdge*>
 findEdge(valhalla::baldr::GraphReader& reader,
-         const std::unordered_map<std::string, midgard::PointLL>& nodes,
+         const nodelayout& nodes,
          const std::string& way_name,
          const std::string& end_node,
          const baldr::GraphId& tile_id = baldr::GraphId{}) {
@@ -631,7 +631,7 @@ valhalla::Api route(const map& map,
 
   valhalla::tyr::actor_t actor(map.config, *reader, true);
   valhalla::Api api;
-  actor.route(request_json, []() {}, &api);
+  actor.route(request_json, nullptr, &api);
   return api;
 }
 
@@ -646,7 +646,9 @@ valhalla::Api route(const map& map,
 
 valhalla::Api route(const map& map, const std::string& request_json) {
   valhalla::tyr::actor_t actor(map.config, true);
-  return actor.unserialized_route(request_json);
+  valhalla::Api api;
+  actor.route(request_json, nullptr, &api);
+  return api;
 }
 
 valhalla::Api match(const map& map,
@@ -668,7 +670,7 @@ valhalla::Api match(const map& map,
 
   valhalla::tyr::actor_t actor(map.config, true);
   valhalla::Api api;
-  actor.trace_route(request_json, []() {}, &api);
+  actor.trace_route(request_json, nullptr, &api);
   return api;
 }
 
@@ -816,29 +818,57 @@ void expect_maneuvers(const valhalla::Api& result,
       << "Actual maneuvers didn't match expected maneuvers";
 }
 
+/**
+ * Tests whether the expected set of instructions is emitted for the specified maneuver index.
+ * Looks at the output of Odin in the result.
+ *
+ * @param result the result of a /route or /match request
+ * @param maneuver_index the specified maneuver index to inspect
+ * @param expected_text_instruction the expected text instruction
+ * @param expected_verbal_transition_alert_instruction the expected verbal transition alert
+ *                                                     instruction
+ * @param expected_verbal_pre_transition_instruction the expected verbal pre-transition instruction
+ * @param expected_verbal_post_transition_instruction the expected verbal post-transition instruction
+ */
+void expect_instructions_at_maneuver_index(
+    const valhalla::Api& result,
+    int maneuver_index,
+    const std::string& expected_text_instruction,
+    const std::string& expected_verbal_transition_alert_instruction,
+    const std::string& expected_verbal_pre_transition_instruction,
+    const std::string& expected_verbal_post_transition_instruction) {
+
+  ASSERT_EQ(result.directions().routes_size(), 1);
+  ASSERT_EQ(result.directions().routes(0).legs_size(), 1);
+  ASSERT_TRUE((maneuver_index >= 0) &&
+              (maneuver_index < result.directions().routes(0).legs(0).maneuver_size()));
+  const auto& maneuver = result.directions().routes(0).legs(0).maneuver(maneuver_index);
+
+  EXPECT_EQ(maneuver.text_instruction(), expected_text_instruction);
+  EXPECT_EQ(maneuver.verbal_transition_alert_instruction(),
+            expected_verbal_transition_alert_instruction);
+  EXPECT_EQ(maneuver.verbal_pre_transition_instruction(), expected_verbal_pre_transition_instruction);
+  EXPECT_EQ(maneuver.verbal_post_transition_instruction(),
+            expected_verbal_post_transition_instruction);
+}
+
 void expect_path_length(const valhalla::Api& result,
                         const float expected_length_km,
                         const float error_margin = 0) {
   EXPECT_EQ(result.trip().routes_size(), 1);
   EXPECT_EQ(result.trip().routes(0).legs_size(), 1);
 
-  const auto& route = result.trip().routes(0);
+  const auto& route = result.directions().routes(0).legs();
 
   float length_km = 0;
-  for (int legnum = 0; legnum < route.legs_size(); legnum++) {
-    const auto& leg = route.legs(legnum);
-    for (int nodenum = 0; nodenum < leg.node_size(); nodenum++) {
-      const auto& node = leg.node(nodenum);
-      if (node.has_edge()) {
-        length_km += node.edge().length();
-      }
-    }
+  for (const auto& leg : result.directions().routes(0).legs()) {
+    length_km += leg.summary().length();
   }
 
   if (error_margin == 0) {
-    EXPECT_FLOAT_EQ(length_km, expected_length_km);
+    EXPECT_FLOAT_EQ(static_cast<float>(length_km), expected_length_km);
   } else {
-    EXPECT_NEAR(length_km, expected_length_km, error_margin);
+    EXPECT_NEAR(static_cast<float>(length_km), expected_length_km, error_margin);
   }
 }
 
@@ -848,13 +878,11 @@ void expect_eta(const valhalla::Api& result,
   EXPECT_EQ(result.trip().routes_size(), 1);
   EXPECT_EQ(result.trip().routes(0).legs_size(), 1);
 
-  const auto& route = result.trip().routes(0);
+  const auto& route = result.directions().routes(0);
 
   double eta_sec = 0;
-  for (int legnum = 0; legnum < route.legs_size(); legnum++) {
-    const auto& leg = route.legs(legnum);
-    const auto& lastnode = leg.node(leg.node_size() - 1);
-    eta_sec += lastnode.elapsed_time();
+  for (const auto& leg : result.directions().routes(0).legs()) {
+    eta_sec += leg.summary().time();
   }
 
   if (error_margin == 0) {

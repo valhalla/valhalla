@@ -33,6 +33,14 @@ struct PathInfo {
       : mode(m), elapsed_time(t), trip_id(tripid), edgeid(edge), elapsed_cost(c),
         has_time_restrictions(time_restriction), turn_cost(tcs) {
   }
+
+  // Stream output
+  friend std::ostream& operator<<(std::ostream& os, const PathInfo& p) {
+    os << std::fixed << std::setprecision(3);
+    os << "mode: " << static_cast<int>(p.mode) << ", elapsed_time: " << p.elapsed_time
+       << ", trip_id: " << p.trip_id << ", edgeid: " << p.edgeid << ", turn_cost: " << p.turn_cost;
+    return os;
+  }
 };
 
 } // namespace thor

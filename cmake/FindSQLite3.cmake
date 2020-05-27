@@ -82,7 +82,7 @@ set(SQLITE3_LIBRARIES
 # Handle the QUIETLY and REQUIRED arguments and set SQLITE3_FOUND to TRUE
 # if all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(SQLITE3
+find_package_handle_standard_args(SQLite3
   DEFAULT_MSG
   SQLITE3_LIBRARIES
   SQLITE3_INCLUDE_DIR)

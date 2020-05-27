@@ -112,7 +112,7 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
     const auto& options = request.options();
 
     // Set the interrupt function
-    service_worker_t::set_interrupt(interrupt_function);
+    service_worker_t::set_interrupt(&interrupt_function);
 
     prime_server::worker_t::result_t result{true};
     double denominator = 0;
@@ -277,10 +277,12 @@ void thor_worker_t::parse_measurements(const Api& request) {
     auto default_accuracy = matcher->config().get<float>("gps_accuracy");
     auto default_radius = matcher->config().get<float>("search_radius");
     for (const auto& pt : options.shape()) {
-      trace.emplace_back(meili::Measurement{{pt.ll().lng(), pt.ll().lat()},
-                                            pt.has_accuracy() ? pt.accuracy() : default_accuracy,
-                                            pt.has_radius() ? pt.radius() : default_radius,
-                                            pt.time()});
+      trace.emplace_back(
+          meili::Measurement{{pt.ll().lng(), pt.ll().lat()},
+                             pt.has_accuracy() ? pt.accuracy() : default_accuracy,
+                             pt.has_radius() ? pt.radius() : default_radius,
+                             pt.time(),
+                             pt.type() == Location::kBreak || pt.type() == Location::kBreakThrough});
     }
   } catch (...) { throw valhalla_exception_t{424}; }
 }
@@ -361,5 +363,9 @@ void thor_worker_t::cleanup() {
   }
 }
 
+void thor_worker_t::set_interrupt(const std::function<void()>* interrupt_function) {
+  interrupt = interrupt_function;
+  reader->SetInterrupt(interrupt);
+}
 } // namespace thor
 } // namespace valhalla

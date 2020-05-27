@@ -37,7 +37,9 @@
         "0": "Bear <RELATIVE_DIRECTION> me matey.",
         "1": "Bear <RELATIVE_DIRECTION> me matey onto <STREET_NAMES>.",
         "2": "Bear <RELATIVE_DIRECTION> me matey onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "3": "Bear <RELATIVE_DIRECTION> me matey to stay on <STREET_NAMES>."
+        "3": "Bear <RELATIVE_DIRECTION> me matey to stay on <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -60,6 +62,12 @@
         ],
         "3": [
           "Bear left me matey to stay on US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -68,7 +76,9 @@
         "0": "Bear <RELATIVE_DIRECTION> me matey.",
         "1": "Bear <RELATIVE_DIRECTION> me matey onto <STREET_NAMES>.",
         "2": "Bear <RELATIVE_DIRECTION> me matey onto <BEGIN_STREET_NAMES>.",
-        "3": "Bear <RELATIVE_DIRECTION> me matey to stay on <STREET_NAMES>."
+        "3": "Bear <RELATIVE_DIRECTION> me matey to stay on <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -91,6 +101,12 @@
         ],
         "3": [
           "Bear left me matey to stay on U.S. 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -117,7 +133,9 @@
     "continue": {
       "phrases": {
         "0": "Aye, continue.",
-        "1": "Heave ho on <STREET_NAMES>."
+        "1": "Heave ho on <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -130,13 +148,25 @@
         ],
         "1": [
           "Heave ho on 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Aye, continue fer <LENGTH>.",
-        "1": "Heave ho on <STREET_NAMES> fer <LENGTH>."
+        "0": "Aye, continue.",
+        "1": "Aye, continue fer <LENGTH>.",
+        "2": "Heave ho on <STREET_NAMES>",
+        "3": "Heave ho on <STREET_NAMES> fer <LENGTH>.",
+        "4": "Continue at <JUNCTION_NAME>.",
+        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
+        "6": "Continue toward <TOWARD_SIGN>.",
+        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -159,17 +189,37 @@
       ],
       "example_phrases": {
         "0": [
-          "Aye, continue fer 300 feet."
+          "Continue."
         ],
         "1": [
-          "Heave ho on 10th Avenue fer 3 tenths of a mile."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
         ]
       }
     },
     "continue_verbal_alert": {
       "phrases": {
         "0": "Aye, continue.",
-        "1": "Heave ho on <STREET_NAMES>."
+        "1": "Heave ho on <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -182,6 +232,12 @@
         ],
         "1": [
           "Heave ho on 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -345,7 +401,21 @@
     "enter_roundabout": {
       "phrases": {
         "0": "Enter thee Cap'n wheel.",
-        "1": "Enter thee Cap'n wheel and take th' <ORDINAL_VALUE> spoke."
+        "1": "Enter thee Cap'n wheel and take th' <ORDINAL_VALUE> spoke.",
+        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "1st",
@@ -358,6 +428,11 @@
         "8th",
         "9th",
         "10th"
+      ],
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail"
       ],
       "example_phrases": {
         "0": [
@@ -374,13 +449,69 @@
           "Enter thee Cap'n wheel and take th' 8th spoke.",
           "Enter thee Cap'n wheel and take th' 9th spoke.",
           "Enter thee Cap'n wheel and take th' 10th spoke."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
         ]
       }
     },
     "enter_roundabout_verbal": {
       "phrases": {
         "0": "Enter thee Cap'n wheel.",
-        "1": "Enter thee Cap'n wheel and take th' <ORDINAL_VALUE> spoke."
+        "1": "Enter thee Cap'n wheel and take th' <ORDINAL_VALUE> spoke.",
+        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "1st",
@@ -393,6 +524,11 @@
         "8th",
         "9th",
         "10th"
+      ],
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail"
       ],
       "example_phrases": {
         "0": [
@@ -409,6 +545,48 @@
           "Enter thee Cap'n wheel and take th' 8th spoke.",
           "Enter thee Cap'n wheel and take th' 9th spoke.",
           "Enter thee Cap'n wheel and take th' 10th spoke."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
         ]
       }
     },
@@ -519,149 +697,12 @@
         ]
       }
     },
-    "exit_ferry": {
-      "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.",
-        "4": "Set sail <CARDINAL_DIRECTION>.",
-        "5": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Point yer bow <CARDINAL_DIRECTION> and set sail on <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.",
-        "8": "Saunter <CARDINAL_DIRECTION>.",
-        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.",
-        "16": "Ride <CARDINAL_DIRECTION>.",
-        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "north",
-        "northeast",
-        "east",
-        "southeast",
-        "south",
-        "southwest",
-        "west",
-        "northwest"
-      ],
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
-      "example_phrases": {
-        "0": [
-          "Head southeast."
-        ],
-        "1": [
-          "Head west on Ferry Lane"
-        ],
-        "2": [
-          "Head south on Summerfield Place/NY 114. Aye, continue on NY 114."
-        ],
-        "4": [
-          "Set sail southeast."
-        ],
-        "5": [
-          "Weigh anchor! Set sail west on Ferry Lane"
-        ],
-        "6": [
-          "Point yer bow south and set sail on Summerfield Place/NY 114. Aye, continue on NY 114."
-        ],
-        "8": [
-          "Saunter southeast."
-        ],
-        "9": [
-          "Saunter west on Ferry Lane"
-        ],
-        "10": [
-          "Saunter south on Summerfield Place/NY 114. Aye, continue on NY 114."
-        ],
-        "16": [
-          "Ride southeast."
-        ],
-        "17": [
-          "Ride west on Ferry Lane"
-        ],
-        "18": [
-          "Ride south on Summerfield Place/NY 114. Aye, continue on NY 114."
-        ]
-      }
-    },
-    "exit_ferry_verbal": {
-      "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "4": "Set sail <CARDINAL_DIRECTION>.",
-        "5": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Point yer bow <CARDINAL_DIRECTION> and set sail on <BEGIN_STREET_NAMES>.",
-        "8": "Saunter <CARDINAL_DIRECTION>.",
-        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "16": "Ride <CARDINAL_DIRECTION>.",
-        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "north",
-        "northeast",
-        "east",
-        "southeast",
-        "south",
-        "southwest",
-        "west",
-        "northwest"
-      ],
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
-      "example_phrases": {
-        "0": [
-          "Head southeast."
-        ],
-        "1": [
-          "Head west on Ferry Lane"
-        ],
-        "2": [
-          "Head south on Summerfield Place, New York 1 14."
-        ],
-        "4": [
-          "Set sail southeast."
-        ],
-        "5": [
-          "Weigh anchor! Set sail west on Ferry Lane"
-        ],
-        "6": [
-          "Point yer bow south and set sail on Summerfield Place, New York 1 14."
-        ],
-        "8": [
-          "Saunter southeast."
-        ],
-        "9": [
-          "Saunter west on Ferry Lane"
-        ],
-        "10": [
-          "Saunter south on Summerfield Place, New York 1 14."
-        ],
-        "16": [
-          "Ride southeast."
-        ],
-        "17": [
-          "Ride west on Ferry Lane"
-        ],
-        "18": [
-          "Ride south on Summerfield Place, New York 1 14."
-        ]
-      }
-    },
     "exit_roundabout": {
       "phrases": {
         "0": "Exit thee wheel.",
         "1": "Exit thee wheel onto <STREET_NAMES>.",
-        "2": "Exit thee wheel onto <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>."
+        "2": "Exit thee wheel onto <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -677,6 +718,9 @@
         ],
         "2": [
           "Exit thee wheel onto Catoctin Mountain Highway/US 15. Aye, continue on US 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
         ]
       }
     },
@@ -684,7 +728,8 @@
       "phrases": {
         "0": "Exit thee wheel.",
         "1": "Exit thee wheel onto <STREET_NAMES>.",
-        "2": "Exit thee wheel onto <BEGIN_STREET_NAMES>."
+        "2": "Exit thee wheel onto <BEGIN_STREET_NAMES>.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -700,6 +745,9 @@
         ],
         "2": [
           "Exit thee wheel onto Catoctin Mountain Highway, U.S. 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
         ]
       }
     },
@@ -1040,144 +1088,6 @@
         ]
       }
     },
-    "post_transit_connection_destination": {
-      "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "4": "Set sail <CARDINAL_DIRECTION>.",
-        "5": "Set sail <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "8": "Saunter <CARDINAL_DIRECTION> me buccaneer.",
-        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES> ye scurvy dog.",
-        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES> me hearties. Aye, continue on <STREET_NAMES>.",
-        "16": "Ride <CARDINAL_DIRECTION>.",
-        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "north",
-        "northeast",
-        "east",
-        "southeast",
-        "south",
-        "southwest",
-        "west",
-        "northwest"
-      ],
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
-      "example_phrases": {
-        "0": [
-          "Head west."
-        ],
-        "1": [
-          "Head northeast on Broadway"
-        ],
-        "2": [
-          "Head south on Summerfield Place/NY 114. Continue on NY 114."
-        ],
-        "4": [
-          "Set sail west."
-        ],
-        "5": [
-          "Set sail northeast on Broadway"
-        ],
-        "6": [
-          "Set sail south on Summerfield Place/NY 114. Continue on NY 114."
-        ],
-        "8": [
-          "Saunter west me buccaneer."
-        ],
-        "9": [
-          "Saunter northeast on Broadway ye scurvy dog."
-        ],
-        "10": [
-          "Saunter south on Summerfield Place/NY 114 me hearties. Aye, continue on NY 114."
-        ],
-        "16": [
-          "Ride west."
-        ],
-        "17": [
-          "Ride northeast on Broadway"
-        ],
-        "18": [
-          "Ride south on Summerfield Place/NY 114. Continue on NY 114."
-        ]
-      }
-    },
-    "post_transit_connection_destination_verbal": {
-      "phrases": {
-        "0": "Head <CARDINAL_DIRECTION>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "4": "Set sail <CARDINAL_DIRECTION>.",
-        "5": "Set sail <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "6": "Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "8": "Saunter <CARDINAL_DIRECTION> me buccaneer.",
-        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES> ye scurvy dog.",
-        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES> me hearties.",
-        "16": "Ride <CARDINAL_DIRECTION>.",
-        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
-        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "north",
-        "northeast",
-        "east",
-        "southeast",
-        "south",
-        "southwest",
-        "west",
-        "northwest"
-      ],
-      "empty_street_name_labels": [
-        "solid ground",
-        "th' bike pirate way",
-        "th' treasure trail"
-      ],
-      "example_phrases": {
-        "0": [
-          "Head west."
-        ],
-        "1": [
-          "Head northeast on Broadway"
-        ],
-        "2": [
-          "Head south on Summerfield Place, New York 1 14."
-        ],
-        "4": [
-          "Set sail west."
-        ],
-        "5": [
-          "Set sail northeast on Broadway"
-        ],
-        "6": [
-          "Set sail south on Summerfield Place, New York 1 14."
-        ],
-        "8": [
-          "Saunter west me buccaneer."
-        ],
-        "9": [
-          "Saunter northeast on Broadway ye scurvy dog."
-        ],
-        "10": [
-          "Saunter south on Summerfield Place, New York 1 14 me hearties."
-        ],
-        "16": [
-          "Ride west."
-        ],
-        "17": [
-          "Ride northeast on Broadway"
-        ],
-        "18": [
-          "Ride south on Summerfield Place, New York 1 14."
-        ]
-      }
-    },
     "post_transition_transit_verbal": {
       "phrases": {
         "0": "Voyage <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
@@ -1429,7 +1339,9 @@
         "0": "Make a sharp <RELATIVE_DIRECTION> bucko.",
         "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.",
         "2": "Arrr, make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-        "3": "Make a sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
+        "3": "Make a sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -1452,6 +1364,12 @@
         ],
         "3": [
           "Make a sharp right matey to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1460,7 +1378,9 @@
         "0": "Make a sharp <RELATIVE_DIRECTION> bucko.",
         "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> ye scallywag.",
         "2": "Arrr, make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-        "3": "Make a sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
+        "3": "Make a sharp <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -1483,6 +1403,12 @@
         ],
         "3": [
           "Make a sharp right matey to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1567,18 +1493,26 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Head <CARDINAL_DIRECTION> fer <LENGTH>.",
-        "1": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
-        "2": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "4": "Set sail <CARDINAL_DIRECTION> fer <LENGTH>.",
-        "5": "Point yer bow <CARDINAL_DIRECTION> and set sail on <STREET_NAMES> fer <LENGTH>.",
-        "6": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
-        "8": "Saunter <CARDINAL_DIRECTION> fer <LENGTH>.",
-        "9": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
-        "10": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "0": "Head <CARDINAL_DIRECTION>.",
+        "1": "Head <CARDINAL_DIRECTION> fer <LENGTH>.",
+        "2": "Head <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "3": "Head <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
+        "4": "Head <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "5": "Set sail <CARDINAL_DIRECTION>.",
+        "6": "Set sail <CARDINAL_DIRECTION> fer <LENGTH>.",
+        "7": "Point yer bow <CARDINAL_DIRECTION> and set sail on <STREET_NAMES>.",
+        "8": "Point yer bow <CARDINAL_DIRECTION> and set sail on <STREET_NAMES> fer <LENGTH>.",
+        "9": "Weigh anchor! Set sail <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "10": "Saunter <CARDINAL_DIRECTION>.",
+        "11": "Saunter <CARDINAL_DIRECTION> fer <LENGTH>.",
+        "12": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "13": "Saunter <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
+        "14": "Saunter <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>.",
+        "15": "Ride <CARDINAL_DIRECTION>.",
         "16": "Ride <CARDINAL_DIRECTION> fer <LENGTH>.",
-        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
-        "18": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
+        "17": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES>.",
+        "18": "Ride <CARDINAL_DIRECTION> on <STREET_NAMES> fer <LENGTH>.",
+        "19": "Ride <CARDINAL_DIRECTION> on <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
         "north",
@@ -1611,44 +1545,72 @@
       ],
       "example_phrases": {
         "0": [
-          "Head east fer a half mile.",
-          "Head north fer 1 kilometer."
+          "Head east.",
+          "Head north."
         ],
         "1": [
-          "Head southwest on 5th Avenue fer 1 tenth of a mile."
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
         ],
         "2": [
-          "Head south on North Prince Street, U.S. 2 22."
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "4": [
-          "Set sail east fer a half mile.",
-          "Drive north fer 1 kilometer."
+          "Head south on North Prince Street, U.S. 2 22."
         ],
         "5": [
-          "Point yer bow southwest and set sail on 5th Avenue fer 1 tenth of a mile."
+          "Drive east.",
+          "Drive north."
         ],
         "6": [
-          "Weigh anchor! Set sail south on North Prince Street, U.S. 2 22."
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
         ],
         "8": [
-          "Saunter east fer a half mile.",
-          "Saunter north fer 1 kilometer."
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "9": [
-          "Saunter southwest on 5th Avenue fer 1 tenth of a mile."
+          "Drive south on North Prince Street, U.S. 2 22."
         ],
         "10": [
-          "Saunter south on North Prince Street, U.S. 2 22."
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
         ],
         "16": [
-          "Ride east fer a half mile.",
-          "Ride north fer 1 kilometer."
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
         ],
         "17": [
-          "Ride southwest on 5th Avenue fer 1 tenth of a mile."
+          "Bike southwest on 5th Avenue."
         ],
         "18": [
-          "Ride south on North Prince Street, U.S. 2 22."
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
         ]
       }
     },
@@ -1932,7 +1894,9 @@
         "0": "Turn <RELATIVE_DIRECTION> bucko.",
         "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> me hearties.",
         "2": "Arrr, turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Aye, continue on <STREET_NAMES>.",
-        "3": "Turn <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
+        "3": "Turn <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -1955,6 +1919,12 @@
         ],
         "3": [
           "Turn starboard matey to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1963,7 +1933,9 @@
         "0": "Turn <RELATIVE_DIRECTION> bucko.",
         "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> me hearties.",
         "2": "Arrr, turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-        "3": "Turn <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>."
+        "3": "Turn <RELATIVE_DIRECTION> matey to stay on <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -1986,6 +1958,12 @@
         ],
         "3": [
           "Turn starboard matey to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1996,7 +1974,9 @@
         "2": "Argh! Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
         "3": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
         "4": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
-        "5": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
+        "5": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -2025,6 +2005,12 @@
         ],
         "5": [
           "Argh! Make a port U-turn at Devonshire Road to stay on Jonestown Road/US 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },
@@ -2035,7 +2021,9 @@
         "2": "Argh! Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
         "3": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
         "4": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
-        "5": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
+        "5": "Argh! Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "solid ground",
@@ -2064,6 +2052,12 @@
         ],
         "5": [
           "Argh! Make a port U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },

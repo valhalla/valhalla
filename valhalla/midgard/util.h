@@ -34,9 +34,6 @@ template <class T> struct ranged_default_t {
   }
 };
 
-// Intersection cases.
-enum IntersectCase { kWithin, kContains, kOutside, kIntersects };
-
 /**
  * Compute time (seconds) given a length (km) and speed (km per hour)
  * @param  length  distance in km.
@@ -255,9 +252,9 @@ template <class container_t> container_t trim_front(container_t& pts, const floa
  * @param  shape         Shape, as vector of PointLLs
  */
 void trim_shape(float start,
-                PointLL start_vertex,
+                PointLL start_vertex, // NOLINT
                 float end,
-                PointLL end_vertex,
+                PointLL end_vertex, // NOLINT
                 std::vector<PointLL>& shape);
 
 /**
@@ -637,5 +634,18 @@ struct projector_t {
   double lng;
   DistanceApproximator approx;
 };
+
+/**
+ * Convert the input units, in either imperial or metric, into meters.
+ * @param   units_km_or_mi (kms or miles), to convert to meters
+ * @param   true if input units are in metric, false if they're in imperial
+ *          units.
+ * @return  the input units converted to meters
+ */
+inline float units_to_meters(float units_km_or_mi, bool is_metric) {
+  return midgard::kMetersPerKm *
+         (is_metric ? units_km_or_mi : (units_km_or_mi * midgard::kKmPerMile));
+}
+
 } // namespace midgard
 } // namespace valhalla

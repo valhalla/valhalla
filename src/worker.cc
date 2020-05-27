@@ -356,15 +356,19 @@ void parse_locations(const rapidjson::Document& doc,
         location->mutable_ll()->set_lat(*lat);
         location->mutable_ll()->set_lng(*lon);
 
+        // trace attributes does not support legs or breaks at discontinuities
         auto stop_type_json = rapidjson::get_optional<std::string>(r_loc, "/type");
-        if (stop_type_json) {
+        if (options.action() == Options::trace_attributes) {
+          location->set_type(valhalla::Location::kVia);
+        } // other actions let you specify whatever type of stop you want
+        else if (stop_type_json) {
           if (*stop_type_json == std::string("through"))
             location->set_type(valhalla::Location::kThrough);
           else if (*stop_type_json == std::string("via"))
             location->set_type(valhalla::Location::kVia);
           else if (*stop_type_json == std::string("break_through"))
             location->set_type(valhalla::Location::kBreakThrough);
-        } // for map matching the default type is a through
+        } // and if you didnt set it it defaulted to break which is not the default for trace_route
         else if (options.action() == Options::trace_route) {
           location->set_type(valhalla::Location::kVia);
         }
@@ -624,11 +628,38 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_date_time("current");
   }
 
-  // parse map matching location input
+  // Set the output precision for shape/geometry (polyline encoding). Defaults to polyline6
+  // This also controls the input precision for encoded_polyline in height action
+  // TODO - is this just for OSRM compatibility?
+  options.set_shape_format(polyline6);
+  auto shape_format = rapidjson::get_optional<std::string>(doc, "/shape_format");
+  if (shape_format) {
+    if (*shape_format == "polyline6") {
+      options.set_shape_format(polyline6);
+    } else if (*shape_format == "polyline5") {
+      options.set_shape_format(polyline5);
+    } else if (*shape_format == "geojson") {
+      options.set_shape_format(geojson);
+    } else {
+      // Throw an error if shape format is invalid
+      throw valhalla_exception_t{164};
+    }
+  }
+
+  // parse map matching location input and encoded_polyline for height actions
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
   if (encoded_polyline) {
     options.set_encoded_polyline(*encoded_polyline);
-    auto decoded = midgard::decode<std::vector<midgard::PointLL>>(*encoded_polyline);
+
+    // Set the precision to use when decoding the polyline. For height actions (only)
+    // either polyline6 (default) or polyline5 are supported. All other actions only
+    // support polyline6 inputs at this time.
+    double precision = 1e-6;
+    if (options.action() == Options::height) {
+      precision = options.shape_format() == valhalla::polyline5 ? 1e-5 : 1e-6;
+    }
+
+    auto decoded = midgard::decode<std::vector<midgard::PointLL>>(*encoded_polyline, precision);
     for (const auto& ll : decoded) {
       auto* sll = options.mutable_shape()->Add();
       sll->mutable_ll()->set_lat(ll.lat());
@@ -702,27 +733,16 @@ void from_json(rapidjson::Document& doc, Options& options) {
     }
   }
 
-  // Set the output precision for shape/geometry (polyline encoding). Defaults to polyline6
-  // TODO - is this just for OSRM compatibility?
-  options.set_shape_format(polyline6);
-  auto shape_format = rapidjson::get_optional<std::string>(doc, "/shape_format");
-  if (shape_format) {
-    if (*shape_format == "polyline6") {
-      options.set_shape_format(polyline6);
-    } else if (*shape_format == "polyline5") {
-      options.set_shape_format(polyline5);
-    } else if (*shape_format == "geojson") {
-      options.set_shape_format(geojson);
-    } else {
-      // Throw an error if shape format is invalid
-      throw valhalla_exception_t{164};
-    }
-  }
-
   // TODO: remove this?
   options.set_do_not_track(rapidjson::get_optional<bool>(doc, "/healthcheck").get_value_or(false));
 
+  // Elevation service options
   options.set_range(rapidjson::get(doc, "/range", false));
+  constexpr uint32_t MAX_HEIGHT_PRECISION = 2;
+  auto height_precision = rapidjson::get_optional<unsigned int>(doc, "/height_precision");
+  if (height_precision && *height_precision <= MAX_HEIGHT_PRECISION) {
+    options.set_height_precision(*height_precision);
+  }
 
   options.set_verbose(rapidjson::get(doc, "/verbose", false));
 
@@ -1356,8 +1376,8 @@ service_worker_t::service_worker_t() : interrupt(nullptr) {
 }
 service_worker_t::~service_worker_t() {
 }
-void service_worker_t::set_interrupt(const std::function<void()>& interrupt_function) {
-  interrupt = &interrupt_function;
+void service_worker_t::set_interrupt(const std::function<void()>* interrupt_function) {
+  interrupt = interrupt_function;
 }
 
 } // namespace valhalla

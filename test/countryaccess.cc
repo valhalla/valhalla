@@ -1,3 +1,4 @@
+#include "filesystem.h"
 #include "midgard/sequence.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphenhancer.h"
@@ -8,7 +9,6 @@
 #include <cstdint>
 
 #include "baldr/rapidjson_utils.h"
-#include <boost/filesystem.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <fstream>
 
@@ -34,8 +34,8 @@ const std::string config_file = "test/test_config_country";
 
 // Remove a temporary file if it exists
 void remove_temp_file(const std::string& fname) {
-  if (boost::filesystem::exists(fname)) {
-    boost::filesystem::remove(fname);
+  if (filesystem::exists(fname)) {
+    filesystem::remove(fname);
   }
 }
 
@@ -46,6 +46,7 @@ void write_config(const std::string& filename) {
     file << "{ \
       \"mjolnir\": { \
       \"concurrency\": 1, \
+      \"id_table_size\": 1000, \
        \"tile_dir\": \"test/data/amsterdam_tiles\", \
         \"admin\": \"" VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite\", \
          \"timezone\": \"" VALHALLA_SOURCE_DIR "test/data/not_needed.sqlite\" \
@@ -81,8 +82,8 @@ void CountryAccess(const std::string& config_file) {
   GraphReader graph_reader(conf.get_child("mjolnir"));
   for (const auto& level : TileHierarchy::levels()) {
     auto level_dir = graph_reader.tile_dir() + "/" + std::to_string(level.first);
-    if (boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
-      boost::filesystem::remove_all(level_dir);
+    if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
+      filesystem::remove_all(level_dir);
     }
   }
 
@@ -95,11 +96,23 @@ void CountryAccess(const std::string& config_file) {
   std::string cr_from_file = "test_from_cr_amsterdam.bin";
   std::string cr_to_file = "test_to_cr_amsterdam.bin";
   std::string bss_nodes_file = "test_bss_nodes_amsterdam.bin";
+  std::string intersections_file = "test_intersections_amsterdam.bin";
+  std::string shapes_file = "test_shapes_amsterdam.bin";
+
   // Parse Amsterdam OSM data
   auto osmdata =
-      PBFGraphParser::Parse(conf.get_child("mjolnir"),
-                            {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
-                            way_nodes_file, access_file, cr_from_file, cr_to_file, bss_nodes_file);
+      PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
+                                {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
+                                way_nodes_file, access_file, intersections_file, shapes_file);
+
+  PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
+                                 {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, cr_from_file,
+                                 cr_to_file, osmdata);
+
+  PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
+                             {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
+                             way_nodes_file, intersections_file, shapes_file, bss_nodes_file,
+                             osmdata);
 
   // Build the graph using the OSMNodes and OSMWays from the parser
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file, cr_from_file,
@@ -239,6 +252,8 @@ void CountryAccess(const std::string& config_file) {
   remove_temp_file(access_file);
   remove_temp_file(cr_from_file);
   remove_temp_file(cr_to_file);
+  remove_temp_file(intersections_file);
+  remove_temp_file(shapes_file);
 }
 
 TEST(CountryAccess, Basic) {

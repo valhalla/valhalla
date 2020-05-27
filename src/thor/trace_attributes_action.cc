@@ -7,12 +7,12 @@
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/json.h"
+#include "meili/match_result.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "thor/attributes_controller.h"
-#include "thor/match_result.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
@@ -57,7 +57,7 @@ std::string thor_worker_t::trace_attributes(Api& request) {
    * map-matching method. If true, this enforces to only use exact route match algorithm.
    */
 
-  std::vector<std::tuple<float, float, std::vector<thor::MatchResult>>> map_match_results;
+  std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>> map_match_results;
 
   switch (options.shape_match()) {
     // If the exact points from a prior route that was run against the Valhalla road network,
@@ -65,7 +65,7 @@ std::string thor_worker_t::trace_attributes(Api& request) {
     case ShapeMatch::edge_walk:
       try {
         route_match(request);
-        map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{});
+        map_match_results.emplace_back(1.0f, 0.0f, std::vector<meili::MatchResult>{});
       } catch (const std::exception& e) {
         throw valhalla_exception_t{
             443, ShapeMatch_Enum_Name(options.shape_match()) +
@@ -91,7 +91,7 @@ std::string thor_worker_t::trace_attributes(Api& request) {
     case ShapeMatch::walk_or_snap:
       try {
         route_match(request);
-        map_match_results.emplace_back(1.0f, 0.0f, std::vector<thor::MatchResult>{});
+        map_match_results.emplace_back(1.0f, 0.0f, std::vector<meili::MatchResult>{});
       } catch (...) {
         LOG_WARN(ShapeMatch_Enum_Name(options.shape_match()) +
                  " algorithm failed to find exact route match; Falling back to map_match...");

@@ -1,4 +1,4 @@
-## Release Date: 2019-??-?? Valhalla 3.0.10
+## Release Date: 2020-05-?? Valhalla 3.1.0
 * **Bug Fix**
    * FIXED: Crazy ETAs.  If a way has forward speed with no backward speed and it is not oneway, then we must set the default speed.  The reverse logic applies as well.  If a way has no backward speed but has a forward speed and it is not a oneway, then set the default speed. [#2102](https://github.com/valhalla/valhalla/pull/2102)
    * FIXED: Map matching elapsed times spliced amongst different legs and discontinuities are now correct [#2104](https://github.com/valhalla/valhalla/pull/2104)
@@ -39,10 +39,19 @@
    * FIXED: Fixed a problem with live speeds where live speeds were being used to determine access, even when a live
    speed (current time) route wasn't what was requested. [#2311](https://github.com/valhalla/valhalla/pull/2311)
    * FIXED: Fix break/continue typo in search filtering [#2317](https://github.com/valhalla/valhalla/pull/2317)
+   * FIXED: Fix a crash in trace_route due to iterating past the end of a vector. [2322](https://github.com/valhalla/valhalla/pull/2322)
    * FIXED: Don't allow timezone information in the local date time string attached at each location. [2312](https://github.com/valhalla/valhalla/pull/2312)
    * FIXED: Fix short route trimming in bidirectional astar [#2323](https://github.com/valhalla/valhalla/pull/2323)
+   * FIXED: Fix shape trimming in leg building for snap candidates that lie within the margin of rounding error [#2326](https://github.com/valhalla/valhalla/pull/2326)
+   * FIXED: Fixes route duration underflow with traffic data [#2325](https://github.com/valhalla/valhalla/pull/2325)
+   * FIXED: Parse mtb:scale tags and set bicycle access if present [#2117](https://github.com/valhalla/valhalla/pull/2117)
+   * FIXED: Fixed segfault.  Shape was missing from options for valhalla_path_comparison and valhalla_run_route.  Also, costing options was missing in valhalla_path_comparison. [#2343](https://github.com/valhalla/valhalla/pull/2343)
+   * FIXED: Handle decimal numbers with zero-value mantissa properly in Lua [#2355](https://github.com/valhalla/valhalla/pull/2355)
+   * FIXED: Many issues that resulted in discontinuities, failed matches or incorrect time/duration for map matching requests. [#2292](https://github.com/valhalla/valhalla/pull/2292)
 
 * **Enhancement**
+   * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
+   * ADDED: Cancellation of tile downloading. [#2319](https://github.com/valhalla/valhalla/pull/2319)
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)
    * ADDED: Allows more complicated routes in timedependent a-star before timing out [#2068](https://github.com/valhalla/valhalla/pull/2068)
    * ADDED: Guide signs and junction names [#2096](https://github.com/valhalla/valhalla/pull/2096)
@@ -61,7 +70,22 @@
    * ADDED: Implement per-location search filters for functional road class and forms of way. [#2289](https://github.com/valhalla/valhalla/pull/2289)
    * ADDED: Approach, multi-cue, and length updates [#2313](https://github.com/valhalla/valhalla/pull/2313)
    * ADDED: Speed up timezone differencing calculation if cache is provided. [#2316](https://github.com/valhalla/valhalla/pull/2316)
-
+   * ADDED: Added rapidjson/schema.h to baldr/rapidjson_util.h to make it available for use within valhalla. [#2330](https://github.com/valhalla/valhalla/issues/2330)
+   * ADDED: Support decimal precision for height values in elevation service. Also support polyline5 for encoded polylines input and output to elevation service. [2324](https://github.com/valhalla/valhalla/pull/2324)
+   * ADDED: Use both imminent and distant verbal multi-cue phrases. [2353](https://github.com/valhalla/valhalla/pull/2353)
+   * ADDED: Split parsing stage into 3 separate stages. [2339](https://github.com/valhalla/valhalla/pull/2339)
+   * CHANGED: Speed up graph enhancing by avoiding continuous unordered_set rebuilding [#2349](https://github.com/valhalla/valhalla/pull/2349)
+   * CHANGED: Skip calling out to Lua for nodes/ways/relations with not tags - speeds up parsing. [#2351](https://github.com/valhalla/valhalla/pull/2351)
+   * CHANGED: Switch to LuaJIT for lua scripting - speeds up file parsing [#2352](https://github.com/valhalla/valhalla/pull/2352)
+   * ADDED: Ability to create OpenLR records from raw data. [2356](https://github.com/valhalla/valhalla/pull/2356)
+   * ADDED: Revamp length phrases [2359](https://github.com/valhalla/valhalla/pull/2359)
+   * CHANGED: Do not allocate memory in skadi if we don't need it. [#2373](https://github.com/valhalla/valhalla/pull/2373)
+   * CHANGED: Map matching: throw error (443/NoSegment) when no candidate edges are available. [#2370](https://github.com/valhalla/valhalla/pull/2370/)
+   * ADDED: Add sk-SK.json (slovak) localization file. [2376](https://github.com/valhalla/valhalla/pull/2376)
+   * ADDED: Extend roundabout phrases. [2378](https://github.com/valhalla/valhalla/pull/2378)
+   * ADDED: More roundabout phrase tests. [2382](https://github.com/valhalla/valhalla/pull/2382)
+   * ADDED: Update the turn and continue phrases to include junction names and guide signs. [2386](https://github.com/valhalla/valhalla/pull/2386)
+   
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
    * FIXED: Changed reachability computation to consider both directions of travel wrt candidate edges [#1965](https://github.com/valhalla/valhalla/pull/1965)
