@@ -32,11 +32,6 @@ public:
                                                  baldr::Location::StopType stop_type,
                                                  float radius,
                                                  sif::EdgeFilter filter = nullptr) const = 0;
-  virtual std::vector<std::vector<baldr::PathLocation>>
-  QueryBulk(const std::vector<midgard::PointLL>& points,
-            const std::vector<baldr::Location::StopType>& stop_types,
-            float radius,
-            sif::EdgeFilter filter = nullptr);
 };
 
 class CandidateGridQuery final : public CandidateQuery {
