@@ -73,14 +73,14 @@ def tiles_for_bounding_box(left, bottom, right, top):
   return tiles
 
 def get_tile_id(tile_level, lat, lon):
-  level = filter(lambda x: x['level'] == tile_level, valhalla_tiles)[0]
+  level = list(filter(lambda x: x['level'] == tile_level, valhalla_tiles))[0]
   width = int(360 / level['size'])
   return int((lat + 90) / level['size']) * width + int((lon + 180 ) / level['size'])
 
 def get_ll(id):
   tile_level = get_tile_level(id)
   tile_index = get_tile_index(id)
-  level = filter(lambda x: x['level'] == tile_level, valhalla_tiles)[0]
+  level = list(filter(lambda x: x['level'] == tile_level, valhalla_tiles))[0]
   width = int(360 / level['size'])
   height = int(180 / level['size'])
   return int(tile_index / width) * level['size'] - 90, (tile_index % width) * level['size'] - 180
