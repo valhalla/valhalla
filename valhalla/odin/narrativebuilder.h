@@ -223,7 +223,7 @@ protected:
                                         const std::string& relative_dir,
                                         const std::string& street_name,
                                         const std::string& exit_number_sign,
-                                        const std::string& exit_toward_sign);
+                                        const std::string& toward_sign);
 
   /////////////////////////////////////////////////////////////////////////////
   std::string FormKeepToStayOnInstruction(Maneuver& maneuver,
@@ -249,14 +249,18 @@ protected:
                                                 const std::string& exit_toward_sign = "");
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormMergeInstruction(Maneuver& maneuver);
+  std::string FormMergeInstruction(Maneuver& maneuver,
+                                   bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+                                   uint32_t element_max_count = kElementMaxCount);
 
   std::string
   FormVerbalAlertMergeInstruction(Maneuver& maneuver,
+                                  bool limit_by_consecutive_count = kLimitByConseuctiveCount,
                                   uint32_t element_max_count = kVerbalAlertElementMaxCount,
                                   const std::string& delim = kVerbalDelim);
 
   std::string FormVerbalMergeInstruction(Maneuver& maneuver,
+                                         bool limit_by_consecutive_count = kLimitByConseuctiveCount,
                                          uint32_t element_max_count = kVerbalPreElementMaxCount,
                                          const std::string& delim = kVerbalDelim);
 
@@ -291,16 +295,21 @@ protected:
                                       const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  std::string FormEnterFerryInstruction(Maneuver& maneuver);
+  std::string FormEnterFerryInstruction(Maneuver& maneuver,
+                                        bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+                                        uint32_t element_max_count = kElementMaxCount);
 
   std::string
   FormVerbalAlertEnterFerryInstruction(Maneuver& maneuver,
+                                       bool limit_by_consecutive_count = kLimitByConseuctiveCount,
                                        uint32_t element_max_count = kVerbalAlertElementMaxCount,
                                        const std::string& delim = kVerbalDelim);
 
-  std::string FormVerbalEnterFerryInstruction(Maneuver& maneuver,
-                                              uint32_t element_max_count = kVerbalPreElementMaxCount,
-                                              const std::string& delim = kVerbalDelim);
+  std::string
+  FormVerbalEnterFerryInstruction(Maneuver& maneuver,
+                                  bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+                                  uint32_t element_max_count = kVerbalPreElementMaxCount,
+                                  const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
   std::string FormTransitConnectionStartInstruction(Maneuver& maneuver);

@@ -354,7 +354,8 @@
       "phrases": {
         "0": "Vjeďte na trajekt.",
         "1": "Vjeďte na <STREET_NAMES>.",
-        "2": "Vjeďte na <FERRY_LABEL> <STREET_NAMES>."
+        "2": "Vjeďte na <FERRY_LABEL> <STREET_NAMES>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "chodník",
@@ -371,6 +372,9 @@
         ],
         "2": [
           "Vjeďte na trajekt Bridgeport - Port Jefferson."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -378,7 +382,8 @@
       "phrases": {
         "0": "Vjeďte na trajekt.",
         "1": "Vjeďte na <STREET_NAMES>.",
-        "2": "Vjeďte na <FERRY_LABEL> <STREET_NAMES>."
+        "2": "Vjeďte na <FERRY_LABEL> <STREET_NAMES>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "chodník",
@@ -395,6 +400,9 @@
         ],
         "2": [
           "Vjeďte na trajekt Bridgeport - Port Jefferson."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -1031,7 +1039,9 @@
         "0": "Připojte se.",
         "1": "Připojte se <RELATIVE_DIRECTION>.",
         "2": "Připojte se na <STREET_NAMES>.",
-        "3": "Připojte se <RELATIVE_DIRECTION> na <STREET_NAMES>."
+        "3": "Připojte se <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "vlevo",
@@ -1054,6 +1064,12 @@
         ],
         "3": [
           "Připojte se vpravo na I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1062,7 +1078,9 @@
         "0": "Připojte se.",
         "1": "Připojte se <RELATIVE_DIRECTION>.",
         "2": "Připojte se na <STREET_NAMES>.",
-        "3": "Připojte se <RELATIVE_DIRECTION> na <STREET_NAMES>."
+        "3": "Připojte se <RELATIVE_DIRECTION> na <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "vlevo",
@@ -1085,6 +1103,12 @@
         ],
         "3": [
           "Připojte se vpravo na I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },

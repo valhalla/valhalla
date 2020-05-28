@@ -354,7 +354,8 @@
       "phrases": {
         "0": "Agafa el ferri.",
         "1": "Agafa <STREET_NAMES>.",
-        "2": "Agafa <STREET_NAMES> <FERRY_LABEL>."
+        "2": "Agafa <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -371,6 +372,9 @@
         ],
         "2": [
           "Agafa el Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -378,7 +382,8 @@
       "phrases": {
         "0": "Agafa el ferri.",
         "1": "Agafa el <STREET_NAMES>.",
-        "2": "Agafa el <STREET_NAMES> <FERRY_LABEL>."
+        "2": "Agafa el <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -395,6 +400,9 @@
         ],
         "2": [
           "Agafa el Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -1031,7 +1039,9 @@
         "0": "Enllaça.",
         "1": "Enllaça a <RELATIVE_DIRECTION>.",
         "2": "Enllaça amb <STREET_NAMES>.",
-        "3": "Enllaça a <RELATIVE_DIRECTION> amb <STREET_NAMES>."
+        "3": "Enllaça a <RELATIVE_DIRECTION> amb <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "l'esquerra",
@@ -1054,6 +1064,12 @@
         ],
         "3": [
           "Enllaça a la dreta amb I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1062,7 +1078,9 @@
         "0": "Enllaça.",
         "1": "Enllaça a <RELATIVE_DIRECTION>.",
         "2": "Enllaça amb <STREET_NAMES>.",
-        "3": "Enllaça a <RELATIVE_DIRECTION> amb <STREET_NAMES>."
+        "3": "Enllaça a <RELATIVE_DIRECTION> amb <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "l'esquerra",
@@ -1085,6 +1103,12 @@
         ],
         "3": [
           "Enllaça a la dreta amb I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },

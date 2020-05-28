@@ -212,7 +212,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   std::string shapes_bin = tile_dir + shapes_file;
 
   // OSMData class
-  OSMData osm_data;
+  OSMData osm_data{0};
 
   // Parse the ways
   if (start_stage <= BuildStage::kParseWays && BuildStage::kParseWays <= end_stage) {
@@ -234,11 +234,6 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   // Parse OSM data
   if (start_stage <= BuildStage::kParseRelations && BuildStage::kParseRelations <= end_stage) {
 
-    // Read the OSMData to files if the end stage is less than enhancing
-    if (end_stage <= BuildStage::kEnhance) {
-      osm_data.read_from_temp_files(tile_dir);
-    }
-
     // Read the OSM protocol buffer file. Callbacks for relations are defined within the PBFParser
     // class
     PBFGraphParser::ParseRelations(config.get_child("mjolnir"), input_files, cr_from_bin, cr_to_bin,
@@ -257,10 +252,6 @@ bool build_tile_set(const boost::property_tree::ptree& config,
 
   // Parse OSM data
   if (start_stage <= BuildStage::kParseNodes && BuildStage::kParseNodes <= end_stage) {
-    // Read the OSMData to files if the end stage is less than enhancing
-    if (end_stage <= BuildStage::kEnhance) {
-      osm_data.read_from_temp_files(tile_dir);
-    }
     // Read the OSM protocol buffer file. Callbacks for nodes
     // are defined within the PBFParser class
     PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,

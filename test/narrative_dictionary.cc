@@ -246,13 +246,17 @@ const std::map<std::string, std::string> kExpectedMergePhrases =
     {{"0", "Merge."},
      {"1", "Merge <RELATIVE_DIRECTION>."},
      {"2", "Merge onto <STREET_NAMES>."},
-     {"3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."}};
+     {"3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."},
+     {"4", "Merge toward <TOWARD_SIGN>."},
+     {"5", "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."}};
 
 const std::map<std::string, std::string> kExpectedMergeVerbalPhrases =
     {{"0", "Merge."},
      {"1", "Merge <RELATIVE_DIRECTION>."},
      {"2", "Merge onto <STREET_NAMES>."},
-     {"3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."}};
+     {"3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."},
+     {"4", "Merge toward <TOWARD_SIGN>."},
+     {"5", "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."}};
 
 const std::map<std::string, std::string> kExpectedEnterRoundaboutPhrases = {
     {"0", "Enter the roundabout."},
@@ -315,12 +319,14 @@ const std::map<std::string, std::string> kExpectedExitRoundaboutVerbalPhrases =
 const std::map<std::string, std::string> kExpectedEnterFerryPhrases =
     {{"0", "Take the Ferry."},
      {"1", "Take the <STREET_NAMES>."},
-     {"2", "Take the <STREET_NAMES> <FERRY_LABEL>."}};
+     {"2", "Take the <STREET_NAMES> <FERRY_LABEL>."},
+     {"3", "Take the ferry toward <TOWARD_SIGN>."}};
 
 const std::map<std::string, std::string> kExpectedEnterFerryVerbalPhrases =
     {{"0", "Take the Ferry."},
      {"1", "Take the <STREET_NAMES>."},
-     {"2", "Take the <STREET_NAMES> <FERRY_LABEL>."}};
+     {"2", "Take the <STREET_NAMES> <FERRY_LABEL>."},
+     {"3", "Take the ferry toward <TOWARD_SIGN>."}};
 
 const std::map<std::string, std::string> kExpectedTransitConnectionStartPhrases =
     {{"0", "Enter the station."},
