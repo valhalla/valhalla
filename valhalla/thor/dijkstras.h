@@ -129,6 +129,9 @@ protected:
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
 
+  // when doing timezone differencing a timezone cache speeds up the computation
+  baldr::DateTime::tz_sys_info_cache_t tz_cache_;
+
   /**
    * Initialization prior to computing the graph expansion
    *

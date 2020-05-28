@@ -91,11 +91,11 @@ uint64_t seconds_since_epoch(const std::string& date_time, const date::time_zone
  * @param   cache         a cache for timezone sys_info lookup (since its expensive)
  * @return Returns the seconds difference between the 2 timezones.
  */
-int timezone_diff(
-    const uint64_t seconds,
-    const date::time_zone* origin_tz,
-    const date::time_zone* dest_tz,
-    std::unordered_map<const date::time_zone*, std::vector<date::sys_info>>* cache = nullptr);
+using tz_sys_info_cache_t = std::unordered_map<const date::time_zone*, std::vector<date::sys_info>>;
+int timezone_diff(const uint64_t seconds,
+                  const date::time_zone* origin_tz,
+                  const date::time_zone* dest_tz,
+                  tz_sys_info_cache_t* cache = nullptr);
 
 /**
  * Get the iso date time from seconds since epoch and timezone.

@@ -518,8 +518,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   Init(origin_new, destination_new);
 
   // Get time information for forward and backward searches
-  auto forward_time_info = TimeInfo::make(origin, graphreader);
-  auto reverse_time_info = TimeInfo::make(destination, graphreader);
+  auto forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
+  auto reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
 
   // Set origin and destination locations - seeds the adj. lists
   // Note: because we can correlate to more than one place for a given

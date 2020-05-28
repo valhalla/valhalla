@@ -147,7 +147,7 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
   }
 
   // Get time information for forward search
-  auto forward_time_info = TimeInfo::make(origin, graphreader);
+  auto forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
 
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.

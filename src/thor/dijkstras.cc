@@ -83,7 +83,7 @@ Dijkstras::SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locat
   // loop over all locations setting the date time with timezone
   std::vector<TimeInfo> infos;
   for (auto& location : locations) {
-    infos.emplace_back(TimeInfo::make(location, reader));
+    infos.emplace_back(TimeInfo::make(location, reader, &tz_cache_));
   }
 
   // Hand back the time information

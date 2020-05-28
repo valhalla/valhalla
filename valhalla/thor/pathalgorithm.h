@@ -100,6 +100,9 @@ protected:
   // for tracking the expansion of the algorithm visually
   expansion_callback_t expansion_callback_;
 
+  // when doing timezone differencing a timezone cache speeds up the computation
+  baldr::DateTime::tz_sys_info_cache_t tz_cache_;
+
   /**
    * Check for path completion along the same edge. Edge ID in question
    * is along both an origin and destination and origin shows up at the

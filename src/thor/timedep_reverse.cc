@@ -314,7 +314,7 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
   float mindist = astarheuristic_.GetDistance(origin_new);
 
   // Get time information for backward search
-  auto reverse_time_info = TimeInfo::make(destination, graphreader);
+  auto reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
 
   // Initialize the locations. For a reverse path search the destination location
   // is used as the "origin" and the origin location is used as the "destination".

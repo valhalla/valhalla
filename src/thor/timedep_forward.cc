@@ -255,7 +255,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
   float mindist = astarheuristic_.GetDistance(origin_new);
 
   // Get time information for forward
-  auto forward_time_info = TimeInfo::make(origin, graphreader);
+  auto forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
 
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.

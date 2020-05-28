@@ -139,7 +139,7 @@ uint64_t seconds_since_epoch(const std::string& date_time, const date::time_zone
 int timezone_diff(const uint64_t seconds,
                   const date::time_zone* origin_tz,
                   const date::time_zone* dest_tz,
-                  std::unordered_map<const date::time_zone*, std::vector<date::sys_info>>* cache) {
+                  tz_sys_info_cache_t* cache) {
 
   if (!origin_tz || !dest_tz || origin_tz == dest_tz) {
     return 0;
