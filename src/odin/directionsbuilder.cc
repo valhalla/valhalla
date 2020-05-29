@@ -101,8 +101,6 @@ void DirectionsBuilder::Build(Api& api) {
 
       // Return trip directions
       PopulateDirectionsLeg(options, &etp, maneuvers, trip_directions);
-
-      LOG_INFO("maneuver_count::" + std::to_string(trip_directions.maneuver_size()));
     }
   }
 }

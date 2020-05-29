@@ -107,8 +107,7 @@ namespace valhalla {
 namespace skadi {
 
 ::valhalla::skadi::sample::sample(const std::string& data_source)
-    : mapped_cache(TILE_COUNT), unzipped_cache(-1, std::vector<int16_t>(HGT_PIXELS)),
-      data_source(data_source) {
+    : mapped_cache(TILE_COUNT), unzipped_cache(-1, std::vector<int16_t>()), data_source(data_source) {
   // messy but needed
   while (this->data_source.size() &&
          this->data_source.back() == filesystem::path::preferred_separator) {
@@ -169,6 +168,7 @@ const int16_t* sample::source(uint16_t index) const {
 
   // for setting where to write the uncompressed data to
   auto dst_func = [this](z_stream& s) -> int {
+    unzipped_cache.second.resize(HGT_PIXELS);
     s.next_out = static_cast<Byte*>(static_cast<void*>(unzipped_cache.second.data()));
     s.avail_out = HGT_BYTES;
     return Z_FINISH; // we know the output will hold all the input

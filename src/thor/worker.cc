@@ -278,12 +278,11 @@ void thor_worker_t::parse_measurements(const Api& request) {
     auto default_accuracy = matcher->config().get<float>("gps_accuracy");
     auto default_radius = matcher->config().get<float>("search_radius");
     for (const auto& pt : options.shape()) {
-      trace.emplace_back(
-          meili::Measurement{{pt.ll().lng(), pt.ll().lat()},
-                             pt.has_accuracy() ? pt.accuracy() : default_accuracy,
-                             pt.has_radius() ? pt.radius() : default_radius,
-                             pt.time(),
-                             pt.type() == Location::kBreak || pt.type() == Location::kBreakThrough});
+      trace.emplace_back(meili::Measurement{{pt.ll().lng(), pt.ll().lat()},
+                                            pt.has_accuracy() ? pt.accuracy() : default_accuracy,
+                                            pt.has_radius() ? pt.radius() : default_radius,
+                                            pt.time(),
+                                            PathLocation::fromPBF(pt.type())});
     }
   } catch (...) { throw valhalla_exception_t{424}; }
 }

@@ -35,7 +35,7 @@ void via_discontinuity(
     const valhalla::Location& loc,
     const GraphId& in,
     const GraphId& out,
-    std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>& vias,
+    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>& vias,
     const size_t path_index,
     const bool flip_index) {
   // Find the path edges within the locations.
@@ -348,7 +348,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   // Things we'll need
   TripRoute* route = nullptr;
   GraphId first_edge;
-  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> vias;
+  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> vias;
   std::vector<thor::PathInfo> path;
   auto& correlated = *api.mutable_options()->mutable_locations();
 
@@ -440,7 +440,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   // Things we'll need
   GraphId last_edge;
   TripRoute* route = nullptr;
-  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> vias;
+  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> vias;
   std::vector<thor::PathInfo> path;
   std::list<valhalla::TripLeg> trip_paths;
   auto& correlated = *api.mutable_options()->mutable_locations();

@@ -6,6 +6,8 @@
 #include "meili/routing.h"
 #include "meili/transition_cost_model.h"
 #include "midgard/distanceapproximator.h"
+#include "worker.h"
+
 #include <array>
 
 namespace {
@@ -709,6 +711,10 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
 
   // Separate the measurements we are using for matching from the ones we'll just interpolate
   auto interpolated = AppendMeasurements(measurements);
+  // Without minimum number of edge candidates, throw a 443 - NoSegment error code.
+  if (!container_.HasMinimumCandidates()) {
+    throw valhalla_exception_t{443};
+  }
 
   // For k paths
   std::vector<StateId> state_ids;
@@ -874,8 +880,8 @@ StateId::Time MapMatcher::AppendMeasurement(const Measurement& measurement,
   auto sq_radius = std::min(sq_max_search_radius,
                             std::max(measurement.sq_search_radius(), measurement.sq_gps_accuracy()));
 
-  const auto& candidates =
-      candidatequery_.Query(measurement.lnglat(), sq_radius, costing()->GetEdgeFilter());
+  const auto& candidates = candidatequery_.Query(measurement.lnglat(), measurement.stop_type(),
+                                                 sq_radius, costing()->GetEdgeFilter());
 
   const auto time = container_.AppendMeasurement(measurement);
 

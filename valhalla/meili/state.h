@@ -2,6 +2,7 @@
 #ifndef MMP_STATE_H_
 #define MMP_STATE_H_
 
+#include <algorithm>
 #include <unordered_map>
 #include <vector>
 
@@ -121,6 +122,16 @@ public:
 
   StateId::Time size() const {
     return static_cast<StateId::Time>(columns_.size());
+  }
+
+  // Check to see if we have the minimum number of measurements and edge candidates to perform a map
+  // match. We need at least one measurements with a non-zero number of edge candidates.
+  bool HasMinimumCandidates() {
+    if (size() < 2) {
+      return false;
+    }
+    return std::find_if(columns_.begin(), columns_.end(),
+                        [](Column& col) { return col.size() > 0; }) != columns_.end();
   }
 
   std::string geojson(const StateId& s) const {

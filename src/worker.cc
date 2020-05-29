@@ -932,6 +932,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
   if (interpolation_distance) {
     options.set_interpolation_distance(*interpolation_distance);
   }
+
   // if specified, get the filter_action value in there
   auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
   FilterAction filter_action;

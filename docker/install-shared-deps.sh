@@ -23,7 +23,7 @@ apt-get install -y \
     libcurl4-openssl-dev \
     libgeos++-dev \
     libgeos-dev \
-    liblua5.2-dev \
+    libluajit-5.1-dev \
     liblz4-dev \
     libprime-server0.6.3-dev \
     libprotobuf-dev \
@@ -32,7 +32,7 @@ apt-get install -y \
     libsqlite3-mod-spatialite \
     libtool \
     locales \
-    lua5.2 \
+    luajit \
     make \
     ninja-build \
     osmium-tool \

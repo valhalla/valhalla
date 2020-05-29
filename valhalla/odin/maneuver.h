@@ -220,6 +220,16 @@ public:
   bool HasRoundaboutExitStreetNames() const;
   void ClearRoundaboutExitStreetNames();
 
+  const StreetNames& roundabout_exit_begin_street_names() const;
+  void set_roundabout_exit_begin_street_names(const std::vector<std::pair<std::string, bool>>& names);
+  void set_roundabout_exit_begin_street_names(
+      std::unique_ptr<StreetNames>&& roundabout_exit_begin_street_names);
+  bool HasRoundaboutExitBeginStreetNames() const;
+  void ClearRoundaboutExitBeginStreetNames();
+
+  const Signs& roundabout_exit_signs() const;
+  Signs* mutable_roundabout_exit_signs();
+
   RelativeDirection merge_to_relative_direction() const;
   void set_merge_to_relative_direction(RelativeDirection merge_to_relative_direction);
 
@@ -365,6 +375,8 @@ protected:
   bool distant_verbal_multi_cue_;
   bool to_stay_on_;
   std::unique_ptr<StreetNames> roundabout_exit_street_names_;
+  std::unique_ptr<StreetNames> roundabout_exit_begin_street_names_;
+  Signs roundabout_exit_signs_;
   RelativeDirection merge_to_relative_direction_;
   bool drive_on_right_; // Defaults to true
   bool has_time_restrictions_;

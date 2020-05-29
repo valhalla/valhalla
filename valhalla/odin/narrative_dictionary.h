@@ -124,6 +124,8 @@ constexpr auto kStreetNamesTag = "<STREET_NAMES>";
 constexpr auto kPreviousStreetNamesTag = "<PREVIOUS_STREET_NAMES>";
 constexpr auto kBeginStreetNamesTag = "<BEGIN_STREET_NAMES>";
 constexpr auto kCrossStreetNamesTag = "<CROSS_STREET_NAMES>";
+constexpr auto kRoundaboutExitStreetNamesTag = "<ROUNDABOUT_EXIT_STREET_NAMES>";
+constexpr auto kRoundaboutExitBeginStreetNamesTag = "<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>";
 constexpr auto kLengthTag = "<LENGTH>";
 constexpr auto kDestinationTag = "<DESTINATION>";
 constexpr auto kCurrentVerbalCueTag = "<CURRENT_VERBAL_CUE>";
@@ -137,6 +139,7 @@ constexpr auto kNumberSignTag = "<NUMBER_SIGN>";
 constexpr auto kBranchSignTag = "<BRANCH_SIGN>";
 constexpr auto kTowardSignTag = "<TOWARD_SIGN>";
 constexpr auto kNameSignTag = "<NAME_SIGN>";
+constexpr auto kJunctionNameTag = "<JUNCTION_NAME>";
 constexpr auto kFerryLabelTag = "<FERRY_LABEL>";
 constexpr auto kTransitPlatformTag = "<TRANSIT_STOP>";
 constexpr auto kStationLabelTag = "<STATION_LABEL>";
@@ -198,6 +201,7 @@ struct EnterFerrySubset : PhraseSet {
 
 struct EnterRoundaboutSubset : PhraseSet {
   std::vector<std::string> ordinal_values;
+  std::vector<std::string> empty_street_name_labels;
 };
 
 struct TransitConnectionSubset : PhraseSet {
