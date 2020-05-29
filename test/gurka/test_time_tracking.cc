@@ -120,6 +120,11 @@ TEST(TimeTracking, forward) {
     ti = baldr::TimeInfo{true, 94, 123456789, 0, 0, 0, cache}.forward(10, 110);
     ASSERT_EQ(ti, (baldr::TimeInfo{true, 110, 123456789 + 10 + 60 * 60 * 3, 10 + 60 * 60 * 3, 10}));
 
+    // change in timezone should result in some offset (NY to LA) wrap around backwards
+    ti = baldr::TimeInfo{true, 110, 123456789, 0, 0, 0, cache}.forward(10, 94);
+    ASSERT_EQ(ti, (baldr::TimeInfo{true, 94, 123456789 + 10 - 60 * 60 * 3,
+                                   midgard::kSecondsPerWeek + 10 - 60 * 60 * 3, 10}));
+
     // wrap around second of week
     ti = baldr::TimeInfo{true, 1, 2, midgard::kSecondsPerWeek - 5, 0, 0, cache}.forward(10, 1);
     ASSERT_EQ(ti, (baldr::TimeInfo{true, 1, 12, 5, 10}));
@@ -134,7 +139,7 @@ TEST(TimeTracking, forward) {
   }
 }
 
-TEST(TimeTracking, decrement) {
+TEST(TimeTracking, reverse) {
   // once without tz cache and once with
   for (auto* cache : std::vector<baldr::DateTime::tz_sys_info_cache_t*>{
            nullptr,
@@ -148,6 +153,12 @@ TEST(TimeTracking, decrement) {
     ti = baldr::TimeInfo{true, 110, 123456789, 0, 0, 0, cache}.reverse(10, 94);
     ASSERT_EQ(ti, (baldr::TimeInfo{true, 94, 123456789 - 10 - 60 * 60 * 3,
                                    midgard::kSecondsPerWeek - 10 - 60 * 60 * 3, 10, 1}));
+
+    // change in timezone should result in some offset (LA to NY)
+    ti = baldr::TimeInfo{true, 94, 123456789, midgard::kSecondsPerWeek - 1, 0, 0, cache}.reverse(10,
+                                                                                                 110);
+    ASSERT_EQ(ti, (baldr::TimeInfo{true, 110, 123456789 - 10 + 60 * 60 * 3, -1 - 10 + 60 * 60 * 3, 10,
+                                   1}));
 
     // wrap around second of week
     ti = baldr::TimeInfo{true, 1, 22, 5, 0, 0, cache}.reverse(10, 1);

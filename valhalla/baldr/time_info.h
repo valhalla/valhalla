@@ -133,7 +133,7 @@ struct TimeInfo {
 
     // offset the local time and second of week by the amount traveled to this label
     uint64_t lt = local_time + static_cast<uint64_t>(seconds_offset);
-    uint32_t sw = static_cast<uint32_t>(second_of_week + seconds_offset);
+    int32_t sw = static_cast<int32_t>(second_of_week + seconds_offset);
 
     // if the timezone changed we need to account for that offset as well
     if (next_tz_index != timezone_index) {
@@ -144,8 +144,11 @@ struct TimeInfo {
       sw += tz_diff;
     }
 
-    // wrap the week second if it went past the end
-    if (sw > valhalla::midgard::kSecondsPerWeek) {
+    // wrap the week second it went past the beginning
+    if (sw < 0) {
+      sw += valhalla::midgard::kSecondsPerWeek;
+    } // wrap the week second if it went past the end
+    else if (sw > valhalla::midgard::kSecondsPerWeek) {
       sw -= valhalla::midgard::kSecondsPerWeek;
     }
 
@@ -156,8 +159,12 @@ struct TimeInfo {
 
     // return the shifted object, notice that seconds from now is only useful for
     // date_time type == current
-    return {valid,   static_cast<uint64_t>(next_tz_index), lt,
-            sw,      static_cast<uint64_t>(std::abs(sfn)), sfn < 0,
+    return {valid,
+            static_cast<uint64_t>(next_tz_index),
+            lt,
+            static_cast<uint32_t>(sw),
+            static_cast<uint64_t>(std::abs(sfn)),
+            sfn < 0,
             tz_cache};
   }
 
@@ -184,9 +191,12 @@ struct TimeInfo {
       sw += tz_diff;
     }
 
-    // wrap the week second if it went past the beginning
+    // wrap the week second it went past the beginning
     if (sw < 0) {
-      sw = valhalla::midgard::kSecondsPerWeek + sw;
+      sw += valhalla::midgard::kSecondsPerWeek;
+    } // wrap the week second if it went past the end
+    else if (sw > valhalla::midgard::kSecondsPerWeek) {
+      sw -= valhalla::midgard::kSecondsPerWeek;
     }
 
     // offset the distance to now handling the sign
