@@ -80,12 +80,14 @@ TEST(TimeTracking, make) {
     int offset = 7;
     if (minutes + offset > 60)
       offset = -offset;
-    now_str = now_str.substr(0, now_str.size() - 2) + std::to_string(minutes + offset);
+    now_str = now_str.substr(0, now_str.size() - 2) + (minutes + offset < 10 ? "0" : "") +
+              std::to_string(minutes + offset);
     location->set_date_time(now_str);
     ti = baldr::TimeInfo::make(*location, reader, cache);
     lt = dt::seconds_since_epoch(now_str, tz);
     sec = dt::second_of_week(lt, tz);
-    ASSERT_EQ(ti, (baldr::TimeInfo{true, 291, lt, sec, static_cast<uint64_t>(offset * 60)}));
+    ASSERT_EQ(ti, (baldr::TimeInfo{true, 291, lt, sec, static_cast<uint64_t>(std::abs(offset * 60)),
+                                   offset < 0}));
     ASSERT_EQ(location->date_time(), now_str);
 
     // messed up date time
