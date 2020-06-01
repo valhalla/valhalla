@@ -4,6 +4,7 @@
 #define MMP_MEASUREMENT_H_
 
 #include <cinttypes>
+#include <valhalla/baldr/location.h>
 #include <valhalla/midgard/pointll.h>
 
 namespace valhalla {
@@ -16,9 +17,9 @@ public:
               float gps_accuracy,
               float search_radius,
               double epoch_time = -1.f,
-              bool is_break_point = false)
+              baldr::Location::StopType stop_type = baldr::Location::StopType::VIA)
       : lnglat_(lnglat), gps_accuracy_(gps_accuracy), search_radius_(search_radius),
-        epoch_time_(epoch_time), is_break_point_(is_break_point) {
+        epoch_time_(epoch_time), stop_type_(stop_type) {
     if (gps_accuracy_ < 0.f) {
       throw std::invalid_argument("non-negative gps_accuracy required");
     }
@@ -52,7 +53,12 @@ public:
   }
 
   bool is_break_point() const {
-    return is_break_point_;
+    return stop_type_ == baldr::Location::StopType::BREAK ||
+           stop_type_ == baldr::Location::StopType::BREAK_THROUGH;
+  }
+
+  baldr::Location::StopType stop_type() const {
+    return stop_type_;
   }
 
 private:
@@ -64,7 +70,7 @@ private:
 
   double epoch_time_;
 
-  bool is_break_point_;
+  baldr::Location::StopType stop_type_;
 };
 
 } // namespace meili

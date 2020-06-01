@@ -99,6 +99,97 @@ const std::map<std::string, std::string> kExpectedExitPhrases =
      {"27", "Take the <NAME_SIGN> exit toward <TOWARD_SIGN>."},
      {"29", "Take the <NAME_SIGN> exit onto <BRANCH_SIGN> toward <TOWARD_SIGN>."}};
 
+const std::map<std::string, std::string> kExpectedContinuePhrases =
+    {{"0", "Continue."},
+     {"1", "Continue on <STREET_NAMES>."},
+     {"2", "Continue at <JUNCTION_NAME>."},
+     {"3", "Continue toward <TOWARD_SIGN>."}};
+
+const std::map<std::string, std::string> kExpectedContinueVerbalPhrases =
+    {{"0", "Continue."},
+     {"1", "Continue for <LENGTH>."},
+     {"2", "Continue on <STREET_NAMES>."},
+     {"3", "Continue on <STREET_NAMES> for <LENGTH>."},
+     {"4", "Continue at <JUNCTION_NAME>."},
+     {"5", "Continue at <JUNCTION_NAME> for <LENGTH>."},
+     {"6", "Continue toward <TOWARD_SIGN>."},
+     {"7", "Continue toward <TOWARD_SIGN> for <LENGTH>."}};
+
+const std::map<std::string, std::string> kExpectedContinueVerbalAlertPhrases =
+    {{"0", "Continue."},
+     {"1", "Continue on <STREET_NAMES>."},
+     {"2", "Continue at <JUNCTION_NAME>."},
+     {"3", "Continue toward <TOWARD_SIGN>."}};
+
+const std::map<std::string, std::string> kExpectedBearPhrases =
+    {{"0", "Bear <RELATIVE_DIRECTION>."},
+     {"1", "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>."},
+     {"2", "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
+     {"3", "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."},
+     {"4", "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>."},
+     {"5", "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."}};
+
+const std::map<std::string, std::string> kExpectedBearVerbalPhrases =
+    {{"0", "Bear <RELATIVE_DIRECTION>."},
+     {"1", "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>."},
+     {"2", "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>."},
+     {"3", "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."},
+     {"4", "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>."},
+     {"5", "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."}};
+
+const std::map<std::string, std::string> kExpectedTurnPhrases =
+    {{"0", "Turn <RELATIVE_DIRECTION>."},
+     {"1", "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."},
+     {"2", "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
+     {"3", "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."},
+     {"4", "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>."},
+     {"5", "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."}};
+
+const std::map<std::string, std::string> kExpectedTurnVerbalPhrases =
+    {{"0", "Turn <RELATIVE_DIRECTION>."},
+     {"1", "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>."},
+     {"2", "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>."},
+     {"3", "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."},
+     {"4", "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>."},
+     {"5", "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."}};
+
+const std::map<std::string, std::string> kExpectedSharpPhrases =
+    {{"0", "Make a sharp <RELATIVE_DIRECTION>."},
+     {"1", "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>."},
+     {"2",
+      "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."},
+     {"3", "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."},
+     {"4", "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>."},
+     {"5", "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."}};
+
+const std::map<std::string, std::string> kExpectedSharpVerbalPhrases =
+    {{"0", "Make a sharp <RELATIVE_DIRECTION>."},
+     {"1", "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>."},
+     {"2", "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>."},
+     {"3", "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."},
+     {"4", "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>."},
+     {"5", "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."}};
+
+const std::map<std::string, std::string> kExpectedUturnPhrases =
+    {{"0", "Make a <RELATIVE_DIRECTION> U-turn."},
+     {"1", "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>."},
+     {"2", "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>."},
+     {"3", "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>."},
+     {"4", "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."},
+     {"5", "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."},
+     {"6", "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>."},
+     {"7", "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."}};
+
+const std::map<std::string, std::string> kExpectedUturnVerbalPhrases =
+    {{"0", "Make a <RELATIVE_DIRECTION> U-turn."},
+     {"1", "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>."},
+     {"2", "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>."},
+     {"3", "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>."},
+     {"4", "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."},
+     {"5", "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."},
+     {"6", "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>."},
+     {"7", "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."}};
+
 const std::map<std::string, std::string> kExpectedExitVerbalPhrases =
     {{"0", "Take the exit on the <RELATIVE_DIRECTION>."},
      {"1", "Take exit <NUMBER_SIGN> on the <RELATIVE_DIRECTION>."},
@@ -155,13 +246,17 @@ const std::map<std::string, std::string> kExpectedMergePhrases =
     {{"0", "Merge."},
      {"1", "Merge <RELATIVE_DIRECTION>."},
      {"2", "Merge onto <STREET_NAMES>."},
-     {"3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."}};
+     {"3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."},
+     {"4", "Merge toward <TOWARD_SIGN>."},
+     {"5", "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."}};
 
 const std::map<std::string, std::string> kExpectedMergeVerbalPhrases =
     {{"0", "Merge."},
      {"1", "Merge <RELATIVE_DIRECTION>."},
      {"2", "Merge onto <STREET_NAMES>."},
-     {"3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."}};
+     {"3", "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>."},
+     {"4", "Merge toward <TOWARD_SIGN>."},
+     {"5", "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."}};
 
 const std::map<std::string, std::string> kExpectedEnterRoundaboutPhrases = {
     {"0", "Enter the roundabout."},
@@ -224,12 +319,14 @@ const std::map<std::string, std::string> kExpectedExitRoundaboutVerbalPhrases =
 const std::map<std::string, std::string> kExpectedEnterFerryPhrases =
     {{"0", "Take the Ferry."},
      {"1", "Take the <STREET_NAMES>."},
-     {"2", "Take the <STREET_NAMES> <FERRY_LABEL>."}};
+     {"2", "Take the <STREET_NAMES> <FERRY_LABEL>."},
+     {"3", "Take the ferry toward <TOWARD_SIGN>."}};
 
 const std::map<std::string, std::string> kExpectedEnterFerryVerbalPhrases =
     {{"0", "Take the Ferry."},
      {"1", "Take the <STREET_NAMES>."},
-     {"2", "Take the <STREET_NAMES> <FERRY_LABEL>."}};
+     {"2", "Take the <STREET_NAMES> <FERRY_LABEL>."},
+     {"3", "Take the ferry toward <TOWARD_SIGN>."}};
 
 const std::map<std::string, std::string> kExpectedTransitConnectionStartPhrases =
     {{"0", "Enter the station."},
@@ -434,13 +531,8 @@ TEST(NarrativeDictionary, test_en_US_becomes_verbal) {
 TEST(NarrativeDictionary, test_en_US_continue) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
-  // "0": "Continue.",
-  const auto& phrase_0 = dictionary.continue_subset.phrases.at("0");
-  validate(phrase_0, "Continue.");
-
-  // "1": "Continue on <STREET_NAMES>."
-  const auto& phrase_1 = dictionary.continue_subset.phrases.at("1");
-  validate(phrase_1, "Continue on <STREET_NAMES>.");
+  // Validate continue phrases
+  validate(dictionary.continue_subset.phrases, kExpectedContinuePhrases);
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
   const auto& empty_street_name_labels = dictionary.continue_subset.empty_street_name_labels;
@@ -450,13 +542,8 @@ TEST(NarrativeDictionary, test_en_US_continue) {
 TEST(NarrativeDictionary, test_en_US_continue_verbal_alert) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
-  // "0": "Continue.",
-  const auto& phrase_0 = dictionary.continue_verbal_alert_subset.phrases.at("0");
-  validate(phrase_0, "Continue.");
-
-  // "1": "Continue on <STREET_NAMES>."
-  const auto& phrase_1 = dictionary.continue_verbal_alert_subset.phrases.at("1");
-  validate(phrase_1, "Continue on <STREET_NAMES>.");
+  // Validate continue_verbal_alert phrases
+  validate(dictionary.continue_verbal_alert_subset.phrases, kExpectedContinueVerbalAlertPhrases);
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
   const auto& empty_street_name_labels =
@@ -467,21 +554,8 @@ TEST(NarrativeDictionary, test_en_US_continue_verbal_alert) {
 TEST(NarrativeDictionary, test_en_US_continue_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
-  // "0": "Continue.",
-  const auto& phrase_0 = dictionary.continue_verbal_subset.phrases.at("0");
-  validate(phrase_0, "Continue.");
-
-  // "1": "Continue for <LENGTH>.",
-  const auto& phrase_1 = dictionary.continue_verbal_subset.phrases.at("1");
-  validate(phrase_1, "Continue for <LENGTH>.");
-
-  // "2": "Continue on <STREET_NAMES>."
-  const auto& phrase_2 = dictionary.continue_verbal_subset.phrases.at("2");
-  validate(phrase_2, "Continue on <STREET_NAMES>.");
-
-  // "3": "Continue on <STREET_NAMES> for <LENGTH>."
-  const auto& phrase_3 = dictionary.continue_verbal_subset.phrases.at("3");
-  validate(phrase_3, "Continue on <STREET_NAMES> for <LENGTH>.");
+  // Validate continue_verbal phrases
+  validate(dictionary.continue_verbal_subset.phrases, kExpectedContinueVerbalPhrases);
 
   // empty_street_name_labels "walkway", "cycleway", "mountain bike trail"
   const auto& empty_street_name_labels = dictionary.continue_verbal_subset.empty_street_name_labels;
@@ -499,22 +573,8 @@ TEST(NarrativeDictionary, test_en_US_continue_verbal) {
 TEST(NarrativeDictionary, test_en_US_bear) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
-  // "0": "Bear <RELATIVE_DIRECTION>.",
-  const auto& phrase_0 = dictionary.bear_subset.phrases.at("0");
-  validate(phrase_0, "Bear <RELATIVE_DIRECTION>.");
-
-  // "1": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-  const auto& phrase_1 = dictionary.bear_subset.phrases.at("1");
-  validate(phrase_1, "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>.");
-
-  // "2": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-  const auto& phrase_2 = dictionary.bear_subset.phrases.at("2");
-  validate(phrase_2,
-           "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.");
-
-  // "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-  const auto& phrase_3 = dictionary.bear_subset.phrases.at("3");
-  validate(phrase_3, "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.");
+  // Validate bear phrases
+  validate(dictionary.bear_subset.phrases, kExpectedBearPhrases);
 
   // relative_directions
   const auto& relative_directions = dictionary.bear_subset.relative_directions;
@@ -528,21 +588,8 @@ TEST(NarrativeDictionary, test_en_US_bear) {
 TEST(NarrativeDictionary, test_en_US_bear_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
-  // "0": "Bear <RELATIVE_DIRECTION>.",
-  const auto& phrase_0 = dictionary.bear_verbal_subset.phrases.at("0");
-  validate(phrase_0, "Bear <RELATIVE_DIRECTION>.");
-
-  // "1": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-  const auto& phrase_1 = dictionary.bear_verbal_subset.phrases.at("1");
-  validate(phrase_1, "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES>.");
-
-  // "2": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-  const auto& phrase_2 = dictionary.bear_verbal_subset.phrases.at("2");
-  validate(phrase_2, "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.");
-
-  // "3": "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-  const auto& phrase_3 = dictionary.bear_verbal_subset.phrases.at("3");
-  validate(phrase_3, "Bear <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.");
+  // Validate bear_verbal phrases
+  validate(dictionary.bear_verbal_subset.phrases, kExpectedBearVerbalPhrases);
 
   // relative_directions
   const auto& relative_directions = dictionary.bear_verbal_subset.relative_directions;
@@ -556,22 +603,8 @@ TEST(NarrativeDictionary, test_en_US_bear_verbal) {
 TEST(NarrativeDictionary, test_en_US_turn) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
-  // "0": "Turn <RELATIVE_DIRECTION>.",
-  const auto& phrase_0 = dictionary.turn_subset.phrases.at("0");
-  validate(phrase_0, "Turn <RELATIVE_DIRECTION>.");
-
-  // "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-  const auto& phrase_1 = dictionary.turn_subset.phrases.at("1");
-  validate(phrase_1, "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.");
-
-  // "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-  const auto& phrase_2 = dictionary.turn_subset.phrases.at("2");
-  validate(phrase_2,
-           "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.");
-
-  // "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-  const auto& phrase_3 = dictionary.turn_subset.phrases.at("3");
-  validate(phrase_3, "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.");
+  // Validate turn phrases
+  validate(dictionary.turn_subset.phrases, kExpectedTurnPhrases);
 
   // relative_directions
   const auto& relative_directions = dictionary.turn_subset.relative_directions;
@@ -585,21 +618,8 @@ TEST(NarrativeDictionary, test_en_US_turn) {
 TEST(NarrativeDictionary, test_en_US_turn_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
-  // "0": "Turn <RELATIVE_DIRECTION>.",
-  const auto& phrase_0 = dictionary.turn_verbal_subset.phrases.at("0");
-  validate(phrase_0, "Turn <RELATIVE_DIRECTION>.");
-
-  // "1": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-  const auto& phrase_1 = dictionary.turn_verbal_subset.phrases.at("1");
-  validate(phrase_1, "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES>.");
-
-  // "2": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-  const auto& phrase_2 = dictionary.turn_verbal_subset.phrases.at("2");
-  validate(phrase_2, "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.");
-
-  // "3": "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-  const auto& phrase_3 = dictionary.turn_verbal_subset.phrases.at("3");
-  validate(phrase_3, "Turn <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.");
+  // Validate turn_verbal phrases
+  validate(dictionary.turn_verbal_subset.phrases, kExpectedTurnVerbalPhrases);
 
   // relative_directions
   const auto& relative_directions = dictionary.turn_verbal_subset.relative_directions;
@@ -613,22 +633,8 @@ TEST(NarrativeDictionary, test_en_US_turn_verbal) {
 TEST(NarrativeDictionary, test_en_US_sharp) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
-  // "0": "Make a sharp <RELATIVE_DIRECTION>.",
-  const auto& phrase_0 = dictionary.sharp_subset.phrases.at("0");
-  validate(phrase_0, "Make a sharp <RELATIVE_DIRECTION>.");
-
-  // "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-  const auto& phrase_1 = dictionary.sharp_subset.phrases.at("1");
-  validate(phrase_1, "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.");
-
-  // "2": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.",
-  const auto& phrase_2 = dictionary.sharp_subset.phrases.at("2");
-  validate(phrase_2,
-           "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>.");
-
-  // "3": "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-  const auto& phrase_3 = dictionary.sharp_subset.phrases.at("3");
-  validate(phrase_3, "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.");
+  // Validate sharp phrases
+  validate(dictionary.sharp_subset.phrases, kExpectedSharpPhrases);
 
   // relative_directions
   const auto& relative_directions = dictionary.sharp_subset.relative_directions;
@@ -642,21 +648,8 @@ TEST(NarrativeDictionary, test_en_US_sharp) {
 TEST(NarrativeDictionary, test_en_US_sharp_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
-  // "0": "Make a sharp <RELATIVE_DIRECTION>.",
-  const auto& phrase_0 = dictionary.sharp_verbal_subset.phrases.at("0");
-  validate(phrase_0, "Make a sharp <RELATIVE_DIRECTION>.");
-
-  // "1": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
-  const auto& phrase_1 = dictionary.sharp_verbal_subset.phrases.at("1");
-  validate(phrase_1, "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES>.");
-
-  // "2": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.",
-  const auto& phrase_2 = dictionary.sharp_verbal_subset.phrases.at("2");
-  validate(phrase_2, "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES>.");
-
-  // "3": "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>."
-  const auto& phrase_3 = dictionary.sharp_verbal_subset.phrases.at("3");
-  validate(phrase_3, "Make a sharp <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.");
+  // Validate sharp_verbal phrases
+  validate(dictionary.sharp_verbal_subset.phrases, kExpectedSharpVerbalPhrases);
 
   // relative_directions
   const auto& relative_directions = dictionary.sharp_verbal_subset.relative_directions;
@@ -670,31 +663,8 @@ TEST(NarrativeDictionary, test_en_US_sharp_verbal) {
 TEST(NarrativeDictionary, test_en_US_uturn) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
-  // "0": "Make a <RELATIVE_DIRECTION> U-turn.",
-  const auto& phrase_0 = dictionary.uturn_subset.phrases.at("0");
-  validate(phrase_0, "Make a <RELATIVE_DIRECTION> U-turn.");
-
-  // "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
-  const auto& phrase_1 = dictionary.uturn_subset.phrases.at("1");
-  validate(phrase_1, "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.");
-
-  // "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
-  const auto& phrase_2 = dictionary.uturn_subset.phrases.at("2");
-  validate(phrase_2, "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.");
-
-  // "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
-  const auto& phrase_3 = dictionary.uturn_subset.phrases.at("3");
-  validate(phrase_3, "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.");
-
-  // "4": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
-  const auto& phrase_4 = dictionary.uturn_subset.phrases.at("4");
-  validate(phrase_4,
-           "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.");
-
-  // "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
-  const auto& phrase_5 = dictionary.uturn_subset.phrases.at("5");
-  validate(phrase_5,
-           "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>.");
+  // Validate uturn phrases
+  validate(dictionary.uturn_subset.phrases, kExpectedUturnPhrases);
 
   // relative_directions
   const auto& relative_directions = dictionary.uturn_verbal_subset.relative_directions;
@@ -708,31 +678,8 @@ TEST(NarrativeDictionary, test_en_US_uturn) {
 TEST(NarrativeDictionary, test_en_US_uturn_verbal) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
-  // "0": "Make a <RELATIVE_DIRECTION> U-turn.",
-  const auto& phrase_0 = dictionary.uturn_verbal_subset.phrases.at("0");
-  validate(phrase_0, "Make a <RELATIVE_DIRECTION> U-turn.");
-
-  // "1": "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.",
-  const auto& phrase_1 = dictionary.uturn_verbal_subset.phrases.at("1");
-  validate(phrase_1, "Make a <RELATIVE_DIRECTION> U-turn onto <STREET_NAMES>.");
-
-  // "2": "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.",
-  const auto& phrase_2 = dictionary.uturn_verbal_subset.phrases.at("2");
-  validate(phrase_2, "Make a <RELATIVE_DIRECTION> U-turn to stay on <STREET_NAMES>.");
-
-  // "3": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.",
-  const auto& phrase_3 = dictionary.uturn_verbal_subset.phrases.at("3");
-  validate(phrase_3, "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES>.");
-
-  // "4": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.",
-  const auto& phrase_4 = dictionary.uturn_verbal_subset.phrases.at("4");
-  validate(phrase_4,
-           "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>.");
-
-  // "5": "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
-  const auto& phrase_5 = dictionary.uturn_verbal_subset.phrases.at("5");
-  validate(phrase_5,
-           "Make a <RELATIVE_DIRECTION> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>.");
+  // Validate uturn_verbal phrases
+  validate(dictionary.uturn_verbal_subset.phrases, kExpectedUturnVerbalPhrases);
 
   // relative_directions
   const auto& relative_directions = dictionary.uturn_verbal_subset.relative_directions;

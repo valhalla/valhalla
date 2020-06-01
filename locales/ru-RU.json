@@ -37,7 +37,9 @@
         "0": "Держитесь <RELATIVE_DIRECTION>.",
         "1": "Держитесь <RELATIVE_DIRECTION> по <STREET_NAMES>.",
         "2": "Держитесь <RELATIVE_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
-        "3": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+        "3": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -60,6 +62,12 @@
         ],
         "3": [
           "Держитесь слева чтобы остаться на US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -68,7 +76,9 @@
         "0": "Держитесь <RELATIVE_DIRECTION>.",
         "1": "Держитесь <RELATIVE_DIRECTION> по <STREET_NAMES>.",
         "2": "Держитесь <RELATIVE_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
-        "3": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+        "3": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -91,6 +101,12 @@
         ],
         "3": [
           "Держитесь левее чтобы остаться на US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -117,7 +133,9 @@
     "continue": {
       "phrases": {
         "0": "Продолжайте.",
-        "1": "Продолжайте по <STREET_NAMES>."
+        "1": "Продолжайте по <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -130,6 +148,12 @@
         ],
         "1": [
           "Продолжайте по 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -138,7 +162,11 @@
         "0": "Продолжайте.",
         "1": "Проедьте <LENGTH>.",
         "2": "Продолжайте по <STREET_NAMES>.",
-        "3": "Проедьте <LENGTH> по <STREET_NAMES>."
+        "3": "Проедьте <LENGTH> по <STREET_NAMES>.",
+        "4": "Continue at <JUNCTION_NAME>.",
+        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
+        "6": "Continue toward <TOWARD_SIGN>.",
+        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -171,13 +199,27 @@
         ],
         "3": [
           "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
         ]
       }
     },
     "continue_verbal_alert": {
       "phrases": {
         "0": "Продолжайте.",
-        "1": "Продолжайте по <STREET_NAMES>."
+        "1": "Продолжайте по <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -190,6 +232,12 @@
         ],
         "1": [
           "Продолжайте по 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -306,7 +354,8 @@
       "phrases": {
         "0": "Воспользуйтесь паромом.",
         "1": "Воспользуйтесь паромом <STREET_NAMES>.",
-        "2": "Воспользуйтесь <STREET_NAMES> <FERRY_LABEL>."
+        "2": "Воспользуйтесь <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -323,6 +372,9 @@
         ],
         "2": [
           "Воспользуйтесь Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -330,7 +382,8 @@
       "phrases": {
         "0": "Воспользуйтесь паромом.",
         "1": "Воспользуйтесь паромом <STREET_NAMES>.",
-        "2": "Воспользуйтесь <STREET_NAMES> <FERRY_LABEL>."
+        "2": "Воспользуйтесь <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -347,6 +400,9 @@
         ],
         "2": [
           "Воспользуйтесь Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -983,7 +1039,9 @@
         "0": "Выезжайте.",
         "1": "Выезжайте <RELATIVE_DIRECTION>.",
         "2": "Выезжайте на <STREET_NAMES>.",
-        "3": "Выезжайте <RELATIVE_DIRECTION> на <STREET_NAMES>."
+        "3": "Выезжайте <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "слева",
@@ -1006,6 +1064,12 @@
         ],
         "3": [
           "Выезжайте справа на I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1014,7 +1078,9 @@
         "0": "Выезжайте.",
         "1": "Выезжайте <RELATIVE_DIRECTION>.",
         "2": "Выезжайте на <STREET_NAMES>.",
-        "3": "Выезжайте <RELATIVE_DIRECTION> на <STREET_NAMES>."
+        "3": "Выезжайте <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "слева",
@@ -1037,6 +1103,12 @@
         ],
         "3": [
           "Выезжайте справа на I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1292,7 +1364,9 @@
         "0": "Резко поверните <RELATIVE_DIRECTION>.",
         "1": "Резко поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
         "2": "Резко поверните <RELATIVE_DIRECTION> на<BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
-        "3": "Резко поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+        "3": "Резко поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -1315,6 +1389,12 @@
         ],
         "3": [
           "Резко поверните направо чтобы остаться на Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1323,7 +1403,9 @@
         "0": "Резко поверните <RELATIVE_DIRECTION>.",
         "1": "Резко поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
         "2": "Резко поверните <RELATIVE_DIRECTION> на<BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
-        "3": "Резко поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+        "3": "Резко поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -1346,6 +1428,12 @@
         ],
         "3": [
           "Резко поверните направо чтобы остаться на Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1834,7 +1922,9 @@
         "0": "Поверните <RELATIVE_DIRECTION>.",
         "1": "Поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
         "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
-        "3": "Поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+        "3": "Поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -1857,6 +1947,12 @@
         ],
         "3": [
           "Поверните направо чтобы остаться на Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1865,7 +1961,9 @@
         "0": "Поверните <RELATIVE_DIRECTION>.",
         "1": "Поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
         "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
-        "3": "Поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+        "3": "Поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -1888,6 +1986,12 @@
         ],
         "3": [
           "Поверните направо чтобы остаться на Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1898,7 +2002,9 @@
         "2": "Развернитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
         "3": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES>.",
         "4": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы попасть на <STREET_NAMES>.",
-        "5": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы остаться <STREET_NAMES>."
+        "5": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы остаться <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -1927,6 +2033,12 @@
         ],
         "5": [
           "Развернитесь влево на Devonshire Road чтобы остаться на Jonestown Road, U.S. 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },
@@ -1937,7 +2049,9 @@
         "2": "Развернитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
         "3": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES>.",
         "4": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы попасть на <STREET_NAMES>.",
-        "5": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы остаться <STREET_NAMES>."
+        "5": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы остаться <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -1966,6 +2080,12 @@
         ],
         "5": [
           "Развернитесь влево на Devonshire Road чтобы остаться на Jonestown Road, U.S. 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },

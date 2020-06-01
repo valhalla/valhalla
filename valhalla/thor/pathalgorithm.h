@@ -11,6 +11,7 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/dynamiccost.h>
+#include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathinfo.h>
 
@@ -99,6 +100,9 @@ protected:
   // for tracking the expansion of the algorithm visually
   expansion_callback_t expansion_callback_;
 
+  // when doing timezone differencing a timezone cache speeds up the computation
+  baldr::DateTime::tz_sys_info_cache_t tz_cache_;
+
   /**
    * Check for path completion along the same edge. Edge ID in question
    * is along both an origin and destination and origin shows up at the
@@ -122,17 +126,6 @@ protected:
       }
     }
     return false;
-  }
-
-  /**
-   * Convenience method to get the timezone index at a node.
-   * @param graphreader Graph reader.
-   * @param node GraphId of the node to get the timezone index.
-   * @return Returns the timezone index. A value of 0 indicates an invalid timezone.
-   */
-  int GetTimezone(baldr::GraphReader& graphreader, const baldr::GraphId& node) {
-    const baldr::GraphTile* tile = graphreader.GetGraphTile(node);
-    return (tile == nullptr) ? 0 : tile->node(node)->timezone();
   }
 };
 

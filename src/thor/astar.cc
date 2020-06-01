@@ -372,8 +372,6 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
   };
 
   // Iterate through edges and add to adjacency list
-  const NodeInfo* nodeinfo = nullptr;
-  const NodeInfo* closest_ni = nullptr;
   for (const auto& edge : origin.path_edges()) {
     // If origin is at a node - skip any inbound edge (dist = 1) unless the
     // destination is also at the same end node (trivial path).
@@ -399,7 +397,6 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     }
 
     // Get cost
-    nodeinfo = endtile->node(directededge->endnode());
     Cost cost =
         costing_->EdgeCost(directededge, tile, seconds_of_week) * (1.0f - edge.percent_along());
     float dist = astarheuristic_.GetDistance(endtile->get_node_ll(directededge->endnode()));
@@ -440,11 +437,6 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
       }
     }
 
-    // Store a node-info for later timezone retrieval (approximate for closest)
-    if (closest_ni == nullptr) {
-      closest_ni = nodeinfo;
-    }
-
     // Compute sortcost
     float sortcost = cost.cost + astarheuristic_.Get(dist);
 
@@ -462,12 +454,6 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     adjacencylist_->add(idx);
 
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
-  }
-
-  // Set the origin timezone
-  if (closest_ni != nullptr && origin.has_date_time() && origin.date_time() == "current") {
-    origin.set_date_time(
-        DateTime::iso_date_time(DateTime::get_tz_db().from_index(closest_ni->timezone())));
   }
 }
 

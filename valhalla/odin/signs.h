@@ -24,6 +24,10 @@ public:
 
   static void CountAndSort(std::vector<Sign>* prev_signs, std::vector<Sign>* curr_signs);
 
+  static std::vector<Sign> TrimSigns(const std::vector<Sign>& signs,
+                                     uint32_t max_count = 0,
+                                     bool limit_by_consecutive_count = false);
+
   const std::vector<Sign>& exit_number_list() const;
   std::vector<Sign>* mutable_exit_number_list();
 
@@ -76,6 +80,9 @@ public:
                                    bool limit_by_consecutive_count = false,
                                    const std::string& delim = "/",
                                    const VerbalTextFormatter* verbal_formatter = nullptr) const;
+
+  std::vector<Sign> GetGuideSigns(uint32_t max_count = 0,
+                                  bool limit_by_consecutive_count = false) const;
 
   const std::vector<Sign>& junction_name_list() const;
   std::vector<Sign>* mutable_junction_name_list();
