@@ -151,6 +151,7 @@ TEST(Traffic, BasicUpdates) {
     // Mostly just updates ever edge in the file to 25km/h, except for one
     // specific edge (B->D) where we simulate a closure (speed=0, congestion high)
     update_bd_traffic_speed(map, 25);
+
     // Now do another route with the same (not restarted) actor to see if
     // it's noticed the changes in the live traffic file
     {

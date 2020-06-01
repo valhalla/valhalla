@@ -77,7 +77,7 @@ const tz_db_t& get_tz_db() {
 }
 
 // get a formatted date.  date in the format of 2016-11-06T01:00 or 2016-11-06
-date::local_seconds get_formatted_date(const std::string& date) {
+date::local_seconds get_formatted_date(const std::string& date, bool can_throw) {
   std::istringstream in{date};
   date::local_seconds tp;
 
@@ -85,6 +85,12 @@ date::local_seconds get_formatted_date(const std::string& date) {
     in >> date::parse("%FT%R", tp);
   else if (date.find('-') != std::string::npos)
     in >> date::parse("%F", tp);
+  else
+    in.setstate(std::ios::failbit);
+
+  // we weren't able to use this string as a date and you'd like to know about it
+  if (can_throw && in.fail())
+    throw std::invalid_argument("Date string is invalid: " + date);
 
   return tp;
 }
@@ -99,7 +105,7 @@ date::zoned_seconds get_ldt(const date::local_seconds& d, const date::time_zone*
   return zt;
 }
 
-// Get the number of days that have elapsed from the pivot date for the inputed date.
+// Get the number of days that have elapsed from the pivot date for the input date.
 // date_time is in the format of 2015-05-06T08:00
 uint32_t days_from_pivot_date(const date::local_seconds& date_time) {
   if (date_time <= pivot_date_) {
@@ -133,7 +139,7 @@ uint64_t seconds_since_epoch(const std::string& date_time, const date::time_zone
 int timezone_diff(const uint64_t seconds,
                   const date::time_zone* origin_tz,
                   const date::time_zone* dest_tz,
-                  std::unordered_map<const date::time_zone*, std::vector<date::sys_info>>* cache) {
+                  tz_sys_info_cache_t* cache) {
 
   if (!origin_tz || !dest_tz || origin_tz == dest_tz) {
     return 0;

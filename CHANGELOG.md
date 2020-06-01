@@ -82,13 +82,14 @@
    * ADDED: Revamp length phrases [#2359](https://github.com/valhalla/valhalla/pull/2359)
    * CHANGED: Do not allocate memory in skadi if we don't need it. [#2373](https://github.com/valhalla/valhalla/pull/2373)
    * CHANGED: Map matching: throw error (443/NoSegment) when no candidate edges are available. [#2370](https://github.com/valhalla/valhalla/pull/2370/)
-   * ADDED: Add sk-SK.json (slovak) localization file. [2376](https://github.com/valhalla/valhalla/pull/2376)
-   * ADDED: Extend roundabout phrases. [2378](https://github.com/valhalla/valhalla/pull/2378)
-   * ADDED: More roundabout phrase tests. [2382](https://github.com/valhalla/valhalla/pull/2382)
-   * ADDED: Update the turn and continue phrases to include junction names and guide signs. [2386](https://github.com/valhalla/valhalla/pull/2386)
-   * ADDED: Add the remaining guide sign toward phrases [2389](https://github.com/valhalla/valhalla/pull/2389)
+   * ADDED: Add sk-SK.json (slovak) localization file. [#2376](https://github.com/valhalla/valhalla/pull/2376)
+   * ADDED: Extend roundabout phrases. [#2378](https://github.com/valhalla/valhalla/pull/2378)
+   * ADDED: More roundabout phrase tests. [#2382](https://github.com/valhalla/valhalla/pull/2382)
+   * ADDED: Update the turn and continue phrases to include junction names and guide signs. [#2386](https://github.com/valhalla/valhalla/pull/2386)
+   * ADDED: Add the remaining guide sign toward phrases [#2389](https://github.com/valhalla/valhalla/pull/2389)
    * ADDED: The ability to allow immediate uturns at trace points in a map matching request [#2380](https://github.com/valhalla/valhalla/pull/2380)
    * ADDED: Add utility functions to Signs. [#2390](https://github.com/valhalla/valhalla/pull/2390)
+   * ADDED: Unified time tracking for all algorithms that support time-based graph expansion. [#2278](https://github.com/valhalla/valhalla/pull/2278)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

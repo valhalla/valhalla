@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <valhalla/baldr/double_bucket_queue.h>
+#include <valhalla/baldr/time_info.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/hierarchylimits.h>
@@ -127,7 +128,8 @@ protected:
                      const baldr::GraphId& node,
                      sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
-                     const bool from_transition);
+                     const bool from_transition,
+                     const baldr::TimeInfo& time_info);
   // Private helper function for `ExpandForward`
   bool ExpandForwardInner(baldr::GraphReader& graphreader,
                           const sif::BDEdgeLabel& pred,
@@ -135,7 +137,8 @@ protected:
                           const uint32_t pred_idx,
                           const EdgeMetadata& meta,
                           uint32_t& shortcuts,
-                          const baldr::GraphTile* tile);
+                          const baldr::GraphTile* tile,
+                          const baldr::TimeInfo& time_info);
 
   /**
    * Expand from the node along the reverse search path.
@@ -145,7 +148,8 @@ protected:
                      sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
-                     const bool from_transition);
+                     const bool from_transition,
+                     const baldr::TimeInfo& time_info);
 
   // Private helper function for `ExpandReverse`
   bool ExpandReverseInner(baldr::GraphReader& graphreader,
@@ -155,7 +159,8 @@ protected:
                           const uint32_t pred_idx,
                           const EdgeMetadata& meta,
                           uint32_t& shortcuts,
-                          const baldr::GraphTile* tile);
+                          const baldr::GraphTile* tile,
+                          const baldr::TimeInfo& time_info);
   /**
    * Add edges at the origin to the forward adjacency list.
    * @param  graphreader  Graph tile reader.
