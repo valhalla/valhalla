@@ -56,6 +56,12 @@ protected:
                                                            std::list<Maneuver>::iterator next_man,
                                                            bool start_man);
 
+  std::list<Maneuver>::iterator CombineRampManeuver(std::list<Maneuver>& maneuvers,
+                                                           std::list<Maneuver>::iterator prev_man,
+                                                           std::list<Maneuver>::iterator curr_man,
+                                                           std::list<Maneuver>::iterator next_man,
+                                                           bool start_man);
+
   std::list<Maneuver>::iterator CombineManeuvers(std::list<Maneuver>& maneuvers,
                                                  std::list<Maneuver>::iterator curr_man,
                                                  std::list<Maneuver>::iterator next_man);
@@ -159,7 +165,8 @@ protected:
    * @return true if the current and next ramp maneuvers are able to be combined,
    * false otherwise.
    */
-  bool AreRampManeuversCombinable(std::list<Maneuver>::iterator curr_man,
+  bool AreRampManeuversCombinable(std::list<Maneuver>::iterator prev_man,
+                                  std::list<Maneuver>::iterator curr_man,
                                   std::list<Maneuver>::iterator next_man) const;
 
   /**

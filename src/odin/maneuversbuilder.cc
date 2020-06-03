@@ -352,6 +352,25 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         curr_man = next_man;
         ++next_man;
       }
+      // Combine ramp maneuvers
+      else if (AreRampManeuversCombinable(prev_man, curr_man, next_man)) {
+
+        uint32_t turn_degree = GetTurnDegree(prev_man->end_heading(), curr_man->begin_heading());
+        Turn::Type turn_type = Turn::GetType(turn_degree);
+        if (turn_type == Turn::Type::kStraight && curr_man->length() < 0.05f) {
+          LOG_TRACE("+++ Combine: current ramp maneuver with next maneuver +++");
+          curr_man = CombineRampManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
+          if (is_first_man) {
+            prev_man = curr_man;
+          }
+          maneuvers_have_been_combined = true;
+          ++next_man;
+        } else {
+          LOG_TRACE("+++ Combine: ramp maneuvers +++");
+          next_man = CombineManeuvers(maneuvers, curr_man, next_man);
+          maneuvers_have_been_combined = true;
+        }
+      }
       // Do not combine
       // if next maneuver is a fork or a tee
       else if (next_man->fork() || next_man->tee()) {
@@ -448,12 +467,6 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
                !curr_man->roundabout() && !next_man->roundabout()) {
 
         LOG_TRACE("+++ Combine: unnamed straight maneuvers +++");
-        next_man = CombineManeuvers(maneuvers, curr_man, next_man);
-        maneuvers_have_been_combined = true;
-      }
-      // Combine ramp maneuvers
-      else if (AreRampManeuversCombinable(curr_man, next_man)) {
-        LOG_TRACE("+++ Combine: ramp maneuvers +++");
         next_man = CombineManeuvers(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
       } else {
@@ -618,6 +631,59 @@ ManeuversBuilder::CombineTurnChannelManeuver(std::list<Maneuver>& maneuvers,
 }
 
 std::list<Maneuver>::iterator
+ManeuversBuilder::CombineRampManeuver(std::list<Maneuver>& maneuvers,
+                                             std::list<Maneuver>::iterator prev_man,
+                                             std::list<Maneuver>::iterator curr_man,
+                                             std::list<Maneuver>::iterator next_man,
+                                             bool start_man) {
+
+  if (start_man) {
+    // Determine turn degree current maneuver and next maneuver
+    next_man->set_turn_degree(GetTurnDegree(curr_man->end_heading(), next_man->begin_heading()));
+  } else {
+    // Determine turn degree based on previous maneuver and next maneuver
+    next_man->set_turn_degree(GetTurnDegree(prev_man->end_heading(), next_man->begin_heading()));
+  }
+
+  // Set relative direction
+  next_man->set_begin_relative_direction(curr_man->begin_relative_direction());
+
+  // Add distance
+  next_man->set_length(next_man->length() + curr_man->length());
+
+  // Add time
+  next_man->set_time(next_man->time() + curr_man->time());
+
+  // Add basic time
+  next_man->set_basic_time(next_man->basic_time() + curr_man->basic_time());
+
+  // TODO - heading?
+
+  // Set begin node index
+  next_man->set_begin_node_index(curr_man->begin_node_index());
+
+  // Set begin shape index
+  next_man->set_begin_shape_index(curr_man->begin_shape_index());
+
+  // Set signs, if needed
+  if (curr_man->HasSigns() && !next_man->HasSigns()) {
+    *(next_man->mutable_signs()) = curr_man->signs();
+  }
+
+  if (start_man) {
+    next_man->set_type(DirectionsLeg_Maneuver_Type_kStart);
+  } else {
+    // Set maneuver type to 'none' so the type will be processed again
+    curr_man->set_type(DirectionsLeg_Maneuver_Type_kNone);
+    SetManeuverType(*(curr_man));
+
+    std::cout << " here " << next_man->type() << std::endl;
+  }
+
+  return maneuvers.erase(curr_man);
+}
+
+std::list<Maneuver>::iterator
 ManeuversBuilder::CombineManeuvers(std::list<Maneuver>& maneuvers,
                                    std::list<Maneuver>::iterator curr_man,
                                    std::list<Maneuver>::iterator next_man) {
@@ -678,7 +744,6 @@ ManeuversBuilder::CombineManeuvers(std::list<Maneuver>& maneuvers,
   if (next_man->portions_highway()) {
     curr_man->set_portions_highway(true);
   }
-
   return maneuvers.erase(next_man);
 }
 
@@ -2354,18 +2419,40 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iter
   return false;
 }
 
-bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator curr_man,
+bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator prev_man,
+                                                  std::list<Maneuver>::iterator curr_man,
                                                   std::list<Maneuver>::iterator next_man) const {
-  if (curr_man->ramp() && next_man->ramp() && !next_man->fork() &&
+  if (curr_man->ramp() && next_man->ramp() &&
       !curr_man->internal_intersection() && !next_man->internal_intersection()) {
-    auto node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
-    if (!node->HasTraversableOutboundIntersectingEdge(next_man->travel_mode()) ||
-        node->IsStraightestTraversableIntersectingEdgeReversed(curr_man->end_heading(),
-                                                               next_man->travel_mode()) ||
-        (next_man->type() == DirectionsLeg_Maneuver_Type_kRampStraight)) {
-      return true;
+    if (!next_man->fork()) {
+      auto node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
+      if (!node->HasTraversableOutboundIntersectingEdge(next_man->travel_mode()) ||
+          node->IsStraightestTraversableIntersectingEdgeReversed(curr_man->end_heading(),
+                                                                 next_man->travel_mode()) ||
+          (next_man->type() == DirectionsLeg_Maneuver_Type_kRampStraight)) {
+        return true;
+      }
+    } else if (!prev_man->ramp()) {
+      // Determine turn degree based on previous maneuver and current maneuver
+      uint32_t turn_degree = GetTurnDegree(prev_man->end_heading(), curr_man->begin_heading());
+      Turn::Type turn_type = Turn::GetType(turn_degree);
+
+      if (turn_type == Turn::Type::kStraight && curr_man->length() < 0.05f) {
+        auto node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
+
+        if (!node->HasTraversableOutboundIntersectingEdge(next_man->travel_mode()) ||
+            node->IsStraightestTraversableIntersectingEdgeReversed(curr_man->end_heading(),
+                                                                   next_man->travel_mode()) ||
+            (next_man->type() == DirectionsLeg_Maneuver_Type_kStayStraight ||
+             next_man->type() == DirectionsLeg_Maneuver_Type_kStayRight ||
+             next_man->type() == DirectionsLeg_Maneuver_Type_kStayLeft)) {
+          return true;
+        }
+      }
     }
   }
+
+
   return false;
 }
 
