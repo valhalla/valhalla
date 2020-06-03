@@ -502,12 +502,72 @@ public:
     //               the request is not for "now", or we're some X % along the route
     // TODO(danpat): for short-ish durations along the route, we should fade live
     //               speeds into any historic/predictive/average value we'd normally use
+    uint32_t partial_live_speed;
+    float partial_live_pct = 0;
     if ((flow_mask & kCurrentFlowMask) && traffic_tile()) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
       auto volatile& live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
       if (live_speed.valid()) {
         *flow_sources |= kCurrentFlowMask;
-        return live_speed.speed_kmh;
+        if (live_speed.breakpoint1 == 255) {
+          return live_speed.speed1_kmh;
+        } else if (live_speed.breakpoint2 == 255) {
+          // If either subsegment is speed=0, return 0
+          if (live_speed.speed1_kmh == 0 || live_speed.speed2_kmh == 0)
+            return 0;
+
+          partial_live_speed = 0;
+          partial_live_pct = 0;
+
+          if (live_speed.speed1_kmh != 255) {
+            auto pct = live_speed.breakpoint1 / 255.;
+            partial_live_pct += pct;
+            partial_live_speed += live_speed.speed1_kmh * pct;
+          }
+
+          if (live_speed.speed2_kmh != 255) {
+            auto pct = (live_speed.breakpoint2 - live_speed.breakpoint1) / 255.;
+            partial_live_pct += pct;
+            partial_live_speed += live_speed.speed2_kmh * pct;
+          }
+          if (partial_live_pct == 1.0) {
+            return partial_live_speed;
+          }
+          // else - fall through - we've got a partial live speed we need to merge
+          // with some other base value
+
+        } else {
+          // If either subsegment is speed=0, return 0
+          if (live_speed.speed1_kmh == 0 || live_speed.speed2_kmh == 0 || live_speed.speed3_kmh)
+            return 0;
+
+          partial_live_speed = 0;
+          partial_live_pct = 0;
+
+          if (live_speed.speed1_kmh != 255) {
+            auto pct = live_speed.breakpoint1 / 255.;
+            partial_live_pct += pct;
+            partial_live_speed += live_speed.speed1_kmh * pct;
+          }
+
+          if (live_speed.speed2_kmh != 255) {
+            auto pct = (live_speed.breakpoint2 - live_speed.breakpoint1) / 255.;
+            partial_live_pct += pct;
+            partial_live_speed += live_speed.speed2_kmh * pct;
+          }
+
+          if (live_speed.speed3_kmh != 255) {
+            auto pct = (255 - live_speed.breakpoint2) / 255.;
+            partial_live_pct += pct;
+            partial_live_speed += live_speed.speed3_kmh * pct;
+          }
+
+          if (partial_live_pct == 1.0) {
+            return partial_live_speed;
+          }
+          // else - fall through - we've got a partial live speed we need to merge
+          // with some other base value
+        }
       }
     }
 
@@ -520,7 +580,11 @@ public:
       float speed = predictedspeeds_.speed(idx, seconds);
       if (valid_speed(speed)) {
         *flow_sources |= kPredictedFlowMask;
-        return static_cast<uint32_t>(speed + .5f);
+        if (partial_live_pct != 0) {
+          return partial_live_speed + (1 - partial_live_pct) * (speed + 0.5f);
+        } else {
+          return static_cast<uint32_t>(speed + .5f);
+        }
       }
 #ifdef LOGGING_LEVEL_TRACE
       else
@@ -570,8 +634,9 @@ public:
     //               speeds into any historic/predictive/average value we'd normally use
     auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
     auto volatile& live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
-    if (live_speed.valid())
-      return live_speed.congestion_level;
+    if (live_speed.valid()) {
+      return live_speed.congestion1;
+    }
     return 0;
   }
 

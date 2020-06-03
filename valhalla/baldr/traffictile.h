@@ -80,7 +80,8 @@ struct Speed {
   }
 
   inline bool closed() const volatile {
-    return valid() && speed_kmh == 0;
+    return valid() && (speed1_kmh == 0 || (breakpoint1 < 255 && speed2_kmh == 0) ||
+                       (breakpoint2 < 255 && speed3_kmh));
   }
 
   // Get age of record in seconds (based on the bucket
@@ -107,7 +108,7 @@ struct TileHeader {
 // change and shouldn't be done lightly.
 static_assert(sizeof(TileHeader) == sizeof(uint64_t) * 4,
               "traffic:TileHeader type size different than expected");
-static_assert(sizeof(Speed) == sizeof(uint16_t),
+static_assert(sizeof(Speed) == sizeof(uint64_t),
               "traffic::Speed type size is different than expected");
 #endif // C_ONLY_INTERFACE
 
