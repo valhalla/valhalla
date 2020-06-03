@@ -205,23 +205,17 @@ struct LineLocation {
 
     // Offsets
     std::bitset<8> flags(attribute4);
-    poff = (index < size) && flags[6] ? lrps.front().distance * raw[index++] / 256 : 0.f;
-    noff = (index < size) && flags[5] ? std::next(lrps.rbegin())->distance * raw[index++] / 256 : 0.f;
+    poff = (index < size) && flags[6] ? raw[index++] : 0;
+    noff = (index < size) && flags[5] ? raw[index++] : 0;
   }
 
-  LineLocation(const std::vector<LocationReferencePoint>& lrps, float poff, float noff)
-      : lrps(lrps),
-        poff(lrps.at(0).distance > 0
-                 ? std::round(poff / lrps.at(0).distance * 256) / 256 * lrps.at(0).distance
-                 : 0.f),
-        noff(lrps.at(lrps.size() - 2).distance > 0
-                 ? std::round(noff / lrps.at(lrps.size() - 2).distance * 256) / 256 *
-                       lrps.at(lrps.size() - 2).distance
-                 : 0.f) {
-    if (poff > lrps.front().distance)
-      throw std::invalid_argument("Positive offset out of range");
-    if (noff > std::next(lrps.rbegin())->distance)
-      throw std::invalid_argument("Negative offset out of range");
+  LineLocation(const std::vector<LocationReferencePoint>& lrps,
+               uint8_t positive_offset_bucket,
+               uint8_t negative_offset_bucket)
+      : lrps(lrps), poff(positive_offset_bucket), noff(negative_offset_bucket) {
+    if (poff > noff) {
+      throw std::invalid_argument("Positive offset cannot be greater than the negative offset");
+    }
   }
 
   PointLL getFirstCoordinate() const {
@@ -280,8 +274,8 @@ struct LineLocation {
     }
 
     // Last location reference point
-    const auto pofff = poff != 0.f;
-    const auto nofff = noff != 0.f;
+    const auto pofff = poff != 0;
+    const auto nofff = noff != 0;
     const auto& last = lrps.back();
     append2(static_cast<std::int32_t>(std::round(geom_scale * (last.longitude - longitude))));
     append2(static_cast<std::int32_t>(std::round(geom_scale * (last.latitude - latitude))));
@@ -290,13 +284,11 @@ struct LineLocation {
 
     // Offsets
     if (pofff) {
-      result.push_back(static_cast<std::int32_t>(std::round(256 * poff / first.distance)) & 0xff);
+      result.push_back(poff);
     }
 
     if (nofff) {
-      result.push_back(
-          static_cast<std::int32_t>(std::round(256 * noff / std::next(lrps.rbegin())->distance)) &
-          0xff);
+      result.push_back(noff);
     }
 
     return result;
@@ -308,8 +300,8 @@ struct LineLocation {
   }
 
   std::vector<LocationReferencePoint> lrps;
-  float poff; // 5.2.9.1 Positive offset
-  float noff; // 5.2.9.2 Negative offset
+  uint8_t poff; // 5.2.9.1 Positive offset - stored as 1/256ths of the path length
+  uint8_t noff; // 5.2.9.2 Negative offset - stored as 1/256ths of the path length
 };
 
 } // namespace OpenLR
