@@ -215,8 +215,8 @@ void ConstructEdges(const OSMData& osmdata,
         // Figure out if the way doubled back on itself and if so treat it like the way ended
         bool doubled_back = false;
         OSMWayNode next_way_node;
-        while (current_way_node_index != last_way_node_index && way_node.node.duplicate_ &&
-               (next_way_node = *way_nodes[current_way_node_index + 1]).node.duplicate_) {
+        while (current_way_node_index != last_way_node_index && way_node.node.flat_loop_ &&
+               (next_way_node = *way_nodes[current_way_node_index + 1]).node.flat_loop_) {
           way_node = next_way_node;
           ++current_way_node_index;
           doubled_back = current_way_node_index != last_way_node_index;

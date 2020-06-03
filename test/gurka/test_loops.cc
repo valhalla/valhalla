@@ -139,3 +139,35 @@ TEST(loops, phi) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_phi", build_config);
   check_opposing(map, 8);
 }
+
+TEST(loops, bow_tie) {
+  // we create a way that doubles back on itself
+  const std::string ascii_map = R"(
+              B   F
+             / \ / \
+            A   C   E
+             \ / \ /
+              G   D)";
+  const gurka::ways ways = {
+      {"ABCDEFCGA", {{"highway", "motorway"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_phi", build_config);
+  check_opposing(map, 8);
+}
+
+TEST(loops, please_god_why) {
+  // we create a way that doubles back on itself
+  const std::string ascii_map = R"(
+              F----G
+             /      \
+      E--D--C---B----A
+          \         /
+           I-------H)";
+  const gurka::ways ways = {
+      {"ABCDEDCFGAHID", {{"highway", "motorway"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_phi", build_config);
+  check_opposing(map, 10);
+}

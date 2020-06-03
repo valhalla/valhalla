@@ -289,7 +289,7 @@ public:
       while (current_way_node_index_ < way_nodes_->size() &&
              (way_node = element = (*way_nodes_)[current_way_node_index_]).node.osmid_ == osmid) {
         // we need to keep the duplicate flag that way parsing set
-        n.duplicate_ = way_node.node.duplicate_;
+        n.flat_loop_ = way_node.node.flat_loop_;
         way_node.node = n;
         element = way_node;
         ++current_way_node_index_;
@@ -375,12 +375,14 @@ public:
       }
       shape_.set(node);
 
-      // Check whether or not the node is a duplicate or a turn around
-      // A turn around is the node at which a way doubles back on itself eg. way=node_0,node_1,node_0
+      // Check whether the node is on a part of a way doubling back on itself
       OSMNode osm_node{node};
       auto inserted = loop_nodes_.insert(std::make_pair(node, i));
-      bool is_turn_around = i != 0 && i != nodes.size() - 1 && nodes[i - 1] == nodes[i + 1];
-      osm_node.duplicate_ = !inserted.second || is_turn_around;
+      bool flattening = inserted.first->second > 0 && i < nodes.size() - 1 &&
+                        nodes[i + 1] == nodes[inserted.first->second - 1];
+      bool unflattening = i > 0 && inserted.first->second < nodes.size() - 1 &&
+                          nodes[i - 1] == nodes[inserted.first->second + 1];
+      osm_node.flat_loop_ = flattening || unflattening;
 
       // Keep the node
       way_nodes_->push_back(
