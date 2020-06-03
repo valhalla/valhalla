@@ -25,7 +25,6 @@ void check_opposing(const gurka::map& map, uint32_t expected_edge_count) {
 }
 
 TEST(loops, flat_loop) {
-  // we create a way that doubles back on itself
   const std::string ascii_map = R"(A-----B)";
   const gurka::ways ways = {
       {"ABA", {{"highway", "motorway"}}},
@@ -36,7 +35,6 @@ TEST(loops, flat_loop) {
 }
 
 TEST(loops, long_loop) {
-  // we create a way that doubles back on itself
   const std::string ascii_map = R"(A--B--C--D--E)";
   const gurka::ways ways = {
       {"ABCDEDCBA", {{"highway", "motorway"}}},
@@ -47,7 +45,6 @@ TEST(loops, long_loop) {
 }
 
 TEST(loops, lollipop) {
-  // we create a way that doubles back on itself
   const std::string ascii_map = R"(
               C----D
              /      \
@@ -63,7 +60,6 @@ TEST(loops, lollipop) {
 }
 
 TEST(loops, split_hair) {
-  // we create a way that doubles back on itself
   const std::string ascii_map = R"(
   F--E
       \
@@ -79,7 +75,6 @@ TEST(loops, split_hair) {
 }
 
 TEST(loops, split_lolli) {
-  // we create a way that doubles back on itself
   const std::string ascii_map = R"(
   K--J         I----H
       \       /      \
@@ -95,7 +90,6 @@ TEST(loops, split_lolli) {
 }
 
 TEST(loops, eye) {
-  // we create a way that doubles back on itself
   const std::string ascii_map = R"(
           J----I
          /      \
@@ -111,7 +105,6 @@ TEST(loops, eye) {
 }
 
 TEST(loops, bubble) {
-  // we create a way that doubles back on itself
   const std::string ascii_map = R"(
           H----G
          /      \
@@ -125,7 +118,6 @@ TEST(loops, bubble) {
 }
 
 TEST(loops, phi) {
-  // we create a way that doubles back on itself
   const std::string ascii_map = R"(
               C----D
              /      \
@@ -141,7 +133,6 @@ TEST(loops, phi) {
 }
 
 TEST(loops, bow_tie) {
-  // we create a way that doubles back on itself
   const std::string ascii_map = R"(
               B   F
              / \ / \
@@ -152,12 +143,11 @@ TEST(loops, bow_tie) {
       {"ABCDEFCGA", {{"highway", "motorway"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_phi", build_config);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_bow_tie", build_config);
   check_opposing(map, 8);
 }
 
 TEST(loops, please_god_why) {
-  // we create a way that doubles back on itself
   const std::string ascii_map = R"(
               F----G
              /      \
@@ -168,6 +158,6 @@ TEST(loops, please_god_why) {
       {"ABCDEDCFGAHID", {{"highway", "motorway"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_phi", build_config);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_please_god_why", build_config);
   check_opposing(map, 10);
 }
