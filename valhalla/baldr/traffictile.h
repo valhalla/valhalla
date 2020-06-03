@@ -81,7 +81,7 @@ struct Speed {
 
   inline bool closed() const volatile {
     return valid() && (speed1_kmh == 0 || (breakpoint1 < 255 && speed2_kmh == 0) ||
-                       (breakpoint2 < 255 && speed3_kmh));
+                       (breakpoint2 < 255 && speed3_kmh == 0));
   }
 
   // Get age of record in seconds (based on the bucket

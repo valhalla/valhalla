@@ -518,22 +518,25 @@ public:
 
           partial_live_speed = 0;
           partial_live_pct = 0;
+          uint32_t breakpoint_sum = 0;
 
           if (live_speed.speed1_kmh != 255) {
             auto pct = live_speed.breakpoint1 / 255.;
+            breakpoint_sum += live_speed.breakpoint1;
             partial_live_pct += pct;
             partial_live_speed += live_speed.speed1_kmh * pct;
           }
 
           if (live_speed.speed2_kmh != 255) {
             auto pct = (live_speed.breakpoint2 - live_speed.breakpoint1) / 255.;
+            breakpoint_sum += (live_speed.breakpoint2 - live_speed.breakpoint1);
             partial_live_pct += pct;
             partial_live_speed += live_speed.speed2_kmh * pct;
           }
-          if (partial_live_pct == 1.0) {
+          if (breakpoint_sum == 255) {
             return partial_live_speed;
           }
-          // else - fall through - we've got a partial live speed we need to merge
+          // else fall through - we've got a partial live speed we need to merge
           // with some other base value
 
         } else {
@@ -543,26 +546,31 @@ public:
 
           partial_live_speed = 0;
           partial_live_pct = 0;
+          uint32_t breakpoint_sum = 0;
 
           if (live_speed.speed1_kmh != 255) {
             auto pct = live_speed.breakpoint1 / 255.;
+            breakpoint_sum += live_speed.breakpoint1;
             partial_live_pct += pct;
             partial_live_speed += live_speed.speed1_kmh * pct;
           }
 
           if (live_speed.speed2_kmh != 255) {
             auto pct = (live_speed.breakpoint2 - live_speed.breakpoint1) / 255.;
+            breakpoint_sum += (live_speed.breakpoint2 - live_speed.breakpoint1);
             partial_live_pct += pct;
             partial_live_speed += live_speed.speed2_kmh * pct;
           }
 
           if (live_speed.speed3_kmh != 255) {
             auto pct = (255 - live_speed.breakpoint2) / 255.;
+            breakpoint_sum += (255 - live_speed.breakpoint2);
             partial_live_pct += pct;
             partial_live_speed += live_speed.speed3_kmh * pct;
           }
 
-          if (partial_live_pct == 1.0) {
+          if (breakpoint_sum == 255) {
+            // we have full coverage, so just return this
             return partial_live_speed;
           }
           // else - fall through - we've got a partial live speed we need to merge
@@ -581,7 +589,7 @@ public:
       if (valid_speed(speed)) {
         *flow_sources |= kPredictedFlowMask;
         if (partial_live_pct != 0) {
-          return partial_live_speed + (1 - partial_live_pct) * (speed + 0.5f);
+          return static_cast<uint32_t>(partial_live_speed + (1 - partial_live_pct) * (speed + 0.5f));
         } else {
           return static_cast<uint32_t>(speed + .5f);
         }
@@ -600,7 +608,12 @@ public:
     if ((invalid_time || is_daytime) && (flow_mask & kConstrainedFlowMask) &&
         valid_speed(de->constrained_flow_speed())) {
       *flow_sources |= kConstrainedFlowMask;
-      return de->constrained_flow_speed();
+      if (partial_live_pct != 0) {
+        return static_cast<uint32_t>(partial_live_speed +
+                                     (1 - partial_live_pct) * de->constrained_flow_speed());
+      } else {
+        return de->constrained_flow_speed();
+      }
     }
 #ifdef LOGGING_LEVEL_TRACE
     else if (de->constrained_flow_speed() != 0)
@@ -614,7 +627,12 @@ public:
     if ((invalid_time || !is_daytime) && (flow_mask & kFreeFlowMask) &&
         valid_speed(de->free_flow_speed())) {
       *flow_sources |= kFreeFlowMask;
-      return de->free_flow_speed();
+      if (partial_live_pct != 0) {
+        return static_cast<uint32_t>(partial_live_speed +
+                                     (1 - partial_live_pct) * de->free_flow_speed());
+      } else {
+        return de->free_flow_speed();
+      }
     }
 #ifdef LOGGING_LEVEL_TRACE
     else if (de->free_flow_speed() != 0)
@@ -624,20 +642,16 @@ public:
 #endif
 
     // Fallback further to specified or derived speed
-    return de->speed();
+    if (partial_live_pct != 0) {
+      return static_cast<uint32_t>(partial_live_speed + (1 - partial_live_pct) * de->speed());
+    } else {
+      return de->speed();
+    }
   }
 
-  inline uint32_t GetCongestion(const DirectedEdge* de) const {
-    // TODO(danpat): this needs to consider the time - we should not use live speeds if
-    //               the request is not for "now", or we're some X % along the route
-    // TODO(danpat): for short-ish durations along the route, we should fade live
-    //               speeds into any historic/predictive/average value we'd normally use
+  inline const volatile traffic::Speed& GetLiveSpeed(const DirectedEdge* de) const {
     auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
-    auto volatile& live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
-    if (live_speed.valid()) {
-      return live_speed.congestion1;
-    }
-    return 0;
+    return traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
   }
 
   /**
