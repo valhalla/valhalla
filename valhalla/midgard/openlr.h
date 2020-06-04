@@ -213,8 +213,14 @@ struct LineLocation {
                uint8_t positive_offset_bucket,
                uint8_t negative_offset_bucket)
       : lrps(lrps), poff(positive_offset_bucket), noff(negative_offset_bucket) {
-    if (poff > noff) {
-      throw std::invalid_argument("Positive offset cannot be greater than the negative offset");
+    if (lrps.size() < 2) {
+      throw std::invalid_argument(
+          "Only descriptors with at least 2 LRPs are supported by this implementation");
+    }
+
+    if (lrps.size() == 2 && poff > noff) {
+      throw std::invalid_argument(
+          "Positive offset cannot be greater than the negative offset when there are only two LRPs, as they would overlap");
     }
   }
 
