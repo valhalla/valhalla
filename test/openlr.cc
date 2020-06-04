@@ -201,8 +201,11 @@ TEST(OpenLR, CreateLinearReference) {
   // compare to the original reference before conversion
   EXPECT_EQ(line_location, converted);
 
-  // if positive or negative offset is too large it should throw
-  EXPECT_THROW(LineLocation(lrps, 1, 0), std::invalid_argument);
+  // If only one LRP, should error
+  EXPECT_THROW(LineLocation({lrps.front()}, 0, 0), std::invalid_argument);
+  // If we only have 2 LRPs, and the pos/neg offsets would overlap, should throw
+  EXPECT_THROW(LineLocation({lrps.front(), lrps.back()}, 0.6 * 255, 0.6 * 255),
+               std::invalid_argument);
 
   // make a short line location so that poff and noff must be 0
   lrps.clear();
