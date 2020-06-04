@@ -218,7 +218,7 @@ struct LineLocation {
           "Only descriptors with at least 2 LRPs are supported by this implementation");
     }
 
-    if (lrps.size() == 2 && poff > noff) {
+    if (lrps.size() == 2 && 255 - poff < noff) {
       throw std::invalid_argument(
           "Positive offset cannot be greater than the negative offset when there are only two LRPs, as they would overlap");
     }
