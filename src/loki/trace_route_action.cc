@@ -45,7 +45,8 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
 
   for (size_t i = 0, n = shape.size(); i < n - 1; ++i) {
     // We bail when the distance between two locations exceeds the threshold
-    PointLL curr = to_ll(shape[i]), next = to_ll(shape[i + 1]);
+    PointLL curr = to_ll(shape[i]);
+    PointLL next = to_ll(shape[i + 1]);
     if (curr.Distance(next) > max_breakage_distance) {
       throw valhalla_exception_t{154};
     }
