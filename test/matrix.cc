@@ -194,6 +194,7 @@ void adjust_scores(Options& options) {
 }
 
 const auto config = json_to_pt(R"({
+    "meili": { "default": { "breakage_distance": 2000} },
     "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
     "loki":{
       "actions":["sources_to_targets"],
