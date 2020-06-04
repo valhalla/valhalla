@@ -40,7 +40,17 @@ void check_shape(const google::protobuf::RepeatedPtrField<valhalla::Location>& s
 
 void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
                     float max_distance,
+                    float max_breakage_distance,
                     float max_factor = 1.0f) {
+
+  for (size_t i = 0, n = shape.size(); i < n - 1; ++i) {
+    // We bail when the distance between two locations exceeds the threshold
+    PointLL curr = to_ll(shape[i]), next = to_ll(shape[i + 1]);
+    if (curr.Distance(next) > max_breakage_distance) {
+      throw valhalla_exception_t{154};
+    }
+  }
+
   // Adjust max - this enables max edge_walk distance to be larger
   max_distance *= max_factor;
 
@@ -130,7 +140,11 @@ void loki_worker_t::init_trace(Api& request) {
 
   // Validate shape count and distance (for now, just send max_factor for distance)
   check_shape(options.shape(), max_trace_shape);
-  check_distance(options.shape(), max_distance.find("trace")->second, max_factor);
+  float breakage_distance =
+      options.has_breakage_distance()
+          ? options.breakage_distance()
+          : config.get_child("meili").get_child("default").get<float>("breakage_distance");
+  check_distance(options.shape(), max_distance.find("trace")->second, breakage_distance, max_factor);
 
   // Validate best paths and best paths shape for `map_snap` requests
   if (options.shape_match() == ShapeMatch::map_snap) {
