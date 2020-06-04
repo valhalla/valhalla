@@ -52,7 +52,7 @@ constexpr uint32_t kDefaultUnitSize = 1;
 // attribute or condition to complete a route.
 constexpr float kMaxPenalty = 12.0f * midgard::kSecPerHour; // 12 hours
 
-// Maximum ferry penalty (when use_ferry == 0). Can't make this too large
+// Maximum ferry penalty (when use_ferry == 0 or use_rail_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
 constexpr float kMaxFerryPenalty = 6.0f * midgard::kSecPerHour; // 6 hours
 
@@ -680,13 +680,14 @@ protected:
   std::unordered_map<baldr::GraphId, float> user_avoid_edges_;
 
   // Weighting to apply to ferry edges
-  float ferry_factor_;
+  float ferry_factor_, rail_ferry_factor_;
 
   // Transition costs
   sif::Cost country_crossing_cost_;
   sif::Cost gate_cost_;
   sif::Cost toll_booth_cost_;
   sif::Cost ferry_transition_cost_;
+  sif::Cost rail_ferry_transition_cost_;
 
   // Penalties that all costing methods support
   float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
@@ -718,11 +719,11 @@ protected:
     // Set the cost (seconds) to enter a ferry (only apply entering since
     // a route must exit a ferry (except artificial test routes ending on
     // a ferry!). Modify ferry edge weighting based on use_ferry factor.
-    float penalty;
+    float ferry_penalty, rail_ferry_penalty;
     float use_ferry = costing_options.use_ferry();
     if (use_ferry < 0.5f) {
       // Penalty goes from max at use_ferry = 0 to 0 at use_ferry = 0.5
-      penalty = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry * 2.0f));
+      ferry_penalty = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry * 2.0f));
 
       // Cost X10 at use_ferry == 0, slopes downwards towards 1.0 at use_ferry = 0.5
       ferry_factor_ = 10.0f - use_ferry * 18.0f;
@@ -730,10 +731,31 @@ protected:
       // Add a ferry weighting factor to influence cost along ferries to make
       // them more favorable if desired rather than driving. No ferry penalty.
       // Half the cost at use_ferry == 1, progress to 1.0 at use_ferry = 0.5
-      penalty = 0.0f;
+      ferry_penalty = 0.0f;
       ferry_factor_ = 1.5f - use_ferry;
     }
-    ferry_transition_cost_ = {costing_options.ferry_cost() + penalty, costing_options.ferry_cost()};
+    ferry_transition_cost_ = {costing_options.ferry_cost() + ferry_penalty,
+                              costing_options.ferry_cost()};
+
+    // Set the cost (seconds) to enter a rail_ferry (only apply entering since
+    // a route must exit a ferry (except artificial test routes ending on
+    // a ferry!). Modify ferry edge weighting based on use_ferry factor.
+    float use_rail_ferry = costing_options.use_rail_ferry();
+    if (use_rail_ferry < 0.5f) {
+      // Penalty goes from max at use_rail_ferry = 0 to 0 at use_rail_ferry = 0.5
+      rail_ferry_penalty = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_rail_ferry * 2.0f));
+
+      // Cost X10 at use_rail_ferry == 0, slopes downwards towards 1.0 at use_rail_ferry = 0.5
+      rail_ferry_factor_ = 10.0f - use_rail_ferry * 18.0f;
+    } else {
+      // Add a ferry weighting factor to influence cost along ferries to make
+      // them more favorable if desired rather than driving. No ferry penalty.
+      // Half the cost at use_ferry == 1, progress to 1.0 at use_ferry = 0.5
+      rail_ferry_penalty = 0.0f;
+      rail_ferry_factor_ = 1.5f - use_rail_ferry;
+    }
+    rail_ferry_transition_cost_ = {costing_options.railferry_cost() + rail_ferry_penalty,
+                                   costing_options.railferry_cost()};
 
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();
@@ -754,7 +776,7 @@ protected:
                                          const baldr::DirectedEdge* edge,
                                          const sif::EdgeLabel& pred,
                                          const uint32_t idx) const {
-    // Cases with both time and penalty: country crossing, ferry, gate, toll booth
+    // Cases with both time and penalty: country crossing, ferry, rail_ferry, gate, toll booth
     sif::Cost c;
     if (node->type() == baldr::NodeType::kBorderControl) {
       c += country_crossing_cost_;
@@ -767,6 +789,9 @@ protected:
     }
     if (edge->use() == baldr::Use::kFerry && pred.use() != baldr::Use::kFerry) {
       c += ferry_transition_cost_;
+    }
+    if (edge->use() == baldr::Use::kRailFerry && pred.use() != baldr::Use::kRailFerry) {
+      c += rail_ferry_transition_cost_;
     }
 
     // Additional penalties without any time cost
@@ -810,6 +835,10 @@ protected:
     }
     if (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry) {
       c += ferry_transition_cost_;
+    }
+
+    if (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry) {
+      c += rail_ferry_transition_cost_;
     }
 
     // Additional penalties without any time cost
