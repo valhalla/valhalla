@@ -48,7 +48,7 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
 
   bool can_be_matched = false;
   float crow_distance = 0.f;
-  for (auto iter = shape.cbegin(); iter < shape.cend() - 1; ++iter) {
+  for (auto iter = shape.begin(); iter < shape.end() - 1; ++iter) {
     // We bail when the distance between two locations exceeds the threshold
     PointLL curr_point = to_ll(*iter);
     PointLL next_point = to_ll(*std::next(iter));
