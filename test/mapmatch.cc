@@ -1408,6 +1408,26 @@ TEST(Mapmatch, no_edge_candidates) {
     } catch (const valhalla::valhalla_exception_t& e) { ASSERT_EQ(e.code, test_cases[i].first); }
   }
 }
+
+TEST(Mapmatch, test_breakage_distance_error_handling) {
+  // tests expected error_code for trace_route edge_walk
+  auto expected_error_code = 154;
+  tyr::actor_t actor(conf, true);
+
+  try {
+    auto response = json_to_pt(actor.trace_route(
+        R"({"costing":"auto","shape_match":"edge_walk","shape":[
+         {"lat":52.0764279,"lon":5.0323097,"type":"break","radius":15},
+         {"lat":52.1022785,"lon":5.1391531,"type":"break","radius":15}]})"));
+  } catch (const valhalla_exception_t& e) {
+    EXPECT_EQ(e.code, expected_error_code);
+    // If we get here then all good - return
+    return;
+  }
+
+  // If we get here then fail the test!
+  FAIL() << "Expected trace_route breakage distance exceed exception was not found";
+}
 } // namespace
 
 int main(int argc, char* argv[]) {
