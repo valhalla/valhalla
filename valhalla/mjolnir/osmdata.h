@@ -42,16 +42,15 @@ struct OSMLaneConnectivity {
   uint32_t from_lanes_index; // Index to string in UniqueNames
 };
 
-// Data types used within OSMData. Note that any maps using OSM way Id as a key can be
-// 32 bit (OSM nodes require 64 bits, but ways do not)
-using RestrictionsMultiMap = std::unordered_multimap<uint32_t, OSMRestriction>;
-using ViaSet = std::unordered_set<uint32_t>;
-using AccessRestrictionsMultiMap = std::unordered_multimap<uint32_t, OSMAccessRestriction>;
-using BikeMultiMap = std::unordered_multimap<uint32_t, OSMBike>;
-using OSMLaneConnectivityMultiMap = std::unordered_multimap<uint32_t, OSMLaneConnectivity>;
+// Data types used within OSMData
+using RestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMRestriction>;
+using ViaSet = std::unordered_set<uint64_t>;
+using AccessRestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMAccessRestriction>;
+using BikeMultiMap = std::unordered_multimap<uint64_t, OSMBike>;
+using OSMLaneConnectivityMultiMap = std::unordered_multimap<uint64_t, OSMLaneConnectivity>;
 
 // OSMString map uses the way Id as the key and the name index into UniqueNames as the value
-using OSMStringMap = std::unordered_map<uint32_t, uint32_t>;
+using OSMStringMap = std::unordered_map<uint64_t, uint32_t>;
 
 /**
  * Simple container for OSM data.
@@ -79,7 +78,7 @@ struct OSMData {
   /**
    * add the direction information to the forward or reverse map for relations.
    */
-  void add_to_name_map(const uint32_t member_id,
+  void add_to_name_map(const uint64_t member_id,
                        const std::string& direction,
                        const std::string& reference,
                        const bool forward = true);

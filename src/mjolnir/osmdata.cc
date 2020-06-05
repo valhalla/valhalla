@@ -28,47 +28,47 @@ const std::string lane_connectivity_file = "osmdata_lane_connectivity.bin";
 
 // Data structures to assist writing and reading data
 struct TempRestriction {
-  uint32_t way_id;
+  uint64_t way_id;
   OSMRestriction restriction;
   TempRestriction() : way_id(0), restriction(OSMRestriction()) {
   }
-  TempRestriction(const uint32_t w, const OSMRestriction& r) : way_id(w), restriction(r) {
+  TempRestriction(const uint64_t w, const OSMRestriction& r) : way_id(w), restriction(r) {
   }
 };
 
 struct TempWayRef {
-  uint32_t way_id;
+  uint64_t way_id;
   uint32_t name_index;
   TempWayRef() : way_id(0), name_index(0) {
   }
-  TempWayRef(const uint32_t w, const uint32_t& index) : way_id(w), name_index(index) {
+  TempWayRef(const uint64_t w, const uint32_t& index) : way_id(w), name_index(index) {
   }
 };
 
 struct BikeRelation {
-  uint32_t way_id;
+  uint64_t way_id;
   OSMBike relation;
   BikeRelation() : way_id(0), relation(OSMBike()) {
   }
-  BikeRelation(const uint32_t w, const OSMBike& r) : way_id(w), relation(r) {
+  BikeRelation(const uint64_t w, const OSMBike& r) : way_id(w), relation(r) {
   }
 };
 
 struct TempAccessRestriction {
-  uint32_t way_id;
+  uint64_t way_id;
   OSMAccessRestriction restriction;
   TempAccessRestriction() : way_id(0), restriction(OSMAccessRestriction()) {
   }
-  TempAccessRestriction(const uint32_t w, const OSMAccessRestriction& r) : way_id(w), restriction(r) {
+  TempAccessRestriction(const uint64_t w, const OSMAccessRestriction& r) : way_id(w), restriction(r) {
   }
 };
 
 struct TempLaneConnectivity {
-  uint32_t way_id;
+  uint64_t way_id;
   OSMLaneConnectivity lane;
   TempLaneConnectivity() : way_id(0), lane(OSMLaneConnectivity()) {
   }
-  TempLaneConnectivity(const uint32_t w, const OSMLaneConnectivity& l) : way_id(w), lane(l) {
+  TempLaneConnectivity(const uint64_t w, const OSMLaneConnectivity& l) : way_id(w), lane(l) {
   }
 };
 
@@ -570,7 +570,7 @@ bool OSMData::read_from_unique_names_file(const std::string& tile_dir) {
 }
 
 // add the direction information to the forward or reverse map for relations.
-void OSMData::add_to_name_map(const uint32_t member_id,
+void OSMData::add_to_name_map(const uint64_t member_id,
                               const std::string& direction,
                               const std::string& reference,
                               const bool forward) {

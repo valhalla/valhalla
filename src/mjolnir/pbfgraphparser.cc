@@ -68,8 +68,8 @@ public:
                  const std::string& intersections_file = "",
                  const std::string& shapes_file = "",
                  bool read_data = false)
-      : shape_(pt.get<unsigned long>("id_table_size", kMaxOSMNodeId)),
-        intersection_(pt.get<unsigned long>("id_table_size", kMaxOSMNodeId)), osmdata_(osmdata),
+      : shape_(pt.get<uint64_t>("id_table_size", kMaxOSMNodeId)),
+        intersection_(pt.get<uint64_t>("id_table_size", kMaxOSMNodeId)), osmdata_(osmdata),
         lua_(get_lua(pt)) {
 
     if (read_data) {
@@ -1409,7 +1409,7 @@ public:
     OSMRestriction restriction{};
     OSMRestriction to_restriction{};
 
-    uint32_t from_way_id = 0;
+    uint64_t from_way_id = 0;
     bool isRestriction = false, isTypeRestriction = false, hasRestriction = false;
     bool isRoad = false, isRoute = false, isBicycle = false, isConnectivity = false;
     bool isConditional = false, has_multiple_times = false;

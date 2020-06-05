@@ -277,7 +277,7 @@ void CheckForDuplicates(const GraphId& nodeid, const Node& node,
   }
 }
 */
-uint32_t CreateSimpleTurnRestriction(const uint32_t wayid,
+uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
                                      const size_t endnode,
                                      sequence<Node>& nodes,
                                      sequence<Edge>& edges,
