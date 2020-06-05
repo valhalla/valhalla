@@ -1,5 +1,6 @@
 #include "midgard/openlr.h"
 #include "midgard/pointll.h"
+#include <stdexcept>
 
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
