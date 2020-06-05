@@ -360,11 +360,6 @@ public:
       }
     }
 
-    if (osmid > kMaxOSMWayId) {
-      throw std::runtime_error("OSM way Id exceeds 32 bit maximum");
-    }
-    uint32_t wayid = static_cast<uint32_t>(osmid);
-
     // unsorted extracts are just plain nasty, so they can bugger off!
     if (osmid < last_way_) {
       throw std::runtime_error("Detected unsorted input data");
@@ -419,10 +414,10 @@ public:
     std::string name;
 
     // Process tags
-    OSMWay w{wayid};
+    OSMWay w{osmid};
     w.set_node_count(nodes.size());
 
-    OSMAccess access{wayid};
+    OSMAccess access{osmid};
     bool has_user_tags = false;
     std::string ref, int_ref, direction, int_direction;
 

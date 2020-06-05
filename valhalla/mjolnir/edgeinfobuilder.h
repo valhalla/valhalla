@@ -27,7 +27,7 @@ public:
    * Set the OSM way Id.
    * @param wayid  Way Id.
    */
-  void set_wayid(const uint32_t wayid);
+  void set_wayid(const uint64_t wayid);
 
   /**
    * Get the mean elevation along the edge.
@@ -106,15 +106,19 @@ protected:
   // 1st 8-byte word
   union Word0 {
     struct {
-      uint64_t wayid_ : 32;          // OSM way Id
-      uint64_t mean_elevation_ : 12; // Mean elevation with 2 meter precision
-      uint64_t bike_network_ : 4;    // Mask of bicycle network types (see graphconstants.h)
-      uint64_t speed_limit_ : 8;     // Speed limit (kph)
-      uint64_t spare0_ : 8;
+      uint64_t wayid_ : 32;            // OSM way Id
+      uint64_t mean_elevation_ : 12;   // Mean elevation with 2 meter precision
+      uint64_t bike_network_ : 4;      // Mask of bicycle network types (see graphconstants.h)
+      uint64_t speed_limit_ : 8;       // Speed limit (kph)
+      uint64_t has_extended_wayid : 1; // Whether or not the wayid is 64bits
+      uint64_t spare_ : 7;
     };
     uint64_t value_;
   };
   Word0 w0_;
+
+  // Where we optionally keep the other half of a 64bit wayid
+  uint32_t extended_wayid_;
 
   // List of name info (offsets, etc.)
   std::vector<baldr::NameInfo> name_info_list_;

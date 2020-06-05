@@ -12,8 +12,14 @@ namespace valhalla {
 namespace mjolnir {
 
 // Set the OSM way Id.
-void EdgeInfoBuilder::set_wayid(const uint32_t wayid) {
-  w0_.wayid_ = wayid;
+void EdgeInfoBuilder::set_wayid(const uint64_t wayid) {
+  // mask off the first 32bits
+  w0_.wayid_ = wayid & 0xFFFFFFFF;
+  // if that turned out to be not enough precision we keep the upper bits separately
+  if (w0_.wayid_ != wayid) {
+    w0_.has_extended_wayid = true;
+    extended_wayid_ = (wayid >> 32) & 0xFFFFFFFF;
+  }
 }
 
 // Set the mean elevation.
@@ -80,6 +86,7 @@ std::size_t EdgeInfoBuilder::BaseSizeOf() const {
   size += sizeof(baldr::EdgeInfo::PackedItem);
   size += (name_info_list_.size() * sizeof(NameInfo));
   size += (encoded_shape_.size() * sizeof(std::string::value_type));
+  size += w0_.has_extended_wayid * sizeof(extended_wayid_);
   return size;
 }
 
@@ -120,6 +127,9 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   os.write(reinterpret_cast<const char*>(eib.name_info_list_.data()),
            (name_count * sizeof(NameInfo)));
   os << eib.encoded_shape_;
+  if (eib.w0_.has_extended_wayid) {
+    os.write(reinterpret_cast<const char*>(&eib.extended_wayid_), sizeof(uint32_t));
+  }
 
   // Pad to an 8 byte boundary
   std::size_t n = (eib.BaseSizeOf() % 8);

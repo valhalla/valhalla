@@ -45,6 +45,13 @@ EdgeInfo::EdgeInfo(char* ptr, const char* names_list, const size_t names_list_le
   // Set encoded_shape_ pointer
   encoded_shape_ = ptr;
   ptr += (encoded_shape_size() * sizeof(char));
+
+  // Optional second half of 64bit way id
+  extended_wayid_ = nullptr;
+  if (w0_.has_extended_wayid) {
+    extended_wayid_ = reinterpret_cast<uint32_t*>(ptr);
+    ptr += sizeof(uint32_t);
+  }
 }
 
 EdgeInfo::~EdgeInfo() {

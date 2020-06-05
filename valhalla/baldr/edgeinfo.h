@@ -83,8 +83,8 @@ public:
    * Gets the OSM way Id.
    * @return  Returns the OSM way Id.
    */
-  uint32_t wayid() const {
-    return w0_.wayid_;
+  uint64_t wayid() const {
+    return (static_cast<uint64_t>(extended_wayid_ ? *extended_wayid_ : 0) << 32) | w0_.wayid_;
   }
 
   /**
@@ -189,11 +189,12 @@ protected:
   // 1st 8-byte word
   union Word0 {
     struct {
-      uint64_t wayid_ : 32;          // OSM way Id
-      uint64_t mean_elevation_ : 12; // Mean elevation with 2 meter precision
-      uint64_t bike_network_ : 4;    // Mask of bicycle network types (see graphconstants.h)
-      uint64_t speed_limit_ : 8;     // Speed limit (kph)
-      uint64_t spare0_ : 8;
+      uint64_t wayid_ : 32;            // OSM way Id
+      uint64_t mean_elevation_ : 12;   // Mean elevation with 2 meter precision
+      uint64_t bike_network_ : 4;      // Mask of bicycle network types (see graphconstants.h)
+      uint64_t speed_limit_ : 8;       // Speed limit (kph)
+      uint64_t has_extended_wayid : 1; // Whether or not the wayid is 64bits
+      uint64_t spare_ : 7;
     };
     uint64_t value_;
   };
@@ -207,6 +208,9 @@ protected:
 
   // The encoded shape of the edge
   const char* encoded_shape_;
+
+  // Where we optionally keep the other half of a 64bit wayid
+  const uint32_t* extended_wayid_;
 
   // Lng, lat shape of the edge
   mutable std::vector<midgard::PointLL> shape_;
