@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <bitset>
 #include <numeric>
+#include <stdexcept>
 #include <vector>
 
 namespace valhalla {
