@@ -754,8 +754,8 @@ protected:
       rail_ferry_penalty = 0.0f;
       rail_ferry_factor_ = 1.5f - use_rail_ferry;
     }
-    rail_ferry_transition_cost_ = {costing_options.railferry_cost() + rail_ferry_penalty,
-                                   costing_options.railferry_cost()};
+    rail_ferry_transition_cost_ = {costing_options.rail_ferry_cost() + rail_ferry_penalty,
+                                   costing_options.rail_ferry_cost()};
 
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();

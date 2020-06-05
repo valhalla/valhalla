@@ -628,8 +628,8 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
                             .get_value_or(kDefaultFerryCost)));
 
     // rail_ferry_cost
-    pbf_costing_options->set_railferry_cost(
-        kRailFerryCostRange(rapidjson::get_optional<float>(*json_costing_options, "/railferry_cost")
+    pbf_costing_options->set_rail_ferry_cost(
+        kRailFerryCostRange(rapidjson::get_optional<float>(*json_costing_options, "/rail_ferry_cost")
                                 .get_value_or(kDefaultRailFerryCost)));
     // use_ferry
     pbf_costing_options->set_use_ferry(
@@ -665,7 +665,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
     pbf_costing_options->set_ferry_cost(kDefaultFerryCost);
     pbf_costing_options->set_use_ferry(kDefaultUseFerry);
-    pbf_costing_options->set_railferry_cost(kDefaultRailFerryCost);
+    pbf_costing_options->set_rail_ferry_cost(kDefaultRailFerryCost);
     pbf_costing_options->set_use_rail_ferry(kDefaultUseRailFerry);
     pbf_costing_options->set_use_highways(kDefaultUseHighways);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
