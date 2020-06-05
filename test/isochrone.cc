@@ -42,7 +42,8 @@ const auto config = json_to_pt(R"({
       "grid": {
         "cache_size": 100240,
         "size": 500
-      }
+      },
+    "default": {"breakage_distance": 2000},
     },
     "service_limits": {
       "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
