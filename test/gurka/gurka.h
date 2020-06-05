@@ -412,7 +412,18 @@ inline void build_pbf(const nodelayout& node_locations,
 
   std::unordered_map<std::string, int> way_osm_id_map;
   for (const auto& way : ways) {
-    way_osm_id_map[way.first] = osm_id++;
+    // allow setting custom way id
+    auto way_id = osm_id++;
+    auto found = way.second.find("osm_id");
+    if (found != way.second.cend()) {
+      auto id = std::stoul(found->second);
+      if (id < osm_id) {
+        throw std::invalid_argument("Osm way id has already been used");
+      }
+      way_id = id;
+    }
+
+    way_osm_id_map[way.first] = way_id;
     std::vector<int> nodeids;
     for (const auto& ch : way.first) {
       nodeids.push_back(node_osm_id_map[std::string(1, ch)]);
