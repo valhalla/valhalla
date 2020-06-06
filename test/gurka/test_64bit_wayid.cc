@@ -10,12 +10,12 @@ TEST(UseDirectionOnWays, CheckNamesAndRefs) {
       {"AB",
        {
            {"highway", "trunk"},
-           {"osm_ida", std::to_string(static_cast<uint64_t>(-1))},
+           {"osm_id", std::to_string(static_cast<uint64_t>(-1))},
        }},
       {"BC",
        {
            {"highway", "trunk"},
-           {"osm_idb", std::to_string(static_cast<uint64_t>(67132))},
+           {"osm_id", std::to_string(static_cast<uint64_t>(67132))},
        }},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);

@@ -31,7 +31,10 @@
 
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
+#include <osmium/io/output_iterator.hpp>
 #include <osmium/io/pbf_output.hpp>
+#include <osmium/object_pointer_collection.hpp>
+#include <osmium/osm/object_comparisons.hpp>
 
 #include <regex>
 #include <string>
@@ -346,7 +349,7 @@ inline void build_pbf(const nodelayout& node_locations,
                       const nodes& nodes,
                       const relations& relations,
                       const std::string& filename,
-                      const int initial_osm_id = 0) {
+                      const uint64_t initial_osm_id = 0) {
 
   const size_t initial_buffer_size = 10000;
   osmium::memory::Buffer buffer{initial_buffer_size, osmium::memory::Buffer::auto_grow::yes};
@@ -377,12 +380,12 @@ inline void build_pbf(const nodelayout& node_locations,
   }
 
   std::unordered_map<std::string, int> node_id_map;
-  std::unordered_map<std::string, int> node_osm_id_map;
+  std::unordered_map<std::string, uint64_t> node_osm_id_map;
   int id = 0;
   for (auto& loc : node_locations) {
     node_id_map[loc.first] = id++;
   }
-  int osm_id = initial_osm_id;
+  uint64_t osm_id = initial_osm_id;
   for (auto& loc : node_locations) {
     if (used_nodes.count(loc.first) > 0) {
       node_osm_id_map[loc.first] = osm_id++;
@@ -410,13 +413,13 @@ inline void build_pbf(const nodelayout& node_locations,
     }
   }
 
-  std::unordered_map<std::string, int> way_osm_id_map;
+  std::unordered_map<std::string, uint64_t> way_osm_id_map;
   for (const auto& way : ways) {
     // allow setting custom way id
     auto way_id = osm_id++;
     auto found = way.second.find("osm_id");
     if (found != way.second.cend()) {
-      auto id = std::stoul(found->second);
+      uint64_t id = std::stoul(found->second);
       if (id < osm_id) {
         throw std::invalid_argument("Osm way id has already been used");
       }
@@ -445,16 +448,16 @@ inline void build_pbf(const nodelayout& node_locations,
   for (const auto& relation : relations) {
 
     std::vector<osmium::builder::attr::member_type> members;
-
     for (const auto& member : relation.members) {
       if (member.type == node_member) {
-        members.push_back(
-            {osmium::item_type::node, node_osm_id_map[member.ref], member.role.c_str()});
+        members.push_back({osmium::item_type::node, static_cast<int64_t>(node_osm_id_map[member.ref]),
+                           member.role.c_str()});
       } else {
         if (way_osm_id_map.count(member.ref) == 0) {
           throw std::runtime_error("Relation member refers to an undefined way " + member.ref);
         }
-        members.push_back({osmium::item_type::way, way_osm_id_map[member.ref], member.role.c_str()});
+        members.push_back({osmium::item_type::way, static_cast<int64_t>(way_osm_id_map[member.ref]),
+                           member.role.c_str()});
       }
     }
 
@@ -478,10 +481,26 @@ inline void build_pbf(const nodelayout& node_locations,
 
   // Initialize Writer using the header from above and tell it that it
   // is allowed to overwrite a possibly existing file.
-  osmium::io::Writer writer{output_file, header, osmium::io::overwrite::allow};
+  osmium::io::Writer writer{output_file, header, osmium::io::overwrite::allow, osmium::io::fsync::no};
 
-  // Write out the contents of the output buffer.
-  writer(std::move(buffer));
+  // Sort by id..
+  // TODO: why does everything use object_id_type of signed int64?
+  osmium::ObjectPointerCollection objects;
+  osmium::apply(buffer, objects);
+  struct object_order_id {
+    bool operator()(const osmium::OSMObject* lhs, const osmium::OSMObject* rhs) const noexcept {
+      return static_cast<uint64_t>(lhs->id()) < static_cast<uint64_t>(rhs->id());
+    }
+  };
+  objects.sort(object_order_id{});
+
+  for (const auto& o : objects) {
+    std::cout << o.type() << "," << o.id() << std::endl;
+  }
+
+  // Write out the objects in sorted order
+  auto out = osmium::io::make_output_iterator(writer);
+  std::copy(objects.begin(), objects.end(), out);
 
   // Explicitly close the writer. Will throw an exception if there is
   // a problem. If you wait for the destructor to close the writer, you
