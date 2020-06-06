@@ -25,4 +25,5 @@ valhalla_module(NAME meili
   DEPENDS
     valhalla::sif
     ${valhalla_protobuf_targets}
-    Boost::boost)
+    Boost::boost
+    glog::glog)
