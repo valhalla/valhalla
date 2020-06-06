@@ -91,14 +91,21 @@ void thor_worker_t::trace_route(Api& request) {
     // If non-exact shape points are used, then we need to correct this shape by sending them
     // through the map-matching algorithm to snap the points to the correct shape
     case ShapeMatch::map_snap:
+      // clang-format off
       try {
         map_match(request);
-      } catch (...) { throw valhalla_exception_t{442}; }
+      } catch (const valhalla_exception_t& e) {
+        throw e;
+      } catch (...) {
+        throw valhalla_exception_t{442};
+      }
+      // clang-format on
       break;
     // If we think that we have the exact shape but there ends up being no Valhalla route match,
     // then we want to fallback to try and use meili map matching to match to local route
     // network. No shortcuts are used and detailed information at every intersection becomes
     // available.
+    // clang-format off
     case ShapeMatch::walk_or_snap:
       try {
         route_match(request);
@@ -107,8 +114,13 @@ void thor_worker_t::trace_route(Api& request) {
                  " algorithm failed to find exact route match; Falling back to map_match...");
         try {
           map_match(request);
-        } catch (...) { throw valhalla_exception_t{442}; }
+        } catch (const valhalla_exception_t& e) {
+          throw e;
+        } catch (...) {
+          throw valhalla_exception_t{442};
+        }
       }
+      // clang-format on
       break;
   }
 
@@ -250,7 +262,7 @@ void thor_worker_t::build_trace(
     throw valhalla_exception_t{442};
 
   // here we enumerate the discontinuities and set the edge index of each input trace point
-  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
+  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> edge_trimming;
   baldr::GraphId last_id;
   size_t edge_index = 0;
   for (const auto& path : paths) {
@@ -275,9 +287,8 @@ void thor_worker_t::build_trace(
     const auto* first_segment = path.second.front();
     const auto& first_match = match_results[first_segment->first_match_idx];
     if (first_match.ends_discontinuity) {
-      route_discontinuities[first_match.edge_index] = {{true, first_match.lnglat,
-                                                        first_match.distance_along},
-                                                       {false, {}, 1.f}};
+      edge_trimming[first_match.edge_index] = {{true, first_match.lnglat, first_match.distance_along},
+                                               {false, {}, 1.f}};
     }
 
     // handle the start of a discontinuity, could be on the same edge where we just ended one. in that
@@ -286,8 +297,8 @@ void thor_worker_t::build_trace(
     const auto* last_segment = path.second.back();
     const auto& last_match = match_results[last_segment->last_match_idx]; // cant use edge_index
     if (last_match.begins_discontinuity) {
-      auto found = route_discontinuities[last_match.edge_index].second = {true, last_match.lnglat,
-                                                                          last_match.distance_along};
+      auto found = edge_trimming[last_match.edge_index].second = {true, last_match.lnglat,
+                                                                  last_match.distance_along};
     }
   }
 
@@ -324,8 +335,7 @@ void thor_worker_t::build_trace(
   auto* leg = request.mutable_trip()->add_routes()->add_legs();
   thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, path_edges.begin(),
                               path_edges.end(), *origin_location, *destination_location,
-                              std::list<valhalla::Location>{}, *leg, interrupt,
-                              &route_discontinuities);
+                              std::list<valhalla::Location>{}, *leg, interrupt, &edge_trimming);
 }
 
 void thor_worker_t::build_route(
@@ -341,6 +351,7 @@ void thor_worker_t::build_route(
   valhalla::TripRoute* route = nullptr;
   std::vector<PathInfo> edges;
   int route_index = 0;
+  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> edge_trimming;
   for (const auto& path : paths) {
     if (route == nullptr) {
       route = request.mutable_trip()->mutable_routes()->Add();
@@ -377,12 +388,32 @@ void thor_worker_t::build_route(
     add_path_edge(destination_location, dest_segment->edgeid, dest_segment->target, dest_match.lnglat,
                   dest_match.distance_from);
 
+    // build up the discontinuities so we can trim shape where we do uturns
+    edge_trimming.clear();
+    for (size_t i = 0; i < path.second.size(); ++i) {
+      const auto* prev_segment = i > 0 ? path.second[i - 1] : nullptr;
+      const auto* segment = path.second[i];
+      const auto* next_segment = i < path.second.size() - 1 ? path.second[i + 1] : nullptr;
+      // if we uturn onto this edge we must trim the beginning and if we uturn off we trim the end
+      bool uturn_onto =
+          prev_segment && prev_segment->edgeid != segment->edgeid && prev_segment->target < 1.f;
+      bool uturn_off_of =
+          next_segment && segment->edgeid != next_segment->edgeid && segment->target < 1.f;
+      if (uturn_onto || uturn_off_of) {
+        edge_trimming[i] = {{uturn_onto, match_results[segment->first_match_idx].lnglat,
+                             segment->source},
+                            {uturn_off_of, match_results[segment->last_match_idx].lnglat,
+                             segment->target}};
+      }
+    }
+
     // TODO: do we actually need to supply the via/through type locations?
 
     // actually build the leg and add it to the route
     TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, path.first.cbegin(),
                           path.first.cend(), *origin_location, *destination_location,
-                          std::list<valhalla::Location>{}, *route->mutable_legs()->Add(), interrupt);
+                          std::list<valhalla::Location>{}, *route->mutable_legs()->Add(), interrupt,
+                          &edge_trimming);
 
     if (path.second.back()->discontinuity) {
       ++route_index;

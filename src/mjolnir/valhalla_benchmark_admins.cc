@@ -192,7 +192,7 @@ void Benchmark(const boost::property_tree::ptree& pt) {
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // Get the admin polys if there is data for tiles that exist
     GraphId tile_id(id, local_level, 0);
-    if (GraphReader::DoesTileExist(hierarchy_properties, tile_id)) {
+    if (reader.DoesTileExist(tile_id)) {
       polys = GetAdminInfo(db_handle, drive_on_right, tiles.TileBounds(id));
       LOG_INFO("polys: " + std::to_string(polys.size()));
       if (polys.size() < 128) {

@@ -44,10 +44,12 @@ const tz_db_t& get_tz_db();
 
 /**
  * Get a formatted date from a string.
- * @param date in the format of 2015-05-06T08:00
+ * @param date       in the format of 2015-05-06T08:00
+ * @param can_throw  if true and the input is malformed invalid_argument is thrown
+ *                   TODO: remove the option to disallow throwing
  * @return  Returns the formatted date.
  */
-date::local_seconds get_formatted_date(const std::string& date);
+date::local_seconds get_formatted_date(const std::string& date, bool can_throw = false);
 
 /**
  * Get a local_date_time with support for dst.
@@ -89,11 +91,11 @@ uint64_t seconds_since_epoch(const std::string& date_time, const date::time_zone
  * @param   cache         a cache for timezone sys_info lookup (since its expensive)
  * @return Returns the seconds difference between the 2 timezones.
  */
-int timezone_diff(
-    const uint64_t seconds,
-    const date::time_zone* origin_tz,
-    const date::time_zone* dest_tz,
-    std::unordered_map<const date::time_zone*, std::vector<date::sys_info>>* cache = nullptr);
+using tz_sys_info_cache_t = std::unordered_map<const date::time_zone*, std::vector<date::sys_info>>;
+int timezone_diff(const uint64_t seconds,
+                  const date::time_zone* origin_tz,
+                  const date::time_zone* dest_tz,
+                  tz_sys_info_cache_t* cache = nullptr);
 
 /**
  * Get the iso date time from seconds since epoch and timezone.
@@ -188,10 +190,6 @@ uint32_t second_of_week(uint32_t epoch_time, const date::time_zone* time_zone);
 static inline std::tm iso_to_tm(const std::string& iso) {
   // Create an invalid tm, then populate it from the ISO string using get_time
   std::tm t = {};
-  t.tm_min = -1;
-  t.tm_hour = -1;
-  t.tm_mday = -1;
-  t.tm_mon = -1;
 
   // Check for invalid string (not the right separators and sizes)
   if (iso.size() != 16 || iso.at(4) != '-' || iso.at(7) != '-' || iso.at(10) != 'T' ||
@@ -203,10 +201,9 @@ static inline std::tm iso_to_tm(const std::string& iso) {
   ss.imbue(std::locale("C"));
   ss >> std::get_time(&t, "%Y-%m-%dT%H:%M");
 
-  // Validate fields. Set tm_year to 0 if any of the year,month,day,hour,minute are invalid.
-  if (t.tm_year > 200 || t.tm_mon < 0 || t.tm_mon > 11 || t.tm_mday < 0 || t.tm_mday > 31 ||
-      t.tm_hour < 0 || t.tm_hour > 23 || t.tm_min < 0 || t.tm_min > 59) {
-    t.tm_year = 0;
+  // If parsing failed zero 0 the struct
+  if (ss.fail()) {
+    return {};
   }
   return t;
 }

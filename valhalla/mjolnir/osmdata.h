@@ -129,6 +129,8 @@ struct OSMData {
 
   // Lane connectivity, index by the to way Id
   OSMLaneConnectivityMultiMap lane_connectivity_map;
+
+  bool initialized = false;
 };
 
 } // namespace mjolnir

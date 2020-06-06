@@ -40,7 +40,6 @@ uint32_t GetOperatorId(const GraphTile* tile,
 namespace valhalla {
 namespace thor {
 
-constexpr uint32_t kBucketCount = 20000;
 constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Default constructor

@@ -181,8 +181,6 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     throw valhalla_exception_t{212};
   }
 
-  LOG_INFO(std::string("trip_path_->node_size()=" + std::to_string(trip_path_->node_size())));
-
   // Process the Destination maneuver
   maneuvers.emplace_front();
   CreateDestinationManeuver(maneuvers.front());
@@ -554,10 +552,8 @@ ManeuversBuilder::CombineInternalManeuver(std::list<Maneuver>& maneuvers,
   // Set begin shape index
   next_man->set_begin_shape_index(curr_man->begin_shape_index());
 
-  // Set signs, if needed
-  if (curr_man->HasSigns() && !next_man->HasSigns()) {
-    *(next_man->mutable_signs()) = curr_man->signs();
-  }
+  // NOTE: Do not copy signs from internal maneuver
+  //       It would produce invalid results
 
   if (start_man) {
     next_man->set_type(DirectionsLeg_Maneuver_Type_kStart);
@@ -1405,7 +1401,7 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       if (trip_path_) {
         auto man_begin_edge = trip_path_->GetCurrEdge(maneuver.begin_node_index());
         auto node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
-        bool prev_edge_has_names = (prev_edge ? !prev_edge->IsUnnamed() : false);
+        //        bool prev_edge_has_names = (prev_edge ? !prev_edge->IsUnnamed() : false);
 
         ////////////////////////////////////////////////////////////////////
         // If the maneuver begin edge is a turn channel
@@ -1461,9 +1457,7 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
         //                  prev_edge->GetNameList());
         //          std::unique_ptr<StreetNames> common_base_names = prev_edge_names
         //              ->FindCommonBaseNames(maneuver.street_names());
-        //          LOG_INFO("prev_edge_names->size()=" + std::to_string(prev_edge_names->size()));
-        //          LOG_INFO("common_base_names->size()=" +
-        //          std::to_string(common_base_names->size())); if (common_base_names->empty()) {
+        //          if (common_base_names->empty()) {
         //            maneuver.set_type(DirectionsLeg_Maneuver_Type_kBecomes);
         //            LOG_TRACE("ManeuverType=BECOMES");
         //          }
@@ -2424,12 +2418,16 @@ void ManeuversBuilder::ProcessRoundaboutNames(std::list<Maneuver>& maneuvers) {
         }
       }
 
-      // Process roundabout exit names
+      // Process roundabout exit names and signs
       if (next_man->type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) {
         if (next_man->HasBeginStreetNames()) {
-          curr_man->set_roundabout_exit_street_names(next_man->begin_street_names().clone());
+          curr_man->set_roundabout_exit_begin_street_names(next_man->begin_street_names().clone());
+          curr_man->set_roundabout_exit_street_names(next_man->street_names().clone());
         } else {
           curr_man->set_roundabout_exit_street_names(next_man->street_names().clone());
+        }
+        if (next_man->HasSigns()) {
+          *(curr_man->mutable_roundabout_exit_signs()) = next_man->signs();
         }
       }
     }
