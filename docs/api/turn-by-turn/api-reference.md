@@ -242,6 +242,7 @@ A multimodal request with a filter for certain Onestop IDs:
 | `it-IT` | `it` | Italian (Italy) |
 | `pt-PT` | `pt` | Portuguese (Portugal) |
 | `ru-RU` | `ru` | Russian (Russia) |
+| `sk-SK` | `sk` | Slovak (Slovakia) |
 | `sl-SI` | `sl` | Slovenian (Slovenia) |
 | `sv-SE` | `sv` | Swedish (Sweden) |
 
