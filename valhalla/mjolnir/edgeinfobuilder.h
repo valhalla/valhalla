@@ -34,7 +34,7 @@ public:
    * @return  Returns mean elevation in meters relative to sea level.
    */
   float mean_elevation() const {
-    return kMinElevation + (w0_.mean_elevation_ * kElevationBinSize);
+    return kMinElevation + (ei_.mean_elevation_ * kElevationBinSize);
   }
 
   /**
@@ -54,7 +54,7 @@ public:
    * @return  Returns the bike network mask for this directed edge.
    */
   uint32_t bike_network() const {
-    return w0_.bike_network_;
+    return ei_.bike_network_;
   }
 
   /**
@@ -103,11 +103,8 @@ public:
   std::size_t SizeOf() const;
 
 protected:
-  // 1st 4-byte word
-  uint32_t wayid_ : 32; // OSM way Id
-
-  // 2nd 4-byte word
-  baldr::EdgeInfo::Word0 w0_;
+  // Fixed size information
+  baldr::EdgeInfo::EdgeInfoInner ei_;
 
   // Where we optionally keep the other half of a 64bit wayid
   uint32_t extended_wayid_;

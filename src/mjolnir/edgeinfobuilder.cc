@@ -14,11 +14,11 @@ namespace mjolnir {
 // Set the OSM way Id.
 void EdgeInfoBuilder::set_wayid(const uint64_t wayid) {
   // mask off the first 32bits
-  wayid_ = wayid & 0xFFFFFFFF;
-  w0_.has_extended_wayid = false;
+  ei_.wayid_ = wayid & 0xFFFFFFFF;
+  ei_.has_extended_wayid = false;
   // if that turned out to be not enough precision we keep the upper bits separately
-  if (wayid_ != wayid) {
-    w0_.has_extended_wayid = true;
+  if (ei_.wayid_ != wayid) {
+    ei_.has_extended_wayid = true;
     extended_wayid_ = (wayid >> 32) & 0xFFFFFFFF;
   }
 }
@@ -26,28 +26,28 @@ void EdgeInfoBuilder::set_wayid(const uint64_t wayid) {
 // Set the mean elevation.
 void EdgeInfoBuilder::set_mean_elevation(const float mean_elev) {
   if (mean_elev < kMinElevation) {
-    w0_.mean_elevation_ = 0;
+    ei_.mean_elevation_ = 0;
   } else {
     uint32_t elev = static_cast<uint32_t>((mean_elev - kMinElevation) / kElevationBinSize);
-    w0_.mean_elevation_ = (elev > kMaxStoredElevation) ? kMaxStoredElevation : elev;
+    ei_.mean_elevation_ = (elev > kMaxStoredElevation) ? kMaxStoredElevation : elev;
   }
 }
 
 // Sets the bike network mask indicating which (if any) bicycle networks are
 // along this edge. See baldr/directededge.h for definitions.
 void EdgeInfoBuilder::set_bike_network(const uint32_t bike_network) {
-  w0_.bike_network_ = bike_network;
+  ei_.bike_network_ = bike_network;
 }
 
 // Sets the speed limit in KPH.
 void EdgeInfoBuilder::set_speed_limit(const uint32_t speed_limit) {
   if (speed_limit == kUnlimitedSpeedLimit) {
-    w0_.speed_limit_ = kUnlimitedSpeedLimit;
+    ei_.speed_limit_ = kUnlimitedSpeedLimit;
   } else if (speed_limit > kMaxAssumedSpeed) {
     LOG_WARN("Exceeding maximum.  Speed limit: " + std::to_string(speed_limit));
-    w0_.speed_limit_ = kMaxAssumedSpeed;
+    ei_.speed_limit_ = kMaxAssumedSpeed;
   } else {
-    w0_.speed_limit_ = speed_limit;
+    ei_.speed_limit_ = speed_limit;
   }
 }
 
@@ -83,12 +83,10 @@ void EdgeInfoBuilder::set_encoded_shape(const std::string& encoded_shape) {
 
 // Get the size of the edge info (including name offsets and shape string)
 std::size_t EdgeInfoBuilder::BaseSizeOf() const {
-  std::size_t size = sizeof(uint32_t);    // wayid
-  size += sizeof(baldr::EdgeInfo::Word0); // w0
-  size += sizeof(baldr::EdgeInfo::Word1); // w1
+  std::size_t size = sizeof(EdgeInfo::EdgeInfoInner);
   size += (name_info_list_.size() * sizeof(NameInfo));
   size += (encoded_shape_.size() * sizeof(std::string::value_type));
-  size += w0_.has_extended_wayid * sizeof(extended_wayid_);
+  size += ei_.has_extended_wayid * sizeof(extended_wayid_);
   return size;
 }
 
@@ -107,29 +105,28 @@ std::size_t EdgeInfoBuilder::SizeOf() const {
 // Output edge info to output stream
 std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   // Pack the name count and encoded shape size. Check against limits.
-  baldr::EdgeInfo::Word1 w1;
+  auto ei = eib.ei_;
   uint32_t name_count = eib.name_info_list_.size();
   if (name_count > kMaxNamesPerEdge) {
     LOG_WARN("Exceeding max names per edge: " + std::to_string(name_count));
     name_count = kMaxNamesPerEdge;
   }
-  w1.name_count_ = name_count;
+  ei.name_count_ = name_count;
 
   // Check if we are exceeding the max encoded size
   if (eib.encoded_shape_.size() > kMaxEncodedShapeSize) {
     LOG_WARN("Exceeding max encoded shape size: " + std::to_string(eib.encoded_shape_.size()));
-    w1.encoded_shape_size_ = static_cast<uint32_t>(kMaxEncodedShapeSize);
+    ei.encoded_shape_size_ = static_cast<uint32_t>(kMaxEncodedShapeSize);
   } else {
-    w1.encoded_shape_size_ = static_cast<uint32_t>(eib.encoded_shape_.size());
+    ei.encoded_shape_size_ = static_cast<uint32_t>(eib.encoded_shape_.size());
   }
 
   // Write out the bytes
-  os.write(reinterpret_cast<const char*>(&eib.w0_), sizeof(baldr::EdgeInfo::Word0));
-  os.write(reinterpret_cast<const char*>(&w1), sizeof(baldr::EdgeInfo::Word1));
+  os.write(reinterpret_cast<const char*>(&ei), sizeof(ei));
   os.write(reinterpret_cast<const char*>(eib.name_info_list_.data()),
            (name_count * sizeof(NameInfo)));
   os << eib.encoded_shape_;
-  if (eib.w0_.has_extended_wayid) {
+  if (ei.has_extended_wayid) {
     os.write(reinterpret_cast<const char*>(&eib.extended_wayid_), sizeof(uint32_t));
   }
 
@@ -140,6 +137,7 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
       os << static_cast<char>(0);
     }
   }
+
   return os;
 }
 
