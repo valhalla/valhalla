@@ -158,7 +158,7 @@ protected:
   std::vector<EdgeStatus> target_edgestatus_;
 
   // Mark each target edge with a list of target indexes that have reached it
-  robin_hood::unordered_map<baldr::GraphId, std::vector<uint32_t>> targets_;
+  robin_hood::unordered_map<uint64_t, std::vector<uint32_t>> targets_;
 
   // List of best connections found so far
   std::vector<BestCandidate> best_connection_;
