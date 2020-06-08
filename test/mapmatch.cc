@@ -1411,7 +1411,7 @@ TEST(Mapmatch, no_edge_candidates) {
 
 TEST(Mapmatch, test_breakage_distance_error_handling) {
   // tests expected error_code for trace_route edge_walk
-  auto expected_error_code = 154;
+  auto expected_error_code = 172;
   tyr::actor_t actor(conf, true);
 
   try {
