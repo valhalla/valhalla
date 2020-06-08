@@ -85,6 +85,7 @@ const std::unordered_map<unsigned, std::string>
 
                 {170, "Locations are in unconnected regions. Go check/edit the map at osm.org"},
                 {171, "No suitable edges near location"},
+                {172, "Exceeded breakage distance for all pairs"},
 
                 {199, "Unknown"},
 

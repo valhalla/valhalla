@@ -50,6 +50,7 @@
    * FIXED: Many issues that resulted in discontinuities, failed matches or incorrect time/duration for map matching requests. [#2292](https://github.com/valhalla/valhalla/pull/2292)
    * FIXED: Seeing segfault when loading large osmdata data files before loading LuaJit. LuaJit fails to create luaL_newstate() Ref: [#2158](https://github.com/ntop/ntopng/issues/2158) Resolution is to load LuaJit before loading the data files. [#2383](https://github.com/valhalla/valhalla/pull/2383)
    * FIXED: Store positive/negative OpenLR offsets in bucketed form [#2405](https://github.com/valhalla/valhalla/2405)
+   * FIXED: Fix on map-matching return code when breakage distance limitation exceeds. Instead of letting the request goes into meili and fails in finding a route, we check the distance in loki and early return with exception code 172. [#2406](https://github.com/valhalla/valhalla/pull/2406)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
