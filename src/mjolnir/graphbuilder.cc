@@ -306,7 +306,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
   }
 
   // Get the way Ids of the edges at the endnode
-  std::vector<uint32_t> wayids;
+  std::vector<uint64_t> wayids;
   auto bundle = collect_node_edges(node_itr, nodes, edges);
   for (const auto& edge : bundle.node_edges) {
     wayids.push_back((*ways[edge.first.wayindex_]).osmwayid_);
@@ -360,7 +360,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
 // Add an access restriction. Returns the mode(s) that have access
 // restrictions on this edge.
 uint32_t AddAccessRestrictions(const uint32_t edgeid,
-                               const uint32_t wayid,
+                               const uint64_t wayid,
                                const OSMData& osmdata,
                                GraphTileBuilder& graphtile) {
   auto res = osmdata.access_restrictions.equal_range(wayid);
