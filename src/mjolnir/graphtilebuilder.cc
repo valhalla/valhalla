@@ -307,16 +307,18 @@ void GraphTileBuilder::StoreTileData() {
       reverse_restriction_size += complex_restriction.SizeOf();
     }
 
-    // Write the edge data (update edge_info_offset_)
-    int64_t current_size = in_mem.tellp();
+    // Write the edge data
     header_builder_.set_edgeinfo_offset(header_builder_.complex_restriction_reverse_offset() +
                                         reverse_restriction_size);
     for (const auto& edgeinfo : edgeinfo_list_) {
       in_mem << edgeinfo;
     }
-    int64_t edge_info_size = in_mem.tellp() - current_size;
+
     // Write the names
-    header_builder_.set_textlist_offset(header_builder_.edgeinfo_offset() + edge_info_size);
+    header_builder_.set_textlist_offset(header_builder_.edgeinfo_offset() + edge_info_offset_);
+    for (const auto& text : textlistbuilder_) {
+      in_mem << text << '\0';
+    }
 
     // Add padding (if needed) to align to 8-byte word.
     int tmp = in_mem.tellp() % 8;
