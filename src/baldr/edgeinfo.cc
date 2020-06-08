@@ -32,11 +32,14 @@ namespace baldr {
 EdgeInfo::EdgeInfo(char* ptr, const char* names_list, const size_t names_list_length)
     : names_list_(names_list), names_list_length_(names_list_length) {
 
-  w0_.value_ = *(reinterpret_cast<uint64_t*>(ptr));
-  ptr += sizeof(uint64_t);
+  wayid_ = *reinterpret_cast<uint32_t*>(ptr);
+  ptr += sizeof(uint32_t);
 
-  item_ = reinterpret_cast<PackedItem*>(ptr);
-  ptr += sizeof(PackedItem);
+  w0_ = *reinterpret_cast<Word0*>(ptr);
+  ptr += sizeof(uint32_t);
+
+  w1_ = *reinterpret_cast<Word1*>(ptr);
+  ptr += sizeof(uint32_t);
 
   // Set name info list pointer
   name_info_list_ = reinterpret_cast<NameInfo*>(ptr);
@@ -61,7 +64,7 @@ EdgeInfo::~EdgeInfo() {
 
 // Get the name info for the specified name index.
 NameInfo EdgeInfo::GetNameInfo(uint8_t index) const {
-  if (index < item_->name_count) {
+  if (index < w1_.name_count_) {
     return name_info_list_[index];
   } else {
     throw std::runtime_error("StreetNameOffset index was out of bounds");
@@ -123,8 +126,7 @@ uint16_t EdgeInfo::GetTypes() const {
 const std::vector<midgard::PointLL>& EdgeInfo::shape() const {
   // if we haven't yet decoded the shape, do so
   if (encoded_shape_ != nullptr && shape_.empty()) {
-    shape_ =
-        midgard::decode7<std::vector<midgard::PointLL>>(encoded_shape_, item_->encoded_shape_size);
+    shape_ = midgard::decode7<std::vector<midgard::PointLL>>(encoded_shape_, w1_.encoded_shape_size_);
   }
   return shape_;
 }
@@ -132,7 +134,7 @@ const std::vector<midgard::PointLL>& EdgeInfo::shape() const {
 // Returns the encoded shape string
 std::string EdgeInfo::encoded_shape() const {
   return encoded_shape_ == nullptr ? midgard::encode7(shape_)
-                                   : std::string(encoded_shape_, item_->encoded_shape_size);
+                                   : std::string(encoded_shape_, w1_.encoded_shape_size_);
 }
 
 json::MapPtr EdgeInfo::json() const {

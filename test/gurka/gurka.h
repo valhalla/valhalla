@@ -415,7 +415,7 @@ inline void build_pbf(const nodelayout& node_locations,
 
   std::unordered_map<std::string, uint64_t> way_osm_id_map;
   for (const auto& way : ways) {
-    // allow setting custom way id
+    // allow setting custom id
     auto way_id = osm_id++;
     auto found = way.second.find("osm_id");
     if (found != way.second.cend()) {

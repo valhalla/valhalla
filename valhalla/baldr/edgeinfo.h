@@ -84,7 +84,7 @@ public:
    * @return  Returns the OSM way Id.
    */
   uint64_t wayid() const {
-    return (static_cast<uint64_t>(extended_wayid_ ? *extended_wayid_ : 0) << 32) | w0_.wayid_;
+    return (static_cast<uint64_t>(extended_wayid_ ? *extended_wayid_ : 0) << 32) | wayid_;
   }
 
   /**
@@ -116,7 +116,7 @@ public:
    * @return Returns the name count.
    */
   uint32_t name_count() const {
-    return item_->name_count;
+    return w1_.name_count_;
   }
 
   /**
@@ -124,7 +124,7 @@ public:
    * @return  Returns the shape size.
    */
   uint32_t encoded_shape_size() const {
-    return item_->encoded_shape_size;
+    return w1_.encoded_shape_size_;
   }
 
   /**
@@ -160,7 +160,7 @@ public:
   const std::vector<midgard::PointLL>& shape() const;
 
   midgard::Shape7Decoder<midgard::PointLL> lazy_shape() const {
-    return midgard::Shape7Decoder<midgard::PointLL>(encoded_shape_, item_->encoded_shape_size);
+    return midgard::Shape7Decoder<midgard::PointLL>(encoded_shape_, w1_.encoded_shape_size_);
   }
 
   /**
@@ -178,30 +178,30 @@ public:
   // Operator EqualTo based on nodea and nodeb.
   bool operator==(const EdgeInfo& rhs) const;
 
-  struct PackedItem {
-    uint32_t name_count : 4;
-    uint32_t encoded_shape_size : 16;
-    uint32_t reserved : 5; // Reserved for use by forks of Valhalla
-    uint32_t spare : 7;
+  union Word0 {
+    uint32_t mean_elevation_ : 12;   // Mean elevation with 2 meter precision
+    uint32_t bike_network_ : 4;      // Mask of bicycle network types (see graphconstants.h)
+    uint32_t speed_limit_ : 8;       // Speed limit (kph)
+    uint32_t has_extended_wayid : 1; // Whether or not the wayid is 64bits
+    uint32_t spare_ : 7;
+  };
+
+  union Word1 {
+    uint32_t name_count_ : 4;
+    uint32_t encoded_shape_size_ : 16;
+    uint32_t reserved_ : 5; // Reserved for use by forks of Valhalla
+    uint32_t spare_ : 7;
   };
 
 protected:
-  // 1st 8-byte word
-  union Word0 {
-    struct {
-      uint64_t wayid_ : 32;            // OSM way Id
-      uint64_t mean_elevation_ : 12;   // Mean elevation with 2 meter precision
-      uint64_t bike_network_ : 4;      // Mask of bicycle network types (see graphconstants.h)
-      uint64_t speed_limit_ : 8;       // Speed limit (kph)
-      uint64_t has_extended_wayid : 1; // Whether or not the wayid is 64bits
-      uint64_t spare_ : 7;
-    };
-    uint64_t value_;
-  };
+  // 1st 4-byte word
+  uint32_t wayid_ : 32; // OSM way Id
+
+  // 2nd 4-byte word
   Word0 w0_;
 
-  // Where we keep the statistics about how large the vectors below are
-  const PackedItem* item_;
+  // 3rd 4-byte word
+  Word1 w1_;
 
   // List of name information (offsets, etc.)
   const NameInfo* name_info_list_;

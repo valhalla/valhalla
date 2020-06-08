@@ -103,19 +103,11 @@ public:
   std::size_t SizeOf() const;
 
 protected:
-  // 1st 8-byte word
-  union Word0 {
-    struct {
-      uint64_t wayid_ : 32;            // OSM way Id
-      uint64_t mean_elevation_ : 12;   // Mean elevation with 2 meter precision
-      uint64_t bike_network_ : 4;      // Mask of bicycle network types (see graphconstants.h)
-      uint64_t speed_limit_ : 8;       // Speed limit (kph)
-      uint64_t has_extended_wayid : 1; // Whether or not the wayid is 64bits
-      uint64_t spare_ : 7;
-    };
-    uint64_t value_;
-  };
-  Word0 w0_;
+  // 1st 4-byte word
+  uint32_t wayid_ : 32; // OSM way Id
+
+  // 2nd 4-byte word
+  baldr::EdgeInfo::Word0 w0_;
 
   // Where we optionally keep the other half of a 64bit wayid
   uint32_t extended_wayid_;

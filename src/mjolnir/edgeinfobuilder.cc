@@ -14,10 +14,10 @@ namespace mjolnir {
 // Set the OSM way Id.
 void EdgeInfoBuilder::set_wayid(const uint64_t wayid) {
   // mask off the first 32bits
-  w0_.wayid_ = wayid & 0xFFFFFFFF;
+  wayid_ = wayid & 0xFFFFFFFF;
   w0_.has_extended_wayid = false;
   // if that turned out to be not enough precision we keep the upper bits separately
-  if (w0_.wayid_ != wayid) {
+  if (wayid_ != wayid) {
     w0_.has_extended_wayid = true;
     extended_wayid_ = (wayid >> 32) & 0xFFFFFFFF;
   }
@@ -83,8 +83,9 @@ void EdgeInfoBuilder::set_encoded_shape(const std::string& encoded_shape) {
 
 // Get the size of the edge info (including name offsets and shape string)
 std::size_t EdgeInfoBuilder::BaseSizeOf() const {
-  std::size_t size = sizeof(uint64_t);
-  size += sizeof(baldr::EdgeInfo::PackedItem);
+  std::size_t size = sizeof(uint32_t);    // wayid
+  size += sizeof(baldr::EdgeInfo::Word0); // w0
+  size += sizeof(baldr::EdgeInfo::Word1); // w1
   size += (name_info_list_.size() * sizeof(NameInfo));
   size += (encoded_shape_.size() * sizeof(std::string::value_type));
   size += w0_.has_extended_wayid * sizeof(extended_wayid_);
@@ -95,10 +96,10 @@ std::size_t EdgeInfoBuilder::BaseSizeOf() const {
 std::size_t EdgeInfoBuilder::SizeOf() const {
   std::size_t size = BaseSizeOf();
 
-  // Add padding to get to 8 byte boundaries
-  size_t n = size % 8;
+  // Add padding to get to 4 byte boundaries
+  size_t n = size % 4;
   if (n != 0) {
-    size += 8 - n;
+    size += 4 - n;
   }
   return size;
 }
@@ -106,25 +107,25 @@ std::size_t EdgeInfoBuilder::SizeOf() const {
 // Output edge info to output stream
 std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   // Pack the name count and encoded shape size. Check against limits.
-  baldr::EdgeInfo::PackedItem item;
+  baldr::EdgeInfo::Word1 w1;
   uint32_t name_count = eib.name_info_list_.size();
   if (name_count > kMaxNamesPerEdge) {
     LOG_WARN("Exceeding max names per edge: " + std::to_string(name_count));
     name_count = kMaxNamesPerEdge;
   }
-  item.name_count = name_count;
+  w1.name_count_ = name_count;
 
   // Check if we are exceeding the max encoded size
   if (eib.encoded_shape_.size() > kMaxEncodedShapeSize) {
     LOG_WARN("Exceeding max encoded shape size: " + std::to_string(eib.encoded_shape_.size()));
-    item.encoded_shape_size = static_cast<uint32_t>(kMaxEncodedShapeSize);
+    w1.encoded_shape_size_ = static_cast<uint32_t>(kMaxEncodedShapeSize);
   } else {
-    item.encoded_shape_size = static_cast<uint32_t>(eib.encoded_shape_.size());
+    w1.encoded_shape_size_ = static_cast<uint32_t>(eib.encoded_shape_.size());
   }
 
   // Write out the bytes
-  os.write(reinterpret_cast<const char*>(&eib.w0_.value_), sizeof(uint64_t));
-  os.write(reinterpret_cast<const char*>(&item), sizeof(baldr::EdgeInfo::PackedItem));
+  os.write(reinterpret_cast<const char*>(&eib.w0_), sizeof(baldr::EdgeInfo::Word0));
+  os.write(reinterpret_cast<const char*>(&w1), sizeof(baldr::EdgeInfo::Word1));
   os.write(reinterpret_cast<const char*>(eib.name_info_list_.data()),
            (name_count * sizeof(NameInfo)));
   os << eib.encoded_shape_;
@@ -132,10 +133,10 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
     os.write(reinterpret_cast<const char*>(&eib.extended_wayid_), sizeof(uint32_t));
   }
 
-  // Pad to an 8 byte boundary
-  std::size_t n = (eib.BaseSizeOf() % 8);
+  // Pad to an 4 byte boundary
+  std::size_t n = (eib.BaseSizeOf() % 4);
   if (n != 0) {
-    for (std::size_t i = 0; i < 8 - n; i++) {
+    for (std::size_t i = 0; i < 4 - n; i++) {
       os << static_cast<char>(0);
     }
   }
