@@ -35,3 +35,4 @@ macro (add_valhalla_benchmark target_file)
 endmacro()
 
 add_subdirectory(meili)
+add_subdirectory(thor)
