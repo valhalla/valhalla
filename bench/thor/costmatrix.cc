@@ -82,6 +82,7 @@ static void BM_UtrechtCostMatrix(benchmark::State& state) {
   std::uniform_real_distribution<> lng_distribution(min_lon, max_lon);
   std::uniform_real_distribution<> lat_distribution(min_lat, max_lat);
 
+  locations.reserve(size);
   for (int i = 0; i < size; i++) {
     locations.emplace_back(midgard::PointLL{lng_distribution(gen), lat_distribution(gen)});
   }
