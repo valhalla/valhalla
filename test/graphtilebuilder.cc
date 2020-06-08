@@ -215,14 +215,13 @@ public:
     header_->set_graphid(id);
     header_->set_directededgecount(1 + (id.tileid() == o_id.tileid()) * 1);
 
-    edgeinfo_ = new char[sizeof(uint64_t) + sizeof(EdgeInfo::Word1) + e.size()];
-    std::memset(static_cast<void*>(edgeinfo_), 0, sizeof(uint64_t));
-    EdgeInfo::Word1 pi{0, static_cast<uint32_t>(e.size())};
-    std::memcpy(static_cast<void*>(edgeinfo_ + sizeof(uint64_t)), static_cast<void*>(&pi),
-                sizeof(EdgeInfo::Word1));
+    edgeinfo_ = new char[sizeof(EdgeInfo::EdgeInfoInner) + e.size()];
+    EdgeInfo::EdgeInfoInner pi{0, 0, 0, 0, 0, 0, 0, static_cast<uint32_t>(e.size())};
+    std::memcpy(static_cast<void*>(edgeinfo_), static_cast<void*>(&pi),
+                sizeof(EdgeInfo::EdgeInfoInner));
     textlist_ = edgeinfo_;
     textlist_size_ = 0;
-    std::memcpy(static_cast<void*>(edgeinfo_ + sizeof(uint64_t) + sizeof(EdgeInfo::Word1)),
+    std::memcpy(static_cast<void*>(edgeinfo_ + sizeof(EdgeInfo::EdgeInfoInner)),
                 static_cast<void*>(&e[0]), e.size());
 
     directededges_ = new DirectedEdge[2];
