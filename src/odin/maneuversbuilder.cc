@@ -1540,7 +1540,8 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       }
       if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) &&
           !maneuver.intersecting_forward_edge() &&
-          ((xedge_counts.right > 0) || ((xedge_counts.right == 0) && (xedge_counts.left == 0)))) {
+          ((xedge_counts.right > 0) || ((xedge_counts.right == 0) && (xedge_counts.left == 0)) ||
+          ((xedge_counts.right == 0) && (xedge_counts.left == 1) && prev_edge->IsRampUse()))) {
         maneuver.set_type(DirectionsLeg_Maneuver_Type_kContinue);
         LOG_TRACE("ManeuverType=CONTINUE (Turn::Type::kSlightRight)");
       } else {
@@ -1657,7 +1658,8 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       }
       if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) &&
           !maneuver.intersecting_forward_edge() &&
-          ((xedge_counts.left > 0) || ((xedge_counts.right == 0) && (xedge_counts.left == 0)))) {
+          ((xedge_counts.left > 0) || ((xedge_counts.right == 0) && (xedge_counts.left == 0)) ||
+              ((xedge_counts.right == 1) && (xedge_counts.left == 0) && !prev_edge->IsRampUse()))) {
         maneuver.set_type(DirectionsLeg_Maneuver_Type_kContinue);
         LOG_TRACE("ManeuverType=CONTINUE (Turn::Type::kSlightLeft)");
       } else {
@@ -2254,10 +2256,10 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
   // Adjust keep straight, if needed
   if (relative_direction == Maneuver::RelativeDirection::kKeepStraight) {
     if ((xedge_counts.right_similar_traversable_outbound == 0) &&
-        (xedge_counts.left_similar_traversable_outbound > 0)) {
+        (xedge_counts.left_similar_traversable_outbound > 0) && maneuver.turn_degree() != 1) {
       maneuver.set_begin_relative_direction(Maneuver::RelativeDirection::kKeepRight);
     } else if ((xedge_counts.right_similar_traversable_outbound > 0) &&
-               (xedge_counts.left_similar_traversable_outbound == 0)) {
+               (xedge_counts.left_similar_traversable_outbound == 0) && maneuver.turn_degree() != 1) {
       maneuver.set_begin_relative_direction(Maneuver::RelativeDirection::kKeepLeft);
     } else if ((xedge_counts.left_similar_traversable_outbound == 0) &&
                (xedge_counts.left_traversable_outbound > 0) &&
