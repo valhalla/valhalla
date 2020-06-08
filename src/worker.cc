@@ -209,6 +209,8 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {170, R"({"code":"NoRoute","message":"Impossible route between points"})"},
     {171,
      R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
+    {172,
+     R"({"code":"BreakageDistanceExceeded","message":"All coordinates are too far away from each other"})"},
 
     {199, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
 

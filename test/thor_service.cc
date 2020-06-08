@@ -78,6 +78,7 @@ TEST(ThorService, test_failure_requests) {
   config.add("thor.logging.long_request", "110.0");
   config.add("meili.default.gps_accuracy", "4.07");
   config.add("meili.default.search_radius", "40");
+  config.add("meili.default.breakage_distance", "2000");
   config.add("meili.grid.size", "500");
   config.add("meili.grid.cache_size", "64");
 
