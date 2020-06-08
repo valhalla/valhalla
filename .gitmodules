@@ -25,3 +25,6 @@
 [submodule "third_party/benchmark"]
 	path = third_party/benchmark
 	url = https://github.com/google/benchmark
+[submodule "third_party/robin-hood-hashing"]
+	path = third_party/robin-hood-hashing
+	url = https://github.com/martinus/robin-hood-hashing.git
