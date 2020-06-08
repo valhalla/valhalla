@@ -65,7 +65,7 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
   }
 
   if (!can_be_matched) {
-    throw valhalla_exception_t{172};
+    throw valhalla_exception_t{172, " " + std::to_string(max_breakage_distance) + " meters"};
   }
 
   valhalla::midgard::logging::Log("location_distance::" +
