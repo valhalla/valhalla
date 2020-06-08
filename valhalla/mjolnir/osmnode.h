@@ -11,7 +11,6 @@
 namespace valhalla {
 namespace mjolnir {
 
-constexpr uint64_t kMaxOSMNodeId = 68719476735;
 constexpr uint32_t kMaxNodeNameIndex = 2097151;
 
 /**
@@ -19,7 +18,8 @@ constexpr uint32_t kMaxNodeNameIndex = 2097151;
  */
 struct OSMNode {
   // The osm id of the node
-  uint64_t osmid_ : 36; // Allows up to 64B Ids
+  uint64_t osmid_;
+
   uint64_t access_ : 12;
   uint64_t type_ : 4;
   uint64_t intersection_ : 1;
@@ -31,7 +31,7 @@ struct OSMNode {
   uint64_t shortlink_ : 1; // Link edge < kMaxInternalLength
   uint64_t non_ferry_edge_ : 1;
   uint64_t ferry_edge_ : 1;
-  uint64_t spare_ : 3;
+  uint64_t spare_ : 39;
 
   // Lat,lng of the node
   float lng_;
@@ -64,10 +64,6 @@ struct OSMNode {
    * @param id Node Id.
    */
   void set_id(const uint64_t id) {
-    // Check for overflow
-    if (id > kMaxOSMNodeId) {
-      throw std::runtime_error("OSMNode: exceeded maximum OSM node Id: " + std::to_string(id));
-    }
     osmid_ = id;
   }
 
