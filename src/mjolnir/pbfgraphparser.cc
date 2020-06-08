@@ -795,8 +795,7 @@ public:
               restriction.set_type(static_cast<AccessType>(type));
               restriction.set_modes(mode);
               restriction.set_value(v);
-              osmdata_.access_restrictions.insert(
-                  AccessRestrictionsMultiMap::value_type(osmid, restriction));
+              osmdata_.access_restrictions.insert({osmid, restriction});
             }
           }
         }
