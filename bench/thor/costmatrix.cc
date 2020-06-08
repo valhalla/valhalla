@@ -95,7 +95,7 @@ static void BM_UtrechtCostMatrix(benchmark::State& state) {
   google::protobuf::RepeatedPtrField<valhalla::Location> sources;
 
   for (const auto& projection : projections) {
-    auto* p = sources.Add(std::move(p));
+    auto* p = sources.Add();
     baldr::PathLocation::toPBF(projection.second, p, reader);
   }
 
