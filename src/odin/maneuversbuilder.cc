@@ -676,8 +676,6 @@ ManeuversBuilder::CombineRampManeuver(std::list<Maneuver>& maneuvers,
     // Set maneuver type to 'none' so the type will be processed again
     curr_man->set_type(DirectionsLeg_Maneuver_Type_kNone);
     SetManeuverType(*(curr_man));
-
-    std::cout << " here " << next_man->type() << std::endl;
   }
 
   return maneuvers.erase(curr_man);
