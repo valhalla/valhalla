@@ -18,7 +18,7 @@ TEST(UseDirectionOnWays, CheckNamesAndRefs) {
            {"osm_id", std::to_string(static_cast<uint64_t>(67132))},
        }},
   };
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {.1, .1});
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_64bit_wayid",
                                {{"mjolnir.timezone", "/path/to/timezone.sqlite"}});
 

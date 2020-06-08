@@ -15,6 +15,7 @@ namespace mjolnir {
 void EdgeInfoBuilder::set_wayid(const uint64_t wayid) {
   // mask off the first 32bits
   w0_.wayid_ = wayid & 0xFFFFFFFF;
+  w0_.has_extended_wayid = false;
   // if that turned out to be not enough precision we keep the upper bits separately
   if (w0_.wayid_ != wayid) {
     w0_.has_extended_wayid = true;

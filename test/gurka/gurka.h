@@ -487,16 +487,18 @@ inline void build_pbf(const nodelayout& node_locations,
   // TODO: why does everything use object_id_type of signed int64?
   osmium::ObjectPointerCollection objects;
   osmium::apply(buffer, objects);
-  struct object_order_id {
+  struct object_order_type_unsigned_id_version {
     bool operator()(const osmium::OSMObject* lhs, const osmium::OSMObject* rhs) const noexcept {
-      return static_cast<uint64_t>(lhs->id()) < static_cast<uint64_t>(rhs->id());
+      if (lhs->type() == rhs->type()) {
+        if (lhs->id() == rhs->id()) {
+          return lhs->version() < rhs->version();
+        }
+        return static_cast<uint64_t>(lhs->id()) < static_cast<uint64_t>(rhs->id());
+      }
+      return lhs->type() < rhs->type();
     }
   };
-  objects.sort(object_order_id{});
-
-  for (const auto& o : objects) {
-    std::cout << o.type() << "," << o.id() << std::endl;
-  }
+  objects.sort(object_order_type_unsigned_id_version{});
 
   // Write out the objects in sorted order
   auto out = osmium::io::make_output_iterator(writer);
