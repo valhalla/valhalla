@@ -48,7 +48,8 @@ TEST(UnorderedIdTable, SerializeDeserialize) {
 
   UnorderedIdTable a(node_count);
   for (uint64_t i = 0; i < node_count; ++i) {
-    a.set(i);
+    a.set(i * 2);
+    EXPECT_TRUE(a.get(i * 2));
   }
   a.serialize("foo.bar");
   UnorderedIdTable b(node_count);
