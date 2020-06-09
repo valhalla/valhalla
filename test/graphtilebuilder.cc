@@ -27,8 +27,8 @@ public:
   using GraphTileBuilder::GraphTileBuilder;
 };
 
-void assert_tile_equalish(const GraphTile a,
-                          const GraphTile b,
+void assert_tile_equalish(const GraphTile& a,
+                          const GraphTile& b,
                           size_t difference,
                           const std::array<std::vector<GraphId>, kBinCount>& bins,
                           const std::string& msg) {
