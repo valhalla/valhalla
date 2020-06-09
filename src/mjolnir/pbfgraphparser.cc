@@ -12,6 +12,7 @@
 #include <boost/optional.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
 #include <future>
+#include <robin_hood.h>
 #include <thread>
 #include <utility>
 
@@ -80,10 +81,13 @@ public:
       // Read the count and then the via ids
       uint64_t count = 0;
       file.read(reinterpret_cast<char*>(&count), sizeof(uint64_t));
-      std::vector<uint64_t> bm(count);
-      file.read(reinterpret_cast<char*>(bm.data()), count * sizeof(uint64_t));
+      std::vector<uint64_t> intersection_vector(count);
+      file.read(reinterpret_cast<char*>(intersection_vector.data()), count * sizeof(uint64_t));
       file.close();
-      intersection_.set_bitmarkers(bm);
+      // Iterate through the vector of intersection IDs and add them to the intersection_ set
+      for (const auto v : intersection_vector) {
+        intersection_.insert(v);
+      }
     }
 
     if (read_data) {
@@ -96,10 +100,13 @@ public:
       // Read the count and then the via ids
       uint64_t count = 0;
       file.read(reinterpret_cast<char*>(&count), sizeof(uint64_t));
-      std::vector<uint64_t> bm(count);
-      file.read(reinterpret_cast<char*>(bm.data()), count * sizeof(uint64_t));
+      std::vector<uint64_t> shape_vector(count);
+      file.read(reinterpret_cast<char*>(shape_vector.data()), count * sizeof(uint64_t));
       file.close();
-      shape_.set_bitmarkers(bm);
+      // Iterate through the vector of shape IDs and add them to the intersection_ set
+      for (const auto v : shape_vector) {
+        shape_.insert(v);
+      }
     }
     current_way_node_index_ = last_node_ = last_way_ = last_relation_ = 0;
 
@@ -161,7 +168,7 @@ public:
     }
 
     // Check if it is in the list of nodes used by ways
-    if (!shape_.get(osmid)) {
+    if (shape_.find(osmid) == shape_.end()) {
       return;
     }
 
@@ -226,32 +233,32 @@ public:
         }
       } else if (tag.first == "gate") {
         if (tag.second == "true") {
-          if (!intersection_.get(osmid)) {
-            intersection_.set(osmid);
+          if (intersection_.find(osmid) == intersection_.end()) {
+            intersection_.insert(osmid);
             ++osmdata_.edge_count;
           }
           n.set_type(NodeType::kGate);
         }
       } else if (tag.first == "bollard") {
         if (tag.second == "true") {
-          if (!intersection_.get(osmid)) {
-            intersection_.set(osmid);
+          if (intersection_.find(osmid) == intersection_.end()) {
+            intersection_.insert(osmid);
             ++osmdata_.edge_count;
           }
           n.set_type(NodeType::kBollard);
         }
       } else if (tag.first == "toll_booth") {
         if (tag.second == "true") {
-          if (!intersection_.get(osmid)) {
-            intersection_.set(osmid);
+          if (intersection_.find(osmid) == intersection_.end()) {
+            intersection_.insert(osmid);
             ++osmdata_.edge_count;
           }
           n.set_type(NodeType::kTollBooth);
         }
       } else if (tag.first == "border_control") {
         if (tag.second == "true") {
-          if (!intersection_.get(osmid)) {
-            intersection_.set(osmid);
+          if (intersection_.find(osmid) == intersection_.end()) {
+            intersection_.insert(osmid);
             ++osmdata_.edge_count;
           }
           n.set_type(NodeType::kBorderControl);
@@ -270,7 +277,7 @@ public:
 
     // Set the intersection flag (relies on ways being processed first to set
     // the intersection Id markers).
-    if (intersection_.get(osmid)) {
+    if (intersection_.find(osmid) != intersection_.end()) {
       n.set_intersection(true);
       osmdata_.intersection_count++;
     }
@@ -370,14 +377,14 @@ public:
     loop_nodes_.clear();
     for (size_t i = 0; i < nodes.size(); ++i) {
       const auto& node = nodes[i];
-      if (shape_.get(node)) {
-        intersection_.set(node);
+      if (shape_.find(node) != shape_.end()) {
+        intersection_.insert(node);
         ++osmdata_.edge_count;
       } else {
         ++osmdata_.node_count;
       }
       way_nodes_->push_back({{node}, static_cast<uint32_t>(ways_->size()), static_cast<uint32_t>(i)});
-      shape_.set(node);
+      shape_.insert(node);
       // If this way is a loop (node occurs twice) we can make our lives way easier if we simply
       // split it up into multiple edges in the graph. If a problem is hard, avoid the problem!
       auto inserted = loop_nodes_.insert(std::make_pair(node, i));
@@ -386,13 +393,13 @@ public:
         // there are already intersections
         bool intsct = false;
         for (size_t j = inserted.first->second + 1; j < i; ++j) {
-          if (intersection_.get(nodes[j])) {
+          if (intersection_.find(nodes[j]) != intersection_.end()) {
             intsct = true;
             break;
           }
         }
         if (!intsct) {
-          intersection_.set(
+          intersection_.insert(
               nodes[(i + inserted.first->second) / 2]); // TODO: update osmdata_.*_count?
         }
 
@@ -400,8 +407,8 @@ public:
         inserted.first->second = i;
       }
     }
-    intersection_.set(nodes.front());
-    intersection_.set(nodes.back());
+    intersection_.insert(nodes.front());
+    intersection_.insert(nodes.back());
     osmdata_.edge_count += 2;
     ++osmdata_.osm_way_count;
     osmdata_.osm_way_node_count += nodes.size();
@@ -1842,24 +1849,40 @@ public:
     if (!intersections.is_open()) {
       return;
     }
-    std::vector<uint64_t> intersections_markers = intersection_.get_bitmarkers();
+
+    // Create a vector to hold the elements of the intersection_ set
+    uint64_t x = 0;
+    std::vector<uint64_t> intersection_vector(intersection_.size());
+    for (const auto i : intersection_) {
+      intersection_vector[x] = i;
+      ++x;
+    }
+
     // Write the count and then the via ids
-    uint64_t sz = intersections_markers.size();
+    uint64_t sz = intersection_vector.size();
     intersections.write(reinterpret_cast<const char*>(&sz), sizeof(uint64_t));
-    intersections.write(reinterpret_cast<const char*>(intersections_markers.data()),
-                        intersections_markers.size() * sizeof(uint64_t));
+    intersections.write(reinterpret_cast<const char*>(intersection_vector.data()),
+                        intersection_vector.size() * sizeof(uint64_t));
     intersections.close();
 
     std::ofstream shape(shapes_file, std::ios::out | std::ios::binary | std::ios::trunc);
     if (!shape.is_open()) {
       return;
     }
-    std::vector<uint64_t> shape_markers = shape_.get_bitmarkers();
+
+    // Create a vector to hold the elements of the shape_ set
+    x = 0;
+    std::vector<uint64_t> shape_vector(shape_.size());
+    for (const auto i : shape_) {
+      shape_vector[x] = i;
+      ++x;
+    }
+
     // Write the count and then the via ids
-    sz = shape_markers.size();
+    sz = shape_vector.size();
     shape.write(reinterpret_cast<const char*>(&sz), sizeof(uint64_t));
-    shape.write(reinterpret_cast<const char*>(shape_markers.data()),
-                shape_markers.size() * sizeof(uint64_t));
+    shape.write(reinterpret_cast<const char*>(shape_vector.data()),
+                shape_vector.size() * sizeof(uint64_t));
     shape.close();
   }
 
@@ -1894,7 +1917,7 @@ public:
   // Mark the OSM Node Ids used by ways
   // TODO: remove interesection_ as you already know it if you
   // encounter more than one consecutive OSMWayNode with the same id
-  IdTable shape_, intersection_;
+  robin_hood::unordered_set<uint64_t> intersection_, shape_;
 
   // Ways and nodes written to file, nodes are written in the order they appear in way (shape)
   std::unique_ptr<sequence<OSMWay>> ways_;
