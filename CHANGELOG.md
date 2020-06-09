@@ -92,6 +92,7 @@
    * ADDED: The ability to allow immediate uturns at trace points in a map matching request [#2380](https://github.com/valhalla/valhalla/pull/2380)
    * ADDED: Add utility functions to Signs. [#2390](https://github.com/valhalla/valhalla/pull/2390)
    * ADDED: Unified time tracking for all algorithms that support time-based graph expansion. [#2278](https://github.com/valhalla/valhalla/pull/2278)
+   * ADDED: Add rail_ferry use and costing. [#2408](https://github.com/valhalla/valhalla/pull/2408)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
