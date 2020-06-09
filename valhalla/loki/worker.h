@@ -81,6 +81,7 @@ protected:
   unsigned int default_node_snap_tolerance;
   unsigned int default_search_cutoff;
   unsigned int default_street_side_tolerance;
+  float default_breakage_distance;
   float long_request;
   // Minimum and maximum walking distances (to validate input).
   size_t min_transit_walking_dis;
