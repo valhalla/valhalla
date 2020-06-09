@@ -6,6 +6,7 @@
 
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/proto/tripcommon.pb.h>
 
 namespace valhalla {
 namespace baldr {
@@ -15,6 +16,8 @@ namespace baldr {
  * the route needs to go. A start, middle, destination or via point
  * through which the route must pass
  *
+ * TODO: deprecate this struct in favor of protobuf valhalla::Location.
+ *
  * @author  Kevin Kreiser
  */
 struct Location {
@@ -23,9 +26,32 @@ public:
    * What kind of location this, determines whether a route can double back or not
    * to find the most efficient path
    */
-  enum class StopType : bool { BREAK, THROUGH };
+  enum class StopType : uint8_t { BREAK, THROUGH, VIA, BREAK_THROUGH };
 
   enum class PreferredSide : uint8_t { EITHER, SAME, OPPOSITE };
+
+  /**
+   * Optional filters supplied in the request.
+   *
+   * NOTE: this struct must be kept in sync with the protobuf defined
+   * valhalla::Location::SearchFilter in tripcommon.proto.
+   */
+  struct SearchFilter {
+  public:
+    SearchFilter(valhalla::RoadClass min_road_class = valhalla::RoadClass::kServiceOther,
+                 valhalla::RoadClass max_road_class = valhalla::RoadClass::kMotorway,
+                 bool exclude_tunnel = false,
+                 bool exclude_bridge = false,
+                 bool exclude_ramp = false);
+
+    valhalla::RoadClass min_road_class_;
+    valhalla::RoadClass max_road_class_;
+    bool exclude_tunnel_;
+    bool exclude_bridge_;
+    bool exclude_ramp_;
+
+  protected:
+  };
 
   /**
    * You have to initialize the location with something
@@ -38,23 +64,11 @@ public:
    */
   Location(const midgard::PointLL& latlng,
            const StopType& stoptype = StopType::BREAK,
-           unsigned int minimum_reachability = 0,
+           unsigned int min_outbound_reach = 0,
+           unsigned int min_inbound_reach = 0,
            unsigned long radius = 0,
-           const PreferredSide& side = PreferredSide::EITHER);
-
-  /**
-   * Serializes this object to rapidjson::Value
-   * @return rapidjson::Value
-   */
-  rapidjson::Value ToRapidJson(rapidjson::Document::AllocatorType& a) const;
-
-  /**
-   * conversion.
-   * @param  d a rapidjson representation of the location
-   */
-  static Location FromRapidJson(const rapidjson::Value& d,
-                                unsigned int default_reachability = 0,
-                                unsigned long default_radius = 0);
+           const PreferredSide& side = PreferredSide::EITHER,
+           const SearchFilter& search_filter = SearchFilter());
 
   /**
    * equality.
@@ -77,21 +91,25 @@ public:
   std::string country_;
 
   boost::optional<std::string> date_time_;
-  boost::optional<int> heading_;
-  boost::optional<int> heading_tolerance_;
-  boost::optional<float> node_snap_tolerance_;
+  boost::optional<float> heading_;
   boost::optional<uint64_t> way_id_;
 
-  // try to find candidates who are reachable from this many or more nodes
-  // if a given candidate edge reaches less than this number of nodes its considered to be a
-  // disconnected island and we'll search for more candidates until we find at least one that isnt
-  // considered a disconnected island
-  unsigned int minimum_reachability_;
+  // try to find candidates who are reachable from/to this many or more nodes
+  // if a given candidate edge is reachable to/from less than this number of nodes its considered to
+  // be a disconnected island and we'll search for more candidates until we find at least one that
+  // isnt considered a disconnected island
+  unsigned int min_outbound_reach_;
+  unsigned int min_inbound_reach_;
   // dont return results further away than this (meters) unless there is nothing this close
   unsigned long radius_;
 
   // which side of the street wrt your input location to leave/arrive from/at
   PreferredSide preferred_side_;
+  float node_snap_tolerance_;
+  float heading_tolerance_;
+  float search_cutoff_;
+  float street_side_tolerance_;
+  SearchFilter search_filter_;
 
   // coordinates of the location as used for altering the side of street
   boost::optional<midgard::PointLL> display_latlng_;

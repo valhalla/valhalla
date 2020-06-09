@@ -97,3 +97,7 @@
 -j '{"locations":[{"lat":40.447029,"lon":-78.450943,"street":"US 22"},{"lat":40.446442,"lon":-78.422813,"street":"I 99 North"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.447029,"lon":-78.450943,"street":"US 22"},{"lat":40.427479,"lon":-78.424789,"street":"I 99 South"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.430908,"lon":-78.425598,"street":"I 99 North"},{"lat":40.447403,"lon":-78.450981,"street":"US 22"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.195564,"lon":-76.969322,"street":"I 76 West"},{"lat":40.192730,"lon":-76.977814,"street":"US 15 South"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.195564,"lon":-76.969322,"street":"I 76 West"},{"lat":40.204460,"lon":-76.964836,"street":"US 15 North"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.196808,"lon":-76.992455,"street":"I 76 East"},{"lat":40.204460,"lon":-76.964836,"street":"US 15 North"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.196808,"lon":-76.992455,"street":"I 76 East"},{"lat":40.192696,"lon":-76.977837,"street":"US 15 South"}],"costing":"auto","units":"miles"}'

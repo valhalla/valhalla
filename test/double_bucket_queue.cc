@@ -1,12 +1,13 @@
 #include "baldr/double_bucket_queue.h"
 #include "config.h"
 #include "midgard/util.h"
-#include "test.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <iostream>
 #include <vector>
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla;
@@ -28,28 +29,20 @@ void TryAddRemove(const std::vector<uint32_t>& costs, const std::vector<uint32_t
   }
   for (auto expected : expectedorder) {
     uint32_t labelindex = adjlist.pop();
-    if (edgelabels[labelindex] != expected) {
-      throw runtime_error("TryAddRemove: expected order test failed");
-    }
+    EXPECT_EQ(edgelabels[labelindex], expected) << "TryAddRemove: expected order test failed";
   }
 }
 
-void TestInvalidConstruction() {
+TEST(DoubleBucketQueue, TestInvalidConstruction) {
   std::vector<float> edgelabels;
   const auto edgecost = [&edgelabels](const uint32_t label) { return edgelabels[label]; };
-  try {
-    // Test invalid bucket size
-    DoubleBucketQueue adjlist(0, 10000, 0, edgecost);
-    throw runtime_error("Invalid bucket size not caught");
-  } catch (...) {}
-  try {
-    // Test invalid range
-    DoubleBucketQueue adjlist(0, 0.0f, 1, edgecost);
-    throw runtime_error("Invalid cost range not caught");
-  } catch (...) {}
+  EXPECT_THROW(DoubleBucketQueue adjlist(0, 10000, 0, edgecost), runtime_error)
+      << "Invalid bucket size not caught";
+  EXPECT_THROW(DoubleBucketQueue adjlist(0, 0.0f, 1, edgecost), runtime_error)
+      << "Invalid cost range not caught";
 }
 
-void TestAddRemove() {
+TEST(DoubleBucketQueue, TestAddRemove) {
   std::vector<uint32_t> costs = {67,  325, 25,  466,   1000, 100005,
                                  758, 167, 258, 16442, 278,  111111000};
   std::vector<uint32_t> expectedorder = costs;
@@ -70,11 +63,10 @@ void TryClear(const std::vector<uint32_t>& costs) {
   }
   adjlist.clear();
   uint32_t idx = adjlist.pop();
-  if (idx != kInvalidLabel)
-    throw runtime_error("TryClear: failed to return invalid edge index after Clear");
+  EXPECT_EQ(idx, kInvalidLabel) << "TryClear: failed to return invalid edge index after Clear";
 }
 
-void TestClear() {
+TEST(DoubleBucketQueue, TestClear) {
   std::vector<uint32_t> costs = {67,  325, 25,  466,   1000, 100005,
                                  758, 167, 258, 16442, 278,  111111000};
   TryClear(costs);
@@ -95,16 +87,16 @@ void TryRemove(DoubleBucketQueue& dbqueue, size_t num_to_remove, const std::vect
   auto previous_cost = -std::numeric_limits<float>::infinity();
   for (size_t i = 0; i < num_to_remove; ++i) {
     const auto top = dbqueue.pop();
-    test::assert_bool(top != kInvalidLabel, "TryAddRemove: expected " +
-                                                std::to_string(num_to_remove) + " labels to remove");
+    EXPECT_NE(top, kInvalidLabel) << "TryAddRemove: expected " + std::to_string(num_to_remove) +
+                                         " labels to remove";
     const auto cost = costs[top];
-    test::assert_bool(previous_cost <= cost, "TryAddRemove: expected order test failed");
+    EXPECT_LE(previous_cost, cost) << "TryAddRemove: expected order test failed";
     previous_cost = cost;
   }
 
   {
     const auto top = dbqueue.pop();
-    test::assert_bool(top == kInvalidLabel, "Simulation: expect list to be empty");
+    EXPECT_EQ(top, kInvalidLabel) << "Simulation: expect list to be empty";
   }
 }
 
@@ -130,7 +122,7 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
     const auto min_cost = costs[key];
     // Must be the minimal one among the tracked labels
     for (auto k : addedLabels) {
-      test::assert_bool(min_cost <= costs[k], "Simulation: minimal cost expected");
+      EXPECT_LE(min_cost, costs[k]) << "Simulation: minimal cost expected";
     }
     addedLabels.erase(key);
 
@@ -142,9 +134,12 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
         if (newcost < costs[idx]) {
           dbqueue.decrease(idx, newcost);
           costs[idx] = newcost;
-          // test::assert_bool(dbqueue.cost(idx) == newcost, "failed to decrease cost");
+          // todo: why commented??
+          // EXPECT_EQ(dbqueue.cost(idx), newcost) << "failed to decrease cost";
         } else {
-          // // Assert that it must fail to decrease since costs[idx] <= newcost
+          // Assert that it must fail to decrease since costs[idx] <= newcost
+          // todo: why commented??
+          // EXPECT_THROW(dbqueue.decrease(idx, newcost), std::runtime_error);
           // test::assert_throw<std::runtime_error>([&dbqueue, idx, newcost](){
           //     dbqueue.decrease(idx, newcost);
           //   }, "decreasing a non-less cost must fail");
@@ -162,7 +157,7 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
   TryRemove(dbqueue, addedLabels.size(), costs);
 }
 
-void TestSimulation() {
+TEST(DoubleBucketQueue, TestSimulation) {
   {
     std::vector<float> costs;
     DoubleBucketQueue dbqueue1(0, 1, 100000, [&costs](const uint32_t label) { return costs[label]; });
@@ -190,18 +185,7 @@ void TestSimulation() {
 
 } // namespace
 
-int main() {
-  test::suite suite("double_bucket_queue");
-
-  suite.test(TEST_CASE(TestInvalidConstruction));
-
-  suite.test(TEST_CASE(TestAddRemove));
-
-  suite.test(TEST_CASE(TestClear));
-
-  //  suite.test(TEST_CASE(TestDecreaseCost));
-
-  suite.test(TEST_CASE(TestSimulation));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

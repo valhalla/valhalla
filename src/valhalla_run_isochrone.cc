@@ -12,15 +12,18 @@
 #include "baldr/pathlocation.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
+#include "sif/costconstants.h"
 #include "sif/costfactory.h"
 #include "thor/isochrone.h"
 #include "tyr/serializers.h"
 #include "worker.h"
 
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 
 #include "config.h"
 
+using namespace valhalla;
+using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
 using namespace valhalla::sif;
@@ -30,7 +33,7 @@ namespace bpo = boost::program_options;
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
-  bpo::options_description options(
+  bpo::options_description poptions(
       "valhalla_run_isochrone " VALHALLA_VERSION "\n"
       "\n"
       " Usage: valhalla_run_isochrone [options]\n"
@@ -41,8 +44,8 @@ int main(int argc, char* argv[]) {
       "\n"
       "\n");
   std::string json, config, filename;
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")(
+  poptions.add_options()("help,h", "Print this help message.")("version,v",
+                                                               "Print the version of this software.")(
       "json,j", boost::program_options::value<std::string>(&json),
       "JSON Example: "
       "'{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984}],\"costing\":"
@@ -56,7 +59,7 @@ int main(int argc, char* argv[]) {
   pos_options.add("config", 1);
   bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
+    bpo::store(bpo::command_line_parser(argc, argv).options(poptions).positional(pos_options).run(),
                vm);
     bpo::notify(vm);
 
@@ -68,7 +71,7 @@ int main(int argc, char* argv[]) {
 
   // Verify args. Make sure JSON payload exists.
   if (vm.count("help")) {
-    std::cout << options << "\n";
+    std::cout << poptions << "\n";
     return EXIT_SUCCESS;
   }
   if (vm.count("version")) {
@@ -82,11 +85,12 @@ int main(int argc, char* argv[]) {
   }
 
   // Process json request
-  valhalla::valhalla_request_t request;
-  request.parse(json, valhalla::odin::DirectionsOptions::isochrone);
+  Api request;
+  ParseApi(json, valhalla::Options::isochrone, request);
+  auto& options = *request.mutable_options();
 
   // Get the denoise parameter
-  float denoise = request.options.denoise();
+  float denoise = options.denoise();
   if (denoise < 0.f || denoise > 1.f) {
     denoise = std::max(std::min(denoise, 1.f), 0.f);
     LOG_WARN("denoise parameter was out of range. Being clamped to " + std::to_string(denoise));
@@ -94,42 +98,42 @@ int main(int argc, char* argv[]) {
 
   // Get generalize parameter
   float generalize = kOptimalGeneralization;
-  if (request.options.has_generalize()) {
-    generalize = request.options.generalize();
+  if (options.has_generalize()) {
+    generalize = options.generalize();
   }
 
   // Get the polygons parameters
-  bool polygons = request.options.polygons();
+  bool polygons = options.polygons();
 
   // Show locations
-  bool show_locations = request.options.show_locations();
+  bool show_locations = options.show_locations();
 
   // reverse (arrive-by) isochrone - trigger if date time type is arrive by
   // TODO - is this how we want to expose in the service? only support reverse
   // for time dependent isochrones? or do we also want a flag to support for
   // general case with no time?
-  bool reverse = request.options.date_time_type() == valhalla::odin::DirectionsOptions::arrive_by;
+  bool reverse = options.date_time_type() == valhalla::Options::arrive_by;
 
   // Get Contours
   std::unordered_map<float, std::string> colors{};
   std::vector<float> contour_times;
-  if (request.options.contours_size() == 0) {
+  if (options.contours_size() == 0) {
     throw std::runtime_error("Contours failed to parse. JSON requires a contours object");
   }
-  for (const auto& contour : request.options.contours()) {
+  for (const auto& contour : options.contours()) {
     contour_times.push_back(contour.time());
     colors[contour_times.back()] = contour.color();
   }
 
   // Process locations
-  auto locations = PathLocation::fromPBF(request.options.locations());
+  auto locations = PathLocation::fromPBF(options.locations());
   if (locations.size() != 1) {
     // TODO - for now just 1 location - maybe later allow multiple?
     throw std::runtime_error("Requires a single location");
   }
 
   // Process avoid locations
-  auto avoid_locations = PathLocation::fromPBF(request.options.avoid_locations());
+  auto avoid_locations = PathLocation::fromPBF(options.avoid_locations());
   if (avoid_locations.size() == 0) {
     LOG_INFO("No avoid locations");
   }
@@ -156,32 +160,32 @@ int main(int argc, char* argv[]) {
   factory.RegisterStandardCostingModels();
 
   // Get type of route - this provides the costing method to use.
-  std::string routetype = valhalla::odin::Costing_Name(request.options.costing());
+  const std::string& routetype = valhalla::Costing_Enum_Name(options.costing());
   LOG_INFO("routetype: " + routetype);
 
   // Get the costing method - pass the JSON configuration
-  valhalla::odin::TripPath trip_path;
+  valhalla::TripLeg trip_path;
   TravelMode mode;
   std::shared_ptr<DynamicCost> mode_costing[4];
   if (routetype == "multimodal") {
     // Create array of costing methods per mode and set initial mode to
     // pedestrian
-    mode_costing[0] = factory.Create(valhalla::odin::Costing::auto_, request.options);
-    mode_costing[1] = factory.Create(valhalla::odin::Costing::pedestrian, request.options);
-    mode_costing[2] = factory.Create(valhalla::odin::Costing::bicycle, request.options);
-    mode_costing[3] = factory.Create(valhalla::odin::Costing::transit, request.options);
+    mode_costing[0] = factory.Create(valhalla::Costing::auto_, options);
+    mode_costing[1] = factory.Create(valhalla::Costing::pedestrian, options);
+    mode_costing[2] = factory.Create(valhalla::Costing::bicycle, options);
+    mode_costing[3] = factory.Create(valhalla::Costing::transit, options);
     mode = TravelMode::kPedestrian;
   } else {
     // Assign costing method, override any config options that are in the
     // json request
-    std::shared_ptr<DynamicCost> cost = factory.Create(request.options.costing(), request.options);
+    std::shared_ptr<DynamicCost> cost = factory.Create(options);
     mode = cost->travel_mode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }
 
   // Find locations
   std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
-  const auto projections = Search(locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+  const auto projections = Search(locations, reader, cost);
   std::vector<PathLocation> path_location;
   for (const auto& loc : locations) {
     try {
@@ -190,8 +194,8 @@ int main(int argc, char* argv[]) {
   }
 
   // Find avoid locations
-  std::vector<AvoidEdge> avoid_edges;
-  const auto avoids = Search(avoid_locations, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+  std::vector<sif::AvoidEdge> avoid_edges;
+  const auto avoids = Search(avoid_locations, reader, cost);
   for (const auto& loc : avoid_locations) {
     for (auto& e : avoids.at(loc).edges) {
       avoid_edges.push_back({e.id, e.percent_along});
@@ -206,9 +210,9 @@ int main(int argc, char* argv[]) {
     path_location.front().date_time_ = "current";
   }
   // TODO: build real request from options above and call the functions like actor_t does
-  request.options.mutable_locations()->Clear();
+  options.mutable_locations()->Clear();
   for (const auto& pl : path_location) {
-    valhalla::baldr::PathLocation::toPBF(pl, request.options.mutable_locations()->Add(), reader);
+    valhalla::baldr::PathLocation::toPBF(pl, options.mutable_locations()->Add(), reader);
   }
 
   // Compute the isotile
@@ -216,13 +220,13 @@ int main(int argc, char* argv[]) {
   Isochrone isochrone;
   auto isotile =
       (routetype == "multimodal")
-          ? isochrone.ComputeMultiModal(*request.options.mutable_locations(),
-                                        contour_times.back() + 10, reader, mode_costing, mode)
+          ? isochrone.ComputeMultiModal(*options.mutable_locations(), contour_times.back() + 10,
+                                        reader, mode_costing, mode)
           : (reverse)
-                ? isochrone.ComputeReverse(*request.options.mutable_locations(),
-                                           contour_times.back() + 10, reader, mode_costing, mode)
-                : isochrone.Compute(*request.options.mutable_locations(), contour_times.back() + 10,
-                                    reader, mode_costing, mode);
+                ? isochrone.ComputeReverse(*options.mutable_locations(), contour_times.back() + 10,
+                                           reader, mode_costing, mode)
+                : isochrone.Compute(*options.mutable_locations(), contour_times.back() + 10, reader,
+                                    mode_costing, mode);
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("Compute isotile took " + std::to_string(msecs) + " ms");

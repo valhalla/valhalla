@@ -1,5 +1,6 @@
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
+
 #include "test.h"
 
 using namespace std;
@@ -19,16 +20,13 @@ public:
   }
 };
 
-void TryFormNumberSplitTtsString(string source, string expected) {
+void TryFormNumberSplitTtsString(const string& source, const string& expected) {
   VerbalTextFormatterTest formatter_test("US", "PA");
   string tts = formatter_test.FormNumberSplitTts(source);
-  if (tts != expected) {
-    throw std::runtime_error("Incorrect FormNumberSplitTts - EXPECTED: " + expected +
-                             "  |  FORMED: " + tts);
-  }
+  EXPECT_EQ(tts, expected);
 }
 
-void TestFormNumberSplitTtsString() {
+TEST(VeralTextFormatter, TestFormNumberSplitTtsString) {
   TryFormNumberSplitTtsString("1", "1");
   TryFormNumberSplitTtsString("12", "12");
   TryFormNumberSplitTtsString("123", "1 23");
@@ -57,15 +55,13 @@ void TestFormNumberSplitTtsString() {
   TryFormNumberSplitTtsString("Road 0110", "Road 01 10");
 }
 
-void TryFormat(string source, string expected) {
+void TryFormat(const string& source, const string& expected) {
   VerbalTextFormatterTest formatter_test("US", "PA");
   string tts = formatter_test.Format(source);
-  if (tts != expected) {
-    throw std::runtime_error("Incorrect Format - EXPECTED: " + expected + "  |  FORMED: " + tts);
-  }
+  EXPECT_EQ(tts, expected);
 }
 
-void TestFormat() {
+TEST(VeralTextFormatter, TestFormat) {
   TryFormat("PA 23", "PA 23");
   TryFormat("PA 283", "PA 2 83");
   TryFormat("US 202", "US 2 02");
@@ -81,14 +77,7 @@ void TestFormat() {
 
 } // namespace
 
-int main() {
-  test::suite suite("verbal_text_formatter");
-
-  // FormNumberSplitTtsString
-  suite.test(TEST_CASE(TestFormNumberSplitTtsString));
-
-  // Format
-  suite.test(TEST_CASE(TestFormat));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

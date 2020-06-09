@@ -13,28 +13,59 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 
+namespace {
+// use a cache to store already constructed sys_info's since they aren't cheap
+template <typename TP>
+const date::sys_info&
+from_cache(const TP& tp,
+           const date::time_zone* tz,
+           std::unordered_map<const date::time_zone*, std::vector<date::sys_info>>& cache) {
+  // check if we have anything for this timezone in the cache
+  auto tz_it = cache.find(tz);
+  if (tz_it != cache.cend()) {
+    // we have something in the cache, see if one of the infos has the particular time point in range
+    auto st = date::floor<std::chrono::seconds>(tp.get_sys_time());
+    auto info_it =
+        std::find_if(tz_it->second.begin(), tz_it->second.end(),
+                     [&st](const date::sys_info& info) { return info.begin <= st && st < info.end; });
+
+    // if it was in the cache we return it
+    if (info_it != tz_it->second.cend()) {
+      return *info_it;
+    }
+  }
+
+  // either this timezone is new or the right info for the range was missing so lets get it
+  auto& infos = tz_it == cache.cend() ? cache.emplace(tz, std::vector<date::sys_info>{}).first->second
+                                      : tz_it->second;
+  infos.emplace_back(tp.get_info());
+  return infos.back();
+}
+} // namespace
+
 using namespace valhalla::baldr;
 namespace valhalla {
 namespace baldr {
 namespace DateTime {
 
 tz_db_t::tz_db_t() : db(date::get_tzdb()) {
-  // load up the tz data
-  for (const auto& z : db.zones) {
-    names.push_back(z.name());
+  // NOTE: outside of this class 0 is reserved for invalid timezone
+  // so we offset each index by 1 to get into the valid range 1-300 or so
+  for (size_t i = 0; i < db.zones.size(); ++i) {
+    names.emplace(db.zones[i].name(), i + 1);
   }
 }
 
 size_t tz_db_t::to_index(const std::string& zone) const {
-  auto it = std::find(names.cbegin(), names.cend(), zone);
+  auto it = names.find(zone);
   if (it == names.cend()) {
     return 0;
   }
-  return (it - names.cbegin()) + 1;
+  return it->second;
 }
 
 const date::time_zone* tz_db_t::from_index(size_t index) const {
-  if (index < 1 || index > names.size()) {
+  if (index < 1 || index > db.zones.size()) {
     return nullptr;
   }
   return &db.zones[index - 1];
@@ -46,7 +77,7 @@ const tz_db_t& get_tz_db() {
 }
 
 // get a formatted date.  date in the format of 2016-11-06T01:00 or 2016-11-06
-date::local_seconds get_formatted_date(const std::string& date) {
+date::local_seconds get_formatted_date(const std::string& date, bool can_throw) {
   std::istringstream in{date};
   date::local_seconds tp;
 
@@ -54,6 +85,12 @@ date::local_seconds get_formatted_date(const std::string& date) {
     in >> date::parse("%FT%R", tp);
   else if (date.find('-') != std::string::npos)
     in >> date::parse("%F", tp);
+  else
+    in.setstate(std::ios::failbit);
+
+  // we weren't able to use this string as a date and you'd like to know about it
+  if (can_throw && in.fail())
+    throw std::invalid_argument("Date string is invalid: " + date);
 
   return tp;
 }
@@ -68,7 +105,7 @@ date::zoned_seconds get_ldt(const date::local_seconds& d, const date::time_zone*
   return zt;
 }
 
-// Get the number of days that have elapsed from the pivot date for the inputed date.
+// Get the number of days that have elapsed from the pivot date for the input date.
 // date_time is in the format of 2015-05-06T08:00
 uint32_t days_from_pivot_date(const date::local_seconds& date_time) {
   if (date_time <= pivot_date_) {
@@ -101,7 +138,8 @@ uint64_t seconds_since_epoch(const std::string& date_time, const date::time_zone
 // so that DST can be take into account). Returns the difference in seconds.
 int timezone_diff(const uint64_t seconds,
                   const date::time_zone* origin_tz,
-                  const date::time_zone* dest_tz) {
+                  const date::time_zone* dest_tz,
+                  tz_sys_info_cache_t* cache) {
 
   if (!origin_tz || !dest_tz || origin_tz == dest_tz) {
     return 0;
@@ -112,16 +150,24 @@ int timezone_diff(const uint64_t seconds,
   const auto origin = date::make_zoned(origin_tz, tp);
   const auto dest = date::make_zoned(dest_tz, tp);
 
-  auto duration = std::chrono::duration_cast<std::chrono::seconds>(origin.get_local_time() -
-                                                                   dest.get_local_time());
-  if (origin.get_info().offset < dest.get_info().offset) {
-    return abs(duration.count());
-  } else {
-    return -1 * abs(duration.count());
+  // if we have a cache use it
+  if (cache) {
+    const auto& origin_info = from_cache(origin, origin_tz, *cache);
+    const auto& dest_info = from_cache(dest, dest_tz, *cache);
+    return static_cast<int>(
+        std::chrono::duration_cast<std::chrono::seconds>(dest_info.offset - origin_info.offset)
+            .count());
   }
+
+  const auto& origin_info = origin.get_info();
+  const auto& dest_info = dest.get_info();
+  return static_cast<int>(
+      std::chrono::duration_cast<std::chrono::seconds>(dest_info.offset - origin_info.offset)
+          .count());
 }
 
-std::string seconds_to_date(const uint64_t seconds, const date::time_zone* time_zone) {
+std::string
+seconds_to_date(const uint64_t seconds, const date::time_zone* time_zone, bool tz_format) {
 
   std::string iso_date;
   if (seconds == 0 || !time_zone) {
@@ -130,12 +176,16 @@ std::string seconds_to_date(const uint64_t seconds, const date::time_zone* time_
 
   std::chrono::seconds dur(seconds);
   std::chrono::time_point<std::chrono::system_clock> tp(dur);
-  std::ostringstream iso_date_time;
-
   const auto date = date::make_zoned(time_zone, tp);
-  iso_date_time << date::format("%FT%R%z", date);
+
+  std::ostringstream iso_date_time;
+  if (tz_format)
+    iso_date_time << date::format("%FT%R%z", date);
+  else
+    iso_date_time << date::format("%FT%R", date);
   iso_date = iso_date_time.str();
-  iso_date.insert(19, 1, ':');
+  if (tz_format)
+    iso_date.insert(19, 1, ':');
   return iso_date;
 }
 
@@ -213,20 +263,20 @@ get_duration(const std::string& date_time, const uint32_t seconds, const date::t
 }
 
 // does this date fall in the begin and end date range?
-bool is_restricted(const bool type,
-                   const uint8_t begin_hrs,
-                   const uint8_t begin_mins,
-                   const uint8_t end_hrs,
-                   const uint8_t end_mins,
-                   const uint8_t dow,
-                   const uint8_t begin_week,
-                   const uint8_t begin_month,
-                   const uint8_t begin_day_dow,
-                   const uint8_t end_week,
-                   const uint8_t end_month,
-                   const uint8_t end_day_dow,
-                   const uint64_t current_time,
-                   const date::time_zone* time_zone) {
+bool is_conditional_active(const bool type,
+                           const uint8_t begin_hrs,
+                           const uint8_t begin_mins,
+                           const uint8_t end_hrs,
+                           const uint8_t end_mins,
+                           const uint8_t dow,
+                           const uint8_t begin_week,
+                           const uint8_t begin_month,
+                           const uint8_t begin_day_dow,
+                           const uint8_t end_week,
+                           const uint8_t end_month,
+                           const uint8_t end_day_dow,
+                           const uint64_t current_time,
+                           const date::time_zone* time_zone) {
 
   if (!time_zone)
     return false;
@@ -241,6 +291,7 @@ bool is_restricted(const bool type,
   std::chrono::seconds dur(current_time);
   std::chrono::time_point<std::chrono::system_clock> tp(dur);
 
+  uint32_t e_year = 0, b_year = 0;
   const auto in_local_time = date::make_zoned(time_zone, tp);
   auto date = date::floor<date::days>(in_local_time.get_local_time());
   auto d = date::year_month_day(date);
@@ -312,6 +363,7 @@ bool is_restricted(const bool type,
       e_day_dow = unsigned((date::year_month(e_d.year(), e_d.month()) / date::last).day());
     }
 
+    bool edge_case = false; // Jan 04 to Jan 01
     // month only
     if (type == kYMD && (b_month && e_month) && (!b_day_dow && !e_day_dow && !b_week && !b_week) &&
         b_month == e_month) {
@@ -327,10 +379,10 @@ bool is_restricted(const bool type,
       return (dow_in_range && dt_in_range);
     } else if (type == kYMD && b_month && b_day_dow) {
 
-      uint32_t e_year = int(d.year()), b_year = int(d.year());
+      e_year = int(d.year()), b_year = int(d.year());
       if (b_month == e_month) {
         if (b_day_dow > e_day_dow) { // Mar 15 - Mar 1
-          e_year = int(d.year()) + 1;
+          edge_case = true;
         }
       } else if (b_month > e_month) { // Oct 10 - Mar 3
         if (b_month > unsigned(d.month())) {
@@ -348,10 +400,10 @@ bool is_restricted(const bool type,
                e_day_dow) { // kNthDow types can have a mix of ymd and nthdow. (e.g. Dec Su[-1]-Mar
                             // 3 Sat 15:00-17:00)
 
-      uint32_t e_year = int(d.year()), b_year = int(d.year());
+      e_year = int(d.year()), b_year = int(d.year());
       if (b_month == e_month) {
         if (b_day_dow > e_day_dow) { // Mar 15 - Mar 1
-          e_year = int(d.year()) + 1;
+          edge_case = true;
         }
       } else if (b_month > e_month) { // Oct 10 - Mar 3
         if (b_month > unsigned(d.month())) {
@@ -416,18 +468,35 @@ bool is_restricted(const bool type,
       e_td = std::chrono::hours(end_hrs) + std::chrono::minutes(end_mins);
     }
 
-    date::sys_seconds sec = date::sys_days(begin_date);
-    date::utc_seconds utc = date::to_utc_time(sec);
-    auto leap_s = utc.time_since_epoch() - sec.time_since_epoch();
-    auto b_in_local_time = date::make_zoned(time_zone, date::local_days(begin_date) + b_td + leap_s);
+    // Time does not matter here; we are only dealing with dates.
+    auto b_in_local_time = date::make_zoned(time_zone, date::local_days(begin_date));
+    auto local_dt = date::make_zoned(time_zone, date::local_days(d));
+    auto e_in_local_time = date::make_zoned(time_zone, date::local_days(end_date));
 
-    sec = date::sys_days(end_date);
-    utc = date::to_utc_time(sec);
-    leap_s = utc.time_since_epoch() - sec.time_since_epoch();
-    auto e_in_local_time = date::make_zoned(time_zone, date::local_days(end_date) + e_td + leap_s);
+    if (edge_case) {
 
-    dt_in_range = (b_in_local_time.get_local_time() <= in_local_time.get_local_time() &&
-                   in_local_time.get_local_time() <= e_in_local_time.get_local_time());
+      // Jan 04 to Jan 02.  We need to test to end of the year and then from the first of the
+      // year to the end date.
+
+      // begin date = Jan 04, 2021
+      // end date = Jan 02, 2021
+      date::year_month_day new_ed =
+          date::year_month_day(date::year(b_year), date::month(12), date::day(31));
+      auto new_e_in_local_time = date::make_zoned(time_zone, date::local_days(new_ed));
+
+      date::year_month_day new_bd =
+          date::year_month_day(date::year(b_year), date::month(1), date::day(1));
+      auto new_b_in_local_time = date::make_zoned(time_zone, date::local_days(new_bd));
+
+      // we need to check Jan 04, 2021 to Dec 31, 2021 and Jan 01, 2021 to Jan 02, 2021
+      dt_in_range = (((b_in_local_time.get_local_time() <= local_dt.get_local_time() &&
+                       local_dt.get_local_time() <= new_e_in_local_time.get_local_time())) ||
+                     ((new_b_in_local_time.get_local_time() <= local_dt.get_local_time() &&
+                       local_dt.get_local_time() <= e_in_local_time.get_local_time())));
+    } else {
+      dt_in_range = (b_in_local_time.get_local_time() <= local_dt.get_local_time() &&
+                     local_dt.get_local_time() <= e_in_local_time.get_local_time());
+    }
 
     bool time_in_range = false;
 
@@ -440,6 +509,22 @@ bool is_restricted(const bool type,
     dt_in_range = (dt_in_range && time_in_range);
   } catch (std::exception& e) {}
   return (dow_in_range && dt_in_range);
+}
+
+uint32_t second_of_week(uint32_t epoch_time, const date::time_zone* time_zone) {
+  // get the date time in this timezone
+  std::chrono::seconds dur(epoch_time);
+  std::chrono::time_point<std::chrono::system_clock> utp(dur);
+  const auto tp = date::make_zoned(time_zone, utp).get_local_time();
+  // floor to midnight of that day
+  auto days = date::floor<date::days>(tp);
+  // get the ordinal day of the week
+  uint32_t day = (date::year_month_weekday(days).weekday() - date::Sunday).count();
+  // subtract midnight from the time to get just the time since midnight
+  auto since_midnight =
+      std::chrono::duration_cast<std::chrono::seconds>(date::make_time(tp - days).to_duration());
+  // get the seconds of the week
+  return day * midgard::kSecondsPerDay + since_midnight.count();
 }
 
 } // namespace DateTime

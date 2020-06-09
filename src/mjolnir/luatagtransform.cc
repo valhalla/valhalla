@@ -51,6 +51,16 @@ void stackdump_g(lua_State* l) {
   printf("\n"); /* end the listing */
 }
 
+std::string to_string(OSMType t) {
+  if (t == OSMType::kNode) {
+    return "node";
+  } else if (t == OSMType::kWay) {
+    return "way";
+  } else {
+    return "relation";
+  }
+}
+
 } // namespace
 
 LuaTagTransform::LuaTagTransform(const std::string& lua) {
@@ -71,7 +81,7 @@ LuaTagTransform::~LuaTagTransform() {
   }
 }
 
-Tags LuaTagTransform::Transform(OSMType type, const Tags& maptags) {
+Tags LuaTagTransform::Transform(OSMType type, uint64_t osmid, const Tags& maptags) {
 
   // grab the proper function out of the lua code
   Tags result;
@@ -97,7 +107,15 @@ Tags LuaTagTransform::Transform(OSMType type, const Tags& maptags) {
 
     // call lua
     if (lua_pcall(state_, 2, type == OSMType::kWay ? 4 : 2, 0)) {
-      LOG_ERROR("Failed to execute lua function for basic tag processing.");
+      const char* lua_error_message = lua_tostring(state_, 1);
+      // if the Lua code fails hard, such as throwing an interpreter error or
+      // running out of memory, then this indicates a programming logic error
+      // and the program should stop with as informative an error message as
+      // it's possible to give.
+      throw std::runtime_error((boost::format("Failed to execute lua function "
+                                              "for basic tag processing in %1% %2%: %3%") %
+                                to_string(type) % osmid % lua_error_message)
+                                   .str());
     }
 
     // TODO:  if we dont care about it we stop looking.  Look for filter = 1

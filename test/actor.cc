@@ -1,11 +1,14 @@
-#include "test.h"
-
+#include <functional>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 
 #include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 
 #include "tyr/actor.h"
+
+#include "test.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -30,7 +33,7 @@ boost::property_tree::ptree make_conf() {
       "loki":{
         "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","transit_available"],
         "logging":{"long_request": 100},
-        "service_defaults":{"minimum_reachability": 50,"radius": 0}
+        "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
       },
       "thor":{"logging":{"long_request": 110}},
       "skadi":{"actons":["height"],"logging":{"long_request": 5}},
@@ -47,7 +50,7 @@ boost::property_tree::ptree make_conf() {
         "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
         "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
         "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
-        "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,
+        "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
         "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
         "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
         "skadi": {"max_shape": 750000,"min_resample": 10.0},
@@ -61,7 +64,7 @@ boost::property_tree::ptree make_conf() {
   return conf;
 }
 
-void test_actor() {
+TEST(Actor, Basic) {
   auto conf = make_conf();
   tyr::actor_t actor(conf);
 
@@ -96,36 +99,38 @@ void test_actor() {
   // TODO: test the rest of them
 }
 
-void test_interrupt() {
-  auto conf = make_conf();
-  tyr::actor_t actor(conf);
+class ActorInterrupt : public ::testing::Test {
+protected:
+  void SetUp() override {
+    conf = make_conf();
+  }
+
   struct test_exception_t {};
 
-  try {
-    actor.route(R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
-        {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})",
-                []() -> void { throw test_exception_t{}; });
-    throw std::logic_error("this should have thrown already");
-  } catch (const test_exception_t& e) {}
+  boost::property_tree::ptree conf;
+};
 
-  try {
-    actor.trace_attributes(R"({"shape":[{"lat":40.546115,"lon":-76.385076},
-        {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})",
-                           []() -> void { throw test_exception_t{}; });
-    throw std::logic_error("this should have thrown already");
-  } catch (const test_exception_t& e) {}
-
-  // TODO: test the rest of them
+TEST_F(ActorInterrupt, Route) {
+  tyr::actor_t actor(conf);
+  std::string request = R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
+        {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})";
+  std::function<void()> interrupt = [] { throw test_exception_t{}; };
+  EXPECT_THROW(actor.route(request, &interrupt), test_exception_t);
 }
+
+TEST_F(ActorInterrupt, TraceAttributes) {
+  tyr::actor_t actor(conf);
+  std::string request = R"({"shape":[{"lat":40.546115,"lon":-76.385076},
+        {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})";
+  std::function<void()> interrupt = [] { throw test_exception_t{}; };
+  EXPECT_THROW(actor.trace_attributes(request, &interrupt), test_exception_t);
+}
+
+// TODO: test the rest of them
 
 } // namespace
 
-int main() {
-  test::suite suite("actor");
-
-  suite.test(TEST_CASE(test_actor));
-
-  suite.test(TEST_CASE(test_interrupt));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

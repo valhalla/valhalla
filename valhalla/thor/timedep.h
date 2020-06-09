@@ -1,6 +1,7 @@
 #ifndef VALHALLA_THOR_TIMEDEP_H_
 #define VALHALLA_THOR_TIMEDEP_H_
 
+#include <valhalla/baldr/time_info.h>
 #include <valhalla/thor/astar.h>
 
 namespace valhalla {
@@ -35,16 +36,15 @@ public:
    * @return Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  virtual std::vector<PathInfo> GetBestPath(odin::Location& origin,
-                                            odin::Location& dest,
-                                            baldr::GraphReader& graphreader,
-                                            const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                                            const sif::TravelMode mode);
+  std::vector<std::vector<PathInfo>>
+  GetBestPath(valhalla::Location& origin,
+              valhalla::Location& dest,
+              baldr::GraphReader& graphreader,
+              const std::shared_ptr<sif::DynamicCost>* mode_costing,
+              const sif::TravelMode mode,
+              const Options& options = Options::default_instance());
 
 protected:
-  uint32_t origin_tz_index_;
-  uint32_t seconds_of_week_;
-
   /**
    * Expand from the node along the forward search path. Immediately expands
    * from the end node of any transition edge (so no transition edges are added
@@ -56,21 +56,30 @@ protected:
    * @param  pred_idx     Predecessor index into the EdgeLabel list.
    * @param  from_transition True if this method is called from a transition
    *                         edge.
-   * @param  localtime    Current local time.  Seconds since epoch
-   * @param  seconds_of_week Seconds from start of the week (local time).
+   * @param  time_info    Tracks time offset as the route progresses
    * @param  dest         Location information of the destination.
    * @param  best_path    Best path found so far. Includes the index into
    *                      EdgeLabels and the cost.
    */
-  void ExpandForward(baldr::GraphReader& graphreader,
+  bool ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
-                     const sif::EdgeLabel& pred,
+                     sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition,
-                     uint64_t localtime,
-                     int32_t seconds_of_week,
-                     const odin::Location& dest,
+                     const baldr::TimeInfo& time_info,
+                     const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);
+
+  // Private helper function for `ExpandReverse`
+  inline bool ExpandForwardInner(baldr::GraphReader& graphreader,
+                                 const sif::EdgeLabel& pred,
+                                 const baldr::NodeInfo* nodeinfo,
+                                 const uint32_t pred_idx,
+                                 const EdgeMetadata& meta,
+                                 const baldr::GraphTile* tile,
+                                 const baldr::TimeInfo& time_info,
+                                 const valhalla::Location& destination,
+                                 std::pair<int32_t, float>& best_path);
 };
 
 /**
@@ -102,16 +111,20 @@ public:
    * @return Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  virtual std::vector<PathInfo> GetBestPath(odin::Location& origin,
-                                            odin::Location& dest,
-                                            baldr::GraphReader& graphreader,
-                                            const std::shared_ptr<sif::DynamicCost>* mode_costing,
-                                            const sif::TravelMode mode);
+  virtual std::vector<std::vector<PathInfo>>
+  GetBestPath(valhalla::Location& origin,
+              valhalla::Location& dest,
+              baldr::GraphReader& graphreader,
+              const std::shared_ptr<sif::DynamicCost>* mode_costing,
+              const sif::TravelMode mode,
+              const Options& options = Options::default_instance());
+
+  /**
+   * Clear the temporary information generated during path construction.
+   */
+  virtual void Clear();
 
 protected:
-  uint32_t dest_tz_index_;
-  uint32_t seconds_of_week_;
-
   // Access mode used by the costing method
   uint32_t access_mode_;
 
@@ -124,7 +137,7 @@ protected:
    * @param  origll  Lat,lng of the origin.
    * @param  destll  Lat,lng of the destination.
    */
-  void Init(const PointLL& origll, const PointLL& destll);
+  void Init(const midgard::PointLL& origll, const midgard::PointLL& destll);
 
   /**
    * Expand from the node along the reverse search path. Immediately expands
@@ -138,22 +151,32 @@ protected:
    * @param  opp_pred_edge Opposing predecessor directed edge.
    * @param  from_transition True if this method is called from a transition
    *                         edge.
-   * @param  localtime    Current local time.  Seconds since epoch
-   * @param  seconds_of_week Seconds from start of the week (local time).
+   * @param  time_info    Tracks time offset as the route progresses
    * @param  dest         Location information of the destination.
    * @param  best_path    Best path found so far. Includes the index into
    *                      EdgeLabels and the cost.
    */
-  void ExpandReverse(baldr::GraphReader& graphreader,
+  bool ExpandReverse(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
-                     const sif::BDEdgeLabel& pred,
+                     sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
                      const bool from_transition,
-                     uint64_t localtime,
-                     int32_t seconds_of_week,
-                     const odin::Location& dest,
+                     const baldr::TimeInfo& time_info,
+                     const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);
+
+  // Private helper function for `ExpandReverse`
+  bool ExpandReverseInner(baldr::GraphReader& graphreader,
+                          const sif::BDEdgeLabel& pred,
+                          const baldr::DirectedEdge* opp_pred_edge,
+                          const baldr::NodeInfo* nodeinfo,
+                          const uint32_t pred_idx,
+                          const EdgeMetadata& meta,
+                          const baldr::GraphTile* tile,
+                          const baldr::TimeInfo& time_info,
+                          const valhalla::Location& destination,
+                          std::pair<int32_t, float>& best_path);
 
   /**
    * The origin of the reverse path is the destination location. Add edges at the
@@ -162,8 +185,10 @@ protected:
    * @param  origin       Location information of the origin.
    * @param  dest         Location information of the destination.
    */
-  void
-  SetOrigin(baldr::GraphReader& graphreader, odin::Location& origin, odin::Location& destination);
+  void SetOrigin(baldr::GraphReader& graphreader,
+                 valhalla::Location& origin,
+                 valhalla::Location& destination,
+                 uint32_t seconds_of_week);
 
   /**
    * The destination of the reverse path is the origin location. Set the
@@ -172,7 +197,7 @@ protected:
    * @param   dest         Location information of the destination.
    * @return  Returns the relative density near the destination (0-15)
    */
-  uint32_t SetDestination(baldr::GraphReader& graphreader, const odin::Location& dest);
+  uint32_t SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
 
   /**
    * Form the path from the adjacency list. Recovers the path from the

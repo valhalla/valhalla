@@ -18,21 +18,25 @@
 #include "odin/util.h"
 #include "tyr/serializers.h"
 
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::tyr;
 using namespace std;
 
+namespace {
+midgard::PointLL to_ll(const LatLng& ll) {
+  return midgard::PointLL{ll.lng(), ll.lat()};
+}
+} // namespace
+
 namespace osrm {
 
 // Serialize a location (waypoint) in OSRM compatible format. Waypoint format is described here:
 //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
-valhalla::baldr::json::MapPtr waypoint(const odin::Location& location,
-                                       bool tracepoint,
-                                       const bool optimized,
-                                       const uint32_t waypoint_index) {
+valhalla::baldr::json::MapPtr
+waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimized) {
   // Create a waypoint to add to the array
   auto waypoint = json::map({});
 
@@ -51,27 +55,31 @@ valhalla::baldr::json::MapPtr waypoint(const odin::Location& location,
 
   // Add distance in meters from the input location to the nearest
   // point on the road used in the route
-  waypoint->emplace("distance", json::fp_t{location.path_edges(0).distance(), 3});
-
-  // Add hint. Goal is for the hint returned from a locate request to be able
-  // to quickly find the edge and point along the edge in a route request.
-  // Defer this - not currently used in OSRM.
-  // waypoint->emplace("hint", std::string("TODO"));
+  // TODO: since distance was normalized in thor - need to recalculate here
+  //       in the future we shall have store separately from score
+  waypoint->emplace("distance",
+                    json::fp_t{to_ll(location.ll()).Distance(to_ll(location.path_edges(0).ll())), 3});
 
   // If the location was used for a tracepoint we trigger extra serialization
-  if (tracepoint) {
+  if (is_tracepoint) {
     waypoint->emplace("alternatives_count", static_cast<uint64_t>(location.path_edges_size() - 1));
-    waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.original_index()));
-    waypoint->emplace("matchings_index",
-                      static_cast<uint64_t>(0)); // we only have one matching for now
+    uint32_t waypoint_index = location.shape_index();
+    if (waypoint_index == numeric_limits<uint32_t>::max()) {
+      // when tracepoint is neither a break nor leg's starting/ending
+      // point (shape_index is uint32_t max), we assign null to its waypoint_index
+      waypoint->emplace("waypoint_index", static_cast<std::nullptr_t>(nullptr));
+    } else {
+      waypoint->emplace("waypoint_index", static_cast<uint64_t>(waypoint_index));
+    }
+    waypoint->emplace("matchings_index", static_cast<uint64_t>(location.route_index()));
   }
 
   // If the location was used for optimized route we add trips_index and waypoint
   // index (index of the waypoint in the trip)
-  if (optimized) {
+  if (is_optimized) {
     int trips_index = 0; // TODO
     waypoint->emplace("trips_index", static_cast<uint64_t>(trips_index));
-    waypoint->emplace("waypoint_index", static_cast<uint64_t>(waypoint_index));
+    waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.shape_index()));
   }
 
   return waypoint;
@@ -79,11 +87,30 @@ valhalla::baldr::json::MapPtr waypoint(const odin::Location& location,
 
 // Serialize locations (called waypoints in OSRM). Waypoints are described here:
 //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
-json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<odin::Location>& locations,
-                         bool tracepoints) {
+json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                         bool is_tracepoint) {
   auto waypoints = json::array({});
   for (const auto& location : locations) {
-    waypoints->emplace_back(waypoint(location, tracepoints));
+    if (location.path_edges().size() == 0) {
+      waypoints->emplace_back(static_cast<std::nullptr_t>(nullptr));
+    } else {
+      waypoints->emplace_back(waypoint(location, is_tracepoint));
+    }
+  }
+  return waypoints;
+}
+
+json::ArrayPtr waypoints(const valhalla::Trip& trip) {
+  auto waypoints = json::array({});
+  // For multi-route the same waypoints are used for all routes.
+  const auto& legs = trip.routes(0).legs();
+  for (const auto& leg : legs) {
+    for (const auto& location : leg.location()) {
+      if (&location == &leg.location(0) && &leg != &*legs.begin()) {
+        continue;
+      }
+      waypoints->emplace_back(waypoint(location, false));
+    }
   }
   return waypoints;
 }

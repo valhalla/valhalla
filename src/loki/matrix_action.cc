@@ -15,12 +15,12 @@ using namespace valhalla::baldr;
 using namespace valhalla::loki;
 
 namespace {
-PointLL to_ll(const odin::Location& l) {
-  return PointLL{l.ll().lng(), l.ll().lat()};
+midgard::PointLL to_ll(const valhalla::Location& l) {
+  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
 }
 
-void check_distance(const google::protobuf::RepeatedPtrField<odin::Location>& sources,
-                    const google::protobuf::RepeatedPtrField<odin::Location>& targets,
+void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
+                    const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
                     float matrix_max_distance,
                     float& max_location_distance) {
   // see if any locations pairs are unreachable or too far apart
@@ -47,80 +47,82 @@ void check_distance(const google::protobuf::RepeatedPtrField<odin::Location>& so
 namespace valhalla {
 namespace loki {
 
-void loki_worker_t::init_matrix(valhalla_request_t& request) {
+void loki_worker_t::init_matrix(Api& request) {
   // we require sources and targets
-  if (request.options.action() == odin::DirectionsOptions::sources_to_targets) {
-    parse_locations(request.options.mutable_sources(), valhalla_exception_t{112});
-    parse_locations(request.options.mutable_targets(), valhalla_exception_t{112});
+  auto& options = *request.mutable_options();
+  if (options.action() == Options::sources_to_targets) {
+    parse_locations(options.mutable_sources(), valhalla_exception_t{112});
+    parse_locations(options.mutable_targets(), valhalla_exception_t{112});
   } // optimized route uses locations but needs to do a matrix
   else {
-    parse_locations(request.options.mutable_locations(), valhalla_exception_t{112});
-    if (request.options.locations_size() < 2) {
+    parse_locations(options.mutable_locations(), valhalla_exception_t{112});
+    if (options.locations_size() < 2) {
       throw valhalla_exception_t{120};
     };
 
     // create new sources and targets from locations
-    request.options.mutable_targets()->CopyFrom(request.options.locations());
-    request.options.mutable_sources()->CopyFrom(request.options.locations());
+    options.mutable_targets()->CopyFrom(options.locations());
+    options.mutable_sources()->CopyFrom(options.locations());
   }
 
   // sanitize
-  if (request.options.sources_size() < 1) {
+  if (options.sources_size() < 1) {
     throw valhalla_exception_t{121};
   };
-  for (auto& s : *request.options.mutable_sources()) {
+  for (auto& s : *options.mutable_sources()) {
     s.clear_heading();
   }
-  if (request.options.targets_size() < 1) {
+  if (options.targets_size() < 1) {
     throw valhalla_exception_t{122};
   };
-  for (auto& t : *request.options.mutable_targets()) {
+  for (auto& t : *options.mutable_targets()) {
     t.clear_heading();
   }
 
   // no locations!
-  request.options.clear_locations();
+  options.clear_locations();
 
   // need costing
   parse_costing(request);
 }
 
-void loki_worker_t::matrix(valhalla_request_t& request) {
+void loki_worker_t::matrix(Api& request) {
   init_matrix(request);
-  auto costing = odin::Costing_Name(request.options.costing());
+  auto& options = *request.mutable_options();
+  const auto& costing_name = Costing_Enum_Name(options.costing());
 
-  if (costing == "multimodal") {
-    throw valhalla_exception_t{140, odin::DirectionsOptions_Action_Name(request.options.action())};
+  if (costing_name == "multimodal") {
+    throw valhalla_exception_t{140, Options_Action_Enum_Name(options.action())};
   };
 
   // check that location size does not exceed max.
-  auto max = max_matrix_locations.find(costing)->second;
-  if (request.options.sources_size() > max || request.options.targets_size() > max) {
+  auto max = max_matrix_locations.find(costing_name)->second;
+  if (options.sources_size() > max || options.targets_size() > max) {
     throw valhalla_exception_t{150, std::to_string(max)};
   };
 
   // check the distances
   auto max_location_distance = std::numeric_limits<float>::min();
-  check_distance(request.options.sources(), request.options.targets(),
-                 max_matrix_distance.find(costing)->second, max_location_distance);
+  check_distance(options.sources(), options.targets(), max_matrix_distance.find(costing_name)->second,
+                 max_location_distance);
 
   // correlate the various locations to the underlying graph
-  auto sources_targets = PathLocation::fromPBF(request.options.sources());
-  auto st = PathLocation::fromPBF(request.options.targets());
+  auto sources_targets = PathLocation::fromPBF(options.sources());
+  auto st = PathLocation::fromPBF(options.targets());
   sources_targets.insert(sources_targets.end(), std::make_move_iterator(st.begin()),
                          std::make_move_iterator(st.end()));
 
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
-    const auto searched = loki::Search(sources_targets, *reader, edge_filter, node_filter);
+    const auto searched = loki::Search(sources_targets, *reader, costing);
     for (size_t i = 0; i < sources_targets.size(); ++i) {
       const auto& l = sources_targets[i];
       const auto& projection = searched.at(l);
       PathLocation::toPBF(projection,
-                          i < request.options.sources_size()
-                              ? request.options.mutable_sources(i)
-                              : request.options.mutable_targets(i - request.options.sources_size()),
+                          i < options.sources_size()
+                              ? options.mutable_sources(i)
+                              : options.mutable_targets(i - options.sources_size()),
                           *reader);
       // TODO: get transit level for transit costing
       // TODO: if transit send a non zero radius
@@ -154,9 +156,10 @@ void loki_worker_t::matrix(valhalla_request_t& request) {
   if (!connected) {
     throw valhalla_exception_t{170};
   };
-  if (!request.options.do_not_track()) {
+  if (!options.do_not_track()) {
     valhalla::midgard::logging::Log("max_location_distance::" +
-                                        std::to_string(max_location_distance * kKmPerMeter) + "km",
+                                        std::to_string(max_location_distance * midgard::kKmPerMeter) +
+                                        "km",
                                     " [ANALYTICS] ");
   }
 }

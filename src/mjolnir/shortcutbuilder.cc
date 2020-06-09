@@ -1,7 +1,6 @@
 #include "mjolnir/shortcutbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <iostream>
@@ -55,7 +54,7 @@ bool EdgesMatch(const GraphTile* tile, const DirectedEdge* edge1, const Directed
 
   // Neither directed edge can have exit signs or be a roundabout.
   // TODO - other sign types?
-  if (edge1->exitsign() || edge2->exitsign() || edge1->roundabout() || edge2->roundabout()) {
+  if (edge1->sign() || edge2->sign() || edge1->roundabout() || edge2->roundabout()) {
     return false;
   }
 
@@ -256,7 +255,7 @@ bool CanContract(GraphReader& reader,
   const DirectedEdge* oppdiredge2 = reader.GetGraphTile(oppedge2)->directededge(oppedge2);
 
   // If either opposing directed edge has exit signs return false
-  if (oppdiredge1->exitsign() || oppdiredge2->exitsign()) {
+  if (oppdiredge1->sign() || oppdiredge2->sign()) {
     return false;
   }
 
@@ -383,7 +382,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
     const DirectedEdge* directededge = tile->directededge(edge_id);
     if (directededge->use() == Use::kTransitConnection ||
         directededge->use() == Use::kEgressConnection ||
-        directededge->use() == Use::kPlatformConnection) {
+        directededge->use() == Use::kPlatformConnection || directededge->bss_connection()) {
       continue;
     }
 
@@ -500,7 +499,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       newedge.set_weighted_grade(6);
 
       // Sanity check - should never see a shortcut with signs
-      if (newedge.exitsign()) {
+      if (newedge.sign()) {
         LOG_ERROR("Shortcut edge with exit signs");
       }
 
@@ -591,7 +590,6 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
       // Update node information
       const auto& admin = tile->admininfo(nodeinfo.admin_index());
       nodeinfo.set_edge_index(tilebuilder.directededges().size());
-      nodeinfo.set_timezone(nodeinfo.timezone());
       nodeinfo.set_admin_index(tilebuilder.AddAdmin(admin.country_text(), admin.state_text(),
                                                     admin.country_iso(), admin.state_iso()));
 
@@ -612,7 +610,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
         DirectedEdge newedge = *directededge;
 
         // Get signs from the base directed edge
-        if (directededge->exitsign()) {
+        if (directededge->sign()) {
           std::vector<SignInfo> signs = tile->GetSigns(edgeid.id());
           if (signs.size() == 0) {
             LOG_ERROR("Base edge should have signs, but none found");
@@ -678,6 +676,16 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
 
       // Set the edge count for the new node
       nodeinfo.set_edge_count(tilebuilder.directededges().size() - edge_count);
+
+      // Get named signs from the base node
+      if (nodeinfo.named_intersection()) {
+
+        std::vector<SignInfo> signs = tile->GetSigns(n, true);
+        if (signs.size() == 0) {
+          LOG_ERROR("Base node should have signs, but none found");
+        }
+        tilebuilder.AddSigns(tilebuilder.nodes().size(), signs);
+      }
       tilebuilder.nodes().emplace_back(std::move(nodeinfo));
     }
 
@@ -689,7 +697,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
 
     // Check if we need to clear the tile cache.
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
   }
   return shortcut_count;

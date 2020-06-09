@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include "baldr/datetime.h"
+#include "baldr/graphconstants.h"
 #include "baldr/location.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -12,6 +13,9 @@
 #include "worker.h"
 
 using namespace valhalla;
+#ifdef HAVE_HTTP
+using namespace prime_server;
+#endif
 
 namespace {
 // Credits: http://werkzeug.pocoo.org/
@@ -182,7 +186,8 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {153,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
-    {154, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+    // OSRM has no equivalent message for this case so we return our own
+    {154, R"({"code":"DistanceExceeded","message":"Path distance exceeds the max distance limit."})"},
     {155, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {156, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
     {157,
@@ -201,10 +206,11 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {164,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
 
-    {170,
-     R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {170, R"({"code":"NoRoute","message":"Impossible route between points"})"},
     {171,
      R"({"code":"NoSegment","message":"One of the supplied input coordinates could not snap to street segment."})"},
+    {172,
+     R"({"code":"BreakageDistanceExceeded","message":"All coordinates are too far away from each other"})"},
 
     {199, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
 
@@ -283,12 +289,49 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
   return d;
 }
 
+void add_date_to_locations(Options& options,
+                           google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
+  if (options.has_date_time() && locations.size()) {
+    switch (options.date_time_type()) {
+      case Options::current:
+        locations.Mutable(0)->set_date_time("current");
+        break;
+      case Options::depart_at:
+        locations.Mutable(0)->set_date_time(options.date_time());
+        break;
+      case Options::arrive_by:
+        locations.Mutable(locations.size() - 1)->set_date_time(options.date_time());
+        break;
+      default:
+        break;
+    }
+  }
+}
+
 void parse_locations(const rapidjson::Document& doc,
-                     google::protobuf::RepeatedPtrField<odin::Location>* locations,
+                     Options& options,
                      const std::string& node,
                      unsigned location_parse_error_code,
                      bool track) {
 
+  google::protobuf::RepeatedPtrField<valhalla::Location>* locations = nullptr;
+  if (node == "locations") {
+    locations = options.mutable_locations();
+  } else if (node == "shape") {
+    locations = options.mutable_shape();
+  } else if (node == "trace") {
+    locations = options.mutable_trace();
+  } else if (node == "sources") {
+    locations = options.mutable_sources();
+  } else if (node == "targets") {
+    locations = options.mutable_targets();
+  } else if (node == "avoid_locations") {
+    locations = options.mutable_avoid_locations();
+  } else {
+    return;
+  }
+
+  bool had_date_time = false;
   auto request_locations =
       rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" + node).c_str());
   if (request_locations) {
@@ -315,9 +358,21 @@ void parse_locations(const rapidjson::Document& doc,
         location->mutable_ll()->set_lat(*lat);
         location->mutable_ll()->set_lng(*lon);
 
+        // trace attributes does not support legs or breaks at discontinuities
         auto stop_type_json = rapidjson::get_optional<std::string>(r_loc, "/type");
-        if (stop_type_json && *stop_type_json == std::string("through")) {
-          location->set_type(odin::Location::kThrough);
+        if (options.action() == Options::trace_attributes) {
+          location->set_type(valhalla::Location::kVia);
+        } // other actions let you specify whatever type of stop you want
+        else if (stop_type_json) {
+          if (*stop_type_json == std::string("through"))
+            location->set_type(valhalla::Location::kThrough);
+          else if (*stop_type_json == std::string("via"))
+            location->set_type(valhalla::Location::kVia);
+          else if (*stop_type_json == std::string("break_through"))
+            location->set_type(valhalla::Location::kBreakThrough);
+        } // and if you didnt set it it defaulted to break which is not the default for trace_route
+        else if (options.action() == Options::trace_route) {
+          location->set_type(valhalla::Location::kVia);
         }
 
         auto name = rapidjson::get_optional<std::string>(r_loc, "/name");
@@ -356,6 +411,7 @@ void parse_locations(const rapidjson::Document& doc,
         auto date_time = rapidjson::get_optional<std::string>(r_loc, "/date_time");
         if (date_time) {
           location->set_date_time(*date_time);
+          had_date_time = true;
         }
         auto heading = rapidjson::get_optional<int>(r_loc, "/heading");
         if (heading) {
@@ -395,11 +451,10 @@ void parse_locations(const rapidjson::Document& doc,
           location->set_rank_candidates(*rank_candidates);
         }
         auto preferred_side = rapidjson::get_optional<std::string>(r_loc, "/preferred_side");
-        odin::Location::PreferredSide side;
-        if (preferred_side && PreferredSide_Parse(*preferred_side, &side)) {
+        valhalla::Location::PreferredSide side;
+        if (preferred_side && PreferredSide_Enum_Parse(*preferred_side, &side)) {
           location->set_preferred_side(side);
         }
-
         lat = rapidjson::get_optional<float>(r_loc, "/display_lat");
         lon = rapidjson::get_optional<float>(r_loc, "/display_lon");
         if (lat && lon && *lat >= -90.0f && *lat <= 90.0f) {
@@ -407,17 +462,63 @@ void parse_locations(const rapidjson::Document& doc,
           location->mutable_display_ll()->set_lat(*lat);
           location->mutable_display_ll()->set_lng(*lon);
         }
+        auto search_cutoff = rapidjson::get_optional<unsigned int>(r_loc, "/search_cutoff");
+        if (search_cutoff) {
+          location->set_search_cutoff(*search_cutoff);
+        }
+        auto street_side_tolerance =
+            rapidjson::get_optional<unsigned int>(r_loc, "/street_side_tolerance");
+        if (street_side_tolerance) {
+          location->set_street_side_tolerance(*street_side_tolerance);
+        }
+        auto search_filter = rapidjson::get_child_optional(r_loc, "/search_filter");
+        if (search_filter) {
+          // search_filter.min_road_class
+          auto min_road_class =
+              rapidjson::get_optional<std::string>(*search_filter, "/min_road_class");
+          valhalla::RoadClass min_rc;
+          if (min_road_class && RoadClass_Enum_Parse(*min_road_class, &min_rc)) {
+            location->mutable_search_filter()->set_min_road_class(min_rc);
+          }
+          // search_filter.max_road_class
+          auto max_road_class =
+              rapidjson::get_optional<std::string>(*search_filter, "/max_road_class");
+          valhalla::RoadClass max_rc;
+          if (max_road_class && RoadClass_Enum_Parse(*max_road_class, &max_rc)) {
+            location->mutable_search_filter()->set_max_road_class(max_rc);
+          }
+          // search_filter.exclude_tunnel
+          location->mutable_search_filter()->set_exclude_tunnel(
+              rapidjson::get_optional<bool>(*search_filter, "/exclude_tunnel").get_value_or(false));
+          // search_filter.exclude_bridge
+          location->mutable_search_filter()->set_exclude_bridge(
+              rapidjson::get_optional<bool>(*search_filter, "/exclude_bridge").get_value_or(false));
+          // search_filter.exclude_ramp
+          location->mutable_search_filter()->set_exclude_ramp(
+              rapidjson::get_optional<bool>(*search_filter, "/exclude_ramp").get_value_or(false));
+        }
       } catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
+    }
+
+    // first and last locations get the default type of break no matter what
+    if (locations->size()) {
+      locations->Mutable(0)->set_type(valhalla::Location::kBreak);
+      locations->Mutable(locations->size() - 1)->set_type(valhalla::Location::kBreak);
     }
     if (track) {
       midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()),
                             " [ANALYTICS] ");
     }
+
+    // push the date time information down into the locations
+    if (!had_date_time) {
+      add_date_to_locations(options, *locations);
+    }
   }
 }
 
 void parse_contours(const rapidjson::Document& doc,
-                    google::protobuf::RepeatedPtrField<odin::Contour>* contours) {
+                    google::protobuf::RepeatedPtrField<Contour>* contours) {
 
   // make sure the isoline definitions are valid
   auto json_contours = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/contours");
@@ -446,7 +547,7 @@ void parse_contours(const rapidjson::Document& doc,
   }
 }
 
-void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
+void from_json(rapidjson::Document& doc, Options& options) {
   bool track = !options.has_do_not_track() || !options.do_not_track();
 
   // TODO: stop doing this after a sufficient amount of time has passed
@@ -460,13 +561,13 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
         doc.AddMember(rapidjson::Value(&key[1], allocator), *child, allocator);
       }
     }
-    // delete directions_options if it existed
+    // delete options if it existed
     doc.RemoveMember("directions_options");
   }
 
   auto fmt = rapidjson::get_optional<std::string>(doc, "/format");
-  odin::DirectionsOptions::Format format;
-  if (fmt && odin::DirectionsOptions_Format_Parse(*fmt, &format)) {
+  Options::Format format;
+  if (fmt && Options_Format_Enum_Parse(*fmt, &format)) {
     options.set_format(format);
   }
 
@@ -483,9 +584,9 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   auto units = rapidjson::get_optional<std::string>(doc, "/units");
   if (units) {
     if ((*units == "miles") || (*units == "mi")) {
-      options.set_units(odin::DirectionsOptions::miles);
+      options.set_units(Options::miles);
     } else {
-      options.set_units(odin::DirectionsOptions::kilometers);
+      options.set_units(Options::kilometers);
     }
   }
 
@@ -497,42 +598,113 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
   // deprecated
   auto narrative = rapidjson::get_optional<bool>(doc, "/narrative");
   if (narrative && !*narrative) {
-    options.set_directions_type(odin::DirectionsType::none);
+    options.set_directions_type(DirectionsType::none);
   }
 
   auto dir_type = rapidjson::get_optional<std::string>(doc, "/directions_type");
-  odin::DirectionsType directions_type;
-  if (dir_type && odin::DirectionsType_Parse(*dir_type, &directions_type)) {
+  DirectionsType directions_type;
+  if (dir_type && DirectionsType_Enum_Parse(*dir_type, &directions_type)) {
     options.set_directions_type(directions_type);
   }
 
+  // date_time
+  auto date_time_type = rapidjson::get_optional<unsigned int>(doc, "/date_time/type");
+  auto date_time_value = rapidjson::get_optional<std::string>(doc, "/date_time/value");
+  if (date_time_type && Options::DateTimeType_IsValid(*date_time_type)) {
+    // check the type is in bounds
+    auto const v = static_cast<Options::DateTimeType>(*date_time_type);
+    if (v >= Options::DateTimeType_ARRAYSIZE)
+      throw valhalla_exception_t{163};
+    options.set_date_time_type(static_cast<Options::DateTimeType>(v));
+    // check the value exists for depart at and arrive by
+    if (!date_time_value) {
+      if (v == Options::depart_at)
+        throw valhalla_exception_t{160};
+      else if (v == Options::arrive_by)
+        throw valhalla_exception_t{161};
+    }
+    // check the value is sane for depart at and arrive by
+    if (v != Options::current && !baldr::DateTime::is_iso_valid(*date_time_value))
+      throw valhalla_exception_t{162};
+    if (v != Options::current)
+      options.set_date_time(*date_time_value);
+    else
+      options.set_date_time("current");
+  } // not specified but you want transit, then we default to current
+  else if (options.has_costing() &&
+           (options.costing() == multimodal || options.costing() == transit)) {
+    options.set_date_time_type(Options::current);
+    options.set_date_time("current");
+  }
+
+  // Set the output precision for shape/geometry (polyline encoding). Defaults to polyline6
+  // This also controls the input precision for encoded_polyline in height action
+  // TODO - is this just for OSRM compatibility?
+  options.set_shape_format(polyline6);
+  auto shape_format = rapidjson::get_optional<std::string>(doc, "/shape_format");
+  if (shape_format) {
+    if (*shape_format == "polyline6") {
+      options.set_shape_format(polyline6);
+    } else if (*shape_format == "polyline5") {
+      options.set_shape_format(polyline5);
+    } else if (*shape_format == "geojson") {
+      options.set_shape_format(geojson);
+    } else {
+      // Throw an error if shape format is invalid
+      throw valhalla_exception_t{164};
+    }
+  }
+
+  // parse map matching location input and encoded_polyline for height actions
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
   if (encoded_polyline) {
     options.set_encoded_polyline(*encoded_polyline);
-    auto decoded = midgard::decode<std::vector<midgard::PointLL>>(*encoded_polyline);
+
+    // Set the precision to use when decoding the polyline. For height actions (only)
+    // either polyline6 (default) or polyline5 are supported. All other actions only
+    // support polyline6 inputs at this time.
+    double precision = 1e-6;
+    if (options.action() == Options::height) {
+      precision = options.shape_format() == valhalla::polyline5 ? 1e-5 : 1e-6;
+    }
+
+    auto decoded = midgard::decode<std::vector<midgard::PointLL>>(*encoded_polyline, precision);
     for (const auto& ll : decoded) {
       auto* sll = options.mutable_shape()->Add();
       sll->mutable_ll()->set_lat(ll.lat());
       sll->mutable_ll()->set_lng(ll.lng());
+      // set type to via by default
+      sll->set_type(valhalla::Location::kVia);
     }
-  } else {
-    parse_locations(doc, options.mutable_shape(), "shape", 134, false);
+    // first and last always get type break
+    if (options.shape_size()) {
+      options.mutable_shape(0)->set_type(valhalla::Location::kBreak);
+      options.mutable_shape(options.shape_size() - 1)->set_type(valhalla::Location::kBreak);
+    }
+    // add the date time
+    add_date_to_locations(options, *options.mutable_shape());
+  } // fall back from encoded polyline to array of locations
+  else {
+    parse_locations(doc, options, "shape", 134, false);
 
     // if no shape then try 'trace'
-    if (options.shape().empty()) {
-      parse_locations(doc, options.mutable_trace(), "trace", 135, false);
+    if (options.shape().size() == 0) {
+      parse_locations(doc, options, "trace", 135, false);
     }
   }
 
   // Begin time for timestamps when entered given durations/delta times (defaults to 0)
   auto t = rapidjson::get_optional<unsigned int>(doc, "/begin_time");
-  double begin_time = (t) ? begin_time = *t : 0.0;
+  double begin_time = 0.0;
+  if (t) {
+    begin_time = *t;
+  }
 
   // Use durations (per shape point pair) to set time
   auto durations = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/durations");
   if (durations) {
     // Make sure durations is sized appropriately
-    if (durations->Size() != options.shape_size() - 1) {
+    if (options.shape_size() > 0 && durations->Size() != (unsigned int)options.shape_size() - 1) {
       throw valhalla_exception_t{136};
     }
 
@@ -570,169 +742,117 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     }
   }
 
-  // Set the output precision for shape/geometry (polyline encoding). Defaults to polyline6
-  // TODO - is this just for OSRM compatibility?
-  options.set_shape_format(odin::polyline6);
-  auto shape_format = rapidjson::get_optional<std::string>(doc, "/shape_format");
-  if (shape_format) {
-    if (*shape_format == "polyline6") {
-      options.set_shape_format(odin::polyline6);
-    } else if (*shape_format == "polyline5") {
-      options.set_shape_format(odin::polyline5);
-    } else {
-      // Throw an error if shape format is invalid
-      throw valhalla_exception_t{164};
-    }
-  }
-
   // TODO: remove this?
   options.set_do_not_track(rapidjson::get_optional<bool>(doc, "/healthcheck").get_value_or(false));
 
+  // Elevation service options
   options.set_range(rapidjson::get(doc, "/range", false));
+  constexpr uint32_t MAX_HEIGHT_PRECISION = 2;
+  auto height_precision = rapidjson::get_optional<unsigned int>(doc, "/height_precision");
+  if (height_precision && *height_precision <= MAX_HEIGHT_PRECISION) {
+    options.set_height_precision(*height_precision);
+  }
 
   options.set_verbose(rapidjson::get(doc, "/verbose", false));
 
-  // costing
-  auto costing_str = rapidjson::get_optional<std::string>(doc, "/costing");
-  if (costing_str) {
-    // try the string directly, some strings are keywords so add an underscore
-    odin::Costing costing;
-    if (valhalla::odin::Costing_Parse(*costing_str, &costing)) {
-      options.set_costing(costing);
-    } else {
-      throw valhalla_exception_t{125, "'" + *costing_str + "'"};
-    }
+  // costing defaults to none which is only valid for locate
+  auto costing_str = rapidjson::get<std::string>(doc, "/costing", "none");
+  // try the string directly, some strings are keywords so add an underscore
+  Costing costing;
+  if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {
+    options.set_costing(costing);
+  } else {
+    throw valhalla_exception_t{125, "'" + costing_str + "'"};
   }
 
   // if specified, get the costing options in there
   // the order of costing must reflect the enum order
-  for (const auto costing : {odin::auto_, odin::auto_shorter, odin::bicycle, odin::bus, odin::hov,
-                             odin::motor_scooter, odin::multimodal, odin::pedestrian, odin::transit,
-                             odin::truck, odin::motorcycle, odin::auto_data_fix, odin::taxi}) {
+  for (const auto& costing : {auto_, auto_shorter, bicycle, bus, hov, motor_scooter, multimodal,
+                              pedestrian, transit, truck, motorcycle, auto_data_fix, taxi, none_}) {
     // Create the costing string
-    auto costing_str = valhalla::odin::Costing_Name(costing);
+    const auto& costing_str = valhalla::Costing_Enum_Name(costing);
     // Create the costing options key
     const auto costing_options_key = "/costing_options/" + costing_str;
 
     switch (costing) {
-      case odin::auto_: {
+      case auto_: {
         sif::ParseAutoCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
-      case odin::auto_shorter: {
+      case auto_shorter: {
         sif::ParseAutoShorterCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
-      case odin::bicycle: {
+      case bicycle: {
         sif::ParseBicycleCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
-      case odin::bus: {
+      case bus: {
         sif::ParseBusCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
-      case odin::hov: {
+      case hov: {
         sif::ParseHOVCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
-      case odin::taxi: {
+      case taxi: {
         sif::ParseTaxiCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
-      case odin::motor_scooter: {
+      case motor_scooter: {
         sif::ParseMotorScooterCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
-      case odin::multimodal: {
+      case multimodal: {
         options.add_costing_options(); // Nothing to parse for this one
         break;
       }
-      case odin::pedestrian: {
+      case pedestrian: {
         sif::ParsePedestrianCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
-      case odin::transit: {
+      case transit: {
         sif::ParseTransitCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
-      case odin::truck: {
+      case truck: {
         sif::ParseTruckCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
-      case odin::motorcycle: {
+      case motorcycle: {
         sif::ParseMotorcycleCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
-      case odin::auto_data_fix: {
+      case auto_data_fix: {
         sif::ParseAutoDataFixCostOptions(doc, costing_options_key, options.add_costing_options());
+        break;
+      }
+      case none_: {
+        sif::ParseNoCostOptions(doc, costing_options_key, options.add_costing_options());
         break;
       }
     }
   }
 
   // get the locations in there
-  parse_locations(doc, options.mutable_locations(), "locations", 130, track);
+  parse_locations(doc, options, "locations", 130, track);
 
   // get the sources in there
-  parse_locations(doc, options.mutable_sources(), "sources", 131, track);
+  parse_locations(doc, options, "sources", 131, track);
 
   // get the targets in there
-  parse_locations(doc, options.mutable_targets(), "targets", 132, track);
+  parse_locations(doc, options, "targets", 132, track);
 
   // get the avoids in there
-  parse_locations(doc, options.mutable_avoid_locations(), "avoid_locations", 133, track);
+  parse_locations(doc, options, "avoid_locations", 133, track);
 
-  // time type
-  auto date_time_type = rapidjson::get_optional<float>(doc, "/date_time/type");
-  if (date_time_type && odin::DirectionsOptions::DateTimeType_IsValid(*date_time_type)) {
-    auto const v = static_cast<int>(*date_time_type);
-    options.set_date_time_type(static_cast<odin::DirectionsOptions::DateTimeType>(v));
-  } // not specified but you want transit, then we default to current
-  else if (options.has_costing() &&
-           (options.costing() == odin::multimodal || options.costing() == odin::transit)) {
-    options.set_date_time_type(odin::DirectionsOptions::current);
-  }
-
-  // time value
-  if (options.has_date_time_type()) {
-    auto date_time_value = rapidjson::get_optional<std::string>(doc, "/date_time/value");
-    switch (options.date_time_type()) {
-      case odin::DirectionsOptions::current:
-        options.set_date_time("current");
-        if (options.locations_size() > 0) {
-          options.mutable_locations(0)->set_date_time("current");
-        }
-        break;
-      case odin::DirectionsOptions::depart_at:
-        if (!date_time_value) {
-          throw valhalla_exception_t{160};
-        };
-        if (!baldr::DateTime::is_iso_valid(*date_time_value)) {
-          throw valhalla_exception_t{162};
-        };
-        options.set_date_time(*date_time_value);
-        if (options.locations_size() > 0) {
-          options.mutable_locations(0)->set_date_time(*date_time_value);
-        }
-        break;
-      case odin::DirectionsOptions::arrive_by:
-        // not yet for transit
-        if (options.costing() == odin::multimodal || options.costing() == odin::transit) {
-          throw valhalla_exception_t{141};
-        };
-        if (!date_time_value) {
-          throw valhalla_exception_t{161};
-        };
-        if (!baldr::DateTime::is_iso_valid(*date_time_value)) {
-          throw valhalla_exception_t{162};
-        };
-        options.set_date_time(*date_time_value);
-        if (options.locations_size() > 0) {
-          options.mutable_locations()->rbegin()->set_date_time(*date_time_value);
-        }
-        break;
-      default:
-        throw valhalla_exception_t{163};
+  // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
+  // TODO: this is because bidirectional a* defaults to middle of the day time for speed lookup
+  if (!options.has_date_time_type() && (options.shape_size() == 0 || options.shape(0).time() == -1)) {
+    for (auto& costing : *options.mutable_costing_options()) {
+      costing.set_flow_mask(
+          static_cast<uint8_t>(costing.flow_mask()) &
+          ~(valhalla::baldr::kPredictedFlowMask | valhalla::baldr::kCurrentFlowMask));
     }
   }
 
@@ -771,9 +891,9 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
 
   // if specified, get the shape_match in there
   auto shape_match_str = rapidjson::get_optional<std::string>(doc, "/shape_match");
-  odin::ShapeMatch shape_match;
+  ShapeMatch shape_match;
   if (shape_match_str) {
-    if (valhalla::odin::ShapeMatch_Parse(*shape_match_str, &shape_match)) {
+    if (valhalla::ShapeMatch_Enum_Parse(*shape_match_str, &shape_match)) {
       options.set_shape_match(shape_match);
     } else {
       throw valhalla_exception_t{445};
@@ -811,10 +931,17 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     options.set_breakage_distance(*breakage_distance);
   }
 
+  // if specified, get the interpolation_distance value in there
+  auto interpolation_distance =
+      rapidjson::get_optional<float>(doc, "/trace_options/interpolation_distance");
+  if (interpolation_distance) {
+    options.set_interpolation_distance(*interpolation_distance);
+  }
+
   // if specified, get the filter_action value in there
   auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
-  odin::FilterAction filter_action;
-  if (filter_action_str && valhalla::odin::FilterAction_Parse(*filter_action_str, &filter_action)) {
+  FilterAction filter_action;
+  if (filter_action_str && valhalla::FilterAction_Enum_Parse(*filter_action_str, &filter_action)) {
     options.set_filter_action(filter_action);
   }
 
@@ -827,29 +954,39 @@ void from_json(rapidjson::Document& doc, odin::DirectionsOptions& options) {
     }
   }
 
+  // how many alternates are desired, default to none and if its multi point its also none
+  options.set_alternates(rapidjson::get<uint32_t>(doc, "/alternates", 0));
+  if (options.locations_size() > 2)
+    options.set_alternates(0);
+
+  // whether to return guidance_views, default false
+  auto guidance_views = rapidjson::get_optional<bool>(doc, "/guidance_views");
+  if (guidance_views) {
+    options.set_guidance_views(*guidance_views);
+  }
+
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},
-                {valhalla::odin::DirectionsOptions_Format_Name(options.format()), allocator},
-                allocator);
+                {valhalla::Options_Format_Enum_Name(options.format()), allocator}, allocator);
 }
 
 } // namespace
 
 namespace valhalla {
 
-namespace odin {
-bool DirectionsOptions_Action_Parse(const std::string& action, odin::DirectionsOptions::Action* a) {
-  static const std::unordered_map<std::string, odin::DirectionsOptions::Action> actions{
-      {"route", odin::DirectionsOptions::route},
-      {"locate", odin::DirectionsOptions::locate},
-      {"sources_to_targets", odin::DirectionsOptions::sources_to_targets},
-      {"optimized_route", odin::DirectionsOptions::optimized_route},
-      {"isochrone", odin::DirectionsOptions::isochrone},
-      {"trace_route", odin::DirectionsOptions::trace_route},
-      {"trace_attributes", odin::DirectionsOptions::trace_attributes},
-      {"height", odin::DirectionsOptions::height},
-      {"transit_available", odin::DirectionsOptions::transit_available},
+bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
+  static const std::unordered_map<std::string, Options::Action> actions{
+      {"route", Options::route},
+      {"locate", Options::locate},
+      {"sources_to_targets", Options::sources_to_targets},
+      {"optimized_route", Options::optimized_route},
+      {"isochrone", Options::isochrone},
+      {"trace_route", Options::trace_route},
+      {"trace_attributes", Options::trace_attributes},
+      {"height", Options::height},
+      {"transit_available", Options::transit_available},
+      {"expansion", Options::expansion},
   };
   auto i = actions.find(action);
   if (i == actions.cend())
@@ -858,38 +995,41 @@ bool DirectionsOptions_Action_Parse(const std::string& action, odin::DirectionsO
   return true;
 }
 
-const std::string& DirectionsOptions_Action_Name(const odin::DirectionsOptions::Action action) {
+const std::string& Options_Action_Enum_Name(const Options::Action action) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> actions{
-      {odin::DirectionsOptions::route, "route"},
-      {odin::DirectionsOptions::locate, "locate"},
-      {odin::DirectionsOptions::sources_to_targets, "sources_to_targets"},
-      {odin::DirectionsOptions::optimized_route, "optimized_route"},
-      {odin::DirectionsOptions::isochrone, "isochrone"},
-      {odin::DirectionsOptions::trace_route, "trace_route"},
-      {odin::DirectionsOptions::trace_attributes, "trace_attributes"},
-      {odin::DirectionsOptions::height, "height"},
-      {odin::DirectionsOptions::transit_available, "transit_available"},
+      {Options::route, "route"},
+      {Options::locate, "locate"},
+      {Options::sources_to_targets, "sources_to_targets"},
+      {Options::optimized_route, "optimized_route"},
+      {Options::isochrone, "isochrone"},
+      {Options::trace_route, "trace_route"},
+      {Options::trace_attributes, "trace_attributes"},
+      {Options::height, "height"},
+      {Options::transit_available, "transit_available"},
+      {Options::expansion, "expansion"},
   };
   auto i = actions.find(action);
   return i == actions.cend() ? empty : i->second;
 }
 
-bool Costing_Parse(const std::string& costing, odin::Costing* c) {
-  static const std::unordered_map<std::string, odin::Costing> costings{
-      {"auto", odin::Costing::auto_},
-      {"auto_shorter", odin::Costing::auto_shorter},
-      {"bicycle", odin::Costing::bicycle},
-      {"bus", odin::Costing::bus},
-      {"hov", odin::Costing::hov},
-      {"taxi", odin::Costing::taxi},
-      {"motor_scooter", odin::Costing::motor_scooter},
-      {"multimodal", odin::Costing::multimodal},
-      {"pedestrian", odin::Costing::pedestrian},
-      {"transit", odin::Costing::transit},
-      {"truck", odin::Costing::truck},
-      {"motorcycle", odin::Costing::motorcycle},
-      {"auto_data_fix", odin::Costing::auto_data_fix},
+bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
+  static const std::unordered_map<std::string, Costing> costings{
+      {"auto", Costing::auto_},
+      {"auto_shorter", Costing::auto_shorter},
+      {"bicycle", Costing::bicycle},
+      {"bus", Costing::bus},
+      {"hov", Costing::hov},
+      {"taxi", Costing::taxi},
+      {"motor_scooter", Costing::motor_scooter},
+      {"multimodal", Costing::multimodal},
+      {"pedestrian", Costing::pedestrian},
+      {"transit", Costing::transit},
+      {"truck", Costing::truck},
+      {"motorcycle", Costing::motorcycle},
+      {"auto_data_fix", Costing::auto_data_fix},
+      {"none", Costing::none_},
+      {"", Costing::none_},
   };
   auto i = costings.find(costing);
   if (i == costings.cend())
@@ -898,32 +1038,33 @@ bool Costing_Parse(const std::string& costing, odin::Costing* c) {
   return true;
 }
 
-const std::string& Costing_Name(const odin::Costing costing) {
+const std::string& Costing_Enum_Name(const Costing costing) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> costings{
-      {odin::Costing::auto_, "auto"},
-      {odin::Costing::auto_shorter, "auto_shorter"},
-      {odin::Costing::bicycle, "bicycle"},
-      {odin::Costing::bus, "bus"},
-      {odin::Costing::hov, "hov"},
-      {odin::Costing::taxi, "taxi"},
-      {odin::Costing::motor_scooter, "motor_scooter"},
-      {odin::Costing::multimodal, "multimodal"},
-      {odin::Costing::pedestrian, "pedestrian"},
-      {odin::Costing::transit, "transit"},
-      {odin::Costing::truck, "truck"},
-      {odin::Costing::motorcycle, "motorcycle"},
-      {odin::Costing::auto_data_fix, "auto_data_fix"},
+      {Costing::auto_, "auto"},
+      {Costing::auto_shorter, "auto_shorter"},
+      {Costing::bicycle, "bicycle"},
+      {Costing::bus, "bus"},
+      {Costing::hov, "hov"},
+      {Costing::taxi, "taxi"},
+      {Costing::motor_scooter, "motor_scooter"},
+      {Costing::multimodal, "multimodal"},
+      {Costing::pedestrian, "pedestrian"},
+      {Costing::transit, "transit"},
+      {Costing::truck, "truck"},
+      {Costing::motorcycle, "motorcycle"},
+      {Costing::auto_data_fix, "auto_data_fix"},
+      {Costing::none_, "none"},
   };
   auto i = costings.find(costing);
   return i == costings.cend() ? empty : i->second;
 }
 
-bool ShapeMatch_Parse(const std::string& match, odin::ShapeMatch* s) {
-  static const std::unordered_map<std::string, odin::ShapeMatch> matches{
-      {"edge_walk", odin::ShapeMatch::edge_walk},
-      {"map_snap", odin::ShapeMatch::map_snap},
-      {"walk_or_snap", odin::ShapeMatch::walk_or_snap},
+bool ShapeMatch_Enum_Parse(const std::string& match, ShapeMatch* s) {
+  static const std::unordered_map<std::string, ShapeMatch> matches{
+      {"edge_walk", ShapeMatch::edge_walk},
+      {"map_snap", ShapeMatch::map_snap},
+      {"walk_or_snap", ShapeMatch::walk_or_snap},
   };
   auto i = matches.find(match);
   if (i == matches.cend())
@@ -932,22 +1073,22 @@ bool ShapeMatch_Parse(const std::string& match, odin::ShapeMatch* s) {
   return true;
 }
 
-const std::string& ShapeMatch_Name(const odin::ShapeMatch match) {
+const std::string& ShapeMatch_Enum_Name(const ShapeMatch match) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> matches{
-      {odin::ShapeMatch::edge_walk, "edge_walk"},
-      {odin::ShapeMatch::map_snap, "map_snap"},
-      {odin::ShapeMatch::walk_or_snap, "walk_or_snap"},
+      {ShapeMatch::edge_walk, "edge_walk"},
+      {ShapeMatch::map_snap, "map_snap"},
+      {ShapeMatch::walk_or_snap, "walk_or_snap"},
   };
   auto i = matches.find(match);
   return i == matches.cend() ? empty : i->second;
 }
 
-bool DirectionsOptions_Format_Parse(const std::string& format, odin::DirectionsOptions::Format* f) {
-  static const std::unordered_map<std::string, odin::DirectionsOptions::Format> formats{
-      {"json", odin::DirectionsOptions::json},
-      {"gpx", odin::DirectionsOptions::gpx},
-      {"osrm", odin::DirectionsOptions::osrm},
+bool Options_Format_Enum_Parse(const std::string& format, Options::Format* f) {
+  static const std::unordered_map<std::string, Options::Format> formats{
+      {"json", Options::json},
+      {"gpx", Options::gpx},
+      {"osrm", Options::osrm},
   };
   auto i = formats.find(format);
   if (i == formats.cend())
@@ -956,31 +1097,31 @@ bool DirectionsOptions_Format_Parse(const std::string& format, odin::DirectionsO
   return true;
 }
 
-const std::string& DirectionsOptions_Format_Name(const odin::DirectionsOptions::Format match) {
+const std::string& Options_Format_Enum_Name(const Options::Format match) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> formats{
-      {odin::DirectionsOptions::json, "json"},
-      {odin::DirectionsOptions::gpx, "gpx"},
-      {odin::DirectionsOptions::osrm, "osrm"},
+      {Options::json, "json"},
+      {Options::gpx, "gpx"},
+      {Options::osrm, "osrm"},
   };
   auto i = formats.find(match);
   return i == formats.cend() ? empty : i->second;
 }
 
-const std::string& DirectionsOptions_Units_Name(const odin::DirectionsOptions::Units unit) {
+const std::string& Options_Units_Enum_Name(const Options::Units unit) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> units{
-      {odin::DirectionsOptions::kilometers, "kilometers"},
-      {odin::DirectionsOptions::miles, "miles"},
+      {Options::kilometers, "kilometers"},
+      {Options::miles, "miles"},
   };
   auto i = units.find(unit);
   return i == units.cend() ? empty : i->second;
 }
 
-bool FilterAction_Parse(const std::string& action, odin::FilterAction* a) {
-  static const std::unordered_map<std::string, odin::FilterAction> actions{
-      {"exclude", odin::FilterAction::exclude},
-      {"include", odin::FilterAction::include},
+bool FilterAction_Enum_Parse(const std::string& action, FilterAction* a) {
+  static const std::unordered_map<std::string, FilterAction> actions{
+      {"exclude", FilterAction::exclude},
+      {"include", FilterAction::include},
   };
   auto i = actions.find(action);
   if (i == actions.cend())
@@ -989,21 +1130,21 @@ bool FilterAction_Parse(const std::string& action, odin::FilterAction* a) {
   return true;
 }
 
-const std::string& FilterAction_Name(const odin::FilterAction action) {
+const std::string& FilterAction_Enum_Name(const FilterAction action) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> actions{
-      {odin::FilterAction::exclude, "exclude"},
-      {odin::FilterAction::include, "include"},
+      {FilterAction::exclude, "exclude"},
+      {FilterAction::include, "include"},
   };
   auto i = actions.find(action);
   return i == actions.cend() ? empty : i->second;
 }
 
-bool DirectionsType_Parse(const std::string& dtype, odin::DirectionsType* t) {
-  static const std::unordered_map<std::string, odin::DirectionsType> types{
-      {"none", odin::DirectionsType::none},
-      {"maneuvers", odin::DirectionsType::maneuvers},
-      {"instructions", odin::DirectionsType::instructions},
+bool DirectionsType_Enum_Parse(const std::string& dtype, DirectionsType* t) {
+  static const std::unordered_map<std::string, DirectionsType> types{
+      {"none", DirectionsType::none},
+      {"maneuvers", DirectionsType::maneuvers},
+      {"instructions", DirectionsType::instructions},
   };
   auto i = types.find(dtype);
   if (i == types.cend())
@@ -1012,11 +1153,11 @@ bool DirectionsType_Parse(const std::string& dtype, odin::DirectionsType* t) {
   return true;
 }
 
-bool PreferredSide_Parse(const std::string& pside, odin::Location::PreferredSide* p) {
-  static const std::unordered_map<std::string, odin::Location::PreferredSide> types{
-      {"either", odin::Location::either},
-      {"same", odin::Location::same},
-      {"opposite", odin::Location::opposite},
+bool PreferredSide_Enum_Parse(const std::string& pside, valhalla::Location::PreferredSide* p) {
+  static const std::unordered_map<std::string, valhalla::Location::PreferredSide> types{
+      {"either", valhalla::Location::either},
+      {"same", valhalla::Location::same},
+      {"opposite", valhalla::Location::opposite},
   };
   auto i = types.find(pside);
   if (i == types.cend())
@@ -1024,7 +1165,24 @@ bool PreferredSide_Parse(const std::string& pside, odin::Location::PreferredSide
   *p = i->second;
   return true;
 }
-} // namespace odin
+
+bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc) {
+  static const std::unordered_map<std::string, valhalla::RoadClass> types{
+      {"motorway", valhalla::RoadClass::kMotorway},
+      {"trunk", valhalla::RoadClass::kTrunk},
+      {"primary", valhalla::RoadClass::kPrimary},
+      {"secondary", valhalla::RoadClass::kSecondary},
+      {"tertiary", valhalla::RoadClass::kTertiary},
+      {"unclassified", valhalla::RoadClass::kUnclassified},
+      {"residential", valhalla::RoadClass::kResidential},
+      {"service_other", valhalla::RoadClass::kServiceOther},
+  };
+  auto i = types.find(rc_name);
+  if (i == types.cend())
+    return false;
+  *rc = i->second;
+  return true;
+}
 
 valhalla_exception_t::valhalla_exception_t(unsigned code, const boost::optional<std::string>& extra)
     : std::runtime_error(""), code(code), extra(extra) {
@@ -1037,29 +1195,23 @@ valhalla_exception_t::valhalla_exception_t(unsigned code, const boost::optional<
   http_message = (http_message_iter == HTTP_STATUS_CODES.cend() ? "" : http_message_iter->second);
 }
 
-valhalla_request_t::valhalla_request_t() {
-  document.SetObject();
-}
-void valhalla_request_t::parse(const std::string& request, odin::DirectionsOptions::Action action) {
-  document = from_string(request, valhalla_exception_t{100});
-  options.set_action(action);
-  from_json(document, options);
-  // TODO: sanity check the parsed values
-}
-void valhalla_request_t::parse(const std::string& request, const std::string& serialized_options) {
-  document = from_string(request, valhalla_exception_t{100});
-  options.ParseFromString(serialized_options);
-  // TODO: sanity check the parsed values
+void ParseApi(const std::string& request, Options::Action action, valhalla::Api& api) {
+  api.Clear();
+  auto document = from_string(request, valhalla_exception_t{100});
+  api.mutable_options()->set_action(action);
+  from_json(document, *api.mutable_options());
 }
 
 #ifdef HAVE_HTTP
-void valhalla_request_t::parse(const http_request_t& request) {
+void ParseApi(const http_request_t& request, valhalla::Api& api) {
+  api.Clear();
 
   // block all but get and post
   if (request.method != method_t::POST && request.method != method_t::GET) {
     throw valhalla_exception_t{101};
   };
 
+  rapidjson::Document document;
   auto& allocator = document.GetAllocator();
   // parse the input
   const auto& json = request.query.find("json");
@@ -1098,10 +1250,11 @@ void valhalla_request_t::parse(const http_request_t& request) {
     document.AddMember({kv.first, allocator}, array, allocator);
   }
 
+  auto& options = *api.mutable_options();
+
   // set the action
-  odin::DirectionsOptions::Action action;
-  if (!request.path.empty() &&
-      odin::DirectionsOptions_Action_Parse(request.path.substr(1), &action)) {
+  Options::Action action;
+  if (!request.path.empty() && Options_Action_Enum_Parse(request.path.substr(1), &action)) {
     options.set_action(action);
   }
 
@@ -1115,26 +1268,22 @@ void valhalla_request_t::parse(const http_request_t& request) {
 }
 
 const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
-const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-const headers_t::value_type XML_MIME{"Content-type", "text/xml;charset=utf-8"};
-const headers_t::value_type GPX_MIME{"Content-type", "application/gpx+xml;charset=utf-8"};
 const headers_t::value_type ATTACHMENT{"Content-Disposition", "attachment; filename=route.gpx"};
 
 worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
                                  http_request_info_t& request_info,
-                                 const valhalla_request_t& request) {
+                                 const Api& request) {
   // get the http status
   std::stringstream body;
 
   // overwrite with osrm error response
-  if (request.options.format() == odin::DirectionsOptions::osrm) {
+  if (request.options().format() == Options::osrm) {
     auto found = OSRM_ERRORS_CODES.find(exception.code);
     if (found == OSRM_ERRORS_CODES.cend()) {
       found = OSRM_ERRORS_CODES.find(199);
     }
-    body << (request.options.has_jsonp() ? request.options.jsonp() + "(" : "") << found->second
-         << (request.options.has_jsonp() ? ")" : "");
+    body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "") << found->second
+         << (request.options().has_jsonp() ? ")" : "");
   } // valhalla error response
   else {
     // build up the json map
@@ -1143,13 +1292,14 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
     json_error->emplace("status_code", static_cast<uint64_t>(exception.http_code));
     json_error->emplace("error", std::string(exception.message));
     json_error->emplace("error_code", static_cast<uint64_t>(exception.code));
-    body << (request.options.has_jsonp() ? request.options.jsonp() + "(" : "") << *json_error
-         << (request.options.has_jsonp() ? ")" : "");
+    body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "") << *json_error
+         << (request.options().has_jsonp() ? ")" : "");
   }
 
-  worker_t::result_t result{false};
+  worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(exception.http_code, exception.http_message, body.str(),
-                           headers_t{CORS, request.options.has_jsonp() ? JS_MIME : JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
+                                                                         : worker::JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
 
@@ -1158,74 +1308,75 @@ worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
 
 worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
                                http_request_info_t& request_info,
-                               const valhalla_request_t& request) {
+                               const Api& request) {
   std::ostringstream stream;
   // jsonp callback if need be
-  if (request.options.has_jsonp()) {
-    stream << request.options.jsonp() << '(';
+  if (request.options().has_jsonp()) {
+    stream << request.options().jsonp() << '(';
   }
   stream << *array;
-  if (request.options.has_jsonp()) {
+  if (request.options().has_jsonp()) {
     stream << ')';
   }
 
-  worker_t::result_t result{false};
+  worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options.has_jsonp() ? JS_MIME : JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
+                                                                         : worker::JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
   return result;
 }
 
-worker_t::result_t to_response(const baldr::json::MapPtr& map,
-                               http_request_info_t& request_info,
-                               const valhalla_request_t& request) {
+worker_t::result_t
+to_response(const baldr::json::MapPtr& map, http_request_info_t& request_info, const Api& request) {
   std::ostringstream stream;
   // jsonp callback if need be
-  if (request.options.has_jsonp()) {
-    stream << request.options.jsonp() << '(';
+  if (request.options().has_jsonp()) {
+    stream << request.options().jsonp() << '(';
   }
   stream << *map;
-  if (request.options.has_jsonp()) {
+  if (request.options().has_jsonp()) {
     stream << ')';
   }
 
-  worker_t::result_t result{false};
+  worker_t::result_t result{false, std::list<std::string>(), ""};
   http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options.has_jsonp() ? JS_MIME : JSON_MIME});
+                           headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
+                                                                         : worker::JSON_MIME});
   response.from_info(request_info);
   result.messages.emplace_back(response.to_string());
   return result;
 }
 
-worker_t::result_t to_response_json(const std::string& json,
-                                    http_request_info_t& request_info,
-                                    const valhalla_request_t& request) {
-  std::ostringstream stream;
-  // jsonp callback if need be
-  if (request.options.has_jsonp()) {
-    stream << request.options.jsonp() << '(';
-  }
-  stream << json;
-  if (request.options.has_jsonp()) {
+worker_t::result_t to_response(const std::string& data,
+                               http_request_info_t& request_info,
+                               const Api& request,
+                               const worker::content_type& mime_type,
+                               const bool as_attachment) {
+
+  worker_t::result_t result{false, std::list<std::string>(), ""};
+  if (request.options().has_jsonp()) {
+    std::ostringstream stream;
+    stream << request.options().jsonp() << '(';
+    stream << data;
     stream << ')';
+
+    headers_t headers{CORS, worker::JS_MIME};
+    if (as_attachment)
+      headers.insert(ATTACHMENT);
+
+    http_response_t response(200, "OK", stream.str(), headers);
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
+  } else {
+    headers_t headers{CORS, mime_type};
+    if (as_attachment)
+      headers.insert(ATTACHMENT);
+    http_response_t response(200, "OK", data, headers);
+    response.from_info(request_info);
+    result.messages.emplace_back(response.to_string());
   }
-
-  worker_t::result_t result{false};
-  http_response_t response(200, "OK", stream.str(),
-                           headers_t{CORS, request.options.has_jsonp() ? JS_MIME : JSON_MIME});
-  response.from_info(request_info);
-  result.messages.emplace_back(response.to_string());
-  return result;
-}
-
-worker_t::result_t to_response_xml(const std::string& xml,
-                                   http_request_info_t& request_info,
-                                   const valhalla_request_t& request) {
-  worker_t::result_t result{false};
-  http_response_t response(200, "OK", xml, headers_t{CORS, GPX_MIME, ATTACHMENT});
-  response.from_info(request_info);
-  result.messages.emplace_back(response.to_string());
   return result;
 }
 
@@ -1235,8 +1386,8 @@ service_worker_t::service_worker_t() : interrupt(nullptr) {
 }
 service_worker_t::~service_worker_t() {
 }
-void service_worker_t::set_interrupt(const std::function<void()>& interrupt_function) {
-  interrupt = &interrupt_function;
-};
+void service_worker_t::set_interrupt(const std::function<void()>* interrupt_function) {
+  interrupt = interrupt_function;
+}
 
 } // namespace valhalla

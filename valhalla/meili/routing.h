@@ -51,8 +51,8 @@ public:
         const uint32_t predecessor,
         const baldr::DirectedEdge* edge,
         const sif::TravelMode mode)
-      : sif::EdgeLabel(predecessor, edgeid, edge, cost, sortcost, 0.0f, mode, 0), nodeid_(nodeid),
-        dest_(dest), source_(source), target_(target), turn_cost_(turn_cost) {
+      : sif::EdgeLabel(predecessor, edgeid, edge, cost, sortcost, 0.0f, mode, 0, sif::Cost{}),
+        nodeid_(nodeid), dest_(dest), source_(source), target_(target), turn_cost_(turn_cost) {
     // Validate inputs
     if (!(0.f <= source && source <= target && target <= 1.f)) {
       throw std::invalid_argument("invalid source (" + std::to_string(source) + ") or target (" +
@@ -132,6 +132,7 @@ private:
   float target_;
 
   // Turn cost since origin (including the turn cost of this edge segment)
+  // TODO: can we rely on the built in transition_cost_ in the base class?
   float turn_cost_;
 };
 
@@ -259,6 +260,22 @@ using labelset_ptr_t = std::shared_ptr<LabelSet>;
 
 /**
  * Find the shortest paths between an origin and a set of destinations.
+ * @param reader            a graph reader for tile access
+ * @param destinations      a vector of locations, usually the origin is at index 0 an the rest are
+ *                          destinations
+ * @param origin_idx        the index of the origin location in the destinations vector
+ * @param labelset          labelset to associate with this computation for later look up/path
+ *                          recovery
+ * @param approximator      used for quick approximation of the distance to goal for a* heuristic
+ * @param search_radius     also used for a* heuristic
+ * @param costing           used for doing best first expansion and checking access/restrictions
+ * @param edgelabel         the last label from the previous expansion that lead to this expansion
+ *                          being run
+ * @param turn_cost_table   array of turn costs based on turn angle
+ * @param max_dist          how far to allow the expansion to run
+ * @param max_time          how long to allow the expansion to run
+ * @return a map of destination index to label index so that you can recover a path for any
+ * destination
  */
 std::unordered_map<uint16_t, uint32_t>
 find_shortest_path(baldr::GraphReader& reader,

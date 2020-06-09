@@ -1,9 +1,9 @@
 #include <cstdint>
 
+#include "baldr/graphconstants.h"
 #include "baldr/json.h"
 #include "odin/enhancedtrippath.h"
 #include "thor/attributes_controller.h"
-#include "thor/match_result.h"
 #include "tyr/serializers.h"
 
 using namespace valhalla;
@@ -18,9 +18,9 @@ namespace {
 constexpr size_t kConfidenceScoreIndex = 0;
 constexpr size_t kRawScoreIndex = 1;
 constexpr size_t kMatchResultsIndex = 2;
-constexpr size_t kTripPathIndex = 3;
+constexpr size_t kTripLegIndex = 3;
 
-json::ArrayPtr serialize_admins(const TripPath& trip_path) {
+json::ArrayPtr serialize_admins(const TripLeg& trip_path) {
   auto admin_array = json::array({});
   for (const auto& admin : trip_path.admin()) {
     auto admin_map = json::map({});
@@ -44,13 +44,13 @@ json::ArrayPtr serialize_admins(const TripPath& trip_path) {
 }
 
 json::ArrayPtr serialize_edges(const AttributesController& controller,
-                               const DirectionsOptions& directions_options,
-                               const TripPath& trip_path) {
+                               const Options& options,
+                               const TripLeg& trip_path) {
   json::ArrayPtr edge_array = json::array({});
 
   // Length and speed default to kilometers
   double scale = 1;
-  if (directions_options.has_units() && directions_options.units() == DirectionsOptions::miles) {
+  if (options.has_units() && options.units() == Options::miles) {
     scale = kMilePerKm;
   }
 
@@ -70,8 +70,12 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
                           static_cast<uint64_t>(std::round(edge.truck_speed() * scale)));
       }
       if (edge.has_speed_limit() && (edge.speed_limit() > 0)) {
-        edge_map->emplace("speed_limit",
-                          static_cast<uint64_t>(std::round(edge.speed_limit() * scale)));
+        if (edge.speed_limit() == kUnlimitedSpeedLimit) {
+          edge_map->emplace("speed_limit", std::string("unlimited"));
+        } else {
+          edge_map->emplace("speed_limit",
+                            static_cast<uint64_t>(std::round(edge.speed_limit() * scale)));
+        }
       }
       if (edge.has_density()) {
         edge_map->emplace("density", static_cast<uint64_t>(edge.density()));
@@ -111,8 +115,7 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
       if (edge.has_mean_elevation()) {
         // Convert to feet if a valid elevation and units are miles
         float mean = edge.mean_elevation();
-        if (mean != kNoElevationData && directions_options.has_units() &&
-            directions_options.units() == DirectionsOptions::miles) {
+        if (mean != kNoElevationData && options.has_units() && options.units() == Options::miles) {
           mean *= kFeetPerMeter;
         }
         edge_map->emplace("mean_elevation", static_cast<int64_t>(mean));
@@ -260,13 +263,13 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
           auto intersecting_edge_array = json::array({});
           for (const auto& xedge : node.intersecting_edge()) {
             auto xedge_map = json::map({});
-            if (xedge.has_walkability() && (xedge.walkability() != TripPath_Traversability_kNone)) {
+            if (xedge.has_walkability() && (xedge.walkability() != TripLeg_Traversability_kNone)) {
               xedge_map->emplace("walkability", to_string(xedge.walkability()));
             }
-            if (xedge.has_cyclability() && (xedge.cyclability() != TripPath_Traversability_kNone)) {
+            if (xedge.has_cyclability() && (xedge.cyclability() != TripLeg_Traversability_kNone)) {
               xedge_map->emplace("cyclability", to_string(xedge.cyclability()));
             }
-            if (xedge.has_driveability() && (xedge.driveability() != TripPath_Traversability_kNone)) {
+            if (xedge.has_driveability() && (xedge.driveability() != TripLeg_Traversability_kNone)) {
               xedge_map->emplace("driveability", to_string(xedge.driveability()));
             }
             xedge_map->emplace("from_edge_name_consistency",
@@ -275,13 +278,22 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
                                static_cast<bool>(xedge.curr_name_consistency()));
             xedge_map->emplace("begin_heading", static_cast<uint64_t>(xedge.begin_heading()));
 
+            if (xedge.has_use()) {
+              xedge_map->emplace("use", to_string(static_cast<baldr::Use>(xedge.use())));
+            }
+
+            if (xedge.has_road_class()) {
+              xedge_map->emplace("road_class",
+                                 to_string(static_cast<baldr::RoadClass>(xedge.road_class())));
+            }
+
             intersecting_edge_array->emplace_back(xedge_map);
           }
           end_node_map->emplace("intersecting_edges", intersecting_edge_array);
         }
 
         if (node.has_elapsed_time()) {
-          end_node_map->emplace("elapsed_time", static_cast<uint64_t>(node.elapsed_time()));
+          end_node_map->emplace("elapsed_time", json::fp_t{node.elapsed_time(), 3});
         }
         if (node.has_admin_index()) {
           end_node_map->emplace("admin_index", static_cast<uint64_t>(node.admin_index()));
@@ -294,6 +306,9 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
         }
         if (node.has_time_zone()) {
           end_node_map->emplace("time_zone", node.time_zone());
+        }
+        if (node.has_transition_time()) {
+          end_node_map->emplace("transition_time", json::fp_t{node.transition_time(), 3});
         }
 
         // TODO transit info at node
@@ -331,7 +346,7 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
 }
 
 json::ArrayPtr serialize_matched_points(const AttributesController& controller,
-                                        const std::vector<thor::MatchResult>& match_results) {
+                                        const std::vector<meili::MatchResult>& match_results) {
   auto match_points_array = json::array({});
   for (const auto& match_result : match_results) {
     auto match_points_map = json::map({});
@@ -344,11 +359,11 @@ json::ArrayPtr serialize_matched_points(const AttributesController& controller,
 
     // Process matched type
     if (controller.attributes.at(kMatchedType)) {
-      switch (match_result.type) {
-        case thor::MatchResult::Type::kMatched:
+      switch (match_result.GetType()) {
+        case meili::MatchResult::Type::kMatched:
           match_points_map->emplace("type", std::string("matched"));
           break;
-        case thor::MatchResult::Type::kInterpolated:
+        case meili::MatchResult::Type::kInterpolated:
           match_points_map->emplace("type", std::string("interpolated"));
           break;
         default:
@@ -357,34 +372,35 @@ json::ArrayPtr serialize_matched_points(const AttributesController& controller,
       }
     }
 
+    // TODO: need to keep track of the index of the edge in the global set of edges a given
+    // TODO: match result belongs/correlated to
     // Process matched point edge index
-    if (controller.attributes.at(kMatchedEdgeIndex) && match_result.HasEdgeIndex()) {
+    if (controller.attributes.at(kMatchedEdgeIndex) && match_result.edgeid.Is_Valid()) {
       match_points_map->emplace("edge_index", static_cast<uint64_t>(match_result.edge_index));
     }
 
     // Process matched point begin route discontinuity
     if (controller.attributes.at(kMatchedBeginRouteDiscontinuity) &&
-        match_result.begin_route_discontinuity) {
+        match_result.begins_discontinuity) {
       match_points_map->emplace("begin_route_discontinuity",
-                                static_cast<bool>(match_result.begin_route_discontinuity));
+                                static_cast<bool>(match_result.begins_discontinuity));
     }
 
     // Process matched point end route discontinuity
-    if (controller.attributes.at(kMatchedEndRouteDiscontinuity) &&
-        match_result.end_route_discontinuity) {
+    if (controller.attributes.at(kMatchedEndRouteDiscontinuity) && match_result.ends_discontinuity) {
       match_points_map->emplace("end_route_discontinuity",
-                                static_cast<bool>(match_result.end_route_discontinuity));
+                                static_cast<bool>(match_result.ends_discontinuity));
     }
 
     // Process matched point distance along edge
     if (controller.attributes.at(kMatchedDistanceAlongEdge) &&
-        (match_result.type != thor::MatchResult::Type::kUnmatched)) {
+        (match_result.GetType() != meili::MatchResult::Type::kUnmatched)) {
       match_points_map->emplace("distance_along_edge", json::fp_t{match_result.distance_along, 3});
     }
 
     // Process matched point distance from trace point
     if (controller.attributes.at(kMatchedDistanceFromTracePoint) &&
-        (match_result.type != thor::MatchResult::Type::kUnmatched)) {
+        (match_result.GetType() != meili::MatchResult::Type::kUnmatched)) {
       match_points_map->emplace("distance_from_trace_point",
                                 json::fp_t{match_result.distance_from, 3});
     }
@@ -394,14 +410,44 @@ json::ArrayPtr serialize_matched_points(const AttributesController& controller,
   return match_points_array;
 }
 
+json::MapPtr serialize_shape_attributes(const AttributesController& controller,
+                                        const TripLeg& trip_path) {
+  auto attributes_map = json::map({});
+  if (controller.attributes.at(kShapeAttributesTime)) {
+    auto times_array = json::array({});
+    for (const auto& time : trip_path.shape_attributes().time()) {
+      // milliseconds (ms) to seconds (sec)
+      times_array->push_back(json::fp_t{time * kSecPerMillisecond, 3});
+    }
+    attributes_map->emplace("time", times_array);
+  }
+  if (controller.attributes.at(kShapeAttributesLength)) {
+    auto lengths_array = json::array({});
+    for (const auto& length : trip_path.shape_attributes().length()) {
+      // decimeters (dm) to kilometer (km)
+      lengths_array->push_back(json::fp_t{length * kKmPerDecimeter, 3});
+    }
+    attributes_map->emplace("length", lengths_array);
+  }
+  if (controller.attributes.at(kShapeAttributesSpeed)) {
+    auto speeds_array = json::array({});
+    for (const auto& speed : trip_path.shape_attributes().speed()) {
+      // dm/s to km/h
+      speeds_array->push_back(json::fp_t{speed * kDecimeterPerSectoKPH, 3});
+    }
+    attributes_map->emplace("speed", speeds_array);
+  }
+  return attributes_map;
+}
+
 void append_trace_info(
     const json::MapPtr& json,
     const AttributesController& controller,
-    const DirectionsOptions& directions_options,
-    const std::tuple<float, float, std::vector<thor::MatchResult>, TripPath>& map_match_result) {
+    const Options& options,
+    const std::tuple<float, float, std::vector<meili::MatchResult>>& map_match_result,
+    const TripLeg& trip_path) {
   // Set trip path and match results
   const auto& match_results = std::get<kMatchResultsIndex>(map_match_result);
-  const auto& trip_path = std::get<kTripPathIndex>(map_match_result);
 
   // Add osm_changeset
   if (trip_path.has_osm_changeset()) {
@@ -430,11 +476,16 @@ void append_trace_info(
   }
 
   // Add edges
-  json->emplace("edges", serialize_edges(controller, directions_options, trip_path));
+  json->emplace("edges", serialize_edges(controller, options, trip_path));
 
   // Add matched points, if requested
   if (controller.category_attribute_enabled(kMatchedCategory) && !match_results.empty()) {
     json->emplace("matched_points", serialize_matched_points(controller, match_results));
+  }
+
+  // Add shape_attributes, if requested
+  if (controller.category_attribute_enabled(kShapeAttributesCategory)) {
+    json->emplace("shape_attributes", serialize_shape_attributes(controller, trip_path));
   }
 }
 } // namespace
@@ -443,22 +494,21 @@ namespace valhalla {
 namespace tyr {
 
 std::string serializeTraceAttributes(
-    const valhalla_request_t& request,
+    const Api& request,
     const AttributesController& controller,
-    std::vector<std::tuple<float, float, std::vector<thor::MatchResult>, TripPath>>&
-        map_match_results) {
+    std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>& map_match_results) {
 
   // Create json map to return
   auto json = json::map({});
 
   // Add result id, if supplied
-  if (request.options.has_id()) {
-    json->emplace("id", request.options.id());
+  if (request.options().has_id()) {
+    json->emplace("id", request.options().id());
   }
 
   // Add units, if specified
-  if (request.options.has_units()) {
-    json->emplace("units", valhalla::odin::DirectionsOptions_Units_Name(request.options.units()));
+  if (request.options().has_units()) {
+    json->emplace("units", valhalla::Options_Units_Enum_Name(request.options().units()));
   }
 
   // Loop over all results to process the best path
@@ -466,17 +516,20 @@ std::string serializeTraceAttributes(
   bool best_path = true;
   auto alt_paths_array = json::array({});
   json->emplace("alternate_paths", alt_paths_array);
+  auto route = request.trip().routes().begin();
   for (const auto& map_match_result : map_match_results) {
     if (best_path) {
       // Append the best path trace info
-      append_trace_info(json, controller, request.options, map_match_result);
+      append_trace_info(json, controller, request.options(), map_match_result, route->legs(0));
       best_path = false;
     } else {
       // Append alternate path trace info to alternate path array
       auto alt_path_json = json::map({});
-      append_trace_info(alt_path_json, controller, request.options, map_match_result);
+      append_trace_info(alt_path_json, controller, request.options(), map_match_result,
+                        route->legs(0));
       alt_paths_array->push_back(alt_path_json);
     }
+    ++route;
   }
   std::stringstream ss;
   ss << *json;

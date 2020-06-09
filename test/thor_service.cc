@@ -66,7 +66,7 @@ std::list<std::pair<std::string, std::string>>
          */
     };
 
-void test_failure_requests() {
+TEST(ThorService, test_failure_requests) {
   // service worker
   boost::property_tree::ptree config;
   config.add("mjolnir.tile_dir", "test/data/thor_service");
@@ -78,6 +78,7 @@ void test_failure_requests() {
   config.add("thor.logging.long_request", "110.0");
   config.add("meili.default.gps_accuracy", "4.07");
   config.add("meili.default.search_radius", "40");
+  config.add("meili.default.breakage_distance", "2000");
   config.add("meili.grid.size", "500");
   config.add("meili.grid.cache_size", "64");
 
@@ -103,24 +104,18 @@ void test_failure_requests() {
     response.from_info(request_info);
     auto response_str = response.to_string();
 
-    if (result.intermediate)
-      throw std::logic_error(
-          "This cant be intermediate right now we are only testing error scenarios");
-    if (result.messages.front() != response_str)
-      throw std::runtime_error("Expected Response: '" + response_str +
-                               ",\n\n Actual Response: " + result.messages.front());
+    EXPECT_FALSE(result.intermediate)
+        << "This cant be intermediate right now we are only testing error scenarios";
+    EXPECT_EQ(result.messages.front(), response_str);
   }
 }
 
 } // namespace
 
-int main(void) {
+int main(int argc, char* argv[]) {
   // make this whole thing bail if it doesnt finish fast
   alarm(120);
 
-  test::suite suite("Thor Service");
-
-  suite.test(TEST_CASE(test_failure_requests));
-
-  return suite.tear_down();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

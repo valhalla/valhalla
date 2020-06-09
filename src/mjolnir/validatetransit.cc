@@ -10,7 +10,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
-#include <boost/filesystem/operations.hpp>
 #include <boost/tokenizer.hpp>
 
 #include "baldr/datetime.h"
@@ -181,7 +180,7 @@ void validate(const boost::property_tree::ptree& pt,
   for (; tile_start != tile_end; ++tile_start) {
     // Get the next tile Id from the queue and get a tile builder
     if (reader_transit_level.OverCommitted()) {
-      reader_transit_level.Clear();
+      reader_transit_level.Trim();
     }
     GraphId tile_id = tile_start->Tile_Base();
 
@@ -472,8 +471,8 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
     // Bail if nothing
     auto hierarchy_properties = pt.get_child("mjolnir");
     auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
-    if (!transit_dir || !boost::filesystem::exists(*transit_dir) ||
-        !boost::filesystem::is_directory(*transit_dir)) {
+    if (!transit_dir || !filesystem::exists(*transit_dir) ||
+        !filesystem::is_directory(*transit_dir)) {
       LOG_INFO("Transit directory not found. Transit will not be added.");
       return false;
     }
@@ -481,13 +480,13 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
     transit_dir->push_back(filesystem::path::preferred_separator);
     GraphReader reader(hierarchy_properties);
     auto local_level = TileHierarchy::levels().rbegin()->first;
-    if (boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) +
-                                        filesystem::path::preferred_separator)) {
-      boost::filesystem::recursive_directory_iterator transit_file_itr(
+    if (filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) +
+                                 filesystem::path::preferred_separator)) {
+      filesystem::recursive_directory_iterator transit_file_itr(
           *transit_dir + std::to_string(local_level + 1) + filesystem::path::preferred_separator),
           end_file_itr;
       for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
-        if (boost::filesystem::is_regular(transit_file_itr->path()) &&
+        if (filesystem::is_regular_file(transit_file_itr->path()) &&
             transit_file_itr->path().extension() == ".gph") {
           auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
           GraphId transit_tile_id = GraphId(graph_id.tileid(), graph_id.level() - 1, graph_id.id());

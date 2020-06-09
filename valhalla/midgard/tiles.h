@@ -10,6 +10,7 @@
 
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/ellipse.h>
 
 namespace valhalla {
 namespace midgard {
@@ -30,14 +31,32 @@ namespace midgard {
 template <class coord_t> class Tiles {
 public:
   /**
-   * Constructor.  A bounding box and tile size is specified.
-   * Sets class data members and computes the number of rows and columns
-   * based on the bounding box and tile size.
-   * @param   bounds    Bounding box
-   * @param   tilesize  Tile size
+   * Constructor. A bounding box and tile size is specified.
+   * Sets class data members and computes the tile size
+   * based on the bounding box and rows and columns.
+   * @param   bounds       Bounding box
+   * @param   tilesize     Size of the tile in both dimensions
+   * @param   subdivisions Number of subtiles in both x and y axis of a single tile
+   * @param   wrapx        Should neighbor operations wrap around the x axis extents
    */
   Tiles(const AABB2<coord_t>& bounds,
         const float tilesize,
+        const unsigned short subdivisions = 1,
+        bool wrapx = true);
+
+  /**
+   * Constructor. A bottom left coord, with tile_size and number of rows and columns
+   * @param   min_pt       Bottom left coord of the tileset
+   * @param   tile_size    The size of a tile in both dimensions
+   * @param   columns      Number of tiles in the x axis
+   * @param   rows         Number of tiles in the y axis
+   * @param   subdivisions Number of subtiles in both x and y axis of a single tile
+   * @param   wrapx        Should neighbor operations wrap around the x axis extents
+   */
+  Tiles(const coord_t& min_pt,
+        const float tile_size,
+        const int32_t columns,
+        const int32_t rows,
         const unsigned short subdivisions = 1,
         bool wrapx = true);
 
@@ -316,13 +335,22 @@ public:
   };
 
   /**
-   * Get the list of tiles that lie within the specified bounding box.
-   * The method finds the center tile and spirals out by finding neighbors
-   * and recursively checking if tile is inside and checking/adding
-   * neighboring tiles
+   * Get the list of tiles that lie within the specified bounding box. Since tiles as well as the
+   * bounding box are both aligned to the axes we can simply find tiles by iterating over rows
+   * and columns of tiles from the minimum to maximum.
    * @param  boundingbox  Bounding box
+   * @return Returns a list of tiles that are within or intersect the bounding box.
    */
   std::vector<int32_t> TileList(const AABB2<coord_t>& boundingbox) const;
+
+  /**
+   * Get the list of tiles that lie within the specified ellipse. The method finds the tile
+   * at the ellipse center. It successively finds neighbors and checks if they are inside or
+   * intersect with the ellipse.
+   * @param  ellipse  Ellipse
+   * @return Returns a list of tiles that are within or intersect the ellipse.
+   */
+  std::vector<int32_t> TileList(const Ellipse<coord_t>& ellipse) const;
 
   /**
    * Color a "connectivity map" starting with a sparse map of uncolored tiles.
@@ -330,7 +358,8 @@ public:
    * value in the connectivity map.
    * @param  connectivity_map  map of tileid to color value
    */
-  void ColorMap(std::unordered_map<uint32_t, size_t>& connectivity_map) const;
+  void ColorMap(std::unordered_map<uint32_t, size_t>& connectivity_map,
+                const std::unordered_map<uint32_t, uint32_t>& not_neighbors = {}) const;
 
   /**
    * Intersect the linestring with the tiles to see which tiles and sub cells it intersects

@@ -10,8 +10,8 @@ using namespace valhalla;
 using namespace valhalla::baldr;
 
 namespace {
-PointLL to_ll(const odin::Location& l) {
-  return PointLL{l.ll().lng(), l.ll().lat()};
+midgard::PointLL to_ll(const valhalla::Location& l) {
+  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
 }
 
 void check_locations(const size_t location_count, const size_t max_locations) {
@@ -21,53 +21,57 @@ void check_locations(const size_t location_count, const size_t max_locations) {
   };
 }
 
-void check_distance(const GraphReader& reader,
-                    const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                     float max_distance) {
-  // see if any locations pairs are unreachable or too far apart
+  // test if total distance along a polyline formed by connecting locations exceeds the maximum
+  float total_path_distance = 0.0f;
   for (auto location = ++locations.begin(); location != locations.end(); ++location) {
     // check if distance between latlngs exceed max distance limit for each mode of travel
     auto path_distance = to_ll(*std::prev(location)).Distance(to_ll(*location));
     max_distance -= path_distance;
     if (max_distance < 0) {
       throw valhalla_exception_t{154};
-    };
-    valhalla::midgard::logging::Log("location_distance::" +
-                                        std::to_string(path_distance * kKmPerMeter) + "km",
-                                    " [ANALYTICS] ");
+    }
+    total_path_distance += path_distance;
   }
+  valhalla::midgard::logging::Log("total_location_distance::" +
+                                      std::to_string(total_path_distance * midgard::kKmPerMeter) +
+                                      "km",
+                                  " [ANALYTICS] ");
 }
+
 } // namespace
 
 namespace valhalla {
 namespace loki {
 
-void loki_worker_t::init_route(valhalla_request_t& request) {
-  parse_locations(request.options.mutable_locations());
+void loki_worker_t::init_route(Api& request) {
+  parse_locations(request.mutable_options()->mutable_locations());
   // need to check location size here instead of in parse_locations because of locate action needing
   // a different size
-  if (request.options.locations_size() < 2) {
+  if (request.options().locations_size() < 2) {
     throw valhalla_exception_t{120};
   };
   parse_costing(request);
 }
 
-void loki_worker_t::route(valhalla_request_t& request) {
+void loki_worker_t::route(Api& request) {
   init_route(request);
-  auto costing = odin::Costing_Name(request.options.costing());
-  check_locations(request.options.locations_size(), max_locations.find(costing)->second);
-  check_distance(*reader, request.options.locations(), max_distance.find(costing)->second);
+  auto& options = *request.mutable_options();
+  const auto& costing_name = Costing_Enum_Name(options.costing());
+  check_locations(options.locations_size(), max_locations.find(costing_name)->second);
+  check_distance(options.locations(), max_distance.find(costing_name)->second);
 
   // Validate walking distances (make sure they are in the accepted range)
-  if (costing == "multimodal" || costing == "transit") {
-    auto transit_start_end_max_distance =
-        rapidjson::get_optional<int>(request.document,
-                                     "/costing_options/pedestrian/transit_start_end_max_distance")
-            .get_value_or(min_transit_walking_dis);
-    auto transit_transfer_max_distance =
-        rapidjson::get_optional<int>(request.document,
-                                     "/costing_options/pedestrian/transit_transfer_max_distance")
-            .get_value_or(min_transit_walking_dis);
+  if (costing_name == "multimodal" || costing_name == "transit") {
+    auto* ped_opts = options.mutable_costing_options(static_cast<int>(pedestrian));
+    if (!ped_opts->has_transit_start_end_max_distance())
+      ped_opts->set_transit_start_end_max_distance(min_transit_walking_dis);
+    auto transit_start_end_max_distance = ped_opts->transit_start_end_max_distance();
+
+    if (!ped_opts->has_transit_transfer_max_distance())
+      ped_opts->set_transit_transfer_max_distance(min_transit_walking_dis);
+    auto transit_transfer_max_distance = ped_opts->transit_transfer_max_distance();
 
     if (transit_start_end_max_distance < min_transit_walking_dis ||
         transit_start_end_max_distance > max_transit_walking_dis) {
@@ -84,11 +88,11 @@ void loki_worker_t::route(valhalla_request_t& request) {
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
-    auto locations = PathLocation::fromPBF(request.options.locations());
-    const auto projections = loki::Search(locations, *reader, edge_filter, node_filter);
+    auto locations = PathLocation::fromPBF(options.locations(), true);
+    const auto projections = loki::Search(locations, *reader, costing);
     for (size_t i = 0; i < locations.size(); ++i) {
       const auto& correlated = projections.at(locations[i]);
-      PathLocation::toPBF(correlated, request.options.mutable_locations(i), *reader);
+      PathLocation::toPBF(correlated, options.mutable_locations(i), *reader);
       // TODO: get transit level for transit costing
       // TODO: if transit send a non zero radius
       if (!connectivity_map) {
@@ -113,7 +117,7 @@ void loki_worker_t::route(valhalla_request_t& request) {
   }
   bool connected = false;
   for (const auto& c : color_counts) {
-    if (c.second == request.options.locations_size()) {
+    if (c.second == options.locations_size()) {
       connected = true;
       break;
     }

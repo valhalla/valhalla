@@ -1,12 +1,14 @@
 #include "valhalla/midgard/util.h"
 #include "valhalla/midgard/constants.h"
 #include "valhalla/midgard/distanceapproximator.h"
+#include "valhalla/midgard/logging.h"
 #include "valhalla/midgard/point2.h"
-#include <cmath>
-#include <valhalla/midgard/polyline2.h>
+#include "valhalla/midgard/polyline2.h"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
+#include <cmath>
 #include <cstdint>
 #include <fstream>
 #include <list>
@@ -86,6 +88,38 @@ template <class container_t> container_t trim_front(container_t& pts, const floa
   // Used all of the polyline without exceeding dist
   pts.clear();
   return result;
+}
+
+void trim_shape(float start,
+                PointLL start_vertex, // NOLINT
+                float end,
+                PointLL end_vertex, // NOLINT
+                std::vector<PointLL>& shape) {
+  // clip up to the start point if the start_vertex is valid
+  float along = 0.f;
+  if (start_vertex.IsValid()) {
+    // find the spot at which we cross the distance threshold and stop
+    auto current = shape.begin();
+    for (; !shape.empty() && (current != shape.end() - 1) && along <= start; ++current) {
+      along += (current + 1)->Distance(*current);
+    }
+    // we found the spot to stop for the beginning of the shape so set it to the new beginning
+    *(--current) = start_vertex;
+    shape.erase(shape.begin(), current);
+    along = start;
+  }
+
+  // clip after the end point if the end vertex is valid
+  if (end_vertex.IsValid()) {
+    // find the point at which we cross the distance threshold and stop
+    auto current = shape.begin();
+    for (; !shape.empty() && (current != shape.end() - 1) && along <= end; ++current) {
+      along += (current + 1)->Distance(*current);
+    }
+    // found the spot to stop for the end of the shape so set it to the new end
+    *(current) = end_vertex;
+    shape.erase(++current, shape.end());
+  }
 }
 
 float tangent_angle(size_t index,
@@ -196,8 +230,9 @@ std::ostream& operator<<(std::ostream& stream, const memory_status& s) {
 }
 
 /* This method makes use of several computations explained and demonstrated at:
- * http://williams.best.vwh.net/avform.htm *
- * We humbly bow to you sir!
+ *   http://williams.best.vwh.net/avform.htm (reference no longer active)
+ * New Reference:
+ *   http://www.movable-type.co.uk/scripts/latlong.html
  */
 template <class container_t>
 container_t
@@ -219,8 +254,10 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
     // double d = 2.0 * asin(sqrt(pow(sin((resampled.back().second * RAD_PER_DEG - lat2) /
     // 2.0), 2.0) + cos(resampled.back().second * RAD_PER_DEG) * cos(lat2)
     // *pow(sin((resampled.back().first * -RAD_PER_DEG - lon2) / 2.0), 2.0)));
-    auto d = acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
-                  cos(last.second * RAD_PER_DEG) * cos(lat2) * cos(last.first * -RAD_PER_DEG - lon2));
+    auto d = (last == *p) ? 0.0
+                          : acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
+                                 cos(last.second * RAD_PER_DEG) * cos(lat2) *
+                                     cos(last.first * -RAD_PER_DEG - lon2));
     // keep placing points while we can fit them
     while (d > remaining) {
       // some precomputed stuff
@@ -266,6 +303,84 @@ template std::list<PointLL>
 resample_spherical_polyline<std::list<PointLL>>(const std::list<PointLL>&, double, bool);
 template std::list<Point2>
 resample_spherical_polyline<std::list<Point2>>(const std::list<Point2>&, double, bool);
+
+/* Resample a polyline at uniform intervals using more accurate spherical interpolation between
+ * points. The length and number of samples is specified. The interval is computed based on
+ * the number of samples and the algorithm guarantees that the secified number of samples
+ * is exactly produced.
+ * This method makes use of several computations explained and demonstrated at:
+ *   http://williams.best.vwh.net/avform.htm (reference no longer active)
+ * New Reference:
+ *   http://www.movable-type.co.uk/scripts/latlong.html
+ */
+std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<PointLL>& polyline,
+                                                         const double length,
+                                                         const uint32_t n) {
+  if (polyline.size() == 0) {
+    return {};
+  }
+
+  // Compute sample distance that splits the polyline equally to create n vertices.
+  // Divisor is n-1 since there is 1 more vertex than edge on the subdivided polyline.
+  double sample_distance = length / (n - 1);
+  double d0 = sample_distance;
+
+  // for each point
+  std::vector<PointLL> resampled = {polyline.front()};
+  sample_distance *= RAD_PER_METER;
+  double remaining = sample_distance;
+  PointLL last = resampled.back();
+  for (auto p = std::next(polyline.cbegin()); p != polyline.cend(); ++p) {
+    // Distance between this vertex and last (in great arc radians)
+    auto lon2 = p->first * -RAD_PER_DEG;
+    auto lat2 = p->second * RAD_PER_DEG;
+    auto d = (last == *p) ? 0.0
+                          : acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
+                                 cos(last.second * RAD_PER_DEG) * cos(lat2) *
+                                     cos(last.first * -RAD_PER_DEG - lon2));
+
+    // Place resampled points on this segment as long as remaining distance is < d
+    while (remaining < d) {
+      // some precomputed stuff
+      auto lon1 = last.first * -RAD_PER_DEG;
+      auto lat1 = last.second * RAD_PER_DEG;
+      auto sd = sin(d);
+      auto a = sin(d - remaining) / sd;
+      auto acs1 = a * cos(lat1);
+      auto b = sin(sample_distance) / sd;
+      auto bcs2 = b * cos(lat2);
+
+      // find the interpolated point along the arc
+      auto x = acs1 * cos(lon1) + bcs2 * cos(lon2);
+      auto y = acs1 * sin(lon1) + bcs2 * sin(lon2);
+      auto z = a * sin(lat1) + b * sin(lat2);
+      last.first = atan2(y, x) * -DEG_PER_RAD;
+      last.second = atan2(z, sqrt(x * x + y * y)) * DEG_PER_RAD;
+      resampled.push_back(last);
+
+      // Update to reduce d and update...
+      d -= remaining;
+      remaining = sample_distance;
+    }
+    // we're going to the next point so consume whatever's left
+    remaining -= d;
+    last = *p;
+  }
+
+  if (resampled.size() < n) {
+    // Append the last polyline point
+    resampled.push_back(std::move(polyline.back()));
+  } else if (resampled.size() == n) {
+    resampled.back() = polyline.back();
+  }
+
+  if (resampled.size() != n) {
+    LOG_ERROR("resampled polyline not expected size! n: " + std::to_string(n) +
+              " actual: " + std::to_string(resampled.size()) + " length: " + std::to_string(length) +
+              " d: " + std::to_string(d0));
+  }
+  return resampled;
+}
 
 // Resample the polyline to the specified resolution. This is a faster and less precise
 // method than resample_spherical_polyline.
@@ -417,7 +532,7 @@ std::vector<midgard::PointLL> simulate_gps(const std::vector<gps_segment_t>& seg
   auto resampled = resample_at_1hz(segments);
 
   // a way to get noise but only allow for slow change
-  std::minstd_rand0 generator(seed);
+  std::mt19937 generator(seed);
   std::uniform_real_distribution<float> distribution(-1, 1);
   ring_queue_t<std::pair<float, float>> noises(smoothing);
   auto get_noise = [&]() {
@@ -463,6 +578,115 @@ std::vector<midgard::PointLL> simulate_gps(const std::vector<gps_segment_t>& seg
     }
   }
   return simulated;
+}
+
+polygon_t to_boundary(const std::unordered_set<uint32_t>& region, const Tiles<PointLL>& tiles) {
+  // do we have this tile in this region
+  auto member = [&region](int32_t tile) { return region.find(tile) != region.cend(); };
+  // get the neighbor tile giving -1 if no neighbor
+  auto neighbor = [&tiles](int32_t tile, int side) -> int32_t {
+    if (tile == -1) {
+      return -1;
+    }
+    auto rc = tiles.GetRowColumn(tile);
+    switch (side) {
+      default:
+      case 0:
+        return rc.second == 0 ? -1 : tile - 1;
+      case 1:
+        return rc.first == 0 ? -1 : tile - tiles.ncolumns();
+      case 2:
+        return rc.second == tiles.ncolumns() - 1 ? -1 : tile + 1;
+      case 3:
+        return rc.first == tiles.nrows() - 1 ? -1 : tile + tiles.ncolumns();
+    }
+  };
+  // get the beginning coord of the counter clockwise winding given edge of the given tile
+  auto coord = [&tiles](uint32_t tile, int side) -> PointLL {
+    auto box = tiles.TileBounds(tile);
+    switch (side) {
+      default:
+      case 0:
+        return PointLL(box.minx(), box.maxy());
+      case 1:
+        return box.minpt();
+      case 2:
+        return PointLL(box.maxx(), box.miny());
+      case 3:
+        return box.maxpt();
+    }
+  };
+  // trace a ring of the polygon
+  polygon_t polygon;
+  std::array<std::unordered_set<uint32_t>, 4> used;
+  auto trace = [&member, &neighbor, &coord, &polygon, &used](uint32_t start_tile, int start_side,
+                                                             bool ccw) {
+    auto tile = start_tile;
+    auto side = start_side;
+    polygon.emplace_back();
+    auto& ring = polygon.back();
+    // walk until you see the starting edge again
+    do {
+      // add this edges geometry
+      if (ccw) {
+        ring.push_back(coord(tile, side));
+      } else {
+        ring.push_front(coord(tile, side));
+      }
+      auto inserted = used[side].insert(tile);
+      if (!inserted.second) {
+        throw std::logic_error("Any tile edge can only be used once as part of the geometry");
+      }
+      // we need to go to the first existing neighbor tile following our winding
+      // starting with the one on the other side of the current side
+      auto adjc = neighbor(tile, (side + 1) % 4);
+      auto diag = neighbor(adjc, side);
+      if (member(diag)) {
+        tile = diag;
+        side = (side + 3) % 4;
+      } // next one keep following winding
+      else if (member(adjc)) {
+        tile = adjc;
+      } // if neither of those were there we stay on this tile and go to the next side
+      else {
+        side = (side + 1) % 4;
+      }
+    } while (tile != start_tile || side != start_side);
+  };
+
+  // the smallest numbered tile has a left edge on the outer ring of the polygon
+  auto start_tile = *region.cbegin();
+  int start_side = 0;
+  for (auto tile : region) {
+    if (tile < start_tile) {
+      start_tile = tile;
+    }
+  }
+
+  // trace the outer
+  trace(start_tile, start_side, true);
+
+  // trace the inners
+  for (auto start_tile : region) {
+    // if the neighbor isnt a member and we didnt already use the side between them
+    for (start_side = 0; start_side < 4; ++start_side) {
+      if (!member(neighbor(start_tile, start_side)) &&
+          used[start_side].find(start_tile) == used[start_side].cend()) {
+        // build the inner ring
+        if (start_side != -1) {
+          trace(start_tile, start_side, false);
+        }
+      }
+    }
+  }
+
+  // close all the rings
+  for (auto& ring : polygon) {
+    ring.push_back(ring.front());
+  }
+
+  // give it back
+  return polygon;
 }
 
 } // namespace midgard

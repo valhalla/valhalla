@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_TRANSITSTOP_H_
 
 #include <cstdint>
+#include <stdexcept>
 #include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {
@@ -19,7 +20,7 @@ public:
               const uint32_t name_offset,
               const bool generated,
               const uint32_t traversability)
-      : spare_(0), generated_(generated), traversability_(traversability) {
+      : generated_(generated), traversability_(traversability), spare_(0) {
     if (one_stop_offset > kMaxNameOffset) {
       throw std::runtime_error("TransitStop: Exceeded maximum name offset");
     }

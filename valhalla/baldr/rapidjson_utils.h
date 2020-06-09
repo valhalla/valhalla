@@ -11,11 +11,15 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
 
-// rapidjson loves to assert and crash programs, its more useful to throw and catch
+// rapidjson asserts by default but we dont want to crash running server
+// its more useful to throw and catch for our use case
+#define RAPIDJSON_ASSERT_THROWS
 #undef RAPIDJSON_ASSERT
 #define RAPIDJSON_ASSERT(x)                                                                          \
   if (!(x))                                                                                          \
   throw std::logic_error(RAPIDJSON_STRINGIFY(x))
+// Because we now throw exceptions, we need to turn of RAPIDJSON_NOEXCEPT
+#define RAPIDJSON_HAS_CXX11_NOEXCEPT 0
 
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
@@ -23,14 +27,18 @@
 #include <rapidjson/pointer.h>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/rapidjson.h>
+#include <rapidjson/schema.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 
 namespace rapidjson {
 
-template <typename T> inline std::string to_string(const T& document_or_value) {
+template <typename T>
+inline std::string to_string(const T& document_or_value, int decimal_places = -1) {
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  if (decimal_places >= 0)
+    writer.SetMaxDecimalPlaces(decimal_places);
   document_or_value.Accept(writer);
   return std::string(buffer.GetString(), buffer.GetSize());
 }
@@ -218,7 +226,7 @@ void read_json(const std::string& filename, Ptree& pt, const std::locale& loc = 
   if (!stream)
     throw std::runtime_error("Cannot open file " + filename);
   stream.imbue(loc);
-  read_json(stream, pt);
+  rapidjson::read_json(stream, pt);
 }
 
 } // namespace rapidjson

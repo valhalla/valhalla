@@ -57,7 +57,8 @@ namespace thor {
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : mode(valhalla::sif::TravelMode::kPedestrian), matcher_factory(config, graph_reader),
-      reader(graph_reader), long_request(config.get<float>("thor.logging.long_request")) {
+      reader(graph_reader), controller{},
+      long_request(config.get<float>("thor.logging.long_request")) {
   // If we weren't provided with a graph reader make our own
   if (!reader)
     reader = matcher_factory.graphreader();
@@ -70,7 +71,8 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
   auto conf_algorithm = config.get<std::string>("thor.source_to_target_algorithm", "select_optimal");
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
-        kv.first == "max_radius" || kv.first == "max_timedep_distance") {
+        kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
+        kv.first == "max_alternates") {
       continue;
     }
     if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
@@ -95,83 +97,75 @@ thor_worker_t::~thor_worker_t() {
 }
 
 #ifdef HAVE_HTTP
-worker_t::result_t thor_worker_t::work(const std::list<zmq::message_t>& job,
-                                       void* request_info,
-                                       const std::function<void()>& interrupt_function) {
+prime_server::worker_t::result_t
+thor_worker_t::work(const std::list<zmq::message_t>& job,
+                    void* request_info,
+                    const std::function<void()>& interrupt_function) {
   // get time for start of request
   auto s = std::chrono::system_clock::now();
-  auto& info = *static_cast<http_request_info_t*>(request_info);
+  auto& info = *static_cast<prime_server::http_request_info_t*>(request_info);
   LOG_INFO("Got Thor Request " + std::to_string(info.id));
-  valhalla_request_t request;
+  Api request;
   try {
     // crack open the original request
-    std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
-    std::string serialized_options(static_cast<const char*>(job.back().data()), job.back().size());
-    request.parse(request_str, serialized_options);
+    request.ParseFromArray(job.front().data(), job.front().size());
+    const auto& options = request.options();
 
     // Set the interrupt function
-    service_worker_t::set_interrupt(interrupt_function);
+    service_worker_t::set_interrupt(&interrupt_function);
 
-    worker_t::result_t result{true};
+    prime_server::worker_t::result_t result{true};
     double denominator = 0;
     // do request specific processing
-    switch (request.options.action()) {
-      case odin::DirectionsOptions::sources_to_targets:
-        result = to_response_json(matrix(request), info, request);
-        denominator = request.options.sources_size() + request.options.targets_size();
+    switch (options.action()) {
+      case Options::sources_to_targets:
+        result = to_response(matrix(request), info, request);
+        denominator = options.sources_size() + options.targets_size();
         break;
-      case odin::DirectionsOptions::optimized_route: {
-        // Forward the original request
-        result.messages.emplace_back(std::move(request_str));
-        auto trip_paths = optimized_route(request);
-        result.messages.emplace_back(request.options.SerializeAsString());
-        for (auto& trippath : trip_paths) {
-          result.messages.emplace_back(trippath.SerializeAsString());
-        }
-        denominator = std::max(request.options.sources_size(), request.options.targets_size());
+      case Options::optimized_route: {
+        optimized_route(request);
+        result.messages.emplace_back(request.SerializeAsString());
+        denominator = std::max(options.sources_size(), options.targets_size());
         break;
       }
-      case odin::DirectionsOptions::isochrone:
-        result = to_response_json(isochrones(request), info, request);
-        denominator = request.options.sources_size() * request.options.targets_size();
+      case Options::isochrone:
+        result = to_response(isochrones(request), info, request);
+        denominator = options.sources_size() * options.targets_size();
         break;
-      case odin::DirectionsOptions::route: {
-        // Forward the original request
-        result.messages.emplace_back(std::move(request_str));
-        auto trip_paths = route(request);
-        result.messages.emplace_back(request.options.SerializeAsString());
-        for (const auto& trippath : trip_paths) {
-          result.messages.emplace_back(trippath.SerializeAsString());
-        }
-        denominator = request.options.locations_size();
+      case Options::route: {
+        route(request);
+        result.messages.emplace_back(request.SerializeAsString());
+        denominator = options.locations_size();
         break;
       }
-      case odin::DirectionsOptions::trace_route: {
-        // Forward the original request
-        result.messages.emplace_back(std::move(request_str));
-        auto trip_path = trace_route(request);
-        result.messages.emplace_back(request.options.SerializeAsString());
-        result.messages.emplace_back(trip_path.SerializeAsString());
+      case Options::trace_route: {
+        trace_route(request);
+        result.messages.emplace_back(request.SerializeAsString());
         denominator = trace.size() / 1100;
         break;
       }
-      case odin::DirectionsOptions::trace_attributes:
-        result = to_response_json(trace_attributes(request), info, request);
+      case Options::trace_attributes:
+        result = to_response(trace_attributes(request), info, request);
         denominator = trace.size() / 1100;
         break;
+      case Options::expansion: {
+        result = to_response(expansion(request), info, request);
+        denominator = options.locations_size();
+        break;
+      }
       default:
         throw valhalla_exception_t{400}; // this should never happen
     }
 
     double elapsed_time =
         std::chrono::duration<float, std::milli>(std::chrono::system_clock::now() - s).count();
-    if (!request.options.do_not_track() && elapsed_time / denominator > long_request) {
-      LOG_WARN("thor::" + odin::DirectionsOptions_Action_Name(request.options.action()) +
+    if (!options.do_not_track() && elapsed_time / denominator > long_request) {
+      LOG_WARN("thor::" + Options_Action_Enum_Name(options.action()) +
                " request elapsed time (ms)::" + std::to_string(elapsed_time));
-      LOG_WARN("thor::" + odin::DirectionsOptions_Action_Name(request.options.action()) +
-               " request exceeded threshold::" + request_str);
+      LOG_WARN("thor::" + Options_Action_Enum_Name(options.action()) +
+               " request exceeded threshold::" + std::to_string(info.id));
       midgard::logging::Log("valhalla_thor_long_request_" +
-                                odin::DirectionsOptions_Action_Name(request.options.action()),
+                                Options_Action_Enum_Name(options.action()),
                             " [ANALYTICS] ");
     }
 
@@ -209,29 +203,23 @@ void run_service(const boost::property_tree::ptree& config) {
 }
 #endif
 
-// Get the costing options if in the config or get the empty default.
-// Creates the cost in the cost factory
-valhalla::sif::cost_ptr_t thor_worker_t::get_costing(const odin::Costing costing,
-                                                     const odin::DirectionsOptions& options) {
-  return factory.Create(costing, options);
-}
-
-std::string thor_worker_t::parse_costing(const valhalla_request_t& request) {
+std::string thor_worker_t::parse_costing(const Api& request) {
   // Parse out the type of route - this provides the costing method to use
-  auto costing = request.options.costing();
-  auto costing_str = odin::Costing_Name(costing);
+  const auto& options = request.options();
+  auto costing = options.costing();
+  auto costing_str = Costing_Enum_Name(costing);
 
   // Set travel mode and construct costing
-  if (costing == odin::Costing::multimodal || costing == odin::Costing::transit) {
+  if (costing == Costing::multimodal || costing == Costing::transit) {
     // For multi-modal we construct costing for all modes and set the
     // initial mode to pedestrian. (TODO - allow other initial modes)
-    mode_costing[0] = get_costing(odin::Costing::auto_, request.options);
-    mode_costing[1] = get_costing(odin::Costing::pedestrian, request.options);
-    mode_costing[2] = get_costing(odin::Costing::bicycle, request.options);
-    mode_costing[3] = get_costing(odin::Costing::transit, request.options);
+    mode_costing[0] = factory.Create(Costing::auto_, options);
+    mode_costing[1] = factory.Create(Costing::pedestrian, options);
+    mode_costing[2] = factory.Create(Costing::bicycle, options);
+    mode_costing[3] = factory.Create(Costing::transit, options);
     mode = valhalla::sif::TravelMode::kPedestrian;
   } else {
-    valhalla::sif::cost_ptr_t cost = get_costing(costing, request.options);
+    valhalla::sif::cost_ptr_t cost = factory.Create(options);
     mode = cost->travel_mode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }
@@ -240,9 +228,10 @@ std::string thor_worker_t::parse_costing(const valhalla_request_t& request) {
   return costing_str;
 }
 
-void thor_worker_t::parse_locations(valhalla_request_t& request) {
-  for (auto* locations : {request.options.mutable_locations(), request.options.mutable_sources(),
-                          request.options.mutable_targets()}) {
+void thor_worker_t::parse_locations(Api& request) {
+  auto& options = *request.mutable_options();
+  for (auto* locations :
+       {options.mutable_locations(), options.mutable_sources(), options.mutable_targets()}) {
     for (auto& location : *locations) {
       // get the minimum score for all the candidates
       auto minScore = std::numeric_limits<float>::max();
@@ -263,7 +252,7 @@ void thor_worker_t::parse_locations(valhalla_request_t& request) {
       }
 
       // subtract off the min score and cap at max so that path algorithm doesnt go too far
-      auto max_score = kMaxDistances.find(odin::Costing_Name(request.options.costing()));
+      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing()));
       for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           candidate.set_distance(candidate.distance() - minScore);
@@ -276,26 +265,28 @@ void thor_worker_t::parse_locations(valhalla_request_t& request) {
   }
 }
 
-void thor_worker_t::parse_measurements(const valhalla_request_t& request) {
+void thor_worker_t::parse_measurements(const Api& request) {
   // Create a matcher
+  const auto& options = request.options();
   try {
-    matcher.reset(matcher_factory.Create(request.options));
+    matcher.reset(matcher_factory.Create(options));
   } catch (const std::invalid_argument& ex) { throw std::runtime_error(std::string(ex.what())); }
 
   // we require locations
   try {
     auto default_accuracy = matcher->config().get<float>("gps_accuracy");
     auto default_radius = matcher->config().get<float>("search_radius");
-    for (const auto& pt : request.options.shape()) {
+    for (const auto& pt : options.shape()) {
       trace.emplace_back(meili::Measurement{{pt.ll().lng(), pt.ll().lat()},
                                             pt.has_accuracy() ? pt.accuracy() : default_accuracy,
                                             pt.has_radius() ? pt.radius() : default_radius,
-                                            pt.time()});
+                                            pt.time(),
+                                            PathLocation::fromPBF(pt.type())});
     }
   } catch (...) { throw valhalla_exception_t{424}; }
 }
 
-void thor_worker_t::log_admin(const valhalla::odin::TripPath& trip_path) {
+void thor_worker_t::log_admin(const valhalla::TripLeg& trip_path) {
   std::unordered_set<std::string> state_iso;
   std::unordered_set<std::string> country_iso;
   std::stringstream s_ss, c_ss;
@@ -323,17 +314,57 @@ void thor_worker_t::log_admin(const valhalla::odin::TripPath& trip_path) {
   }
 }
 
+/*
+ * Apply attribute filters from the request to the AttributesController. These filters
+ * allow including or excluding specific attributes from the response in route,
+ * trace_route, and trace_attributes actions.
+ */
+void thor_worker_t::parse_filter_attributes(const Api& request, bool is_strict_filter) {
+  // Set default controller
+  controller = AttributesController();
+  const auto& options = request.options();
+
+  if (options.has_filter_action()) {
+    switch (options.filter_action()) {
+      case (FilterAction::include): {
+        if (is_strict_filter)
+          controller.disable_all();
+        for (const auto& filter_attribute : options.filter_attributes()) {
+          try {
+            controller.attributes.at(filter_attribute) = true;
+          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
+        }
+        break;
+      }
+      case (FilterAction::exclude): {
+        for (const auto& filter_attribute : options.filter_attributes()) {
+          try {
+            controller.attributes.at(filter_attribute) = false;
+          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
+        }
+        break;
+      }
+    }
+  }
+}
+
 void thor_worker_t::cleanup() {
   astar.Clear();
   bidir_astar.Clear();
+  timedep_forward.Clear();
+  timedep_reverse.Clear();
   multi_modal_astar.Clear();
   trace.clear();
   isochrone_gen.Clear();
   matcher_factory.ClearFullCache();
   if (reader->OverCommitted()) {
-    reader->Clear();
+    reader->Trim();
   }
 }
 
+void thor_worker_t::set_interrupt(const std::function<void()>* interrupt_function) {
+  interrupt = interrupt_function;
+  reader->SetInterrupt(interrupt);
+}
 } // namespace thor
 } // namespace valhalla

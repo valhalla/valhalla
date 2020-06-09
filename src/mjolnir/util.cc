@@ -6,6 +6,7 @@
 #include "midgard/logging.h"
 #include "midgard/point2.h"
 #include "midgard/polyline2.h"
+#include "mjolnir/bssbuilder.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphenhancer.h"
@@ -20,8 +21,9 @@
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/filesystem/operations.hpp>
 #include <boost/property_tree/ptree.hpp>
+
+using namespace valhalla::midgard;
 
 namespace {
 
@@ -31,10 +33,13 @@ const std::string way_nodes_file = "way_nodes.bin";
 const std::string nodes_file = "nodes.bin";
 const std::string edges_file = "edges.bin";
 const std::string access_file = "access.bin";
+const std::string bss_nodes_file = "bss_nodes.bin";
 const std::string cr_from_file = "complex_from_restrictions.bin";
 const std::string cr_to_file = "complex_to_restrictions.bin";
 const std::string new_to_old_file = "new_nodes_to_old_nodes.bin";
 const std::string old_to_new_file = "old_nodes_to_new_nodes.bin";
+const std::string intersections_file = "intersections.bin";
+const std::string shapes_file = "shapes.bin";
 
 } // namespace
 
@@ -47,7 +52,7 @@ namespace mjolnir {
 std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) {
   std::vector<std::string> tokens;
   boost::algorithm::split(tokens, tag_value, std::bind1st(std::equal_to<char>(), delim),
-                          boost::algorithm::token_compress_on);
+                          boost::algorithm::token_compress_off);
   return tokens;
 }
 
@@ -126,13 +131,33 @@ bool shapes_match(const std::vector<PointLL>& shape1, const std::vector<PointLL>
   }
 }
 
+bool load_spatialite(sqlite3* db_handle) {
+  sqlite3_enable_load_extension(db_handle, 1);
+  // we do a bunch of failover for changes to the module file name over the years
+  for (const auto& mod_name : std::vector<std::string>{"mod_spatialite", "mod_spatialite.so",
+                                                       "libspatialite", "libspatialite.so"}) {
+    std::string sql = "SELECT load_extension('" + mod_name + "')";
+    char* err_msg = nullptr;
+    if (sqlite3_exec(db_handle, sql.c_str(), nullptr, nullptr, &err_msg) == SQLITE_OK) {
+      LOG_INFO("SpatiaLite loaded as an extension");
+      return true;
+    } else {
+      LOG_WARN("load_extension() warning: " + std::string(err_msg));
+      sqlite3_free(err_msg);
+    }
+  }
+  LOG_ERROR("sqlite3 load_extension() failed to load spatialite module");
+  return false;
+}
+
 bool build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage,
-                    const BuildStage end_stage) {
+                    const BuildStage end_stage,
+                    const bool release_osmpbf_memory) {
   auto remove_temp_file = [](const std::string& fname) {
-    if (boost::filesystem::exists(fname)) {
-      boost::filesystem::remove(fname);
+    if (filesystem::exists(fname)) {
+      filesystem::remove(fname);
     }
   };
 
@@ -153,9 +178,9 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     // set up the directories and purge old tiles if starting at the parsing stage
     for (const auto& level : valhalla::baldr::TileHierarchy::levels()) {
       auto level_dir = tile_dir + std::to_string(level.first);
-      if (boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
+      if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
         LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
-        boost::filesystem::remove_all(level_dir);
+        filesystem::remove_all(level_dir);
       }
     }
 
@@ -163,13 +188,13 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     auto level_dir =
         tile_dir +
         std::to_string(valhalla::baldr::TileHierarchy::levels().rbegin()->second.level + 1);
-    if (boost::filesystem::exists(level_dir) && !boost::filesystem::is_empty(level_dir)) {
+    if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
       LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
-      boost::filesystem::remove_all(level_dir);
+      filesystem::remove_all(level_dir);
     }
 
     // Create the directory if it does not exist
-    boost::filesystem::create_directories(tile_dir);
+    filesystem::create_directories(tile_dir);
   }
 
   // Set up the temporary (*.bin) files used during processing
@@ -178,26 +203,67 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   std::string nodes_bin = tile_dir + nodes_file;
   std::string edges_bin = tile_dir + edges_file;
   std::string access_bin = tile_dir + access_file;
+  std::string bss_nodes_bin = tile_dir + bss_nodes_file;
   std::string cr_from_bin = tile_dir + cr_from_file;
   std::string cr_to_bin = tile_dir + cr_to_file;
   std::string new_to_old_bin = tile_dir + new_to_old_file;
   std::string old_to_new_bin = tile_dir + old_to_new_file;
+  std::string intersections_bin = tile_dir + intersections_file;
+  std::string shapes_bin = tile_dir + shapes_file;
 
   // OSMData class
-  OSMData osm_data;
+  OSMData osm_data{0};
 
-  // Parse OSM data
-  if (start_stage <= BuildStage::kParse && BuildStage::kParse <= end_stage) {
-    // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
-    // relations are defined within the PBFParser class
-    osm_data = PBFGraphParser::Parse(config.get_child("mjolnir"), input_files, ways_bin,
-                                     way_nodes_bin, access_bin, cr_from_bin, cr_to_bin);
+  // Parse the ways
+  if (start_stage <= BuildStage::kParseWays && BuildStage::kParseWays <= end_stage) {
+    // Read the OSM protocol buffer file. Callbacks for ways are defined within the PBFParser class
+    osm_data = PBFGraphParser::ParseWays(config.get_child("mjolnir"), input_files, ways_bin,
+                                         way_nodes_bin, access_bin, intersections_bin, shapes_bin);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
-    OSMPBF::Parser::free();
+    if (release_osmpbf_memory && BuildStage::kParseWays == end_stage) {
+      OSMPBF::Parser::free();
+    }
 
-    // Write the OSMData to files if parsing is the end stage
-    if (end_stage == BuildStage::kParse) {
+    // Write the OSMData to files if the end stage is less than enhancing
+    if (end_stage <= BuildStage::kEnhance) {
+      osm_data.write_to_temp_files(tile_dir);
+    }
+  }
+
+  // Parse OSM data
+  if (start_stage <= BuildStage::kParseRelations && BuildStage::kParseRelations <= end_stage) {
+
+    // Read the OSM protocol buffer file. Callbacks for relations are defined within the PBFParser
+    // class
+    PBFGraphParser::ParseRelations(config.get_child("mjolnir"), input_files, cr_from_bin, cr_to_bin,
+                                   osm_data);
+
+    // Free all protobuf memory - cannot use the protobuffer lib after this!
+    if (release_osmpbf_memory && BuildStage::kParseRelations == end_stage) {
+      OSMPBF::Parser::free();
+    }
+
+    // Write the OSMData to files if the end stage is less than enhancing
+    if (end_stage <= BuildStage::kEnhance) {
+      osm_data.write_to_temp_files(tile_dir);
+    }
+  }
+
+  // Parse OSM data
+  if (start_stage <= BuildStage::kParseNodes && BuildStage::kParseNodes <= end_stage) {
+    // Read the OSM protocol buffer file. Callbacks for nodes
+    // are defined within the PBFParser class
+    PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
+                               intersections_bin, shapes_bin, bss_nodes_bin, osm_data);
+
+    // Free all protobuf memory - cannot use the protobuffer lib after this!
+    if (release_osmpbf_memory) {
+      OSMPBF::Parser::free();
+    }
+
+    // Write the OSMData to files if the end stage is less than enhancing
+    if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
   }
@@ -218,7 +284,11 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
   if (start_stage <= BuildStage::kEnhance && BuildStage::kEnhance <= end_stage) {
-    GraphEnhancer::Enhance(config, access_bin);
+    // Read OSMData names from file if enhancing tiles is the first stage
+    if (start_stage == BuildStage::kEnhance) {
+      osm_data.read_from_unique_names_file(tile_dir);
+    }
+    GraphEnhancer::Enhance(config, osm_data, access_bin);
   }
 
   // Perform optional edge filtering (remove edges and nodes for specific access modes)
@@ -229,6 +299,11 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   // Add transit
   if (start_stage <= BuildStage::kTransit && BuildStage::kTransit <= end_stage) {
     TransitBuilder::Build(config);
+  }
+
+  // Build bike share stations
+  if (start_stage <= BuildStage::kBss && BuildStage::kBss <= end_stage) {
+    BssBuilder::Build(config, bss_nodes_bin);
   }
 
   // Builds additional hierarchies if specified within config file. Connections
@@ -253,14 +328,17 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     LOG_INFO("Skipping hierarchy builder and shortcut builder");
   }
 
-  // Build the Complex Restrictions
-  if (start_stage <= BuildStage::kRestrictions && BuildStage::kRestrictions <= end_stage) {
-    RestrictionBuilder::Build(config, cr_from_bin, cr_to_bin);
-  }
-
   // Add elevation to the tiles
   if (start_stage <= BuildStage::kElevation && BuildStage::kElevation <= end_stage) {
     ElevationBuilder::Build(config);
+  }
+
+  // Build the Complex Restrictions
+  // ComplexRestrictions must be done after elevation. The reason is that building
+  // elevation into the tiles reads each tile and serializes the data to "builders"
+  // within the tile. However, there is no serialization currently available for complex restrictions.
+  if (start_stage <= BuildStage::kRestrictions && BuildStage::kRestrictions <= end_stage) {
+    RestrictionBuilder::Build(config, cr_from_bin, cr_to_bin);
   }
 
   // Validate the graph and add information that cannot be added until full graph is formed.
@@ -276,10 +354,13 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     remove_temp_file(nodes_bin);
     remove_temp_file(edges_bin);
     remove_temp_file(access_bin);
+    remove_temp_file(bss_nodes_bin);
     remove_temp_file(cr_from_bin);
     remove_temp_file(cr_to_bin);
     remove_temp_file(new_to_old_bin);
     remove_temp_file(old_to_new_bin);
+    remove_temp_file(intersections_bin);
+    remove_temp_file(shapes_bin);
     OSMData::cleanup_temp_files(tile_dir);
   }
   return true;

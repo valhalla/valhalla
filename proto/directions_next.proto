@@ -1,0 +1,100 @@
+syntax = "proto2";
+option optimize_for = LITE_RUNTIME;
+package valhalla;
+
+message Waypoint {
+  optional float lat = 1;
+  optional float lon = 2;
+  optional string type = 3;
+  optional uint32 bearing = 4;
+  optional string name = 5;
+  optional string street = 6;
+  optional string side_of_street = 7;
+}
+
+message BoundingBox {
+  optional float min_lat = 1;
+  optional float min_lon = 2;
+  optional float max_lat = 3;
+  optional float max_lon = 4;
+}
+
+message StreetName {
+  optional string text = 1;          // Text of street name, examples: MD 43 East, White Marsh Boulevard
+  optional bool is_route_number = 2; // true if street name is a reference route number such as: I 95 South or MD 43 East
+}
+
+message Step {
+  optional float distance = 1;
+  optional uint32 duration = 2;
+  optional uint32 geometry_index_begin = 3;      // begin geometry inclusive index
+  optional uint32 geometry_index_end = 4;        // end geometry inclusive index
+  optional uint32 incoming_maneuver_index = 5;   // the index of the maneuver at the start of the step
+  optional uint32 outgoing_maneuver_index = 6;   // the index of the maneuver at the end of the step
+  repeated StreetName street_names = 7;          // consistent street names for the entire step
+  optional string travel_mode = 8;               // travel mode 
+  optional string travel_mode_type = 9;          // travel type
+  optional string driving_side = 10;             // legal driving side for this step
+}
+  
+message SignElement {
+  optional string text = 1;               // The actual sign element text, examples: I 95 North or Derry Street
+  optional bool is_route_number = 2;      // true if sign element is a reference route number such as: I 81 South or US 322 West
+  optional uint32 consecutive_count = 3;  // The frequency of this sign element within a set a consecutive signs
+}
+
+message Sign {
+  repeated SignElement exit_numbers = 1;          // The list of exit numbers, example: 67B
+  repeated SignElement exit_onto_streets = 2;     // The list of exit branch street names, example: I 95 North
+  repeated SignElement exit_toward_locations = 3; // The list of exit toward locations, examples: New York or I 395 South
+  repeated SignElement exit_names = 4;            // The list of exit names - not used much in US, example: Gettysburg Pike
+}
+
+message Lane {
+  optional bool is_valid = 1;
+  repeated string indications = 2;
+}
+
+message Maneuver {
+  optional string type = 1;
+  optional uint32 geometry_index = 2;
+  optional uint32 incoming_bearing = 3;                    // incoming bearing at transition
+  optional uint32 outgoing_bearing = 4;                    // outgoing bearing at transition
+  repeated StreetName street_names = 5;                    // street names at the transition
+  optional Sign sign = 6;
+  optional Lane lane = 7;
+  optional bool is_obvious = 8;                            // true if transition is obvious, might not need announced
+  optional bool is_verbal_multi_cue = 9;                   // true if the pre transition also announces the next transition alert
+  optional string text_instruction = 10;                   // text instruction
+  optional string verbal_transition_alert_instruction = 11;// verbal transition alert instruction
+  optional string verbal_pre_transition_instruction = 12;  // verbal pre-transition instruction
+  optional string verbal_post_transition_instruction = 13; // verbal post-transition instruction
+}
+
+message Leg {
+  optional string summary = 1;              // description using main roads per leg
+  optional float distance = 2;
+  optional uint32 duration = 3;
+  optional BoundingBox bounding_box = 4;
+  optional string geometry = 5;
+  repeated Step steps = 6;
+  repeated Maneuver maneuvers = 7;
+}
+
+message Route {
+  optional float distance = 1; 
+  optional uint32 duration = 2;
+  optional BoundingBox bounding_box = 3;
+  repeated Leg legs = 4;
+}
+
+message Directions {
+  repeated Waypoint waypoints = 1;
+  repeated Route routes = 2;
+  optional BoundingBox bounding_box = 3; // bounding box for all routes
+  optional string language_code = 4;
+  optional string units = 5;
+  optional uint32 status_code = 6;
+  optional string status_message = 7;
+  optional uint32 uuid = 8;
+}

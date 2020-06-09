@@ -4,12 +4,27 @@
 [submodule "rapidjson"]
 	path = third_party/rapidjson
 	url = https://github.com/miloyip/rapidjson
-[submodule "proto"]
-	path = third_party/OSMLR
-	url = https://github.com/valhalla/osmlr-tile-spec.git
 [submodule "third_party/dirent"]
 	path = third_party/dirent
 	url = https://github.com/tronkko/dirent
 [submodule "third_party/date"]
 	path = third_party/date
 	url = https://github.com/HowardHinnant/date.git
+[submodule "third_party/googletest"]
+	path = third_party/googletest
+	url = https://github.com/google/googletest.git
+[submodule "third_party/libosmium"]
+	path = third_party/libosmium
+	url = https://github.com/osmcode/libosmium.git
+[submodule "third_party/protozero"]
+	path = third_party/protozero
+	url = https://github.com/mapbox/protozero.git
+[submodule "third_party/microtar"]
+	path = third_party/microtar
+	url = https://github.com/rxi/microtar.git
+[submodule "third_party/benchmark"]
+	path = third_party/benchmark
+	url = https://github.com/google/benchmark
+[submodule "third_party/robin-hood-hashing"]
+	path = third_party/robin-hood-hashing
+	url = https://github.com/martinus/robin-hood-hashing.git

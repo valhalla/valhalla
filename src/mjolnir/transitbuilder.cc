@@ -1,7 +1,6 @@
 #include "mjolnir/transitbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 
-#include <boost/filesystem/operations.hpp>
 #include <fstream>
 #include <future>
 #include <iostream>
@@ -15,7 +14,6 @@
 #include <vector>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 
 #include "baldr/datetime.h"
 #include "baldr/graphreader.h"
@@ -102,7 +100,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   // present in this tile set a value > number of directed edges
   uint32_t signidx = 0;
   uint32_t nextsignidx = (tilebuilder_local.header()->signcount() > 0)
-                             ? tilebuilder_local.sign(0).edgeindex()
+                             ? tilebuilder_local.sign(0).index()
                              : currentedges.size() + 1;
   uint32_t signcount = tilebuilder_local.header()->signcount();
 
@@ -129,14 +127,14 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       // Update any signs that use this idx - increment their index by the
       // number of added edges
       while (idx == nextsignidx && signidx < signcount) {
-        if (!currentedges[idx].exitsign()) {
+        if (!currentedges[idx].sign()) {
           LOG_ERROR("Signs for this index but directededge says no sign");
         }
-        tilebuilder_local.sign_builder(signidx).set_edgeindex(idx + added_edges);
+        tilebuilder_local.sign_builder(signidx).set_index(idx + added_edges);
 
         // Increment to the next sign and update nextsignidx
         signidx++;
-        nextsignidx = (signidx >= signcount) ? 0 : tilebuilder_local.sign(signidx).edgeindex();
+        nextsignidx = (signidx >= signcount) ? 0 : tilebuilder_local.sign(signidx).index();
       }
 
       // Add any restrictions that use this idx - increment their index by the
@@ -236,9 +234,8 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   // Get the directed edge index of the first sign. If no signs are
   // present in this tile set a value > number of directed edges
   signidx = 0;
-  nextsignidx = (tilebuilder_transit.header()->signcount() > 0)
-                    ? tilebuilder_transit.sign(0).edgeindex()
-                    : currentedges.size() + 1;
+  nextsignidx = (tilebuilder_transit.header()->signcount() > 0) ? tilebuilder_transit.sign(0).index()
+                                                                : currentedges.size() + 1;
   signcount = tilebuilder_transit.header()->signcount();
 
   // Get the directed edge index of the first access restriction.
@@ -584,11 +581,11 @@ void build(const std::string& transit_dir,
   for (; tile_start != tile_end; ++tile_start) {
     // Get the next tile Id from the queue and get a tile builder
     if (reader_local_level.OverCommitted()) {
-      reader_local_level.Clear();
+      reader_local_level.Trim();
     }
 
     if (reader_transit_level.OverCommitted()) {
-      reader_transit_level.Clear();
+      reader_transit_level.Trim();
     }
 
     GraphId tile_id = tile_start->Tile_Base();
@@ -668,8 +665,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   // Bail if nothing
   auto hierarchy_properties = pt.get_child("mjolnir");
   auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
-  if (!transit_dir || !boost::filesystem::exists(*transit_dir) ||
-      !boost::filesystem::is_directory(*transit_dir)) {
+  if (!transit_dir || !filesystem::exists(*transit_dir) || !filesystem::is_directory(*transit_dir)) {
     LOG_INFO("Transit directory not found. Transit will not be added.");
     return;
   }
@@ -678,29 +674,35 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   transit_dir->push_back(filesystem::path::preferred_separator);
   GraphReader reader(hierarchy_properties);
   auto local_level = TileHierarchy::levels().rbegin()->first;
-  if (boost::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) +
-                                      filesystem::path::preferred_separator)) {
-    boost::filesystem::recursive_directory_iterator transit_file_itr(
+  if (filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) +
+                               filesystem::path::preferred_separator)) {
+    filesystem::recursive_directory_iterator transit_file_itr(
         *transit_dir + std::to_string(local_level + 1) + filesystem::path::preferred_separator),
         end_file_itr;
     for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
-      if (boost::filesystem::is_regular(transit_file_itr->path()) &&
-          transit_file_itr->path().extension() == ".gph") {
+      if (filesystem::is_regular_file(transit_file_itr->path()) &&
+          transit_file_itr->path().string().find(".gph") ==
+              (transit_file_itr->path().string().size() - 4)) {
         auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
         GraphId local_graph_id(graph_id.tileid(), graph_id.level() - 1, graph_id.id());
-        if (GraphReader::DoesTileExist(hierarchy_properties, local_graph_id)) {
+        if (reader.DoesTileExist(local_graph_id)) {
           const GraphTile* tile = reader.GetGraphTile(local_graph_id);
           tiles.emplace(local_graph_id);
           const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") +
                                                filesystem::path::preferred_separator +
                                                GraphTile::FileSuffix(graph_id);
-          boost::filesystem::path filename = destination_path;
+          filesystem::path root = destination_path;
+          root.replace_filename("");
           // Make sure the directory exists on the system and copy to the tile_dir
-          if (!boost::filesystem::exists(filename.parent_path())) {
-            boost::filesystem::create_directories(filename.parent_path());
+          if (!filesystem::exists(root)) {
+            filesystem::create_directories(root);
           }
-          boost::filesystem::copy_file(transit_file_itr->path(), destination_path,
-                                       boost::filesystem::copy_option::overwrite_if_exists);
+          std::ifstream in(transit_file_itr->path().string(),
+                           std::ios_base::in | std::ios_base::binary);
+          std::ofstream out(destination_path,
+                            std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
+
+          out << in.rdbuf();
         }
       }
     }

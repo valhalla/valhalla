@@ -1,13 +1,14 @@
 #include "config.h"
 
+#include "baldr/rapidjson_utils.h"
+#include "filesystem.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "worker.h"
 
-#include "baldr/rapidjson_utils.h"
 #include <algorithm>
 #include <atomic>
-#include <boost/filesystem/operations.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -18,17 +19,19 @@
 #include <string>
 #include <thread>
 #include <tuple>
+#include <valhalla/sif/costfactory.h>
 #include <vector>
 
 namespace bpo = boost::program_options;
 
-boost::filesystem::path config_file_path;
+filesystem::path config_file_path;
 size_t threads =
     std::max(static_cast<size_t>(std::thread::hardware_concurrency()), static_cast<size_t>(1));
 size_t batch = 1;
 bool extrema = false;
 size_t isolated = 0;
 size_t radius = 0;
+std::string costing_str;
 std::vector<std::string> input_files;
 
 using job_t = std::vector<valhalla::baldr::Location>;
@@ -76,7 +79,7 @@ struct result_t {
 };
 using results_t = std::set<result_t>;
 
-bool ParseArguments(int argc, char* argv[]) {
+int ParseArguments(int argc, char* argv[]) {
 
   bpo::options_description options(
       "search " VALHALLA_VERSION "\n"
@@ -92,7 +95,7 @@ bool ParseArguments(int argc, char* argv[]) {
   std::string search_type;
   options.add_options()("help,h", "Print this help message.")("version,v",
                                                               "Print the version of this software.")(
-      "config,c", boost::program_options::value<boost::filesystem::path>(&config_file_path),
+      "config,c", boost::program_options::value<filesystem::path>(&config_file_path),
       "Path to the json configuration file.")(
       "threads,t", boost::program_options::value<size_t>(&threads),
       "Concurrency to use.")("batch,b", boost::program_options::value<size_t>(&batch),
@@ -102,7 +105,9 @@ bool ParseArguments(int argc, char* argv[]) {
       "reach,i", boost::program_options::value<size_t>(&isolated),
       "How many edges need to be reachable before considering it as connected to the larger "
       "network")("radius,r", boost::program_options::value<size_t>(&radius),
-                 "How many meters to search away from the input location")
+                 "How many meters to search away from the input location")(
+      "costing", boost::program_options::value<std::string>(&costing_str),
+      "Which costing model to use.")
       // positional arguments
       ("input_files",
        boost::program_options::value<std::vector<std::string>>(&input_files)->multitoken());
@@ -119,17 +124,17 @@ bool ParseArguments(int argc, char* argv[]) {
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-    return false;
+    return 1;
   }
 
   if (vm.count("help")) {
     std::cout << options << "\n";
-    return true;
+    return -1;
   }
 
   if (vm.count("version")) {
     std::cout << "loki_benchmark " << VALHALLA_VERSION << "\n";
-    return true;
+    return -1;
   }
 
   // argument checking and verification
@@ -137,19 +142,35 @@ bool ParseArguments(int argc, char* argv[]) {
     if (vm.count(arg) == 0) {
       std::cerr << "The <" << arg << "> argument was not provided, but is mandatory\n\n";
       std::cerr << options << "\n";
-      return false;
+      return 1;
     }
   }
 
   // TODO: complain when no input files
 
-  return true;
+  return 0;
+}
+
+valhalla::sif::cost_ptr_t create_costing() {
+  valhalla::Options options;
+  for (int i = 0; i < valhalla::Costing_MAX; ++i)
+    options.add_costing_options();
+  valhalla::Costing costing;
+  if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {
+    options.set_costing(costing);
+  } else {
+    options.set_costing(valhalla::Costing::none_);
+  }
+  valhalla::sif::CostFactory<valhalla::sif::DynamicCost> factory;
+  factory.RegisterStandardCostingModels();
+  return factory.Create(options);
 }
 
 void work(const boost::property_tree::ptree& config, std::promise<results_t>& promise) {
   // lambda to do the current job
+  auto costing = create_costing();
   valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
-  auto search = [&reader](const job_t& job) {
+  auto search = [&reader, &costing](const job_t& job) {
     // so that we dont benefit from cache coherency
     reader.Clear();
     std::pair<result_t, result_t> result;
@@ -158,7 +179,7 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
       auto start = std::chrono::high_resolution_clock::now();
       try {
         // TODO: actually save the result
-        auto result = valhalla::loki::Search(job, reader, valhalla::loki::PassThroughEdgeFilter);
+        auto result = valhalla::loki::Search(job, reader, costing);
         auto end = std::chrono::high_resolution_clock::now();
         (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), true, job,
                         cached};
@@ -187,13 +208,17 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
 
 int main(int argc, char** argv) {
 
-  if (!ParseArguments(argc, argv)) {
+  int ret = ParseArguments(argc, argv);
+  if (ret > 0) {
     return EXIT_FAILURE;
+  }
+  if (ret < 0) {
+    return EXIT_SUCCESS;
   }
 
   // check what type of input we are getting
   boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.c_str(), pt);
+  rapidjson::read_json(config_file_path.string(), pt);
 
   // configure logging
   boost::optional<boost::property_tree::ptree&> logging_subtree =
@@ -215,7 +240,7 @@ int main(int argc, char** argv) {
       std::stringstream ss(line);
       std::string item;
       std::vector<std::string> parts;
-      while (std::getline(ss, item, ',')) {
+      while (std::getline(ss, item, ' ')) {
         parts.push_back(std::move(item));
       }
       float lat = std::stof(parts[0]);
@@ -225,7 +250,7 @@ int main(int argc, char** argv) {
       float lon = valhalla::midgard::circular_range_clamp<float>(std::stof(parts[1]), -180, 180);
       valhalla::midgard::PointLL ll(lat, lon);
       valhalla::baldr::Location loc(ll);
-      loc.minimum_reachability_ = isolated;
+      loc.min_inbound_reach_ = loc.min_outbound_reach_ = isolated;
       loc.radius_ = radius;
       job.emplace_back(std::move(loc));
       if (job.size() == batch) {

@@ -23,19 +23,19 @@ namespace thor {
 
 constexpr uint32_t kCostMatrixThreshold = 5;
 
-std::string thor_worker_t::matrix(valhalla_request_t& request) {
+std::string thor_worker_t::matrix(Api& request) {
   parse_locations(request);
   auto costing = parse_costing(request);
+  const auto& options = request.options();
 
-  if (!request.options.do_not_track()) {
-    valhalla::midgard::logging::Log("matrix_type::" +
-                                        odin::DirectionsOptions_Action_Name(request.options.action()),
+  if (!options.do_not_track()) {
+    valhalla::midgard::logging::Log("matrix_type::" + Options_Action_Enum_Name(options.action()),
                                     " [ANALYTICS] ");
   }
 
   // Parse out units; if none specified, use kilometers
   double distance_scale = kKmPerMeter;
-  if (request.options.units() == odin::DirectionsOptions::miles) {
+  if (options.units() == Options::miles) {
     distance_scale = kMilePerMeter;
   }
 
@@ -44,13 +44,13 @@ std::string thor_worker_t::matrix(valhalla_request_t& request) {
   std::vector<TimeDistance> time_distances;
   auto costmatrix = [&]() {
     thor::CostMatrix matrix;
-    return matrix.SourceToTarget(request.options.sources(), request.options.targets(), *reader,
-                                 mode_costing, mode, max_matrix_distance.find(costing)->second);
+    return matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
+                                 max_matrix_distance.find(costing)->second);
   };
   auto timedistancematrix = [&]() {
     thor::TimeDistanceMatrix matrix;
-    return matrix.SourceToTarget(request.options.sources(), request.options.targets(), *reader,
-                                 mode_costing, mode, max_matrix_distance.find(costing)->second);
+    return matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
+                                 max_matrix_distance.find(costing)->second);
   };
   switch (source_to_target_algorithm) {
     case SELECT_OPTIMAL:
@@ -60,8 +60,8 @@ std::string thor_worker_t::matrix(valhalla_request_t& request) {
         case TravelMode::kBicycle:
           // Use CostMatrix if number of sources and number of targets
           // exceeds some threshold
-          if (request.options.sources().size() > kCostMatrixThreshold &&
-              request.options.targets().size() > kCostMatrixThreshold) {
+          if (options.sources().size() > kCostMatrixThreshold &&
+              options.targets().size() > kCostMatrixThreshold) {
             time_distances = costmatrix();
           } else {
             time_distances = timedistancematrix();

@@ -27,9 +27,12 @@ public:
    * @param  use            Use of the edge.
    * @param  rc             Road class / importance
    * @param  localidx       Index of the edge (from the node) on the local level
+   * @param  signal         Traffic signal
    * @param  restrictions   Mask of simple turn restrictions at the end node
    *                        of this directed edge.
    * @param  bike_network   Mask of bike_networks from relations.
+   * @param  reclass_ferry  Reclassify ferry boolean; Allows us to drop destination only attribution
+   * or anything that would prevent seeing a ferry connection
    */
   DirectedEdgeBuilder(const OSMWay& way,
                       const baldr::GraphId& endnode,
@@ -42,7 +45,8 @@ public:
                       const uint32_t localidx,
                       const bool signal,
                       const uint32_t restrictions,
-                      const uint32_t bike_network);
+                      const uint32_t bike_network,
+                      const bool reclass_ferry);
 };
 
 } // namespace mjolnir

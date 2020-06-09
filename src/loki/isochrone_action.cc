@@ -8,11 +8,11 @@ using namespace valhalla;
 using namespace valhalla::baldr;
 
 namespace {
-PointLL to_ll(const odin::Location& l) {
-  return PointLL{l.ll().lng(), l.ll().lat()};
+midgard::PointLL to_ll(const valhalla::Location& l) {
+  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
 }
 
-void check_distance(const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                     float matrix_max_distance,
                     float& max_location_distance) {
   // see if any locations pairs are unreachable or too far apart
@@ -36,55 +36,58 @@ void check_distance(const google::protobuf::RepeatedPtrField<odin::Location>& lo
 namespace valhalla {
 namespace loki {
 
-void loki_worker_t::init_isochrones(valhalla_request_t& request) {
+void loki_worker_t::init_isochrones(Api& request) {
+  auto& options = *request.mutable_options();
+
   // strip off unused information
-  parse_locations(request.options.mutable_locations());
-  if (request.options.locations_size() < 1) {
+  parse_locations(options.mutable_locations());
+  if (options.locations_size() < 1) {
     throw valhalla_exception_t{120};
   };
-  for (auto& l : *request.options.mutable_locations()) {
+  for (auto& l : *options.mutable_locations()) {
     l.clear_heading();
   }
 
   // check that the number of contours is ok
-  if (request.options.contours_size() < 1) {
+  if (options.contours_size() < 1) {
     throw valhalla_exception_t{113};
-  } else if (request.options.contours_size() > max_contours) {
+  } else if (options.contours_size() > max_contours) {
     throw valhalla_exception_t{152, std::to_string(max_contours)};
   }
 
   // validate the contour time by checking the last one
-  const auto contour = request.options.contours().rbegin();
+  const auto contour = options.contours().rbegin();
   if (contour->time() > max_time) {
     throw valhalla_exception_t{151, std::to_string(max_time)};
   }
 
   parse_costing(request);
 }
-void loki_worker_t::isochrones(valhalla_request_t& request) {
+void loki_worker_t::isochrones(Api& request) {
   init_isochrones(request);
+  auto& options = *request.mutable_options();
   // check that location size does not exceed max
-  if (request.options.locations_size() > max_locations.find("isochrone")->second) {
+  if (options.locations_size() > max_locations.find("isochrone")->second) {
     throw valhalla_exception_t{150, std::to_string(max_locations.find("isochrone")->second)};
   };
 
   // check the distances
   auto max_location_distance = std::numeric_limits<float>::min();
-  check_distance(request.options.locations(), max_distance.find("isochrone")->second,
-                 max_location_distance);
-  if (!request.options.do_not_track()) {
+  check_distance(options.locations(), max_distance.find("isochrone")->second, max_location_distance);
+  if (!options.do_not_track()) {
     valhalla::midgard::logging::Log("max_location_distance::" +
-                                        std::to_string(max_location_distance * kKmPerMeter) + "km",
+                                        std::to_string(max_location_distance * midgard::kKmPerMeter) +
+                                        "km",
                                     " [ANALYTICS] ");
   }
 
   try {
     // correlate the various locations to the underlying graph
-    auto locations = PathLocation::fromPBF(request.options.locations());
-    const auto projections = loki::Search(locations, *reader, edge_filter, node_filter);
+    auto locations = PathLocation::fromPBF(options.locations());
+    const auto projections = loki::Search(locations, *reader, costing);
     for (size_t i = 0; i < locations.size(); ++i) {
       const auto& projection = projections.at(locations[i]);
-      PathLocation::toPBF(projection, request.options.mutable_locations(i), *reader);
+      PathLocation::toPBF(projection, options.mutable_locations(i), *reader);
     }
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }
 }

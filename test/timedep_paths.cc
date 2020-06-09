@@ -13,6 +13,7 @@
 #include "worker.h"
 #include <boost/property_tree/ptree.hpp>
 
+using namespace valhalla;
 using namespace valhalla::thor;
 using namespace valhalla::sif;
 using namespace valhalla::loki;
@@ -30,18 +31,12 @@ boost::property_tree::ptree json_to_pt(const std::string& json) {
   return pt;
 }
 
-valhalla::odin::DirectionsOptions json_to_pbf(const std::string& json) {
-  valhalla::valhalla_request_t request;
-  request.parse(json, valhalla::odin::DirectionsOptions::route);
-  return request.options;
-}
-
 rapidjson::Document to_document(const std::string& request) {
   rapidjson::Document d;
   auto& allocator = d.GetAllocator();
   d.Parse(request.c_str());
   if (d.HasParseError())
-    throw valhalla::valhalla_exception_t{100};
+    throw valhalla_exception_t{100};
   return d;
 }
 
@@ -61,9 +56,9 @@ const std::unordered_map<std::string, float> kMaxDistances = {
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
 
-void adjust_scores(valhalla::valhalla_request_t& request) {
-  for (auto* locations : {request.options.mutable_locations(), request.options.mutable_sources(),
-                          request.options.mutable_targets()}) {
+void adjust_scores(Options& options) {
+  for (auto* locations :
+       {options.mutable_locations(), options.mutable_sources(), options.mutable_targets()}) {
     for (auto& location : *locations) {
       // get the minimum score for all the candidates
       auto minScore = std::numeric_limits<float>::max();
@@ -82,7 +77,7 @@ void adjust_scores(valhalla::valhalla_request_t& request) {
       }
 
       // subtract off the min score and cap at max so that path algorithm doesnt go too far
-      auto max_score = kMaxDistances.find(valhalla::odin::Costing_Name(request.options.costing()));
+      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing()));
       for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           candidate.set_distance(candidate.distance() - minScore);
@@ -95,11 +90,12 @@ void adjust_scores(valhalla::valhalla_request_t& request) {
 }
 
 const auto config = json_to_pt(R"({
+    "meili": {"default": {"breakage_distance": 2000}},
     "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
     "loki":{
       "actions":["sources_to_targets"],
       "logging":{"long_request": 100},
-      "service_defaults":{"minimum_reachability": 50,"radius": 0}
+      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
     },
     "service_limits": {
       "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
@@ -109,7 +105,7 @@ const auto config = json_to_pt(R"({
       "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
       "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
-      "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,
+      "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
       "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
       "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
       "skadi": {"max_shape": 750000,"min_resample": 10.0},
@@ -126,38 +122,31 @@ void try_path(GraphReader& reader,
               const bool depart_at,
               const char* test_request,
               const uint32_t expected_edgecount) {
-  valhalla::valhalla_request_t request;
-  request.parse(test_request, valhalla::odin::DirectionsOptions::route);
+  Api request;
+  ParseApi(test_request, Options::route, request);
   loki_worker.route(request);
-  adjust_scores(request);
-  auto options = json_to_pbf(test_request);
+  adjust_scores(*request.mutable_options());
 
   // For now this just tests auto costing - could extend to other
   TravelMode mode = TravelMode::kDrive;
-  cost_ptr_t costing = CreateAutoCost(options.costing(), options);
+  cost_ptr_t costing = CreateAutoCost(request.options().costing(), request.options());
   std::shared_ptr<DynamicCost> mode_costing[4];
   mode_costing[static_cast<uint32_t>(mode)] = costing;
 
-  valhalla::odin::Location origin = request.options.locations(0);
-  valhalla::odin::Location dest = request.options.locations(1);
+  valhalla::Location origin = request.options().locations(0);
+  valhalla::Location dest = request.options().locations(1);
   if (depart_at) {
     TimeDepForward alg;
-    auto pathedges = alg.GetBestPath(origin, dest, reader, mode_costing, mode);
-    if (pathedges.size() != expected_edgecount) {
-      throw std::runtime_error("Depart at path failed: expected edges: " +
-                               std::to_string(expected_edgecount));
-    }
+    auto pathedges = alg.GetBestPath(origin, dest, reader, mode_costing, mode).front();
+    EXPECT_EQ(pathedges.size(), expected_edgecount) << "Depart at path failed";
   } else {
     TimeDepReverse alg;
-    auto pathedges = alg.GetBestPath(origin, dest, reader, mode_costing, mode);
-    if (pathedges.size() != expected_edgecount) {
-      throw std::runtime_error("Arrive by path failed: expected edges: " +
-                               std::to_string(expected_edgecount));
-    }
+    auto pathedges = alg.GetBestPath(origin, dest, reader, mode_costing, mode).front();
+    EXPECT_EQ(pathedges.size(), expected_edgecount) << "Arrive by path failed";
   }
 }
 
-void test_depart_at_paths() {
+TEST(TimeDepPaths, test_depart_at_paths) {
   // Test setup
   loki_worker_t loki_worker(config);
   GraphReader reader(config.get_child("mjolnir"));
@@ -174,7 +163,7 @@ void test_depart_at_paths() {
   try_path(reader, loki_worker, true, test_request2, 10);
 }
 
-void test_arrive_by_paths() {
+TEST(TimeDepPaths, test_arrive_by_paths) {
   // Test setup
   loki_worker_t loki_worker(config);
   GraphReader reader(config.get_child("mjolnir"));
@@ -186,14 +175,7 @@ void test_arrive_by_paths() {
 }
 
 int main(int argc, char* argv[]) {
-  test::suite suite("trivial_paths");
   // logging::Configure({{"type", ""}}); // silence logs
-
-  // Test depart at
-  suite.test(TEST_CASE(test_depart_at_paths));
-
-  // Test arrive by
-  suite.test(TEST_CASE(test_arrive_by_paths));
-
-  return suite.tear_down();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

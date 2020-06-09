@@ -1,0 +1,1 @@
+-j '{"locations":[{"lat":40.021908,"lon":-76.192703,"street":"Hartman Bridge Road"},{"lat":40.023170,"lon":-76.194572,"name":"Adidas Outlet"}],"costing":"auto","directions_options":{"units":"miles"}}'

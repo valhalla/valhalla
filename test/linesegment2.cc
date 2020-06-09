@@ -1,33 +1,29 @@
 #include "midgard/linesegment2.h"
 
-#include "test.h"
-
 #include <vector>
 
 #include "midgard/point2.h"
+
+#include "test.h"
 
 using namespace std;
 using namespace valhalla::midgard;
 
 namespace {
 
-void TestDefaultConstructor() {
+TEST(Linesegment, TestDefaultConstructor) {
   LineSegment2<Point2> l;
   LineSegment2<Point2> expected(Point2(0.0f, 0.0f), Point2(0.0f, 0.0f));
-  if (!l.ApproximatelyEqual(expected)) {
-    throw runtime_error("LineSegment2 default constructor test failed");
-  }
+  EXPECT_TRUE(l.ApproximatelyEqual(expected));
 }
 
 void TryDistance(const Point2& p, const LineSegment2<Point2>& s, const float res, const Point2& exp) {
   Point2 closest;
-  float d = s.Distance(p, closest);
-  if (fabs(d - res) > kEpsilon)
-    throw runtime_error("Distance test failed - incorrect distance");
-  if ((fabs(closest.x() - exp.x()) > kEpsilon || fabs(closest.y() - exp.y()) > kEpsilon))
-    throw runtime_error("Distance test failed - incorrect closest point");
+  EXPECT_NEAR(s.Distance(p, closest), res, kEpsilon);
+  EXPECT_NEAR(closest.x(), exp.x(), kEpsilon);
+  EXPECT_NEAR(closest.y(), exp.y(), kEpsilon);
 }
-void TestDistance() {
+TEST(Linesegment, TestDistance) {
   // Test segment
   Point2 a(-2.0f, -2.0f);
   Point2 b(4.0f, 4.0f);
@@ -49,11 +45,11 @@ void TryIntersect(const LineSegment2<Point2>& s1,
                   const Point2& exp) {
   Point2 intersect;
   bool doesintersect = s1.Intersect(s2, intersect);
-  if (doesintersect != res)
-    throw runtime_error("Intersect test failed - intersects is incorrect");
-  if (doesintersect &&
-      (fabs(intersect.x() - exp.x()) > kEpsilon || fabs(intersect.y() - exp.y()) > kEpsilon))
-    throw runtime_error("Intersect test failed - intersection point is incorrect");
+  EXPECT_EQ(doesintersect, res);
+  if (doesintersect) {
+    EXPECT_NEAR(intersect.x(), exp.x(), kEpsilon);
+    EXPECT_NEAR(intersect.y(), exp.y(), kEpsilon);
+  }
 }
 
 void TryIntersectLL(const LineSegment2<PointLL>& s1,
@@ -62,14 +58,14 @@ void TryIntersectLL(const LineSegment2<PointLL>& s1,
                     const PointLL& exp) {
   PointLL intersect;
   bool doesintersect = s1.Intersect(s2, intersect);
-  if (doesintersect != res)
-    throw runtime_error("Intersect test failed - intersects is incorrect");
-  if (doesintersect &&
-      (fabs(intersect.x() - exp.x()) > kEpsilon || fabs(intersect.y() - exp.y()) > kEpsilon))
-    throw runtime_error("Intersect test failed - intersection point is incorrect");
+  EXPECT_EQ(doesintersect, res);
+  if (doesintersect) {
+    EXPECT_NEAR(intersect.x(), exp.x(), kEpsilon);
+    EXPECT_NEAR(intersect.y(), exp.y(), kEpsilon);
+  }
 }
 
-void TestIntersect() {
+TEST(Linesegment, TestIntersect) {
   LineSegment2<Point2> s1(Point2(-2.0f, -2.0f), Point2(4.0f, 4.0f));
 
   // Case 1 - beyond end of s1
@@ -126,9 +122,7 @@ void TestIntersect() {
 void TryPolyIntersect(const LineSegment2<Point2>& s1,
                       const std::vector<Point2>& poly,
                       const bool res) {
-  if (s1.Intersect(poly) != res) {
-    throw runtime_error("Polygon Intersect test failed");
-  }
+  EXPECT_EQ(s1.Intersect(poly), res);
 }
 
 void TryPolyClip(const LineSegment2<Point2>& s1,
@@ -137,18 +131,16 @@ void TryPolyClip(const LineSegment2<Point2>& s1,
                  LineSegment2<Point2>& clip_res) {
   LineSegment2<Point2> clip_segment;
   bool intersects = s1.ClipToPolygon(poly, clip_segment);
-  if (intersects != res) {
-    throw runtime_error("LineSegment ClipToPolygon intersection test failed");
-  }
-  if (!clip_res.ApproximatelyEqual(clip_segment)) {
-    throw runtime_error(
-        "LineSegment ClipToPolygon clipped segment mismatch: should be " +
-        std::to_string(clip_segment.a().x()) + "," + std::to_string(clip_segment.a().y()) +
-        " to: " + std::to_string(clip_segment.b().x()) + "," + std::to_string(clip_segment.b().y()));
-  }
+  EXPECT_EQ(intersects, res) << "LineSegment ClipToPolygon intersection test failed";
+
+  EXPECT_TRUE(clip_res.ApproximatelyEqual(clip_segment))
+      << "LineSegment ClipToPolygon clipped segment mismatch: should be " +
+             std::to_string(clip_segment.a().x()) + "," + std::to_string(clip_segment.a().y()) +
+             " to: " + std::to_string(clip_segment.b().x()) + "," +
+             std::to_string(clip_segment.b().y());
 }
 
-void TestPolyIntersect() {
+TEST(Linesegment, TestPolyIntersect) {
 
   // Construct a convex polygon
   std::vector<Point2> poly = {{2.0f, 2.0f},
@@ -196,17 +188,19 @@ void TestPolyIntersect() {
 
 void TryIsLeft(const Point2& p, const LineSegment2<Point2>& s, const int res) {
   float d = s.IsLeft(p);
-  if (res == 0 && fabs(d) > kEpsilon) {
-    throw runtime_error("IsLeft test failed - should be on the segment");
+
+  if (res == 0) {
+    EXPECT_LT(fabs(d), kEpsilon) << "should be on the segment -- " << res;
   }
-  if (res == -1 && d > -kEpsilon) {
-    throw runtime_error("IsLeft test failed - should be right of the segment");
+  if (res == -1) {
+    EXPECT_LE(d, -kEpsilon) << "should be right of the segment -- " << res;
   }
-  if (res == 1 && d < kEpsilon) {
-    throw runtime_error("IsLeft test failed - should be right of the segment");
+  if (res == 1) {
+    EXPECT_GE(d, kEpsilon) << "should be right of the segment -- " << res;
   }
 }
-void TestIsLeft() {
+
+TEST(Linesegment, TestIsLeft) {
   // Use -1 for right of the segment, 0 for on the segment, and 1 for left
   // of the segment
   LineSegment2<Point2> s(Point2(-2.0f, -2.0f), Point2(4.0f, 4.0f));
@@ -217,23 +211,7 @@ void TestIsLeft() {
 
 } // namespace
 
-int main() {
-  test::suite suite("point2");
-
-  // Test the default constructor
-  suite.test(TEST_CASE(TestDefaultConstructor));
-
-  // Test distance of a point to a line segment
-  suite.test(TEST_CASE(TestDistance));
-
-  // Test if 2 line segments intersect
-  suite.test(TEST_CASE(TestIntersect));
-
-  // Test if line segment intersects polygon
-  suite.test(TEST_CASE(TestPolyIntersect));
-
-  // Test if a point is left, right, or on a line segment
-  suite.test(TEST_CASE(TestIsLeft));
-
-  return suite.tear_down();
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

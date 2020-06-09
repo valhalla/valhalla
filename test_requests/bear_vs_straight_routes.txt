@@ -13,3 +13,8 @@
 -j '{"locations":[{"lat":37.612965,"lon":-122.403297,"street":"San Diego Avenue"},{"lat":37.612446,"lon":-122.404266,"street":"Park Boulevard"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":36.565117,"lon":-121.917465,"street":"Guadalupe Street"},{"lat":36.565800,"lon":-121.918091,"street":"Guadalupe Street"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":36.565117,"lon":-121.917465,"street":"Guadalupe Street"},{"lat":36.565914,"lon":-121.917625,"street":"Portola Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.662865,"lon":-76.044220,"street":"Harrington Road"},{"lat":39.654343,"lon":-76.043983,"street":"Red Toad Road"}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.654343,"lon":-76.043983,"street":"Red Toad Road"},{"lat":39.662865,"lon":-76.044220,"street":"Harrington Road"}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":36.590164,"lon":-121.878990,"street":"Castro Road"},{"lat":36.590904,"lon":-121.879982,"street":"Aguajito Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.298569,"lon":-76.821365,"street":""},{"lat":40.299107,"lon":-76.820152,"street":"US 22 East"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.056026,"lon":-78.512238,"street":""},{"lat":40.055134,"lon":-78.510963,"street":"US 220 Business"}],"costing":"auto","directions_options":{"units":"miles"}}'

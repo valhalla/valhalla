@@ -46,12 +46,17 @@ public:
    * levels. If the deserialize flag is set then all objects are serialized
    * from memory into builders that can be added to and then stored using
    * StoreTileData.
-   * @param  tile_dir     Base directory path
-   * @param  graphid      GraphId used to determine the tileid and level
-   * @param  deserialize  If true the existing objects in the tile are
-   *                      converted into builders so they can be added to.
+   * @param  tile_dir               Base directory path
+   * @param  graphid                GraphId used to determine the tileid and level
+   * @param  deserialize            If true the existing objects in the tile are
+   *                                converted into builders so they can be added to.
+   * @param  serialize_turn_lanes   If true, the offsets are truely text offsets.
+   *                                If false, the offsets are indexes into unique name file
    */
-  GraphTileBuilder(const std::string& tile_dir, const GraphId& graphid, const bool deserialize);
+  GraphTileBuilder(const std::string& tile_dir,
+                   const GraphId& graphid,
+                   const bool deserialize,
+                   bool serialize_turn_lanes = true);
 
   /**
    * Output the tile to file. Stores as binary data.
@@ -187,7 +192,7 @@ public:
    * @param  wayid  The target edge is part of this the way id.
    * @param  elev   Mean elevation.
    * @param  bn     Bike network.
-   * @param  spd    Speed limit.
+   * @param  spd    Speed limit. [kph]
    * @param  lls    The shape of the target edge.
    * @param  names  The names of the target edge.
    * @param  types  Bits indicating if the name is a ref vs a name.
@@ -409,11 +414,27 @@ public:
   void AddTurnLanes(const uint32_t idx, const std::string& str);
 
   /**
+   * Add turn lane information for a directed edge.
+   * @param  idx      Directed edge index.
+   * @param  tl_idx   Turn lane index into the OSMData name_offset map
+   */
+  void AddTurnLanes(const uint32_t idx, const uint32_t tl_idx);
+
+  /**
+   * Add turn lanes
+   * @param  turn_lanes vector of turn lanes
+   */
+  void AddTurnLanes(const std::vector<TurnLanes>& turn_lanes);
+
+  /**
    * Add a predicted speed profile for a directed edge.
    * @param  idx  Edge Id within the tile.
    * @param  profile  Compressed profile (200 short int)
+   * @param  predicted_count_hint  How many predicted speeds should we expect to add
    */
-  void AddPredictedSpeed(const uint32_t idx, const std::vector<int16_t>& profile);
+  void AddPredictedSpeed(const uint32_t idx,
+                         const std::vector<int16_t>& profile,
+                         const size_t predicted_count_hint = 256);
 
   /**
    * Updates a tile with predictive speed data. Also updates directed edges with

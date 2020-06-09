@@ -10,9 +10,9 @@
 #include "route_serializer_valhalla.cc"
 #include "tyr/serializers.h"
 
-#include <valhalla/proto/directions_options.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/directions.pb.h>
+#include <valhalla/proto/options.pb.h>
+#include <valhalla/proto/trip.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::tyr;
@@ -29,7 +29,7 @@ namespace {
  * @param  legs  The legs of the route
  * @return the gpx string
  */
-std::string pathToGPX(const std::list<odin::TripPath>& legs) {
+std::string pathToGPX(const google::protobuf::RepeatedPtrField<TripLeg>& legs) {
   // start the gpx, we'll use 6 digits of precision
   std::stringstream gpx;
   gpx << std::setprecision(6) << std::fixed;
@@ -76,17 +76,15 @@ std::string pathToGPX(const std::list<odin::TripPath>& legs) {
 namespace valhalla {
 namespace tyr {
 
-std::string serializeDirections(const valhalla_request_t& request,
-                                std::list<TripPath>& path_legs,
-                                const std::list<TripDirections>& directions_legs) {
+std::string serializeDirections(Api& request) {
   // serialize them
-  switch (request.options.format()) {
-    case DirectionsOptions_Format_osrm:
-      return osrm_serializers::serialize(request.options, path_legs, directions_legs);
-    case DirectionsOptions_Format_gpx:
-      return pathToGPX(path_legs);
-    case DirectionsOptions_Format_json:
-      return valhalla_serializers::serialize(request.options, directions_legs);
+  switch (request.options().format()) {
+    case Options_Format_osrm:
+      return osrm_serializers::serialize(request);
+    case Options_Format_gpx:
+      return pathToGPX(request.trip().routes(0).legs());
+    case Options_Format_json:
+      return valhalla_serializers::serialize(request);
     default:
       throw;
   }

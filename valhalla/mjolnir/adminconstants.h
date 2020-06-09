@@ -82,7 +82,7 @@ const std::unordered_map<std::string, std::vector<int>>
                      (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
                       kMotorcycleAccess),
                      -1, -1, -1, -1, -1, -1, -1}},
-                   {"The Netherlands",
+                   {"Netherlands",
                     {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
                       kMotorcycleAccess),
                      (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
@@ -129,7 +129,7 @@ const std::unordered_map<std::string, std::vector<int>>
                    {"United Kingdom",
                     {-1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
-                   {"United States of America",
+                   {"United States",
                     {-1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),

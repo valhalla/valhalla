@@ -6,11 +6,11 @@ Isochrone maps share some of the same concepts and terminology with familiar top
 
 This is an example of isochrones showing the travel times by driving from a location in Melbourne, as depicted in Mobility Explorer.
 
-![Isochrones for travel times by walking in Lancaster, PA](/images/isochrone.png)
+![Isochrones for travel times by walking in Lancaster, PA](../images/isochrone.png)
 
 ## Inputs of the Isochrone service
 
-An isochrone request run locally takes the form of `localhost:8002/isochrone?json={}`, where the JSON inputs inside the `{}` includes an array of at least one location and options for the [route costing model](/turn-by-turn/api-reference/#costing-models).
+An isochrone request run locally takes the form of `localhost:8002/isochrone?json={}`, where the JSON inputs inside the `{}` includes an array of at least one location and options for the [route costing model](../turn-by-turn/api-reference.md#costing-models).
 
 For example, you can use the isochrone service to find out where you can travel within a 15-minute walk from your office building. The API request for this uses `isochrone?` as the request action, `pedestrian` costing, and a single contour for a 15-minute time interval. The response is GeoJSON, which you can display on a map to visualize where you might be able to walk.
 
@@ -22,18 +22,18 @@ There is an option to name your isochrone request by appending `&id=`. The `id` 
 
 ### Location parameters
 
-The `locations` must include a latitude and longitude in decimal degrees. The coordinates can come from many input sources, such as a GPS location, a point or a click on a map, a geocoding service, and so on. External search services, such as [Mapbox Geocoding](https://www.mapbox.com/api-documentation/#geocoding) can be used to find places and geocode addresses, whose coordinates can be used as input to the service.
+The `locations` must include a latitude and longitude in decimal degrees. The coordinates can come from many input sources, such as a GPS location, a point or a click on a map, a geocoding service, and so on. External search services, such as [Mapbox Geocoding](https://docs.mapbox.com/api/search/#geocoding) can be used to find places and geocode addresses, whose coordinates can be used as input to the service.
 
 | Location parameters | Description |
 | :--------- | :----------- |
 | `lat` | Latitude of the location in degrees. |
 | `lon` | Longitude of the location in degrees. |
 
-Refer to the [route location documentation](/turn-by-turn/api-reference.md#locations) for more information on specifying locations.
+Refer to the [route location documentation](../turn-by-turn/api-reference.md#locations) for more information on specifying locations.
 
 ### Costing parameters
 
-The isochrone service uses the `auto`, `bicycle`, `pedestrian`, and `multimodal` costing models available in the Valhalla Turn-by-Turn service. Refer to the [route costing models](/turn-by-turn/api-reference.md#costing-models) and [costing options](/turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
+The isochrone service uses the `auto`, `bicycle`, `pedestrian`, and `multimodal` costing models available in the Valhalla Turn-by-Turn service. Refer to the [route costing models](../turn-by-turn/api-reference.md#costing-models) and [costing options](../turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
 
 ### Other request parameters
 
@@ -45,6 +45,7 @@ The isochrone service uses the `auto`, `bicycle`, `pedestrian`, and `multimodal`
 | `polygons` | A Boolean value to determine whether to return geojson polygons or linestrings as the contours. The default is `false`, which returns lines; when `true`, polygons are returned. Note: When `polygons` is `true`, any contour that forms a ring is returned as a polygon. |
 | `denoise` | A floating point value from `0` to `1` (default of `1`) which can be used to remove smaller contours. A value of `1` will only return the largest contour for a given time value. A value of `0.5` drops any contours that are less than half the area of the largest contour in the set of contours for that same time value. |
 | `generalize` | A floating point value in meters used as the tolerance for [Douglas-Peucker](https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm) generalization. Note: Generalization of contours can lead to self-intersections, as well as intersections of adjacent contours. |
+| `show_locations` | A boolean indicating whether the input locations should be returned as MultiPoint features: one feature for the exact input coordinates and one feature for the coordinates of the network node it snapped to. Default false. 
 
 ## Outputs of the Isochrone service
 
@@ -52,7 +53,7 @@ In the service response, the isochrone contours are returned as [GeoJSON](http:/
 
 The contours are calculated using rasters and are returned as either polygon or line features, depending on your input setting for the `polygons` parameter. If an isochrone request has been named using the optional `&id=` input, then the `id` is returned as a name property for the feature collection within the GeoJSON response.
 
-See the [HTTP return codes](/turn-by-turn/api-reference.md#http-status-codes-and-conditions) for more on messages you might receive from the service.
+See the [HTTP return codes](../turn-by-turn/api-reference.md#http-status-codes-and-conditions) for more on messages you might receive from the service.
 
 ### Draw isochrones on a map
 

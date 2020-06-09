@@ -5,7 +5,6 @@
 #include <map>
 #include <memory>
 #include <set>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -16,6 +15,8 @@
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
+
+#include <robin_hood.h>
 
 namespace valhalla {
 namespace thor {
@@ -106,8 +107,8 @@ public:
    * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance>
-  SourceToTarget(const google::protobuf::RepeatedPtrField<odin::Location>& source_location_list,
-                 const google::protobuf::RepeatedPtrField<odin::Location>& target_location_list,
+  SourceToTarget(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+                 const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
                  baldr::GraphReader& graphreader,
                  const std::shared_ptr<sif::DynamicCost>* mode_costing,
                  const sif::TravelMode mode,
@@ -157,7 +158,7 @@ protected:
   std::vector<EdgeStatus> target_edgestatus_;
 
   // Mark each target edge with a list of target indexes that have reached it
-  std::unordered_map<baldr::GraphId, std::vector<uint32_t>> targets_;
+  robin_hood::unordered_map<uint64_t, std::vector<uint32_t>> targets_;
 
   // List of best connections found so far
   std::vector<BestCandidate> best_connection_;
@@ -175,8 +176,8 @@ protected:
    * @param  source_location_list   List of source/origin locations.
    * @param  target_location_list   List of target/destination locations.
    */
-  void Initialize(const google::protobuf::RepeatedPtrField<odin::Location>& source_location_list,
-                  const google::protobuf::RepeatedPtrField<odin::Location>& target_location_list);
+  void Initialize(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+                  const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list);
 
   /**
    * Iterate the forward search from the source/origin location.
@@ -216,7 +217,7 @@ protected:
    * @param  sources       List of source/origin locations.
    */
   void SetSources(baldr::GraphReader& graphreader,
-                  const google::protobuf::RepeatedPtrField<odin::Location>& sources);
+                  const google::protobuf::RepeatedPtrField<valhalla::Location>& sources);
 
   /**
    * Set the target/destination locations. Search expands backwards from
@@ -225,7 +226,7 @@ protected:
    * @param  targets       List of target locations.
    */
   void SetTargets(baldr::GraphReader& graphreader,
-                  const google::protobuf::RepeatedPtrField<odin::Location>& targets);
+                  const google::protobuf::RepeatedPtrField<valhalla::Location>& targets);
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path
@@ -239,7 +240,7 @@ protected:
    * @return  Returns true if all destinations have been settled.
    */
   bool UpdateDestinations(const uint32_t origin_index,
-                          const google::protobuf::RepeatedPtrField<odin::Location>& locations,
+                          const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
                           const sif::BDEdgeLabel& pred,

@@ -215,15 +215,6 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   Load(enter_ferry_verbal_subset, narrative_pt.get_child(kEnterFerryVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
-  LOG_TRACE("Populate exit_ferry_subset...");
-  // Populate exit_ferry_subset
-  Load(exit_ferry_subset, narrative_pt.get_child(kExitFerryKey));
-
-  LOG_TRACE("Populate exit_ferry_verbal_subset...");
-  // Populate exit_ferry_verbal_subset
-  Load(exit_ferry_verbal_subset, narrative_pt.get_child(kExitFerryVerbalKey));
-
-  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate transit_connection_start_subset...");
   // Populate transit_connection_start_subset
   Load(transit_connection_start_subset, narrative_pt.get_child(kTransitConnectionStartKey));
@@ -300,17 +291,6 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   Load(transit_transfer_verbal_subset, narrative_pt.get_child(kTransitTransferVerbalKey));
 
   /////////////////////////////////////////////////////////////////////////////
-  LOG_TRACE("Populate post_transit_connection_destination_subset...");
-  // Populate post_transit_connection_destination_subset
-  Load(post_transit_connection_destination_subset,
-       narrative_pt.get_child(kPostTransitConnectionDestinationKey));
-
-  LOG_TRACE("Populate post_transit_connection_destination_verbal_subset...");
-  // Populate post_transit_connection_destination_verbal_subset
-  Load(post_transit_connection_destination_verbal_subset,
-       narrative_pt.get_child(kPostTransitConnectionDestinationVerbalKey));
-
-  /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate post_transition_verbal_subset...");
   // Populate post_transition_verbal_subset
   Load(post_transition_verbal_subset, narrative_pt.get_child(kPostTransitionVerbalKey));
@@ -325,6 +305,11 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   LOG_TRACE("Populate verbal_multi_cue_subset...");
   // Populate verbal_multi_cue_subset
   Load(verbal_multi_cue_subset, narrative_pt.get_child(kVerbalMultiCueKey));
+
+  /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate approach_verbal_alert_subset...");
+  // Populate approach_verbal_alert_subset
+  Load(approach_verbal_alert_subset, narrative_pt.get_child(kApproachVerbalAlertKey));
 }
 
 void NarrativeDictionary::Load(PhraseSet& phrase_handle,
@@ -443,6 +428,10 @@ void NarrativeDictionary::Load(EnterRoundaboutSubset& enter_roundabout_handle,
   // Populate ordinal_values
   enter_roundabout_handle.ordinal_values =
       as_vector<std::string>(enter_roundabout_subset_pt, kOrdinalValuesKey);
+
+  // Populate empty_street_name_labels
+  enter_roundabout_handle.empty_street_name_labels =
+      as_vector<std::string>(enter_roundabout_subset_pt, kEmptyStreetNameLabelsKey);
 }
 
 void NarrativeDictionary::Load(EnterFerrySubset& enter_ferry_handle,
@@ -523,6 +512,36 @@ void NarrativeDictionary::Load(
   post_transition_transit_verbal_handle.transit_stop_count_labels =
       as_unordered_map<std::string, std::string>(post_transition_transit_verbal_subset_pt,
                                                  kTransitStopCountLabelsKey);
+}
+
+void NarrativeDictionary::Load(VerbalMultiCueSubset& verbal_multi_cue_handle,
+                               const boost::property_tree::ptree& verbal_multi_cue_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<PhraseSet&>(verbal_multi_cue_handle), verbal_multi_cue_subset_pt);
+
+  // Populate metric_lengths
+  verbal_multi_cue_handle.metric_lengths =
+      as_vector<std::string>(verbal_multi_cue_subset_pt, kMetricLengthsKey);
+
+  // Populate us_customary_lengths
+  verbal_multi_cue_handle.us_customary_lengths =
+      as_vector<std::string>(verbal_multi_cue_subset_pt, kUsCustomaryLengthsKey);
+}
+
+void NarrativeDictionary::Load(ApproachVerbalAlertSubset& approach_verbal_alert_handle,
+                               const boost::property_tree::ptree& approach_verbal_alert_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<PhraseSet&>(approach_verbal_alert_handle), approach_verbal_alert_subset_pt);
+
+  // Populate metric_lengths
+  approach_verbal_alert_handle.metric_lengths =
+      as_vector<std::string>(approach_verbal_alert_subset_pt, kMetricLengthsKey);
+
+  // Populate us_customary_lengths
+  approach_verbal_alert_handle.us_customary_lengths =
+      as_vector<std::string>(approach_verbal_alert_subset_pt, kUsCustomaryLengthsKey);
 }
 
 const std::locale& NarrativeDictionary::GetLocale() const {

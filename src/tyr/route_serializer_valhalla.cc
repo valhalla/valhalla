@@ -7,7 +7,7 @@
 #include "odin/util.h"
 #include "tyr/serializers.h"
 
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/proto/options.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -93,32 +93,35 @@ valhalla output looks like this:
 */
 using namespace std;
 
-json::MapPtr summary(const std::list<valhalla::odin::TripDirections>& legs) {
+json::MapPtr summary(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs) {
 
-  uint64_t time = 0;
-  long double length = 0;
+  double time = 0;
+  double length = 0;
+  bool has_time_restrictions = false;
   AABB2<PointLL> bbox(10000.0f, 10000.0f, -10000.0f, -10000.0f);
   for (const auto& leg : legs) {
-    time += static_cast<uint64_t>(leg.summary().time());
+    time += leg.summary().time();
     length += leg.summary().length();
 
     AABB2<PointLL> leg_bbox(leg.summary().bbox().min_ll().lng(), leg.summary().bbox().min_ll().lat(),
                             leg.summary().bbox().max_ll().lng(), leg.summary().bbox().max_ll().lat());
     bbox.Expand(leg_bbox);
+    has_time_restrictions = has_time_restrictions || leg.summary().has_time_restrictions();
   }
 
   auto route_summary = json::map({});
-  route_summary->emplace("time", time);
+  route_summary->emplace("time", json::fp_t{time, 3});
   route_summary->emplace("length", json::fp_t{length, 3});
   route_summary->emplace("min_lat", json::fp_t{bbox.miny(), 6});
   route_summary->emplace("min_lon", json::fp_t{bbox.minx(), 6});
   route_summary->emplace("max_lat", json::fp_t{bbox.maxy(), 6});
   route_summary->emplace("max_lon", json::fp_t{bbox.maxx(), 6});
+  route_summary->emplace("has_time_restrictions", json::Value{has_time_restrictions});
   LOG_DEBUG("trip_time::" + std::to_string(time) + "s");
   return route_summary;
 }
 
-json::ArrayPtr locations(const std::list<valhalla::odin::TripDirections>& legs) {
+json::ArrayPtr locations(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs) {
   auto locations = json::array({});
 
   int index = 0;
@@ -127,8 +130,12 @@ json::ArrayPtr locations(const std::list<valhalla::odin::TripDirections>& legs) 
          ++location) {
       index = 1;
       auto loc = json::map({});
-      if (location->type() == odin::Location_Type_kThrough) {
+      if (location->type() == valhalla::Location_Type_kThrough) {
         loc->emplace("type", std::string("through"));
+      } else if (location->type() == valhalla::Location_Type_kVia) {
+        loc->emplace("type", std::string("via"));
+      } else if (location->type() == valhalla::Location_Type_kBreakThrough) {
+        loc->emplace("type", std::string("break_through"));
       } else {
         loc->emplace("type", std::string("break"));
       }
@@ -159,9 +166,9 @@ json::ArrayPtr locations(const std::list<valhalla::odin::TripDirections>& legs) 
         loc->emplace("date_time", location->date_time());
       }
       if (location->has_side_of_street()) {
-        if (location->side_of_street() == odin::Location::kLeft) {
+        if (location->side_of_street() == valhalla::Location::kLeft) {
           loc->emplace("side_of_street", std::string("left"));
-        } else if (location->side_of_street() == odin::Location::kRight) {
+        } else if (location->side_of_street() == valhalla::Location::kRight) {
           loc->emplace("side_of_street", std::string("right"));
         }
       }
@@ -179,68 +186,70 @@ json::ArrayPtr locations(const std::list<valhalla::odin::TripDirections>& legs) 
 }
 
 const std::unordered_map<int, std::string> vehicle_to_string{
-    {static_cast<int>(TripDirections_VehicleType_kCar), "car"},
-    {static_cast<int>(TripDirections_VehicleType_kMotorcycle), "motorcycle"},
-    {static_cast<int>(TripDirections_VehicleType_kAutoBus), "bus"},
-    {static_cast<int>(TripDirections_VehicleType_kTractorTrailer), "tractor_trailer"},
-    {static_cast<int>(TripDirections_VehicleType_kMotorScooter), "motor_scooter"},
+    {static_cast<int>(DirectionsLeg_VehicleType_kCar), "car"},
+    {static_cast<int>(DirectionsLeg_VehicleType_kMotorcycle), "motorcycle"},
+    {static_cast<int>(DirectionsLeg_VehicleType_kAutoBus), "bus"},
+    {static_cast<int>(DirectionsLeg_VehicleType_kTractorTrailer), "tractor_trailer"},
+    {static_cast<int>(DirectionsLeg_VehicleType_kMotorScooter), "motor_scooter"},
 };
 
 std::unordered_map<int, std::string> pedestrian_to_string{
-    {static_cast<int>(TripDirections_PedestrianType_kFoot), "foot"},
-    {static_cast<int>(TripDirections_PedestrianType_kWheelchair), "wheelchair"},
-    {static_cast<int>(TripDirections_PedestrianType_kSegway), "segway"},
+    {static_cast<int>(DirectionsLeg_PedestrianType_kFoot), "foot"},
+    {static_cast<int>(DirectionsLeg_PedestrianType_kWheelchair), "wheelchair"},
+    {static_cast<int>(DirectionsLeg_PedestrianType_kSegway), "segway"},
 };
 
 std::unordered_map<int, std::string> bicycle_to_string{
-    {static_cast<int>(TripDirections_BicycleType_kRoad), "road"},
-    {static_cast<int>(TripDirections_BicycleType_kCross), "cross"},
-    {static_cast<int>(TripDirections_BicycleType_kHybrid), "hybrid"},
-    {static_cast<int>(TripDirections_BicycleType_kMountain), "mountain"},
+    {static_cast<int>(DirectionsLeg_BicycleType_kRoad), "road"},
+    {static_cast<int>(DirectionsLeg_BicycleType_kCross), "cross"},
+    {static_cast<int>(DirectionsLeg_BicycleType_kHybrid), "hybrid"},
+    {static_cast<int>(DirectionsLeg_BicycleType_kMountain), "mountain"},
 };
 
 std::unordered_map<int, std::string> transit_to_string{
-    {static_cast<int>(TripDirections_TransitType_kTram), "tram"},
-    {static_cast<int>(TripDirections_TransitType_kMetro), "metro"},
-    {static_cast<int>(TripDirections_TransitType_kRail), "rail"},
-    {static_cast<int>(TripDirections_TransitType_kBus), "bus"},
-    {static_cast<int>(TripDirections_TransitType_kFerry), "ferry"},
-    {static_cast<int>(TripDirections_TransitType_kCableCar), "cable_car"},
-    {static_cast<int>(TripDirections_TransitType_kGondola), "gondola"},
-    {static_cast<int>(TripDirections_TransitType_kFunicular), "funicular"},
+    {static_cast<int>(DirectionsLeg_TransitType_kTram), "tram"},
+    {static_cast<int>(DirectionsLeg_TransitType_kMetro), "metro"},
+    {static_cast<int>(DirectionsLeg_TransitType_kRail), "rail"},
+    {static_cast<int>(DirectionsLeg_TransitType_kBus), "bus"},
+    {static_cast<int>(DirectionsLeg_TransitType_kFerry), "ferry"},
+    {static_cast<int>(DirectionsLeg_TransitType_kCableCar), "cable_car"},
+    {static_cast<int>(DirectionsLeg_TransitType_kGondola), "gondola"},
+    {static_cast<int>(DirectionsLeg_TransitType_kFunicular), "funicular"},
 };
 
 std::pair<std::string, std::string>
-travel_mode_type(const valhalla::odin::TripDirections_Maneuver& maneuver) {
+travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver) {
   switch (maneuver.travel_mode()) {
-    case TripDirections_TravelMode_kDrive: {
+    case DirectionsLeg_TravelMode_kDrive: {
       auto i = maneuver.has_vehicle_type() ? vehicle_to_string.find(maneuver.vehicle_type())
                                            : vehicle_to_string.cend();
       return i == vehicle_to_string.cend() ? make_pair("drive", "car")
                                            : make_pair("drive", i->second);
     }
-    case TripDirections_TravelMode_kPedestrian: {
+    case DirectionsLeg_TravelMode_kPedestrian: {
       auto i = maneuver.has_pedestrian_type() ? pedestrian_to_string.find(maneuver.pedestrian_type())
                                               : pedestrian_to_string.cend();
       return i == pedestrian_to_string.cend() ? make_pair("pedestrian", "foot")
                                               : make_pair("pedestrian", i->second);
     }
-    case TripDirections_TravelMode_kBicycle: {
+    case DirectionsLeg_TravelMode_kBicycle: {
       auto i = maneuver.has_bicycle_type() ? bicycle_to_string.find(maneuver.bicycle_type())
                                            : bicycle_to_string.cend();
       return i == bicycle_to_string.cend() ? make_pair("bicycle", "road")
                                            : make_pair("bicycle", i->second);
     }
-    case TripDirections_TravelMode_kTransit: {
+    case DirectionsLeg_TravelMode_kTransit: {
       auto i = maneuver.has_transit_type() ? transit_to_string.find(maneuver.transit_type())
                                            : transit_to_string.cend();
       return i == transit_to_string.cend() ? make_pair("transit", "rail")
                                            : make_pair("transit", i->second);
     }
   }
+  throw std::runtime_error("Unhandled case");
 }
 
-json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs) {
+json::ArrayPtr
+legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directions_legs) {
 
   // TODO: multiple legs.
   auto legs = json::array({});
@@ -248,6 +257,7 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
     auto leg = json::map({});
     auto summary = json::map({});
     auto maneuvers = json::array({});
+    bool has_time_restrictions = false;
 
     for (const auto& maneuver : directions_leg.maneuver()) {
 
@@ -290,7 +300,7 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
       }
 
       // Time, length, and shape indexes
-      man->emplace("time", static_cast<uint64_t>(maneuver.time()));
+      man->emplace("time", json::fp_t{maneuver.time(), 3});
       man->emplace("length", json::fp_t{maneuver.length(), 3});
       man->emplace("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
       man->emplace("end_shape_index", static_cast<uint64_t>(maneuver.end_shape_index()));
@@ -301,6 +311,10 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
       }
       if (maneuver.portions_unpaved()) {
         man->emplace("rough", maneuver.portions_unpaved());
+      }
+      if (maneuver.has_time_restrictions()) {
+        man->emplace("has_time_restrictions", maneuver.has_time_restrictions());
+        has_time_restrictions = true;
       }
 
       // Process sign
@@ -532,12 +546,13 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
     if (directions_leg.maneuver_size() > 0) {
       leg->emplace("maneuvers", maneuvers);
     }
-    summary->emplace("time", static_cast<uint64_t>(directions_leg.summary().time()));
+    summary->emplace("time", json::fp_t{directions_leg.summary().time(), 3});
     summary->emplace("length", json::fp_t{directions_leg.summary().length(), 3});
     summary->emplace("min_lat", json::fp_t{directions_leg.summary().bbox().min_ll().lat(), 6});
     summary->emplace("min_lon", json::fp_t{directions_leg.summary().bbox().min_ll().lng(), 6});
     summary->emplace("max_lat", json::fp_t{directions_leg.summary().bbox().max_ll().lat(), 6});
     summary->emplace("max_lon", json::fp_t{directions_leg.summary().bbox().max_ll().lng(), 6});
+    summary->emplace("has_time_restrictions", json::Value{has_time_restrictions});
     leg->emplace("summary", summary);
     leg->emplace("shape", directions_leg.shape());
 
@@ -546,22 +561,18 @@ json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_
   return legs;
 }
 
-std::string serialize(const valhalla::odin::DirectionsOptions& directions_options,
-                      const std::list<valhalla::odin::TripDirections>& directions_legs) {
+std::string serialize(const Api& api) {
   // build up the json object
   auto json = json::map(
-      {{"trip", json::map({{"locations", locations(directions_legs)},
-                           {"summary", summary(directions_legs)},
-                           {"legs", legs(directions_legs)},
-                           {"status_message",
-                            string("Found route between points")}, // found route between points OR
-                                                                   // cannot find route between points
-                           {"status", static_cast<uint64_t>(0)},   // 0 success
-                           {"units",
-                            valhalla::odin::DirectionsOptions_Units_Name(directions_options.units())},
-                           {"language", directions_options.language()}})}});
-  if (directions_options.has_id()) {
-    json->emplace("id", directions_options.id());
+      {{"trip", json::map({{"locations", locations(api.directions().routes(0).legs())},
+                           {"summary", summary(api.directions().routes(0).legs())},
+                           {"legs", legs(api.directions().routes(0).legs())},
+                           {"status_message", string("Found route between points")},
+                           {"status", static_cast<uint64_t>(0)}, // 0 success
+                           {"units", valhalla::Options_Units_Enum_Name(api.options().units())},
+                           {"language", api.options().language()}})}});
+  if (api.options().has_id()) {
+    json->emplace("id", api.options().id());
   }
 
   std::stringstream ss;

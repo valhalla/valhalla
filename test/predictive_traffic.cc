@@ -4,9 +4,11 @@
 #include <string>
 #include <vector>
 
+#include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
+#include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
 
 #include "baldr/rapidjson_utils.h"
@@ -14,6 +16,7 @@
 
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
+using namespace valhalla::midgard;
 
 namespace {
 
@@ -31,7 +34,8 @@ const auto config = json_to_pt(R"({
 
 } // namespace
 
-void test_predictive_traffic() {
+// TODO - add this back in when updated data is available!
+TEST(PredictiveTraffic, DISABLED_test_predictive_traffic) {
   boost::property_tree::ptree hierarchy_properties = config.get_child("mjolnir");
   GraphReader reader(hierarchy_properties);
 
@@ -54,22 +58,11 @@ void test_predictive_traffic() {
           auto de = tile->directededge(idx);
 
           if (edgeid.value == 67134432) {
-            if (de->free_flow_speed() != 5)
-              throw std::runtime_error("Free flow speed should be 5 for edge 67134432, but it is: " +
-                                       std::to_string(de->free_flow_speed()));
-            if (de->constrained_flow_speed() != 6)
-              throw std::runtime_error(
-                  "Constrained flow speed should be 6 for edge 67134432, but it is: " +
-                  std::to_string(de->constrained_flow_speed()));
+            EXPECT_EQ(de->free_flow_speed(), 5) << "for edge 67134432";
+            EXPECT_EQ(de->constrained_flow_speed(), 6) << "for edge 67134432";
           } else if (edgeid.value == 264348364578) {
-            if (de->free_flow_speed() != 13)
-              throw std::runtime_error(
-                  "Free fow speed should be 13 for edge 264348364578, but it is: " +
-                  std::to_string(de->free_flow_speed()));
-            if (de->constrained_flow_speed() != 9)
-              throw std::runtime_error(
-                  "Constrained flow speed should be 9 for edge 264348364578, but it is: " +
-                  std::to_string(de->constrained_flow_speed()));
+            EXPECT_EQ(de->free_flow_speed(), 13) << "for edge 264348364578";
+            EXPECT_EQ(de->constrained_flow_speed(), 9) << "for edge 264348364578";
           }
           if (de->constrained_flow_speed() || de->free_flow_speed())
             count++;
@@ -77,14 +70,63 @@ void test_predictive_traffic() {
       }
     }
   }
-  if (count != 23751)
-    throw std::runtime_error("Incorrect number of edges updated.  Count: " + std::to_string(count));
+  EXPECT_EQ(count, 23751) << "Incorrect number of edges updated";
+}
+
+TEST(PredictiveTraffic, test_get_speed) {
+  GraphReader reader(config.get_child("mjolnir"));
+
+  // fixture traffic tile 0/003/196.gph
+  GraphId id("0/3196/0");
+  auto tile = reader.GetGraphTile(id);
+  auto de = tile->directededge(id);
+
+  EXPECT_TRUE(de->has_predicted_speed()) << "No predicted speed on edge " + std::to_string(id);
+
+  EXPECT_TRUE(de->constrained_flow_speed()) << "No constrained speed on edge " + std::to_string(id);
+
+  EXPECT_TRUE(de->free_flow_speed()) << "No freeflow speed on edge " + std::to_string(id);
+
+  // Test cases where constrained flow speed is returned
+  auto expected = 35;
+  std::vector<uint32_t> actuals = {tile->GetSpeed(de), tile->GetSpeed(de, kConstrainedFlowMask),
+                                   tile->GetSpeed(de, kConstrainedFlowMask, 25201)};
+  for (auto actual : actuals) {
+    EXPECT_EQ(actual, expected) << "constrained speeds not equal";
+  }
+
+  // Test cases where free flow speed is returned
+  expected = 45;
+  actuals = {tile->GetSpeed(de, kFreeFlowMask), tile->GetSpeed(de, kFreeFlowMask, kSecondsPerDay),
+             tile->GetSpeed(de, kFreeFlowMask, 0)};
+  for (auto actual : actuals) {
+    EXPECT_EQ(actual, expected) << "freeflow speeds not equal";
+  }
+
+  // Test cases where predicted flow speed is returned
+  expected = 23;
+  auto actual = tile->GetSpeed(de, kPredictedFlowMask, kConstrainedFlowSecondOfDay);
+  EXPECT_EQ(actual, expected) << "predicted speed incorrect";
+
+  // Test cases where we has for a time of day that is huge
+  expected = 23;
+  actual = tile->GetSpeed(de, kPredictedFlowMask, kConstrainedFlowSecondOfDay + kSecondsPerWeek);
+  EXPECT_EQ(actual, expected) << "predicted speed incorrect";
+
+  // Test flow_sources
+  uint8_t flow_sources;
+  tile->GetSpeed(de, kPredictedFlowMask, kConstrainedFlowSecondOfDay, &flow_sources);
+  EXPECT_TRUE(flow_sources & kPredictedFlowMask) << "Expected flow_sources to include predicted";
+
+  tile->GetSpeed(de, kConstrainedFlowMask, kConstrainedFlowSecondOfDay, &flow_sources);
+  EXPECT_FALSE(flow_sources & kPredictedFlowMask) << "Expected flow_sources not to include predicted";
+
+  tile->GetSpeed(de, kNoFlowMask, kConstrainedFlowSecondOfDay, &flow_sources);
+
+  EXPECT_FALSE(flow_sources & kPredictedFlowMask) << "Expected flow_sources not to include predicted";
 }
 
 int main(int argc, char* argv[]) {
-  test::suite suite("predictive_traffic");
-  // TODO - add this back in when updated data is available!
-  //  suite.test(TEST_CASE(test_predictive_traffic));
-
-  return suite.tear_down();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

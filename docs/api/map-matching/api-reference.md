@@ -2,7 +2,7 @@
 
 With the Mapbox Map Matching service, you can match coordinates, such as GPS locations, to roads and paths that have been mapped in OpenStreetMap. By doing this, you can turn a path into a route with narrative instructions and also get the attribute values from that matched line.
 
-You can view an [interactive demo](http://valhalla.github.io/demos/map_matching/) or use [Mobility Explorer](https://github.com/transitland/mobility-explorer). 
+You can view an [interactive demo](http://valhalla.github.io/demos/map_matching/) or use [Mobility Explorer](https://github.com/transitland/mobility-explorer).
 
 There are two separate Map Matching calls that perform different operations on an input set of latitude,longitude coordinates. The `trace_route` action returns the shape snapped to the road network and narrative directions, while `trace_attributes` returns detailed attribution along the portion of the route.
 
@@ -11,6 +11,8 @@ It is important to note that all service requests should be *POST* because `shap
 ## Trace route action
 
 The `trace_route` action takes the costing mode and a list of latitude,longitude coordinates, for example, from a GPS trace, to turn them into a route with the shape snapped to the road network and a set of guidance directions. You might use this to take a GPS trace from a bike route into a set of narrative instructions so you can re-create your trip or share it with others.
+
+By default a single trip leg is returned in a trace_route response. You can split the route response into multiple legs by setting `"type":"break"` on any of the input shape objects in the `shape` parameter of your query. The first and last locations should always have type break. Note that setting breaks is not supported for encoded_polyline input, and is only supported for `map_snap` mode of the trace_route endpoint.
 
 ## Trace attributes action
 
@@ -50,6 +52,11 @@ You can also set `directions_options` to specify output units, language, and whe
 | `begin_time` | Begin timestamp for the trace. This is used along with the `durations` so that timestamps can be specified for a trace that is specified using an encoded polyline. |
 | `durations` | List of durations (seconds) between each successive pair of input trace points. This allows trace points to be supplied as an encoded polyline and timestamps to be created by using this list of "delta" times along with the `begin_time` of the trace. |
 | `use_timestamps` | A boolean value indicating whether the input timestamps or durations should be used when computing elapsed time at each edge along the matched path. If true, timestamps are used. If false (default), internal costing is applied to compute elapsed times. |
+| `trace_options` | Additional options. |
+| `trace_options.search_radius` | Search radius in meters associated with supplied trace points. |
+| `trace_options.gps_accuracy` | GPS accuracy in meters associated with supplied trace points. |
+| `trace_options.breakage_distance` | Breaking distance in meters between trace points. |
+| `trace_options.interpolation_distance` | Interpolation distance in meters beyond which trace points are merged together. |
 
 ### Attribute filters (`trace_attributes` only)
 
@@ -110,6 +117,8 @@ node.intersecting_edge.to_edge_name_consistency
 node.intersecting_edge.driveability
 node.intersecting_edge.cyclability
 node.intersecting_edge.walkability
+node.intersecting_edge.use
+node.intersecting_edge.road_class
 node.elapsed_time
 node.admin_index
 node.type
@@ -147,7 +156,7 @@ The `trace_attributes` results contains a list of edges and, optionally, the fol
 | `edges` | List of edges associated with input shape. See the list of [edge items](#edge-items) for details. |
 | `osm_changeset` | Identifier of the OpenStreetMap base data version. |
 | `admins` | List of the administrative codes and names. See the list of [admin items](#admin-items) for details. |
-| `shape` | The [encoded polyline](/decoding.md) of the matched path. |
+| `shape` | The [encoded polyline](../../decoding.md) of the matched path. |
 | `matched_points` | List of match results when using the `map_snap` shape match algorithm. There is a one-to-one correspondence with the input set of latitude, longitude coordinates and this list of match results. See the list of [matched point items](#matched-point-items) for details. |
 | `units` | The specified units with the request, in either kilometers or miles. |
 
@@ -233,6 +242,8 @@ Each `intersecting_edge` may include:
 | `driveability` | Driveability values, if available:<ul><li>`forward`</li><li>`backward`</li><li>`both`</li></ul> |
 | `cyclability` | Cyclability values, if available:<ul><li>`forward`</li><li>`backward`</li><li>`both`</li></ul> |
 | `walkability` | Walkability values, if available:<ul><li>`forward`</li><li>`backward`</li><li>`both`</li></ul> |
+| `use` | Use values: <ul><li>`tram`</li><li>`road`</li><li>`ramp`</li><li>`turn_channel`</li><li>`track`</li><li>`driveway`</li><li>`alley`</li><li>`parking_aisle`</li><li>`emergency_access`</li><li>`drive_through`</li><li>`culdesac`</li><li>`cycleway`</li><li>`mountain_bike`</li><li>`sidewalk`</li><li>`footway`</li><li>`steps`</li><li>`other`</li><li>`rail-ferry`</li><li>`ferry`</li><li>`rail`</li><li>`bus`</li><li>`rail_connection`</li><li>`bus_connnection`</li><li>`transit_connection`</li></ul> |
+| `road_class` | Road class values:<ul><li>`motorway`</li><li>`trunk`</li><li>`primary`</li><li>`secondary`</li><li>`tertiary`</li><li>`unclassified`</li><li>`residential`</li><li>`service_other`</li></ul> |
 
 #### Admin items
 
@@ -269,7 +280,7 @@ Follow these guidelines to improve the Map Matching results.
 * Have each trace represent one continuous path.
 * Verify that there is a corresponding match with the OpenStreetMap network.
 
-You can use certain parameters to tune the response. Unless otherwise noted, each of these options is specified within a root-level `trace_options` object. 
+You can use certain parameters to tune the response. Unless otherwise noted, each of these options is specified within a root-level `trace_options` object.
 
 * Use `turn_penalty_factor` to penalize turns from one road segment to next. For a pedestrian `trace_route`, you may see a back-and-forth motion along the streets of your path. Try increasing the turn penalty factor to 500 to smooth out jittering of points. Note that if GPS accuracy is already good, increasing this will have a negative affect on your results.
 * Set the `gps_accuracy` to indicate the accuracy in meters.
@@ -285,6 +296,12 @@ You can use certain parameters to tune the response. Unless otherwise noted, eac
 ### Example `trace_route` requests
 
 The following are example JSON payloads for POST requests for the `trace_routes` action.
+
+*`trace_route` with shape parameter*
+
+```
+{"shape":[{"lat":39.983841,"lon":-76.735741,"type":"break"},{"lat":39.983704,"lon":-76.735298,"type":"via"},{"lat":39.983578,"lon":-76.734848,"type":"via"},{"lat":39.983551,"lon":-76.734253,"type":"break"},{"lat":39.983555,"lon":-76.734116,"type":"via"},{"lat":39.983589,"lon":-76.733315,"type":"via"},{"lat":39.983719,"lon":-76.732445,"type":"via"},{"lat":39.983818,"lon":-76.731712,"type":"via"},{"lat":39.983776,"lon":-76.731506,"type":"via"},{"lat":39.983696,"lon":-76.731369,"type":"break"}],"costing":"auto","shape_match":"map_snap"}}
+```
 
 *`trace_route` with encoded polyline parameter*
 

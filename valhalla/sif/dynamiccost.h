@@ -2,20 +2,26 @@
 #define VALHALLA_SIF_DYNAMICCOST_H_
 
 #include <cstdint>
+#include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/double_bucket_queue.h> // For kInvalidLabel
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
-#include <valhalla/proto/directions_options.pb.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/hierarchylimits.h>
+#include <valhalla/thor/edgestatus.h>
 
 #include <memory>
+#include <third_party/rapidjson/include/rapidjson/document.h>
 #include <unordered_map>
 
 namespace valhalla {
@@ -44,11 +50,11 @@ constexpr uint32_t kDefaultUnitSize = 1;
 
 // Maximum penalty allowed. Cannot be too high because sometimes one cannot avoid a particular
 // attribute or condition to complete a route.
-constexpr float kMaxPenalty = 12.0f * kSecPerHour; // 12 hours
+constexpr float kMaxPenalty = 12.0f * midgard::kSecPerHour; // 12 hours
 
-// Maximum ferry penalty (when use_ferry == 0). Can't make this too large
+// Maximum ferry penalty (when use_ferry == 0 or use_rail_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
-constexpr float kMaxFerryPenalty = 6.0f * kSecPerHour; // 6 hours
+constexpr float kMaxFerryPenalty = 6.0f * midgard::kSecPerHour; // 6 hours
 
 /**
  * Base class for dynamic edge costing. This class defines the interface for
@@ -70,7 +76,7 @@ public:
    * @param  options Request options in a pbf
    * @param  mode Travel mode
    */
-  DynamicCost(const odin::DirectionsOptions& options, const TravelMode mode);
+  DynamicCost(const Options& options, const TravelMode mode);
 
   virtual ~DynamicCost();
 
@@ -147,7 +153,8 @@ public:
                        const baldr::GraphTile*& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
-                       const uint32_t tz_index) const = 0;
+                       const uint32_t tz_index,
+                       bool& time_restricted) const = 0;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -173,7 +180,8 @@ public:
                               const baldr::GraphTile*& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
-                              const uint32_t tz_index) const = 0;
+                              const uint32_t tz_index,
+                              bool& has_time_restrictions) const = 0;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -183,6 +191,9 @@ public:
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const = 0;
 
+  inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
+    return true;
+  };
   /**
    * Get the cost to traverse the specified directed edge using a transit
    * departure (schedule based edge traversal). Cost includes
@@ -194,16 +205,28 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::TransitDeparture* departure,
-                        const uint32_t curr_time) const;
+                        const uint32_t curr_time) const = 0;
 
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
-   * @param   edge  Pointer to a directed edge.
-   * @param   speed A speed for a road segment/edge.
-   * @return  Returns the cost and speed.
+   * @param   edge    Pointer to a directed edge.
+   * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
+   * @param   seconds Seconds of week for predicted speed or free and constrained speed lookup
+   * @return  Returns the cost and time (seconds).
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const uint32_t speed) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphTile* tile,
+                        const uint32_t seconds) const = 0;
+
+  /**
+   * Get the cost to traverse the specified directed edge. Cost includes
+   * the time (seconds) to traverse the edge.
+   * @param   edge    Pointer to a directed edge.
+   * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
+   * @return  Returns the cost and time (seconds).
+   */
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -212,13 +235,11 @@ public:
    * @param   edge  Directed edge (the to edge)
    * @param   node  Node (intersection) where transition occurs.
    * @param   pred  Predecessor edge information.
-   * @param   has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred,
-                              const bool has_traffic = false) const;
+                              const EdgeLabel& pred) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -231,20 +252,20 @@ public:
    *                   "from" or predecessor edge in the transition.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor. This is the "to" edge.
-   * @param   has_traffic  Does the transition have traffic information.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* opp_edge,
-                                     const baldr::DirectedEdge* opp_pred_edge,
-                                     const bool has_traffic = false) const;
+                                     const baldr::DirectedEdge* opp_pred_edge) const;
 
   /**
    * Test if an edge should be restricted due to a complex restriction.
    * @param  edge  Directed edge.
    * @param  pred        Predecessor information.
    * @param  edge_labels List of edge labels.
+   * @param  edge_labels List of edge labels in other direction
+   *                     (e.g. bidirectional when connecting the two trees).
    * @param  tile        Graph tile (to read restriction if needed).
    * @param  edgeid      Edge Id for the directed edge.
    * @param  forward     Forward search or reverse search.
@@ -262,6 +283,7 @@ public:
                   const baldr::GraphTile*& tile,
                   const baldr::GraphId& edgeid,
                   const bool forward,
+                  thor::EdgeStatus* edgestatus = nullptr,
                   const uint64_t current_time = 0,
                   const uint32_t tz_index = 0) const {
     // Lambda to get the next predecessor EdgeLabel (that is not a transition)
@@ -272,6 +294,42 @@ public:
           (label->predecessor() == baldr::kInvalidLabel) ? label : &edge_labels[label->predecessor()];
       return next_pred;
     };
+    auto reset_edge_status =
+        [&edgestatus, &forward](const std::vector<baldr::GraphId>& edge_ids_in_complex_restriction) {
+          // A complex restriction spans multiple edges, e.g. from A to C via B.
+          //
+          // At the point of triggering a complex restriction, all edges leading up to C
+          // hav already been evaluated. I.e. B is now marked as kPermanent since
+          // we didn't know at the time of B's evaluation that A to B would eventually
+          // form a restricted path
+          //
+          // So, in order to still allow new paths involving B, e.g. D to B to C,
+          // we need to go back and revert the permanent status of A and B.
+          //
+          // We mark it as kUnreachedOrReset so that in effect it is no longer visible. (It can't
+          // be removed since that invalidates subsequent indices and setting it to temporary
+          // means it'll still do a comparison to existing sort cost and fail later).
+          //
+          // If we do find a complex restriction has triggered, we must walk back
+          // and reset the EdgeStatus of previous edges in the restriction that were
+          // already marked as kPermanent.
+          if (edgestatus != nullptr) {
+            auto first = edge_ids_in_complex_restriction.cbegin();
+            auto last = edge_ids_in_complex_restriction.cend();
+
+            // Nothing to do if the restriction has no vias
+            if (first == last) {
+              return;
+            }
+            // Reset all but the last edge since there is
+            // no point in possibly expanding from A a second time and could lead
+            // to infinite loops
+            --last;
+            std::for_each(first, last, [&edgestatus](baldr::GraphId edge_id) {
+              edgestatus->Update(edge_id, thor::EdgeSet::kUnreachedOrReset);
+            });
+          }
+        };
 
     // If forward, check if the edge marks the end of a restriction, else check
     // if the edge marks the start of a complex restriction.
@@ -290,38 +348,58 @@ public:
         // Ids do not match the path for this restriction.
         bool match = true;
         const EdgeLabel* next_pred = first_pred;
-        if (cr->via_count() > 0) {
-          // The via list starts immediately after the structure
-          baldr::GraphId* via = reinterpret_cast<baldr::GraphId*>(cr + 1);
-          for (uint32_t i = 0; i < cr->via_count(); i++, via++) {
-            if (via->value != next_pred->edgeid().value) {
-              match = false;
-              break;
-            }
+        // Remember the edge_ids in restriction for later reset
+        std::vector<baldr::GraphId> edge_ids_in_complex_restriction;
+        edge_ids_in_complex_restriction.reserve(10);
+
+        cr->WalkVias([&match, &next_pred, next_predecessor,
+                      &edge_ids_in_complex_restriction](const baldr::GraphId* via) {
+          if (via->value != next_pred->edgeid().value) {
+            // Pred diverged from restriction, exit early
+            match = false;
+            return baldr::WalkingVia::StopWalking;
+          } else {
+            edge_ids_in_complex_restriction.push_back(next_pred->edgeid());
+            // Move to the next predecessor and keep walking restriction
             next_pred = next_predecessor(next_pred);
+            return baldr::WalkingVia::KeepWalking;
           }
-        }
+        });
+        // Don't forget the last one
+        edge_ids_in_complex_restriction.push_back(next_pred->edgeid());
 
         // Check against the start/end of the complex restriction
         if (match && ((forward && next_pred->edgeid() == cr->from_graphid()) ||
                       (!forward && next_pred->edgeid() == cr->to_graphid()))) {
 
           if (current_time && cr->has_dt()) {
-            if (baldr::DateTime::is_restricted(cr->dt_type(), cr->begin_hrs(), cr->begin_mins(),
-                                               cr->end_hrs(), cr->end_mins(), cr->dow(),
-                                               cr->begin_week(), cr->begin_month(),
-                                               cr->begin_day_dow(), cr->end_week(), cr->end_month(),
-                                               cr->end_day_dow(), current_time,
-                                               baldr::DateTime::get_tz_db().from_index(tz_index))) {
+            // TODO Possibly a bug here. Shouldn't both kTimedDenied and kTimedAllowed
+            //      be handled here? As is done in IsRestricted
+            if (baldr::DateTime::is_conditional_active(cr->dt_type(), cr->begin_hrs(),
+                                                       cr->begin_mins(), cr->end_hrs(),
+                                                       cr->end_mins(), cr->dow(), cr->begin_week(),
+                                                       cr->begin_month(), cr->begin_day_dow(),
+                                                       cr->end_week(), cr->end_month(),
+                                                       cr->end_day_dow(), current_time,
+                                                       baldr::DateTime::get_tz_db().from_index(
+                                                           tz_index))) {
+              // We triggered a complex restriction, so make sure we reset edge-status' for
+              // earlier edges in restriction that were already marked as permanent
+              reset_edge_status(edge_ids_in_complex_restriction);
               return true;
             }
             continue;
           }
           // TODO: If a user runs a non-time dependent route, we need to provide Manuever Notes for
           // the timed restriction.
-          else if (!current_time && cr->has_dt())
+          else if (!current_time && cr->has_dt()) {
             return false;
-          return true; // Otherwise this is a non-timed restriction and it exists all the time.
+          } else {
+            // We triggered a complex restriction, so make sure we reset edge-status' for
+            // earlier edges in restriction that were already marked as permanent
+            reset_edge_status(edge_ids_in_complex_restriction);
+            return true; // Otherwise this is a non-timed restriction and it exists all the time.
+          }
         }
       }
     }
@@ -335,16 +413,74 @@ public:
    *                      indicates the route is not time dependent.
    * @param  tz_index     timezone index for the node
    */
-  bool IsRestricted(const uint64_t restriction,
-                    const uint64_t current_time,
-                    const uint32_t tz_index) const {
+  static bool IsConditionalActive(const uint64_t restriction,
+                                  const uint64_t current_time,
+                                  const uint32_t tz_index) {
 
     baldr::TimeDomain td(restriction);
-    return baldr::DateTime::is_restricted(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(),
-                                          td.end_mins(), td.dow(), td.begin_week(), td.begin_month(),
-                                          td.begin_day_dow(), td.end_week(), td.end_month(),
-                                          td.end_day_dow(), current_time,
-                                          baldr::DateTime::get_tz_db().from_index(tz_index));
+    return baldr::DateTime::is_conditional_active(td.type(), td.begin_hrs(), td.begin_mins(),
+                                                  td.end_hrs(), td.end_mins(), td.dow(),
+                                                  td.begin_week(), td.begin_month(),
+                                                  td.begin_day_dow(), td.end_week(), td.end_month(),
+                                                  td.end_day_dow(), current_time,
+                                                  baldr::DateTime::get_tz_db().from_index(tz_index));
+  }
+
+  inline bool EvaluateRestrictions(uint16_t auto_type,
+                                   const baldr::DirectedEdge* edge,
+                                   const baldr::GraphTile*& tile,
+                                   const baldr::GraphId& edgeid,
+                                   const uint64_t current_time,
+                                   const uint32_t tz_index,
+                                   bool& has_time_restrictions) const {
+    if (edge->access_restriction()) {
+      const std::vector<baldr::AccessRestriction>& restrictions =
+          tile->GetAccessRestrictions(edgeid.id(), auto_type);
+
+      bool time_allowed = false;
+
+      for (const auto& restriction : restrictions) {
+        // Compare the time to the time-based restrictions
+        baldr::AccessType access_type = restriction.type();
+        if (access_type == baldr::AccessType::kTimedAllowed ||
+            access_type == baldr::AccessType::kTimedDenied) {
+          has_time_restrictions = true;
+
+          if (access_type == baldr::AccessType::kTimedAllowed)
+            time_allowed = true;
+
+          if (current_time == 0) {
+            // No time supplied so ignore time-based restrictions
+            // (but mark the edge  (`has_time_restrictions`)
+            continue;
+          } else {
+            // is in range?
+            if (IsConditionalActive(restriction.value(), current_time, tz_index)) {
+              // If edge really is restricted at this time, we can exit early.
+              // If not, we should keep looking
+
+              // We are in range at the time we are allowed at this edge
+              if (access_type == baldr::AccessType::kTimedAllowed)
+                return true;
+              else
+                return false;
+            }
+          }
+        }
+        // In case there are additional restriction checks for a particular  mode,
+        // check them now
+        if (!ModeSpecificAllowed(restriction)) {
+          return false;
+        }
+      }
+
+      // if we have time allowed restrictions then these restrictions are
+      // the only time we can route here.  Meaning all other time is restricted.
+      // We looped over all the time allowed restrictions and we were never in range.
+      if (time_allowed && current_time != 0)
+        return false;
+    }
+    return true;
   }
 
   /**
@@ -514,6 +650,14 @@ public:
     return (avoid != user_avoid_edges_.end() && avoid->second <= percent_along);
   }
 
+  /**
+   * Get the flow mask used for accessing traffic flow data from the tile
+   * @return the flow mask used
+   */
+  uint8_t flow_mask() const {
+    return flow_mask_;
+  }
+
 protected:
   // Algorithm pass
   uint32_t pass_;
@@ -536,24 +680,28 @@ protected:
   std::unordered_map<baldr::GraphId, float> user_avoid_edges_;
 
   // Weighting to apply to ferry edges
-  float ferry_factor_;
+  float ferry_factor_, rail_ferry_factor_;
 
   // Transition costs
   sif::Cost country_crossing_cost_;
   sif::Cost gate_cost_;
   sif::Cost toll_booth_cost_;
   sif::Cost ferry_transition_cost_;
+  sif::Cost rail_ferry_transition_cost_;
 
   // Penalties that all costing methods support
   float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
   float alley_penalty_;            // Penalty (seconds) to use a alley
   float destination_only_penalty_; // Penalty (seconds) using private road, driveway, or parking aisle
 
+  // A mask which determines which flow data the costing should use from the tile
+  uint8_t flow_mask_;
+
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
    */
-  void get_base_costs(const odin::CostingOptions& costing_options) {
+  void get_base_costs(const CostingOptions& costing_options) {
     // Cost only (no time) penalties
     alley_penalty_ = costing_options.alley_penalty();
     destination_only_penalty_ = costing_options.destination_only_penalty();
@@ -571,11 +719,11 @@ protected:
     // Set the cost (seconds) to enter a ferry (only apply entering since
     // a route must exit a ferry (except artificial test routes ending on
     // a ferry!). Modify ferry edge weighting based on use_ferry factor.
-    float penalty;
+    float ferry_penalty, rail_ferry_penalty;
     float use_ferry = costing_options.use_ferry();
     if (use_ferry < 0.5f) {
       // Penalty goes from max at use_ferry = 0 to 0 at use_ferry = 0.5
-      penalty = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry * 2.0f));
+      ferry_penalty = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_ferry * 2.0f));
 
       // Cost X10 at use_ferry == 0, slopes downwards towards 1.0 at use_ferry = 0.5
       ferry_factor_ = 10.0f - use_ferry * 18.0f;
@@ -583,10 +731,34 @@ protected:
       // Add a ferry weighting factor to influence cost along ferries to make
       // them more favorable if desired rather than driving. No ferry penalty.
       // Half the cost at use_ferry == 1, progress to 1.0 at use_ferry = 0.5
-      penalty = 0.0f;
+      ferry_penalty = 0.0f;
       ferry_factor_ = 1.5f - use_ferry;
     }
-    ferry_transition_cost_ = {costing_options.ferry_cost() + penalty, costing_options.ferry_cost()};
+    ferry_transition_cost_ = {costing_options.ferry_cost() + ferry_penalty,
+                              costing_options.ferry_cost()};
+
+    // Set the cost (seconds) to enter a rail_ferry (only apply entering since
+    // a route must exit a ferry (except artificial test routes ending on
+    // a ferry!). Modify ferry edge weighting based on use_ferry factor.
+    float use_rail_ferry = costing_options.use_rail_ferry();
+    if (use_rail_ferry < 0.5f) {
+      // Penalty goes from max at use_rail_ferry = 0 to 0 at use_rail_ferry = 0.5
+      rail_ferry_penalty = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - use_rail_ferry * 2.0f));
+
+      // Cost X10 at use_rail_ferry == 0, slopes downwards towards 1.0 at use_rail_ferry = 0.5
+      rail_ferry_factor_ = 10.0f - use_rail_ferry * 18.0f;
+    } else {
+      // Add a ferry weighting factor to influence cost along ferries to make
+      // them more favorable if desired rather than driving. No ferry penalty.
+      // Half the cost at use_ferry == 1, progress to 1.0 at use_ferry = 0.5
+      rail_ferry_penalty = 0.0f;
+      rail_ferry_factor_ = 1.5f - use_rail_ferry;
+    }
+    rail_ferry_transition_cost_ = {costing_options.rail_ferry_cost() + rail_ferry_penalty,
+                                   costing_options.rail_ferry_cost()};
+
+    // Set the speed mask to determine which speed data types are allowed
+    flow_mask_ = costing_options.flow_mask();
   }
 
   /**
@@ -604,7 +776,7 @@ protected:
                                          const baldr::DirectedEdge* edge,
                                          const sif::EdgeLabel& pred,
                                          const uint32_t idx) const {
-    // Cases with both time and penalty: country crossing, ferry, gate, toll booth
+    // Cases with both time and penalty: country crossing, ferry, rail_ferry, gate, toll booth
     sif::Cost c;
     if (node->type() == baldr::NodeType::kBorderControl) {
       c += country_crossing_cost_;
@@ -617,6 +789,9 @@ protected:
     }
     if (edge->use() == baldr::Use::kFerry && pred.use() != baldr::Use::kFerry) {
       c += ferry_transition_cost_;
+    }
+    if (edge->use() == baldr::Use::kRailFerry && pred.use() != baldr::Use::kRailFerry) {
+      c += rail_ferry_transition_cost_;
     }
 
     // Additional penalties without any time cost
@@ -662,6 +837,10 @@ protected:
       c += ferry_transition_cost_;
     }
 
+    if (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry) {
+      c += rail_ferry_transition_cost_;
+    }
+
     // Additional penalties without any time cost
     if (edge->destonly() && !pred->destonly()) {
       c.cost += destination_only_penalty_;
@@ -687,9 +866,17 @@ protected:
   }
 };
 
-typedef std::shared_ptr<DynamicCost> cost_ptr_t;
+using cost_ptr_t = std::shared_ptr<DynamicCost>;
+
+/**
+ * Parses the cost options from json and stores values in pbf.
+ * @param object The json request represented as a DOM tree.
+ * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
+ */
+void ParseCostOptions(const rapidjson::Value& obj, CostingOptions* pbf_costing_options);
 
 } // namespace sif
+
 } // namespace valhalla
 
 #endif // VALHALLA_SIF_DYNAMICCOST_H_

@@ -296,8 +296,8 @@ const std::vector<std::pair<uint16_t, std::string>> osrm_responses{
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
-    {400, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
-    {400, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+    {400, R"({"code":"DistanceExceeded","message":"Path distance exceeds the max distance limit."})"},
+    {400, R"({"code":"DistanceExceeded","message":"Path distance exceeds the max distance limit."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400,
@@ -345,13 +345,14 @@ void start_service() {
   boost::property_tree::ptree config;
   std::stringstream json;
   json << R"({
+      "meili": { "default": { "breakage_distance": 2000} },
       "mjolnir": { "tile_dir": "test/tiles" },
       "loki": { "actions": [ "locate", "route", "sources_to_targets", "optimized_route", "isochrone", "trace_route", "trace_attributes" ],
                   "logging": { "long_request": 100.0 },
-                  "service": { "proxy": "ipc:///tmp/test_loki_proxy" }, 
-                "service_defaults": { "minimum_reachability": 50, "radius": 0} },
+                  "service": { "proxy": "ipc:///tmp/test_loki_proxy" },
+                "service_defaults": { "minimum_reachability": 50, "radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60} },
       "thor": { "service": { "proxy": "ipc:///tmp/test_thor_proxy" } },
-      "httpd": { "service": { "loopback": "ipc:///tmp/test_loki_results", "interrupt": "ipc:///tmp/test_loki_interrupt" } }, 
+      "httpd": { "service": { "loopback": "ipc:///tmp/test_loki_results", "interrupt": "ipc:///tmp/test_loki_interrupt" } },
       "service_limits": {
         "skadi": { "max_shape": 100, "min_resample": "10"},
         "auto": { "max_distance": 5000000.0, "max_locations": 20,
@@ -363,9 +364,10 @@ void start_service() {
         "trace": { "max_best_paths": 4, "max_best_paths_shape": 100, "max_distance": 200000.0, "max_gps_accuracy": 100.0, "max_search_radius": 100, "max_shape": 16000 },
         "max_avoid_locations": 0,
         "max_reachability": 100,
-        "max_radius": 200
+        "max_radius": 200,
+        "max_alternates":2
       },
-      "costing_options": { "auto": {}, "pedestrian": {} }
+      "costing_directions_options": { "auto": {}, "pedestrian": {} }
     })";
   rapidjson::read_json(json, config);
 
@@ -385,8 +387,9 @@ void run_requests(const std::vector<http_request_t>& requests,
       client(context, "ipc:///tmp/test_loki_server",
              [&requests, &request, &request_str]() {
                // we dont have any more requests so bail
-               if (request == requests.cend())
+               if (request == requests.cend()) {
                  return std::make_pair<const void*, size_t>(nullptr, 0);
+               }
                // get the string of bytes to send formatted for http protocol
                request_str = request->to_string();
                // LOG_INFO("Loki Test Request :: " + request_str + '\n');
@@ -395,15 +398,16 @@ void run_requests(const std::vector<http_request_t>& requests,
              },
              [&requests, &request, &responses, &success_count](const void* data, size_t size) {
                auto response = http_response_t::from_string(static_cast<const char*>(data), size);
-               if (response.code != responses[request - requests.cbegin() - 1].first)
-                 throw std::runtime_error(
-                     "Expected Response Code: " +
-                     std::to_string(responses[request - requests.cbegin() - 1].first) +
-                     ", Actual Response Code: " + std::to_string(response.code));
-               if (response.body != responses[request - requests.cbegin() - 1].second)
-                 throw std::runtime_error(
-                     "Expected Response: " + responses[request - requests.cbegin() - 1].second +
-                     ", Actual Response: " + response.body);
+               EXPECT_EQ(response.code, responses[request - requests.cbegin() - 1].first);
+
+               // Parse as rapidjson::Document which correctly doesn't care about order-dependence
+               // of the json-data compared to the boost::property_tree::ptree
+               rapidjson::Document response_json, expected_json;
+               response_json.Parse(response.body);
+               expected_json.Parse(responses[request - requests.cbegin() - 1].second);
+               EXPECT_EQ(response_json, expected_json)
+                   << "\nExpected Response: " + responses[request - requests.cbegin() - 1].second +
+                          "\n, Actual Response: " + response.body;
 
                ++success_count;
                return request != requests.cend();
@@ -413,33 +417,34 @@ void run_requests(const std::vector<http_request_t>& requests,
   client.batch();
 
   // Make sure that all requests are tested
-  test::assert_bool(success_count == requests.size(),
-                    "Expected passed tests count: " + std::to_string(requests.size()) +
-                        " Actual passed tests count: " + std::to_string(success_count));
+  EXPECT_EQ(success_count, requests.size());
 }
 
-void test_failure_requests() {
+TEST(LokiService, test_failure_requests) {
   run_requests(valhalla_requests, valhalla_responses);
 }
 
-void test_osrm_failure_requests() {
+TEST(LokiService, test_osrm_failure_requests) {
   run_requests(osrm_requests, osrm_responses);
 }
+
+// todo: test_success_requests??
+
 } // namespace
 
-int main(void) {
+class LokiServiceEnv : public ::testing::Environment {
+public:
+  void SetUp() override {
+    start_service();
+  }
+};
+
+// Elevation service
+int main(int argc, char* argv[]) {
   // make this whole thing bail if it doesnt finish fast
   alarm(180);
 
-  test::suite suite("Loki Service");
-
-  // test failures
-  suite.test(TEST_CASE(start_service));
-  suite.test(TEST_CASE(test_failure_requests));
-  suite.test(TEST_CASE(test_osrm_failure_requests));
-
-  // test successes
-  // suite.test(TEST_CASE(test_success_requests));
-
-  return suite.tear_down();
+  testing::AddGlobalTestEnvironment(new LokiServiceEnv);
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

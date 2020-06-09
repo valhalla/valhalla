@@ -62,6 +62,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(trace_route_overloads, trace_route, 1, 1)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(trace_attributes_overloads, trace_attributes, 1, 1);
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(height_overloads, height, 1, 1);
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(transit_available_overloads, transit_available, 1, 1);
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(expansion_overloads, expansion, 1, 1);
 } // namespace
 
 BOOST_PYTHON_MODULE(valhalla) {
@@ -83,6 +84,7 @@ BOOST_PYTHON_MODULE(valhalla) {
       .def("TraceAttributes", &valhalla::tyr::actor_t::route, trace_attributes_overloads())
       .def("Height", &valhalla::tyr::actor_t::route, height_overloads())
       .def("TransitAvailable", &valhalla::tyr::actor_t::route, transit_available_overloads())
+      .def("Expansion", &valhalla::tyr::actor_t::route, expansion_overloads())
 
       ;
 }

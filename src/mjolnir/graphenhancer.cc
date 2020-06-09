@@ -18,7 +18,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include <boost/filesystem/operations.hpp>
+#include <boost/format.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
@@ -68,6 +68,7 @@ constexpr float kDensityLatDeg = (kDensityRadius * kMetersPerKm) / kMetersPerDeg
 constexpr float kTurnChannelFactor = 1.25f;
 constexpr float kRampDensityFactor = 0.8f;
 constexpr float kRampFactor = 0.85f;
+constexpr float kRoundaboutFactor = 0.5f;
 
 // A little struct to hold stats information during each threads work
 struct enhancer_stats {
@@ -101,14 +102,20 @@ struct enhancer_stats {
  * @param  directededge  Directed edge to update.
  * @param  density       Relative road density.
  * @param  urban_rc_speed Array of default speeds vs. road class for urban areas
+ * @param  rc_speed Array of default speeds vs. road class
+ * @param  infer_turn_channels flag indicating if we should infer tc.
+ *
  */
-void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint32_t* urban_rc_speed) {
+void UpdateSpeed(DirectedEdge& directededge,
+                 const uint32_t density,
+                 const uint32_t* urban_rc_speed,
+                 bool infer_turn_channels) {
 
   // Update speed on ramps (if not a tagged speed) and turn channels
   if (directededge.link()) {
     uint32_t speed = directededge.speed();
     Use use = directededge.use();
-    if (use == Use::kTurnChannel) {
+    if (use == Use::kTurnChannel && infer_turn_channels) {
       speed = static_cast<uint32_t>((speed * kTurnChannelFactor) + 0.5f);
     } else if ((use == Use::kRamp) && (directededge.speed_type() != SpeedType::kTagged)) {
       // If no tagged speed set ramp speed to slightly lower than speed
@@ -169,6 +176,11 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
       directededge.set_speed(urban_rc_speed[rc]);
     }
 
+    if (directededge.roundabout()) {
+      uint32_t speed = directededge.speed(); // could be default or urban speed
+      directededge.set_speed(static_cast<uint32_t>((speed * kRoundaboutFactor) + 0.5f));
+    }
+
     // Reduce speeds on parking aisles, driveways, and drive-thrus. These uses are
     // marked as destination only in pbfgraphparser.
     if (directededge.use() == Use::kParkingAisle) {
@@ -184,6 +196,329 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density, const uint3
       uint32_t speed = directededge.speed();
       directededge.set_speed(speed / 2);
     }
+  }
+}
+
+// Get the turn types.  This is used the determine if we should enhance or update
+// Turn lanes based on the turns at this node.
+void GetTurnTypes(const DirectedEdge directededge,
+                  const uint32_t idx,
+                  std::set<Turn::Type>& outgoing_turn_type,
+                  NodeInfo& startnodeinfo,
+                  GraphTileBuilder& tilebuilder,
+                  GraphReader& reader,
+                  std::mutex& lock) {
+
+  // Get the tile at the startnode
+  const GraphTile* tile = &tilebuilder;
+  uint32_t heading = startnodeinfo.heading(idx);
+
+  // Get the tile at the end node. and find inbound heading of the candidate
+  // edge to the end node.
+  if (tile->id() != directededge.endnode().Tile_Base()) {
+    lock.lock();
+    tile = reader.GetGraphTile(directededge.endnode());
+    lock.unlock();
+  }
+  const NodeInfo* node = tile->node(directededge.endnode());
+
+  const DirectedEdge* diredge = tile->directededge(node->edge_index());
+  for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
+    // Find the opposing directed edge and its heading
+    if (i == directededge.opp_local_idx()) {
+      auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).shape();
+      if (!diredge->forward()) {
+        std::reverse(shape.begin(), shape.end());
+      }
+      uint32_t hdg = std::round(
+          PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(diredge->classification(),
+                                                                   diredge->use())));
+
+      // Convert to inbound heading
+      heading = ((hdg + 180) % 360);
+      break;
+    }
+  }
+
+  // Iterate through outbound edges and get turn degrees from the candidate
+  // edge onto outbound driveable edges.
+  diredge = tile->directededge(node->edge_index());
+  for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
+    // Skip opposing directed edge and any edge that is not a road. Skip any
+    // edges that are not driveable outbound.
+    if (i == directededge.opp_local_idx() || !(diredge->forwardaccess() & kAutoAccess) ||
+        (directededge.restrictions() & (1 << diredge->localedgeidx())) != 0) {
+      continue;
+    }
+
+    // Get the heading of the outbound edge (unfortunately GraphEnhancer may
+    // not have yet computed and stored headings for this node).
+    auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).shape();
+    if (!diredge->forward()) {
+      std::reverse(shape.begin(), shape.end());
+    }
+    uint32_t to_heading =
+        std::round(PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(diredge->classification(),
+                                                                            diredge->use())));
+    // Store outgoing turn type for any driveable edges
+    uint32_t turndegree = GetTurnDegree(heading, to_heading);
+    outgoing_turn_type.insert(Turn::GetType(turndegree));
+  }
+}
+
+// Update the rightmost lane as needed.
+void EnhanceRightLane(const DirectedEdge directededge,
+                      const uint32_t idx,
+                      NodeInfo& startnodeinfo,
+                      GraphTileBuilder& tilebuilder,
+                      GraphReader& reader,
+                      std::mutex& lock,
+                      std::vector<uint16_t>& enhanced_tls) {
+  std::set<Turn::Type> outgoing_turn_type;
+  GetTurnTypes(directededge, idx, outgoing_turn_type, startnodeinfo, tilebuilder, reader, lock);
+
+  size_t index = enhanced_tls.size() - 1;
+  uint16_t tl = enhanced_tls[index];
+
+  if (outgoing_turn_type.find(Turn::Type::kSlightRight) != outgoing_turn_type.end()) {
+    // assume the slight right is the through if kStraight is not found
+    if (tl == kTurnLaneThrough &&
+        outgoing_turn_type.find(Turn::Type::kStraight) != outgoing_turn_type.end()) {
+      tl |= kTurnLaneSlightRight;
+    }
+  }
+
+  if (outgoing_turn_type.find(Turn::Type::kRight) != outgoing_turn_type.end())
+    tl |= kTurnLaneRight;
+  if (outgoing_turn_type.find(Turn::Type::kSharpRight) != outgoing_turn_type.end())
+    tl |= kTurnLaneSharpRight;
+  enhanced_tls[index] = tl;
+}
+
+// Update the leftmost lane as needed.
+void EnhanceLeftLane(const DirectedEdge directededge,
+                     const uint32_t idx,
+                     NodeInfo& startnodeinfo,
+                     GraphTileBuilder& tilebuilder,
+                     GraphReader& reader,
+                     std::mutex& lock,
+                     std::vector<uint16_t>& enhanced_tls) {
+  std::set<Turn::Type> outgoing_turn_type;
+  GetTurnTypes(directededge, idx, outgoing_turn_type, startnodeinfo, tilebuilder, reader, lock);
+
+  uint16_t tl = enhanced_tls[0];
+  if (outgoing_turn_type.find(Turn::Type::kSlightLeft) != outgoing_turn_type.end()) {
+    // assume the slight left is the through if kStraight is not found
+    if (tl == kTurnLaneThrough &&
+        outgoing_turn_type.find(Turn::Type::kStraight) != outgoing_turn_type.end()) {
+      tl |= kTurnLaneSlightLeft;
+    }
+  }
+  if (outgoing_turn_type.find(Turn::Type::kLeft) != outgoing_turn_type.end())
+    tl |= kTurnLaneLeft;
+  if (outgoing_turn_type.find(Turn::Type::kSharpLeft) != outgoing_turn_type.end())
+    tl |= kTurnLaneSharpLeft;
+  enhanced_tls[0] = tl;
+}
+
+// update turn lanes vector
+bool ProcessLanes(bool isLeft, bool endOnTurn, std::vector<uint16_t>& enhanced_tls) {
+
+  bool bUpdated = false;
+  uint16_t previous = 0u;
+
+  if (isLeft) {
+    std::vector<uint16_t>::iterator it = enhanced_tls.begin();
+    for (; it != enhanced_tls.end(); it++) {
+      if (((*it & kTurnLaneLeft) || (*it & kTurnLaneSharpLeft) || (*it & kTurnLaneSlightLeft) ||
+           (*it & kTurnLaneThrough)) &&
+          (previous == 0u || (previous & kTurnLaneLeft) || (previous & kTurnLaneSharpLeft) ||
+           (previous & kTurnLaneSlightLeft) || (previous & kTurnLaneThrough))) {
+        previous = *it;
+      } else if (previous && (*it == kTurnLaneEmpty || *it == kTurnLaneNone)) {
+        *it = kTurnLaneThrough;
+
+        if (!endOnTurn)
+          bUpdated = true; // should end on a through
+
+      } else if (previous && ((*it & kTurnLaneRight) || (*it & kTurnLaneSharpRight) ||
+                              (*it & kTurnLaneSlightRight))) {
+        if (endOnTurn)
+          bUpdated = true;
+        else
+          bUpdated = false; // should end on a through
+        break;
+      } else { // anything else then no update.
+        bUpdated = false;
+        break;
+      }
+    }
+  } else {
+    std::vector<uint16_t>::reverse_iterator r_it = enhanced_tls.rbegin(); // note reverse iterator
+    for (; r_it != enhanced_tls.rend(); r_it++) {
+      if (((*r_it & kTurnLaneRight) || (*r_it & kTurnLaneSharpRight) ||
+           (*r_it & kTurnLaneSlightRight) || (*r_it & kTurnLaneThrough)) &&
+          (previous == 0u || (previous & kTurnLaneRight) || (previous & kTurnLaneSharpRight) ||
+           (previous & kTurnLaneSlightRight) || (previous & kTurnLaneThrough))) {
+        previous = *r_it;
+      } else if (previous && (*r_it == kTurnLaneEmpty || *r_it == kTurnLaneNone)) {
+        *r_it = kTurnLaneThrough;
+        bUpdated = true;
+      } else { // if it is anything else then no update.
+        bUpdated = false;
+        break;
+      }
+    }
+  }
+  return bUpdated;
+}
+
+// Enhance the Turn lanes (if needed) and add them to the tile.
+void UpdateTurnLanes(const OSMData& osmdata,
+                     const uint32_t idx,
+                     DirectedEdge& directededge,
+                     NodeInfo& startnodeinfo,
+                     GraphTileBuilder& tilebuilder,
+                     GraphReader& reader,
+                     std::mutex& lock,
+                     std::vector<TurnLanes>& turn_lanes) {
+
+  // Lambda to check if the turn set includes a right turn type
+  const auto has_turn_right = [](std::set<Turn::Type>& turn_types) {
+    return turn_types.find(Turn::Type::kSlightRight) != turn_types.end() ||
+           turn_types.find(Turn::Type::kRight) != turn_types.end() ||
+           turn_types.find(Turn::Type::kSharpRight) != turn_types.end();
+  };
+  // Lambda to check if the turn set includes a left turn type
+  const auto has_turn_left = [](std::set<Turn::Type>& turn_types) {
+    return turn_types.find(Turn::Type::kSlightLeft) != turn_types.end() ||
+           turn_types.find(Turn::Type::kLeft) != turn_types.end() ||
+           turn_types.find(Turn::Type::kSharpLeft) != turn_types.end();
+  };
+
+  if (directededge.turnlanes()) {
+    auto index = tilebuilder.turnlanes_offset(idx);
+    std::string turnlane_tags = osmdata.name_offset_map.name(index);
+    std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
+    std::vector<uint16_t> enhanced_tls = TurnLanes::lanemasks(str);
+
+    bool bUpdated = false;
+    // handle [left, none, none, right] --> [left, straight, straight, right]
+    // handle [straight, none, [straight, right], right] --> [straight, straight, [straight, right],
+    // right]
+    bUpdated = ProcessLanes(true, true, enhanced_tls);
+
+    if (!bUpdated) {
+      // handle [left, [straight, left], none, straight] --> [left, [straight, left], straight,
+      // straight]
+      // handle [left, none, none] --> [left, straight, straight]
+      enhanced_tls = TurnLanes::lanemasks(str);
+
+      std::set<Turn::Type> outgoing_turn_type;
+      GetTurnTypes(directededge, idx, outgoing_turn_type, startnodeinfo, tilebuilder, reader, lock);
+      if (outgoing_turn_type.empty()) {
+        directededge.set_turnlanes(false);
+        return;
+      }
+
+      bUpdated = ProcessLanes(true, false, enhanced_tls);
+
+      if (bUpdated) {
+        // Should have a left.
+        if (has_turn_left(outgoing_turn_type)) {
+          // check for a right.
+          EnhanceRightLane(directededge, idx, startnodeinfo, tilebuilder, reader, lock, enhanced_tls);
+        }
+      }
+    }
+
+    if (!bUpdated) {
+      // handle [none, none, right] --> [straight, straight, right]
+      enhanced_tls = TurnLanes::lanemasks(str);
+      if (((enhanced_tls.back() & kTurnLaneRight) || (enhanced_tls.back() & kTurnLaneSharpRight) ||
+           (enhanced_tls.back() & kTurnLaneSlightRight)) &&
+          (enhanced_tls.front() == kTurnLaneEmpty || enhanced_tls.front() == kTurnLaneNone)) {
+
+        std::set<Turn::Type> outgoing_turn_type;
+        GetTurnTypes(directededge, idx, outgoing_turn_type, startnodeinfo, tilebuilder, reader, lock);
+        if (outgoing_turn_type.empty()) {
+          directededge.set_turnlanes(false);
+          return;
+        }
+
+        bUpdated = ProcessLanes(false, false, enhanced_tls);
+
+        if (bUpdated) {
+          // Should have a right.  check for a left.
+          if (has_turn_right(outgoing_turn_type)) {
+            // check for a left
+            EnhanceLeftLane(directededge, idx, startnodeinfo, tilebuilder, reader, lock,
+                            enhanced_tls);
+          }
+        }
+      }
+    }
+
+    if (!bUpdated) {
+      // handle [straight, straight, none] --> [straight, straight, straight]
+      enhanced_tls = TurnLanes::lanemasks(str);
+      if ((enhanced_tls.front() & kTurnLaneThrough) &&
+          (enhanced_tls.back() == kTurnLaneEmpty || enhanced_tls.back() == kTurnLaneNone)) {
+        uint16_t previous = 0u;
+        for (auto it = enhanced_tls.begin(); it != enhanced_tls.end(); it++) {
+          if ((*it & kTurnLaneThrough) && (previous == 0u || (previous & kTurnLaneThrough))) {
+            previous = *it;
+          } else if (previous && (*it == kTurnLaneEmpty || *it == kTurnLaneNone)) {
+            *it = kTurnLaneThrough;
+            bUpdated = true;
+          } else { // if it is anything else then no update.
+            bUpdated = false;
+            break;
+          }
+        }
+
+        if (bUpdated) {
+          // check for a right.
+          EnhanceRightLane(directededge, idx, startnodeinfo, tilebuilder, reader, lock, enhanced_tls);
+          // check for a left
+          EnhanceLeftLane(directededge, idx, startnodeinfo, tilebuilder, reader, lock, enhanced_tls);
+        }
+      }
+    }
+
+    if (!bUpdated) {
+      // handle [none, straight, straight] --> [straight, straight, straight]
+      enhanced_tls = TurnLanes::lanemasks(str);
+      uint16_t previous = 0u;
+      if ((enhanced_tls.back() & kTurnLaneThrough) &&
+          (enhanced_tls.front() == kTurnLaneEmpty || enhanced_tls.front() == kTurnLaneNone)) {
+        for (auto r_it = enhanced_tls.rbegin(); r_it != enhanced_tls.rend(); r_it++) {
+          if ((enhanced_tls.back() & kTurnLaneThrough) &&
+              (previous == 0u || (previous & kTurnLaneThrough))) {
+            previous = *r_it;
+          } else if (previous && (*r_it == kTurnLaneEmpty || *r_it == kTurnLaneNone)) {
+            *r_it = kTurnLaneThrough;
+            bUpdated = true;
+          } else { // if it is anything else then no update.
+            bUpdated = false;
+            break;
+          }
+        }
+
+        if (bUpdated) {
+          // check for a right.
+          EnhanceRightLane(directededge, idx, startnodeinfo, tilebuilder, reader, lock, enhanced_tls);
+          // check for a left
+          EnhanceLeftLane(directededge, idx, startnodeinfo, tilebuilder, reader, lock, enhanced_tls);
+        }
+      }
+    }
+    // if anything was updated, we have to get the new string from the updated vector.
+    if (bUpdated)
+      str = TurnLanes::GetTurnLaneString(TurnLanes::turnlane_string(enhanced_tls));
+
+    uint32_t offset = tilebuilder.AddName(str);
+    turn_lanes.emplace_back(idx, offset);
   }
 }
 
@@ -269,8 +604,24 @@ bool IsNotThruEdge(GraphReader& reader,
                    DirectedEdge& directededge) {
   // Add the end node to the expand list
   std::unordered_set<GraphId> visitedset; // Set of visited nodes
-  std::unordered_set<GraphId> expandset;  // Set of nodes to expand
-  expandset.insert(directededge.endnode());
+  std::vector<GraphId> expandset; // Set of nodes to expand - uses a vector for cache friendliness
+
+  // Pre-reserve space in the expandset.  Most of the time, we'll
+  // expand fewer nodes than this, so we'll avoid vector reallocation
+  // delays.  If a particular startnode expands further than this, it's
+  // fine, it'll just be a little slower because the expandset
+  // vector will need to grow.
+  constexpr int MAX_EXPECTED_OUTGOING_EDGES = 10;
+  expandset.reserve(kMaxNoThruTries * MAX_EXPECTED_OUTGOING_EDGES);
+
+  // Instead of removing elements from the expandset, we'll just keep
+  // a pointer to the "start" position - it's faster to just leave
+  // the nodes we've visited in memory at the start of the vector
+  // than to constantly keep the vector "correct" by removing items.
+  // Because we know that the expandset is of relatively small limited size,
+  // this approach is faster than the more generic erase(begin()) option
+  std::size_t expand_pos = 0;
+  expandset.push_back(directededge.endnode());
 
   // Expand edges until exhausted, the maximum number of expansions occur,
   // or end up back at the starting node. No node can be visited twice.
@@ -280,14 +631,14 @@ bool IsNotThruEdge(GraphReader& reader,
   const GraphTile* tile;
   for (uint32_t n = 0; n < kMaxNoThruTries; n++) {
     // If expand list is exhausted this is "not thru"
-    if (expandset.empty()) {
+    if (expand_pos == expandset.size()) {
       return true;
     }
 
     // Get the node off of the expand list and add it to the visited list.
-    // Expand edges from this node.
-    const GraphId expandnode = *expandset.cbegin();
-    expandset.erase(expandset.begin());
+    // Expand edges from this node.  Post-increment the index to the next
+    // item.
+    const GraphId expandnode = expandset[expand_pos++];
     visitedset.insert(expandnode);
     if (expandnode.Tile_Base() != prior_tile) {
       lock.lock();
@@ -319,7 +670,7 @@ bool IsNotThruEdge(GraphReader& reader,
 
       // Add to the end node to expand set if not already visited set
       if (visitedset.find(diredge->endnode()) == visitedset.end()) {
-        expandset.insert(diredge->endnode());
+        expandset.push_back(diredge->endnode());
       }
     }
   }
@@ -495,6 +846,87 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
 
   // Assume this is an intersection internal edge
   return true;
+}
+
+// Get the Headings for the node.
+void GetHeadings(GraphTileBuilder& tile, NodeInfo& nodeinfo, uint32_t ntrans) {
+  if (ntrans == 0) {
+    throw std::runtime_error("edge transitions set is empty");
+  }
+
+  std::vector<uint32_t> heading(ntrans);
+  nodeinfo.set_local_edge_count(ntrans);
+  for (uint32_t j = 0; j < ntrans; j++) {
+    DirectedEdge& de = tile.directededge_builder(nodeinfo.edge_index() + j);
+
+    auto e_offset = tile.edgeinfo(de.edgeinfo_offset());
+    auto shape = e_offset.shape();
+    if (!de.forward()) {
+      std::reverse(shape.begin(), shape.end());
+    }
+    heading[j] = std::round(
+        PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(de.classification(), de.use())));
+
+    // Set heading in NodeInfo. TODO - what if 2 edges have nearly the
+    // same heading - should one be "adjusted" so the relative direction
+    // is maintained.
+    nodeinfo.set_heading(j, heading[j]);
+  }
+}
+
+// Is the next edge from the end node of the directededge is internal or not.
+bool IsNextEdgeInternal(const DirectedEdge directededge,
+                        GraphTileBuilder& tilebuilder,
+                        GraphReader& reader,
+                        std::mutex& lock,
+                        bool infer_internal_intersections) {
+  // Get the tile at the startnode
+  GraphTileBuilder tile = tilebuilder;
+  // Get the tile at the end node. and find inbound heading of the candidate
+  // edge to the end node.
+  bool b_diff_tile = false;
+  if (tile.id() != directededge.endnode().Tile_Base()) {
+    lock.lock();
+    tile = GraphTileBuilder(reader.tile_dir(), directededge.endnode(), true, false);
+    b_diff_tile = true;
+    lock.unlock();
+  }
+  NodeInfo& nodeinfo = tile.node_builder(directededge.endnode().id());
+
+  // this tile may not have been updated yet; therefore, we must
+  // compute the headings for the end node as they are needed for the
+  // IsIntersectionInternal function
+  if (b_diff_tile) {
+    // Get headings of the edges - set in NodeInfo.
+    uint32_t count = nodeinfo.edge_count();
+    uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
+
+    GetHeadings(tile, nodeinfo, ntrans);
+  }
+  // Iterate through outbound edges to find the next edge
+  for (uint32_t i = 0; i < nodeinfo.edge_count(); i++) {
+    DirectedEdge& diredge = tile.directededge_builder(nodeinfo.edge_index() + i);
+
+    // Skip opposing directed edge and any edge that is not a road. Skip any
+    // edges that are not driveable outbound.
+    if (i == directededge.opp_local_idx() || (diredge.use() != Use::kRoad) ||
+        !(diredge.forwardaccess() & kAutoAccess)) {
+      continue;
+    }
+
+    // if the edge from the endnode is the next edge for this way, then
+    // check if it is internal.
+    if (tilebuilder.edgeinfo(directededge.edgeinfo_offset()).wayid() ==
+        tile.edgeinfo(diredge.edgeinfo_offset()).wayid()) {
+
+      if (!infer_internal_intersections)
+        return diredge.internal();
+      else
+        return IsIntersectionInternal(&tile, reader, lock, directededge.endnode(), nodeinfo, diredge,
+                                      i);
+    }
+  }
+  return false;
 }
 
 /**
@@ -761,7 +1193,7 @@ uint32_t GetStopImpact(uint32_t from,
   ///////////////////////////////////////////////////////////////////////////
 
   // Get the highest classification of other roads at the intersection
-  bool allramps = true;
+  bool all_ramps = true;
   const DirectedEdge* edge = &edges[0];
   // kUnclassified,  kResidential, and kServiceOther are grouped
   // together for the stop_impact logic.
@@ -783,7 +1215,7 @@ uint32_t GetStopImpact(uint32_t from,
 
     // Check if not a ramp or turn channel
     if (!edge->link()) {
-      allramps = false;
+      all_ramps = false;
     }
   }
 
@@ -808,7 +1240,6 @@ uint32_t GetStopImpact(uint32_t from,
 
   // TODO: possibly increase stop impact at large intersections (more edges)
   // or if several are high class
-
   // Reduce stop impact from a turn channel or when only links
   // (ramps and turn channels) are involved. Exception - sharp turns.
   Turn::Type turn_type = Turn::GetType(turn_degree);
@@ -816,12 +1247,12 @@ uint32_t GetStopImpact(uint32_t from,
                    turn_type == Turn::Type::kReverse);
   bool is_slight = (turn_type == Turn::Type::kStraight || turn_type == Turn::Type::kSlightRight ||
                     turn_type == Turn::Type::kSlightLeft);
-  if (allramps) {
+  if (all_ramps) {
     if (is_sharp) {
       stop_impact += 2;
     } else if (is_slight) {
       stop_impact /= 2;
-    } else {
+    } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
       stop_impact -= 1;
     }
   } else if (edges[from].use() == Use::kRamp && edges[to].use() == Use::kRamp &&
@@ -832,7 +1263,8 @@ uint32_t GetStopImpact(uint32_t from,
     } else if (count > 3) {
       stop_impact += 2;
     }
-  } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp) {
+  } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp &&
+             !edges[from].internal() && !edges[to].internal()) {
     // Increase stop impact on merge
     if (is_sharp) {
       stop_impact += 3;
@@ -841,6 +1273,7 @@ uint32_t GetStopImpact(uint32_t from,
     } else {
       stop_impact += 2;
     }
+
   } else if (edges[from].use() == Use::kTurnChannel) {
     // Penalize sharp turns
     if (is_sharp) {
@@ -849,11 +1282,30 @@ uint32_t GetStopImpact(uint32_t from,
       stop_impact += 1;
     } else if (is_slight) {
       stop_impact /= 2;
-    } else {
+    } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
       stop_impact -= 1;
     }
   }
-
+  // add to the stop impact when transitioning from higher to lower class road and we are not on a TC
+  // or ramp penalize lefts when driving on the right.
+  else if (nodeinfo.drive_on_right() &&
+           (turn_type == Turn::Type::kSharpLeft || turn_type == Turn::Type::kLeft) &&
+           from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
+           edges[to].use() != Use::kTurnChannel) {
+    if (nodeinfo.traffic_signal()) {
+      stop_impact += 2;
+    } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
+      stop_impact++;
+    // penalize rights when driving on the left.
+  } else if (!nodeinfo.drive_on_right() &&
+             (turn_type == Turn::Type::kSharpRight || turn_type == Turn::Type::kRight) &&
+             from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
+             edges[to].use() != Use::kTurnChannel) {
+    if (nodeinfo.traffic_signal()) {
+      stop_impact += 2;
+    } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
+      stop_impact++;
+  }
   // Clamp to kMaxStopImpact
   return (stop_impact <= kMaxStopImpact) ? stop_impact : kMaxStopImpact;
 }
@@ -871,14 +1323,13 @@ void ProcessEdgeTransitions(const uint32_t idx,
                             DirectedEdge& directededge,
                             const DirectedEdge* edges,
                             const uint32_t ntrans,
-                            uint32_t* headings,
                             const NodeInfo& nodeinfo,
                             enhancer_stats& stats) {
   for (uint32_t i = 0; i < ntrans; i++) {
     // Get the turn type (reverse the heading of the from directed edge since
     // it is incoming
-    uint32_t from_heading = ((headings[i] + 180) % 360);
-    uint32_t turn_degree = GetTurnDegree(from_heading, headings[idx]);
+    uint32_t from_heading = ((nodeinfo.heading(i) + 180) % 360);
+    uint32_t turn_degree = GetTurnDegree(from_heading, nodeinfo.heading(idx));
     directededge.set_turntype(i, Turn::GetType(turn_degree));
 
     // Set the edge_to_left and edge_to_right flags
@@ -893,7 +1344,7 @@ void ProcessEdgeTransitions(const uint32_t idx,
 
         // Get the turn degree from incoming edge i to j and check if right
         // or left of the turn degree from incoming edge i onto idx
-        uint32_t degree = GetTurnDegree(from_heading, headings[j]);
+        uint32_t degree = GetTurnDegree(from_heading, nodeinfo.heading(j));
         if (turn_degree > 180) {
           if (degree > turn_degree || degree < 180) {
             ++right_count;
@@ -978,6 +1429,7 @@ bool ConsistentNames(const std::string& country_code,
 // We make sure to lock on reading and writing because we dont want to race
 // since difference threads, use for the tilequeue as well
 void enhance(const boost::property_tree::ptree& pt,
+             const OSMData& osmdata,
              const std::string& access_file,
              const boost::property_tree::ptree& hierarchy_properties,
              std::queue<GraphId>& tilequeue,
@@ -988,6 +1440,13 @@ void enhance(const boost::property_tree::ptree& pt,
   sequence<OSMAccess> access_tags(access_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
+  bool infer_internal_intersections =
+      pt.get<bool>("data_processing.infer_internal_intersections", true);
+
+  bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
+
+  bool apply_country_overrides = pt.get<bool>("data_processing.apply_country_overrides", true);
+
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
   if (!database) {
@@ -1011,7 +1470,7 @@ void enhance(const boost::property_tree::ptree& pt,
   // 25 MPH - tertiary
   // 20 MPH - residential and unclassified
   // 15 MPH - service/other
-  uint32_t urban_rc_speed[] = {89, 73, 57, 49, 40, 35, 35, 25};
+  uint32_t urban_rc_speed[] = {89, 73, 57, 49, 40, 35, 30, 20};
 
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0};
@@ -1040,7 +1499,7 @@ void enhance(const boost::property_tree::ptree& pt,
     }
 
     // Tile builder - serialize in existing tile so we can add admin names
-    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, true);
+    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, true, false);
     lock.unlock();
 
     // this will be our updated list of restrictions.
@@ -1049,12 +1508,56 @@ void enhance(const boost::property_tree::ptree& pt,
     uint32_t ar_before = tilebuilder.header()->access_restriction_count();
     std::vector<AccessRestriction> access_restrictions;
 
+    uint32_t tl_before = tilebuilder.header()->turnlane_count();
+    std::vector<TurnLanes> turn_lanes;
+
     uint32_t id = tile_id.tileid();
     // First pass - update links (set use to ramp or turn channel) and
     // set opposing local index.
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
       GraphId startnode(id, local_level, i);
       NodeInfo& nodeinfo = tilebuilder.node_builder(i);
+
+      // Get headings of the edges - set in NodeInfo. Set driveability info
+      // on the node as well.
+      uint32_t count = nodeinfo.edge_count();
+      uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
+      if (ntrans == 0) {
+        throw std::runtime_error("edge transitions set is empty");
+      }
+
+      // Headings must be done first so that we can check if a next edge is internal or not
+      // while processing turn lanes.
+      std::vector<uint32_t> heading(ntrans);
+      nodeinfo.set_local_edge_count(ntrans);
+      for (uint32_t j = 0; j < ntrans; j++) {
+        DirectedEdge& directededge = tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
+
+        auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
+        auto shape = e_offset.shape();
+        if (!directededge.forward()) {
+          std::reverse(shape.begin(), shape.end());
+        }
+        heading[j] = std::round(
+            PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(directededge.classification(),
+                                                                     directededge.use())));
+
+        // Set heading in NodeInfo. TODO - what if 2 edges have nearly the
+        // same heading - should one be "adjusted" so the relative direction
+        // is maintained.
+        nodeinfo.set_heading(j, heading[j]);
+
+        // Set traversability for autos
+        Traversability traversability;
+        if (directededge.forwardaccess() & kAutoAccess) {
+          traversability = (directededge.reverseaccess() & kAutoAccess) ? Traversability::kBoth
+                                                                        : Traversability::kForward;
+        } else {
+          traversability = (directededge.reverseaccess() & kAutoAccess) ? Traversability::kBackward
+                                                                        : Traversability::kNone;
+        }
+        nodeinfo.set_local_driveability(j, traversability);
+      }
 
       const DirectedEdge* edges = tile->directededge(nodeinfo.edge_index());
       for (uint32_t j = 0; j < nodeinfo.edge_count(); j++) {
@@ -1104,45 +1607,6 @@ void enhance(const boost::property_tree::ptree& pt,
         stats.no_country_found++;
       }
 
-      // Get headings of the edges - set in NodeInfo. Set driveability info
-      // on the node as well.
-      uint32_t count = nodeinfo.edge_count();
-      uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
-      if (ntrans == 0) {
-        throw std::runtime_error("edge transitions set is empty");
-      }
-
-      std::vector<uint32_t> heading(ntrans);
-      nodeinfo.set_local_edge_count(ntrans);
-      for (uint32_t j = 0; j < ntrans; j++) {
-        DirectedEdge& directededge = tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
-
-        auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
-        auto shape = e_offset.shape();
-        if (!directededge.forward()) {
-          std::reverse(shape.begin(), shape.end());
-        }
-        heading[j] = std::round(
-            PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(directededge.classification(),
-                                                                     directededge.use())));
-
-        // Set heading in NodeInfo. TODO - what if 2 edges have nearly the
-        // same heading - should one be "adjusted" so the relative direction
-        // is maintained.
-        nodeinfo.set_heading(j, heading[j]);
-
-        // Set traversability for autos
-        Traversability traversability;
-        if (directededge.forwardaccess() & kAutoAccess) {
-          traversability = (directededge.reverseaccess() & kAutoAccess) ? Traversability::kBoth
-                                                                        : Traversability::kForward;
-        } else {
-          traversability = (directededge.reverseaccess() & kAutoAccess) ? Traversability::kBackward
-                                                                        : Traversability::kNone;
-        }
-        nodeinfo.set_local_driveability(j, traversability);
-      }
-
       // Go through directed edges and "enhance" directed edge attributes
       uint32_t driveable_count = 0;
       const DirectedEdge* edges = tilebuilder.directededges(nodeinfo.edge_index());
@@ -1166,8 +1630,7 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // only process country access logic if the iso country codes match.
-        if (country_code == end_node_code) {
-
+        if (apply_country_overrides && country_code == end_node_code) {
           // country access logic.
           // if the (auto, bike, foot, etc) tag flag is set in the OSMAccess
           // struct, then this means that it has been set by a user of the
@@ -1266,13 +1729,14 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // Update speed.
-        UpdateSpeed(directededge, density, urban_rc_speed);
+        UpdateSpeed(directededge, density, urban_rc_speed, infer_turn_channels);
 
         // Update the named flag
         auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNamesAndTypes();
         directededge.set_named(names.size() > 0);
 
         // Name continuity - on the directededge.
+        uint32_t ntrans = nodeinfo.local_edge_count();
         for (uint32_t k = 0; k < ntrans; k++) {
           DirectedEdge& fromedge = tilebuilder.directededge(nodeinfo.edge_index() + k);
           if (ConsistentNames(country_code, names,
@@ -1283,7 +1747,45 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Set edge transitions.
         if (j < kNumberOfEdgeTransitions) {
-          ProcessEdgeTransitions(j, directededge, edges, ntrans, &heading[0], nodeinfo, stats);
+          ProcessEdgeTransitions(j, directededge, edges, ntrans, nodeinfo, stats);
+        }
+
+        // since the not thru flag is set, we are at either the prior or the next edge and we need to
+        // see if we have an internal edge.
+        if (directededge.not_thru() && directededge.turnlanes()) {
+
+          // get the outbound edges to the node
+          // find the edge that has the same wayid as the current DE
+          // if it is internal, then add turn lanes for this edge and not the internal one
+          // if not internal, then do not add turn lanes for this DE and leave them on the next one.
+          if (!IsNextEdgeInternal(directededge, tilebuilder, reader, lock,
+                                  infer_internal_intersections)) {
+            directededge.set_turnlanes(false);
+          }
+        }
+
+        // may have been temporarily set in the builder.
+        directededge.set_not_thru(false);
+
+        // Test if an internal intersection edge. Must do this after setting
+        // opposing edge index
+        if (infer_internal_intersections &&
+            IsIntersectionInternal(&tilebuilder, reader, lock, startnode, nodeinfo, directededge,
+                                   j)) {
+          directededge.set_internal(true);
+        }
+
+        if (directededge.internal()) {
+          // never set turnlanes on an internal edge.
+          directededge.set_turnlanes(false);
+          stats.internalcount++;
+        }
+
+        // Enhance and add turn lanes if not an internal edge.
+        if (!directededge.internal() && directededge.turnlanes()) {
+          // Update turn lanes.
+          UpdateTurnLanes(osmdata, nodeinfo.edge_index() + j, directededge, nodeinfo, tilebuilder,
+                          reader, lock, turn_lanes);
         }
 
         // Check for not_thru edge (only on low importance edges). Exclude
@@ -1293,14 +1795,6 @@ void enhance(const boost::property_tree::ptree& pt,
             directededge.set_not_thru(true);
             stats.not_thru++;
           }
-        }
-
-        // Test if an internal intersection edge. Must do this after setting
-        // opposing edge index
-        if (IsIntersectionInternal(&tilebuilder, reader, lock, startnode, nodeinfo, directededge,
-                                   j)) {
-          directededge.set_internal(true);
-          stats.internalcount++;
         }
 
         // Update access restrictions (update weight units)
@@ -1344,6 +1838,15 @@ void enhance(const boost::property_tree::ptree& pt,
     }
     tilebuilder.AddAccessRestrictions(access_restrictions);
 
+    // Replace turnlanes
+    if (tl_before != turn_lanes.size()) {
+      LOG_TRACE("Mismatch in turn lane count before " + std::to_string(tl_before) +
+                ""
+                " and after " +
+                std::to_string(turn_lanes.size()) + " tileid = " + std::to_string(tile_id.tileid()));
+    }
+    tilebuilder.AddTurnLanes(turn_lanes);
+
     // Write the new file
     lock.lock();
     tilebuilder.StoreTileData();
@@ -1351,7 +1854,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
     // Check if we need to clear the tile cache
     if (reader.OverCommitted()) {
-      reader.Clear();
+      reader.Trim();
     }
     lock.unlock();
   }
@@ -1370,7 +1873,9 @@ namespace valhalla {
 namespace mjolnir {
 
 // Enhance the local level of the graph
-void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt, const std::string& access_file) {
+void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
+                            const OSMData& osmdata,
+                            const std::string& access_file) {
   LOG_INFO("Enhancing local graph...");
 
   // A place to hold worker threads and their results, exceptions or otherwise
@@ -1399,9 +1904,9 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt, const std::st
   // Start the threads
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(enhance, std::cref(hierarchy_properties), std::cref(access_file),
-                                 std::ref(hierarchy_properties), std::ref(tilequeue), std::ref(lock),
-                                 std::ref(results.back())));
+    thread.reset(new std::thread(enhance, std::cref(hierarchy_properties), std::cref(osmdata),
+                                 std::cref(access_file), std::ref(hierarchy_properties),
+                                 std::ref(tilequeue), std::ref(lock), std::ref(results.back())));
   }
 
   // Wait for them to finish up their work

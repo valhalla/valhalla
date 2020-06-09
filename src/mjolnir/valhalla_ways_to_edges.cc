@@ -8,7 +8,6 @@
 #include "config.h"
 
 #include "baldr/rapidjson_utils.h"
-#include <boost/filesystem/operations.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -19,13 +18,14 @@
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 
 namespace bpo = boost::program_options;
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
-boost::filesystem::path config_file_path;
+filesystem::path config_file_path;
 std::vector<std::string> input_files;
 
 // Structure holding an edge Id and forward flag
@@ -51,8 +51,7 @@ bool ParseArguments(int argc, char* argv[]) {
 
   options.add_options()("help,h", "Print this help message.")("version,v",
                                                               "Print the version of this software.")(
-      "config,c",
-      boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
+      "config,c", boost::program_options::value<filesystem::path>(&config_file_path)->required(),
       "Path to the json configuration file.")
       // positional arguments
       ("input_files",
@@ -84,7 +83,7 @@ bool ParseArguments(int argc, char* argv[]) {
   }
 
   if (vm.count("config")) {
-    if (boost::filesystem::is_regular_file(config_file_path)) {
+    if (filesystem::is_regular_file(config_file_path)) {
       return true;
     } else {
       std::cerr << "Configuration file is required\n\n" << options << "\n\n";
@@ -104,7 +103,7 @@ int main(int argc, char** argv) {
 
   // Get the config to see which coverage we are using
   boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.c_str(), pt);
+  rapidjson::read_json(config_file_path.string(), pt);
 
   // Get something we can use to fetch tiles
   auto tile_properties = pt.get_child("mjolnir");
@@ -119,7 +118,7 @@ int main(int argc, char** argv) {
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // If tile exists add it to the queue
     GraphId edge_id(id, local_level, 0);
-    if (!reader.DoesTileExist(tile_properties, edge_id)) {
+    if (!reader.DoesTileExist(edge_id)) {
       continue;
     }
 
@@ -145,7 +144,7 @@ int main(int argc, char** argv) {
   std::ofstream ways_file;
   std::string fname = pt.get<std::string>("mjolnir.tile_dir") + "/way_edges.txt";
   ways_file.open(fname, std::ofstream::out | std::ofstream::trunc);
-  for (auto way : ways_edges) {
+  for (const auto& way : ways_edges) {
     ways_file << way.first;
     for (auto edge : way.second) {
       ways_file << "," << (uint32_t)edge.forward << "," << (uint64_t)edge.edgeid;
