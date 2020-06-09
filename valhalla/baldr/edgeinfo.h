@@ -206,7 +206,7 @@ protected:
   // The encoded shape of the edge
   const char* encoded_shape_;
 
-  // Where we optionally keep the last 2 bytes a 64bit wayid
+  // Where we optionally keep the last 2 bytes of a 64bit wayid
   uint16_t extended_wayid_;
 
   // Lng, lat shape of the edge
