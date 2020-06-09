@@ -34,9 +34,9 @@ using namespace valhalla::mjolnir;
 namespace {
 
 // This value controls the initial size of the Id table. If this is exceeded
-// the table will be resized and a warning is generated (indicating we should
-// increase this value).
-constexpr uint64_t kMaxOSMNodeId = 10000000000;
+// the table will be resized. We should keep this number just higher than
+// reality to maintain performance
+constexpr uint64_t kMaxOSMNodesHint = 1300000000;
 
 // Absurd classification.
 constexpr uint32_t kAbsurdRoadClass = 777777;
@@ -68,38 +68,20 @@ public:
                  const std::string& intersections_file = "",
                  const std::string& shapes_file = "",
                  bool read_data = false)
-      : shape_(pt.get<unsigned long>("id_table_size", kMaxOSMNodeId)),
-        intersection_(pt.get<unsigned long>("id_table_size", kMaxOSMNodeId)), osmdata_(osmdata),
+      : shape_(pt.get<unsigned long>("id_table_size", kMaxOSMNodesHint)),
+        intersection_(pt.get<unsigned long>("id_table_size", kMaxOSMNodesHint)), osmdata_(osmdata),
         lua_(get_lua(pt)) {
 
     if (read_data) {
-      std::ifstream file(intersections_file, std::ios::in | std::ios::binary);
-      if (!file.is_open()) {
+      if (!intersection_.deserialize(intersections_file)) {
         return;
       }
-      // Read the count and then the via ids
-      uint64_t count = 0;
-      file.read(reinterpret_cast<char*>(&count), sizeof(uint64_t));
-      std::vector<uint64_t> bm(count);
-      file.read(reinterpret_cast<char*>(bm.data()), count * sizeof(uint64_t));
-      file.close();
-      intersection_.set_bitmarkers(bm);
     }
 
     if (read_data) {
-
-      std::ifstream file(shapes_file, std::ios::in | std::ios::binary);
-      if (!file.is_open()) {
+      if (!shape_.deserialize(shapes_file)) {
         return;
       }
-
-      // Read the count and then the via ids
-      uint64_t count = 0;
-      file.read(reinterpret_cast<char*>(&count), sizeof(uint64_t));
-      std::vector<uint64_t> bm(count);
-      file.read(reinterpret_cast<char*>(bm.data()), count * sizeof(uint64_t));
-      file.close();
-      shape_.set_bitmarkers(bm);
     }
     current_way_node_index_ = last_node_ = last_way_ = last_relation_ = 0;
 
@@ -1841,31 +1823,10 @@ public:
   }
 
   void output_idtables(const std::string& intersections_file, const std::string& shapes_file) {
-    // Open file and truncate
-    std::ofstream intersections(intersections_file,
-                                std::ios::out | std::ios::binary | std::ios::trunc);
-    if (!intersections.is_open()) {
+    if (!intersection_.serialize(intersections_file))
       return;
-    }
-    std::vector<uint64_t> intersections_markers = intersection_.get_bitmarkers();
-    // Write the count and then the via ids
-    uint64_t sz = intersections_markers.size();
-    intersections.write(reinterpret_cast<const char*>(&sz), sizeof(uint64_t));
-    intersections.write(reinterpret_cast<const char*>(intersections_markers.data()),
-                        intersections_markers.size() * sizeof(uint64_t));
-    intersections.close();
-
-    std::ofstream shape(shapes_file, std::ios::out | std::ios::binary | std::ios::trunc);
-    if (!shape.is_open()) {
+    if (!shape_.serialize(shapes_file))
       return;
-    }
-    std::vector<uint64_t> shape_markers = shape_.get_bitmarkers();
-    // Write the count and then the via ids
-    sz = shape_markers.size();
-    shape.write(reinterpret_cast<const char*>(&sz), sizeof(uint64_t));
-    shape.write(reinterpret_cast<const char*>(shape_markers.data()),
-                shape_markers.size() * sizeof(uint64_t));
-    shape.close();
   }
 
   // Configuration option to include driveways
@@ -1899,7 +1860,7 @@ public:
   // Mark the OSM Node Ids used by ways
   // TODO: remove interesection_ as you already know it if you
   // encounter more than one consecutive OSMWayNode with the same id
-  IdTable shape_, intersection_;
+  UnorderedIdTable shape_, intersection_;
 
   // Ways and nodes written to file, nodes are written in the order they appear in way (shape)
   std::unique_ptr<sequence<OSMWay>> ways_;
