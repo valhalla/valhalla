@@ -78,4 +78,5 @@ valhalla_module(NAME mjolnir
     SQLite3::SQLite3
     Lua::Lua
     Threads::Threads
-    ZLIB::ZLIB)
+    ZLIB::ZLIB
+    robin_hood::robin_hood)
