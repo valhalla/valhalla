@@ -191,6 +191,7 @@ void start_service(zmq::context_t& context) {
   boost::property_tree::ptree config;
   std::stringstream json;
   json << R"({
+      "meili": { "default": { "breakage_distance": 2000} },
       "mjolnir": { "tile_dir": "test/tiles" },
       "loki": { "actions": [ "height" ],
                   "logging": { "long_request": 100.0 },

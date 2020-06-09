@@ -180,16 +180,16 @@ public:
 
   // Fixed size data within EdgeInfo
   struct EdgeInfoInner {
-    uint32_t wayid_ : 32;            // OSM way Id
-    uint32_t mean_elevation_ : 12;   // Mean elevation with 2 meter precision
-    uint32_t bike_network_ : 4;      // Mask of bicycle network types (see graphconstants.h)
-    uint32_t speed_limit_ : 8;       // Speed limit (kph)
-    uint32_t has_extended_wayid : 1; // Whether or not the wayid is 64bits
-    uint32_t spare0_ : 7;
-    uint32_t name_count_ : 4;
-    uint32_t encoded_shape_size_ : 16;
-    uint32_t reserved_ : 5; // Reserved for use by forks of Valhalla
-    uint32_t spare1_ : 7;
+    uint32_t wayid_ : 32;              // OSM way Id
+    uint32_t mean_elevation_ : 12;     // Mean elevation with 2 meter precision
+    uint32_t bike_network_ : 4;        // Mask of bicycle network types (see graphconstants.h)
+    uint32_t speed_limit_ : 8;         // Speed limit (kph)
+    uint32_t has_extended_wayid : 1;   // Whether or not the wayid is 64bits
+    uint32_t spare0_ : 7;              // not used
+    uint32_t name_count_ : 4;          // How many name infos we expect
+    uint32_t encoded_shape_size_ : 16; // How many bytes long the encoded shape is
+    uint32_t reserved_ : 5;            // Reserved for use by forks of Valhalla
+    uint32_t spare1_ : 7;              // not used
   };
 
 protected:

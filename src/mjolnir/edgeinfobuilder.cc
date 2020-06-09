@@ -130,12 +130,11 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
     os.write(reinterpret_cast<const char*>(&eib.extended_wayid_), sizeof(uint32_t));
   }
 
-  // Pad to an 4 byte boundary
-  std::size_t n = (eib.BaseSizeOf() % 4);
-  if (n != 0) {
-    for (std::size_t i = 0; i < 4 - n; i++) {
-      os << static_cast<char>(0);
-    }
+  // Pad to a 4 byte boundary
+  std::size_t padding = (eib.BaseSizeOf() % 4);
+  padding = padding > 0 ? 4 - padding : 0;
+  if (padding > 0) {
+    os.write("\0\0\0\0", padding);
   }
 
   return os;
