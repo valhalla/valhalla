@@ -95,6 +95,10 @@ public:
     else if (pl.preferred_side_ == Location::PreferredSide::OPPOSITE)
       l->set_preferred_side(valhalla::Location::opposite);
 
+    if (pl.display_latlng_) {
+      l->mutable_display_ll()->set_lng(pl.display_latlng_->lng());
+      l->mutable_display_ll()->set_lat(pl.display_latlng_->lat());
+    }
     if (!pl.name_.empty()) {
       l->set_name(pl.name_);
     }
@@ -241,6 +245,9 @@ public:
       l.search_filter_.exclude_tunnel_ = loc.search_filter().exclude_tunnel();
       l.search_filter_.exclude_bridge_ = loc.search_filter().exclude_bridge();
       l.search_filter_.exclude_ramp_ = loc.search_filter().exclude_ramp();
+    }
+    if (loc.has_display_ll()) {
+      l.display_latlng_ = midgard::PointLL{loc.display_ll().lng(), loc.display_ll().lat()};
     }
     return l;
   }

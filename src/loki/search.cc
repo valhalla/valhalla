@@ -366,7 +366,6 @@ struct bin_handler_t {
         length_ratio = 1.f - length_ratio;
       }
       // side of street TODO: set limitations on when we should use provided display ll to control
-      // side of street
       auto sq_tolerance = square(double(location.street_side_tolerance_));
       auto side =
           candidate.get_side(location.display_latlng_ ? *location.display_latlng_ : location.latlng_,
