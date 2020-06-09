@@ -88,16 +88,16 @@ struct OSMData {
    */
   static void cleanup_temp_files(const std::string& tile_dir);
 
-  uint64_t max_changeset_id_; // The largest/newest changeset id encountered when parsing OSM data
-  size_t osm_node_count;      // Count of osm nodes
-  size_t osm_way_count;       // Count of osm ways
-  size_t osm_way_node_count;  // Count of osm nodes on osm ways
-  size_t intersection_count;  // Count of intersection nodes
-  size_t node_count;          // Count of all nodes
-  size_t edge_count;          // Estimated count of edges
-  size_t node_ref_count;      // Number of node with ref
-  size_t node_name_count;     // Number of nodes with names
-  size_t node_exit_to_count;  // Number of nodes with exit_to
+  uint64_t max_changeset_id_;  // The largest/newest changeset id encountered when parsing OSM data
+  uint64_t osm_node_count;     // Count of osm nodes
+  uint64_t osm_way_count;      // Count of osm ways
+  uint64_t osm_way_node_count; // Count of osm nodes on osm ways
+  uint64_t intersection_count; // Count of intersection nodes
+  uint64_t node_count;         // Count of all nodes
+  uint64_t edge_count;         // Estimated count of edges
+  uint64_t node_ref_count;     // Number of node with ref
+  uint64_t node_name_count;    // Number of nodes with names
+  uint64_t node_exit_to_count; // Number of nodes with exit_to
 
   // Stores simple restrictions. Indexed by the from way Id
   RestrictionsMultiMap restrictions;

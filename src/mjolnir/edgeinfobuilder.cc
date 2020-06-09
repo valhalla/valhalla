@@ -13,14 +13,12 @@ namespace mjolnir {
 
 // Set the OSM way Id.
 void EdgeInfoBuilder::set_wayid(const uint64_t wayid) {
-  // mask off the first 32bits
+  // mask off the various parts of the id into their respective spots
   ei_.wayid_ = wayid & 0xFFFFFFFF;
-  ei_.has_extended_wayid = false;
-  // if that turned out to be not enough precision we keep the upper bits separately
-  if (ei_.wayid_ != wayid) {
-    ei_.has_extended_wayid = true;
-    extended_wayid_ = (wayid >> 32) & 0xFFFFFFFF;
-  }
+  ei_.wayid0_ = (wayid >> 32) & 0xFF;
+  ei_.wayid1_ = (wayid >> 40) & 0xFF;
+  extended_wayid_ = (wayid >> 48) & 0xFFFF;
+  ei_.has_extended_wayid_ = extended_wayid_ > 0;
 }
 
 // Set the mean elevation.
@@ -86,7 +84,7 @@ std::size_t EdgeInfoBuilder::BaseSizeOf() const {
   std::size_t size = sizeof(EdgeInfo::EdgeInfoInner);
   size += (name_info_list_.size() * sizeof(NameInfo));
   size += (encoded_shape_.size() * sizeof(std::string::value_type));
-  size += ei_.has_extended_wayid * sizeof(extended_wayid_);
+  size += ei_.has_extended_wayid_ * sizeof(extended_wayid_);
   return size;
 }
 
@@ -126,8 +124,8 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   os.write(reinterpret_cast<const char*>(eib.name_info_list_.data()),
            (name_count * sizeof(NameInfo)));
   os << eib.encoded_shape_;
-  if (ei.has_extended_wayid) {
-    os.write(reinterpret_cast<const char*>(&eib.extended_wayid_), sizeof(uint32_t));
+  if (ei.has_extended_wayid_) {
+    os.write(reinterpret_cast<const char*>(&eib.extended_wayid_), sizeof(eib.extended_wayid_));
   }
 
   // Pad to a 4 byte boundary
