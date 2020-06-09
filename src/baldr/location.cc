@@ -39,7 +39,8 @@ bool Location::operator==(const Location& o) const {
          heading_tolerance_ == o.heading_tolerance_ &&
          node_snap_tolerance_ == o.node_snap_tolerance_ && way_id_ == o.way_id_ &&
          min_outbound_reach_ == o.min_outbound_reach_ && min_inbound_reach_ == o.min_inbound_reach_ &&
-         radius_ == o.radius_ && preferred_side_ == o.preferred_side_ && display_latlng_ == o.display_latlng_;
+         radius_ == o.radius_ && preferred_side_ == o.preferred_side_ &&
+         display_latlng_ == o.display_latlng_;
 }
 
 } // namespace baldr

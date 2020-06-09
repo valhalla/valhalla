@@ -372,7 +372,8 @@ struct bin_handler_t {
           candidate.get_side(location.display_latlng_ ? *location.display_latlng_ : location.latlng_,
                              location.display_latlng_
                                  ? location.display_latlng_->DistanceSquared(candidate.point)
-                                 : candidate.sq_distance);
+                                 : candidate.sq_distance,
+                             sq_tolerance);
       auto reach = get_reach(candidate.edge_id, candidate.edge);
       PathLocation::PathEdge path_edge{candidate.edge_id, length_ratio, candidate.point,
                                        distance,          side,         reach.outbound,
