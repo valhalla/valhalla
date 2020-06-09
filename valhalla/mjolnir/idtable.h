@@ -93,6 +93,15 @@ public:
     return true;
   }
 
+  /**
+   * For unit tests only
+   * @param other
+   * @return
+   */
+  bool operator==(const UnorderedIdTable& other) const {
+    return bitmarkers_ == other.bitmarkers_;
+  }
+
 private:
   robin_hood::unordered_map<uint64_t, uint64_t> bitmarkers_;
 };

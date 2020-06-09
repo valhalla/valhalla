@@ -1,15 +1,12 @@
 #include "mjolnir/idtable.h"
+
 #include <cstdint>
 #include <cstdlib>
 #include <unordered_set>
 
-#include "test.h"
+#include <gtest/gtest.h>
 
-namespace {
-
-using namespace std;
 using namespace valhalla::mjolnir;
-
 constexpr uint64_t kTableSize = 40000;
 
 TEST(UnorderedIdTable, SetGet) {
@@ -46,10 +43,18 @@ TEST(UnorderedIdTable, Random) {
 }
 
 TEST(UnorderedIdTable, SerializeDeserialize) {
-  // TODO
-}
+  uint64_t node_count = 1300000000; // this is about how many there are in real life
+  node_count = 1000;
 
-} // namespace
+  UnorderedIdTable a(node_count);
+  for (uint64_t i = 0; i < node_count; ++i) {
+    a.set(i);
+  }
+  a.serialize("foo.bar");
+  UnorderedIdTable b(node_count);
+  b.deserialize("foo.bar");
+  EXPECT_EQ(a, b);
+}
 
 int main(int argc, char* argv[]) {
   testing::InitGoogleTest(&argc, argv);
