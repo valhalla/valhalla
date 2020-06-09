@@ -46,8 +46,8 @@ EdgeInfo::EdgeInfo(char* ptr, const char* names_list, const size_t names_list_le
   // Optional second half of 64bit way id
   extended_wayid_ = 0;
   if (ei_.has_extended_wayid_) {
-    extended_wayid_ = static_cast<uint32_t>(*(ptr));
-    extended_wayid_ |= static_cast<uint32_t>(*(ptr + 1)) << 8;
+    extended_wayid_ = static_cast<uint16_t>(*(ptr));
+    extended_wayid_ |= static_cast<uint16_t>(*(ptr + 1)) << 8;
     ptr += sizeof(uint16_t);
   }
 }
