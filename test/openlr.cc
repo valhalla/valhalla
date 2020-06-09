@@ -1,5 +1,6 @@
 #include "midgard/openlr.h"
 #include "midgard/pointll.h"
+#include <stdexcept>
 
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
@@ -58,11 +59,11 @@ const testfixture testfixtures[] = {{"CwOa9yUQACODBQEqAL4jEw==", 5.069987, 52.11
                                     {"CwOiYCUMoBNWAv9P/+MSBg==", 5.110692, 52.100590, 253.125,
                                      5.108922, 52.100300, 73.125, 117.2, 0, 0},
                                     {"CxWj2OogyxJBDhDSAvwSUL4=", 30.431259, -30.757352, 16.875,
-                                     30.474319, -30.749712, 185.625, 820.4, 608.890625, 0},
+                                     30.474319, -30.749712, 185.625, 820.4, 190, 0},
                                     {"CxWj2OogyxJBDhDSAvwSMA0=", 30.431259, -30.757352, 16.875,
-                                     30.474319, -30.749712, 185.625, 820.4, 0, 41.6609},
+                                     30.474319, -30.749712, 185.625, 820.4, 0, 13},
                                     {"CxWj2OogyxJBDhDSAvwScL4N", 30.431259, -30.757352, 16.875,
-                                     30.474319, -30.749712, 185.625, 820.4, 608.890625, 41.6609},
+                                     30.474319, -30.749712, 185.625, 820.4, 190, 13},
                                     {"C6i8rRtM3BjgAAAAAAUYAA==", -122.713562, 38.390942, 5.625,
                                      -122.713562, 38.390991, 5.625, 0, 0, 0}};
 
@@ -145,8 +146,8 @@ TEST(OpenLR, InternalReferencePoints) {
   locRef.lrps.insert(std::prev(std::prev(locRef.lrps.end())), locRef.lrps[1]);
   EXPECT_NEAR(locRef.getLength(), 5 * 12774.8, 1e-3) << "Distance incorrect.";
 
-  auto hex = " 0b 01 b5 01 22 b7 3e 10 fc da cc f4 08 80 10 f3 da "
-             "00 00 00 00 10 f3 da 00 00 00 00 10 f3 da 00 00 00 00 10 f3 da fc de 14 71 10 63 ab ab";
+  auto hex =
+      " 0b 01 b5 01 22 b7 3e 10 fc da cc f4 08 80 10 f3 da 00 00 00 00 10 f3 da 00 00 00 00 10 f3 da 00 00 00 00 10 f3 da fc de 14 71 10 63 44 44";
   EXPECT_EQ(to_hex(locRef.toBinary()), hex) << "Incorrectly encoded reference";
 }
 
@@ -193,7 +194,7 @@ TEST(OpenLR, CreateLinearReference) {
     fow = static_cast<LocationReferencePoint::FormOfWay>(static_cast<uint8_t>(fow) + 1);
     --lowest_frc_next_point;
   }
-  LineLocation line_location(lrps, 17.438, 13.721);
+  LineLocation line_location(lrps, 12, 234);
 
   // do a round trip conversion
   LineLocation converted(line_location.toBinary());
@@ -201,17 +202,19 @@ TEST(OpenLR, CreateLinearReference) {
   // compare to the original reference before conversion
   EXPECT_EQ(line_location, converted);
 
-  // if positive or negative offset is too large it should throw
-  EXPECT_THROW(LineLocation(lrps, lrps[0].distance + 1, 0), std::invalid_argument);
-  EXPECT_THROW(LineLocation(lrps, 0, lrps[lrps.size() - 2].distance + 1), std::invalid_argument);
+  // If only one LRP, should error
+  EXPECT_THROW(LineLocation({lrps.front()}, 0, 0), std::invalid_argument);
+  // If we only have 2 LRPs, and the pos/neg offsets would overlap, should throw
+  EXPECT_THROW(LineLocation({lrps.front(), lrps.back()}, 0.6 * 255, 0.6 * 255),
+               std::invalid_argument);
 
   // make a short line location so that poff and noff must be 0
   lrps.clear();
   lrps.emplace_back(0, 0, 90, frc, fow, nullptr, 5, lowest_frc_next_point);
   lrps.emplace_back(.000005, 0, 270, frc, fow, &lrps.back());
   LineLocation short_location(lrps, 0, 0);
-  EXPECT_EQ(short_location.poff, 0.f);
-  EXPECT_EQ(short_location.noff, 0.f);
+  EXPECT_EQ(short_location.poff, 0);
+  EXPECT_EQ(short_location.noff, 0);
 }
 
 } // namespace
