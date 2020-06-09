@@ -84,7 +84,9 @@ public:
    * @return  Returns the OSM way Id.
    */
   uint64_t wayid() const {
-    return (static_cast<uint64_t>(extended_wayid_) << 32) | ei_.wayid_;
+    return (static_cast<uint64_t>(extended_wayid_) << 48) |
+           (static_cast<uint64_t>(ei_.wayid0_) << 40) | (static_cast<uint64_t>(ei_.wayid1_) << 32) |
+           ei_.wayid_;
   }
 
   /**
@@ -180,16 +182,18 @@ public:
 
   // Fixed size data within EdgeInfo
   struct EdgeInfoInner {
-    uint32_t wayid_ : 32;              // OSM way Id
-    uint32_t mean_elevation_ : 12;     // Mean elevation with 2 meter precision
-    uint32_t bike_network_ : 4;        // Mask of bicycle network types (see graphconstants.h)
-    uint32_t speed_limit_ : 8;         // Speed limit (kph)
-    uint32_t has_extended_wayid : 1;   // Whether or not the wayid is 64bits
-    uint32_t spare0_ : 7;              // not used
+    uint32_t wayid_ : 32; // OSM way Id
+
+    uint32_t mean_elevation_ : 12; // Mean elevation with 2 meter precision
+    uint32_t bike_network_ : 4;    // Mask of bicycle network types (see graphconstants.h)
+    uint32_t speed_limit_ : 8;     // Speed limit (kph)
+    uint32_t wayid0_ : 8;          // Next byte of the way id
+
     uint32_t name_count_ : 4;          // How many name infos we expect
     uint32_t encoded_shape_size_ : 16; // How many bytes long the encoded shape is
-    uint32_t reserved_ : 5;            // Reserved for use by forks of Valhalla
-    uint32_t spare1_ : 7;              // not used
+    uint32_t wayid1_ : 8;              // Next next byte of the way id
+    uint32_t has_extended_wayid_ : 1;  // Whether or not the wayid is 64bits;
+    uint32_t spare0_ : 3;              // not used
   };
 
 protected:
@@ -202,8 +206,8 @@ protected:
   // The encoded shape of the edge
   const char* encoded_shape_;
 
-  // Where we optionally keep the other half of a 64bit wayid
-  uint32_t extended_wayid_;
+  // Where we optionally keep the last 2 bytes a 64bit wayid
+  uint16_t extended_wayid_;
 
   // Lng, lat shape of the edge
   mutable std::vector<midgard::PointLL> shape_;

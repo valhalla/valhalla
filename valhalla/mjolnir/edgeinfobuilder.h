@@ -106,8 +106,8 @@ protected:
   // Fixed size information
   baldr::EdgeInfo::EdgeInfoInner ei_;
 
-  // Where we optionally keep the other half of a 64bit wayid
-  uint32_t extended_wayid_;
+  // Where we optionally keep the last 2 bytes of a 64bit wayid
+  uint16_t extended_wayid_;
 
   // List of name info (offsets, etc.)
   std::vector<baldr::NameInfo> name_info_list_;
