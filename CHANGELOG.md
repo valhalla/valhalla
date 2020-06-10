@@ -95,6 +95,7 @@
    * ADDED: Unified time tracking for all algorithms that support time-based graph expansion. [#2278](https://github.com/valhalla/valhalla/pull/2278)
    * ADDED: Add rail_ferry use and costing. [#2408](https://github.com/valhalla/valhalla/pull/2408)
    * ADDED (back): Support for 64bit wide way ids in the edgeinfo structure with no impact to size for data sources with ids 32bits wide. [#2410](https://github.com/valhalla/valhalla/pull/2410)
+   * ADDED: Support for 64bit osm node ids in parsing stage of tile building [#2415](https://github.com/valhalla/valhalla/pull/2415)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
