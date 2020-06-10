@@ -18,7 +18,7 @@ constexpr uint32_t kMaxNodeNameIndex = 2097151;
  */
 struct OSMNode {
   // The osm id of the node
-  uint64_t osmid_ : 64;
+  uint64_t osmid_;
 
   // Store node names in a separate list (so they don't require as many indexes)
   uint64_t name_index_ : 21;
