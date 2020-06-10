@@ -324,6 +324,12 @@ TEST(Search, test_edge_search) {
   search(x, false, answer,
          {PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::LEFT}});
 
+  // try nuking display ll by setting street_side_max_distance less than display ll distance
+  x.street_side_max_distance_ = 1000;
+  search(x, false, answer,
+         {PE{{t, l, 3}, ratio, answer, 0, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE}});
+  x.street_side_max_distance_ = 5000; // reset to default
+
   // try display ll on the other side
   x.display_latlng_ = PointLL{answer.first - ortho.x(), answer.second - ortho.y()};
   search(x, false, answer,

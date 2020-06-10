@@ -94,7 +94,7 @@
    * ADDED: Add utility functions to Signs. [#2390](https://github.com/valhalla/valhalla/pull/2390)
    * ADDED: Unified time tracking for all algorithms that support time-based graph expansion. [#2278](https://github.com/valhalla/valhalla/pull/2278)
    * ADDED: Add rail_ferry use and costing. [#2408](https://github.com/valhalla/valhalla/pull/2408)
-   * ADDED: `display_lat` and `display_lon` to `locations` in in put for better control of routing side of street [#1769](https://github.com/valhalla/valhalla/pull/1769)
+   * ADDED: `street_side_max_distance`, `display_lat` and `display_lon` to `locations` in input for better control of routing side of street [#1769](https://github.com/valhalla/valhalla/pull/1769)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

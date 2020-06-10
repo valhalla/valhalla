@@ -109,6 +109,7 @@ public:
   float heading_tolerance_;
   float search_cutoff_;
   float street_side_tolerance_;
+  float street_side_max_distance_;
   SearchFilter search_filter_;
 
   // coordinates of the location as used for altering the side of street

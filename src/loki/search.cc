@@ -120,10 +120,13 @@ struct candidate_t {
     return sq_distance < c.sq_distance;
   }
 
-  PathLocation::SideOfStreet
-  get_side(const PointLL& original, double sq_distance, double sq_tolerance) const {
-    // its so close to the edge that its basically on the edge
-    if (sq_distance < sq_tolerance) {
+  PathLocation::SideOfStreet get_side(const PointLL& original,
+                                      double sq_distance,
+                                      double sq_tolerance,
+                                      double sq_max_distance) const {
+    // point is so close to the edge that its basically on the edge,
+    // or its to far from the edge that we shouldn't use it to determine side of street
+    if (sq_distance < sq_tolerance || sq_distance > sq_max_distance) {
       return PathLocation::SideOfStreet::NONE;
     }
 
@@ -365,14 +368,15 @@ struct bin_handler_t {
       if (!candidate.edge->forward()) {
         length_ratio = 1.f - length_ratio;
       }
-      // side of street TODO: set limitations on when we should use provided display ll to control
+      // side of street
       auto sq_tolerance = square(double(location.street_side_tolerance_));
+      auto sq_max_distance = square(double(location.street_side_max_distance_));
       auto side =
           candidate.get_side(location.display_latlng_ ? *location.display_latlng_ : location.latlng_,
                              location.display_latlng_
                                  ? location.display_latlng_->DistanceSquared(candidate.point)
                                  : candidate.sq_distance,
-                             sq_tolerance);
+                             sq_tolerance, sq_max_distance);
       auto reach = get_reach(candidate.edge_id, candidate.edge);
       PathLocation::PathEdge path_edge{candidate.edge_id, length_ratio, candidate.point,
                                        distance,          side,         reach.outbound,

@@ -132,6 +132,7 @@ public:
     l->set_radius(pl.radius_);
     l->set_search_cutoff(pl.radius_ > pl.search_cutoff_ ? pl.radius_ : pl.search_cutoff_);
     l->set_street_side_tolerance(pl.street_side_tolerance_);
+    l->set_street_side_max_distance(pl.street_side_max_distance_);
     l->mutable_search_filter()->set_min_road_class(pl.search_filter_.min_road_class_);
     l->mutable_search_filter()->set_max_road_class(pl.search_filter_.max_road_class_);
     l->mutable_search_filter()->set_exclude_tunnel(pl.search_filter_.exclude_tunnel_);
@@ -238,6 +239,9 @@ public:
     }
     if (loc.has_street_side_tolerance()) {
       l.street_side_tolerance_ = loc.street_side_tolerance();
+    }
+    if (loc.has_street_side_max_distance()) {
+      l.street_side_max_distance_ = loc.street_side_max_distance();
     }
     if (loc.has_search_filter()) {
       l.search_filter_.min_road_class_ = loc.search_filter().min_road_class();

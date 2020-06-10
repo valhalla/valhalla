@@ -471,6 +471,11 @@ void parse_locations(const rapidjson::Document& doc,
         if (street_side_tolerance) {
           location->set_street_side_tolerance(*street_side_tolerance);
         }
+        auto street_side_max_distance =
+            rapidjson::get_optional<unsigned int>(r_loc, "/street_side_max_distance");
+        if (street_side_max_distance) {
+          location->set_street_side_max_distance(*street_side_max_distance);
+        }
         auto search_filter = rapidjson::get_child_optional(r_loc, "/search_filter");
         if (search_filter) {
           // search_filter.min_road_class
