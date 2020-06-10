@@ -144,7 +144,7 @@ void FilterTiles(GraphReader& reader,
         uint32_t idx = directededge->edgeinfo_offset();
         auto edgeinfo = tile->edgeinfo(idx);
         std::string encoded_shape = edgeinfo.encoded_shape();
-        uint64_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
+        uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
         uint32_t edge_info_offset =
             tilebuilder.AddEdgeInfo(w, nodeid, directededge->endnode(), edgeinfo.wayid(),
                                     edgeinfo.mean_elevation(), edgeinfo.bike_network(),
