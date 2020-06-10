@@ -33,11 +33,6 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-// This value controls the initial size of the Id table. If this is exceeded
-// the table will be resized. We should keep this number just higher than
-// reality to maintain performance
-constexpr uint64_t kMaxOSMNodesHint = 1300000000;
-
 // Absurd classification.
 constexpr uint32_t kAbsurdRoadClass = 777777;
 
@@ -281,6 +276,7 @@ public:
       ++current_way_node_index_;
       osmdata_.edge_count += intersection;
     }
+    osmdata_.edge_count -= intersection; // more accurate but undercounts by skipping lone edges
     ++osmdata_.node_count;
   }
 
@@ -374,7 +370,6 @@ public:
         inserted.first->second = i;
       }
     }
-    osmdata_.edge_count += 2;
     ++osmdata_.osm_way_count;
     osmdata_.osm_way_node_count += nodes.size();
 
