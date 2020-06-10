@@ -270,6 +270,8 @@ public:
       sequence<OSMWayNode>::iterator element = (*way_nodes_)[current_way_node_index_];
       while (current_way_node_index_ < way_nodes_->size() &&
              (way_node = element = (*way_nodes_)[current_way_node_index_]).node.osmid_ == osmid) {
+        // we need to keep the duplicate flag that way parsing set
+        n.flat_loop_ = way_node.node.flat_loop_;
         way_node.node = n;
         element = way_node;
         ++current_way_node_index_;
@@ -331,17 +333,6 @@ public:
       LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
     }
 
-    // Check for ways that loop back on themselves (simple check) and add
-    // any wayids that have loops to a vector
-    if (nodes.size() > 2) {
-      for (size_t i = 2, j = 0; i < nodes.size(); i++, j++) {
-        if (nodes[i] == nodes[j]) {
-          loops_.push_back(osmid);
-          break;
-        }
-      }
-    }
-
     if (osmid > kMaxOSMWayId) {
       throw std::runtime_error("OSM way Id exceeds 32 bit maximum");
     }
@@ -356,6 +347,7 @@ public:
     // Add the refs to the reference list and mark the nodes that care about when processing nodes
     loop_nodes_.clear();
     for (size_t i = 0; i < nodes.size(); ++i) {
+      // If we've seen this node anywhere else then its an intersection (ie graph node)
       const auto& node = nodes[i];
       if (shape_.get(node)) {
         intersection_.set(node);
@@ -363,12 +355,24 @@ public:
       } else {
         ++osmdata_.node_count;
       }
-      way_nodes_->push_back({{node}, static_cast<uint32_t>(ways_->size()), static_cast<uint32_t>(i)});
       shape_.set(node);
+
+      // Check whether the node is on a part of a way doubling back on itself
+      OSMNode osm_node{node};
+      auto inserted = loop_nodes_.insert(std::make_pair(node, i));
+      bool flattening = inserted.first->second > 0 && i < nodes.size() - 1 &&
+                        nodes[i + 1] == nodes[inserted.first->second - 1];
+      bool unflattening = i > 0 && inserted.first->second < nodes.size() - 1 &&
+                          nodes[i - 1] == nodes[inserted.first->second + 1];
+      osm_node.flat_loop_ = flattening || unflattening;
+
+      // Keep the node
+      way_nodes_->push_back(
+          {osm_node, static_cast<uint32_t>(ways_->size()), static_cast<uint32_t>(i)});
+
       // If this way is a loop (node occurs twice) we can make our lives way easier if we simply
       // split it up into multiple edges in the graph. If a problem is hard, avoid the problem!
-      auto inserted = loop_nodes_.insert(std::make_pair(node, i));
-      if (inserted.second == false) {
+      if (!inserted.second) {
         // Walk through nodes between the 2 nodes that form the loop and see if
         // there are already intersections
         bool intsct = false;
@@ -378,11 +382,11 @@ public:
             break;
           }
         }
+        // If there wasnt already an intersection we'll make one in the middle of the loop
         if (!intsct) {
           intersection_.set(
               nodes[(i + inserted.first->second) / 2]); // TODO: update osmdata_.*_count?
         }
-
         // Update the index in case the node is used again (a future loop)
         inserted.first->second = i;
       }
@@ -1810,18 +1814,6 @@ public:
     bss_nodes_.reset(bss_nodes);
   }
 
-  // Output list of wayids that have loops
-  void output_loops() {
-    std::ofstream loop_file;
-    loop_file.open("loop_ways.txt", std::ofstream::out | std::ofstream::trunc);
-    for (auto& wayid : loops_) {
-      loop_file << wayid << std::endl;
-    }
-    loop_file.close();
-    loops_.clear();
-    loops_.shrink_to_fit();
-  }
-
   void output_idtables(const std::string& intersections_file, const std::string& shapes_file) {
     if (!intersection_.serialize(intersections_file))
       return;
@@ -1870,9 +1862,6 @@ public:
   size_t current_way_node_index_;
   uint64_t last_node_, last_way_, last_relation_;
   std::unordered_map<uint64_t, size_t> loop_nodes_;
-
-  // List of wayids with loops
-  std::vector<uint64_t> loops_;
 
   // user entered access
   std::unique_ptr<sequence<OSMAccess>> access_;
@@ -1939,7 +1928,6 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
                                                         OSMPBF::Interest::CHANGESETS),
                           callback);
   }
-  callback.output_loops();
   callback.output_idtables(intersections_file, shapes_file);
 
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +

@@ -66,6 +66,14 @@ struct Edge {
   uint32_t targetnode_;
 
   /**
+   * For now you cant be valid if you dont have any shape
+   * @return true if the edge has at least 1 shape point
+   */
+  bool is_valid() const {
+    return attributes.llcount > 0;
+  }
+
+  /**
    * Construct a new edge. Target node and additional lat,lngs will
    * be filled in later.
    * @param sourcenode   Start node of the edge
