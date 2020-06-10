@@ -138,7 +138,8 @@ void ConstructEdges(const OSMData& osmdata,
     auto way_node = *way_nodes[current_way_node_index];
     const auto way = *ways[way_node.way_index];
     const auto first_way_node_index = current_way_node_index;
-    const auto last_way_node_index = first_way_node_index + way.node_count() - 1;
+    const auto last_way_node_index =
+        first_way_node_index + way.node_count() - way_node.way_shape_node_index - 1;
 
     // Validate - make sure all nodes for this edge are valid
     bool valid = true;
@@ -159,7 +160,7 @@ void ConstructEdges(const OSMData& osmdata,
     // Remember this edge starts here
     Edge prev_edge = Edge{0};
     Edge edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
-    edge.attributes.way_begin = true;
+    edge.attributes.way_begin = way_node.way_shape_node_index == 0;
 
     // Remember this node as starting this edge
     way_node.node.link_edge_ = way.link();
@@ -186,11 +187,11 @@ void ConstructEdges(const OSMData& osmdata,
         if (!infer_turn_channels && way.turn_channel())
           edge.attributes.turn_channel = true;
 
-        uint32_t size = static_cast<uint32_t>(edges.size());
-        if (!edge.attributes.way_begin)
-          size += 1;
+        // remember what edge this node will end, its complicated by the fact that we delay adding the
+        // edge until the next iteration of the loop, ie once the edge becomes prev_edge
+        uint32_t end_of = static_cast<uint32_t>(edges.size() + prev_edge.is_valid());
         nodes.push_back(
-            {way_node.node, static_cast<uint32_t>(-1), size, graph_id_predicate(way_node.node)});
+            {way_node.node, static_cast<uint32_t>(-1), end_of, graph_id_predicate(way_node.node)});
 
         // Mark the edge as ending a way if this is the last node in the way
         edge.attributes.way_end = current_way_node_index == last_way_node_index;
@@ -200,27 +201,40 @@ void ConstructEdges(const OSMData& osmdata,
           prev_edge.attributes.way_prior = true;
         }
 
-        if (!edge.attributes.way_begin)
+        // We should add the previous edge now that we know its done
+        if (prev_edge.is_valid())
           edges.push_back(prev_edge);
 
         // Mark the current edge as the next edge one since we processed the first edge
         if (prev_edge.attributes.way_begin)
           edge.attributes.way_next = true;
 
+        // Finish this edge
         prev_edge = edge;
 
-        // Start a new edge if this is not the last node in the way
-        if (current_way_node_index != last_way_node_index) {
+        // Figure out if the way doubled back on itself and if so treat it like the way ended
+        bool doubled_back = false;
+        OSMWayNode next_way_node;
+        while (current_way_node_index != last_way_node_index && way_node.node.flat_loop_ &&
+               (next_way_node = *way_nodes[current_way_node_index + 1]).node.flat_loop_) {
+          way_node = next_way_node;
+          ++current_way_node_index;
+          doubled_back = current_way_node_index != last_way_node_index;
+        }
+
+        // Either we were done making edges from this way or there is an internal part that is doubled
+        // backed over itself and we need to skip it
+        if (current_way_node_index == last_way_node_index || doubled_back) {
+          edges.push_back(prev_edge);
+          current_way_node_index += !doubled_back;
+          break;
+        } // Start a new edge if this is not the last node in the way
+        else {
           edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
           sequence<Node>::iterator element = --nodes.end();
           auto node = *element;
           node.start_of = edges.size() + 1; // + 1 because the edge has not been added yet
           element = node;
-        } // This was the last shape point in the way
-        else {
-          edges.push_back(prev_edge); // add the last edge
-          ++current_way_node_index;
-          break;
         }
       } // If this edge has a signal not at a intersection
       else if (way_node.node.traffic_signal()) {
