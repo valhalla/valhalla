@@ -142,6 +142,12 @@ public:
       return; // not found
     }
 
+    // TODO: instead of the shape check below we can find the waynode that matches this nodeid. if the
+    // current id is already greater than this id and the next one then we can skip this node. in the
+    // case that there are more than one waynode with the same node id then we know its an
+    // intersection so we should mark an intersection bit on each one showing that. if we do these two
+    // things we can completely remove the need for a shape_ and intersection_ (idtable)
+
     // Check if it is in the list of nodes used by ways
     if (!shape_.get(osmid)) {
       return;
@@ -343,6 +349,13 @@ public:
       throw std::runtime_error("Detected unsorted input data");
     }
     last_way_ = osmid;
+
+    // TODO: we should change intersection to be a bit on the waynode, then we can set the beginning
+    // and end of each way here as well as cut loops (cant check if they are already cut) and when we
+    // sort the waynodes by nodeid we can mark anyones that appear more than once by setting their
+    // intersection bit. this way we still have all the information we needed about which nodes are
+    // intersections for building edges in the graph. finally we can also completely remove the shape
+    // bitset as its only used for marking intersections here.
 
     // Add the refs to the reference list and mark the nodes that care about when processing nodes
     loop_nodes_.clear();
