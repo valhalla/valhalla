@@ -1,6 +1,8 @@
 
 #include "mjolnir/pbfadminparser.h"
 #include "admin_lua_proc.h"
+#include "baldr/tilehierarchy.h"
+#include "midgard/logging.h"
 #include "mjolnir/idtable.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmadmin.h"
@@ -8,13 +10,8 @@
 #include "mjolnir/util.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
-#include <future>
-#include <thread>
-#include <utility>
 
-#include "baldr/tilehierarchy.h"
-#include "midgard/logging.h"
+#include <utility>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -134,6 +131,7 @@ public:
   LuaTagTransform lua_;
 
   // Mark the OSM Ids used by the ways and relations
+  // TODO: just use robin_hood::unordered_set<uint64_t> since these are probably relatively small
   UnorderedIdTable shape_, members_;
 
   // Pointer to all the OSM data (for use by callbacks)

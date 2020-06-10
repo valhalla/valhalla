@@ -96,14 +96,11 @@ void CountryAccess(const std::string& config_file) {
   std::string cr_from_file = "test_from_cr_amsterdam.bin";
   std::string cr_to_file = "test_to_cr_amsterdam.bin";
   std::string bss_nodes_file = "test_bss_nodes_amsterdam.bin";
-  std::string intersections_file = "test_intersections_amsterdam.bin";
-  std::string shapes_file = "test_shapes_amsterdam.bin";
 
   // Parse Amsterdam OSM data
-  auto osmdata =
-      PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
-                                {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
-                                way_nodes_file, access_file, intersections_file, shapes_file);
+  auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
+                                           {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"},
+                                           ways_file, way_nodes_file, access_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, cr_from_file,
@@ -111,8 +108,7 @@ void CountryAccess(const std::string& config_file) {
 
   PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
                              {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
-                             way_nodes_file, intersections_file, shapes_file, bss_nodes_file,
-                             osmdata);
+                             way_nodes_file, bss_nodes_file, osmdata);
 
   // Build the graph using the OSMNodes and OSMWays from the parser
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file, cr_from_file,
@@ -252,8 +248,6 @@ void CountryAccess(const std::string& config_file) {
   remove_temp_file(access_file);
   remove_temp_file(cr_from_file);
   remove_temp_file(cr_to_file);
-  remove_temp_file(intersections_file);
-  remove_temp_file(shapes_file);
 }
 
 TEST(CountryAccess, Basic) {

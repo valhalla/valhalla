@@ -63,26 +63,8 @@ public:
   virtual ~graph_callback() {
   }
 
-  graph_callback(const boost::property_tree::ptree& pt,
-                 OSMData& osmdata,
-                 const std::string& intersections_file = "",
-                 const std::string& shapes_file = "",
-                 bool read_data = false)
-      : shape_(pt.get<unsigned long>("id_table_size", kMaxOSMNodesHint)),
-        intersection_(pt.get<unsigned long>("id_table_size", kMaxOSMNodesHint)), osmdata_(osmdata),
-        lua_(get_lua(pt)) {
-
-    if (read_data) {
-      if (!intersection_.deserialize(intersections_file)) {
-        return;
-      }
-    }
-
-    if (read_data) {
-      if (!shape_.deserialize(shapes_file)) {
-        return;
-      }
-    }
+  graph_callback(const boost::property_tree::ptree& pt, OSMData& osmdata)
+      : osmdata_(osmdata), lua_(get_lua(pt)) {
     current_way_node_index_ = last_node_ = last_way_ = last_relation_ = 0;
 
     highway_cutoff_rc_ = RoadClass::kPrimary;
@@ -119,6 +101,13 @@ public:
 
   virtual void
   node_callback(uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
+    // unsorted extracts are just plain nasty, so they can bugger off!
+    if (osmid < last_node_) {
+      throw std::runtime_error("Detected unsorted input data");
+    }
+    last_node_ = osmid;
+
+    // Handle bike share stations separately
     boost::optional<Tags> results = boost::none;
     if (bss_nodes_) {
       // Get tags - do't bother with Lua callout if the taglist is empty
@@ -142,14 +131,28 @@ public:
       return; // not found
     }
 
-    // TODO: instead of the shape check below we can find the waynode that matches this nodeid. if the
-    // current id is already greater than this id and the next one then we can skip this node. in the
-    // case that there are more than one waynode with the same node id then we know its an
-    // intersection so we should mark an intersection bit on each one showing that. if we do these two
-    // things we can completely remove the need for a shape_ and intersection_ (idtable)
+    // if we found all of the node ids we were looking for already we can bail
+    if (current_way_node_index_ >= way_nodes_->size()) {
+      return;
+    }
 
-    // Check if it is in the list of nodes used by ways
-    if (!shape_.get(osmid)) {
+    // if the current osmid of this node of this pbf file is greater than the waynode we are looking
+    // for then it must be in another pbf file. so we need to move on to the next waynode that could
+    // possibly actually be in this pbf file
+    if (osmid > (*(*way_nodes_)[current_way_node_index_]).node.osmid_) {
+      current_way_node_index_ =
+          way_nodes_->find_first_of(OSMWayNode{{osmid}},
+                                    [](const OSMWayNode& a, const OSMWayNode& b) {
+                                      return a.node.osmid_ <= b.node.osmid_;
+                                    },
+                                    current_way_node_index_);
+    }
+
+    // if this nodes id is less than the waynode we are looking for then we know its a node we can
+    // skip because it means there were no ways that we kept that referenced it. also we could run out
+    // of waynodes to look for and in that case we are done as well
+    if (osmid < (*(*way_nodes_)[current_way_node_index_]).node.osmid_ ||
+        current_way_node_index_ >= way_nodes_->size()) {
       return;
     }
 
@@ -160,12 +163,6 @@ public:
     } else {
       results = results ? results : empty_node_results_;
     }
-
-    // unsorted extracts are just plain nasty, so they can bugger off!
-    if (osmid < last_node_) {
-      throw std::runtime_error("Detected unsorted input data");
-    }
-    last_node_ = osmid;
 
     const auto& highway_junction = results->find("highway");
     bool is_highway_junction =
@@ -179,6 +176,7 @@ public:
     OSMNode n;
     n.set_id(osmid);
     n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
+    bool intersection = false;
     if (is_highway_junction) {
       n.set_type(NodeType::kMotorWayJunction);
     }
@@ -214,32 +212,32 @@ public:
         }
       } else if (tag.first == "gate") {
         if (tag.second == "true") {
-          if (!intersection_.get(osmid)) {
-            intersection_.set(osmid);
+          if (!intersection) {
+            intersection = true;
             ++osmdata_.edge_count;
           }
           n.set_type(NodeType::kGate);
         }
       } else if (tag.first == "bollard") {
         if (tag.second == "true") {
-          if (!intersection_.get(osmid)) {
-            intersection_.set(osmid);
+          if (!intersection) {
+            intersection = true;
             ++osmdata_.edge_count;
           }
           n.set_type(NodeType::kBollard);
         }
       } else if (tag.first == "toll_booth") {
         if (tag.second == "true") {
-          if (!intersection_.get(osmid)) {
-            intersection_.set(osmid);
+          if (!intersection) {
+            intersection = true;
             ++osmdata_.edge_count;
           }
           n.set_type(NodeType::kTollBooth);
         }
       } else if (tag.first == "border_control") {
         if (tag.second == "true") {
-          if (!intersection_.get(osmid)) {
-            intersection_.set(osmid);
+          if (!intersection) {
+            intersection = true;
             ++osmdata_.edge_count;
           }
           n.set_type(NodeType::kBorderControl);
@@ -256,40 +254,34 @@ public:
       */
     }
 
-    // Set the intersection flag (relies on ways being processed first to set
-    // the intersection Id markers).
-    if (intersection_.get(osmid)) {
+    // If way parsing marked it as the beginning or end of a way (dead ends) we'll keep that too
+    sequence<OSMWayNode>::iterator element = (*way_nodes_)[current_way_node_index_];
+    auto way_node = *element;
+    intersection = intersection || way_node.node.intersection_;
+
+    // If multiple ways reference this its also an intersection
+    if (!intersection && current_way_node_index_ < way_nodes_->size() - 1 &&
+        osmid == (*(*way_nodes_)[current_way_node_index_ + 1]).node.osmid_) {
+      intersection = true;
+    }
+
+    // Finally set the intersection flag for any reason that we outlined above
+    if (intersection) {
       n.set_intersection(true);
       osmdata_.intersection_count++;
     }
 
-    // find a node we need to update
-    current_way_node_index_ = way_nodes_->find_first_of(OSMWayNode{{osmid}},
-                                                        [](const OSMWayNode& a, const OSMWayNode& b) {
-                                                          return a.node.osmid_ == b.node.osmid_;
-                                                        },
-                                                        current_way_node_index_);
-    // we found the first one
-    if (current_way_node_index_ < way_nodes_->size()) {
-      // update all the nodes that match it
-      OSMWayNode way_node;
-      sequence<OSMWayNode>::iterator element = (*way_nodes_)[current_way_node_index_];
-      while (current_way_node_index_ < way_nodes_->size() &&
-             (way_node = element = (*way_nodes_)[current_way_node_index_]).node.osmid_ == osmid) {
-        // we need to keep the duplicate flag that way parsing set
-        n.flat_loop_ = way_node.node.flat_loop_;
-        way_node.node = n;
-        element = way_node;
-        ++current_way_node_index_;
-      }
-
-      if (++osmdata_.osm_node_count % 5000000 == 0) {
-        LOG_DEBUG("Processed " + std::to_string(osmdata_.osm_node_count) + " nodes on ways");
-      }
-    } // if we hit the end of the nodes and didnt find it that is a problem
-    else {
-      throw std::runtime_error("Didn't find OSMWayNode for node id: " + std::to_string(osmid));
+    // Update all copies of this node that various ways referenced
+    while (current_way_node_index_ < way_nodes_->size() &&
+           (way_node = element = (*way_nodes_)[current_way_node_index_]).node.osmid_ == osmid) {
+      // we need to keep the duplicate flag that way parsing set
+      n.flat_loop_ = way_node.node.flat_loop_;
+      way_node.node = n;
+      element = way_node;
+      ++current_way_node_index_;
+      osmdata_.edge_count += intersection;
     }
+    ++osmdata_.node_count;
   }
 
   virtual void way_callback(uint64_t osmid,
@@ -350,25 +342,11 @@ public:
     }
     last_way_ = osmid;
 
-    // TODO: we should change intersection to be a bit on the waynode, then we can set the beginning
-    // and end of each way here as well as cut loops (cant check if they are already cut) and when we
-    // sort the waynodes by nodeid we can mark anyones that appear more than once by setting their
-    // intersection bit. this way we still have all the information we needed about which nodes are
-    // intersections for building edges in the graph. finally we can also completely remove the shape
-    // bitset as its only used for marking intersections here.
-
     // Add the refs to the reference list and mark the nodes that care about when processing nodes
     loop_nodes_.clear();
+    auto way_node_index = way_nodes_->size();
     for (size_t i = 0; i < nodes.size(); ++i) {
-      // If we've seen this node anywhere else then its an intersection (ie graph node)
       const auto& node = nodes[i];
-      if (shape_.get(node)) {
-        intersection_.set(node);
-        ++osmdata_.edge_count;
-      } else {
-        ++osmdata_.node_count;
-      }
-      shape_.set(node);
 
       // Check whether the node is on a part of a way doubling back on itself
       OSMNode osm_node{node};
@@ -378,6 +356,7 @@ public:
       bool unflattening = i > 0 && inserted.first->second < nodes.size() - 1 &&
                           nodes[i - 1] == nodes[inserted.first->second + 1];
       osm_node.flat_loop_ = flattening || unflattening;
+      osm_node.intersection_ = i == 0 || i == nodes.size() - 1;
 
       // Keep the node
       way_nodes_->push_back(
@@ -386,26 +365,15 @@ public:
       // If this way is a loop (node occurs twice) we can make our lives way easier if we simply
       // split it up into multiple edges in the graph. If a problem is hard, avoid the problem!
       if (!inserted.second) {
-        // Walk through nodes between the 2 nodes that form the loop and see if
-        // there are already intersections
-        bool intsct = false;
-        for (size_t j = inserted.first->second + 1; j < i; ++j) {
-          if (intersection_.get(nodes[j])) {
-            intsct = true;
-            break;
-          }
-        }
-        // If there wasnt already an intersection we'll make one in the middle of the loop
-        if (!intsct) {
-          intersection_.set(
-              nodes[(i + inserted.first->second) / 2]); // TODO: update osmdata_.*_count?
-        }
+        // We'll make an intersection in the middle of the loop
+        auto way_node_itr = (*way_nodes_)[way_node_index + (i + inserted.first->second) / 2];
+        auto way_node = *way_node_itr;
+        way_node.node.intersection_ = true;
+        way_node_itr = way_node;
         // Update the index in case the node is used again (a future loop)
         inserted.first->second = i;
       }
     }
-    intersection_.set(nodes.front());
-    intersection_.set(nodes.back());
     osmdata_.edge_count += 2;
     ++osmdata_.osm_way_count;
     osmdata_.osm_way_node_count += nodes.size();
@@ -1827,13 +1795,6 @@ public:
     bss_nodes_.reset(bss_nodes);
   }
 
-  void output_idtables(const std::string& intersections_file, const std::string& shapes_file) {
-    if (!intersection_.serialize(intersections_file))
-      return;
-    if (!shape_.serialize(shapes_file))
-      return;
-  }
-
   // Configuration option to include driveways
   bool include_driveways_;
 
@@ -1861,11 +1822,6 @@ public:
 
   // Pointer to all the OSM data (for use by callbacks)
   OSMData& osmdata_;
-
-  // Mark the OSM Node Ids used by ways
-  // TODO: remove interesection_ as you already know it if you
-  // encounter more than one consecutive OSMWayNode with the same id
-  UnorderedIdTable shape_, intersection_;
 
   // Ways and nodes written to file, nodes are written in the order they appear in way (shape)
   std::unique_ptr<sequence<OSMWay>> ways_;
@@ -1901,9 +1857,7 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
                                   const std::vector<std::string>& input_files,
                                   const std::string& ways_file,
                                   const std::string& way_nodes_file,
-                                  const std::string& access_file,
-                                  const std::string& intersections_file,
-                                  const std::string& shapes_file) {
+                                  const std::string& access_file) {
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
@@ -1941,7 +1895,6 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
                                                         OSMPBF::Interest::CHANGESETS),
                           callback);
   }
-  callback.output_idtables(intersections_file, shapes_file);
 
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
            std::to_string(osmdata.osm_way_node_count) + " nodes");
@@ -2034,8 +1987,6 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
                                 const std::vector<std::string>& input_files,
                                 const std::string& ways_file,
                                 const std::string& way_nodes_file,
-                                const std::string& intersections_file,
-                                const std::string& shapes_file,
                                 const std::string& bss_nodes_file,
                                 OSMData& osmdata) {
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
@@ -2046,7 +1997,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
                pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
-  graph_callback callback(pt, osmdata, intersections_file, shapes_file, true);
+  graph_callback callback(pt, osmdata);
 
   // Read the OSMData to files if not initialized.
   if (!osmdata.initialized)
@@ -2069,6 +2020,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
     for (auto& file_handle : file_handles) {
       callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
           callback.last_relation_ = 0;
+      // we send a null way_nodes file so that only the bike share stations are parsed
       callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
                      new sequence<OSMNode>(bss_nodes_file, true));
       OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
