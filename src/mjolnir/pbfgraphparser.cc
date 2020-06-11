@@ -611,6 +611,9 @@ public:
             w.set_destination_only(true);
             w.set_use(Use::kDriveThru);
             break;
+          case Use::kService:
+            w.set_use(Use::kService);
+            break;
           case Use::kTrack:
             w.set_use(Use::kTrack);
             break;
