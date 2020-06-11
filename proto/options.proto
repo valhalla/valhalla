@@ -106,6 +106,7 @@ message CostingOptions {
   optional uint32 flow_mask = 55;
   optional float rail_ferry_cost = 56;
   optional float use_rail_ferry = 57;
+  optional float service_penalty = 58;
 }
 
 message AvoidEdge {
