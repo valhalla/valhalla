@@ -29,6 +29,7 @@ namespace {
 constexpr float kDefaultDestinationOnlyPenalty = 600.0f; // Seconds
 constexpr float kDefaultManeuverPenalty = 5.0f;          // Seconds
 constexpr float kDefaultAlleyPenalty = 60.0f;            // Seconds
+constexpr float kDefaultServicePenalty = 15.0f;          // Seconds
 constexpr float kDefaultGateCost = 30.0f;                // Seconds
 constexpr float kDefaultGatePenalty = 600.0f;            // Seconds
 constexpr float kDefaultFerryCost = 300.0f;              // Seconds
@@ -760,6 +761,11 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
     turn_stress += (node->traffic_signal()) ? 0.4 : 1.0;
   }
 
+  // Penalize transitions onto service roads
+  if (edge->use() == Use::kServiceRoad && pred.use() != Use::kServiceRoad) {
+    penalty += kDefaultServicePenalty;
+  }
+
   // Reduce penalty by bike_accom the closer use_roads_ is to 0
   penalty *= (bike_accom * avoid_roads) + use_roads_;
 
@@ -838,6 +844,11 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
                         static_cast<uint32_t>(edge->classification()));
     // Reduce the turn stress if there is a traffic signal
     turn_stress += (node->traffic_signal()) ? 0.4 : 1.0;
+  }
+
+  // Penalize transitions onto service roads
+  if (edge->use() == Use::kServiceRoad && pred->use() != Use::kServiceRoad) {
+    penalty += kDefaultServicePenalty;
   }
 
   // Reduce penalty by bike_accom the closer use_roads_ is to 0
