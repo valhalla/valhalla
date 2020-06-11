@@ -611,8 +611,8 @@ public:
             w.set_destination_only(true);
             w.set_use(Use::kDriveThru);
             break;
-          case Use::kService:
-            w.set_use(Use::kService);
+          case Use::kServiceRoad:
+            w.set_use(Use::kServiceRoad);
             break;
           case Use::kTrack:
             w.set_use(Use::kTrack);
@@ -1300,6 +1300,7 @@ public:
               case Use::kEmergencyAccess:
               case Use::kDriveThru:
               case Use::kLivingStreet:
+              case Use::kServiceRoad:
                 w.set_surface(Surface::kPavedSmooth);
                 break;
               case Use::kCycleway:
@@ -1389,7 +1390,8 @@ public:
     }
 
     // Infer cul-de-sac if a road edge is a loop and is low classification.
-    if (!w.roundabout() && loop_nodes_.size() != nodes.size() && w.use() == Use::kRoad &&
+    if (!w.roundabout() && loop_nodes_.size() != nodes.size() &&
+        (w.use() == Use::kRoad || w.use() == Use::kServiceRoad) &&
         w.road_class() > RoadClass::kTertiary) {
       w.set_use(Use::kCuldesac);
     }

@@ -40,6 +40,8 @@ message TripLeg {
     kDriveThruUse = 8;         // Commercial drive-thru (banks/fast-food)
     kCuldesacUse = 9;          // Cul-de-sac (edge that forms a loop and is only
                                // connected at one node to another edge.
+    kLivingStreetUse = 10;     // Streets with preference towards bicyclists and pedestrians
+    kServiceRoadUse = 11;      // Generic service road (not driveway, alley, parking aisle, etc.)
 
     // Bicycle specific uses
     kCyclewayUse = 20;          // Dedicated bicycle path

@@ -290,6 +290,10 @@ TripLeg_Use GetTripLegUse(const Use use) {
       return TripLeg_Use_kEmergencyAccessUse;
     case Use::kDriveThru:
       return TripLeg_Use_kDriveThruUse;
+    case Use::kLivingStreet:
+      return TripLeg_Use_kLivingStreetUse;
+    case Use::kServiceRoad:
+      return TripLeg_Use_kServiceRoadUse;
     case Use::kCuldesac:
       return TripLeg_Use_kCuldesacUse;
     case Use::kCycleway:
