@@ -94,8 +94,10 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction prevents this path.
     bool has_time_restrictions = false;
+    int restriction_idx = -1;
     if (es->set() == EdgeSet::kPermanent ||
-        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
+        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions,
+                           restriction_idx) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
       continue;
     }
@@ -113,7 +115,8 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, has_time_restrictions,
+                   restriction_idx);
       }
       continue;
     }
@@ -121,7 +124,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                             distance, transition_cost, has_time_restrictions);
+                             distance, transition_cost, has_time_restrictions, restriction_idx);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_->add(idx);
   }
@@ -255,8 +258,9 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     // Get opposing directed edge and check if allowed.
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
     bool has_time_restrictions = false;
+    int restriction_idx = -1;
     if (opp_edge == nullptr || !costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0,
-                                                         0, has_time_restrictions)) {
+                                                         0, has_time_restrictions, restriction_idx)) {
       continue;
     }
 
@@ -274,7 +278,8 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, has_time_restrictions,
+                   restriction_idx);
       }
       continue;
     }
@@ -282,7 +287,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                             distance, transition_cost, has_time_restrictions);
+                             distance, transition_cost, has_time_restrictions, restriction_idx);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_->add(idx);
   }

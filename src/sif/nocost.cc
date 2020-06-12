@@ -65,7 +65,8 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       bool& has_time_restrictions) const {
+                       bool& has_time_restrictions,
+                       int& restriction_idx) const {
     return !edge->is_shortcut();
   }
 
@@ -94,7 +95,8 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              bool& has_time_restrictions) const {
+                              bool& has_time_restrictions,
+                              int& restriction_idx) const {
     return !opp_edge->is_shortcut();
   }
 

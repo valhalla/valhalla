@@ -154,7 +154,8 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       bool& time_restricted) const = 0;
+                       bool& time_restricted,
+                       int& restriction_idx) const = 0;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -181,7 +182,8 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              bool& has_time_restrictions) const = 0;
+                              bool& has_time_restrictions,
+                              int& restriction_idx) const = 0;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -432,19 +434,22 @@ public:
                                    const baldr::GraphId& edgeid,
                                    const uint64_t current_time,
                                    const uint32_t tz_index,
-                                   bool& has_time_restrictions) const {
+                                   bool& has_time_restrictions,
+                                   int& restriction_idx) const {
     if (edge->access_restriction()) {
       const std::vector<baldr::AccessRestriction>& restrictions =
           tile->GetAccessRestrictions(edgeid.id(), auto_type);
 
       bool time_allowed = false;
 
-      for (const auto& restriction : restrictions) {
+      for (int i, n = static_cast<int>(restrictions.size()); i < n; ++i) {
+        const auto& restriction = restrictions[i];
         // Compare the time to the time-based restrictions
         baldr::AccessType access_type = restriction.type();
         if (access_type == baldr::AccessType::kTimedAllowed ||
             access_type == baldr::AccessType::kTimedDenied) {
           has_time_restrictions = true;
+          restriction_idx = i;
 
           if (access_type == baldr::AccessType::kTimedAllowed)
             time_allowed = true;

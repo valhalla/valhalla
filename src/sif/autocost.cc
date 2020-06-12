@@ -175,7 +175,8 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       bool& has_time_restrictions) const;
+                       bool& has_time_restrictions,
+                       int& restriction_idx) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -202,7 +203,8 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              bool& has_time_restrictions) const;
+                              bool& has_time_restrictions,
+                              int& restriction_idx) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -396,7 +398,8 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       bool& has_time_restrictions) const {
+                       bool& has_time_restrictions,
+                       int& restriction_idx) const {
 
   if (flow_mask_ & kCurrentFlowMask) {
     if (tile->IsClosedDueToTraffic(edgeid))
@@ -415,7 +418,7 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
   }
 
   return DynamicCost::EvaluateRestrictions(kAutoAccess, edge, tile, edgeid, current_time, tz_index,
-                                           has_time_restrictions);
+                                           has_time_restrictions, restriction_idx);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -427,7 +430,8 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              bool& has_time_restrictions) const {
+                              bool& has_time_restrictions,
+                              int& restriction_idx) const {
   if (flow_mask_ & kCurrentFlowMask) {
     if (tile->IsClosedDueToTraffic(opp_edgeid))
       return false;
@@ -443,7 +447,7 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
   }
 
   return DynamicCost::EvaluateRestrictions(kAutoAccess, edge, tile, opp_edgeid, current_time,
-                                           tz_index, has_time_restrictions);
+                                           tz_index, has_time_restrictions, restriction_idx);
 }
 
 // Get the cost to traverse the edge in seconds
@@ -790,7 +794,8 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       bool& has_time_restrictions) const;
+                       bool& has_time_restrictions,
+                       int& restriction_idx) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -817,7 +822,8 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              bool& has_time_restrictions) const;
+                              bool& has_time_restrictions,
+                              int& restriction_idx) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -866,7 +872,8 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
                       const baldr::GraphId& edgeid,
                       const uint64_t current_time,
                       const uint32_t tz_index,
-                      bool& has_time_restrictions) const {
+                      bool& has_time_restrictions,
+                      int& restriction_idx) const {
   if (flow_mask_ & kCurrentFlowMask) {
     if (tile->IsClosedDueToTraffic(edgeid))
       return false;
@@ -884,7 +891,7 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
   }
 
   return DynamicCost::EvaluateRestrictions(kBusAccess, edge, tile, edgeid, current_time, tz_index,
-                                           has_time_restrictions);
+                                           has_time_restrictions, restriction_idx);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -896,7 +903,8 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const baldr::GraphId& opp_edgeid,
                              const uint64_t current_time,
                              const uint32_t tz_index,
-                             bool& has_time_restrictions) const {
+                             bool& has_time_restrictions,
+                             int& restriction_idx) const {
   if (flow_mask_ & kCurrentFlowMask) {
     if (tile->IsClosedDueToTraffic(opp_edgeid))
       return false;
@@ -912,7 +920,7 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
   }
 
   return DynamicCost::EvaluateRestrictions(kBusAccess, edge, tile, opp_edgeid, current_time, tz_index,
-                                           has_time_restrictions);
+                                           has_time_restrictions, restriction_idx);
 }
 
 void ParseBusCostOptions(const rapidjson::Document& doc,
@@ -971,7 +979,8 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       bool& has_time_restrictions) const;
+                       bool& has_time_restrictions,
+                       int& restriction_idx) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -997,7 +1006,8 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              bool& has_time_restrictions) const;
+                              bool& has_time_restrictions,
+                              int& restriction_idx) const;
 
   /**
    * Returns the cost to traverse the edge and an estimate of the actual time
@@ -1066,7 +1076,8 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
                       const baldr::GraphId& edgeid,
                       const uint64_t current_time,
                       const uint32_t tz_index,
-                      bool& has_time_restrictions) const {
+                      bool& has_time_restrictions,
+                      int& restriction_idx) const {
   if (flow_mask_ & kCurrentFlowMask) {
     if (tile->IsClosedDueToTraffic(edgeid))
       return false;
@@ -1086,7 +1097,7 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
   }
 
   return DynamicCost::EvaluateRestrictions(kHOVAccess, edge, tile, edgeid, current_time, tz_index,
-                                           has_time_restrictions);
+                                           has_time_restrictions, restriction_idx);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -1098,7 +1109,8 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const baldr::GraphId& opp_edgeid,
                              const uint64_t current_time,
                              const uint32_t tz_index,
-                             bool& has_time_restrictions) const {
+                             bool& has_time_restrictions,
+                             int& restriction_idx) const {
   if (flow_mask_ & kCurrentFlowMask) {
     if (tile->IsClosedDueToTraffic(opp_edgeid))
       return false;
@@ -1116,7 +1128,7 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
   }
 
   return DynamicCost::EvaluateRestrictions(kHOVAccess, edge, tile, opp_edgeid, current_time, tz_index,
-                                           has_time_restrictions);
+                                           has_time_restrictions, restriction_idx);
 }
 
 void ParseHOVCostOptions(const rapidjson::Document& doc,
@@ -1175,7 +1187,8 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       bool& has_time_restrictions) const;
+                       bool& has_time_restrictions,
+                       int& restriction_idx) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -1201,7 +1214,8 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              bool& has_time_restrictions) const;
+                              bool& has_time_restrictions,
+                              int& restriction_idx) const;
 
   /**
    * Returns the cost to traverse the edge and an estimate of the actual time
@@ -1270,7 +1284,8 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       bool& has_time_restrictions) const {
+                       bool& has_time_restrictions,
+                       int& restriction_idx) const {
   if (flow_mask_ & kCurrentFlowMask) {
     if (tile->IsClosedDueToTraffic(edgeid))
       return false;
@@ -1290,7 +1305,7 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
   }
 
   return DynamicCost::EvaluateRestrictions(kTaxiAccess, edge, tile, edgeid, current_time, tz_index,
-                                           has_time_restrictions);
+                                           has_time_restrictions, restriction_idx);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -1302,7 +1317,8 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              bool& has_time_restrictions) const {
+                              bool& has_time_restrictions,
+                              int& restriction_idx) const {
   if (flow_mask_ & kCurrentFlowMask) {
     if (tile->IsClosedDueToTraffic(opp_edgeid))
       return false;
@@ -1319,7 +1335,7 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
   return DynamicCost::EvaluateRestrictions(kHOVAccess, edge, tile, opp_edgeid, current_time, tz_index,
-                                           has_time_restrictions);
+                                           has_time_restrictions, restriction_idx);
 }
 
 void ParseTaxiCostOptions(const rapidjson::Document& doc,
@@ -1371,7 +1387,8 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       bool& has_time_restrictions) const {
+                       bool& has_time_restrictions,
+                       int& restriction_idx) const {
 
     // Note: this profile ignores closures in live traffic, so that check is not
     //       present, unlike other Allowed() implementations

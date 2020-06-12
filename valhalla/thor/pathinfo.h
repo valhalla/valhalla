@@ -20,6 +20,7 @@ struct PathInfo {
   baldr::GraphId edgeid;      // Directed edge Id
   float elapsed_cost;         // Cost to the end of the edge in cost units
   bool has_time_restrictions; // Whether or not this edge has a time restriction
+  int restriction_index;      // Record which restriction
   float turn_cost; // Turn cost in seconds at the beginning of the edge, only in map matching for now
 
   // TODO: drop this superfluous constructor
@@ -29,9 +30,10 @@ struct PathInfo {
            const uint32_t tripid,
            const float c,
            const bool time_restriction,
+           const int restriction_idx,
            const float tcs = 0)
       : mode(m), elapsed_time(t), trip_id(tripid), edgeid(edge), elapsed_cost(c),
-        has_time_restrictions(time_restriction), turn_cost(tcs) {
+        has_time_restrictions(time_restriction), restriction_index(restriction_idx), turn_cost(tcs) {
   }
 
   // Stream output

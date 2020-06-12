@@ -283,7 +283,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     pred = {kInvalidLabel, edge_id, directededge, elapsed, 0, 0, mode, 0, {}};
 
     paths.back().first.emplace_back(
-        PathInfo{mode, elapsed.secs, edge_id, 0, elapsed.cost, false, transition_cost.secs});
+        PathInfo{mode, elapsed.secs, edge_id, 0, elapsed.cost, false, -1, transition_cost.secs});
     paths.back().second.emplace_back(&edge_segment);
     --num_segments;
 
