@@ -207,8 +207,7 @@ const std::map<std::string, std::string> kExpectedExitVerbalPhrases =
      {"14", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward "
             "<TOWARD_SIGN>."}};
 
-const std::map<std::string, std::string> kExpectedExitVisualPhrases =
-    {{"0", "Exit <EXIT_NUMBERS>"}};
+const std::map<std::string, std::string> kExpectedExitVisualPhrases = {{"0", "Exit <EXIT_NUMBERS>"}};
 
 const std::map<std::string, std::string> kExpectedKeepPhrases =
     {{"0", "Keep <RELATIVE_DIRECTION> at the fork."},
