@@ -284,6 +284,11 @@ public:
   virtual void way_callback(uint64_t osmid,
                             const OSMPBF::Tags& tags,
                             const std::vector<uint64_t>& nodes) override {
+    // unsorted extracts are just plain nasty, so they can bugger off!
+    if (osmid < last_way_) {
+      throw std::runtime_error("Detected unsorted input data");
+    }
+    last_way_ = osmid;
 
     // Do not add ways with < 2 nodes. Log error or add to a problem list
     // TODO - find out if we do need these, why they exist...
@@ -327,12 +332,6 @@ public:
     } catch (const std::out_of_range& oor) {
       LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
     }
-
-    // unsorted extracts are just plain nasty, so they can bugger off!
-    if (osmid < last_way_) {
-      throw std::runtime_error("Detected unsorted input data");
-    }
-    last_way_ = osmid;
 
     // Add the refs to the reference list and mark the nodes that care about when processing nodes
     loop_nodes_.clear();
@@ -1355,6 +1354,12 @@ public:
   virtual void relation_callback(const uint64_t osmid,
                                  const OSMPBF::Tags& tags,
                                  const std::vector<OSMPBF::Member>& members) override {
+    // unsorted extracts are just plain nasty, so they can bugger off!
+    if (osmid < last_relation_) {
+      throw std::runtime_error("Detected unsorted input data");
+    }
+    last_relation_ = osmid;
+
     // Get tags
     Tags results =
         tags.empty() ? empty_relation_results_ : lua_.Transform(OSMType::kRelation, osmid, tags);
@@ -1362,11 +1367,10 @@ public:
       return;
     }
 
-    // unsorted extracts are just plain nasty, so they can bugger off!
-    if (osmid < last_relation_) {
-      throw std::runtime_error("Detected unsorted input data");
-    }
-    last_relation_ = osmid;
+    std::cout << "RESRICTION: " << osmid << std::endl;
+    for (const auto& t : tags)
+      std::cout << t.first << " = " << t.second << std::endl;
+    std::cout << std::endl;
 
     OSMRestriction restriction{};
     OSMRestriction to_restriction{};
