@@ -137,7 +137,7 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
                            tmp_n_info->edge_index() + l);
 
               // only look at non transition edges.
-              if (de->edgeinfo_offset() != 0 && de->endnode() != prev_Node && g_id != avoidId &&
+              if (de->endnode() != prev_Node && g_id != avoidId &&
                   !(de->IsTransitLine() || de->is_shortcut() ||
                     de->use() == Use::kTransitConnection || de->use() == Use::kEgressConnection ||
                     de->use() == Use::kPlatformConnection)) {
