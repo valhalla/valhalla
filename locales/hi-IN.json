@@ -866,6 +866,16 @@
         ]
       }
     },
+    "exit_visual": {
+      "phrases": {
+        "0": "निकलें. <EXIT_NUMBERS>"
+      },
+      "example_phrases": {
+        "0": [
+          "निकलें.  1A"
+        ]
+      }
+    },
     "keep": {
       "phrases": {
         "0": "दोराहे पर <RELATIVE_DIRECTION> बने रहें.",
