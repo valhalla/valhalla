@@ -866,6 +866,16 @@
         ]
       }
     },
+    "exit_visual": {
+      "phrases": {
+        "0": "Exit <EXIT_NUMBERS>"
+      },
+      "example_phrases": {
+        "0": [
+          "Exit 1A"
+        ]
+      }
+    },
     "keep": {
       "phrases": {
         "0": "Håll <RELATIVE_DIRECTION> i vägskälet.",
