@@ -279,8 +279,8 @@ void CheckForDuplicates(const GraphId& nodeid, const Node& node,
     // Check if the end node is already in the set of edges from this node
     const auto en = endnodes.find(endnode);
     if (en != endnodes.end() && en->second.length == edgelengths[n]) {
-      uint32_t wayid1 = ways[edges[en->second.edgeindex].wayindex_].way_id();
-      uint32_t wayid2 = ways[edges[edgeindex].wayindex_].way_id();
+      uint64_t wayid1 = ways[edges[en->second.edgeindex].wayindex_].way_id();
+      uint64_t wayid2 = ways[edges[edgeindex].wayindex_].way_id();
       (*stats).AddIssue(kDuplicateWays, GraphId(), wayid1, wayid2);
     } else {
       endnodes.emplace(std::piecewise_construct,
