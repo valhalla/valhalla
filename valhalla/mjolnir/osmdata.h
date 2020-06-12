@@ -93,8 +93,7 @@ struct OSMData {
   size_t osm_node_count;      // Count of osm nodes
   size_t osm_way_count;       // Count of osm ways
   size_t osm_way_node_count;  // Count of osm nodes on osm ways
-  size_t intersection_count;  // Count of intersection nodes
-  size_t node_count;          // Count of all nodes
+  size_t node_count;          // Count of all nodes in the graph
   size_t edge_count;          // Estimated count of edges
   size_t node_ref_count;      // Number of node with ref
   size_t node_name_count;     // Number of nodes with names

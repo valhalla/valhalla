@@ -490,15 +490,14 @@ bool OSMData::write_to_temp_files(const std::string& tile_dir) {
     return false;
   }
   file.write(reinterpret_cast<const char*>(&max_changeset_id_), sizeof(uint64_t));
-  file.write(reinterpret_cast<const char*>(&osm_node_count), sizeof(size_t));
-  file.write(reinterpret_cast<const char*>(&osm_way_count), sizeof(size_t));
-  file.write(reinterpret_cast<const char*>(&osm_way_node_count), sizeof(size_t));
-  file.write(reinterpret_cast<const char*>(&intersection_count), sizeof(size_t));
-  file.write(reinterpret_cast<const char*>(&node_count), sizeof(size_t));
-  file.write(reinterpret_cast<const char*>(&edge_count), sizeof(size_t));
-  file.write(reinterpret_cast<const char*>(&node_ref_count), sizeof(size_t));
-  file.write(reinterpret_cast<const char*>(&node_name_count), sizeof(size_t));
-  file.write(reinterpret_cast<const char*>(&node_exit_to_count), sizeof(size_t));
+  file.write(reinterpret_cast<const char*>(&osm_node_count), sizeof(uint64_t));
+  file.write(reinterpret_cast<const char*>(&osm_way_count), sizeof(uint64_t));
+  file.write(reinterpret_cast<const char*>(&osm_way_node_count), sizeof(uint64_t));
+  file.write(reinterpret_cast<const char*>(&node_count), sizeof(uint64_t));
+  file.write(reinterpret_cast<const char*>(&edge_count), sizeof(uint64_t));
+  file.write(reinterpret_cast<const char*>(&node_ref_count), sizeof(uint64_t));
+  file.write(reinterpret_cast<const char*>(&node_name_count), sizeof(uint64_t));
+  file.write(reinterpret_cast<const char*>(&node_exit_to_count), sizeof(uint64_t));
   file.close();
 
   // Write the rest of OSMData
@@ -535,7 +534,6 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
   file.read(reinterpret_cast<char*>(&osm_node_count), sizeof(size_t));
   file.read(reinterpret_cast<char*>(&osm_way_count), sizeof(size_t));
   file.read(reinterpret_cast<char*>(&osm_way_node_count), sizeof(size_t));
-  file.read(reinterpret_cast<char*>(&intersection_count), sizeof(size_t));
   file.read(reinterpret_cast<char*>(&node_count), sizeof(size_t));
   file.read(reinterpret_cast<char*>(&edge_count), sizeof(size_t));
   file.read(reinterpret_cast<char*>(&node_ref_count), sizeof(size_t));
