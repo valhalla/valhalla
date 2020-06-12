@@ -125,19 +125,34 @@ struct candidate_t {
                                       double sq_tolerance,
                                       double sq_max_distance) const {
     // point is so close to the edge that its basically on the edge,
-    // or its to far from the edge that we shouldn't use it to determine side of street
+    // or its too far from the edge that we shouldn't use it to determine side of street
     if (sq_distance < sq_tolerance || sq_distance > sq_max_distance) {
       return PathLocation::SideOfStreet::NONE;
     }
 
-    // get the side TODO: this can technically fail for longer segments..
-    // to fix it we simply compute the plane formed by the triangle
-    // through the center of the earth and the two shape points and test
-    // whether the original point is above or below the plane (depending on winding)
+    // get the angle of the tangent line to the shape at this point
     auto& shape = edge_info->shape();
-    LineSegment2<PointLL> segment(shape[index], shape[index + 1]);
-    return (segment.IsLeft(original) > 0) == edge->forward() ? PathLocation::SideOfStreet::LEFT
-                                                             : PathLocation::SideOfStreet::RIGHT;
+    auto tang_angle =
+        tangent_angle(index, point, shape,
+                      GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
+
+    // get the absolute angle between the snap point and the provided point
+    auto angle_to_point = point.Heading(original);
+
+    // add 360 degrees if angle becomes negative
+    auto angle_diff = (angle_to_point - tang_angle) >= 0.0f ? (angle_to_point - tang_angle) : (angle_to_point - tang_angle + 360.0f);
+
+    // 10 degrees on either side is considered to be straight ahead
+    auto angle_tolerance = 10.0f;
+
+    // check which side the point falls in
+    if (angle_diff > angle_tolerance && angle_diff < (angle_tolerance + 180.0f - angle_tolerance)) {
+      return PathLocation::SideOfStreet::RIGHT;
+    } else if (angle_diff > (180.0f + angle_tolerance) && angle_diff < 360.0f - angle_tolerance) {
+      return PathLocation::SideOfStreet::LEFT;
+    } else {
+      return PathLocation::SideOfStreet::NONE;
+    }
   }
 };
 
