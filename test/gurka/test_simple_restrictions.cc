@@ -18,9 +18,12 @@ protected:
     G----H---2I)";
 
     const gurka::ways ways = {
-        {"AB", {{"highway", "primary"}}},  {"BC", {{"highway", "primary"}}},
-        {"DEF", {{"highway", "primary"}}}, {"GHI", {{"highway", "primary"}}},
-        {"ADG", {{"highway", "primary"}}}, {"BE", {{"highway", "primary"}}},
+        {"AB", {{"highway", "primary"}, {"osm_id", "4294967296"}}},
+        {"BC", {{"highway", "primary"}, {"osm_id", "4294967297"}}},
+        {"DEF", {{"highway", "primary"}, {"osm_id", "4294967298"}}},
+        {"GHI", {{"highway", "primary"}, {"osm_id", "4294967299"}}},
+        {"ADG", {{"highway", "primary"}, {"osm_id", "4294967300"}}},
+        {"BE", {{"highway", "primary"}, {"osm_id", "4294967301"}}},
     };
 
     const gurka::relations relations = {
