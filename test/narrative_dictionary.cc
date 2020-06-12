@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 
+#include "midgard/logging.h"
 #include "odin/narrative_dictionary.h"
 #include "odin/util.h"
 
@@ -205,6 +206,9 @@ const std::map<std::string, std::string> kExpectedExitVerbalPhrases =
      {"12", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."},
      {"14", "Take the <NAME_SIGN> exit on the <RELATIVE_DIRECTION> onto <BRANCH_SIGN> toward "
             "<TOWARD_SIGN>."}};
+
+const std::map<std::string, std::string> kExpectedExitVisualPhrases =
+    {{"0", "Exit <EXIT_NUMBERS>"}};
 
 const std::map<std::string, std::string> kExpectedKeepPhrases =
     {{"0", "Keep <RELATIVE_DIRECTION> at the fork."},
@@ -898,6 +902,13 @@ TEST(NarrativeDictionary, test_en_US_exit_verbal) {
   validate(relative_directions, kExpectedRelativeTwoDirections);
 }
 
+TEST(NarrativeDictionary, test_en_US_exit_visual) {
+  const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
+
+  // Validate exit_visual phrases
+  validate(dictionary.exit_visual_subset.phrases, kExpectedExitVisualPhrases);
+}
+
 TEST(NarrativeDictionary, test_en_US_keep) {
   const NarrativeDictionary& dictionary = GetNarrativeDictionary("en-US");
 
@@ -1330,6 +1341,7 @@ TEST(NarrativeDictionary, test_en_US_approach_verbal_alert) {
 } // namespace
 
 int main(int argc, char* argv[]) {
+  valhalla::midgard::logging::Configure({{"type", ""}}); // silence logs
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
