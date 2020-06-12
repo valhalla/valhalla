@@ -894,7 +894,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
     // alley_penalty
     pbf_costing_options->set_service_penalty(
         kServicePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/service_penalty")
-                               .get_value_or(kDefaultServicePenalty)));
+                                 .get_value_or(kDefaultServicePenalty)));
 
     // gate_cost
     pbf_costing_options->set_gate_cost(
@@ -1013,12 +1013,12 @@ public:
   TestBicycleCost(const Costing costing, const Options& options) : BicycleCost(costing, options){};
 
   using BicycleCost::alley_penalty_;
-  using BicycleCost::service_penalty_;
   using BicycleCost::country_crossing_cost_;
   using BicycleCost::destination_only_penalty_;
   using BicycleCost::ferry_transition_cost_;
   using BicycleCost::gate_cost_;
   using BicycleCost::maneuver_penalty_;
+  using BicycleCost::service_penalty_;
 };
 
 TestBicycleCost* make_bicyclecost_from_json(const std::string& property, float testVal) {
