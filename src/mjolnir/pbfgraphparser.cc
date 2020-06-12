@@ -119,7 +119,6 @@ public:
           n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
           n.set_type(NodeType::kBikeShare);
           bss_nodes_->push_back(n);
-          ++osmdata_.node_count;
           return; // we are done.
         }
       }
@@ -263,7 +262,7 @@ public:
     // Finally set the intersection flag for any reason that we outlined above
     if (intersection) {
       n.set_intersection(true);
-      osmdata_.intersection_count++;
+      osmdata_.node_count++;
     }
 
     // Update all copies of this node that various ways referenced
@@ -276,8 +275,10 @@ public:
       ++current_way_node_index_;
       osmdata_.edge_count += intersection;
     }
+    if (++osmdata_.osm_node_count % 5000000 == 0) {
+      LOG_DEBUG("Processed " + std::to_string(osmdata_.osm_node_count) + " nodes on ways");
+    }
     osmdata_.edge_count -= intersection; // more accurate but undercounts by skipping lone edges
-    ++osmdata_.node_count;
   }
 
   virtual void way_callback(uint64_t osmid,
