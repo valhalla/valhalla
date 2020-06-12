@@ -58,7 +58,7 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
 
       GraphId g_id(endnodetile->id().tileid(), endnodetile->id().level(), n_info->edge_index() + j);
 
-      if (de->edgeinfo_offset() != 0 && de->endnode() != prev_Node && g_id != avoidId &&
+      if (de->endnode() != prev_Node && g_id != avoidId &&
           !(de->IsTransitLine() || de->is_shortcut() || de->use() == Use::kTransitConnection ||
             de->use() == Use::kEgressConnection || de->use() == Use::kPlatformConnection)) {
         // get the edge info offset
