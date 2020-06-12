@@ -1367,11 +1367,6 @@ public:
       return;
     }
 
-    std::cout << "RESRICTION: " << osmid << std::endl;
-    for (const auto& t : tags)
-      std::cout << t.first << " = " << t.second << std::endl;
-    std::cout << std::endl;
-
     OSMRestriction restriction{};
     OSMRestriction to_restriction{};
 
