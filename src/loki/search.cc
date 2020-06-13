@@ -133,14 +133,15 @@ struct candidate_t {
     // get the angle of the tangent line to the shape at this point
     auto& shape = edge_info->shape();
     auto tang_angle =
-        tangent_angle(index, point, shape,
-                      GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
+        tangent_angle(index, point, shape, GetOffsetForHeading(edge->classification(), edge->use()),
+                      edge->forward());
 
     // get the absolute angle between the snap point and the provided point
     auto angle_to_point = point.Heading(original);
 
     // add 360 degrees if angle becomes negative
-    auto angle_diff = (angle_to_point - tang_angle) >= 0.0f ? (angle_to_point - tang_angle) : (angle_to_point - tang_angle + 360.0f);
+    auto angle_diff = (angle_to_point - tang_angle) >= 0.0f ? (angle_to_point - tang_angle)
+                                                            : (angle_to_point - tang_angle + 360.0f);
 
     // 10 degrees on either side is considered to be straight ahead
     auto angle_tolerance = 10.0f;
