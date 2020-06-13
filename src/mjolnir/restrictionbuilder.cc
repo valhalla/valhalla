@@ -192,9 +192,9 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
               currentNode = n_graphId;
               prev_Node = GraphId();
             } else {
-              LOG_WARN("Could not recover restriction from way_id " +
+              /*LOG_WARN("Could not recover restriction from way_id " +
                        std::to_string(res_way_ids.front()) + " to way_id " +
-                       std::to_string(res_way_ids.back()));
+                       std::to_string(res_way_ids.back()));*/
               graphids.clear();
               return graphids;
             }
@@ -217,9 +217,9 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
             currentNode = n_graphId;
             prev_Node = GraphId();
           } else {
-            LOG_WARN("Could not recover restriction from way_id " +
+            /*LOG_WARN("Could not recover restriction from way_id " +
                      std::to_string(res_way_ids.front()) + " to way_id " +
-                     std::to_string(res_way_ids.back()));
+                     std::to_string(res_way_ids.back()));*/
             graphids.clear();
             return graphids;
           }
@@ -231,8 +231,8 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
   }
 
   if (!bBeginFound) { // happens when opp edge is found and via a this node.
-    LOG_WARN("Could not recover restriction from way_id " + std::to_string(res_way_ids.front()) +
-             " to way_id " + std::to_string(res_way_ids.back()));
+    /*LOG_WARN("Could not recover restriction from way_id " + std::to_string(res_way_ids.front()) +
+             " to way_id " + std::to_string(res_way_ids.back()));*/
     graphids.clear();
   }
 
