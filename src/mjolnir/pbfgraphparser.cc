@@ -94,8 +94,10 @@ public:
     return std::string(lua_graph_lua, lua_graph_lua + lua_graph_lua_len);
   }
 
-  virtual void
-  node_callback(uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
+  virtual void node_callback(const uint64_t osmid,
+                             const double lng,
+                             const double lat,
+                             const OSMPBF::Tags& tags) override {
     // unsorted extracts are just plain nasty, so they can bugger off!
     if (osmid < last_node_) {
       throw std::runtime_error("Detected unsorted input data");
@@ -281,7 +283,7 @@ public:
     osmdata_.edge_count -= intersection; // more accurate but undercounts by skipping lone edges
   }
 
-  virtual void way_callback(uint64_t osmid,
+  virtual void way_callback(const uint64_t osmid,
                             const OSMPBF::Tags& tags,
                             const std::vector<uint64_t>& nodes) override {
     // unsorted extracts are just plain nasty, so they can bugger off!
