@@ -44,11 +44,14 @@ EdgeInfo::EdgeInfo(char* ptr, const char* names_list, const size_t names_list_le
   ptr += (encoded_shape_size() * sizeof(char));
 
   // Optional second half of 64bit way id
-  extended_wayid_ = 0;
-  if (ei_.has_extended_wayid_) {
-    extended_wayid_ = static_cast<uint16_t>(*(ptr));
-    extended_wayid_ |= static_cast<uint16_t>(*(ptr + 1)) << 8;
-    ptr += sizeof(uint16_t);
+  extended_wayid2_ = extended_wayid3_ = 0;
+  if (ei_.extended_wayid_size_ > 0) {
+    extended_wayid2_ = static_cast<uint8_t>(*ptr);
+    ptr += sizeof(uint8_t);
+  }
+  if (ei_.extended_wayid_size_ > 1) {
+    extended_wayid3_ = static_cast<uint8_t>(*ptr);
+    ptr += sizeof(uint8_t);
   }
 }
 

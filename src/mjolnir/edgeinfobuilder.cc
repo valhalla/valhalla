@@ -15,10 +15,11 @@ namespace mjolnir {
 void EdgeInfoBuilder::set_wayid(const uint64_t wayid) {
   // mask off the various parts of the id into their respective spots
   ei_.wayid_ = wayid & 0xFFFFFFFF;
-  ei_.wayid0_ = (wayid >> 32) & 0xFF;
-  ei_.wayid1_ = (wayid >> 40) & 0xFF;
-  extended_wayid_ = (wayid >> 48) & 0xFFFF;
-  ei_.has_extended_wayid_ = extended_wayid_ > 0;
+  ei_.extended_wayid0_ = (wayid >> 32) & 0xFF;
+  ei_.extended_wayid1_ = (wayid >> 40) & 0xFF;
+  extended_wayid2_ = (wayid >> 48) & 0xFF;
+  extended_wayid3_ = (wayid >> 56) & 0xFF;
+  ei_.extended_wayid_size_ = extended_wayid3_ > 0 ? 2 : (extended_wayid2_ > 0 ? 1 : 0);
 }
 
 // Set the mean elevation.
@@ -84,7 +85,7 @@ std::size_t EdgeInfoBuilder::BaseSizeOf() const {
   std::size_t size = sizeof(EdgeInfo::EdgeInfoInner);
   size += (name_info_list_.size() * sizeof(NameInfo));
   size += (encoded_shape_.size() * sizeof(std::string::value_type));
-  size += ei_.has_extended_wayid_ * sizeof(extended_wayid_);
+  size += ei_.extended_wayid_size_;
   return size;
 }
 
@@ -124,8 +125,11 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   os.write(reinterpret_cast<const char*>(eib.name_info_list_.data()),
            (name_count * sizeof(NameInfo)));
   os << eib.encoded_shape_;
-  if (ei.has_extended_wayid_) {
-    os.write(reinterpret_cast<const char*>(&eib.extended_wayid_), sizeof(eib.extended_wayid_));
+  if (ei.extended_wayid_size_ > 0) {
+    os.write(reinterpret_cast<const char*>(&eib.extended_wayid2_), sizeof(eib.extended_wayid2_));
+  }
+  if (ei.extended_wayid_size_ > 1) {
+    os.write(reinterpret_cast<const char*>(&eib.extended_wayid3_), sizeof(eib.extended_wayid3_));
   }
 
   // Pad to a 4 byte boundary

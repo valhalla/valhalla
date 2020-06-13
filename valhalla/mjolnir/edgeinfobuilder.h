@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
@@ -107,7 +108,8 @@ protected:
   baldr::EdgeInfo::EdgeInfoInner ei_;
 
   // Where we optionally keep the last 2 bytes of a 64bit wayid
-  uint16_t extended_wayid_;
+  uint8_t extended_wayid2_;
+  uint8_t extended_wayid3_;
 
   // List of name info (offsets, etc.)
   std::vector<baldr::NameInfo> name_info_list_;

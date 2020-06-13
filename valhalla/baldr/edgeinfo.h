@@ -84,9 +84,10 @@ public:
    * @return  Returns the OSM way Id.
    */
   uint64_t wayid() const {
-    return (static_cast<uint64_t>(extended_wayid_) << 48) |
-           (static_cast<uint64_t>(ei_.wayid0_) << 40) | (static_cast<uint64_t>(ei_.wayid1_) << 32) |
-           ei_.wayid_;
+    return (static_cast<uint64_t>(extended_wayid3_) << 56) |
+           (static_cast<uint64_t>(extended_wayid2_) << 48) |
+           (static_cast<uint64_t>(ei_.extended_wayid1_) << 40) |
+           (static_cast<uint64_t>(ei_.extended_wayid0_) << 32) | static_cast<uint64_t>(ei_.wayid_);
   }
 
   /**
@@ -187,13 +188,13 @@ public:
     uint32_t mean_elevation_ : 12; // Mean elevation with 2 meter precision
     uint32_t bike_network_ : 4;    // Mask of bicycle network types (see graphconstants.h)
     uint32_t speed_limit_ : 8;     // Speed limit (kph)
-    uint32_t wayid0_ : 8;          // Next byte of the way id
+    uint32_t extended_wayid0_ : 8; // Next byte of the way id
 
     uint32_t name_count_ : 4;          // How many name infos we expect
     uint32_t encoded_shape_size_ : 16; // How many bytes long the encoded shape is
-    uint32_t wayid1_ : 8;              // Next next byte of the way id
-    uint32_t has_extended_wayid_ : 1;  // Whether or not the wayid is 64bits;
-    uint32_t spare0_ : 3;              // not used
+    uint32_t extended_wayid1_ : 8;     // Next next byte of the way id
+    uint32_t extended_wayid_size_ : 2; // How many more bytes the way id is stored in
+    uint32_t spare0_ : 2;              // not used
   };
 
 protected:
@@ -207,7 +208,8 @@ protected:
   const char* encoded_shape_;
 
   // Where we optionally keep the last 2 bytes of a 64bit wayid
-  uint16_t extended_wayid_;
+  uint8_t extended_wayid2_;
+  uint8_t extended_wayid3_;
 
   // Lng, lat shape of the edge
   mutable std::vector<midgard::PointLL> shape_;

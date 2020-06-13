@@ -10,13 +10,17 @@ void find_ids(baldr::GraphReader& reader, std::multiset<uint64_t> osm_way_ids) {
     for (auto edge = tile_id; edge.id() < tile->header()->directededgecount(); ++edge) {
       // we should find every way id in the tile set
       auto info = tile->edgeinfo(tile->directededge(edge)->edgeinfo_offset());
-      auto found = osm_way_ids.find(info.wayid());
-      EXPECT_FALSE(found == osm_way_ids.cend());
+      auto id = info.wayid();
+      auto found = osm_way_ids.find(id);
+      if (found == osm_way_ids.cend()) {
+        EXPECT_FALSE(found == osm_way_ids.cend()) << " couldnt find " << info.wayid();
+        return;
+      }
       osm_way_ids.erase(found);
     }
   }
   // and because we found them all there should be none left
-  EXPECT_EQ(osm_way_ids.size(), 0);
+  EXPECT_EQ(osm_way_ids.size(), 0) << " some expected osm way ids were not found";
 }
 
 TEST(WayIds, way_ids) {
@@ -68,9 +72,15 @@ TEST(WayIds, way_ids1) {
   };
   // keep one for each directed edge
   std::multiset<uint64_t> osm_way_ids;
-  for (const auto& id : ids) {
+  for (int i = 0; i < ids.size(); ++i) {
+    const auto& id = ids[i];
     osm_way_ids.emplace(std::stoull(id));
     osm_way_ids.emplace(std::stoull(id));
+    // these are ways that become 2 edges
+    if (i == 2 || i == 4) {
+      osm_way_ids.emplace(std::stoull(id));
+      osm_way_ids.emplace(std::stoull(id));
+    }
   }
 
   const gurka::relations relations = {
@@ -95,7 +105,7 @@ TEST(WayIds, way_ids1) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/simple_restrictions",
+  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/gurka_64bit_wayid1",
                                {{"mjolnir.hierarchy", "false"}, {"mjolnir.concurrency", "1"}});
 
   // need to access the tiles
