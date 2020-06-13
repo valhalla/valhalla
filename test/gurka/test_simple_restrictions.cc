@@ -1,5 +1,6 @@
 #include "gurka.h"
 #include <gtest/gtest.h>
+#include <random>
 
 using namespace valhalla;
 
@@ -17,13 +18,22 @@ protected:
     |
     G----H---2I)";
 
+    // generate random 64bit ids for these ways
+    std::mt19937_64 gen(1);
+    std::uniform_int_distribution<uint64_t> dist(100, std::numeric_limits<uint64_t>::max());
+    std::vector<std::string> ids;
+    for (int i = 0; i < 6; ++i) {
+      ids.push_back(std::to_string(dist(gen)));
+      std::cout << ids.back() << std::endl;
+    }
+
     const gurka::ways ways = {
-        {"AB", {{"highway", "primary"}, {"osm_id", "4294967296"}}},
-        {"BC", {{"highway", "primary"}, {"osm_id", "4294967297"}}},
-        {"DEF", {{"highway", "primary"}, {"osm_id", "4294967298"}}},
-        {"GHI", {{"highway", "primary"}, {"osm_id", "4294967299"}}},
-        {"ADG", {{"highway", "primary"}, {"osm_id", "4294967300"}}},
-        {"BE", {{"highway", "primary"}, {"osm_id", "4294967301"}}},
+        {"AB", {{"highway", "primary"}, {"osm_id", ids[0]}}},
+        {"BC", {{"highway", "primary"}, {"osm_id", ids[1]}}},
+        {"DEF", {{"highway", "primary"}, {"osm_id", ids[2]}}},
+        {"GHI", {{"highway", "primary"}, {"osm_id", ids[3]}}},
+        {"ADG", {{"highway", "primary"}, {"osm_id", ids[4]}}},
+        {"BE", {{"highway", "primary"}, {"osm_id", ids[5]}}},
     };
 
     const gurka::relations relations = {
