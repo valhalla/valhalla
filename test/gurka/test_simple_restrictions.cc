@@ -21,7 +21,9 @@ protected:
     // generate random 64bit ids for these ways
     std::mt19937_64 gen(1);
     std::uniform_int_distribution<uint64_t> dist(100, std::numeric_limits<uint64_t>::max());
-    std::vector<std::string> ids;
+    std::vector<std::string> ids{
+        "121", "122", "123", "124", "6472927700900931484", "125",
+    };
     for (int i = 0; i < 6; ++i) {
       ids.push_back(std::to_string(dist(gen)));
       std::cout << ids.back() << std::endl;
