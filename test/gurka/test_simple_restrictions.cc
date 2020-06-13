@@ -61,7 +61,7 @@ protected:
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
     map = gurka::buildtiles(layout, ways, {}, relations, "test/data/simple_restrictions",
-                            {{"mjolnir.hierarchy", "false"}});
+                            {{"mjolnir.hierarchy", "false"}, {"mjolnir.concurrency", "1"}});
   }
 };
 

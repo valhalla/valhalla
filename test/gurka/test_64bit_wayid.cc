@@ -3,7 +3,23 @@
 
 using namespace valhalla;
 
-TEST(WaysId, way_ids) {
+void find_ids(baldr::GraphReader& reader, std::multiset<uint64_t> osm_way_ids) {
+  // check all edges have correct edge info
+  for (const auto& tile_id : reader.GetTileSet()) {
+    const auto* tile = reader.GetGraphTile(tile_id);
+    for (auto edge = tile_id; edge.id() < tile->header()->directededgecount(); ++edge) {
+      // we should find every way id in the tile set
+      auto info = tile->edgeinfo(tile->directededge(edge)->edgeinfo_offset());
+      auto found = osm_way_ids.find(info.wayid());
+      EXPECT_FALSE(found == osm_way_ids.cend());
+      osm_way_ids.erase(found);
+    }
+  }
+  // and because we found them all there should be none left
+  EXPECT_EQ(osm_way_ids.size(), 0);
+}
+
+TEST(WayIds, way_ids) {
   // build a very simple graph
   const std::string ascii_map = R"(ABCDFGHIJKLMNOPQRSTUVWXYZ)";
   gurka::ways ways;
@@ -28,18 +44,61 @@ TEST(WaysId, way_ids) {
 
   // need to access the tiles
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  find_ids(reader, osm_way_ids);
+}
 
-  // check all edges have correct edge info
-  for (const auto& tile_id : reader.GetTileSet()) {
-    const auto* tile = reader.GetGraphTile(tile_id);
-    for (auto edge = tile_id; edge.id() < tile->header()->directededgecount(); ++edge) {
-      // we should find every way id in the tile set
-      auto info = tile->edgeinfo(tile->directededge(edge)->edgeinfo_offset());
-      auto found = osm_way_ids.find(info.wayid());
-      EXPECT_FALSE(found == osm_way_ids.cend());
-      osm_way_ids.erase(found);
-    }
+TEST(WayIds, way_ids1) {
+  const std::string ascii_map = R"(
+    A---1B----C
+    |    |
+    D----E----F
+    |
+    G----H---2I)";
+
+  std::vector<std::string> ids{
+      "121", "122", "123", "124", "6472927700900931484", "125",
+  };
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}, {"osm_id", ids[0]}}},
+      {"BC", {{"highway", "primary"}, {"osm_id", ids[1]}}},
+      {"DEF", {{"highway", "primary"}, {"osm_id", ids[2]}}},
+      {"GHI", {{"highway", "primary"}, {"osm_id", ids[3]}}},
+      {"ADG", {{"highway", "primary"}, {"osm_id", ids[4]}}},
+      {"BE", {{"highway", "primary"}, {"osm_id", ids[5]}}},
+  };
+  // keep one for each directed edge
+  std::multiset<uint64_t> osm_way_ids;
+  for (const auto& id : ids) {
+    osm_way_ids.emplace(std::stoull(id));
+    osm_way_ids.emplace(std::stoull(id));
   }
-  // and because we found them all there should be none left
-  EXPECT_EQ(osm_way_ids.size(), 0);
+
+  const gurka::relations relations = {
+      {{
+           {gurka::way_member, "BC", "from"},
+           {gurka::way_member, "BE", "to"},
+           {gurka::node_member, "B", "via"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_left_turn"},
+       }},
+      {{
+           {gurka::way_member, "GHI", "from"},
+           {gurka::way_member, "AB", "to"},
+           {gurka::way_member, "ADG", "via"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_entry"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/simple_restrictions",
+                               {{"mjolnir.hierarchy", "false"}, {"mjolnir.concurrency", "1"}});
+
+  // need to access the tiles
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  find_ids(reader, osm_way_ids);
 }
