@@ -129,11 +129,8 @@ void test(const std::string& request,
       if (it == expected_bss_maneuver.end()) {
         if (m.bss_maneuver_type() !=
             BssManeuverType::DirectionsLeg_Maneuver_BssManeuverType_kNoneAction) {
-          throw std::logic_error(
-              std::string("BSS maneuver type at ") + std::to_string(idx) + " is incorrect" +
-              std::to_string(
-                  m.bss_maneuver_type() ==
-                  BssManeuverType::DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare));
+          throw std::logic_error(std::string("BSS maneuver type at ") + std::to_string(idx) +
+                                 " is incorrect");
         }
       } else {
         if (m.bss_maneuver_type() != it->second) {
