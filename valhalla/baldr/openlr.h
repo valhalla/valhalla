@@ -3,6 +3,7 @@
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
+#include <valhalla/proto/trip.pb.h>
 
 #include <assert.h>
 #include <bitset>
@@ -320,6 +321,32 @@ struct LineLocation {
 };
 
 } // namespace OpenLR
+
+/**
+ * Maps Valhalla edge and road class to an OpenLR form-of-way.
+ *
+ * @param node   Node of single trip leg
+ * @return       OpenLR form-of-way classification. If this can't be determined
+ *               from the edge's road class or use information, will return FormOfWay::OTHER.
+ */
+OpenLR::LocationReferencePoint::FormOfWay road_class_to_fow(const TripLeg::Node& node);
+
+/**
+ * Compute base64-encoded OpenLR descriptor per-edge of a trip leg.
+ *
+ * @param   leg   TripPath leg
+ * @return        OpenLR descriptors for all edges in a path
+ */
+std::vector<std::string> openlr_edges(const TripLeg& leg);
+
+/**
+ * Compute base64-encoded OpenLR descriptor for an entire trip leg.
+ *
+ * @param   leg   TripPath leg
+ * @return        OpenLR descriptor for a single trip leg.
+ */
+std::vector<std::string> openlr_legs(const TripLeg& leg);
+
 } // namespace midgard
 } // namespace valhalla
 

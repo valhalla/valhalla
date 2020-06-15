@@ -57,6 +57,9 @@ You can also set `directions_options` to specify output units, language, and whe
 | `trace_options.gps_accuracy` | GPS accuracy in meters associated with supplied trace points. |
 | `trace_options.breakage_distance` | Breaking distance in meters between trace points. |
 | `trace_options.interpolation_distance` | Interpolation distance in meters beyond which trace points are merged together. |
+| `linear_references` | When present and `true`, the successful `trace_route` response will include a key `linear_references`. Its value is an array of base64-encoded [OpenLR location references][openlr], one for each graph edge of the road network matched by the input trace. |
+
+[openlr]: https://www.openlr-association.com/fileadmin/user_upload/openlr-whitepaper_v1.5.pdf
 
 ### Attribute filters (`trace_attributes` only)
 
