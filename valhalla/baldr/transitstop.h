@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_TRANSITSTOP_H_
 
 #include <cstdint>
+#include <stdexcept>
 #include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {

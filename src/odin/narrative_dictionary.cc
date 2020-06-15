@@ -160,6 +160,10 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   // Populate exit_verbal_subset
   Load(exit_verbal_subset, narrative_pt.get_child(kExitVerbalKey));
 
+  LOG_TRACE("Populate exit_visual_subset...");
+  // Populate exit_visual_subset
+  Load(exit_visual_subset, narrative_pt.get_child(kExitVisualKey));
+
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate keep_subset...");
   // Populate keep_subset

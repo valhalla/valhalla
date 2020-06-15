@@ -41,4 +41,5 @@ valhalla_module(NAME odin
     valhalla::proto
     ${valhalla_protobuf_targets}
     Boost::boost
-    libprime_server)
+    libprime_server
+    robin_hood::robin_hood)

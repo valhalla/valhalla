@@ -345,6 +345,7 @@ void start_service() {
   boost::property_tree::ptree config;
   std::stringstream json;
   json << R"({
+      "meili": { "default": { "breakage_distance": 2000} },
       "mjolnir": { "tile_dir": "test/tiles" },
       "loki": { "actions": [ "locate", "route", "sources_to_targets", "optimized_route", "isochrone", "trace_route", "trace_attributes" ],
                   "logging": { "long_request": 100.0 },

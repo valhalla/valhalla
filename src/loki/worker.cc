@@ -220,6 +220,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   default_search_cutoff = config.get<unsigned int>("loki.service_defaults.search_cutoff");
   default_street_side_tolerance =
       config.get<unsigned int>("loki.service_defaults.street_side_tolerance");
+  default_breakage_distance = config.get<float>("meili.default.breakage_distance");
   max_gps_accuracy = config.get<float>("service_limits.trace.max_gps_accuracy");
   max_search_radius = config.get<float>("service_limits.trace.max_search_radius");
   max_best_paths = config.get<unsigned int>("service_limits.trace.max_best_paths");
