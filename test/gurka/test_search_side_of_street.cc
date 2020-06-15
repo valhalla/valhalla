@@ -20,7 +20,7 @@ protected:
         |                             |
         D-----------------------------C
     )";
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
 
     const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
                               {"BC", {{"highway", "primary"}}},
