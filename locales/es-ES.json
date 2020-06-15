@@ -866,6 +866,16 @@
         ]
       }
     },
+    "exit_visual": {
+      "phrases": {
+        "0": "Salida <EXIT_NUMBERS>"
+      },
+      "example_phrases": {
+        "0": [
+          "Salida 1A"
+        ]
+      }
+    },
     "keep": {
       "phrases": {
         "0": "En la bifurcación manténgase a la <RELATIVE_DIRECTION>.",
