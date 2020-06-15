@@ -88,40 +88,6 @@ void AStarBSSAlgorithm::Init(const midgard::PointLL& origll, const midgard::Poin
   adjacencylist_ = std::make_shared<DoubleBucketQueue>(mincost, range, bucketsize, edgecost);
   pedestrian_edgestatus_.clear();
   bicycle_edgestatus_.clear();
-
-  // Get hierarchy limits from the costing. Get a copy since we increment
-  // transition counts (i.e., this is not a const reference).
-  pedestrian_hierarchy_limits_ = pedestrian_costing_->GetHierarchyLimits();
-  bicycle_hierarchy_limits_ = bicycle_costing_->GetHierarchyLimits();
-}
-
-// Modulate the hierarchy expansion within distance based on density at
-// the destination (increase distance for lower densities and decrease
-// for higher densities) and the distance between origin and destination
-// (increase for shorter distances).
-void AStarBSSAlgorithm::ModifyHierarchyLimits(const float dist, const uint32_t density) {
-  // TODO - default distance below which we increase expansion within
-  // distance. This is somewhat temporary to address route quality on shorter
-  // routes - hopefully we will mark the data somehow to indicate how to
-  // use the hierarchy when approaching the destination (or use a
-  // bi-directional search without hierarchies for shorter routes).
-  float factor = 1.0f;
-  if (25000.0f < dist && dist < 100000.0f) {
-    factor = std::min(3.0f, 100000.0f / dist);
-  }
-  /* TODO - need a reliable density factor near the destination (e.g. tile level?)
-  // Low density - increase expansion within distance.
-  // High density - decrease expansion within distance.
-  if (density < 8) {
-    float f = 1.0f + (8.0f - density) * 0.125f;
-    factor *= f;
-  } else if (density > 8) {
-    float f = 0.5f + (15.0f - density) * 0.0625;
-    factor *= f;
-  }*/
-  // TODO - just arterial for now...investigate whether to alter local as well
-  pedestrian_hierarchy_limits_[1].expansion_within_dist *= factor;
-  bicycle_hierarchy_limits_[1].expansion_within_dist *= factor;
 }
 
 // Expand from the node along the forward search path. Immediately expands
@@ -141,8 +107,6 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
       (mode == TravelMode::kPedestrian ? pedestrian_costing_ : bicycle_costing_);
   const auto& current_heuristic =
       (mode == TravelMode::kPedestrian ? pedestrian_astarheuristic_ : bicycle_astarheuristic_);
-  auto& current_hierarchy_limits =
-      (mode == TravelMode::kPedestrian ? pedestrian_hierarchy_limits_ : bicycle_hierarchy_limits_);
 
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -166,20 +130,14 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
 
   for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++directededge, ++edgeid, ++current_es) {
-    // Skip shortcut edges until we have stopped expanding on the next level.
-    // Also skip shortcut edges when near the destination. Always skip within
-    // 10km but also reject long shortcut edges outside this distance.
-    // TODO - configure this distance based on density?
     // Use regular edges while still expanding on the next level since we can still
     // transition down to that level. If using a shortcut, set the shortcuts mask.
     // Skip if this is a regular edge superseded by a shortcut.
     if (directededge->is_shortcut()) {
-      if (!current_hierarchy_limits[edgeid.level() + 1].StopExpanding() ||
-          (pred.distance() < 10000.0f || directededge->length() > max_shortcut_length)) {
+      if (pred.distance() < 10000.0f || directededge->length() > max_shortcut_length) {
         continue;
-      } else {
-        shortcuts |= directededge->shortcut();
       }
+      shortcuts |= directededge->shortcut();
     } else if (shortcuts & directededge->superseded()) {
       continue;
     }
@@ -274,14 +232,8 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
   if (!from_transition && nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      if (trans->up()) {
-        current_hierarchy_limits[node.level()].up_transition_count++;
-        ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, from_bss, mode,
-                      destination, best_path);
-      } else if (!current_hierarchy_limits[trans->endnode().level()].StopExpanding(pred.distance())) {
-        ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, from_bss, mode,
-                      destination, best_path);
-      }
+      ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, from_bss, mode, destination,
+                    best_path);
     }
   }
 }
@@ -314,9 +266,6 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
   // destination first in case the origin edge includes a destination edge.
   uint32_t density = SetDestination(graphreader, destination);
   SetOrigin(graphreader, origin, destination);
-
-  // Update hierarchy limits
-  ModifyHierarchyLimits(mindist, density);
 
   // Find shortest path
   uint32_t nc = 0; // Count of iterations with no convergence
@@ -388,16 +337,6 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
         LOG_ERROR("No convergence to destination after = " + std::to_string(edgelabels_.size()));
         return {};
       }
-    }
-
-    const auto& hierarchy_limits =
-        (pred.mode() == TravelMode::kPedestrian ? pedestrian_hierarchy_limits_
-                                                : bicycle_hierarchy_limits_);
-
-    // Do not expand based on hierarchy level based on number of upward
-    // transitions and distance to the destination
-    if (hierarchy_limits[pred.endnode().level()].StopExpanding(dist2dest)) {
-      continue;
     }
 
     // Expand forward from the end node of the predecessor edge.

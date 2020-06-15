@@ -129,12 +129,15 @@ void test(const std::string& request,
       if (it == expected_bss_maneuver.end()) {
         if (m.bss_maneuver_type() !=
             BssManeuverType::DirectionsLeg_Maneuver_BssManeuverType_kNoneAction) {
-          throw std::logic_error(std::string("BSS maneuver type at") + std::to_string(idx) +
-                                 " is incorrect");
+          throw std::logic_error(
+              std::string("BSS maneuver type at ") + std::to_string(idx) + " is incorrect" +
+              std::to_string(
+                  m.bss_maneuver_type() ==
+                  BssManeuverType::DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare));
         }
       } else {
         if (m.bss_maneuver_type() != it->second) {
-          throw std::logic_error(std::string("BSS maneuver type at") + std::to_string(idx) +
+          throw std::logic_error(std::string("BSS maneuver type at ") + std::to_string(idx) +
                                  " is incorrect");
         }
       }
@@ -223,8 +226,8 @@ TEST(AstarBss, test_BSS_mode_Without_Mode_Changes_2) {
   std::string request =
       R"({"locations":[{"lat":48.865020,"lon":2.369113},{"lat":48.859782,"lon":2.36101}],
 	       "costing":"bikeshare",
-	       "costing_options":{"pedestrian":{"bss_rent_cost":1800,"bss_rent_penalty":0},
-	                          "bicycle"   :{"bss_return_cost":1800,"bss_return_penalty":0}}})";
+	       "costing_options":{"pedestrian":{"bss_rent_cost":1800,"bss_rent_penalty":1800},
+	                          "bicycle"   :{"bss_return_cost":1800,"bss_return_penalty":1800}}})";
 
   std::vector<valhalla::DirectionsLeg_TravelMode> expected_travel_modes{
       valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
@@ -312,6 +315,23 @@ TEST(AstarBss, test_Auto) {
                                           "Rue Debelleyme",    "Rue de Turenne",
                                           "Rue Commines",      "Rue Oberkampf",
                                           "Rue Amelot"};
+  // There shouldn't be any bss maneuvers
+  const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
+
+  test(request, expected_travel_modes, expected_route, expected_bss_maneuver);
+}
+
+// When auto is chosen as travel_mode, the departure edge must NOT be a bss connections edge
+TEST(AstarBss, test_Truck) {
+  std::string request =
+      R"({"locations":[{"lat":48.859895,"lon":2.3610976338},{"lat":48.86271911,"lon":2.367111146}],"costing":"truck"})";
+  std::vector<valhalla::DirectionsLeg_TravelMode> expected_travel_modes{
+      valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kDrive};
+  std::vector<std::string> expected_route{"Rue de la Perle",     "Rue des Quatre Fils",
+                                          "Rue des Archives",    "Rue Pastourelle",
+                                          "Rue du Temple",       "Place de la République",
+                                          "Boulevard du Temple", "Boulevard des Filles du Calvaire",
+                                          "Rue Oberkampf",       "Rue Amelot"};
   // There shouldn't be any bss maneuvers
   const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
 

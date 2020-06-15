@@ -76,10 +76,6 @@ protected:
   sif::TravelMode mode_;     // Current travel mode
   uint8_t travel_type_;      // Current travel type
 
-  // Hierarchy limits.
-  std::vector<sif::HierarchyLimits> pedestrian_hierarchy_limits_;
-  std::vector<sif::HierarchyLimits> bicycle_hierarchy_limits_;
-
   // A* heuristic
   AStarHeuristic pedestrian_astarheuristic_;
   AStarHeuristic bicycle_astarheuristic_;
@@ -107,17 +103,6 @@ protected:
    * @param  destll  Lat,lng of the destination.
    */
   virtual void Init(const midgard::PointLL& origll, const midgard::PointLL& destll);
-
-  /**
-   * Modify hierarchy limits based on distance between origin and destination
-   * and the relative road density at the destination. For shorter routes
-   * we stay on arterial roads further from the destination. Also for lower
-   * road densities near the destination the hierarchy transition distances
-   * are increased.
-   * @param   dist     Distance between origin and destination.
-   * @param   density  Relative road density near the destination.
-   */
-  void ModifyHierarchyLimits(const float dist, const uint32_t density);
 
   /**
    * Expand from the node along the forward search path. Immediately expands

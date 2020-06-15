@@ -227,7 +227,7 @@ public:
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
       if (edge->is_shortcut() || edge->use() >= Use::kFerry ||
-          !(edge->forwardaccess() & kPedestrianAccess)) {
+          !(edge->forwardaccess() & kPedestrianAccess) || edge->bss_connection()) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
