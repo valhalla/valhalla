@@ -140,16 +140,18 @@ struct candidate_t {
     auto angle_to_point = point.Heading(original);
 
     // add 360 degrees if angle becomes negative
-    auto angle_diff = (angle_to_point - tang_angle) >= 0.0f ? (angle_to_point - tang_angle)
-                                                            : (angle_to_point - tang_angle + 360.0f);
+    auto angle_diff = angle_to_point - tang_angle;
+    if (angle_diff < 0) {
+      angle_diff += 360.f;
+    }
 
     // 10 degrees on either side is considered to be straight ahead
-    auto angle_tolerance = 10.0f;
+    auto angle_tolerance = 10.f;
 
     // check which side the point falls in
-    if (angle_diff > angle_tolerance && angle_diff < (angle_tolerance + 180.0f - angle_tolerance)) {
+    if (angle_diff > angle_tolerance && angle_diff < (180.f - angle_tolerance)) {
       return PathLocation::SideOfStreet::RIGHT;
-    } else if (angle_diff > (180.0f + angle_tolerance) && angle_diff < 360.0f - angle_tolerance) {
+    } else if (angle_diff > (180.f + angle_tolerance) && angle_diff < (360.f - angle_tolerance)) {
       return PathLocation::SideOfStreet::LEFT;
     } else {
       return PathLocation::SideOfStreet::NONE;
