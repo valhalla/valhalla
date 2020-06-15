@@ -29,7 +29,7 @@ Location::Location(const midgard::PointLL& latlng,
     : latlng_(latlng), stoptype_(stoptype), min_outbound_reach_(min_outbound_reach),
       min_inbound_reach_(min_inbound_reach), radius_(radius), preferred_side_(side),
       node_snap_tolerance_(5), heading_tolerance_(60), search_cutoff_(35000),
-      street_side_tolerance_(5), street_side_max_distance_(5000), search_filter_(search_filter) {
+      street_side_tolerance_(5), street_side_max_distance_(1000), search_filter_(search_filter) {
 }
 
 bool Location::operator==(const Location& o) const {

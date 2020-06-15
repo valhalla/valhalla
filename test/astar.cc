@@ -476,7 +476,7 @@ boost::property_tree::ptree get_conf(const char* tiles) {
           "search_cutoff": 35000,
           "node_snap_tolerance": 5,
           "street_side_tolerance": 5,
-          "street_side_max_distance": 5000,
+          "street_side_max_distance": 1000,
           "heading_tolerance": 60
         }
       },
