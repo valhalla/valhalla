@@ -442,7 +442,7 @@ public:
 
       bool time_allowed = false;
 
-      for (int i, n = static_cast<int>(restrictions.size()); i < n; ++i) {
+      for (int i = 0, n = static_cast<int>(restrictions.size()); i < n; ++i) {
         const auto& restriction = restrictions[i];
         // Compare the time to the time-based restrictions
         baldr::AccessType access_type = restriction.type();
