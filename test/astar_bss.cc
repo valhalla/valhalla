@@ -223,8 +223,8 @@ TEST(AstarBss, test_BSS_mode_Without_Mode_Changes_2) {
   std::string request =
       R"({"locations":[{"lat":48.865020,"lon":2.369113},{"lat":48.859782,"lon":2.36101}],
 	       "costing":"bikeshare",
-	       "costing_options":{"pedestrian":{"bss_rent_cost":1800,"bss_rent_penalty":1800},
-	                          "bicycle"   :{"bss_return_cost":1800,"bss_return_penalty":1800}}})";
+	       "costing_options":{"pedestrian":{"bss_rent_cost":1800,"bss_rent_penalty":0},
+	                          "bicycle"   :{"bss_return_cost":1800,"bss_return_penalty":0}}})";
 
   std::vector<valhalla::DirectionsLeg_TravelMode> expected_travel_modes{
       valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
