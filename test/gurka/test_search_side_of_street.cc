@@ -10,7 +10,7 @@ protected:
 
   static void SetUpTestSuite() {
     const std::string ascii_map = R"(
-                                      5
+         7                            5
                        3
                                       6
         A1-------------2--------------B
@@ -144,4 +144,22 @@ TEST_F(SearchSideOfStreet, InputRightDisplayAheadStraightLeft) {
   // point 6 is not left enough so is considered straight ahead
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
+}
+
+TEST_F(SearchSideOfStreet, InputRightDisplayBehindLeft) {
+  auto from = "1";
+  auto to = "4";
+  auto display = "7";
+  const std::string& request =
+      (boost::format(
+           R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s,"display_lat":%s,"display_lon":%s}],"costing":"auto"})") %
+       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()) %
+       std::to_string(map.nodes.at(display).lat()) % std::to_string(map.nodes.at(display).lng()))
+          .str();
+  auto result = gurka::route(map, request);
+
+  // point 6 is not left enough so is considered straight ahead
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kDestinationLeft});
 }
