@@ -692,7 +692,6 @@ protected:
   sif::Cost bike_share_cost_;
   sif::Cost rail_ferry_transition_cost_;
 
-
   // Penalties that all costing methods support
   float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
   float alley_penalty_;            // Penalty (seconds) to use a alley
