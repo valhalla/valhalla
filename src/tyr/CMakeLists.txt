@@ -30,4 +30,5 @@ valhalla_module(NAME tyr
     valhalla::odin
     valhalla::proto
     ${valhalla_protobuf_targets}
-    Boost::boost)
+    Boost::boost
+    robin_hood::robin_hood)

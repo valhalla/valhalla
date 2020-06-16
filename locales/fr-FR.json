@@ -866,6 +866,16 @@
         ]
       }
     },
+    "exit_visual": {
+      "phrases": {
+        "0": "Sortie n°<EXIT_NUMBERS>"
+      },
+      "example_phrases": {
+        "0": [
+          "Sortie n°1A"
+        ]
+      }
+    },
     "keep": {
       "phrases": {
         "0": "Gardez la <RELATIVE_DIRECTION> à la fourche.",
