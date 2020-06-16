@@ -65,20 +65,12 @@ bool side_filter(const PathLocation::PathEdge& edge, const Location& location, G
   return same != (location.preferred_side_ == Location::PreferredSide::SAME);
 }
 
-bool heading_filter(const DirectedEdge* edge,
-                    const EdgeInfo& info,
-                    const Location& location,
-                    const PointLL& point,
-                    size_t index) {
+bool heading_filter(const Location& location, float angle) {
   // no heading means we filter nothing
   if (!location.heading_) {
     return false;
   }
 
-  // get the angle of the shape from this point
-  auto angle =
-      tangent_angle(index, point, info.shape(),
-                    GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
   // we want the closest distance between two angles which can be had
   // across 0 or between the two so we just need to know which is bigger
   if (*location.heading_ > angle) {
@@ -121,6 +113,7 @@ struct candidate_t {
   }
 
   PathLocation::SideOfStreet get_side(const PointLL& original,
+                                      float tang_angle,
                                       double sq_distance,
                                       double sq_tolerance,
                                       double sq_max_distance) const {
@@ -129,12 +122,6 @@ struct candidate_t {
     if (sq_distance < sq_tolerance || sq_distance > sq_max_distance) {
       return PathLocation::SideOfStreet::NONE;
     }
-
-    // get the angle of the tangent line to the shape at this point
-    auto& shape = edge_info->shape();
-    auto tang_angle =
-        tangent_angle(index, point, shape, GetOffsetForHeading(edge->classification(), edge->use()),
-                      edge->forward());
 
     // get the absolute angle between the snap point and the provided point
     auto angle_to_point = point.Heading(original);
@@ -146,9 +133,19 @@ struct candidate_t {
     }
 
     // 10 degrees on either side is considered to be straight ahead
-    auto angle_tolerance = 10.f;
+    constexpr float angle_tolerance = 10.f;
 
-    // check which side the point falls in
+    // check which side the point falls in:
+    // If angle_diff is between 10 and 170 it's on the right side,
+    // if angle_diff is between 190 and 350 it's on the left side,
+    // otherwise it's practically straight ahead or behind.
+    //
+    //       \    L    /
+    //        \       /
+    //  - - - - - x - - - - -
+    //        /       \
+    //       /    R    \
+    //
     if (angle_diff > angle_tolerance && angle_diff < (180.f - angle_tolerance)) {
       return PathLocation::SideOfStreet::RIGHT;
     } else if (angle_diff > (180.f + angle_tolerance) && angle_diff < (360.f - angle_tolerance)) {
@@ -303,7 +300,11 @@ struct bin_handler_t {
         GraphId id = tile->id();
         id.set_id(node->edge_index() + (edge - start_edge));
         auto info = tile->edgeinfo(edge->edgeinfo_offset());
-
+        // calculate the heading of the snapped point to the shape for use in heading filter
+        size_t index = edge->forward() ? 0 : info.shape().size() - 2;
+        float angle =
+            tangent_angle(index, candidate.point, info.shape(),
+                          GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
         // do we want this edge
         if (edge_filter(edge) != 0.0f) {
           auto reach = get_reach(id, edge);
@@ -314,8 +315,7 @@ struct bin_handler_t {
                                            PathLocation::NONE,
                                            reach.outbound,
                                            reach.inbound};
-          auto index = edge->forward() ? 0 : info.shape().size() - 2;
-          if (heading_filter(edge, info, location, candidate.point, index)) {
+          if (heading_filter(location, angle)) {
             filtered.emplace_back(std::move(path_edge));
           } else if (correlated_edges.insert(path_edge.id).second) {
             correlated.edges.push_back(std::move(path_edge));
@@ -338,10 +338,8 @@ struct bin_handler_t {
                                            PathLocation::NONE,
                                            reach.outbound,
                                            reach.inbound};
-          // index is opposite the logic above
-          auto index = other_edge->forward() ? info.shape().size() - 2 : 0;
-          if (heading_filter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), location,
-                             candidate.point, index)) {
+          // angle is 180 degrees opposite direction of the one above
+          if (heading_filter(location, std::fmod(angle + 180.f, 360.f))) {
             filtered.emplace_back(std::move(path_edge));
           } else if (correlated_edges.insert(path_edge.id).second) {
             correlated.edges.push_back(std::move(path_edge));
@@ -386,11 +384,17 @@ struct bin_handler_t {
       if (!candidate.edge->forward()) {
         length_ratio = 1.f - length_ratio;
       }
-      // side of street
+      // calculate the heading of the snapped point to the shape for use in heading
+      // filter and side of street calculation
+      float angle =
+          tangent_angle(candidate.index, candidate.point, candidate.edge_info->shape(),
+                        GetOffsetForHeading(candidate.edge->classification(), candidate.edge->use()),
+                        candidate.edge->forward());
       auto sq_tolerance = square(double(location.street_side_tolerance_));
       auto sq_max_distance = square(double(location.street_side_max_distance_));
       auto side =
           candidate.get_side(location.display_latlng_ ? *location.display_latlng_ : location.latlng_,
+                             angle,
                              location.display_latlng_
                                  ? location.display_latlng_->DistanceSquared(candidate.point)
                                  : candidate.sq_distance,
@@ -400,9 +404,7 @@ struct bin_handler_t {
                                        distance,          side,         reach.outbound,
                                        reach.inbound};
       // correlate the edge we found
-      if (side_filter(path_edge, location, reader) ||
-          heading_filter(candidate.edge, *candidate.edge_info, location, candidate.point,
-                         candidate.index)) {
+      if (side_filter(path_edge, location, reader) || heading_filter(location, angle)) {
         filtered.push_back(std::move(path_edge));
       } else if (correlated_edges.insert(candidate.edge_id).second) {
         correlated.edges.push_back(std::move(path_edge));
@@ -417,9 +419,9 @@ struct bin_handler_t {
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point,
                                                distance,         flip_side(side),  reach.outbound,
                                                reach.inbound};
+         // angle is 180 degrees opposite of the one above
         if (side_filter(other_path_edge, location, reader) ||
-            heading_filter(other_edge, *candidate.edge_info, location, candidate.point,
-                           candidate.index)) {
+            heading_filter(location, std::fmod(angle + 180.f, 360.f))) {
           filtered.push_back(std::move(other_path_edge));
         } else if (correlated_edges.insert(opposing_edge_id).second) {
           correlated.edges.push_back(std::move(other_path_edge));
