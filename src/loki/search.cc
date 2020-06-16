@@ -419,7 +419,7 @@ struct bin_handler_t {
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point,
                                                distance,         flip_side(side),  reach.outbound,
                                                reach.inbound};
-         // angle is 180 degrees opposite of the one above
+        // angle is 180 degrees opposite of the one above
         if (side_filter(other_path_edge, location, reader) ||
             heading_filter(location, std::fmod(angle + 180.f, 360.f))) {
           filtered.push_back(std::move(other_path_edge));
