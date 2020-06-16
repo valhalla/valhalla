@@ -192,6 +192,7 @@ void search(valhalla::baldr::Location location,
   valhalla::Location pbf;
   PathLocation::toPBF(location, &pbf, reader);
   location = PathLocation::fromPBF(pbf);
+  location.street_side_max_distance_ = 5000;
 
   const auto costing = create_costing();
   const auto results = Search({location}, reader, costing);
@@ -220,7 +221,6 @@ void search(valhalla::baldr::Location location,
 }
 
 void search(valhalla::baldr::Location location, size_t result_count, int reachability) {
-
   // make the config file
   boost::property_tree::ptree conf;
   conf.put("tile_dir", tile_dir);
@@ -230,6 +230,8 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
   valhalla::Location pbf;
   PathLocation::toPBF(location, &pbf, reader);
   location = PathLocation::fromPBF(pbf);
+  location.street_side_max_distance_ = 5000;
+
   const auto costing = create_costing();
 
   const auto results = Search({location}, reader, costing);
@@ -324,16 +326,15 @@ TEST(Search, test_edge_search) {
   search(x, false, answer,
          {PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::LEFT}});
 
-  // try nuking display ll by setting street_side_max_distance less than display ll distance
-  x.street_side_max_distance_ = 1000;
-  search(x, false, answer,
-         {PE{{t, l, 3}, ratio, answer, 0, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE}});
-  x.street_side_max_distance_ = 5000; // reset to default
-
   // try display ll on the other side
   x.display_latlng_ = PointLL{answer.first - ortho.x(), answer.second - ortho.y()};
   search(x, false, answer,
          {PE{{t, l, 3}, ratio, answer, 0, S::LEFT}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::RIGHT}});
+
+  // try nuking display ll by setting it farther away than street_side_max_distance
+  x.display_latlng_ = PointLL{answer.first - 5 * ortho.x(), answer.second - 5 * ortho.y()};
+  search(x, false, answer,
+         {PE{{t, l, 3}, ratio, answer, 0, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE}});
 
   // check that the side of street tolerance works
   Location sst_huge(test);
