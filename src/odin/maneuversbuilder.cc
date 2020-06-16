@@ -632,10 +632,10 @@ ManeuversBuilder::CombineTurnChannelManeuver(std::list<Maneuver>& maneuvers,
 
 std::list<Maneuver>::iterator
 ManeuversBuilder::CombineRampManeuver(std::list<Maneuver>& maneuvers,
-                                             std::list<Maneuver>::iterator prev_man,
-                                             std::list<Maneuver>::iterator curr_man,
-                                             std::list<Maneuver>::iterator next_man,
-                                             bool start_man) {
+                                      std::list<Maneuver>::iterator prev_man,
+                                      std::list<Maneuver>::iterator curr_man,
+                                      std::list<Maneuver>::iterator next_man,
+                                      bool start_man) {
 
   if (start_man) {
     // Determine turn degree current maneuver and next maneuver
@@ -1539,7 +1539,7 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) &&
           !maneuver.intersecting_forward_edge() &&
           ((xedge_counts.right > 0) || ((xedge_counts.right == 0) && (xedge_counts.left == 0)) ||
-          ((xedge_counts.right == 0) && (xedge_counts.left == 1) && prev_edge->IsRampUse()))) {
+           ((xedge_counts.right == 0) && (xedge_counts.left == 1) && prev_edge->IsRampUse()))) {
         maneuver.set_type(DirectionsLeg_Maneuver_Type_kContinue);
         LOG_TRACE("ManeuverType=CONTINUE (Turn::Type::kSlightRight)");
       } else {
@@ -1657,7 +1657,7 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) &&
           !maneuver.intersecting_forward_edge() &&
           ((xedge_counts.left > 0) || ((xedge_counts.right == 0) && (xedge_counts.left == 0)) ||
-              ((xedge_counts.right == 1) && (xedge_counts.left == 0) && !prev_edge->IsRampUse()))) {
+           ((xedge_counts.right == 1) && (xedge_counts.left == 0) && !prev_edge->IsRampUse()))) {
         maneuver.set_type(DirectionsLeg_Maneuver_Type_kContinue);
         LOG_TRACE("ManeuverType=CONTINUE (Turn::Type::kSlightLeft)");
       } else {
@@ -2422,8 +2422,8 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iter
 bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator prev_man,
                                                   std::list<Maneuver>::iterator curr_man,
                                                   std::list<Maneuver>::iterator next_man) const {
-  if (curr_man->ramp() && next_man->ramp() &&
-      !curr_man->internal_intersection() && !next_man->internal_intersection()) {
+  if (curr_man->ramp() && next_man->ramp() && !curr_man->internal_intersection() &&
+      !next_man->internal_intersection()) {
     if (!next_man->fork()) {
       auto node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
       if (!node->HasTraversableOutboundIntersectingEdge(next_man->travel_mode()) ||
@@ -2451,7 +2451,6 @@ bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator 
       }
     }
   }
-
 
   return false;
 }

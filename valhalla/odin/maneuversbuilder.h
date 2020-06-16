@@ -57,10 +57,10 @@ protected:
                                                            bool start_man);
 
   std::list<Maneuver>::iterator CombineRampManeuver(std::list<Maneuver>& maneuvers,
-                                                           std::list<Maneuver>::iterator prev_man,
-                                                           std::list<Maneuver>::iterator curr_man,
-                                                           std::list<Maneuver>::iterator next_man,
-                                                           bool start_man);
+                                                    std::list<Maneuver>::iterator prev_man,
+                                                    std::list<Maneuver>::iterator curr_man,
+                                                    std::list<Maneuver>::iterator next_man,
+                                                    bool start_man);
 
   std::list<Maneuver>::iterator CombineManeuvers(std::list<Maneuver>& maneuvers,
                                                  std::list<Maneuver>::iterator curr_man,
