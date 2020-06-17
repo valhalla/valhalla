@@ -49,6 +49,7 @@ struct TimeInfo {
    *
    * @param location                 location for which to initialize the TimeInfo
    * @param reader                   used to get timezone information from the graph
+   * @param tz_cache                 non-owning pointer to timezone info cache
    * @param default_timezone_index   used when no timezone information is available
    * @return the initialized TimeInfo
    */
@@ -72,6 +73,35 @@ struct TimeInfo {
         break;
     }
 
+    // return the time info based on this location information
+    return make(*location.mutable_date_time(), timezone_index, tz_cache, default_timezone_index);
+  }
+
+  /**
+   * Helper function to initialize the object from a location. Uses the graph to
+   * find timezone information about the edge candidates at the location. If the
+   * graph has no timezone information or the location has no edge candidates the
+   * default timezone will be used (if unspecified UTC is used). If no datetime
+   * is provided on the location or an invalid one is provided the TimeInfo will
+   * be invalid.
+   *
+   * @param date_time               string representing the time from which to make this time info
+   *                                if the string is 'current' it will be replaced with the now time
+   * @param timezone_index          the timezone index at which to make this time info, 0 if unknown
+   * @param tz_cache                timezone info cache used when crossing timezones while tracking
+   * @param default_timezone_index  the index to use when the timezone index is 0 or unknown
+   * @return the initialized TimeInfo
+   */
+  static TimeInfo
+  make(std::string& date_time,
+       int timezone_index,
+       baldr::DateTime::tz_sys_info_cache_t* tz_cache = nullptr,
+       int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC")) {
+    // No time to to track
+    if (date_time.empty()) {
+      return {false};
+    }
+
     // Set the origin timezone to be the timezone at the end node use this for timezone changes
     if (timezone_index == 0) {
       // Don't use the provided one if its not valid
@@ -88,18 +118,18 @@ struct TimeInfo {
     const auto now_date =
         date::make_zoned(tz, sc::time_point_cast<sc::seconds>(
                                  sc::time_point_cast<sc::minutes>(sc::system_clock::now())));
-    if (location.date_time() == "current") {
+    if (date_time == "current") {
       std::ostringstream iso_dt;
       iso_dt << date::format("%FT%R", now_date);
-      location.set_date_time(iso_dt.str());
+      date_time = iso_dt.str();
     }
 
     // Convert the requested time into seconds from epoch
     date::local_seconds parsed_date;
     try {
-      parsed_date = dt::get_formatted_date(location.date_time(), true);
+      parsed_date = dt::get_formatted_date(date_time, true);
     } catch (...) {
-      LOG_ERROR("Could not parse provided date_time: " + location.date_time());
+      LOG_ERROR("Could not parse provided date_time: " + date_time);
       return {false};
     }
     const auto then_date = date::make_zoned(tz, parsed_date);

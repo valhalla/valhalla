@@ -6,6 +6,28 @@ using namespace valhalla;
 
 const std::unordered_map<std::string, std::string> build_config{{"mjolnir.shortcuts", "false"}};
 
+void create_costing(const Api& request,
+                    sif::cost_ptr_t* mode_costing,
+                    const sif::CostFactory<sif::DynamicCost>& factory) {
+  // Parse out the type of route - this provides the costing method to use
+  const auto& options = request.options();
+  auto costing = options.costing();
+  auto costing_str = Costing_Enum_Name(costing);
+
+  // Set travel mode and construct costing
+  if (costing == Costing::multimodal || costing == Costing::transit) {
+    // For multi-modal we construct costing for all modes and set the
+    // initial mode to pedestrian. (TODO - allow other initial modes)
+    mode_costing[0] = factory.Create(Costing::auto_, options);
+    mode_costing[1] = factory.Create(Costing::pedestrian, options);
+    mode_costing[2] = factory.Create(Costing::bicycle, options);
+    mode_costing[3] = factory.Create(Costing::transit, options);
+  } else {
+    valhalla::sif::cost_ptr_t cost = factory.Create(options);
+    mode_costing[static_cast<uint8_t>(cost->travel_mode())] = cost;
+  }
+}
+
 TEST(recosting, mode_changes) {
   const std::string ascii_map = R"(A--1--B--2--C
                                          |     |
@@ -24,35 +46,76 @@ TEST(recosting, mode_changes) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_flat_loop", build_config);
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
 
-  std::string named_locations = "ABCDEF123456";
-  for (const auto& i : named_locations) {
-    for (const auto& j : named_locations) {
-      if (i == j) {
+  // run all the permutations
+  std::string named_locations = "A1B2C3D4E5F6";
+  for (int i = 0; i < named_locations.size(); ++i) {
+    for (int j = 0; j < named_locations.size(); ++j) {
+      // skip uninterestingly close routes
+      if (std::abs(i - j) < 6) {
         continue;
       }
 
       // get the api response out using the normal means
-      auto api = gurka::route(map, std::string(i, 1), std::string(j, 1), "auto", "", reader);
+      auto start = named_locations.substr(i, 1);
+      auto end = named_locations.substr(j, 1);
+      auto api = gurka::route(map, start, end, "auto", "", reader);
+
+      // build up the costing object
+      sif::cost_ptr_t mode_costing[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
+      sif::CostFactory<sif::DynamicCost> factory;
+      factory.RegisterStandardCostingModels();
+      create_costing(api, mode_costing, factory);
+
+      // find the percentage of the edges used
+      auto leg = api.trip().routes(0).legs(0);
+      float begin_pct = 0;
+      for (const auto& edge : api.options().locations(0).path_edges()) {
+        if (leg.node(0).edge().id() == edge.graph_id()) {
+          begin_pct = 1.f - edge.percent_along();
+          break;
+        }
+      }
+      float end_pct = 1;
+      for (const auto& edge : api.options().locations(1).path_edges()) {
+        if (std::next(leg.node().rbegin())->edge().id() == edge.graph_id()) {
+          end_pct = edge.percent_along();
+          break;
+        }
+      }
 
       // setup a callback for the recosting to get each edge
-      auto node_itr = api.trip().routes(0).legs(0).node().begin();
-      sif::PathEdgeCallback edge_cb = [&node_itr]() -> sif::PathEdge {
+      auto edge_itr = leg.node().begin();
+      sif::EdgeCallback edge_cb = [&edge_itr, &begin_pct, end_pct]() -> sif::PathEdge {
         // done
-        if (!node_itr->has_edge())
+        if (!edge_itr->has_edge())
           return {};
+
+        // how much of the edge
+        auto edge_pct =
+            begin_pct != -1 ? begin_pct : (!std::next(edge_itr)->has_edge() ? end_pct : 1.f);
+        begin_pct = -1;
+
         // here's an edge
-        sif::PathEdge pe{baldr::GraphId(node_itr->edge().id()),
-                         sif::TravelMode(node_itr->edge().travel_mode())};
-        ++node_itr;
+        sif::PathEdge pe{baldr::GraphId(edge_itr->edge().id()),
+                         sif::TravelMode(edge_itr->edge().travel_mode()), edge_pct};
+        ++edge_itr;
         return pe;
       };
 
       // setup a callback for the recosting to tell us about the new label each made
-      sif::EdgeLabelCallback label_cb = []() -> void {};
+      auto elapsed_itr = leg.node().begin();
+      double length = 0;
+      sif::LabelCallback label_cb = [&elapsed_itr, &length](const sif::EdgeLabel& label) -> void {
+        length += elapsed_itr->edge().length() * 1000.0;
+        EXPECT_EQ(elapsed_itr->edge().id(), label.edgeid());
+        EXPECT_NEAR(length, label.path_distance(), 2);
+        EXPECT_NEAR(elapsed_itr->transition_time(), label.transition_secs(), .1);
+        ++elapsed_itr;
+        EXPECT_NEAR(elapsed_itr->elapsed_time(), label.cost().secs, .1);
+      };
 
       // recost the path
-
-      // check the results are the same
+      sif::recost_forward(*reader, &mode_costing[0], "", edge_cb, label_cb);
     }
   }
 }

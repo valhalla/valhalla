@@ -11,8 +11,8 @@
 namespace valhalla {
 namespace sif {
 
-// edge id, mode of travel, whether or not this is the last edge
-using PathEdge = std::tuple<baldr::GraphId, TravelMode, bool>;
+// edge id, mode of travel, how much of the edge is used as a percentage from 0 to 1
+using PathEdge = std::tuple<baldr::GraphId, TravelMode, float>;
 // what this function calls to get the next edge
 using EdgeCallback = std::function<PathEdge(void)>;
 // what this function calls to emit the next label
@@ -31,28 +31,65 @@ using LabelCallback = std::function<void(const EdgeLabel& label)>;
  * @param label_cb          the callback used to emit each label in the path
  */
 void recost_forward(baldr::GraphReader& reader,
-                    valhalla::Location& origin,
-                    const valhalla::Location& destination,
                     const std::shared_ptr<DynamicCost>* mode_costing,
+                    std::string date_time,
                     const EdgeCallback& edge_cb,
                     const LabelCallback& label_cb) {
-  // keep grabbing edges while we get valid ids
-  PathEdge edge;
-  EdgeLabel label;
+  // graph the first path edge
+  baldr::GraphId edge_id;
+  TravelMode mode;
+  float edge_pct;
+  std::tie(edge_id, mode, edge_pct) = edge_cb();
+
+  // fetch the graph objects
+  const baldr::GraphTile* tile = nullptr;
+  const baldr::DirectedEdge* edge = reader.directededge(edge_id, tile);
+  const baldr::NodeInfo* node = edge ? reader.nodeinfo(edge->endnode(), tile) : nullptr;
+
+  // setup the time tracking
   baldr::DateTime::tz_sys_info_cache_t tz_cache;
-  auto time_info = baldr::TimeInfo::make(origin, reader, &tz_cache);
-  while (std::get<0>(edge = edge_cb()).Is_Valid()) {
-    // is this the first edge
-    auto prev_label = label;
-    if (prev_label.predecessor() == baldr::kInvalidLabel) {
-      // edge cost * partial distance
-    } // this is not the first edge
-    else {
-      // time update
-      // turn cost
-      // edge cost * partial distance if its the last edge by id assuming no loops?
-    }
+  baldr::TimeInfo time_info =
+      baldr::TimeInfo::make(date_time, node ? node->timezone() : 0, &tz_cache);
+  edge = nullptr;
+  node = nullptr;
+
+  // keep grabbing edges while we get valid ids
+  EdgeLabel label;
+  Cost cost{};
+  double length = 0;
+  while (edge_id.Is_Valid()) {
+    // get the previous edges node
+    node = edge ? reader.nodeinfo(edge->endnode(), tile) : nullptr;
+    if (edge && !node)
+      throw std::runtime_error("Cannot recost path, node cannot be found");
+    // grab the edge
+    edge = reader.directededge(edge_id, tile);
+    if (!edge)
+      throw std::runtime_error("Cannot recost path, edge cannot be found");
+
+    // TODO: if this edge begins a restriction, we need to start popping off edges into queue
+    // so that we can find if we reach the end of the restriction. then we need to replay the
+    // queued edges as normal
+    bool time_restrictions_TODO = false;
+
+    // update the time
+    auto ti = node ? time_info.forward(cost.secs, node->timezone()) : time_info;
+    // grab the costing for this mode
+    auto costing = mode_costing[static_cast<uint8_t>(mode)];
+    // if we've never set up the time information before we need to do it now
+    Cost transition_cost = node ? costing->TransitionCost(edge, node, label) : Cost{};
+    // TODO: we use a different costing when its transit
+    // update the cost to the end of this edge
+    cost += transition_cost + costing->EdgeCost(edge, tile, ti.second_of_week) * edge_pct;
+    // update the length to the end of this edge
+    length += edge->length() * edge_pct;
+    // construct the label
+    label = EdgeLabel(node ? label.predecessor() + 1 : baldr::kInvalidLabel, edge_id, edge, cost,
+                      cost.cost, 0, mode, length, transition_cost, time_restrictions_TODO);
+    // hand back the label
     label_cb(label);
+    // next edge
+    std::tie(edge_id, mode, edge_pct) = edge_cb();
   }
 }
 
