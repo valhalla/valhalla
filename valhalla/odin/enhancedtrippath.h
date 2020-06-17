@@ -591,6 +591,9 @@ public:
 
   bool HasIntersectingEdgeCurrNameConsistency() const;
 
+  bool HasNonBackwardTraversableSameNameIntersectingEdge(uint32_t from_heading,
+                                                      const TripLeg_TravelMode travel_mode);
+
   std::unique_ptr<EnhancedTripLeg_IntersectingEdge> GetIntersectingEdge(size_t index);
 
   void CalculateRightLeftIntersectingEdgeCounts(uint32_t from_heading,
@@ -611,6 +614,8 @@ public:
 
   bool HasWiderForwardTraversableHighwayXEdge(uint32_t from_heading,
                                               const TripLeg_TravelMode travel_mode);
+
+  bool HasTraversableIntersectingEdge(const TripLeg_TravelMode travel_mode);
 
   bool HasTraversableOutboundIntersectingEdge(const TripLeg_TravelMode travel_mode);
 

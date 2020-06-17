@@ -1297,6 +1297,23 @@ bool EnhancedTripLeg_Node::HasIntersectingEdgeCurrNameConsistency() const {
   return false;
 }
 
+bool EnhancedTripLeg_Node::HasNonBackwardTraversableSameNameIntersectingEdge(
+    uint32_t from_heading,
+    const TripLeg_TravelMode travel_mode) {
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    if ((xedge->prev_name_consistency() || xedge->curr_name_consistency()) &&
+        xedge->IsTraversable(travel_mode)) {
+      uint32_t intersecting_turn_degree = GetTurnDegree(from_heading, xedge->begin_heading());
+      bool non_backward = !((intersecting_turn_degree > 124) && (intersecting_turn_degree < 236));
+      if (non_backward) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 std::unique_ptr<EnhancedTripLeg_IntersectingEdge>
 EnhancedTripLeg_Node::GetIntersectingEdge(size_t index) {
   return std::make_unique<EnhancedTripLeg_IntersectingEdge>(mutable_intersecting_edge(index));
@@ -1434,6 +1451,16 @@ bool EnhancedTripLeg_Node::HasWiderForwardTraversableHighwayXEdge(
     auto xedge = GetIntersectingEdge(i);
     if (is_wider_forward(GetTurnDegree(from_heading, xedge->begin_heading())) &&
         xedge->IsTraversableOutbound(travel_mode) && xedge->IsHighway()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasTraversableIntersectingEdge(const TripLeg_TravelMode travel_mode) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    if (GetIntersectingEdge(i)->IsTraversable(travel_mode)) {
       return true;
     }
   }

@@ -564,6 +564,21 @@ protected:
   virtual void FormArticulatedPrepositions(std::string& instruction) {
   }
 
+  /**
+   * If begin_street_names exist, assign begin_street_names to street_names and clear the
+   * begin_street_names.
+   *
+   * @param maneuver The current maneuver to process.
+   * @param begin_street_names The begin street names string.
+   * @param street_names The street names string.
+   *
+   * @return true if a verbal multi-cue instruction should be formed for the
+   *         two specified maneuvers.
+   */
+  void UpdateObviousManeuverStreetNames(Maneuver& maneuver,
+                                        std::string& begin_street_names,
+                                        std::string& street_names);
+
   /////////////////////////////////////////////////////////////////////////////
   const Options& options_;
   const EnhancedTripLeg* trip_path_;
