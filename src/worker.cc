@@ -970,6 +970,13 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_guidance_views(*guidance_views);
   }
 
+  // whether to include roundabout_exit maneuvers, default true
+  auto roundabout_exits = rapidjson::get_optional<bool>(doc, "/roundabout_exits");
+  options.set_roundabout_exits(true);
+  if (roundabout_exits) {
+    options.set_roundabout_exits(*roundabout_exits);
+  }
+
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},
