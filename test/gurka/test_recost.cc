@@ -11,8 +11,8 @@ void create_costing(const Api& request,
                     const sif::CostFactory<sif::DynamicCost>& factory) {
   // Parse out the type of route - this provides the costing method to use
   const auto& options = request.options();
-  auto costing = options.costing();
-  auto costing_str = Costing_Enum_Name(costing);
+  const auto& costing = options.costing();
+  const auto& costing_str = Costing_Enum_Name(costing);
 
   // Set travel mode and construct costing
   if (costing == Costing::multimodal || costing == Costing::transit) {
@@ -48,8 +48,8 @@ TEST(recosting, mode_changes) {
 
   // run all the permutations
   std::string named_locations = "A1B2C3D4E5F6";
-  for (int i = 0; i < named_locations.size(); ++i) {
-    for (int j = 0; j < named_locations.size(); ++j) {
+  for (size_t i = 0; i < named_locations.size(); ++i) {
+    for (size_t j = 0; j < named_locations.size(); ++j) {
       // skip uninterestingly close routes
       if (i == j) {
         continue;
