@@ -26,7 +26,7 @@ public:
   /**
    * Default constructor.
    */
-  EdgeLabel() : predecessor_(baldr::kInvalidLabel) {
+  EdgeLabel() {
   }
 
   /**

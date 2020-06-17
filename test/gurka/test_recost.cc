@@ -51,7 +51,7 @@ TEST(recosting, mode_changes) {
   for (int i = 0; i < named_locations.size(); ++i) {
     for (int j = 0; j < named_locations.size(); ++j) {
       // skip uninterestingly close routes
-      if (std::abs(i - j) < 6) {
+      if (i == j) {
         continue;
       }
 
@@ -68,17 +68,18 @@ TEST(recosting, mode_changes) {
 
       // find the percentage of the edges used
       auto leg = api.trip().routes(0).legs(0);
-      float begin_pct = 0;
-      for (const auto& edge : api.options().locations(0).path_edges()) {
-        if (leg.node(0).edge().id() == edge.graph_id()) {
-          begin_pct = 1.f - edge.percent_along();
-          break;
-        }
-      }
       float end_pct = 1;
       for (const auto& edge : api.options().locations(1).path_edges()) {
         if (std::next(leg.node().rbegin())->edge().id() == edge.graph_id()) {
           end_pct = edge.percent_along();
+          break;
+        }
+      }
+      float begin_pct = 0;
+      for (const auto& edge : api.options().locations(0).path_edges()) {
+        if (leg.node(0).edge().id() == edge.graph_id()) {
+          // handle trivial route
+          begin_pct = (leg.node_size() == 2 ? end_pct : 1.f) - edge.percent_along();
           break;
         }
       }
@@ -105,11 +106,18 @@ TEST(recosting, mode_changes) {
       // setup a callback for the recosting to tell us about the new label each made
       auto elapsed_itr = leg.node().begin();
       double length = 0;
-      sif::LabelCallback label_cb = [&elapsed_itr, &length](const sif::EdgeLabel& label) -> void {
+      uint32_t pred = baldr::kInvalidLabel;
+      sif::LabelCallback label_cb = [&elapsed_itr, &length,
+                                     &pred](const sif::EdgeLabel& label) -> void {
         length += elapsed_itr->edge().length() * 1000.0;
         EXPECT_EQ(elapsed_itr->edge().id(), label.edgeid());
+        EXPECT_EQ(pred++, label.predecessor());
+        EXPECT_EQ(static_cast<uint8_t>(elapsed_itr->edge().travel_mode()),
+                  static_cast<uint8_t>(label.mode()));
         EXPECT_NEAR(length, label.path_distance(), 2);
         EXPECT_NEAR(elapsed_itr->transition_time(), label.transition_secs(), .1);
+        // TODO: test restrictions
+        // we need to move to the next node which has the elapsed time at the end of the edge
         ++elapsed_itr;
         EXPECT_NEAR(elapsed_itr->elapsed_time(), label.cost().secs, .1);
       };

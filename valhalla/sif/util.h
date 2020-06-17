@@ -55,8 +55,10 @@ void recost_forward(baldr::GraphReader& reader,
 
   // keep grabbing edges while we get valid ids
   EdgeLabel label;
+  uint32_t predecessor = baldr::kInvalidLabel;
   Cost cost{};
   double length = 0;
+
   while (edge_id.Is_Valid()) {
     // get the previous edges node
     node = edge ? reader.nodeinfo(edge->endnode(), tile) : nullptr;
@@ -84,8 +86,8 @@ void recost_forward(baldr::GraphReader& reader,
     // update the length to the end of this edge
     length += edge->length() * edge_pct;
     // construct the label
-    label = EdgeLabel(node ? label.predecessor() + 1 : baldr::kInvalidLabel, edge_id, edge, cost,
-                      cost.cost, 0, mode, length, transition_cost, time_restrictions_TODO);
+    label = EdgeLabel(predecessor++, edge_id, edge, cost, cost.cost, 0, mode, length, transition_cost,
+                      time_restrictions_TODO);
     // hand back the label
     label_cb(label);
     // next edge
