@@ -88,7 +88,7 @@ TEST_F(SearchSideOfStreet, InputRightDisplayLeft) {
           .str();
   auto result = gurka::route(map, request);
 
-  // display_ll is on the left so overrides the input point being on the right
+  // display_ll is on the left and overrides the input point being on the right
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kDestinationLeft});
 }
@@ -123,7 +123,7 @@ TEST_F(SearchSideOfStreet, InputRightDisplayAheadLeft) {
           .str();
   auto result = gurka::route(map, request);
 
-  // point 6 is not left enough of the tangent line to be considered left side of street
+  // point 5 is left enough of the tangent line so is considered left side of street
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kDestinationLeft});
 }
@@ -159,7 +159,7 @@ TEST_F(SearchSideOfStreet, InputRightDisplayBehindLeft) {
           .str();
   auto result = gurka::route(map, request);
 
-  // point 6 is not left enough so is considered straight ahead
+  // point 7 is behind and left enough of the tangent line so is considered left side of street
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kDestinationLeft});
 }
