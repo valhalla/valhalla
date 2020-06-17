@@ -94,6 +94,7 @@
    * ADDED: Add utility functions to Signs. [#2390](https://github.com/valhalla/valhalla/pull/2390)
    * ADDED: Unified time tracking for all algorithms that support time-based graph expansion. [#2278](https://github.com/valhalla/valhalla/pull/2278)
    * ADDED: Add rail_ferry use and costing. [#2408](https://github.com/valhalla/valhalla/pull/2408)
+   * ADDED: Add addtional exit phrases. [#2421](https://github.com/valhalla/valhalla/pull/2421)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
