@@ -43,7 +43,7 @@ TEST(recosting, mode_changes) {
       {"C4E", {{"highway", "trunk"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_flat_loop", build_config);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_recost", build_config);
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
 
   // run all the permutations
