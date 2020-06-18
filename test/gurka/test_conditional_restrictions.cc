@@ -84,7 +84,8 @@ TEST_F(ConditionalRestrictions, NoRestrictionAutoNoDate) {
 }
 
 TEST_F(ConditionalRestrictions, NoRestrictionAuto) {
-  auto result = gurka::route(map, "A", "E", "auto", "2020-04-15T06:00");
+  auto result = gurka::route(map, "A", "E", "auto",
+                             {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-15T06:00"}});
   gurka::assert::osrm::expect_route(result, {"AB", "BC", "CE"});
 }
 
@@ -93,7 +94,9 @@ TEST_F(ConditionalRestrictions, RestrictionAuto) {
   EXPECT_THROW(
       {
         try {
-          auto result = gurka::route(map, "A", "E", "auto", "2020-04-02T12:00");
+          auto result =
+              gurka::route(map, "A", "E", "auto",
+                           {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T12:00"}});
         } catch (const std::exception& e) {
           // and this tests that it has the correct message
           EXPECT_STREQ("No path could be found for input", e.what());
@@ -110,7 +113,8 @@ TEST_F(ConditionalRestrictions, NoRestrictionBikeNoDate) {
 }
 
 TEST_F(ConditionalRestrictions, NoRestrictionBike) {
-  auto result = gurka::route(map, "A", "E", "bicycle", "2020-04-02T12:00");
+  auto result = gurka::route(map, "A", "E", "bicycle",
+                             {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T12:00"}});
   gurka::assert::osrm::expect_route(result, {"AD", "DE"});
   ;
 }
@@ -120,7 +124,9 @@ TEST_F(ConditionalRestrictions, RestrictionBike) {
   EXPECT_THROW(
       {
         try {
-          auto result = gurka::route(map, "A", "E", "bicycle", "2020-04-02T20:00");
+          auto result =
+              gurka::route(map, "A", "E", "bicycle",
+                           {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T20:00"}});
         } catch (const std::exception& e) {
           // and this tests that it has the correct message
           EXPECT_STREQ("No path could be found for input", e.what());
@@ -136,7 +142,8 @@ TEST_F(ConditionalRestrictions, NoRestrictionPedestrianNoDate) {
 }
 
 TEST_F(ConditionalRestrictions, NoRestrictionPedestrian) {
-  auto result = gurka::route(map, "A", "E", "pedestrian", "2020-04-02T20:00");
+  auto result = gurka::route(map, "A", "E", "pedestrian",
+                             {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T20:00"}});
   gurka::assert::osrm::expect_route(result, {"AD", "DE"});
 }
 
@@ -145,7 +152,9 @@ TEST_F(ConditionalRestrictions, RestrictionPedestrian) {
   EXPECT_THROW(
       {
         try {
-          auto result = gurka::route(map, "A", "E", "pedestrian", "2020-04-02T12:00");
+          auto result =
+              gurka::route(map, "A", "E", "pedestrian",
+                           {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T12:00"}});
         } catch (const std::exception& e) {
           // and this tests that it has the correct message
           EXPECT_STREQ("No path could be found for input", e.what());

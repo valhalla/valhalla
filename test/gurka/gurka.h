@@ -157,10 +157,11 @@ build_config(const std::string& tiledir,
   return ptree;
 }
 
-std::string build_valhalla_route_request(const map& map,
-                                         const std::vector<std::string>& waypoints,
-                                         const std::string& costing = "auto",
-                                         const std::string& datetime = "") {
+std::string
+build_valhalla_route_request(const map& map,
+                             const std::vector<std::string>& waypoints,
+                             const std::string& costing = "auto",
+                             const std::unordered_map<std::string, std::string>& options = {}) {
 
   rapidjson::Document doc;
   doc.SetObject();
@@ -179,20 +180,18 @@ std::string build_valhalla_route_request(const map& map,
   speed_types.PushBack("freeflow", allocator);
   speed_types.PushBack("constrained", allocator);
   speed_types.PushBack("predicted", allocator);
-  if (datetime == "current") {
-    dt.AddMember("type", 0, allocator);
-    dt.AddMember("value", "current", allocator);
-    speed_types.PushBack("current", allocator);
-  } else if (datetime != "") {
-    dt.AddMember("type", 1, allocator);
-    dt.AddMember("value", datetime, allocator);
+
+  // add the options using the pointer method
+  for (const auto& kv : options) {
+    if (kv.first.find("/date_time/type") != std::string::npos && kv.second == "0") {
+      speed_types.PushBack("current", allocator);
+    }
+    rapidjson::Pointer(kv.first).Set(doc, kv.second);
   }
 
   doc.AddMember("locations", locations, allocator);
   doc.AddMember("costing", costing, allocator);
-  if (datetime != "") {
-    doc.AddMember("date_time", dt, allocator);
-  }
+
   rapidjson::Value costing_options(rapidjson::kObjectType);
   rapidjson::Value co(rapidjson::kObjectType);
   co.AddMember("speed_types", speed_types, allocator);
@@ -541,7 +540,7 @@ map buildtiles(const nodelayout layout,
   detail::build_pbf(result.nodes, ways, nodes, relations, pbf_filename);
   std::cerr << "[          ] building tiles in " << result.config.get<std::string>("mjolnir.tile_dir")
             << std::endl;
-  midgard::logging::Configure({{"type", ""}});
+  // midgard::logging::Configure({{"type", ""}});
 
   mjolnir::build_tile_set(result.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
                           mjolnir::BuildStage::kValidate, false);
@@ -615,7 +614,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
 valhalla::Api route(const map& map,
                     const std::vector<std::string>& waypoints,
                     const std::string& costing,
-                    const std::string& datetime,
+                    const std::unordered_map<std::string, std::string>& options = {},
                     std::shared_ptr<valhalla::baldr::GraphReader> reader = {}) {
   if (!reader)
     reader.reset(new valhalla::baldr::GraphReader(map.config.get_child("mjolnir")));
@@ -632,7 +631,7 @@ valhalla::Api route(const map& map,
     first = false;
   };
   std::cerr << " with costing " << costing << std::endl;
-  auto request_json = detail::build_valhalla_route_request(map, waypoints, costing, datetime);
+  auto request_json = detail::build_valhalla_route_request(map, waypoints, costing, options);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -645,9 +644,9 @@ valhalla::Api route(const map& map,
                     const std::string& from,
                     const std::string& to,
                     const std::string& costing,
-                    const std::string& datetime = "",
+                    const std::unordered_map<std::string, std::string>& options = {},
                     std::shared_ptr<valhalla::baldr::GraphReader> reader = {}) {
-  return route(map, {from, to}, costing, datetime, reader);
+  return route(map, {from, to}, costing, options, reader);
 }
 
 valhalla::Api route(const map& map, const std::string& request_json) {
