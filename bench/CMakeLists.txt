@@ -24,6 +24,7 @@ macro (add_valhalla_benchmark target_file)
     VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
   target_link_libraries(${target_name} valhalla benchmark::benchmark)
   add_dependencies(benchmarks ${target_name})
+  add_dependencies(${target_name} utrecht_tiles)
   # Add a custom target running the benchmark
   add_custom_target(run-${target_name}
     COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${target_name}
