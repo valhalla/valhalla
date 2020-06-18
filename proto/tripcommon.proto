@@ -87,12 +87,13 @@ message Location {
 
   //more inputs
   optional PreferredSide preferred_side = 26 [default = either];
-  //spot for display_ll
+  optional LatLng display_ll = 27;
   optional uint32 search_cutoff = 28;
   optional uint32 street_side_tolerance = 29;
   optional uint32 route_index = 30;
   optional uint32 shape_index = 31;
   optional SearchFilter search_filter = 32;
+  optional uint32 street_side_max_distance = 33;
 }
 
 message TransitEgressInfo {
