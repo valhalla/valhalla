@@ -38,7 +38,12 @@ using namespace valhalla::odin;
 namespace {
 
 constexpr float kShortForkThreshold = 0.05f; // Kilometers
-constexpr uint32_t kOverlayEdgeMax = 5;      // Maximum number of edges to look for matching overlay
+
+// Kilometers - picked since the next rounded maneuver announcement will happen
+// in a quarter mile or 400 meters
+constexpr float kShortContinueThreshold = 0.6f;
+
+constexpr uint32_t kOverlayEdgeMax = 5; // Maximum number of edges to look for matching overlay
 
 std::vector<std::string> split(const std::string& source, char delimiter) {
   std::vector<std::string> tokens;
@@ -467,6 +472,9 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
 
         // Mark that the current maneuver contains an obvious maneuver
         curr_man->set_contains_obvious_maneuver(true);
+
+        // Disable turn channel
+        curr_man->set_turn_channel(false);
 
         LOG_TRACE("+++ Combine: obvious maneuver +++");
         next_man = CombineManeuvers(maneuvers, curr_man, next_man);
@@ -2409,7 +2417,7 @@ bool ManeuversBuilder::IsNextManeuverObvious(std::list<Maneuver>& maneuvers,
 
     // Return true if a short continue maneuver
     // and the following maneuver is not a continue
-    if (next_man->length(Options_Units_kilometers) < 0.604f) {
+    if (next_man->length(Options_Units_kilometers) < kShortContinueThreshold) {
       auto next_next_man = std::next(next_man);
       if ((next_next_man != maneuvers.end()) &&
           (next_next_man->type() != DirectionsLeg_Maneuver_Type_kContinue)) {

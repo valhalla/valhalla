@@ -21,6 +21,9 @@ namespace {
 constexpr float kShortRemainingDistanceThreshold = 0.402f; // Kilometers (~quarter mile)
 constexpr int kSignificantRoadClassThreshold = 2;          // Max lower road class delta
 
+constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
+constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
+
 const std::string& RoadClass_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kMotorway"}, {1, "kTrunk"},        {2, "kPrimary"},     {3, "kSecondary"},
@@ -1305,7 +1308,8 @@ bool EnhancedTripLeg_Node::HasNonBackwardTraversableSameNameIntersectingEdge(
     if ((xedge->prev_name_consistency() || xedge->curr_name_consistency()) &&
         xedge->IsTraversable(travel_mode)) {
       uint32_t intersecting_turn_degree = GetTurnDegree(from_heading, xedge->begin_heading());
-      bool non_backward = !((intersecting_turn_degree > 124) && (intersecting_turn_degree < 236));
+      bool non_backward = !((intersecting_turn_degree > kBackwardTurnDegreeLowerBound) &&
+                            (intersecting_turn_degree < kBackwardTurnDegreeUpperBound));
       if (non_backward) {
         return true;
       }
