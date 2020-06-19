@@ -2415,6 +2415,34 @@ bool ManeuversBuilder::IsNextManeuverObvious(std::list<Maneuver>& maneuvers,
       return false;
     }
 
+    // Process ramp forks
+    if (curr_man->ramp() && curr_man->fork() && !curr_man->contains_obvious_maneuver()) {
+      // Obvious if Keep straight and continue
+      if (curr_man->type() == DirectionsLeg_Maneuver_Type_kStayStraight) {
+        return true;
+      } else {
+        if (node) {
+          IntersectingEdgeCounts xedge_counts;
+          node->CalculateRightLeftIntersectingEdgeCounts(curr_man->end_heading(),
+                                                         curr_man->travel_mode(), xedge_counts);
+
+          // TODO: we could enhance in the future
+          // Obvious if left fork and no left edges at intersection
+          if ((curr_man->type() == DirectionsLeg_Maneuver_Type_kStayLeft) &&
+              (xedge_counts.left == 0)) {
+            return true;
+          }
+
+          // Obvious if right fork and no right edges at intersection
+          if ((curr_man->type() == DirectionsLeg_Maneuver_Type_kStayRight) &&
+              (xedge_counts.right == 0)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
     // Return true if a short continue maneuver
     // and the following maneuver is not a continue
     if (next_man->length(Options_Units_kilometers) < kShortContinueThreshold) {
