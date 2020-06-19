@@ -62,6 +62,7 @@ config = {
       'search_cutoff': 35000,
       'node_snap_tolerance': 5,
       'street_side_tolerance': 5,
+      'street_side_max_distance': 1000,
       'heading_tolerance': 60
     },
     'logging': {
@@ -308,6 +309,7 @@ help_text = {
       'search_cutoff': 'The cutoff at which we will assume the input is too far away from civilisation to be worth correlating to the nearest graph elements',
       'node_snap_tolerance': 'During edge correlation this is the tolerance used to determine whether or not to snap to the intersection rather than along the street, if the snap location is within this distance from the intersection the intersection is used instead',
       'street_side_tolerance': 'If your input coordinate is less than this tolerance away from the edge centerline then we set your side of street to none otherwise your side of street will be left or right depending on direction of travel',
+      'street_side_max_distance': 'The max distance in meters that the input coordinates or display ll can be from the edge centerline for them to be used for determining the side of street. Beyond this distance the side of street is set to none',
       'heading_tolerance': 'When a heading is supplied, this is the tolerance around that heading with which we determine whether an edges heading is similar enough to match the supplied heading'
     },
     'logging': {

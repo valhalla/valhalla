@@ -54,6 +54,9 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
 
       if (!location.has_street_side_tolerance())
         location.set_street_side_tolerance(default_street_side_tolerance);
+
+      if (!location.has_street_side_max_distance())
+        location.set_street_side_max_distance(default_street_side_max_distance);
     }
   } else if (required_exception) {
     throw *required_exception;
@@ -220,6 +223,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   default_search_cutoff = config.get<unsigned int>("loki.service_defaults.search_cutoff");
   default_street_side_tolerance =
       config.get<unsigned int>("loki.service_defaults.street_side_tolerance");
+  default_street_side_max_distance =
+      config.get<unsigned int>("loki.service_defaults.street_side_max_distance");
   default_breakage_distance = config.get<float>("meili.default.breakage_distance");
   max_gps_accuracy = config.get<float>("service_limits.trace.max_gps_accuracy");
   max_search_radius = config.get<float>("service_limits.trace.max_search_radius");
