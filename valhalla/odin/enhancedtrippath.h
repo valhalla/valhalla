@@ -592,7 +592,7 @@ public:
   bool HasIntersectingEdgeCurrNameConsistency() const;
 
   bool HasNonBackwardTraversableSameNameIntersectingEdge(uint32_t from_heading,
-                                                      const TripLeg_TravelMode travel_mode);
+                                                         const TripLeg_TravelMode travel_mode);
 
   std::unique_ptr<EnhancedTripLeg_IntersectingEdge> GetIntersectingEdge(size_t index);
 
