@@ -1546,8 +1546,11 @@ struct OSMWay {
    * @param  use_direction_on_ways  use direction on way vs relation?
    * @return  Returns vector of strings
    */
-  std::vector<std::string>
-  GetNames(const std::string& ref, const UniqueNames& name_offset_map, uint16_t& types, bool allow_alt_name, bool use_direction_on_ways) const;
+  std::vector<std::string> GetNames(const std::string& ref,
+                                    const UniqueNames& name_offset_map,
+                                    uint16_t& types,
+                                    bool allow_alt_name,
+                                    bool use_direction_on_ways) const;
 
   // OSM way Id
   uint32_t osmwayid_;
