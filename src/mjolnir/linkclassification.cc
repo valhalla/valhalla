@@ -141,8 +141,7 @@ std::pair<uint32_t, uint32_t> Reclassify(LinkTreeNode& root,
                                          sequence<Edge>& edges,
                                          sequence<OSMWay>& ways,
                                          sequence<OSMWayNode>& way_nodes,
-                                         std::queue<LinkTreeNode*>& leaves,
-                                         bool infer_turn_channels) {
+                                         std::queue<LinkTreeNode*>& leaves) {
   // Get the classification at the root node.
   std::pair<uint32_t, uint32_t> counts = std::make_pair(0, 0);
   uint32_t exit_classification = root.classification;
@@ -215,8 +214,8 @@ std::pair<uint32_t, uint32_t> Reclassify(LinkTreeNode& root,
     // nodes along the path can have more than 2 links (fork). The end nodes
     // must have a non-link edge.
     bool turn_channel = false;
-    if (infer_turn_channels && (rc > static_cast<uint32_t>(RoadClass::kTrunk) && !has_fork &&
-                                !has_exit && ends_have_non_link)) {
+    if (rc > static_cast<uint32_t>(RoadClass::kTrunk) && !has_fork &&
+                                !has_exit && ends_have_non_link) {
       turn_channel = IsTurnChannel(ways, edges, way_nodes, link_edge_indexes);
     }
 
@@ -256,8 +255,7 @@ std::pair<uint32_t, uint32_t> Reclassify(LinkTreeNode& root,
 void ReclassifyLinks(const std::string& ways_file,
                      const std::string& nodes_file,
                      const std::string& edges_file,
-                     const std::string& way_nodes_file,
-                     bool infer_turn_channels) {
+                     const std::string& way_nodes_file) {
   LOG_INFO("Reclassifying link graph edges...");
 
   // Need to capture these in the expand lambda
@@ -394,13 +392,13 @@ void ReclassifyLinks(const std::string& ways_file,
       }
 
       // Reclassify link edges within the link tree
-      auto counts = Reclassify(exit_node, edges, ways, way_nodes, leaves, infer_turn_channels);
+      auto counts = Reclassify(exit_node, edges, ways, way_nodes, leaves);
       count += counts.first;
       tc_count += counts.second;
     }
   }
-  LOG_INFO("Finished with " + std::to_string(count) + " reclassified. " +
-           " Turn channel count = " + std::to_string(tc_count));
+  LOG_INFO("Finished with potentially " + std::to_string(count) + " links reclassified " +
+           " and turn channel count = " + std::to_string(tc_count));
 }
 
 } // namespace mjolnir
