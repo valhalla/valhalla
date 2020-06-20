@@ -111,8 +111,7 @@ void ConstructEdges(const OSMData& osmdata,
                     const std::string& nodes_file,
                     const std::string& edges_file,
                     const float tilesize,
-                    const std::function<GraphId(const OSMNode&)>& graph_id_predicate,
-                    bool infer_turn_channels) {
+                    const std::function<GraphId(const OSMNode&)>& graph_id_predicate) {
   LOG_INFO("Creating graph edges from ways...");
 
   // so we can read ways and nodes and write edges
@@ -182,10 +181,6 @@ void ConstructEdges(const OSMData& osmdata,
             (way.link() && Length(edge.llindex_, way_node.node) < kMaxInternalLength);
         way_node.node.link_edge_ = way.link();
         way_node.node.non_link_edge_ = !way.link() && (way.auto_forward() || way.auto_backward());
-
-        // if this is data has turn_channels set then we need to use the flag.
-        if (!infer_turn_channels && way.turn_channel())
-          edge.attributes.turn_channel = true;
 
         // remember what edge this node will end, its complicated by the fact that we delay adding the
         // edge until the next iteration of the loop, ie once the edge becomes prev_edge
@@ -414,9 +409,18 @@ void BuildTileSet(const std::string& ways_file,
   sequence<OSMRestriction> complex_restrictions_to(complex_restriction_to_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
-  bool infer_internal_intersections =
+
+  bool reclassify_links_ = (pt.get<bool>("reclassify_links", true));
+  if (reclassify_links_)
+    LOG_INFO("Utilizing the reclassified attributes by default.");
+  else
+    LOG_INFO("Not utilizing the reclassified attributes by default.");
+
+  bool allow_alt_name_ = pt.get<bool>("data_processing.allow_alt_name", false);
+  bool use_direction_on_ways_ = pt.get<bool>("data_processing.use_direction_on_ways", false);
+  bool infer_internal_intersections_ =
       pt.get<bool>("data_processing.infer_internal_intersections", true);
-  bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
+  bool infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
 
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
@@ -480,14 +484,16 @@ void BuildTileSet(const std::string& ways_file,
       std::unordered_multimap<uint32_t, multi_polygon_type> admin_polys;
       std::unordered_map<uint32_t, bool> drive_on_right;
       std::unordered_map<uint32_t, bool> allow_intersection_names;
-
+      std::unordered_map<std::string, uint32_t> isos;
+      std::unordered_map<uint32_t, std::vector<bool>> config_overrides;
       if (admin_db_handle) {
-        admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, allow_intersection_names,
+        admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, allow_intersection_names, isos,
                                    tiling.TileBounds(id), graphtile);
         if (admin_polys.size() == 1) {
           // TODO - check if tile bounding box is entirely inside the polygon...
           tile_within_one_admin = true;
         }
+        config_overrides = GetConfigOverrides(admin_db_handle, isos);
       }
 
       bool tile_within_one_tz = false;
@@ -511,6 +517,14 @@ void BuildTileSet(const std::string& ways_file,
                                            ? nodes.end() - node_itr
                                            : std::next(tile_start)->second - tile_start->second));
 
+      uint32_t prev_admin_index = 0;
+      //Set the default config options.
+      bool reclassify_links = reclassify_links_;
+      bool allow_alt_name = allow_alt_name_;
+      bool use_direction_on_ways = use_direction_on_ways_;
+      bool infer_internal_intersections = infer_internal_intersections_;
+      bool infer_turn_channels = infer_turn_channels_;
+
       while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tile_id) {
         // amalgamate all the node duplicates into one and the edges that connect to it
         // this moves the iterator for you
@@ -529,6 +543,26 @@ void BuildTileSet(const std::string& ways_file,
         uint32_t admin_index = (tile_within_one_admin)
                                    ? admin_polys.begin()->first
                                    : GetMultiPolyId(admin_polys, node_ll, graphtile);
+
+        if (config_overrides.size() && prev_admin_index != admin_index) {
+          //Set the default config options.
+          reclassify_links = reclassify_links_;
+          allow_alt_name = allow_alt_name_;
+          use_direction_on_ways = use_direction_on_ways_;
+          infer_internal_intersections = infer_internal_intersections_;
+          infer_turn_channels = infer_turn_channels_;
+
+          auto config = config_overrides.find(admin_index);
+          if (config != config_overrides.end()) {
+            auto settings = config->second;
+            allow_alt_name = settings.at(static_cast<uint32_t>(ConfigCols::kAllowAltName));
+            reclassify_links = settings.at(static_cast<uint32_t>(ConfigCols::kReclassifyLinks));
+            use_direction_on_ways = settings.at(static_cast<uint32_t>(ConfigCols::kUseDirectionOnWays));
+            infer_internal_intersections = settings.at(static_cast<uint32_t>(ConfigCols::kInferInternalIntersections));
+            infer_turn_channels = settings.at(static_cast<uint32_t>(ConfigCols::kInferTurnChannels));
+          }
+          prev_admin_index = admin_index;
+        }
 
         // Look for potential duplicates
         // CheckForDuplicates(nodeid, node, edgelengths, nodes, edges, osmdata.ways, stats);
@@ -691,7 +725,7 @@ void BuildTileSet(const std::string& ways_file,
             auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
 
             uint16_t types = 0;
-            auto names = w.GetNames(ref, osmdata.name_offset_map, types);
+            auto names = w.GetNames(ref, osmdata.name_offset_map, types, allow_alt_name, use_direction_on_ways);
 
             // Update bike_network type
             if (bike_network) {
@@ -737,9 +771,11 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           // Add a directed edge and get a reference to it
+          // For now we always reclassify ferry links.  TODO should we change this logic?
           DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward,
                                  static_cast<uint32_t>(std::get<0>(found->second) + .5), speed,
-                                 truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
+                                 truck_speed, use,
+                                 ((reclassify_links || edge.attributes.reclass_ferry) ? static_cast<RoadClass>(edge.attributes.importance) :  static_cast<RoadClass>(edge.attributes.rc_importance)),
                                  n, has_signal, restrictions, bike_network,
                                  edge.attributes.reclass_ferry);
           graphtile.directededges().emplace_back(de);
@@ -757,7 +793,9 @@ void BuildTileSet(const std::string& ways_file,
           directededge.set_curvature(std::get<1>(found->second));
 
           // Set use to ramp or turn channel
-          if (edge.attributes.turn_channel) {
+          if (infer_turn_channels && edge.attributes.turn_channel) {
+            directededge.set_use(Use::kTurnChannel);
+          } else if (!infer_turn_channels && w.turn_channel()) {
             directededge.set_use(Use::kTurnChannel);
           } else if (edge.attributes.link) {
             directededge.set_use(Use::kRamp);
@@ -1169,8 +1207,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                  tl->second.tiles.TileSize(),
                  [&level](const OSMNode& node) {
                    return TileHierarchy::GetGraphId({node.lng_, node.lat_}, level);
-                 },
-                 pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
+                 });
 
   // Line up the nodes and then re-map the edges that the edges to them
   auto tiles = SortGraph(nodes_file, edges_file, level);
@@ -1178,12 +1215,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   // Reclassify links (ramps). Cannot do this when building tiles since the
   // edge list needs to be modified
   DataQuality stats;
-  if (pt.get<bool>("mjolnir.reclassify_links", true)) {
-    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file,
-                    pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
-  } else {
-    LOG_WARN("Not reclassifying link graph edges");
-  }
+  ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file);
 
   // Reclassify ferry connection edges - use the highway classification cutoff
   baldr::RoadClass rc = baldr::RoadClass::kPrimary;
@@ -1205,6 +1237,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
 
 // Get highway refs from relations
 std::string GraphBuilder::GetRef(const std::string& way_ref, const std::string& relation_ref) {
+
   bool found = false;
   std::string refs;
   std::vector<std::string> way_refs = GetTagTokens(way_ref);     // US 51;I 57

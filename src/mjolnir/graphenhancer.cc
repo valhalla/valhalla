@@ -1440,12 +1440,12 @@ void enhance(const boost::property_tree::ptree& pt,
   sequence<OSMAccess> access_tags(access_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
-  bool infer_internal_intersections =
+  bool infer_internal_intersections_ =
       pt.get<bool>("data_processing.infer_internal_intersections", true);
 
-  bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
+  bool infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
 
-  bool apply_country_overrides = pt.get<bool>("data_processing.apply_country_overrides", true);
+  bool apply_country_overrides_ = pt.get<bool>("data_processing.apply_country_overrides", true);
 
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
@@ -1530,6 +1530,7 @@ void enhance(const boost::property_tree::ptree& pt,
       // while processing turn lanes.
       std::vector<uint32_t> heading(ntrans);
       nodeinfo.set_local_edge_count(ntrans);
+
       for (uint32_t j = 0; j < ntrans; j++) {
         DirectedEdge& directededge = tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
@@ -1587,6 +1588,11 @@ void enhance(const boost::property_tree::ptree& pt,
       }
     }
 
+    uint32_t prev_admin_index = 0;
+    bool apply_country_overrides = apply_country_overrides_;
+    bool infer_internal_intersections = infer_internal_intersections_;
+    bool infer_turn_channels = infer_turn_channels_;
+
     // Second pass - add admin information and edge transition information.
     PointLL base_ll = tilebuilder.header()->base_ll();
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
@@ -1599,14 +1605,41 @@ void enhance(const boost::property_tree::ptree& pt,
       nodeinfo.set_density(density);
 
       uint32_t admin_index = nodeinfo.admin_index();
+      std::unordered_map<std::string, uint32_t> isos;
+
       // Set the country code
       std::string country_code = "";
       if (admin_index != 0) {
         country_code = tilebuilder.admins_builder(admin_index).country_iso();
+        if (prev_admin_index != admin_index) {
+          isos.emplace(country_code, admin_index);
+          prev_admin_index = admin_index;
+        }
+
       } else {
         stats.no_country_found++;
       }
 
+      // only process if different admin and admin db is in use
+      if (isos.size() && admin_db_handle) {
+        //Set the default config options.
+        apply_country_overrides = apply_country_overrides_;
+        infer_internal_intersections = infer_internal_intersections_;
+        infer_turn_channels = infer_turn_channels_;
+
+        std::unordered_map<uint32_t, std::vector<bool>> config_overrides;
+        config_overrides = GetConfigOverrides(admin_db_handle, isos);
+
+        if (config_overrides.size()) {
+          auto config = config_overrides.find(admin_index);
+          if (config != config_overrides.end()) {
+            auto settings = config->second;
+            apply_country_overrides = settings.at(static_cast<uint32_t>(ConfigCols::kApplyCountryOverrides));
+            infer_internal_intersections = settings.at(static_cast<uint32_t>(ConfigCols::kInferInternalIntersections));
+            infer_turn_channels = settings.at(static_cast<uint32_t>(ConfigCols::kInferTurnChannels));
+          }
+        }
+      }
       // Go through directed edges and "enhance" directed edge attributes
       uint32_t driveable_count = 0;
       const DirectedEdge* edges = tilebuilder.directededges(nodeinfo.edge_index());
