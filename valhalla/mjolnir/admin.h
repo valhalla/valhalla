@@ -97,19 +97,18 @@ void GetData(sqlite3* db_handle,
  * @param  configs          unordered multimap of country specific configs.
  */
 void GetConfigData(sqlite3* db_handle,
-             sqlite3_stmt* stmt,
-             const std::string& sql,
-             const std::unordered_map<std::string, uint32_t>& isos,
-             std::unordered_map<uint32_t, std::vector<bool>>& configs);
+                   sqlite3_stmt* stmt,
+                   const std::string& sql,
+                   const std::unordered_map<std::string, uint32_t>& isos,
+                   std::unordered_map<uint32_t, std::vector<bool>>& configs);
 /*
  *
  * Get the country overrides that exist for the admins that intersect with the tile bounding box.
  * @param  db_handle        sqlite3 db handle
  * @param  isos             unordered multimap of admin isos
-*/
+ */
 std::unordered_map<uint32_t, std::vector<bool>>
-GetConfigOverrides(sqlite3* db_handle,
-             const std::unordered_map<std::string, uint32_t>& isos);
+GetConfigOverrides(sqlite3* db_handle, const std::unordered_map<std::string, uint32_t>& isos);
 
 /**
  * Get the admin polys that intersect with the tile bounding box.

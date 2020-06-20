@@ -84,7 +84,7 @@ struct Edge {
   static Edge make_edge(const uint32_t wayindex, const uint32_t llindex, const OSMWay& way) {
     Edge e{wayindex, llindex};
     e.attributes.llcount = 1;
-    //rc_importance is the original roadclass and importance may be updated or reclassified
+    // rc_importance is the original roadclass and importance may be updated or reclassified
     e.attributes.importance = e.attributes.rc_importance = static_cast<uint32_t>(way.road_class());
     if (way.use() == baldr::Use::kEmergencyAccess) {
       // Temporary until all access values are set

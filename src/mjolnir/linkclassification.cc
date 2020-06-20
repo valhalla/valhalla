@@ -214,8 +214,8 @@ std::pair<uint32_t, uint32_t> Reclassify(LinkTreeNode& root,
     // nodes along the path can have more than 2 links (fork). The end nodes
     // must have a non-link edge.
     bool turn_channel = false;
-    if (rc > static_cast<uint32_t>(RoadClass::kTrunk) && !has_fork &&
-                                !has_exit && ends_have_non_link) {
+    if (rc > static_cast<uint32_t>(RoadClass::kTrunk) && !has_fork && !has_exit &&
+        ends_have_non_link) {
       turn_channel = IsTurnChannel(ways, edges, way_nodes, link_edge_indexes);
     }
 

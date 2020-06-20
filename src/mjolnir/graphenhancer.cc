@@ -1622,7 +1622,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
       // only process if different admin and admin db is in use
       if (isos.size() && admin_db_handle) {
-        //Set the default config options.
+        // Set the default config options.
         apply_country_overrides = apply_country_overrides_;
         infer_internal_intersections = infer_internal_intersections_;
         infer_turn_channels = infer_turn_channels_;
@@ -1634,8 +1634,10 @@ void enhance(const boost::property_tree::ptree& pt,
           auto config = config_overrides.find(admin_index);
           if (config != config_overrides.end()) {
             auto settings = config->second;
-            apply_country_overrides = settings.at(static_cast<uint32_t>(ConfigCols::kApplyCountryOverrides));
-            infer_internal_intersections = settings.at(static_cast<uint32_t>(ConfigCols::kInferInternalIntersections));
+            apply_country_overrides =
+                settings.at(static_cast<uint32_t>(ConfigCols::kApplyCountryOverrides));
+            infer_internal_intersections =
+                settings.at(static_cast<uint32_t>(ConfigCols::kInferInternalIntersections));
             infer_turn_channels = settings.at(static_cast<uint32_t>(ConfigCols::kInferTurnChannels));
           }
         }

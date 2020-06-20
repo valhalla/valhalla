@@ -202,10 +202,10 @@ void GetData(sqlite3* db_handle,
 }
 
 void GetConfigData(sqlite3* db_handle,
-             sqlite3_stmt* stmt,
-             const std::string& sql,
-             const std::unordered_map<std::string, uint32_t>& isos,
-             std::unordered_map<uint32_t, std::vector<bool>>& configs){
+                   sqlite3_stmt* stmt,
+                   const std::string& sql,
+                   const std::unordered_map<std::string, uint32_t>& isos,
+                   std::unordered_map<uint32_t, std::vector<bool>>& configs) {
   uint32_t result = 0;
   std::vector<bool> overrides;
   std::string iso_code;
@@ -238,9 +238,11 @@ void GetConfigData(sqlite3* db_handle,
       overrides.emplace_back(sqlite3_column_int(stmt, (int)ConfigCols::kApplyCountryOverrides + 1));
     }
 
-    if (sqlite3_column_type(stmt, (int)ConfigCols::kInferInternalIntersections + 1) == SQLITE_INTEGER) {
+    if (sqlite3_column_type(stmt, (int)ConfigCols::kInferInternalIntersections + 1) ==
+        SQLITE_INTEGER) {
       // infer_internal_intersections
-      overrides.emplace_back(sqlite3_column_int(stmt, (int)ConfigCols::kInferInternalIntersections + 1));
+      overrides.emplace_back(
+          sqlite3_column_int(stmt, (int)ConfigCols::kInferInternalIntersections + 1));
     }
 
     if (sqlite3_column_type(stmt, (int)ConfigCols::kInferTurnChannels + 1) == SQLITE_INTEGER) {
@@ -265,7 +267,7 @@ void GetConfigData(sqlite3* db_handle,
 
     auto iso = isos.find(iso_code);
     if (iso != isos.end()) {
-      configs.emplace(iso->second,overrides);
+      configs.emplace(iso->second, overrides);
     }
     overrides.clear();
     result = sqlite3_step(stmt);
@@ -279,8 +281,7 @@ void GetConfigData(sqlite3* db_handle,
 
 // Get the country overrides that exist for the admins that intersect with the tile bounding box.
 std::unordered_map<uint32_t, std::vector<bool>>
-GetConfigOverrides(sqlite3* db_handle,
-                   const std::unordered_map<std::string, uint32_t>& isos) {
+GetConfigOverrides(sqlite3* db_handle, const std::unordered_map<std::string, uint32_t>& isos) {
 
   std::unordered_map<uint32_t, std::vector<bool>> configs;
   if (!db_handle) {

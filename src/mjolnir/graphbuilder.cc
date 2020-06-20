@@ -518,7 +518,7 @@ void BuildTileSet(const std::string& ways_file,
                                            : std::next(tile_start)->second - tile_start->second));
 
       uint32_t prev_admin_index = 0;
-      //Set the default config options.
+      // Set the default config options.
       bool reclassify_links = reclassify_links_;
       bool allow_alt_name = allow_alt_name_;
       bool use_direction_on_ways = use_direction_on_ways_;
@@ -545,7 +545,7 @@ void BuildTileSet(const std::string& ways_file,
                                    : GetMultiPolyId(admin_polys, node_ll, graphtile);
 
         if (config_overrides.size() && prev_admin_index != admin_index) {
-          //Set the default config options.
+          // Set the default config options.
           reclassify_links = reclassify_links_;
           allow_alt_name = allow_alt_name_;
           use_direction_on_ways = use_direction_on_ways_;
@@ -557,8 +557,10 @@ void BuildTileSet(const std::string& ways_file,
             auto settings = config->second;
             allow_alt_name = settings.at(static_cast<uint32_t>(ConfigCols::kAllowAltName));
             reclassify_links = settings.at(static_cast<uint32_t>(ConfigCols::kReclassifyLinks));
-            use_direction_on_ways = settings.at(static_cast<uint32_t>(ConfigCols::kUseDirectionOnWays));
-            infer_internal_intersections = settings.at(static_cast<uint32_t>(ConfigCols::kInferInternalIntersections));
+            use_direction_on_ways =
+                settings.at(static_cast<uint32_t>(ConfigCols::kUseDirectionOnWays));
+            infer_internal_intersections =
+                settings.at(static_cast<uint32_t>(ConfigCols::kInferInternalIntersections));
             infer_turn_channels = settings.at(static_cast<uint32_t>(ConfigCols::kInferTurnChannels));
           }
           prev_admin_index = admin_index;
@@ -725,7 +727,8 @@ void BuildTileSet(const std::string& ways_file,
             auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
 
             uint16_t types = 0;
-            auto names = w.GetNames(ref, osmdata.name_offset_map, types, allow_alt_name, use_direction_on_ways);
+            auto names = w.GetNames(ref, osmdata.name_offset_map, types, allow_alt_name,
+                                    use_direction_on_ways);
 
             // Update bike_network type
             if (bike_network) {
@@ -775,7 +778,9 @@ void BuildTileSet(const std::string& ways_file,
           DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward,
                                  static_cast<uint32_t>(std::get<0>(found->second) + .5), speed,
                                  truck_speed, use,
-                                 ((reclassify_links || edge.attributes.reclass_ferry) ? static_cast<RoadClass>(edge.attributes.importance) :  static_cast<RoadClass>(edge.attributes.rc_importance)),
+                                 ((reclassify_links || edge.attributes.reclass_ferry)
+                                      ? static_cast<RoadClass>(edge.attributes.importance)
+                                      : static_cast<RoadClass>(edge.attributes.rc_importance)),
                                  n, has_signal, restrictions, bike_network,
                                  edge.attributes.reclass_ferry);
           graphtile.directededges().emplace_back(de);
@@ -1204,8 +1209,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
 
   // Make the edges and nodes in the graph
   ConstructEdges(osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                 tl->second.tiles.TileSize(),
-                 [&level](const OSMNode& node) {
+                 tl->second.tiles.TileSize(), [&level](const OSMNode& node) {
                    return TileHierarchy::GetGraphId({node.lng_, node.lat_}, level);
                  });
 

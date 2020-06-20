@@ -858,13 +858,13 @@ public:
       }
 
       else if (tag.first == "ref" && !tag.second.empty()) {
-          w.set_ref_index(osmdata_.name_offset_map.index(tag.second));
+        w.set_ref_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "int_ref" && !tag.second.empty()) {
-          w.set_int_ref_index(osmdata_.name_offset_map.index(tag.second));
+        w.set_int_ref_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "direction" && !tag.second.empty()) {
-          w.set_direction_index(osmdata_.name_offset_map.index(tag.second));
+        w.set_direction_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "int_direction" && !tag.second.empty()) {
-          w.set_int_direction_index(osmdata_.name_offset_map.index(tag.second));
+        w.set_int_direction_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "sac_scale") {
         std::string value = tag.second;
         boost::algorithm::to_lower(value);
