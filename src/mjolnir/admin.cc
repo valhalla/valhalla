@@ -132,7 +132,8 @@ void GetData(sqlite3* db_handle,
              GraphTileBuilder& tilebuilder,
              std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
              std::unordered_map<uint32_t, bool>& drive_on_right,
-             std::unordered_map<uint32_t, bool>& allow_intersection_names) {
+             std::unordered_map<uint32_t, bool>& allow_intersection_names,
+             std::unordered_map<std::string, uint32_t>& isos) {
   uint32_t result = 0;
   bool dor = true;
   bool intersection_name = false;
@@ -189,6 +190,7 @@ void GetData(sqlite3* db_handle,
     polys.emplace(index, multi_poly);
     drive_on_right.emplace(index, dor);
     allow_intersection_names.emplace(index, intersection_name);
+    isos.emplace(country_iso, index);
 
     result = sqlite3_step(stmt);
   }
@@ -199,11 +201,112 @@ void GetData(sqlite3* db_handle,
   }
 }
 
+void GetConfigData(sqlite3* db_handle,
+             sqlite3_stmt* stmt,
+             const std::string& sql,
+             const std::unordered_map<std::string, uint32_t>& isos,
+             std::unordered_map<uint32_t, std::vector<bool>>& configs){
+  uint32_t result = 0;
+  std::vector<bool> overrides;
+  std::string iso_code;
+
+  uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+
+  if (ret == SQLITE_OK || ret == SQLITE_ERROR) {
+    result = sqlite3_step(stmt);
+
+    if (result == SQLITE_DONE) {
+      sqlite3_finalize(stmt);
+      stmt = 0;
+      return;
+    }
+  }
+
+  while (result == SQLITE_ROW) {
+
+    if (sqlite3_column_type(stmt, 0) == SQLITE_TEXT) {
+      iso_code = (char*)sqlite3_column_text(stmt, 0);
+    }
+
+    if (sqlite3_column_type(stmt, (int)ConfigCols::kAllowAltName + 1) == SQLITE_INTEGER) {
+      // allow_alt_name
+      overrides.emplace_back(sqlite3_column_int(stmt, (int)ConfigCols::kAllowAltName + 1));
+    }
+
+    if (sqlite3_column_type(stmt, (int)ConfigCols::kApplyCountryOverrides + 1) == SQLITE_INTEGER) {
+      // apply_country_overrides
+      overrides.emplace_back(sqlite3_column_int(stmt, (int)ConfigCols::kApplyCountryOverrides + 1));
+    }
+
+    if (sqlite3_column_type(stmt, (int)ConfigCols::kInferInternalIntersections + 1) == SQLITE_INTEGER) {
+      // infer_internal_intersections
+      overrides.emplace_back(sqlite3_column_int(stmt, (int)ConfigCols::kInferInternalIntersections + 1));
+    }
+
+    if (sqlite3_column_type(stmt, (int)ConfigCols::kInferTurnChannels + 1) == SQLITE_INTEGER) {
+      // infer_turn_channels
+      overrides.emplace_back(sqlite3_column_int(stmt, (int)ConfigCols::kInferTurnChannels + 1));
+    }
+
+    if (sqlite3_column_type(stmt, (int)ConfigCols::kReclassifyLinks + 1) == SQLITE_INTEGER) {
+      // reclassify_links
+      overrides.emplace_back(sqlite3_column_int(stmt, (int)ConfigCols::kReclassifyLinks + 1));
+    }
+
+    if (sqlite3_column_type(stmt, (int)ConfigCols::kUseAdminDb + 1) == SQLITE_INTEGER) {
+      // use_admin_db
+      overrides.emplace_back(sqlite3_column_int(stmt, (int)ConfigCols::kUseAdminDb + 1));
+    }
+
+    if (sqlite3_column_type(stmt, (int)ConfigCols::kUseDirectionOnWays + 1) == SQLITE_INTEGER) {
+      // use_direction_on_ways
+      overrides.emplace_back(sqlite3_column_int(stmt, (int)ConfigCols::kUseDirectionOnWays + 1));
+    }
+
+    auto iso = isos.find(iso_code);
+    if (iso != isos.end()) {
+      configs.emplace(iso->second,overrides);
+    }
+    overrides.clear();
+    result = sqlite3_step(stmt);
+  }
+
+  if (stmt) {
+    sqlite3_finalize(stmt);
+    stmt = 0;
+  }
+}
+
+// Get the country overrides that exist for the admins that intersect with the tile bounding box.
+std::unordered_map<uint32_t, std::vector<bool>>
+GetConfigOverrides(sqlite3* db_handle,
+                   const std::unordered_map<std::string, uint32_t>& isos) {
+
+  std::unordered_map<uint32_t, std::vector<bool>> configs;
+  if (!db_handle) {
+    return configs;
+  }
+
+  sqlite3_stmt* stmt = 0;
+  // state query
+  std::string sql = "SELECT iso_code, allow_alt_name, apply_country_overrides, ";
+  sql += "infer_internal_intersections, infer_turn_channels, reclassify_links, ";
+  sql += "use_admin_db, use_direction_on_ways from data_processing;";
+  GetConfigData(db_handle, stmt, sql, isos, configs);
+
+  if (stmt) { // just in case something bad happened.
+    sqlite3_finalize(stmt);
+    stmt = 0;
+  }
+  return configs;
+}
+
 // Get the admin polys that intersect with the tile bounding box.
 std::unordered_multimap<uint32_t, multi_polygon_type>
 GetAdminInfo(sqlite3* db_handle,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              std::unordered_map<uint32_t, bool>& allow_intersection_names,
+             std::unordered_map<std::string, uint32_t>& isos,
              const AABB2<PointLL>& aabb,
              GraphTileBuilder& tilebuilder) {
   std::unordered_multimap<uint32_t, multi_polygon_type> polys;
@@ -225,7 +328,7 @@ GetAdminInfo(sqlite3* db_handle,
   sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + "));";
-  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names);
+  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names, isos);
 
   // country query
   sql =
@@ -237,7 +340,7 @@ GetAdminInfo(sqlite3* db_handle,
   sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + "));";
-  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names);
+  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names, isos);
 
   if (stmt) { // just in case something bad happened.
     sqlite3_finalize(stmt);

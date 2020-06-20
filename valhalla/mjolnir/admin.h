@@ -25,6 +25,16 @@ typedef boost::geometry::model::d2::point_xy<double> point_type;
 typedef boost::geometry::model::polygon<point_type> polygon_type;
 typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
 
+enum class ConfigCols : uint8_t {
+  kAllowAltName = 0,
+  kApplyCountryOverrides = 1,
+  kInferInternalIntersections = 2,
+  kInferTurnChannels = 3,
+  kReclassifyLinks = 4,
+  kUseAdminDb = 5,
+  kUseDirectionOnWays = 6
+};
+
 /**
  * Get the dbhandle of a sqlite db.  Used for timezones and admins DBs.
  * @param  database   db file location.
@@ -73,7 +83,33 @@ void GetData(sqlite3* db_handle,
              const std::string& sql,
              GraphTileBuilder& tilebuilder,
              std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
+             std::unordered_map<std::string, uint32_t>& isos,
              std::unordered_map<uint32_t, bool>& drive_on_right);
+
+/*
+ *
+ * Get the country overrides that exist for the admins that intersect with the tile bounding box
+ * from the spatialite db given an SQL statement
+ * @param  db_handle        sqlite3 db handle
+ * @param  stmt             prepared statement object
+ * @param  sql              sql commend to run.
+ * @param  isos             unordered multimap of admin isos
+ * @param  configs          unordered multimap of country specific configs.
+ */
+void GetConfigData(sqlite3* db_handle,
+             sqlite3_stmt* stmt,
+             const std::string& sql,
+             const std::unordered_map<std::string, uint32_t>& isos,
+             std::unordered_map<uint32_t, std::vector<bool>>& configs);
+/*
+ *
+ * Get the country overrides that exist for the admins that intersect with the tile bounding box.
+ * @param  db_handle        sqlite3 db handle
+ * @param  isos             unordered multimap of admin isos
+*/
+std::unordered_map<uint32_t, std::vector<bool>>
+GetConfigOverrides(sqlite3* db_handle,
+             const std::unordered_map<std::string, uint32_t>& isos);
 
 /**
  * Get the admin polys that intersect with the tile bounding box.
@@ -82,6 +118,7 @@ void GetData(sqlite3* db_handle,
  * road
  * @param  allow_intersection_names   unordered map that indicates if we call out intersections
  * names for this country
+ * @param  isos             unordered multimap of admin isos
  * @param  aabb             bb of the tile
  * @param  tilebuilder      Graph tile builder
  */
@@ -89,6 +126,7 @@ std::unordered_multimap<uint32_t, multi_polygon_type>
 GetAdminInfo(sqlite3* db_handle,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              std::unordered_map<uint32_t, bool>& allow_intersection_names,
+             std::unordered_map<std::string, uint32_t>& isos,
              const AABB2<PointLL>& aabb,
              GraphTileBuilder& tilebuilder);
 
