@@ -96,14 +96,98 @@ void OSMWay::set_forward_lanes(const uint32_t forward_lanes) {
 
 // Get the names for the edge info based on the road class.
 std::vector<std::string>
-OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uint16_t& types) const {
+OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uint16_t& types, bool allow_alt_name, bool use_direction_on_ways) const {
 
   uint16_t location = 0;
   types = 0;
 
+  std::string way_ref, way_int_ref, direction, int_direction;
+
+  if (ref_index_ != 0)
+    way_ref = name_offset_map.name(ref_index_);
+
+  if (direction_index_ != 0)
+    direction = name_offset_map.name(direction_index_);
+
+  if (use_direction_on_ways && !way_ref.empty()) {
+    if (!direction.empty()) {
+      std::vector<std::string> refs = GetTagTokens(way_ref);
+      std::vector<std::string> directions = GetTagTokens(direction);
+
+      std::string tmp_ref;
+      if (refs.size() == directions.size()) {
+        for (uint32_t i = 0; i < refs.size(); i++) {
+          if (!tmp_ref.empty()) {
+            tmp_ref += ";";
+          }
+          if (!directions.at(i).empty())
+            tmp_ref += refs.at(i) + " " + directions.at(i);
+          else
+            tmp_ref += refs.at(i);
+        }
+        way_ref = tmp_ref;
+      }
+    }
+  }
+
+  if (int_ref_index_ != 0)
+    way_int_ref = name_offset_map.name(int_ref_index_);
+
+  if (int_direction_index_ != 0)
+    int_direction = name_offset_map.name(int_direction_index_);
+
+  if (use_direction_on_ways && !way_int_ref.empty()) {
+    if (!int_direction.empty()) {
+      std::vector<std::string> int_refs = GetTagTokens(way_int_ref);
+      std::vector<std::string> int_directions = GetTagTokens(int_direction);
+
+      std::string tmp_ref;
+      if (int_refs.size() == int_directions.size()) {
+        for (uint32_t i = 0; i < int_refs.size(); i++) {
+          if (!tmp_ref.empty()) {
+            tmp_ref += ";";
+          }
+          if (!int_directions.at(i).empty())
+            tmp_ref += int_refs.at(i) + " " + int_directions.at(i);
+          else
+            tmp_ref += int_refs.at(i);
+        }
+        way_int_ref = tmp_ref;
+      }
+    }
+  }
+
+  // add int_refs to the end of the refs for now.  makes sure that we don't add dups.
+  if (use_direction_on_ways && !way_int_ref.empty()) {
+    std::string tmp = way_ref;
+
+    std::vector<std::string> rs = GetTagTokens(tmp);
+    std::vector<std::string> is = GetTagTokens(way_int_ref);
+    bool bFound = false;
+
+    for (auto& i : is) {
+      for (auto& r : rs) {
+        if (i == r) {
+          bFound = true;
+          break;
+        }
+      }
+      if (!bFound) {
+        if (!tmp.empty()) {
+          tmp += ";";
+        }
+        tmp += i;
+      }
+      bFound = false;
+    }
+    if (!tmp.empty()) {
+      way_ref = tmp;
+    }
+  }
+
   std::vector<std::string> names;
   // Process motorway and trunk refs
-  if ((ref_index_ != 0 || !ref.empty()) &&
+  if ((!way_ref.empty() || !ref.empty()) &&
       ((static_cast<RoadClass>(road_class_) == RoadClass::kMotorway) ||
        (static_cast<RoadClass>(road_class_) == RoadClass::kTrunk))) {
     std::vector<std::string> tokens;
@@ -111,7 +195,7 @@ OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uin
     if (!ref.empty()) {
       tokens = GetTagTokens(ref); // use updated refs from relations.
     } else {
-      tokens = GetTagTokens(name_offset_map.name(ref_index_));
+      tokens = GetTagTokens(way_ref);
     }
 
     for (const auto& t : tokens) {
@@ -131,13 +215,13 @@ OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uin
   }
 
   // Process non limited access refs
-  if (ref_index_ != 0 && (static_cast<RoadClass>(road_class_) != RoadClass::kMotorway) &&
+  if (!way_ref.empty() && (static_cast<RoadClass>(road_class_) != RoadClass::kMotorway) &&
       (static_cast<RoadClass>(road_class_) != RoadClass::kTrunk)) {
     std::vector<std::string> tokens;
     if (!ref.empty()) {
       tokens = GetTagTokens(ref); // use updated refs from relations.
     } else {
-      tokens = GetTagTokens(name_offset_map.name(ref_index_));
+      tokens = GetTagTokens(way_ref);
     }
 
     for (const auto& t : tokens) {
@@ -149,7 +233,7 @@ OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uin
   }
 
   // Process alt_name
-  if (alt_name_index_ != 0 && alt_name_index_ != name_index_) {
+  if (allow_alt_name && alt_name_index_ != 0 && alt_name_index_ != name_index_) {
     names.emplace_back(name_offset_map.name(alt_name_index_));
     location++;
   }

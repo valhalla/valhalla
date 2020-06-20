@@ -129,6 +129,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the index for the direction
+   * @param  idx  Index for the direction.
+   */
+  void set_direction_index(const uint32_t idx) {
+    direction_index_ = idx;
+  }
+
+  /**
+   * Get the direction index.
+   * @return  Returns the index for the direction.
+   */
+  uint32_t direction_index() const {
+    return direction_index_;
+  }
+
+  /**
    * Sets the index for int ret
    * @param  idx  Index for the international reference.
    */
@@ -142,6 +158,22 @@ struct OSMWay {
    */
   uint32_t int_ref_index() const {
     return int_ref_index_;
+  }
+
+  /**
+   * Sets the index for the int direction
+   * @param  idx  Index for the int direction.
+   */
+  void set_int_direction_index(const uint32_t idx) {
+    int_direction_index_ = idx;
+  }
+
+  /**
+   * Get the int direction index.
+   * @return  Returns the index for the int direction.
+   */
+  uint32_t int_direction_index() const {
+    return int_direction_index_;
   }
 
   /**
@@ -1507,12 +1539,15 @@ struct OSMWay {
 
   /**
    * Get the names for the edge info based on the road class.
-   * @param  ref              updated refs from relations.
-   * @param  name_offset_map  map of unique names and refs from ways.
+   * @param  ref                    updated refs from relations.
+   * @param  name_offset_map        map of unique names and refs from ways.
+   * @param  types                  is ref or name
+   * @param  allow_alt_name         support alt name?
+   * @param  use_direction_on_ways  use direction on way vs relation?
    * @return  Returns vector of strings
    */
   std::vector<std::string>
-  GetNames(const std::string& ref, const UniqueNames& name_offset_map, uint16_t& types) const;
+  GetNames(const std::string& ref, const UniqueNames& name_offset_map, uint16_t& types, bool allow_alt_name, bool use_direction_on_ways) const;
 
   // OSM way Id
   uint32_t osmwayid_;
@@ -1520,6 +1555,10 @@ struct OSMWay {
   // Reference name (highway numbers)
   uint32_t ref_index_;
   uint32_t int_ref_index_;
+
+  // Used when direction is set on the way vs relation
+  uint32_t direction_index_;
+  uint32_t int_direction_index_;
 
   // Names
   uint32_t name_index_;
