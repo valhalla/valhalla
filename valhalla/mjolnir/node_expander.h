@@ -34,6 +34,7 @@ struct Edge {
   struct EdgeAttributes {
     uint64_t llcount : 16;
     uint64_t importance : 3;
+    uint64_t rc_importance : 3;
     uint64_t driveableforward : 1;
     uint64_t driveablereverse : 1;
     uint64_t traffic_signal : 1;
@@ -55,7 +56,7 @@ struct Edge {
     uint64_t way_end : 1;       // True if last edge of way
     uint64_t way_next : 1;      // True if next edge after the first edge of the way
     uint64_t way_prior : 1;     // True if prior edge after the last edge of the way
-    uint64_t spare : 30;
+    uint64_t spare : 27;
   };
   EdgeAttributes attributes;
 
@@ -83,7 +84,8 @@ struct Edge {
   static Edge make_edge(const uint32_t wayindex, const uint32_t llindex, const OSMWay& way) {
     Edge e{wayindex, llindex};
     e.attributes.llcount = 1;
-    e.attributes.importance = static_cast<uint32_t>(way.road_class());
+    //rc_importance is the original roadclass and importance may be updated or reclassified
+    e.attributes.importance = e.attributes.rc_importance = static_cast<uint32_t>(way.road_class());
     if (way.use() == baldr::Use::kEmergencyAccess) {
       // Temporary until all access values are set
       e.attributes.driveableforward = false;
