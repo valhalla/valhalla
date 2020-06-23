@@ -45,7 +45,7 @@ public:
 
   bool Allowed(const DirectedEdge* edge,
                const EdgeLabel& pred,
-               const GraphTile*& tile,
+               const GraphTile* tile,
                const GraphId& edgeid,
                const uint64_t current_time,
                const uint32_t tz_index,
@@ -63,7 +63,7 @@ public:
   bool AllowedReverse(const DirectedEdge* edge,
                       const EdgeLabel& pred,
                       const DirectedEdge* opp_edge,
-                      const GraphTile*& tile,
+                      const GraphTile* tile,
                       const GraphId& opp_edgeid,
                       const uint64_t current_time,
                       const uint32_t tz_index,
