@@ -319,6 +319,63 @@ TEST(UtilMidgard, TestTrimPolyline) {
   EXPECT_EQ(length(clip.begin(), clip.begin()), 0.0f) << "incorrect length when iterators are equal";
 }
 
+TEST(UtilMidgard, TestTrimPolylineWithDoubles) {
+  using Point = valhalla::midgard::PointXY<double>;
+
+  std::vector<Point> line{{0, 0}, {0, 0}, {20, 20}, {31, 1}, {31, 1}, {12, 23}, {7, 2}, {7, 2}};
+
+  auto clip = trim_polyline(line.begin(), line.end(), 0.f, 1.f);
+  EXPECT_EQ(length(clip.begin(), clip.end()), length(line.begin(), line.end()))
+      << "Should not clip anything if range is [0, 1]";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.f, 0.1f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.1f, 1e-5)
+      << "10% portion should be clipped";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.5f, 1.f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.5f, 1e-5)
+      << "50% portion should be clipped";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.5f, 0.7f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.2f, 1e-5)
+      << "0.2 portion should be clipped";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.65f, 0.7f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.05f, 1e-5)
+      << "5% portion should be clipped";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.4999f, 0.5f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.0001f, 1e-5)
+      << "0.1% portion should be clipped";
+
+  EXPECT_TRUE(trim_polyline(line.begin(), line.end(), 0.65f, 0.5f).empty())
+      << "nothing should be clipped since [0.65, 0.5]";
+
+  EXPECT_TRUE(trim_polyline(line.begin(), line.end(), -2.f, -1.f).empty())
+      << "nothing should be clipped since negative [-2, -1]";
+
+  EXPECT_EQ(trim_polyline(line.begin(), line.end(), 0.f, 0.f).back(), Point(0, 0))
+      << "nothing should be clipped since empty set [0, 0]";
+
+  EXPECT_EQ(trim_polyline(line.begin(), line.end(), -1.f, 0.f).back(), Point(0, 0))
+      << "nothing should be clipped since out of range [-1, 0]";
+
+  EXPECT_EQ(trim_polyline(line.begin(), line.end(), 1.f, 1.f).front(), Point(7, 2))
+      << "nothing should be clipped since [1, 1]";
+
+  EXPECT_EQ(trim_polyline(line.begin(), line.end(), 1.f, 2.f).front(), Point(7, 2))
+      << "nothing should be clipped since out of range [1, 2]";
+
+  EXPECT_TRUE(trim_polyline(line.begin(), line.end(), 1.001f, 2.f).empty())
+      << "nothing should be clipped since out of range [1.001, 2]";
+
+  EXPECT_TRUE(trim_polyline(line.begin(), line.end(), 0.5f, 0.1f).empty())
+      << "nothing should be clipped since empty set [0.5, 0.1]";
+
+  // Make sure length returns 0 when iterator is equal
+  EXPECT_EQ(length(clip.begin(), clip.begin()), 0.0f) << "incorrect length when iterators are equal";
+}
+
 TEST(UtilMidgard, TestTrimFront) {
   std::vector<Point2> pts = {{-1.0f, -1.0f}, {-1.0f, 1.0f}, {0.0f, 1.0f},
                              {1.0f, 1.0f},   {4.0f, 5.0f},  {5.0f, 5.0f}};

@@ -17,6 +17,7 @@
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>
+#include <valhalla/midgard/util_core.h>
 
 namespace valhalla {
 namespace midgard {
@@ -128,11 +129,12 @@ inline float normalize(const float num, const float den) {
 // Compute the length of the polyline represented by a set of lat,lng points.
 // Avoids having to copy the points into a polyline, polyline should really just extend
 // A container class like vector or list
-template <class container_t> float length(const container_t& pts) {
+template <class container_t>
+typename container_t::value_type::first_type length(const container_t& pts) {
   if (pts.size() < 2) {
     return 0.0f;
   }
-  float length = 0.0f;
+  typename container_t::value_type::first_type length = 0.0f;
   for (auto p = std::next(pts.cbegin()); p != pts.end(); ++p) {
     length += p->Distance(*std::prev(p));
   }
@@ -145,12 +147,13 @@ template <class container_t> float length(const container_t& pts) {
  * @param  end    Ending point (iterator) within the polyline container.
  * @return Returns the length of the polyline.
  */
-template <typename iterator_t> float length(const iterator_t& begin, const iterator_t& end) {
+template <typename iterator_t>
+typename iterator_t::value_type::first_type length(const iterator_t& begin, const iterator_t& end) {
   if (begin == end) {
-    return 0.0f;
+    return 0.0;
   }
 
-  float length = 0.0f;
+  typename iterator_t::value_type::first_type length = 0.0f;
   for (auto vertex = std::next(begin); vertex != end; vertex++) {
     length += std::prev(vertex)->Distance(*vertex);
   }
@@ -179,8 +182,11 @@ trim_polyline(const iterator_t& begin, const iterator_t& end, float source, floa
   source = std::min(std::max(source, 0.f), 1.f);
   target = std::min(std::max(target, 0.f), 1.f);
 
-  float total_length = length(begin, end), prev_vertex_length = 0.f,
-        source_length = total_length * source, target_length = total_length * target;
+  // Use precision from point type being iterated over
+  typename iterator_t::value_type::first_type total_length = length(begin, end),
+                                              prev_vertex_length = 0.f,
+                                              source_length = total_length * source,
+                                              target_length = total_length * target;
 
   // An state indicating if the position of current vertex is larger
   // than source and smaller than target
@@ -301,33 +307,6 @@ template <class T1, class T2> inline T2 ToSet(const T1& inset) {
     outset.emplace(item.second.template get_value<typename T2::value_type>());
   }
   return outset;
-}
-
-/**
- * equals with an epsilon for approximation
- * @param a first operand
- * @param b second operand
- * @param epsilon to help with approximate equality
- */
-template <class T> bool equal(const T a, const T b, const T epsilon = static_cast<T>(.00001)) {
-  if (epsilon < static_cast<T>(0)) {
-    throw std::logic_error("Using a negative epsilon is not supported");
-  }
-  T diff = a - b;
-  // if its non-negative it better be less than epsilon, if its negative then it better be bigger
-  // than epsilon
-  bool negative = diff < static_cast<T>(0);
-  return (!negative && diff <= epsilon) || (negative && diff >= -epsilon);
-}
-
-template <class T> bool similar(const T a, const T b, const double similarity = .99) {
-  if (a == 0 || b == 0) {
-    return a == b;
-  }
-  if ((a < 0) != (b < 0)) {
-    return false;
-  }
-  return (double)std::min(a, b) / (double)std::max(a, b) >= similarity;
 }
 
 /**

@@ -13,21 +13,22 @@ using namespace valhalla::midgard;
 
 namespace {
 
-void TryGeneralizeAndLength(Polyline2<Point2>& pl, const float& gen, const float& res) {
+template <typename PrecisionT>
+void TryGeneralizeAndLength(Polyline2<PointXY<PrecisionT>>& pl, const float& gen, const float& res) {
   uint32_t size = pl.Generalize(gen);
 
-  std::vector<Point2> pts = pl.pts();
+  std::vector<PointXY<PrecisionT>> pts = pl.pts();
 
   EXPECT_EQ(pl.pts().size(), 2);
-  EXPECT_EQ(pts[0], Point2(25.0f, 25.0f));
-  EXPECT_EQ(pts[1], Point2(50.0f, 100.0f));
+  EXPECT_EQ(pts[0], PointXY<PrecisionT>(25.0, 25.0));
+  EXPECT_EQ(pts[1], PointXY<PrecisionT>(50.0, 100.0));
 
-  Polyline2<Point2> pl2;
+  Polyline2<PointXY<PrecisionT>> pl2;
   pl2 = pl.GeneralizedPolyline(gen);
 
   EXPECT_EQ(pl2.pts().size(), 2);
-  EXPECT_EQ(pl2.pts().at(0), Point2(25.0f, 25.0f));
-  EXPECT_EQ(pl2.pts().at(1), Point2(50.0f, 100.0f));
+  EXPECT_EQ(pl2.pts().at(0), PointXY<PrecisionT>(25.0, 25.0));
+  EXPECT_EQ(pl2.pts().at(1), PointXY<PrecisionT>(50.0, 100.0));
 
   // TODO: there was a bug in test and it never ran
   // TODO: currently it doesn't compare up to kEpsilon precision
@@ -38,6 +39,14 @@ TEST(Polyline2, TestGeneralizeAndLength) {
   std::vector<Point2> pts = {Point2(25.0f, 25.0f), Point2(50.0f, 50.0f), Point2(25.0f, 75.0f),
                              Point2(50.0f, 100.0f)};
   Polyline2<Point2> pl(pts);
+  TryGeneralizeAndLength(pl, 100.0f, 79.0569f);
+}
+
+TEST(Polyline2, TestGeneralizeAndLengthWithDoubles) {
+  using Point2d = PointXY<double>;
+  std::vector<Point2d> pts = {Point2d(25.0f, 25.0f), Point2d(50.0f, 50.0f), Point2d(25.0f, 75.0f),
+                              Point2d(50.0f, 100.0f)};
+  Polyline2<Point2d> pl(pts);
   TryGeneralizeAndLength(pl, 100.0f, 79.0569f);
 }
 
