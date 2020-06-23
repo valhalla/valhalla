@@ -21,7 +21,7 @@
 #include <valhalla/thor/edgestatus.h>
 
 #include <memory>
-#include <third_party/rapidjson/include/rapidjson/document.h>
+#include <rapidjson/document.h>
 #include <unordered_map>
 
 namespace valhalla {
