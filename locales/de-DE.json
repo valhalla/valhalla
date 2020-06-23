@@ -2095,7 +2095,7 @@
     "verbal_multi_cue": {
       "phrases": {
         "0": "<CURRENT_VERBAL_CUE> Dann <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> Dann, in<LENGTH>, <NEXT_VERBAL_CUE>"
+        "1": "<CURRENT_VERBAL_CUE> Dann, in <LENGTH>, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
         "<KILOMETERS> Kilometern",
