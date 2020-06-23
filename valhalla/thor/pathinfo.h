@@ -28,7 +28,6 @@ struct PathInfo {
            const baldr::GraphId& edge,
            const uint32_t tripid,
            const float c,
-           const bool time_restriction,
            const int restriction_idx,
            const float tcs = 0)
       : mode(m), elapsed_time(t), trip_id(tripid), edgeid(edge), elapsed_cost(c),
