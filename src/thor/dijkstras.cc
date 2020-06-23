@@ -141,19 +141,17 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
 
     // Check if the edge is allowed or if a restriction occurs
     EdgeStatus* todo = nullptr;
-    bool has_time_restrictions = false;
     int restriction_idx = -1;
     if (offset_time.valid) {
       // With date time we check time dependent restrictions and access
       if (!costing_->Allowed(directededge, pred, tile, edgeid, offset_time.local_time,
-                             nodeinfo->timezone(), has_time_restrictions, restriction_idx) ||
+                             nodeinfo->timezone(), restriction_idx) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true, todo,
                                offset_time.local_time, nodeinfo->timezone())) {
         continue;
       }
     } else {
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions,
-                             restriction_idx) ||
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true)) {
         continue;
       }
@@ -175,8 +173,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions,
-                   restriction_idx);
+        lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
       }
       continue;
     }
@@ -189,7 +186,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, newcost.cost, 0.0f,
-                               mode_, transition_cost, false, has_time_restrictions, restriction_idx);
+                               mode_, transition_cost, false, restriction_idx);
     adjacencylist_->add(idx);
   }
 
@@ -301,20 +298,18 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
 
     // Check if the edge is allowed or if a restriction occurs
     EdgeStatus* todo = nullptr;
-    bool has_time_restrictions = false;
     int restriction_idx = -1;
     if (offset_time.valid) {
       // With date time we check time dependent restrictions and access
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id,
-                                    offset_time.local_time, nodeinfo->timezone(),
-                                    has_time_restrictions, restriction_idx) ||
+                                    offset_time.local_time, nodeinfo->timezone(), restriction_idx) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false, todo,
                                offset_time.local_time, nodeinfo->timezone())) {
         continue;
       }
     } else {
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id, 0, 0,
-                                    has_time_restrictions, restriction_idx) ||
+                                    restriction_idx) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false)) {
         continue;
       }
@@ -336,8 +331,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions,
-                   restriction_idx);
+        lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
       }
       continue;
     }
@@ -346,8 +340,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, opp_edge_id, directededge, newcost, newcost.cost,
-                               0.0f, mode_, transition_cost, false, has_time_restrictions,
-                               restriction_idx);
+                               0.0f, mode_, transition_cost, false, restriction_idx);
     adjacencylist_->add(idx);
   }
 
@@ -519,12 +512,10 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     // costing - assume if you get a transit edge you walked to the transit stop
     uint32_t tripid = 0;
     uint32_t blockid = 0;
-    bool has_time_restrictions = false;
     int restriction_idx = -1;
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
-      if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions,
-                       restriction_idx)) {
+      if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx)) {
         continue;
       }
 
@@ -602,7 +593,6 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
       // is allowed. If mode is pedestrian this will validate walking
       // distance has not been exceeded.
       if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0, 0,
-                                                               has_time_restrictions,
                                                                restriction_idx)) {
         continue;
       }
@@ -650,12 +640,9 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     }
 
     // Make the label in advance, we may not end up using it but we need it for the expansion decision
-    MMEdgeLabel edge_label{pred_idx,       edgeid,           directededge,
-                           newcost,        newcost.cost,     0.0f,
-                           mode_,          walking_distance, tripid,
-                           prior_stop,     blockid,          operator_id,
-                           has_transit,    transition_cost,  has_time_restrictions,
-                           restriction_idx};
+    MMEdgeLabel edge_label{pred_idx, edgeid,      directededge,     newcost,         newcost.cost,
+                           0.0f,     mode_,       walking_distance, tripid,          prior_stop,
+                           blockid,  operator_id, has_transit,      transition_cost, restriction_idx};
 
     // See if this is even worth expanding
     auto maybe_expand = ShouldExpand(graphreader, edge_label, InfoRoutingType::multi_modal);
@@ -674,7 +661,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid, transition_cost,
-                   has_time_restrictions, restriction_idx);
+                   restriction_idx);
       }
       continue;
     }
@@ -816,10 +803,9 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // Construct the edge label. Set the predecessor edge index to invalid
       // to indicate the origin of the path.
       uint32_t idx = bdedgelabels_.size();
-      const bool has_time_restrictions = false;
       int restriction_idx = -1;
       bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, cost.cost,
-                                 0., mode_, Cost{}, false, has_time_restrictions, restriction_idx);
+                                 0., mode_, Cost{}, false, restriction_idx);
       // Set the origin flag
       bdedgelabels_.back().set_origin();
 
@@ -883,10 +869,9 @@ void Dijkstras::SetDestinationLocations(
       // to invalid to indicate the origin of the path. Make sure the opposing
       // edge (edgeid) is set.
       uint32_t idx = bdedgelabels_.size();
-      const bool has_time_restrictions = false;
       int restriction_idx = -1;
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, cost.cost,
-                                 0., mode_, Cost{}, false, has_time_restrictions, restriction_idx);
+                                 0., mode_, Cost{}, false, restriction_idx);
       adjacencylist_->add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id));
     }
@@ -946,13 +931,11 @@ void Dijkstras::SetOriginLocationsMultiModal(
       uint32_t idx = mmedgelabels_.size();
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
       // TODO Do we care about time restrictions at origin edges?
-      bool has_time_restrictions = false;
       int restriction_idx = -1;
       // TODO How about transition cost?
       auto transition_cost = Cost{};
       MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, 0,
-                             GraphId(), 0, 0, false, transition_cost, has_time_restrictions,
-                             restriction_idx);
+                             GraphId(), 0, 0, false, transition_cost, restriction_idx);
 
       // Set the origin flag
       edge_label.set_origin();

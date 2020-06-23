@@ -168,7 +168,6 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
   return (!pred_edgelabel.edgeid().Is_Valid() && costing->GetEdgeFilter()(edge) != 0.f) ||
          edgeid == pred_edgelabel.edgeid() ||
          costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0,
-                          i_dont_care_about_time_restrictions_here,
                           i_dont_care_about_restriction_idx_here);
 }
 

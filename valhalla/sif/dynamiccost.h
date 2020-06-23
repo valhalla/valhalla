@@ -154,7 +154,6 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       bool& time_restricted,
                        int& restriction_idx) const = 0;
 
   /**
@@ -182,7 +181,6 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              bool& has_time_restrictions,
                               int& restriction_idx) const = 0;
 
   /**
@@ -434,7 +432,6 @@ public:
                                    const baldr::GraphId& edgeid,
                                    const uint64_t current_time,
                                    const uint32_t tz_index,
-                                   bool& has_time_restrictions,
                                    int& restriction_idx) const {
     if (edge->access_restriction()) {
       const std::vector<baldr::AccessRestriction>& restrictions =
@@ -448,7 +445,6 @@ public:
         baldr::AccessType access_type = restriction.type();
         if (access_type == baldr::AccessType::kTimedAllowed ||
             access_type == baldr::AccessType::kTimedDenied) {
-          has_time_restrictions = true;
           restriction_idx = i;
 
           if (access_type == baldr::AccessType::kTimedAllowed)

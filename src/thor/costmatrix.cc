@@ -308,10 +308,8 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
 
       // Skip this edge if no access is allowed (based on costing method)
       // or if a complex restriction prevents transition onto this edge.
-      bool has_time_restrictions = false;
       int restriction_idx = -1;
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions,
-                             restriction_idx) ||
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx) ||
           costing_->Restricted(directededge, pred, edgelabels, tile, edgeid, true)) {
         continue;
       }
@@ -327,8 +325,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
         if (newcost.cost < lab.cost().cost) {
           adj->decrease(es->index(), newcost.cost);
           lab.Update(pred_idx, newcost, newcost.cost, tc,
-                     pred.path_distance() + directededge->length(), has_time_restrictions,
-                     restriction_idx);
+                     pred.path_distance() + directededge->length(), restriction_idx);
         }
         continue;
       }
@@ -347,7 +344,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, mode_, tc,
                               pred.path_distance() + directededge->length(),
                               (pred.not_thru_pruning() || !directededge->not_thru()),
-                              has_time_restrictions, restriction_idx);
+                              restriction_idx);
       adj->add(idx);
     }
 
@@ -583,10 +580,9 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       // Skip this edge if no access is allowed (based on costing method)
       // or if a complex restriction prevents transition onto this edge.
       const DirectedEdge* opp_edge = t2->directededge(oppedge);
-      bool has_time_restrictions = false;
       int restriction_idx = -1;
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0,
-                                    has_time_restrictions, restriction_idx) ||
+                                    restriction_idx) ||
           costing_->Restricted(directededge, pred, edgelabels, tile, edgeid, false)) {
         continue;
       }
@@ -604,8 +600,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
         if (newcost.cost < lab.cost().cost) {
           adj->decrease(es->index(), newcost.cost);
           lab.Update(pred_idx, newcost, newcost.cost, tc,
-                     pred.path_distance() + directededge->length(), has_time_restrictions,
-                     restriction_idx);
+                     pred.path_distance() + directededge->length(), restriction_idx);
         }
         continue;
       }
@@ -616,7 +611,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, mode_, tc,
                               pred.path_distance() + directededge->length(),
                               (pred.not_thru_pruning() || !directededge->not_thru()),
-                              has_time_restrictions, restriction_idx);
+                              restriction_idx);
       adj->add(idx);
 
       // Add to the list of targets that have reached this edge
@@ -726,7 +721,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
       BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d, false,
-                             false, -1);
+                             -1);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
@@ -813,7 +808,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
       BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_, ec, d,
-                             false, false, -1);
+                             false, -1);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).

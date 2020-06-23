@@ -111,7 +111,6 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       bool& time_restricted,
                        int& restriction_idx) const;
 
   /**
@@ -138,7 +137,6 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              bool& has_time_restrictions,
                               int& restriction_idx) const;
 
   /**
@@ -539,7 +537,6 @@ bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
                           const baldr::GraphId& edgeid,
                           const uint64_t current_time,
                           const uint32_t tz_index,
-                          bool& has_time_restrictions,
                           int& restriction_idx) const {
   if (flow_mask_ & kCurrentFlowMask) {
     if (tile->IsClosedDueToTraffic(edgeid))
@@ -575,7 +572,6 @@ bool TransitCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                  const baldr::GraphId& opp_edgeid,
                                  const uint64_t current_time,
                                  const uint32_t tz_index,
-                                 bool& has_time_restrictions,
                                  int& restriction_idx) const {
   // This method should not be called since time based routes do not use
   // bidirectional A*

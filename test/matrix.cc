@@ -67,7 +67,7 @@ public:
                       const GraphId& opp_edgeid,
                       const uint64_t current_time,
                       const uint32_t tz_index,
-                      bool& has_time_restrictions) const {
+                      int& restriction_idx) const {
     if (!(opp_edge->forwardaccess() & kAutoAccess) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||

@@ -200,10 +200,9 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
 
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
-  bool has_time_restrictions = false;
   int restriction_idx = -1;
   if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, oppedge, time_info.local_time,
-                                nodeinfo->timezone(), has_time_restrictions, restriction_idx) ||
+                                nodeinfo->timezone(), restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_rev_, tile, meta.edge_id, false, &edgestatus_,
                            time_info.local_time, nodeinfo->timezone())) {
     return false;
@@ -252,8 +251,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       adjacencylist_->decrease(meta.edge_status->index(), newsortcost);
-      lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions,
-                 restriction_idx);
+      lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
     }
     return true;
   }
@@ -276,8 +274,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   uint32_t idx = edgelabels_rev_.size();
   edgelabels_rev_.emplace_back(pred_idx, meta.edge_id, oppedge, meta.edge, newcost, sortcost, dist,
                                mode_, transition_cost,
-                               (pred.not_thru_pruning() || !meta.edge->not_thru()),
-                               has_time_restrictions, restriction_idx);
+                               (pred.not_thru_pruning() || !meta.edge->not_thru()), restriction_idx);
   adjacencylist_->add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
 
@@ -512,7 +509,7 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
     uint32_t idx = edgelabels_rev_.size();
     edgelabels_rev_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
-                                 dist, mode_, c, false, false, -1);
+                                 dist, mode_, c, false, -1);
     adjacencylist_->add(idx);
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
@@ -590,8 +587,7 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const u
     }
     cost += previous_transition_cost;
     path.emplace_back(edgelabel.mode(), cost.secs, edgelabel.opp_edgeid(), 0, cost.cost,
-                      edgelabel.has_time_restriction(), edgelabel.restriction_idx(),
-                      previous_transition_cost.secs);
+                      edgelabel.restriction_idx(), previous_transition_cost.secs);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
