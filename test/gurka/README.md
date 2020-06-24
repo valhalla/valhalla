@@ -189,6 +189,8 @@ void expect_instructions_at_maneuver_index(
 void expect_path_length(const valhalla::Api& result,
                         const float expected_length_km,
                         const float error_margin = 0);
+
+void expect_path(const valhalla::Api& result, const std::vector<std::string>& expected_names);
 ```
 
 ## `gurka::assert::osrm`
