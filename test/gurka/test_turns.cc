@@ -19,6 +19,7 @@ TEST(Standalone, TurnStraight) {
   auto result = gurka::route(map, "A", "C", "auto");
 
   gurka::assert::osrm::expect_steps(result, {"ABC"});
+  gurka::assert::raw::expect_path(result, {"ABC", "ABC"});
   gurka::assert::raw::expect_path_length(result, 1.0, .001);
 }
 /*************************************************************/
@@ -62,6 +63,7 @@ TEST_F(Turns, TurnRight) {
   auto result = gurka::route(map_1, "A", "D", "auto");
 
   gurka::assert::osrm::expect_steps(result, {"ABC", "BD"});
+  gurka::assert::raw::expect_path(result, {"ABC", "BD"});
 
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRight,
@@ -74,6 +76,7 @@ TEST_F(Turns, TurnLeft) {
   auto result = gurka::route(map_2, "C", "D", "auto");
 
   gurka::assert::osrm::expect_steps(result, {"FEBC", "FDB"});
+  gurka::assert::raw::expect_path(result, {"FEBC", "FDB"});
 
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kLeft,

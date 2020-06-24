@@ -145,6 +145,7 @@ TEST(Traffic, BasicUpdates) {
     {
       auto result = gurka::route(map, "A", "C", "auto", "current", clean_reader);
       gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
+      gurka::assert::raw::expect_path(result, {"AB", "BC"});
       gurka::assert::raw::expect_eta(result, 361.5);
     }
     // Make some updates to the traffic .tar file.
@@ -157,6 +158,7 @@ TEST(Traffic, BasicUpdates) {
     {
       auto result = gurka::route(map, "A", "C", "auto", "current", clean_reader);
       gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
+      gurka::assert::raw::expect_path(result, {"AB", "BC"});
       gurka::assert::raw::expect_eta(result, 145.5);
     }
     // Next, set the speed to the highest possible to ensure nothing breaks
@@ -164,6 +166,7 @@ TEST(Traffic, BasicUpdates) {
     {
       auto result = gurka::route(map, "A", "C", "auto", "current", clean_reader);
       gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
+      gurka::assert::raw::expect_path(result, {"AB", "BC"});
       gurka::assert::raw::expect_eta(result, 15.617648);
     }
     // Back to previous speed
@@ -173,6 +176,7 @@ TEST(Traffic, BasicUpdates) {
     {
       auto result = gurka::route(map, "A", "C", "auto", "", clean_reader);
       gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
+      gurka::assert::raw::expect_path(result, {"AB", "BC"});
       gurka::assert::raw::expect_eta(result, 361.5);
     }
     // Now do another route with the same (not restarted) actor to see if
@@ -180,11 +184,13 @@ TEST(Traffic, BasicUpdates) {
     {
       auto result = gurka::route(map, "B", "D", "auto", "current", clean_reader);
       gurka::assert::osrm::expect_steps(result, {"BC", "CE", "DE"});
+      gurka::assert::raw::expect_path(result, {"BC", "CE", "DE"});
       gurka::assert::raw::expect_eta(result, 172.8, 0.01);
     }
     {
       auto result = gurka::route(map, "D", "B", "auto", "current", clean_reader);
       gurka::assert::osrm::expect_steps(result, {"BD"});
+      gurka::assert::raw::expect_path(result, {"BD"});
       gurka::assert::raw::expect_eta(result, 28.8, 0.01);
     }
     // Repeat the B->D route, but this time with no timestamp - this should
@@ -192,6 +198,7 @@ TEST(Traffic, BasicUpdates) {
     {
       auto result = gurka::route(map, "B", "D", "auto", "", clean_reader);
       gurka::assert::osrm::expect_steps(result, {"BD"});
+      gurka::assert::raw::expect_path(result, {"BD"});
       gurka::assert::raw::expect_eta(result, 72);
     }
   }

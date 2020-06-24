@@ -38,12 +38,15 @@ gurka::map SimpleRestrictions::map = {};
 TEST_F(SimpleRestrictions, ForceDetour) {
   auto result = gurka::route(map, "C", "F", "auto");
   gurka::assert::osrm::expect_steps(result, {"BC", "AB", "ADG", "DEF"});
+  gurka::assert::raw::expect_path(result, {"BC", "AB", "ADG", "DEF", "DEF"});
 }
 TEST_F(SimpleRestrictions, NoDetourWhenReversed) {
   auto result = gurka::route(map, "F", "C", "auto");
   gurka::assert::osrm::expect_steps(result, {"DEF", "BE", "BC"});
+  gurka::assert::raw::expect_path(result, {"DEF", "BE", "BC"});
 }
 TEST_F(SimpleRestrictions, NoDetourFromDifferentStart) {
   auto result = gurka::route(map, "1", "F", "auto");
   gurka::assert::osrm::expect_steps(result, {"AB", "BE", "DEF"});
+  gurka::assert::raw::expect_path(result, {"AB", "BE", "DEF"});
 }

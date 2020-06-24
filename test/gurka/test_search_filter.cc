@@ -50,6 +50,7 @@ TEST_F(SearchFilter, Unfiltered) {
 
   // should take the shortest path
   gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
+  gurka::assert::raw::expect_path(result, {"AB", "BC"});
 }
 TEST_F(SearchFilter, Heading) {
   auto from = "1";
@@ -65,6 +66,7 @@ TEST_F(SearchFilter, Heading) {
 
   // should take the long way around starting southbound due to heading at origin
   gurka::assert::osrm::expect_steps(result, {"AB", "AD", "CD", "BC"});
+  gurka::assert::raw::expect_path(result, {"AB", "AD", "CD", "BC"});
 }
 TEST_F(SearchFilter, PreferredSide) {
   auto from = "1";
@@ -80,6 +82,7 @@ TEST_F(SearchFilter, PreferredSide) {
 
   // should take the long way around starting southbound due to preferred side at destination
   gurka::assert::osrm::expect_steps(result, {"AB", "AD", "CD", "BC"});
+  gurka::assert::raw::expect_path(result, {"AB", "AD", "CD", "BC"});
 }
 TEST_F(SearchFilter, MaxRoadClass) {
   auto from = "1";
@@ -94,6 +97,7 @@ TEST_F(SearchFilter, MaxRoadClass) {
           .str();
   auto result = gurka::route(map, request);
   gurka::assert::osrm::expect_steps(result, {"AD", "AB", "BC"});
+  gurka::assert::raw::expect_path(result, {"AD", "AB", "BC"});
 }
 TEST_F(SearchFilter, MinRoadClass) {
   auto from = "1";
@@ -107,6 +111,7 @@ TEST_F(SearchFilter, MinRoadClass) {
           .str();
   auto result = gurka::route(map, request);
   gurka::assert::osrm::expect_steps(result, {"AB"});
+  gurka::assert::raw::expect_path(result, {"AB"});
 }
 TEST_F(SearchFilter, ExcludeTunnel) {
   auto from = "2";
@@ -118,6 +123,7 @@ TEST_F(SearchFilter, ExcludeTunnel) {
           .str();
   auto result_unfiltered = gurka::route(map, request_unfiltered);
   gurka::assert::osrm::expect_steps(result_unfiltered, {"BC", "AB"});
+  gurka::assert::raw::expect_path(result_unfiltered, {"BC", "AB"});
 
   const std::string& request_filtered =
       (boost::format(
@@ -127,6 +133,7 @@ TEST_F(SearchFilter, ExcludeTunnel) {
           .str();
   auto result_filtered = gurka::route(map, request_filtered);
   gurka::assert::osrm::expect_steps(result_filtered, {"AD", "AB"});
+  gurka::assert::raw::expect_path(result_filtered, {"AD", "AB"});
 }
 TEST_F(SearchFilter, ExcludeBridge) {
   auto from = "6";
@@ -138,6 +145,7 @@ TEST_F(SearchFilter, ExcludeBridge) {
           .str();
   auto result_unfiltered = gurka::route(map, request_unfiltered);
   gurka::assert::osrm::expect_steps(result_unfiltered, {"EF", "DE", "CD"});
+  gurka::assert::raw::expect_path(result_unfiltered, {"EF", "DE", "CD"});
 
   const std::string& request_filtered =
       (boost::format(
@@ -147,6 +155,7 @@ TEST_F(SearchFilter, ExcludeBridge) {
           .str();
   auto result_filtered = gurka::route(map, request_filtered);
   gurka::assert::osrm::expect_steps(result_filtered, {"AD", "CD"});
+  gurka::assert::raw::expect_path(result_filtered, {"AD", "CD"});
 }
 TEST_F(SearchFilter, ExcludeRamp) {
   auto from = "5";
@@ -158,6 +167,7 @@ TEST_F(SearchFilter, ExcludeRamp) {
           .str();
   auto result_unfiltered = gurka::route(map, request_unfiltered);
   gurka::assert::osrm::expect_steps(result_unfiltered, {"AF", "AB", "BC"});
+  gurka::assert::raw::expect_path(result_unfiltered, {"AF", "AB", "BC"});
 
   const std::string& request_filtered =
       (boost::format(
@@ -168,4 +178,5 @@ TEST_F(SearchFilter, ExcludeRamp) {
   auto result_filtered = gurka::route(map, request_filtered);
 
   gurka::assert::osrm::expect_steps(result_filtered, {"AD", "AB", "BC"});
+  gurka::assert::raw::expect_path(result_filtered, {"AD", "AB", "BC"});
 }
