@@ -216,7 +216,7 @@ TEST(TimeTracking, routes) {
   for (const auto& route : api.trip().routes()) {
     for (const auto& leg : route.legs()) {
       for (const auto& node : leg.node()) {
-        times.push_back(node.elapsed_time());
+        times.push_back(node.cost().elapsed_cost().seconds());
       }
     }
   }
@@ -237,7 +237,7 @@ TEST(TimeTracking, routes) {
   for (const auto& route : api.trip().routes()) {
     for (const auto& leg : route.legs()) {
       for (const auto& node : leg.node()) {
-        times.push_back(node.elapsed_time());
+        times.push_back(node.cost().elapsed_cost().seconds());
       }
     }
   }
@@ -258,7 +258,7 @@ TEST(TimeTracking, routes) {
   for (const auto& route : api.trip().routes()) {
     for (const auto& leg : route.legs()) {
       for (const auto& node : leg.node()) {
-        times.push_back(node.elapsed_time());
+        times.push_back(node.cost().elapsed_cost().seconds());
       }
     }
   }

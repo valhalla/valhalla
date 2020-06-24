@@ -36,7 +36,7 @@ public:
                       const boost::property_tree::ptree& config);
 
   // we use the difference between the original two measurements and the distance along the route
-  // network to compute a transition cost of a given candidate, turn_cost may be added if
+  // network to compute a transition cost of a given candidate, transition_time may be added if
   // the turn_penalty_table_ is enabled, one could make use of time in this computation but
   // this is not advisable as traffic at the time may make readings unreliable and time information
   // is not strictly required to perform the matching

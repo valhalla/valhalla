@@ -602,8 +602,7 @@ int main(int argc, char* argv[]) {
   auto t0 = std::chrono::high_resolution_clock::now();
 
   // Construct costing
-  CostFactory<DynamicCost> factory;
-  factory.RegisterStandardCostingModels();
+  CostFactory<> factory;
   // Get the costing method - pass the JSON configuration
   TravelMode mode;
   std::shared_ptr<DynamicCost> mode_costing[4];

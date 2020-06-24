@@ -328,23 +328,12 @@ public:
   }
 
   /**
-   * Get the transition cost in seconds. This is used in the bidirectional A*
+   * Get the transition cost. This is used in the bidirectional A*
    * to determine the cost at the connection. But is also used for general stats
-   * @return  Returns the transition cost (including penalties) in seconds.
+   * @return  Returns the transition cost (including penalties).
    */
-  float transition_cost() const {
-    return transition_cost_.cost;
-  }
-
-  /**
-   * Get the transition cost in seconds. This is used in the bidirectional A*
-   * reverse path search to allow the recovery of the true elapsed time along
-   * the path. This is needed since the transition cost is applied at a
-   * different node than the forward search.
-   * @return  Returns the transition cost (without penalties) in seconds.
-   */
-  float transition_secs() const {
-    return transition_cost_.secs;
+  sif::Cost transition_cost() const {
+    return transition_cost_;
   }
 
 protected:

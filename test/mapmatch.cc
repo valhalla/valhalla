@@ -183,8 +183,8 @@ void compare_results(const valhalla::Api& expected, const valhalla::Api& result)
     for (int l = 0; l < route.legs_size(); ++l) {
       const auto& leg = route.legs(l);
 
-      auto expected_seconds = leg.node().rbegin()->elapsed_time();
-      auto answer_seconds = leg_answer->node().rbegin()->elapsed_time();
+      auto expected_seconds = leg.node().rbegin()->cost().elapsed_cost().seconds();
+      auto answer_seconds = leg_answer->node().rbegin()->cost().elapsed_cost().seconds();
       ASSERT_NEAR(expected_seconds, answer_seconds, .1)
           << "Expected leg with elapsed time " << expected_seconds << " but got " << answer_seconds;
 
@@ -1042,8 +1042,8 @@ TEST(Mapmatch, test_leg_duration_trimming) {
       EXPECT_EQ(rlegs.size(), mlegs.size()) << "Number of legs differs";
       printf("Route %zu\n", i);
       for (size_t j = 0; j < rlegs.size(); ++j) {
-        auto rtime = rlegs.Get(j).node().rbegin()->elapsed_time();
-        auto mtime = mlegs.Get(j).node().rbegin()->elapsed_time();
+        auto rtime = rlegs.Get(j).node().rbegin()->cost().elapsed_cost().seconds();
+        auto mtime = mlegs.Get(j).node().rbegin()->cost().elapsed_cost().seconds();
         printf("r: %.2f %s\n", rtime, rlegs.Get(j).shape().c_str());
         printf("m: %.2f %s\n", mtime, mlegs.Get(j).shape().c_str());
         EXPECT_NEAR(rtime, mtime, 0.1) << "Leg time differs";
@@ -1106,9 +1106,15 @@ TEST(Mapmatch, test_discontinuity_on_same_edge) {
             R"(,"node_snap_tolerance":0}]})";
 
         auto single_route_api = tester.route(route_test_case);
-        double route_duration =
-            single_route_api.trip().routes(0).legs(0).node().rbegin()->elapsed_time();
-        double duration = leg.node().rbegin()->elapsed_time();
+        double route_duration = single_route_api.trip()
+                                    .routes(0)
+                                    .legs(0)
+                                    .node()
+                                    .rbegin()
+                                    ->cost()
+                                    .elapsed_cost()
+                                    .seconds();
+        double duration = leg.node().rbegin()->cost().elapsed_cost().seconds();
         ASSERT_NEAR(duration, route_duration, .1) << "Expected legs with duration " +
                                                          std::to_string(route_duration) +
                                                          " but got " + std::to_string(duration);

@@ -156,8 +156,7 @@ int main(int argc, char* argv[]) {
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
   // Construct costing
-  CostFactory<DynamicCost> factory;
-  factory.RegisterStandardCostingModels();
+  CostFactory<> factory;
 
   // Get type of route - this provides the costing method to use.
   const std::string& routetype = valhalla::Costing_Enum_Name(options.costing());

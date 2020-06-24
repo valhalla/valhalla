@@ -290,15 +290,13 @@ int main(int argc, char* argv[]) {
   }
 
   // Construct costing
-  CostFactory<DynamicCost> factory;
-  factory.RegisterStandardCostingModels();
   valhalla::Costing costing;
   if (valhalla::Costing_Enum_Parse(routetype, &costing)) {
     request.mutable_options()->set_costing(costing);
   } else {
     throw std::runtime_error("No costing method found");
   }
-  cost_ptr_t cost_ptr = factory.Create(request.options());
+  cost_ptr_t cost_ptr =   valhalla::sif::CostFactory<>{}.Create(request.options());
 
   // If a shape is entered use edge walking
   if (!map_match) {

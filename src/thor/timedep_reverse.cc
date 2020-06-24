@@ -587,8 +587,8 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const u
       cost += edgelabel.cost() - edgelabels_rev_[predidx].cost();
     }
     cost += previous_transition_cost;
-    path.emplace_back(edgelabel.mode(), cost.secs, edgelabel.opp_edgeid(), 0, cost.cost,
-                      edgelabel.has_time_restriction(), previous_transition_cost.secs);
+    path.emplace_back(edgelabel.mode(), cost, edgelabel.opp_edgeid(), 0,
+                      edgelabel.has_time_restriction(), previous_transition_cost);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
@@ -600,8 +600,7 @@ std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const u
     // We apply the turn cost at the beginning of the edge, as is done in the forward path
     // Semantically this can be thought of is, how much time did it take to turn onto this edge
     // To do this we need to carry the cost forward to the next edge in the path so we cache it here
-    previous_transition_cost.secs = edgelabel.transition_secs();
-    previous_transition_cost.cost = edgelabel.transition_cost();
+    previous_transition_cost = edgelabel.transition_cost();
   }
 
   return path;

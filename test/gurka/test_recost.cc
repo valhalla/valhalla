@@ -87,11 +87,12 @@ TEST(recosting, all_algorithms) {
           EXPECT_EQ(static_cast<uint8_t>(elapsed_itr->edge().travel_mode()),
                     static_cast<uint8_t>(label.mode()));
           EXPECT_NEAR(length, label.path_distance(), 2);
-          EXPECT_NEAR(elapsed_itr->transition_time(), label.transition_secs(), .1);
+          EXPECT_NEAR(elapsed_itr->cost().transition_cost().seconds(), label.transition_cost().secs,
+                      .1);
           // TODO: test restrictions
           // we need to move to the next node which has the elapsed time at the end of the edge
           ++elapsed_itr;
-          EXPECT_NEAR(elapsed_itr->elapsed_time(), label.cost().secs, .1);
+          EXPECT_NEAR(elapsed_itr->cost().elapsed_cost().seconds(), label.cost().secs, .1);
         };
 
         // find the percentage of the edges used

@@ -282,8 +282,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     // Update the predecessor EdgeLabel (for transition costing in the next round);
     pred = {kInvalidLabel, edge_id, directededge, elapsed, 0, 0, mode, 0, {}};
 
-    paths.back().first.emplace_back(
-        PathInfo{mode, elapsed.secs, edge_id, 0, elapsed.cost, false, transition_cost.secs});
+    paths.back().first.emplace_back(PathInfo{mode, elapsed, edge_id, 0, false, transition_cost});
     paths.back().second.emplace_back(&edge_segment);
     --num_segments;
 

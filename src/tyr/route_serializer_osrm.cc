@@ -432,7 +432,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     loc->emplace_back(json::fp_t{ll.lat(), 6});
     intersection->emplace("location", loc);
     intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
-    if (node->has_transition_time())
+    if (node->transition_time() > 0)
       intersection->emplace("duration", json::fp_t{node->transition_time(), 3});
 
     // Get bearings and access to outgoing intersecting edges. Do not add

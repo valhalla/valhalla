@@ -1115,9 +1115,7 @@ void TripLegBuilder::Build(
     const std::list<valhalla::Location>& through_loc,
     TripLeg& trip_path,
     const std::function<void()>* interrupt_callback,
-    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>* edge_trimming,
-    float trim_begin,
-    float trim_end) {
+    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>* edge_trimming) {
   // Test interrupt prior to building trip path
   if (interrupt_callback) {
     (*interrupt_callback)();
@@ -1277,7 +1275,8 @@ void TripLegBuilder::Build(
 
     auto* node = trip_path.add_node();
     if (controller.attributes.at(kNodeElapsedTime)) {
-      node->set_elapsed_time(path_begin->elapsed_time - trim_begin - trim_end);
+      node->mutable_cost()->mutable_elapsed_cost()->set_seconds(path_begin->elapsed_cost.secs);
+      node->mutable_cost()->mutable_elapsed_cost()->set_cost(path_begin->elapsed_cost.cost);
     }
 
     const GraphTile* end_tile = graphreader.GetGraphTile(edge->endnode());
@@ -1314,7 +1313,6 @@ void TripLegBuilder::Build(
 
   // Iterate through path
   bool is_first_edge = true;
-  double elapsedtime = 0;
   uint32_t block_id = 0;
   uint32_t prior_opp_local_index = -1;
   std::vector<PointLL> trip_shape;
@@ -1357,7 +1355,10 @@ void TripLegBuilder::Build(
     // we could cache the timezone and just add seconds when the timezone doesnt change
     uint32_t second_of_week = kInvalidSecondsOfWeek;
     if (origin_epoch != 0) {
-      second_of_week = DateTime::second_of_week(origin_epoch + static_cast<uint32_t>(elapsedtime),
+      auto elapsed_seconds = static_cast<uint32_t>(
+          trip_path.node_size() == 0 ? 0
+                                     : trip_path.node().rbegin()->cost().elapsed_cost().seconds());
+      second_of_week = DateTime::second_of_week(origin_epoch + elapsed_seconds,
                                                 DateTime::get_tz_db().from_index(node->timezone()));
     }
 
@@ -1376,13 +1377,15 @@ void TripLegBuilder::Build(
 
     // Assign the elapsed time from the start of the leg
     if (controller.attributes.at(kNodeElapsedTime)) {
-      trip_node->set_elapsed_time(elapsedtime);
-    }
-
-    // Update elapsed time at the end of the edge, store this at the next node.
-    elapsedtime = edge_itr->elapsed_time - trim_begin;
-    if (edge_itr == path_end - 1) {
-      elapsedtime -= trim_end;
+      if (edge_itr == path_begin) {
+        trip_node->mutable_cost()->mutable_elapsed_cost()->set_seconds(0);
+        trip_node->mutable_cost()->mutable_elapsed_cost()->set_cost(0);
+      } else {
+        trip_node->mutable_cost()->mutable_elapsed_cost()->set_seconds(
+            std::prev(edge_itr)->elapsed_cost.secs);
+        trip_node->mutable_cost()->mutable_elapsed_cost()->set_cost(
+            std::prev(edge_itr)->elapsed_cost.cost);
+      }
     }
 
     // Assign the admin index
@@ -1398,8 +1401,10 @@ void TripLegBuilder::Build(
       }
     }
 
-    if (controller.attributes.at(kNodeTransitionTime) && edge_itr->turn_cost > 0) {
-      trip_node->set_transition_time(edge_itr->turn_cost);
+    if (controller.attributes.at(kNodeTransitionTime)) {
+      trip_node->mutable_cost()->mutable_transition_cost()->set_seconds(
+          edge_itr->transition_cost.secs);
+      trip_node->mutable_cost()->mutable_transition_cost()->set_cost(edge_itr->transition_cost.cost);
     }
 
     AddTransitNodes(trip_node, node, startnode, start_tile, graphtile, controller);
@@ -1782,7 +1787,13 @@ void TripLegBuilder::Build(
                       admin_info_list));
   }
   if (controller.attributes.at(kNodeElapsedTime)) {
-    node->set_elapsed_time(elapsedtime);
+    node->mutable_cost()->mutable_elapsed_cost()->set_seconds(std::prev(path_end)->elapsed_cost.secs);
+    node->mutable_cost()->mutable_elapsed_cost()->set_cost(std::prev(path_end)->elapsed_cost.cost);
+  }
+
+  if (controller.attributes.at(kNodeTransitionTime)) {
+    node->mutable_cost()->mutable_transition_cost()->set_seconds(0);
+    node->mutable_cost()->mutable_transition_cost()->set_cost(0);
   }
 
   // Assign the admins

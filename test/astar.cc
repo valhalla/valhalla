@@ -302,7 +302,7 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
   int32_t time = 0;
   for (const auto& path : paths) {
     for (const auto& p : path) {
-      time += p.elapsed_time;
+      time += p.elapsed_cost.secs;
     }
     EXPECT_EQ(path.size(), expected_num_paths);
     break;
@@ -1676,8 +1676,8 @@ TEST(Astar, BiDirTrivial) {
                   .front();
 
   ASSERT_TRUE(path.size() == 1);
-  EXPECT_LT(path.front().elapsed_cost, 1);
-  EXPECT_LT(path.front().elapsed_time, 1);
+  EXPECT_LT(path.front().elapsed_cost.cost, 1);
+  EXPECT_LT(path.front().elapsed_cost.secs, 1);
 }
 
 class AstarTestEnv : public ::testing::Environment {

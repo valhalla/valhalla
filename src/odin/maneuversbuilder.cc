@@ -1097,8 +1097,8 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
   // Set the time based on the delta of the elapsed time between the begin
   // and end nodes
-  maneuver.set_time(trip_path_->node(maneuver.end_node_index()).elapsed_time() -
-                    trip_path_->node(maneuver.begin_node_index()).elapsed_time());
+  maneuver.set_time(trip_path_->node(maneuver.end_node_index()).cost().elapsed_cost().seconds() -
+                    trip_path_->node(maneuver.begin_node_index()).cost().elapsed_cost().seconds());
 
   // if possible, set the turn degree and relative direction
   if (prev_edge) {

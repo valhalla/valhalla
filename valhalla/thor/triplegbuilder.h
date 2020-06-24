@@ -46,11 +46,6 @@ public:
    * @param trip_path             The leg we will fill out
    * @param interrupt_callback    A way to abort the processing in case the request was cancelled
    * @param edge_trimming         Markers on edges with information on how to trim their shape
-   * @param trim_begin            For map matching we have one long sequence of path infos regardless
-   *                              of legs so we must supply an amount of elapsed time which we trim
-   *                              from the beginning
-   * @param trim_end              Similarly to trim_begin, we must also trim at the end of a map
-   *                              matched edge
    * @return
    */
   static void Build(const AttributesController& controller,
@@ -64,9 +59,7 @@ public:
                     TripLeg& trip_path,
                     const std::function<void()>* interrupt_callback = nullptr,
                     std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>*
-                        edge_trimming = nullptr,
-                    float trim_begin = 0,
-                    float trim_end = 0);
+                        edge_trimming = nullptr);
 };
 
 } // namespace thor

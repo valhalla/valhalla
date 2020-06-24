@@ -77,8 +77,8 @@ TEST(Trimming, routes) {
   costings[static_cast<int>(costing->travel_mode())] = costing;
 
   // fake up a route
-  std::vector<thor::PathInfo> path{{costing->travel_mode(), .001, start_id, 0, .001, false},
-                                   {costing->travel_mode(), 45, end_id, 0, 45, false}};
+  std::vector<thor::PathInfo> path{{costing->travel_mode(), {.001, .001}, start_id, 0, false},
+                                   {costing->travel_mode(), {45, 45}, end_id, 0, false}};
   valhalla::Location origin = fake_location(start_id, start, offset);
   valhalla::Location dest = fake_location(end_id, end, 1);
 
