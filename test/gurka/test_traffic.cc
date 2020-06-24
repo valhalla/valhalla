@@ -144,7 +144,7 @@ TEST(Traffic, BasicUpdates) {
     // Do a route with initial traffic
     {
       auto result = gurka::route(map, "A", "C", "auto", "current", clean_reader);
-      gurka::assert::osrm::expect_route(result, {"AB", "BC"});
+      gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
       gurka::assert::raw::expect_eta(result, 361.5);
     }
     // Make some updates to the traffic .tar file.
@@ -156,14 +156,14 @@ TEST(Traffic, BasicUpdates) {
     // it's noticed the changes in the live traffic file
     {
       auto result = gurka::route(map, "A", "C", "auto", "current", clean_reader);
-      gurka::assert::osrm::expect_route(result, {"AB", "BC"});
+      gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
       gurka::assert::raw::expect_eta(result, 145.5);
     }
     // Next, set the speed to the highest possible to ensure nothing breaks
     update_bd_traffic_speed(map, valhalla::baldr::kMaxSpeedKph);
     {
       auto result = gurka::route(map, "A", "C", "auto", "current", clean_reader);
-      gurka::assert::osrm::expect_route(result, {"AB", "BC"});
+      gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
       gurka::assert::raw::expect_eta(result, 15.617648);
     }
     // Back to previous speed
@@ -172,26 +172,26 @@ TEST(Traffic, BasicUpdates) {
     // results aren't used
     {
       auto result = gurka::route(map, "A", "C", "auto", "", clean_reader);
-      gurka::assert::osrm::expect_route(result, {"AB", "BC"});
+      gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
       gurka::assert::raw::expect_eta(result, 361.5);
     }
     // Now do another route with the same (not restarted) actor to see if
     // it's noticed the changes in the live traffic file
     {
       auto result = gurka::route(map, "B", "D", "auto", "current", clean_reader);
-      gurka::assert::osrm::expect_route(result, {"BC", "CE", "DE"});
+      gurka::assert::osrm::expect_steps(result, {"BC", "CE", "DE"});
       gurka::assert::raw::expect_eta(result, 172.8, 0.01);
     }
     {
       auto result = gurka::route(map, "D", "B", "auto", "current", clean_reader);
-      gurka::assert::osrm::expect_route(result, {"BD"});
+      gurka::assert::osrm::expect_steps(result, {"BD"});
       gurka::assert::raw::expect_eta(result, 28.8, 0.01);
     }
     // Repeat the B->D route, but this time with no timestamp - this should
     // disable using live traffc and the road should be open again.
     {
       auto result = gurka::route(map, "B", "D", "auto", "", clean_reader);
-      gurka::assert::osrm::expect_route(result, {"BD"});
+      gurka::assert::osrm::expect_steps(result, {"BD"});
       gurka::assert::raw::expect_eta(result, 72);
     }
   }

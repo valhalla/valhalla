@@ -39,5 +39,5 @@ gurka::map MtbAccess::map = {};
 
 TEST_F(MtbAccess, CheckMtbAccess) {
   auto result = gurka::route(map, "A", "C", "bicycle");
-  gurka::assert::osrm::expect_route(result, {"AB", "BC"});
+  gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
 }

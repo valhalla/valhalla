@@ -199,7 +199,7 @@ These functions will first serialize the raw `valhalla::Api` object into a JSON 
 (using `tyr::serializeDirections`), then perform assertions within the JSON document only.
 
 ```cpp
-void expect_route(valhalla::Api& raw_result,
+void expect_steps(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
                   bool dedupe = true);
 

@@ -696,10 +696,10 @@ namespace osrm {
  * Tests if a found path traverses the expected roads in the expected order
  *
  * @param result the result of a /route or /match request
- * @param expected_names the names of the roads the path should traverse in order
+ * @param expected_names the names of the step roads the path should traverse in order
  * @param dedupe whether subsequent same-name roads should appear multiple times or not (default not)
  */
-void expect_route(valhalla::Api& raw_result,
+void expect_steps(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
                   bool dedupe = true) {
 
