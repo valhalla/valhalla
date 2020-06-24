@@ -51,7 +51,10 @@ gurka::map UseDirectionOnWays::map = {};
 
 TEST_F(UseDirectionOnWays, CheckNamesAndRefs) {
   auto result = gurka::route(map, "A", "E", "auto");
-  gurka::assert::osrm::expect_route(result, {"AB", "BC", "CD", "DE"});
+  gurka::assert::osrm::expect_steps(result, {"AB", "BC", "CD", "DE"});
+  gurka::assert::raw::expect_path(result,
+                                  {"AB/US 30 East/US 222 North", "BC/I-95 North/US 40 East",
+                                   "CD/US 15 South/I-80 West", "DE/US 119 South/I-99 North/US XX"});
 
   // test direction is used correctly
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(0).street_name_size(), 3);
