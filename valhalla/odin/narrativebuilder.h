@@ -571,9 +571,6 @@ protected:
    * @param maneuver The current maneuver to process.
    * @param begin_street_names The begin street names string.
    * @param street_names The street names string.
-   *
-   * @return true if a verbal multi-cue instruction should be formed for the
-   *         two specified maneuvers.
    */
   void UpdateObviousManeuverStreetNames(Maneuver& maneuver,
                                         std::string& begin_street_names,
