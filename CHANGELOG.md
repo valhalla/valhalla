@@ -98,6 +98,7 @@
    * ADDED: `street_side_max_distance`, `display_lat` and `display_lon` to `locations` in input for better control of routing side of street [#1769](https://github.com/valhalla/valhalla/pull/1769)
    * ADDED: Add addtional exit phrases. [#2421](https://github.com/valhalla/valhalla/pull/2421)
    * ADDED: Add Japanese locale, update German. [#2432](https://github.com/valhalla/valhalla/pull/2432)
+   * ADDED: Gurka expect_route refactor [#2435](https://github.com/valhalla/valhalla/pull/2435)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
