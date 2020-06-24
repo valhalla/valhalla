@@ -1303,10 +1303,14 @@ bool EnhancedTripLeg_Node::HasIntersectingEdgeCurrNameConsistency() const {
 bool EnhancedTripLeg_Node::HasNonBackwardTraversableSameNameIntersectingEdge(
     uint32_t from_heading,
     const TripLeg_TravelMode travel_mode) {
+  // Loop over the route path intersecting edges
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     auto xedge = GetIntersectingEdge(i);
+    // Check if the intersecting edges have the same names as the path edges
+    // and if the intersecting edge is traversable based on the route path travel mode
     if ((xedge->prev_name_consistency() || xedge->curr_name_consistency()) &&
         xedge->IsTraversable(travel_mode)) {
+      // Calculate the intersecting edge turn degree to make sure it is not in the opposing direction
       uint32_t intersecting_turn_degree = GetTurnDegree(from_heading, xedge->begin_heading());
       bool non_backward = !((intersecting_turn_degree > kBackwardTurnDegreeLowerBound) &&
                             (intersecting_turn_degree < kBackwardTurnDegreeUpperBound));

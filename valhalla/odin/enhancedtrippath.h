@@ -591,6 +591,18 @@ public:
 
   bool HasIntersectingEdgeCurrNameConsistency() const;
 
+  /**
+   * Returns true if there is an non-backward traversable intersecting edge with the same name
+   * as the previous and/or current edges at this node along the route path.
+   * Non-backward is so we do not consider edges in the reverse direction of the route path.
+   *
+   * @param from_heading the previous edge end heading.
+   * @param travel_mode the travel mode at the node in the route path - examples:
+   *                       kDrive, kPedestrian, kBicycle, kTransit
+   *
+   * @return true if there is an non-backward traversable intersecting edge with the same name
+   * as the previous and/or current edges at this node along the route path.
+   */
   bool HasNonBackwardTraversableSameNameIntersectingEdge(uint32_t from_heading,
                                                          const TripLeg_TravelMode travel_mode);
 
