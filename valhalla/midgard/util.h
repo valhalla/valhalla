@@ -170,10 +170,6 @@ typename iterator_t::value_type::first_type length(const iterator_t& begin, cons
  * @param  target Percentage of total length to trim from the end.
  * @return Returns a new polyline.
  */
-#if __GNUC__ <= 5 && __OPTIMIZE__
-#pragma GCC push_state
-#pragma GCC optimize("O0")
-#endif
 template <typename iterator_t>
 std::vector<typename iterator_t::value_type>
 trim_polyline(const iterator_t& begin, const iterator_t& end, float source, float target) {
@@ -200,8 +196,16 @@ trim_polyline(const iterator_t& begin, const iterator_t& end, float source, floa
   std::vector<typename iterator_t::value_type> clip;
   iterator_t prev_vertex = begin;
   for (auto vertex = std::next(begin); vertex != end; vertex++) {
-    const auto segment_length = prev_vertex->Distance(*vertex),
-               vertex_length = prev_vertex_length + segment_length;
+
+    const auto segment_length = prev_vertex->Distance(*vertex);
+    // Note: GCC-5 seems to have a bug optimizing use of `vertex_length` here on 32 bit platforms.
+    // Marking this as voliatle prevents some optimizations, and makes the floating point that
+    // later depends on `vertex_length` work correctly
+#if __i386__ && __GCC__ <= 5 && __OPTIMIZE__
+    volatile auto vertex_length = prev_vertex_length + segment_length;
+#else
+    const auto vertex_length = prev_vertex_length + segment_length;
+#endif
 
     // Open if source is located at current segment
     if (!open && source_length < vertex_length) {
@@ -239,9 +243,6 @@ trim_polyline(const iterator_t& begin, const iterator_t& end, float source, floa
   // So here we have assert(1 < clip.size())
   return clip;
 }
-#if __GNUC__ <= 5 && __OPTIMIZE__
-#pragma GCC pop_state
-#endif
 
 /**
  * Trim the front of a polyline (represented as a list or vector of Point2).
