@@ -579,11 +579,12 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
 void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
                                   const std::string& costing_options_key,
                                   CostingOptions* pbf_costing_options) {
+  pbf_costing_options->set_costing(Costing::motor_scooter);
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
     // TODO: farm more common stuff out to parent class
-    ParseCostOptions(*json_costing_options, pbf_costing_options);
+    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
 
     // If specified, parse json and set pbf values
 

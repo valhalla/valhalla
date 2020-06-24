@@ -207,6 +207,7 @@ void ParseNoCostOptions(const rapidjson::Document& doc,
                         const std::string& costing_options_key,
                         CostingOptions* pbf_costing_options) {
   // this is probably not needed but its part of the contract for costing..
+  pbf_costing_options->set_costing(Costing::none_);
 }
 
 cost_ptr_t CreateNoCost(const Costing costing, const Options& options) {

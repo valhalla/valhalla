@@ -8,6 +8,7 @@
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/autocost.h>
 #include <valhalla/sif/bicyclecost.h>
+#include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/motorcyclecost.h>
 #include <valhalla/sif/motorscootercost.h>
 #include <valhalla/sif/nocost.h>
@@ -22,7 +23,7 @@ namespace sif {
 /**
  * Generic factory class for creating objects based on type name.
  */
-template <class cost_t> class CostFactory {
+template <class cost_t = DynamicCost> class CostFactory {
 public:
   typedef std::shared_ptr<cost_t> cost_ptr_t;
   typedef cost_ptr_t (*factory_function_t)(const Costing costing, const Options& options);
@@ -31,6 +32,19 @@ public:
    * Constructor
    */
   CostFactory() {
+    Register(Costing::auto_, CreateAutoCost);
+    Register(Costing::auto_data_fix, CreateAutoDataFixCost);
+    Register(Costing::auto_shorter, CreateAutoShorterCost);
+    Register(Costing::bicycle, CreateBicycleCost);
+    Register(Costing::bus, CreateBusCost);
+    Register(Costing::hov, CreateHOVCost);
+    Register(Costing::taxi, CreateTaxiCost);
+    Register(Costing::motor_scooter, CreateMotorScooterCost);
+    Register(Costing::motorcycle, CreateMotorcycleCost);
+    Register(Costing::pedestrian, CreatePedestrianCost);
+    Register(Costing::truck, CreateTruckCost);
+    Register(Costing::transit, CreateTransitCost);
+    Register(Costing::none_, CreateNoCost);
   }
 
   /**
@@ -40,6 +54,7 @@ public:
    * @param function   the function pointer to call to actually create the cost object
    */
   void Register(const Costing costing, factory_function_t function) {
+    factory_funcs_.erase(costing);
     factory_funcs_.emplace(costing, function);
   }
 
@@ -69,25 +84,6 @@ public:
     }
     // create the cost using the function pointer
     return itr->second(costing, options);
-  }
-
-  /**
-   * Convenience method to register all of the standard costing models.
-   */
-  void RegisterStandardCostingModels() {
-    Register(Costing::auto_, CreateAutoCost);
-    Register(Costing::auto_data_fix, CreateAutoDataFixCost);
-    Register(Costing::auto_shorter, CreateAutoShorterCost);
-    Register(Costing::bicycle, CreateBicycleCost);
-    Register(Costing::bus, CreateBusCost);
-    Register(Costing::hov, CreateHOVCost);
-    Register(Costing::taxi, CreateTaxiCost);
-    Register(Costing::motor_scooter, CreateMotorScooterCost);
-    Register(Costing::motorcycle, CreateMotorcycleCost);
-    Register(Costing::pedestrian, CreatePedestrianCost);
-    Register(Costing::truck, CreateTruckCost);
-    Register(Costing::transit, CreateTransitCost);
-    Register(Costing::none_, CreateNoCost);
   }
 
 private:

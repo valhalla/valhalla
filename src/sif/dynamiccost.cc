@@ -1,5 +1,14 @@
 #include "sif/dynamiccost.h"
 #include "baldr/graphconstants.h"
+#include "sif/autocost.h"
+#include "sif/bicyclecost.h"
+#include "sif/motorcyclecost.h"
+#include "sif/motorscootercost.h"
+#include "sif/nocost.h"
+#include "sif/pedestriancost.h"
+#include "sif/transitcost.h"
+#include "sif/truckcost.h"
+#include "worker.h"
 
 using namespace valhalla::baldr;
 
@@ -198,9 +207,101 @@ void DynamicCost::AddUserAvoidEdges(const std::vector<AvoidEdge>& avoid_edges) {
   }
 }
 
-void ParseCostOptions(const rapidjson::Value& value, CostingOptions* pbf_costing_options) {
+void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_costing_options) {
   auto speed_types = rapidjson::get_child_optional(value, "/speed_types");
   pbf_costing_options->set_flow_mask(SpeedMask_Parse(speed_types));
+  auto name = rapidjson::get_optional<std::string>(value, "/name");
+  if (name) {
+    pbf_costing_options->set_name(*name);
+  }
+}
+
+void ParseCostOptions(const Costing& costing,
+                      const rapidjson::Document& doc,
+                      const std::string& costing_options_key,
+                      CostingOptions* pbf_costing_options) {
+  switch (costing) {
+    case auto_: {
+      sif::ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+      break;
+    }
+    case auto_shorter: {
+      sif::ParseAutoShorterCostOptions(doc, costing_options_key, pbf_costing_options);
+      break;
+    }
+    case bicycle: {
+      sif::ParseBicycleCostOptions(doc, costing_options_key, pbf_costing_options);
+      break;
+    }
+    case bus: {
+      sif::ParseBusCostOptions(doc, costing_options_key, pbf_costing_options);
+      break;
+    }
+    case hov: {
+      sif::ParseHOVCostOptions(doc, costing_options_key, pbf_costing_options);
+      break;
+    }
+    case taxi: {
+      sif::ParseTaxiCostOptions(doc, costing_options_key, pbf_costing_options);
+      break;
+    }
+    case motor_scooter: {
+      sif::ParseMotorScooterCostOptions(doc, costing_options_key, pbf_costing_options);
+      break;
+    }
+    case multimodal: {
+      pbf_costing_options->set_costing(Costing::multimodal); // Nothing to parse for this one
+      break;
+    }
+    case pedestrian: {
+      sif::ParsePedestrianCostOptions(doc, costing_options_key, pbf_costing_options);
+      break;
+    }
+    case transit: {
+      sif::ParseTransitCostOptions(doc, costing_options_key, pbf_costing_options);
+      break;
+    }
+    case truck: {
+      sif::ParseTruckCostOptions(doc, costing_options_key, pbf_costing_options);
+      break;
+    }
+    case motorcycle: {
+      sif::ParseMotorcycleCostOptions(doc, costing_options_key, pbf_costing_options);
+      break;
+    }
+    case auto_data_fix: {
+      sif::ParseAutoDataFixCostOptions(doc, costing_options_key, pbf_costing_options);
+      break;
+    }
+    case none_: {
+      sif::ParseNoCostOptions(doc, costing_options_key, pbf_costing_options);
+      break;
+    }
+  }
+  pbf_costing_options->set_costing(costing);
+}
+
+void ParseCostOptions(const rapidjson::Document& doc,
+                      const std::string& costing_options_key,
+                      CostingOptions* pbf_costing_options) {
+  // it has to have a costing object where you say, it has to be an object, it has to have a member
+  // named costing and the value of that member has to be a string type
+  auto json = rapidjson::get_child_optional(doc, costing_options_key.c_str());
+  decltype(json->MemberBegin()) costing_itr;
+  if (!json || !json->IsObject() ||
+      (costing_itr = json->FindMember("costing")) == json->MemberEnd() ||
+      !costing_itr->value.IsString()) {
+    throw valhalla_exception_t{127};
+  }
+  // then we can try to parse the string and if its invalid we barf
+  Costing costing;
+  std::string costing_str = costing_itr->value.GetString();
+  if (!Costing_Enum_Parse(costing_str, &costing)) {
+    throw valhalla_exception_t{125, "'" + costing_str + "'"};
+  }
+  // finally we can parse the costing
+  ParseCostOptions(costing, doc, costing_options_key, pbf_costing_options);
+  return;
 }
 
 } // namespace sif

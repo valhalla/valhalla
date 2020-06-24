@@ -106,6 +106,8 @@ message CostingOptions {
   optional uint32 flow_mask = 55;
   optional float rail_ferry_cost = 56;
   optional float use_rail_ferry = 57;
+  optional Costing costing = 58;
+  optional string name = 59;
 }
 
 message AvoidEdge {
@@ -188,4 +190,5 @@ message Options {
   optional bool guidance_views = 41;                                      // Whether to return guidance_views in the response
   // 42 is reserved
   optional uint32 height_precision = 43 [default = 0];                    // Number of digits precision for heights returned
+  repeated CostingOptions recostings = 44;                             // Costing options to use to recost a path after it has been found
 }

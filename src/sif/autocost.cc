@@ -560,11 +560,12 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
 void ParseAutoCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
                           CostingOptions* pbf_costing_options) {
+  pbf_costing_options->set_costing(Costing::auto_);
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
     // TODO: farm more common stuff out to parent class
-    ParseCostOptions(*json_costing_options, pbf_costing_options);
+    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
 
     // If specified, parse json and set pbf values
 
@@ -737,6 +738,7 @@ void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
                                  const std::string& costing_options_key,
                                  CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+  pbf_costing_options->set_costing(Costing::auto_shorter);
 }
 
 cost_ptr_t CreateAutoShorterCost(const Costing costing, const Options& options) {
@@ -919,6 +921,7 @@ void ParseBusCostOptions(const rapidjson::Document& doc,
                          const std::string& costing_options_key,
                          CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+  pbf_costing_options->set_costing(Costing::bus);
 }
 
 cost_ptr_t CreateBusCost(const Costing costing, const Options& options) {
@@ -1123,6 +1126,7 @@ void ParseHOVCostOptions(const rapidjson::Document& doc,
                          const std::string& costing_options_key,
                          CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+  pbf_costing_options->set_costing(Costing::hov);
 }
 
 cost_ptr_t CreateHOVCost(const Costing costing, const Options& options) {
@@ -1326,6 +1330,7 @@ void ParseTaxiCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
                           CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+  pbf_costing_options->set_costing(Costing::taxi);
 }
 
 cost_ptr_t CreateTaxiCost(const Costing costing, const Options& options) {
@@ -1410,6 +1415,7 @@ void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
                                  const std::string& costing_options_key,
                                  CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+  pbf_costing_options->set_costing(Costing::auto_data_fix);
 }
 
 cost_ptr_t CreateAutoDataFixCost(const Costing costing, const Options& options) {
@@ -1450,7 +1456,7 @@ make_autocost_from_json(const std::string& property, T testVal, const std::strin
      << "}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return std::make_shared<TestAutoCost>(valhalla::Costing::auto_, request.options());
+  return std::make_shared<TestAutoCost>(Costing::auto_, request.options());
 }
 
 std::uniform_real_distribution<float>

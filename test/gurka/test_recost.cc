@@ -6,12 +6,11 @@ using namespace valhalla;
 
 const std::unordered_map<std::string, std::string> build_config{{"mjolnir.shortcuts", "false"}};
 
-void create_costing(const Api& request,
-                    sif::cost_ptr_t* mode_costing,
-                    const sif::CostFactory<sif::DynamicCost>& factory) {
+void create_costing(const Api& request, sif::cost_ptr_t* mode_costing) {
 
   const auto& options = request.options();
 
+  sif::CostFactory<> factory;
   mode_costing[static_cast<uint8_t>(sif::TravelMode::kDrive)] =
       factory.Create(Costing::auto_, options);
   mode_costing[static_cast<uint8_t>(sif::TravelMode::kPedestrian)] =
@@ -51,7 +50,7 @@ TEST(recosting, all_algorithms) {
   };
   for (const auto& option : options) {
     for (size_t i = 0; i < named_locations.size(); ++i) {
-      for (size_t j = 0; j < named_locations.size(); ++j) {
+      for (size_t j = i + 1; j < named_locations.size(); ++j) {
         // skip uninterestingly close routes
         if (i == j) {
           continue;
@@ -65,9 +64,7 @@ TEST(recosting, all_algorithms) {
 
         // build up the costing object
         sif::cost_ptr_t mode_costing[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
-        sif::CostFactory<sif::DynamicCost> factory;
-        factory.RegisterStandardCostingModels();
-        create_costing(api, mode_costing, factory);
+        create_costing(api, mode_costing);
 
         // setup a callback for the recosting to get each edge
         auto edge_itr = leg.node().begin();
@@ -157,9 +154,7 @@ TEST(recosting, throwing) {
 
   // build up the costing object
   sif::cost_ptr_t mode_costing[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
-  sif::CostFactory<sif::DynamicCost> factory;
-  factory.RegisterStandardCostingModels();
-  create_costing(api, mode_costing, factory);
+  create_costing(api, mode_costing);
 
   // setup a callback for the recosting to get each edge
   const auto& leg = api.trip().routes(0).legs(0);
@@ -222,4 +217,30 @@ TEST(recosting, throwing) {
                                    edge_cb, label_cb),
                std::runtime_error);
   EXPECT_EQ(called, false);
+}
+
+TEST(recosting, error_request) {
+  auto config = gurka::detail::build_config("foo_bar", {});
+  auto reader = std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"));
+  valhalla::tyr::actor_t actor(config, *reader, true);
+
+  try {
+    actor.route(R"({"costing":"auto","locations":[],"recostings":[{"frosting":"chocolate"}]})");
+    FAIL() << "No costing should have thrown";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 127); }
+
+  try {
+    actor.route(R"({"costing":"auto","locations":[],"recostings":[{"costing":"foo"}]})");
+    FAIL() << "Wrong costing should have thrown";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 125); }
+
+  try {
+    actor.route(R"({"costing":"auto","locations":[],"recostings":[{"costing":"auto"}]})");
+    FAIL() << "No name should have thrown";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 127); }
+
+  try {
+    actor.route(R"({"costing":"auto","locations":[],"recostings":[{"name":"foo"}]})");
+    FAIL() << "No costing should have thrown";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 127); }
 }

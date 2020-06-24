@@ -18,8 +18,8 @@ namespace {
 
 void create_costing_options(Options& options) {
   const rapidjson::Document doc;
-  sif::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
-  options.add_costing_options();
+  sif::ParseCostOptions(valhalla::Costing::auto_, doc, "/costing_options/auto",
+                        options.add_costing_options());
 }
 
 boost::property_tree::ptree json_to_pt(const std::string& json) {
@@ -89,7 +89,7 @@ static void BM_UtrechtCostMatrix(benchmark::State& state) {
 
   Options options;
   create_costing_options(options);
-  auto costs = sif::CreateAutoCost(Costing::auto_, options);
+  auto costs = sif::CostFactory<>{}.Create(Costing::auto_, options);
 
   const auto projections = loki::Search(locations, reader, costs);
 

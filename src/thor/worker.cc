@@ -63,9 +63,6 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
   if (!reader)
     reader = matcher_factory.graphreader();
 
-  // Register standard edge/node costing methods
-  factory.RegisterStandardCostingModels();
-
   // Select the matrix algorithm based on the conf file (defaults to
   // select_optimal if not present)
   auto conf_algorithm = config.get<std::string>("thor.source_to_target_algorithm", "select_optimal");

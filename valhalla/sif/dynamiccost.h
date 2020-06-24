@@ -873,7 +873,31 @@ using cost_ptr_t = std::shared_ptr<DynamicCost>;
  * @param object The json request represented as a DOM tree.
  * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
  */
-void ParseCostOptions(const rapidjson::Value& obj, CostingOptions* pbf_costing_options);
+void ParseSharedCostOptions(const rapidjson::Value& obj, CostingOptions* pbf_costing_options);
+
+/**
+ * Parses the costing options for the specified costing
+ * @param costing               which costing options type should be parsed
+ * @param doc                   json document
+ * @param costing_options_key   the key in the json document where the options are located
+ * @param pbf_costing_options   where to store the parsed options
+ */
+void ParseCostOptions(const Costing& costing,
+                      const rapidjson::Document& doc,
+                      const std::string& costing_options_key,
+                      CostingOptions* pbf_costing_options);
+
+/**
+ * Parses the costing options for the costing specified within the json object. If the
+ * json object has no key named "costing" the type of costing cannot be found and an
+ * exception is thrown
+ * @param doc                   json document
+ * @param costing_options_key   the key in the json document where the options are located
+ * @param pbf_costing_options   where to store the parsed options
+ */
+void ParseCostOptions(const rapidjson::Document& doc,
+                      const std::string& costing_options_key,
+                      CostingOptions* pbf_costing_options);
 
 } // namespace sif
 

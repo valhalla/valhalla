@@ -5,7 +5,8 @@
 #include "loki/reach.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
-#include "sif/autocost.h"
+#include "sif/costfactory.h"
+#include "sif/dynamiccost.h"
 
 #include <algorithm>
 #include <boost/property_tree/ptree.hpp>
@@ -18,14 +19,20 @@ namespace vs = valhalla::sif;
 
 namespace {
 
-std::shared_ptr<vs::DynamicCost> create_costing() {
+vs::cost_ptr_t create_costing() {
   Options options;
   const rapidjson::Document doc;
-  sif::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
-  sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
-                                   options.add_costing_options());
-  options.add_costing_options();
-  return vs::CreateAutoCost(Costing::auto_, options);
+  for (int i = 0; i < Costing_ARRAYSIZE; ++i) {
+    Costing costing = static_cast<Costing>(i);
+    // Create the costing string
+    const auto& costing_str = valhalla::Costing_Enum_Name(costing);
+    // Create the costing options key
+    const auto costing_options_key = "/costing_options/" + costing_str;
+    // Parse the options
+    sif::ParseCostOptions(costing, doc, costing_options_key, options.add_costing_options());
+  }
+  vs::CostFactory<> factory;
+  return vs::CostFactory<>{}.Create(Costing::auto_, options);
 }
 
 boost::property_tree::ptree get_conf() {
