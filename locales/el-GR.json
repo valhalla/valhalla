@@ -771,7 +771,7 @@
         "7": "Πάρτε την έξοδο <NUMBER_SIGN> στα <RELATIVE_DIRECTION> για <BRANCH_SIGN> προς <TOWARD_SIGN>.",
         "8": "Πάρτε την έξοδο <NAME_SIGN> στα <RELATIVE_DIRECTION>.",
         "10": "Πάρτε την έξοδο <NAME_SIGN> στα <RELATIVE_DIRECTION> προς <BRANCH_SIGN>.",
-        "12": "Πάρτε την έξοδο <BRANCH_SIGN> στα <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
+        "12": "Πάρτε την έξοδο <NAME_SIGN> στα <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
         "14": "Πάρτε την έξοδο <NAME_SIGN> στα <RELATIVE_DIRECTION> για <BRANCH_SIGN> προς <TOWARD_SIGN>.",
         "15": "Πάρτε την έξοδο.",
         "16": "Βγείτε στην έξοδο <NUMBER_SIGN>.",
@@ -998,7 +998,7 @@
       "phrases": {
         "0": "Μείνετε <RELATIVE_DIRECTION> στη διχάλα.",
         "1": "Μείνετε <RELATIVE_DIRECTION> για να πάρετε την έξοδο <NUMBER_SIGN>.",
-        "2": "Μείνετε δεξιά για να πάρετε τη <STREET_NAMES>.",
+        "2": "Μείνετε <RELATIVE_DIRECTION> για να πάρετε τη <STREET_NAMES>.",
         "3": "Μείνετε <RELATIVE_DIRECTION> για να βγείτε στην έξοδο <NUMBER_SIGN> προς <STREET_NAMES>.",
         "4": "Συνεχίστε <RELATIVE_DIRECTION> προς <TOWARD_SIGN>.",
         "5": "Μείνετε <RELATIVE_DIRECTION> για να βγείτε στην έξοδο <NUMBER_SIGN> προς <TOWARD_SIGN>.",
