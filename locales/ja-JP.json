@@ -1,13 +1,13 @@
 {
-  "posix_locale": "de_DE.UTF-8",
+  "posix_locale": "ja_JP.UTF-8",
   "aliases": [
-    "de"
+    "ja"
   ],
   "instructions": {
     "arrive": {
       "phrases": {
-        "0": "Ankunft: <TIME>.",
-        "1": "Ankunft: <TIME> an <TRANSIT_STOP>."
+        "0": "到着: <TIME>",
+        "1": "<TRANSIT_STOP>への到着: <TIME>"
       },
       "example_phrases": {
         "0": [
@@ -20,8 +20,8 @@
     },
     "arrive_verbal": {
       "phrases": {
-        "0": "Um <TIME> ankommen",
-        "1": "Um <TIME> an <TRANSIT_STOP> ankommen."
+        "0": "<TIME>に到着します。",
+        "1": "<TIME> には<TRANSIT_STOP>に到着します。"
       },
       "example_phrases": {
         "0": [
@@ -34,21 +34,21 @@
     },
     "bear": {
       "phrases": {
-        "0": "Leicht nach <RELATIVE_DIRECTION> abbiegen.",
-        "1": "Leicht nach <RELATIVE_DIRECTION> auf <STREET_NAMES> abbiegen.",
-        "2": "Leicht nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
-        "3": "Leicht nach <RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
-        "4": "An <JUNCTION_NAME> leicht nach <RELATIVE_DIRECTION> abbiegen.",
-        "5": "Leicht nach <RELATIVE_DIRECTION> in Richtung <TOWARD_SIGN> abbiegen."
+        "0": "<RELATIVE_DIRECTION>方向です。",
+        "1": "<RELATIVE_DIRECTION> 方向です。その先<STREET_NAMES>です。",
+        "2": "<RELATIVE_DIRECTION>方向、 <BEGIN_STREET_NAMES>です。 その先<STREET_NAMES>です。",
+        "3": "<RELATIVE_DIRECTION> 方向です。その先 <STREET_NAMES>です。",
+        "4": "<JUNCTION_NAME>を<RELATIVE_DIRECTION>方向です。",
+        "5": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面です。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "relative_directions": [
-        "links",
-        "rechts"
+        "左",
+        "右"
       ],
       "example_phrases": {
         "0": [
@@ -73,21 +73,21 @@
     },
     "bear_verbal": {
       "phrases": {
-        "0": "Leicht nach <RELATIVE_DIRECTION> abbiegen.",
-        "1": "Leicht nach <RELATIVE_DIRECTION> auf <STREET_NAMES> abbiegen.",
-        "2": "Leicht nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
-        "3": "Leicht nach <RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
-        "4": "An <JUNCTION_NAME> leicht nach <RELATIVE_DIRECTION> abbiegen.",
-        "5": "Leicht nach <RELATIVE_DIRECTION> in Richtung <TOWARD_SIGN> abbiegen."
+        "0": "<RELATIVE_DIRECTION>方向です。",
+        "1": "<RELATIVE_DIRECTION> 方向です。その先<STREET_NAMES>です。",
+        "2": "<RELATIVE_DIRECTION> 方向です。その先<BEGIN_STREET_NAMES>です。",
+        "3": "<RELATIVE_DIRECTION> 方向です。その先 <STREET_NAMES>です。",
+        "4": "<JUNCTION_NAME>を<RELATIVE_DIRECTION>方向です。",
+        "5": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面です。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "relative_directions": [
-        "links",
-        "rechts"
+        "左",
+        "右"
       ],
       "example_phrases": {
         "0": [
@@ -112,7 +112,7 @@
     },
     "becomes": {
       "phrases": {
-        "0": "<PREVIOUS_STREET_NAMES> wird zu <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES>から<STREET_NAMES>になります。"
       },
       "example_phrases": {
         "0": [
@@ -122,7 +122,7 @@
     },
     "becomes_verbal": {
       "phrases": {
-        "0": "<PREVIOUS_STREET_NAMES> wird zu <STREET_NAMES>."
+        "0": "<PREVIOUS_STREET_NAMES>から<STREET_NAMES>になります。"
       },
       "example_phrases": {
         "0": [
@@ -132,15 +132,15 @@
     },
     "continue": {
       "phrases": {
-        "0": "Weiter.",
-        "1": "Weiter auf <STREET_NAMES>.",
-        "2": "Weiter an <JUNCTION_NAME>.",
-        "3": "Weiter in Richtung <TOWARD_SIGN>."
+        "0": "直進です。",
+        "1": "<STREET_NAMES>を直進です。",
+        "2": "<JUNCTION_NAME>を直進です。",
+        "3": "<TOWARD_SIGN>方面、直進です。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "example_phrases": {
         "0": [
@@ -159,33 +159,33 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Weiter.",
-        "1": "<LENGTH> weiter.",
-        "2": "Weiter auf <STREET_NAMES>.",
-        "3": "<LENGTH> weiter auf <STREET_NAMES>.",
-        "4": "Weiter an <JUNCTION_NAME>.",
-        "5": "An <JUNCTION_NAME> <LENGTH> weiter.",
-        "6": "Weiter in Richtung <TOWARD_SIGN>.",
-        "7": "<LENGTH> weiter in Richtung <TOWARD_SIGN>."
+        "0": "直進です。",
+        "1": "<LENGTH>直進です。",
+        "2": "<STREET_NAMES>を直進です。",
+        "3": " <STREET_NAMES> を <LENGTH>直進です。",
+        "4": "<JUNCTION_NAME>を直進です。",
+        "5": "<JUNCTION_NAME> を<LENGTH>直進です。",
+        "6": "<TOWARD_SIGN>方面、直進です。",
+        "7": "<TOWARD_SIGN> 方面、 <LENGTH>直進です。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "metric_lengths": [
-        "<KILOMETERS> Kilometer",
-        "einen Kilometer",
-        "<METERS> Meter",
-        "weniger als 10 Meter"
+        "<KILOMETERS> キロメートル",
+        "1 キロメートル",
+        "<METERS> メートル",
+        " 10メートル以内"
       ],
       "us_customary_lengths": [
-        "<MILES> Meilen",
-        "eine Meile",
-        "eine halbe Meile",
-        "eine viertel Meile",
-        "<FEET> Fuß",
-        "weniger als 10 Fuß"
+        "<MILES> マイル",
+        "1 マイル",
+        "0.5 マイル",
+        "0.25 マイル",
+        "<FEET> フィート",
+        "10 フィート以内"
       ],
       "example_phrases": {
         "0": [
@@ -216,15 +216,15 @@
     },
     "continue_verbal_alert": {
       "phrases": {
-        "0": "Weiter.",
-        "1": "Weiter auf <STREET_NAMES>.",
-        "2": "Weiter an <JUNCTION_NAME>.",
-        "3": "Weiter in Richtung <TOWARD_SIGN>."
+        "0": "直進です。",
+        "1": "<STREET_NAMES>を直進です。",
+        "2": "<JUNCTION_NAME>を直進です。",
+        "3": "<TOWARD_SIGN>方面、直進です。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "example_phrases": {
         "0": [
@@ -243,8 +243,8 @@
     },
     "depart": {
       "phrases": {
-        "0": "Abfahrt: <TIME>.",
-        "1": "Abfahrt: <TIME> an <TRANSIT_STOP>."
+        "0": "出発: <TIME>",
+        "1": "<TRANSIT_STOP>の出発: <TIME>"
       },
       "example_phrases": {
         "0": [
@@ -257,8 +257,8 @@
     },
     "depart_verbal": {
       "phrases": {
-        "0": "Um <TIME> abfahren.",
-        "1": "Um <TIME> von <TRANSIT_STOP> abfahren."
+        "0": "<TIME>に出発です。",
+        "1": "<TIME> に<TRANSIT_STOP>を出発です。"
       },
       "example_phrases": {
         "0": [
@@ -271,14 +271,14 @@
     },
     "destination": {
       "phrases": {
-        "0": "Ziel erreicht.",
-        "1": "<DESTINATION> erreicht.",
-        "2": "Ziel befindet sich auf der <RELATIVE_DIRECTION> Seite.",
-        "3": "<DESTINATION> befindet sich auf der <RELATIVE_DIRECTION> Seite."
+        "0": "目的地に到着しました。",
+        "1": " <DESTINATION>に到着しました。",
+        "2": "目的地は<RELATIVE_DIRECTION>側です。",
+        "3": "<DESTINATION> は<RELATIVE_DIRECTION>側です。"
       },
       "relative_directions": [
-        "linken",
-        "rechten"
+        "左",
+        "右"
       ],
       "example_phrases": {
         "0": [
@@ -298,14 +298,14 @@
     },
     "destination_verbal": {
       "phrases": {
-        "0": "Ziel erreicht.",
-        "1": "<DESTINATION> erreicht.",
-        "2": "Ziel befindet sich auf der <RELATIVE_DIRECTION> Seite.",
-        "3": "<DESTINATION> befindet sich auf der <RELATIVE_DIRECTION> Seite."
+        "0": "目的地に到着しました。",
+        "1": " <DESTINATION>に到着しました。",
+        "2": "目的地は<RELATIVE_DIRECTION>側です。",
+        "3": "<DESTINATION> は<RELATIVE_DIRECTION>側です。"
       },
       "relative_directions": [
-        "linken",
-        "rechten"
+        "左",
+        "右"
       ],
       "example_phrases": {
         "0": [
@@ -325,14 +325,14 @@
     },
     "destination_verbal_alert": {
       "phrases": {
-        "0": "Ziel fast erreicht.",
-        "1": "<DESTINATION> fast erreicht.",
-        "2": "Gleich befindet sich das Ziel auf der <RELATIVE_DIRECTION> Seite.",
-        "3": "Gleich befindet sich <DESTINATION> auf der <RELATIVE_DIRECTION> Seite."
+        "0": "まもなく目的地に到着します。",
+        "1": "まもなく<DESTINATION>に到着します。",
+        "2": "目的地は<RELATIVE_DIRECTION>側です。",
+        "3": "<DESTINATION> は<RELATIVE_DIRECTION>側です。"
       },
       "relative_directions": [
-        "linken",
-        "rechten"
+        "左",
+        "右"
       ],
       "example_phrases": {
         "0": [
@@ -352,17 +352,17 @@
     },
     "enter_ferry": {
       "phrases": {
-        "0": "Die Fähre nehmen.",
-        "1": "Die <STREET_NAMES> nehmen.",
-        "2": "Die <FERRY_LABEL> <STREET_NAMES> nehmen.",
-        "3": "Die Fähre in Richtung <TOWARD_SIGN> nehmen."
+        "0": "フェリーに乗ります。",
+        "1": " <STREET_NAMES>です。",
+        "2": "<STREET_NAMES> です。その先、<FERRY_LABEL>です。",
+        "3": "<TOWARD_SIGN>方面のフェリーに乗ります。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
-      "ferry_label": "Fähre",
+      "ferry_label": "フェリー",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -380,17 +380,17 @@
     },
     "enter_ferry_verbal": {
       "phrases": {
-        "0": "Die Fähre nehmen.",
-        "1": "Die <STREET_NAMES> nehmen.",
-        "2": "Die <FERRY_LABEL> <STREET_NAMES> nehmen.",
-        "3": "Die Fähre in Richtung <TOWARD_SIGN> nehmen."
+        "0": "フェリーに乗ります。",
+        "1": "<STREET_NAMES>です。",
+        "2": "<STREET_NAMES> です。その先、<FERRY_LABEL>です。",
+        "3": "<TOWARD_SIGN>方面のフェリーに乗ります。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
-      "ferry_label": "Fähre",
+      "ferry_label": "フェリー",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -408,39 +408,39 @@
     },
     "enter_roundabout": {
       "phrases": {
-        "0": "In den Kreisverkehr fahren.",
-        "1": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt nehmen.",
-        "2": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt auf <ROUNDABOUT_EXIT_STREET_NAMES> nehmen.",
-        "3": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt auf <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> nehmen. Weiter auf <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt in Richtung <TOWARD_SIGN> nehmen.",
-        "5": "In den Kreisverkehr fahren und die Ausfahrt auf <ROUNDABOUT_EXIT_STREET_NAMES> nehmen.",
-        "6": "In den Kreisverkehr fahren und die Ausfahrt auf <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> nehmen. Weiter auf <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "7": "In den Kreisverkehr fahren und die Ausfahrt in Richtung <TOWARD_SIGN> nehmen.",
-        "8": "Auf <STREET_NAMES> fahren.",
-        "9": "Auf <STREET_NAMES> fahren und die <ORDINAL_VALUE> Ausfahrt nehmen.",
-        "10": "Auf <STREET_NAMES> fahren und die <ORDINAL_VALUE> Ausfahrt auf <ROUNDABOUT_EXIT_STREET_NAMES> nehmen.",
-        "11": "Auf <STREET_NAMES> fahren und die <ORDINAL_VALUE> Ausfahrt auf <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> nehmen. Weiter auf <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "12": "Auf <STREET_NAMES> fahren und die <ORDINAL_VALUE> Ausfahrt in Richtung <TOWARD_SIGN> nehmen.",
-        "13": "Auf <STREET_NAMES> fahren und die Ausfahrt auf <ROUNDABOUT_EXIT_STREET_NAMES> nehmen.",
-        "14": "Auf <STREET_NAMES> fahren und die Ausfahrt auf <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> nehmen. Weiter auf <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Auf <STREET_NAMES> fahren und die Ausfahrt in Richtung <TOWARD_SIGN> nehmen."
+        "0": "環状交差点に入ります。",
+        "1": "環状交差点に入り、<ORDINAL_VALUE> を出ます。",
+        "2": "環状交差点に入り、  <ORDINAL_VALUE>を出て <ROUNDABOUT_EXIT_STREET_NAMES>に入ります。",
+        "3": "環状交差点に入り、 <ORDINAL_VALUE> を出て <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>に入ります。その先、 <ROUNDABOUT_EXIT_STREET_NAMES>を進みます。",
+        "4": "環状交差点に入り、<TOWARD_SIGN> 方面に<ORDINAL_VALUE>を出ます。",
+        "5": "環状交差点に入り、 <ROUNDABOUT_EXIT_STREET_NAMES>方面に出ます。",
+        "6": "環状交差点に入り、 <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に出ます。その先、 <ROUNDABOUT_EXIT_STREET_NAMES>を進みます。",
+        "7": "環状交差点に入り、 <TOWARD_SIGN>方面に出ます。",
+        "8": "<STREET_NAMES>に入ります。",
+        "9": "<STREET_NAMES> に入り、 <ORDINAL_VALUE> を出ます。",
+        "10": "<STREET_NAMES> に入り、<ROUNDABOUT_EXIT_STREET_NAMES>方面に <ORDINAL_VALUE> を出ます。",
+        "11": " <STREET_NAMES> に入り、<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に <ORDINAL_VALUE> を出ます。その先、<ROUNDABOUT_EXIT_STREET_NAMES>を進みます。",
+        "12": " <STREET_NAMES> に入り、<TOWARD_SIGN>方面に <ORDINAL_VALUE> を出ます。",
+        "13": "<STREET_NAMES> に入り、<ROUNDABOUT_EXIT_STREET_NAMES>方面に出ます。",
+        "14": "<STREET_NAMES> に入り、 <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に出ます。その先 <ROUNDABOUT_EXIT_STREET_NAMES>を進みます。",
+        "15": "<STREET_NAMES> に入り、<TOWARD_SIGN>方面に出ます。"
       },
       "ordinal_values": [
-        "1.",
-        "2.",
-        "3.",
-        "4.",
-        "5.",
-        "6.",
-        "7.",
-        "8.",
-        "9.",
-        "10."
+        "1 つ目の",
+        "2 つ目の",
+        "3 つ目の",
+        "4 つ目の",
+        "5 つ目の",
+        "6 つ目の",
+        "7 つ目の",
+        "8 つ目の",
+        "9 つ目の",
+        "10 番目の"
       ],
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "example_phrases": {
         "0": [
@@ -504,39 +504,39 @@
     },
     "enter_roundabout_verbal": {
       "phrases": {
-        "0": "In den Kreisverkehr fahren.",
-        "1": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt nehmen.",
-        "2": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt nehmen auf <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt auf <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> nehmen.",
-        "4": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt in Richtung <TOWARD_SIGN> nehmen.",
-        "5": "In den Kreisverkehr fahren und die Ausfahrt auf <ROUNDABOUT_EXIT_STREET_NAMES> nehmen.",
-        "6": "In den Kreisverkehr fahren und die Ausfahrt auf <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> nehmen.",
-        "7": "In den Kreisverkehr fahren und die Ausfahrt in Richtung <TOWARD_SIGN> nehmen.",
-        "8": "Auf <STREET_NAMES> fahren.",
-        "9": "Auf <STREET_NAMES> fahren",
-        "10": "Auf <STREET_NAMES> fahren und die <ORDINAL_VALUE> Ausfahrt auf <ROUNDABOUT_EXIT_STREET_NAMES> nehmen.",
-        "11": "Auf <STREET_NAMES> fahren und die <ORDINAL_VALUE> Ausfahrt auf <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> nehmen.",
-        "12": "Auf <STREET_NAMES> fahren und die <ORDINAL_VALUE> Ausfahrt in Richtung <TOWARD_SIGN> nehmen.",
-        "13": "Auf <STREET_NAMES> fahren und die Ausfahrt auf <ROUNDABOUT_EXIT_STREET_NAMES> nehmen.",
-        "14": "Auf <STREET_NAMES> fahren und die Ausfahrt auf <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> nehmen.",
-        "15": "Auf <STREET_NAMES> fahren und die Ausfahrt in Richtung <TOWARD_SIGN> nehmen."
+        "0": "環状交差点に入ります。",
+        "1": "環状交差点に入り、<ORDINAL_VALUE> を出ます。",
+        "2": "環状交差点に入り、  <ORDINAL_VALUE>を出て <ROUNDABOUT_EXIT_STREET_NAMES>に入ります。",
+        "3": "環状交差点に入り、<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に <ORDINAL_VALUE> を出ます。",
+        "4": "環状交差点に入り、<TOWARD_SIGN> 方面に<ORDINAL_VALUE>を出ます。",
+        "5": "環状交差点に入り、 <ROUNDABOUT_EXIT_STREET_NAMES>方面に出ます。",
+        "6": "環状交差点に入り、 <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に出ます。",
+        "7": "環状交差点に入り、 <TOWARD_SIGN>方面に出ます。",
+        "8": "<STREET_NAMES>に入ります。",
+        "9": "<STREET_NAMES> に入り、 <ORDINAL_VALUE> を出ます。",
+        "10": "<STREET_NAMES> に入り、<ROUNDABOUT_EXIT_STREET_NAMES>方面に <ORDINAL_VALUE> を出ます。",
+        "11": "<STREET_NAMES> に入り、<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に <ORDINAL_VALUE> を出ます。",
+        "12": "<STREET_NAMES> に入り、<TOWARD_SIGN>方面に <ORDINAL_VALUE> を出ます。",
+        "13": "<STREET_NAMES> に入り、<ROUNDABOUT_EXIT_STREET_NAMES>方面に出ます。",
+        "14": "<STREET_NAMES>に入り、 <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に出ます。",
+        "15": "<STREET_NAMES> に入り、<TOWARD_SIGN>方面に出ます。"
       },
       "ordinal_values": [
-        "erste",
-        "zweite",
-        "dritte",
-        "vierte",
-        "fünfte",
-        "sechste",
-        "siebte",
-        "achte",
-        "neunte",
-        "zehnte"
+        "1 つ目の",
+        "2 つ目の",
+        "3 つ目の",
+        "4 つ目の",
+        "5 つ目の",
+        "6 つ目の",
+        "7 つ目の",
+        "8 つ目の",
+        "9 つ目の",
+        "10 番目の"
       ],
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "example_phrases": {
         "0": [
@@ -600,34 +600,34 @@
     },
     "exit": {
       "phrases": {
-        "0": "An der Ausfahrt <RELATIVE_DIRECTION> abfahren.",
-        "1": "An der Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren.",
-        "2": "Auf <BRANCH_SIGN> über die Ausfahrt <RELATIVE_DIRECTION> abfahren.",
-        "3": "Auf <BRANCH_SIGN> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren.",
-        "4": "An der Ausfahrt <RELATIVE_DIRECTION> abfahren Richtung <TOWARD_SIGN>.",
-        "5": "An der Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren Richtung <TOWARD_SIGN>.",
-        "6": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <RELATIVE_DIRECTION> abfahren.",
-        "7": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren.",
-        "8": "An der Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren.",
-        "10": "Auf <BRANCH_SIGN> über die Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren.",
-        "12": "An der Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren Richtung <TOWARD_SIGN>.",
-        "14": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren.",
-        "15": "An der Ausfahrt abfahren.",
-        "16": "An der Ausfahrt <NUMBER_SIGN> abfahren.",
-        "17": "An der Ausfahrt <BRANCH_SIGN> abfahren.",
-        "18": "Auf <BRANCH_SIGN> über die Ausfahrt <NUMBER_SIGN>.",
-        "19": "An der Ausfahrt abfahren Richtung <TOWARD_SIGN>.",
-        "20": "An der Ausfahrt <NUMBER_SIGN> abfahren Richtung <TOWARD_SIGN>.",
-        "21": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt abfahren.",
-        "22": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NUMBER_SIGN> abfahren.",
-        "23": "An der Ausfahrt <NAME_SIGN> abfahren.",
-        "25": "Auf <BRANCH_SIGN> über die Ausfahrt <NAME_SIGN> abfahren.",
-        "27": "An der Ausfahrt <NAME_SIGN> abfahren Richtung <TOWARD_SIGN>.",
-        "29": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NAME_SIGN> abfahren."
+        "0": " <RELATIVE_DIRECTION>方向、出口です。",
+        "1": "<RELATIVE_DIRECTION>方向、 <NUMBER_SIGN> 番出口です。",
+        "2": "<RELATIVE_DIRECTION>方向、 <BRANCH_SIGN>出口です。",
+        "3": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<BRANCH_SIGN>です。",
+        "4": "<RELATIVE_DIRECTION>方向、 <TOWARD_SIGN>方面出口です。",
+        "5": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面<NUMBER_SIGN>番出口です。",
+        "6": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面<BRANCH_SIGN>出口です。",
+        "7": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<BRANCH_SIGN>、<TOWARD_SIGN>方面です。",
+        "8": "<RELATIVE_DIRECTION>方向、<NAME_SIGN> 出口です。",
+        "10": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向、 <NAME_SIGN> 出口です。",
+        "12": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面<NAME_SIGN>出口です。",
+        "14": "<RELATIVE_DIRECTION>方向、<NAME_SIGN>出口です。その先<BRANCH_SIGN>、<TOWARD_SIGN>方面です。",
+        "15": "出口です。",
+        "16": "<NUMBER_SIGN>番出口です。",
+        "17": "<BRANCH_SIGN>出口です。",
+        "18": "<NUMBER_SIGN>番出口です。その先<BRANCH_SIGN>です。",
+        "19": "<TOWARD_SIGN>方面、出口です。",
+        "20": "<TOWARD_SIGN>方面、<NUMBER_SIGN>番出口です。",
+        "21": "<TOWARD_SIGN>方面、<BRANCH_SIGN>出口です。",
+        "22": "<NUMBER_SIGN>番出口です。その先<BRANCH_SIGN>、<TOWARD_SIGN>方面です。",
+        "23": "<NAME_SIGN>出口です。",
+        "25": "<NAME_SIGN>出口です。その先<BRANCH_SIGN>です。",
+        "27": "<NAME_SIGN>出口、<TOWARD_SIGN>方面です。",
+        "29": "<NAME_SIGN>出口です。その先<BRANCH_SIGN>、<TOWARD_SIGN>方面です。"
       },
       "relative_directions": [
-        "links",
-        "rechts"
+        "左",
+        "右"
       ],
       "example_phrases": {
         "0": [
@@ -707,15 +707,15 @@
     },
     "exit_roundabout": {
       "phrases": {
-        "0": "Aus dem Kreisverkehr ausfahren.",
-        "1": "Aus dem Kreisverkehr auf <STREET_NAMES> ausfahren.",
-        "2": "Aus dem Kreisverkehr auf <BEGIN_STREET_NAMES> ausfahren. Dann weiter auf <STREET_NAMES>.",
-        "3": "Aus dem Kreisverkehr in Richtung <TOWARD_SIGN> ausfahren."
+        "0": "環状交差点を出ます。",
+        "1": " <STREET_NAMES>方面に環状交差点を出ます。",
+        "2": "<BEGIN_STREET_NAMES>方面に環状交差点を出ます。その先、 <STREET_NAMES>を進みます。",
+        "3": "<TOWARD_SIGN>方面に環状交差点を出ます。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "example_phrases": {
         "0": [
@@ -734,15 +734,15 @@
     },
     "exit_roundabout_verbal": {
       "phrases": {
-        "0": "Aus dem Kreisverkehr ausfahren.",
-        "1": "Aus dem Kreisverkehr auf <STREET_NAMES> ausfahren.",
-        "2": "Aus dem Kreisverkehr auf <BEGIN_STREET_NAMES> ausfahren.",
-        "3": "Aus dem Kreisverkehr in Richtung <TOWARD_SIGN> ausfahren."
+        "0": "環状交差点を出ます。",
+        "1": "<STREET_NAMES>方面に環状交差点を出ます。",
+        "2": "<BEGIN_STREET_NAMES>方面に環状交差点を出ます。",
+        "3": " <TOWARD_SIGN>方面に環状交差点を出ます。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "example_phrases": {
         "0": [
@@ -761,34 +761,34 @@
     },
     "exit_verbal": {
       "phrases": {
-        "0": "An der Ausfahrt <RELATIVE_DIRECTION> abfahren.",
-        "1": "An der Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren.",
-        "2": "Auf <BRANCH_SIGN> über die Ausfahrt <RELATIVE_DIRECTION> abfahren.",
-        "3": "Auf <BRANCH_SIGN> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren.",
-        "4": "An der Ausfahrt <RELATIVE_DIRECTION> abfahren Richtung <TOWARD_SIGN>.",
-        "5": "An der Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren Richtung <TOWARD_SIGN>.",
-        "6": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <RELATIVE_DIRECTION> abfahren.",
-        "7": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> abfahren.",
-        "8": "An der Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren.",
-        "10": "Auf <BRANCH_SIGN> über die Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren.",
-        "12": "An der Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren Richtung <TOWARD_SIGN>.",
-        "14": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NAME_SIGN> <RELATIVE_DIRECTION> abfahren.",
-        "15": "An der Ausfahrt abfahren.",
-        "16": "An der Ausfahrt <NUMBER_SIGN> abfahren.",
-        "17": "An der Ausfahrt <BRANCH_SIGN> abfahren.",
-        "18": "Auf <BRANCH_SIGN> über die Ausfahrt <NUMBER_SIGN>.",
-        "19": "An der Ausfahrt abfahren Richtung <TOWARD_SIGN>.",
-        "20": "An der Ausfahrt <NUMBER_SIGN> abfahren Richtung <TOWARD_SIGN>.",
-        "21": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt abfahren.",
-        "22": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NUMBER_SIGN> abfahren.",
-        "23": "An der Ausfahrt <NAME_SIGN> abfahren.",
-        "25": "Auf <BRANCH_SIGN> über die Ausfahrt <NAME_SIGN> abfahren.",
-        "27": "An der Ausfahrt <NAME_SIGN> abfahren Richtung <TOWARD_SIGN>.",
-        "29": "Auf <BRANCH_SIGN> Richtung <TOWARD_SIGN> über die Ausfahrt <NAME_SIGN> abfahren."
+        "0": " <RELATIVE_DIRECTION>方向、出口です。",
+        "1": "<RELATIVE_DIRECTION>方向、 <NUMBER_SIGN> 番出口です。",
+        "2": "<RELATIVE_DIRECTION>方向、 <BRANCH_SIGN>出口です。",
+        "3": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<BRANCH_SIGN>です。",
+        "4": "<RELATIVE_DIRECTION>方向、 <TOWARD_SIGN>方面出口です。",
+        "5": "<RELATIVE_DIRECTION>方向<TOWARD_SIGN>方面、<NUMBER_SIGN>番出口です。",
+        "6": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面<BRANCH_SIGN>出口です。",
+        "7": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<BRANCH_SIGN>、<TOWARD_SIGN>方面です。",
+        "8": "<RELATIVE_DIRECTION>方向、<NAME_SIGN> 出口です。",
+        "10": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向、 <NAME_SIGN> 出口です。",
+        "12": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面<NAME_SIGN>出口です。",
+        "14": "<RELATIVE_DIRECTION>方向、<NAME_SIGN>出口です。その先<BRANCH_SIGN>、<TOWARD_SIGN>方面です。",
+        "15": "出口です。",
+        "16": "<NUMBER_SIGN>番出口です。",
+        "17": "<BRANCH_SIGN>出口です。",
+        "18": "<NUMBER_SIGN>番出口です。その先<BRANCH_SIGN>です。",
+        "19": "<TOWARD_SIGN>方面、出口です。",
+        "20": "<TOWARD_SIGN>方面、<NUMBER_SIGN>番出口です。",
+        "21": "<TOWARD_SIGN>方面、<BRANCH_SIGN>出口です。",
+        "22": "<NUMBER_SIGN>番出口です。その先<BRANCH_SIGN>、<TOWARD_SIGN>方面です。",
+        "23": "<NAME_SIGN>出口です。",
+        "25": "<NAME_SIGN>出口です。その先<BRANCH_SIGN>です。",
+        "27": "<NAME_SIGN>出口、<TOWARD_SIGN>方面です。",
+        "29": "<NAME_SIGN>出口です。その先<BRANCH_SIGN>、<TOWARD_SIGN>方面です。"
       },
       "relative_directions": [
-        "links",
-        "rechts"
+        "左",
+        "右"
       ],
       "example_phrases": {
         "0": [
@@ -868,7 +868,7 @@
     },
     "exit_visual": {
       "phrases": {
-        "0": "Ausfahrt <EXIT_NUMBERS>"
+        "0": "<EXIT_NUMBERS>番出口"
       },
       "example_phrases": {
         "0": [
@@ -878,24 +878,24 @@
     },
     "keep": {
       "phrases": {
-        "0": "<RELATIVE_DIRECTION> halten an der Gabelung.",
-        "1": "<RELATIVE_DIRECTION> halten auf die Ausfahrt <NUMBER_SIGN>.",
-        "2": "<RELATIVE_DIRECTION> halten auf <STREET_NAMES>.",
-        "3": "<RELATIVE_DIRECTION> halten um die Ausfahrt <NUMBER_SIGN> auf <STREET_NAMES> zu nehmen.",
-        "4": "<RELATIVE_DIRECTION> halten Richtung <TOWARD_SIGN>.",
-        "5": "<RELATIVE_DIRECTION> halten um die Ausfahrt <NUMBER_SIGN> Richtung <TOWARD_SIGN> zu nehmen.",
-        "6": "<RELATIVE_DIRECTION> halten auf <STREET_NAMES> Richtung <TOWARD_SIGN>.",
-        "7": "<RELATIVE_DIRECTION> halten um die Ausfahrt <NUMBER_SIGN> auf <STREET_NAMES> Richtung <TOWARD_SIGN> zu nehmen."
+        "0": "分岐を <RELATIVE_DIRECTION>方向です。",
+        "1": "<RELATIVE_DIRECTION>方向です。その先<NUMBER_SIGN>番出口です。",
+        "2": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>です。",
+        "3": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<STREET_NAMES>です。",
+        "4": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面です。",
+        "5": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<TOWARD_SIGN>方面です。",
+        "6": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>、<TOWARD_SIGN>方面です。",
+        "7": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<STREET_NAMES>、<TOWARD_SIGN>方面です。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "relative_directions": [
-        "Links",
-        "Geradeaus",
-        "Rechts"
+        "左",
+        "直進",
+        "右"
       ],
       "example_phrases": {
         "0": [
@@ -928,20 +928,20 @@
     },
     "keep_to_stay_on": {
       "phrases": {
-        "0": "Auf <STREET_NAMES> <RELATIVE_DIRECTION> halten.",
-        "1": "Auf <STREET_NAMES> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten.",
-        "2": "Auf <STREET_NAMES> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten.",
-        "3": "Auf <STREET_NAMES> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten Richtung <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>です。",
+        "1": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<STREET_NAMES>です。",
+        "2": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>、<TOWARD_SIGN>方面です。",
+        "3": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<STREET_NAMES>、<TOWARD_SIGN>方面です。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "relative_directions": [
-        "links",
-        "geradeaus",
-        "rechts"
+        "左",
+        "直進",
+        "右"
       ],
       "example_phrases": {
         "0": [
@@ -962,20 +962,20 @@
     },
     "keep_to_stay_on_verbal": {
       "phrases": {
-        "0": "Auf <STREET_NAMES> <RELATIVE_DIRECTION> halten.",
-        "1": "Auf <STREET_NAMES> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten.",
-        "2": "Auf <STREET_NAMES> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten.",
-        "3": "Auf <STREET_NAMES> über die Ausfahrt <NUMBER_SIGN> <RELATIVE_DIRECTION> halten Richtung <TOWARD_SIGN>."
+        "0": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>です。",
+        "1": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<STREET_NAMES>です。",
+        "2": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>、<TOWARD_SIGN>方面です。",
+        "3": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<STREET_NAMES>、<TOWARD_SIGN>方面です。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "relative_directions": [
-        "links",
-        "geradeaus",
-        "rechts"
+        "左",
+        "直進",
+        "右"
       ],
       "example_phrases": {
         "0": [
@@ -996,24 +996,24 @@
     },
     "keep_verbal": {
       "phrases": {
-        "0": "<RELATIVE_DIRECTION> halten an der Gabelung.",
-        "1": "<RELATIVE_DIRECTION> halten auf die Ausfahrt <NUMBER_SIGN>.",
-        "2": "<RELATIVE_DIRECTION> halten auf <STREET_NAMES>.",
-        "3": "<RELATIVE_DIRECTION> halten um die Ausfahrt <NUMBER_SIGN> auf <STREET_NAMES> zu nehmen.",
-        "4": "<RELATIVE_DIRECTION> halten Richtung <TOWARD_SIGN>.",
-        "5": "<RELATIVE_DIRECTION> halten um die Ausfahrt <NUMBER_SIGN> Richtung <TOWARD_SIGN> zu nehmen.",
-        "6": "<RELATIVE_DIRECTION> halten auf <STREET_NAMES> Richtung <TOWARD_SIGN>.",
-        "7": "<RELATIVE_DIRECTION> halten um die Ausfahrt <NUMBER_SIGN> auf <STREET_NAMES> Richtung <TOWARD_SIGN> zu nehmen."
+        "0": "分岐を <RELATIVE_DIRECTION>方向です。",
+        "1": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。",
+        "2": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>です。",
+        "3": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<STREET_NAMES>です。",
+        "4": "<RELATIVE_DIRECTION>方向です。その先、<TOWARD_SIGN>方面です。",
+        "5": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先、<TOWARD_SIGN>方面です。",
+        "6": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>、<TOWARD_SIGN>方面です。",
+        "7": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<STREET_NAMES>、<TOWARD_SIGN>方面です。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "relative_directions": [
-        "Links",
-        "Geradeaus",
-        "Rechts"
+        "左",
+        "直進",
+        "右"
       ],
       "example_phrases": {
         "0": [
@@ -1046,21 +1046,21 @@
     },
     "merge": {
       "phrases": {
-        "0": "Einfädeln.",
-        "1": "<RELATIVE_DIRECTION> einfädeln.",
-        "2": "Auf <STREET_NAMES> einfädeln.",
-        "3": "<RELATIVE_DIRECTION> auf <STREET_NAMES> einfädeln.",
-        "4": "In Richtung <TOWARD_SIGN> einfädeln.",
-        "5": "In Richtung <TOWARD_SIGN> nach <RELATIVE_DIRECTION> einfädeln."
+        "0": "合流です。",
+        "1": "<RELATIVE_DIRECTION>方向に合流です。",
+        "2": "合流です。 <STREET_NAMES>に入ります。",
+        "3": "<RELATIVE_DIRECTION>方向 に合流です。<STREET_NAMES>に入ります。",
+        "4": "<TOWARD_SIGN>方面に合流です。",
+        "5": "<RELATIVE_DIRECTION> 方向に合流です。<TOWARD_SIGN>方面に進みます。"
       },
       "relative_directions": [
-        "Links",
-        "Rechts"
+        "左",
+        "右"
       ],
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "example_phrases": {
         "0": [
@@ -1085,25 +1085,25 @@
     },
     "merge_verbal": {
       "phrases": {
-        "0": "Einfädeln.",
-        "1": "<RELATIVE_DIRECTION> einfädeln.",
-        "2": "Auf <STREET_NAMES> einfädeln.",
-        "3": "<RELATIVE_DIRECTION> auf <STREET_NAMES> einfädeln.",
-        "4": "In Richtung <TOWARD_SIGN> einfädeln.",
-        "5": "In Richtung <TOWARD_SIGN> nach <RELATIVE_DIRECTION> einfädeln."
+        "0": "合流です。",
+        "1": "<RELATIVE_DIRECTION>方向に合流です。",
+        "2": "合流です。 <STREET_NAMES>に入ります。",
+        "3": "<RELATIVE_DIRECTION> に合流です。<STREET_NAMES>に入ります。",
+        "4": "<TOWARD_SIGN>方面に合流です。",
+        "5": " <RELATIVE_DIRECTION>方向に合流です。<TOWARD_SIGN>方面に進みます。"
       },
       "relative_directions": [
-        "Links",
-        "Rechts"
+        "左",
+        "右"
       ],
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "example_phrases": {
         "0": [
-          "Merge."
+          "合流です。"
         ],
         "1": [
           "Merge left."
@@ -1124,42 +1124,42 @@
     },
     "post_transition_transit_verbal": {
       "phrases": {
-        "0": "<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> fahren."
+        "0": "<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>乗車します。"
       },
       "transit_stop_count_labels": {
-        "one": "Haltestelle",
-        "other": "Haltestellen"
+        "one": "駅",
+        "other": "駅"
       },
       "example_phrases": {
         "0": [
-          "Travel 1 stop.",
-          "Travel 3 stops."
+          "1駅乗車します。",
+          "3駅乗車します。"
         ]
       }
     },
     "post_transition_verbal": {
       "phrases": {
-        "0": "<LENGTH> weiter.",
-        "1": "<LENGTH> weiter auf <STREET_NAMES>."
+        "0": "<LENGTH>直進です。",
+        "1": " <STREET_NAMES> を <LENGTH>直進です。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "metric_lengths": [
-        "<KILOMETERS> Kilometer",
-        "einen Kilometer",
-        "<METERS> Meter",
-        "weniger als 10 Meter"
+        "<KILOMETERS> キロメートル",
+        "1 キロメートル",
+        "<METERS> メートル",
+        " 10メートル以内"
       ],
       "us_customary_lengths": [
-        "<MILES> Meilen",
-        "eine Meile",
-        "eine halbe Meile",
-        "eine viertel Meile",
-        "<FEET> Fuß",
-        "weniger als 10 Fuß"
+        "<MILES> マイル",
+        "1 マイル",
+        "0.5 マイル",
+        "0.25 マイル",
+        "<FEET> フィート",
+        "10 フィート以内"
       ],
       "example_phrases": {
         "0": [
@@ -1174,25 +1174,25 @@
     },
     "ramp": {
       "phrases": {
-        "0": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> abbiegen.",
-        "1": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.",
-        "2": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.",
-        "3": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.",
-        "4": "Auf die Auffahrt <NAME_SIGN> leicht nach <RELATIVE_DIRECTION> abbiegen.",
-        "5": "Auf die Auffahrt nach <RELATIVE_DIRECTION> abbiegen.",
-        "6": "Auf die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.",
-        "7": "Auf die Auffahrt nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.",
-        "8": "Auf die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.",
-        "9": "Auf die Auffahrt <NAME_SIGN> nach <RELATIVE_DIRECTION> abbiegen.",
-        "10": "Auf die Auffahrt abbiegen.",
-        "11": "Auf die Auffahrt <BRANCH_SIGN> abbiegen.",
-        "12": "Auf die Auffahrt abbiegen Richtung <TOWARD_SIGN>.",
-        "13": "Auf die Auffahrt <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.",
-        "14": "Auf die Auffahrt <NAME_SIGN> abbiegen."
+        "0": "分岐を<RELATIVE_DIRECTION>方向です。",
+        "1": "<BRANCH_SIGN> を <RELATIVE_DIRECTION>方向です。",
+        "2": "分岐を <RELATIVE_DIRECTION> 方向です。その先<TOWARD_SIGN>方面です。",
+        "3": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向です。その先<TOWARD_SIGN>方面です。",
+        "4": "<NAME_SIGN>を  <RELATIVE_DIRECTION>方向です。",
+        "5": "分岐を<RELATIVE_DIRECTION>方向です。",
+        "6": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向です。",
+        "7": "分岐を<RELATIVE_DIRECTION>方向です。その先<TOWARD_SIGN>方面です。",
+        "8": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向です。その先<TOWARD_SIGN>方面です。",
+        "9": "<NAME_SIGN>を<RELATIVE_DIRECTION>方向です。",
+        "10": "分岐です。",
+        "11": "分岐を<BRANCH_SIGN> 方面です。",
+        "12": "分岐を <TOWARD_SIGN>方面です。",
+        "13": "<BRANCH_SIGN> を <TOWARD_SIGN>方面です。",
+        "14": "<NAME_SIGN> 方面です。"
       },
       "relative_directions": [
-        "links",
-        "rechts"
+        "左",
+        "右"
       ],
       "example_phrases": {
         "0": [
@@ -1246,11 +1246,11 @@
     },
     "ramp_straight": {
       "phrases": {
-        "0": "Geradeaus auf die Auffahrt fahren.",
-        "1": "Auf <BRANCH_SIGN> geradeaus auf die Auffahrt fahren.",
-        "2": "Geradeaus auf die Auffahrt fahren Richtung <TOWARD_SIGN>.",
-        "3": "Auf <BRANCH_SIGN> geradeaus auf die Auffahrt fahren Richtung <TOWARD_SIGN>.",
-        "4": "Geradeaus auf die Auffahrt <NAME_SIGN> fahren."
+        "0": "分岐を直進です。",
+        "1": "<BRANCH_SIGN>を直進です。",
+        "2": "分岐を直進です。その先<TOWARD_SIGN>方面です。",
+        "3": "<BRANCH_SIGN>を直進です。その先<TOWARD_SIGN>方面です。",
+        "4": "<NAME_SIGN>を直進です。"
       },
       "example_phrases": {
         "0": [
@@ -1272,11 +1272,11 @@
     },
     "ramp_straight_verbal": {
       "phrases": {
-        "0": "Geradeaus auf die Auffahrt fahren.",
-        "1": "Auf <BRANCH_SIGN> geradeaus auf die Auffahrt fahren.",
-        "2": "Geradeaus auf die Auffahrt fahren Richtung <TOWARD_SIGN>.",
-        "3": "Auf <BRANCH_SIGN> geradeaus auf die Auffahrt fahren Richtung <TOWARD_SIGN>.",
-        "4": "Geradeaus auf die Auffahrt <NAME_SIGN> fahren."
+        "0": "分岐を直進です。",
+        "1": "<BRANCH_SIGN>を直進です。",
+        "2": "分岐を直進です。その先<TOWARD_SIGN>方面です。",
+        "3": "<BRANCH_SIGN>を直進です。その先<TOWARD_SIGN>方面です。",
+        "4": "<NAME_SIGN>を直進です。"
       },
       "example_phrases": {
         "0": [
@@ -1298,25 +1298,25 @@
     },
     "ramp_verbal": {
       "phrases": {
-        "0": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> abbiegen.",
-        "1": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.",
-        "2": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.",
-        "3": "Auf die Auffahrt leicht nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.",
-        "4": "Auf die Auffahrt <NAME_SIGN> leicht nach <RELATIVE_DIRECTION> abbiegen.",
-        "5": "Auf die Auffahrt nach <RELATIVE_DIRECTION> abbiegen.",
-        "6": "Auf die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen.",
-        "7": "Auf die Auffahrt nach <RELATIVE_DIRECTION> abbiegen Richtung <TOWARD_SIGN>.",
-        "8": "Auf die Auffahrt nach <RELATIVE_DIRECTION> auf <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.",
-        "9": "Auf die Auffahrt <NAME_SIGN> nach <RELATIVE_DIRECTION> abbiegen.",
-        "10": "Auf die Auffahrt abbiegen.",
-        "11": "Auf die Auffahrt <BRANCH_SIGN> abbiegen.",
-        "12": "Auf die Auffahrt abbiegen Richtung <TOWARD_SIGN>.",
-        "13": "Auf die Auffahrt <BRANCH_SIGN> abbiegen Richtung <TOWARD_SIGN>.",
-        "14": "Auf die Auffahrt <NAME_SIGN> abbiegen."
+        "0": "分岐を<RELATIVE_DIRECTION>方向です。",
+        "1": "<BRANCH_SIGN> を <RELATIVE_DIRECTION>方向です。",
+        "2": "分岐を <RELATIVE_DIRECTION> 方向です。その先<TOWARD_SIGN>方面です。",
+        "3": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向です。その先<TOWARD_SIGN>方面です。",
+        "4": "<NAME_SIGN>を  <RELATIVE_DIRECTION>方向です。",
+        "5": "分岐を<RELATIVE_DIRECTION>方向です。",
+        "6": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向です。",
+        "7": "分岐を<RELATIVE_DIRECTION>方向です。その先<TOWARD_SIGN>方面です。",
+        "8": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向です。その先<TOWARD_SIGN>方面です。",
+        "9": "<NAME_SIGN>を<RELATIVE_DIRECTION>方向です。",
+        "10": "分岐です。",
+        "11": "分岐を<BRANCH_SIGN> 方面です。",
+        "12": "分岐を <TOWARD_SIGN>方面です。",
+        "13": "<BRANCH_SIGN> を <TOWARD_SIGN>方面です。",
+        "14": "分岐を<NAME_SIGN> 方面です。"
       },
       "relative_directions": [
-        "links",
-        "rechts"
+        "左",
+        "右"
       ],
       "example_phrases": {
         "0": [
@@ -1370,34 +1370,34 @@
     },
     "sharp": {
       "phrases": {
-        "0": "Scharf nach <RELATIVE_DIRECTION> abbiegen.",
-        "1": "Scharf nach <RELATIVE_DIRECTION> auf <STREET_NAMES> abbiegen.",
-        "2": "Scharf nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
-        "3": "Scharf nach <RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
-        "4": "An <JUNCTION_NAME> scharf nach <RELATIVE_DIRECTION> abbiegen.",
-        "5": "Scharf nach <RELATIVE_DIRECTION> in Richtung <TOWARD_SIGN> abbiegen."
+        "0": "斜め<RELATIVE_DIRECTION>手前方向です。",
+        "1": "斜め<RELATIVE_DIRECTION> 手前方向です。その先<STREET_NAMES>です。",
+        "2": "斜め <RELATIVE_DIRECTION>手前方向、<BEGIN_STREET_NAMES>です。その先、<STREET_NAMES>です。",
+        "3": "斜め <RELATIVE_DIRECTION> 手前方向です。その先<STREET_NAMES>です。",
+        "4": "<JUNCTION_NAME>を斜め <RELATIVE_DIRECTION> 手前方向です。",
+        "5": "斜め<RELATIVE_DIRECTION>手前方向、<TOWARD_SIGN>方面です。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "relative_directions": [
-        "links",
-        "rechts"
+        "左",
+        "右"
       ],
       "example_phrases": {
         "0": [
-          "Make a sharp right."
+          "Make a sharp left."
         ],
         "1": [
-          "Make a sharp left onto Arlen Road."
+          "Make a sharp right onto Flatbush Avenue."
         ],
         "2": [
-          "Make a sharp right onto Belair Road/US 1 Business. Continue on US 1 Business."
+          "Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
         ],
         "3": [
-          "Make a sharp left to stay on US 15 South."
+          "Make a sharp right to stay on Sunstone Drive."
         ],
         "4": [
           "Make a sharp right at Mannenbashi East."
@@ -1409,34 +1409,34 @@
     },
     "sharp_verbal": {
       "phrases": {
-        "0": "Scharf nach <RELATIVE_DIRECTION> abbiegen.",
-        "1": "Scharf nach <RELATIVE_DIRECTION> auf <STREET_NAMES> abbiegen.",
-        "2": "Scharf nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen.",
-        "3": "Scharf nach <RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
-        "4": "An <JUNCTION_NAME> scharf nach <RELATIVE_DIRECTION> abbiegen.",
-        "5": "Scharf nach <RELATIVE_DIRECTION> in Richtung <TOWARD_SIGN> abbiegen."
+        "0": "斜め<RELATIVE_DIRECTION>手前方向です。",
+        "1": "斜め<RELATIVE_DIRECTION> 手前方向です。その先<STREET_NAMES>です。",
+        "2": "斜め<RELATIVE_DIRECTION> 手前方向です。その先<BEGIN_STREET_NAMES>です。",
+        "3": "斜め <RELATIVE_DIRECTION> 手前方向です。その先<STREET_NAMES>です。",
+        "4": "<JUNCTION_NAME>を斜め <RELATIVE_DIRECTION> 手前方向です。",
+        "5": "斜め<RELATIVE_DIRECTION>手前方向、<TOWARD_SIGN>方面です。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "relative_directions": [
-        "links",
-        "rechts"
+        "左",
+        "右"
       ],
       "example_phrases": {
         "0": [
-          "Make a sharp right."
+          "Make a sharp left."
         ],
         "1": [
-          "Make a sharp left onto Arlen Road."
+          "Make a sharp right onto Flatbush Avenue."
         ],
         "2": [
-          "Make a sharp right onto Belair Road, U.S. 1 Business."
+          "Make a sharp left onto North Bond Street, U.S. 1 Business."
         ],
         "3": [
-          "Make a sharp left to stay on U.S. 15 South."
+          "Make a sharp right to stay on Sunstone Drive."
         ],
         "4": [
           "Make a sharp right at Mannenbashi East."
@@ -1448,44 +1448,47 @@
     },
     "start": {
       "phrases": {
-        "0": "Richtung <CARDINAL_DIRECTION>.",
-        "1": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION>.",
-        "2": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION>. Dann weiter auf <STREET_NAMES>.",
-        "4": "Richtung <CARDINAL_DIRECTION> fahren.",
-        "5": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> fahren.",
-        "6": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION> fahren. Dann weiter auf <STREET_NAMES>.",
-        "8": "Richtung <CARDINAL_DIRECTION> laufen.",
-        "9": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> laufen.",
-        "10": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION> laufen. Dann weiter auf <STREET_NAMES>.",
-        "16": "Richtung <CARDINAL_DIRECTION> radeln.",
-        "17": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> radeln.",
-        "18": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION> radeln. Dann weiter auf <STREET_NAMES>."
+        "0": " <CARDINAL_DIRECTION>方向です。",
+        "1": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
+        "2": "<BEGIN_STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。その先、<STREET_NAMES>です。",
+        "4": " <CARDINAL_DIRECTION>方向です。",
+        "5": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
+        "6": "<BEGIN_STREET_NAMES>を<CARDINAL_DIRECTION> 方向です。その先、<STREET_NAMES>です。",
+        "8": " <CARDINAL_DIRECTION>方向です。",
+        "9": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
+        "10": "<BEGIN_STREET_NAMES>を <CARDINAL_DIRECTION>方向です。その先、<STREET_NAMES>です。",
+        "16": "<CARDINAL_DIRECTION>方向です。",
+        "17": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
+        "18": "<BEGIN_STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。その先、<STREET_NAMES>です。"
       },
       "cardinal_directions": [
-        "Norden",
-        "Nordosten",
-        "Osten",
-        "Südosten",
-        "Süden",
-        "Südwesten",
-        "Westen",
-        "Nordwesten"
+        "北",
+        "北東",
+        "東",
+        "南東",
+        "南",
+        "南西",
+        "西",
+        "北西"
       ],
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "example_phrases": {
         "0": [
-          "Richtung Osten.",
-          "Richtung Norden."
+          "Head east.",
+          "Head north."
         ],
         "1": [
-          "Auf Hauptstraße Richtung Südwesten."
+          "Head southwest on 5th Avenue.",
+          "Head west on the walkway",
+          "Head east on the cycleway",
+          "Head north on the mountain bike trail"
         ],
         "2": [
-          "Auf A 1 Richtung Süden. Dann weiter auf B 13."
+          "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
         ],
         "4": [
           "Drive east.",
@@ -1524,55 +1527,55 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Richtung <CARDINAL_DIRECTION>.",
-        "1": "<LENGTH> Richtung <CARDINAL_DIRECTION>.",
-        "2": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION>.",
-        "3": "<LENGTH> auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION>.",
-        "4": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION>.",
-        "5": "Richtung <CARDINAL_DIRECTION> fahren.",
-        "6": "<LENGTH> Richtung <CARDINAL_DIRECTION> fahren.",
-        "7": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> fahren.",
-        "8": "<LENGTH> auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> fahren.",
-        "9": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION> fahren.",
-        "10": "Richtung <CARDINAL_DIRECTION> laufen.",
-        "11": "<LENGTH> Richtung <CARDINAL_DIRECTION> laufen.",
-        "12": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> laufen.",
-        "13": "<LENGTH> auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> laufen.",
-        "14": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION> laufen.",
-        "15": "Richtung <CARDINAL_DIRECTION> radeln.",
-        "16": "<LENGTH> Richtung <CARDINAL_DIRECTION> radeln.",
-        "17": "Auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> radeln.",
-        "18": "<LENGTH> auf <STREET_NAMES> Richtung <CARDINAL_DIRECTION> radeln.",
-        "19": "Auf <BEGIN_STREET_NAMES> Richtung <CARDINAL_DIRECTION> radeln."
+        "0": " <CARDINAL_DIRECTION>方向です。",
+        "1": "<CARDINAL_DIRECTION>方向に <LENGTH>です。",
+        "2": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
+        "3": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向に <LENGTH>です。",
+        "4": "<BEGIN_STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
+        "5": " <CARDINAL_DIRECTION>方向です。",
+        "6": "<CARDINAL_DIRECTION>方向に <LENGTH>です。",
+        "7": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
+        "8": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向に <LENGTH>です。",
+        "9": "<BEGIN_STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
+        "10": " <CARDINAL_DIRECTION>方向です。",
+        "11": "<CARDINAL_DIRECTION> 方向に<LENGTH>です。",
+        "12": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
+        "13": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向に <LENGTH>です。",
+        "14": "<BEGIN_STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
+        "15": "<CARDINAL_DIRECTION>方向です。",
+        "16": "<CARDINAL_DIRECTION> 方向に <LENGTH>です。",
+        "17": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
+        "18": "<STREET_NAMES>を <CARDINAL_DIRECTION>方向に <LENGTH>です。",
+        "19": "<BEGIN_STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。"
       },
       "cardinal_directions": [
-        "Norden",
-        "Nordosten",
-        "Osten",
-        "Südosten",
-        "Süden",
-        "Südwesten",
-        "Westen",
-        "Nordwesten"
+        "北",
+        "北東",
+        "東",
+        "南東",
+        "南",
+        "南西",
+        "西",
+        "北西"
       ],
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "metric_lengths": [
-        "<KILOMETERS> Kilometer",
-        "einen Kilometer",
-        "<METERS> Meter",
-        "weniger als 10 Meter"
+        "<KILOMETERS> キロメートル",
+        "1 キロメートル",
+        "<METERS> メートル",
+        " 10メートル以内"
       ],
       "us_customary_lengths": [
-        "<MILES> Meilen",
-        "eine Meile",
-        "eine halbe Meile",
-        "eine viertel Meile",
-        "<FEET> Fuß",
-        "weniger als 10 Fuß"
+        "<MILES> マイル",
+        "1 マイル",
+        "0.5 マイル",
+        "0.25 マイル",
+        "<FEET> フィート",
+        "10 フィート以内"
       ],
       "example_phrases": {
         "0": [
@@ -1647,22 +1650,22 @@
     },
     "transit": {
       "phrases": {
-        "0": "Mit <TRANSIT_NAME> fahren. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Mit <TRANSIT_NAME> Richtung <TRANSIT_HEADSIGN> fahren. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "<TRANSIT_NAME>に乗ります。(<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN>方面に<TRANSIT_NAME>に乗ります。 (<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "Straßenbahn",
-        "U-Bahn",
-        "Zug",
-        "Bus",
-        "Fähre",
-        "Kabelbahn",
-        "Luftseilbahn",
-        "Standseilbahn"
+        "トラム",
+        "地下鉄",
+        "電車",
+        "バス",
+        "フェリー",
+        "ケーブルカー",
+        "ゴンドラ",
+        "ケーブルカー"
       ],
       "transit_stop_count_labels": {
-        "one": "Haltestelle",
-        "other": "Haltestellen"
+        "one": "駅",
+        "other": "駅"
       },
       "example_phrases": {
         "0": [
@@ -1678,11 +1681,11 @@
     },
     "transit_connection_destination": {
       "phrases": {
-        "0": "Bahnhof verlassen.",
-        "1": "<TRANSIT_STOP> verlassen.",
-        "2": "<STATION_LABEL> <TRANSIT_STOP> verlassen."
+        "0": "駅を出ます。",
+        "1": "<TRANSIT_STOP>を出ます。",
+        "2": "<STATION_LABEL>の<TRANSIT_STOP>を出ます。"
       },
-      "station_label": "Bahnhof",
+      "station_label": "駅",
       "example_phrases": {
         "0": [
           "Exit the station."
@@ -1697,11 +1700,11 @@
     },
     "transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Bahnhof verlassen.",
-        "1": "<TRANSIT_STOP> verlassen.",
-        "2": "<STATION_LABEL> <TRANSIT_STOP> verlassen."
+        "0": "駅を出ます。",
+        "1": "<TRANSIT_STOP>を出ます。",
+        "2": "<STATION_LABEL>の<TRANSIT_STOP>を出ます。"
       },
-      "station_label": "Bahnhof",
+      "station_label": "駅",
       "example_phrases": {
         "0": [
           "Exit the station."
@@ -1716,11 +1719,11 @@
     },
     "transit_connection_start": {
       "phrases": {
-        "0": "Bahnhof betreten.",
-        "1": "<TRANSIT_STOP> betreten.",
-        "2": "<STATION_LABEL> <TRANSIT_STOP> betreten."
+        "0": "駅に入ります。",
+        "1": "<TRANSIT_STOP>に入ります。",
+        "2": "<STATION_LABEL>の<TRANSIT_STOP>に入ります。"
       },
-      "station_label": "Bahnhof",
+      "station_label": "駅",
       "example_phrases": {
         "0": [
           "Enter the station."
@@ -1735,11 +1738,11 @@
     },
     "transit_connection_start_verbal": {
       "phrases": {
-        "0": "Bahnhof betreten.",
-        "1": "<TRANSIT_STOP> betreten.",
-        "2": "<STATION_LABEL> <TRANSIT_STOP> betreten."
+        "0": "駅に入ります。",
+        "1": "<TRANSIT_STOP>に入ります。",
+        "2": "<STATION_LABEL>の<TRANSIT_STOP>に入ります。"
       },
-      "station_label": "Bahnhof",
+      "station_label": "駅",
       "example_phrases": {
         "0": [
           "Enter the station."
@@ -1754,11 +1757,11 @@
     },
     "transit_connection_transfer": {
       "phrases": {
-        "0": "Am Bahnhof umsteigen.",
-        "1": "Am <TRANSIT_STOP> umsteigen.",
-        "2": "Am <STATION_LABEL> <TRANSIT_STOP> umsteigen."
+        "0": "駅で乗り換えです。",
+        "1": "<TRANSIT_STOP>で乗り換えです。",
+        "2": "<STATION_LABEL>の<TRANSIT_STOP>で乗り換えです。"
       },
-      "station_label": "Bahnhof",
+      "station_label": "駅",
       "example_phrases": {
         "0": [
           "Transfer at the station."
@@ -1773,11 +1776,11 @@
     },
     "transit_connection_transfer_verbal": {
       "phrases": {
-        "0": "Am Bahnhof umsteigen.",
-        "1": "Am <TRANSIT_STOP> umsteigen.",
-        "2": "Am <STATION_LABEL> <TRANSIT_STOP> umsteigen."
+        "0": "駅で乗り換えです。",
+        "1": "<TRANSIT_STOP>で乗り換えです。",
+        "2": "<STATION_LABEL>の<TRANSIT_STOP>で乗り換えです。"
       },
-      "station_label": "Bahnhof",
+      "station_label": "駅",
       "example_phrases": {
         "0": [
           "Transfer at the station."
@@ -1792,22 +1795,22 @@
     },
     "transit_remain_on": {
       "phrases": {
-        "0": "Mit <TRANSIT_NAME> weiter. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Mit <TRANSIT_NAME> Richtung <TRANSIT_HEADSIGN> weiter. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "<TRANSIT_NAME>に乗ります。(<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN>方面に<TRANSIT_NAME>に乗ります。(<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "Straßenbahn",
-        "U-Bahn",
-        "Zug",
-        "Bus",
-        "Fähre",
-        "Kabelbahn",
-        "Luftseilbahn",
-        "Standseilbahn"
+        "トラム",
+        "地下鉄",
+        "電車",
+        "バス",
+        "フェリー",
+        "ケーブルカー",
+        "ゴンドラ",
+        "ケーブルカー"
       ],
       "transit_stop_count_labels": {
-        "one": "Haltestelle",
-        "other": "Haltestellen"
+        "one": "駅",
+        "other": "駅"
       },
       "example_phrases": {
         "0": [
@@ -1821,18 +1824,18 @@
     },
     "transit_remain_on_verbal": {
       "phrases": {
-        "0": "Mit <TRANSIT_NAME> weiter fahren.",
-        "1": "Mit <TRANSIT_NAME> Richtung <TRANSIT_HEADSIGN> weiter fahren."
+        "0": "<TRANSIT_NAME>に乗ります。",
+        "1": "<TRANSIT_HEADSIGN>方面に<TRANSIT_NAME>に乗ります。"
       },
       "empty_transit_name_labels": [
-        "Straßenbahn",
-        "U-Bahn",
-        "Zug",
-        "Bus",
-        "Fähre",
-        "Kabelbahn",
-        "Luftseilbahn",
-        "Standseilbahn"
+        "トラム",
+        "地下鉄",
+        "電車",
+        "バス",
+        "フェリー",
+        "ケーブルカー",
+        "ゴンドラ",
+        "ケーブルカー"
       ],
       "example_phrases": {
         "0": [
@@ -1845,22 +1848,22 @@
     },
     "transit_transfer": {
       "phrases": {
-        "0": "Zu <TRANSIT_NAME> umsteigen. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "Zu <TRANSIT_NAME> Richtung <TRANSIT_HEADSIGN> umsteigen. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+        "0": "<TRANSIT_NAME>に乗り換えです。(<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN>方面に<TRANSIT_NAME>に乗り換えです。(<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "Straßenbahn",
-        "U-Bahn",
-        "Zug",
-        "Bus",
-        "Fähre",
-        "Kabelbahn",
-        "Luftseilbahn",
-        "Standseilbahn"
+        "トラム",
+        "地下鉄",
+        "電車",
+        "バス",
+        "フェリー",
+        "ケーブルカー",
+        "ゴンドラ",
+        "ケーブルカー"
       ],
       "transit_stop_count_labels": {
-        "one": "Haltestelle",
-        "other": "Haltestellen"
+        "one": "駅",
+        "other": "駅"
       },
       "example_phrases": {
         "0": [
@@ -1874,18 +1877,18 @@
     },
     "transit_transfer_verbal": {
       "phrases": {
-        "0": "Zu <TRANSIT_NAME> umsteigen.",
-        "1": "Zu <TRANSIT_NAME> Richtung <TRANSIT_HEADSIGN> umsteigen."
+        "0": "<TRANSIT_NAME>に乗り換えです。",
+        "1": "<TRANSIT_HEADSIGN>方面に<TRANSIT_NAME>に乗り換えです。"
       },
       "empty_transit_name_labels": [
-        "Straßenbahn",
-        "U-Bahn",
-        "Zug",
-        "Bus",
-        "Fähre",
-        "Kabelbahn",
-        "Luftseilbahn",
-        "Standseilbahn"
+        "トラム",
+        "地下鉄",
+        "電車",
+        "バス",
+        "フェリー",
+        "ケーブルカー",
+        "ゴンドラ",
+        "ケーブルカー"
       ],
       "example_phrases": {
         "0": [
@@ -1898,18 +1901,18 @@
     },
     "transit_verbal": {
       "phrases": {
-        "0": "Mit <TRANSIT_NAME> fahren.",
-        "1": "Mit <TRANSIT_NAME> Richtung <TRANSIT_HEADSIGN> fahren."
+        "0": "<TRANSIT_NAME>に乗ります。",
+        "1": "<TRANSIT_HEADSIGN>方面に<TRANSIT_NAME>に乗ります。"
       },
       "empty_transit_name_labels": [
-        "Straßenbahn",
-        "U-Bahn",
-        "Zug",
-        "Bus",
-        "Fähre",
-        "Kabelbahn",
-        "Luftseilbahn",
-        "Standseilbahn"
+        "トラム",
+        "地下鉄",
+        "電車",
+        "バス",
+        "フェリー",
+        "ケーブルカー",
+        "ゴンドラ",
+        "ケーブルカー"
       ],
       "example_phrases": {
         "0": [
@@ -1922,21 +1925,21 @@
     },
     "turn": {
       "phrases": {
-        "0": "<RELATIVE_DIRECTION> abbiegen.",
-        "1": "<RELATIVE_DIRECTION> auf <STREET_NAMES> abbiegen.",
-        "2": "<RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
-        "3": "<RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
-        "4": "An <JUNCTION_NAME> nach <RELATIVE_DIRECTION> abbiegen.",
-        "5": "In Richtung <TOWARD_SIGN> nach <RELATIVE_DIRECTION> abbiegen."
+        "0": "<RELATIVE_DIRECTION>方向です。",
+        "1": "<RELATIVE_DIRECTION> 方向です。その先<STREET_NAMES>です。",
+        "2": "<RELATIVE_DIRECTION>方向、<BEGIN_STREET_NAMES>です。その先、<STREET_NAMES>です。",
+        "3": "<RELATIVE_DIRECTION> 方向です。その先<STREET_NAMES>です。",
+        "4": "<JUNCTION_NAME>を <RELATIVE_DIRECTION> 方向です。",
+        "5": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面です。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "relative_directions": [
-        "Links",
-        "Rechts"
+        "左",
+        "右"
       ],
       "example_phrases": {
         "0": [
@@ -1961,25 +1964,25 @@
     },
     "turn_verbal": {
       "phrases": {
-        "0": "<RELATIVE_DIRECTION> abbiegen.",
-        "1": "<RELATIVE_DIRECTION> auf <STREET_NAMES> abbiegen.",
-        "2": "<RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
-        "3": "<RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
-        "4": "An <JUNCTION_NAME> nach <RELATIVE_DIRECTION> abbiegen.",
-        "5": "In Richtung <TOWARD_SIGN> nach <RELATIVE_DIRECTION> abbiegen."
+        "0": "<RELATIVE_DIRECTION>方向です。",
+        "1": "<RELATIVE_DIRECTION> 方向です。その先<STREET_NAMES>です。",
+        "2": "<RELATIVE_DIRECTION> 方向です。その先 <BEGIN_STREET_NAMES>です。",
+        "3": "<RELATIVE_DIRECTION> 方向です。その先<STREET_NAMES>です。",
+        "4": "<JUNCTION_NAME>を <RELATIVE_DIRECTION> 方向です。",
+        "5": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面です。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "relative_directions": [
-        "Links",
-        "Rechts"
+        "左",
+        "右"
       ],
       "example_phrases": {
         "0": [
-          "Turn left."
+          "左方向です。"
         ],
         "1": [
           "Turn right onto Flatbush Avenue."
@@ -2000,23 +2003,23 @@
     },
     "uturn": {
       "phrases": {
-        "0": "Nach <RELATIVE_DIRECTION> eine Kehrtwende machen.",
-        "1": "Nach <RELATIVE_DIRECTION> eine Kehrtwende auf <STREET_NAMES> machen.",
-        "2": "Nach <RELATIVE_DIRECTION> eine Kehrtwende machen um auf <STREET_NAMES> zu bleiben.",
-        "3": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> machen.",
-        "4": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> auf <STREET_NAMES> machen.",
-        "5": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> machen um auf <STREET_NAMES> zu bleiben.",
-        "6": "An <JUNCTION_NAME> eine Kehrtwende nach <RELATIVE_DIRECTION> machen.",
-        "7": "In Richtung <TOWARD_SIGN> eine Kehrtwende nach <RELATIVE_DIRECTION> machen."
+        "0": "<RELATIVE_DIRECTION> 方向、Uターンです。",
+        "1": "<RELATIVE_DIRECTION> 方向、Uターンです。その先<STREET_NAMES>です。",
+        "2": "<RELATIVE_DIRECTION>方向、Uターンです。その先<STREET_NAMES>です。",
+        "3": "<CROSS_STREET_NAMES>を <RELATIVE_DIRECTION> 方向、Uターンです。",
+        "4": "<CROSS_STREET_NAMES>を <RELATIVE_DIRECTION>方向、Uターンです。その先 <STREET_NAMES>です。",
+        "5": "<CROSS_STREET_NAMES>を<RELATIVE_DIRECTION> 方向、Uターンです。その先<STREET_NAMES>です。",
+        "6": "<JUNCTION_NAME>を<RELATIVE_DIRECTION> 方向、Uターンです。",
+        "7": "<RELATIVE_DIRECTION> 方向、<TOWARD_SIGN>方面にUターンです。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "relative_directions": [
-        "links",
-        "rechts"
+        "左",
+        "右"
       ],
       "example_phrases": {
         "0": [
@@ -2047,23 +2050,23 @@
     },
     "uturn_verbal": {
       "phrases": {
-        "0": "Nach <RELATIVE_DIRECTION> eine Kehrtwende machen.",
-        "1": "Nach <RELATIVE_DIRECTION> eine Kehrtwende auf <STREET_NAMES> machen.",
-        "2": "Nach <RELATIVE_DIRECTION> eine Kehrtwende machen um auf <STREET_NAMES> zu bleiben.",
-        "3": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> machen.",
-        "4": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> auf <STREET_NAMES> machen.",
-        "5": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> machen um auf <STREET_NAMES> zu bleiben.",
-        "6": "An <JUNCTION_NAME> eine Kehrtwende nach <RELATIVE_DIRECTION> machen.",
-        "7": "In Richtung <TOWARD_SIGN> eine Kehrtwende nach <RELATIVE_DIRECTION> machen."
+        "0": "<RELATIVE_DIRECTION> 方向、Uターンです。",
+        "1": " <RELATIVE_DIRECTION> 方向、Uターンです。その先<STREET_NAMES>です。",
+        "2": " <RELATIVE_DIRECTION>方向、Uターンです。その先<STREET_NAMES>です。",
+        "3": "<CROSS_STREET_NAMES>を <RELATIVE_DIRECTION> 方向、Uターンです。",
+        "4": "<CROSS_STREET_NAMES>を <RELATIVE_DIRECTION>方向、Uターンです。その先 <STREET_NAMES>です。",
+        "5": "<CROSS_STREET_NAMES>を<RELATIVE_DIRECTION> 方向、Uターンです。その先<STREET_NAMES>です。",
+        "6": "<JUNCTION_NAME>を<RELATIVE_DIRECTION> 方向、Uターンです。",
+        "7": "<RELATIVE_DIRECTION> 方向、<TOWARD_SIGN>方面にUターンです。"
       },
       "empty_street_name_labels": [
-        "Fußweg",
-        "Radweg",
-        "Mountainbike Strecke"
+        "歩道",
+        "自転車道",
+        "自転車道"
       ],
       "relative_directions": [
-        "links",
-        "rechts"
+        "左",
+        "右"
       ],
       "example_phrases": {
         "0": [
@@ -2094,22 +2097,22 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> Dann <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> Dann, in <LENGTH>, <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE> その先 <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> 。その先<LENGTH> で <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> Kilometern",
-        "einen Kilometer",
-        "<METERS> Metern",
-        "weniger als 10 Metern"
+        "<KILOMETERS> キロメートル",
+        "1 キロメートル",
+        "<METERS> メートル",
+        " 10メートル以内"
       ],
       "us_customary_lengths": [
-        "<MILES> Meilen",
-        "eine Meile",
-        "eine halbe Meile",
-        "eine viertel Meile",
-        "<FEET> Fuß",
-        "weniger als 10 Fuß"
+        "<MILES> マイル",
+        "1 マイル",
+        "0.5 マイル",
+        "0.25 マイル",
+        "<FEET> フィート",
+        "10 フィート以内"
       ],
       "example_phrases": {
         "0": [
@@ -2122,21 +2125,21 @@
     },
     "approach_verbal_alert": {
       "phrases": {
-        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+        "0": "<LENGTH>先、 <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> Kilometern",
-        "einen Kilometer",
-        "<METERS> Metern",
-        "weniger als 10 Metern"
+        "<KILOMETERS> キロメートル",
+        "1 キロメートル",
+        "<METERS> メートル",
+        " 10メートル以内"
       ],
       "us_customary_lengths": [
-        "<MILES> Meilen",
-        "eine Meile",
-        "eine halbe Meile",
-        "eine viertel Meile",
-        "<FEET> Fuß",
-        "weniger als 10 Fuß"
+        "<MILES> マイル",
+        "1 マイル",
+        "0.5 マイル",
+        "0.25 マイル",
+        "<FEET> フィート",
+        "10 フィート以内"
       ],
       "example_phrases": {
         "0": [

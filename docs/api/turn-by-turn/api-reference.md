@@ -243,6 +243,7 @@ A multimodal request with a filter for certain Onestop IDs:
 | `fr-FR` | `fr` | French (France) |
 | `hi-IN` | `hi` | Hindi (India) |
 | `it-IT` | `it` | Italian (Italy) |
+| `ja-JP` | `ja` | Japanese (Japan) |
 | `pt-PT` | `pt` | Portuguese (Portugal) |
 | `ru-RU` | `ru` | Russian (Russia) |
 | `sk-SK` | `sk` | Slovak (Slovakia) |
