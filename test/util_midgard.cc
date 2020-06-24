@@ -291,7 +291,7 @@ TEST(UtilMidgard, TestTrimPolyline) {
   std::vector<Point> line{{0, 0}, {0, 0}, {20, 20}, {31, 1}, {31, 1}, {12, 23}, {7, 2}, {7, 2}};
 
   auto clip = trim_polyline(line.begin(), line.end(), 0.f, 1.f);
-  EXPECT_EQ(length(clip.begin(), clip.end()), length(line.begin(), line.end()))
+  EXPECT_FLOAT_EQ(length(clip.begin(), clip.end()), length(line.begin(), line.end()))
       << "Should not clip anything if range is [0, 1]";
 
   clip = trim_polyline(line.begin(), line.end(), 0.f, 0.1f);
@@ -348,7 +348,7 @@ TEST(UtilMidgard, TestTrimPolylineWithDoubles) {
   std::vector<Point> line{{0, 0}, {0, 0}, {20, 20}, {31, 1}, {31, 1}, {12, 23}, {7, 2}, {7, 2}};
 
   auto clip = trim_polyline(line.begin(), line.end(), 0.f, 1.f);
-  EXPECT_EQ(length(clip.begin(), clip.end()), length(line.begin(), line.end()))
+  EXPECT_DOUBLE_EQ(length(clip.begin(), clip.end()), length(line.begin(), line.end()))
       << "Should not clip anything if range is [0, 1]";
 
   clip = trim_polyline(line.begin(), line.end(), 0.f, 0.1f);

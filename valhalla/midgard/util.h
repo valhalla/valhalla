@@ -170,6 +170,10 @@ typename iterator_t::value_type::first_type length(const iterator_t& begin, cons
  * @param  target Percentage of total length to trim from the end.
  * @return Returns a new polyline.
  */
+#if __GNUC__ <= 5 && __OPTIMIZE__
+#pragma GCC push_state
+#pragma GCC optimize("O0")
+#endif
 template <typename iterator_t>
 std::vector<typename iterator_t::value_type>
 trim_polyline(const iterator_t& begin, const iterator_t& end, float source, float target) {
@@ -235,6 +239,9 @@ trim_polyline(const iterator_t& begin, const iterator_t& end, float source, floa
   // So here we have assert(1 < clip.size())
   return clip;
 }
+#if __GNUC__ <= 5 && __OPTIMIZE__
+#pragma GCC pop_state
+#endif
 
 /**
  * Trim the front of a polyline (represented as a list or vector of Point2).
