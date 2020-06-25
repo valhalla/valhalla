@@ -29,6 +29,8 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+#include <valhalla/proto/trip.pb.h>
+
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/io/pbf_output.hpp>
@@ -692,13 +694,13 @@ namespace assert {
 namespace osrm {
 
 /**
- * Tests if a found path traverses the expected roads in the expected order
+ * Tests if a found path traverses the expected steps in the expected order
  *
  * @param result the result of a /route or /match request
- * @param expected_names the names of the roads the path should traverse in order
+ * @param expected_names the names of the step roads the path should traverse in order
  * @param dedupe whether subsequent same-name roads should appear multiple times or not (default not)
  */
-void expect_route(valhalla::Api& raw_result,
+void expect_steps(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
                   bool dedupe = true) {
 
@@ -746,7 +748,7 @@ void expect_route(valhalla::Api& raw_result,
     actual_names.erase(last, actual_names.end());
   }
 
-  EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path";
+  EXPECT_EQ(actual_names, expected_names) << "Actual steps didn't match expected steps";
 }
 /**
  * Tests if a found path traverses the expected roads in the expected order
@@ -925,6 +927,40 @@ void expect_eta(const valhalla::Api& result,
   } else {
     EXPECT_NEAR(static_cast<float>(eta_sec), expected_eta_seconds, error_margin);
   }
+}
+
+std::string
+to_string(const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) {
+  std::string str;
+
+  for (const auto& street_name : street_names) {
+    if (!str.empty()) {
+      str += "/";
+    }
+    str += street_name.value();
+  }
+  return str;
+}
+
+/**
+ * Tests if a found path traverses the expected edges in the expected order
+ *
+ * @param result the result of a /route or /match request
+ * @param expected_names the names of the edges the path should traverse in order
+ */
+void expect_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
+  EXPECT_EQ(result.trip().routes_size(), 1);
+
+  std::vector<std::string> actual_names;
+  for (const auto& leg : result.trip().routes(0).legs()) {
+    for (const auto& node : leg.node()) {
+      if (node.has_edge()) {
+        actual_names.push_back(to_string(node.edge().name()));
+      }
+    }
+  }
+
+  EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path";
 }
 
 } // namespace raw

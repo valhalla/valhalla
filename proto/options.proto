@@ -193,5 +193,6 @@ message Options {
   optional bool guidance_views = 41;                                      // Whether to return guidance_views in the response
   // 42 is reserved
   optional uint32 height_precision = 43 [default = 0];                    // Number of digits precision for heights returned
-  repeated CostingOptions recostings = 44;                             // Costing options to use to recost a path after it has been found
+  optional bool roundabout_exits = 44 [default = true];                   // Whether to announce roundabout exit maneuvers
+  repeated CostingOptions recostings = 45;                                // Costing options to use to recost a path after it has been found
 }

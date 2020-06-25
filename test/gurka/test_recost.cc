@@ -209,3 +209,6 @@ TEST(recosting, error_request) {
     FAIL() << "No costing should have thrown";
   } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 127); }
 }
+
+TEST(recosting, api) {
+}
