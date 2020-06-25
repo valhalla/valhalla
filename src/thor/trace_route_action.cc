@@ -401,10 +401,12 @@ void thor_worker_t::build_route(
           next_segment && segment->edgeid != next_segment->edgeid && segment->target < 1.f;
       if (uturn_onto || uturn_off_of) {
         // Protect against invalid match indexes
-        midgard::PointLL first_match_ll = segment->first_match_idx < 0 ? midgard::PointLL() :
-                  match_results[segment->first_match_idx].lnglat;
-        midgard::PointLL last_match_ll = segment->last_match_idx < 0 ? midgard::PointLL() :
-                  match_results[segment->last_match_idx].lnglat;
+        midgard::PointLL first_match_ll = segment->first_match_idx < 0
+                                              ? midgard::PointLL()
+                                              : match_results[segment->first_match_idx].lnglat;
+        midgard::PointLL last_match_ll = segment->last_match_idx < 0
+                                             ? midgard::PointLL()
+                                             : match_results[segment->last_match_idx].lnglat;
         edge_trimming[i] = {{uturn_onto, first_match_ll, segment->source},
                             {uturn_off_of, last_match_ll, segment->target}};
       }
