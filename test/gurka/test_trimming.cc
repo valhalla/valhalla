@@ -89,7 +89,8 @@ TEST(Trimming, routes) {
   // sliver of the end of the edge
   thor::AttributesController c;
   valhalla::TripLeg leg;
-  thor::TripLegBuilder::Build(c, reader, costings, path.cbegin(), path.cend(), origin, dest, {}, leg);
+  thor::TripLegBuilder::Build({}, c, reader, costings, path.cbegin(), path.cend(), origin, dest, {},
+                              leg);
   auto leg_shape = midgard::decode<std::vector<midgard::PointLL>>(leg.shape());
   auto leg_length = midgard::length(leg_shape);
 

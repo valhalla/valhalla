@@ -171,8 +171,8 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
   t1 = std::chrono::high_resolution_clock::now();
   AttributesController controller;
   auto& trip_path = *request.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
-  TripLegBuilder::Build(controller, reader, mode_costing, pathedges.begin(), pathedges.end(), origin,
-                        dest, std::list<valhalla::Location>{}, trip_path);
+  TripLegBuilder::Build(request.options(), controller, reader, mode_costing, pathedges.begin(),
+                        pathedges.end(), origin, dest, std::list<valhalla::Location>{}, trip_path);
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripLegBuilder took " + std::to_string(msecs) + " ms");
@@ -249,8 +249,8 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
       AttributesController controller;
       valhalla::TripLeg trip_leg;
       const auto& pathedges = paths.front();
-      TripLegBuilder::Build(controller, reader, mode_costing, pathedges.begin(), pathedges.end(),
-                            origin, dest, std::list<valhalla::Location>{}, trip_leg);
+      TripLegBuilder::Build(request.options(), controller, reader, mode_costing, pathedges.begin(),
+                            pathedges.end(), origin, dest, std::list<valhalla::Location>{}, trip_leg);
       t2 = std::chrono::high_resolution_clock::now();
       total_trip_leg_builder_ms +=
           std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();

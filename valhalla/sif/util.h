@@ -27,7 +27,7 @@ using LabelCallback = std::function<void(const EdgeLabel& label)>;
  * @param source_pct        the percent along the initial edge the source location is
  * @param target_pct        the percent along the final edge the target location is
  * @param date_time         the time string representing the local time before traversing the first
- *                          edge. of the format YYYY-MM-DDTHH:SS
+ *                          edge. of the format YYYY-MM-DDTHH:mm
  */
 void recost_forward(baldr::GraphReader& reader,
                     const sif::DynamicCost& costing,

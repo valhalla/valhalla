@@ -417,8 +417,8 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
           route = api.mutable_trip()->mutable_routes()->Add();
         auto& leg = *route->mutable_legs()->Add();
-        TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(), *origin,
-                              *destination, throughs, leg, interrupt, &vias);
+        TripLegBuilder::Build(api.options(), controller, *reader, mode_costing, path.begin(),
+                              path.end(), *origin, *destination, throughs, leg, interrupt, &vias);
         path.clear();
         vias.clear();
       }
@@ -506,8 +506,9 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
           route = api.mutable_trip()->mutable_routes()->Add();
         auto& leg = *route->mutable_legs()->Add();
-        thor::TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(),
-                                    *origin, *destination, throughs, leg, interrupt, &vias);
+        thor::TripLegBuilder::Build(api.options(), controller, *reader, mode_costing, path.begin(),
+                                    path.end(), *origin, *destination, throughs, leg, interrupt,
+                                    &vias);
         path.clear();
         vias.clear();
       }

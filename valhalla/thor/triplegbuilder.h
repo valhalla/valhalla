@@ -35,6 +35,7 @@ public:
   /**
    * Form a trip leg out of a path (sequence of path infos)
    *
+   * @param options               Request options
    * @param controller            Which meta data attributes to include in the trip leg
    * @param graphreader           A way of accessing graph information
    * @param mode_costing          A costing object
@@ -48,7 +49,8 @@ public:
    * @param edge_trimming         Markers on edges with information on how to trim their shape
    * @return
    */
-  static void Build(const AttributesController& controller,
+  static void Build(const valhalla::Options& options,
+                    const AttributesController& controller,
                     baldr::GraphReader& graphreader,
                     const std::shared_ptr<sif::DynamicCost>* mode_costing,
                     const std::vector<PathInfo>::const_iterator path_begin,

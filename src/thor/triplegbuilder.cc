@@ -18,6 +18,7 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "sif/costconstants.h"
+#include "sif/util.h"
 #include "thor/attributes_controller.h"
 #include "thor/triplegbuilder.h"
 
@@ -1099,12 +1100,74 @@ void AddTripIntersectingEdge(const AttributesController& controller,
   }
 }
 
+/**
+ * This adds cost information at every node using supplementary costings provided at request time
+ * There are some limitations here:
+ * For multipoint routes the date_time used will not reflect the time offset that would have been if
+ * you used the supplementary costing instead it is using the time at which the primary costing
+ * arrived at the start of the leg
+ * The same limitation is also true for arrive by routes in which the start time of the leg will be
+ * the start time computed via the time offset from the primary costings time estimation
+ * @param options     the api request options
+ * @param src_pct     percent along the first edge of the path the start location snapped
+ * @param tgt_pct     percent along the last edge of the path the end location snapped
+ * @param date_time   date_time at the start of the leg or empty string if none
+ * @param reader      graph reader for tile access
+ * @param leg         the already constructed trip leg to which extra cost information is added
+ */
+void AccumulateRecostingInfoForward(const valhalla::Options& options,
+                                    float src_pct,
+                                    float tgt_pct,
+                                    const std::string& date_time,
+                                    valhalla::baldr::GraphReader& reader,
+                                    valhalla::TripLeg& leg) {
+  // setup a callback for the recosting to get each edge
+  auto in_itr = leg.node().begin();
+  sif::EdgeCallback edge_cb = [&in_itr]() -> baldr::GraphId {
+    auto edge_id = in_itr->has_edge() ? baldr::GraphId(in_itr->edge().id()) : baldr::GraphId{};
+    ++in_itr;
+    return edge_id;
+  };
+
+  // setup a callback for the recosting to tell us about the new label each made
+  auto out_itr = leg.mutable_node()->begin();
+  sif::LabelCallback label_cb = [&out_itr](const sif::EdgeLabel& label) -> void {
+    // get the turn cost at this node
+    out_itr->mutable_recosts()->rbegin()->mutable_transition_cost()->set_seconds(
+        label.transition_cost().secs);
+    out_itr->mutable_recosts()->rbegin()->mutable_transition_cost()->set_cost(
+        label.transition_cost().cost);
+    // get the elapsed time at the end of this labels edge and hang it on the next node
+    ++out_itr;
+    out_itr->mutable_recosts()->Add()->mutable_elapsed_cost()->set_seconds(label.cost().secs);
+    out_itr->mutable_recosts()->rbegin()->mutable_elapsed_cost()->set_cost(label.cost().cost);
+  };
+
+  // do each recosting
+  for (const auto& recosting : options.recostings()) {
+    // get the costing
+    auto costing = sif::CostFactory<>{}.Create(recosting);
+    // reset to the beginning of the route
+    in_itr = leg.node().begin();
+    out_itr = leg.mutable_node()->begin();
+    // no elapsed time yet at the start of the leg
+    out_itr->mutable_recosts()->Add()->mutable_elapsed_cost()->set_seconds(0);
+    out_itr->mutable_recosts()->rbegin()->mutable_elapsed_cost()->set_cost(0);
+    // do the recosting for this costing
+    sif::recost_forward(reader, *costing, edge_cb, label_cb, src_pct, tgt_pct, date_time);
+    // no turn cost at the end of the leg
+    out_itr->mutable_recosts()->rbegin()->mutable_transition_cost()->set_seconds(0);
+    out_itr->mutable_recosts()->rbegin()->mutable_transition_cost()->set_cost(0);
+  }
+}
+
 } // namespace
 
 namespace valhalla {
 namespace thor {
 
 void TripLegBuilder::Build(
+    const valhalla::Options& options,
     const AttributesController& controller,
     GraphReader& graphreader,
     const std::shared_ptr<sif::DynamicCost>* mode_costing,
@@ -1129,7 +1192,9 @@ void TripLegBuilder::Build(
 
   // TODO: use TimeInfo
   uint32_t origin_second_of_week = kInvalidSecondsOfWeek;
+  std::string date_time;
   if (origin.has_date_time()) {
+    date_time = origin.date_time();
     origin_second_of_week = DateTime::day_of_week(origin.date_time()) * kSecondsPerDay +
                             DateTime::seconds_from_midnight(origin.date_time());
   }
@@ -1306,6 +1371,9 @@ void TripLegBuilder::Build(
 
     // Assign the trip path admins
     AssignAdmins(controller, trip_path, admin_info_list);
+
+    // Add that extra costing information if requested
+    AccumulateRecostingInfoForward(options, start_pct, end_pct, date_time, graphreader, trip_path);
 
     // Trivial path is done
     return;
@@ -1810,6 +1878,9 @@ void TripLegBuilder::Build(
   if (osmchangeset != 0 && controller.attributes.at(kOsmChangeset)) {
     trip_path.set_osm_changeset(osmchangeset);
   }
+
+  // Add that extra costing information if requested
+  AccumulateRecostingInfoForward(options, start_pct, end_pct, date_time, graphreader, trip_path);
 }
 
 } // namespace thor
