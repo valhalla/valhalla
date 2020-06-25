@@ -27,3 +27,4 @@
 -j '{"locations":[{"lat":40.183956,"lon":-76.602325,"street":"Beverly Road"},{"lat":40.281590,"lon":-76.659790,"street":"Orchard Road"}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":40.221043,"lon":-76.935387,"street":"Lower Allen Drive"},{"lat":40.306686,"lon":-76.594315,"street":"South Railroad Street"}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":40.901207,"lon":-81.429909,"street":"I 77 South"},{"lat":40.899826,"lon":-81.433838,"street":"Hossler Street Northwest"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.520050,"lon":-78.396637,"street":"Chestnut Avenue"},{"lat":40.516129,"lon":-78.394173,"street":"7th Avenue"}],"costing":"auto","units":"miles"}'

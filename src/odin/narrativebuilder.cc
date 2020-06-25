@@ -145,7 +145,9 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         maneuver.set_verbal_pre_transition_instruction(FormVerbalRampStraightInstruction(maneuver));
 
         // Only set verbal post if > min ramp length
-        if (maneuver.length() > kVerbalPostMinimumRampLength) {
+        // or contains obvious maneuver
+        if ((maneuver.length() > kVerbalPostMinimumRampLength) ||
+            maneuver.contains_obvious_maneuver()) {
           // Set verbal post transition instruction
           maneuver.set_verbal_post_transition_instruction(
               FormVerbalPostTransitionInstruction(maneuver));
@@ -164,7 +166,9 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         maneuver.set_verbal_pre_transition_instruction(FormVerbalRampInstruction(maneuver));
 
         // Only set verbal post if > min ramp length
-        if (maneuver.length() > kVerbalPostMinimumRampLength) {
+        // or contains obvious maneuver
+        if ((maneuver.length() > kVerbalPostMinimumRampLength) ||
+            maneuver.contains_obvious_maneuver()) {
           // Set verbal post transition instruction
           maneuver.set_verbal_post_transition_instruction(
               FormVerbalPostTransitionInstruction(maneuver));
@@ -183,7 +187,9 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         maneuver.set_verbal_pre_transition_instruction(FormVerbalExitInstruction(maneuver));
 
         // Only set verbal post if > min ramp length
-        if (maneuver.length() > kVerbalPostMinimumRampLength) {
+        // or contains obvious maneuver
+        if ((maneuver.length() > kVerbalPostMinimumRampLength) ||
+            maneuver.contains_obvious_maneuver()) {
           // Set verbal post transition instruction
           maneuver.set_verbal_post_transition_instruction(
               FormVerbalPostTransitionInstruction(maneuver));
@@ -3661,11 +3667,14 @@ std::string NarrativeBuilder::FormVerbalPostTransitionInstruction(Maneuver& mane
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
-  // Assign the street names
-  std::string street_names =
-      FormStreetNames(maneuver, maneuver.street_names(),
-                      &dictionary_.post_transition_verbal_subset.empty_street_name_labels, true,
-                      element_max_count, delim, maneuver.verbal_formatter());
+  // Assign the street names if maneuver does not contain an obvious maneuver
+  std::string street_names;
+  if (!maneuver.contains_obvious_maneuver()) {
+    street_names =
+        FormStreetNames(maneuver, maneuver.street_names(),
+                        &dictionary_.post_transition_verbal_subset.empty_street_name_labels, true,
+                        element_max_count, delim, maneuver.verbal_formatter());
+  }
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
