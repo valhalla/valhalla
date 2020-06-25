@@ -87,8 +87,8 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Confirm maneuver type assignment
   ConfirmManeuverTypeAssignment(maneuvers);
 
-  // Process the roundabout names
-  ProcessRoundaboutNames(maneuvers);
+  // Process roundabouts
+  ProcessRoundabouts(maneuvers);
 
   // Process the 'to stay on' attribute
   SetToStayOnAttribute(maneuvers);
@@ -2376,7 +2376,7 @@ bool ManeuversBuilder::AreRoundaboutsProcessable(const TripLeg_TravelMode travel
   return false;
 }
 
-void ManeuversBuilder::ProcessRoundaboutNames(std::list<Maneuver>& maneuvers) {
+void ManeuversBuilder::ProcessRoundabouts(std::list<Maneuver>& maneuvers) {
   // Set previous maneuver
   auto prev_man = maneuvers.begin();
 
@@ -2428,6 +2428,11 @@ void ManeuversBuilder::ProcessRoundaboutNames(std::list<Maneuver>& maneuvers) {
         }
         if (next_man->HasSigns()) {
           *(curr_man->mutable_roundabout_exit_signs()) = next_man->signs();
+        }
+
+        // Suppress roundabout exit maneuver if user requested
+        if (!options_.roundabout_exits()) {
+          next_man = CombineManeuvers(maneuvers, curr_man, next_man);
         }
       }
     }
