@@ -1,6 +1,7 @@
 #ifndef VALHALLA_SIF_COSTFACTORY_H_
 #define VALHALLA_SIF_COSTFACTORY_H_
 
+#include <functional>
 #include <map>
 #include <memory>
 
@@ -23,10 +24,9 @@ namespace sif {
 /**
  * Generic factory class for creating objects based on type name.
  */
-template <class cost_t = DynamicCost> class CostFactory {
+class CostFactory {
 public:
-  typedef std::shared_ptr<cost_t> cost_ptr_t;
-  typedef cost_ptr_t (*factory_function_t)(const Costing costing, const Options& options);
+  using factory_function_t = std::function<cost_ptr_t(const CostingOptions& options)>;
 
   /**
    * Constructor
@@ -68,7 +68,23 @@ public:
       throw std::runtime_error("No costing provided to cost factory");
 
     // create the cost using the creation function
-    return Create(options.costing(), options);
+    auto costing_index = static_cast<int>(options.costing());
+    if (costing_index < options.costing_options_size()) {
+      return Create(options.costing_options(costing_index));
+    } // if we didnt have costing options we need to use some default ones
+    else {
+      throw std::runtime_error("No costing options provided to cost factory");
+    }
+  }
+
+  /**
+   * Make a default cost from its specified type
+   * @param costing  which costing to create
+   */
+  cost_ptr_t Create(Costing costing) const {
+    CostingOptions default_options;
+    default_options.set_costing(costing);
+    return Create(default_options);
   }
 
   /**
@@ -76,14 +92,37 @@ public:
    * @param costing  the type of cost to create
    * @param options  pbf with request options
    */
-  cost_ptr_t Create(const Costing costing, const Options& options) const {
-    auto itr = factory_funcs_.find(costing);
+  cost_ptr_t Create(const CostingOptions& options) const {
+    // you cant get a costing without a costing type
+    if (!options.has_costing())
+      throw std::runtime_error("No costing provided to cost factory");
+
+    auto itr = factory_funcs_.find(options.costing());
     if (itr == factory_funcs_.end()) {
-      auto costing_str = Costing_Enum_Name(costing);
+      auto costing_str = Costing_Enum_Name(options.costing());
       throw std::runtime_error("No costing method found for '" + costing_str + "'");
     }
     // create the cost using the function pointer
-    return itr->second(costing, options);
+    return itr->second(options);
+  }
+
+  mode_costing_t CreateModeCosting(const Options& options, TravelMode& mode) {
+    mode_costing_t mode_costing;
+    // Set travel mode and construct costing
+    if (options.costing() == Costing::multimodal || options.costing() == Costing::transit) {
+      // For multi-modal we construct costing for all modes and set the
+      // initial mode to pedestrian. (TODO - allow other initial modes)
+      mode_costing[0] = Create(options.costing_options(static_cast<int>(Costing::auto_)));
+      mode_costing[1] = Create(options.costing_options(static_cast<int>(Costing::pedestrian)));
+      mode_costing[2] = Create(options.costing_options(static_cast<int>(Costing::bicycle)));
+      mode_costing[3] = Create(options.costing_options(static_cast<int>(Costing::transit)));
+      mode = valhalla::sif::TravelMode::kPedestrian;
+    } else {
+      valhalla::sif::cost_ptr_t cost = Create(options);
+      mode = cost->travel_mode();
+      mode_costing[static_cast<uint32_t>(mode)] = cost;
+    }
+    return mode_costing;
   }
 
 private:

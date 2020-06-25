@@ -110,7 +110,7 @@ public:
   SourceToTarget(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
                  const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
                  baldr::GraphReader& graphreader,
-                 const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                 const sif::mode_costing_t& mode_costing,
                  const sif::TravelMode mode,
                  const float max_matrix_distance);
 

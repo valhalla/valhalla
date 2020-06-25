@@ -503,7 +503,7 @@ std::vector<std::vector<PathInfo>>
 BidirectionalAStar::GetBestPath(valhalla::Location& origin,
                                 valhalla::Location& destination,
                                 GraphReader& graphreader,
-                                const std::shared_ptr<DynamicCost>* mode_costing,
+                                const sif::mode_costing_t& mode_costing,
                                 const sif::TravelMode mode,
                                 const Options& options) {
   // Set the mode and costing

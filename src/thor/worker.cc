@@ -205,21 +205,7 @@ std::string thor_worker_t::parse_costing(const Api& request) {
   const auto& options = request.options();
   auto costing = options.costing();
   auto costing_str = Costing_Enum_Name(costing);
-
-  // Set travel mode and construct costing
-  if (costing == Costing::multimodal || costing == Costing::transit) {
-    // For multi-modal we construct costing for all modes and set the
-    // initial mode to pedestrian. (TODO - allow other initial modes)
-    mode_costing[0] = factory.Create(Costing::auto_, options);
-    mode_costing[1] = factory.Create(Costing::pedestrian, options);
-    mode_costing[2] = factory.Create(Costing::bicycle, options);
-    mode_costing[3] = factory.Create(Costing::transit, options);
-    mode = valhalla::sif::TravelMode::kPedestrian;
-  } else {
-    valhalla::sif::cost_ptr_t cost = factory.Create(options);
-    mode = cost->travel_mode();
-    mode_costing[static_cast<uint32_t>(mode)] = cost;
-  }
+  mode_costing = factory.CreateModeCosting(options, mode);
   valhalla::midgard::logging::Log("travel_mode::" + std::to_string(static_cast<uint32_t>(mode)),
                                   " [ANALYTICS] ");
   return costing_str;

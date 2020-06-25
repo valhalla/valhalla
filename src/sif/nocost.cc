@@ -30,7 +30,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  NoCost(const Costing costing, const Options& options) : DynamicCost(options, TravelMode::kDrive) {
+  NoCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kDrive) {
   }
 
   virtual ~NoCost() {
@@ -210,8 +210,8 @@ void ParseNoCostOptions(const rapidjson::Document& doc,
   pbf_costing_options->set_costing(Costing::none_);
 }
 
-cost_ptr_t CreateNoCost(const Costing costing, const Options& options) {
-  return std::make_shared<NoCost>(costing, options);
+cost_ptr_t CreateNoCost(const CostingOptions& options) {
+  return std::make_shared<NoCost>(options);
 }
 
 } // namespace sif

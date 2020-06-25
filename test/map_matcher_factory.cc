@@ -21,19 +21,10 @@ using namespace valhalla;
 
 using ptree = boost::property_tree::ptree;
 
-// TODO - is there a better way to set these?
-void create_costing_options(Options& options) {
-  // TODO - accept RapidJSON as argument.
+void create_costing_options(Costing costing, Options& options) {
   const rapidjson::Document doc;
-  for (int i = 0; i < Costing_ARRAYSIZE; ++i) {
-    Costing costing = static_cast<Costing>(i);
-    // Create the costing string
-    const auto& costing_str = valhalla::Costing_Enum_Name(costing);
-    // Create the costing options key
-    const auto costing_options_key = "/costing_options/" + costing_str;
-    // Parse the options
-    sif::ParseCostOptions(costing, doc, costing_options_key, options.add_costing_options());
-  }
+  sif::ParseCostingOptions(doc, "/costing_options", options);
+  options.set_costing(costing);
 }
 
 TEST(MapMatcherFactory, TestMapMatcherFactory) {
@@ -47,12 +38,12 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
     {
       // Copy it so we can change it
       Options options;
-      create_costing_options(options);
+      create_costing_options(Costing::auto_, options);
       auto config = root;
       config.put<std::string>("meili.auto.hello", "world");
       config.put<std::string>("meili.default.hello", "default world");
       meili::MapMatcherFactory factory(config);
-      auto matcher = factory.Create(Costing::auto_, options);
+      auto matcher = factory.Create(options);
       EXPECT_EQ(matcher->travelmode(), sif::TravelMode::kDrive);
 
       // NOT SURE WHAT THIS IS SUPPOSED TO DO?
@@ -64,11 +55,11 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
     // Test configuration priority
     {
       Options options;
-      create_costing_options(options);
+      create_costing_options(Costing::bicycle, options);
       auto config = root;
       config.put<std::string>("meili.default.hello", "default world");
       meili::MapMatcherFactory factory(config);
-      auto matcher = factory.Create(Costing::bicycle, options);
+      auto matcher = factory.Create(options);
       EXPECT_EQ(matcher->travelmode(), sif::TravelMode::kBicycle);
 
       // NOT SURE WHAT THIS IS SUPPOSED TO DO?
@@ -80,7 +71,7 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
     // Test configuration priority
     {
       Options options;
-      create_costing_options(options);
+      create_costing_options(Costing::pedestrian, options);
       auto config = root;
       meili::MapMatcherFactory factory(config);
       float preferred_search_radius = 3;
@@ -89,7 +80,7 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
       options.set_search_radius(preferred_search_radius);
       config.put<int>("meili.auto.search_radius", incorrect_search_radius);
       config.put<int>("meili.default.search_radius", default_search_radius);
-      auto matcher = factory.Create(Costing::pedestrian, options);
+      auto matcher = factory.Create(options);
       EXPECT_EQ(matcher->travelmode(), sif::TravelMode::kPedestrian);
       EXPECT_EQ(matcher->config().get<float>("search_radius"), preferred_search_radius)
           << "preference for pedestrian should override pedestrian config";
@@ -100,11 +91,11 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
     // Test configuration priority
     {
       Options options;
-      create_costing_options(options);
+      create_costing_options(Costing::pedestrian, options);
       meili::MapMatcherFactory factory(root);
       float preferred_search_radius = 3;
       options.set_search_radius(preferred_search_radius);
-      auto matcher = factory.Create(Costing::pedestrian, options);
+      auto matcher = factory.Create(options);
       EXPECT_EQ(matcher->travelmode(), sif::TravelMode::kPedestrian);
       EXPECT_EQ(matcher->config().get<float>("search_radius"), preferred_search_radius)
           << "preference for universal should override config";
@@ -114,7 +105,7 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
     // Test default mode
     {
       Options options;
-      create_costing_options(options);
+      create_costing_options(Costing::auto_, options);
       meili::MapMatcherFactory factory(root);
       auto matcher = factory.Create(options);
       EXPECT_EQ(matcher->travelmode(), sif::TravelMode::kDrive)
@@ -126,9 +117,8 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
     // Test preferred mode
     {
       Options options;
-      create_costing_options(options);
+      create_costing_options(Costing::pedestrian, options);
       meili::MapMatcherFactory factory(root);
-      options.set_costing(Costing::pedestrian);
       auto matcher = factory.Create(options);
       EXPECT_EQ(matcher->travelmode(), sif::TravelMode::kPedestrian)
           << "should read costing in options correctly";
@@ -146,7 +136,7 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
     // Test custom costing
     {
       Options options;
-      create_costing_options(options);
+      create_costing_options(Costing::pedestrian, options);
       meili::MapMatcherFactory factory(root);
       options.set_costing(Costing::pedestrian);
       auto matcher = factory.Create(options);
@@ -175,9 +165,10 @@ TEST(MapMatcherFactory, TestMapMatcher) {
 
   meili::MapMatcherFactory factory(root);
   Options options;
-  create_costing_options(options);
-  auto auto_matcher = factory.Create(Costing::auto_, options);
-  auto pedestrian_matcher = factory.Create(Costing::pedestrian, options);
+  create_costing_options(Costing::auto_, options);
+  auto auto_matcher = factory.Create(options);
+  options.set_costing(Costing::pedestrian);
+  auto pedestrian_matcher = factory.Create(options);
 
   // Share the same pool
 

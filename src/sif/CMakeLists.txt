@@ -10,7 +10,8 @@ set(sources
   pedestriancost.cc
   transitcost.cc
   truckcost.cc
-  dynamiccost.cc)
+  dynamiccost.cc
+  util.cc)
 
 valhalla_module(NAME sif
   SOURCES ${sources}

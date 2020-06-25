@@ -98,7 +98,7 @@ end_node_t GetEndEdges(GraphReader& reader,
 // node and expands from there. Returns true once the end node has been found (and
 // distance is approximately what it should be). Returns false if expansion from this
 // node fails (cannot find edges that match the trace - either in position or distance).
-bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
+bool expand_from_node(const sif::mode_costing_t& mode_costing,
                       const TravelMode& mode,
                       GraphReader& reader,
                       const std::vector<meili::Measurement>& shape,
@@ -238,7 +238,7 @@ bool expand_from_node(const std::shared_ptr<DynamicCost>* mode_costing,
 } // namespace
 
 // For the route path using an edge walking method.
-bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
+bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
                             const sif::TravelMode& mode,
                             GraphReader& reader,
                             const std::vector<meili::Measurement>& shape,

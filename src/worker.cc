@@ -771,16 +771,9 @@ void from_json(rapidjson::Document& doc, Options& options) {
     throw valhalla_exception_t{125, "'" + costing_str + "'"};
   }
 
-  // if specified, get the costing options in there
-  for (int i = 0; i < Costing_ARRAYSIZE; ++i) {
-    Costing costing = static_cast<Costing>(i);
-    // Create the costing string
-    const auto& costing_str = valhalla::Costing_Enum_Name(costing);
-    // Create the costing options key
-    const auto costing_options_key = "/costing_options/" + costing_str;
-    // Parse the options
-    sif::ParseCostOptions(costing, doc, costing_options_key, options.add_costing_options());
-  }
+  // Parse all of the costing options in their specified order
+  sif::ParseCostingOptions(doc, "/costing_options", options);
+  options.set_costing(costing);
 
   // parse any named costings for re-costing a given path
   auto recostings = rapidjson::get_child_optional(doc, "/recostings");
@@ -788,7 +781,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
     for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
       // parse the options
       std::string key = "/recostings/" + std::to_string(i);
-      sif::ParseCostOptions(doc, key, options.add_recostings());
+      sif::ParseCostingOptions(doc, key, options.add_recostings());
       if (!options.recostings().rbegin()->has_name()) {
         throw valhalla_exception_t{127};
       }

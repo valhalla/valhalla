@@ -173,9 +173,7 @@ void make_tile() {
 }
 
 std::shared_ptr<vs::DynamicCost> create_costing() {
-  valhalla::Options options;
-  options.set_costing(valhalla::Costing::none_);
-  return vs::CreateNoCost(valhalla::Costing::none_, options);
+  return vs::CreateNoCost({});
 }
 
 void search(valhalla::baldr::Location location,

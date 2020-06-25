@@ -105,7 +105,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     GraphReader& graphreader,
-    const std::shared_ptr<DynamicCost>* mode_costing,
+    const sif::mode_costing_t& mode_costing,
     const TravelMode mode,
     const float max_matrix_distance) {
   // Set the mode and costing

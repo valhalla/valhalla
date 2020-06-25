@@ -245,7 +245,7 @@ std::vector<std::vector<PathInfo>>
 AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
                                 valhalla::Location& destination,
                                 GraphReader& graphreader,
-                                const std::shared_ptr<DynamicCost>* mode_costing,
+                                const sif::mode_costing_t& mode_costing,
                                 const TravelMode mode,
                                 const Options& options) {
   // Set the mode and costing

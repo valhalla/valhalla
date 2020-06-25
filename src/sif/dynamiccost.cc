@@ -47,7 +47,7 @@ uint8_t SpeedMask_Parse(const boost::optional<const rapidjson::Value&>& speed_ty
 namespace valhalla {
 namespace sif {
 
-DynamicCost::DynamicCost(const Options& options, const TravelMode mode)
+DynamicCost::DynamicCost(const CostingOptions& options, const TravelMode mode)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
       flow_mask_(kDefaultFlowMask) {
   // Parse property tree to get hierarchy limits
@@ -187,7 +187,6 @@ bool DynamicCost::bicycle() const {
 
 // Add to the exclude list.
 void DynamicCost::AddToExcludeList(const baldr::GraphTile*& tile) {
-  ;
 }
 
 // Checks if we should exclude or not.
@@ -216,92 +215,102 @@ void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_c
   }
 }
 
-void ParseCostOptions(const Costing& costing,
-                      const rapidjson::Document& doc,
-                      const std::string& costing_options_key,
-                      CostingOptions* pbf_costing_options) {
+void ParseCostingOptions(const rapidjson::Document& doc,
+                         const std::string& costing_options_key,
+                         Options& options) {
+  // if specified, get the costing options in there
+  for (int i = 0; i < Costing_ARRAYSIZE; ++i) {
+    Costing costing = static_cast<Costing>(i);
+    // Create the costing string
+    const auto& costing_str = valhalla::Costing_Enum_Name(costing);
+    // Create the costing options key
+    const auto key = costing_options_key + "/" + costing_str;
+    // Parse the costing options
+    ParseCostingOptions(doc, key, options.add_costing_options(), costing);
+  }
+}
+
+void ParseCostingOptions(const rapidjson::Document& doc,
+                         const std::string& key,
+                         CostingOptions* costing_options,
+                         Costing costing) {
+  // if the costing wasnt specified we have to find it nested in the json object
+  if (costing == Costing_ARRAYSIZE) {
+    // it has to have a costing object, it has to be an object, it has to have a member
+    // named costing and the value of that member has to be a string type
+    auto json = rapidjson::get_child_optional(doc, key.c_str());
+    decltype(json->MemberBegin()) costing_itr;
+    if (!json || !json->IsObject() ||
+        (costing_itr = json->FindMember("costing")) == json->MemberEnd() ||
+        !costing_itr->value.IsString()) {
+      throw valhalla_exception_t{127};
+    }
+    // then we can try to parse the string and if its invalid we barf
+    std::string costing_str = costing_itr->value.GetString();
+    if (!Costing_Enum_Parse(costing_str, &costing)) {
+      throw valhalla_exception_t{125, "'" + costing_str + "'"};
+    }
+  }
+  // finally we can parse the costing
   switch (costing) {
     case auto_: {
-      sif::ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+      sif::ParseAutoCostOptions(doc, key, costing_options);
       break;
     }
     case auto_shorter: {
-      sif::ParseAutoShorterCostOptions(doc, costing_options_key, pbf_costing_options);
+      sif::ParseAutoShorterCostOptions(doc, key, costing_options);
       break;
     }
     case bicycle: {
-      sif::ParseBicycleCostOptions(doc, costing_options_key, pbf_costing_options);
+      sif::ParseBicycleCostOptions(doc, key, costing_options);
       break;
     }
     case bus: {
-      sif::ParseBusCostOptions(doc, costing_options_key, pbf_costing_options);
+      sif::ParseBusCostOptions(doc, key, costing_options);
       break;
     }
     case hov: {
-      sif::ParseHOVCostOptions(doc, costing_options_key, pbf_costing_options);
+      sif::ParseHOVCostOptions(doc, key, costing_options);
       break;
     }
     case taxi: {
-      sif::ParseTaxiCostOptions(doc, costing_options_key, pbf_costing_options);
+      sif::ParseTaxiCostOptions(doc, key, costing_options);
       break;
     }
     case motor_scooter: {
-      sif::ParseMotorScooterCostOptions(doc, costing_options_key, pbf_costing_options);
+      sif::ParseMotorScooterCostOptions(doc, key, costing_options);
       break;
     }
     case multimodal: {
-      pbf_costing_options->set_costing(Costing::multimodal); // Nothing to parse for this one
+      costing_options->set_costing(Costing::multimodal); // Nothing to parse for this one
       break;
     }
     case pedestrian: {
-      sif::ParsePedestrianCostOptions(doc, costing_options_key, pbf_costing_options);
+      sif::ParsePedestrianCostOptions(doc, key, costing_options);
       break;
     }
     case transit: {
-      sif::ParseTransitCostOptions(doc, costing_options_key, pbf_costing_options);
+      sif::ParseTransitCostOptions(doc, key, costing_options);
       break;
     }
     case truck: {
-      sif::ParseTruckCostOptions(doc, costing_options_key, pbf_costing_options);
+      sif::ParseTruckCostOptions(doc, key, costing_options);
       break;
     }
     case motorcycle: {
-      sif::ParseMotorcycleCostOptions(doc, costing_options_key, pbf_costing_options);
+      sif::ParseMotorcycleCostOptions(doc, key, costing_options);
       break;
     }
     case auto_data_fix: {
-      sif::ParseAutoDataFixCostOptions(doc, costing_options_key, pbf_costing_options);
+      sif::ParseAutoDataFixCostOptions(doc, key, costing_options);
       break;
     }
     case none_: {
-      sif::ParseNoCostOptions(doc, costing_options_key, pbf_costing_options);
+      sif::ParseNoCostOptions(doc, key, costing_options);
       break;
     }
   }
-  pbf_costing_options->set_costing(costing);
-}
-
-void ParseCostOptions(const rapidjson::Document& doc,
-                      const std::string& costing_options_key,
-                      CostingOptions* pbf_costing_options) {
-  // it has to have a costing object where you say, it has to be an object, it has to have a member
-  // named costing and the value of that member has to be a string type
-  auto json = rapidjson::get_child_optional(doc, costing_options_key.c_str());
-  decltype(json->MemberBegin()) costing_itr;
-  if (!json || !json->IsObject() ||
-      (costing_itr = json->FindMember("costing")) == json->MemberEnd() ||
-      !costing_itr->value.IsString()) {
-    throw valhalla_exception_t{127};
-  }
-  // then we can try to parse the string and if its invalid we barf
-  Costing costing;
-  std::string costing_str = costing_itr->value.GetString();
-  if (!Costing_Enum_Parse(costing_str, &costing)) {
-    throw valhalla_exception_t{125, "'" + costing_str + "'"};
-  }
-  // finally we can parse the costing
-  ParseCostOptions(costing, doc, costing_options_key, pbf_costing_options);
-  return;
+  costing_options->set_costing(costing);
 }
 
 } // namespace sif

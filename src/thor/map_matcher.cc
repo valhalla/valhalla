@@ -171,7 +171,7 @@ std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment
 MapMatcher::FormPath(meili::MapMatcher* matcher,
                      const std::vector<meili::MatchResult>& results,
                      const std::vector<meili::EdgeSegment>& edge_segments,
-                     const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                     const sif::mode_costing_t& mode_costing,
                      const sif::TravelMode mode,
                      Options& options) {
 

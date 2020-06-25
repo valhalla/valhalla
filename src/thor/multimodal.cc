@@ -98,7 +98,7 @@ std::vector<std::vector<PathInfo>>
 MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
                                      valhalla::Location& destination,
                                      GraphReader& graphreader,
-                                     const std::shared_ptr<DynamicCost>* mode_costing,
+                                     const sif::mode_costing_t& mode_costing,
                                      const TravelMode mode,
                                      const Options& options) {
   // For pedestrian costing - set flag allowing use of transit connections
@@ -232,7 +232,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
                                             const bool from_transition,
                                             const std::shared_ptr<DynamicCost>& pc,
                                             const std::shared_ptr<DynamicCost>& tc,
-                                            const std::shared_ptr<DynamicCost>* mode_costing,
+                                            const sif::mode_costing_t& mode_costing,
                                             const TimeInfo& time_info) {
 
   // Get the tile and the node info. Skip if tile is null (can happen

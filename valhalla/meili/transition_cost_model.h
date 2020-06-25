@@ -19,7 +19,7 @@ public:
                       const IViterbiSearch& vs,
                       const TopKSearch& ts,
                       const StateContainer& container,
-                      const sif::cost_ptr_t* mode_costing,
+                      const sif::mode_costing_t& mode_costing,
                       const sif::TravelMode travelmode,
                       float beta,
                       float breakage_distance,
@@ -31,7 +31,7 @@ public:
                       const IViterbiSearch& vs,
                       const TopKSearch& ts,
                       const StateContainer& container,
-                      const sif::cost_ptr_t* mode_costing,
+                      const sif::mode_costing_t& mode_costing,
                       const sif::TravelMode travelmode,
                       const boost::property_tree::ptree& config);
 
@@ -73,7 +73,7 @@ private:
 
   const StateContainer& container_;
 
-  const sif::cost_ptr_t* mode_costing_;
+  const sif::mode_costing_t& mode_costing_;
 
   const sif::TravelMode travelmode_;
 

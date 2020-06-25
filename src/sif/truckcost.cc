@@ -113,7 +113,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  TruckCost(const Costing costing, const Options& options);
+  TruckCost(const CostingOptions& options);
 
   virtual ~TruckCost();
 
@@ -317,29 +317,26 @@ public:
 };
 
 // Constructor
-TruckCost::TruckCost(const Costing costing, const Options& options)
+TruckCost::TruckCost(const CostingOptions& options)
     : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
                                                                       1.0f, 1.1f, 1.2f, 1.3f,
                                                                       1.4f, 1.6f, 1.9f, 2.2f,
                                                                       2.5f, 2.8f, 3.1f, 3.5f} {
 
-  // Grab the costing options based on the specified costing type
-  const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
-
   type_ = VehicleType::kTractorTrailer;
 
   // Get the base costs
-  get_base_costs(costing_options);
+  get_base_costs(options);
 
-  low_class_penalty_ = costing_options.low_class_penalty();
+  low_class_penalty_ = options.low_class_penalty();
 
   // Get the vehicle attributes
-  hazmat_ = costing_options.hazmat();
-  weight_ = costing_options.weight();
-  axle_load_ = costing_options.axle_load();
-  height_ = costing_options.height();
-  width_ = costing_options.width();
-  length_ = costing_options.length();
+  hazmat_ = options.hazmat();
+  weight_ = options.weight();
+  axle_load_ = options.axle_load();
+  height_ = options.height();
+  width_ = options.width();
+  length_ = options.length();
 
   // Create speed cost table
   speedfactor_.resize(kMaxSpeedKph + 1, 0);
@@ -352,7 +349,7 @@ TruckCost::TruckCost(const Costing costing, const Options& options)
   // factor. A toll factor of 0 would indicate no adjustment to weighting for toll roads.
   // use_tolls = 1 would reduce weighting slightly (a negative delta) while
   // use_tolls = 0 would penalize (positive delta to weighting factor).
-  float use_tolls = costing_options.use_tolls();
+  float use_tolls = options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (2.0f - 4 * use_tolls) : // ranges from 2 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
 
@@ -727,8 +724,8 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateTruckCost(const Costing costing, const Options& options) {
-  return std::make_shared<TruckCost>(costing, options);
+cost_ptr_t CreateTruckCost(const CostingOptions& options) {
+  return std::make_shared<TruckCost>(options);
 }
 
 } // namespace sif
@@ -745,7 +742,7 @@ namespace {
 
 class TestTruckCost : public TruckCost {
 public:
-  TestTruckCost(const Costing costing, const Options& options) : TruckCost(costing, options){};
+  TestTruckCost(const CostingOptions& options) : TruckCost(options){};
 
   using TruckCost::alley_penalty_;
   using TruckCost::country_crossing_cost_;
@@ -761,7 +758,7 @@ TestTruckCost* make_truckcost_from_json(const std::string& property, float testV
   ss << R"({"costing_options":{"truck":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestTruckCost(valhalla::Costing::truck, request.options());
+  return new TestTruckCost(request.options().costing_options(static_cast<int>(Costing::truck)));
 }
 
 std::uniform_real_distribution<float>*

@@ -202,7 +202,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
 // Compute the forward graph traversal
 void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
                         GraphReader& graphreader,
-                        const std::shared_ptr<DynamicCost>* mode_costing,
+                        const sif::mode_costing_t& mode_costing,
                         const TravelMode mode) {
 
   // Set the mode and costing
@@ -357,7 +357,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
 // Compute the reverse graph traversal
 void Dijkstras::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
                                GraphReader& graphreader,
-                               const std::shared_ptr<DynamicCost>* mode_costing,
+                               const sif::mode_costing_t& mode_costing,
                                const TravelMode mode) {
   // Set the mode and costing
   mode_ = mode;
@@ -408,7 +408,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
                                         const bool from_transition,
                                         const std::shared_ptr<DynamicCost>& pc,
                                         const std::shared_ptr<DynamicCost>& tc,
-                                        const std::shared_ptr<DynamicCost>* mode_costing,
+                                        const sif::mode_costing_t& mode_costing,
                                         const TimeInfo& time_info) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -690,7 +690,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
 void Dijkstras::ComputeMultiModal(
     google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
     GraphReader& graphreader,
-    const std::shared_ptr<DynamicCost>* mode_costing,
+    const sif::mode_costing_t& mode_costing,
     const TravelMode mode) {
   // For pedestrian costing - set flag allowing use of transit connections
   // Set pedestrian costing to use max distance. TODO - need for other modes

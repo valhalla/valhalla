@@ -6,24 +6,6 @@ using namespace valhalla;
 
 const std::unordered_map<std::string, std::string> build_config{{"mjolnir.shortcuts", "false"}};
 
-void create_costing(const Api& request, sif::cost_ptr_t* mode_costing) {
-
-  const auto& options = request.options();
-
-  sif::CostFactory<> factory;
-  mode_costing[static_cast<uint8_t>(sif::TravelMode::kDrive)] =
-      factory.Create(Costing::auto_, options);
-  mode_costing[static_cast<uint8_t>(sif::TravelMode::kPedestrian)] =
-      factory.Create(Costing::pedestrian, options);
-  mode_costing[static_cast<uint8_t>(sif::TravelMode::kBicycle)] =
-      factory.Create(Costing::bicycle, options);
-  mode_costing[static_cast<uint8_t>(sif::TravelMode::kPublicTransit)] =
-      factory.Create(Costing::transit, options);
-
-  valhalla::sif::cost_ptr_t cost = factory.Create(options);
-  mode_costing[static_cast<uint8_t>(cost->travel_mode())] = cost;
-}
-
 TEST(recosting, all_algorithms) {
   const std::string ascii_map = R"(A--1--B-2-3-C
                                          |     |
@@ -61,10 +43,6 @@ TEST(recosting, all_algorithms) {
         auto end = named_locations.substr(j, 1);
         auto api = gurka::route(map, start, end, "auto", option, reader);
         auto leg = api.trip().routes(0).legs(0);
-
-        // build up the costing object
-        sif::cost_ptr_t mode_costing[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
-        create_costing(api, mode_costing);
 
         // setup a callback for the recosting to get each edge
         auto edge_itr = leg.node().begin();
@@ -116,11 +94,12 @@ TEST(recosting, all_algorithms) {
         std::string date_time = dt_itr != option.cend() ? dt_itr->second : "";
         auto type_itr = option.find("/date_time/type");
         bool forward = type_itr != option.cend() ? std::stoi(type_itr->second) != 2 : true;
+        // build up the costing object
+        auto costing = sif::CostFactory().Create(api.options());
 
         // recost the path
         if (forward) {
-          sif::recost_forward(*reader, *mode_costing[static_cast<uint8_t>(sif::TravelMode::kDrive)],
-                              edge_cb, label_cb, src_pct, tgt_pct, date_time);
+          sif::recost_forward(*reader, *costing, edge_cb, label_cb, src_pct, tgt_pct, date_time);
         } else {
           // sif::recost_reverse(*reader, &mode_costing[0], date_time, edge_cb, label_cb);
         }
@@ -153,10 +132,6 @@ TEST(recosting, throwing) {
   // cross the graph as a pedestrian
   auto api = gurka::route(map, "A", "F", "pedestrian", {}, reader);
 
-  // build up the costing object
-  sif::cost_ptr_t mode_costing[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
-  create_costing(api, mode_costing);
-
   // setup a callback for the recosting to get each edge
   const auto& leg = api.trip().routes(0).legs(0);
   auto edge_itr = leg.node().begin();
@@ -170,29 +145,24 @@ TEST(recosting, throwing) {
   bool called = false;
   sif::LabelCallback label_cb = [&called](const sif::EdgeLabel& label) -> void { called = true; };
 
+  // build up the costing object
+  auto costing = sif::CostFactory().Create(Costing::auto_);
+
   // those percentages are bonkers
-  EXPECT_THROW(sif::recost_forward(*reader,
-                                   *mode_costing[static_cast<uint8_t>(sif::TravelMode::kDrive)],
-                                   edge_cb, label_cb, -90, 476),
-               std::logic_error);
+  EXPECT_THROW(sif::recost_forward(*reader, *costing, edge_cb, label_cb, -90, 476), std::logic_error);
 
   // this edge id is valid but doesnt exist
-  EXPECT_THROW(sif::recost_forward(*reader,
-                                   *mode_costing[static_cast<uint8_t>(sif::TravelMode::kDrive)],
-                                   []() { return baldr::GraphId{123456789}; }, label_cb),
+  EXPECT_THROW(sif::recost_forward(*reader, *costing, []() { return baldr::GraphId{123456789}; },
+                                   label_cb),
                std::runtime_error);
 
   // this edge id is not valid
-  sif::recost_forward(*reader, *mode_costing[static_cast<uint8_t>(sif::TravelMode::kDrive)],
-                      []() { return baldr::GraphId{}; }, label_cb);
+  sif::recost_forward(*reader, *costing, []() { return baldr::GraphId{}; }, label_cb);
   EXPECT_EQ(called, false);
 
   // this path isnt possible with a car because the second edge doesnt have auto access
   called = false;
-  EXPECT_THROW(sif::recost_forward(*reader,
-                                   *mode_costing[static_cast<uint8_t>(sif::TravelMode::kDrive)],
-                                   edge_cb, label_cb),
-               std::runtime_error);
+  EXPECT_THROW(sif::recost_forward(*reader, *costing, edge_cb, label_cb), std::runtime_error);
   EXPECT_EQ(called, true);
 
   // go in the reverse direction
@@ -201,10 +171,7 @@ TEST(recosting, throwing) {
 
   // this path isnt possible with a car because the first node is a gate
   called = false;
-  EXPECT_THROW(sif::recost_forward(*reader,
-                                   *mode_costing[static_cast<uint8_t>(sif::TravelMode::kDrive)],
-                                   edge_cb, label_cb),
-               std::runtime_error);
+  EXPECT_THROW(sif::recost_forward(*reader, *costing, edge_cb, label_cb), std::runtime_error);
   EXPECT_EQ(called, true);
 
   // travel only on pedestrian edges
@@ -213,10 +180,7 @@ TEST(recosting, throwing) {
 
   // it wont be able to evaluate any edges because they are all pedestrian only
   called = false;
-  EXPECT_THROW(sif::recost_forward(*reader,
-                                   *mode_costing[static_cast<uint8_t>(sif::TravelMode::kDrive)],
-                                   edge_cb, label_cb),
-               std::runtime_error);
+  EXPECT_THROW(sif::recost_forward(*reader, *costing, edge_cb, label_cb), std::runtime_error);
   EXPECT_EQ(called, false);
 }
 

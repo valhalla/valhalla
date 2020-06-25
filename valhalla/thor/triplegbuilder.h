@@ -52,7 +52,7 @@ public:
   static void Build(const valhalla::Options& options,
                     const AttributesController& controller,
                     baldr::GraphReader& graphreader,
-                    const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                    const sif::mode_costing_t& mode_costing,
                     const std::vector<PathInfo>::const_iterator path_begin,
                     const std::vector<PathInfo>::const_iterator path_end,
                     valhalla::Location& origin,

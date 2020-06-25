@@ -69,12 +69,14 @@ TEST(Trimming, routes) {
   EXPECT_GT(offset * start_edge->length(), start_length);
 
   // fake a costing
-  valhalla::Options options;
   const rapidjson::Document doc;
-  sif::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
-  auto costing = sif::CreateAutoCost(valhalla::Costing::auto_, options);
-  sif::cost_ptr_t costings[int(sif::TravelMode::kMaxTravelMode)];
-  costings[static_cast<int>(costing->travel_mode())] = costing;
+  valhalla::Options options;
+  options.set_costing(Costing::auto_);
+  sif::ParseCostingOptions(doc, "/costing_options", options);
+  sif::TravelMode mode;
+  sif::CostFactory factory;
+  auto mode_costings = factory.CreateModeCosting(options, mode);
+  auto costing = mode_costings[static_cast<size_t>(mode)];
 
   // fake up a route
   std::vector<thor::PathInfo> path{{costing->travel_mode(), {.001, .001}, start_id, 0, false},
@@ -89,8 +91,8 @@ TEST(Trimming, routes) {
   // sliver of the end of the edge
   thor::AttributesController c;
   valhalla::TripLeg leg;
-  thor::TripLegBuilder::Build({}, c, reader, costings, path.cbegin(), path.cend(), origin, dest, {},
-                              leg);
+  thor::TripLegBuilder::Build({}, c, reader, mode_costings, path.cbegin(), path.cend(), origin, dest,
+                              {}, leg);
   auto leg_shape = midgard::decode<std::vector<midgard::PointLL>>(leg.shape());
   auto leg_length = midgard::length(leg_shape);
 

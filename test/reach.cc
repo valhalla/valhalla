@@ -19,22 +19,6 @@ namespace vs = valhalla::sif;
 
 namespace {
 
-vs::cost_ptr_t create_costing() {
-  Options options;
-  const rapidjson::Document doc;
-  for (int i = 0; i < Costing_ARRAYSIZE; ++i) {
-    Costing costing = static_cast<Costing>(i);
-    // Create the costing string
-    const auto& costing_str = valhalla::Costing_Enum_Name(costing);
-    // Create the costing options key
-    const auto costing_options_key = "/costing_options/" + costing_str;
-    // Parse the options
-    sif::ParseCostOptions(costing, doc, costing_options_key, options.add_costing_options());
-  }
-  vs::CostFactory<> factory;
-  return vs::CostFactory<>{}.Create(Costing::auto_, options);
-}
-
 boost::property_tree::ptree get_conf() {
   std::stringstream ss;
   ss << R"({
@@ -87,7 +71,7 @@ TEST(Reach, check_all_reach) {
   auto conf = get_conf();
   GraphReader reader(conf.get_child("mjolnir"));
 
-  auto costing = create_costing();
+  auto costing = vs::CostFactory{}.Create(Costing::auto_);
   Reach reach_finder;
 
   // look at all the edges

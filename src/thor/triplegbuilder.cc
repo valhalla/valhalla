@@ -1144,9 +1144,10 @@ void AccumulateRecostingInfoForward(const valhalla::Options& options,
   };
 
   // do each recosting
+  sif::CostFactory factory;
   for (const auto& recosting : options.recostings()) {
     // get the costing
-    auto costing = sif::CostFactory<>{}.Create(recosting);
+    auto costing = factory.Create(recosting);
     // reset to the beginning of the route
     in_itr = leg.node().begin();
     out_itr = leg.mutable_node()->begin();
@@ -1170,7 +1171,7 @@ void TripLegBuilder::Build(
     const valhalla::Options& options,
     const AttributesController& controller,
     GraphReader& graphreader,
-    const std::shared_ptr<sif::DynamicCost>* mode_costing,
+    const sif::mode_costing_t& mode_costing,
     const std::vector<PathInfo>::const_iterator path_begin,
     const std::vector<PathInfo>::const_iterator path_end,
     valhalla::Location& origin,

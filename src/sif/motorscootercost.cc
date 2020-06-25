@@ -160,7 +160,7 @@ public:
    * @param  costing specified costing type.
    * @param  options pbf with request options.
    */
-  MotorScooterCost(const Costing costing, const Options& options);
+  MotorScooterCost(const CostingOptions& options);
 
   // virtual destructor
   virtual ~MotorScooterCost() {
@@ -364,16 +364,13 @@ public:
 };
 
 // Constructor
-MotorScooterCost::MotorScooterCost(const Costing costing, const Options& options)
+MotorScooterCost::MotorScooterCost(const CostingOptions& options)
     : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
                                                                       1.0f, 1.1f, 1.2f, 1.3f,
                                                                       1.4f, 1.6f, 1.9f, 2.2f,
                                                                       2.5f, 2.8f, 3.1f, 3.5f} {
-  // Grab the costing options based on the specified costing type
-  const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
-
   // Get the base costs
-  get_base_costs(costing_options);
+  get_base_costs(options);
 
   // Create speed cost table
   speedfactor_.resize(kMaxSpeedKph + 1, 0);
@@ -388,11 +385,11 @@ MotorScooterCost::MotorScooterCost(const Costing costing, const Options& options
   }
 
   // Set top speed for motor scooter
-  top_speed_ = costing_options.top_speed();
+  top_speed_ = options.top_speed();
 
   // Set grade penalties based on use_hills option.
   // Scale from 0 (avoid hills) to 1 (don't avoid hills)
-  float use_hills = costing_options.use_hills();
+  float use_hills = options.use_hills();
   float avoid_hills = (1.0f - use_hills);
   for (uint32_t i = 0; i <= kMaxGradeFactor; ++i) {
     grade_penalty_[i] = avoid_hills * kAvoidHillsStrength[i];
@@ -402,7 +399,7 @@ MotorScooterCost::MotorScooterCost(const Costing costing, const Options& options
   // 0 (avoid primary roads) to 1 (don't avoid primary roads). Above 0.5 start to
   // reduce the weight difference between road classes while factors below 0.5
   // start to increase the differences.
-  float use_primary = costing_options.use_primary();
+  float use_primary = options.use_primary();
   road_factor_ = (use_primary >= 0.5f) ? 1.5f - use_primary : 3.0f - use_primary * 5.0f;
 }
 
@@ -665,8 +662,8 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateMotorScooterCost(const Costing costing, const Options& options) {
-  return std::make_shared<MotorScooterCost>(costing, options);
+cost_ptr_t CreateMotorScooterCost(const CostingOptions& options) {
+  return std::make_shared<MotorScooterCost>(options);
 }
 
 } // namespace sif
@@ -683,8 +680,7 @@ namespace {
 
 class TestMotorScooterCost : public MotorScooterCost {
 public:
-  TestMotorScooterCost(const Costing costing, const Options& options)
-      : MotorScooterCost(costing, options){};
+  TestMotorScooterCost(const CostingOptions& options) : MotorScooterCost(options){};
 
   using MotorScooterCost::alley_penalty_;
   using MotorScooterCost::country_crossing_cost_;
@@ -699,7 +695,8 @@ TestMotorScooterCost* make_motorscootercost_from_json(const std::string& propert
   ss << R"({"costing_options":{"motor_scooter":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestMotorScooterCost(valhalla::Costing::motor_scooter, request.options());
+  return new TestMotorScooterCost(
+      request.options().costing_options(static_cast<int>(Costing::motor_scooter)));
 }
 
 template <typename T>
