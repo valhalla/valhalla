@@ -211,4 +211,54 @@ TEST(recosting, error_request) {
 }
 
 TEST(recosting, api) {
+  const std::string ascii_map = R"(A--1--B-2-3-C
+                                         |     |
+                                         |     |
+                                         4     5
+                                         |     |
+                                         |     |
+                                         D--6--E--7--F)";
+  const gurka::ways ways = {
+      {"A1B23C", {{"highway", "Trunk"}}},
+      {"D6E7F", {{"highway", "Trunk"}}},
+      {"B4D", {{"highway", "residential"}}},
+      {"C5E", {{"highway", "Trunk"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_recost", build_config);
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+  std::string locations = R"({"lon":)" + std::to_string(map.nodes["1"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["1"].lat()) + R"(},{"lon":)" +
+                          std::to_string(map.nodes["7"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["7"].lat()) + "}";
+
+  // lets also do a bunch of costings
+  Api api;
+  auto json = actor.route(R"({"costing":"auto","locations":[)" + locations + R"(],"recostings":[
+      {"costing":"auto","name":"same"},
+      {"costing":"auto","name":"avoid_highways","use_highways":0.1},
+      {"costing":"bicycle","name":"slower"},
+      {"costing":"pedestrian","name":"slower_still"},
+      {"costing":"pedestrian","name":"slowest","walking_speed":2}]})",
+                          {}, &api);
+
+  auto greater_equal = [](const valhalla::TripLeg::PathCost& a,
+                          const valhalla::TripLeg::PathCost& b) {
+    EXPECT_GE(a.elapsed_cost().cost(), b.elapsed_cost().cost());
+    EXPECT_GE(a.elapsed_cost().seconds(), b.elapsed_cost().seconds());
+    EXPECT_GE(a.transition_cost().cost(), b.transition_cost().cost());
+    EXPECT_GE(a.transition_cost().seconds(), b.transition_cost().seconds());
+  };
+
+  // check we have the right amount of costing information at all places
+  for (const auto& n : api.trip().routes(0).legs(0).node()) {
+    EXPECT_EQ(n.recosts_size(), 5);
+    greater_equal(n.cost(), n.recosts(0));
+    greater_equal(n.recosts(0), n.recosts(1));
+    greater_equal(n.recosts(1), n.recosts(2));
+    greater_equal(n.recosts(2), n.recosts(3));
+    greater_equal(n.recosts(3), n.recosts(4));
+  }
 }

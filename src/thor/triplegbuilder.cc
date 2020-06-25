@@ -1121,6 +1121,11 @@ void AccumulateRecostingInfoForward(const valhalla::Options& options,
                                     const std::string& date_time,
                                     valhalla::baldr::GraphReader& reader,
                                     valhalla::TripLeg& leg) {
+  // bail if this is empty for some reason
+  if (leg.node_size() == 0) {
+    return;
+  }
+
   // setup a callback for the recosting to get each edge
   auto in_itr = leg.node().begin();
   sif::EdgeCallback edge_cb = [&in_itr]() -> baldr::GraphId {
@@ -1155,10 +1160,21 @@ void AccumulateRecostingInfoForward(const valhalla::Options& options,
     out_itr->mutable_recosts()->Add()->mutable_elapsed_cost()->set_seconds(0);
     out_itr->mutable_recosts()->rbegin()->mutable_elapsed_cost()->set_cost(0);
     // do the recosting for this costing
-    sif::recost_forward(reader, *costing, edge_cb, label_cb, src_pct, tgt_pct, date_time);
-    // no turn cost at the end of the leg
-    out_itr->mutable_recosts()->rbegin()->mutable_transition_cost()->set_seconds(0);
-    out_itr->mutable_recosts()->rbegin()->mutable_transition_cost()->set_cost(0);
+    try {
+      sif::recost_forward(reader, *costing, edge_cb, label_cb, src_pct, tgt_pct, date_time);
+      // no turn cost at the end of the leg
+      out_itr->mutable_recosts()->rbegin()->mutable_transition_cost()->set_seconds(0);
+      out_itr->mutable_recosts()->rbegin()->mutable_transition_cost()->set_cost(0);
+    } // couldnt be recosted (difference in access for example) so we fill it with nulls to show this
+    catch (...) {
+      int should_have = leg.node(0).recosts_size();
+      for (auto& node : *leg.mutable_node()) {
+        if (node.recosts_size() == should_have) {
+          node.mutable_recosts()->RemoveLast();
+        }
+        node.mutable_recosts()->Add();
+      }
+    }
   }
 }
 
