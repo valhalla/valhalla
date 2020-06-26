@@ -16,12 +16,6 @@ using namespace valhalla;
 
 namespace {
 
-void create_costing_options(Options& options) {
-  const rapidjson::Document doc;
-  sif::ParseCostOptions(valhalla::Costing::auto_, doc, "/costing_options/auto",
-                        options.add_costing_options());
-}
-
 boost::property_tree::ptree json_to_pt(const std::string& json) {
   std::stringstream ss;
   ss << json;
@@ -88,10 +82,12 @@ static void BM_UtrechtCostMatrix(benchmark::State& state) {
   }
 
   Options options;
-  create_costing_options(options);
-  auto costs = sif::CostFactory<>{}.Create(Costing::auto_, options);
+  options.set_costing(Costing::auto_);
+  sif::TravelMode mode;
+  auto costs = sif::CostFactory().CreateModeCosting(options, mode);
+  auto cost = costs[static_cast<size_t>(mode)];
 
-  const auto projections = loki::Search(locations, reader, costs);
+  const auto projections = loki::Search(locations, reader, cost);
 
   google::protobuf::RepeatedPtrField<valhalla::Location> sources;
 
@@ -104,8 +100,7 @@ static void BM_UtrechtCostMatrix(benchmark::State& state) {
 
   for (auto _ : state) {
     thor::CostMatrix matrix;
-    auto result =
-        matrix.SourceToTarget(sources, sources, reader, &costs, sif::TravelMode::kDrive, 100000.);
+    auto result = matrix.SourceToTarget(sources, sources, reader, costs, mode, 100000.);
     result_size = result.size();
   }
   state.counters["Routes"] = benchmark::Counter(size, benchmark::Counter::kIsIterationInvariantRate);

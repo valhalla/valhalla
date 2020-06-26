@@ -257,11 +257,6 @@ TEST(recosting, api) {
     }
   };
 
-  auto print = [](const valhalla::TripLeg::PathCost& a) {
-    std::cout << a.elapsed_cost().cost() << " " << a.elapsed_cost().seconds() << " "
-              << a.transition_cost().cost() << " " << a.transition_cost().seconds() << std::endl;
-  };
-
   // check we have the right amount of costing information at all places
   for (const auto& n : api.trip().routes(0).legs(0).node()) {
     EXPECT_EQ(n.recosts_size(), 5);
@@ -274,15 +269,19 @@ TEST(recosting, api) {
     // bike cost uses different costing units so we only do the seconds
     greater_equal(n.recosts(2), n.recosts(3), false, false);
     greater_equal(n.recosts(3), n.recosts(4));
-
-    print(n.cost());
-    for (const auto& cost : n.recosts()) {
-      print(cost);
-    }
-    std::cout << "-------------------------------------------------" << std::endl;
   }
 
   // TODO: verify json has the right info
+
+  // TODO: do it again for osrm format
+  json = actor.route(R"({"costing":"auto","format":"osrm", "locations":[)" + locations +
+                         R"(],"recostings":[
+      {"costing":"auto","name":"same"},
+      {"costing":"auto","name":"avoid_highways","use_highways":0.1},
+      {"costing":"bicycle","name":"slower"},
+      {"costing":"pedestrian","name":"slower_still"},
+      {"costing":"pedestrian","name":"slowest","walking_speed":2}]})",
+                     {}, &api);
 
   api.Clear();
   json = actor.route(R"({"costing":"auto","locations":[)" + locations + R"(],"recostings":[
@@ -300,4 +299,11 @@ TEST(recosting, api) {
   }
 
   // TODO: verify json has the right info
+
+  // TODO: do it again for osrm format
+  json = actor.route(R"({"costing":"auto","format":"osrm","locations":[)" + locations +
+                         R"(],"recostings":[
+      {"costing":"truck","name":"nope"},
+      {"costing":"auto","name":"same"}]})",
+                     {}, &api);
 }

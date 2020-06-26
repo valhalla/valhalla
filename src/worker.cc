@@ -786,6 +786,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
         throw valhalla_exception_t{127};
       }
     }
+    // TODO: throw if not all names are unique?
   }
 
   // get the locations in there

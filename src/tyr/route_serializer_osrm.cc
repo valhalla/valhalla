@@ -248,15 +248,28 @@ json::array({}); for(const auto& leg : legs) { for(const auto& maneuver : leg.ma
 **/
 
 // Add OSRM route summary information: distance, duration
-void route_summary(json::MapPtr& route,
-                   const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
-                   bool imperial) {
+void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial, int route_index) {
   // Compute total distance and duration
-  double duration = 0.0f;
-  double distance = 0.0f;
-  for (const auto& leg : legs) {
+  double duration = 0;
+  double distance = 0;
+  double weight = 0;
+  auto leg_itr = api.trip().routes(route_index).legs().begin();
+  std::vector<std::pair<double, double>> recosts(api.options().recostings_size(), {0, 0});
+  for (const auto& leg : api.directions().routes(route_index).legs()) {
     distance += leg.summary().length();
     duration += leg.summary().time();
+    weight += leg_itr->node().rbegin()->cost().elapsed_cost().cost();
+    for (int i = 0; i < leg_itr->node().rbegin()->recosts_size(); ++i) {
+      const auto& recost = leg_itr->node().rbegin()->recosts(i);
+      if (!recost.has_elapsed_cost() || recosts[i].first < 0) {
+        recosts[i].first = -1;
+        recosts[i].second = -1;
+      } else {
+        recosts[i].first += recost.elapsed_cost().seconds();
+        recosts[i].second += recost.elapsed_cost().cost();
+      }
+    }
+    ++leg_itr;
   }
 
   // Convert distance to meters. Output distance and duration.
@@ -264,11 +277,20 @@ void route_summary(json::MapPtr& route,
   route->emplace("distance", json::fp_t{distance, 3});
   route->emplace("duration", json::fp_t{duration, 3});
 
-  // TODO - support returning weight based on costing method
-  // as well as returning the costing method
-  float weight = duration;
   route->emplace("weight", json::fp_t{weight, 3});
-  route->emplace("weight_name", std::string("Valhalla default"));
+  route->emplace("weight_name", api.options().costing_options(api.options().costing()).name());
+
+  auto recosting_itr = api.options().recostings().begin();
+  for (const auto& recost : recosts) {
+    if (recost.first < 0) {
+      route->emplace("duration_" + recosting_itr->name(), nullptr_t());
+      route->emplace("weight_" + recosting_itr->name(), nullptr_t());
+    } else {
+      route->emplace("duration_" + recosting_itr->name(), json::fp_t{recost.first, 3});
+      route->emplace("weight_" + recosting_itr->name(), json::fp_t{recost.second, 3});
+    }
+    ++recosting_itr;
+  }
 }
 
 // Generate leg shape in geojson format.
@@ -434,6 +456,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
     if (node->transition_time() > 0)
       intersection->emplace("duration", json::fp_t{node->transition_time(), 3});
+    // TODO: add recosted durations to the intersection?
 
     // Get bearings and access to outgoing intersecting edges. Do not add
     // any intersecting edges for the first depart intersection and for
@@ -1240,9 +1263,32 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
       step->emplace("mode", mode);
       step->emplace("driving_side", drive_side);
-      step->emplace("duration", json::fp_t{duration, 3});
-      step->emplace("weight", json::fp_t{duration, 3});
       step->emplace("distance", json::fp_t{distance, 3});
+      step->emplace("duration", json::fp_t{duration, 3});
+      const auto& end_node = path_leg.node(maneuver.end_path_index());
+      const auto& begin_node = path_leg.node(maneuver.begin_path_index());
+      auto weight = end_node.cost().elapsed_cost().cost() - begin_node.cost().elapsed_cost().cost();
+      step->emplace("weight", json::fp_t{weight, 3});
+      auto recost_itr = options.recostings().begin();
+      auto begin_recost_itr = begin_node.recosts().begin();
+      for (const auto& end_recost : end_node.recosts()) {
+        if (end_recost.has_elapsed_cost()) {
+          output_leg->emplace("duration_" + recost_itr->name(),
+                              json::fp_t{end_recost.elapsed_cost().seconds() -
+                                             begin_recost_itr->elapsed_cost().seconds(),
+                                         3});
+          output_leg->emplace("weight_" + recost_itr->name(),
+                              json::fp_t{end_recost.elapsed_cost().cost() -
+                                             begin_recost_itr->elapsed_cost().cost(),
+                                         3});
+        } else {
+          output_leg->emplace("duration_" + recost_itr->name(), nullptr_t());
+          output_leg->emplace("weight_" + recost_itr->name(), nullptr_t());
+        }
+        ++recost_itr;
+        ++begin_recost_itr;
+      }
+
       step->emplace("name", name);
       if (!ref.empty()) {
         step->emplace("ref", ref);
@@ -1331,7 +1377,21 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     output_leg->emplace("summary", summarize_leg(leg));
     output_leg->emplace("distance", json::fp_t{distance, 3});
     output_leg->emplace("duration", json::fp_t{duration, 3});
-    output_leg->emplace("weight", json::fp_t{duration, 3});
+    output_leg->emplace("weight",
+                        json::fp_t{path_leg.node().rbegin()->cost().elapsed_cost().cost(), 3});
+    auto recost_itr = options.recostings().begin();
+    for (const auto& recost : path_leg.node().rbegin()->recosts()) {
+      if (recost.has_elapsed_cost()) {
+        output_leg->emplace("duration_" + recost_itr->name(),
+                            json::fp_t{recost.elapsed_cost().seconds(), 3});
+        output_leg->emplace("weight_" + recost_itr->name(),
+                            json::fp_t{recost.elapsed_cost().cost(), 3});
+      } else {
+        output_leg->emplace("duration_" + recost_itr->name(), nullptr_t());
+        output_leg->emplace("weight_" + recost_itr->name(), nullptr_t());
+      }
+      ++recost_itr;
+    }
 
     // Add steps to the leg
     output_leg->emplace("steps", steps);
@@ -1386,7 +1446,7 @@ std::string serialize(valhalla::Api& api) {
     route_geometry(route, api.directions().routes(i).legs(), options);
 
     // Other route summary information
-    route_summary(route, api.directions().routes(i).legs(), imperial);
+    route_summary(route, api, imperial, i);
 
     // Serialize route legs
     route->emplace("legs", serialize_legs(api.directions().routes(i).legs(),
