@@ -534,7 +534,6 @@ public:
     return std::make_tuple(best, min_distance, best_index);
   }
 
-private:
   static constexpr float INVALID = 0xBADBADBAD;
 };
 
