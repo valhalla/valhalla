@@ -35,7 +35,7 @@ public:
    * @param   x   x component of the vector.
    * @param   y   y component of the vector.
    */
-  VectorXY<PrecisionT>(const float x, const float y) : x_(x), y_(y) {
+  VectorXY<PrecisionT>(const PrecisionT x, const PrecisionT y) : x_(x), y_(y) {
   }
 
   /**
@@ -69,7 +69,7 @@ public:
    * Get the x component.
    * @return  Returns the x component of the vector.
    */
-  float x() const {
+  PrecisionT x() const {
     return x_;
   }
 
@@ -77,7 +77,7 @@ public:
    * Get the y component.
    * @return  Returns the y component of the vector.
    */
-  float y() const {
+  PrecisionT y() const {
     return y_;
   }
 
@@ -85,7 +85,7 @@ public:
    * Set the x component.
    * @param  x  x coordinate value.
    */
-  void set_x(const float x) {
+  void set_x(const PrecisionT x) {
     x_ = x;
   }
 
@@ -93,7 +93,7 @@ public:
    * Set the y component.
    * @param  y  y coordinate value.
    */
-  void set_y(const float y) {
+  void set_y(const PrecisionT y) {
     y_ = y;
   }
 
@@ -102,7 +102,7 @@ public:
    * @param   x   x component of the vector.
    * @param   y   y component of the vector.
    */
-  void Set(const float x, const float y) {
+  void Set(const PrecisionT x, const PrecisionT y) {
     x_ = x;
     y_ = y;
   }
@@ -175,7 +175,7 @@ public:
    * @param   scalar   Scalar to muliply the vector with.
    * @return  Returns the resulting vector
    */
-  VectorXY<PrecisionT> operator*(const float scalar) const {
+  VectorXY<PrecisionT> operator*(const PrecisionT scalar) const {
     return VectorXY<PrecisionT>(x_ * scalar, y_ * scalar);
   }
 
@@ -184,7 +184,7 @@ public:
    * @param   scalar   Scalar to muliply the vector with.
    * @return  Returns the address of the current vector.
    */
-  VectorXY<PrecisionT>& operator*=(const float scalar) {
+  VectorXY<PrecisionT>& operator*=(const PrecisionT scalar) {
     x_ *= scalar;
     y_ *= scalar;
     return *this;
@@ -206,7 +206,7 @@ public:
    * @param   w  Vector
    * @return  Returns the dot product (a scalar).
    */
-  float Dot(const VectorXY<PrecisionT>& w) const {
+  PrecisionT Dot(const VectorXY<PrecisionT>& w) const {
     return (x_ * w.x() + y_ * w.y());
   }
 
@@ -216,7 +216,7 @@ public:
    * @return  Returns the magnitude of the resulting vector (which is
    *          along the z axis)
    */
-  float Cross(const VectorXY<PrecisionT>& w) const {
+  PrecisionT Cross(const VectorXY<PrecisionT>& w) const {
     return (x_ * w.y() - y_ * w.x());
   }
 
@@ -234,7 +234,7 @@ public:
    * Computes the norm (length) of the current vector.
    * @return  Returns the length of the vector.
    */
-  float Norm() const {
+  PrecisionT Norm() const {
     return sqrtf(Dot(*this));
   }
 
@@ -243,7 +243,7 @@ public:
    * (Useful when absolute distance is not required)
    * @return  Returns the length squared of the vector.
    */
-  float NormSquared(void) const {
+  PrecisionT NormSquared(void) const {
     return (Dot(*this));
   }
 
@@ -253,7 +253,7 @@ public:
    */
   VectorXY<PrecisionT>& Normalize() {
     // Normalize the vector if the norm is not 0 or 1
-    float n = Norm();
+    PrecisionT n = Norm();
     if (n > kEpsilon && n != 1.0f) {
       x_ /= n;
       y_ /= n;
@@ -267,8 +267,8 @@ public:
    * @param   w  Vector to determine component along.
    * @return  Returns the component of the current vector along w.
    */
-  float Component(const VectorXY<PrecisionT>& w) const {
-    float n = w.Dot(w);
+  PrecisionT Component(const VectorXY<PrecisionT>& w) const {
+    PrecisionT n = w.Dot(w);
     return (n != 0.0f) ? (Dot(w) / n) : 0.0f;
   }
 
@@ -288,7 +288,7 @@ public:
    * @param   w  Vector to determine angle from current vector.
    * @return  Returns the angle in radians between the two vectors.
    */
-  float AngleBetween(const VectorXY<PrecisionT>& w) const {
+  PrecisionT AngleBetween(const VectorXY<PrecisionT>& w) const {
     return acosf(Dot(w) / (Norm() * w.Norm()));
   }
 
@@ -307,8 +307,8 @@ public:
 
 private:
   // x,y coordinate of the point
-  float x_;
-  float y_;
+  PrecisionT x_;
+  PrecisionT y_;
 };
 
 using Vector2 = VectorXY<float>;
