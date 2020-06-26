@@ -100,6 +100,7 @@
    * ADDED: Add Japanese locale, update German. [#2432](https://github.com/valhalla/valhalla/pull/2432)
    * ADDED: Gurka expect_route refactor [#2435](https://github.com/valhalla/valhalla/pull/2435)
    * ADDED: Add option to suppress roundabout exits [#2437](https://github.com/valhalla/valhalla/pull/2437)
+   * CHANGED: Point2/PointLL are now templated to allow for higher precision coordinate math when desired [#2429](https://github.com/valhalla/valhalla/pull/2429)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
