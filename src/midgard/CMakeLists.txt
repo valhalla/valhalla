@@ -3,7 +3,6 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/midgard/*.h)
 set(sources
   tiles.cc
   gridded_data.cc
-  polyline2.cc
   obb2.cc
   aabb2.cc
   util.cc
