@@ -47,7 +47,7 @@ public:
    * Get the longitude in degrees.
    * @return  Returns longitude in degrees.
    */
-  float lng() const {
+  PrecisionT lng() const {
     return first;
   }
 
@@ -55,7 +55,7 @@ public:
    * Get the latitude in degrees.
    * @return  Returns latitude (degrees).
    */
-  float lat() const {
+  PrecisionT lat() const {
     return second;
   }
 
@@ -111,13 +111,15 @@ public:
    * @param  pct  Percentage along the segment.
    * @return Returns the point along the segment.
    */
-  GeoPoint along_segment(const GeoPoint& end, const float pct) const {
+  GeoPoint along_segment(const GeoPoint& end, const PrecisionT pct) const {
     return {lng() + (end.lng() - lng()) * pct, lat() + (end.lat() - lat()) * pct};
   }
 
   /**
    * Calculates the distance between two lng,lat's in meters. Uses spherical
    * geometry (law of cosines).
+   * Note - this method loses precision when the points are within ~1m of each
+   *        other, and cannot meaningfully meausre distances less than that.
    * @param   ll2   Second lng,lat position to calculate distance to.
    * @return  Returns the distance in meters.
    */
@@ -143,7 +145,7 @@ public:
     } else if (cosb <= -1.0) {
       return kPi * kRadEarthMeters;
     } else {
-      return (float)(acos(cosb) * kRadEarthMeters);
+      return static_cast<PrecisionT>(acos(cosb) * kRadEarthMeters);
     }
   }
 
@@ -168,12 +170,12 @@ public:
    */
   float Curvature(const GeoPoint& ll1, const GeoPoint& ll2) const {
     // Find the 3 distances between positions
-    float a = Distance(ll1);
-    float b = ll1.Distance(ll2);
-    float c = Distance(ll2);
-    float s = (a + b + c) * 0.5f;
-    float k = sqrtf(s * (s - a) * (s - b) * (s - c));
-    return (std::isnan(k) || k == 0.0f) ? std::numeric_limits<float>::max()
+    PrecisionT a = Distance(ll1);
+    PrecisionT b = ll1.Distance(ll2);
+    PrecisionT c = Distance(ll2);
+    PrecisionT s = (a + b + c) * 0.5f;
+    PrecisionT k = sqrtf(s * (s - a) * (s - b) * (s - c));
+    return (std::isnan(k) || k == 0.0f) ? std::numeric_limits<PrecisionT>::max()
                                         : ((a * b * c) / (4.0f * k));
   }
 
@@ -218,19 +220,19 @@ public:
    *                   Distance in meters of the closest point,
    *                   Index of the segment of the polyline which contains the closest point >
    */
-  std::tuple<GeoPoint, float, int>
+  std::tuple<GeoPoint, PrecisionT, int>
   ClosestPoint(const std::vector<GeoPoint>& pts,
                int pivot_index = 0,
                float forward_dist_cutoff = std::numeric_limits<float>::infinity(),
                float reverse_dist_cutoff = 0) const {
     // setup
     if (pts.empty() || pivot_index < 0 || pivot_index > pts.size() - 1)
-      return std::make_tuple(GeoPoint(), std::numeric_limits<float>::max(), -1);
+      return std::make_tuple(GeoPoint(), std::numeric_limits<PrecisionT>::max(), -1);
 
     int closest_segment = pivot_index;
     GeoPoint closest = pts[pivot_index];
     DistanceApproximator<GeoPoint> approx(*this);
-    float mindistsqr = approx.DistanceSquared(closest);
+    PrecisionT mindistsqr = approx.DistanceSquared(closest);
 
     // start going backwards, then go forwards
     for (bool reverse : {true, false}) {
