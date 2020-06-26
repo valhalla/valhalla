@@ -178,7 +178,7 @@ protected:
    *
    * @param maneuvers The list of maneuvers to process.
    */
-  void ProcessRoundaboutNames(std::list<Maneuver>& maneuvers);
+  void ProcessRoundabouts(std::list<Maneuver>& maneuvers);
 
   /**
    * Iterate through the maneuvers and set the 'to stay on' attribute as needed.
