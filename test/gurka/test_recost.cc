@@ -219,10 +219,10 @@ TEST(recosting, api) {
                                          |     |
                                          D--6--E--7--F)";
   const gurka::ways ways = {
-      {"A1B23C", {{"highway", "Trunk"}}},
-      {"D6E7F", {{"highway", "Trunk"}}},
-      {"B4D", {{"highway", "residential"}}},
-      {"C5E", {{"highway", "Trunk"}}},
+      {"A1B23C", {{"highway", "trunk"}, {"hgv", "no"}}},
+      {"D6E7F", {{"highway", "trunk"}, {"hgv", "no"}}},
+      {"B4D", {{"highway", "residential"}, {"hgv", "no"}}},
+      {"C5E", {{"highway", "trunk"}, {"hgv", "no"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
@@ -244,12 +244,22 @@ TEST(recosting, api) {
       {"costing":"pedestrian","name":"slowest","walking_speed":2}]})",
                           {}, &api);
 
-  auto greater_equal = [](const valhalla::TripLeg::PathCost& a,
-                          const valhalla::TripLeg::PathCost& b) {
-    EXPECT_GE(a.elapsed_cost().cost(), b.elapsed_cost().cost());
-    EXPECT_GE(a.elapsed_cost().seconds(), b.elapsed_cost().seconds());
-    EXPECT_GE(a.transition_cost().cost(), b.transition_cost().cost());
-    EXPECT_GE(a.transition_cost().seconds(), b.transition_cost().seconds());
+  auto greater_equal = [](const valhalla::TripLeg::PathCost& lesser,
+                          const valhalla::TripLeg::PathCost& greater, bool cost = true,
+                          bool transition = true) {
+    if (cost)
+      EXPECT_GE(greater.elapsed_cost().cost(), lesser.elapsed_cost().cost());
+    EXPECT_GE(greater.elapsed_cost().seconds(), lesser.elapsed_cost().seconds());
+    if (transition) {
+      if (cost)
+        EXPECT_GE(greater.transition_cost().cost(), lesser.transition_cost().cost());
+      EXPECT_GE(greater.transition_cost().seconds(), lesser.transition_cost().seconds());
+    }
+  };
+
+  auto print = [](const valhalla::TripLeg::PathCost& a) {
+    std::cout << a.elapsed_cost().cost() << " " << a.elapsed_cost().seconds() << " "
+              << a.transition_cost().cost() << " " << a.transition_cost().seconds() << std::endl;
   };
 
   // check we have the right amount of costing information at all places
@@ -257,8 +267,37 @@ TEST(recosting, api) {
     EXPECT_EQ(n.recosts_size(), 5);
     greater_equal(n.cost(), n.recosts(0));
     greater_equal(n.recosts(0), n.recosts(1));
-    greater_equal(n.recosts(1), n.recosts(2));
-    greater_equal(n.recosts(2), n.recosts(3));
+    // this should be strickly bigger because of avoid highways
+    if (n.cost().elapsed_cost().seconds() > 0)
+      EXPECT_GT(n.recosts(1).elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
+    greater_equal(n.recosts(1), n.recosts(2), true, false);
+    // bike cost uses different costing units so we only do the seconds
+    greater_equal(n.recosts(2), n.recosts(3), false, false);
     greater_equal(n.recosts(3), n.recosts(4));
+
+    print(n.cost());
+    for (const auto& cost : n.recosts()) {
+      print(cost);
+    }
+    std::cout << "-------------------------------------------------" << std::endl;
   }
+
+  // TODO: verify json has the right info
+
+  api.Clear();
+  json = actor.route(R"({"costing":"auto","locations":[)" + locations + R"(],"recostings":[
+      {"costing":"truck","name":"nope"},
+      {"costing":"auto","name":"same"}]})",
+                     {}, &api);
+
+  // the first recosting should always be blank
+  for (const auto& n : api.trip().routes(0).legs(0).node()) {
+    EXPECT_EQ(n.recosts_size(), 2);
+    EXPECT_FALSE(n.recosts(0).has_elapsed_cost());
+    EXPECT_FALSE(n.recosts(0).has_transition_cost());
+    EXPECT_TRUE(n.recosts(1).has_elapsed_cost());
+    EXPECT_TRUE(n.recosts(1).has_transition_cost());
+  }
+
+  // TODO: verify json has the right info
 }
