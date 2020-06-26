@@ -329,12 +329,12 @@ json::ArrayPtr legs(const valhalla::Api& api) {
       auto begin_recost_itr = trip_leg_itr->node(maneuver.begin_path_index()).recosts().begin();
       for (const auto& end_recost : trip_leg_itr->node(maneuver.end_path_index()).recosts()) {
         if (end_recost.has_elapsed_cost())
-          summary->emplace("time_" + recost_itr->name(),
-                           json::fp_t{end_recost.elapsed_cost().seconds() -
-                                          begin_recost_itr->elapsed_cost().seconds(),
-                                      3});
+          man->emplace("time_" + recost_itr->name(),
+                       json::fp_t{end_recost.elapsed_cost().seconds() -
+                                      begin_recost_itr->elapsed_cost().seconds(),
+                                  3});
         else
-          summary->emplace("time_" + recost_itr->name(), nullptr_t());
+          man->emplace("time_" + recost_itr->name(), nullptr_t());
         ++recost_itr;
       }
 

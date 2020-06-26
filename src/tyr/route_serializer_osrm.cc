@@ -1273,17 +1273,17 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       auto begin_recost_itr = begin_node.recosts().begin();
       for (const auto& end_recost : end_node.recosts()) {
         if (end_recost.has_elapsed_cost()) {
-          output_leg->emplace("duration_" + recost_itr->name(),
-                              json::fp_t{end_recost.elapsed_cost().seconds() -
-                                             begin_recost_itr->elapsed_cost().seconds(),
-                                         3});
-          output_leg->emplace("weight_" + recost_itr->name(),
-                              json::fp_t{end_recost.elapsed_cost().cost() -
-                                             begin_recost_itr->elapsed_cost().cost(),
-                                         3});
+          step->emplace("duration_" + recost_itr->name(),
+                        json::fp_t{end_recost.elapsed_cost().seconds() -
+                                       begin_recost_itr->elapsed_cost().seconds(),
+                                   3});
+          step->emplace("weight_" + recost_itr->name(),
+                        json::fp_t{end_recost.elapsed_cost().cost() -
+                                       begin_recost_itr->elapsed_cost().cost(),
+                                   3});
         } else {
-          output_leg->emplace("duration_" + recost_itr->name(), nullptr_t());
-          output_leg->emplace("weight_" + recost_itr->name(), nullptr_t());
+          step->emplace("duration_" + recost_itr->name(), nullptr_t());
+          step->emplace("weight_" + recost_itr->name(), nullptr_t());
         }
         ++recost_itr;
         ++begin_recost_itr;
