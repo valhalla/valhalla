@@ -28,57 +28,67 @@ using std::uint32_t;
 using std::uint64_t;
 #endif
 
-constexpr uint16_t INVALID_SPEED_AGE_BUCKET = 0;
-constexpr uint16_t MAX_SPEED_AGE_BUCKET = 15;
-constexpr uint16_t SPEED_AGE_BUCKET_SIZE = 2; // 2 minutes per bucket
-
-// Traffic speeds are encoded as 8 bits in `Speed` below
-constexpr uint32_t MAX_TRAFFIC_SPEED_KPH = 255;
-
-/**
- * Helper function to return the approximate age in seconds of a record based
- * on the bucket it belongs to.  Because buckets have a 2 minute resolution,
- * we round to the median bucket time period valid (e.g. 1 min, 3 min, 5 min)
- * Non-class method to help with C-bindings interface
- *
- * @return Age in seconds of the start of the bucket, or -1 for INVALID_SPEED_AGE_BUCKET (0)
- */
-inline int valhalla_traffic_age_bucket_to_seconds(const uint16_t age_bucket) {
-  if (age_bucket == INVALID_SPEED_AGE_BUCKET)
-    return -1;
-  return (age_bucket - 1) * SPEED_AGE_BUCKET_SIZE * 60 + (SPEED_AGE_BUCKET_SIZE * 60 / 2);
-}
-
-/**
- * Helper function to determine which age bucket a seconds value
- * resides in.
- */
-inline uint16_t valhalla_traffic_seconds_to_age_bucket(const int seconds) {
-  // Simple integer division, should truncate as we want
-  auto bucket = (seconds / 60) / SPEED_AGE_BUCKET_SIZE;
-  if (bucket > MAX_SPEED_AGE_BUCKET)
-    return INVALID_SPEED_AGE_BUCKET;
-  return bucket + 1; // 0 seconds should go into bucket 1, as bucket 0 is for invalid records
-}
+// Traffic speeds are encoded as 7 bits in `Speed` below with a 2kph multiplier
+constexpr uint32_t MAX_TRAFFIC_SPEED_KPH = 254;
+// This value _of bitfield_ (not in kph) signals that the live speed is not known
+constexpr uint32_t UNKNOWN_TRAFFIC_SPEED_VALUE = MAX_TRAFFIC_SPEED_KPH >> 1;
 
 struct Speed {
-  uint16_t speed_kmh : 8;        // km/h - so max range is 0-255km/h
-  uint16_t congestion_level : 3; // 0 - unknown, 1-6 - low-high, 7 - unused
-  uint16_t age_bucket : 4;       // Age bucket for the speed record (see SPEED_AGE_BUCKET_SIZE)
-  uint16_t spare : 1;            // TODO: reserved for later use
+  uint64_t overall_speed : 7; // 0-255kph in 2kph resolution (access with `get_overall_speed()`)
+  uint64_t speed1 : 7;        // 0-255kph in 2kph resolution (access with `get_speed(0)`)
+  uint64_t speed2 : 7;
+  uint64_t speed3 : 7;
+  uint64_t breakpoint1 : 8; // position = length * breakpoint1 * 255
+  uint64_t breakpoint2 : 8; // position = length * breakpoint2 * 255
+  uint64_t congestion1 : 6; // Stores 0 (unknown), or 1->63 (no congestion->max congestion)
+  uint64_t congestion2 : 6; //
+  uint64_t congestion3 : 6; //
+  uint64_t is_valid : 1;
+  uint64_t spare : 1;
+
 #ifndef C_ONLY_INTERFACE
   inline bool valid() const volatile {
-    return age_bucket != INVALID_SPEED_AGE_BUCKET;
+    return is_valid == 1;
   }
-
   inline bool closed() const volatile {
-    return valid() && speed_kmh == 0;
+    return is_valid == 1 && overall_speed == 0;
   }
 
-  // Get age of record in seconds (based on the bucket
-  // it belongs to)
-  inline int age_secs() const volatile {
-    return valhalla_traffic_age_bucket_to_seconds(age_bucket);
+  inline bool closed(std::size_t subsegment) const volatile {
+    assert(subsegment <= 2);
+    if (!valid())
+      return false;
+    switch (subsegment) {
+      case 0:
+        return speed1 == 0;
+      case 1:
+        return breakpoint1 < 255 && speed2 == 0;
+      case 2:
+        return breakpoint2 < 255 && speed3 == 0;
+      default:
+        assert(false);
+    }
+  }
+  /// Returns overall speed in kph across edge
+  inline uint8_t get_overall_speed() const volatile {
+    return overall_speed << 1;
+  }
+
+  /// Returns speed in a certain subsegment in kph
+  inline uint8_t get_speed(std::size_t subsegment) const volatile {
+    assert(subsegment <= 2);
+    if (!valid())
+      return false;
+    switch (subsegment) {
+      case 0:
+        return speed1 << 1;
+      case 1:
+        return speed2 << 1;
+      case 2:
+        return speed3 << 1;
+      default:
+        assert(false);
+    }
   }
 #endif
 };
@@ -99,7 +109,7 @@ struct TileHeader {
 // change and shouldn't be done lightly.
 static_assert(sizeof(TileHeader) == sizeof(uint64_t) * 4,
               "traffic:TileHeader type size different than expected");
-static_assert(sizeof(Speed) == sizeof(uint16_t),
+static_assert(sizeof(Speed) == sizeof(uint64_t),
               "traffic::Speed type size is different than expected");
 #endif // C_ONLY_INTERFACE
 
@@ -111,7 +121,16 @@ static_assert(sizeof(Speed) == sizeof(uint16_t),
  */
 #ifndef C_ONLY_INTERFACE
 namespace {
-static constexpr volatile Speed INVALID_SPEED{0, 0, INVALID_SPEED_AGE_BUCKET, 0};
+static constexpr volatile Speed INVALID_SPEED{0u,
+                                              UNKNOWN_TRAFFIC_SPEED_VALUE,
+                                              UNKNOWN_TRAFFIC_SPEED_VALUE,
+                                              UNKNOWN_TRAFFIC_SPEED_VALUE,
+                                              0u,
+                                              0u,
+                                              0u,
+                                              0u,
+                                              0u,
+                                              0u};
 
 // Assert these constants are the same
 // (We want to avoid including this file in graphconstants.h)

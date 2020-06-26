@@ -507,7 +507,7 @@ public:
       auto volatile& live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
       if (live_speed.valid()) {
         *flow_sources |= kCurrentFlowMask;
-        return live_speed.speed_kmh;
+        return live_speed.get_overall_speed();
       }
     }
 
@@ -563,16 +563,9 @@ public:
     return de->speed();
   }
 
-  inline uint32_t GetCongestion(const DirectedEdge* de) const {
-    // TODO(danpat): this needs to consider the time - we should not use live speeds if
-    //               the request is not for "now", or we're some X % along the route
-    // TODO(danpat): for short-ish durations along the route, we should fade live
-    //               speeds into any historic/predictive/average value we'd normally use
+  inline const volatile traffic::Speed& GetLiveSpeed(const DirectedEdge* de) const {
     auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
-    auto volatile& live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
-    if (live_speed.valid())
-      return live_speed.congestion_level;
-    return 0;
+    return traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
   }
 
   /**

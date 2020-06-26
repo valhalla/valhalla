@@ -86,7 +86,7 @@ constexpr uint8_t kUnlimitedSpeedLimit = std::numeric_limits<uint8_t>::max();
 // The max assumed speed we know from static data
 constexpr uint8_t kMaxAssumedSpeed = 140; // ~85 MPH
 // Actual speed from traffic
-constexpr uint8_t kMaxTrafficSpeed = 255; // ~160 MPH
+constexpr uint8_t kMaxTrafficSpeed = 254; // ~160 MPH
 // Maximum speed. This impacts the effectiveness of A* for driving routes
 // so it should be set as low as is reasonable. Speeds above this in OSM are
 // clamped to this maximum value.

@@ -60,12 +60,14 @@ void update_bd_traffic_speed(valhalla::gurka::map& map, uint16_t new_speed) {
     baldr::GraphId tile_id(tile.header->tile_id);
     auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
 
-    for (int i = 0; i < tile.header->directed_edge_count; i++) {
-      (tile.speeds + i)->age_bucket = baldr::traffic::MAX_SPEED_AGE_BUCKET;
-      if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == i) {
-        (tile.speeds + i)->speed_kmh = 0;
+    for (int index = 0; index < tile.header->directed_edge_count; index++) {
+      (tile.speeds + index)->is_valid = 1;
+      if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
+        (tile.speeds + index)->overall_speed = 0;
+        (tile.speeds + index)->speed1 = 0;
       } else {
-        (tile.speeds + i)->speed_kmh = new_speed;
+        (tile.speeds + index)->overall_speed = new_speed >> 1;
+        (tile.speeds + index)->speed1 = new_speed >> 1;
       }
     }
     mtar_next(&tar);
@@ -149,7 +151,7 @@ TEST(Traffic, BasicUpdates) {
       gurka::assert::raw::expect_eta(result, 361.5);
     }
     // Make some updates to the traffic .tar file.
-    // Mostly just updates ever edge in the file to 25km/h, except for one
+    // Mostly just updates every edge in the file to 25km/h, except for one
     // specific edge (B->D) where we simulate a closure (speed=0, congestion high)
     update_bd_traffic_speed(map, 25);
 
@@ -159,7 +161,7 @@ TEST(Traffic, BasicUpdates) {
       auto result = gurka::route(map, "A", "C", "auto", "current", clean_reader);
       gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
       gurka::assert::raw::expect_path(result, {"AB", "BC"});
-      gurka::assert::raw::expect_eta(result, 145.5);
+      gurka::assert::raw::expect_eta(result, 151.5);
     }
     // Next, set the speed to the highest possible to ensure nothing breaks
     update_bd_traffic_speed(map, valhalla::baldr::kMaxSpeedKph);
@@ -167,7 +169,7 @@ TEST(Traffic, BasicUpdates) {
       auto result = gurka::route(map, "A", "C", "auto", "current", clean_reader);
       gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
       gurka::assert::raw::expect_path(result, {"AB", "BC"});
-      gurka::assert::raw::expect_eta(result, 15.617648);
+      gurka::assert::raw::expect_eta(result, 15.673229);
     }
     // Back to previous speed
     update_bd_traffic_speed(map, 25);
@@ -185,13 +187,13 @@ TEST(Traffic, BasicUpdates) {
       auto result = gurka::route(map, "B", "D", "auto", "current", clean_reader);
       gurka::assert::osrm::expect_steps(result, {"BC", "CE", "DE"});
       gurka::assert::raw::expect_path(result, {"BC", "CE", "DE"});
-      gurka::assert::raw::expect_eta(result, 172.8, 0.01);
+      gurka::assert::raw::expect_eta(result, 180., 0.01);
     }
     {
       auto result = gurka::route(map, "D", "B", "auto", "current", clean_reader);
       gurka::assert::osrm::expect_steps(result, {"BD"});
       gurka::assert::raw::expect_path(result, {"BD"});
-      gurka::assert::raw::expect_eta(result, 28.8, 0.01);
+      gurka::assert::raw::expect_eta(result, 30., 0.01);
     }
     // Repeat the B->D route, but this time with no timestamp - this should
     // disable using live traffc and the road should be open again.
