@@ -15,6 +15,7 @@ namespace {
 constexpr double RAD_PER_DEG = valhalla::midgard::kPiDouble / 180.0;
 constexpr double DEG_PER_RAD = 180.0 / valhalla::midgard::kPiDouble;
 } // namespace
+constexpr float INVALID_LL = 0xBADBADBAD;
 /**
  * Longitude, Latitude  point. Derives from Point2 and allows access methods
  * using lng,lat naming. Extends functionality to add heading, curvature,
@@ -32,9 +33,9 @@ public:
   using PointXY<PrecisionT>::second;
 
   /**
-   * Default constructor.  Sets longitude and latitude to INVALID.
+   * Default constructor.  Sets longitude and latitude to INVALID_LL.
    */
-  GeoPoint() : PointXY<PrecisionT>(INVALID, INVALID) {
+  GeoPoint() : PointXY<PrecisionT>(INVALID_LL, INVALID_LL) {
   }
 
   /**
@@ -61,18 +62,18 @@ public:
 
   /**
    * Checks for validity of the coordinates.
-   * @return  Returns the false if lat or lon coordinates are set to INVALID.
+   * @return  Returns the false if lat or lon coordinates are set to INVALID_LL.
    */
   bool IsValid() const {
-    return first != INVALID && second != INVALID;
+    return first != INVALID_LL && second != INVALID_LL;
   };
 
   /**
    * Sets the coordinates to an invalid state
    */
   void Invalidate() {
-    first = INVALID;
-    second = INVALID;
+    first = INVALID_LL;
+    second = INVALID_LL;
   }
 
   /**
@@ -533,8 +534,6 @@ public:
     }
     return std::make_tuple(best, min_distance, best_index);
   }
-
-  static constexpr float INVALID = 0xBADBADBAD;
 };
 
 using PointLL = GeoPoint<float>;
