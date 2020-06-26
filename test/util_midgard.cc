@@ -490,9 +490,6 @@ TEST(UtilMidgard, TestTrimPolylineWithDoubleGeoPoint) {
   std::vector<Point> line{a, a, b, c, c, d, e, e};
 
   constexpr double MAX_DOUBLE_PRECISION = 0.0002; // 0.2mm at this lon/lat using doubles
-#else
-  constexpr double MAX_DOUBLE_PRECISION = 0.0002; // 0.2mm at this lon/lat using doubles
-#endif
 
   auto clip = trim_polyline(line.begin(), line.end(), 0.f, 1.f);
   EXPECT_DOUBLE_EQ(length(clip.begin(), clip.end()), length(line.begin(), line.end()))
