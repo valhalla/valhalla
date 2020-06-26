@@ -441,9 +441,14 @@ TEST(UtilMidgard, TestTrimPolylineWithFloatGeoPoint) {
       << "5% portion should be clipped";
 
   clip = trim_polyline(line.begin(), line.end(), 0.4999f, 0.5f);
+#if __i386__
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.0001f, 0.07)
+      << "0.1% portion should be clipped";
+#else
   EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.0001f,
               MAX_FLOAT_PRECISION)
       << "0.1% portion should be clipped";
+#endif
 
   EXPECT_TRUE(trim_polyline(line.begin(), line.end(), 0.65f, 0.5f).empty())
       << "nothing should be clipped since [0.65, 0.5]";
@@ -485,6 +490,9 @@ TEST(UtilMidgard, TestTrimPolylineWithDoubleGeoPoint) {
   std::vector<Point> line{a, a, b, c, c, d, e, e};
 
   constexpr double MAX_DOUBLE_PRECISION = 0.0002; // 0.2mm at this lon/lat using doubles
+#else
+  constexpr double MAX_DOUBLE_PRECISION = 0.0002; // 0.2mm at this lon/lat using doubles
+#endif
 
   auto clip = trim_polyline(line.begin(), line.end(), 0.f, 1.f);
   EXPECT_DOUBLE_EQ(length(clip.begin(), clip.end()), length(line.begin(), line.end()))
@@ -513,10 +521,15 @@ TEST(UtilMidgard, TestTrimPolylineWithDoubleGeoPoint) {
   // Special note: PointLL uses the law of cosines to measure distances.
   // Our test ends up with points about 3cm apart, which is too close to accurately
   // measure with the law of cosines.  We customize the threshold here to allow
-  // for this.
+  // for this.  Precision is slightly worse on x86-32 by a few cm
   clip = trim_polyline(line.begin(), line.end(), 0.4999, 0.5);
+#if __i386__
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.0001f, 0.07)
+      << "0.1% portion should be clipped";
+#else
   EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.0001f, 0.04)
       << "0.1% portion should be clipped";
+#endif
 
   EXPECT_TRUE(trim_polyline(line.begin(), line.end(), 0.65f, 0.5f).empty())
       << "nothing should be clipped since [0.65, 0.5]";
