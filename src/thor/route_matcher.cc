@@ -364,7 +364,7 @@ bool RouteMatcher::FormPath(const std::shared_ptr<DynamicCost>* mode_costing,
           elapsed.secs = shape[index].epoch_time() - shape[0].epoch_time();
 
         // Add begin edge
-        path_infos.emplace_back(mode, elapsed.secs, graphid, 0, elapsed.cost, false, -1);
+        path_infos.emplace_back(mode, elapsed.secs, graphid, 0, elapsed.cost, -1);
 
         // Set previous edge label
         prev_edge_label = {kInvalidLabel, graphid, de, {}, 0, 0, mode, 0, {}};
