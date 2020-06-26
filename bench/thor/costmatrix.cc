@@ -83,6 +83,8 @@ static void BM_UtrechtCostMatrix(benchmark::State& state) {
 
   Options options;
   options.set_costing(Costing::auto_);
+  rapidjson::Document doc;
+  sif::ParseCostingOptions(doc, "/costing_options", options);
   sif::TravelMode mode;
   auto costs = sif::CostFactory().CreateModeCosting(options, mode);
   auto cost = costs[static_cast<size_t>(mode)];

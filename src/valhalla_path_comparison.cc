@@ -283,10 +283,8 @@ int main(int argc, char* argv[]) {
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
   if (!map_match) {
-    valhalla::Options options;
-    for (int i = 0; i < valhalla::Costing_MAX; ++i) {
-      request.mutable_options()->add_costing_options();
-    }
+    rapidjson::Document doc;
+    sif::ParseCostingOptions(doc, "/costing_options", *request.mutable_options());
   }
 
   // Construct costing
