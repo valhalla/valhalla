@@ -11,7 +11,7 @@ using namespace valhalla::midgard;
 namespace {
 
 void TryMetersPerDegreeLongitude(const PointLL& p, const float d2) {
-  EXPECT_NEAR(DistanceApproximator::MetersPerLngDegree(p.lat()), d2, kEpsilon);
+  EXPECT_NEAR(DistanceApproximator<PointLL>::MetersPerLngDegree(p.lat()), d2, kEpsilon);
 }
 
 TEST(DistanceApproximator, TestMetersPerDegreeLongitude) {
@@ -20,7 +20,7 @@ TEST(DistanceApproximator, TestMetersPerDegreeLongitude) {
 
 void TryDistanceSquaredFromTestPt(const PointLL& testpt, const PointLL& p, const float d2) {
   // Test if distance is within 2% of the spherical distance
-  DistanceApproximator approx(testpt);
+  DistanceApproximator<PointLL> approx(testpt);
   float d = sqrtf(approx.DistanceSquared(p));
   // std::cout << " d = " << d << " ArcDistance = " << d2 << std::endl;
   EXPECT_NEAR(d / d2, 1, 0.02f);
@@ -35,7 +35,7 @@ TEST(DistanceApproximator, TestDistanceSquaredFromTestPt) {
 
 void TryDistanceSquared(const PointLL& a, const PointLL& b, const float d2) {
   // Test if distance is > 2% the spherical distance
-  float d = sqrtf(DistanceApproximator::DistanceSquared(a, b));
+  float d = sqrtf(DistanceApproximator<PointLL>::DistanceSquared(a, b));
   // std::cout << " d = " << d << " ArcDistance = " << d2 << std::endl;
   EXPECT_NEAR(d / d2, 1, 2.0f) << "DistanceSquared between 2 points test failed";
 }

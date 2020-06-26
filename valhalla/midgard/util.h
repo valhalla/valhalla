@@ -86,8 +86,8 @@ inline AABB2<PointLL> ExpandMeters(const AABB2<PointLL>& box, const float meters
   // Find the delta latitude and delta longitude (max of the delta at the
   // minimum and maximum latitude)
   float dlat = meters / kMetersPerDegreeLat;
-  float dlng1 = (meters / DistanceApproximator::MetersPerLngDegree(box.miny()));
-  float dlng2 = (meters / DistanceApproximator::MetersPerLngDegree(box.maxy()));
+  float dlng1 = (meters / DistanceApproximator<PointLL>::MetersPerLngDegree(box.miny()));
+  float dlng2 = (meters / DistanceApproximator<PointLL>::MetersPerLngDegree(box.maxy()));
   float dlng = std::max(dlng1, dlng2);
   return {box.minx() - dlng, box.miny() - dlat, box.maxx() + dlng, box.maxy() + dlat};
 }
@@ -105,7 +105,7 @@ inline AABB2<PointLL> ExpandMeters(const PointLL& pt, const float meters) {
   }
 
   float dlat = meters / kMetersPerDegreeLat;
-  float dlng = meters / DistanceApproximator::MetersPerLngDegree(pt.lat());
+  float dlng = meters / DistanceApproximator<PointLL>::MetersPerLngDegree(pt.lat());
   PointLL minpt(pt.lng() - dlng, pt.lat() - dlat);
   PointLL maxpt(pt.lng() + dlng, pt.lat() + dlat);
   return {minpt, maxpt};
@@ -619,7 +619,7 @@ struct projector_t {
   double lon_scale;
   double lat;
   double lng;
-  DistanceApproximator approx;
+  DistanceApproximator<PointLL> approx;
 };
 
 /**

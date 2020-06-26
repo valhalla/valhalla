@@ -578,7 +578,7 @@ std::vector<midgard::PointLL> simulate_gps(const std::vector<gps_segment_t>& seg
       // meters of noise with extremely low likelihood its larger than accuracy
       auto noise = get_noise();
       // use the number of meters per degree in both axis to offset the point by the noise
-      auto metersPerDegreeLon = DistanceApproximator::MetersPerLngDegree(p.second);
+      auto metersPerDegreeLon = DistanceApproximator<PointLL>::MetersPerLngDegree(p.second);
       simulated.emplace_back(midgard::PointLL(p.first + noise.first / metersPerDegreeLon,
                                               p.second + noise.second / kMetersPerDegreeLat));
       // keep the distance to use for accuracy

@@ -468,7 +468,7 @@ TEST(UtilMidgard, TestExpandLocation) {
   PointLL loc(-77.0f, 39.0f);
   AABB2<PointLL> box = ExpandMeters(loc, 100);
   float area = (box.Height() * kMetersPerDegreeLat) * box.Width() *
-               DistanceApproximator::MetersPerLngDegree(loc.lat());
+               DistanceApproximator<PointLL>::MetersPerLngDegree(loc.lat());
   EXPECT_LE(area, 201.0f * 201.0f);
   EXPECT_GE(area, 199.0f * 199.0f);
 
