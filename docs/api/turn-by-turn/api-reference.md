@@ -237,6 +237,7 @@ A multimodal request with a filter for certain Onestop IDs:
 | `ca-ES` | `ca` | Catalan (Spain) |
 | `cs-CZ` | `cs` | Czech (Czech Republic) |
 | `de-DE` | `de` | German (Germany) |
+| `el-GR` | `el` | Greek (Greece) |
 | `en-US` | `en` | English (United States) |
 | `en-US-x-pirate` | `pirate` | English (United States) Pirate |
 | `es-ES` | `es` | Spanish (Spain) |
