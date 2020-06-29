@@ -30,7 +30,7 @@ public:
   enum SideOfStreet { NONE = 0, LEFT, RIGHT };
   struct PathEdge {
     PathEdge(const GraphId& id,
-             const float dist,
+             const float percent_along,
              const midgard::PointLL& projected,
              const float score,
              const SideOfStreet sos = NONE,
@@ -95,6 +95,10 @@ public:
     else if (pl.preferred_side_ == Location::PreferredSide::OPPOSITE)
       l->set_preferred_side(valhalla::Location::opposite);
 
+    if (pl.display_latlng_) {
+      l->mutable_display_ll()->set_lng(pl.display_latlng_->lng());
+      l->mutable_display_ll()->set_lat(pl.display_latlng_->lat());
+    }
     if (!pl.name_.empty()) {
       l->set_name(pl.name_);
     }
@@ -128,6 +132,7 @@ public:
     l->set_radius(pl.radius_);
     l->set_search_cutoff(pl.radius_ > pl.search_cutoff_ ? pl.radius_ : pl.search_cutoff_);
     l->set_street_side_tolerance(pl.street_side_tolerance_);
+    l->set_street_side_max_distance(pl.street_side_max_distance_);
     l->mutable_search_filter()->set_min_road_class(pl.search_filter_.min_road_class_);
     l->mutable_search_filter()->set_max_road_class(pl.search_filter_.max_road_class_);
     l->mutable_search_filter()->set_exclude_tunnel(pl.search_filter_.exclude_tunnel_);
@@ -175,14 +180,17 @@ public:
     }
   }
 
+  static baldr::Location::StopType fromPBF(valhalla::Location::Type type) {
+    if (type == valhalla::Location::kVia)
+      return Location::StopType::VIA;
+    else if (type == valhalla::Location::kBreak)
+      return Location::StopType::BREAK;
+    else if (type == valhalla::Location::kThrough)
+      return Location::StopType::THROUGH;
+    return Location::StopType::BREAK_THROUGH;
+  }
+
   static Location fromPBF(const valhalla::Location& loc) {
-    auto stop_type = Location::StopType::BREAK;
-    if (loc.type() == valhalla::Location::kThrough)
-      stop_type = Location::StopType::THROUGH;
-    else if (loc.type() == valhalla::Location::kVia)
-      stop_type = Location::StopType::VIA;
-    else if (loc.type() == valhalla::Location::kBreakThrough)
-      stop_type = Location::StopType::BREAK_THROUGH;
     auto side = PreferredSide::EITHER;
     if (loc.preferred_side() == valhalla::Location::same)
       side = PreferredSide::SAME;
@@ -190,7 +198,7 @@ public:
       side = PreferredSide::OPPOSITE;
 
     SearchFilter search_filter = SearchFilter();
-    Location l({loc.ll().lng(), loc.ll().lat()}, stop_type, loc.minimum_reachability(),
+    Location l({loc.ll().lng(), loc.ll().lat()}, fromPBF(loc.type()), loc.minimum_reachability(),
                loc.minimum_reachability(), loc.radius(), side, search_filter);
 
     if (loc.has_name()) {
@@ -232,12 +240,18 @@ public:
     if (loc.has_street_side_tolerance()) {
       l.street_side_tolerance_ = loc.street_side_tolerance();
     }
+    if (loc.has_street_side_max_distance()) {
+      l.street_side_max_distance_ = loc.street_side_max_distance();
+    }
     if (loc.has_search_filter()) {
       l.search_filter_.min_road_class_ = loc.search_filter().min_road_class();
       l.search_filter_.max_road_class_ = loc.search_filter().max_road_class();
       l.search_filter_.exclude_tunnel_ = loc.search_filter().exclude_tunnel();
       l.search_filter_.exclude_bridge_ = loc.search_filter().exclude_bridge();
       l.search_filter_.exclude_ramp_ = loc.search_filter().exclude_ramp();
+    }
+    if (loc.has_display_ll()) {
+      l.display_latlng_ = midgard::PointLL{loc.display_ll().lng(), loc.display_ll().lat()};
     }
     return l;
   }

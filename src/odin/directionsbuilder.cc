@@ -95,14 +95,12 @@ void DirectionsBuilder::Build(Api& api) {
         if (options.directions_type() == DirectionsType::instructions) {
           std::unique_ptr<NarrativeBuilder> narrative_builder =
               NarrativeBuilderFactory::Create(options, &etp);
-          narrative_builder->Build(options, maneuvers);
+          narrative_builder->Build(maneuvers);
         }
       }
 
       // Return trip directions
       PopulateDirectionsLeg(options, &etp, maneuvers, trip_directions);
-
-      LOG_INFO("maneuver_count::" + std::to_string(trip_directions.maneuver_size()));
     }
   }
 }

@@ -191,11 +191,12 @@ void start_service(zmq::context_t& context) {
   boost::property_tree::ptree config;
   std::stringstream json;
   json << R"({
+      "meili": { "default": { "breakage_distance": 2000} },
       "mjolnir": { "tile_dir": "test/tiles" },
       "loki": { "actions": [ "height" ],
                   "logging": { "long_request": 100.0 },
                   "service": { "proxy": "ipc:///tmp/test_skadi_proxy" },
-                "service_defaults": { "minimum_reachability": 50, "radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60} },
+                "service_defaults": { "minimum_reachability": 50, "radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60} },
       "thor": { "service": { "proxy": "ipc:///tmp/test_skadi_thor_proxy" } },
       "httpd": { "service": { "loopback": "ipc:///tmp/test_skadi_results", "interrupt": "ipc:///tmp/test_skadi_interrupt" } },
       "additional_data": { "elevation": "test/data/service" },

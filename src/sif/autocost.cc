@@ -35,13 +35,15 @@ constexpr float kDefaultGatePenalty = 300.0f;            // Seconds
 constexpr float kDefaultTollBoothCost = 15.0f;           // Seconds
 constexpr float kDefaultTollBoothPenalty = 0.0f;         // Seconds
 constexpr float kDefaultFerryCost = 300.0f;              // Seconds
+constexpr float kDefaultRailFerryCost = 300.0f;          // Seconds
 constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 
 // Other options
-constexpr float kDefaultUseFerry = 0.5f;    // Factor between 0 and 1
-constexpr float kDefaultUseHighways = 1.0f; // Factor between 0 and 1
-constexpr float kDefaultUseTolls = 0.5f;    // Factor between 0 and 1
+constexpr float kDefaultUseFerry = 0.5f;     // Factor between 0 and 1
+constexpr float kDefaultUseRailFerry = 0.4f; // Factor between 0 and 1
+constexpr float kDefaultUseHighways = 1.0f;  // Factor between 0 and 1
+constexpr float kDefaultUseTolls = 0.5f;     // Factor between 0 and 1
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -84,11 +86,13 @@ constexpr ranged_default_t<float> kGatePenaltyRange{0, kDefaultGatePenalty, kMax
 constexpr ranged_default_t<float> kTollBoothCostRange{0, kDefaultTollBoothCost, kMaxPenalty};
 constexpr ranged_default_t<float> kTollBoothPenaltyRange{0, kDefaultTollBoothPenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kFerryCostRange{0, kDefaultFerryCost, kMaxPenalty};
+constexpr ranged_default_t<float> kRailFerryCostRange{0, kDefaultRailFerryCost, kMaxPenalty};
 constexpr ranged_default_t<float> kCountryCrossingCostRange{0, kDefaultCountryCrossingCost,
                                                             kMaxPenalty};
 constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountryCrossingPenalty,
                                                                kMaxPenalty};
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
+constexpr ranged_default_t<float> kUseRailFerryRange{0, kDefaultUseRailFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 
@@ -460,7 +464,10 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::GraphTile* tile,
                         const uint32_t seconds) const {
   auto speed = std::min(tile->GetSpeed(edge, flow_mask_, seconds), (uint32_t)top_speed_);
-  float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
+  float factor =
+      (edge->use() == Use::kFerry)
+          ? ferry_factor_
+          : (edge->use() == Use::kRailFerry) ? rail_ferry_factor_ : density_factor_[edge->density()];
 
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
@@ -675,10 +682,19 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
         kFerryCostRange(rapidjson::get_optional<float>(*json_costing_options, "/ferry_cost")
                             .get_value_or(kDefaultFerryCost)));
 
+    // rail_ferry_cost
+    pbf_costing_options->set_rail_ferry_cost(
+        kRailFerryCostRange(rapidjson::get_optional<float>(*json_costing_options, "/rail_ferry_cost")
+                                .get_value_or(kDefaultRailFerryCost)));
     // use_ferry
     pbf_costing_options->set_use_ferry(
         kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
                            .get_value_or(kDefaultUseFerry)));
+
+    // use_rail_ferry
+    pbf_costing_options->set_use_rail_ferry(
+        kUseRailFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_rail_ferry")
+                               .get_value_or(kDefaultUseRailFerry)));
 
     // use_highways
     pbf_costing_options->set_use_highways(
@@ -708,6 +724,8 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
     pbf_costing_options->set_ferry_cost(kDefaultFerryCost);
     pbf_costing_options->set_use_ferry(kDefaultUseFerry);
+    pbf_costing_options->set_rail_ferry_cost(kDefaultRailFerryCost);
+    pbf_costing_options->set_use_rail_ferry(kDefaultUseRailFerry);
     pbf_costing_options->set_use_highways(kDefaultUseHighways);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);

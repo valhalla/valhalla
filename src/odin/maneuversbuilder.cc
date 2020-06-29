@@ -87,8 +87,8 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Confirm maneuver type assignment
   ConfirmManeuverTypeAssignment(maneuvers);
 
-  // Process the roundabout names
-  ProcessRoundaboutNames(maneuvers);
+  // Process roundabouts
+  ProcessRoundabouts(maneuvers);
 
   // Process the 'to stay on' attribute
   SetToStayOnAttribute(maneuvers);
@@ -101,6 +101,9 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 
   // Process the guidance view junctions
   ProcessGuidanceViewJunctions(maneuvers);
+
+  // Mark the maneuvers that have traversable outbound intersecting edges
+  SetTraversableOutboundIntersectingEdgeFlags(maneuvers);
 
 #ifdef LOGGING_LEVEL_TRACE
   int final_man_id = 1;
@@ -177,8 +180,6 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
   if (trip_path_->location_size() < 2) {
     throw valhalla_exception_t{212};
   }
-
-  LOG_INFO(std::string("trip_path_->node_size()=" + std::to_string(trip_path_->node_size())));
 
   // Process the Destination maneuver
   maneuvers.emplace_front();
@@ -551,10 +552,8 @@ ManeuversBuilder::CombineInternalManeuver(std::list<Maneuver>& maneuvers,
   // Set begin shape index
   next_man->set_begin_shape_index(curr_man->begin_shape_index());
 
-  // Set signs, if needed
-  if (curr_man->HasSigns() && !next_man->HasSigns()) {
-    *(next_man->mutable_signs()) = curr_man->signs();
-  }
+  // NOTE: Do not copy signs from internal maneuver
+  //       It would produce invalid results
 
   if (start_man) {
     next_man->set_type(DirectionsLeg_Maneuver_Type_kStart);
@@ -1402,7 +1401,7 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       if (trip_path_) {
         auto man_begin_edge = trip_path_->GetCurrEdge(maneuver.begin_node_index());
         auto node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
-        bool prev_edge_has_names = (prev_edge ? !prev_edge->IsUnnamed() : false);
+        //        bool prev_edge_has_names = (prev_edge ? !prev_edge->IsUnnamed() : false);
 
         ////////////////////////////////////////////////////////////////////
         // If the maneuver begin edge is a turn channel
@@ -1458,9 +1457,7 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
         //                  prev_edge->GetNameList());
         //          std::unique_ptr<StreetNames> common_base_names = prev_edge_names
         //              ->FindCommonBaseNames(maneuver.street_names());
-        //          LOG_INFO("prev_edge_names->size()=" + std::to_string(prev_edge_names->size()));
-        //          LOG_INFO("common_base_names->size()=" +
-        //          std::to_string(common_base_names->size())); if (common_base_names->empty()) {
+        //          if (common_base_names->empty()) {
         //            maneuver.set_type(DirectionsLeg_Maneuver_Type_kBecomes);
         //            LOG_TRACE("ManeuverType=BECOMES");
         //          }
@@ -2379,7 +2376,7 @@ bool ManeuversBuilder::AreRoundaboutsProcessable(const TripLeg_TravelMode travel
   return false;
 }
 
-void ManeuversBuilder::ProcessRoundaboutNames(std::list<Maneuver>& maneuvers) {
+void ManeuversBuilder::ProcessRoundabouts(std::list<Maneuver>& maneuvers) {
   // Set previous maneuver
   auto prev_man = maneuvers.begin();
 
@@ -2421,12 +2418,21 @@ void ManeuversBuilder::ProcessRoundaboutNames(std::list<Maneuver>& maneuvers) {
         }
       }
 
-      // Process roundabout exit names
+      // Process roundabout exit names and signs
       if (next_man->type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) {
         if (next_man->HasBeginStreetNames()) {
-          curr_man->set_roundabout_exit_street_names(next_man->begin_street_names().clone());
+          curr_man->set_roundabout_exit_begin_street_names(next_man->begin_street_names().clone());
+          curr_man->set_roundabout_exit_street_names(next_man->street_names().clone());
         } else {
           curr_man->set_roundabout_exit_street_names(next_man->street_names().clone());
+        }
+        if (next_man->HasSigns()) {
+          *(curr_man->mutable_roundabout_exit_signs()) = next_man->signs();
+        }
+
+        // Suppress roundabout exit maneuver if user requested
+        if (!options_.roundabout_exits()) {
+          next_man = CombineManeuvers(maneuvers, curr_man, next_man);
         }
       }
     }
@@ -2783,6 +2789,44 @@ bool ManeuversBuilder::RampLeadsToHighway(Maneuver& maneuver) const {
   }
   // Not a ramp
   return false;
+}
+
+void ManeuversBuilder::SetTraversableOutboundIntersectingEdgeFlags(std::list<Maneuver>& maneuvers) {
+  // Process each maneuver for traversable outbound intersecting edges
+  for (Maneuver& maneuver : maneuvers) {
+    bool found_first_edge_to_process = false;
+    for (int node_index = maneuver.begin_node_index(); node_index < maneuver.end_node_index();
+         ++node_index) {
+      if (!found_first_edge_to_process) {
+        auto curr_edge = trip_path_->GetCurrEdge(node_index);
+        // Skip the initial internal and turn channel edges
+        if (curr_edge->internal_intersection() || curr_edge->IsTurnChannelUse()) {
+          continue;
+        }
+        // we can process the next edge - set flag and continue
+        found_first_edge_to_process = true;
+        continue;
+      }
+      auto node = trip_path_->GetEnhancedNode(node_index);
+      auto prev_edge = trip_path_->GetPrevEdge(node_index);
+      if (node && prev_edge) {
+        IntersectingEdgeCounts xedge_counts;
+        node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                       prev_edge->travel_mode(), xedge_counts);
+        if (xedge_counts.right_traversable_outbound > 0) {
+          maneuver.set_has_right_traversable_outbound_intersecting_edge(true);
+        }
+        if (xedge_counts.left_traversable_outbound > 0) {
+          maneuver.set_has_left_traversable_outbound_intersecting_edge(true);
+        }
+        // If both are already marks then we can stop processing
+        if (maneuver.has_right_traversable_outbound_intersecting_edge() &&
+            maneuver.has_left_traversable_outbound_intersecting_edge()) {
+          break;
+        }
+      }
+    }
+  }
 }
 
 } // namespace odin

@@ -178,7 +178,7 @@ protected:
    *
    * @param maneuvers The list of maneuvers to process.
    */
-  void ProcessRoundaboutNames(std::list<Maneuver>& maneuvers);
+  void ProcessRoundabouts(std::list<Maneuver>& maneuvers);
 
   /**
    * Iterate through the maneuvers and set the 'to stay on' attribute as needed.
@@ -236,6 +236,13 @@ protected:
    * @return true if the specified maneuver is a ramp and leads to a highway.
    */
   bool RampLeadsToHighway(Maneuver& maneuver) const;
+
+  /**
+   * Mark maneuvers that have traversable outbound intersecting edges.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void SetTraversableOutboundIntersectingEdgeFlags(std::list<Maneuver>& maneuvers);
 
   const Options& options_;
   EnhancedTripLeg* trip_path_;

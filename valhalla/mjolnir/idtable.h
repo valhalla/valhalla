@@ -48,7 +48,7 @@ public:
    * @param  id  OSM Id
    * @return  Returns true if the OSM Id is used. False if not.
    */
-  inline const bool get(const uint64_t id) {
+  inline bool get(const uint64_t id) {
     return id > maxosmid_ ? false
                           : bitmarkers_[id / 64] &
                                 (static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64)));
@@ -60,6 +60,28 @@ public:
    */
   inline uint64_t max() const {
     return maxosmid_;
+  }
+
+  /**
+   * Gets the bit markers
+   * @return bit markers
+   */
+  inline std::vector<uint64_t> get_bitmarkers() {
+    return bitmarkers_;
+  }
+
+  /**
+   * Sets the bit markers
+   * Also, resizes the internal storage and adjusts maxosmid_
+   * @param  vector  bit markers
+   */
+  inline void set_bitmarkers(const std::vector<uint64_t>& bitmarkers) {
+
+    // Set this to the actual maximum as dictated by the storage
+    maxosmid_ = bitmarkers.size() * static_cast<uint64_t>(64) - 1;
+    // Create a vector to mark bits. Initialize to 0.
+    bitmarkers_.resize((maxosmid_ / 64) + 1, 0);
+    bitmarkers_ = bitmarkers;
   }
 
 private:

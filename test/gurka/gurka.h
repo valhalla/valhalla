@@ -12,24 +12,24 @@
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
+#include "baldr/rapidjson_utils.h"
+#include "filesystem.h"
 #include "loki/worker.h"
+#include "midgard/constants.h"
+#include "midgard/encoded.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "midgard/util.h"
 #include "mjolnir/util.h"
 #include "odin/worker.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
-#include <boost/filesystem.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include "rapidjson/document.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
-
-#include "midgard/constants.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
+#include <valhalla/proto/trip.pb.h>
 
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
@@ -44,13 +44,15 @@
 namespace valhalla {
 namespace gurka {
 
+using nodelayout = std::map<std::string, midgard::PointLL>;
+
 struct map {
   boost::property_tree::ptree config;
-  std::unordered_map<std::string, midgard::PointLL> nodes;
+  nodelayout nodes;
 };
 
-using ways = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
-using nodes = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
+using ways = std::map<std::string, std::map<std::string, std::string>>;
+using nodes = std::map<std::string, std::map<std::string, std::string>>;
 
 enum relation_member_type { node_member, way_member };
 struct relation_member {
@@ -60,12 +62,10 @@ struct relation_member {
 };
 struct relation {
   std::vector<relation_member> members;
-  std::unordered_map<std::string, std::string> tags;
+  std::map<std::string, std::string> tags;
 };
 
 using relations = std::vector<relation>;
-
-using nodelayout = std::unordered_map<std::string, midgard::PointLL>;
 
 namespace detail {
 
@@ -74,7 +74,7 @@ build_config(const std::string& tiledir,
              const std::unordered_map<std::string, std::string>& config_options) {
 
   const std::string default_config = R"(
-    {"mjolnir":{"tile_dir":"", "concurrency": 1},
+    {"mjolnir":{"id_table_size":1000,"tile_dir":"", "concurrency": 1},
      "thor":{
        "logging" : {"long_request" : 100}
      },
@@ -93,7 +93,8 @@ build_config(const std::string& tiledir,
          "route": true,
          "search_radius": 50,
          "sigma_z": 4.07,
-         "turn_penalty_factor": 0
+         "turn_penalty_factor": 0,
+         "penalize_immediate_uturn": true
        },
        "customizable": [
          "mode",
@@ -104,7 +105,8 @@ build_config(const std::string& tiledir,
          "sigma_z",
          "beta",
          "max_route_distance_factor",
-         "max_route_time_factor"
+         "max_route_time_factor",
+         "penalize_immediate_uturn"
        ]
      },
      "loki":{
@@ -126,6 +128,7 @@ build_config(const std::string& tiledir,
          "search_cutoff" : 35000,
          "node_snap_tolerance" : 5,
          "street_side_tolerance" : 5,
+         "street_side_max_distance": 1000,
          "heading_tolerance" : 60
         }
      },
@@ -235,8 +238,9 @@ build_valhalla_route_request_with_costing_options(const map& map,
 
 std::string build_valhalla_match_request(const map& map,
                                          const std::vector<std::string>& waypoints,
-                                         const bool break_at_points = false,
-                                         const std::string& costing = "auto") {
+                                         const std::string& stop_type,
+                                         const std::string& costing = "auto",
+                                         const std::string& trace_options = "{}") {
 
   rapidjson::Document doc;
   doc.SetObject();
@@ -247,9 +251,7 @@ std::string build_valhalla_match_request(const map& map,
     rapidjson::Value p(rapidjson::kObjectType);
     p.AddMember("lon", map.nodes.at(waypoint).lng(), allocator);
     p.AddMember("lat", map.nodes.at(waypoint).lat(), allocator);
-    if (break_at_points) {
-      p.AddMember("type", "break", allocator);
-    }
+    p.AddMember("type", stop_type, allocator);
     locations.PushBack(p, allocator);
   }
   doc.AddMember("shape", locations, allocator);
@@ -259,8 +261,15 @@ std::string build_valhalla_match_request(const map& map,
   rapidjson::StringBuffer sb;
   rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
   doc.Accept(writer);
-  std::cout << sb.GetString() << std::endl;
-  return sb.GetString();
+  std::string request = sb.GetString();
+  // inject more options directly
+  if (!trace_options.empty()) {
+    request.back() = ',';
+    request += R"("trace_options":)";
+    request += trace_options;
+    request.push_back('}');
+  }
+  return request;
 }
 
 std::vector<std::string> splitter(const std::string in_pattern, const std::string& content) {
@@ -554,9 +563,9 @@ map buildtiles(const nodelayout layout,
     throw std::runtime_error("Can't use / for tests, as we need to clean it out first");
   }
 
-  if (boost::filesystem::exists(workdir))
-    boost::filesystem::remove_all(workdir);
-  boost::filesystem::create_directories(workdir);
+  if (filesystem::exists(workdir))
+    filesystem::remove_all(workdir);
+  filesystem::create_directories(workdir);
 
   auto pbf_filename = workdir + "/map.pbf";
   std::cerr << "[          ] generating map PBF at " << pbf_filename << std::endl;
@@ -587,7 +596,7 @@ std::tuple<const baldr::GraphId,
            const baldr::GraphId,
            const baldr::DirectedEdge*>
 findEdge(valhalla::baldr::GraphReader& reader,
-         const std::unordered_map<std::string, midgard::PointLL>& nodes,
+         const nodelayout& nodes,
          const std::string& way_name,
          const std::string& end_node,
          const baldr::GraphId& tile_id = baldr::GraphId{}) {
@@ -704,8 +713,15 @@ valhalla::Api route_with_costing_options(const map& map,
 
 valhalla::Api match(const map& map,
                     const std::vector<std::string>& waypoints,
-                    const bool break_at_points,
-                    const std::string& costing) {
+                    const std::string& stop_type,
+                    const std::string& costing,
+                    const std::string& trace_options = "{}",
+                    std::shared_ptr<valhalla::baldr::GraphReader> reader = {}) {
+  if (!reader)
+    reader.reset(new valhalla::baldr::GraphReader(map.config.get_child("mjolnir")));
+  else
+    std::cerr << "[          ] Using pre-allocated baldr::GraphReader" << std::endl;
+
   std::cerr << "[          ] Matching with mjolnir.tile_dir = "
             << map.config.get<std::string>("mjolnir.tile_dir") << " with waypoints ";
   bool first = true;
@@ -716,10 +732,11 @@ valhalla::Api match(const map& map,
     first = false;
   };
   std::cerr << " with costing " << costing << std::endl;
-  auto request_json = detail::build_valhalla_match_request(map, waypoints, break_at_points, costing);
+  auto request_json =
+      detail::build_valhalla_match_request(map, waypoints, stop_type, costing, trace_options);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
-  valhalla::tyr::actor_t actor(map.config, true);
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
   valhalla::Api api;
   actor.trace_route(request_json, nullptr, &api);
   return api;
@@ -729,13 +746,13 @@ namespace assert {
 namespace osrm {
 
 /**
- * Tests if a found path traverses the expected roads in the expected order
+ * Tests if a found path traverses the expected steps in the expected order
  *
  * @param result the result of a /route or /match request
- * @param expected_names the names of the roads the path should traverse in order
+ * @param expected_names the names of the step roads the path should traverse in order
  * @param dedupe whether subsequent same-name roads should appear multiple times or not (default not)
  */
-void expect_route(valhalla::Api& raw_result,
+void expect_steps(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
                   bool dedupe = true) {
 
@@ -783,7 +800,7 @@ void expect_route(valhalla::Api& raw_result,
     actual_names.erase(last, actual_names.end());
   }
 
-  EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path";
+  EXPECT_EQ(actual_names, expected_names) << "Actual steps didn't match expected steps";
 }
 /**
  * Tests if a found path traverses the expected roads in the expected order
@@ -856,42 +873,94 @@ void expect_maneuvers(const valhalla::Api& result,
                       const std::vector<valhalla::DirectionsLeg_Maneuver_Type>& expected_maneuvers) {
 
   EXPECT_EQ(result.directions().routes_size(), 1);
-  EXPECT_EQ(result.directions().routes(0).legs_size(), 1);
-
-  const auto& leg = result.directions().routes(0).legs(0);
 
   std::vector<valhalla::DirectionsLeg_Maneuver_Type> actual_maneuvers;
-  for (int i = 0; i < leg.maneuver_size(); i++) {
-    actual_maneuvers.push_back(leg.maneuver(i).type());
+  for (const auto& leg : result.directions().routes(0).legs()) {
+    for (const auto& maneuver : leg.maneuver()) {
+      actual_maneuvers.push_back(maneuver.type());
+    }
   }
 
   EXPECT_EQ(actual_maneuvers, expected_maneuvers)
       << "Actual maneuvers didn't match expected maneuvers";
 }
 
+/**
+ * Tests whether the expected set of instructions is emitted for the specified maneuver index.
+ * Looks at the output of Odin in the result.
+ *
+ * @param result the result of a /route or /match request
+ * @param maneuver_index the specified maneuver index to inspect
+ * @param expected_text_instruction the expected text instruction
+ * @param expected_verbal_transition_alert_instruction the expected verbal transition alert
+ *                                                     instruction
+ * @param expected_verbal_pre_transition_instruction the expected verbal pre-transition instruction
+ * @param expected_verbal_post_transition_instruction the expected verbal post-transition instruction
+ */
+void expect_instructions_at_maneuver_index(
+    const valhalla::Api& result,
+    int maneuver_index,
+    const std::string& expected_text_instruction,
+    const std::string& expected_verbal_transition_alert_instruction,
+    const std::string& expected_verbal_pre_transition_instruction,
+    const std::string& expected_verbal_post_transition_instruction) {
+
+  ASSERT_EQ(result.directions().routes_size(), 1);
+  ASSERT_EQ(result.directions().routes(0).legs_size(), 1);
+  ASSERT_TRUE((maneuver_index >= 0) &&
+              (maneuver_index < result.directions().routes(0).legs(0).maneuver_size()));
+  const auto& maneuver = result.directions().routes(0).legs(0).maneuver(maneuver_index);
+
+  EXPECT_EQ(maneuver.text_instruction(), expected_text_instruction);
+  EXPECT_EQ(maneuver.verbal_transition_alert_instruction(),
+            expected_verbal_transition_alert_instruction);
+  EXPECT_EQ(maneuver.verbal_pre_transition_instruction(), expected_verbal_pre_transition_instruction);
+  EXPECT_EQ(maneuver.verbal_post_transition_instruction(),
+            expected_verbal_post_transition_instruction);
+}
+
 void expect_path_length(const valhalla::Api& result,
                         const float expected_length_km,
                         const float error_margin = 0) {
   EXPECT_EQ(result.trip().routes_size(), 1);
-  EXPECT_EQ(result.trip().routes(0).legs_size(), 1);
 
-  const auto& route = result.trip().routes(0);
-
-  float length_km = 0;
-  for (int legnum = 0; legnum < route.legs_size(); legnum++) {
-    const auto& leg = route.legs(legnum);
-    for (int nodenum = 0; nodenum < leg.node_size(); nodenum++) {
-      const auto& node = leg.node(nodenum);
-      if (node.has_edge()) {
-        length_km += node.edge().length();
-      }
+  double length_m = 0;
+  for (const auto& route : result.trip().routes()) {
+    for (const auto& leg : route.legs()) {
+      auto points = midgard::decode<std::vector<midgard::PointLL>>(leg.shape());
+      length_m += midgard::length(points);
     }
   }
 
   if (error_margin == 0) {
-    EXPECT_FLOAT_EQ(length_km, expected_length_km);
+    EXPECT_FLOAT_EQ(static_cast<float>(length_m), expected_length_km * 1000);
   } else {
-    EXPECT_NEAR(length_km, expected_length_km, error_margin);
+    EXPECT_NEAR(static_cast<float>(length_m), expected_length_km * 1000, 1.f);
+  }
+
+  double length_km = 0;
+  for (const auto& leg : result.trip().routes(0).legs()) {
+    for (const auto& node : leg.node()) {
+      if (node.has_edge())
+        length_km += node.edge().length();
+    }
+  }
+
+  if (error_margin == 0) {
+    EXPECT_FLOAT_EQ(static_cast<float>(length_km), expected_length_km);
+  } else {
+    EXPECT_NEAR(static_cast<float>(length_km), expected_length_km, error_margin);
+  }
+
+  length_km = 0;
+  for (const auto& leg : result.directions().routes(0).legs()) {
+    length_km += leg.summary().length();
+  }
+
+  if (error_margin == 0) {
+    EXPECT_FLOAT_EQ(static_cast<float>(length_km), expected_length_km);
+  } else {
+    EXPECT_NEAR(static_cast<float>(length_km), expected_length_km, error_margin);
   }
 }
 
@@ -899,22 +968,51 @@ void expect_eta(const valhalla::Api& result,
                 const float expected_eta_seconds,
                 const float error_margin = 0) {
   EXPECT_EQ(result.trip().routes_size(), 1);
-  EXPECT_EQ(result.trip().routes(0).legs_size(), 1);
-
-  const auto& route = result.trip().routes(0);
 
   double eta_sec = 0;
-  for (int legnum = 0; legnum < route.legs_size(); legnum++) {
-    const auto& leg = route.legs(legnum);
-    const auto& lastnode = leg.node(leg.node_size() - 1);
-    eta_sec += lastnode.elapsed_time();
+  for (const auto& leg : result.directions().routes(0).legs()) {
+    eta_sec += leg.summary().time();
   }
 
   if (error_margin == 0) {
-    EXPECT_FLOAT_EQ(eta_sec, expected_eta_seconds);
+    EXPECT_FLOAT_EQ(static_cast<float>(eta_sec), expected_eta_seconds);
   } else {
-    EXPECT_NEAR(eta_sec, expected_eta_seconds, error_margin);
+    EXPECT_NEAR(static_cast<float>(eta_sec), expected_eta_seconds, error_margin);
   }
+}
+
+std::string
+to_string(const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) {
+  std::string str;
+
+  for (const auto& street_name : street_names) {
+    if (!str.empty()) {
+      str += "/";
+    }
+    str += street_name.value();
+  }
+  return str;
+}
+
+/**
+ * Tests if a found path traverses the expected edges in the expected order
+ *
+ * @param result the result of a /route or /match request
+ * @param expected_names the names of the edges the path should traverse in order
+ */
+void expect_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
+  EXPECT_EQ(result.trip().routes_size(), 1);
+
+  std::vector<std::string> actual_names;
+  for (const auto& leg : result.trip().routes(0).legs()) {
+    for (const auto& node : leg.node()) {
+      if (node.has_edge()) {
+        actual_names.push_back(to_string(node.edge().name()));
+      }
+    }
+  }
+
+  EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path";
 }
 
 } // namespace raw

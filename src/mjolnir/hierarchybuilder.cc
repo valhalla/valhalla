@@ -1,7 +1,6 @@
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -140,15 +139,16 @@ void FormTilesInNewLevel(GraphReader& reader,
         directededge->use() == Use::kPlatformConnection) {
       // Transit connection edges should live on the lowest class level
       // where a new node exists
-      uint8_t lowest_level;
       auto f = find_nodes(old_to_new, base_node);
-      if (f.local_node.Is_Valid()) {
+      uint8_t lowest_level;
+      if (f.local_node.Is_Valid())
         lowest_level = 2;
-      } else if (f.arterial_node.Is_Valid()) {
+      else if (f.arterial_node.Is_Valid())
         lowest_level = 1;
-      } else if (f.highway_node.Is_Valid()) {
+      else if (f.highway_node.Is_Valid())
         lowest_level = 0;
-      }
+      else
+        throw std::logic_error("Could not find valid node level");
       return (lowest_level == current_level);
     } else if (directededge->bss_connection()) {
       // Despite the road class, Bike Share Stations' connections are always at local level
@@ -611,8 +611,7 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt,
   // Update the end nodes to all transit connections in the transit hierarchy
   auto hierarchy_properties = pt.get_child("mjolnir");
   auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
-  if (transit_dir && boost::filesystem::exists(*transit_dir) &&
-      boost::filesystem::is_directory(*transit_dir)) {
+  if (transit_dir && filesystem::exists(*transit_dir) && filesystem::is_directory(*transit_dir)) {
     UpdateTransitConnections(reader, old_to_new_file);
   }
 

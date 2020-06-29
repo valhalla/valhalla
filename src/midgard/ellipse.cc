@@ -1,6 +1,7 @@
 #include <cmath>
 
 #include "valhalla/midgard/ellipse.h"
+#include "valhalla/midgard/util.h"
 
 namespace valhalla {
 namespace midgard {
@@ -16,7 +17,7 @@ template <class coord_t> Ellipse<coord_t>::Ellipse() : s(0), c(0) {
 template <class coord_t>
 Ellipse<coord_t>::Ellipse(const coord_t& p1, const coord_t& p2, float angle) {
   // Set the center and get sin and cos of the angle
-  center_.Set(p1.x() + p2.x() * 0.5f, p1.y() + p2.y() * 0.5f);
+  center_.Set((p1.x() + p2.x()) * 0.5f, (p1.y() + p2.y()) * 0.5f);
   float angleRad = angle * kRadPerDeg;
   c = cosf(angleRad);
   s = sinf(angleRad);

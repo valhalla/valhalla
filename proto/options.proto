@@ -111,7 +111,9 @@ message CostingOptions {
   optional FilterAction filter_route_action = 53;
   repeated string filter_route_ids = 54;
   optional uint32 flow_mask = 55;
-  repeated CostingConstraint costing_constraints = 56;
+  optional float rail_ferry_cost = 56;
+  optional float use_rail_ferry = 57;
+ repeated CostingConstraint costing_constraints = 58;
 }
 
 message AvoidEdge {
@@ -192,5 +194,7 @@ message Options {
   optional uint32 alternates = 39;                                        // Maximum number of alternate routes that can be returned
   optional float interpolation_distance = 40;                             // Map-matching interpolation distance beyond which trace points are merged
   optional bool guidance_views = 41;                                      // Whether to return guidance_views in the response
-  optional uint32 height_precision = 42 [default = 0];                    // Number of digits precision for heights returned
+  // 42 is reserved
+  optional uint32 height_precision = 43 [default = 0];                    // Number of digits precision for heights returned
+  optional bool roundabout_exits = 44 [default = true];                   // Whether to announce roundabout exit maneuvers
 }

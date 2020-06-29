@@ -29,7 +29,7 @@ public:
 
   ~LuaTagTransform();
 
-  Tags Transform(OSMType type, const Tags& tags);
+  Tags Transform(OSMType type, uint64_t osmid, const Tags& tags);
 
 protected:
   lua_State* state_;

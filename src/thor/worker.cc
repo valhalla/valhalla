@@ -280,7 +280,8 @@ void thor_worker_t::parse_measurements(const Api& request) {
       trace.emplace_back(meili::Measurement{{pt.ll().lng(), pt.ll().lat()},
                                             pt.has_accuracy() ? pt.accuracy() : default_accuracy,
                                             pt.has_radius() ? pt.radius() : default_radius,
-                                            pt.time()});
+                                            pt.time(),
+                                            PathLocation::fromPBF(pt.type())});
     }
   } catch (...) { throw valhalla_exception_t{424}; }
 }

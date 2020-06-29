@@ -1,7 +1,6 @@
 #include "loki/search.h"
 #include <cstdint>
 
-#include <boost/filesystem.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <unordered_set>
 
@@ -10,6 +9,7 @@
 #include "baldr/location.h"
 #include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
 #include "sif/nocost.h"
@@ -49,8 +49,8 @@ std::pair<GraphId, PointLL> c({tile_id.tileid(), tile_id.level(), 2}, {.01, .01}
 std::pair<GraphId, PointLL> d({tile_id.tileid(), tile_id.level(), 3}, {.2, .1});
 
 void clean_tiles() {
-  if (boost::filesystem::is_directory(tile_dir)) {
-    boost::filesystem::remove_all(tile_dir);
+  if (filesystem::is_directory(tile_dir)) {
+    filesystem::remove_all(tile_dir);
   }
 }
 
@@ -192,6 +192,7 @@ void search(valhalla::baldr::Location location,
   valhalla::Location pbf;
   PathLocation::toPBF(location, &pbf, reader);
   location = PathLocation::fromPBF(pbf);
+  location.street_side_max_distance_ = 5000;
 
   const auto costing = create_costing();
   const auto results = Search({location}, reader, costing);
@@ -220,7 +221,6 @@ void search(valhalla::baldr::Location location,
 }
 
 void search(valhalla::baldr::Location location, size_t result_count, int reachability) {
-
   // make the config file
   boost::property_tree::ptree conf;
   conf.put("tile_dir", tile_dir);
@@ -230,6 +230,8 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
   valhalla::Location pbf;
   PathLocation::toPBF(location, &pbf, reader);
   location = PathLocation::fromPBF(pbf);
+  location.street_side_max_distance_ = 5000;
+
   const auto costing = create_costing();
 
   const auto results = Search({location}, reader, costing);
@@ -317,6 +319,22 @@ TEST(Search, test_edge_search) {
   PointLL test{answer.first + ortho.x(), answer.second + ortho.y()};
   search({test}, false, answer,
          {PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::LEFT}});
+
+  // try getting side of street by setting the display ll instead
+  x = {answer};
+  x.display_latlng_ = test;
+  search(x, false, answer,
+         {PE{{t, l, 3}, ratio, answer, 0, S::RIGHT}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::LEFT}});
+
+  // try display ll on the other side
+  x.display_latlng_ = PointLL{answer.first - ortho.x(), answer.second - ortho.y()};
+  search(x, false, answer,
+         {PE{{t, l, 3}, ratio, answer, 0, S::LEFT}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::RIGHT}});
+
+  // try nuking display ll by setting it farther away than street_side_max_distance
+  x.display_latlng_ = PointLL{answer.first - 5 * ortho.x(), answer.second - 5 * ortho.y()};
+  search(x, false, answer,
+         {PE{{t, l, 3}, ratio, answer, 0, S::NONE}, PE{{t, l, 8}, 1.f - ratio, answer, 0, S::NONE}});
 
   // check that the side of street tolerance works
   Location sst_huge(test);

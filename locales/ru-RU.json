@@ -37,7 +37,9 @@
         "0": "Держитесь <RELATIVE_DIRECTION>.",
         "1": "Держитесь <RELATIVE_DIRECTION> по <STREET_NAMES>.",
         "2": "Держитесь <RELATIVE_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
-        "3": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+        "3": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -60,6 +62,12 @@
         ],
         "3": [
           "Держитесь слева чтобы остаться на US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -68,7 +76,9 @@
         "0": "Держитесь <RELATIVE_DIRECTION>.",
         "1": "Держитесь <RELATIVE_DIRECTION> по <STREET_NAMES>.",
         "2": "Держитесь <RELATIVE_DIRECTION> по <BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
-        "3": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+        "3": "Держитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -91,6 +101,12 @@
         ],
         "3": [
           "Держитесь левее чтобы остаться на US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -117,7 +133,9 @@
     "continue": {
       "phrases": {
         "0": "Продолжайте.",
-        "1": "Продолжайте по <STREET_NAMES>."
+        "1": "Продолжайте по <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -130,13 +148,25 @@
         ],
         "1": [
           "Продолжайте по 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Проедьте <LENGTH>.",
-        "1": "Проедьте <LENGTH> по <STREET_NAMES>."
+        "0": "Продолжайте.",
+        "1": "Проедьте <LENGTH>.",
+        "2": "Продолжайте по <STREET_NAMES>.",
+        "3": "Проедьте <LENGTH> по <STREET_NAMES>.",
+        "4": "Continue at <JUNCTION_NAME>.",
+        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
+        "6": "Continue toward <TOWARD_SIGN>.",
+        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -159,17 +189,37 @@
       ],
       "example_phrases": {
         "0": [
-          "Проедьте 300 футов."
+          "Continue."
         ],
         "1": [
-          "Проедьте 3 десятых мили по 10th Avenue."
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
         ]
       }
     },
     "continue_verbal_alert": {
       "phrases": {
         "0": "Продолжайте.",
-        "1": "Продолжайте по <STREET_NAMES>."
+        "1": "Продолжайте по <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -182,6 +232,12 @@
         ],
         "1": [
           "Продолжайте по 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -298,7 +354,8 @@
       "phrases": {
         "0": "Воспользуйтесь паромом.",
         "1": "Воспользуйтесь паромом <STREET_NAMES>.",
-        "2": "Воспользуйтесь <STREET_NAMES> <FERRY_LABEL>."
+        "2": "Воспользуйтесь <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -315,6 +372,9 @@
         ],
         "2": [
           "Воспользуйтесь Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -322,7 +382,8 @@
       "phrases": {
         "0": "Воспользуйтесь паромом.",
         "1": "Воспользуйтесь паромом <STREET_NAMES>.",
-        "2": "Воспользуйтесь <STREET_NAMES> <FERRY_LABEL>."
+        "2": "Воспользуйтесь <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -339,13 +400,30 @@
         ],
         "2": [
           "Воспользуйтесь Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
     "enter_roundabout": {
       "phrases": {
         "0": "Заедьте на кольцо.",
-        "1": "Заедьте на кольцо и съезжайте на <ORDINAL_VALUE> съезде."
+        "1": "Заедьте на кольцо и съезжайте на <ORDINAL_VALUE> съезде.",
+        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "первом",
@@ -359,40 +437,10 @@
         "девятом",
         "десятом"
       ],
-      "example_phrases": {
-        "0": [
-          "Заедьте на кольцо."
-        ],
-        "1": [
-          "Заедьте на кольцо и съезжайте на первом съезде.",
-          "Заедьте на кольцо и съезжайте на втором съезде.",
-          "Заедьте на кольцо и съезжайте на третьем съезде.",
-          "Заедьте на кольцо и съезжайте на четвертом съезде.",
-          "Заедьте на кольцо и съезжайте на пятом съезде.",
-          "Заедьте на кольцо и съезжайте на шестом съезде.",
-          "Заедьте на кольцо и съезжайте на седьмом съезде.",
-          "Заедьте на кольцо и съезжайте на восьмом съезде.",
-          "Заедьте на кольцо и съезжайте на девятом съезде.",
-          "Заедьте на кольцо и съезжайте на десятом съезде."
-        ]
-      }
-    },
-    "enter_roundabout_verbal": {
-      "phrases": {
-        "0": "Заедьте на кольцо.",
-        "1": "Заедьте на кольцо и съезжайте на <ORDINAL_VALUE> съезде."
-      },
-      "ordinal_values": [
-        "первым",
-        "втором",
-        "третьем",
-        "четвертом",
-        "пятом",
-        "шестом",
-        "седьмом",
-        "восьмом",
-        "девятом",
-        "десятом"
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail"
       ],
       "example_phrases": {
         "0": [
@@ -409,6 +457,144 @@
           "Заедьте на кольцо и съезжайте на восьмом съезде.",
           "Заедьте на кольцо и съезжайте на девятом съезде.",
           "Заедьте на кольцо и съезжайте на десятом съезде."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
+        ]
+      }
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Заедьте на кольцо.",
+        "1": "Заедьте на кольцо и съезжайте на <ORDINAL_VALUE> съезде.",
+        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+      },
+      "ordinal_values": [
+        "первым",
+        "втором",
+        "третьем",
+        "четвертом",
+        "пятом",
+        "шестом",
+        "седьмом",
+        "восьмом",
+        "девятом",
+        "десятом"
+      ],
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail"
+      ],
+      "example_phrases": {
+        "0": [
+          "Заедьте на кольцо."
+        ],
+        "1": [
+          "Заедьте на кольцо и съезжайте на первом съезде.",
+          "Заедьте на кольцо и съезжайте на втором съезде.",
+          "Заедьте на кольцо и съезжайте на третьем съезде.",
+          "Заедьте на кольцо и съезжайте на четвертом съезде.",
+          "Заедьте на кольцо и съезжайте на пятом съезде.",
+          "Заедьте на кольцо и съезжайте на шестом съезде.",
+          "Заедьте на кольцо и съезжайте на седьмом съезде.",
+          "Заедьте на кольцо и съезжайте на восьмом съезде.",
+          "Заедьте на кольцо и съезжайте на девятом съезде.",
+          "Заедьте на кольцо и съезжайте на десятом съезде."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
         ]
       }
     },
@@ -519,149 +705,12 @@
         ]
       }
     },
-    "exit_ferry": {
-      "phrases": {
-        "0": "Двигайтесь на <CARDINAL_DIRECTION>.",
-        "1": "Двигайтесь на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
-        "2": "Двигайтесь на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте направляться вдоль <STREET_NAMES>.",
-        "4": "Едьте на <CARDINAL_DIRECTION>.",
-        "5": "Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
-        "6": "Едьте на<CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>.",
-        "8": "Идите <CARDINAL_DIRECTION>.",
-        "9": "Идите <CARDINAL_DIRECTION> на <STREET_NAMES>.",
-        "10": "Идите <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте идти по <STREET_NAMES>.",
-        "16": "Едьте на <CARDINAL_DIRECTION>.",
-        "17": "Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
-        "18": "Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "север",
-        "северо-восток",
-        "восток",
-        "юго-восток",
-        "юг",
-        "юго-запад",
-        "запад",
-        "северо-запад"
-      ],
-      "empty_street_name_labels": [
-        "аллее",
-        "велосипедной дорожке",
-        "горной велосипедной тропе"
-      ],
-      "example_phrases": {
-        "0": [
-          "Двигайтесь на юго-восток."
-        ],
-        "1": [
-          "Двигайтесь на запад на Ferry Lane"
-        ],
-        "2": [
-          "Двигайтесь на юг на Summerfield Place/NY 114. Продолжайте направляться вдоль NY 114."
-        ],
-        "4": [
-          "Едьте на юго-восток."
-        ],
-        "5": [
-          "Едьте на запад Ferry Lane"
-        ],
-        "6": [
-          "Едьте на запад на Summerfield Place/NY 114. Продолжайте идти по NY 114."
-        ],
-        "8": [
-          "Идите на юго-восток."
-        ],
-        "9": [
-          "Идите назапад на Ferry Lane"
-        ],
-        "10": [
-          "Идите на юг на Summerfield Place/NY 114. Продолжайте идти по NY 114."
-        ],
-        "16": [
-          "Едьте на юго-восток."
-        ],
-        "17": [
-          "Едьте на запад Ferry Lane"
-        ],
-        "18": [
-          "Едьте на запад на Summerfield Place/NY 114. Продолжайте идти по NY 114."
-        ]
-      }
-    },
-    "exit_ferry_verbal": {
-      "phrases": {
-        "0": "Двигайтесь на <CARDINAL_DIRECTION>.",
-        "1": "Двигайтесь на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
-        "2": "Двигайтесь на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте направляться вдоль <STREET_NAMES>.",
-        "4": "Едьте на <CARDINAL_DIRECTION>.",
-        "5": "Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
-        "6": "Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>.",
-        "8": "Идите <CARDINAL_DIRECTION>.",
-        "9": "Идите <CARDINAL_DIRECTION> на <STREET_NAMES>.",
-        "10": "Идите <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте идти по <STREET_NAMES>.",
-        "16": "Едьте на <CARDINAL_DIRECTION>.",
-        "17": "Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
-        "18": "Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "север",
-        "северо-восток",
-        "восток",
-        "юго-восток",
-        "юг",
-        "юго-запад",
-        "запад",
-        "северо-запад"
-      ],
-      "empty_street_name_labels": [
-        "аллее",
-        "велосипедной дорожке",
-        "горной велосипедной тропе"
-      ],
-      "example_phrases": {
-        "0": [
-          "Двигайтесь на юго-восток."
-        ],
-        "1": [
-          "Двигайтесь на запад на Ferry Lane"
-        ],
-        "2": [
-          "Двигайтесь на юг на Summerfield Place/NY 114. Продолжайте направляться вдоль NY 114."
-        ],
-        "4": [
-          "Едьте на юго-восток."
-        ],
-        "5": [
-          "Едьте на запад Ferry Lane"
-        ],
-        "6": [
-          "Едьте на запад на Summerfield Place/NY 114. Продолжайте идти по NY 114."
-        ],
-        "8": [
-          "Идите на юго-восток."
-        ],
-        "9": [
-          "Идите назапад на Ferry Lane"
-        ],
-        "10": [
-          "Идите на юг на Summerfield Place/NY 114. Продолжайте идти по NY 114."
-        ],
-        "16": [
-          "Едьте на юго-восток."
-        ],
-        "17": [
-          "Едьте на запад Ferry Lane"
-        ],
-        "18": [
-          "Едьте на запад на Summerfield Place/NY 114. Продолжайте идти по NY 114."
-        ]
-      }
-    },
     "exit_roundabout": {
       "phrases": {
         "0": "Съезжайте с кольца.",
         "1": "Съезжайте с кольца на <STREET_NAMES>.",
-        "2": "Съезжайте с кольца на <BEGIN_STREET_NAMES>. Продолжайте двигаться по <STREET_NAMES>."
+        "2": "Съезжайте с кольца на <BEGIN_STREET_NAMES>. Продолжайте двигаться по <STREET_NAMES>.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -677,6 +726,9 @@
         ],
         "2": [
           "Съезжайте с кольца на Catoctin Mountain Highway/US 15. Продолжайте двигаться по US 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
         ]
       }
     },
@@ -684,7 +736,8 @@
       "phrases": {
         "0": "Съезжайте с кольца.",
         "1": "Съезжайте с кольца на <STREET_NAMES>.",
-        "2": "Съезжайте с кольца на <BEGIN_STREET_NAMES>. Продолжайте двигаться по <STREET_NAMES>."
+        "2": "Съезжайте с кольца на <BEGIN_STREET_NAMES>. Продолжайте двигаться по <STREET_NAMES>.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -700,6 +753,9 @@
         ],
         "2": [
           "Съезжайте с кольца на Catoctin Mountain Highway/US 15. Продолжайте двигаться по US 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
         ]
       }
     },
@@ -807,6 +863,16 @@
         ],
         "29": [
           "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "съезд <EXIT_NUMBERS>"
+      },
+      "example_phrases": {
+        "0": [
+          "съезд 1A"
         ]
       }
     },
@@ -983,7 +1049,9 @@
         "0": "Выезжайте.",
         "1": "Выезжайте <RELATIVE_DIRECTION>.",
         "2": "Выезжайте на <STREET_NAMES>.",
-        "3": "Выезжайте <RELATIVE_DIRECTION> на <STREET_NAMES>."
+        "3": "Выезжайте <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "слева",
@@ -1006,6 +1074,12 @@
         ],
         "3": [
           "Выезжайте справа на I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1014,7 +1088,9 @@
         "0": "Выезжайте.",
         "1": "Выезжайте <RELATIVE_DIRECTION>.",
         "2": "Выезжайте на <STREET_NAMES>.",
-        "3": "Выезжайте <RELATIVE_DIRECTION> на <STREET_NAMES>."
+        "3": "Выезжайте <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "слева",
@@ -1037,144 +1113,12 @@
         ],
         "3": [
           "Выезжайте справа на I 83 South."
-        ]
-      }
-    },
-    "post_transit_connection_destination": {
-      "phrases": {
-        "0": "Двигайтесь на <CARDINAL_DIRECTION>.",
-        "1": "Двигайтесь на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
-        "2": "Двигайтесь на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте направляться вдоль <STREET_NAMES>.",
-        "4": "Едьте на <CARDINAL_DIRECTION>.",
-        "5": "Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
-        "6": "Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>.",
-        "8": "Идите <CARDINAL_DIRECTION>.",
-        "9": "Идите <CARDINAL_DIRECTION> на <STREET_NAMES>.",
-        "10": "Идите <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте идти по <STREET_NAMES>.",
-        "16": "Едьте на <CARDINAL_DIRECTION>.",
-        "17": "Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
-        "18": "Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "север",
-        "северо-восток",
-        "восток",
-        "юго-восток",
-        "юг",
-        "юго-запад",
-        "запад",
-        "северо-запад"
-      ],
-      "empty_street_name_labels": [
-        "аллее",
-        "велосипедной дорожке",
-        "горной велосипедной тропе"
-      ],
-      "example_phrases": {
-        "0": [
-          "Двигайтесь на юго-восток."
-        ],
-        "1": [
-          "Двигайтесь на запад на Ferry Lane"
-        ],
-        "2": [
-          "Двигайтесь на юг на Summerfield Place/NY 114. Продолжайте направляться вдоль NY 114."
         ],
         "4": [
-          "Ежайте на юго-восток."
+          "Merge toward Baltimore."
         ],
         "5": [
-          "Ежайте на запад Ferry Lane"
-        ],
-        "6": [
-          "Ежайте на запад на Summerfield Place/NY 114. Продолжайте идти по NY 114."
-        ],
-        "8": [
-          "Идите на юго-восток."
-        ],
-        "9": [
-          "Идите назапад на Ferry Lane"
-        ],
-        "10": [
-          "Идите на юг на Summerfield Place/NY 114. Продолжайте идти по NY 114."
-        ],
-        "16": [
-          "Ежайте на юго-восток."
-        ],
-        "17": [
-          "Ежайте на запад Ferry Lane"
-        ],
-        "18": [
-          "Ежайте на запад на Summerfield Place/NY 114. Продолжайте идти по NY 114."
-        ]
-      }
-    },
-    "post_transit_connection_destination_verbal": {
-      "phrases": {
-        "0": "Двигайтесь на <CARDINAL_DIRECTION>.",
-        "1": "Двигайтесь на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
-        "2": "Двигайтесь на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте направляться вдоль <STREET_NAMES>.",
-        "4": "Едьте на <CARDINAL_DIRECTION>.",
-        "5": "Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
-        "6": "Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>.",
-        "8": "Идите <CARDINAL_DIRECTION>.",
-        "9": "Идите <CARDINAL_DIRECTION> на <STREET_NAMES>.",
-        "10": "Идите <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте идти по <STREET_NAMES>.",
-        "16": "Едьте на <CARDINAL_DIRECTION>.",
-        "17": "Едьте на <CARDINAL_DIRECTION> на <STREET_NAMES>.",
-        "18": "Едьте на <CARDINAL_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте ехать по <STREET_NAMES>."
-      },
-      "cardinal_directions": [
-        "север",
-        "северо-восток",
-        "восток",
-        "юго-восток",
-        "юг",
-        "юго-запад",
-        "запад",
-        "северо-запад"
-      ],
-      "empty_street_name_labels": [
-        "аллее",
-        "велосипедной дорожке",
-        "горной велосипедной тропе"
-      ],
-      "example_phrases": {
-        "0": [
-          "Двигайтесь на юго-восток."
-        ],
-        "1": [
-          "Двигайтесь на запад на Ferry Lane"
-        ],
-        "2": [
-          "Двигайтесь на юг на Summerfield Place/NY 114. Продолжайте направляться вдоль NY 114."
-        ],
-        "4": [
-          "Едьте на юго-восток."
-        ],
-        "5": [
-          "Едьте на запад Ferry Lane"
-        ],
-        "6": [
-          "Едьте на запад на Summerfield Place/NY 114. Продолжайте ехать по NY 114."
-        ],
-        "8": [
-          "Идите на юго-восток."
-        ],
-        "9": [
-          "Идите назапад на Ferry Lane"
-        ],
-        "10": [
-          "Идите на юг на Summerfield Place/NY 114. Продолжайте идти по NY 114."
-        ],
-        "16": [
-          "Едьте на юго-восток."
-        ],
-        "17": [
-          "Едьте на запад Ferry Lane"
-        ],
-        "18": [
-          "Едьте на запад на Summerfield Place/NY 114. Продолжайте ехать по NY 114."
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1430,7 +1374,9 @@
         "0": "Резко поверните <RELATIVE_DIRECTION>.",
         "1": "Резко поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
         "2": "Резко поверните <RELATIVE_DIRECTION> на<BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
-        "3": "Резко поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+        "3": "Резко поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -1453,6 +1399,12 @@
         ],
         "3": [
           "Резко поверните направо чтобы остаться на Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1461,7 +1413,9 @@
         "0": "Резко поверните <RELATIVE_DIRECTION>.",
         "1": "Резко поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
         "2": "Резко поверните <RELATIVE_DIRECTION> на<BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
-        "3": "Резко поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+        "3": "Резко поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -1484,6 +1438,12 @@
         ],
         "3": [
           "Резко поверните направо чтобы остаться на Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1568,18 +1528,26 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Двигайтесь на <CARDINAL_DIRECTION> <LENGTH>.",
-        "1": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
-        "2": "Двигайтесь на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
-        "4": "Едьте на <CARDINAL_DIRECTION> <LENGTH>.",
-        "5": "Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
-        "6": "Едьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
-        "8": "Идите на <CARDINAL_DIRECTION> <LENGTH>.",
-        "9": "Идите на <CARDINAL_DIRECTION> по <STREET_NAMES> for <LENGTH>.",
-        "10": "Идите на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "0": "Двигайтесь на <CARDINAL_DIRECTION>.",
+        "1": "Двигайтесь на <CARDINAL_DIRECTION> <LENGTH>.",
+        "2": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "3": "Двигайтесь на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "4": "Двигайтесь на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "5": "Едьте на <CARDINAL_DIRECTION>.",
+        "6": "Едьте на <CARDINAL_DIRECTION> <LENGTH>.",
+        "7": "Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "8": "Едьте на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "9": "Едьте на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "10": "Идите на <CARDINAL_DIRECTION>.",
+        "11": "Идите на <CARDINAL_DIRECTION> <LENGTH>.",
+        "12": "Идите на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "13": "Идите на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "14": "Идите на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>.",
+        "15": "Едьте в на <CARDINAL_DIRECTION>.",
         "16": "Едьте в на <CARDINAL_DIRECTION> <LENGTH>.",
-        "17": "Едьте в на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
-        "18": "Едьте в на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>."
+        "17": "Едьте в на <CARDINAL_DIRECTION> по <STREET_NAMES>.",
+        "18": "Едьте в на <CARDINAL_DIRECTION> по <STREET_NAMES> <LENGTH>.",
+        "19": "Едьте в на <CARDINAL_DIRECTION> по <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
         "север",
@@ -1612,44 +1580,72 @@
       ],
       "example_phrases": {
         "0": [
-          "Двигайтесь на восток половину мили.",
-          "Двигайтесь на север один километр."
+          "Head east.",
+          "Head north."
         ],
         "1": [
-          "Двигайтесь на юго-восток по Пятой Авеню 1 десятую мили."
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
         ],
         "2": [
-          "Двигайтесь на юг по North Prince Street, U.S. 2 22."
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "4": [
-          "Едьте на east половину мили.",
-          "Едьте на for 1 километр."
+          "Head south on North Prince Street, U.S. 2 22."
         ],
         "5": [
-          "Едьте на юго-запад по Пятой Авеню 1 десятую мили."
+          "Drive east.",
+          "Drive north."
         ],
         "6": [
-          "Едьте на юг по North Prince Street, U.S. 2 22."
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
         ],
         "8": [
-          "Идите на восток половину мили.",
-          "Идите на север 1 километр."
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
         ],
         "9": [
-          "Идите на юго-запад по Пятой Авеню 1 десятую мили."
+          "Drive south on North Prince Street, U.S. 2 22."
         ],
         "10": [
-          "Идите на юг по North Prince Street, U.S. 2 22."
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
         ],
         "16": [
-          "Едьте на восток половину мили.",
-          "Едьте на север for 1 километр."
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
         ],
         "17": [
-          "Едьте на югозапад on 5th Avenue for 1 десятую мили."
+          "Bike southwest on 5th Avenue."
         ],
         "18": [
-          "Едьте на юг по North Prince Street, U.S. 2 22."
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
         ]
       }
     },
@@ -1936,7 +1932,9 @@
         "0": "Поверните <RELATIVE_DIRECTION>.",
         "1": "Поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
         "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
-        "3": "Поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+        "3": "Поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -1959,6 +1957,12 @@
         ],
         "3": [
           "Поверните направо чтобы остаться на Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1967,7 +1971,9 @@
         "0": "Поверните <RELATIVE_DIRECTION>.",
         "1": "Поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
         "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте по <STREET_NAMES>.",
-        "3": "Поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>."
+        "3": "Поверните <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -1990,6 +1996,12 @@
         ],
         "3": [
           "Поверните направо чтобы остаться на Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -2000,7 +2012,9 @@
         "2": "Развернитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
         "3": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES>.",
         "4": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы попасть на <STREET_NAMES>.",
-        "5": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы остаться <STREET_NAMES>."
+        "5": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы остаться <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -2029,6 +2043,12 @@
         ],
         "5": [
           "Развернитесь влево на Devonshire Road чтобы остаться на Jonestown Road, U.S. 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },
@@ -2039,7 +2059,9 @@
         "2": "Развернитесь <RELATIVE_DIRECTION> чтобы остаться на <STREET_NAMES>.",
         "3": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES>.",
         "4": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы попасть на <STREET_NAMES>.",
-        "5": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы остаться <STREET_NAMES>."
+        "5": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> чтобы остаться <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "аллее",
@@ -2068,6 +2090,12 @@
         ],
         "5": [
           "Развернитесь влево на Devonshire Road чтобы остаться на Jonestown Road, U.S. 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },
