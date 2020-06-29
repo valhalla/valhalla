@@ -1137,8 +1137,9 @@ void BuildLocalTiles(const unsigned int thread_count,
       const auto& stat = result.get_future().get();
       stats.AddStatistics(stat);
       stat.LogIssues();
-    } catch (std::exception& e) {
-      // TODO: throw further up the chain?
+    } // If we couldnt write a tile for whatever reason we fail the whole job
+    catch (std::exception& e) {
+      throw e;
     }
   }
 }
