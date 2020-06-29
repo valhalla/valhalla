@@ -88,5 +88,5 @@ TEST_F(SimpleRestrictions, ForceDetourComplex) {
   // bidirectional a* has a problem with complex restrictions
   auto result = gurka::route(map, R"({"locations":[{"lon":0.008084,"lat":-0.003593},
     {"lon":0.00359,"lat":0.0}],"costing":"auto","date_time":{"type":0}})");
-  gurka::assert::osrm::expect_path(result, {"GHI", "ADG", "DEF", "BE", "AB"});
+  gurka::assert::raw::expect_path(result, {"GHI", "ADG", "DEF", "BE", "AB"});
 }
