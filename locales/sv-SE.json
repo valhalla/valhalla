@@ -37,7 +37,9 @@
         "0": "Håll <RELATIVE_DIRECTION>.",
         "1": "Håll <RELATIVE_DIRECTION> till <STREET_NAMES>.",
         "2": "Håll <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
-        "3": "Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>."
+        "3": "Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "gångbanan",
@@ -60,6 +62,12 @@
         ],
         "3": [
           "Håll vänster för att stanna kvar på US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -68,7 +76,9 @@
         "0": "Håll <RELATIVE_DIRECTION>.",
         "1": "Håll <RELATIVE_DIRECTION> till <STREET_NAMES>.",
         "2": "Håll <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>.",
-        "3": "Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>."
+        "3": "Håll <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "gångbanan",
@@ -91,6 +101,12 @@
         ],
         "3": [
           "Håll vänster för att stanna kvar på U.S. 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -117,7 +133,9 @@
     "continue": {
       "phrases": {
         "0": "Fortsätt.",
-        "1": "Fortsätt på <STREET_NAMES>."
+        "1": "Fortsätt på <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "gångbanan",
@@ -130,6 +148,12 @@
         ],
         "1": [
           "Fortsätt på 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -138,7 +162,11 @@
         "0": "Fortsätt.",
         "1": "Fortsätt <LENGTH>.",
         "2": "Fortsätt på <STREET_NAMES>.",
-        "3": "Fortsätt <LENGTH> på <STREET_NAMES>."
+        "3": "Fortsätt <LENGTH> på <STREET_NAMES>.",
+        "4": "Continue at <JUNCTION_NAME>.",
+        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
+        "6": "Continue toward <TOWARD_SIGN>.",
+        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
       },
       "empty_street_name_labels": [
         "gångbanan",
@@ -171,13 +199,27 @@
         ],
         "3": [
           "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
         ]
       }
     },
     "continue_verbal_alert": {
       "phrases": {
         "0": "Fortsätt.",
-        "1": "Fortsätt på <STREET_NAMES>."
+        "1": "Fortsätt på <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "gångbanan",
@@ -190,6 +232,12 @@
         ],
         "1": [
           "Fortsätt på 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -306,7 +354,8 @@
       "phrases": {
         "0": "Ta färjan.",
         "1": "Ta <STREET_NAMES>.",
-        "2": "Ta <STREET_NAMES> <FERRY_LABEL>."
+        "2": "Ta <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "gångbanan",
@@ -323,6 +372,9 @@
         ],
         "2": [
           "Ta Bridgeport - Port Jefferson-färjan."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -330,7 +382,8 @@
       "phrases": {
         "0": "Ta färjan.",
         "1": "Ta <STREET_NAMES>.",
-        "2": "Ta <STREET_NAMES> <FERRY_LABEL>."
+        "2": "Ta <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "gångbanan",
@@ -347,13 +400,30 @@
         ],
         "2": [
           "Ta Bridgeport - Port Jefferson-färjan."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
     "enter_roundabout": {
       "phrases": {
         "0": "Kör in i rondellen.",
-        "1": "Kör in i rondellen och ta <ORDINAL_VALUE> avfarten."
+        "1": "Kör in i rondellen och ta <ORDINAL_VALUE> avfarten.",
+        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "1:a",
@@ -366,6 +436,11 @@
         "8:e",
         "9:e",
         "10:e"
+      ],
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail"
       ],
       "example_phrases": {
         "0": [
@@ -382,13 +457,69 @@
           "Kör in i rondellen och ta 8:e avfarten.",
           "Kör in i rondellen och ta 9:e avfarten.",
           "Kör in i rondellen och ta 10:e avfarten."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
         ]
       }
     },
     "enter_roundabout_verbal": {
       "phrases": {
         "0": "Kör in i rondellen.",
-        "1": "Kör in i rondellen och ta <ORDINAL_VALUE> exit."
+        "1": "Kör in i rondellen och ta <ORDINAL_VALUE> exit.",
+        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "1:a",
@@ -401,6 +532,11 @@
         "8:e",
         "9:e",
         "10:e"
+      ],
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail"
       ],
       "example_phrases": {
         "0": [
@@ -417,6 +553,48 @@
           "Kör in i rondellen och ta 8:e avfarten.",
           "Kör in i rondellen och ta 9:e avfarten.",
           "Kör in i rondellen och ta 10:e avfarten."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
         ]
       }
     },
@@ -531,7 +709,8 @@
       "phrases": {
         "0": "Kör ut ur rondellen.",
         "1": "Kör ut ur rondellen till <STREET_NAMES>.",
-        "2": "Kör ut ur rondellen till <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>."
+        "2": "Kör ut ur rondellen till <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "gångbanan",
@@ -547,6 +726,9 @@
         ],
         "2": [
           "Kör ut ur rondellen till Catoctin Mountain Highway/US 15. Fortsätt på US 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
         ]
       }
     },
@@ -554,7 +736,8 @@
       "phrases": {
         "0": "Kör ut ur rondellen.",
         "1": "Kör ut ur rondellen till <STREET_NAMES>.",
-        "2": "Kör ut ur rondellen till <BEGIN_STREET_NAMES>."
+        "2": "Kör ut ur rondellen till <BEGIN_STREET_NAMES>.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "gångbanan",
@@ -570,6 +753,9 @@
         ],
         "2": [
           "Kör ut ur rondellen till Catoctin Mountain Highway, U.S. 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
         ]
       }
     },
@@ -677,6 +863,16 @@
         ],
         "29": [
           "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Exit <EXIT_NUMBERS>"
+      },
+      "example_phrases": {
+        "0": [
+          "Exit 1A"
         ]
       }
     },
@@ -853,7 +1049,9 @@
         "0": "Anslut.",
         "1": "Anslut <RELATIVE_DIRECTION>.",
         "2": "Anslut till <STREET_NAMES>.",
-        "3": "Anslut <RELATIVE_DIRECTION> till <STREET_NAMES>."
+        "3": "Anslut <RELATIVE_DIRECTION> till <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "vänster",
@@ -876,6 +1074,12 @@
         ],
         "3": [
           "Anslut höger till I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -884,7 +1088,9 @@
         "0": "Anslut.",
         "1": "Anslut <RELATIVE_DIRECTION>.",
         "2": "Anslut till <STREET_NAMES>.",
-        "3": "Anslut <RELATIVE_DIRECTION> till <STREET_NAMES>."
+        "3": "Anslut <RELATIVE_DIRECTION> till <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "vänster",
@@ -907,6 +1113,12 @@
         ],
         "3": [
           "Anslut höger till I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1161,7 +1373,9 @@
         "0": "Sväng skarp <RELATIVE_DIRECTION>.",
         "1": "Sväng skarp <RELATIVE_DIRECTION> till <STREET_NAMES>.",
         "2": "Sväng skarp <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
-        "3": "Sväng skarp <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>."
+        "3": "Sväng skarp <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "gångbanan",
@@ -1184,6 +1398,12 @@
         ],
         "3": [
           "Sväng skarp höger för att stanna kvar på Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1192,7 +1412,9 @@
         "0": "Sväng skarp <RELATIVE_DIRECTION>.",
         "1": "Sväng skarp <RELATIVE_DIRECTION> till <STREET_NAMES>.",
         "2": "Sväng skarp <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>.",
-        "3": "Sväng skarp <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>."
+        "3": "Sväng skarp <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "gångbanan",
@@ -1215,6 +1437,12 @@
         ],
         "3": [
           "Sväng skarp höger för att stanna kvar på Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1700,7 +1928,9 @@
         "0": "Sväng <RELATIVE_DIRECTION>.",
         "1": "Sväng <RELATIVE_DIRECTION> till <STREET_NAMES>.",
         "2": "Sväng <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
-        "3": "Sväng <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>."
+        "3": "Sväng <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "gångbanan",
@@ -1723,6 +1953,12 @@
         ],
         "3": [
           "Sväng höger för att stanna kvar på Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1731,7 +1967,9 @@
         "0": "Sväng <RELATIVE_DIRECTION>.",
         "1": "Sväng <RELATIVE_DIRECTION> till <STREET_NAMES>.",
         "2": "Sväng <RELATIVE_DIRECTION> till <BEGIN_STREET_NAMES>.",
-        "3": "Sväng <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>."
+        "3": "Sväng <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "gångbanan",
@@ -1754,6 +1992,12 @@
         ],
         "3": [
           "Sväng höger för att stanna kvar på Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1764,7 +2008,9 @@
         "2": "Gör en U-sväng åt <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
         "3": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES>.",
         "4": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES> till <STREET_NAMES>.",
-        "5": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES> för att stanna kvar på <STREET_NAMES>."
+        "5": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES> för att stanna kvar på <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "gångbanan",
@@ -1793,6 +2039,12 @@
         ],
         "5": [
           "Gör en U-sväng åt vänster på Devonshire Road för att stanna kvar på Jonestown Road/US 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },
@@ -1803,7 +2055,9 @@
         "2": "Gör en U-sväng åt <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
         "3": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES>.",
         "4": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES> till <STREET_NAMES>.",
-        "5": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES> för att stanna kvar på <STREET_NAMES>."
+        "5": "Gör en U-sväng åt <RELATIVE_DIRECTION> på <CROSS_STREET_NAMES> för att stanna kvar på <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "gångbanan",
@@ -1832,6 +2086,12 @@
         ],
         "5": [
           "Gör en U-sväng åt vänster på Devonshire Road för att stanna kvar på Jonestown Road, U.S. 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },

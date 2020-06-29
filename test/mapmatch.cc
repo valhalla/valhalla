@@ -80,7 +80,7 @@ const auto conf = json_to_pt(R"({
     "loki":{
       "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
       "logging":{"long_request": 100},
-      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
+      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
     },
     "thor":{"logging":{"long_request": 110}},
     "skadi":{"actons":["height"],"logging":{"long_request": 5}},
@@ -1407,6 +1407,26 @@ TEST(Mapmatch, no_edge_candidates) {
       actor.trace_route(test_cases[i].second, nullptr, &req_rep);
     } catch (const valhalla::valhalla_exception_t& e) { ASSERT_EQ(e.code, test_cases[i].first); }
   }
+}
+
+TEST(Mapmatch, test_breakage_distance_error_handling) {
+  // tests expected error_code for trace_route edge_walk
+  auto expected_error_code = 172;
+  tyr::actor_t actor(conf, true);
+
+  try {
+    auto response = json_to_pt(actor.trace_route(
+        R"({"costing":"auto","shape_match":"edge_walk","shape":[
+         {"lat":52.0764279,"lon":5.0323097,"type":"break","radius":15},
+         {"lat":52.1022785,"lon":5.1391531,"type":"break","radius":15}]})"));
+  } catch (const valhalla_exception_t& e) {
+    EXPECT_EQ(e.code, expected_error_code);
+    // If we get here then all good - return
+    return;
+  }
+
+  // If we get here then fail the test!
+  FAIL() << "Expected trace_route breakage distance exceed exception was not found";
 }
 } // namespace
 

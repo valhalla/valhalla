@@ -751,6 +751,14 @@ public:
    */
   midgard::AABB2<midgard::PointLL> GetMinimumBoundingBox(const midgard::AABB2<midgard::PointLL>& bb);
 
+  /**
+   * Convenience method to get the timezone index at a node.
+   * @param node   GraphId of the node to get the timezone index.
+   * @param tile   Current tile.
+   * @return Returns the timezone index. A value of 0 indicates an invalid timezone.
+   */
+  int GetTimezone(const baldr::GraphId& node, const GraphTile*& tile);
+
 protected:
   // (Tar) extract of tiles - the contents are empty if not being used
   struct tile_extract_t {

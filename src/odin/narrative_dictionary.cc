@@ -160,6 +160,10 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   // Populate exit_verbal_subset
   Load(exit_verbal_subset, narrative_pt.get_child(kExitVerbalKey));
 
+  LOG_TRACE("Populate exit_visual_subset...");
+  // Populate exit_visual_subset
+  Load(exit_visual_subset, narrative_pt.get_child(kExitVisualKey));
+
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate keep_subset...");
   // Populate keep_subset
@@ -428,6 +432,10 @@ void NarrativeDictionary::Load(EnterRoundaboutSubset& enter_roundabout_handle,
   // Populate ordinal_values
   enter_roundabout_handle.ordinal_values =
       as_vector<std::string>(enter_roundabout_subset_pt, kOrdinalValuesKey);
+
+  // Populate empty_street_name_labels
+  enter_roundabout_handle.empty_street_name_labels =
+      as_vector<std::string>(enter_roundabout_subset_pt, kEmptyStreetNameLabelsKey);
 }
 
 void NarrativeDictionary::Load(EnterFerrySubset& enter_ferry_handle,

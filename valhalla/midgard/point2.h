@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MIDGARD_POINT2_H_
 #define VALHALLA_MIDGARD_POINT2_H_
 
+#include <cstdint>
 #include <cstring>
 #include <functional>
 #include <tuple>

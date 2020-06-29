@@ -37,7 +37,9 @@
         "0": "Queda't a <RELATIVE_DIRECTION>.",
         "1": "Queda't a <RELATIVE_DIRECTION> cap a <STREET_NAMES>.",
         "2": "Queda't a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
-        "3": "Queda't a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>."
+        "3": "Queda't a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -60,6 +62,12 @@
         ],
         "3": [
           "Queda't a l'esquerra per continuar per US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -68,7 +76,9 @@
         "0": "Queda't a <RELATIVE_DIRECTION>.",
         "1": "Queda't a <RELATIVE_DIRECTION> cap a <STREET_NAMES>.",
         "2": "Queda't a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>.",
-        "3": "Queda't a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>."
+        "3": "Queda't a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -91,6 +101,12 @@
         ],
         "3": [
           "Queda't a l'esquerra per continuar per US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -117,7 +133,9 @@
     "continue": {
       "phrases": {
         "0": "Continua.",
-        "1": "Continua per <STREET_NAMES>."
+        "1": "Continua per <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -130,6 +148,12 @@
         ],
         "1": [
           "Continua per 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -138,7 +162,11 @@
         "0": "Continua.",
         "1": "Continua durant <LENGTH>.",
         "2": "Continua per <STREET_NAMES>.",
-        "3": "Continua per <STREET_NAMES> durant <LENGTH>."
+        "3": "Continua per <STREET_NAMES> durant <LENGTH>.",
+        "4": "Continue at <JUNCTION_NAME>.",
+        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
+        "6": "Continue toward <TOWARD_SIGN>.",
+        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -171,13 +199,27 @@
         ],
         "3": [
           "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
         ]
       }
     },
     "continue_verbal_alert": {
       "phrases": {
         "0": "Continua.",
-        "1": "Continua per <STREET_NAMES>."
+        "1": "Continua per <STREET_NAMES>.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -190,6 +232,12 @@
         ],
         "1": [
           "Continua per 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -306,7 +354,8 @@
       "phrases": {
         "0": "Agafa el ferri.",
         "1": "Agafa <STREET_NAMES>.",
-        "2": "Agafa <STREET_NAMES> <FERRY_LABEL>."
+        "2": "Agafa <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -323,6 +372,9 @@
         ],
         "2": [
           "Agafa el Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -330,7 +382,8 @@
       "phrases": {
         "0": "Agafa el ferri.",
         "1": "Agafa el <STREET_NAMES>.",
-        "2": "Agafa el <STREET_NAMES> <FERRY_LABEL>."
+        "2": "Agafa el <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -347,13 +400,30 @@
         ],
         "2": [
           "Agafa el Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
     "enter_roundabout": {
       "phrases": {
         "0": "Entra a la rotonda.",
-        "1": "Entra a la rotonda i pren la sortida <ORDINAL_VALUE>."
+        "1": "Entra a la rotonda i pren la sortida <ORDINAL_VALUE>.",
+        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "1a",
@@ -366,6 +436,11 @@
         "8ena",
         "9ena",
         "10ena"
+      ],
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail"
       ],
       "example_phrases": {
         "0": [
@@ -382,13 +457,69 @@
           "Entra a la rotonda i pren la 8ena sortida.",
           "Entra a la rotonda i pren la 9ena sortida.",
           "Entra a la rotonda i pren la 10ena sortida."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
         ]
       }
     },
     "enter_roundabout_verbal": {
       "phrases": {
         "0": "Entra a la rotonda.",
-        "1": "Entra a la rotonda i pren la sortida <ORDINAL_VALUE>."
+        "1": "Entra a la rotonda i pren la sortida <ORDINAL_VALUE>.",
+        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "1a",
@@ -401,6 +532,11 @@
         "8ena",
         "9ena",
         "10ena"
+      ],
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail"
       ],
       "example_phrases": {
         "0": [
@@ -417,6 +553,48 @@
           "Entra a la rotonda i pren la 8ena sortida.",
           "Entra a la rotonda i pren la 9ena sortida.",
           "Entra a la rotonda i pren la 10ena sortida."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
         ]
       }
     },
@@ -531,7 +709,8 @@
       "phrases": {
         "0": "Surt de la rotonda.",
         "1": "Surt de la rotonda a <STREET_NAMES>.",
-        "2": "Surt de la rotonda a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>."
+        "2": "Surt de la rotonda a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -547,6 +726,9 @@
         ],
         "2": [
           "Surt de la rotonda a Catoctin Mountain Highway/US 15. Continua per US 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
         ]
       }
     },
@@ -554,7 +736,8 @@
       "phrases": {
         "0": "Surt de la rotonda.",
         "1": "Surt de la rotonda a <STREET_NAMES>.",
-        "2": "Surt de la rotonda a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>."
+        "2": "Surt de la rotonda a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -570,6 +753,9 @@
         ],
         "2": [
           "Surt de la rotonda a Catoctin Mountain Highway, U.S. 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
         ]
       }
     },
@@ -677,6 +863,16 @@
         ],
         "29": [
           "Pren la sortida White Marsh Boulevard a MD 43 East cap a White Marsh."
+        ]
+      }
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Exit <EXIT_NUMBERS>"
+      },
+      "example_phrases": {
+        "0": [
+          "Exit 1A"
         ]
       }
     },
@@ -853,7 +1049,9 @@
         "0": "Enllaça.",
         "1": "Enllaça a <RELATIVE_DIRECTION>.",
         "2": "Enllaça amb <STREET_NAMES>.",
-        "3": "Enllaça a <RELATIVE_DIRECTION> amb <STREET_NAMES>."
+        "3": "Enllaça a <RELATIVE_DIRECTION> amb <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "l'esquerra",
@@ -876,6 +1074,12 @@
         ],
         "3": [
           "Enllaça a la dreta amb I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -884,7 +1088,9 @@
         "0": "Enllaça.",
         "1": "Enllaça a <RELATIVE_DIRECTION>.",
         "2": "Enllaça amb <STREET_NAMES>.",
-        "3": "Enllaça a <RELATIVE_DIRECTION> amb <STREET_NAMES>."
+        "3": "Enllaça a <RELATIVE_DIRECTION> amb <STREET_NAMES>.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "l'esquerra",
@@ -907,6 +1113,12 @@
         ],
         "3": [
           "Enllaça a la dreta amb I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1161,7 +1373,9 @@
         "0": "Gir tancat a <RELATIVE_DIRECTION>.",
         "1": "Gir tancat a <RELATIVE_DIRECTION> cap a <STREET_NAMES>.",
         "2": "Gir tancat a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
-        "3": "Gir tancat a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>."
+        "3": "Gir tancat a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -1184,6 +1398,12 @@
         ],
         "3": [
           "Gir tancat a la dreta per continuar per Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1192,7 +1412,9 @@
         "0": "Gir tancat a <RELATIVE_DIRECTION>.",
         "1": "Gir tancat a <RELATIVE_DIRECTION> cap a <STREET_NAMES>.",
         "2": "Gir tancat a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>.",
-        "3": "Gir tancat a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>."
+        "3": "Gir tancat a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -1215,6 +1437,12 @@
         ],
         "3": [
           "Gir tancat a la dreta per continuar per Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1700,7 +1928,9 @@
         "0": "Gira a <RELATIVE_DIRECTION>.",
         "1": "Gira a <RELATIVE_DIRECTION> cap a <STREET_NAMES>.",
         "2": "Gira a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
-        "3": "Gira a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>."
+        "3": "Gira a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -1723,6 +1953,12 @@
         ],
         "3": [
           "Gira a la dreta per continuar per Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1731,7 +1967,9 @@
         "0": "Gira a <RELATIVE_DIRECTION>.",
         "1": "Gira a <RELATIVE_DIRECTION> cap a <STREET_NAMES>.",
         "2": "Gira a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>.",
-        "3": "Gira a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>."
+        "3": "Gira a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -1754,6 +1992,12 @@
         ],
         "3": [
           "Gira a la dreta per continuar per Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1764,7 +2008,9 @@
         "2": "Mitja volta a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
         "3": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES>.",
         "4": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> cap a <STREET_NAMES>.",
-        "5": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> per continuar per <STREET_NAMES>."
+        "5": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> per continuar per <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -1793,6 +2039,12 @@
         ],
         "5": [
           "Mitja volta a l'esquerra a Devonshire Road per continuar per Jonestown Road/US 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },
@@ -1803,7 +2055,9 @@
         "2": "Mitja volta a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
         "3": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES>.",
         "4": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> cap a <STREET_NAMES>.",
-        "5": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> per continuar per <STREET_NAMES>."
+        "5": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> per continuar per <STREET_NAMES>.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
@@ -1832,6 +2086,12 @@
         ],
         "5": [
           "Mitja volta a l'esquerra a Devonshire Road per continuar per Jonestown Road/US 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },

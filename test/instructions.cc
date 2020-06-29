@@ -436,6 +436,76 @@ TEST(Instructions, validate_multi_cue_instructions) {
                     "Continue for 100 feet.");
 }
 
+TEST(Instructions, validate_roundabout_unnamed_cycleway_instructions) {
+  int expected_routes_size = 1;
+  int expected_legs_size = 1;
+  int expected_maneuvers_size = 4;
+  int maneuver_index = 0;
+
+  // Test start maneuver on unnamed cycleway prior to roundabout
+  test_instructions({VALHALLA_SOURCE_DIR
+                     "test/pinpoints/instructions/roundabout_unnamed_cycleway.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Bike east on the cycleway.", "", "Bike east on the cycleway.",
+                    "Continue for 200 feet.");
+
+  maneuver_index = 1;
+  // Test enter roundabout with unnamed cycleway
+  test_instructions({VALHALLA_SOURCE_DIR
+                     "test/pinpoints/instructions/roundabout_unnamed_cycleway.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Enter the roundabout and take the 2nd exit.",
+                    "Enter the roundabout and take the 2nd exit.",
+                    "Enter the roundabout and take the 2nd exit.");
+
+  maneuver_index = 2;
+  // Test exit roundabout onto unnamed cycleway
+  test_instructions(
+      {VALHALLA_SOURCE_DIR "test/pinpoints/instructions/roundabout_unnamed_cycleway.pbf"},
+      expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+      "Exit the roundabout onto the cycleway.", "",
+      "Exit the roundabout onto the cycleway. Then, in 200 feet, You will arrive at your destination.",
+      "Continue for 200 feet.");
+}
+
+TEST(Instructions, validate_turn_at_instructions) {
+
+  int expected_routes_size = 1;
+  int expected_legs_size = 1;
+  int expected_maneuvers_size = 3;
+  int maneuver_index = 1;
+
+  // Turn right at
+  test_instructions(
+      {VALHALLA_SOURCE_DIR "test/pinpoints/instructions/turn_right_at.pbf"}, expected_routes_size,
+      expected_legs_size, expected_maneuvers_size, maneuver_index, "Turn right at 新橋三丁目交番前.",
+      "Turn right at 新橋三丁目交番前.",
+      "Turn right at 新橋三丁目交番前. Then, in 50 meters, You will arrive at your destination.",
+      "Continue for 50 meters.");
+
+  // Turn right at using internal edge
+  test_instructions({VALHALLA_SOURCE_DIR
+                     "test/pinpoints/instructions/turn_right_at_using_internal_edge.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Turn right at 万年橋東.", "Turn right at 万年橋東.",
+                    "Turn right at 万年橋東. Then You will arrive at your destination.",
+                    "Continue for 50 meters.");
+
+  // Make a right U-turn at
+  test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/uturn_right_at.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Make a right U-turn at 銀座五丁目.", "Make a right U-turn at 銀座五丁目.",
+                    "Make a right U-turn at 銀座五丁目. Then You will arrive at 15.",
+                    "Continue for 30 meters.");
+
+  // Turn left at
+  test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/turn_left_at.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Turn left at 銀座七丁目.", "Turn left at 銀座七丁目.",
+                    "Turn left at 銀座七丁目. Then You will arrive at 花椿通り.",
+                    "Continue for 20 meters.");
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
