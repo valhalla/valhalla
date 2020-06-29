@@ -23,6 +23,8 @@
 -j '{"locations":[{"lat":40.253910,"lon":-76.825859,"street":"I 83 North"},{"lat":40.264870,"lon":-76.814453,"street":"I 83 North"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.253166,"lon":-76.806427,"street":"US 322 West"},{"lat":40.246693,"lon":-76.810471,"street":"I 283 South"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.253155,"lon":-76.806244,"street":"US 322 West"},{"lat":40.255798,"lon":-76.813812,"street":"US 322 West"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.253155,"lon":-76.806244,"street":"US 322 West"},{"lat":40.25369289671995,"lon":-76.81776344776154}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.253155,"lon":-76.806244,"street":"US 322 West"},{"lat":40.2493530384799,"lon":-76.81287109851837}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.265491,"lon":-76.814674,"street":"I 83 South"},{"lat":40.247715,"lon":-76.811638,"street":"I 283 South"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.273895,"lon":-76.816689,"street":"I 83 North"},{"lat":40.279041,"lon":-76.814186,"street":"Union Deposit Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.273949,"lon":-76.816711,"street":"I 83 North"},{"lat":40.278671,"lon":-76.821510,"street":"Union Deposit Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
