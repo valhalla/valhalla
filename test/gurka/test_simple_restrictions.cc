@@ -70,20 +70,23 @@ gurka::map SimpleRestrictions::map = {};
 /*************************************************************/
 TEST_F(SimpleRestrictions, ForceDetour) {
   auto result = gurka::route(map, "C", "F", "auto");
-  gurka::assert::osrm::expect_route(result, {"BC", "AB", "ADG", "DEF"});
+  gurka::assert::osrm::expect_steps(result, {"BC", "AB", "ADG", "DEF"});
+  gurka::assert::raw::expect_path(result, {"BC", "AB", "ADG", "DEF", "DEF"});
 }
 TEST_F(SimpleRestrictions, NoDetourWhenReversed) {
   auto result = gurka::route(map, "F", "C", "auto");
-  gurka::assert::osrm::expect_route(result, {"DEF", "BE", "BC"});
+  gurka::assert::osrm::expect_steps(result, {"DEF", "BE", "BC"});
+  gurka::assert::raw::expect_path(result, {"DEF", "BE", "BC"});
 }
 TEST_F(SimpleRestrictions, NoDetourFromDifferentStart) {
   auto result = gurka::route(map, "1", "F", "auto");
-  gurka::assert::osrm::expect_route(result, {"AB", "BE", "DEF"});
+  gurka::assert::osrm::expect_steps(result, {"AB", "BE", "DEF"});
+  gurka::assert::raw::expect_path(result, {"AB", "BE", "DEF"});
 }
 TEST_F(SimpleRestrictions, ForceDetourComplex) {
   // this test fails if you remove the time dependence because
   // bidirectional a* has a problem with complex restrictions
   auto result = gurka::route(map, R"({"locations":[{"lon":0.008084,"lat":-0.003593},
     {"lon":0.00359,"lat":0.0}],"costing":"auto","date_time":{"type":0}})");
-  gurka::assert::osrm::expect_route(result, {"GHI", "ADG", "DEF", "BE", "AB"});
+  gurka::assert::osrm::expect_path(result, {"GHI", "ADG", "DEF", "BE", "AB"});
 }

@@ -38,7 +38,8 @@ public:
    * @param  id  OSM Id
    * @return  Returns true if the OSM Id is used. False if not.
    */
-  inline const bool get(const uint64_t id) const {
+
+  inline bool get(const uint64_t id) const {
     uint64_t idx = id / 64;
     auto found = bitmarkers_.find(idx);
     return found != bitmarkers_.cend() &&

@@ -350,7 +350,7 @@ void start_service() {
       "loki": { "actions": [ "locate", "route", "sources_to_targets", "optimized_route", "isochrone", "trace_route", "trace_attributes" ],
                   "logging": { "long_request": 100.0 },
                   "service": { "proxy": "ipc:///tmp/test_loki_proxy" },
-                "service_defaults": { "minimum_reachability": 50, "radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60} },
+                "service_defaults": { "minimum_reachability": 50, "radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60} },
       "thor": { "service": { "proxy": "ipc:///tmp/test_thor_proxy" } },
       "httpd": { "service": { "loopback": "ipc:///tmp/test_loki_results", "interrupt": "ipc:///tmp/test_loki_interrupt" } },
       "service_limits": {
