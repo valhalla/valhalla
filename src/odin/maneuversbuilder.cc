@@ -2397,9 +2397,9 @@ bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator 
   return false;
 }
 
-bool ManeuversBuilder::IsNextManeuverObvious(std::list<Maneuver>& maneuvers,
-                                             std::list<Maneuver>::iterator curr_man,
-                                             std::list<Maneuver>::iterator next_man) const {
+bool ManeuversBuilder::IsNextManeuverObvious(const std::list<Maneuver>& maneuvers,
+                                             std::list<Maneuver>::const_iterator curr_man,
+                                             std::list<Maneuver>::const_iterator next_man) const {
   // The next maneuver must be a continue maneuver
   if ((next_man->type() == DirectionsLeg_Maneuver_Type_kContinue)) {
     // Get the node between the the current and next maneuver

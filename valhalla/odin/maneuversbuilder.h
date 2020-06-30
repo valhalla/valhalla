@@ -173,9 +173,9 @@ protected:
    * @return true if the next maneuver is obvious and can be combined with the current maneuver,
    * false otherwise.
    */
-  bool IsNextManeuverObvious(std::list<Maneuver>& maneuvers,
-                             std::list<Maneuver>::iterator curr_man,
-                             std::list<Maneuver>::iterator next_man) const;
+  bool IsNextManeuverObvious(const std::list<Maneuver>& maneuvers,
+                             std::list<Maneuver>::const_iterator curr_man,
+                             std::list<Maneuver>::const_iterator next_man) const;
 
   /**
    * Returns true if roundabouts are processable based on the specified travel mode.
