@@ -52,11 +52,8 @@ namespace valhalla {
 namespace midgard {
 
 // scalar * vector operator.
-VectorXY<float> operator*(float s, const VectorXY<float>& v) {
-  return VectorXY<float>(v.x() * s, v.y() * s);
-}
-VectorXY<double> operator*(double s, const VectorXY<double>& v) {
-  return VectorXY<double>(v.x() * s, v.y() * s);
+Vector2 operator*(float s, const Vector2& v) {
+  return Vector2(v.x() * s, v.y() * s);
 }
 
 // Trim the front of a polyline (represented as a list or vector of Point2).

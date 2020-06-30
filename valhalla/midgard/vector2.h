@@ -320,8 +320,7 @@ using Vector2 = VectorXY<float>;
  * @param   v  Vector to be multiplied with the scalar
  * @return  Returns the resulting vector
  */
-template <typename PrecisionT>
-VectorXY<PrecisionT> operator*(PrecisionT s, const VectorXY<PrecisionT>& v);
+Vector2 operator*(float s, const Vector2& v);
 
 } // namespace midgard
 } // namespace valhalla
