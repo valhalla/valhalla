@@ -444,7 +444,7 @@ void validate(
     AABB2<PointLL> bb = tiles.TileBounds(tileid);
     float area = ((bb.maxy() - bb.miny()) * kMetersPerDegreeLat * kKmPerMeter) *
                  ((bb.maxx() - bb.minx()) *
-                  DistanceApproximator::MetersPerLngDegree(bb.Center().y()) * kKmPerMeter);
+                  DistanceApproximator<PointLL>::MetersPerLngDegree(bb.Center().y()) * kKmPerMeter);
     float density = (roadlength * 0.0005f) / area;
     densities[level].push_back(density);
 

@@ -1,39 +1,19 @@
-#include "valhalla/midgard/polyline2.h"
+#include "midgard/polyline2.h"
+#include "midgard/point2.h"
+#include "midgard/pointll.h"
 
-#include <functional>
 #include <list>
-#include <vector>
 
 namespace valhalla {
 namespace midgard {
 
-template <class coord_t> Polyline2<coord_t>::Polyline2() {
-}
-
-// Constructor given a list of points.
-template <class coord_t> Polyline2<coord_t>::Polyline2(const std::vector<coord_t>& pts) {
-  pts_ = pts;
-}
-
-// Get the list of points.
-template <class coord_t> std::vector<coord_t>& Polyline2<coord_t>::pts() {
-  return pts_;
-}
-
-// Add a point to the polyline. Checks to see if the input point is
-// equal to the current endpoint of the polyline and does not add the
-// point if it is equal.
-template <class coord_t> void Polyline2<coord_t>::Add(const coord_t& p) {
-  uint32_t n = pts_.size();
-  if (n == 0 || !(p == pts_[n - 1])) {
-    pts_.push_back(p);
-  }
-}
-
-// Finds the length of the polyline by accumulating the length of all
-// segments.
-template <class coord_t> float Polyline2<coord_t>::Length() const {
-  float length = 0;
+/**
+ * Finds the length of the polyline by accumulating the length of all
+ * segments.
+ * @return    Returns the length of the polyline.
+ */
+template <typename coord_t> typename coord_t::value_type Polyline2<coord_t>::Length() const {
+  typename coord_t::value_type length = 0;
   if (pts_.size() < 2) {
     return length;
   }
@@ -43,11 +23,15 @@ template <class coord_t> float Polyline2<coord_t>::Length() const {
   return length;
 }
 
-// Find the length of the supplied polyline.
-template <class coord_t>
+/**
+ * Compute the length of the specified polyline.
+ * @param   pts  Polyline vertices.
+ * @return  Returns the length of the polyline.
+ */
+template <typename coord_t>
 template <class container_t>
-float Polyline2<coord_t>::Length(const container_t& pts) {
-  float length = 0;
+typename coord_t::value_type Polyline2<coord_t>::Length(const container_t& pts) {
+  typename coord_t::value_type length = 0;
   if (pts.size() < 2) {
     return length;
   }
@@ -57,42 +41,20 @@ float Polyline2<coord_t>::Length(const container_t& pts) {
   return length;
 }
 
-// Finds the closest point to the supplied polyline as well as the distance
-// to that point and the index of the segment where the closest point lies.
-template <class coord_t>
-std::tuple<coord_t, float, int> Polyline2<coord_t>::ClosestPoint(const coord_t& pt) const {
-  return pt.ClosestPoint(pts_);
-}
-
-// Generalize this polyline.
-template <class coord_t>
-uint32_t Polyline2<coord_t>::Generalize(const float t, const std::unordered_set<size_t>& indices) {
-  // Create a vector for the output shape. Recursively call Douglass-Peucker
-  // method to generalize the polyline. Square the error tolerance to avoid
-  // sqrts.
-  Generalize(pts_, t, indices);
-  return pts_.size();
-}
-
-// Get a generalized polyline from this polyline. This polyline remains
-// unchanged.
-template <class coord_t>
-Polyline2<coord_t>
-Polyline2<coord_t>::GeneralizedPolyline(const float t, const std::unordered_set<size_t>& indices) {
-  // Recursively call Douglass-Peucker method to generalize the polyline.
-  // Square the error tolerance to avoid sqrts.
-  Polyline2 generalized(pts_);
-  generalized.Generalize(t, indices);
-  return generalized;
-}
-
-template <class coord_t>
+/**
+ * Generalize the given list of points
+ *
+ * @param polyline    the list of points
+ * @param epsilon     the tolerance used in removing points
+ * @param  indices    list of indices of points not to generalize
+ */
+template <typename coord_t>
 template <class container_t>
 void Polyline2<coord_t>::Generalize(container_t& polyline,
-                                    float epsilon,
+                                    typename coord_t::value_type epsilon,
                                     const std::unordered_set<size_t>& indices) {
   // any epsilon this low will have no effect on the input nor will any super short input
-  if (epsilon <= 0.f || polyline.size() < 3)
+  if (epsilon <= 0 || polyline.size() < 3)
     return;
 
   // the recursive bit
@@ -102,7 +64,7 @@ void Polyline2<coord_t>::Generalize(container_t& polyline,
   peucker = [&peucker, &polyline, epsilon, &indices](typename container_t::iterator start, size_t s,
                                                      typename container_t::iterator end, size_t e) {
     // find the point furthest from the line
-    float dmax = std::numeric_limits<float>::lowest();
+    float dmax = std::numeric_limits<typename coord_t::value_type>::lowest();
     typename container_t::iterator itr;
     LineSegment2<coord_t> l{*start, *end};
     size_t j = e - 1, k;
@@ -144,42 +106,45 @@ void Polyline2<coord_t>::Generalize(container_t& polyline,
   peucker(polyline.begin(), 0, std::prev(polyline.end()), polyline.size() - 1);
 }
 
-// Clip this polyline to the specified bounding box.
-template <class coord_t> uint32_t Polyline2<coord_t>::Clip(const AABB2<coord_t>& box) {
-  return box.Clip(pts_, false);
-}
-
-// Gets a polyline clipped to the supplied bounding box. This polyline
-// remains unchanged.
-template <class coord_t>
-Polyline2<coord_t> Polyline2<coord_t>::ClippedPolyline(const AABB2<coord_t>& box) {
-  // Copy the polyline points to a temporary vector
-  std::vector<coord_t> pts = pts_;
-  box.Clip(pts, false);
-  return Polyline2(pts);
-}
-
-template <class coord_t> bool Polyline2<coord_t>::operator==(const Polyline2<coord_t>& other) const {
-  return pts_.size() == other.pts_.size() && std::equal(pts_.begin(), pts_.end(), other.pts_.begin());
-}
-
 // Explicit instantiation
-template class Polyline2<Point2>;
-template class Polyline2<PointLL>;
+template class Polyline2<PointXY<float>>;
+template class Polyline2<PointXY<double>>;
+template class Polyline2<GeoPoint<float>>;
+template class Polyline2<GeoPoint<double>>;
 
-template float Polyline2<PointLL>::Length(const std::vector<PointLL>&);
-template float Polyline2<Point2>::Length(const std::vector<Point2>&);
-template float Polyline2<PointLL>::Length(const std::list<PointLL>&);
-template float Polyline2<Point2>::Length(const std::list<Point2>&);
+template float Polyline2<PointXY<float>>::Length(const std::vector<PointXY<float>>&);
+template double Polyline2<PointXY<double>>::Length(const std::vector<PointXY<double>>&);
+template float Polyline2<PointXY<float>>::Length(const std::list<PointXY<float>>&);
+template double Polyline2<PointXY<double>>::Length(const std::list<PointXY<double>>&);
+template float Polyline2<GeoPoint<float>>::Length(const std::vector<GeoPoint<float>>&);
+template double Polyline2<GeoPoint<double>>::Length(const std::vector<GeoPoint<double>>&);
+template float Polyline2<GeoPoint<float>>::Length(const std::list<GeoPoint<float>>&);
+template double Polyline2<GeoPoint<double>>::Length(const std::list<GeoPoint<double>>&);
 
-template void
-Polyline2<PointLL>::Generalize(std::vector<PointLL>&, float, const std::unordered_set<size_t>&);
-template void
-Polyline2<Point2>::Generalize(std::vector<Point2>&, float, const std::unordered_set<size_t>&);
-template void
-Polyline2<PointLL>::Generalize(std::list<PointLL>&, float, const std::unordered_set<size_t>&);
-template void
-Polyline2<Point2>::Generalize(std::list<Point2>&, float, const std::unordered_set<size_t>&);
+template void Polyline2<PointXY<float>>::Generalize(std::vector<PointXY<float>>&,
+                                                    float,
+                                                    const std::unordered_set<size_t>&);
+template void Polyline2<PointXY<double>>::Generalize(std::vector<PointXY<double>>&,
+                                                     double,
+                                                     const std::unordered_set<size_t>&);
+template void Polyline2<PointXY<float>>::Generalize(std::list<PointXY<float>>&,
+                                                    float,
+                                                    const std::unordered_set<size_t>&);
+template void Polyline2<PointXY<double>>::Generalize(std::list<PointXY<double>>&,
+                                                     double,
+                                                     const std::unordered_set<size_t>&);
+template void Polyline2<GeoPoint<float>>::Generalize(std::vector<GeoPoint<float>>&,
+                                                     float,
+                                                     const std::unordered_set<size_t>&);
+template void Polyline2<GeoPoint<double>>::Generalize(std::vector<GeoPoint<double>>&,
+                                                      double,
+                                                      const std::unordered_set<size_t>&);
+template void Polyline2<GeoPoint<float>>::Generalize(std::list<GeoPoint<float>>&,
+                                                     float,
+                                                     const std::unordered_set<size_t>&);
+template void Polyline2<GeoPoint<double>>::Generalize(std::list<GeoPoint<double>>&,
+                                                      double,
+                                                      const std::unordered_set<size_t>&);
 
 } // namespace midgard
 } // namespace valhalla
