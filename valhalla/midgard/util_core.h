@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 namespace valhalla {
 namespace midgard {
 /**
