@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -37,7 +38,12 @@ using namespace valhalla::odin;
 namespace {
 
 constexpr float kShortForkThreshold = 0.05f; // Kilometers
-constexpr uint32_t kOverlayEdgeMax = 5;      // Maximum number of edges to look for matching overlay
+
+// Kilometers - picked since the next rounded maneuver announcement will happen
+// in a quarter mile or 400 meters
+constexpr float kShortContinueThreshold = 0.6f;
+
+constexpr uint32_t kOverlayEdgeMax = 5; // Maximum number of edges to look for matching overlay
 
 std::vector<std::string> split(const std::string& source, char delimiter) {
   std::vector<std::string> tokens;
@@ -456,6 +462,23 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         LOG_TRACE("+++ Combine: ramp maneuvers +++");
         next_man = CombineManeuvers(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
+      }
+      // Combine obvious maneuver
+      else if (IsNextManeuverObvious(maneuvers, curr_man, next_man)) {
+        // If current maneuver does not have street names then use the next maneuver street names
+        if (!curr_man->HasStreetNames() && next_man->HasStreetNames()) {
+          curr_man->set_street_names(next_man->street_names().clone());
+        }
+
+        // Mark that the current maneuver contains an obvious maneuver
+        curr_man->set_contains_obvious_maneuver(true);
+
+        // Disable turn channel
+        curr_man->set_turn_channel(false);
+
+        LOG_TRACE("+++ Combine: obvious maneuver +++");
+        next_man = CombineManeuvers(maneuvers, curr_man, next_man);
+        maneuvers_have_been_combined = true;
       } else {
         LOG_TRACE("+++ Do Not Combine +++");
         // Update with no combine
@@ -677,6 +700,11 @@ ManeuversBuilder::CombineManeuvers(std::list<Maneuver>& maneuvers,
   // If needed, set portions_highway
   if (next_man->portions_highway()) {
     curr_man->set_portions_highway(true);
+  }
+
+  // If needed, set contains_obvious_maneuver
+  if (next_man->contains_obvious_maneuver()) {
+    curr_man->set_contains_obvious_maneuver(true);
   }
 
   return maneuvers.erase(next_man);
@@ -2369,6 +2397,76 @@ bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator 
   return false;
 }
 
+bool ManeuversBuilder::IsNextManeuverObvious(const std::list<Maneuver>& maneuvers,
+                                             std::list<Maneuver>::const_iterator curr_man,
+                                             std::list<Maneuver>::const_iterator next_man) const {
+  // The next maneuver must be a continue maneuver
+  if ((next_man->type() == DirectionsLeg_Maneuver_Type_kContinue)) {
+    // Get the node between the the current and next maneuver
+    auto node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
+
+    // Return true if there are no traversable intersecting edges
+    if (node && !node->HasTraversableIntersectingEdge(next_man->travel_mode())) {
+      return true;
+    }
+
+    // Return false if the maneuver has an exit number
+    if (next_man->HasExitNumberSign()) {
+      return false;
+    }
+
+    // Process ramp forks
+    if (curr_man->ramp() && curr_man->fork() && !curr_man->contains_obvious_maneuver()) {
+      // Obvious if Keep straight and continue
+      if (curr_man->type() == DirectionsLeg_Maneuver_Type_kStayStraight) {
+        return true;
+      } else {
+        if (node) {
+          IntersectingEdgeCounts xedge_counts;
+          node->CalculateRightLeftIntersectingEdgeCounts(curr_man->end_heading(),
+                                                         curr_man->travel_mode(), xedge_counts);
+
+          // TODO: we could enhance in the future
+          // Obvious if left fork and no left edges at intersection
+          if ((curr_man->type() == DirectionsLeg_Maneuver_Type_kStayLeft) &&
+              (xedge_counts.left == 0)) {
+            return true;
+          }
+
+          // Obvious if right fork and no right edges at intersection
+          if ((curr_man->type() == DirectionsLeg_Maneuver_Type_kStayRight) &&
+              (xedge_counts.right == 0)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    // Return true if a short continue maneuver
+    // and the following maneuver is not a continue
+    if (next_man->length(Options_Units_kilometers) < kShortContinueThreshold) {
+      auto next_next_man = std::next(next_man);
+      if ((next_next_man != maneuvers.end()) &&
+          (next_next_man->type() != DirectionsLeg_Maneuver_Type_kContinue)) {
+        return true;
+      }
+    }
+
+    // Return false at motorway junction
+    if (node && (node->type() == TripLeg_Node_Type_kMotorwayJunction)) {
+      return false;
+    }
+
+    // Return true if not a non-backward traversable same name intersecting edge
+    if (node && !node->HasNonBackwardTraversableSameNameIntersectingEdge(curr_man->end_heading(),
+                                                                         next_man->travel_mode())) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool ManeuversBuilder::AreRoundaboutsProcessable(const TripLeg_TravelMode travel_mode) const {
   if ((travel_mode == TripLeg_TravelMode_kDrive) || (travel_mode == TripLeg_TravelMode_kBicycle)) {
     return true;
@@ -2421,8 +2519,14 @@ void ManeuversBuilder::ProcessRoundabouts(std::list<Maneuver>& maneuvers) {
       // Process roundabout exit names and signs
       if (next_man->type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) {
         if (next_man->HasBeginStreetNames()) {
-          curr_man->set_roundabout_exit_begin_street_names(next_man->begin_street_names().clone());
-          curr_man->set_roundabout_exit_street_names(next_man->street_names().clone());
+          if (next_man->contains_obvious_maneuver()) {
+            // If the next_man contains an obvious maneuver
+            // then use the begin street names as the street names
+            curr_man->set_roundabout_exit_street_names(next_man->begin_street_names().clone());
+          } else {
+            curr_man->set_roundabout_exit_begin_street_names(next_man->begin_street_names().clone());
+            curr_man->set_roundabout_exit_street_names(next_man->street_names().clone());
+          }
         } else {
           curr_man->set_roundabout_exit_street_names(next_man->street_names().clone());
         }

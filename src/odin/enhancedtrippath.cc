@@ -21,6 +21,9 @@ namespace {
 constexpr float kShortRemainingDistanceThreshold = 0.402f; // Kilometers (~quarter mile)
 constexpr int kSignificantRoadClassThreshold = 2;          // Max lower road class delta
 
+constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
+constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
+
 const std::string& RoadClass_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kMotorway"}, {1, "kTrunk"},        {2, "kPrimary"},     {3, "kSecondary"},
@@ -1297,6 +1300,28 @@ bool EnhancedTripLeg_Node::HasIntersectingEdgeCurrNameConsistency() const {
   return false;
 }
 
+bool EnhancedTripLeg_Node::HasNonBackwardTraversableSameNameIntersectingEdge(
+    uint32_t from_heading,
+    const TripLeg_TravelMode travel_mode) {
+  // Loop over the route path intersecting edges
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    // Check if the intersecting edges have the same names as the path edges
+    // and if the intersecting edge is traversable based on the route path travel mode
+    if ((xedge->prev_name_consistency() || xedge->curr_name_consistency()) &&
+        xedge->IsTraversable(travel_mode)) {
+      // Calculate the intersecting edge turn degree to make sure it is not in the opposing direction
+      uint32_t intersecting_turn_degree = GetTurnDegree(from_heading, xedge->begin_heading());
+      bool non_backward = !((intersecting_turn_degree > kBackwardTurnDegreeLowerBound) &&
+                            (intersecting_turn_degree < kBackwardTurnDegreeUpperBound));
+      if (non_backward) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 std::unique_ptr<EnhancedTripLeg_IntersectingEdge>
 EnhancedTripLeg_Node::GetIntersectingEdge(size_t index) {
   return std::make_unique<EnhancedTripLeg_IntersectingEdge>(mutable_intersecting_edge(index));
@@ -1434,6 +1459,16 @@ bool EnhancedTripLeg_Node::HasWiderForwardTraversableHighwayXEdge(
     auto xedge = GetIntersectingEdge(i);
     if (is_wider_forward(GetTurnDegree(from_heading, xedge->begin_heading())) &&
         xedge->IsTraversableOutbound(travel_mode) && xedge->IsHighway()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasTraversableIntersectingEdge(const TripLeg_TravelMode travel_mode) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    if (GetIntersectingEdge(i)->IsTraversable(travel_mode)) {
       return true;
     }
   }

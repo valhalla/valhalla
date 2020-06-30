@@ -163,6 +163,21 @@ protected:
                                   std::list<Maneuver>::iterator next_man) const;
 
   /**
+   * Returns true if the next maneuver is obvious and can be combined with the current maneuver,
+   * false otherwise.
+   *
+   * @param maneuvers The list of maneuvers to process
+   * @param curr_man Current maneuver
+   * @param next_man Next maneuver
+   *
+   * @return true if the next maneuver is obvious and can be combined with the current maneuver,
+   * false otherwise.
+   */
+  bool IsNextManeuverObvious(const std::list<Maneuver>& maneuvers,
+                             std::list<Maneuver>::const_iterator curr_man,
+                             std::list<Maneuver>::const_iterator next_man) const;
+
+  /**
    * Returns true if roundabouts are processable based on the specified travel mode.
    *
    * @param travel_mode The current specified travel mode.

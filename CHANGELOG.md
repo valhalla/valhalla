@@ -53,6 +53,7 @@
    * FIXED: Fix on map-matching return code when breakage distance limitation exceeds. Instead of letting the request goes into meili and fails in finding a route, we check the distance in loki and early return with exception code 172. [#2406](https://github.com/valhalla/valhalla/pull/2406)
    * FIXED: Don't create edges for portions of ways that are doubled back on themselves as this confuses opposing edge index computations [#2385](https://github.com/valhalla/valhalla/pull/2385)
    * FIXED: Protect against nan in uniform_resample_spherical_polyline. [#2431](https://github.com/valhalla/valhalla/pull/2431)
+   * FIXED: Obvious maneuvers. [#2436](https://github.com/valhalla/valhalla/pull/2436)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
