@@ -193,7 +193,7 @@ target_link_libraries(valhalla
     $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
     Threads::Threads)
 if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
-  target_link_libraries(valhalla PUBLIC CURL::CURL)
+  target_link_libraries(valhalla PUBLIC CURL::libcurl)
 endif()
 set(VALHALLA_EXPORT_LIBRARIES valhalla)
 

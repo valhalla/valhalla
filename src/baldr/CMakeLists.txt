@@ -109,5 +109,5 @@ valhalla_module(NAME baldr
     valhalla::proto
     ${valhalla_protobuf_targets}
     Boost::boost
-    CURL::CURL
+    CURL::libcurl
     ZLIB::ZLIB)
