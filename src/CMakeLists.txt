@@ -2,12 +2,6 @@ include(GNUInstallDirs)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
-## Set relative to the current source and binary paths
-set(VALHALLA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
-if(NOT VALHALLA_SOURCE_DIR)
-  set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
-endif()
-
 ## Declare C++ build configuration variables as part of HandleLibcxxFlags.
 #
 # - LIBCXX_COMPILE_FLAGS: flags used to compile libc++
@@ -72,8 +66,8 @@ function(valhalla_module)
       $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>)
   target_include_directories(${library} ${MODULE_INCLUDE_DIRECTORIES}
      PRIVATE
-       ${VALHALLA_BINARY_DIR}
-       ${VALHALLA_BINARY_DIR}/valhalla)
+       ${valhalla_BINARY_DIR}/src
+       ${valhalla_BINARY_DIR}/src/valhalla)
 
   if(ENABLE_COVERAGE)
     target_compile_options(${library} PUBLIC -ftest-coverage -fprofile-arcs)
@@ -110,7 +104,7 @@ function(valhalla_module)
   set(libvalhalla_link_libraries "${libvalhalla_link_libraries};${external_module_depends}" CACHE INTERNAL "")
 endfunction()
 
-add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing ${CMAKE_BINARY_DIR}/third_party/robin-hood-hashing)
+add_subdirectory(${valhalla_SOURCE_DIR}/third_party/robin-hood-hashing ${CMAKE_BINARY_DIR}/third_party/robin-hood-hashing)
 
 add_subdirectory(../proto ${CMAKE_CURRENT_BINARY_DIR}/valhalla/proto)
 add_subdirectory(baldr)
@@ -132,8 +126,8 @@ configure_file(../valhalla/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/valhalla/c
 
 set(valhalla_hdrs
     ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h
-    ${VALHALLA_SOURCE_DIR}/valhalla/worker.h
-    ${VALHALLA_SOURCE_DIR}/valhalla/filesystem.h)
+    ${valhalla_SOURCE_DIR}/valhalla/worker.h
+    ${valhalla_SOURCE_DIR}/valhalla/filesystem.h)
 
 set(valhalla_src
     worker.cc
@@ -143,7 +137,7 @@ set(valhalla_src
     ${libvalhalla_link_objects})
 
 if (ENABLE_SERVICES)
-  set(valhalla_hdrs ${valhalla_hdrs} ${VALHALLA_SOURCE_DIR}/valhalla/tile_server.h)
+  set(valhalla_hdrs ${valhalla_hdrs} ${valhalla_SOURCE_DIR}/valhalla/tile_server.h)
   set(valhalla_src ${valhalla_src} tile_server.cc)
 endif()
 
@@ -174,18 +168,18 @@ endif()
 
 target_include_directories(valhalla
   PUBLIC
-    ${VALHALLA_SOURCE_DIR}
-    ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
-    ${VALHALLA_BINARY_DIR}
-    ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
-    ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-    ${VALHALLA_SOURCE_DIR}/third_party/date/include
+    ${valhalla_SOURCE_DIR}
+    ${valhalla_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
+    ${valhalla_BINARY_DIR}/src
+    ${valhalla_BINARY_DIR}/src/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
+    ${valhalla_SOURCE_DIR}/third_party/rapidjson/include
+    ${valhalla_SOURCE_DIR}/third_party/date/include
   PRIVATE
     ${libvalhalla_include_directories})
 
 if(MSVC)
   target_include_directories(valhalla
-    PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/dirent/include)
+    PUBLIC ${valhalla_SOURCE_DIR}/third_party/dirent/include)
 endif()
 
 target_link_libraries(valhalla
@@ -218,7 +212,7 @@ install(TARGETS valhalla
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT development)
 
 if(BUILD_SHARED_LIBS)
-  install(FILES ${VALHALLA_SOURCE_DIR}/COPYING ${VALHALLA_SOURCE_DIR}/CHANGELOG.md
+  install(FILES ${valhalla_SOURCE_DIR}/COPYING ${valhalla_SOURCE_DIR}/CHANGELOG.md
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/libvalhalla0"
     COMPONENT shared)
 else()
@@ -229,7 +223,7 @@ else()
   endif()
 endif()
 
-install(FILES ${VALHALLA_SOURCE_DIR}/COPYING ${VALHALLA_SOURCE_DIR}/CHANGELOG.md ${VALHALLA_SOURCE_DIR}/README.md
+install(FILES ${valhalla_SOURCE_DIR}/COPYING ${valhalla_SOURCE_DIR}/CHANGELOG.md ${valhalla_SOURCE_DIR}/README.md
   DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/libvalhalla-dev"
   COMPONENT development)
 
@@ -243,7 +237,7 @@ install(FILES ${valhalla_hdrs}
 
 if(PKG_CONFIG_FOUND)
   ## Configure libvalhalla.pc file with valhalla target linking options via PkgConfig linker
-  set(CMAKE_PkgConfig_LINK_EXECUTABLE "<CMAKE_COMMAND> -DINPUT=${VALHALLA_SOURCE_DIR}/libvalhalla.pc.in -DOUTPUT=<TARGET> -DVERSION=${VALHALLA_VERSION} -Dprefix=${CMAKE_INSTALL_PREFIX} -Dexec_prefix=${CMAKE_INSTALL_PREFIX} -Dlibdir=${CMAKE_INSTALL_LIBDIR} -Dincludedir=${CMAKE_INSTALL_INCLUDEDIR} -Ddeplibs=\"<FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>\" -P ${CMAKE_SOURCE_DIR}/cmake/PkgConfig.cmake")
+  set(CMAKE_PkgConfig_LINK_EXECUTABLE "<CMAKE_COMMAND> -DINPUT=${valhalla_SOURCE_DIR}/libvalhalla.pc.in -DOUTPUT=<TARGET> -DVERSION=${VALHALLA_VERSION} -Dprefix=${CMAKE_INSTALL_PREFIX} -Dexec_prefix=${CMAKE_INSTALL_PREFIX} -Dlibdir=${CMAKE_INSTALL_LIBDIR} -Dincludedir=${CMAKE_INSTALL_INCLUDEDIR} -Ddeplibs=\"<FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>\" -P ${CMAKE_SOURCE_DIR}/cmake/PkgConfig.cmake")
 
   add_executable(libvalhalla.pc EXCLUDE_FROM_ALL ../libvalhalla.pc.in)
   target_link_libraries(libvalhalla.pc valhalla)
@@ -253,7 +247,7 @@ if(PKG_CONFIG_FOUND)
   if(NOT \${_res} EQUAL 0)
     message(FATAL_ERROR \"Configuring libvalhalla.pc failed: \${_err}\")
   endif()")
-  install(FILES ${VALHALLA_BINARY_DIR}/libvalhalla.pc
+  install(FILES ${valhalla_BINARY_DIR}/src/libvalhalla.pc
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
     COMPONENT development)
 endif()
