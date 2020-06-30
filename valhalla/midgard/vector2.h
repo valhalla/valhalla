@@ -1,8 +1,8 @@
 #ifndef VALHALLA_MIDGARD_VECTOR2_H_
 #define VALHALLA_MIDGARD_VECTOR2_H_
 
-#include <math.h>
-#include <stdarg.h>
+#include <cmath>
+#include <cstdarg>
 
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/point2.h>

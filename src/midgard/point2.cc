@@ -7,13 +7,13 @@ namespace valhalla {
 namespace midgard {
 
 /**
-   * Finds the closest point to the supplied polyline as well as the distance
-   * to that point and the index of the segment where the closest point lies.
-   * @param  pts     List of points on the polyline.
-   * @return  tuple of <Closest point along the polyline,
-   *                    Returns the distance of the closest point,
-   *                    Index of the segment of the polyline which contains the closest point
-   *                   >
+ * Finds the closest point to the supplied polyline as well as the distance
+ * to that point and the index of the segment where the closest point lies.
+ * @param  pts     List of points on the polyline.
+ * @return  tuple of <Closest point along the polyline,
+ *                    Returns the distance of the closest point,
+ *                    Index of the segment of the polyline which contains the closest point
+ *                   >
  */
 template <typename PrecisionT>
 std::tuple<PointXY<PrecisionT>, PrecisionT, int>
@@ -36,9 +36,9 @@ PointXY<PrecisionT>::ClosestPoint(const std::vector<PointXY<PrecisionT>>& pts) c
   VectorXY<PrecisionT> v1;    // Segment vector (v1)
   VectorXY<PrecisionT> v2;    // Vector from origin to target (v2)
   PointXY<PrecisionT> projpt; // Projected point along v1
-  value_type dot;                  // Dot product of v1 and v2
-  value_type comp;                 // Component of v2 along v1
-  value_type dist;                 // Squared distance from target to closest point on line
+  value_type dot;             // Dot product of v1 and v2
+  value_type comp;            // Component of v2 along v1
+  value_type dist;            // Squared distance from target to closest point on line
 
   for (size_t index = 0; index < pts.size() - 1; ++index) {
     // Get the current segment
@@ -106,11 +106,11 @@ PointXY<PrecisionT>::ClosestPoint(const std::vector<PointXY<PrecisionT>>& pts) c
 }
 
 /**
-   * Tests whether this point is within a polygon.
-   * @param  poly  List of vertices that form a polygon. Assumes
-   *               the following:
-   *                  Only the first and last vertices may be duplicated.
-   * @return  Returns true if the point is within the polygon, false if not.
+ * Tests whether this point is within a polygon.
+ * @param  poly  List of vertices that form a polygon. Assumes
+ *               the following:
+ *                  Only the first and last vertices may be duplicated.
+ * @return  Returns true if the point is within the polygon, false if not.
  */
 template <typename PrecisionT>
 template <typename container_t>
@@ -135,7 +135,7 @@ bool PointXY<PrecisionT>::WithinPolygon(const container_t& poly) const {
   return winding_number != 0;
 }
 
-//explicit instantiations
+// explicit instantiations
 template class VectorXY<float>;
 template class PointXY<float>;
 template class VectorXY<double>;
@@ -144,5 +144,5 @@ template bool PointXY<float>::WithinPolygon(const std::vector<PointXY<float>>&) 
 template bool PointXY<float>::WithinPolygon(const std::list<PointXY<float>>&) const;
 template bool PointXY<double>::WithinPolygon(const std::vector<PointXY<double>>&) const;
 template bool PointXY<double>::WithinPolygon(const std::list<PointXY<double>>&) const;
-}
-}
+} // namespace midgard
+} // namespace valhalla
