@@ -8,26 +8,6 @@ if(NOT VALHALLA_SOURCE_DIR)
   set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 endif()
 
-## Get Valhalla version
-file(STRINGS "${VALHALLA_SOURCE_DIR}/valhalla/valhalla.h.in" version_lines REGEX "VALHALLA_VERSION_(MAJOR|MINOR|PATCH)")
-foreach(line ${version_lines})
-  if("${line}" MATCHES "(VALHALLA_VERSION_(MAJOR|MINOR|PATCH))[\t ]+([0-9]+)")
-    set(${CMAKE_MATCH_1} ${CMAKE_MATCH_3})
-    set(${CMAKE_MATCH_1} ${CMAKE_MATCH_3} PARENT_SCOPE)
-  endif()
-endforeach()
-if(DEFINED VALHALLA_VERSION_MAJOR)
-  set(VERSION "${VALHALLA_VERSION_MAJOR}")
-  if(DEFINED VALHALLA_VERSION_MINOR)
-    set(VERSION "${VERSION}.${VALHALLA_VERSION_MINOR}")
-    if(DEFINED VALHALLA_VERSION_PATCH)
-      set(VERSION "${VERSION}.${VALHALLA_VERSION_PATCH}")
-    endif()
-  endif()
-else()
-  message(FATAL_ERROR "No Valhalla major version")
-endif()
-
 ## Declare C++ build configuration variables as part of HandleLibcxxFlags.
 #
 # - LIBCXX_COMPILE_FLAGS: flags used to compile libc++
@@ -208,7 +188,7 @@ target_link_libraries(valhalla
     Threads::Threads)
 
 set_target_properties(valhalla PROPERTIES
-  VERSION "${VERSION}"
+  VERSION "${VALHALLA_VERSION}"
   SOVERSION "${VALHALLA_VERSION_MAJOR}")
 
 set(LIBVALHALLA_SO_LINK ${CMAKE_SHARED_LIBRARY_PREFIX}valhalla${CMAKE_SHARED_LIBRARY_SUFFIX})
@@ -243,7 +223,7 @@ install(FILES ${valhalla_hdrs}
 
 if(PKG_CONFIG_FOUND)
   ## Configure libvalhalla.pc file with valhalla target linking options via PkgConfig linker
-  set(CMAKE_PkgConfig_LINK_EXECUTABLE "<CMAKE_COMMAND> -DINPUT=${VALHALLA_SOURCE_DIR}/libvalhalla.pc.in -DOUTPUT=<TARGET> -DVERSION=${VERSION} -Dprefix=${CMAKE_INSTALL_PREFIX} -Dexec_prefix=${CMAKE_INSTALL_PREFIX} -Dlibdir=${CMAKE_INSTALL_LIBDIR} -Dincludedir=${CMAKE_INSTALL_INCLUDEDIR} -Ddeplibs=\"<FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>\" -P ${CMAKE_SOURCE_DIR}/cmake/PkgConfig.cmake")
+  set(CMAKE_PkgConfig_LINK_EXECUTABLE "<CMAKE_COMMAND> -DINPUT=${VALHALLA_SOURCE_DIR}/libvalhalla.pc.in -DOUTPUT=<TARGET> -DVERSION=${VALHALLA_VERSION} -Dprefix=${CMAKE_INSTALL_PREFIX} -Dexec_prefix=${CMAKE_INSTALL_PREFIX} -Dlibdir=${CMAKE_INSTALL_LIBDIR} -Dincludedir=${CMAKE_INSTALL_INCLUDEDIR} -Ddeplibs=\"<FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>\" -P ${CMAKE_SOURCE_DIR}/cmake/PkgConfig.cmake")
 
   add_executable(libvalhalla.pc EXCLUDE_FROM_ALL ../libvalhalla.pc.in)
   target_link_libraries(libvalhalla.pc valhalla)

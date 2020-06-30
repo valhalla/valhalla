@@ -8,7 +8,29 @@
 # on Windows and using CMake-enabled IDEs.
 #
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
-project(valhalla LANGUAGES CXX C)
+
+## Get Valhalla version
+file(STRINGS
+  "${CMAKE_CURRENT_SOURCE_DIR}/valhalla/valhalla.h.in" version_lines
+  REGEX "VALHALLA_VERSION_(MAJOR|MINOR|PATCH)")
+foreach(line ${version_lines})
+  if("${line}" MATCHES "(VALHALLA_VERSION_(MAJOR|MINOR|PATCH))[\t ]+([0-9]+)")
+    set(${CMAKE_MATCH_1} ${CMAKE_MATCH_3})
+  endif()
+endforeach()
+if(DEFINED VALHALLA_VERSION_MAJOR)
+  set(VALHALLA_VERSION "${VALHALLA_VERSION_MAJOR}")
+  if(DEFINED VALHALLA_VERSION_MINOR)
+    set(VALHALLA_VERSION "${VALHALLA_VERSION}.${VALHALLA_VERSION_MINOR}")
+    if(DEFINED VALHALLA_VERSION_PATCH)
+      set(VALHALLA_VERSION "${VALHALLA_VERSION}.${VALHALLA_VERSION_PATCH}")
+    endif()
+  endif()
+else()
+  message(FATAL_ERROR "No Valhalla major version")
+endif()
+
+project(valhalla LANGUAGES CXX C VERSION ${VALHALLA_VERSION})
 
 include(FindPkgConfig)
 include(GNUInstallDirs)
