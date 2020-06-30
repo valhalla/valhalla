@@ -80,7 +80,7 @@ void FilterTiles(GraphReader& reader,
       uint32_t edge_index = tilebuilder.directededges().size();
 
       // Iterate through directed edges outbound from this node
-      std::vector<uint32_t> wayid;
+      std::vector<uint64_t> wayid;
       std::vector<GraphId> endnode;
       const NodeInfo* nodeinfo = tile->node(nodeid);
       GraphId edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
