@@ -52,6 +52,7 @@
    * FIXED: Store positive/negative OpenLR offsets in bucketed form [#2405](https://github.com/valhalla/valhalla/2405)
    * FIXED: Fix on map-matching return code when breakage distance limitation exceeds. Instead of letting the request goes into meili and fails in finding a route, we check the distance in loki and early return with exception code 172. [#2406](https://github.com/valhalla/valhalla/pull/2406)
    * FIXED: Don't create edges for portions of ways that are doubled back on themselves as this confuses opposing edge index computations [#2385](https://github.com/valhalla/valhalla/pull/2385)
+   * FIXED: Protect against nan in uniform_resample_spherical_polyline. [#2431](https://github.com/valhalla/valhalla/pull/2431)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
@@ -94,7 +95,14 @@
    * ADDED: Add utility functions to Signs. [#2390](https://github.com/valhalla/valhalla/pull/2390)
    * ADDED: Unified time tracking for all algorithms that support time-based graph expansion. [#2278](https://github.com/valhalla/valhalla/pull/2278)
    * ADDED: Add rail_ferry use and costing. [#2408](https://github.com/valhalla/valhalla/pull/2408)
+   * ADDED: `street_side_max_distance`, `display_lat` and `display_lon` to `locations` in input for better control of routing side of street [#1769](https://github.com/valhalla/valhalla/pull/1769)
    * ADDED: Add addtional exit phrases. [#2421](https://github.com/valhalla/valhalla/pull/2421)
+   * ADDED: Add Japanese locale, update German. [#2432](https://github.com/valhalla/valhalla/pull/2432)
+   * ADDED: Gurka expect_route refactor [#2435](https://github.com/valhalla/valhalla/pull/2435)
+   * ADDED: Add option to suppress roundabout exits [#2437](https://github.com/valhalla/valhalla/pull/2437)
+   * ADDED: Add Greek locale. [#2438](https://github.com/valhalla/valhalla/pull/2438)
+   * ADDED (back): Support for 64bit wide way ids in the edgeinfo structure with no impact to size for data sources with ids 32bits wide. [#2422](https://github.com/valhalla/valhalla/pull/2422)
+   * ADDED: Support for 64bit osm node ids in parsing stage of tile building [#2422](https://github.com/valhalla/valhalla/pull/2422)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

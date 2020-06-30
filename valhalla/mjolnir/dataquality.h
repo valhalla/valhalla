@@ -21,11 +21,11 @@ enum DataIssueType {
 
 // Simple struct for holding duplicate ways to allow sorting by edgecount
 struct DuplicateWay {
-  uint32_t wayid1;
-  uint32_t wayid2;
+  uint64_t wayid1;
+  uint64_t wayid2;
   uint32_t edgecount;
 
-  DuplicateWay(const uint32_t id1, const uint32_t id2, const uint32_t n)
+  DuplicateWay(const uint64_t id1, const uint64_t id2, const uint32_t n)
       : wayid1(id1), wayid2(id2), edgecount(n) {
   }
 
@@ -57,8 +57,8 @@ public:
    */
   void AddIssue(const DataIssueType issuetype,
                 const baldr::GraphId& graphid,
-                const uint32_t wayid1,
-                const uint32_t wayid2);
+                const uint64_t wayid1,
+                const uint64_t wayid2);
 
   /**
    * Log simple statistics.

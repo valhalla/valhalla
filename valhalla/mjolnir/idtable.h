@@ -4,34 +4,24 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <midgard/logging.h>
+#include <fstream>
 #include <vector>
+
+#include <robin_hood.h>
+
+#include <midgard/logging.h>
 
 namespace valhalla {
 namespace mjolnir {
 
-/**
- * A method for marking OSM Ids that are used by ways/nodes/relations.
- * Uses a vector where 1 bit is used for each possible Id.
- * So for a maximum OSM Id of 4 billion this uses 500MB memory
- */
-class IdTable {
+class UnorderedIdTable final {
 public:
   /**
    * Constructor
-   * @param   maxosmid   Maximum OSM Id to support.
+   * @param   size_hint   Hint about the total number of ids.
    */
-  IdTable(const uint64_t maxosmid) {
-    // Create a vector to mark bits. Initialize to 0.
-    bitmarkers_.resize((maxosmid / 64) + 1, 0);
-    // Set this to the actual maximum as dictated by the storage
-    maxosmid_ = bitmarkers_.size() * static_cast<uint64_t>(64) - 1;
-  }
-
-  /**
-   * Destructor
-   */
-  ~IdTable() {
+  UnorderedIdTable(const uint64_t size_hint) {
+    bitmarkers_.reserve((size_hint / 64) + 1);
   }
 
   /**
@@ -39,7 +29,7 @@ public:
    * @param   osmid   OSM Id of the way/node/relation.
    */
   inline void set(const uint64_t id) {
-    auto idx = maybe_resize(id);
+    uint64_t idx = id / 64;
     bitmarkers_[idx] |= static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64));
   }
 
@@ -48,64 +38,75 @@ public:
    * @param  id  OSM Id
    * @return  Returns true if the OSM Id is used. False if not.
    */
-  inline const bool get(const uint64_t id) {
-    return id > maxosmid_ ? false
-                          : bitmarkers_[id / 64] &
-                                (static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64)));
+
+  inline bool get(const uint64_t id) const {
+    uint64_t idx = id / 64;
+    auto found = bitmarkers_.find(idx);
+    return found != bitmarkers_.cend() &&
+           found->second & (static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64)));
   }
 
   /**
-   * Gets the maximum current id that could be found in the set
-   * @return maximum id
+   * Serializes the table to file
+   * @param file_name  the file to which we should serialize the table
+   * @return true if the table could be serialized
    */
-  inline uint64_t max() const {
-    return maxosmid_;
+  bool serialize(const std::string& file_name) {
+    std::ofstream file(file_name, std::ios::out | std::ios::binary | std::ios::trunc);
+    if (!file.is_open()) {
+      return false;
+    }
+    // TODO: do more than one entry at a time, buffer 10k of them into a vector and write that
+    // Write key/value pairs
+    for (const auto& i : bitmarkers_) {
+      // key
+      file.write(reinterpret_cast<const char*>(&i.first), sizeof(uint64_t));
+      // value
+      file.write(reinterpret_cast<const char*>(&i.second), sizeof(uint64_t));
+    }
+    file.close();
+    return true;
   }
 
   /**
-   * Gets the bit markers
-   * @return bit markers
+   * Deserializes the table from file
+   * @param file_name  the file from which to deserialize the table
+   * @return true if it was succesfully deserialized
    */
-  inline std::vector<uint64_t> get_bitmarkers() {
-    return bitmarkers_;
+  bool deserialize(const std::string& file_name) {
+    std::ifstream file(file_name, std::ios::in | std::ios::binary | std::ios::ate);
+    if (!file.is_open()) {
+      return false;
+    }
+    uint64_t entries = static_cast<uint64_t>(file.tellg()) / 2;
+    file.seekg(0, std::ios::beg);
+
+    // TODO: do more than one entry at a time, buffer 10k of them into a vector and read that
+    // Read the count and then the via ids
+    bitmarkers_.reserve(entries);
+    uint64_t key, value;
+    while (file && entries--) {
+      file.read(reinterpret_cast<char*>(&key), sizeof(key));
+      file.read(reinterpret_cast<char*>(&value), sizeof(value));
+      bitmarkers_[key] = value;
+    }
+    file.close();
+    return true;
   }
 
   /**
-   * Sets the bit markers
-   * Also, resizes the internal storage and adjusts maxosmid_
-   * @param  vector  bit markers
+   * For unit tests only
+   * @param other
+   * @return
    */
-  inline void set_bitmarkers(const std::vector<uint64_t>& bitmarkers) {
-
-    // Set this to the actual maximum as dictated by the storage
-    maxosmid_ = bitmarkers.size() * static_cast<uint64_t>(64) - 1;
-    // Create a vector to mark bits. Initialize to 0.
-    bitmarkers_.resize((maxosmid_ / 64) + 1, 0);
-    bitmarkers_ = bitmarkers;
+  bool operator==(const UnorderedIdTable& other) const {
+    return bitmarkers_ == other.bitmarkers_;
   }
 
 private:
-  /**
-   * Resizes the internal storage and adjusts maxosmid_ if needed
-   * the idea is that we dont need to actually do this very often
-   *
-   * @param the id which needs to fit in storage
-   * @returns the index holding the bit
-   */
-  inline uint64_t maybe_resize(const uint64_t id) {
-    // we dont double it because that could be huge, so we stay conservative
-    uint64_t idx = id / 64;
-    if (id > maxosmid_) {
-      LOG_WARN("Max osmid exceeded bitset, resizing to fit id: " + std::to_string(id));
-      bitmarkers_.resize(std::ceil(idx * 1.01 + 1), 0);
-      maxosmid_ = bitmarkers_.size() * static_cast<uint64_t>(64) - 1;
-    }
-    return idx;
-  }
-
-  uint64_t maxosmid_;
-  std::vector<uint64_t> bitmarkers_;
+  robin_hood::unordered_map<uint64_t, uint64_t> bitmarkers_;
 };
+
 } // namespace mjolnir
 } // namespace valhalla
 

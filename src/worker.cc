@@ -455,6 +455,13 @@ void parse_locations(const rapidjson::Document& doc,
         if (preferred_side && PreferredSide_Enum_Parse(*preferred_side, &side)) {
           location->set_preferred_side(side);
         }
+        lat = rapidjson::get_optional<float>(r_loc, "/display_lat");
+        lon = rapidjson::get_optional<float>(r_loc, "/display_lon");
+        if (lat && lon && *lat >= -90.0f && *lat <= 90.0f) {
+          lon = midgard::circular_range_clamp<float>(*lon, -180, 180);
+          location->mutable_display_ll()->set_lat(*lat);
+          location->mutable_display_ll()->set_lng(*lon);
+        }
         auto search_cutoff = rapidjson::get_optional<unsigned int>(r_loc, "/search_cutoff");
         if (search_cutoff) {
           location->set_search_cutoff(*search_cutoff);
@@ -463,6 +470,11 @@ void parse_locations(const rapidjson::Document& doc,
             rapidjson::get_optional<unsigned int>(r_loc, "/street_side_tolerance");
         if (street_side_tolerance) {
           location->set_street_side_tolerance(*street_side_tolerance);
+        }
+        auto street_side_max_distance =
+            rapidjson::get_optional<unsigned int>(r_loc, "/street_side_max_distance");
+        if (street_side_max_distance) {
+          location->set_street_side_max_distance(*street_side_max_distance);
         }
         auto search_filter = rapidjson::get_child_optional(r_loc, "/search_filter");
         if (search_filter) {
@@ -956,6 +968,13 @@ void from_json(rapidjson::Document& doc, Options& options) {
   auto guidance_views = rapidjson::get_optional<bool>(doc, "/guidance_views");
   if (guidance_views) {
     options.set_guidance_views(*guidance_views);
+  }
+
+  // whether to include roundabout_exit maneuvers, default true
+  auto roundabout_exits = rapidjson::get_optional<bool>(doc, "/roundabout_exits");
+  options.set_roundabout_exits(true);
+  if (roundabout_exits) {
+    options.set_roundabout_exits(*roundabout_exits);
   }
 
   // force these into the output so its obvious what we did to the user

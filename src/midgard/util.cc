@@ -258,6 +258,11 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
                           : acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
                                  cos(last.second * RAD_PER_DEG) * cos(lat2) *
                                      cos(last.first * -RAD_PER_DEG - lon2));
+    if (std::isnan(d)) {
+      // set d to 0, do not skip in case we are preserving coordinates
+      d = 0.0;
+    }
+
     // keep placing points while we can fit them
     while (d > remaining) {
       // some precomputed stuff
@@ -338,6 +343,9 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
                           : acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
                                  cos(last.second * RAD_PER_DEG) * cos(lat2) *
                                      cos(last.first * -RAD_PER_DEG - lon2));
+    if (std::isnan(d)) {
+      continue;
+    }
 
     // Place resampled points on this segment as long as remaining distance is < d
     while (remaining < d) {

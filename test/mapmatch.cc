@@ -80,7 +80,7 @@ const auto conf = json_to_pt(R"({
     "loki":{
       "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
       "logging":{"long_request": 100},
-      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
+      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
     },
     "thor":{"logging":{"long_request": 110}},
     "skadi":{"actons":["height"],"logging":{"long_request": 5}},
@@ -1241,21 +1241,19 @@ TEST(Mapmatch, test_loop_matching) {
 TEST(Mapmatch, test_intersection_matching) {
   std::vector<std::string> test_cases = {
       R"({"shape":[
-          {"lat": 52.0981267, "lon": 5.1296180, "type": "break", "node_snap_tolerance": 0},
-          {"lat": 52.0981280, "lon": 5.1297250, "type": "break", "node_snap_tolerance": 0}],
+          {"lat": 52.098126, "lon": 5.129618, "type": "break", "node_snap_tolerance": 0},
+          {"lat": 52.098128, "lon": 5.129725, "type": "break", "node_snap_tolerance": 0}],
           "costing":"auto","shape_match":"map_snap"})",
       R"({"shape":[
-          {"lat": 52.0981346, "lon": 5.1300437, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.0981250, "lon": 5.1309460, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.0980642, "lon": 5.1314993, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.0980870, "lon": 5.1315040, "type": "break", "node_snap_tolerance": 5}],
+          {"lat": 52.098134, "lon": 5.130043, "type": "break", "node_snap_tolerance": 5},
+          {"lat": 52.098125, "lon": 5.130946, "type": "break", "node_snap_tolerance": 5},
+          {"lat": 52.098064, "lon": 5.131499, "type": "break", "node_snap_tolerance": 5},
+          {"lat": 52.098087, "lon": 5.131504, "type": "break", "node_snap_tolerance": 5}],
           "costing":"auto","shape_match":"map_snap"})",
       R"({"shape":[
-          {"lat": 52.0951641, "lon": 5.1285609, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.0952055, "lon": 5.1292756, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.0952520, "lon": 5.1301350, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.0952940, "lon": 5.1309060, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.0944788, "lon": 5.1304066, "type": "break", "node_snap_tolerance": 5}],
+          {"lat": 52.095164, "lon": 5.128560, "type": "break", "node_snap_tolerance": 5},
+          {"lat": 52.095294, "lon": 5.130906, "type": "break", "node_snap_tolerance": 5},
+          {"lat": 52.094478, "lon": 5.130406, "type": "break", "node_snap_tolerance": 5}],
           "costing":"auto","shape_match":"map_snap"})"};
 
   api_tester tester;
