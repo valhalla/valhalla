@@ -1,4 +1,4 @@
-file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/midgard/*.h)
+file(GLOB headers ${valhalla_SOURCE_DIR}/valhalla/midgard/*.h)
 
 set(sources
   linesegment2.cc
@@ -18,8 +18,8 @@ valhalla_module(NAME midgard
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
-      ${VALHALLA_SOURCE_DIR}
-      ${VALHALLA_SOURCE_DIR}/valhalla
-      $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+      ${valhalla_SOURCE_DIR}
+      ${valhalla_SOURCE_DIR}/valhalla
+      $<$<BOOL:${MSVC}>:${valhalla_SOURCE_DIR}/third_party/dirent/include>
   DEPENDS
     Boost::boost)

@@ -35,8 +35,7 @@ project(valhalla LANGUAGES CXX C VERSION ${VALHALLA_VERSION})
 include(FindPkgConfig)
 include(GNUInstallDirs)
 
-set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
+list(INSERT CMAKE_MODULE_PATH 0 ${valhalla_SOURCE_DIR}/cmake)
 
 set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ language version to use (default is 14)")
 option(ENABLE_TOOLS "Enable Valhalla tools" ON)
@@ -135,7 +134,7 @@ if(ENABLE_COVERAGE)
   endif()
 
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/coverage.info
-    COMMAND ${LCOV_PATH} --directory . --base-directory ${VALHALLA_SOURCE_DIR} --no-external --capture --output-file coverage.info --no-checksum
+    COMMAND ${LCOV_PATH} --directory . --base-directory ${valhalla_SOURCE_DIR} --no-external --capture --output-file coverage.info --no-checksum
     COMMAND ${LCOV_PATH} --remove coverage.info '*/third_party/*' --output-file coverage.info
     COMMAND ${LCOV_PATH} --remove coverage.info '${CMAKE_CURRENT_BINARY_DIR}/*' --output-file coverage.info
     COMMAND ${LCOV_PATH} --list coverage.info
@@ -273,12 +272,12 @@ endif()
 
 ## Executable targets
 function(get_source_path PATH NAME)
-  if(EXISTS ${VALHALLA_SOURCE_DIR}/src/${NAME}.cc)
-    set(${PATH} ${VALHALLA_SOURCE_DIR}/src/${NAME}.cc PARENT_SCOPE)
-  elseif(EXISTS ${VALHALLA_SOURCE_DIR}/src/meili/${NAME}.cc)
-    set(${PATH} ${VALHALLA_SOURCE_DIR}/src/meili/${NAME}.cc PARENT_SCOPE)
-  elseif(EXISTS ${VALHALLA_SOURCE_DIR}/src/mjolnir/${NAME}.cc)
-    set(${PATH} ${VALHALLA_SOURCE_DIR}/src/mjolnir/${NAME}.cc PARENT_SCOPE)
+  if(EXISTS ${valhalla_SOURCE_DIR}/src/${NAME}.cc)
+    set(${PATH} ${valhalla_SOURCE_DIR}/src/${NAME}.cc PARENT_SCOPE)
+  elseif(EXISTS ${valhalla_SOURCE_DIR}/src/meili/${NAME}.cc)
+    set(${PATH} ${valhalla_SOURCE_DIR}/src/meili/${NAME}.cc PARENT_SCOPE)
+  elseif(EXISTS ${valhalla_SOURCE_DIR}/src/mjolnir/${NAME}.cc)
+    set(${PATH} ${valhalla_SOURCE_DIR}/src/mjolnir/${NAME}.cc PARENT_SCOPE)
   else()
     message(FATAL_ERROR "no source path for ${NAME}")
   endif()
@@ -340,8 +339,8 @@ if(ENABLE_DATA_TOOLS)
   target_link_libraries(valhalla_build_admins GEOS::GEOS)
   target_sources(valhalla_build_statistics
     PUBLIC
-      ${VALHALLA_SOURCE_DIR}/src/mjolnir/statistics.cc
-      ${VALHALLA_SOURCE_DIR}/src/mjolnir/statistics_database.cc)
+      ${valhalla_SOURCE_DIR}/src/mjolnir/statistics.cc
+      ${valhalla_SOURCE_DIR}/src/mjolnir/statistics_database.cc)
 endif()
 
 if(ENABLE_SERVICES)
@@ -396,7 +395,7 @@ set(CPACK_PACKAGE_VERSION_MINOR ${VALHALLA_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${VALHALLA_VERSION_PATCH})
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}${CPACK_PACKAGE_VERSION_SUFFIX}")
 set(CPACK_PACKAGE_CONTACT "Team Valhalla <valhalla@mapzen.com>")
-set(CPACK_RESOURCE_FILE_LICENSE "${VALHALLA_SOURCE_DIR}/LICENSE.md")
+set(CPACK_RESOURCE_FILE_LICENSE "${valhalla_SOURCE_DIR}/LICENSE.md")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "OpenStreetMap Routing API
  A set of routing APIs designed around OSM map data using
  dynamic costing and a tiled data structure")
@@ -440,6 +439,6 @@ else()
   set(CPACK_COMPONENTS_ALL "development")
 endif()
 
-set(CPACK_PROJECT_CONFIG_FILE ${VALHALLA_SOURCE_DIR}/cmake/CPackConfig.cmake)
+set(CPACK_PROJECT_CONFIG_FILE ${valhalla_SOURCE_DIR}/cmake/CPackConfig.cmake)
 set(CPACK_DEBIAN_PACKAGE_DEBUG OFF)
 include(CPack)

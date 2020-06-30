@@ -1,4 +1,4 @@
-file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/loki/*.h)
+file(GLOB headers ${valhalla_SOURCE_DIR}/valhalla/loki/*.h)
 
 set(sources
   search.cc
@@ -18,12 +18,12 @@ valhalla_module(NAME loki
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
-      ${VALHALLA_SOURCE_DIR}
-      ${VALHALLA_SOURCE_DIR}/valhalla
-      ${VALHALLA_SOURCE_DIR}/third_party/date/include
-      $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+      ${valhalla_SOURCE_DIR}
+      ${valhalla_SOURCE_DIR}/valhalla
+      ${valhalla_SOURCE_DIR}/third_party/date/include
+      $<$<BOOL:${MSVC}>:${valhalla_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+      ${valhalla_SOURCE_DIR}/third_party/rapidjson/include
       ${CMAKE_BINARY_DIR}
   DEPENDS
     valhalla::skadi

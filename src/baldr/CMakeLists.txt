@@ -4,33 +4,33 @@ set(tz_db_files africa antarctica asia australasia backward etcetera europe
 
 foreach(tz_db_file ${tz_db_files})
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_${tz_db_file}.h
-    COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
-        ${VALHALLA_SOURCE_DIR}/date_time/${tz_db_file}
+    COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${valhalla_SOURCE_DIR}/cmake/Binary2Header.cmake
+        ${valhalla_SOURCE_DIR}/date_time/${tz_db_file}
         ${CMAKE_CURRENT_BINARY_DIR}/date_time_${tz_db_file}.h
         --variable-name date_time_${tz_db_file} --skip 1 --raw
-    WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
+    WORKING_DIRECTORY ${valhalla_SOURCE_DIR}
     COMMENT "Compiling date_time/${tz_db_file} to date_time_${tz_db_file}.h"
-    DEPENDS ${VALHALLA_SOURCE_DIR}/date_time/${tz_db_file})
+    DEPENDS ${valhalla_SOURCE_DIR}/date_time/${tz_db_file})
 endforeach()
 
 ## Process the windowsZones.xml file
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
-  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
-      ${VALHALLA_SOURCE_DIR}/date_time/windowsZones.xml
+  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${valhalla_SOURCE_DIR}/cmake/Binary2Header.cmake
+      ${valhalla_SOURCE_DIR}/date_time/windowsZones.xml
       ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
       --variable-name date_time_windows_zones_xml --skip 1 --raw
-  WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
+  WORKING_DIRECTORY ${valhalla_SOURCE_DIR}
   COMMENT "Compiling date_time/windowsZones.xml to date_time_windows_zones.h"
-  DEPENDS ${VALHALLA_SOURCE_DIR}/date_time/windowsZones.xml)
+  DEPENDS ${valhalla_SOURCE_DIR}/date_time/windowsZones.xml)
 
-file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/baldr/*.h)
+file(GLOB headers ${valhalla_SOURCE_DIR}/valhalla/baldr/*.h)
 
 set(includes
-    ${VALHALLA_SOURCE_DIR}
-     ${VALHALLA_SOURCE_DIR}/valhalla
-     $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
-     ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-     ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+    ${valhalla_SOURCE_DIR}
+     ${valhalla_SOURCE_DIR}/valhalla
+     $<$<BOOL:${MSVC}>:${valhalla_SOURCE_DIR}/third_party/dirent/include>
+     ${valhalla_SOURCE_DIR}/third_party/rapidjson/include
+     ${valhalla_SOURCE_DIR}/third_party/date/include)
 
 set(sources
     accessrestriction.cc
@@ -88,8 +88,8 @@ list(APPEND sources
 
 #ios we have more work to make use of system tzdb
 if(APPLE)
-  list(APPEND includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
-  list(APPEND sources ${VALHALLA_SOURCE_DIR}/third_party/date/src/ios.mm)
+  list(APPEND includes ${valhalla_SOURCE_DIR}/third_party/date/include/date)
+  list(APPEND sources ${valhalla_SOURCE_DIR}/third_party/date/src/ios.mm)
 endif()
 
 valhalla_module(NAME baldr
