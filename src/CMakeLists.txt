@@ -66,7 +66,9 @@ function(valhalla_module)
       $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>)
   target_include_directories(${library} ${MODULE_INCLUDE_DIRECTORIES}
      PRIVATE
+       ${valhalla_SOURCE_DIR}/src
        ${valhalla_BINARY_DIR}/src
+       ${valhalla_SOURCE_DIR}/valhalla
        ${valhalla_BINARY_DIR}/src/valhalla)
 
   if(ENABLE_COVERAGE)
@@ -169,12 +171,12 @@ endif()
 target_include_directories(valhalla
   PUBLIC
     ${valhalla_SOURCE_DIR}
-    ${valhalla_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${valhalla_BINARY_DIR}/src
-    ${valhalla_BINARY_DIR}/src/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${valhalla_SOURCE_DIR}/third_party/rapidjson/include
     ${valhalla_SOURCE_DIR}/third_party/date/include
   PRIVATE
+    ${valhalla_SOURCE_DIR}/valhalla
+    ${valhalla_BINARY_DIR}/src/valhalla
     ${libvalhalla_include_directories})
 
 if(MSVC)

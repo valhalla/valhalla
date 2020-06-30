@@ -25,6 +25,9 @@ if(ENABLE_DATA_TOOLS)
       ${VALHALLA_SOURCE_DIR}/third_party/microtar/src
       ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
       ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
+    target_include_directories(${TESTNAME} PRIVATE
+      ${valhalla_SOURCE_DIR}/valhalla
+      ${valhalla_BINARY_DIR}/src/valhalla)
     add_dependencies(${TESTNAME} build_timezones)
 
     ## Test run targets

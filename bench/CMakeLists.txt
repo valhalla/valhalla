@@ -22,6 +22,9 @@ macro (add_valhalla_benchmark target_file)
     PROPERTIES
     COMPILE_DEFINITIONS
     VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
+  target_include_directories(${target_name} PRIVATE
+    ${valhalla_SOURCE_DIR}/valhalla
+    ${valhalla_BINARY_DIR}/src/valhalla)
   target_link_libraries(${target_name} valhalla benchmark::benchmark)
   add_dependencies(benchmarks ${target_name})
   add_dependencies(${target_name} utrecht_tiles)

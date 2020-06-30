@@ -48,6 +48,9 @@ foreach(test ${tests})
     # Any tool that needs interact with Lua will need these flags on macOS
     target_link_options(${test} PUBLIC -pagezero_size 10000 -image_base 100000000)
   endif()
+  target_include_directories(${test} PRIVATE
+      ${valhalla_SOURCE_DIR}/valhalla
+      ${valhalla_BINARY_DIR}/src/valhalla)
   target_include_directories(${test} SYSTEM PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
       ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
@@ -60,6 +63,9 @@ foreach(test ${cost_tests})
     FOLDER "Tests"
     COMPILE_DEFINITIONS INLINE_TEST)
   create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc)
+  target_include_directories(${test} PRIVATE
+      ${valhalla_SOURCE_DIR}/valhalla
+      ${valhalla_BINARY_DIR}/src/valhalla)
   target_link_libraries(${test} valhalla gtest gmock pthread)
 endforeach()
 

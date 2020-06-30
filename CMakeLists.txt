@@ -302,8 +302,11 @@ if(ENABLE_TOOLS)
   foreach(program ${valhalla_programs})
     get_source_path(path ${program})
     add_executable(${program} ${path})
-    set_target_properties(${program} PROPERTIES FOLDER "Tools")
     create_source_groups("Source Files" ${path})
+    set_target_properties(${program} PROPERTIES FOLDER "Tools")
+    target_include_directories(${program} PRIVATE
+      ${valhalla_SOURCE_DIR}/valhalla
+      ${valhalla_BINARY_DIR}/src/valhalla)
     target_link_libraries(${program} Boost::program_options valhalla)
     if(WIN32)
       target_link_libraries(${program} ${CURL_LIBRARIES})
@@ -318,6 +321,9 @@ if(ENABLE_DATA_TOOLS)
     add_executable(${program} ${path})
     create_source_groups("Source Files" ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
+    target_include_directories(${program} PRIVATE
+      ${valhalla_SOURCE_DIR}/valhalla
+      ${valhalla_BINARY_DIR}/src/valhalla)
     target_link_libraries(${program} valhalla valhalla-data-tools Boost::program_options)
     if (LUAJIT_FOUND AND APPLE)
       # Using LuaJIT on macOS requires a couple of extra linker flags
@@ -343,6 +349,9 @@ if(ENABLE_SERVICES)
     add_executable(${program} src/${program}.cc)
     create_source_groups("Source Files" src/${program}.cc)
     set_target_properties(${program} PROPERTIES FOLDER "Services")
+    target_include_directories(${program} PRIVATE
+      ${valhalla_SOURCE_DIR}/valhalla
+      ${valhalla_BINARY_DIR}/src/valhalla)
     target_link_libraries(${program}
       valhalla
       valhalla-data-tools
