@@ -144,7 +144,7 @@ TEST_F(SearchFilter, ExcludeBridge) {
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
           .str();
   auto result_unfiltered = gurka::route(map, request_unfiltered);
-  gurka::assert::osrm::expect_steps(result_unfiltered, {"EF", "DE", "CD"});
+  gurka::assert::osrm::expect_steps(result_unfiltered, {"EF", "DE"});
   gurka::assert::raw::expect_path(result_unfiltered, {"EF", "DE", "CD"});
 
   const std::string& request_filtered =
