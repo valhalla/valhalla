@@ -170,10 +170,11 @@ endif()
 
 target_include_directories(valhalla
   PUBLIC
-    ${valhalla_SOURCE_DIR}
-    ${valhalla_BINARY_DIR}/src
-    ${valhalla_SOURCE_DIR}/third_party/rapidjson/include
-    ${valhalla_SOURCE_DIR}/third_party/date/include
+    $<BUILD_INTERFACE:${valhalla_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${valhalla_BINARY_DIR}/src>
+    $<BUILD_INTERFACE:${valhalla_SOURCE_DIR}/third_party/rapidjson/include>
+    $<BUILD_INTERFACE:${valhalla_SOURCE_DIR}/third_party/date/include>
+    $<INSTALL_INTERFACE:include>
   PRIVATE
     ${valhalla_SOURCE_DIR}/valhalla
     ${valhalla_BINARY_DIR}/src/valhalla
@@ -194,6 +195,7 @@ target_link_libraries(valhalla
 if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
   target_link_libraries(valhalla PUBLIC CURL::CURL)
 endif()
+set(VALHALLA_EXPORT_LIBRARIES valhalla)
 
 if(ENABLE_DATA_TOOLS)
   add_library(valhalla-data-tools INTERFACE)
@@ -201,6 +203,7 @@ if(ENABLE_DATA_TOOLS)
     INTERFACE
       SQLite3::SQLite3
       SpatiaLite::SpatiaLite)
+  list(APPEND VALHALLA_EXPORT_LIBRARIES valhalla-data-tools)
 endif()
 
 set_target_properties(valhalla PROPERTIES
@@ -209,7 +212,8 @@ set_target_properties(valhalla PROPERTIES
 
 set(LIBVALHALLA_SO_LINK ${CMAKE_SHARED_LIBRARY_PREFIX}valhalla${CMAKE_SHARED_LIBRARY_SUFFIX})
 
-install(TARGETS valhalla
+install(TARGETS ${VALHALLA_EXPORT_LIBRARIES}
+  EXPORT valhalla_exports
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shared NAMELINK_SKIP
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT development)
 
@@ -235,6 +239,24 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${LIBVALHALLA_SO_LINK}
 
 install(FILES ${valhalla_hdrs}
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla"
+  COMPONENT development)
+
+configure_file(
+  "${valhalla_SOURCE_DIR}/cmake/valhalla-config.cmake.in"
+  "${valhalla_BINARY_DIR}/valhalla-config.cmake"
+  @ONLY)
+
+export(TARGETS ${VALHALLA_EXPORT_LIBRARIES} NAMESPACE valhalla::
+  FILE "${valhalla_BINARY_DIR}/valhalla-targets.cmake")
+
+install(FILES "${valhalla_BINARY_DIR}/valhalla-config.cmake"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/valhalla"
+  COMPONENT development)
+
+install(EXPORT valhalla_exports
+  NAMESPACE valhalla::
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/valhalla"
+  FILE valhalla-targets.cmake
   COMPONENT development)
 
 if(PKG_CONFIG_FOUND)
