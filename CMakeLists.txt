@@ -35,6 +35,9 @@ project(valhalla LANGUAGES CXX C VERSION ${VALHALLA_VERSION})
 include(FindPkgConfig)
 include(GNUInstallDirs)
 
+if(CMAKE_VERSION VERSION_LESS 3.14)
+  list(INSERT CMAKE_MODULE_PATH 0 ${valhalla_SOURCE_DIR}/cmake/future/3.14)
+endif()
 list(INSERT CMAKE_MODULE_PATH 0 ${valhalla_SOURCE_DIR}/cmake)
 
 set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ language version to use (default is 14)")

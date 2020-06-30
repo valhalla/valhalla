@@ -201,7 +201,7 @@ if(ENABLE_DATA_TOOLS)
   add_library(valhalla-data-tools INTERFACE)
   target_link_libraries(valhalla-data-tools
     INTERFACE
-      SQLite3::SQLite3
+      SQLite::SQLite3
       SpatiaLite::SpatiaLite)
   list(APPEND VALHALLA_EXPORT_LIBRARIES valhalla-data-tools)
 endif()
