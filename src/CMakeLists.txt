@@ -153,7 +153,6 @@ create_source_groups("Source Files" ${valhalla_src})
 
 target_compile_definitions(valhalla
   PUBLIC
-    $<$<BOOL:${MSVC}>:VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI>
     RAPIDJSON_HAS_STDSTRING  # this is a part of the workaround for OBJECT libraries,
                              # because ${libvalhalla_compile_definitions} must be private.
                              # To be removed with ${libvalhalla_compile_definitions} below
@@ -161,6 +160,11 @@ target_compile_definitions(valhalla
     AUTO_DOWNLOAD=0
   PRIVATE
     ${libvalhalla_compile_definitions})
+
+if(MSVC)
+  target_compile_definitions(valhalla
+    PUBLIC VC_EXTRALEAN WIN32_LEAN_AND_MEAN NOMINMAX NOGDI)
+endif()
 
 target_compile_options(valhalla PUBLIC ${libvalhalla_compile_options})
 
@@ -176,9 +180,13 @@ target_include_directories(valhalla
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
     ${VALHALLA_SOURCE_DIR}/third_party/date/include
-    $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
   PRIVATE
     ${libvalhalla_include_directories})
+
+if(MSVC)
+  target_include_directories(valhalla
+    PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/dirent/include)
+endif()
 
 target_link_libraries(valhalla
   PUBLIC
