@@ -102,6 +102,8 @@
    * ADDED: Gurka expect_route refactor [#2435](https://github.com/valhalla/valhalla/pull/2435)
    * ADDED: Add option to suppress roundabout exits [#2437](https://github.com/valhalla/valhalla/pull/2437)
    * ADDED: Add Greek locale. [#2438](https://github.com/valhalla/valhalla/pull/2438)
+   * ADDED (back): Support for 64bit wide way ids in the edgeinfo structure with no impact to size for data sources with ids 32bits wide. [#2422](https://github.com/valhalla/valhalla/pull/2422)
+   * ADDED: Support for 64bit osm node ids in parsing stage of tile building [#2422](https://github.com/valhalla/valhalla/pull/2422)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
