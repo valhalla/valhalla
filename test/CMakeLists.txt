@@ -39,7 +39,10 @@ foreach(test ${tests})
     FOLDER "Tests"
     COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
   create_source_groups("Source Files" ${test}.cc)
-  target_link_libraries(${test} valhalla gtest gmock pthread)
+  target_link_libraries(${test} valhalla robin_hood gtest gmock pthread)
+  if(ENABLE_SERVICES)
+    target_link_libraries(${test} libprime_server)
+  endif()
   if (LUAJIT_FOUND AND APPLE)
     # Using LuaJIT on macOS requires a couple of extra linker flags
     # Any tool that needs interact with Lua will need these flags on macOS

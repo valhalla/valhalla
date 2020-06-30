@@ -318,7 +318,7 @@ if(ENABLE_DATA_TOOLS)
     add_executable(${program} ${path})
     create_source_groups("Source Files" ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
-    target_link_libraries(${program} valhalla Boost::program_options)
+    target_link_libraries(${program} valhalla valhalla-data-tools Boost::program_options)
     if (LUAJIT_FOUND AND APPLE)
       # Using LuaJIT on macOS requires a couple of extra linker flags
       target_link_options(${program} PUBLIC -pagezero_size 10000 -image_base 100000000)
@@ -343,7 +343,11 @@ if(ENABLE_SERVICES)
     add_executable(${program} src/${program}.cc)
     create_source_groups("Source Files" src/${program}.cc)
     set_target_properties(${program} PROPERTIES FOLDER "Services")
-    target_link_libraries(${program} valhalla Boost::program_options)
+    target_link_libraries(${program}
+      valhalla
+      valhalla-data-tools
+      libprime_server
+      Boost::program_options)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()

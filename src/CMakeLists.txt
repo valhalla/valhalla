@@ -166,7 +166,7 @@ if(MSVC)
     PUBLIC VC_EXTRALEAN WIN32_LEAN_AND_MEAN NOMINMAX NOGDI)
 endif()
 
-target_compile_options(valhalla PUBLIC ${libvalhalla_compile_options})
+target_compile_options(valhalla PRIVATE ${libvalhalla_compile_options})
 
 if(ENABLE_COMPILER_WARNINGS)
   cxx_add_warning_flags(valhalla)
@@ -190,10 +190,22 @@ endif()
 
 target_link_libraries(valhalla
   PUBLIC
-    ${libvalhalla_link_libraries}
+    ${valhalla_protobuf_targets}
   PRIVATE
+    ${libvalhalla_link_libraries}
     $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
     Threads::Threads)
+if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
+  target_link_libraries(valhalla PUBLIC CURL::CURL)
+endif()
+
+if(ENABLE_DATA_TOOLS)
+  add_library(valhalla-data-tools INTERFACE)
+  target_link_libraries(valhalla-data-tools
+    INTERFACE
+      SQLite3::SQLite3
+      SpatiaLite::SpatiaLite)
+endif()
 
 set_target_properties(valhalla PROPERTIES
   VERSION "${VALHALLA_VERSION}"
