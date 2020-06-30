@@ -1,9 +1,10 @@
-#include "valhalla/midgard/util.h"
-#include "valhalla/midgard/constants.h"
-#include "valhalla/midgard/distanceapproximator.h"
-#include "valhalla/midgard/logging.h"
-#include "valhalla/midgard/point2.h"
-#include "valhalla/midgard/polyline2.h"
+#include "midgard/util.h"
+#include "midgard/constants.h"
+#include "midgard/distanceapproximator.h"
+#include "midgard/logging.h"
+#include "midgard/point2.h"
+#include "midgard/polyline2.h"
+#include "midgard/vector2.h"
 
 #include <algorithm>
 #include <array>
@@ -489,10 +490,19 @@ y_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_t
   auto b = u.second - (u.first * m);
   return (y - b) / m;
 }
-template PointLL::first_type
-y_intercept<PointLL>(const PointLL& u, const PointLL& v, const PointLL::first_type y);
-template Point2::first_type
-y_intercept<Point2>(const Point2& u, const Point2& v, const Point2::first_type y);
+template PointXY<float>::first_type y_intercept<PointXY<float>>(const PointXY<float>&,
+                                                                const PointXY<float>&,
+                                                                const PointXY<float>::first_type);
+template GeoPoint<float>::first_type y_intercept<GeoPoint<float>>(const GeoPoint<float>&,
+                                                                  const GeoPoint<float>&,
+                                                                  const GeoPoint<float>::first_type);
+template PointXY<double>::first_type y_intercept<PointXY<double>>(const PointXY<double>&,
+                                                                  const PointXY<double>&,
+                                                                  const PointXY<double>::first_type);
+template GeoPoint<double>::first_type
+y_intercept<GeoPoint<double>>(const GeoPoint<double>&,
+                              const GeoPoint<double>&,
+                              const GeoPoint<double>::first_type);
 
 // Return the intercept of the line passing through uv with the vertical line defined by x
 template <class coord_t>
@@ -508,10 +518,19 @@ x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_t
   auto b = u.second - (u.first * m);
   return x * m + b;
 }
-template PointLL::second_type
-x_intercept<PointLL>(const PointLL& u, const PointLL& v, const PointLL::second_type x);
-template Point2::second_type
-x_intercept<Point2>(const Point2& u, const Point2& v, const Point2::second_type x);
+template PointXY<float>::first_type x_intercept<PointXY<float>>(const PointXY<float>&,
+                                                                const PointXY<float>&,
+                                                                const PointXY<float>::first_type);
+template GeoPoint<float>::first_type x_intercept<GeoPoint<float>>(const GeoPoint<float>&,
+                                                                  const GeoPoint<float>&,
+                                                                  const GeoPoint<float>::first_type);
+template PointXY<double>::first_type x_intercept<PointXY<double>>(const PointXY<double>&,
+                                                                  const PointXY<double>&,
+                                                                  const PointXY<double>::first_type);
+template GeoPoint<double>::first_type
+x_intercept<GeoPoint<double>>(const GeoPoint<double>&,
+                              const GeoPoint<double>&,
+                              const GeoPoint<double>::first_type);
 
 template <class container_t> float polygon_area(const container_t& polygon) {
   typename container_t::value_type::first_type area =
