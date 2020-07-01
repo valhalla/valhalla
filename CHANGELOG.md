@@ -53,8 +53,10 @@
    * FIXED: Fix on map-matching return code when breakage distance limitation exceeds. Instead of letting the request goes into meili and fails in finding a route, we check the distance in loki and early return with exception code 172. [#2406](https://github.com/valhalla/valhalla/pull/2406)
    * FIXED: Don't create edges for portions of ways that are doubled back on themselves as this confuses opposing edge index computations [#2385](https://github.com/valhalla/valhalla/pull/2385)
    * FIXED: Protect against nan in uniform_resample_spherical_polyline. [#2431](https://github.com/valhalla/valhalla/pull/2431)
+   * FIXED: Obvious maneuvers. [#2436](https://github.com/valhalla/valhalla/pull/2436)
 
 * **Enhancement**
+   * ADDED: Add explicit include for sstream to be compatible with msvc_x64 toolset. [#2449](https://github.com/valhalla/valhalla/pull/2449)
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
    * ADDED: Cancellation of tile downloading. [#2319](https://github.com/valhalla/valhalla/pull/2319)
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)
@@ -101,6 +103,9 @@
    * ADDED: Gurka expect_route refactor [#2435](https://github.com/valhalla/valhalla/pull/2435)
    * ADDED: Add option to suppress roundabout exits [#2437](https://github.com/valhalla/valhalla/pull/2437)
    * ADDED: Add Greek locale. [#2438](https://github.com/valhalla/valhalla/pull/2438)
+   * ADDED (back): Support for 64bit wide way ids in the edgeinfo structure with no impact to size for data sources with ids 32bits wide. [#2422](https://github.com/valhalla/valhalla/pull/2422)
+   * ADDED: Support for 64bit osm node ids in parsing stage of tile building [#2422](https://github.com/valhalla/valhalla/pull/2422)
+   * CHANGED: Point2/PointLL are now templated to allow for higher precision coordinate math when desired [#2429](https://github.com/valhalla/valhalla/pull/2429)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

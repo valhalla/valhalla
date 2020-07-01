@@ -146,7 +146,7 @@ TEST(Traffic, BasicUpdates) {
     // Do a route with initial traffic
     {
       auto result = gurka::route(map, "A", "C", "auto", "current", clean_reader);
-      gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
+      gurka::assert::osrm::expect_steps(result, {"AB"});
       gurka::assert::raw::expect_path(result, {"AB", "BC"});
       gurka::assert::raw::expect_eta(result, 361.5);
     }
@@ -159,7 +159,7 @@ TEST(Traffic, BasicUpdates) {
     // it's noticed the changes in the live traffic file
     {
       auto result = gurka::route(map, "A", "C", "auto", "current", clean_reader);
-      gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
+      gurka::assert::osrm::expect_steps(result, {"AB"});
       gurka::assert::raw::expect_path(result, {"AB", "BC"});
       gurka::assert::raw::expect_eta(result, 151.5);
     }
@@ -167,7 +167,7 @@ TEST(Traffic, BasicUpdates) {
     update_all_edges_but_bd(map, valhalla::baldr::kMaxSpeedKph);
     {
       auto result = gurka::route(map, "A", "C", "auto", "current", clean_reader);
-      gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
+      gurka::assert::osrm::expect_steps(result, {"AB"});
       gurka::assert::raw::expect_path(result, {"AB", "BC"});
       gurka::assert::raw::expect_eta(result, 15.785715);
     }
@@ -177,7 +177,7 @@ TEST(Traffic, BasicUpdates) {
     // results aren't used
     {
       auto result = gurka::route(map, "A", "C", "auto", "", clean_reader);
-      gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
+      gurka::assert::osrm::expect_steps(result, {"AB"});
       gurka::assert::raw::expect_path(result, {"AB", "BC"});
       gurka::assert::raw::expect_eta(result, 361.5);
     }

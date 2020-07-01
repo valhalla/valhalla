@@ -129,7 +129,7 @@ TEST(loops, phi) {
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_phi", build_config);
-  check_opposing(map, 8);
+  check_opposing(map, 10);
 }
 
 TEST(loops, bow_tie) {
@@ -159,5 +159,5 @@ TEST(loops, please_god_why) {
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_please_god_why", build_config);
-  check_opposing(map, 10);
+  check_opposing(map, 12);
 }

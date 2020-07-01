@@ -116,7 +116,7 @@ Maneuver::Maneuver()
       distant_verbal_multi_cue_(false), to_stay_on_(false), drive_on_right_(true),
       has_time_restrictions_(false), has_right_traversable_outbound_intersecting_edge_(false),
       has_left_traversable_outbound_intersecting_edge_(false),
-      include_verbal_pre_transition_length_(false) {
+      include_verbal_pre_transition_length_(false), contains_obvious_maneuver_(false) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
@@ -756,6 +756,14 @@ void Maneuver::set_include_verbal_pre_transition_length(bool include_verbal_pre_
   include_verbal_pre_transition_length_ = include_verbal_pre_transition_length;
 }
 
+bool Maneuver::contains_obvious_maneuver() const {
+  return contains_obvious_maneuver_;
+}
+
+void Maneuver::set_contains_obvious_maneuver(bool contains_obvious_maneuver) {
+  contains_obvious_maneuver_ = contains_obvious_maneuver;
+}
+
 TripLeg_TravelMode Maneuver::travel_mode() const {
   return travel_mode_;
 }
@@ -1078,6 +1086,9 @@ std::string Maneuver::ToString() const {
 
   man_str += " | distant_verbal_multi_cue=";
   man_str += std::to_string(distant_verbal_multi_cue_);
+
+  man_str += " | contains_obvious_maneuver=";
+  man_str += std::to_string(contains_obvious_maneuver_);
 
   man_str += " | travel_mode=";
   man_str += std::to_string(travel_mode_);

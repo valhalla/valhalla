@@ -62,6 +62,8 @@ TEST(EdgeInfoBuilder, TestWriteRead) {
   eibuilder.set_mean_elevation(100.0f);
   EXPECT_NEAR(eibuilder.mean_elevation(), 100.0f, kElevationBinSize);
 
+  eibuilder.set_wayid(6472927700900931484);
+
   // Name
   std::vector<NameInfo> name_info_list;
   name_info_list.push_back({963});
@@ -80,6 +82,8 @@ TEST(EdgeInfoBuilder, TestWriteRead) {
   std::unique_ptr<EdgeInfo> ei(new EdgeInfo(memblock.get(), nullptr, 0));
 
   // TODO: errors thrown should say what was found and what was expected
+
+  EXPECT_EQ(ei->wayid(), 6472927700900931484);
 
   // Validate the read in fields to the original EdgeInfoBuilder
   EXPECT_EQ(name_info_list.size(), ei->name_count());

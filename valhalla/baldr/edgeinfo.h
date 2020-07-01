@@ -83,8 +83,11 @@ public:
    * Gets the OSM way Id.
    * @return  Returns the OSM way Id.
    */
-  uint32_t wayid() const {
-    return w0_.wayid_;
+  uint64_t wayid() const {
+    return (static_cast<uint64_t>(extended_wayid3_) << 56) |
+           (static_cast<uint64_t>(extended_wayid2_) << 48) |
+           (static_cast<uint64_t>(ei_.extended_wayid1_) << 40) |
+           (static_cast<uint64_t>(ei_.extended_wayid0_) << 32) | static_cast<uint64_t>(ei_.wayid_);
   }
 
   /**
@@ -92,7 +95,7 @@ public:
    * @return  Returns mean elevation in meters relative to sea level.
    */
   float mean_elevation() const {
-    return kMinElevation + (w0_.mean_elevation_ * kElevationBinSize);
+    return kMinElevation + (ei_.mean_elevation_ * kElevationBinSize);
   }
 
   /**
@@ -100,7 +103,7 @@ public:
    * @return  Returns the bike network mask for this directed edge.
    */
   uint32_t bike_network() const {
-    return w0_.bike_network_;
+    return ei_.bike_network_;
   }
 
   /**
@@ -108,7 +111,7 @@ public:
    * @return  Returns the speed limit in KPH.
    */
   uint32_t speed_limit() const {
-    return w0_.speed_limit_;
+    return ei_.speed_limit_;
   }
 
   /**
@@ -116,7 +119,7 @@ public:
    * @return Returns the name count.
    */
   uint32_t name_count() const {
-    return item_->name_count;
+    return ei_.name_count_;
   }
 
   /**
@@ -124,7 +127,7 @@ public:
    * @return  Returns the shape size.
    */
   uint32_t encoded_shape_size() const {
-    return item_->encoded_shape_size;
+    return ei_.encoded_shape_size_;
   }
 
   /**
@@ -160,7 +163,7 @@ public:
   const std::vector<midgard::PointLL>& shape() const;
 
   midgard::Shape7Decoder<midgard::PointLL> lazy_shape() const {
-    return midgard::Shape7Decoder<midgard::PointLL>(encoded_shape_, item_->encoded_shape_size);
+    return midgard::Shape7Decoder<midgard::PointLL>(encoded_shape_, ei_.encoded_shape_size_);
   }
 
   /**
@@ -178,35 +181,35 @@ public:
   // Operator EqualTo based on nodea and nodeb.
   bool operator==(const EdgeInfo& rhs) const;
 
-  struct PackedItem {
-    uint32_t name_count : 4;
-    uint32_t encoded_shape_size : 16;
-    uint32_t reserved : 5; // Reserved for use by forks of Valhalla
-    uint32_t spare : 7;
+  // Fixed size data within EdgeInfo
+  struct EdgeInfoInner {
+    uint32_t wayid_ : 32; // OSM way Id
+
+    uint32_t mean_elevation_ : 12; // Mean elevation with 2 meter precision
+    uint32_t bike_network_ : 4;    // Mask of bicycle network types (see graphconstants.h)
+    uint32_t speed_limit_ : 8;     // Speed limit (kph)
+    uint32_t extended_wayid0_ : 8; // Next byte of the way id
+
+    uint32_t name_count_ : 4;          // How many name infos we expect
+    uint32_t encoded_shape_size_ : 16; // How many bytes long the encoded shape is
+    uint32_t extended_wayid1_ : 8;     // Next next byte of the way id
+    uint32_t extended_wayid_size_ : 2; // How many more bytes the way id is stored in
+    uint32_t spare0_ : 2;              // not used
   };
 
 protected:
-  // 1st 8-byte word
-  union Word0 {
-    struct {
-      uint64_t wayid_ : 32;          // OSM way Id
-      uint64_t mean_elevation_ : 12; // Mean elevation with 2 meter precision
-      uint64_t bike_network_ : 4;    // Mask of bicycle network types (see graphconstants.h)
-      uint64_t speed_limit_ : 8;     // Speed limit (kph)
-      uint64_t spare0_ : 8;
-    };
-    uint64_t value_;
-  };
-  Word0 w0_;
-
-  // Where we keep the statistics about how large the vectors below are
-  const PackedItem* item_;
+  // Fixed size information
+  EdgeInfoInner ei_;
 
   // List of name information (offsets, etc.)
   const NameInfo* name_info_list_;
 
   // The encoded shape of the edge
   const char* encoded_shape_;
+
+  // Where we optionally keep the last 2 bytes of a 64bit wayid
+  uint8_t extended_wayid2_;
+  uint8_t extended_wayid3_;
 
   // Lng, lat shape of the edge
   mutable std::vector<midgard::PointLL> shape_;
