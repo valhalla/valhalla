@@ -67,7 +67,19 @@ std::string remove_double_quotes(const std::string& s) {
   return ret;
 }
 
-// Compute a curvature metric given an edge shape
+/**
+ * Compute a curvature metric given an edge shape. The final value is from 0 to 15 it is computed by
+ * taking each pair of 3 points in the shape and finding the radius of the circle for which all 3
+ * points lie on it. The larger the radius the less curvy a set of 3 points is. The function is not
+ * robust to the ordering of the points which means some pathological cases can seem straight but
+ * actually be curvy however this is uncommon in real data sets. Each radius of 3 consecutive points
+ * is measured and capped at a maximum value, the radii are averaged together and a final score
+ * between 0 and 15 is stored.
+ *
+ * @param shape   the shape whose curviness we want to measure
+ * @return value between 0 and 15 representing the average curviness of the input shape. lower
+ *         values indicate less curvy shapes and higher values indicate curvier shapes
+ */
 uint32_t compute_curvature(const std::list<PointLL>& shape) {
   // Edges with just 2 shape points have no curvature.
   // TODO - perhaps a post-process to "average" curvature along adjacent edges

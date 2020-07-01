@@ -56,6 +56,7 @@
    * FIXED: Obvious maneuvers. [#2436](https://github.com/valhalla/valhalla/pull/2436)
 
 * **Enhancement**
+   * ADDED: Add explicit include for sstream to be compatible with msvc_x64 toolset. [#2449](https://github.com/valhalla/valhalla/pull/2449)
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
    * ADDED: Cancellation of tile downloading. [#2319](https://github.com/valhalla/valhalla/pull/2319)
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)
@@ -104,6 +105,7 @@
    * ADDED: Add Greek locale. [#2438](https://github.com/valhalla/valhalla/pull/2438)
    * ADDED (back): Support for 64bit wide way ids in the edgeinfo structure with no impact to size for data sources with ids 32bits wide. [#2422](https://github.com/valhalla/valhalla/pull/2422)
    * ADDED: Support for 64bit osm node ids in parsing stage of tile building [#2422](https://github.com/valhalla/valhalla/pull/2422)
+   * CHANGED: Point2/PointLL are now templated to allow for higher precision coordinate math when desired [#2429](https://github.com/valhalla/valhalla/pull/2429)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
