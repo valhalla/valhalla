@@ -1,7 +1,3 @@
-#include <boost/archive/iterators/base64_from_binary.hpp>
-#include <boost/archive/iterators/binary_from_base64.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
-
 #include <iostream>
 
 #include "baldr/predictedspeeds.h"
@@ -14,13 +10,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
 namespace {
-
-// base64 decoding
-std::string decode64(const std::string& val) {
-  using namespace boost::archive::iterators;
-  using It = transform_width<binary_from_base64<std::string::const_iterator>, 8, 6>;
-  return std::string(It(std::begin(val)), It(std::end(val)));
-}
 
 // Convert big endian bytes to little endian
 int16_t to_little_endian(const int16_t val) {
@@ -63,7 +52,9 @@ TEST(PredicteSpeeds, test_decoding) {
 
   // Decode the base64 string and cast the data to a raw string of signed bytes
   auto decoded_str = decode64(encoded_speed_string);
-  EXPECT_EQ(decoded_str.size(), 402);
+  // 401 is the expected size (as opposed to 400=200*2) because we start reading from a 1-byte
+  // offset below at the little endian conversion
+  EXPECT_EQ(decoded_str.size(), 401);
 
   auto raw = reinterpret_cast<const int8_t*>(decoded_str.data());
 
@@ -197,7 +188,9 @@ TEST(PredicteSpeeds, test_negative_speeds) {
 
   // Decode the base64 string and cast the data to a raw string of signed bytes
   auto decoded_str = decode64(encoded_speed_string);
-  EXPECT_EQ(decoded_str.size(), 402);
+  // 401 is the expected size (as opposed to 400=200*2) because we start reading from a 1-byte
+  // offset below at the little endian conversion
+  EXPECT_EQ(decoded_str.size(), 401);
 
   auto raw = reinterpret_cast<const int8_t*>(decoded_str.data());
 
