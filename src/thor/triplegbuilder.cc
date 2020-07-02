@@ -104,7 +104,7 @@ void SetShapeAttributes(const AttributesController& controller,
 
   if (trip_path.has_shape_attributes()) {
     // A list of percent along the edge and corresponding speed (meters per second)
-    std::vector<std::pair<double, double>> speeds;
+    std::vector<std::tuple<double, double>> speeds;
     double speed = (edge->length() * (tgt_pct - src_pct)) / edge_seconds;
     speeds.emplace_back(tgt_pct, speed);
     if (cut_for_traffic) {
@@ -127,12 +127,12 @@ void SetShapeAttributes(const AttributesController& controller,
     // Set the shape attributes
     double distance_total_pct = src_pct;
     auto speed_itr = std::find_if(speeds.cbegin(), speeds.cend(),
-                                  [distance_total_pct](const std::pair<double, double>& s) {
-                                    return distance_total_pct <= s.first;
+                                  [distance_total_pct](const std::tuple<double, double>& s) {
+                                    return distance_total_pct <= std::get<0>(s);
                                   });
     for (auto i = shape_begin + 1; i < shape.size(); ++i) {
       double distance = shape[i].Distance(shape[i - 1]); // meters
-      double time = distance / speed_itr->second;        // seconds
+      double time = distance / std::get<1>(*speed_itr);  // seconds
 
       // Set shape attributes time per shape point if requested
       if (controller.attributes.at(kShapeAttributesTime)) {
@@ -155,8 +155,8 @@ void SetShapeAttributes(const AttributesController& controller,
       // If there is a change in speed here we need to make a new shape point and continue from there
       double distance_pct = distance / edge->length();
       double next_total = distance_total_pct + distance_pct;
-      if (next_total > speed_itr->first && std::next(speed_itr) != speeds.cend()) {
-        auto coef = speed_itr->first - distance_total_pct / next_total;
+      if (next_total > std::get<0>(*speed_itr) && std::next(speed_itr) != speeds.cend()) {
+        auto coef = std::get<0>(*speed_itr) - distance_total_pct / next_total;
         auto point = shape[i - 1].PointAlongSegment(shape[i], coef);
         shape.insert(shape.begin() + i, point);
         ++speed;
