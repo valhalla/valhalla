@@ -12,6 +12,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/signinfo.h"
 #include "baldr/tilehierarchy.h"
+#include "baldr/traffictile.h"
 #include "meili/match_result.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -99,20 +100,21 @@ void SetShapeAttributes(const AttributesController& controller,
                         uint32_t second_of_week,
                         double src_pct,
                         double tgt_pct) {
+  // TODO: if this is a transit edge then the costing will throw
+
   if (trip_path.has_shape_attributes()) {
-    auto edge_percentage = tgt_pct - src_pct;
-    // calculates total edge time and total edge length
-    // TODO: you can get this directly from the path edge by taking its cost and subtracting off
-    // the transition cost that it also now contains
-    double edge_time =
-        costing->EdgeCost(edge, tile, second_of_week).secs * edge_percentage; // seconds
-    // TODO: get the measured length from shape (full shape) to increase precision
-    double edge_length = edge->length() * edge_percentage; // meters
+    // A list of percent along the edge and corresponding speed (meters per second)
+    std::vector<std::pair<double, double>> speeds;
+    speeds.emplace_back(tgt_pct, edge->length() / costing->EdgeCost(edge, tile, second_of_week).secs);
+    // TODO: get traffic speed if relevant
+
     // Set the shape attributes
-    for (++shape_begin; shape_begin < shape.size(); ++shape_begin) {
-      double distance = shape[shape_begin].Distance(shape[shape_begin - 1]); // meters
-      double distance_pct = distance / edge_length; // fraction of edge length
-      double time = edge_time * distance_pct;       // seconds
+    auto speed = speeds.cbegin();
+    double distance_total_pct = src_pct;
+    for (auto i = shape_begin + 1; i < shape.size(); ++i) {
+      double distance = shape[i].Distance(shape[i - 1]); // meters
+      double distance_pct = distance / edge->length();   // fraction of edge length
+      double time = distance / speed->second;            // seconds
 
       // Set shape attributes time per shape point if requested
       if (controller.attributes.at(kShapeAttributesTime)) {
@@ -131,6 +133,17 @@ void SetShapeAttributes(const AttributesController& controller,
         // convert speed to decimeters per sec and then round to an integer
         trip_path.mutable_shape_attributes()->add_speed((distance * kDecimeterPerMeter / time) + 0.5);
       }
+
+      // If there is a change in speed here we need to make a new shape point and continue from there
+      auto next_total = distance_total_pct + distance_pct;
+      if (next_total > speed->first && std::next(speed) != speeds.cend()) {
+        auto coef = speed->first - distance_total_pct / next_total;
+        auto point = shape[i - 1].PointAlongSegment(shape[i], coef);
+        shape.insert(shape.begin() + i, point);
+        ++speed;
+        --i; // we now have a new point for which we need some shape attributes
+      }
+      distance_total_pct = next_total;
     }
   }
 }
@@ -327,7 +340,7 @@ TripLeg_Use GetTripLegUse(const Use use) {
       return TripLeg_Use_kPlatformConnectionUse;
     case Use::kTransitConnection:
       return TripLeg_Use_kTransitConnectionUse;
-    // Should not see other values
+      // Should not see other values
     default:
       // TODO should we throw a runtime error?
       return TripLeg_Use_kRoadUse;
@@ -691,6 +704,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   // Set speed if requested
   if (controller.attributes.at(kEdgeSpeed)) {
+    // TODO: if this is a transit edge then the costing will throw
     // TODO: could get better precision speed here by calling GraphTile::GetSpeed but we'd need to
     // know whether or not the costing actually cares about the speed of the edge. Perhaps a refactor
     // of costing to have a GetSpeed function which EdgeCost calls internally but which we can also
@@ -1259,6 +1273,10 @@ void TripLegBuilder::Build(
       trip_edge->set_length(km);
     }
 
+    // Set shape attributes
+    SetShapeAttributes(controller, tile, edge, mode_costing[static_cast<int>(path_begin->mode)],
+                       shape, 0, trip_path, origin_second_of_week, start_pct, end_pct);
+
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex)) {
       trip_edge->set_begin_shape_index(0);
@@ -1267,10 +1285,6 @@ void TripLegBuilder::Build(
     if (controller.attributes.at(kEdgeEndShapeIndex)) {
       trip_edge->set_end_shape_index(shape.size() - 1);
     }
-
-    // Set shape attributes
-    SetShapeAttributes(controller, tile, edge, mode_costing[static_cast<int>(path_begin->mode)],
-                       shape, 0, trip_path, origin_second_of_week, start_pct, end_pct);
 
     // Set begin and end heading if requested. Uses shape so
     // must be done after the edge's shape has been added.
@@ -1674,6 +1688,10 @@ void TripLegBuilder::Build(
       trip_edge->set_length(km);
     }
 
+    // Set shape attributes
+    SetShapeAttributes(controller, graphtile, directededge, costing, trip_shape, begin_index,
+                       trip_path, second_of_week, trim_start_pct, trim_end_pct);
+
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex)) {
       trip_edge->set_begin_shape_index(begin_index);
@@ -1683,10 +1701,6 @@ void TripLegBuilder::Build(
     if (controller.attributes.at(kEdgeEndShapeIndex)) {
       trip_edge->set_end_shape_index(trip_shape.size() - 1);
     }
-
-    // Set shape attributes
-    SetShapeAttributes(controller, graphtile, directededge, costing, trip_shape, begin_index,
-                       trip_path, second_of_week, trim_start_pct, trim_end_pct);
 
     // Set begin and end heading if requested. Uses trip_shape so
     // must be done after the edge's shape has been added.
