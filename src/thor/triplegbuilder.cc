@@ -128,7 +128,7 @@ void SetShapeAttributes(const AttributesController& controller,
     // Set the shape attributes
     double distance_total_pct = src_pct;
     auto speed_itr = std::find_if(speeds.cbegin(), speeds.cend(),
-                                  [distance_total_pct](const std::tuple<double, double>& s) {
+                                  [distance_total_pct](const decltype(speeds)::value_type& s) {
                                     return distance_total_pct <= std::get<0>(s);
                                   });
     for (auto i = shape_begin + 1; i < shape.size(); ++i) {
