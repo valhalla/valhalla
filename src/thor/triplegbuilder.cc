@@ -118,8 +118,9 @@ void SetShapeAttributes(const AttributesController& controller,
         speeds.emplace_back(traffic_speed.breakpoint1 / 255.0, speed);
         if (traffic_speed.breakpoint1 < 255) {
           speeds.emplace_back(traffic_speed.breakpoint2 / 255.0, speed);
-          if (traffic_speed.breakpoint2 < 255)
+          if (traffic_speed.breakpoint2 < 255) {
             speeds.emplace_back(1, speed);
+          }
         }
       }
     }
