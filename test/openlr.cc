@@ -3,13 +3,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "midgard/encoded.h"
 #include "midgard/openlr.h"
 #include "midgard/pointll.h"
-#include "midgard/util.h"
-
-#include "proto/trip.pb.h"
-#include "proto/tripcommon.pb.h"
 
 #include "test.h"
 

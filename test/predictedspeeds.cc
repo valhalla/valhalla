@@ -52,9 +52,11 @@ TEST(PredicteSpeeds, test_decoding) {
 
   // Decode the base64 string and cast the data to a raw string of signed bytes
   auto decoded_str = decode64(encoded_speed_string);
-  // 401 is the expected size (as opposed to 400=200*2) because we start reading from a 1-byte
-  // offset below at the little endian conversion
-  EXPECT_EQ(decoded_str.size(), 401);
+  // HACK(mookerji): kDecodedSpeedSize+1 is the expected size (as opposed to kDecodedSpeedSize)
+  // because we start reading from a 1-byte offset below at the little endian conversion. This is
+  // actually a broken test fixture because we start reading from 0 in the actual CLI decoding in
+  // src/mjolnir/valhalla_add_predicted_traffic.cc
+  EXPECT_EQ(decoded_str.size(), kDecodedSpeedSize + 1);
 
   auto raw = reinterpret_cast<const int8_t*>(decoded_str.data());
 
@@ -64,8 +66,8 @@ TEST(PredicteSpeeds, test_decoding) {
   // Create the coefficients. Each group of 2 bytes represents a signed, int16 number (big endian).
   // Convert to little endian.
   int idx = 1;
-  int16_t coefficients[200];
-  for (uint32_t i = 0; i < 200; ++i, idx += 2) {
+  int16_t coefficients[kCoefficientCount];
+  for (uint32_t i = 0; i < kCoefficientCount; ++i, idx += 2) {
     coefficients[i] = to_little_endian(*(reinterpret_cast<const int16_t*>(&raw[idx])));
   }
 
@@ -188,9 +190,8 @@ TEST(PredicteSpeeds, test_negative_speeds) {
 
   // Decode the base64 string and cast the data to a raw string of signed bytes
   auto decoded_str = decode64(encoded_speed_string);
-  // 401 is the expected size (as opposed to 400=200*2) because we start reading from a 1-byte
-  // offset below at the little endian conversion
-  EXPECT_EQ(decoded_str.size(), 401);
+  // HACK(mookerji): See note above.
+  EXPECT_EQ(decoded_str.size(), kDecodedSpeedSize + 1);
 
   auto raw = reinterpret_cast<const int8_t*>(decoded_str.data());
 
@@ -200,8 +201,8 @@ TEST(PredicteSpeeds, test_negative_speeds) {
   // Create the coefficients. Each group of 2 bytes represents a signed, int16 number (big endian).
   // Convert to little endian.
   int idx = 1;
-  int16_t coefficients[200];
-  for (uint32_t i = 0; i < 200; ++i, idx += 2) {
+  int16_t coefficients[kCoefficientCount];
+  for (uint32_t i = 0; i < kCoefficientCount; ++i, idx += 2) {
     coefficients[i] = to_little_endian(*(reinterpret_cast<const int16_t*>(&raw[idx])));
   }
 
