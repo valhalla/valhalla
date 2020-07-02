@@ -176,19 +176,20 @@ trim_polyline(const iterator_t& begin,
               const iterator_t& end,
               typename iterator_t::value_type::first_type source,
               typename iterator_t::value_type::first_type target) {
-  using vt = typename iterator_t::value_type::first_type;
   // Detect invalid cases
-  if (target < source || target < vt(0) || vt(1) < source || begin == end) {
+  if (target < source || target < 0 || 1 < source || begin == end) {
     return {};
   }
 
   // Clamp source and target to range [0, 1]
-  source = std::min(std::max(source, vt(0)), vt(1));
-  target = std::min(std::max(target, vt(0)), vt(1));
+  source = std::min(std::max(source, 0), 1);
+  target = std::min(std::max(target, 0), 1);
 
   // Use precision from point type being iterated over
-  vt total_length = length(begin, end), prev_vertex_length = vt(0),
-     source_length = total_length * source, target_length = total_length * target;
+  typename iterator_t::value_type::first_type total_length = length(begin, end),
+                                              prev_vertex_length = 0,
+                                              source_length = total_length * source,
+                                              target_length = total_length * target;
 
   // An state indicating if the position of current vertex is larger
   // than source and smaller than target
