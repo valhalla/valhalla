@@ -12,7 +12,6 @@
 #include "baldr/graphconstants.h"
 #include "baldr/signinfo.h"
 #include "baldr/tilehierarchy.h"
-#include "baldr/traffictile.h"
 #include "meili/match_result.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
