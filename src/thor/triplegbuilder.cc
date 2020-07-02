@@ -93,28 +93,46 @@ void AssignAdmins(const AttributesController& controller,
 void SetShapeAttributes(const AttributesController& controller,
                         const GraphTile* tile,
                         const DirectedEdge* edge,
-                        const std::shared_ptr<sif::DynamicCost>& costing,
                         std::vector<PointLL>& shape,
                         size_t shape_begin,
                         TripLeg& trip_path,
-                        uint32_t second_of_week,
                         double src_pct,
-                        double tgt_pct) {
+                        double tgt_pct,
+                        double edge_seconds,
+                        bool cut_for_traffic) {
   // TODO: if this is a transit edge then the costing will throw
 
   if (trip_path.has_shape_attributes()) {
     // A list of percent along the edge and corresponding speed (meters per second)
     std::vector<std::pair<double, double>> speeds;
-    speeds.emplace_back(tgt_pct, edge->length() / costing->EdgeCost(edge, tile, second_of_week).secs);
-    // TODO: get traffic speed if relevant
+    double speed = (edge->length() * (tgt_pct - src_pct)) / edge_seconds;
+    speeds.emplace_back(tgt_pct, speed);
+    if (cut_for_traffic) {
+      // TODO: we'd like to use the speed from traffic here but because there are synchronization
+      // problems with those records changing between when we used them to make the path and when we
+      // try to grab them again here, we instead rely on the total time from PathInfo and just do the
+      // cutting for now
+      const auto& traffic_speed = tile->trafficspeed(edge);
+      if (traffic_speed.valid()) {
+        speeds.clear();
+        speeds.emplace_back(traffic_speed.breakpoint1 / 255.0, speed);
+        if (traffic_speed.breakpoint1 < 255) {
+          speeds.emplace_back(traffic_speed.breakpoint2 / 255.0, speed);
+          if (traffic_speed.breakpoint2 < 255)
+            speeds.emplace_back(1, speed);
+        }
+      }
+    }
 
     // Set the shape attributes
-    auto speed = speeds.cbegin();
     double distance_total_pct = src_pct;
+    auto speed_itr = std::find_if(speeds.cbegin(), speeds.cend(),
+                                  [distance_total_pct](const std::pair<double, double>& s) {
+                                    return distance_total_pct <= s.first;
+                                  });
     for (auto i = shape_begin + 1; i < shape.size(); ++i) {
       double distance = shape[i].Distance(shape[i - 1]); // meters
-      double distance_pct = distance / edge->length();   // fraction of edge length
-      double time = distance / speed->second;            // seconds
+      double time = distance / speed_itr->second;        // seconds
 
       // Set shape attributes time per shape point if requested
       if (controller.attributes.at(kShapeAttributesTime)) {
@@ -135,9 +153,10 @@ void SetShapeAttributes(const AttributesController& controller,
       }
 
       // If there is a change in speed here we need to make a new shape point and continue from there
-      auto next_total = distance_total_pct + distance_pct;
-      if (next_total > speed->first && std::next(speed) != speeds.cend()) {
-        auto coef = speed->first - distance_total_pct / next_total;
+      double distance_pct = distance / edge->length();
+      double next_total = distance_total_pct + distance_pct;
+      if (next_total > speed_itr->first && std::next(speed_itr) != speeds.cend()) {
+        auto coef = speed_itr->first - distance_total_pct / next_total;
         auto point = shape[i - 1].PointAlongSegment(shape[i], coef);
         shape.insert(shape.begin() + i, point);
         ++speed;
@@ -1260,10 +1279,10 @@ void TripLegBuilder::Build(
     bool drive_on_right = graphreader.nodeinfo(start_node)->drive_on_right();
 
     // Add trip edge
+    auto costing = mode_costing[static_cast<uint32_t>(path_begin->mode)];
     auto trip_edge =
         AddTripEdge(controller, path_begin->edgeid, path_begin->trip_id, 0, path_begin->mode,
-                    travel_types[static_cast<int>(path_begin->mode)],
-                    mode_costing[static_cast<uint32_t>(path_begin->mode)], edge, drive_on_right,
+                    travel_types[static_cast<int>(path_begin->mode)], costing, edge, drive_on_right,
                     trip_path.add_node(), tile, graphreader, origin_second_of_week, startnode.id(),
                     false, nullptr, path_begin->has_time_restrictions);
 
@@ -1274,8 +1293,9 @@ void TripLegBuilder::Build(
     }
 
     // Set shape attributes
-    SetShapeAttributes(controller, tile, edge, mode_costing[static_cast<int>(path_begin->mode)],
-                       shape, 0, trip_path, origin_second_of_week, start_pct, end_pct);
+    auto edge_seconds = path_begin->elapsed_time - path_begin->turn_cost;
+    SetShapeAttributes(controller, tile, edge, shape, 0, trip_path, start_pct, end_pct, edge_seconds,
+                       costing->flow_mask() & kCurrentFlowMask);
 
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex)) {
@@ -1689,8 +1709,12 @@ void TripLegBuilder::Build(
     }
 
     // Set shape attributes
-    SetShapeAttributes(controller, graphtile, directededge, costing, trip_shape, begin_index,
-                       trip_path, second_of_week, trim_start_pct, trim_end_pct);
+    auto edge_seconds = edge_itr->elapsed_time - edge_itr->turn_cost;
+    if (edge_itr != path_begin)
+      edge_seconds -= std::prev(edge_itr)->elapsed_time;
+    SetShapeAttributes(controller, graphtile, directededge, trip_shape, begin_index, trip_path,
+                       trim_start_pct, trim_end_pct, edge_seconds,
+                       costing->flow_mask() & kCurrentFlowMask);
 
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex)) {
