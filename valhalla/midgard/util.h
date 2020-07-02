@@ -172,21 +172,23 @@ typename iterator_t::value_type::first_type length(const iterator_t& begin, cons
  */
 template <typename iterator_t>
 std::vector<typename iterator_t::value_type>
-trim_polyline(const iterator_t& begin, const iterator_t& end, float source, float target) {
+trim_polyline(const iterator_t& begin,
+              const iterator_t& end,
+              typename iterator_t::value_type::first_type source,
+              typename iterator_t::value_type::first_type target) {
+  using vt = typename iterator_t::value_type::first_type;
   // Detect invalid cases
-  if (target < source || target < 0.f || 1.f < source || begin == end) {
+  if (target < source || target < vt(0) || vt(1) < source || begin == end) {
     return {};
   }
 
   // Clamp source and target to range [0, 1]
-  source = std::min(std::max(source, 0.f), 1.f);
-  target = std::min(std::max(target, 0.f), 1.f);
+  source = std::min(std::max(source, vt(0)), vt(1));
+  target = std::min(std::max(target, vt(0)), vt(1));
 
   // Use precision from point type being iterated over
-  typename iterator_t::value_type::first_type total_length = length(begin, end),
-                                              prev_vertex_length = 0.f,
-                                              source_length = total_length * source,
-                                              target_length = total_length * target;
+  vt total_length = length(begin, end), prev_vertex_length = vt(0),
+     source_length = total_length * source, target_length = total_length * target;
 
   // An state indicating if the position of current vertex is larger
   // than source and smaller than target
@@ -210,14 +212,14 @@ trim_polyline(const iterator_t& begin, const iterator_t& end, float source, floa
     // Open if source is located at current segment
     if (!open && source_length < vertex_length) {
       const auto offset = normalize(source_length - prev_vertex_length, segment_length);
-      clip.push_back(prev_vertex->along_segment(*vertex, offset));
+      clip.push_back(prev_vertex->PointAlongSegment(*vertex, offset));
       open = true;
     }
 
     // Open -> Close if target is located at current segment
     if (open && target_length < vertex_length) {
       const auto offset = normalize(target_length - prev_vertex_length, segment_length);
-      clip.push_back(prev_vertex->along_segment(*vertex, offset));
+      clip.push_back(prev_vertex->PointAlongSegment(*vertex, offset));
       open = false;
       break;
     }

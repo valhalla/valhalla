@@ -111,34 +111,17 @@ public:
   }
 
   /**
-   * Returns the point a specified percentage along a segment from this point
-   * to an end point.
-   * @param  end  End point.
-   * @param  pct  Percentage along the segment.
-   * @return Returns the point along the segment.
+   * Returns the point along the segment between this point and the provided point using the provided
+   * distance along. A distance of .5 would be the point halfway between the two points. A distance of
+   * .25 would be 25% of the way from this point to the provided point. The default distance is .5, so
+   * the midpoint
+   * @param   p1         second point of the line segment
+   * @param   distance   the percentage along the segment to place the output point
+   * @return  returns the point along the line segment at the specified distance
    */
-  PointXY<PrecisionT> along_segment(const PointXY<PrecisionT>& end, const PrecisionT pct) const {
-    return {x() + (end.x() - x()) * pct, y() + (end.y() - y()) * pct};
-  }
-
-  /**
-   * Affine combination of this point with another point. 2 scalars are
-   * provided (a0 and a1) and the must add to 1.
-   * @param  a0  Scalar for this point
-   * @param  a1  Scalar for p1
-   * @param  p1  Point 1
-   */
-  PointXY<PrecisionT>
-  AffineCombination(const PrecisionT a0, const PrecisionT a1, const PointXY<PrecisionT>& p1) const {
-    return PointXY<PrecisionT>(a0 * first + a1 * p1.first, a0 * second + a1 * p1.second);
-  }
-  /**
-   * Gets the midpoint on a line segment between this point and point p1.
-   * @param   p1  Point
-   * @return  Returns the midpoint between this point and p1.
-   */
-  PointXY<PrecisionT> MidPoint(const PointXY<PrecisionT>& p1) const {
-    return PointXY(0.5f * (first + p1.first), 0.5f * (second + p1.second));
+  PointXY<PrecisionT> PointAlongSegment(const PointXY<PrecisionT>& p1,
+                                        PrecisionT distance = .5) const {
+    return PointXY(first + distance * (p1.first - first), second + distance * (p1.second - second));
   }
 
   /**
