@@ -105,23 +105,25 @@ void SetShapeAttributes(const AttributesController& controller,
     // A list of percent along the edge and corresponding speed (meters per second)
     std::vector<std::tuple<double, double>> speeds;
     double speed = (edge->length() * (tgt_pct - src_pct)) / edge_seconds;
-    speeds.emplace_back(tgt_pct, speed);
     if (cut_for_traffic) {
       // TODO: we'd like to use the speed from traffic here but because there are synchronization
       // problems with those records changing between when we used them to make the path and when we
       // try to grab them again here, we instead rely on the total time from PathInfo and just do the
       // cutting for now
       const auto& traffic_speed = tile->trafficspeed(edge);
-      if (traffic_speed.valid()) {
-        speeds.clear();
+      if (traffic_speed.breakpoint1 > 0) {
         speeds.emplace_back(traffic_speed.breakpoint1 / 255.0, speed);
-        if (traffic_speed.breakpoint1 < 255) {
-          speeds.emplace_back(traffic_speed.breakpoint2 / 255.0, speed);
-          if (traffic_speed.breakpoint2 < 255) {
-            speeds.emplace_back(1, speed);
-          }
-        }
       }
+      if (traffic_speed.breakpoint2 > 0) {
+        speeds.emplace_back(traffic_speed.breakpoint2 / 255.0, speed);
+      }
+      if (traffic_speed.speed3 != UNKNOWN_TRAFFIC_SPEED_RAW) {
+        speeds.emplace_back(1, speed);
+      }
+    }
+    // Cap the end so that we always have something to use
+    if (speeds.empty() || std::get<0>(speeds.back()) < tgt_pct) {
+      speeds.emplace_back(tgt_pct, speed);
     }
 
     // Set the shape attributes
@@ -152,7 +154,8 @@ void SetShapeAttributes(const AttributesController& controller,
         trip_path.mutable_shape_attributes()->add_speed((distance * kDecimeterPerMeter / time) + 0.5);
       }
 
-      // If there is a change in speed here we need to make a new shape point and continue from there
+      // If there is a change in speed here we need to make a new shape point and continue from
+      // there
       double distance_pct = distance / edge->length();
       double next_total = distance_total_pct + distance_pct;
       if (next_total > std::get<0>(*speed_itr) && std::next(speed_itr) != speeds.cend()) {
@@ -725,9 +728,9 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   if (controller.attributes.at(kEdgeSpeed)) {
     // TODO: if this is a transit edge then the costing will throw
     // TODO: could get better precision speed here by calling GraphTile::GetSpeed but we'd need to
-    // know whether or not the costing actually cares about the speed of the edge. Perhaps a refactor
-    // of costing to have a GetSpeed function which EdgeCost calls internally but which we can also
-    // call externally
+    // know whether or not the costing actually cares about the speed of the edge. Perhaps a
+    // refactor of costing to have a GetSpeed function which EdgeCost calls internally but which we
+    // can also call externally
     auto speed = directededge->length() /
                  costing->EdgeCost(directededge, graphtile, second_of_week).secs * 3.6;
     trip_edge->set_speed(speed);
