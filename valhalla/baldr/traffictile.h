@@ -67,12 +67,16 @@ struct TrafficSpeed {
         assert(false);
     }
   }
-  /// Returns overall speed in kph across edge
+  // Returns overall speed in kph across edge
   inline uint8_t get_overall_speed() const volatile {
     return overall_speed << 1;
   }
 
-  /// Returns speed in a certain subsegment in kph
+  // Returns speed in a certain subsegment in kph
+  //
+  // CAUTION: Caller must check that returned value is less or equal to
+  // `baldr::MAX_TRAFFIC_SPEED_KPH`. A larger value means the live-speed
+  // is not known
   inline uint8_t get_speed(std::size_t subsegment) const volatile {
     assert(subsegment <= 2);
     if (!valid())
