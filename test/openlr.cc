@@ -147,6 +147,7 @@ TEST(OpenLR, OffsetsOverrun) {
 }
 
 TEST(OpenLR, TooSmallReference) {
+  // This location is a substring of the OpenLR segment in InternalReferencePoints above.
   auto location = "83hRxEAM=";
   EXPECT_THROW(auto locRef = LineLocation(location, true), std::invalid_argument);
 }

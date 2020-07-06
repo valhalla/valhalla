@@ -55,7 +55,8 @@ TEST(PredicteSpeeds, test_decoding) {
   // HACK(mookerji): kDecodedSpeedSize+1 is the expected size (as opposed to kDecodedSpeedSize)
   // because we start reading from a 1-byte offset below at the little endian conversion. This is
   // actually a broken test fixture because we start reading from 0 in the actual CLI decoding in
-  // src/mjolnir/valhalla_add_predicted_traffic.cc
+  // src/mjolnir/valhalla_add_predicted_traffic.cc. To FIX this, we need to encode the speeds[]
+  // array below and start the little endian conversion from 0 instead of 1.
   EXPECT_EQ(decoded_str.size(), kDecodedSpeedSize + 1);
 
   auto raw = reinterpret_cast<const int8_t*>(decoded_str.data());
