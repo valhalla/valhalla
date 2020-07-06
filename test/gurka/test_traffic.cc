@@ -29,8 +29,10 @@ typedef struct {
 } mtar_raw_header_t_;
 
 /*************************************************************/
+
 // Helper function for updating the BD edge in the following test
-void update_all_edges_but_bd(valhalla::gurka::map& map, uint16_t new_speed) {
+void update_all_edges_but_bd(const valhalla::gurka::map& map,
+                             const valhalla::baldr::TrafficSpeed& new_speed) {
   int fd = open(map.config.get<std::string>("mjolnir.traffic_extract").c_str(), O_RDWR);
   struct stat s;
   fstat(fd, &s);
@@ -61,19 +63,74 @@ void update_all_edges_but_bd(valhalla::gurka::map& map, uint16_t new_speed) {
     auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
 
     for (int index = 0; index < tile.header->directed_edge_count; index++) {
-      (tile.speeds + index)->breakpoint1 = 255;
       if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
         (tile.speeds + index)->overall_speed = 0;
         (tile.speeds + index)->speed1 = 0;
+        (tile.speeds + index)->breakpoint1 = 255;
       } else {
-        (tile.speeds + index)->overall_speed = new_speed >> 1;
-        (tile.speeds + index)->speed1 = new_speed >> 1;
+        valhalla::baldr::TrafficSpeed* existing =
+            const_cast<valhalla::baldr::TrafficSpeed*>(tile.speeds + index);
+        *existing = new_speed;
       }
     }
     mtar_next(&tar);
   }
   munmap(tar.stream, s.st_size);
   close(fd);
+}
+void update_all_edges_but_bd(const valhalla::gurka::map& map, uint16_t new_speed) {
+  valhalla::baldr::TrafficSpeed ts{};
+  ts.speed1 = new_speed >> 1;
+  ts.overall_speed = new_speed >> 1;
+  ts.breakpoint1 = 255;
+  update_all_edges_but_bd(map, ts);
+}
+
+void blank_traffic(const valhalla::gurka::map& map) {
+  const auto& traffic_extract = map.config.get<std::string>("mjolnir.traffic_extract");
+  mtar_t tar;
+  auto tar_open_result = mtar_open(&tar, traffic_extract.c_str(), "w");
+  ASSERT_EQ(tar_open_result, MTAR_ESUCCESS);
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  auto tile_ids = reader.GetTileSet();
+  // Traffic data works like this:
+  //   1. There is a separate .tar file containing tile entries matching the main tiles
+  //   2. Each tile is a fixed-size, with a header, and entries
+  // This loop iterates ofer the routing tiles, and creates blank
+  // traffic tiles with empty records.
+  // Valhalla mmap()'s this file and reads from it during route calculation.
+  // This loop below creates initial .tar file entries .  Lower down, we make changes to
+  // values within the generated traffic tiles and test that routes reflect those changes
+  // as expected.
+  for (auto tile_id : tile_ids) {
+    auto tile = reader.GetGraphTile(tile_id);
+    std::stringstream buffer;
+    baldr::TrafficTileHeader header = {};
+    header.tile_id = tile_id;
+    std::vector<baldr::TrafficSpeed> speeds;
+    header.directed_edge_count = tile->header()->directededgecount();
+    buffer.write(reinterpret_cast<char*>(&header), sizeof(header));
+    baldr::TrafficSpeed dummy_speed = {}; // Initialize to all zeros
+    for (int i = 0; i < header.directed_edge_count; ++i) {
+      buffer.write(reinterpret_cast<char*>(&dummy_speed), sizeof(dummy_speed));
+    }
+    uint32_t dummy_uint32 = 0;
+    buffer.write(reinterpret_cast<char*>(&dummy_uint32), sizeof(dummy_uint32));
+    buffer.write(reinterpret_cast<char*>(&dummy_uint32), sizeof(dummy_uint32));
+
+    /* Write strings to files `test1.txt` and `test2.txt` */
+    std::string blanktile = buffer.str();
+    std::string filename = valhalla::baldr::GraphTile::FileSuffix(tile_id);
+    auto e1 = mtar_write_file_header(&tar, filename.c_str(), blanktile.size());
+    EXPECT_EQ(e1, MTAR_ESUCCESS);
+    auto e2 = mtar_write_data(&tar, blanktile.c_str(), blanktile.size());
+    EXPECT_EQ(e2, MTAR_ESUCCESS);
+  }
+
+  mtar_finalize(&tar);
+  mtar_close(&tar);
 }
 
 TEST(Traffic, BasicUpdates) {
@@ -92,56 +149,10 @@ TEST(Traffic, BasicUpdates) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   std::string tile_dir = "test/data/traffic_basicupdates";
   auto map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
-
-  std::string traffic_extract = tile_dir + "/traffic.tar";
+  map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
+  blank_traffic(map);
 
   {
-    mtar_t tar;
-    auto tar_open_result = mtar_open(&tar, traffic_extract.c_str(), "w");
-    ASSERT_EQ(tar_open_result, MTAR_ESUCCESS);
-
-    baldr::GraphReader reader(map.config.get_child("mjolnir"));
-
-    auto tile_ids = reader.GetTileSet();
-    // Traffic data works like this:
-    //   1. There is a separate .tar file containing tile entries matching the main tiles
-    //   2. Each tile is a fixed-size, with a header, and entries
-    // This loop iterates ofer the routing tiles, and creates blank
-    // traffic tiles with empty records.
-    // Valhalla mmap()'s this file and reads from it during route calculation.
-    // This loop below creates initial .tar file entries .  Lower down, we make changes to
-    // values within the generated traffic tiles and test that routes reflect those changes
-    // as expected.
-    for (auto tile_id : tile_ids) {
-      auto tile = reader.GetGraphTile(tile_id);
-      std::stringstream buffer;
-      baldr::TrafficTileHeader header = {};
-      header.tile_id = tile_id;
-      std::vector<baldr::TrafficSpeed> speeds;
-      header.directed_edge_count = tile->header()->directededgecount();
-      buffer.write(reinterpret_cast<char*>(&header), sizeof(header));
-      baldr::TrafficSpeed dummy_speed = {}; // Initialize to all zeros
-      for (int i = 0; i < header.directed_edge_count; ++i) {
-        buffer.write(reinterpret_cast<char*>(&dummy_speed), sizeof(dummy_speed));
-      }
-      uint32_t dummy_uint32 = 0;
-      buffer.write(reinterpret_cast<char*>(&dummy_uint32), sizeof(dummy_uint32));
-      buffer.write(reinterpret_cast<char*>(&dummy_uint32), sizeof(dummy_uint32));
-
-      /* Write strings to files `test1.txt` and `test2.txt` */
-      std::string blanktile = buffer.str();
-      std::string filename = valhalla::baldr::GraphTile::FileSuffix(tile_id);
-      auto e1 = mtar_write_file_header(&tar, filename.c_str(), blanktile.size());
-      EXPECT_EQ(e1, MTAR_ESUCCESS);
-      auto e2 = mtar_write_data(&tar, blanktile.c_str(), blanktile.size());
-      EXPECT_EQ(e2, MTAR_ESUCCESS);
-    }
-
-    mtar_finalize(&tar);
-    mtar_close(&tar);
-  }
-  {
-    map.config.put("mjolnir.traffic_extract", traffic_extract);
     auto clean_reader = gurka::make_clean_graphreader(map.config.get_child("mjolnir"));
     // Do a route with initial traffic
     {
@@ -204,4 +215,112 @@ TEST(Traffic, BasicUpdates) {
       gurka::assert::raw::expect_eta(result, 72);
     }
   }
+}
+
+TEST(Traffic, CutGoems) {
+
+  const std::string ascii_map = R"(
+    A----B----C
+         |    |
+         D----E)";
+
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
+                            {"BC", {{"highway", "primary"}}},
+                            {"BD", {{"highway", "primary"}}},
+                            {"CE", {{"highway", "primary"}}},
+                            {"DE", {{"highway", "primary"}}}};
+
+  // build the tiles
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  std::string tile_dir = "test/data/traffic_cutgeoms";
+  auto map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
+
+  // empty traffic for now
+  map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
+  blank_traffic(map);
+
+  // get ready for some requests
+  tyr::actor_t actor(map.config);
+
+  // first we get the edge without traffic on it
+  {
+    auto result_json = actor.trace_attributes(
+        R"({"shape":[
+        {"lat":)" +
+        std::to_string(double(map.nodes["A"].second)) + R"(,"lon":)" +
+        std::to_string(double(map.nodes["A"].first)) +
+        R"(},
+        {"lat":)" +
+        std::to_string(double(map.nodes["B"].second)) + R"(,"lon":)" +
+        std::to_string(double(map.nodes["B"].first)) +
+        R"(}
+      ],"costing":"auto","shape_match":"map_snap",
+      "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "action":"include"}})");
+
+    rapidjson::Document doc;
+    doc.Parse(result_json);
+
+    auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(
+        rapidjson::Pointer("/shape").Get(doc)->GetString());
+    auto shape_attributes_time = rapidjson::Pointer("/shape_attributes/time").Get(doc)->GetArray();
+    auto shape_attributes_length =
+        rapidjson::Pointer("/shape_attributes/length").Get(doc)->GetArray();
+    auto shape_attributes_speed = rapidjson::Pointer("/shape_attributes/speed").Get(doc)->GetArray();
+
+    EXPECT_EQ(shape.size(), 2);
+    EXPECT_EQ(shape_attributes_time.Size(), shape.size() - 1);
+    EXPECT_EQ(shape_attributes_length.Size(), shape.size() - 1);
+    EXPECT_EQ(shape_attributes_speed.Size(), shape.size() - 1);
+  }
+
+  // then we add one portion of the edge having traffic
+  {
+    valhalla::baldr::TrafficSpeed ts{0u,
+                                     valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+                                     valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+                                     valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+                                     0u,
+                                     0u,
+                                     0u,
+                                     0u,
+                                     0u,
+                                     0u};
+    ts.speed1 = 42 >> 1;
+    ts.breakpoint1 = 127;
+    update_all_edges_but_bd(map, ts);
+
+    auto result_json = actor.trace_attributes(
+        R"({"shape":[
+        {"lat":)" +
+        std::to_string(map.nodes["A"].second) + R"(,"lon":)" + std::to_string(map.nodes["A"].first) +
+        R"(},
+        {"lat":)" +
+        std::to_string(map.nodes["B"].second) + R"(,"lon":)" + std::to_string(map.nodes["B"].first) +
+        R"(}
+      ],"costing":"auto","shape_match":"map_snap",
+      "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "action":"include"}})");
+
+    rapidjson::Document doc;
+    doc.Parse(result_json);
+
+    auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(
+        rapidjson::Pointer("/shape").Get(doc)->GetString());
+    auto shape_attributes_time = rapidjson::Pointer("/shape_attributes/time").Get(doc)->GetArray();
+    auto shape_attributes_length =
+        rapidjson::Pointer("/shape_attributes/length").Get(doc)->GetArray();
+    auto shape_attributes_speed = rapidjson::Pointer("/shape_attributes/speed").Get(doc)->GetArray();
+
+    EXPECT_EQ(shape.size(), 3);
+    EXPECT_EQ(shape_attributes_time.Size(), shape.size() - 1);
+    EXPECT_EQ(shape_attributes_length.Size(), shape.size() - 1);
+    EXPECT_EQ(shape_attributes_speed.Size(), shape.size() - 1);
+
+    // TODO: check the cut point is at the right spot
+  }
+
+  // TODO:  more permutations of TrafficSpeed object
 }
