@@ -673,6 +673,27 @@ TEST(UtilMidgard, TrimShapeEmpty) {
   ASSERT_EQ(shape.size(), 0);
 }
 
+// Test cases from: https://tools.ietf.org/html/rfc4648#section-10
+TEST(UtilMidgard, Base64) {
+  // Cases: plaintext/decoded, encoded
+  std::vector<std::pair<std::string, std::string>> cases = {
+      {"", ""},
+      {"f", "Zg=="},
+      {"fo", "Zm8="},
+      {"foo", "Zm9v"},
+      {"foob", "Zm9vYg=="},
+      {"fooba", "Zm9vYmE="},
+      {"foobar", "Zm9vYmFy"},
+  };
+  for (const auto& test_case : cases) {
+    std::string decoded = test_case.first;
+    std::string encoded = test_case.second;
+    EXPECT_EQ(encode64(decoded), encoded);
+    EXPECT_EQ(decode64(encoded), decoded);
+    EXPECT_EQ(decode64(encode64(decoded)), decoded);
+  }
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {

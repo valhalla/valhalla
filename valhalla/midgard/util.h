@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VALHALLA_MIDGARD_UTIL_H_
+#define VALHALLA_MIDGARD_UTIL_H_
 
 #include <cstdint>
 #include <limits>
@@ -636,5 +637,17 @@ inline float units_to_meters(float units_km_or_mi, bool is_metric) {
          (is_metric ? units_km_or_mi : (units_km_or_mi * midgard::kKmPerMile));
 }
 
+/**
+ * Encode binary string as base64.
+ */
+std::string encode64(const std::string& val);
+
+/**
+ * Decode base64 string to binary.
+ */
+std::string decode64(const std::string& val);
+
 } // namespace midgard
 } // namespace valhalla
+  //
+#endif // VALHALLA_MIDGARD_UTIL_H_

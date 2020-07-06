@@ -164,6 +164,10 @@ message TripLeg {
     optional bool   ends_segment = 5;
   }
 
+  message Restriction{
+    optional uint32 type = 1;
+  }
+
   message Edge {
     repeated StreetName name = 1;           // street names
     optional float length = 2;              // km
@@ -209,6 +213,7 @@ message TripLeg {
     repeated TurnLane turn_lanes = 42;
     optional bool has_time_restrictions = 43;
     optional float default_speed = 44;       // km/h
+    optional Restriction restriction = 45;
   }
 
   message IntersectingEdge {

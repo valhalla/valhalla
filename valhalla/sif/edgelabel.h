@@ -52,11 +52,11 @@ public:
             const TravelMode mode,
             const uint32_t path_distance,
             const Cost& transition_cost,
-            bool has_time_restrictions = false)
+            int restriction_idx = -1)
       : predecessor_(predecessor), path_distance_(path_distance), restrictions_(edge->restrictions()),
         edgeid_(edgeid), opp_index_(edge->opp_index()), opp_local_idx_(edge->opp_local_idx()),
         mode_(static_cast<uint32_t>(mode)), endnode_(edge->endnode()),
-        has_time_restrictions_(has_time_restrictions), use_(static_cast<uint32_t>(edge->use())),
+        restriction_idx_(restriction_idx), use_(static_cast<uint32_t>(edge->use())),
         classification_(static_cast<uint32_t>(edge->classification())), shortcut_(edge->shortcut()),
         dest_only_(edge->destonly()), origin_(0), toll_(edge->toll()), not_thru_(edge->not_thru()),
         deadend_(edge->deadend()),
@@ -78,12 +78,12 @@ public:
               const Cost& cost,
               const float sortcost,
               const Cost& transition_cost,
-              const bool has_time_restrictions) {
+              const int restriction_idx) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
     transition_cost_ = transition_cost;
-    has_time_restrictions_ = has_time_restrictions;
+    restriction_idx_ = restriction_idx;
   }
 
   /**
@@ -103,13 +103,13 @@ public:
               const float sortcost,
               const uint32_t path_distance,
               const Cost& transition_cost,
-              const bool has_time_restrictions) {
+              const int restriction_idx) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
     path_distance_ = path_distance;
     transition_cost_ = transition_cost;
-    has_time_restrictions_ = has_time_restrictions;
+    restriction_idx_ = restriction_idx;
   }
 
   /**
@@ -248,18 +248,11 @@ public:
     origin_ = true;
   }
   /**
-   * Does this edge have any time restrictions?
+   * Get the restriction idx
    */
-  bool has_time_restriction() const {
-    return has_time_restrictions_;
+  int restriction_idx() const {
+    return restriction_idx_;
   }
-  /**
-   * Sets whether this edge has any time restrictions or not
-   */
-  void set_has_time_restriction(bool has_time_restrictions) {
-    has_time_restrictions_ = has_time_restrictions;
-  }
-
   /**
    * Does this edge have a toll?
    * @return  Returns true if this edge has a toll.
@@ -387,8 +380,7 @@ protected:
    * on_complex_rest: Part of a complex restriction.
    */
   uint64_t endnode_ : 46;
-  uint64_t spare_ : 1; // Unused  bit
-  uint64_t has_time_restrictions_ : 1;
+  uint64_t spare_ : 2; // Unused  bit
   uint64_t use_ : 6;
   uint64_t classification_ : 3;
   uint64_t shortcut_ : 1;
@@ -399,13 +391,14 @@ protected:
   uint64_t deadend_ : 1;
   uint64_t on_complex_rest_ : 1;
 
+  int restriction_idx_;
   Cost cost_;      // Cost and elapsed time along the path.
   float sortcost_; // Sort cost - includes A* heuristic.
   float distance_; // Distance to the destination.
 
   // Was originally used for reverse search path to remove extra time where paths intersected
   // but its now used everywhere to measure the difference in time along the edge vs at the node
-  sif::Cost transition_cost_;
+  Cost transition_cost_;
 };
 
 /**
@@ -444,7 +437,7 @@ public:
               const sif::TravelMode mode,
               const sif::Cost& transition_cost,
               const bool not_thru_pruning,
-              const bool has_time_restrictions)
+              const int restriction_idx)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -454,7 +447,7 @@ public:
                   mode,
                   0,
                   transition_cost,
-                  has_time_restrictions),
+                  restriction_idx),
         opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
   }
 
@@ -482,7 +475,7 @@ public:
               const sif::Cost& transition_cost,
               const uint32_t path_distance,
               const bool not_thru_pruning,
-              const bool has_time_restrictions)
+              const int restriction_idx)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -492,7 +485,7 @@ public:
                   mode,
                   path_distance,
                   transition_cost,
-                  has_time_restrictions),
+                  restriction_idx),
         opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
   }
 
@@ -515,17 +508,8 @@ public:
               const float sortcost,
               const float dist,
               const sif::TravelMode mode,
-              const bool has_time_restrictions)
-      : EdgeLabel(predecessor,
-                  edgeid,
-                  edge,
-                  cost,
-                  sortcost,
-                  dist,
-                  mode,
-                  0,
-                  Cost{},
-                  has_time_restrictions),
+              const int restriction_idx)
+      : EdgeLabel(predecessor, edgeid, edge, cost, sortcost, dist, mode, 0, Cost{}, restriction_idx),
         not_thru_pruning_(!edge->not_thru()) {
     opp_edgeid_ = {};
   }
@@ -543,12 +527,12 @@ public:
               const sif::Cost& cost,
               const float sortcost,
               const sif::Cost& tc,
-              const bool has_time_restrictions) {
+              const int restriction_idx) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
     transition_cost_ = tc;
-    has_time_restrictions_ = has_time_restrictions;
+    restriction_idx_ = restriction_idx;
   }
 
   /**
@@ -566,13 +550,13 @@ public:
               const float sortcost,
               const sif::Cost& tc,
               const uint32_t path_distance,
-              const bool has_time_restrictions) {
+              const int restriction_idx) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
     transition_cost_ = tc;
     path_distance_ = path_distance;
-    has_time_restrictions_ = has_time_restrictions;
+    restriction_idx_ = restriction_idx;
   }
 
   /**
@@ -636,7 +620,7 @@ public:
               const uint32_t transit_operator,
               const bool has_transit,
               const Cost& transition_cost,
-              const bool has_time_restrictions = false)
+              const int restriction_idx = -1)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -646,7 +630,7 @@ public:
                   mode,
                   path_distance,
                   transition_cost,
-                  has_time_restrictions),
+                  restriction_idx),
         prior_stopid_(prior_stopid), tripid_(tripid), blockid_(blockid),
         transit_operator_(transit_operator), has_transit_(has_transit) {
   }
@@ -672,7 +656,7 @@ public:
               const uint32_t tripid,
               const uint32_t blockid,
               const Cost& transition_cost,
-              const bool has_time_restrictions) {
+              const int restriction_idx) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
@@ -680,7 +664,7 @@ public:
     tripid_ = tripid;
     blockid_ = blockid;
     transition_cost_ = transition_cost;
-    has_time_restrictions_ = has_time_restrictions;
+    restriction_idx_ = restriction_idx;
   }
 
   /**

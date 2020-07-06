@@ -590,7 +590,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const uint32_t start_node_idx,
                           const bool has_junction_name,
                           const GraphTile* start_tile,
-                          const bool has_time_restrictions) {
+                          const int restrictions_idx) {
 
   // Index of the directed edge within the tile
   uint32_t idx = edge.id();
@@ -775,9 +775,14 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     }
   }
 
-  if (has_time_restrictions) {
-    trip_edge->set_has_time_restrictions(has_time_restrictions);
+  if (directededge->access_restriction() && restrictions_idx >= 0) {
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        graphtile->GetAccessRestrictions(edge.id(), costing->access_mode());
+    trip_edge->mutable_restriction()->set_type(
+        static_cast<uint32_t>(restrictions[restrictions_idx].type()));
   }
+
+  trip_edge->set_has_time_restrictions(restrictions_idx >= 0);
 
   // Set the trip path use based on directed edge use if requested
   if (controller.attributes.at(kEdgeUse)) {
@@ -1284,7 +1289,7 @@ void TripLegBuilder::Build(
         AddTripEdge(controller, path_begin->edgeid, path_begin->trip_id, 0, path_begin->mode,
                     travel_types[static_cast<int>(path_begin->mode)], costing, edge, drive_on_right,
                     trip_path.add_node(), tile, graphreader, origin_second_of_week, startnode.id(),
-                    false, nullptr, path_begin->has_time_restrictions);
+                    false, nullptr, path_begin->restriction_index);
 
     // Set length if requested. Convert to km
     if (controller.attributes.at(kEdgeLength)) {
@@ -1616,7 +1621,7 @@ void TripLegBuilder::Build(
         AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, costing, directededge,
                     node->drive_on_right(), trip_node, graphtile, graphreader, second_of_week,
                     startnode.id(), node->named_intersection(), start_tile,
-                    edge_itr->has_time_restrictions);
+                    edge_itr->restriction_index);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).

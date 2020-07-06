@@ -18,6 +18,11 @@
 #include <sys/stat.h>
 #include <vector>
 
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/remove_whitespace.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+
 namespace {
 
 constexpr double RAD_PER_METER = 1.0 / 6378160.187;
@@ -714,6 +719,36 @@ polygon_t to_boundary(const std::unordered_set<uint32_t>& region, const Tiles<Po
 
   // give it back
   return polygon;
+}
+
+constexpr char PADDING_ENCODED = '=';
+constexpr char ZERO_ENCODED = 'A';
+
+std::string encode64(const std::string& text) {
+  using namespace boost::archive::iterators;
+  using Base64Encode = base64_from_binary<transform_width<std::string::const_iterator, 6, 8>>;
+  // Encode and add padding to string per octet encoding described here:
+  // https://tools.ietf.org/html/rfc4648#section-4
+  std::string encoded(Base64Encode(text.begin()), Base64Encode(text.end()));
+  size_t num_pad_chars = (3 - text.size() % 3) % 3;
+  encoded.append(num_pad_chars, PADDING_ENCODED);
+  return encoded;
+}
+
+std::string decode64(const std::string& encoded) {
+  using namespace boost::archive::iterators;
+  using Base64Decode =
+      transform_width<binary_from_base64<remove_whitespace<std::string::const_iterator>>, 8, 6>;
+  // NOTE(mookerji): Ugh, for more details, see:
+  // https://stackoverflow.com/questions/10521581/base64-encode-using-boost-throw-exception
+  size_t num_pad_chars = (4 - encoded.size() % 4) % 4;
+  std::string padded = encoded;
+  padded.append(num_pad_chars, PADDING_ENCODED);
+  size_t pad_chars = std::count(padded.begin(), padded.end(), PADDING_ENCODED);
+  std::replace(padded.begin(), padded.end(), PADDING_ENCODED, ZERO_ENCODED);
+  std::string decoded(Base64Decode(padded.begin()), Base64Decode(padded.end()));
+  decoded.erase(decoded.end() - pad_chars, decoded.end());
+  return decoded;
 }
 
 } // namespace midgard

@@ -158,7 +158,7 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       bool& time_restricted) const;
+                       int& restriction_idx) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -185,7 +185,7 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              bool& has_time_restrictions) const;
+                              int& restriction_idx) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -426,7 +426,7 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
                                const baldr::GraphId& edgeid,
                                const uint64_t current_time,
                                const uint32_t tz_index,
-                               bool& has_time_restrictions) const {
+                               int& restriction_idx) const {
   if (flow_mask_ & kCurrentFlowMask) {
     if (tile->IsClosedDueToTraffic(edgeid))
       return false;
@@ -441,7 +441,7 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
   }
 
   return DynamicCost::EvaluateRestrictions(kTruckAccess, edge, tile, edgeid, current_time, tz_index,
-                                           has_time_restrictions);
+                                           restriction_idx);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -453,7 +453,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                const baldr::GraphId& opp_edgeid,
                                const uint64_t current_time,
                                const uint32_t tz_index,
-                               bool& has_time_restrictions) const {
+                               int& restriction_idx) const {
   if (flow_mask_ & kCurrentFlowMask) {
     if (tile->IsClosedDueToTraffic(opp_edgeid))
       return false;
@@ -468,7 +468,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
   }
 
   return DynamicCost::EvaluateRestrictions(kTruckAccess, edge, tile, opp_edgeid, current_time,
-                                           tz_index, has_time_restrictions);
+                                           tz_index, restriction_idx);
 }
 
 // Check if access is allowed at the specified node.
