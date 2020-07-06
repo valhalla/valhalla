@@ -48,6 +48,7 @@ set(sources
     edgetracker.cc
     merge.cc
     nodeinfo.cc
+    openlr.cc
     location.cc
     pathlocation.cc
     tilehierarchy.cc

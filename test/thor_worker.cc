@@ -131,6 +131,32 @@ TEST(ThorWorker, test_parse_filter_attributes_includes) {
         << "Expected " + included_keys[i] + " to be present";
   }
 }
+
+TEST(ThorWorker, test_linear_references) {
+  std::vector<std::string> requests = {
+      R"({"costing":"auto","linear_references":true,"locations":[
+          {"lat":52.09110,"lon":5.09806},
+          {"lat":52.09098,"lon":5.09679}],
+          "action":"include"})",
+  };
+  const std::vector<std::string>& expected = {
+      "CwOgEyUK5Rt3AP/H//wbBw==",
+      "CwOf+CUK4ht3AP/k//8bBw==",
+      "CwOf6yUK4Rt3AP/Y//0bBw==",
+      "CwOgEyUK5T/gAAABAAE/EA==",
+  };
+  tyr::actor_t actor(conf, true);
+  for (const auto& request : requests) {
+    auto result = json_to_pt(actor.route(request));
+    const auto& references = result.get_child("trip.linear_references");
+    EXPECT_EQ(references.size(), 4);
+    for (const auto& reference : references) {
+      const std::string& actual = reference.second.get_value<std::string>();
+      EXPECT_TRUE(std::find(expected.begin(), expected.end(), actual) != expected.end());
+    }
+  }
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
