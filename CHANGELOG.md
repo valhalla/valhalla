@@ -106,7 +106,6 @@
    * ADDED (back): Support for 64bit wide way ids in the edgeinfo structure with no impact to size for data sources with ids 32bits wide. [#2422](https://github.com/valhalla/valhalla/pull/2422)
    * ADDED: Support for 64bit osm node ids in parsing stage of tile building [#2422](https://github.com/valhalla/valhalla/pull/2422)
    * CHANGED: Point2/PointLL are now templated to allow for higher precision coordinate math when desired [#2429](https://github.com/valhalla/valhalla/pull/2429)
-   * CHANGED: Point2/PointLL are now templated to allow for higher precision coordinate math when desired [#2429](https://github.com/valhalla/valhalla/pull/2429)
    * FIXED: Base64 encoding/decoding [#2452](https://github.com/valhalla/valhalla/pull/2452)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
