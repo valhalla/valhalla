@@ -1,34 +1,23 @@
-#include "midgard/openlr.h"
-#include "midgard/pointll.h"
-#include <stdexcept>
-
-#include <boost/archive/iterators/base64_from_binary.hpp>
-#include <boost/archive/iterators/binary_from_base64.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
-
 #include <iomanip>
 #include <sstream>
+#include <stdexcept>
 #include <string>
+
+#include "baldr/openlr.h"
+#include "midgard/encoded.h"
+#include "midgard/pointll.h"
+#include "proto/trip.pb.h"
+#include "proto/tripcommon.pb.h"
 
 #include "test.h"
 
 namespace {
 
+using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::midgard::OpenLR;
 
-std::string decode64(const std::string& val) {
-  using namespace boost::archive::iterators;
-  using It = transform_width<binary_from_base64<std::string::const_iterator>, 8, 6>;
-  return std::string(It(std::begin(val)), It(std::end(val)));
-}
-
-std::string encode64(const std::string& val) {
-  using namespace boost::archive::iterators;
-  using It = base64_from_binary<transform_width<std::string::const_iterator, 6, 8>>;
-  auto tmp = std::string(It(std::begin(val)), It(std::end(val)));
-  return tmp.append((3 - val.size() % 3) % 3, '=');
-}
+using FormOfWay = OpenLR::LocationReferencePoint::FormOfWay;
 
 std::string to_hex(const std::string& value) {
   std::stringstream s;
@@ -52,26 +41,36 @@ struct testfixture {
   double expectedNoff;
 };
 
-const testfixture testfixtures[] = {{"CwOa9yUQACODBQEqAL4jEw==", 5.069987, 52.119130, 39.375,
-                                     5.072967, 52.121030, 219.375, 293, 0, 0},
-                                    {"CwOa9yUQACODqgEqAL4jEw==", 5.069987, 52.119130, 39.375,
-                                     5.072967, 52.121030, 219.375, 9962, 0, 0},
-                                    {"CwOiYCUMoBNWAv9P/+MSBg==", 5.110692, 52.100590, 253.125,
-                                     5.108922, 52.100300, 73.125, 117.2, 0, 0},
-                                    {"CxWj2OogyxJBDhDSAvwSUL4=", 30.431259, -30.757352, 16.875,
-                                     30.474319, -30.749712, 185.625, 820.4, 190, 0},
-                                    {"CxWj2OogyxJBDhDSAvwSMA0=", 30.431259, -30.757352, 16.875,
-                                     30.474319, -30.749712, 185.625, 820.4, 0, 13},
-                                    {"CxWj2OogyxJBDhDSAvwScL4N", 30.431259, -30.757352, 16.875,
-                                     30.474319, -30.749712, 185.625, 820.4, 190, 13},
-                                    {"C6i8rRtM3BjgAAAAAAUYAA==", -122.713562, 38.390942, 5.625,
-                                     -122.713562, 38.390991, 5.625, 0, 0, 0}};
+const testfixture testfixtures[] = {
+    {"CwOa9yUQACODBQEqAL4jEw==", 5.069987, 52.119130, 39.375, 5.072967, 52.121030, 219.375, 293, 0,
+     0},
+    {"CwOa9yUQACODqgEqAL4jEw==", 5.069987, 52.119130, 39.375, 5.072967, 52.121030, 219.375, 9962, 0,
+     0},
+    {"CwOiYCUMoBNWAv9P/+MSBg==", 5.110692, 52.100590, 253.125, 5.108922, 52.100300, 73.125, 117.2, 0,
+     0},
+    {"CxWj2OogyxJBDhDSAvwSUL4=", 30.431259, -30.757352, 16.875, 30.474319, -30.749712, 185.625, 820.4,
+     190, 0},
+    {"CxWj2OogyxJBDhDSAvwSMA0=", 30.431259, -30.757352, 16.875, 30.474319, -30.749712, 185.625, 820.4,
+     0, 13},
+    {"CxWj2OogyxJBDhDSAvwScL4N", 30.431259, -30.757352, 16.875, 30.474319, -30.749712, 185.625, 820.4,
+     190, 13},
+    {"C6i8rRtM3BjgAAAAAAUYAA==", -122.713562, 38.390942, 5.625, -122.713562, 38.390991, 5.625, 0, 0,
+     0},
+    {"CwRbWyNG9RpsCQCb/jsbtAT/6/+jK1lE", 6.1268198, 49.6085178, 140.625, 6.1281598, 49.6030578,
+     286.875, 527.4, 68, 0},
+    {"CwB67CGukRxiCACyAbwaMXU=", 0.6752192, 47.3651611, 28.125, 0.6769992, 47.3696011, 196.875, 468.8,
+     0, 117},
+    {"CwcX6CItqAs6AQAAAAALGg==", 9.9750602, 48.0632865, 298.125, 9.9750602, 48.0632865, 298.125, 58.6,
+     0, 0},
+    {"CwRbWyNG9BpgAACa/jsboAD/6/+kKwA=", 6.1268198, 49.6084964, 5.625, 6.1281498, 49.6030464, 5.625,
+     0, 0, 0},
+};
 
 TEST(OpenLR, Decode) {
 
   for (auto& fixture : testfixtures) {
-    auto locRef = LineLocation(decode64(fixture.descriptor));
-
+    EXPECT_NO_THROW(LineLocation(fixture.descriptor, true));
+    auto locRef = LineLocation(fixture.descriptor, true);
     EXPECT_NEAR(locRef.getFirstCoordinate().lng(), fixture.expectedFirstCoordinateLongitude, 1e-5);
     EXPECT_NEAR(locRef.getFirstCoordinate().lat(), fixture.expectedFirstCoordinateLatitude, 1e-5);
     EXPECT_NEAR(locRef.lrps[0].bearing, fixture.expectedFirstCoordinateBearing, 1e-5);
@@ -87,7 +86,7 @@ TEST(OpenLR, Decode) {
     // exact) above. If they are not exact then this test will fail! Try again with expected
     // values. TODO - this currently fails for 32 bit
 #if _WIN64 || __amd64__
-    if (encode64(locRef.toBinary()) != fixture.descriptor) {
+    if (locRef.toBase64() != fixture.descriptor) {
       locRef.lrps[0].latitude = fixture.expectedFirstCoordinateLatitude;
       locRef.lrps[0].longitude = fixture.expectedFirstCoordinateLongitude;
       locRef.lrps[0].bearing = fixture.expectedFirstCoordinateBearing;
@@ -97,7 +96,7 @@ TEST(OpenLR, Decode) {
       locRef.lrps[0].distance = fixture.expectedDistance;
       locRef.poff = fixture.expectedPoff;
       locRef.noff = fixture.expectedNoff;
-      EXPECT_EQ(encode64(locRef.toBinary()), fixture.descriptor);
+      EXPECT_EQ(locRef.toBase64(), fixture.descriptor);
     }
 #endif
   }
@@ -106,9 +105,9 @@ TEST(OpenLR, Decode) {
 TEST(OpenLR, InternalReferencePoints) {
   auto location = "CwG1ASK3PhD82sz0CIAQ89r83hRxEAM=";
 
-  auto locRef = LineLocation(decode64(location));
+  auto locRef = LineLocation(location, true);
 
-  EXPECT_EQ(encode64(locRef.toBinary()), location);
+  EXPECT_EQ(locRef.toBase64(), location);
   EXPECT_EQ(locRef.lrps.size(), 3) << "Incorrectly number of intermediate LRP";
 
   EXPECT_NEAR(locRef.getFirstCoordinate().lng(), 2.400523, 1e-5);
@@ -129,8 +128,10 @@ TEST(OpenLR, InternalReferencePoints) {
   EXPECT_NEAR(locRef.poff, 0, 1e-3);
   EXPECT_NEAR(locRef.noff, 0, 1e-3);
 
-  for (float poff = 0; poff < locRef.lrps[0].distance; poff += locRef.lrps[0].distance / 3) {
-    for (float noff = 0; noff < locRef.lrps[1].distance; noff += locRef.lrps[1].distance / 3) {
+  for (float poff = 0; poff < locRef.lrps[0].distance;
+       poff += locRef.lrps[0].distance / 3) { // NOLINT
+    for (float noff = 0; noff < locRef.lrps[1].distance;
+         noff += locRef.lrps[1].distance / 3) { // NOLINT
       locRef.poff = poff;
       locRef.noff = noff;
       LineLocation tryRef(locRef.toBinary());
@@ -153,14 +154,15 @@ TEST(OpenLR, InternalReferencePoints) {
 
 TEST(OpenLR, OffsetsOverrun) {
   auto location = "CwG1ASK3PhD82sz0CIAQ89oAAAAAEPPa/N4UcRBj";
-  auto locRef = LineLocation(decode64(location));
+  auto locRef = LineLocation(location, true);
   EXPECT_EQ(locRef.poff, 0.f);
   EXPECT_EQ(locRef.noff, 0.f);
 }
 
 TEST(OpenLR, TooSmallReference) {
-  auto location = "CwG1ASK3PhD82=";
-  EXPECT_THROW(auto locRef = LineLocation(decode64(location)), std::invalid_argument);
+  // This location is a substring of the OpenLR segment in InternalReferencePoints above.
+  auto location = "83hRxEAM=";
+  EXPECT_THROW(auto locRef = LineLocation(location, true), std::invalid_argument);
 }
 
 TEST(OpenLR, CreateLinearReference) {
@@ -173,7 +175,7 @@ TEST(OpenLR, CreateLinearReference) {
   unsigned char frc = 0;
   auto fow = LocationReferencePoint::FormOfWay::MOTORWAY;
   unsigned char lowest_frc_next_point = 7;
-  uint16_t bearing;
+  uint16_t bearing = 0;
   for (const auto& p : points) {
     // first or intermediate point
     if (&p != &points.back()) {
@@ -215,6 +217,75 @@ TEST(OpenLR, CreateLinearReference) {
   LineLocation short_location(lrps, 0, 0);
   EXPECT_EQ(short_location.poff, 0);
   EXPECT_EQ(short_location.noff, 0);
+}
+
+TEST(OpenLR, road_class_to_fow) {
+  // Check basic undefined behavior
+  TripLeg::Node node;
+  EXPECT_EQ(road_class_to_fow(node), FormOfWay::OTHER);
+  // Basic road class behavior check
+  node.mutable_edge()->set_roundabout(true);
+  node.mutable_edge()->set_use(TripLeg::kRoadUse);
+  node.mutable_edge()->set_road_class(RoadClass::kPrimary);
+  EXPECT_EQ(road_class_to_fow(node), FormOfWay::ROUNDABOUT);
+}
+
+TripLeg CreateLeg(const std::vector<PointLL>& points) {
+  TripLeg path;
+  TripLeg::Node* node;
+  TripLeg::Edge* edge;
+  node = path.add_node();
+  path.set_shape(encode(points));
+  edge = node->mutable_edge();
+  edge->set_begin_shape_index(0);
+  edge->set_end_shape_index(1);
+  edge->set_use(TripLeg::kRoadUse);
+  edge->set_road_class(RoadClass::kPrimary);
+  return path;
+}
+
+// TripPath to OpenLR tests: Spot check that some two point line segments (on a primary road
+// segment). Note that the validation of OpenLR serialization is done in the tests fixtures above.
+
+TEST(OpenLR, openlr_edges) {
+  // Check encoding
+  std::vector<PointLL> points = {
+      PointLL(5.08531221, 52.0938563),
+      PointLL(5.0865867, 52.0930211),
+  };
+  std::vector<std::string> openlrs = openlr_edges(CreateLeg(points));
+  EXPECT_EQ(openlrs.size(), 1);
+  EXPECT_EQ(openlrs.at(0), "CwOdwSULZhtsAgCA/60bHA==");
+  // Check decoding
+  LineLocation decoded(openlrs.at(0), true);
+  EXPECT_EQ(decoded.lrps.size(), 2);
+  PointLL first = decoded.getFirstCoordinate();
+  EXPECT_NEAR(first.lat(), points.at(0).lat(), 0.0001);
+  EXPECT_NEAR(first.lng(), points.at(0).lng(), 0.0001);
+  PointLL last = decoded.getLastCoordinate();
+  EXPECT_NEAR(last.lat(), points.at(1).lat(), 0.0001);
+  EXPECT_NEAR(last.lng(), points.at(1).lng(), 0.0001);
+}
+
+TEST(OpenLR, openlr_edges_duplicate) {
+  // Check encoding
+  std::vector<PointLL> points = {
+      PointLL(5.08531221, 52.0938563),
+      PointLL(5.08531221, 52.0938563),
+
+  };
+  std::vector<std::string> openlrs = openlr_edges(CreateLeg(points));
+  EXPECT_EQ(openlrs.size(), 1);
+  EXPECT_EQ(openlrs.at(0), "CwOdwSULZhtgAAAAAAAbEA==");
+  // Check decoding
+  LineLocation decoded(openlrs.at(0), true);
+  EXPECT_EQ(decoded.lrps.size(), 2);
+  PointLL first = decoded.getFirstCoordinate();
+  EXPECT_NEAR(first.lat(), points.at(0).lat(), 0.0001);
+  EXPECT_NEAR(first.lng(), points.at(0).lng(), 0.0001);
+  PointLL last = decoded.getLastCoordinate();
+  EXPECT_NEAR(last.lat(), points.at(1).lat(), 0.0001);
+  EXPECT_NEAR(last.lng(), points.at(1).lng(), 0.0001);
 }
 
 } // namespace
