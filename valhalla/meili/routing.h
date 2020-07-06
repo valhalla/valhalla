@@ -13,6 +13,7 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
@@ -282,7 +283,7 @@ find_shortest_path(baldr::GraphReader& reader,
                    const std::vector<baldr::PathLocation>& destinations,
                    uint16_t origin_idx,
                    labelset_ptr_t labelset,
-                   const midgard::DistanceApproximator& approximator,
+                   const midgard::DistanceApproximator<midgard::PointLL>& approximator,
                    const float search_radius,
                    sif::cost_ptr_t costing,
                    const Label* edgelabel,

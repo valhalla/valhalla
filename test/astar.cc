@@ -554,7 +554,7 @@ TEST(Astar, test_oneway) {
     }
   }
 
-  auto correct_route = std::vector<std::string>{"Quay Street", "Nelson Street", ""};
+  auto correct_route = std::vector<std::string>{"Quay Street", ""};
   EXPECT_EQ(names, correct_route) << "Incorrect route, got: \n" +
                                          boost::algorithm::join(names, ", ") + ", expected: \n" +
                                          boost::algorithm::join(correct_route, ", ");
@@ -616,9 +616,9 @@ TEST(Astar, test_deadend) {
   }
 
   auto correct_route =
-      std::vector<std::string>{"Bell Lane",   "Small Street",
+      std::vector<std::string>{"Bell Lane", "Small Street",
                                "Quay Street", // The u-turn on Quay Street is optimized away
-                               "Quay Street", "Small Street", "", ""};
+                               "", ""};
   EXPECT_EQ(names, correct_route) << "Incorrect route, got: \n" +
                                          boost::algorithm::join(names, ", ") + ", expected: \n" +
                                          boost::algorithm::join(correct_route, ", ");
@@ -665,9 +665,9 @@ TEST(Astar, test_time_dep_forward_with_current_time) {
   }
 
   auto correct_route =
-      std::vector<std::string>{"Bell Lane",   "Small Street",
+      std::vector<std::string>{"Bell Lane", "Small Street",
                                "Quay Street", // The u-turn on Quay Street is optimized away
-                               "Quay Street", "Small Street", "", ""};
+                               "", ""};
   EXPECT_EQ(names, correct_route) << "Incorrect route, got: \n" +
                                          boost::algorithm::join(names, ", ") + ", expected: \n" +
                                          boost::algorithm::join(correct_route, ", ");
@@ -717,9 +717,9 @@ TEST(Astar, test_deadend_timedep_forward) {
   }
 
   auto correct_route =
-      std::vector<std::string>{"Bell Lane",   "Small Street",
+      std::vector<std::string>{"Bell Lane", "Small Street",
                                "Quay Street", // The u-turn on Quay Street is optimized away
-                               "Quay Street", "Small Street", "", ""};
+                               "", ""};
   EXPECT_EQ(names, correct_route) << "Incorrect route, got: \n" +
                                          boost::algorithm::join(names, ", ") + ", expected: \n" +
                                          boost::algorithm::join(correct_route, ", ");
@@ -770,9 +770,9 @@ TEST(Astar, test_deadend_timedep_reverse) {
   }
 
   auto correct_route =
-      std::vector<std::string>{"Bell Lane",   "Small Street",
+      std::vector<std::string>{"Bell Lane", "Small Street",
                                "Quay Street", // The u-turn on Quay Street is optimized away
-                               "Quay Street", "Small Street", "", ""};
+                               "", ""};
   EXPECT_EQ(names, correct_route) << "Incorrect route, got: \n" +
                                          boost::algorithm::join(names, ", ") + ", expected: \n" +
                                          boost::algorithm::join(correct_route, ", ");

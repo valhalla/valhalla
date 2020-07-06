@@ -1,45 +1,54 @@
-#ifndef VALHALLA_MIDGARD_POINTLL_H_
-#define VALHALLA_MIDGARD_POINTLL_H_
+#pragma once
 
 #include <cmath>
 #include <limits>
 #include <tuple>
 #include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/point2.h>
-
 namespace valhalla {
 namespace midgard {
 
+namespace {
+constexpr double RAD_PER_DEG = valhalla::midgard::kPiDouble / 180.0;
+constexpr double DEG_PER_RAD = 180.0 / valhalla::midgard::kPiDouble;
+} // namespace
+constexpr float INVALID_LL = 0xBADBADBAD;
 /**
  * Longitude, Latitude  point. Derives from Point2 and allows access methods
  * using lng,lat naming. Extends functionality to add heading, curvature,
  * and distance based on spherical geometry. Note that the order in the pair
  * is LONGITUDE first, LATITUDE second.
  */
-class PointLL : public Point2 {
+template <typename PrecisionT> class GeoPoint : public PointXY<PrecisionT> {
+
 public:
   /**
    * Use the constructors provided by pair
    */
-  using Point2::Point2;
+  using PointXY<PrecisionT>::PointXY;
+  using PointXY<PrecisionT>::first;
+  using PointXY<PrecisionT>::second;
+  using typename PointXY<PrecisionT>::value_type;
 
   /**
-   * Default constructor.  Sets longitude and latitude to INVALID.
+   * Default constructor.  Sets longitude and latitude to INVALID_LL.
    */
-  PointLL() : Point2(INVALID, INVALID) {
+  GeoPoint() : PointXY<PrecisionT>(INVALID_LL, INVALID_LL) {
   }
 
   /**
    * Parent constructor. Forwards to parent.
    */
-  PointLL(const Point2& p) : Point2(p) {
+  GeoPoint(const PointXY<PrecisionT>& p) : PointXY<PrecisionT>(p) {
   }
 
   /**
    * Get the longitude in degrees.
    * @return  Returns longitude in degrees.
    */
-  float lng() const {
+  PrecisionT lng() const {
     return first;
   }
 
@@ -47,28 +56,32 @@ public:
    * Get the latitude in degrees.
    * @return  Returns latitude (degrees).
    */
-  float lat() const {
+  PrecisionT lat() const {
     return second;
   }
 
   /**
    * Checks for validity of the coordinates.
-   * @return  Returns the false if lat or lon coordinates are set to INVALID.
+   * @return  Returns the false if lat or lon coordinates are set to INVALID_LL.
    */
-  bool IsValid() const;
+  bool IsValid() const {
+    return first != INVALID_LL && second != INVALID_LL;
+  };
 
   /**
    * Sets the coordinates to an invalid state
    */
-  void Invalidate();
+  void Invalidate() {
+    first = INVALID_LL;
+    second = INVALID_LL;
+  }
 
   /**
    * Gets the midpoint on a line segment between this point and point p1.
    * @param   p1  Point
    * @return  Returns the midpoint between this point and p1.
    */
-  PointLL MidPoint(const PointLL& p1) const;
-
+  GeoPoint MidPoint(const GeoPoint& p) const;
   /**
    * Returns the point a specified percentage along a segment from this point
    * to an end point.
@@ -76,17 +89,19 @@ public:
    * @param  pct  Percentage along the segment.
    * @return Returns the point along the segment.
    */
-  PointLL along_segment(const PointLL& end, const float pct) const {
-    return {x() + (end.x() - x()) * pct, y() + (end.y() - y()) * pct};
+  GeoPoint along_segment(const GeoPoint& end, const PrecisionT pct) const {
+    return {lng() + (end.lng() - lng()) * pct, lat() + (end.lat() - lat()) * pct};
   }
 
   /**
    * Calculates the distance between two lng,lat's in meters. Uses spherical
    * geometry (law of cosines).
+   * Note - this method loses precision when the points are within ~1m of each
+   *        other, and cannot meaningfully meausre distances less than that.
    * @param   ll2   Second lng,lat position to calculate distance to.
    * @return  Returns the distance in meters.
    */
-  float Distance(const PointLL& ll2) const;
+  PrecisionT Distance(const GeoPoint& ll2) const;
 
   /**
    * Approximates the distance squared between two lng,lat points - uses
@@ -94,17 +109,20 @@ public:
    * @param   ll2   Second lng,lat position to calculate distance to.
    * @return  Returns the distance squared in meters.
    */
-  float DistanceSquared(const PointLL& ll2) const;
+  PrecisionT DistanceSquared(const GeoPoint& ll2) const {
+    DistanceApproximator<GeoPoint<PrecisionT>> approx(*this);
+    return approx.DistanceSquared(ll2);
+  }
 
   /**
    * Calculates the curvature using this position and 2 others. Found by
    * computing the radius of the circle that circumscribes the 3 positions.
    * @param   ll1   Second lng,lat position
    * @param   ll2   Third lng,lat position
-   * @return  Returns the curvature in meters. Returns max float if the points
+   * @return  Returns the curvature in meters. Returns max value_type if the points
    *          are collinear.
    */
-  float Curvature(const PointLL& ll1, const PointLL& ll2) const;
+  PrecisionT Curvature(const GeoPoint& ll1, const GeoPoint& ll2) const;
 
   /**
    * Calculates the heading or azimuth from the current lng,lat to the
@@ -113,7 +131,7 @@ public:
    * @return   Returns the heading in degrees with range [0,360] where 0 is
    *           due north, 90 is east, 180 is south, and 270 is west.
    */
-  float Heading(const PointLL& ll2) const;
+  PrecisionT Heading(const GeoPoint& ll2) const;
 
   /**
    * Finds the closest point to the supplied polyline as well as the distance
@@ -133,11 +151,11 @@ public:
    *                   Distance in meters of the closest point,
    *                   Index of the segment of the polyline which contains the closest point >
    */
-  std::tuple<PointLL, float, int>
-  ClosestPoint(const std::vector<PointLL>& pts,
+  std::tuple<GeoPoint, PrecisionT, int>
+  ClosestPoint(const std::vector<GeoPoint>& pts,
                int pivot_index = 0,
-               float forward_dist_cutoff = std::numeric_limits<float>::infinity(),
-               float reverse_dist_cutoff = 0) const;
+               PrecisionT forward_dist_cutoff = std::numeric_limits<PrecisionT>::infinity(),
+               PrecisionT reverse_dist_cutoff = 0) const;
 
   /**
    * Calculate the heading from the start index within a polyline of lng,lat
@@ -147,10 +165,10 @@ public:
    * @param  idx0  Start index within the polyline.
    * @param  idx1  End index within the polyline
    */
-  static float HeadingAlongPolyline(const std::vector<PointLL>& pts,
-                                    const float dist,
-                                    const uint32_t idx0,
-                                    const uint32_t idx1);
+  static PrecisionT HeadingAlongPolyline(const std::vector<GeoPoint>& pts,
+                                         const PrecisionT dist,
+                                         const uint32_t idx0,
+                                         const uint32_t idx1);
 
   /**
    * Calculate the heading from the start of a polyline of lng,lat points to a
@@ -158,7 +176,7 @@ public:
    * @param  pts   Polyline - list of lng,lat points.
    * @param  dist  Distance in meters from start to find heading to.
    */
-  static float HeadingAlongPolyline(const std::vector<PointLL>& pts, const float dist) {
+  static PrecisionT HeadingAlongPolyline(const std::vector<GeoPoint>& pts, const PrecisionT dist) {
     return HeadingAlongPolyline(pts, dist, 0, pts.size() - 1);
   }
 
@@ -171,10 +189,10 @@ public:
    * @param  idx0  Start index within the polyline.
    * @param  idx1  End index within the polyline
    */
-  static float HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
-                                      const float dist,
-                                      const uint32_t idx0,
-                                      const uint32_t idx1);
+  static PrecisionT HeadingAtEndOfPolyline(const std::vector<GeoPoint>& pts,
+                                           const PrecisionT dist,
+                                           const uint32_t idx0,
+                                           const uint32_t idx1);
 
   /**
    * Calculate the heading from a point at a specified distance from the end
@@ -183,7 +201,7 @@ public:
    * @param  dist  Distance in meters from end. A point that distance is
    *               used to find the heading to the end point.
    */
-  static float HeadingAtEndOfPolyline(const std::vector<PointLL>& pts, const float dist) {
+  static PrecisionT HeadingAtEndOfPolyline(const std::vector<GeoPoint>& pts, const PrecisionT dist) {
     return HeadingAtEndOfPolyline(pts, dist, 0, pts.size() - 1);
   }
 
@@ -193,8 +211,8 @@ public:
    * @param  p2  End point of the segment.
    * @return  Returns true if this point is left of the segment.
    */
-  virtual float IsLeft(const PointLL& p1, const PointLL& p2) const {
-    return (p2.x() - p1.x()) * (y() - p1.y()) - (x() - p1.x()) * (p2.y() - p1.y());
+  virtual value_type IsLeft(const GeoPoint& p1, const GeoPoint& p2) const {
+    return (p2.lng() - p1.lng()) * (lat() - p1.lat()) - (lng() - p1.lng()) * (p2.lat() - p1.lat());
   }
 
   /**
@@ -212,7 +230,9 @@ public:
    *
    * @return true if the system is spherical false if not
    */
-  static bool IsSpherical();
+  static bool IsSpherical() {
+    return true;
+  }
 
   /**
    * Project this point onto the line from u to v
@@ -220,7 +240,7 @@ public:
    * @param v          second point of segment
    * @return p  the projected point of this onto the segment uv
    */
-  PointLL Project(const PointLL& u, const PointLL& v) const {
+  GeoPoint Project(const GeoPoint& u, const GeoPoint& v) const {
     auto lon_scale = cosf(second * kRadPerDeg);
     return Project(u, v, lon_scale);
   }
@@ -233,7 +253,7 @@ public:
    *                   you cached it and want to avoid trig functions in a tight loop
    * @return p  the projected point of this onto the segment uv
    */
-  PointLL Project(const PointLL& u, const PointLL& v, float lon_scale) const;
+  GeoPoint Project(const GeoPoint& u, const GeoPoint& v, PrecisionT lon_scale) const;
 
   /**
    * Project this point to the supplied polyline as well as the distance
@@ -243,12 +263,10 @@ public:
    *                   Distance in meters of the closest point,
    *                   Index of the segment of the polyline which contains the closest point >
    */
-  std::tuple<PointLL, float, int> Project(const std::vector<PointLL>& pts) const;
-
-private:
-  static constexpr float INVALID = 0xBADBADBAD;
+  std::tuple<GeoPoint, PrecisionT, int> Project(const std::vector<GeoPoint>& pts) const;
 };
 
+using PointLL = GeoPoint<float>;
 } // namespace midgard
 } // namespace valhalla
 
@@ -263,5 +281,3 @@ template <> struct hash<valhalla::midgard::PointLL> {
   }
 };
 } // namespace std
-
-#endif // VALHALLA_MIDGARD_POINTLL_H_

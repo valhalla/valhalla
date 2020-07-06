@@ -91,7 +91,7 @@ void Isochrone::ConstructIsoTile(
   // Range of grids in latitude space
   float dlat = max_distance / kMetersPerDegreeLat;
   // Range of grids in longitude space
-  float dlon = max_distance / DistanceApproximator::MetersPerLngDegree(center_ll.lat());
+  float dlon = max_distance / DistanceApproximator<PointLL>::MetersPerLngDegree(center_ll.lat());
 
   // Optimize for 600 cells in latitude (slightly larger for multimodal).
   // Round off to nearest 0.001 degree. TODO - revisit min and max grid sizes

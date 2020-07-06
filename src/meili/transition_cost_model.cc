@@ -134,7 +134,7 @@ void TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) co
   const auto& left_measurement = container_.measurement(lhs.time());
   const auto& right_measurement = container_.measurement(rhs.time());
 
-  const midgard::DistanceApproximator approximator(right_measurement.lnglat());
+  const midgard::DistanceApproximator<midgard::PointLL> approximator(right_measurement.lnglat());
 
   auto max_route_distance =
       std::min(GreatCircleDistance(left_measurement, right_measurement) * max_route_distance_factor_,

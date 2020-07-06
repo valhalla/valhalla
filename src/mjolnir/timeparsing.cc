@@ -1,6 +1,7 @@
 #include <bitset>
 #include <ctime>
 #include <regex>
+#include <sstream>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>

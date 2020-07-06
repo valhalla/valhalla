@@ -67,7 +67,19 @@ std::string remove_double_quotes(const std::string& s) {
   return ret;
 }
 
-// Compute a curvature metric given an edge shape
+/**
+ * Compute a curvature metric given an edge shape. The final value is from 0 to 15 it is computed by
+ * taking each pair of 3 points in the shape and finding the radius of the circle for which all 3
+ * points lie on it. The larger the radius the less curvy a set of 3 points is. The function is not
+ * robust to the ordering of the points which means some pathological cases can seem straight but
+ * actually be curvy however this is uncommon in real data sets. Each radius of 3 consecutive points
+ * is measured and capped at a maximum value, the radii are averaged together and a final score
+ * between 0 and 15 is stored.
+ *
+ * @param shape   the shape whose curviness we want to measure
+ * @return value between 0 and 15 representing the average curviness of the input shape. lower
+ *         values indicate less curvy shapes and higher values indicate curvier shapes
+ */
 uint32_t compute_curvature(const std::list<PointLL>& shape) {
   // Edges with just 2 shape points have no curvature.
   // TODO - perhaps a post-process to "average" curvature along adjacent edges
@@ -208,8 +220,6 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   std::string cr_to_bin = tile_dir + cr_to_file;
   std::string new_to_old_bin = tile_dir + new_to_old_file;
   std::string old_to_new_bin = tile_dir + old_to_new_file;
-  std::string intersections_bin = tile_dir + intersections_file;
-  std::string shapes_bin = tile_dir + shapes_file;
 
   // OSMData class
   OSMData osm_data{0};
@@ -218,7 +228,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   if (start_stage <= BuildStage::kParseWays && BuildStage::kParseWays <= end_stage) {
     // Read the OSM protocol buffer file. Callbacks for ways are defined within the PBFParser class
     osm_data = PBFGraphParser::ParseWays(config.get_child("mjolnir"), input_files, ways_bin,
-                                         way_nodes_bin, access_bin, intersections_bin, shapes_bin);
+                                         way_nodes_bin, access_bin);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
     if (release_osmpbf_memory && BuildStage::kParseWays == end_stage) {
@@ -255,7 +265,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     // Read the OSM protocol buffer file. Callbacks for nodes
     // are defined within the PBFParser class
     PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
-                               intersections_bin, shapes_bin, bss_nodes_bin, osm_data);
+                               bss_nodes_bin, osm_data);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
     if (release_osmpbf_memory) {
@@ -359,8 +369,6 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     remove_temp_file(cr_to_bin);
     remove_temp_file(new_to_old_bin);
     remove_temp_file(old_to_new_bin);
-    remove_temp_file(intersections_bin);
-    remove_temp_file(shapes_bin);
     OSMData::cleanup_temp_files(tile_dir);
   }
   return true;

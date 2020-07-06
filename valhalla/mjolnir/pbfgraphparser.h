@@ -23,17 +23,12 @@ public:
    * @param  ways_file                      where to store the ways so they are not in memory
    * @param  way_nodes_file                 where to store the nodes so they are not in memory
    * @param  access_file                    where to store the access tags so they are not in memory
-   * @param  intersections_file             where to store the intersection nodes so they are not in
-   * memory
-   * @param  shapes_file                    where to store the shape nodes so they are not in memory
    */
   static OSMData ParseWays(const boost::property_tree::ptree& pt,
                            const std::vector<std::string>& input_files,
                            const std::string& ways_file,
                            const std::string& way_nodes_file,
-                           const std::string& access_file,
-                           const std::string& intersections_file,
-                           const std::string& shapes_file);
+                           const std::string& access_file);
 
   /**
    * Loads given input files
@@ -58,9 +53,6 @@ public:
    * @param  input_files                    the protobuf files to parse
    * @param  ways_file                      where to store the ways so they are not in memory
    * @param  way_nodes_file                 where to store the nodes so they are not in memory
-   * @param  intersections_file             where to store the intersection nodes so they are not in
-   * memory
-   * @param  shapes_file                    where to store the shape nodes so they are not in memory
    * @param  bss_nodes_file                 where to store the bss nodes so they are not in memory
    * @param  osmdata                        OSM data
    */
@@ -68,8 +60,6 @@ public:
                          const std::vector<std::string>& input_files,
                          const std::string& ways_file,
                          const std::string& way_nodes_file,
-                         const std::string& intersections_file,
-                         const std::string& shapes_file,
                          const std::string& bss_nodes_file,
                          OSMData& osmdata);
 };
