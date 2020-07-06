@@ -19,18 +19,18 @@ struct PathInfo {
                           // of the edge
   uint32_t trip_id;       // Trip Id (0 if not a transit edge).
   baldr::GraphId edgeid;  // Directed edge Id
-  bool has_time_restrictions; // Whether or not this edge has a time restriction
-  sif::Cost transition_cost;  // Turn cost at the beginning of the edge
+  int restriction_index;  // Record which restrictionn
+  sif::Cost transition_cost; // Turn cost at the beginning of the edge
 
   // TODO: drop this superfluous constructor
   PathInfo(const sif::TravelMode m,
            const sif::Cost c,
            const baldr::GraphId& edge,
            const uint32_t tripid,
-           const bool time_restriction,
+           const int restriction_idx,
            const sif::Cost tc = {})
-      : mode(m), elapsed_cost(c), trip_id(tripid), edgeid(edge),
-        has_time_restrictions(time_restriction), transition_cost(tc) {
+      : mode(m), elapsed_cost(c), trip_id(tripid), edgeid(edge), restriction_index(restriction_idx),
+        transition_cost(tc) {
   }
 
   // Stream output

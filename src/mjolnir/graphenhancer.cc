@@ -953,10 +953,10 @@ uint32_t GetDensity(GraphReader& reader,
   float mr2 = rm * rm;
 
   // Use distance approximator for all distance checks
-  DistanceApproximator approximator(ll);
+  DistanceApproximator<PointLL> approximator(ll);
 
   // Get a list of tiles required for a node search within this radius
-  float lngdeg = (rm / DistanceApproximator::MetersPerLngDegree(ll.lat()));
+  float lngdeg = (rm / DistanceApproximator<PointLL>::MetersPerLngDegree(ll.lat()));
   AABB2<PointLL> bbox(Point2(ll.lng() - lngdeg, ll.lat() - kDensityLatDeg),
                       Point2(ll.lng() + lngdeg, ll.lat() + kDensityLatDeg));
   std::vector<int32_t> tilelist = tiles.TileList(bbox);

@@ -2,10 +2,9 @@
 #ifndef VALHALLA_MIDGARD_DISTANCEAPPROXIMATOR_H_
 #define VALHALLA_MIDGARD_DISTANCEAPPROXIMATOR_H_
 
-#include <math.h>
+#include <cmath>
 
 #include <valhalla/midgard/constants.h>
-#include <valhalla/midgard/pointll.h>
 
 namespace valhalla {
 namespace midgard {
@@ -28,7 +27,7 @@ namespace midgard {
  * varies with latitude. The distance from A to B may not match the distance
  * from B to A if the latitudes of the 2 points differ.
  */
-class DistanceApproximator {
+template <typename PointT> class DistanceApproximator {
 public:
   /**
    * Constructor.
@@ -38,7 +37,7 @@ public:
    * precalculates the meters per degree of longitude.
    * @param   ll    Latitude, longitude of the test point (degrees)
    */
-  DistanceApproximator(const PointLL& ll)
+  DistanceApproximator(const PointT& ll)
       : centerlat_(ll.lat()), centerlng_(ll.lng()), m_lng_scale_(LngScalePerLat(centerlat_)),
         m_per_lng_degree_(m_lng_scale_ * kMetersPerDegreeLat) {
   }
@@ -49,7 +48,7 @@ public:
    * precalculates the meters per degree of longitude.
    * @param   ll    Latitude, longitude of the test point (degrees)
    */
-  void SetTestPoint(const PointLL& ll) {
+  void SetTestPoint(const PointT& ll) {
     centerlat_ = ll.lat();
     centerlng_ = ll.lng();
     m_lng_scale_ = LngScalePerLat(centerlat_);
@@ -60,7 +59,7 @@ public:
    * Getter for lng scale
    * @return the distance scale for lng at this points latitude
    */
-  float GetLngScale() const {
+  typename PointT::first_type GetLngScale() const {
     return m_lng_scale_;
   }
 
@@ -74,7 +73,7 @@ public:
    *          theorem.  Squared distance is returned for more efficient
    *          searching (avoids sqrt).
    */
-  float DistanceSquared(const PointLL& ll) const {
+  typename PointT::first_type DistanceSquared(const PointT& ll) const {
     return sqr((ll.lat() - centerlat_) * kMetersPerDegreeLat) +
            sqr((ll.lng() - centerlng_) * m_per_lng_degree_);
   }
@@ -87,9 +86,9 @@ public:
    * @param   ll2  Second point (lat,lng)
    * @return  Returns the approximate distance squared (in meters)
    */
-  static float DistanceSquared(const PointLL& ll1, const PointLL& ll2) {
-    float latm = (ll1.lat() - ll2.lat()) * kMetersPerDegreeLat;
-    float lngm = (ll1.lng() - ll2.lng()) * MetersPerLngDegree((ll1.lat() + ll2.lat()) * 0.5f);
+  static typename PointT::first_type DistanceSquared(const PointT& ll1, const PointT& ll2) {
+    auto latm = (ll1.lat() - ll2.lat()) * kMetersPerDegreeLat;
+    auto lngm = (ll1.lng() - ll2.lng()) * MetersPerLngDegree((ll1.lat() + ll2.lat()) * 0.5);
     return (latm * latm + lngm * lngm);
   }
 
@@ -101,7 +100,7 @@ public:
    * @param   lat   Latitude in degrees
    * @return  Returns the number of meters per degree of longitude
    */
-  static float MetersPerLngDegree(const float lat) {
+  static typename PointT::first_type MetersPerLngDegree(const typename PointT::first_type lat) {
     return LngScalePerLat(lat) * kMetersPerDegreeLat;
   }
 
@@ -111,17 +110,17 @@ public:
    * @param   lat   Latitude in degrees
    * @return  Returns the scale to use for longitude at this degree of latitude
    */
-  static float LngScalePerLat(const float lat) {
+  static typename PointT::first_type LngScalePerLat(const typename PointT::first_type lat) {
     return cosf(lat * kRadPerDeg);
   }
 
 private:
-  float centerlat_;
-  float centerlng_;
-  float m_lng_scale_;
-  float m_per_lng_degree_;
+  typename PointT::first_type centerlat_;
+  typename PointT::first_type centerlng_;
+  typename PointT::first_type m_lng_scale_;
+  typename PointT::first_type m_per_lng_degree_;
 
-  float sqr(const float v) const {
+  typename PointT::first_type sqr(const typename PointT::first_type v) const {
     return v * v;
   }
 };

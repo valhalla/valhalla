@@ -250,8 +250,10 @@ coord_t AABB2<coord_t>::ClipIntersection(const ClipEdge bdry,
 }
 
 // Explicit instantiation
-template class AABB2<Point2>;
-template class AABB2<PointLL>;
+template class AABB2<PointXY<float>>;
+template class AABB2<PointXY<double>>;
+template class AABB2<GeoPoint<float>>;
+template class AABB2<GeoPoint<double>>;
 
 } // namespace midgard
 } // namespace valhalla

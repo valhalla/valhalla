@@ -191,7 +191,7 @@ bool expand_from_node(const sif::mode_costing_t& mode_costing,
           elapsed.secs = shape[index].epoch_time() - shape[0].epoch_time();
 
         // Add edge and update correlated index
-        path_infos.emplace_back(mode, elapsed, edge_id, 0, false, transition_cost);
+        path_infos.emplace_back(mode, elapsed, edge_id, 0, -1, transition_cost);
 
         // Set previous edge label
         prev_edge_label = {kInvalidLabel, edge_id, de, {}, 0, 0, mode, 0, {}};
@@ -364,7 +364,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           elapsed.secs = shape[index].epoch_time() - shape[0].epoch_time();
 
         // Add begin edge
-        path_infos.emplace_back(mode, elapsed, graphid, 0, false);
+        path_infos.emplace_back(mode, elapsed, graphid, 0, -1);
 
         // Set previous edge label
         prev_edge_label = {kInvalidLabel, graphid, de, {}, 0, 0, mode, 0, {}};
@@ -415,7 +415,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
             elapsed.secs = shape.back().epoch_time() - shape[0].epoch_time();
 
           // Add end edge
-          path_infos.emplace_back(mode, elapsed, end_edge_graphid, 0, false, transition_cost);
+          path_infos.emplace_back(mode, elapsed, end_edge_graphid, 0, -1, transition_cost);
           return true;
         } else {
           // Did not find an edge that correlates with the trace, return false.
@@ -436,7 +436,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           elapsed.secs = shape.back().epoch_time() - shape[0].epoch_time();
 
         // Add end edge
-        path_infos.emplace_back(mode, elapsed, GraphId(edge.graph_id()), 0, false);
+        path_infos.emplace_back(mode, elapsed, GraphId(edge.graph_id()), 0, -1);
         return true;
       }
     }

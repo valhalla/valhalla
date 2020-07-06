@@ -92,7 +92,7 @@ void recost_forward(baldr::GraphReader& reader,
     // TODO: if this edge begins a restriction, we need to start popping off edges into queue
     // so that we can find if we reach the end of the restriction. then we need to replay the
     // queued edges as normal
-    bool time_restrictions_TODO = false;
+    int time_restrictions_TODO = -1;
 
     // this edge is not allowed
     if (predecessor != baldr::kInvalidLabel &&

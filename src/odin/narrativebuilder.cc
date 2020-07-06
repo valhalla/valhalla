@@ -145,7 +145,9 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         maneuver.set_verbal_pre_transition_instruction(FormVerbalRampStraightInstruction(maneuver));
 
         // Only set verbal post if > min ramp length
-        if (maneuver.length() > kVerbalPostMinimumRampLength) {
+        // or contains obvious maneuver
+        if ((maneuver.length() > kVerbalPostMinimumRampLength) ||
+            maneuver.contains_obvious_maneuver()) {
           // Set verbal post transition instruction
           maneuver.set_verbal_post_transition_instruction(
               FormVerbalPostTransitionInstruction(maneuver));
@@ -164,7 +166,9 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         maneuver.set_verbal_pre_transition_instruction(FormVerbalRampInstruction(maneuver));
 
         // Only set verbal post if > min ramp length
-        if (maneuver.length() > kVerbalPostMinimumRampLength) {
+        // or contains obvious maneuver
+        if ((maneuver.length() > kVerbalPostMinimumRampLength) ||
+            maneuver.contains_obvious_maneuver()) {
           // Set verbal post transition instruction
           maneuver.set_verbal_post_transition_instruction(
               FormVerbalPostTransitionInstruction(maneuver));
@@ -183,7 +187,9 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         maneuver.set_verbal_pre_transition_instruction(FormVerbalExitInstruction(maneuver));
 
         // Only set verbal post if > min ramp length
-        if (maneuver.length() > kVerbalPostMinimumRampLength) {
+        // or contains obvious maneuver
+        if ((maneuver.length() > kVerbalPostMinimumRampLength) ||
+            maneuver.contains_obvious_maneuver()) {
           // Set verbal post transition instruction
           maneuver.set_verbal_post_transition_instruction(
               FormVerbalPostTransitionInstruction(maneuver));
@@ -485,6 +491,9 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   // Set begin_street_names value
   std::string begin_street_names = FormStreetNames(maneuver, maneuver.begin_street_names());
 
+  // Update street names for maneuvers that contain obvious maneuvers
+  UpdateObviousManeuverStreetNames(maneuver, begin_street_names, street_names);
+
   // Determine which phrase to use
   uint8_t phrase_id = 0;
   if (!street_names.empty()) {
@@ -559,6 +568,9 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(Maneuver& maneuver,
       FormStreetNames(maneuver, maneuver.begin_street_names(),
                       &dictionary_.start_verbal_subset.empty_street_name_labels, false,
                       element_max_count, delim, maneuver.verbal_formatter());
+
+  // Update street names for maneuvers that contain obvious maneuvers
+  UpdateObviousManeuverStreetNames(maneuver, begin_street_names, street_names);
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
@@ -1045,6 +1057,9 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
   // Assign the begin street names
   std::string begin_street_names = FormStreetNames(maneuver, maneuver.begin_street_names());
 
+  // Update street names for maneuvers that contain obvious maneuvers
+  UpdateObviousManeuverStreetNames(maneuver, begin_street_names, street_names);
+
   // Determine which phrase to use
   uint8_t phrase_id = 0;
   std::string junction_name;
@@ -1143,6 +1158,9 @@ std::string NarrativeBuilder::FormVerbalTurnInstruction(Maneuver& maneuver,
   std::string begin_street_names =
       FormStreetNames(maneuver, maneuver.begin_street_names(), &subset->empty_street_name_labels,
                       false, element_max_count, delim, maneuver.verbal_formatter());
+
+  // Update street names for maneuvers that contain obvious maneuvers
+  UpdateObviousManeuverStreetNames(maneuver, begin_street_names, street_names);
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
@@ -2869,6 +2887,9 @@ std::string NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver,
       FormStreetNames(maneuver, maneuver.begin_street_names(),
                       &dictionary_.exit_roundabout_subset.empty_street_name_labels);
 
+  // Update street names for maneuvers that contain obvious maneuvers
+  UpdateObviousManeuverStreetNames(maneuver, begin_street_names, street_names);
+
   // Determine which phrase to use
   uint8_t phrase_id = 0;
   std::string guide_sign;
@@ -2928,6 +2949,9 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(Maneuver& mane
       FormStreetNames(maneuver, maneuver.begin_street_names(),
                       &dictionary_.exit_roundabout_verbal_subset.empty_street_name_labels, false,
                       element_max_count, delim, maneuver.verbal_formatter());
+
+  // Update street names for maneuvers that contain obvious maneuvers
+  UpdateObviousManeuverStreetNames(maneuver, begin_street_names, street_names);
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
@@ -3643,11 +3667,14 @@ std::string NarrativeBuilder::FormVerbalPostTransitionInstruction(Maneuver& mane
   std::string instruction;
   instruction.reserve(kInstructionInitialCapacity);
 
-  // Assign the street names
-  std::string street_names =
-      FormStreetNames(maneuver, maneuver.street_names(),
-                      &dictionary_.post_transition_verbal_subset.empty_street_name_labels, true,
-                      element_max_count, delim, maneuver.verbal_formatter());
+  // Assign the street names if maneuver does not contain an obvious maneuver
+  std::string street_names;
+  if (!maneuver.contains_obvious_maneuver()) {
+    street_names =
+        FormStreetNames(maneuver, maneuver.street_names(),
+                        &dictionary_.post_transition_verbal_subset.empty_street_name_labels, true,
+                        element_max_count, delim, maneuver.verbal_formatter());
+  }
 
   // Determine which phrase to use
   uint8_t phrase_id = 0;
@@ -4126,6 +4153,15 @@ bool NarrativeBuilder::IsWithinVerbalMultiCueBounds(Maneuver& maneuver) {
   }
   // Maneuver must be quick (basic time < 13 sec)
   return (maneuver.basic_time() < kVerbalMultiCueTimeThreshold);
+}
+
+void NarrativeBuilder::UpdateObviousManeuverStreetNames(Maneuver& maneuver,
+                                                        std::string& begin_street_names,
+                                                        std::string& street_names) {
+  if (maneuver.contains_obvious_maneuver() && !begin_street_names.empty()) {
+    street_names = begin_street_names;
+    begin_street_names.clear();
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////

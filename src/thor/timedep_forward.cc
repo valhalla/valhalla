@@ -147,10 +147,10 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   }
   // Skip shortcut edges for time dependent routes, if no access is allowed to this edge
   // (based on costing method)
-  bool has_time_restrictions = false;
+  int restriction_idx = -1;
   if (meta.edge->is_shortcut() ||
       !costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
-                         nodeinfo->timezone(), has_time_restrictions) ||
+                         nodeinfo->timezone(), restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
                            time_info.local_time, nodeinfo->timezone())) {
     return false;
@@ -196,7 +196,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       adjacencylist_->decrease(meta.edge_status->index(), newsortcost);
-      lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
+      lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
     }
     return true;
   }
@@ -218,7 +218,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   // Add to the adjacency list and edge labels.
   uint32_t idx = edgelabels_.size();
   edgelabels_.emplace_back(pred_idx, meta.edge_id, meta.edge, newcost, sortcost, dist, mode_, 0,
-                           transition_cost, has_time_restrictions);
+                           transition_cost, restriction_idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   adjacencylist_->add(idx);
   return true;

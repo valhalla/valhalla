@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VALHALLA_MIDGARD_UTIL_H_
+#define VALHALLA_MIDGARD_UTIL_H_
 
 #include <cstdint>
 #include <limits>
@@ -17,6 +18,7 @@
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>
+#include <valhalla/midgard/util_core.h>
 
 namespace valhalla {
 namespace midgard {
@@ -85,8 +87,8 @@ inline AABB2<PointLL> ExpandMeters(const AABB2<PointLL>& box, const float meters
   // Find the delta latitude and delta longitude (max of the delta at the
   // minimum and maximum latitude)
   float dlat = meters / kMetersPerDegreeLat;
-  float dlng1 = (meters / DistanceApproximator::MetersPerLngDegree(box.miny()));
-  float dlng2 = (meters / DistanceApproximator::MetersPerLngDegree(box.maxy()));
+  float dlng1 = (meters / DistanceApproximator<PointLL>::MetersPerLngDegree(box.miny()));
+  float dlng2 = (meters / DistanceApproximator<PointLL>::MetersPerLngDegree(box.maxy()));
   float dlng = std::max(dlng1, dlng2);
   return {box.minx() - dlng, box.miny() - dlat, box.maxx() + dlng, box.maxy() + dlat};
 }
@@ -104,7 +106,7 @@ inline AABB2<PointLL> ExpandMeters(const PointLL& pt, const float meters) {
   }
 
   float dlat = meters / kMetersPerDegreeLat;
-  float dlng = meters / DistanceApproximator::MetersPerLngDegree(pt.lat());
+  float dlng = meters / DistanceApproximator<PointLL>::MetersPerLngDegree(pt.lat());
   PointLL minpt(pt.lng() - dlng, pt.lat() - dlat);
   PointLL maxpt(pt.lng() + dlng, pt.lat() + dlat);
   return {minpt, maxpt};
@@ -128,11 +130,12 @@ inline float normalize(const float num, const float den) {
 // Compute the length of the polyline represented by a set of lat,lng points.
 // Avoids having to copy the points into a polyline, polyline should really just extend
 // A container class like vector or list
-template <class container_t> float length(const container_t& pts) {
+template <class container_t>
+typename container_t::value_type::first_type length(const container_t& pts) {
   if (pts.size() < 2) {
     return 0.0f;
   }
-  float length = 0.0f;
+  typename container_t::value_type::first_type length = 0.0f;
   for (auto p = std::next(pts.cbegin()); p != pts.end(); ++p) {
     length += p->Distance(*std::prev(p));
   }
@@ -145,12 +148,13 @@ template <class container_t> float length(const container_t& pts) {
  * @param  end    Ending point (iterator) within the polyline container.
  * @return Returns the length of the polyline.
  */
-template <typename iterator_t> float length(const iterator_t& begin, const iterator_t& end) {
+template <typename iterator_t>
+typename iterator_t::value_type::first_type length(const iterator_t& begin, const iterator_t& end) {
   if (begin == end) {
-    return 0.0f;
+    return 0.0;
   }
 
-  float length = 0.0f;
+  typename iterator_t::value_type::first_type length = 0.0f;
   for (auto vertex = std::next(begin); vertex != end; vertex++) {
     length += std::prev(vertex)->Distance(*vertex);
   }
@@ -179,8 +183,11 @@ trim_polyline(const iterator_t& begin, const iterator_t& end, float source, floa
   source = std::min(std::max(source, 0.f), 1.f);
   target = std::min(std::max(target, 0.f), 1.f);
 
-  float total_length = length(begin, end), prev_vertex_length = 0.f,
-        source_length = total_length * source, target_length = total_length * target;
+  // Use precision from point type being iterated over
+  typename iterator_t::value_type::first_type total_length = length(begin, end),
+                                              prev_vertex_length = 0.f,
+                                              source_length = total_length * source,
+                                              target_length = total_length * target;
 
   // An state indicating if the position of current vertex is larger
   // than source and smaller than target
@@ -190,8 +197,16 @@ trim_polyline(const iterator_t& begin, const iterator_t& end, float source, floa
   std::vector<typename iterator_t::value_type> clip;
   iterator_t prev_vertex = begin;
   for (auto vertex = std::next(begin); vertex != end; vertex++) {
-    const auto segment_length = prev_vertex->Distance(*vertex),
-               vertex_length = prev_vertex_length + segment_length;
+
+    const auto segment_length = prev_vertex->Distance(*vertex);
+    // Note: GCC-5 seems to have a bug optimizing use of `vertex_length` here on 32 bit platforms.
+    // Marking this as voliatle prevents some optimizations, and makes the floating point that
+    // later depends on `vertex_length` work correctly
+#if __i386__ && __GCC__ <= 5 && __OPTIMIZE__
+    volatile auto vertex_length = prev_vertex_length + segment_length;
+#else
+    const auto vertex_length = prev_vertex_length + segment_length;
+#endif
 
     // Open if source is located at current segment
     if (!open && source_length < vertex_length) {
@@ -301,33 +316,6 @@ template <class T1, class T2> inline T2 ToSet(const T1& inset) {
     outset.emplace(item.second.template get_value<typename T2::value_type>());
   }
   return outset;
-}
-
-/**
- * equals with an epsilon for approximation
- * @param a first operand
- * @param b second operand
- * @param epsilon to help with approximate equality
- */
-template <class T> bool equal(const T a, const T b, const T epsilon = static_cast<T>(.00001)) {
-  if (epsilon < static_cast<T>(0)) {
-    throw std::logic_error("Using a negative epsilon is not supported");
-  }
-  T diff = a - b;
-  // if its non-negative it better be less than epsilon, if its negative then it better be bigger
-  // than epsilon
-  bool negative = diff < static_cast<T>(0);
-  return (!negative && diff <= epsilon) || (negative && diff >= -epsilon);
-}
-
-template <class T> bool similar(const T a, const T b, const double similarity = .99) {
-  if (a == 0 || b == 0) {
-    return a == b;
-  }
-  if ((a < 0) != (b < 0)) {
-    return false;
-  }
-  return (double)std::min(a, b) / (double)std::max(a, b) >= similarity;
 }
 
 /**
@@ -632,7 +620,7 @@ struct projector_t {
   double lon_scale;
   double lat;
   double lng;
-  DistanceApproximator approx;
+  DistanceApproximator<PointLL> approx;
 };
 
 /**
@@ -647,5 +635,17 @@ inline float units_to_meters(float units_km_or_mi, bool is_metric) {
          (is_metric ? units_km_or_mi : (units_km_or_mi * midgard::kKmPerMile));
 }
 
+/**
+ * Encode binary string as base64.
+ */
+std::string encode64(const std::string& val);
+
+/**
+ * Decode base64 string to binary.
+ */
+std::string decode64(const std::string& val);
+
 } // namespace midgard
 } // namespace valhalla
+  //
+#endif // VALHALLA_MIDGARD_UTIL_H_
