@@ -253,6 +253,15 @@ public:
   bool contains_obvious_maneuver() const;
   void set_contains_obvious_maneuver(bool contains_obvious_maneuver);
 
+  bool has_combined_enter_exit_roundabout() const;
+  void set_has_combined_enter_exit_roundabout(bool has_combined_enter_exit_roundabout);
+
+  float roundabout_length(const Options::Units& units = Options::kilometers) const;
+  void set_roundabout_length(float roundabout_length);
+
+  float roundabout_exit_length(const Options::Units& units = Options::kilometers) const;
+  void set_roundabout_exit_length(float roundabout_exit_length);
+
   TripLeg_TravelMode travel_mode() const;
   void set_travel_mode(TripLeg_TravelMode travel_mode);
 
@@ -384,6 +393,9 @@ protected:
   bool has_left_traversable_outbound_intersecting_edge_;
   bool include_verbal_pre_transition_length_;
   bool contains_obvious_maneuver_;
+  bool has_combined_enter_exit_roundabout_;
+  float roundabout_length_;      // Kilometers
+  float roundabout_exit_length_; // Kilometers
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support

@@ -193,7 +193,8 @@ TEST_F(InstructionsRoundabout, RoundaboutExitSuppressed) {
       expect_instructions_at_maneuver_index(result, maneuver_index,
                                             "Enter the roundabout and take the 3rd exit.",
                                             "Enter the roundabout and take the 3rd exit.",
-                                            "Enter the roundabout and take the 3rd exit.", "");
+                                            "Enter the roundabout and take the 3rd exit.",
+                                            "Continue for 200 meters.");
 
   // Verify the exit_roundabout is suppressed
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, ++maneuver_index,
