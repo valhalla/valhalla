@@ -2,6 +2,7 @@
 #define VALHALLA_MIDGARD_OPENLR_H_
 
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/util.h>
 
 #include <assert.h>
 #include <bitset>
@@ -72,7 +73,7 @@ inline float integer2distance(
 } // namespace
 
 // Reference: OpenLR™ White Paper Version: 1.5 revision 2
-// http://www.openlr.org/data/docs/OpenLR-Whitepaper_v1.5.pdf
+// https://www.openlr-association.com/fileadmin/user_upload/openlr-whitepaper_v1.5.pdf
 
 // Location Reference Point, p.35, section 5.4
 struct LocationReferencePoint {
@@ -162,19 +163,22 @@ struct LocationReferencePoint {
 // Line locations, p.19, section 3.1
 // Only line location with 2 location reference points are supported
 struct LineLocation {
-  LineLocation(const std::string& reference) {
+  LineLocation(const std::string& reference, bool base64_encoded = false) {
+    const std::string& decoded = base64_encoded ? decode64(reference) : reference;
     //  Line location data size: 16 + (n-2)*7 + [0/1/2] bytes
-    if (reference.size() < 16)
-      throw std::invalid_argument("OpenLR reference is too small " + reference);
+    const size_t size = decoded.size();
+    if (size < 16) {
+      throw std::invalid_argument("OpenLR reference is too small reference=" + reference +
+                                  "size=" + std::to_string(decoded.size()));
+    }
 
-    const auto raw = reinterpret_cast<const unsigned char*>(reference.data());
-    const auto size = reference.size();
+    const auto raw = reinterpret_cast<const unsigned char*>(decoded.data());
     std::size_t index = 0;
 
     // Status, version 3, has attributes, ArF 'Circle or no area location'
     auto status = raw[index++] & 0x7f;
     if (status != 0x0b)
-      throw std::invalid_argument("OpenLR reference invalid status " + reference);
+      throw std::invalid_argument("OpenLR reference invalid status " + decoded);
 
     // First location reference point
     auto longitude = integer2decimal(fixed<std::int32_t, 3>(raw, index));
@@ -299,6 +303,10 @@ struct LineLocation {
     }
 
     return result;
+  }
+
+  std::string toBase64() const {
+    return encode64(toBinary());
   }
 
   bool operator==(const LineLocation& lloc) const {
