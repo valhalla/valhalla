@@ -125,7 +125,7 @@ static_assert(sizeof(TrafficSpeed) == sizeof(uint64_t),
  */
 #ifndef C_ONLY_INTERFACE
 namespace {
-static constexpr volatile TrafficSpeed INVALID_SPEED{0u,
+static constexpr volatile TrafficSpeed INVALID_SPEED{UNKNOWN_TRAFFIC_SPEED_RAW,
                                                      UNKNOWN_TRAFFIC_SPEED_RAW,
                                                      UNKNOWN_TRAFFIC_SPEED_RAW,
                                                      UNKNOWN_TRAFFIC_SPEED_RAW,

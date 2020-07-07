@@ -244,34 +244,29 @@ TEST(Traffic, CutGoems) {
 
   // first we get the edge without traffic on it
   {
-    std::string result_json;
-    EXPECT_NO_THROW(result_json = actor.trace_attributes(
-                        R"({"shape":[
-        {"lat":)" + std::to_string(map.nodes["C"].second) +
-                        R"(,"lon":)" + std::to_string(map.nodes["C"].first) +
-                        R"(},
-        {"lat":)" + std::to_string(map.nodes["E"].second) +
-                        R"(,"lon":)" + std::to_string(map.nodes["E"].first) +
-                        R"(}
-      ],"costing":"auto","shape_match":"map_snap","date_time":{"type":0},
+    valhalla::Api api;
+    EXPECT_NO_THROW(actor.route(
+        R"({"locations":[
+        {"lat":)" +
+            std::to_string(map.nodes["C"].second) + R"(,"lon":)" +
+            std::to_string(map.nodes["C"].first) +
+            R"(},
+        {"lat":)" +
+            std::to_string(map.nodes["E"].second) + R"(,"lon":)" +
+            std::to_string(map.nodes["E"].first) +
+            R"(}
+      ],"costing":"auto","date_time":{"type":0},
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
       "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
-      "action":"include"}})"));
+      "action":"include"}})",
+        nullptr, &api));
 
-    rapidjson::Document doc;
-    doc.Parse(result_json);
-
-    auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(
-        rapidjson::Pointer("/shape").Get(doc)->GetString());
-    auto shape_attributes_time = rapidjson::Pointer("/shape_attributes/time").Get(doc)->GetArray();
-    auto shape_attributes_length =
-        rapidjson::Pointer("/shape_attributes/length").Get(doc)->GetArray();
-    auto shape_attributes_speed = rapidjson::Pointer("/shape_attributes/speed").Get(doc)->GetArray();
-
+    const auto& leg = api.trip().routes(0).legs(0);
+    auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
     EXPECT_EQ(shape.size(), 2);
-    EXPECT_EQ(shape_attributes_time.Size(), shape.size() - 1);
-    EXPECT_EQ(shape_attributes_length.Size(), shape.size() - 1);
-    EXPECT_EQ(shape_attributes_speed.Size(), shape.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().time_size(), shape.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().length_size(), shape.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().speed_size(), shape.size() - 1);
   }
 
   // then we add one portion of the edge having traffic
@@ -289,34 +284,30 @@ TEST(Traffic, CutGoems) {
     ts.speed1 = 42 >> 1;
     ts.breakpoint1 = 127;
     update_all_edges_but_bd(map, ts);
-    std::string result_json;
-    EXPECT_NO_THROW(result_json = actor.trace_attributes(
-                        R"({"shape":[
-        {"lat":)" + std::to_string(map.nodes["C"].second) +
-                        R"(,"lon":)" + std::to_string(map.nodes["C"].first) +
-                        R"(},
-        {"lat":)" + std::to_string(map.nodes["E"].second) +
-                        R"(,"lon":)" + std::to_string(map.nodes["E"].first) +
-                        R"(}
-      ],"costing":"auto","shape_match":"map_snap",
+
+    valhalla::Api api;
+    EXPECT_NO_THROW(actor.route(
+        R"({"locations":[
+        {"lat":)" +
+            std::to_string(map.nodes["C"].second) + R"(,"lon":)" +
+            std::to_string(map.nodes["C"].first) +
+            R"(},
+        {"lat":)" +
+            std::to_string(map.nodes["E"].second) + R"(,"lon":)" +
+            std::to_string(map.nodes["E"].first) +
+            R"(}
+      ],"costing":"auto","date_time":{"type":0},
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
       "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
-      "action":"include"},"date_time":{"type":0}})"));
+      "action":"include"}})",
+        nullptr, &api));
 
-    rapidjson::Document doc;
-    doc.Parse(result_json);
-
-    auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(
-        rapidjson::Pointer("/shape").Get(doc)->GetString());
-    auto shape_attributes_time = rapidjson::Pointer("/shape_attributes/time").Get(doc)->GetArray();
-    auto shape_attributes_length =
-        rapidjson::Pointer("/shape_attributes/length").Get(doc)->GetArray();
-    auto shape_attributes_speed = rapidjson::Pointer("/shape_attributes/speed").Get(doc)->GetArray();
-
+    const auto& leg = api.trip().routes(0).legs(0);
+    auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
     EXPECT_EQ(shape.size(), 3);
-    EXPECT_EQ(shape_attributes_time.Size(), shape.size() - 1);
-    EXPECT_EQ(shape_attributes_length.Size(), shape.size() - 1);
-    EXPECT_EQ(shape_attributes_speed.Size(), shape.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().time_size(), shape.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().length_size(), shape.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().speed_size(), shape.size() - 1);
 
     auto b1 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 127 / 255.0);
     EXPECT_TRUE(b1.ApproximatelyEqual(shape[1]));
