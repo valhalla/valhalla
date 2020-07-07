@@ -233,17 +233,16 @@ TEST(Traffic, CutGoems) {
   // build the tiles
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   std::string tile_dir = "test/data/traffic_cutgeoms";
-  auto map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, tile_dir,
+                               {{"mjolnir.traffic_extract", tile_dir + "/traffic.tar"}});
 
   // empty traffic for now
-  map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
   blank_traffic(map);
-
-  // get ready for some requests
-  tyr::actor_t actor(map.config, true);
 
   // first we get the edge without traffic on it
   {
+    auto clean_reader = gurka::make_clean_graphreader(map.config.get_child("mjolnir"));
+    tyr::actor_t actor(map.config, *clean_reader);
     valhalla::Api api;
     EXPECT_NO_THROW(actor.route(
         R"({"locations":[
@@ -263,7 +262,9 @@ TEST(Traffic, CutGoems) {
 
     const auto& leg = api.trip().routes(0).legs(0);
     auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
-    EXPECT_EQ(shape.size(), 2);
+    EXPECT_EQ(leg.node_size(), 2); // 1 edge
+    EXPECT_EQ(shape.size(), 2);    // 2 shape points
+    // 1 attribute per metric
     EXPECT_EQ(leg.shape_attributes().time_size(), shape.size() - 1);
     EXPECT_EQ(leg.shape_attributes().length_size(), shape.size() - 1);
     EXPECT_EQ(leg.shape_attributes().speed_size(), shape.size() - 1);
@@ -281,10 +282,13 @@ TEST(Traffic, CutGoems) {
                                      0u,
                                      0u,
                                      0u};
+    ts.overall_speed = 42 >> 1;
     ts.speed1 = 42 >> 1;
     ts.breakpoint1 = 127;
     update_all_edges_but_bd(map, ts);
 
+    auto clean_reader = gurka::make_clean_graphreader(map.config.get_child("mjolnir"));
+    tyr::actor_t actor(map.config, *clean_reader);
     valhalla::Api api;
     EXPECT_NO_THROW(actor.route(
         R"({"locations":[
@@ -304,7 +308,9 @@ TEST(Traffic, CutGoems) {
 
     const auto& leg = api.trip().routes(0).legs(0);
     auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
-    EXPECT_EQ(shape.size(), 3);
+    EXPECT_EQ(leg.node_size(), 2); // 1 edge
+    EXPECT_EQ(shape.size(), 3);    // 3 shape points
+    // 2 attributes per metric
     EXPECT_EQ(leg.shape_attributes().time_size(), shape.size() - 1);
     EXPECT_EQ(leg.shape_attributes().length_size(), shape.size() - 1);
     EXPECT_EQ(leg.shape_attributes().speed_size(), shape.size() - 1);
