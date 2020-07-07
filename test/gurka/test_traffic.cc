@@ -240,24 +240,23 @@ TEST(Traffic, CutGoems) {
   blank_traffic(map);
 
   // get ready for some requests
-  tyr::actor_t actor(map.config);
+  tyr::actor_t actor(map.config, true);
 
   // first we get the edge without traffic on it
   {
-    auto result_json = actor.trace_attributes(
-        R"({"shape":[
-        {"lat":)" +
-        std::to_string(double(map.nodes["A"].second)) + R"(,"lon":)" +
-        std::to_string(double(map.nodes["A"].first)) +
-        R"(},
-        {"lat":)" +
-        std::to_string(double(map.nodes["B"].second)) + R"(,"lon":)" +
-        std::to_string(double(map.nodes["B"].first)) +
-        R"(}
-      ],"costing":"auto","shape_match":"map_snap",
+    std::string result_json;
+    EXPECT_NO_THROW(result_json = actor.trace_attributes(
+                        R"({"shape":[
+        {"lat":)" + std::to_string(map.nodes["C"].second) +
+                        R"(,"lon":)" + std::to_string(map.nodes["C"].first) +
+                        R"(},
+        {"lat":)" + std::to_string(map.nodes["E"].second) +
+                        R"(,"lon":)" + std::to_string(map.nodes["E"].first) +
+                        R"(}
+      ],"costing":"auto","shape_match":"map_snap","date_time":{"type":0},
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
       "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
-      "action":"include"}})");
+      "action":"include"}})"));
 
     rapidjson::Document doc;
     doc.Parse(result_json);
@@ -290,19 +289,19 @@ TEST(Traffic, CutGoems) {
     ts.speed1 = 42 >> 1;
     ts.breakpoint1 = 127;
     update_all_edges_but_bd(map, ts);
-
-    auto result_json = actor.trace_attributes(
-        R"({"shape":[
-        {"lat":)" +
-        std::to_string(map.nodes["A"].second) + R"(,"lon":)" + std::to_string(map.nodes["A"].first) +
-        R"(},
-        {"lat":)" +
-        std::to_string(map.nodes["B"].second) + R"(,"lon":)" + std::to_string(map.nodes["B"].first) +
-        R"(}
+    std::string result_json;
+    EXPECT_NO_THROW(result_json = actor.trace_attributes(
+                        R"({"shape":[
+        {"lat":)" + std::to_string(map.nodes["C"].second) +
+                        R"(,"lon":)" + std::to_string(map.nodes["C"].first) +
+                        R"(},
+        {"lat":)" + std::to_string(map.nodes["E"].second) +
+                        R"(,"lon":)" + std::to_string(map.nodes["E"].first) +
+                        R"(}
       ],"costing":"auto","shape_match":"map_snap",
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
       "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
-      "action":"include"}})");
+      "action":"include"},"date_time":{"type":0}})"));
 
     rapidjson::Document doc;
     doc.Parse(result_json);
@@ -319,7 +318,8 @@ TEST(Traffic, CutGoems) {
     EXPECT_EQ(shape_attributes_length.Size(), shape.size() - 1);
     EXPECT_EQ(shape_attributes_speed.Size(), shape.size() - 1);
 
-    // TODO: check the cut point is at the right spot
+    auto b1 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 127 / 255.0);
+    EXPECT_TRUE(b1.ApproximatelyEqual(shape[1]));
   }
 
   // TODO:  more permutations of TrafficSpeed object
