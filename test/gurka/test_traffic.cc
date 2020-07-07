@@ -271,7 +271,7 @@ TEST(Traffic, CutGoems) {
 
   // then we add one portion of the edge having traffic
   {
-    valhalla::baldr::TrafficSpeed ts{0u,
+    valhalla::baldr::TrafficSpeed ts{valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
                                      valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
                                      valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
                                      valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
