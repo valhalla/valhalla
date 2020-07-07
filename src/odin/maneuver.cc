@@ -271,8 +271,8 @@ float Maneuver::length(const Options::Units& units) const {
   return length_;
 }
 
-void Maneuver::set_length(float length) {
-  length_ = length;
+void Maneuver::set_length(float km_length) {
+  length_ = km_length;
 }
 
 double Maneuver::time() const {
@@ -781,8 +781,8 @@ float Maneuver::roundabout_length(const Options::Units& units) const {
   return roundabout_length_;
 }
 
-void Maneuver::set_roundabout_length(float roundabout_length) {
-  roundabout_length_ = roundabout_length;
+void Maneuver::set_roundabout_length(float roundabout_km_length) {
+  roundabout_length_ = roundabout_km_length;
 }
 
 float Maneuver::roundabout_exit_length(const Options::Units& units) const {
@@ -792,8 +792,8 @@ float Maneuver::roundabout_exit_length(const Options::Units& units) const {
   return roundabout_exit_length_;
 }
 
-void Maneuver::set_roundabout_exit_length(float roundabout_exit_length) {
-  roundabout_exit_length_ = roundabout_exit_length;
+void Maneuver::set_roundabout_exit_length(float roundabout_exit_km_length) {
+  roundabout_exit_length_ = roundabout_exit_km_length;
 }
 
 TripLeg_TravelMode Maneuver::travel_mode() const {
@@ -1121,6 +1121,15 @@ std::string Maneuver::ToString() const {
 
   man_str += " | contains_obvious_maneuver=";
   man_str += std::to_string(contains_obvious_maneuver_);
+
+  man_str += " | has_combined_enter_exit_roundabout=";
+  man_str += std::to_string(has_combined_enter_exit_roundabout_);
+
+  man_str += " | roundabout_length=";
+  man_str += std::to_string(roundabout_length_);
+
+  man_str += " | roundabout_exit_length=";
+  man_str += std::to_string(roundabout_exit_length_);
 
   man_str += " | travel_mode=";
   man_str += std::to_string(travel_mode_);
