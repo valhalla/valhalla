@@ -3,8 +3,11 @@
 #include <stdexcept>
 #include <string>
 
-#include "midgard/openlr.h"
+#include "baldr/openlr.h"
+#include "midgard/encoded.h"
 #include "midgard/pointll.h"
+#include "proto/trip.pb.h"
+#include "proto/tripcommon.pb.h"
 
 #include "test.h"
 
@@ -13,6 +16,8 @@ namespace {
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::midgard::OpenLR;
+
+using FormOfWay = OpenLR::LocationReferencePoint::FormOfWay;
 
 std::string to_hex(const std::string& value) {
   std::stringstream s;
@@ -51,6 +56,14 @@ const testfixture testfixtures[] = {
      190, 13},
     {"C6i8rRtM3BjgAAAAAAUYAA==", -122.713562, 38.390942, 5.625, -122.713562, 38.390991, 5.625, 0, 0,
      0},
+    {"CwRbWyNG9RpsCQCb/jsbtAT/6/+jK1lE", 6.1268198, 49.6085178, 140.625, 6.1281598, 49.6030578,
+     286.875, 527.4, 68, 0},
+    {"CwB67CGukRxiCACyAbwaMXU=", 0.6752192, 47.3651611, 28.125, 0.6769992, 47.3696011, 196.875, 468.8,
+     0, 117},
+    {"CwcX6CItqAs6AQAAAAALGg==", 9.9750602, 48.0632865, 298.125, 9.9750602, 48.0632865, 298.125, 58.6,
+     0, 0},
+    {"CwRbWyNG9BpgAACa/jsboAD/6/+kKwA=", 6.1268198, 49.6084964, 5.625, 6.1281498, 49.6030464, 5.625,
+     0, 0, 0},
 };
 
 TEST(OpenLR, Decode) {
@@ -205,6 +218,76 @@ TEST(OpenLR, CreateLinearReference) {
   EXPECT_EQ(short_location.poff, 0);
   EXPECT_EQ(short_location.noff, 0);
 }
+
+TEST(OpenLR, road_class_to_fow) {
+  // Check basic undefined behavior
+  TripLeg::Node node;
+  EXPECT_EQ(road_class_to_fow(node), FormOfWay::OTHER);
+  // Basic road class behavior check
+  node.mutable_edge()->set_roundabout(true);
+  node.mutable_edge()->set_use(TripLeg::kRoadUse);
+  node.mutable_edge()->set_road_class(RoadClass::kPrimary);
+  EXPECT_EQ(road_class_to_fow(node), FormOfWay::ROUNDABOUT);
+}
+
+TripLeg CreateLeg(const std::vector<PointLL>& points) {
+  TripLeg path;
+  TripLeg::Node* node;
+  TripLeg::Edge* edge;
+  node = path.add_node();
+  path.set_shape(encode(points));
+  edge = node->mutable_edge();
+  edge->set_begin_shape_index(0);
+  edge->set_end_shape_index(1);
+  edge->set_use(TripLeg::kRoadUse);
+  edge->set_road_class(RoadClass::kPrimary);
+  return path;
+}
+
+// TripPath to OpenLR tests: Spot check that some two point line segments (on a primary road
+// segment). Note that the validation of OpenLR serialization is done in the tests fixtures above.
+
+TEST(OpenLR, openlr_edges) {
+  // Check encoding
+  std::vector<PointLL> points = {
+      PointLL(5.08531221, 52.0938563),
+      PointLL(5.0865867, 52.0930211),
+  };
+  std::vector<std::string> openlrs = openlr_edges(CreateLeg(points));
+  EXPECT_EQ(openlrs.size(), 1);
+  EXPECT_EQ(openlrs.at(0), "CwOdwSULZhtsAgCA/60bHA==");
+  // Check decoding
+  LineLocation decoded(openlrs.at(0), true);
+  EXPECT_EQ(decoded.lrps.size(), 2);
+  PointLL first = decoded.getFirstCoordinate();
+  EXPECT_NEAR(first.lat(), points.at(0).lat(), 0.0001);
+  EXPECT_NEAR(first.lng(), points.at(0).lng(), 0.0001);
+  PointLL last = decoded.getLastCoordinate();
+  EXPECT_NEAR(last.lat(), points.at(1).lat(), 0.0001);
+  EXPECT_NEAR(last.lng(), points.at(1).lng(), 0.0001);
+}
+
+TEST(OpenLR, openlr_edges_duplicate) {
+  // Check encoding
+  std::vector<PointLL> points = {
+      PointLL(5.08531221, 52.0938563),
+      PointLL(5.08531221, 52.0938563),
+
+  };
+  std::vector<std::string> openlrs = openlr_edges(CreateLeg(points));
+  EXPECT_EQ(openlrs.size(), 1);
+  EXPECT_EQ(openlrs.at(0), "CwOdwSULZhtgAAAAAAAbEA==");
+  // Check decoding
+  LineLocation decoded(openlrs.at(0), true);
+  EXPECT_EQ(decoded.lrps.size(), 2);
+  PointLL first = decoded.getFirstCoordinate();
+  EXPECT_NEAR(first.lat(), points.at(0).lat(), 0.0001);
+  EXPECT_NEAR(first.lng(), points.at(0).lng(), 0.0001);
+  PointLL last = decoded.getLastCoordinate();
+  EXPECT_NEAR(last.lat(), points.at(1).lat(), 0.0001);
+  EXPECT_NEAR(last.lng(), points.at(1).lng(), 0.0001);
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
