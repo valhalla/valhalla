@@ -93,6 +93,9 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Confirm maneuver type assignment
   ConfirmManeuverTypeAssignment(maneuvers);
 
+  // Mark the maneuvers that have traversable outbound intersecting edges
+  SetTraversableOutboundIntersectingEdgeFlags(maneuvers);
+
   // Process roundabouts
   ProcessRoundabouts(maneuvers);
 
@@ -107,9 +110,6 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 
   // Process the guidance view junctions
   ProcessGuidanceViewJunctions(maneuvers);
-
-  // Mark the maneuvers that have traversable outbound intersecting edges
-  SetTraversableOutboundIntersectingEdgeFlags(maneuvers);
 
 #ifdef LOGGING_LEVEL_TRACE
   int final_man_id = 1;
@@ -2536,6 +2536,21 @@ void ManeuversBuilder::ProcessRoundabouts(std::list<Maneuver>& maneuvers) {
 
         // Suppress roundabout exit maneuver if user requested
         if (!options_.roundabout_exits()) {
+          // Mark that the maneuver has a combined enter and exit roundabout instruction
+          curr_man->set_has_combined_enter_exit_roundabout(true);
+
+          // Set the roundabout length
+          curr_man->set_roundabout_length(curr_man->length());
+
+          // Set the roundabout exit length
+          curr_man->set_roundabout_exit_length(next_man->length());
+
+          // Set the traversable_outbound_intersecting_edge booleans
+          curr_man->set_has_left_traversable_outbound_intersecting_edge(
+              next_man->has_left_traversable_outbound_intersecting_edge());
+          curr_man->set_has_right_traversable_outbound_intersecting_edge(
+              next_man->has_right_traversable_outbound_intersecting_edge());
+
           next_man = CombineManeuvers(maneuvers, curr_man, next_man);
         }
       }
