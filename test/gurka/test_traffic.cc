@@ -112,7 +112,11 @@ void blank_traffic(const valhalla::gurka::map& map) {
     std::vector<baldr::TrafficSpeed> speeds;
     header.directed_edge_count = tile->header()->directededgecount();
     buffer.write(reinterpret_cast<char*>(&header), sizeof(header));
-    baldr::TrafficSpeed dummy_speed = {}; // Initialize to all zeros
+    baldr::TrafficSpeed dummy_speed =
+        {valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW, valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+         valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+         valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW}; // Initialize break points to 0s and speeds to
+                                                      // unknown
     for (int i = 0; i < header.directed_edge_count; ++i) {
       buffer.write(reinterpret_cast<char*>(&dummy_speed), sizeof(dummy_speed));
     }

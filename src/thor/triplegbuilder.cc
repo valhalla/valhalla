@@ -113,12 +113,12 @@ void SetShapeAttributes(const AttributesController& controller,
       const auto& traffic_speed = tile->trafficspeed(edge);
       if (traffic_speed.breakpoint1 > 0) {
         speeds.emplace_back(traffic_speed.breakpoint1 / 255.0, speed);
-      }
-      if (traffic_speed.breakpoint2 > 0) {
-        speeds.emplace_back(traffic_speed.breakpoint2 / 255.0, speed);
-      }
-      if (traffic_speed.speed3 != UNKNOWN_TRAFFIC_SPEED_RAW) {
-        speeds.emplace_back(1, speed);
+        if (traffic_speed.breakpoint2 > 0) {
+          speeds.emplace_back(traffic_speed.breakpoint2 / 255.0, speed);
+          if (traffic_speed.speed3 != UNKNOWN_TRAFFIC_SPEED_RAW) {
+            speeds.emplace_back(1, speed);
+          }
+        }
       }
     }
     // Cap the end so that we always have something to use
