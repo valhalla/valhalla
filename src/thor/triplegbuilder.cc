@@ -144,7 +144,7 @@ void SetShapeAttributes(const AttributesController& controller,
         auto coef =
             (std::get<0>(*speed_itr) - distance_total_pct) / (next_total - distance_total_pct);
         auto point = shape[i - 1].PointAlongSegment(shape[i], coef);
-        shape.insert(shape.begin() + i - 1, point);
+        shape.insert(shape.begin() + i, point);
         next_total = std::get<0>(*speed_itr);
         distance *= coef;
         shift = 1;
