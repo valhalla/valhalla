@@ -725,17 +725,24 @@ TEST(Traffic, CutGeoms) {
           google::protobuf::util::MessageToJsonString(leg, &buf, opt);
           std::cout << buf << std::endl;
 
-          auto node_of_interest = "I";
+          auto node_of_interest = "F";
           std::cout << "node['" << node_of_interest << "'] "
                     << std::to_string(map.nodes[node_of_interest].first) << ", "
                     << std::to_string(map.nodes[node_of_interest].second) << std::endl;
+          node_of_interest = "I";
+          std::cout << "node['" << node_of_interest << "'] "
+                    << std::to_string(map.nodes[node_of_interest].first) << ", "
+                    << std::to_string(map.nodes[node_of_interest].second) << std::endl;
+          int i=0;
           for (auto& shape : shapes) {
-            std::cout << "shape " << std::to_string(shape.first) << ", "
+
+            std::cout << "shape #" <<std::to_string(i) << ": "<< std::to_string(shape.first) << ", "
                       << std::to_string(shape.second) << std::endl;
+            ++i;
           }
         }
         EXPECT_EQ(leg.node_size(), 3); // FI + IE
-        EXPECT_EQ(shapes.size(), 7); // TODO Figure out this one
+        EXPECT_EQ(shapes.size(), 9);
         // An attribute for each pair formed by the shape-points
         EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
         EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
@@ -753,7 +760,15 @@ TEST(Traffic, CutGeoms) {
         }
         EXPECT_TRUE(map.nodes["H"].ApproximatelyEqual(shapes[4]));
         EXPECT_TRUE(map.nodes["I"].ApproximatelyEqual(shapes[5]));
-        EXPECT_TRUE(map.nodes["E"].ApproximatelyEqual(shapes[6]));
+        {
+          auto b2 = map.nodes["I"].PointAlongSegment(map.nodes["E"], 100 / 255.0);
+          EXPECT_TRUE(b2.ApproximatelyEqual(shapes[6]));
+        }
+        {
+          auto b2 = map.nodes["I"].PointAlongSegment(map.nodes["E"], 200 / 255.0);
+          EXPECT_TRUE(b2.ApproximatelyEqual(shapes[7]));
+        }
+        EXPECT_TRUE(map.nodes["E"].ApproximatelyEqual(shapes[8]));
       }
     }
   }
