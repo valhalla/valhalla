@@ -370,13 +370,6 @@ TEST(Traffic, CutGeoms) {
         nullptr, &api);
 
     const auto& leg = api.trip().routes(0).legs(0);
-    //{
-    //  std::string buf;
-    //  google::protobuf::util::JsonPrintOptions opt;
-    //  opt.add_whitespace = true;
-    //  google::protobuf::util::MessageToJsonString(leg, &buf, opt);
-    //  std::cout << buf << std::endl;
-    //}
     auto shapes = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
     EXPECT_EQ(leg.node_size(), 2); // 1 edge
     EXPECT_EQ(shapes.size(), 4);
@@ -442,13 +435,6 @@ TEST(Traffic, CutGeoms) {
           nullptr, &api);
 
       const auto& leg = api.trip().routes(0).legs(0);
-      //{
-      //  std::string buf;
-      //  google::protobuf::util::JsonPrintOptions opt;
-      //  opt.add_whitespace = true;
-      //  google::protobuf::util::MessageToJsonString(leg, &buf, opt);
-      //  std::cout << buf << std::endl;
-      //}
       auto shapes = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
       EXPECT_EQ(leg.node_size(), 2); // 1 edge
       EXPECT_EQ(shapes.size(), 4);
@@ -486,13 +472,6 @@ TEST(Traffic, CutGeoms) {
           nullptr, &api);
 
       const auto& leg = api.trip().routes(0).legs(0);
-      //{
-      //  std::string buf;
-      //  google::protobuf::util::JsonPrintOptions opt;
-      //  opt.add_whitespace = true;
-      //  google::protobuf::util::MessageToJsonString(leg, &buf, opt);
-      //  std::cout << buf << std::endl;
-      //}
       auto shapes = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
       EXPECT_EQ(leg.node_size(), 2); // 1 edge
       EXPECT_EQ(shapes.size(), 4);
@@ -559,20 +538,6 @@ TEST(Traffic, CutGeoms) {
         const auto& leg = api.trip().routes(0).legs(0);
         auto shapes = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
 
-        //{
-        //  std::string buf;
-        //  google::protobuf::util::JsonPrintOptions opt;
-        //  opt.add_whitespace = true;
-        //  google::protobuf::util::MessageToJsonString(leg, &buf, opt);
-        //  std::cout << buf << std::endl;
-        //}
-        // std::cout << "node['2'] " << std::to_string(map.nodes["1"].first) << ", "
-        //          << std::to_string(map.nodes["2"].second) << std::endl;
-        // for (auto& shape : shapes) {
-        //  std::cout << "shape " << std::to_string(shape.first) << ", " <<
-        //  std::to_string(shape.second)
-        //            << std::endl;
-        //}
         EXPECT_EQ(leg.node_size(), 2); // 1 edge
         EXPECT_EQ(shapes.size(), 4);
         // An attribute for each pair formed by the shape-points
@@ -612,21 +577,6 @@ TEST(Traffic, CutGeoms) {
         const auto& leg = api.trip().routes(0).legs(0);
         auto shapes = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
 
-        //{
-        //  std::string buf;
-        //  google::protobuf::util::JsonPrintOptions opt;
-        //  opt.add_whitespace = true;
-        //  google::protobuf::util::MessageToJsonString(leg, &buf, opt);
-        //  std::cout << buf << std::endl;
-        //}
-        // std::cout << "node['1'] " << std::to_string(map.nodes["1"].first) << ", "
-        //          << std::to_string(map.nodes["1"].second) << std::endl;
-        // for (auto& shape : shapes) {
-        //  std::cout << "shape " << std::to_string(shape.first) << ", " <<
-        //  std::to_string(shape.second)
-        //            << std::endl;
-        //}
-
         EXPECT_EQ(leg.node_size(), 2); // 1 edge
         EXPECT_EQ(shapes.size(), 4);
         // An attribute for each pair formed by the shape-points
@@ -664,20 +614,6 @@ TEST(Traffic, CutGeoms) {
 
         const auto& leg = api.trip().routes(0).legs(0);
         auto shapes = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
-        //{
-        //  std::string buf;
-        //  google::protobuf::util::JsonPrintOptions opt;
-        //  opt.add_whitespace = true;
-        //  google::protobuf::util::MessageToJsonString(leg, &buf, opt);
-        //  std::cout << buf << std::endl;
-
-        //  std::cout << "node['F'] " << std::to_string(map.nodes["F"].first) << ", "
-        //            << std::to_string(map.nodes["1"].second) << std::endl;
-        //  for (auto& shape : shapes) {
-        //    std::cout << "shape " << std::to_string(shape.first) << ", "
-        //              << std::to_string(shape.second) << std::endl;
-        //  }
-        //}
         EXPECT_EQ(leg.node_size(), 2); // 1 edge
         EXPECT_EQ(shapes.size(), 6);
         // An attribute for each pair formed by the shape-points
@@ -718,29 +654,29 @@ TEST(Traffic, CutGeoms) {
 
         const auto& leg = api.trip().routes(0).legs(0);
         auto shapes = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
-        {
-          std::string buf;
-          google::protobuf::util::JsonPrintOptions opt;
-          opt.add_whitespace = true;
-          google::protobuf::util::MessageToJsonString(leg, &buf, opt);
-          std::cout << buf << std::endl;
+        //{
+        //  std::string buf;
+        //  google::protobuf::util::JsonPrintOptions opt;
+        //  opt.add_whitespace = true;
+        //  google::protobuf::util::MessageToJsonString(leg, &buf, opt);
+        //  std::cout << buf << std::endl;
 
-          auto node_of_interest = "F";
-          std::cout << "node['" << node_of_interest << "'] "
-                    << std::to_string(map.nodes[node_of_interest].first) << ", "
-                    << std::to_string(map.nodes[node_of_interest].second) << std::endl;
-          node_of_interest = "I";
-          std::cout << "node['" << node_of_interest << "'] "
-                    << std::to_string(map.nodes[node_of_interest].first) << ", "
-                    << std::to_string(map.nodes[node_of_interest].second) << std::endl;
-          int i=0;
-          for (auto& shape : shapes) {
+        //  auto node_of_interest = "F";
+        //  std::cout << "node['" << node_of_interest << "'] "
+        //            << std::to_string(map.nodes[node_of_interest].first) << ", "
+        //            << std::to_string(map.nodes[node_of_interest].second) << std::endl;
+        //  node_of_interest = "I";
+        //  std::cout << "node['" << node_of_interest << "'] "
+        //            << std::to_string(map.nodes[node_of_interest].first) << ", "
+        //            << std::to_string(map.nodes[node_of_interest].second) << std::endl;
+        //  int i=0;
+        //  for (auto& shape : shapes) {
 
-            std::cout << "shape #" <<std::to_string(i) << ": "<< std::to_string(shape.first) << ", "
-                      << std::to_string(shape.second) << std::endl;
-            ++i;
-          }
-        }
+        //    std::cout << "shape #" <<std::to_string(i) << ": "<< std::to_string(shape.first) << ", "
+        //              << std::to_string(shape.second) << std::endl;
+        //    ++i;
+        //  }
+        //}
         EXPECT_EQ(leg.node_size(), 3); // FI + IE
         EXPECT_EQ(shapes.size(), 9);
         // An attribute for each pair formed by the shape-points
@@ -772,5 +708,4 @@ TEST(Traffic, CutGeoms) {
       }
     }
   }
-  // TODO:  more permutations of TrafficSpeed object
 }

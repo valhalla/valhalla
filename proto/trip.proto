@@ -1,5 +1,5 @@
 syntax = "proto2";
-//option optimize_for = LITE_RUNTIME;
+option optimize_for = LITE_RUNTIME;
 package valhalla;
 import public "tripcommon.proto";
 

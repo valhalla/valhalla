@@ -164,25 +164,25 @@ endif()
 # TODO: remove after switching to CMake >= 3.9
 if(CMAKE_VERSION VERSION_LESS 3.9)
   if(NOT TARGET protobuf::libprotobuf-lite)
-    add_library(protobuf::libprotobuf IMPORTED)
-    set_target_properties(protobuf::libprotobuf PROPERTIES
+    add_library(protobuf::libprotobuf-lite UNKNOWN IMPORTED)
+    set_target_properties(protobuf::libprotobuf-lite PROPERTIES
       FOLDER "Dependencies"
       INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
 
     if(EXISTS "${PROTOBUF_LIBRARY}")
-      set_target_properties(protobuf::libprotobuf PROPERTIES
+      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
         IMPORTED_LOCATION "${PROTOBUF_LIBRARY}")
     endif()
     if(EXISTS "${PROTOBUF_LIBRARY_RELEASE}")
-      set_property(TARGET protobuf::libprotobuf APPEND PROPERTY
+      set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
         IMPORTED_CONFIGURATIONS RELEASE)
-      set_target_properties(protobuf::libprotobuf PROPERTIES
+      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
         IMPORTED_LOCATION_RELEASE "${PROTOBUF_LIBRARY_RELEASE}")
     endif()
     if(EXISTS "${PROTOBUF_LIBRARY_DEBUG}")
-      set_property(TARGET protobuf::libprotobuf APPEND PROPERTY
+      set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
         IMPORTED_CONFIGURATIONS DEBUG)
-      set_target_properties(protobuf::libprotobuf PROPERTIES
+      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
         IMPORTED_LOCATION_DEBUG "${PROTOBUF_LIBRARY_DEBUG}")
     endif()
   endif()
@@ -192,8 +192,8 @@ endif()
 # TODO: After switching to CMake 3.12+, replace with
 #       $<TARGET_EXISTS:protobuf::libprotobuf
 #       $<TARGET_EXISTS:protobuf::libprotobuf-lite
-if(TARGET protobuf::libprotobuf)
-  set(valhalla_protobuf_targets protobuf::libprotobuf)
+if(TARGET protobuf::libprotobuf-lite)
+  set(valhalla_protobuf_targets protobuf::libprotobuf-lite)
 elseif(TARGET protobuf::libprotobuf)
   set(valhalla_protobuf_targets protobuf::libprotobuf)
 else()
