@@ -6,7 +6,6 @@
 #include <valhalla/baldr/traffictile.h>
 
 #include <boost/property_tree/ptree.hpp>
-#include <google/protobuf/util/json_util.h>
 
 #include <cmath>
 #include <sstream>
