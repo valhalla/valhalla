@@ -6,6 +6,7 @@
 #include <valhalla/baldr/traffictile.h>
 
 #include <boost/property_tree/ptree.hpp>
+#include <google/protobuf/util/json_util.h>
 
 #include <cmath>
 #include <sstream>
@@ -268,7 +269,7 @@ TEST(Traffic, CutGeoms) {
     auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
     EXPECT_EQ(leg.node_size(), 2); // 1 edge
     EXPECT_EQ(shape.size(), 2);    // 2 shape points
-    // 1 attribute per metric
+    // An attribute for each pair formed by the shape-points
     EXPECT_EQ(leg.shape_attributes().time_size(), shape.size() - 1);
     EXPECT_EQ(leg.shape_attributes().length_size(), shape.size() - 1);
     EXPECT_EQ(leg.shape_attributes().speed_size(), shape.size() - 1);
@@ -314,7 +315,7 @@ TEST(Traffic, CutGeoms) {
     auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
     EXPECT_EQ(leg.node_size(), 2); // 1 edge
     EXPECT_EQ(shape.size(), 3);    // 3 shape points
-    // 2 attributes per metric
+    // An attribute for each pair formed by the shape-points
     EXPECT_EQ(leg.shape_attributes().time_size(), shape.size() - 1);
     EXPECT_EQ(leg.shape_attributes().length_size(), shape.size() - 1);
     EXPECT_EQ(leg.shape_attributes().speed_size(), shape.size() - 1);
@@ -323,5 +324,72 @@ TEST(Traffic, CutGeoms) {
     EXPECT_TRUE(b1.ApproximatelyEqual(shape[1]));
   }
 
+  // Another permutation of subsegments
+  {
+    {
+      valhalla::baldr::TrafficSpeed ts{valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+                                       valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+                                       valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+                                       valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+                                       0u,
+                                       0u,
+                                       0u,
+                                       0u,
+                                       0u,
+                                       0u};
+      ts.overall_speed = 30 >> 1;
+
+      ts.speed1 = 20 >> 1;
+      ts.breakpoint1 = 100;
+
+      ts.speed2 = 40 >> 1;
+      ts.breakpoint2 = 200;
+      update_all_edges_but_bd(map, ts);
+    }
+
+    auto clean_reader = gurka::make_clean_graphreader(map.config.get_child("mjolnir"));
+    tyr::actor_t actor(map.config, *clean_reader);
+    valhalla::Api api;
+    actor.route(
+        R"({"locations":[
+        {"lat":)" +
+            std::to_string(map.nodes["C"].second) + R"(,"lon":)" +
+            std::to_string(map.nodes["C"].first) +
+            R"(},
+        {"lat":)" +
+            std::to_string(map.nodes["E"].second) + R"(,"lon":)" +
+            std::to_string(map.nodes["E"].first) +
+            R"(}
+      ],"costing":"auto","date_time":{"type":0},
+      "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "action":"include"}})",
+        nullptr, &api);
+
+    const auto& leg = api.trip().routes(0).legs(0);
+    {
+      std::string buf;
+      google::protobuf::util::JsonPrintOptions opt;
+      opt.add_whitespace = true;
+      google::protobuf::util::MessageToJsonString(leg, &buf, opt);
+      std::cout << buf << std::endl;
+    }
+    auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
+    EXPECT_EQ(leg.node_size(), 2); // 1 edge
+    EXPECT_EQ(shape.size(), 4);
+    // An attribute for each pair formed by the shape-points
+    EXPECT_EQ(leg.shape_attributes().time_size(), shape.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().length_size(), shape.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().speed_size(), shape.size() - 1);
+
+    {
+      auto b1 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 100 / 255.0);
+      EXPECT_TRUE(b1.ApproximatelyEqual(shape[1]));
+    }
+    {
+      auto b2 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 200 / 255.0);
+      EXPECT_TRUE(b2.ApproximatelyEqual(shape[2]));
+    }
+  }
   // TODO:  more permutations of TrafficSpeed object
 }
