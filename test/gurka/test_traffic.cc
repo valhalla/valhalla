@@ -235,7 +235,7 @@ TEST(Traffic, CutGeoms) {
   const gurka::ways ways = {{"AB", {{"highway", "primary"}}}, {"BC", {{"highway", "primary"}}},
                             {"BD", {{"highway", "primary"}}}, {"CE", {{"highway", "primary"}}},
                             {"CF", {{"highway", "primary"}}}, {"FGHI", {{"highway", "primary"}}},
-                            {"DE", {{"highway", "primary"}}}};
+                            {"EI", {{"highway", "primary"}}}, {"DE", {{"highway", "primary"}}}};
 
   // build the tiles
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
@@ -589,7 +589,7 @@ TEST(Traffic, CutGeoms) {
           auto b2 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 200 / 255.0);
           EXPECT_TRUE(b2.ApproximatelyEqual(shapes[2]));
         }
-          EXPECT_TRUE(map.nodes["E"].ApproximatelyEqual(shapes[3]));
+        EXPECT_TRUE(map.nodes["E"].ApproximatelyEqual(shapes[3]));
       }
       {
         // Test partial CE
@@ -697,6 +697,63 @@ TEST(Traffic, CutGeoms) {
         }
         EXPECT_TRUE(map.nodes["H"].ApproximatelyEqual(shapes[4]));
         EXPECT_TRUE(map.nodes["I"].ApproximatelyEqual(shapes[5]));
+      }
+      {
+        // Test partial multishape 2->E
+        actor.route(
+            R"({"locations":[
+        {"lat":)" +
+                std::to_string(map.nodes["2"].second) + R"(,"lon":)" +
+                std::to_string(map.nodes["2"].first) +
+                R"(},
+        {"lat":)" +
+                std::to_string(map.nodes["E"].second) + R"(,"lon":)" +
+                std::to_string(map.nodes["E"].first) +
+                R"(}
+      ],"costing":"auto","date_time":{"type":0},
+      "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "action":"include"}})",
+            nullptr, &api);
+
+        const auto& leg = api.trip().routes(0).legs(0);
+        auto shapes = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
+        {
+          std::string buf;
+          google::protobuf::util::JsonPrintOptions opt;
+          opt.add_whitespace = true;
+          google::protobuf::util::MessageToJsonString(leg, &buf, opt);
+          std::cout << buf << std::endl;
+
+          auto node_of_interest = "I";
+          std::cout << "node['" << node_of_interest << "'] "
+                    << std::to_string(map.nodes[node_of_interest].first) << ", "
+                    << std::to_string(map.nodes[node_of_interest].second) << std::endl;
+          for (auto& shape : shapes) {
+            std::cout << "shape " << std::to_string(shape.first) << ", "
+                      << std::to_string(shape.second) << std::endl;
+          }
+        }
+        EXPECT_EQ(leg.node_size(), 3); // FI + IE
+        EXPECT_EQ(shapes.size(), 7); // TODO Figure out this one
+        // An attribute for each pair formed by the shape-points
+        EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
+
+        EXPECT_TRUE(map.nodes["2"].ApproximatelyEqual(shapes[0]));
+        {
+          auto b1 = map.nodes["F"].PointAlongSegment(map.nodes["I"], 100 / 255.0);
+          EXPECT_TRUE(b1.ApproximatelyEqual(shapes[1]));
+        }
+        EXPECT_TRUE(map.nodes["G"].ApproximatelyEqual(shapes[2]));
+        {
+          auto b2 = map.nodes["F"].PointAlongSegment(map.nodes["I"], 200 / 255.0);
+          EXPECT_TRUE(b2.ApproximatelyEqual(shapes[3]));
+        }
+        EXPECT_TRUE(map.nodes["H"].ApproximatelyEqual(shapes[4]));
+        EXPECT_TRUE(map.nodes["I"].ApproximatelyEqual(shapes[5]));
+        EXPECT_TRUE(map.nodes["E"].ApproximatelyEqual(shapes[6]));
       }
     }
   }
