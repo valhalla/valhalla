@@ -133,8 +133,24 @@ void SetShapeAttributes(const AttributesController& controller,
                                     return distance_total_pct <= std::get<0>(s);
                                   });
     for (auto i = shape_begin + 1; i < shape.size(); ++i) {
+      // If there is a change in speed here we need to make a new shape point and continue from
+      // there
       double distance = shape[i].Distance(shape[i - 1]); // meters
-      double time = distance / std::get<1>(*speed_itr);  // seconds
+      double distance_pct = distance / edge->length();
+      double next_total = distance_total_pct + distance_pct;
+      size_t shift = 0;
+      if (next_total > std::get<0>(*speed_itr) && std::next(speed_itr) != speeds.cend()) {
+        // Calculate where the cut point should be between these two existing shape points
+        auto coef =
+            (std::get<0>(*speed_itr) - distance_total_pct) / (next_total - distance_total_pct);
+        auto point = shape[i - 1].PointAlongSegment(shape[i], coef);
+        shape.insert(shape.begin() + i - 1, point);
+        next_total = std::get<0>(*speed_itr);
+        distance *= coef;
+        shift = 1;
+      }
+      distance_total_pct = next_total;
+      double time = distance / std::get<1>(*speed_itr); // seconds
 
       // Set shape attributes time per shape point if requested
       if (controller.attributes.at(kShapeAttributesTime)) {
@@ -154,18 +170,8 @@ void SetShapeAttributes(const AttributesController& controller,
         trip_path.mutable_shape_attributes()->add_speed((distance * kDecimeterPerMeter / time) + 0.5);
       }
 
-      // If there is a change in speed here we need to make a new shape point and continue from
-      // there
-      double distance_pct = distance / edge->length();
-      double next_total = distance_total_pct + distance_pct;
-      if (next_total > std::get<0>(*speed_itr) && std::next(speed_itr) != speeds.cend()) {
-        auto coef = std::get<0>(*speed_itr) - distance_total_pct / next_total;
-        auto point = shape[i - 1].PointAlongSegment(shape[i], coef);
-        shape.insert(shape.begin() + i, point);
-        ++speed;
-        --i; // we now have a new point for which we need some shape attributes
-      }
-      distance_total_pct = next_total;
+      // If we just cut the shape we need to go on to the next marker only after setting the attribs
+      std::advance(speed_itr, shift);
     }
   }
 }

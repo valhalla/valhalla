@@ -221,7 +221,7 @@ TEST(Traffic, BasicUpdates) {
   }
 }
 
-TEST(Traffic, CutGoems) {
+TEST(Traffic, CutGeoms) {
 
   const std::string ascii_map = R"(
     A----B----C
@@ -248,7 +248,7 @@ TEST(Traffic, CutGoems) {
     auto clean_reader = gurka::make_clean_graphreader(map.config.get_child("mjolnir"));
     tyr::actor_t actor(map.config, *clean_reader);
     valhalla::Api api;
-    EXPECT_NO_THROW(actor.route(
+    actor.route(
         R"({"locations":[
         {"lat":)" +
             std::to_string(map.nodes["C"].second) + R"(,"lon":)" +
@@ -262,7 +262,7 @@ TEST(Traffic, CutGoems) {
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
       "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
       "action":"include"}})",
-        nullptr, &api));
+        nullptr, &api);
 
     const auto& leg = api.trip().routes(0).legs(0);
     auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
@@ -294,7 +294,7 @@ TEST(Traffic, CutGoems) {
     auto clean_reader = gurka::make_clean_graphreader(map.config.get_child("mjolnir"));
     tyr::actor_t actor(map.config, *clean_reader);
     valhalla::Api api;
-    EXPECT_NO_THROW(actor.route(
+    actor.route(
         R"({"locations":[
         {"lat":)" +
             std::to_string(map.nodes["C"].second) + R"(,"lon":)" +
@@ -308,7 +308,7 @@ TEST(Traffic, CutGoems) {
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
       "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
       "action":"include"}})",
-        nullptr, &api));
+        nullptr, &api);
 
     const auto& leg = api.trip().routes(0).legs(0);
     auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
