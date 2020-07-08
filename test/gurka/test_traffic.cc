@@ -269,13 +269,13 @@ TEST(Traffic, CutGeoms) {
         nullptr, &api);
 
     const auto& leg = api.trip().routes(0).legs(0);
-    auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
+    auto shapes = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
     EXPECT_EQ(leg.node_size(), 2); // 1 edge
-    EXPECT_EQ(shape.size(), 2);    // 2 shape points
+    EXPECT_EQ(shapes.size(), 2);   // 2 shape points
     // An attribute for each pair formed by the shape-points
-    EXPECT_EQ(leg.shape_attributes().time_size(), shape.size() - 1);
-    EXPECT_EQ(leg.shape_attributes().length_size(), shape.size() - 1);
-    EXPECT_EQ(leg.shape_attributes().speed_size(), shape.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
   }
 
   // then we add one portion of the edge having traffic
@@ -315,16 +315,16 @@ TEST(Traffic, CutGeoms) {
         nullptr, &api);
 
     const auto& leg = api.trip().routes(0).legs(0);
-    auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
+    auto shapes = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
     EXPECT_EQ(leg.node_size(), 2); // 1 edge
-    EXPECT_EQ(shape.size(), 3);    // 3 shape points
+    EXPECT_EQ(shapes.size(), 3);   // 3 shape points
     // An attribute for each pair formed by the shape-points
-    EXPECT_EQ(leg.shape_attributes().time_size(), shape.size() - 1);
-    EXPECT_EQ(leg.shape_attributes().length_size(), shape.size() - 1);
-    EXPECT_EQ(leg.shape_attributes().speed_size(), shape.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
 
     auto b1 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 127 / 255.0);
-    EXPECT_TRUE(b1.ApproximatelyEqual(shape[1]));
+    EXPECT_TRUE(b1.ApproximatelyEqual(shapes[1]));
   }
 
   // Another permutation of subsegments
@@ -370,28 +370,28 @@ TEST(Traffic, CutGeoms) {
         nullptr, &api);
 
     const auto& leg = api.trip().routes(0).legs(0);
-    {
-      std::string buf;
-      google::protobuf::util::JsonPrintOptions opt;
-      opt.add_whitespace = true;
-      google::protobuf::util::MessageToJsonString(leg, &buf, opt);
-      std::cout << buf << std::endl;
-    }
-    auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
+    //{
+    //  std::string buf;
+    //  google::protobuf::util::JsonPrintOptions opt;
+    //  opt.add_whitespace = true;
+    //  google::protobuf::util::MessageToJsonString(leg, &buf, opt);
+    //  std::cout << buf << std::endl;
+    //}
+    auto shapes = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
     EXPECT_EQ(leg.node_size(), 2); // 1 edge
-    EXPECT_EQ(shape.size(), 4);
+    EXPECT_EQ(shapes.size(), 4);
     // An attribute for each pair formed by the shape-points
-    EXPECT_EQ(leg.shape_attributes().time_size(), shape.size() - 1);
-    EXPECT_EQ(leg.shape_attributes().length_size(), shape.size() - 1);
-    EXPECT_EQ(leg.shape_attributes().speed_size(), shape.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
 
     {
       auto b1 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 100 / 255.0);
-      EXPECT_TRUE(b1.ApproximatelyEqual(shape[1]));
+      EXPECT_TRUE(b1.ApproximatelyEqual(shapes[1]));
     }
     {
       auto b2 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 200 / 255.0);
-      EXPECT_TRUE(b2.ApproximatelyEqual(shape[2]));
+      EXPECT_TRUE(b2.ApproximatelyEqual(shapes[2]));
     }
   }
 
@@ -442,28 +442,29 @@ TEST(Traffic, CutGeoms) {
           nullptr, &api);
 
       const auto& leg = api.trip().routes(0).legs(0);
-      {
-        std::string buf;
-        google::protobuf::util::JsonPrintOptions opt;
-        opt.add_whitespace = true;
-        google::protobuf::util::MessageToJsonString(leg, &buf, opt);
-        std::cout << buf << std::endl;
-      }
-      auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
+      //{
+      //  std::string buf;
+      //  google::protobuf::util::JsonPrintOptions opt;
+      //  opt.add_whitespace = true;
+      //  google::protobuf::util::MessageToJsonString(leg, &buf, opt);
+      //  std::cout << buf << std::endl;
+      //}
+      auto shapes = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
       EXPECT_EQ(leg.node_size(), 2); // 1 edge
-      EXPECT_EQ(shape.size(), 4);
+      EXPECT_EQ(shapes.size(), 4);
       // An attribute for each pair formed by the shape-points
-      EXPECT_EQ(leg.shape_attributes().time_size(), shape.size() - 1);
-      EXPECT_EQ(leg.shape_attributes().length_size(), shape.size() - 1);
-      EXPECT_EQ(leg.shape_attributes().speed_size(), shape.size() - 1);
+      EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
+      EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
+      EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
 
+      { EXPECT_TRUE(map.nodes["C"].ApproximatelyEqual(shapes[0])); }
       {
         auto b1 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 100 / 255.0);
-        EXPECT_TRUE(b1.ApproximatelyEqual(shape[1]));
+        EXPECT_TRUE(b1.ApproximatelyEqual(shapes[1]));
       }
       {
         auto b2 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 200 / 255.0);
-        EXPECT_TRUE(b2.ApproximatelyEqual(shape[2]));
+        EXPECT_TRUE(b2.ApproximatelyEqual(shapes[2]));
       }
     }
     {
@@ -492,24 +493,29 @@ TEST(Traffic, CutGeoms) {
         google::protobuf::util::MessageToJsonString(leg, &buf, opt);
         std::cout << buf << std::endl;
       }
-      auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
+      auto shapes = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
       EXPECT_EQ(leg.node_size(), 2); // 1 edge
-      EXPECT_EQ(shape.size(), 4);
+      EXPECT_EQ(shapes.size(), 4);
       // An attribute for each pair formed by the shape-points
-      EXPECT_EQ(leg.shape_attributes().time_size(), shape.size() - 1);
-      EXPECT_EQ(leg.shape_attributes().length_size(), shape.size() - 1);
-      EXPECT_EQ(leg.shape_attributes().speed_size(), shape.size() - 1);
+      EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
+      EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
+      EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
 
-      {
-        EXPECT_TRUE(map.nodes["1"].ApproximatelyEqual(shape[0]));
+      std::cout << "node['1'] " << std::to_string(map.nodes["1"].first) << ", "
+                << std::to_string(map.nodes["1"].second) << std::endl;
+      for (auto& shape : shapes) {
+        std::cout << "shape " << std::to_string(shape.first) << ", " << std::to_string(shape.second)
+                  << std::endl;
       }
+
+      { EXPECT_TRUE(map.nodes["1"].ApproximatelyEqual(shapes[0])); }
       {
         auto b1 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 100 / 255.0);
-        EXPECT_TRUE(b1.ApproximatelyEqual(shape[1]));
+        EXPECT_TRUE(b1.ApproximatelyEqual(shapes[1]));
       }
       {
         auto b2 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 200 / 255.0);
-        EXPECT_TRUE(b2.ApproximatelyEqual(shape[2]));
+        EXPECT_TRUE(b2.ApproximatelyEqual(shapes[2]));
       }
     }
   }
