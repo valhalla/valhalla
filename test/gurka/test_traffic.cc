@@ -226,6 +226,9 @@ TEST(Traffic, CutGeoms) {
 
   const std::string ascii_map = R"(
     A----B----C
+         |   1
+         |    |
+         |    |
          |    |
          D----E)";
 
@@ -465,13 +468,11 @@ TEST(Traffic, CutGeoms) {
     }
     {
       // Test partial CE
-      float lat_offset = 0.2;
-
       actor.route(
           R"({"locations":[
         {"lat":)" +
-              std::to_string(map.nodes["C"].second + lat_offset) + R"(,"lon":)" +
-              std::to_string(map.nodes["C"].first) +
+              std::to_string(map.nodes["1"].second) + R"(,"lon":)" +
+              std::to_string(map.nodes["1"].first) +
               R"(},
         {"lat":)" +
               std::to_string(map.nodes["E"].second) + R"(,"lon":)" +
@@ -493,12 +494,15 @@ TEST(Traffic, CutGeoms) {
       }
       auto shape = midgard::decode<std::vector<valhalla::midgard::PointLL>>(leg.shape());
       EXPECT_EQ(leg.node_size(), 2); // 1 edge
-      EXPECT_EQ(shape.size(), 0); // TODO fill in the partial here
+      EXPECT_EQ(shape.size(), 4);
       // An attribute for each pair formed by the shape-points
       EXPECT_EQ(leg.shape_attributes().time_size(), shape.size() - 1);
       EXPECT_EQ(leg.shape_attributes().length_size(), shape.size() - 1);
       EXPECT_EQ(leg.shape_attributes().speed_size(), shape.size() - 1);
 
+      {
+        EXPECT_TRUE(map.nodes["1"].ApproximatelyEqual(shape[0]));
+      }
       {
         auto b1 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 100 / 255.0);
         EXPECT_TRUE(b1.ApproximatelyEqual(shape[1]));
