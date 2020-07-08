@@ -20,8 +20,8 @@ TEST(Traffic, TileConstruction) {
   testdata.header.directed_edge_count = 3;
   testdata.speed3.overall_speed = 98 >> 1;
   testdata.speed3.speed1 = 98 >> 1;
-  testdata.speed3.speed2 = UNKNOWN_TRAFFIC_SPEED_VALUE;
-  testdata.speed3.speed3 = UNKNOWN_TRAFFIC_SPEED_VALUE;
+  testdata.speed3.speed2 = UNKNOWN_TRAFFIC_SPEED_RAW;
+  testdata.speed3.speed3 = UNKNOWN_TRAFFIC_SPEED_RAW;
   testdata.speed3.breakpoint1 = 255;
 
   TrafficTile tile(reinterpret_cast<char*>(&testdata));
@@ -31,7 +31,7 @@ TEST(Traffic, TileConstruction) {
   EXPECT_FALSE(speed.closed());
   EXPECT_EQ(speed.get_overall_speed(), 98);
   EXPECT_EQ(speed.get_speed(0), 98);
-  EXPECT_EQ(speed.get_speed(1), UNKNOWN_TRAFFIC_SPEED_VALUE << 1);
+  EXPECT_EQ(speed.get_speed(1), UNKNOWN_TRAFFIC_SPEED_RAW << 1);
 }
 
 TEST(Traffic, NullTileConstruction) {
@@ -68,7 +68,7 @@ TEST(Traffic, SpeedValid) {
   EXPECT_TRUE(speed.closed());
 
   // Test wraparound
-  speed.speed1 = UNKNOWN_TRAFFIC_SPEED_VALUE + 1;
+  speed.speed1 = UNKNOWN_TRAFFIC_SPEED_RAW + 1;
   EXPECT_EQ(speed.speed1, 0);
 }
 

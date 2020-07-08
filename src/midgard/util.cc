@@ -78,7 +78,7 @@ template <class container_t> container_t trim_front(container_t& pts, const floa
     double segdist = p1->Distance(*p2);
     if ((d + segdist) > dist) {
       double frac = (dist - d) / segdist;
-      auto midpoint = p1->AffineCombination((1.0 - frac), frac, *p2);
+      auto midpoint = p1->PointAlongSegment(*p2, frac);
       result.push_back(midpoint);
 
       // Remove used part of polyline
@@ -152,7 +152,7 @@ float tangent_angle(size_t index,
     // are we done yet?
     if (remaining <= d) {
       auto coef = remaining / d;
-      u = u.AffineCombination(1 - coef, coef, *i);
+      u = u.PointAlongSegment(*i, coef);
       return u.Heading(point);
     }
     // next one
@@ -170,7 +170,7 @@ float tangent_angle(size_t index,
     // are we done yet?
     if (remaining <= d) {
       auto coef = remaining / d;
-      v = v.AffineCombination(1 - coef, coef, *i);
+      v = v.PointAlongSegment(*i, coef);
       return u.Heading(v);
     }
     // next one
