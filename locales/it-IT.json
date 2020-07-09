@@ -3,6 +3,11 @@
   "aliases": [
     "it"
   ],
+  "abbreviations": {
+    "cardinal_directions": {},
+    "miscellaneous": {},
+    "road_labels": {}
+  },
   "instructions": {
     "arrive": {
       "phrases": {
