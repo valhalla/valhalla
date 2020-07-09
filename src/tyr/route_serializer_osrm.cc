@@ -356,8 +356,20 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     loc->emplace_back(json::fp_t{ll.lat(), 6});
     intersection->emplace("location", loc);
     intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
-    if (node->transition_time() > 0)
-      intersection->emplace("duration", json::fp_t{node->transition_time(), 3});
+    if (node->cost().transition_cost().seconds() > 0)
+      intersection->emplace("turn_duration", json::fp_t{node->cost().transition_cost().seconds(), 3});
+    if (node->cost().transition_cost().cost() > 0)
+      intersection->emplace("turn_weight", json::fp_t{node->cost().transition_cost().cost(), 3});
+    auto next_node = i + 1 < n ? etp->GetEnhancedNode(i + 1) : nullptr;
+    if (next_node) {
+      auto secs = next_node->cost().elapsed_cost().seconds() - node->cost().elapsed_cost().seconds();
+      auto cost = next_node->cost().elapsed_cost().cost() - node->cost().elapsed_cost().cost();
+      if (secs > 0)
+        intersection->emplace("duration", json::fp_t{secs, 3});
+      if (cost > 0)
+        intersection->emplace("weight", json::fp_t{cost, 3});
+    }
+
     // TODO: add recosted durations to the intersection?
 
     // Get bearings and access to outgoing intersecting edges. Do not add

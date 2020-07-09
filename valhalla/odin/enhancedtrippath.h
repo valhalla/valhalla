@@ -577,8 +577,12 @@ public:
     return mutable_node_->time_zone();
   }
 
-  double transition_time() const {
-    return mutable_node_->cost().transition_cost().seconds();
+  TripLeg::PathCost cost() const {
+    return mutable_node_->cost();
+  }
+
+  const google::protobuf::RepeatedPtrField<TripLeg::PathCost> recosts() const {
+    return mutable_node_->recosts();
   }
 
   bool HasIntersectingEdges() const;
