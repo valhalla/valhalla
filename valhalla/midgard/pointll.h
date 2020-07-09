@@ -77,21 +77,15 @@ public:
   }
 
   /**
-   * Gets the midpoint on a line segment between this point and point p1.
-   * @param   p1  Point
-   * @return  Returns the midpoint between this point and p1.
+   * Returns the point along the segment between this point and the provided point using the provided
+   * distance along. A distance of .5 would be the point halfway between the two points. A distance of
+   * .25 would be 25% of the way from this point to the provided point. The default distance is .5, so
+   * the midpoint
+   * @param   p1         second point of the line segment
+   * @param   distance   the percentage along the segment to place the output point
+   * @return  returns the point along the line segment at the specified distance
    */
-  GeoPoint MidPoint(const GeoPoint& p) const;
-  /**
-   * Returns the point a specified percentage along a segment from this point
-   * to an end point.
-   * @param  end  End point.
-   * @param  pct  Percentage along the segment.
-   * @return Returns the point along the segment.
-   */
-  GeoPoint along_segment(const GeoPoint& end, const PrecisionT pct) const {
-    return {lng() + (end.lng() - lng()) * pct, lat() + (end.lat() - lat()) * pct};
-  }
+  GeoPoint PointAlongSegment(const GeoPoint& p, PrecisionT distance = .5) const;
 
   /**
    * Calculates the distance between two lng,lat's in meters. Uses spherical

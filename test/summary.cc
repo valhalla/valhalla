@@ -126,7 +126,7 @@ TEST(Summary, test_time_summary) {
       // we should have had some transition costs along the way
       EXPECT_GT(accumulated_transition_time, 0);
       // we should have the edge time plus the transition time add up to the leg time
-      EXPECT_NEAR(accumulated_edge_time + accumulated_transition_time, accumulated_time, .15);
+      EXPECT_NEAR(accumulated_edge_time + accumulated_transition_time, accumulated_time, .16);
       ++trip_leg;
     }
     ++trip_route;

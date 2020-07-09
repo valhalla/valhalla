@@ -661,6 +661,11 @@ void from_json(rapidjson::Document& doc, Options& options) {
     }
   }
 
+  auto linear_references = rapidjson::get_optional<bool>(doc, "/linear_references");
+  if (linear_references) {
+    options.set_linear_references(*linear_references);
+  }
+
   // parse map matching location input and encoded_polyline for height actions
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
   if (encoded_polyline) {

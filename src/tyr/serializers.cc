@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "baldr/json.h"
+#include "baldr/openlr.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/turn.h"
 #include "midgard/aabb2.h"
@@ -18,7 +19,8 @@
 #include "odin/util.h"
 #include "tyr/serializers.h"
 
-#include <valhalla/proto/options.pb.h>
+#include "proto/options.pb.h"
+#include "proto/trip.pb.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -30,6 +32,22 @@ midgard::PointLL to_ll(const LatLng& ll) {
   return midgard::PointLL{ll.lng(), ll.lat()};
 }
 } // namespace
+namespace valhalla {
+namespace tyr {
+json::ArrayPtr route_references(const TripRoute& route, const Options& options) {
+  if (options.costing() != Costing::auto_) {
+    json::array({});
+  }
+  json::ArrayPtr references = json::array({});
+  for (const TripLeg& leg : route.legs()) {
+    for (const std::string& openlr : midgard::openlr_edges(leg)) {
+      references->emplace_back(openlr);
+    }
+  }
+  return references;
+}
+} // namespace tyr
+} // namespace valhalla
 
 namespace osrm {
 

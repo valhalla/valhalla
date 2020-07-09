@@ -267,6 +267,14 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(
             FormVerbalEnterRoundaboutInstruction(maneuver));
+
+        // If the maneuver has a combined enter exit roundabout instruction
+        // then set verbal post transition instruction
+        if (maneuver.has_combined_enter_exit_roundabout()) {
+          maneuver.set_verbal_post_transition_instruction(
+              FormVerbalPostTransitionInstruction(maneuver,
+                                                  maneuver.HasRoundaboutExitBeginStreetNames()));
+        }
         break;
       }
       case DirectionsLeg_Maneuver_Type_kRoundaboutExit: {
@@ -3670,8 +3678,14 @@ std::string NarrativeBuilder::FormVerbalPostTransitionInstruction(Maneuver& mane
   // Assign the street names if maneuver does not contain an obvious maneuver
   std::string street_names;
   if (!maneuver.contains_obvious_maneuver()) {
+    // Use the maneuver roundabout_exit_street_names
+    // if the maneuver has a combined enter/exit roundabout instruction
+    // otherwise use the maneuver street names
+    const StreetNames& street_name_list =
+        (maneuver.has_combined_enter_exit_roundabout() ? maneuver.roundabout_exit_street_names()
+                                                       : maneuver.street_names());
     street_names =
-        FormStreetNames(maneuver, maneuver.street_names(),
+        FormStreetNames(maneuver, street_name_list,
                         &dictionary_.post_transition_verbal_subset.empty_street_name_labels, true,
                         element_max_count, delim, maneuver.verbal_formatter());
   }
@@ -3751,9 +3765,17 @@ std::string NarrativeBuilder::FormLength(Maneuver& maneuver,
                                          const std::vector<std::string>& us_customary_lengths) {
   switch (options_.units()) {
     case Options::miles: {
-      return FormUsCustomaryLength(maneuver.length(Options::miles), us_customary_lengths);
+      return FormUsCustomaryLength((maneuver.has_combined_enter_exit_roundabout()
+                                        ? maneuver.roundabout_exit_length(Options::miles)
+                                        : maneuver.length(Options::miles)),
+                                   us_customary_lengths);
     }
-    default: { return FormMetricLength(maneuver.length(Options::kilometers), metric_lengths); }
+    default: {
+      return FormMetricLength((maneuver.has_combined_enter_exit_roundabout()
+                                   ? maneuver.roundabout_exit_length(Options::kilometers)
+                                   : maneuver.length(Options::kilometers)),
+                              metric_lengths);
+    }
   }
 }
 
@@ -4133,15 +4155,16 @@ bool NarrativeBuilder::IsVerbalMultiCuePossible(Maneuver& maneuver, Maneuver& ne
   // Next maneuver must have a verbal transition alert or a verbal pre-transition instruction
   // Current maneuver must be within verbal multi-cue bounds
   // Next maneuver must not be a merge
-  // Current and next maneuvers must not be a roundabout
+  // Current is not a roundabout OR current maneuver has combined enter/exit roundabout instruction
+  // Next maneuver must not be a roundabout
   // Current and next maneuvers must not be transit or transit connection
   if (maneuver.HasVerbalPreTransitionInstruction() &&
       (next_maneuver.HasVerbalTransitionAlertInstruction() ||
        next_maneuver.HasVerbalPreTransitionInstruction()) &&
       IsWithinVerbalMultiCueBounds(maneuver) && !next_maneuver.IsMergeType() &&
-      !maneuver.roundabout() && !next_maneuver.roundabout() && !maneuver.IsTransit() &&
-      !next_maneuver.IsTransit() && !maneuver.transit_connection() &&
-      !next_maneuver.transit_connection()) {
+      (!maneuver.roundabout() || maneuver.has_combined_enter_exit_roundabout()) &&
+      !next_maneuver.roundabout() && !maneuver.IsTransit() && !next_maneuver.IsTransit() &&
+      !maneuver.transit_connection() && !next_maneuver.transit_connection()) {
     return true;
   }
   return false;

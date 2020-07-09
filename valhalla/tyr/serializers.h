@@ -98,6 +98,11 @@ std::string serializeTraceAttributes(
     const thor::AttributesController& controller,
     std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>& results);
 
+// Return a JSON array of OpenLR 1.5 line location references for each edge of a map matching
+// result. For the time being, result is only non-empty for auto costing requests.
+baldr::json::ArrayPtr route_references(const valhalla::TripRoute& route,
+                                       const valhalla::Options& options);
+
 } // namespace tyr
 } // namespace valhalla
 

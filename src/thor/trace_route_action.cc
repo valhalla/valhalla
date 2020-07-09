@@ -313,10 +313,8 @@ void thor_worker_t::build_trace(
 
   // initialize the origin and destination location for route
   const meili::EdgeSegment* origin_segment = paths.front().second.front();
-  std::cout << *origin_segment << std::endl;
   const meili::MatchResult& origin_match = match_results[origin_segment->first_match_idx];
   const meili::EdgeSegment* dest_segment = paths.back().second.back();
-  std::cout << *dest_segment << std::endl;
   const meili::MatchResult& dest_match = match_results[dest_segment->last_match_idx];
   Location* origin_location = options.mutable_shape(&origin_match - &match_results.front());
   Location* destination_location = options.mutable_shape(&dest_match - &match_results.front());

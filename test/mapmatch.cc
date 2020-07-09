@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <random>
 #include <utility>
@@ -163,9 +164,6 @@ std::string output_shape(const valhalla::Api& api) {
 }
 
 void compare_results(const valhalla::Api& expected, const valhalla::Api& result) {
-  std::cout << output_shape(expected) << std::endl;
-  std::cout << output_shape(result) << std::endl;
-
   // check the number of routes match
   ASSERT_EQ(result.trip().routes_size(), expected.trip().routes_size())
       << "Expected " << expected.trip().routes_size() << " routes but got "
@@ -229,7 +227,6 @@ TEST(Mapmatch, test_matcher) {
     // get a route shape
     PointLL start, end;
     auto test_case = make_test_case(start, end);
-    std::cout << test_case << std::endl;
     boost::property_tree::ptree route;
     std::string route_json;
     try {
@@ -307,7 +304,6 @@ TEST(Mapmatch, test_matcher) {
                                  matched_edges.end() - 1);
     if (walked_it == walked_edges.end()) {
       if (looped) {
-        std::cout << "route had a possible loop" << std::endl;
         continue;
       }
       auto decoded_match = midgard::decode<std::vector<PointLL>>(matched.get<std::string>("shape"));
@@ -327,7 +323,6 @@ TEST(Mapmatch, test_matcher) {
       std::cout << geojson << std::endl;
       FAIL() << "The match did not match the walk";
     }
-    std::cout << "Iteration " << tested << " complete" << std::endl;
     ++tested;
   }
 }
@@ -724,7 +719,6 @@ TEST(Mapmatch, test_topk_fork_alternate) {
           {"lat":52.08511,"lon":5.15085,"accuracy":10,"time":2},
           {"lat":52.08533,"lon":5.15109,"accuracy":20,"time":4},
           {"lat":52.08539,"lon":5.15100,"accuracy":20,"time":6}]})");
-  std::cout << json << std::endl;
   auto matched = json_to_pt(json);
 
   /*** Primary path - left at the fork
@@ -1417,7 +1411,6 @@ TEST(Mapmatch, test_breakage_distance_error_handling) {
   // tests expected error_code for trace_route edge_walk
   auto expected_error_code = 172;
   tyr::actor_t actor(conf, true);
-
   try {
     auto response = json_to_pt(actor.trace_route(
         R"({"costing":"auto","shape_match":"edge_walk","shape":[
@@ -1432,10 +1425,82 @@ TEST(Mapmatch, test_breakage_distance_error_handling) {
   // If we get here then fail the test!
   FAIL() << "Expected trace_route breakage distance exceed exception was not found";
 }
+
+// Spot check OpenLR linear references when asked for
+TEST(Mapmatch, openlr_parameter_true_osrm_api) {
+  // clang-format off
+  const std::string request = R"({"costing":"auto","linear_references": true,"format":"osrm","shape_match":"map_snap","shape":[{"lon":5.08531221,"lat":52.0938563,"type":"break"},{"lon":5.0865867,"lat":52.0930211,"type":"break"}]})";
+  // clang-format on
+  tyr::actor_t actor(conf, true);
+  const auto& response = json_to_pt(actor.trace_route(request));
+  const auto& matches = response.get_child("matchings");
+  EXPECT_EQ(matches.size(), 1);
+  const std::vector<std::string>& expected = {
+      "CwOduyULYhtpAAAV//0bGQ==", "CwOdxCULYBtqAAAM//4bGg==", "CwOdySULXxtrAAAf//EbGw==",
+      "CwOd1yULVxtrAQBV/9AbGw==", "CwOduyULYj/gAAACAAA/EA==",
+  };
+  for (const auto& match : matches) {
+    const auto& references = match.second.get_child("linear_references");
+    EXPECT_EQ(references.size(), 5);
+    for (const auto& reference : references) {
+      const std::string& actual = reference.second.get_value<std::string>();
+      EXPECT_TRUE(std::find(expected.begin(), expected.end(), actual) != expected.end());
+    }
+  }
+}
+
+// Replica of above test, but uses the Valhalla's native API
+TEST(Mapmatch, openlr_parameter_true_native_api) {
+  // clang-format off
+  const std::string request = R"({"costing":"auto","linear_references": true,"shape_match":"map_snap","shape":[{"lon":5.08531221,"lat":52.0938563,"type":"break"},{"lon":5.0865867,"lat":52.0930211,"type":"break"}]})";
+  // clang-format on
+  tyr::actor_t actor(conf, true);
+  const auto& response = json_to_pt(actor.trace_route(request));
+  const std::vector<std::string>& expected = {
+      "CwOduyULYhtpAAAV//0bGQ==", "CwOdxCULYBtqAAAM//4bGg==", "CwOdySULXxtrAAAf//EbGw==",
+      "CwOd1yULVxtrAQBV/9AbGw==", "CwOduyULYj/gAAACAAA/EA==",
+  };
+  const auto& references = response.get_child("trip.linear_references");
+  EXPECT_EQ(references.size(), 5);
+  for (const auto& reference : references) {
+    const std::string& actual = reference.second.get_value<std::string>();
+    EXPECT_TRUE(std::find(expected.begin(), expected.end(), actual) != expected.end());
+  }
+}
+
+// Verify that OpenLR references are not present in API response when not asked for
+TEST(Mapmatch, openlr_parameter_falsy_api) {
+  const std::vector<std::string> requests = {
+      R"({"costing":"auto","linear_references":false,"format":"osrm","shape_match":"map_snap","shape":[{"lon":5.08531221,"lat":52.0938563,"type":"break"},{"lon":5.0865867,"lat":52.0930211,"type":"break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[{"lon":5.08531221,"lat":52.0938563,"type":"break"},{"lon":5.0865867,"lat":52.0930211,"type":"break"}]})",
+  };
+  tyr::actor_t actor(conf, true);
+  for (const auto& request : requests) {
+    const auto& response = json_to_pt(actor.trace_route(request));
+    const auto& matches = response.get_child("matchings");
+    EXPECT_EQ(matches.size(), 1);
+    for (const auto& match : matches) {
+      EXPECT_FALSE(match.second.get_child_optional("linear_references"));
+    }
+  }
+}
+
+// Replica of above test, but uses the Valhalla's native API
+TEST(Mapmatch, openlr_parameter_falsy_native_api) {
+  const std::vector<std::string> requests = {
+      R"({"costing":"auto","linear_references":false,"shape_match":"map_snap","shape":[{"lon":5.08531221,"lat":52.0938563,"type":"break"},{"lon":5.0865867,"lat":52.0930211,"type":"break"}]})",
+      R"({"costing":"auto","shape_match":"map_snap","shape":[{"lon":5.08531221,"lat":52.0938563,"type":"break"},{"lon":5.0865867,"lat":52.0930211,"type":"break"}]})",
+  };
+  tyr::actor_t actor(conf, true);
+  for (const auto& request : requests) {
+    const auto& response = json_to_pt(actor.trace_route(request));
+    EXPECT_FALSE(response.get_child_optional("linear_references"));
+  }
+}
 } // namespace
 
 int main(int argc, char* argv[]) {
-  // midgard::logging::Configure({{"type", ""}}); // silence logs
+  midgard::logging::Configure({{"type", ""}});
   if (argc > 1 && std::string(argv[1]).find("gtest") == std::string::npos) {
     if (argc > 1)
       seed = std::stoi(argv[1]);
