@@ -41,9 +41,6 @@ void route_references(json::MapPtr& route_json, const TripRoute& route, const Op
   if (!linear_reference) {
     return;
   }
-  if (options.costing() != Costing::auto_) {
-    route_json->emplace("linear_references", json::array({}));
-  }
   json::ArrayPtr references = json::array({});
   for (const TripLeg& leg : route.legs()) {
     for (const std::string& openlr : midgard::openlr_edges(leg)) {

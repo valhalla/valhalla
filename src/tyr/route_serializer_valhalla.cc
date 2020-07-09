@@ -578,6 +578,6 @@ std::string serialize(const Api& api) {
   std::stringstream ss;
   ss << *json;
   return ss.str();
-} // namespace
+}
 } // namespace valhalla_serializers
 } // namespace
