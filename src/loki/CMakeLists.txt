@@ -31,5 +31,4 @@ valhalla_module(NAME loki
     valhalla::proto
     ${valhalla_protobuf_targets}
     Boost::boost
-    libprime_server
-    robin_hood::robin_hood)
+    libprime_server)
