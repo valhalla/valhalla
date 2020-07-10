@@ -21,21 +21,6 @@ Follow these steps to start contributing a translation:
 
 Once a language is 100% translated, the project maintainers will be notified and we will make a PR with your updates. Thank you for your contribution!
 
-### Abbreviations
-
-Note: abbreviations are not translated in Transifex, these should be added to the locale JSON files directly.
-
-Locale files also include data about common abbreviations for cardinal directions, place names, and street types. These may be used by clients to shorten street names that appear in a text instruction displayed visually to a user.
-
-The format consists of key-value pairs where the key is the long form of the word and the value is the shortened form in the same language.
-
-The abbreviations come in three types:
-- `cardinal_directions`: Cardinal direction words as they appear in street names, e.g. 16th Street Northwest.
-- `road_labels`: [Street type designations](https://en.wikipedia.org/wiki/Street_or_road_name#Street_type_designations), such as those that appear as suffixes in English-speaking regions or prefixes in Spanish-speaking regions.
-- `miscellaneous`: Miscellaneous words that are frequently abbreviated in street or place names.
-
-The lists only include words commonly found in road names, and they only include abbreviations that a user would recognize instantly and unambiguously.
-
 ### Translating language files directly (Advanced)
 
 Follow these instructions if you prefer to edit the JSON files directly without Transifex.
@@ -81,3 +66,18 @@ Czech `aliases` entry example:
 
 #### Tag descriptions
 `TODO`
+
+## Abbreviations
+
+Note: abbreviations are not translated in Transifex, these should be added to the locale JSON files directly.
+
+Locale files also include data about common abbreviations for cardinal directions, place names, and street types. These may be used by clients to shorten street names that appear in a text instruction displayed visually to a user.
+
+The format consists of key-value pairs where the key is the long form of the word and the value is the shortened form in the same language.
+
+The abbreviations come in three types:
+- `cardinal_directions`: Cardinal direction words as they appear in street names, e.g. 16th Street Northwest.
+- `road_labels`: [Street type designations](https://en.wikipedia.org/wiki/Street_or_road_name#Street_type_designations), such as those that appear as suffixes in English-speaking regions or prefixes in Spanish-speaking regions.
+- `miscellaneous`: Miscellaneous words that are frequently abbreviated in street or place names.
+
+The lists only include words commonly found in road names, and they only include abbreviations that a user would recognize instantly and unambiguously.

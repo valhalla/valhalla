@@ -41,8 +41,8 @@ const std::map<std::string, std::string> kExpectedCardinalDirectionAbbreviations
      {"South", "S"}, {"Southwest", "SW"}, {"West", "W"}, {"Northwest", "NW"}};
 
 const std::map<std::string, std::string> kExpectedMiscellaneousAbbreviations =
-    {{"International", "Int'l"}, {"Junior", "Jr"}, {"Memorial", "Mem"},
-     {"National", "Nat'l"},      {"Route", "Rte"}, {"Senior", "Sr"}};
+    {{"Building", "Bldg"},  {"International", "Int'l"}, {"Junior", "Jr"}, {"Memorial", "Mem"},
+     {"National", "Nat'l"}, {"Route", "Rte"},           {"Senior", "Sr"}};
 
 const std::map<std::string, std::string> kExpectedRoadLabelAbbreviations =
     {{"Avenue", "Ave"},  {"Boulevard", "Blvd"}, {"Bypass", "Byp"}, {"Circle", "Cir"},
