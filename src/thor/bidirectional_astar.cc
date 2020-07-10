@@ -457,8 +457,8 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // can properly recover elapsed time on the reverse path.
   Cost transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
-  Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay);
-  newcost.cost += transition_cost.cost;
+  Cost newcost =
+      pred.cost() + costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay) + transition_cost;
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -1019,13 +1019,14 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
   while (edgelabel_index != kInvalidLabel) {
     const BDEdgeLabel& edgelabel = edgelabels_reverse_[edgelabel_index];
 
-    // Get elapsed time on the edge, then add the transition cost at
-    // prior edge.
+    // The first edge has no previous edge with elapsed cost so we can just use it directly
     uint32_t predidx = edgelabel.predecessor();
     if (predidx == kInvalidLabel) {
       cost += edgelabel.cost();
-    } else {
-      cost += edgelabel.cost() - edgelabels_reverse_[predidx].cost();
+    } // This edge needs the elapsed cost between it and the previous edge, since its the reverse path
+    // in flipping the path around we also need to switch out the transition costs (shifting right)
+    else {
+      cost += edgelabel.cost() - edgelabels_reverse_[predidx].cost() - edgelabel.transition_cost();
     }
     cost += previous_transition_cost;
     path.emplace_back(edgelabel.mode(), cost, edgelabel.opp_edgeid(), 0, edgelabel.restriction_idx(),
