@@ -1,4 +1,4 @@
-#include "mjolnir/idtable.h"
+#include "../src/mjolnir/idtable.h"
 
 #include <cstdint>
 #include <cstdlib>
