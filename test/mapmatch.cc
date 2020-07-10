@@ -1474,7 +1474,7 @@ TEST(Mapmatch, openlr_parameter_falsy_api) {
     const auto& matches = response.get_child("matchings");
     EXPECT_EQ(matches.size(), 1);
     for (const auto& match : matches) {
-      EXPECT_FALSE(match.second.get_child_optional("linear_references"));
+      EXPECT_THROW(match.second.get_child("linear_references"), std::runtime_error);
     }
   }
 }
@@ -1488,7 +1488,7 @@ TEST(Mapmatch, openlr_parameter_falsy_native_api) {
   tyr::actor_t actor(conf, true);
   for (const auto& request : requests) {
     const auto& response = json_to_pt(actor.trace_route(request));
-    EXPECT_FALSE(response.get_child_optional("linear_references"));
+    EXPECT_THROW(response.get_child("trip.linear_references"), std::runtime_error);
   }
 }
 } // namespace

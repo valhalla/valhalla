@@ -56,6 +56,7 @@
    * FIXED: Obvious maneuvers. [#2436](https://github.com/valhalla/valhalla/pull/2436)
    * FIXED: Base64 encoding/decoding [#2452](https://github.com/valhalla/valhalla/pull/2452)
    * FIXED: Added post roundabout instruction when enter/exit roundabout maneuvers are combined [#2454](https://github.com/valhalla/valhalla/pull/2454)
+   * FIXED: openlr: Explicitly check for linear reference option for Valhalla serialization. [#2458](https://github.com/valhalla/valhalla/pull/2458)
 
 * **Enhancement**
    * ADDED: Add explicit include for sstream to be compatible with msvc_x64 toolset. [#2449](https://github.com/valhalla/valhalla/pull/2449)
