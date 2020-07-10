@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/json.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/meili/match_result.h>
@@ -100,8 +101,9 @@ std::string serializeTraceAttributes(
 
 // Return a JSON array of OpenLR 1.5 line location references for each edge of a map matching
 // result. For the time being, result is only non-empty for auto costing requests.
-baldr::json::ArrayPtr route_references(const valhalla::TripRoute& route,
-                                       const valhalla::Options& options);
+void route_references(baldr::json::MapPtr& route_json,
+                      const TripRoute& route,
+                      const Options& options);
 
 } // namespace tyr
 } // namespace valhalla

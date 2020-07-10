@@ -34,9 +34,12 @@ midgard::PointLL to_ll(const LatLng& ll) {
 } // namespace
 namespace valhalla {
 namespace tyr {
-json::ArrayPtr route_references(const TripRoute& route, const Options& options) {
-  if (options.costing() != Costing::auto_) {
-    json::array({});
+void route_references(json::MapPtr& route_json, const TripRoute& route, const Options& options) {
+  const bool linear_reference =
+      options.linear_references() &&
+      (options.action() == Options::trace_route || options.action() == Options::route);
+  if (!linear_reference) {
+    return;
   }
   json::ArrayPtr references = json::array({});
   for (const TripLeg& leg : route.legs()) {
@@ -44,7 +47,7 @@ json::ArrayPtr route_references(const TripRoute& route, const Options& options) 
       references->emplace_back(openlr);
     }
   }
-  return references;
+  route_json->emplace("linear_references", references);
 }
 } // namespace tyr
 } // namespace valhalla

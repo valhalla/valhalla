@@ -1355,12 +1355,8 @@ std::string serialize(valhalla::Api& api) {
       // NOTE(mookerji): confidence value here is a placeholder for future implementation.
       route->emplace("confidence", json::fp_t{1, 1});
     }
-    const bool linear_reference =
-        options.linear_references() &&
-        (options.action() == Options::trace_route || options.action() == Options::route);
-    if (linear_reference) {
-      route->emplace("linear_references", route_references(api.trip().routes(i), options));
-    }
+    // Add linear references, if applicable
+    route_references(route, api.trip().routes(i), options);
 
     // Concatenated route geometry
     route_geometry(route, api.directions().routes(i), options);

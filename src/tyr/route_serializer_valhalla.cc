@@ -609,17 +609,15 @@ std::string serialize(const Api& api) {
   // TODO: resolve incoming linear references conflict when Buros pr lands
 
   // build up the json object
-  auto json = json::map(
-      {{"trip",
-        json::map({{"locations", locations(api.directions().routes(0).legs())},
-                   {"linear_references", tyr::route_references(api.trip().routes(0), api.options())},
-                   {"summary", summary(api)},
-                   {"legs", legs(api)},
-                   {"status_message", string("Found route between points")},
-                   {"status", static_cast<uint64_t>(0)}, // 0 success
-                   {"units", valhalla::Options_Units_Enum_Name(api.options().units())},
-                   {"language", api.options().language()}})}});
-
+  auto trip_json = json::map({{"locations", locations(api.directions().routes(0).legs())},
+                              {"summary", summary(api)},
+                              {"legs", legs(api)},
+                              {"status_message", string("Found route between points")},
+                              {"status", static_cast<uint64_t>(0)}, // 0 success
+                              {"units", valhalla::Options_Units_Enum_Name(api.options().units())},
+                              {"language", api.options().language()}});
+  tyr::route_references(trip_json, api.trip().routes(0), api.options());
+  auto json = json::map({{"trip", trip_json}});
   if (api.options().has_id()) {
     json->emplace("id", api.options().id());
   }
