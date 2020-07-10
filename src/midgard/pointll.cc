@@ -1,17 +1,17 @@
-#include <valhalla/midgard/pointll.h>
+#include "midgard/pointll.h"
 
 #include <list>
 
 namespace valhalla {
 namespace midgard {
 
-/**
- * Gets the midpoint on a line segment between this point and point p1.
- * @param   p1  Point
- * @return  Returns the midpoint between this point and p1.
- */
 template <typename PrecisionT>
-GeoPoint<PrecisionT> GeoPoint<PrecisionT>::MidPoint(const GeoPoint<PrecisionT>& p) const {
+GeoPoint<PrecisionT> GeoPoint<PrecisionT>::PointAlongSegment(const GeoPoint<PrecisionT>& p,
+                                                             PrecisionT distance) const {
+  if (distance == 0)
+    return *this;
+  if (distance == 1)
+    return p;
   // radians
   const auto lon1 = first * -RAD_PER_DEG;
   const auto lat1 = second * RAD_PER_DEG;
@@ -25,13 +25,15 @@ GeoPoint<PrecisionT> GeoPoint<PrecisionT>::MidPoint(const GeoPoint<PrecisionT>& 
   // fairly accurate distance between points
   const auto d = acos(sl1 * sl2 + cl1 * cl2 * cos(lon1 - lon2));
   // interpolation parameters
-  const auto ab = sin(d * .5) / sin(d);
-  const auto acs1 = ab * cl1;
-  const auto bcs2 = ab * cl2;
+  auto sd = sin(d);
+  const auto a = sin(d * (1 - distance)) / sd;
+  const auto b = sin(d * distance) / sd;
+  const auto acs1 = a * cl1;
+  const auto bcs2 = b * cl2;
   // find the interpolated point along the arc
   const auto x = acs1 * cos(lon1) + bcs2 * cos(lon2);
   const auto y = acs1 * sin(lon1) + bcs2 * sin(lon2);
-  const auto z = ab * (sl1 + sl2);
+  const auto z = a * sl1 + b * sl2;
   return GeoPoint<PrecisionT>(atan2(y, x) * -DEG_PER_RAD,
                               atan2(z, sqrt(x * x + y * y)) * DEG_PER_RAD);
 }
