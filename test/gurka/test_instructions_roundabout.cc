@@ -246,7 +246,6 @@ TEST(InstructionsRoundaboutRegression, TurnChannelRoundaboutExitRegression) {
                                {{"mjolnir.admin",
                                  {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}}});
 
-  auto from = "K";
   const std::string& request =
       (boost::format(
            R"({"locations":[{"lat":52.08862730752708,"lon":5.107829332318943},{"lat":52.08843613199833,"lon":5.109036862850189}],"costing":"auto"})"))
