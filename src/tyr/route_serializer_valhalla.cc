@@ -606,8 +606,6 @@ json::ArrayPtr legs(const valhalla::Api& api) {
 }
 
 std::string serialize(const Api& api) {
-  // TODO: resolve incoming linear references conflict when Buros pr lands
-
   // build up the json object
   auto trip_json = json::map({{"locations", locations(api.directions().routes(0).legs())},
                               {"summary", summary(api)},
