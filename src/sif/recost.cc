@@ -1,4 +1,4 @@
-#include "sif/util.h"
+#include "sif/recost.h"
 #include "baldr/time_info.h"
 
 namespace valhalla {

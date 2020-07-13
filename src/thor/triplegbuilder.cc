@@ -18,7 +18,7 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "sif/costconstants.h"
-#include "sif/util.h"
+#include "sif/recost.h"
 #include "thor/attributes_controller.h"
 #include "thor/triplegbuilder.h"
 

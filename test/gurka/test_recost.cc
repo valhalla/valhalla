@@ -1,5 +1,5 @@
 #include "gurka.h"
-#include "sif/util.h"
+#include "sif/recost.h"
 #include <gtest/gtest.h>
 
 using namespace valhalla;
