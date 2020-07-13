@@ -54,12 +54,13 @@ namespace meili {
 EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
                          float the_source,
                          float the_target,
+                         int the_restriction_idx,
                          int the_first_match_idx,
                          int the_last_match_idx,
                          bool disconnect)
     : edgeid(the_edgeid), source(the_source), target(the_target),
-      first_match_idx(the_first_match_idx), last_match_idx(the_last_match_idx),
-      discontinuity(disconnect) {
+      restriction_idx(the_restriction_idx), first_match_idx(the_first_match_idx),
+      last_match_idx(the_last_match_idx), discontinuity(disconnect) {
   if (!edgeid.Is_Valid()) {
     throw std::invalid_argument("Invalid edgeid");
   }
@@ -96,7 +97,8 @@ bool MergeRoute(const State& source,
   std::vector<EdgeSegment> segments;
   auto label = route_rbegin;
   for (; std::next(label) != route_rend; label++) {
-    segments.emplace_back(label->edgeid(), label->source(), label->target());
+    segments.emplace_back(label->edgeid(), label->source(), label->target(), -1, -1,
+                          label->restriction_idx());
   }
 
   // If we looped all the way to the beginning then there should be no previous labels

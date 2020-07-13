@@ -21,12 +21,14 @@ TransitionCostModel::TransitionCostModel(baldr::GraphReader& graphreader,
                                          float breakage_distance,
                                          float max_route_distance_factor,
                                          float max_route_time_factor,
-                                         float turn_penalty_factor)
+                                         float turn_penalty_factor,
+                                         bool match_on_restrictions)
     : graphreader_(graphreader), vs_(vs), ts_(ts), container_(container), mode_costing_(mode_costing),
       travelmode_(travelmode), beta_(beta), inv_beta_(1.f / beta_),
       breakage_distance_(breakage_distance), max_route_distance_factor_(max_route_distance_factor),
       max_route_time_factor_(max_route_time_factor),
-      turn_penalty_factor_(turn_penalty_factor), turn_cost_table_{0.f} {
+      turn_penalty_factor_(turn_penalty_factor), turn_cost_table_{0.f},
+      match_on_restrictions_(match_on_restrictions) {
   if (beta_ <= 0.f) {
     throw std::invalid_argument("Expect beta to be positive");
   }
@@ -59,7 +61,8 @@ TransitionCostModel::TransitionCostModel(baldr::GraphReader& graphreader,
                           config.get<float>("breakage_distance"),
                           config.get<float>("max_route_distance_factor"),
                           config.get<float>("max_route_time_factor"),
-                          config.get<float>("turn_penalty_factor")) {
+                          config.get<float>("turn_penalty_factor"),
+                          config.get<bool>("match_on_restrictions")) {
 }
 
 float TransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) const {
@@ -150,10 +153,11 @@ void TransitionCostModel::UpdateRoute(const StateId& lhs, const StateId& rhs) co
   }
 
   labelset_ptr_t labelset = std::make_shared<LabelSet>(max_route_distance);
-  const auto& results = find_shortest_path(graphreader_, locations, 0, labelset, approximator,
-                                           right_measurement.search_radius(),
-                                           mode_costing_[static_cast<size_t>(travelmode_)], edgelabel,
-                                           turn_cost_table_, max_route_distance, max_route_time);
+  const auto& results =
+      find_shortest_path(graphreader_, locations, 0, labelset, approximator,
+                         right_measurement.search_radius(),
+                         mode_costing_[static_cast<size_t>(travelmode_)], edgelabel, turn_cost_table_,
+                         max_route_distance, max_route_time, match_on_restrictions_);
 
   left.SetRoute(unreached_stateids, results, labelset);
 }

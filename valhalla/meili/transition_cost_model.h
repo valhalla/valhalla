@@ -25,7 +25,8 @@ public:
                       float breakage_distance,
                       float max_route_distance_factor,
                       float max_route_time_factor,
-                      float turn_penalty_factor);
+                      float turn_penalty_factor,
+                      bool match_on_restrictions);
 
   TransitionCostModel(baldr::GraphReader& graphreader,
                       const IViterbiSearch& vs,
@@ -90,6 +91,8 @@ private:
 
   // Cost for each degree in [0, 180]
   float turn_cost_table_[181];
+
+  bool match_on_restrictions_{false};
 };
 
 } // namespace meili

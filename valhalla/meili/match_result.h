@@ -72,6 +72,7 @@ struct EdgeSegment {
               float the_target = 1.f,
               int the_first_match_idx = -1,
               int the_last_match_idx = -1,
+              int restriction_idx = -1,
               bool disconnect = false);
 
   baldr::GraphId edgeid;
@@ -79,6 +80,7 @@ struct EdgeSegment {
   float target{1.f};
   int first_match_idx{-1};
   int last_match_idx{-1};
+  int restriction_idx{-1};
   bool discontinuity{false};
 
   // Stream output
