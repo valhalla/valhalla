@@ -16,8 +16,6 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 
-#include <robin_hood.h>
-
 namespace valhalla {
 namespace thor {
 
@@ -94,6 +92,7 @@ public:
    * the constructor mainly just sets some internals to a default empty value.
    */
   CostMatrix();
+  ~CostMatrix();
 
   /**
    * Forms a time distance matrix from the set of source locations
@@ -156,9 +155,6 @@ protected:
   std::vector<std::shared_ptr<baldr::DoubleBucketQueue>> target_adjacency_;
   std::vector<std::vector<sif::BDEdgeLabel>> target_edgelabel_;
   std::vector<EdgeStatus> target_edgestatus_;
-
-  // Mark each target edge with a list of target indexes that have reached it
-  robin_hood::unordered_map<uint64_t, std::vector<uint32_t>> targets_;
 
   // List of best connections found so far
   std::vector<BestCandidate> best_connection_;
@@ -251,6 +247,12 @@ protected:
    * @return  Returns a time distance matrix among locations.
    */
   std::vector<TimeDistance> FormTimeDistanceMatrix();
+
+private:
+  class TargetMap;
+
+  // Mark each target edge with a list of target indexes that have reached it
+  std::unique_ptr<TargetMap> targets_;
 };
 
 } // namespace thor
