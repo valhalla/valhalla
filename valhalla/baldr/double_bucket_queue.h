@@ -179,10 +179,20 @@ private:
    * @return Returns the bucket that the cost lies within.
    */
   bucket_t& get_bucket(const float cost) {
-    return (cost < currentcost_)
-               ? *currentbucket_
-               : (cost < maxcost_) ? buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)]
-                                   : overflowbucket_;
+    return (cost < currentcost_) ? *currentbucket_
+                                 : (cost < maxcost_) ? get_bucket_inner(cost) : overflowbucket_;
+  }
+
+  inline bucket_t& get_bucket_inner(float cost) {
+    auto diff = cost - mincost_;
+    if (diff < 0) {
+      LOG_ERROR("Cost less than mincost_, should not be possible. cost " + std::to_string(cost) +
+                " mincost_ " + std::to_string(mincost_) + " range " + std::to_string(bucketrange_) +
+                " size " + std::to_string(bucketsize_) + " inv_ " + std::to_string(inv_));
+      diff = 0.0;
+    }
+
+    return buckets_[static_cast<uint32_t>(diff * inv_)];
   }
 
   /**
@@ -229,7 +239,7 @@ private:
         // Get the cost (using the label cost function)
         float cost = labelcost_(label);
         if (cost < maxcost_) {
-          buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)].push_back(label);
+          get_bucket_inner(cost).push_back(label);
         } else {
           tmp.push_back(label);
         }
