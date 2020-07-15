@@ -176,7 +176,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometer",
         "1 kilometer",
-        "een halve kilometer",
         "<METERS> meter",
         "minder dan 10 meter"
       ],
@@ -184,8 +183,7 @@
         "<MILES> mijl",
         "1 mijl",
         "een halve mijl",
-        "<TENTHS_OF_MILE> tienden van een mijl",
-        "1 tiende van een mijl",
+        "een kwart mijl",
         "<FEET> voet",
         "minder dan 10 voet"
       ],
@@ -1049,8 +1047,8 @@
     "merge": {
       "phrases": {
         "0": "Voeg in.",
-        "1": "Voeg in op de <STREET_NAMES>.",
-        "2": "Merge onto <STREET_NAMES>.",
+        "1": "Merge <RELATIVE_DIRECTION>.",
+        "2": "Voeg in op de <STREET_NAMES>.",
         "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
         "4": "Merge toward <TOWARD_SIGN>.",
         "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
@@ -1088,8 +1086,8 @@
     "merge_verbal": {
       "phrases": {
         "0": "Voeg in.",
-        "1": "Voeg in op de <STREET_NAMES>.",
-        "2": "Merge onto <STREET_NAMES>.",
+        "1": "Merge <RELATIVE_DIRECTION>.",
+        "2": "Voeg in op de <STREET_NAMES>.",
         "3": "Merge <RELATIVE_DIRECTION> onto <STREET_NAMES>.",
         "4": "Merge toward <TOWARD_SIGN>.",
         "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
@@ -1179,7 +1177,7 @@
     "ramp": {
       "phrases": {
         "0": "Neem de toerit naar <RELATIVE_DIRECTION>.",
-        "1": "Neem de oprit < BRANCH_SIGN> naar <RELATIVE_DIRECTION>.",
+        "1": "Neem de oprit <BRANCH_SIGN> naar <RELATIVE_DIRECTION>.",
         "2": "Neem de toerit <RELATIVE_DIRECTION> richting <TOWARD_SIGN>.",
         "3": "Neem de <BRANCH_SIGN> toerit <RELATIVE_DIRECTION> richting <TOWARD_SIGN>.",
         "4": "Neem de <NAME_SIGN> toerit <RELATIVE_DIRECTION>.",
@@ -1254,7 +1252,7 @@
         "1": "Rij rechtdoor op <BRANCH_SIGN> naar de toerit.",
         "2": "Rij rechtdoor naar de toerit richting <TOWARD_SIGN>.",
         "3": "Rij rechtdoor op <BRANCH_SIGN> naar de toerit richting <TOWARD_SIGN>.",
-        "4": "Rij richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>."
+        "4": "Stay straight to take the <NAME_SIGN> ramp."
       },
       "example_phrases": {
         "0": [
@@ -1280,7 +1278,7 @@
         "1": "Rij rechtdoor op <BRANCH_SIGN> naar de toerit.",
         "2": "Rij rechtdoor naar de toerit richting <TOWARD_SIGN>.",
         "3": "Rij rechtdoor op <BRANCH_SIGN> naar de toerit richting <TOWARD_SIGN>.",
-        "4": "Rij richting het <CARDINAL_DIRECTION>en op de <BEGIN_STREET_NAMES>."
+        "4": "Stay straight to take the <NAME_SIGN> ramp."
       },
       "example_phrases": {
         "0": [
@@ -1303,10 +1301,10 @@
     "ramp_verbal": {
       "phrases": {
         "0": "Neem de oprit richting <RELATIVE_DIRECTION>.",
-        "1": "Neem de oprit < BRANCH_SIGN> richting <RELATIVE_DIRECTION>.",
+        "1": "Neem de oprit <BRANCH_SIGN> richting <RELATIVE_DIRECTION>.",
         "2": "Neem de toerit <RELATIVE_DIRECTION> richting <TOWARD_SIGN>.",
         "3": "Neem de <BRANCH_SIGN> toerit <RELATIVE_DIRECTION> richting <TOWARD_SIGN>.",
-        "4": "Neem de <BRANCH_SIGN> toerit <RELATIVE_DIRECTION>.",
+        "4": "Neem de <NAME_SIGN> toerit <RELATIVE_DIRECTION>.",
         "5": "Sla <RELATIVE_DIRECTION> af richting de toerit.",
         "6": "Sla <RELATIVE_DIRECTION> af richting de <BRANCH_SIGN>  toerit.",
         "7": "Sla <RELATIVE_DIRECTION> af richting de toerit naar <TOWARD_SIGN>.",
@@ -1570,7 +1568,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometers",
         "1 kilometer",
-        "een halve kilometer",
         "<METERS> meter",
         "minder dan 10 meter"
       ],
@@ -1578,8 +1575,7 @@
         "<MILES> mijl",
         "1 mijl",
         "een halve mijl",
-        "<TENTHS_OF_MILE> tienden van een mijl",
-        "1 tiende van een mijl",
+        "een kwart mijl",
         "<FEET> voet",
         "minder dan 10 voet"
       ],
@@ -2114,7 +2110,7 @@
         "<MILES> miles",
         "1 mile",
         "a half mile",
-        "a quarter mile",
+        "een kwart mijl",
         "<FEET> feet",
         "less than 10 feet"
       ],
@@ -2141,7 +2137,7 @@
         "<MILES> miles",
         "1 mile",
         "a half mile",
-        "a quarter mile",
+        "een kwart mijl",
         "<FEET> feet",
         "less than 10 feet"
       ],
