@@ -65,9 +65,8 @@ protected:
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-    map =
-        gurka::buildtiles(layout, ways, {}, {}, "test/data/conditional_restrictions",
-                          {{"mjolnir.timezone", {"test/data/tz.sqlite"}}});
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/conditional_restrictions",
+                            {{"mjolnir.timezone", {"test/data/tz.sqlite"}}});
   }
 };
 
