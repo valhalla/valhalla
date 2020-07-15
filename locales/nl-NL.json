@@ -1150,7 +1150,6 @@
       "metric_lengths": [
         "<KILOMETERS> kilometer",
         "1 kilometer",
-        "een halve kilometer",
         "<METERS> meter",
         "minder dan 10 meter"
       ],
@@ -1158,8 +1157,7 @@
         "<MILES> mijl",
         "1 mijl",
         "een halve mijl",
-        "<TENTHS_OF_MILE> tienden van een mijl",
-        "1 tiende van een mijl",
+        "een kwart mijl",
         "<FEET> voet",
         "minder dan 10 voet"
       ],
