@@ -101,7 +101,7 @@ std::string serialize_to_pbf(Api& request) {
   if (!request.SerializeToString(&buf)) {
     LOG_ERROR("Failed serializing to pbf in Thor::Worker - trace_route");
     throw valhalla_exception_t{401, boost::optional<std::string>(
-                                        "Failed serializing to pbf in Thor::Worker - trace_route")};
+                                        "Failed serializing to pbf in Thor::Worker")};
   }
   return buf;
 };
@@ -121,7 +121,8 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
     bool success = request.ParseFromArray(job.front().data(), job.front().size());
     if (!success) {
       LOG_ERROR("Failed parsing pbf in Thor::Worker");
-      throw std::runtime_error("Failed parsing pbf in Thor::Worker");
+      throw valhalla_exception_t{401,
+                                 boost::optional<std::string>("Failed parsing pbf in Thor::Worker")};
     }
     const auto& options = request.options();
 
