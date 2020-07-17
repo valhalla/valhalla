@@ -203,3 +203,76 @@ TEST_F(InstructionsRoundabout, RoundaboutExitSuppressed) {
                                                             "You have arrived at your destination.",
                                                             "");
 }
+
+/*************************************************************/
+TEST(InstructionsRoundaboutRegression, TurnChannelRoundaboutExitRegression) {
+  // Regression test for roundabout exit that is also a turn channel
+  // https://www.openstreetmap.org/query?lat=48.62346&lon=2.46777#map=18/48.62310/2.46813
+  const std::string ascii_map = R"(
+    K---L--------O---P
+    1   \       /
+         M     N
+         \    /2
+    A     E--F
+    |    /    \
+    B---D      G---J
+    |    \    /
+    C     I--H
+
+  )";
+
+  const gurka::ways ways = {
+      {"ABC", {{"highway", "service"}}},
+      {"BD", {{"highway", "tertiary"}}},
+      {"DIHGFED", {{"highway", "secondary"}, {"junction", "roundabout"}, {"name", ""}}},
+      {"GJ", {{"highway", "secondary"}}},
+      {"KLOP", {{"highway", "trunk"}, {"oneway", "yes"}, {"name", "La Francilienne"}}},
+      {"LME",
+       {{"highway", "trunk_link"},
+        {"oneway", "yes"},
+        {"destination", "Corbeil-Esses-Centre; Z.I. de l'Apport Paris;Ports"},
+        {"junction:ref", "30"}}},
+      {"FNO", {{"highway", "trunk_link"}, {"oneway", "yes"}, {"name", ""}}},
+  };
+
+  const gurka::nodes nodes = {
+      {"L",
+       {{"highway", "motorway_junction"}, {"ref", "30"}, {"exit_to", "Corbeil-Essonnes centre"}}}};
+
+  const double gridsize = 10;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {5.1079374, 52.0887174});
+
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_roundabouts_regression",
+                               {{"mjolnir.admin",
+                                 {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}}});
+
+  auto from = "1";
+  auto to = "2";
+  const std::string& request =
+      (boost::format(R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto"})") %
+       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+          .str();
+
+  auto result = gurka::route(map, request);
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kExitRight,
+                                                DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
+                                                DirectionsLeg_Maneuver_Type_kRoundaboutExit,
+                                                DirectionsLeg_Maneuver_Type_kDestinationRight});
+  int maneuver_index = 2;
+
+  // Verify the enter_roundabout instructions
+  gurka::assert::raw::
+      expect_instructions_at_maneuver_index(result, maneuver_index,
+                                            "Enter the roundabout and take the 3rd exit.",
+                                            "Enter the roundabout and take the 3rd exit.",
+                                            "Enter the roundabout and take the 3rd exit.", "");
+
+  maneuver_index = 4;
+  // Verify the exit_roundabout is suppressed
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
+                                                            "Your destination is on the right.",
+                                                            "Your destination will be on the right.",
+                                                            "Your destination is on the right.", "");
+}
