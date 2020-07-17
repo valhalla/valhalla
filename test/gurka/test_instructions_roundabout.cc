@@ -210,9 +210,9 @@ TEST(InstructionsRoundaboutRegression, TurnChannelRoundaboutExitRegression) {
   // https://www.openstreetmap.org/query?lat=48.62346&lon=2.46777#map=18/48.62310/2.46813
   const std::string ascii_map = R"(
     K---L--------O---P
-        \       /
+    1   \       /
          M     N
-         \    /
+         \    /2
     A     E--F
     |    /    \
     B---D      G---J
@@ -246,10 +246,14 @@ TEST(InstructionsRoundaboutRegression, TurnChannelRoundaboutExitRegression) {
                                {{"mjolnir.admin",
                                  {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}}});
 
+  auto from = "1";
+  auto to = "2";
   const std::string& request =
-      (boost::format(
-           R"({"locations":[{"lat":52.08862730752708,"lon":5.107829332318943},{"lat":52.08843613199833,"lon":5.109036862850189}],"costing":"auto"})"))
+      (boost::format(R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto"})") %
+       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
           .str();
+
   auto result = gurka::route(map, request);
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kExitRight,
