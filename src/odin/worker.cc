@@ -58,7 +58,7 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
     bool success = request.ParseFromArray(job.front().data(), job.front().size());
     if (!success) {
       LOG_ERROR("Failed parsing pbf in Odin::Worker");
-      throw valhalla_exception_t{401,
+      throw valhalla_exception_t{200,
                                  boost::optional<std::string>("Failed parsing pbf in Odin::Worker")};
     }
 
