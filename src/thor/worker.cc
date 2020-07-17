@@ -100,7 +100,8 @@ std::string serialize_to_pbf(Api& request) {
   std::string buf;
   if (!request.SerializeToString(&buf)) {
     LOG_ERROR("Failed serializing to pbf in Thor::Worker - trace_route");
-    throw std::runtime_error("Failed serializing to pbf in Thor::Worker - trace_route");
+    throw valhalla_exception_t{401, boost::optional<std::string>(
+                                        "Failed serializing to pbf in Thor::Worker - trace_route")};
   }
   return buf;
 };
@@ -184,10 +185,14 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
 
     return result;
   } catch (const valhalla_exception_t& e) {
-    valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
+    valhalla::midgard::logging::Log("400::" + std::string(e.what()) +
+                                        " request_id=" + std::to_string(info.id),
+                                    " [ANALYTICS] ");
     return jsonify_error(e, info, request);
   } catch (const std::exception& e) {
-    valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
+    valhalla::midgard::logging::Log("400::" + std::string(e.what()) +
+                                        " request_id=" + std::to_string(info.id),
+                                    " [ANALYTICS] ");
     return jsonify_error({499, std::string(e.what())}, info, request);
   }
 }
