@@ -55,7 +55,11 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
     service_worker_t::set_interrupt(&interrupt_function);
 
     // crack open the in progress request
-    request.ParseFromArray(job.front().data(), job.front().size());
+    bool success = request.ParseFromArray(job.front().data(), job.front().size());
+    if (!success) {
+      LOG_ERROR("Failed parsing pbf in Odin::Worker");
+      throw std::runtime_error("Failed parsing pbf in Odin::Worker");
+    }
 
     // narrate them and serialize them along
     narrate(request);

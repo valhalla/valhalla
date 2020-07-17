@@ -108,7 +108,11 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
   Api request;
   try {
     // crack open the original request
-    request.ParseFromArray(job.front().data(), job.front().size());
+    bool success = request.ParseFromArray(job.front().data(), job.front().size());
+    if (!success) {
+      LOG_ERROR("Failed parsing pbf in Thor::Worker");
+      throw std::runtime_error("Failed parsing pbf in Thor::Worker");
+    }
     const auto& options = request.options();
 
     // Set the interrupt function
