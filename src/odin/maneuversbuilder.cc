@@ -2336,7 +2336,7 @@ bool ManeuversBuilder::IsTurnChannelManeuverCombinable(std::list<Maneuver>::iter
                                                        bool start_man) const {
 
   // Current maneuver must be a turn channel and not equal to the next maneuver
-  if (curr_man->turn_channel() && (curr_man != next_man)) {
+  if (curr_man->turn_channel() && (curr_man != next_man) && !next_man->IsDestinationType()) {
 
     uint32_t new_turn_degree;
     if (start_man) {
