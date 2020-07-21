@@ -316,9 +316,10 @@ int main(int argc, char* argv[]) {
     std::vector<Measurement> measurements;
     measurements.reserve(path.size());
     for (const auto& location : path) {
-      measurements.emplace_back(Measurement{{location.latlng_.lng(), location.latlng_.lat()},
-                                            matcher->config().get<float>("gps_accuracy") + 10,
-                                            matcher->config().get<float>("search_radius") + 10});
+      measurements.emplace_back(
+          Measurement{{location.latlng_.lng(), location.latlng_.lat()},
+                      matcher->config().emission_cost.gps_accuracy_meters + 10,
+                      matcher->config().candidate_search.search_radius_meters + 10});
     }
 
     auto results = matcher->OfflineMatch(measurements).front().results;
