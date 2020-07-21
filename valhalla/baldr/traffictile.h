@@ -67,6 +67,7 @@ struct TrafficSpeed {
         return breakpoint2 < 255 && speed3 == 0;
       default:
         assert(false);
+        throw std::logic_error("Bad subsegment");
     }
   }
   /// Returns overall speed in kph across edge
@@ -92,6 +93,7 @@ struct TrafficSpeed {
         return speed3 << 1;
       default:
         assert(false);
+        throw std::logic_error("Bad subsegment");
     }
   }
 #endif
