@@ -197,6 +197,8 @@ Also note that we run some `clang-tidy` linting over the code as well (see `.cla
 
 `scripts/clang-tidy-only-diff.sh` is run in CI and will the build if it detects any issues.
 
+Additionally a check with address sanitizer is run in CI. It is recommended to perform testing with sanitizer locally prior to commiting. In order to compile with sanitizer use flag `-DENABLE_SANITIZER=ON` during `cmake` confiuration step.
+
 Tests
 -----
 
