@@ -79,4 +79,5 @@ valhalla_module(NAME mjolnir
     Lua::Lua
     Threads::Threads
     ZLIB::ZLIB
+  BUILD_DEPENDS
     robin_hood::robin_hood)

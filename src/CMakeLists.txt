@@ -44,7 +44,7 @@ endfunction()
 
 function(valhalla_module)
   set(oneValueArgs NAME)
-  set(multiValueArgs SOURCES HEADERS DEPENDS INCLUDE_DIRECTORIES)
+  set(multiValueArgs SOURCES HEADERS DEPENDS BUILD_DEPENDS INCLUDE_DIRECTORIES)
   cmake_parse_arguments(MODULE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   set(library valhalla-${MODULE_NAME})
@@ -88,12 +88,21 @@ function(valhalla_module)
   endif()
 
   ## Save properties of external dependencies and target objects to propagate to valhalla target
-  string(REGEX REPLACE "(valhalla::[^;]+)" "" external_module_depends "${MODULE_DEPENDS}")
-  string(REGEX REPLACE "([^;]+)" "$<TARGET_PROPERTY:\\1,INTERFACE_COMPILE_DEFINITIONS>" external_compile_definitions "${external_module_depends}")
-  string(REGEX REPLACE "([^;]+)" "$<TARGET_PROPERTY:\\1,INTERFACE_INCLUDE_DIRECTORIES>" external_include_directories "${external_module_depends}")
+  string(REGEX REPLACE "(valhalla::[^;]+)" ""
+    external_module_depends "${MODULE_DEPENDS}")
+  string(REGEX REPLACE "(valhalla::[^;]+)" ""
+    external_module_build_depends "${MODULE_BUILD_DEPENDS}")
+  string(REGEX REPLACE
+    "([^;]+)" "$<TARGET_PROPERTY:\\1,INTERFACE_COMPILE_DEFINITIONS>"
+    external_compile_definitions
+    "${external_module_depends};${external_module_build_depends}")
+  string(REGEX REPLACE
+    "([^;]+)" "$<TARGET_PROPERTY:\\1,INTERFACE_INCLUDE_DIRECTORIES>"
+    external_include_directories
+    "${external_module_depends};${external_module_build_depends}")
   target_compile_definitions(${library} PRIVATE ${external_compile_definitions})
   target_include_directories(${library} PRIVATE ${external_include_directories})
-  foreach(dep "${MODULE_DEPENDS}")
+  foreach(dep IN LISTS MODULE_DEPENDS MODULE_BUILD_DEPENDS)
     if("${dep}" MATCHES "^valhalla::")
       add_dependencies(${library} ${dep})
     endif()

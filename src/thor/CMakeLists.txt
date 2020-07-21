@@ -42,4 +42,5 @@ valhalla_module(NAME thor
     ${valhalla_protobuf_targets}
     Boost::boost
     libprime_server
+  BUILD_DEPENDS
     robin_hood::robin_hood)
