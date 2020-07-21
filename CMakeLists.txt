@@ -200,13 +200,28 @@ else()
   message(FATAL_ERROR "Required target protobuf::libprotobuf-lite or protobuf::libprotobuf is not defined")
 endif()
 
+function(strip_include_suffix VAR SUFFIX)
+  set(dirs "${${VAR}}")
+  foreach(dir IN LISTS ${VAR})
+    get_filename_component(suffix "${dir}" NAME)
+    if("${suffix}" STREQUAL "${SUFFIX}")
+      get_filename_component(dir "${dir}" DIRECTORY)
+      list(APPEND dirs "${dir}")
+    endif()
+  endforeach()
+  set(${VAR} "${dirs}" PARENT_SCOPE)
+endfunction()
+
 add_library(libprime_server INTERFACE IMPORTED)
 if(ENABLE_SERVICES)
   pkg_check_modules(libprime_server REQUIRED libprime_server>=0.6.3)
+  pkg_check_modules(ZMQ REQUIRED libzmq>=4.1.4)
   # workaround for https://gitlab.kitware.com/cmake/cmake/issues/15804
   find_library(libprime_server_LIBRARY
     NAME ${libprime_server_LIBRARIES}
     HINTS ${libprime_server_LIBRARY_DIRS})
+  strip_include_suffix(libprime_server_INCLUDE_DIRS prime_server)
+  list(APPEND libprime_server_INCLUDE_DIRS ${ZMQ_INCLUDE_DIRS})
   set_target_properties(libprime_server PROPERTIES
     INTERFACE_LINK_LIBRARIES "${libprime_server_LIBRARY}"
     INTERFACE_INCLUDE_DIRECTORIES "${libprime_server_INCLUDE_DIRS}"
