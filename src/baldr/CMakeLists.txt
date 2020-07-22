@@ -27,11 +27,14 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/baldr/*.h)
 
 # Builds a checksum of the traffictile header and store it in `traffic_tile_version.h`
 set(GENERATED_VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/traffic_tile_version.h")
-add_custom_command(OUTPUT "${GENERATED_VERSION_HEADER}"
-    COMMENT "Generating the traffic-tile version"
-    COMMAND ${VALHALLA_SOURCE_DIR}/scripts/build_traffic_tile_version.sh ${VALHALLA_SOURCE_DIR} "${GENERATED_VERSION_HEADER}"
-    DEPENDS ${VALHALLA_SOURCE_DIR}/valhalla/baldr/traffictile.h
-    )
+message("Generating traffictile version header")
+configure_file(${VALHALLA_SOURCE_DIR}/valhalla/baldr/traffictile.h
+               ${CMAKE_CURRENT_BINARY_DIR}/traffictile.h.junk)
+file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/traffictile.h.junk)
+
+file(SHA1 ${VALHALLA_SOURCE_DIR}/valhalla/baldr/traffictile.h traffic_tile_version_full)
+string(SUBSTRING ${traffic_tile_version_full} 0 4 traffic_tile_version_short)
+file(WRITE ${GENERATED_VERSION_HEADER} "const uint32_t TRAFFIC_TILE_VERSION = 0x${traffic_tile_version_short};")
 
 set(includes
     ${VALHALLA_SOURCE_DIR}
