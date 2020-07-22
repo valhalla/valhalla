@@ -151,9 +151,7 @@ public:
   }
 
   const volatile TrafficSpeed& trafficspeed(const uint32_t directed_edge_offset) const {
-    if (header == nullptr) {
-      return INVALID_SPEED;
-    } else if (header->traffic_tile_version != TRAFFIC_TILE_VERSION) {
+    if (header == nullptr || header->traffic_tile_version != TRAFFIC_TILE_VERSION) {
       return INVALID_SPEED;
     }
     if (directed_edge_offset >= header->directed_edge_count)

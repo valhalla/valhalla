@@ -29,7 +29,7 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/baldr/*.h)
 set(GENERATED_VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/traffic_tile_version.h")
 add_custom_command(OUTPUT "${GENERATED_VERSION_HEADER}"
     COMMENT "Generating the traffic-tile version"
-    COMMAND ${VALHALLA_SOURCE_DIR}/scripts/build_traffic_tile_version.sh  ${VALHALLA_SOURCE_DIR} > "${GENERATED_VERSION_HEADER}"
+    COMMAND ${VALHALLA_SOURCE_DIR}/scripts/build_traffic_tile_version.sh ${VALHALLA_SOURCE_DIR} "${GENERATED_VERSION_HEADER}"
     DEPENDS ${VALHALLA_SOURCE_DIR}/valhalla/baldr/traffictile.h
     )
 

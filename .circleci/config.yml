@@ -19,8 +19,8 @@ commands:
             curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
             echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
             echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
-            echo 'nvm install v8.11.2' >> $BASH_ENV
-            echo 'nvm alias default v8.11.2' >> $BASH_ENV
+            source $BASH_ENV && nvm install v8.11.2
+            source $BASH_ENV && nvm alias default v8.11.2
 
 jobs:
   build-base:
@@ -57,8 +57,8 @@ jobs:
             curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
             echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
             echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
-            echo 'nvm install v8.11.2' >> $BASH_ENV
-            echo 'nvm alias default v8.11.2' >> $BASH_ENV
+            nvm install v8.11.2
+            nvm alias default v8.11.2
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
@@ -99,8 +99,8 @@ jobs:
             curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
             echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
             echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
-            echo 'nvm install v8.11.2' >> $BASH_ENV
-            echo 'nvm alias default v8.11.2' >> $BASH_ENV
+            nvm install v8.11.2
+            nvm alias default v8.11.2
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
