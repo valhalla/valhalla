@@ -248,7 +248,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
 
     // thor project 4xx
     {400, R"({"code":"InvalidService","message":"Service name is invalid."})"},
-    {401, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+    {401, R"({"code":"InvalidUrl","message":"Failed to serialize route."})"},
 
     {420,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
