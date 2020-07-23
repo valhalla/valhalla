@@ -1,4 +1,4 @@
-file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/thor/*.h)
+file(GLOB headers ${valhalla_SOURCE_DIR}/valhalla/thor/*.h)
 
 set(sources
   astar.cc
@@ -28,12 +28,12 @@ valhalla_module(NAME thor
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
-      ${VALHALLA_SOURCE_DIR}
-      ${VALHALLA_SOURCE_DIR}/valhalla
-      ${VALHALLA_SOURCE_DIR}/third_party/date/include
-      $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+      ${valhalla_SOURCE_DIR}
+      ${valhalla_SOURCE_DIR}/valhalla
+      ${valhalla_SOURCE_DIR}/third_party/date/include
+      $<$<BOOL:${MSVC}>:${valhalla_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+      ${valhalla_SOURCE_DIR}/third_party/rapidjson/include
       ${CMAKE_BINARY_DIR}
   DEPENDS
     valhalla::proto
@@ -42,4 +42,5 @@ valhalla_module(NAME thor
     ${valhalla_protobuf_targets}
     Boost::boost
     libprime_server
+  BUILD_DEPENDS
     robin_hood::robin_hood)

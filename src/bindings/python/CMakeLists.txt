@@ -31,6 +31,9 @@ else()
     OUTPUT_NAME valhalla
     LINK_LIBRARIES "${PYTHON_LIBRARIES}"
     INCLUDE_DIRECTORIES "${PYTHON_INCLUDE_DIRS}")
+    target_include_directories(python_valhalla PRIVATE
+      ${valhalla_SOURCE_DIR}/valhalla
+      ${valhalla_BINARY_DIR}/src/valhalla)
   target_link_libraries(python_valhalla valhalla Boost::${Boost_Python_lib})
   set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 

@@ -1,25 +1,25 @@
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
-  COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
-      ${VALHALLA_SOURCE_DIR}/lua/admin.lua
+  COMMAND ${CMAKE_COMMAND} -P ${valhalla_SOURCE_DIR}/cmake/Binary2Header.cmake
+      ${valhalla_SOURCE_DIR}/lua/admin.lua
       ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
       --variable-name lua_admin_lua
-  WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
+  WORKING_DIRECTORY ${valhalla_SOURCE_DIR}
   COMMENT "Compiling lua/admin.lua to admin_lua_proc.h"
-  DEPENDS ${VALHALLA_SOURCE_DIR}/lua/admin.lua
+  DEPENDS ${valhalla_SOURCE_DIR}/lua/admin.lua
   VERBATIM)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
-  COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
-      ${VALHALLA_SOURCE_DIR}/lua/graph.lua
+  COMMAND ${CMAKE_COMMAND} -P ${valhalla_SOURCE_DIR}/cmake/Binary2Header.cmake
+      ${valhalla_SOURCE_DIR}/lua/graph.lua
       ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
       --variable-name lua_graph_lua
-  WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
+  WORKING_DIRECTORY ${valhalla_SOURCE_DIR}
   COMMENT "Compiling lua/graph.lua to graph_lua_proc.h"
-  DEPENDS ${VALHALLA_SOURCE_DIR}/lua/graph.lua
+  DEPENDS ${valhalla_SOURCE_DIR}/lua/graph.lua
   VERBATIM)
 
-file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/mjolnir/*.h)
+file(GLOB headers ${valhalla_SOURCE_DIR}/valhalla/mjolnir/*.h)
 
 set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
@@ -63,10 +63,10 @@ valhalla_module(NAME mjolnir
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
-      ${VALHALLA_SOURCE_DIR}
-      ${VALHALLA_SOURCE_DIR}/valhalla
-      ${VALHALLA_SOURCE_DIR}/third_party/date/include
-      $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+      ${valhalla_SOURCE_DIR}
+      ${valhalla_SOURCE_DIR}/valhalla
+      ${valhalla_SOURCE_DIR}/third_party/date/include
+      $<$<BOOL:${MSVC}>:${valhalla_SOURCE_DIR}/third_party/dirent/include>
       ${PROTOBUF_INCLUDE_DIR}
    PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
@@ -75,8 +75,9 @@ valhalla_module(NAME mjolnir
     valhalla::proto
     valhalla::baldr
     SpatiaLite::SpatiaLite
-    SQLite3::SQLite3
+    SQLite::SQLite3
     Lua::Lua
     Threads::Threads
     ZLIB::ZLIB
+  BUILD_DEPENDS
     robin_hood::robin_hood)

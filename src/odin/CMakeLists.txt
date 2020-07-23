@@ -1,13 +1,13 @@
-file(GLOB locale_jsons ${VALHALLA_SOURCE_DIR}/locales *.json)
+file(GLOB locale_jsons ${valhalla_SOURCE_DIR}/locales *.json)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/locales.h
-  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P cmake/Binary2Header.cmake ${VALHALLA_SOURCE_DIR}/locales/ ${CMAKE_CURRENT_BINARY_DIR}/locales.h --locales
-  WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
+  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P cmake/Binary2Header.cmake ${valhalla_SOURCE_DIR}/locales/ ${CMAKE_CURRENT_BINARY_DIR}/locales.h --locales
+  WORKING_DIRECTORY ${valhalla_SOURCE_DIR}
   COMMENT "Compiling locales/*.json to locales.h"
   DEPENDS ${locale_jsons}
   VERBATIM)
 
-file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/odin/*.h)
+file(GLOB headers ${valhalla_SOURCE_DIR}/valhalla/odin/*.h)
 
 set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/locales.h
@@ -30,12 +30,12 @@ valhalla_module(NAME odin
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
-      ${VALHALLA_SOURCE_DIR}
-      ${VALHALLA_SOURCE_DIR}/valhalla
-      ${VALHALLA_SOURCE_DIR}/third_party/date/include
-      $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+      ${valhalla_SOURCE_DIR}
+      ${valhalla_SOURCE_DIR}/valhalla
+      ${valhalla_SOURCE_DIR}/third_party/date/include
+      $<$<BOOL:${MSVC}>:${valhalla_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+      ${valhalla_SOURCE_DIR}/third_party/rapidjson/include
       ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS
     valhalla::proto

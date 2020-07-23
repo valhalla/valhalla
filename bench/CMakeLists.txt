@@ -1,5 +1,5 @@
 set(BENCHMARK_ENABLE_TESTING OFF)
-add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/benchmark
+add_subdirectory(${valhalla_SOURCE_DIR}/third_party/benchmark
   ${CMAKE_BINARY_DIR}/benchmark)
 set_target_properties(benchmark PROPERTIES FOLDER "Dependencies")
 set_target_properties(benchmark_main PROPERTIES FOLDER "Dependencies")
@@ -21,7 +21,10 @@ macro (add_valhalla_benchmark target_file)
   set_target_properties(${target_name}
     PROPERTIES
     COMPILE_DEFINITIONS
-    VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
+    VALHALLA_SOURCE_DIR="${valhalla_SOURCE_DIR}/")
+  target_include_directories(${target_name} PRIVATE
+    ${valhalla_SOURCE_DIR}/valhalla
+    ${valhalla_BINARY_DIR}/src/valhalla)
   target_link_libraries(${target_name} valhalla benchmark::benchmark)
   add_dependencies(benchmarks ${target_name})
   add_dependencies(${target_name} utrecht_tiles)

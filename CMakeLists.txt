@@ -8,13 +8,37 @@
 # on Windows and using CMake-enabled IDEs.
 #
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
-project(valhalla LANGUAGES CXX C)
+
+## Get Valhalla version
+file(STRINGS
+  "${CMAKE_CURRENT_SOURCE_DIR}/valhalla/valhalla.h.in" version_lines
+  REGEX "VALHALLA_VERSION_(MAJOR|MINOR|PATCH)")
+foreach(line ${version_lines})
+  if("${line}" MATCHES "(VALHALLA_VERSION_(MAJOR|MINOR|PATCH))[\t ]+([0-9]+)")
+    set(${CMAKE_MATCH_1} ${CMAKE_MATCH_3})
+  endif()
+endforeach()
+if(DEFINED VALHALLA_VERSION_MAJOR)
+  set(VALHALLA_VERSION "${VALHALLA_VERSION_MAJOR}")
+  if(DEFINED VALHALLA_VERSION_MINOR)
+    set(VALHALLA_VERSION "${VALHALLA_VERSION}.${VALHALLA_VERSION_MINOR}")
+    if(DEFINED VALHALLA_VERSION_PATCH)
+      set(VALHALLA_VERSION "${VALHALLA_VERSION}.${VALHALLA_VERSION_PATCH}")
+    endif()
+  endif()
+else()
+  message(FATAL_ERROR "No Valhalla major version")
+endif()
+
+project(valhalla LANGUAGES CXX C VERSION ${VALHALLA_VERSION})
 
 include(FindPkgConfig)
 include(GNUInstallDirs)
 
-set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
+if(CMAKE_VERSION VERSION_LESS 3.14)
+  list(INSERT CMAKE_MODULE_PATH 0 ${valhalla_SOURCE_DIR}/cmake/future/3.14)
+endif()
+list(INSERT CMAKE_MODULE_PATH 0 ${valhalla_SOURCE_DIR}/cmake)
 
 set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ language version to use (default is 14)")
 option(ENABLE_TOOLS "Enable Valhalla tools" ON)
@@ -113,7 +137,7 @@ if(ENABLE_COVERAGE)
   endif()
 
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/coverage.info
-    COMMAND ${LCOV_PATH} --directory . --base-directory ${VALHALLA_SOURCE_DIR} --no-external --capture --output-file coverage.info --no-checksum
+    COMMAND ${LCOV_PATH} --directory . --base-directory ${valhalla_SOURCE_DIR} --no-external --capture --output-file coverage.info --no-checksum
     COMMAND ${LCOV_PATH} --remove coverage.info '*/third_party/*' --output-file coverage.info
     COMMAND ${LCOV_PATH} --remove coverage.info '${CMAKE_CURRENT_BINARY_DIR}/*' --output-file coverage.info
     COMMAND ${LCOV_PATH} --list coverage.info
@@ -131,22 +155,17 @@ endif()
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 
-if(NOT TARGET CURL::CURL)
-  add_library(CURL::CURL INTERFACE IMPORTED)
+if(TARGET CURL::CURL)
+  message(STATUS "Using curl from the outside")
+  if(NOT TARGET CURL::libcurl)
+    add_library(CURL::libcurl ALIAS CURL::CURL)
+  endif()
+else()
   if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
     if(NOT CURL_FOUND)
       find_package(CURL REQUIRED)
     endif()
-    set_target_properties(CURL::CURL PROPERTIES
-      #INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
-      INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
-      INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
-    if(NOT WIN32)
-      set_property(TARGET CURL::CURL APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}")
-    endif()
   endif()
-else()
-  message(STATUS "Using curl from the outside")
 endif()
 
 if(NOT Protobuf_FOUND)
@@ -251,12 +270,12 @@ endif()
 
 ## Executable targets
 function(get_source_path PATH NAME)
-  if(EXISTS ${VALHALLA_SOURCE_DIR}/src/${NAME}.cc)
-    set(${PATH} ${VALHALLA_SOURCE_DIR}/src/${NAME}.cc PARENT_SCOPE)
-  elseif(EXISTS ${VALHALLA_SOURCE_DIR}/src/meili/${NAME}.cc)
-    set(${PATH} ${VALHALLA_SOURCE_DIR}/src/meili/${NAME}.cc PARENT_SCOPE)
-  elseif(EXISTS ${VALHALLA_SOURCE_DIR}/src/mjolnir/${NAME}.cc)
-    set(${PATH} ${VALHALLA_SOURCE_DIR}/src/mjolnir/${NAME}.cc PARENT_SCOPE)
+  if(EXISTS ${valhalla_SOURCE_DIR}/src/${NAME}.cc)
+    set(${PATH} ${valhalla_SOURCE_DIR}/src/${NAME}.cc PARENT_SCOPE)
+  elseif(EXISTS ${valhalla_SOURCE_DIR}/src/meili/${NAME}.cc)
+    set(${PATH} ${valhalla_SOURCE_DIR}/src/meili/${NAME}.cc PARENT_SCOPE)
+  elseif(EXISTS ${valhalla_SOURCE_DIR}/src/mjolnir/${NAME}.cc)
+    set(${PATH} ${valhalla_SOURCE_DIR}/src/mjolnir/${NAME}.cc PARENT_SCOPE)
   else()
     message(FATAL_ERROR "no source path for ${NAME}")
   endif()
@@ -280,11 +299,14 @@ if(ENABLE_TOOLS)
   foreach(program ${valhalla_programs})
     get_source_path(path ${program})
     add_executable(${program} ${path})
-    set_target_properties(${program} PROPERTIES FOLDER "Tools")
     create_source_groups("Source Files" ${path})
+    set_target_properties(${program} PROPERTIES FOLDER "Tools")
+    target_include_directories(${program} PRIVATE
+      ${valhalla_SOURCE_DIR}/valhalla
+      ${valhalla_BINARY_DIR}/src/valhalla)
     target_link_libraries(${program} Boost::program_options valhalla)
     if(WIN32)
-      target_link_libraries(${program} ${CURL_LIBRARIES})
+      target_link_libraries(${program} CURL::libcurl)
     endif()
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
@@ -296,13 +318,16 @@ if(ENABLE_DATA_TOOLS)
     add_executable(${program} ${path})
     create_source_groups("Source Files" ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
-    target_link_libraries(${program} valhalla Boost::program_options)
+    target_include_directories(${program} PRIVATE
+      ${valhalla_SOURCE_DIR}/valhalla
+      ${valhalla_BINARY_DIR}/src/valhalla)
+    target_link_libraries(${program} valhalla valhalla-data-tools Boost::program_options)
     if (LUAJIT_FOUND AND APPLE)
       # Using LuaJIT on macOS requires a couple of extra linker flags
       target_link_options(${program} PUBLIC -pagezero_size 10000 -image_base 100000000)
     endif()
     if(WIN32)
-      target_link_libraries(${program} ${CURL_LIBRARIES})
+      target_link_libraries(${program} CURL::libcurl)
     endif()
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
@@ -312,8 +337,8 @@ if(ENABLE_DATA_TOOLS)
   target_link_libraries(valhalla_build_admins GEOS::GEOS)
   target_sources(valhalla_build_statistics
     PUBLIC
-      ${VALHALLA_SOURCE_DIR}/src/mjolnir/statistics.cc
-      ${VALHALLA_SOURCE_DIR}/src/mjolnir/statistics_database.cc)
+      ${valhalla_SOURCE_DIR}/src/mjolnir/statistics.cc
+      ${valhalla_SOURCE_DIR}/src/mjolnir/statistics_database.cc)
 endif()
 
 if(ENABLE_SERVICES)
@@ -321,7 +346,14 @@ if(ENABLE_SERVICES)
     add_executable(${program} src/${program}.cc)
     create_source_groups("Source Files" src/${program}.cc)
     set_target_properties(${program} PROPERTIES FOLDER "Services")
-    target_link_libraries(${program} valhalla Boost::program_options)
+    target_include_directories(${program} PRIVATE
+      ${valhalla_SOURCE_DIR}/valhalla
+      ${valhalla_BINARY_DIR}/src/valhalla)
+    target_link_libraries(${program}
+      valhalla
+      valhalla-data-tools
+      libprime_server
+      Boost::program_options)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
@@ -361,7 +393,7 @@ set(CPACK_PACKAGE_VERSION_MINOR ${VALHALLA_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${VALHALLA_VERSION_PATCH})
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}${CPACK_PACKAGE_VERSION_SUFFIX}")
 set(CPACK_PACKAGE_CONTACT "Team Valhalla <valhalla@mapzen.com>")
-set(CPACK_RESOURCE_FILE_LICENSE "${VALHALLA_SOURCE_DIR}/LICENSE.md")
+set(CPACK_RESOURCE_FILE_LICENSE "${valhalla_SOURCE_DIR}/LICENSE.md")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "OpenStreetMap Routing API
  A set of routing APIs designed around OSM map data using
  dynamic costing and a tiled data structure")
@@ -405,6 +437,6 @@ else()
   set(CPACK_COMPONENTS_ALL "development")
 endif()
 
-set(CPACK_PROJECT_CONFIG_FILE ${VALHALLA_SOURCE_DIR}/cmake/CPackConfig.cmake)
+set(CPACK_PROJECT_CONFIG_FILE ${valhalla_SOURCE_DIR}/cmake/CPackConfig.cmake)
 set(CPACK_DEBIAN_PACKAGE_DEBUG OFF)
 include(CPack)
