@@ -98,8 +98,7 @@ jobs:
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
           cd build \
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
-                -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
-                -DENABLE_SANITIZER=ON
+                -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On
       - run: make -C build -j4
       - run: make -C build utrecht_tiles
       - run: make -C build -j2 tests
@@ -117,6 +116,26 @@ jobs:
       - run: make -C build package
       - run: make -C build coverage
       - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+
+  sanitizer-build-debug:
+    docker:
+      - image: valhalla/valhalla:build-latest
+    steps:
+      - checkout
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: node ./scripts/validate_changelog.js
+      - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache-debug-linux-x86_64-{{ .Branch }}
+            - ccache-debug-linux-x86_64
+      - run: npm install --ignore-scripts
+      - run: mkdir build
+      - run: |
+          cd build \
+            && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=Off -DENABLE_NODE_BINDINGS=Off
+      - run: make -C build -j2 tests
+      - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j2 check
 
   build-release:
     docker:
@@ -241,6 +260,7 @@ workflows:
     jobs:
       - build-base
       - lint-build-debug
+      - sanitizer-build-debug
       - build-release
       - build-release-x86
       - build-osx
