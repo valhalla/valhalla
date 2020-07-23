@@ -188,7 +188,7 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
 
 void customize_traffic(const boost::property_tree::ptree& config,
                        baldr::GraphId& target_edge_id,
-                       int target_speed) {
+                       const int target_speed) {
   valhalla_tests::utils::build_live_traffic_data(config);
   // Make some updates to the traffic .tar file.
   // Generate traffic data
@@ -200,7 +200,8 @@ void customize_traffic(const boost::property_tree::ptree& config,
     auto edge_id = baldr::GraphId(tile_id.tileid(), tile_id.level(), index);
     if (edge_id == target_edge_id) {
       current->breakpoint1 = 255;
-      current->overall_speed = target_speed;
+      current->overall_speed = target_speed >> 1;
+      current->speed1 = target_speed >> 1;
     }
   };
   valhalla_tests::utils::customize_live_traffic_data(config, generate_traffic);
@@ -213,7 +214,7 @@ static void BM_GetSpeed(benchmark::State& state) {
 
   const auto config = build_config("get-speed.tar");
   auto tgt_edge_id = baldr::GraphId(3196, 0, 3221);
-  auto tgt_speed = 100;
+  const auto tgt_speed = 50;
   customize_traffic(config, tgt_edge_id, tgt_speed);
 
   auto clean_reader = valhalla_tests::utils::make_clean_graphreader(config.get_child("mjolnir"));
@@ -228,6 +229,8 @@ static void BM_GetSpeed(benchmark::State& state) {
   }
 
   if (tile->GetSpeed(edge, 255, 1) != tgt_speed) {
+    fprintf(stderr, "ERROR: tgt_speed: %i, GetSpeed(...): %i\n", tgt_speed,
+            tile->GetSpeed(edge, 255, 1));
     throw std::runtime_error("Target edge was not at target speed");
   }
 
