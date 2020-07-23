@@ -8,7 +8,6 @@
 #include <thread>
 #include <unistd.h>
 
-using namespace prime_server;
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::thor;
