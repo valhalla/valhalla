@@ -221,10 +221,15 @@ void NodeInfo::set_stop_index(const uint32_t stop_index) {
 // Get the heading of the local edge given its local index. Supports
 // up to 8 local edges. Headings are expanded from 8 bits.
 uint32_t NodeInfo::heading(const uint32_t localidx) const {
-  // Make sure everything is 64 bit!
-  uint64_t shift = localidx * 8; // 8 bits per index
-  return static_cast<uint32_t>(std::round(
-      ((headings_ & (static_cast<uint64_t>(255) << shift)) >> shift) * kHeadingExpandFactor));
+  if (localidx > kMaxLocalEdgeIndex) {
+    LOG_WARN("Local index exceeds max in set_heading, return 0");
+    return 0;
+  } else {
+    // Make sure everything is 64 bit!
+    uint64_t shift = localidx * 8; // 8 bits per index
+    return static_cast<uint32_t>(std::round(
+        ((headings_ & (static_cast<uint64_t>(255) << shift)) >> shift) * kHeadingExpandFactor));
+  }
 }
 
 // Set the heading of the local edge given its local index. Supports
