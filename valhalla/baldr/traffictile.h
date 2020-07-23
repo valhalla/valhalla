@@ -68,6 +68,7 @@ struct TrafficSpeed {
         return breakpoint2 < 255 && speed3 == 0;
       default:
         assert(false);
+        throw std::logic_error("Bad subsegment");
     }
   }
 
@@ -94,6 +95,7 @@ struct TrafficSpeed {
         return speed3 << 1;
       default:
         assert(false);
+        throw std::logic_error("Bad subsegment");
     }
   }
 #endif
