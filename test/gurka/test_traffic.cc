@@ -86,7 +86,8 @@ void update_all_edges_but_bd(const valhalla::gurka::map& map, uint16_t new_speed
   update_all_edges_but_bd(map, ts);
 }
 
-void blank_traffic(const valhalla::gurka::map& map) {
+void blank_traffic(const valhalla::gurka::map& map,
+                   uint32_t traffic_tile_version = TRAFFIC_TILE_VERSION) {
   const auto& traffic_extract = map.config.get<std::string>("mjolnir.traffic_extract");
   mtar_t tar;
   auto tar_open_result = mtar_open(&tar, traffic_extract.c_str(), "w");
@@ -109,6 +110,7 @@ void blank_traffic(const valhalla::gurka::map& map) {
     std::stringstream buffer;
     baldr::TrafficTileHeader header = {};
     header.tile_id = tile_id;
+    header.traffic_tile_version = traffic_tile_version;
     std::vector<baldr::TrafficSpeed> speeds;
     header.directed_edge_count = tile->header()->directededgecount();
     buffer.write(reinterpret_cast<char*>(&header), sizeof(header));
