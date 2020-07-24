@@ -228,7 +228,7 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
   // Handle transitions - expand from the end node of each transition
   if (!from_transition && nodeinfo->transition_count() > 0) {
-    const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
+    const NodeTransition* trans = tile->transition(nodeinfo->transition_index()); // NOLINT
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       if (trans->up()) {
         hierarchy_limits_[node.level()].up_transition_count++;

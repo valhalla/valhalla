@@ -416,6 +416,9 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         // Form output information based on path edges
         if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
           route = api.mutable_trip()->mutable_routes()->Add();
+        if (route == nullptr) {
+          continue;
+        }
         auto& leg = *route->mutable_legs()->Add();
         TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(), *origin,
                               *destination, throughs, leg, interrupt, &vias);
@@ -424,7 +427,9 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
       }
     }
   }
-
+  if (route == nullptr) {
+    return;
+  }
   // Reverse the legs because protobuf only has adding to the end
   std::reverse(route->mutable_legs()->begin(), route->mutable_legs()->end());
 }
@@ -504,6 +509,9 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         // Form output information based on path edges. vias are a route discontinuity map
         if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
           route = api.mutable_trip()->mutable_routes()->Add();
+        if (route == nullptr) {
+          continue;
+        }
         auto& leg = *route->mutable_legs()->Add();
         thor::TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(),
                                     *origin, *destination, throughs, leg, interrupt, &vias);

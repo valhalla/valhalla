@@ -357,6 +357,9 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
 
     // Handle transitions - expand from the end node of the transition
     if (!from_transition && nodeinfo->transition_count() > 0) {
+      if (tile == nullptr) {
+        return;
+      }
       const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
       for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
         if (trans->up()) {

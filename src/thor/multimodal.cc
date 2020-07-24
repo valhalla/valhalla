@@ -526,6 +526,9 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
   // Handle transitions - expand from the end node each transition
   if (!from_transition && nodeinfo->transition_count() > 0) {
+    if (tile == nullptr) {
+      return false;
+    }
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, pc, tc, mode_costing,
