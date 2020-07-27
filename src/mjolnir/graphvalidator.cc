@@ -622,9 +622,6 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
     LOG_WARN((boost::format("Possible duplicates at level: %1% = %2%") % std::to_string(level) %
               duplicates[level])
                  .str());
-    if (densities[level].empty()) {
-      continue;
-    }
     // Get the average density and the max density
     float max_density = 0.0f;
     float sum = 0.0f;
