@@ -68,36 +68,34 @@ TEST(GraphTileBuilder, TestBuildIsReproducible) {
     const gurka::ways ways = {
         {"ABA", {{"highway", "motorway"}}},
     };
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+    const gurka::nodelayout layout = gurka::detail::map_to_coordinates(ascii_map, 10);
     const std::string workdir = "test/data/gurka_reproduce_tile_build/" + dir;
-    auto map = gurka::buildtiles(layout, ways, {}, {}, workdir, {});
-    return map;
+    return gurka::buildtiles(layout, ways, {}, {}, workdir, {});
   };
-
-  const auto first_map = build_tiles("1");
-  const auto second_map = build_tiles("2");
+  const gurka::map first_map = build_tiles("1");
+  const gurka::map second_map = build_tiles("2");
 
   baldr::GraphReader first_reader(first_map.config.get_child("mjolnir"));
   baldr::GraphReader second_reader(second_map.config.get_child("mjolnir"));
-  const auto first_tiles = first_reader.GetTileSet();
+  const std::unordered_set<GraphId> first_tiles = first_reader.GetTileSet();
   ASSERT_EQ(first_tiles.size(), second_reader.GetTileSet().size())
       << "Got different tiles sets: tile count mismatch";
-  for (auto tile_id : first_tiles) {
-    const auto* first_tile = first_reader.GetGraphTile(tile_id);
+  for (const GraphId& tile_id : first_tiles) {
+    const GraphTile* first_tile = first_reader.GetGraphTile(tile_id);
     ASSERT_TRUE(second_reader.DoesTileExist(tile_id))
         << "Tile " << GraphTile::FileSuffix(tile_id) << " isn't found in the second tile set";
-    const auto* second_tile = second_reader.GetGraphTile(tile_id);
+    const GraphTile* second_tile = second_reader.GetGraphTile(tile_id);
 
     // human readable check
     assert_tile_equalish(*first_tile, *second_tile);
 
     // check that raw tiles are equal
-    auto raw_tile_bytes = [](const GraphTile* tile) -> std::string {
-      const auto header = tile->header();
+    const auto raw_tile_bytes = [](const GraphTile* tile) -> std::string {
+      const GraphTileHeader* header = tile->header();
       return std::string(reinterpret_cast<const char*>(header), header->end_offset());
     };
-    const auto first_raw_tile = raw_tile_bytes(first_tile);
-    const auto second_raw_tile = raw_tile_bytes(second_tile);
+    const std::string first_raw_tile = raw_tile_bytes(first_tile);
+    const std::string second_raw_tile = raw_tile_bytes(second_tile);
     EXPECT_EQ(first_raw_tile, second_raw_tile)
         << "Tile{" << GraphTile::FileSuffix(tile_id) << "} mismatch";
   }
