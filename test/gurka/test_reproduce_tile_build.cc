@@ -27,31 +27,36 @@ void assert_tile_equalish(const GraphTile& a, const GraphTile& b) {
             0);
 
   // if the header is as expected
-  const auto *ah = a.header(), *bh = b.header();
-  if (ah->access_restriction_count() == bh->access_restriction_count() &&
-      ah->admincount() == bh->admincount() &&
-      ah->complex_restriction_forward_offset() == bh->complex_restriction_forward_offset() &&
-      ah->complex_restriction_reverse_offset() == bh->complex_restriction_reverse_offset() &&
-      ah->date_created() == bh->date_created() && ah->density() == bh->density() &&
-      ah->departurecount() == bh->departurecount() &&
-      ah->directededgecount() == bh->directededgecount() &&
-      ah->edgeinfo_offset() == bh->edgeinfo_offset() && ah->exit_quality() == bh->exit_quality() &&
-      ah->graphid() == bh->graphid() && ah->name_quality() == bh->name_quality() &&
-      ah->nodecount() == bh->nodecount() && ah->routecount() == bh->routecount() &&
-      ah->signcount() == bh->signcount() && ah->speed_quality() == bh->speed_quality() &&
-      ah->stopcount() == bh->stopcount() && ah->textlist_offset() == bh->textlist_offset() &&
-      ah->schedulecount() == bh->schedulecount() && ah->version() == bh->version()) {
-    // make sure the edges' shape and names match
-    for (size_t i = 0; i < ah->directededgecount(); ++i) {
-      auto a_info = a.edgeinfo(a.directededge(i)->edgeinfo_offset());
-      auto b_info = b.edgeinfo(b.directededge(i)->edgeinfo_offset());
-      ASSERT_EQ(a_info.encoded_shape(), b_info.encoded_shape());
-      ASSERT_EQ(a_info.GetNames().size(), b_info.GetNames().size());
-      for (size_t j = 0; j < a_info.GetNames().size(); ++j)
-        ASSERT_EQ(a_info.GetNames()[j], b_info.GetNames()[j]);
-    }
-  } else {
-    FAIL() << "not equal";
+  const GraphTileHeader *ah = a.header(), *bh = b.header();
+  ASSERT_EQ(ah->access_restriction_count(), bh->access_restriction_count());
+  ASSERT_EQ(ah->admincount(), bh->admincount());
+  ASSERT_EQ(ah->complex_restriction_forward_offset(), bh->complex_restriction_forward_offset());
+  ASSERT_EQ(ah->complex_restriction_reverse_offset(), bh->complex_restriction_reverse_offset());
+  ASSERT_EQ(ah->date_created(), bh->date_created());
+  ASSERT_EQ(ah->density(), bh->density());
+  ASSERT_EQ(ah->departurecount(), bh->departurecount());
+  ASSERT_EQ(ah->directededgecount(), bh->directededgecount());
+  ASSERT_EQ(ah->edgeinfo_offset(), bh->edgeinfo_offset());
+  ASSERT_EQ(ah->exit_quality(), bh->exit_quality());
+  ASSERT_EQ(ah->graphid(), bh->graphid());
+  ASSERT_EQ(ah->name_quality(), bh->name_quality());
+  ASSERT_EQ(ah->nodecount(), bh->nodecount());
+  ASSERT_EQ(ah->routecount(), bh->routecount());
+  ASSERT_EQ(ah->signcount(), bh->signcount());
+  ASSERT_EQ(ah->speed_quality(), bh->speed_quality());
+  ASSERT_EQ(ah->stopcount(), bh->stopcount());
+  ASSERT_EQ(ah->textlist_offset(), bh->textlist_offset());
+  ASSERT_EQ(ah->schedulecount(), bh->schedulecount());
+  ASSERT_EQ(ah->version(), bh->version());
+
+  // make sure the edges' shape and names match
+  for (size_t i = 0; i < ah->directededgecount(); ++i) {
+    const EdgeInfo a_info = a.edgeinfo(a.directededge(i)->edgeinfo_offset());
+    const EdgeInfo b_info = b.edgeinfo(b.directededge(i)->edgeinfo_offset());
+    ASSERT_EQ(a_info.encoded_shape(), b_info.encoded_shape());
+    ASSERT_EQ(a_info.GetNames().size(), b_info.GetNames().size());
+    for (size_t j = 0; j < a_info.GetNames().size(); ++j)
+      ASSERT_EQ(a_info.GetNames()[j], b_info.GetNames()[j]);
   }
 }
 
