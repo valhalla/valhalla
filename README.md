@@ -142,6 +142,8 @@ Important build options include:
 | `-DENABLE_COMPILER_WARNINGS` (`ON` / `OFF`) | Build with common compiler warnings (defaults to off)|
 | `-DENABLE_WERROR` (`ON` / `OFF`) | Treat compiler warnings as errors  (defaults to off). Requires `-DENABLE_COMPILER_WARNINGS=ON` to take effect.|
 | `-DENABLE_BENCHMARKS` (`ON` / `OFF`) | Enable microbenchmarking  (defaults to on).|
+| `-DENABLE_ADDRESS_SANITIZER` (`ON` / `OFF`) | Build with address sanitizer (defaults to off).|
+| `-DENABLE_UNDEFINED_SANITIZER` (`ON` / `OFF`) | Build with undefined behavior sanitizer (defaults to off).|
 
 For more build options run the interactive GUI:
 
@@ -197,7 +199,7 @@ Also note that we run some `clang-tidy` linting over the code as well (see `.cla
 
 `scripts/clang-tidy-only-diff.sh` is run in CI and will the build if it detects any issues.
 
-Additionally a check with address sanitizer is run in CI. It is recommended to perform testing with sanitizer locally prior to commiting. In order to compile with sanitizer use flag `-DENABLE_SANITIZER=ON` during `cmake` confiuration step. As long as leak sanitizer (which is a part of address sanitizer) is not currently supported across different platforms it is disabled in the CI. You can disable it loclally with the environment variable `ASAN_OPTIONS=detect_leaks=0`.
+Additionally, a check with [ASan](https://clang.llvm.org/docs/AddressSanitizer.html) is run in CI. We recommend testing with ASan  and debug symbols locally prior to commiting, with the `-DENABLE_ADDRESS_SANITIZER=ON -DCMAKE_BUILD_TYPE=Debug` flags during cmake configuration. As long as leak sanitizer (which is a part of address sanitizer) is not currently supported across different platforms it is disabled in the CI. You can disable it locally with the environment variable `ASAN_OPTIONS=detect_leaks=0`.
 
 Tests
 -----

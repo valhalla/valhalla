@@ -1,11 +1,11 @@
-if(ENABLE_SANITIZER)
+if(ENABLE_ADDRESS_SANITIZER)
   message(STATUS "Enabling address sanitizer (ASan).")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
 endif()
 
-if(ENABLE_UB_SANITIZER)
+if(ENABLE_UNDEFINED_SANITIZER)
   message(STATUS "Enabling undefined behavior sanitizer (UBSan).")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")

@@ -133,7 +133,7 @@ jobs:
       - run: mkdir build
       - run: |
           cd build \
-            && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZER=ON -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=Off -DENABLE_NODE_BINDINGS=Off
+            && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_ADDRESS_SANITIZER=ON -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=Off -DENABLE_NODE_BINDINGS=Off
       - run: make -C build -j2 tests
       - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j2 check
 
