@@ -1,3 +1,8 @@
+if (ENABLE_SANITIZERS)
+  set(ENABLE_ADDRESS_SANITIZER ON)
+  set(ENABLE_UNDEFINED_SANITIZER ON)
+endif()
+
 if(ENABLE_ADDRESS_SANITIZER)
   message(STATUS "Enabling address sanitizer (ASan).")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls")
