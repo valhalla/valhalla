@@ -502,6 +502,8 @@ void DirectedEdge::set_shortcut(const uint32_t shortcut) {
 void DirectedEdge::set_superseded(const uint32_t superseded) {
   if (superseded > kMaxShortcutsFromNode) {
     LOG_WARN("Exceeding max shortcut edges from a node: " + std::to_string(superseded));
+  } else if (superseded == 0) {
+    superseded_ = 0;
   } else {
     superseded_ = (1 << (superseded - 1));
   }
