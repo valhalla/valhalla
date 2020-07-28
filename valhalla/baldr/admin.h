@@ -58,11 +58,11 @@ public:
   uint32_t country_offset() const;
 
 protected:
-  uint32_t country_offset_;       // country name offset
-  uint32_t state_offset_;         // state name offset
-  char country_iso_[kCountryIso]; // country ISO3166-1
-  char state_iso_[kStateIso];     // state ISO3166-2
-  char spare_[3];                 // spare for byte alignment
+  uint32_t country_offset_;         // country name offset
+  uint32_t state_offset_;           // state name offset
+  char country_iso_[kCountryIso]{}; // country ISO3166-1
+  char state_iso_[kStateIso]{};     // state ISO3166-2
+  char spare_[3]{};                 // spare for byte alignment
 };
 
 } // namespace baldr
