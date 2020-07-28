@@ -50,14 +50,6 @@ apt-get install -y \
     zlib1g-dev \
   && rm -rf /var/lib/apt/lists/*
 
-# install node
-mkdir -p ${NVM_DIR}
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
-. $NVM_DIR/nvm.sh \
-    && nvm install $NODE_VERSION \
-    && nvm alias default $NODE_VERSION \
-    && nvm use default
-
 # install cmake
 curl https://cmake.org/files/v3.16/cmake-3.16.0-Linux-$(uname --machine).sh > /tmp/cmake.sh
 sh /tmp/cmake.sh --prefix=/usr/local --skip-license && /bin/rm /tmp/cmake.sh
