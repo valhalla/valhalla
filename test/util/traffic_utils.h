@@ -56,7 +56,8 @@ typedef struct {
 // To actually customize the traffic data, use `customize_live_traffic_data`
 //
 /*************************************************************/
-void build_live_traffic_data(const boost::property_tree::ptree& config) {
+void build_live_traffic_data(const boost::property_tree::ptree& config,
+                             uint32_t traffic_tile_version = TRAFFIC_TILE_VERSION) {
 
   std::string tile_dir = config.get<std::string>("mjolnir.tile_dir");
   std::string traffic_extract = config.get<std::string>("mjolnir.traffic_extract");
@@ -87,6 +88,7 @@ void build_live_traffic_data(const boost::property_tree::ptree& config) {
       std::stringstream buffer;
       baldr::TrafficTileHeader header = {};
       header.tile_id = tile_id;
+      header.traffic_tile_version = traffic_tile_version;
       std::vector<baldr::TrafficSpeed> speeds;
       header.directed_edge_count = tile->header()->directededgecount();
       buffer.write(reinterpret_cast<char*>(&header), sizeof(header));
