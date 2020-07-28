@@ -1,12 +1,6 @@
-#ifndef VALHALLA_MIDGARD_LINESEGMENT2_H_
-#define VALHALLA_MIDGARD_LINESEGMENT2_H_
-
-#include <math.h>
+#pragma once
+#include <cmath>
 #include <vector>
-
-#include <valhalla/midgard/point2.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/vector2.h>
 
 namespace valhalla {
 namespace midgard {
@@ -57,7 +51,7 @@ public:
    * @return  Returns the distance squared from pt to the closest point on
    *          the segment.
    */
-  float DistanceSquared(const coord_t& p, coord_t& closest) const;
+  typename coord_t::value_type DistanceSquared(const coord_t& p, coord_t& closest) const;
 
   /**
    * Finds the distance of a specified point from the line segment
@@ -67,7 +61,7 @@ public:
    * @return  Returns the distance from p to the closest point on
    *          the segment.
    */
-  float Distance(const coord_t& p, coord_t& closest) const {
+  typename coord_t::value_type Distance(const coord_t& p, coord_t& closest) const {
     return sqrtf(DistanceSquared(p, closest));
   }
 
@@ -106,7 +100,7 @@ public:
    * @return   Returns >0 for point to the left, < 0 for point to the right,
    *           and 0 for a point on the line
    */
-  float IsLeft(const coord_t& p) const {
+  typename coord_t::value_type IsLeft(const coord_t& p) const {
     return (b_.x() - a_.x()) * (p.y() - a_.y()) - (p.x() - a_.x()) * (b_.y() - a_.y());
   }
 
@@ -126,5 +120,3 @@ private:
 
 } // namespace midgard
 } // namespace valhalla
-
-#endif // VALHALLA_MIDGARD_LINESEGMENT2_H_

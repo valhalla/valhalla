@@ -38,12 +38,12 @@ gurka::map Accessibility::map = {};
 /*************************************************************/
 TEST_F(Accessibility, Auto1) {
   auto result = gurka::route(map, "C", "F", "auto");
-  gurka::assert::osrm::expect_steps(result, {"BC", "AB", "ADG", "DEF"});
+  gurka::assert::osrm::expect_steps(result, {"BC", "ADG", "DEF"});
   gurka::assert::raw::expect_path(result, {"BC", "AB", "ADG", "DEF", "DEF"});
 }
 TEST_F(Accessibility, Auto2) {
   auto result = gurka::route(map, "C", "I", "auto");
-  gurka::assert::osrm::expect_steps(result, {"BC", "AB", "ADG", "GHI"});
+  gurka::assert::osrm::expect_steps(result, {"BC", "ADG", "GHI"});
   gurka::assert::raw::expect_path(result, {"BC", "AB", "ADG", "ADG", "GHI", "GHI"});
 }
 TEST_F(Accessibility, WalkUsesShortcut1) {
@@ -63,12 +63,12 @@ TEST_F(Accessibility, BikeUsesShortcut) {
 }
 TEST_F(Accessibility, BikeAvoidsSecondShortcut) {
   auto result = gurka::route(map, "C", "I", "bicycle");
-  gurka::assert::osrm::expect_steps(result, {"BC", "BE", "EH", "GHI"});
+  gurka::assert::osrm::expect_steps(result, {"BC", "BE", "GHI"});
   gurka::assert::raw::expect_path(result, {"BC", "BE", "EH", "GHI"});
 }
 TEST_F(Accessibility, WalkAvoidsMotorway) {
   auto result = gurka::route(map, "A", "G", "pedestrian");
-  gurka::assert::osrm::expect_steps(result, {"AB", "BE", "EH", "GHI"});
+  gurka::assert::osrm::expect_steps(result, {"AB", "BE", "GHI"});
   gurka::assert::raw::expect_path(result, {"AB", "BE", "EH", "GHI"});
 }
 TEST_F(Accessibility, AutoUsesMotorway) {

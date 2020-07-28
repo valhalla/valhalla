@@ -387,7 +387,7 @@ void FindOSMConnection(const PointLL& stop_ll,
   const float kTransitLatDeg = kMetersPerKm / kMetersPerDegreeLat; // one km radius
 
   // Get a list of tiles required for a node search within this radius
-  float lngdeg = (rm / DistanceApproximator::MetersPerLngDegree(stop_ll.lat()));
+  float lngdeg = (rm / DistanceApproximator<PointLL>::MetersPerLngDegree(stop_ll.lat()));
   AABB2<PointLL> bbox(Point2(stop_ll.lng() - lngdeg, stop_ll.lat() - kTransitLatDeg),
                       Point2(stop_ll.lng() + lngdeg, stop_ll.lat() + kTransitLatDeg));
   std::vector<int32_t> tilelist = tiles.TileList(bbox);
@@ -404,7 +404,7 @@ void FindOSMConnection(const PointLL& stop_ll,
 
     // Use distance approximator for all distance checks
     PointLL base_ll = newtile->header()->base_ll();
-    DistanceApproximator approximator(stop_ll);
+    DistanceApproximator<PointLL> approximator(stop_ll);
     for (uint32_t i = 0; i < newtile->header()->nodecount(); i++) {
       const NodeInfo* node = newtile->node(i);
       // Check if within radius

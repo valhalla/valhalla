@@ -203,8 +203,8 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
       }
 
       // expand the top and bottom edges of the box to account for geodesics
-      min_y -= std::abs(min_y - PointLL(min_x, min_y).MidPoint({max_x, min_y}).second);
-      max_y += std::abs(max_y - PointLL(min_x, max_y).MidPoint({max_x, max_y}).second);
+      min_y -= std::abs(min_y - PointLL(min_x, min_y).PointAlongSegment({max_x, min_y}).second);
+      max_y += std::abs(max_y - PointLL(min_x, max_y).PointAlongSegment({max_x, max_y}).second);
       auto min_c = tile_level.tiles.Col(min_x), min_r = tile_level.tiles.Row(min_y);
       auto max_c = tile_level.tiles.Col(max_x), max_r = tile_level.tiles.Row(max_y);
       if (min_c > max_c) {
@@ -230,9 +230,10 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
   ++utc->tm_mon;
   for (const auto& tile : tiles) {
     auto bbox = tile_level.tiles.TileBounds(tile.tileid());
-    auto min_y = std::max(bbox.miny(), bbox.minpt().MidPoint({bbox.maxx(), bbox.miny()}).second);
-    auto max_y =
-        std::min(bbox.maxy(), PointLL(bbox.minx(), bbox.maxy()).MidPoint(bbox.maxpt()).second);
+    auto min_y =
+        std::max(bbox.miny(), bbox.minpt().PointAlongSegment({bbox.maxx(), bbox.miny()}).second);
+    auto max_y = std::min(bbox.maxy(),
+                          PointLL(bbox.minx(), bbox.maxy()).PointAlongSegment(bbox.maxpt()).second);
     bbox = AABB2<PointLL>(bbox.minx(), min_y, bbox.maxx(), max_y);
     // stop count
     auto request =
@@ -747,12 +748,12 @@ void fetch_tiles(const ptree& pt,
     uniques.lock.unlock();
     auto filter = tiles.TileBounds(current.tileid());
     // expanding both top and bottom by distance to geodesic running through the coords
-    auto min_y =
-        filter.miny() -
-        std::abs(filter.miny() - filter.minpt().MidPoint({filter.maxx(), filter.miny()}).second);
-    auto max_y =
-        filter.maxy() +
-        std::abs(filter.maxy() - filter.maxpt().MidPoint({filter.minx(), filter.maxy()}).second);
+    auto min_y = filter.miny() -
+                 std::abs(filter.miny() -
+                          filter.minpt().PointAlongSegment({filter.maxx(), filter.miny()}).second);
+    auto max_y = filter.maxy() +
+                 std::abs(filter.maxy() -
+                          filter.maxpt().PointAlongSegment({filter.minx(), filter.maxy()}).second);
     AABB2<PointLL> bbox(filter.minx(), min_y, filter.maxx(), max_y);
     ptree response;
     auto api_key =

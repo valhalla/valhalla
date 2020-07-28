@@ -117,7 +117,9 @@ Maneuver::Maneuver()
       has_time_restrictions_(false), has_right_traversable_outbound_intersecting_edge_(false),
       has_left_traversable_outbound_intersecting_edge_(false),
       bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction),
-      include_verbal_pre_transition_length_(false) {
+      include_verbal_pre_transition_length_(false), contains_obvious_maneuver_(false),
+      has_combined_enter_exit_roundabout_(false), roundabout_length_(0.0f),
+      roundabout_exit_length_(0.0f) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
@@ -270,8 +272,8 @@ float Maneuver::length(const Options::Units& units) const {
   return length_;
 }
 
-void Maneuver::set_length(float length) {
-  length_ = length;
+void Maneuver::set_length(float km_length) {
+  length_ = km_length;
 }
 
 double Maneuver::time() const {
@@ -757,6 +759,44 @@ void Maneuver::set_include_verbal_pre_transition_length(bool include_verbal_pre_
   include_verbal_pre_transition_length_ = include_verbal_pre_transition_length;
 }
 
+bool Maneuver::contains_obvious_maneuver() const {
+  return contains_obvious_maneuver_;
+}
+
+void Maneuver::set_contains_obvious_maneuver(bool contains_obvious_maneuver) {
+  contains_obvious_maneuver_ = contains_obvious_maneuver;
+}
+
+bool Maneuver::has_combined_enter_exit_roundabout() const {
+  return has_combined_enter_exit_roundabout_;
+}
+
+void Maneuver::set_has_combined_enter_exit_roundabout(bool has_combined_enter_exit_roundabout) {
+  has_combined_enter_exit_roundabout_ = has_combined_enter_exit_roundabout;
+}
+
+float Maneuver::roundabout_length(const Options::Units& units) const {
+  if (units == Options::miles) {
+    return (roundabout_length_ * midgard::kMilePerKm);
+  }
+  return roundabout_length_;
+}
+
+void Maneuver::set_roundabout_length(float roundabout_km_length) {
+  roundabout_length_ = roundabout_km_length;
+}
+
+float Maneuver::roundabout_exit_length(const Options::Units& units) const {
+  if (units == Options::miles) {
+    return (roundabout_exit_length_ * midgard::kMilePerKm);
+  }
+  return roundabout_exit_length_;
+}
+
+void Maneuver::set_roundabout_exit_length(float roundabout_exit_km_length) {
+  roundabout_exit_length_ = roundabout_exit_km_length;
+}
+
 TripLeg_TravelMode Maneuver::travel_mode() const {
   return travel_mode_;
 }
@@ -1087,6 +1127,18 @@ std::string Maneuver::ToString() const {
 
   man_str += " | distant_verbal_multi_cue=";
   man_str += std::to_string(distant_verbal_multi_cue_);
+
+  man_str += " | contains_obvious_maneuver=";
+  man_str += std::to_string(contains_obvious_maneuver_);
+
+  man_str += " | has_combined_enter_exit_roundabout=";
+  man_str += std::to_string(has_combined_enter_exit_roundabout_);
+
+  man_str += " | roundabout_length=";
+  man_str += std::to_string(roundabout_length_);
+
+  man_str += " | roundabout_exit_length=";
+  man_str += std::to_string(roundabout_exit_length_);
 
   man_str += " | travel_mode=";
   man_str += std::to_string(travel_mode_);

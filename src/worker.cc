@@ -247,7 +247,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
 
     // thor project 4xx
     {400, R"({"code":"InvalidService","message":"Service name is invalid."})"},
-    {401, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+    {401, R"({"code":"InvalidUrl","message":"Failed to serialize route."})"},
 
     {420,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
@@ -660,6 +660,11 @@ void from_json(rapidjson::Document& doc, Options& options) {
     }
   }
 
+  auto linear_references = rapidjson::get_optional<bool>(doc, "/linear_references");
+  if (linear_references) {
+    options.set_linear_references(*linear_references);
+  }
+
   // parse map matching location input and encoded_polyline for height actions
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
   if (encoded_polyline) {
@@ -972,6 +977,13 @@ void from_json(rapidjson::Document& doc, Options& options) {
   auto guidance_views = rapidjson::get_optional<bool>(doc, "/guidance_views");
   if (guidance_views) {
     options.set_guidance_views(*guidance_views);
+  }
+
+  // whether to include roundabout_exit maneuvers, default true
+  auto roundabout_exits = rapidjson::get_optional<bool>(doc, "/roundabout_exits");
+  options.set_roundabout_exits(true);
+  if (roundabout_exits) {
+    options.set_roundabout_exits(*roundabout_exits);
   }
 
   // force these into the output so its obvious what we did to the user

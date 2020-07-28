@@ -1,12 +1,15 @@
-#ifndef VALHALLA_MIDGARD_POINT2_H_
-#define VALHALLA_MIDGARD_POINT2_H_
+#pragma once
 
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <limits>
 #include <tuple>
 #include <utility>
 #include <vector>
+
+#include <valhalla/midgard/util_core.h>
 
 namespace {
 constexpr float LL_EPSILON = .00002f;
@@ -16,31 +19,30 @@ namespace valhalla {
 namespace midgard {
 
 // Forward references
-class Vector2;
+template <typename PrecisionT> class VectorXY;
 
 /**
  * 2D Point (cartesian). float x,y components.
  * @author David W. Nesbitt
  */
-class Point2 : public std::pair<float, float> {
+template <typename PrecisionT> class PointXY : public std::pair<PrecisionT, PrecisionT> {
 
 public:
   /**
    * Use the constructors provided by pair
    */
-  using std::pair<float, float>::pair;
-
-  /**
-   * Destructor
-   */
-  virtual ~Point2() {
-  }
+  using std::pair<PrecisionT, PrecisionT>::pair;
+  using std::pair<PrecisionT, PrecisionT>::first;
+  using std::pair<PrecisionT, PrecisionT>::second;
+  using typename std::pair<PrecisionT, PrecisionT>::first_type;
+  using typename std::pair<PrecisionT, PrecisionT>::second_type;
+  using value_type = typename std::pair<PrecisionT, PrecisionT>::first_type;
 
   /**
    * Get the x component.
    * @return  Returns the x component of the point.
    */
-  float x() const {
+  PrecisionT x() const {
     return first;
   }
 
@@ -48,7 +50,7 @@ public:
    * Get the y component.
    * @return  Returns the y component of the point.
    */
-  float y() const {
+  PrecisionT y() const {
     return second;
   }
 
@@ -56,7 +58,7 @@ public:
    * Set the x component.
    * @param  x  x coordinate value.
    */
-  void set_x(const float x) {
+  void set_x(const PrecisionT x) {
     first = x;
   }
 
@@ -64,7 +66,7 @@ public:
    * Set the y component.
    * @param  y  y coordinate value.
    */
-  void set_y(const float y) {
+  void set_y(const PrecisionT y) {
     second = y;
   }
 
@@ -73,7 +75,7 @@ public:
    * @param   x   x coordinate position.
    * @param   y   y coordinate position.
    */
-  virtual void Set(const float x, const float y) {
+  virtual void Set(const PrecisionT x, const PrecisionT y) {
     first = x;
     second = y;
   }
@@ -84,47 +86,43 @@ public:
    * @param   e  An epsilon which determines how close they must be to be considered equal
    * @return  Returns true if two points are approximately equal, false otherwise.
    */
-  bool ApproximatelyEqual(const Point2& p, float e = LL_EPSILON) const;
+  bool ApproximatelyEqual(const PointXY<PrecisionT>& p, float e = LL_EPSILON) const {
+    return equal<value_type>(first, p.first, e) && equal<second_type>(second, p.second, e);
+  }
 
   /**
    * Get the distance squared from this point to point p.
    * @param   p  Other point.
    * @return  Returns the distance squared between this point and p.
    */
-  virtual float DistanceSquared(const Point2& p) const;
+  PrecisionT DistanceSquared(const PointXY<PrecisionT>& p) const {
+    auto a = first - p.first;
+    auto b = second - p.second;
+    return a * a + b * b;
+  }
 
   /**
    * Get the distance from this point to point p.
    * @param   p  Other point.
    * @return  Returns the distance between this point and p.
    */
-  virtual float Distance(const Point2& p) const;
-
-  /**
-   * Returns the point a specified percentage along a segment from this point
-   * to an end point.
-   * @param  end  End point.
-   * @param  pct  Percentage along the segment.
-   * @return Returns the point along the segment.
-   */
-  Point2 along_segment(const Point2& end, const float pct) const {
-    return {x() + (end.x() - x()) * pct, y() + (end.y() - y()) * pct};
+  PrecisionT Distance(const PointXY<PrecisionT>& p) const {
+    return sqrtf(DistanceSquared(p));
   }
 
   /**
-   * Affine combination of this point with another point. 2 scalars are
-   * provided (a0 and a1) and the must add to 1.
-   * @param  a0  Scalar for this point
-   * @param  a1  Scalar for p1
-   * @param  p1  Point 1
+   * Returns the point along the segment between this point and the provided point using the provided
+   * distance along. A distance of .5 would be the point halfway between the two points. A distance of
+   * .25 would be 25% of the way from this point to the provided point. The default distance is .5, so
+   * the midpoint
+   * @param   p1         second point of the line segment
+   * @param   distance   the percentage along the segment to place the output point
+   * @return  returns the point along the line segment at the specified distance
    */
-  Point2 AffineCombination(const float a0, const float a1, const Point2& p1) const;
-  /**
-   * Gets the midpoint on a line segment between this point and point p1.
-   * @param   p1  Point
-   * @return  Returns the midpoint between this point and p1.
-   */
-  Point2 MidPoint(const Point2& p1) const;
+  PointXY<PrecisionT> PointAlongSegment(const PointXY<PrecisionT>& p1,
+                                        PrecisionT distance = .5) const {
+    return PointXY(first + distance * (p1.first - first), second + distance * (p1.second - second));
+  }
 
   /**
    * Add a vector to the current point.
@@ -132,7 +130,9 @@ public:
    * @return  Returns a new point: the result of the current point
    *          plus the specified vector.
    */
-  Point2 operator+(const Vector2& v) const;
+  PointXY<PrecisionT> operator+(const VectorXY<PrecisionT>& v) const {
+    return PointXY<PrecisionT>(first + v.x(), second + v.y());
+  }
 
   /**
    * Subtract a vector from the current point.
@@ -140,14 +140,18 @@ public:
    * @return  Returns a new point: the result of the current point
    *          minus the specified vector.
    */
-  Point2 operator-(const Vector2& v) const;
+  PointXY<PrecisionT> operator-(const VectorXY<PrecisionT>& v) const {
+    return PointXY<PrecisionT>(first - v.x(), second - v.y());
+  }
 
   /**
    * Subtraction of a point from the current point.
    * @param p Point to subtract from the current point.
    * @return  Returns a vector.
    */
-  Vector2 operator-(const Point2& p) const;
+  VectorXY<PrecisionT> operator-(const PointXY<PrecisionT>& p) const {
+    return VectorXY<PrecisionT>(first - p.first, second - p.second);
+  }
 
   /**
    * Finds the closest point to the supplied polyline as well as the distance
@@ -158,7 +162,8 @@ public:
    *                    Index of the segment of the polyline which contains the closest point
    *                   >
    */
-  std::tuple<Point2, float, int> ClosestPoint(const std::vector<Point2>& pts) const;
+  std::tuple<PointXY<PrecisionT>, PrecisionT, int>
+  ClosestPoint(const std::vector<PointXY<PrecisionT>>& pts) const;
 
   /**
    * Test whether this point is to the left of a segment from p1 to p2.
@@ -166,7 +171,7 @@ public:
    * @param  p2  End point of the segment.
    * @return  Returns true if this point is left of the segment.
    */
-  virtual float IsLeft(const Point2& p1, const Point2& p2) const {
+  virtual float IsLeft(const PointXY<PrecisionT>& p1, const PointXY<PrecisionT>& p2) const {
     return (p2.x() - p1.x()) * (y() - p1.y()) - (x() - p1.x()) * (p2.y() - p1.y());
   }
 
@@ -185,10 +190,14 @@ public:
    *
    * @return true if the system is spherical false if not
    */
-  static bool IsSpherical();
+  static bool IsSpherical() {
+    return false;
+  }
 
 protected:
 };
+
+using Point2 = PointXY<float>;
 
 } // namespace midgard
 } // namespace valhalla
@@ -204,5 +213,3 @@ template <> struct hash<valhalla::midgard::Point2> {
   }
 };
 } // namespace std
-
-#endif // VALHALLA_MIDGARD_POINT2_H_
