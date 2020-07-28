@@ -87,7 +87,7 @@ jobs:
       - image: valhalla/valhalla:build-latest
     steps:
       - checkout
-      - run: apt-get update && apt-get install -u nodejs
+      - run: apt-get update && apt-get install -y nodejs
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: node ./scripts/validate_changelog.js
       - run: git submodule sync && git submodule update --init
