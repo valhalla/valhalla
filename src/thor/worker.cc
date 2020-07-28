@@ -96,6 +96,16 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
 thor_worker_t::~thor_worker_t() {
 }
 
+std::string serialize_to_pbf(Api& request) {
+  std::string buf;
+  if (!request.SerializeToString(&buf)) {
+    LOG_ERROR("Failed serializing to pbf in Thor::Worker - trace_route");
+    throw valhalla_exception_t{401, boost::optional<std::string>(
+                                        "Failed serializing to pbf in Thor::Worker")};
+  }
+  return buf;
+};
+
 #ifdef HAVE_HTTP
 prime_server::worker_t::result_t
 thor_worker_t::work(const std::list<zmq::message_t>& job,
@@ -108,7 +118,12 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
   Api request;
   try {
     // crack open the original request
-    request.ParseFromArray(job.front().data(), job.front().size());
+    bool success = request.ParseFromArray(job.front().data(), job.front().size());
+    if (!success) {
+      LOG_ERROR("Failed parsing pbf in Thor::Worker");
+      throw valhalla_exception_t{401,
+                                 boost::optional<std::string>("Failed parsing pbf in Thor::Worker")};
+    }
     const auto& options = request.options();
 
     // Set the interrupt function
@@ -124,7 +139,7 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
         break;
       case Options::optimized_route: {
         optimized_route(request);
-        result.messages.emplace_back(request.SerializeAsString());
+        result.messages.emplace_back(serialize_to_pbf(request));
         denominator = std::max(options.sources_size(), options.targets_size());
         break;
       }
@@ -134,13 +149,13 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
         break;
       case Options::route: {
         route(request);
-        result.messages.emplace_back(request.SerializeAsString());
+        result.messages.emplace_back(serialize_to_pbf(request));
         denominator = options.locations_size();
         break;
       }
       case Options::trace_route: {
         trace_route(request);
-        result.messages.emplace_back(request.SerializeAsString());
+        result.messages.emplace_back(serialize_to_pbf(request));
         denominator = trace.size() / 1100;
         break;
       }
@@ -171,10 +186,14 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
 
     return result;
   } catch (const valhalla_exception_t& e) {
-    valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
+    valhalla::midgard::logging::Log("400::" + std::string(e.what()) +
+                                        " request_id=" + std::to_string(info.id),
+                                    " [ANALYTICS] ");
     return jsonify_error(e, info, request);
   } catch (const std::exception& e) {
-    valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
+    valhalla::midgard::logging::Log("400::" + std::string(e.what()) +
+                                        " request_id=" + std::to_string(info.id),
+                                    " [ANALYTICS] ");
     return jsonify_error({499, std::string(e.what())}, info, request);
   }
 }

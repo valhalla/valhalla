@@ -19,3 +19,7 @@
 *.bat text eol=crlf
 *.cmd text eol=crlf
 *.ps1 text eol=crlf
+
+# Declare changelog to be union merged, as that's tyically
+# how you want to deal with conflicts in a changelog
+/CHANGELOG.md merge=union
