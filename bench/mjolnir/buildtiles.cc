@@ -25,10 +25,7 @@ int main(int argc, char** argv) {
     }
   };
 
-  const std::string kProtobufs[] = {
-      "andorra.osm.pbf", "london.osm.pbf", "monaco.osm.pbf",    "moscow.osm.pbf",
-      "munchen.osm.pbf", "porto.osm.pbf",  "stockholm.osm.pbf", "sydney.osm.pbf",
-  };
+  const std::string kProtobufs[] = {"stockholm.osm.pbf"};
   const BuildStage kStages[] = {BuildStage::kParseWays, BuildStage::kParseRelations,
                                 BuildStage::kParseNodes, BuildStage::kBuild, BuildStage::kEnhance};
   for (const BuildStage stage : kStages) {
