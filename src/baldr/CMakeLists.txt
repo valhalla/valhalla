@@ -33,8 +33,12 @@ configure_file(${VALHALLA_SOURCE_DIR}/valhalla/baldr/traffictile.h
 file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/traffictile.h.junk)
 
 file(SHA1 ${VALHALLA_SOURCE_DIR}/valhalla/baldr/traffictile.h traffic_tile_version_full)
-string(SUBSTRING ${traffic_tile_version_full} 0 4 traffic_tile_version_short)
-file(WRITE ${GENERATED_VERSION_HEADER} "const uint32_t TRAFFIC_TILE_VERSION = 0x${traffic_tile_version_short};")
+string(SUBSTRING ${traffic_tile_version_full} 0 8 traffic_tile_version_short)
+file(WRITE ${GENERATED_VERSION_HEADER} "#ifndef VALHALLA_TRAFFIC_TILE_VERSION
+#define VALHALLA_TRAFFIC_TILE_VERSION
+const uint32_t TRAFFIC_TILE_VERSION = 0x${traffic_tile_version_short};
+#endif
+")
 
 set(includes
     ${VALHALLA_SOURCE_DIR}
