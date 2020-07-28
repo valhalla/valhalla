@@ -247,7 +247,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
 
     // thor project 4xx
     {400, R"({"code":"InvalidService","message":"Service name is invalid."})"},
-    {401, R"({"code":"InvalidUrl","message":"URL string is invalid."})"},
+    {401, R"({"code":"InvalidUrl","message":"Failed to serialize route."})"},
 
     {420,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
@@ -658,6 +658,11 @@ void from_json(rapidjson::Document& doc, Options& options) {
       // Throw an error if shape format is invalid
       throw valhalla_exception_t{164};
     }
+  }
+
+  auto linear_references = rapidjson::get_optional<bool>(doc, "/linear_references");
+  if (linear_references) {
+    options.set_linear_references(*linear_references);
   }
 
   // parse map matching location input and encoded_polyline for height actions

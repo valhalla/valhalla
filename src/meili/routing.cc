@@ -163,11 +163,11 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
                           const Label& pred_edgelabel,
                           const baldr::GraphTile* tile) {
   // TODO We may want to optionally have map matching take time restrictions into account here
-  bool i_dont_care_about_time_restrictions_here = false;
+  int i_dont_care_about_restriction_idx_here = -1;
   return (!pred_edgelabel.edgeid().Is_Valid() && costing->GetEdgeFilter()(edge) != 0.f) ||
          edgeid == pred_edgelabel.edgeid() ||
          costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0,
-                          i_dont_care_about_time_restrictions_here);
+                          i_dont_care_about_restriction_idx_here);
 }
 
 /**
@@ -347,7 +347,7 @@ find_shortest_path(baldr::GraphReader& reader,
                    const std::vector<baldr::PathLocation>& destinations,
                    uint16_t origin_idx,
                    labelset_ptr_t labelset,
-                   const midgard::DistanceApproximator& approximator,
+                   const midgard::DistanceApproximator<midgard::PointLL>& approximator,
                    const float search_radius,
                    sif::cost_ptr_t costing,
                    const Label* edgelabel,

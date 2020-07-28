@@ -21,7 +21,7 @@
     "arrive_verbal": {
       "phrases": {
         "0": "<TIME>に到着します。",
-        "1": "<TIME> には<TRANSIT_STOP>に到着します。"
+        "1": "<TIME>には<TRANSIT_STOP>に到着します。"
       },
       "example_phrases": {
         "0": [
@@ -35,9 +35,9 @@
     "bear": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION>方向です。",
-        "1": "<RELATIVE_DIRECTION> 方向です。その先<STREET_NAMES>です。",
-        "2": "<RELATIVE_DIRECTION>方向、 <BEGIN_STREET_NAMES>です。 その先<STREET_NAMES>です。",
-        "3": "<RELATIVE_DIRECTION> 方向です。その先 <STREET_NAMES>です。",
+        "1": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>です。",
+        "2": "<RELATIVE_DIRECTION>方向、<BEGIN_STREET_NAMES>です。その先<STREET_NAMES>です。",
+        "3": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>です。",
         "4": "<JUNCTION_NAME>を<RELATIVE_DIRECTION>方向です。",
         "5": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面です。"
       },
@@ -74,9 +74,9 @@
     "bear_verbal": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION>方向です。",
-        "1": "<RELATIVE_DIRECTION> 方向です。その先<STREET_NAMES>です。",
-        "2": "<RELATIVE_DIRECTION> 方向です。その先<BEGIN_STREET_NAMES>です。",
-        "3": "<RELATIVE_DIRECTION> 方向です。その先 <STREET_NAMES>です。",
+        "1": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>です。",
+        "2": "<RELATIVE_DIRECTION>方向です。その先<BEGIN_STREET_NAMES>です。",
+        "3": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>です。",
         "4": "<JUNCTION_NAME>を<RELATIVE_DIRECTION>方向です。",
         "5": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面です。"
       },
@@ -162,11 +162,11 @@
         "0": "直進です。",
         "1": "<LENGTH>直進です。",
         "2": "<STREET_NAMES>を直進です。",
-        "3": " <STREET_NAMES> を <LENGTH>直進です。",
+        "3": "<STREET_NAMES>を<LENGTH>直進です。",
         "4": "<JUNCTION_NAME>を直進です。",
-        "5": "<JUNCTION_NAME> を<LENGTH>直進です。",
+        "5": "<JUNCTION_NAME>を<LENGTH>直進です。",
         "6": "<TOWARD_SIGN>方面、直進です。",
-        "7": "<TOWARD_SIGN> 方面、 <LENGTH>直進です。"
+        "7": "<TOWARD_SIGN>方面、<LENGTH>直進です。"
       },
       "empty_street_name_labels": [
         "歩道",
@@ -174,18 +174,18 @@
         "自転車道"
       ],
       "metric_lengths": [
-        "<KILOMETERS> キロメートル",
+        "<KILOMETERS>キロメートル",
         "1 キロメートル",
-        "<METERS> メートル",
-        " 10メートル以内"
+        "<METERS>メートル",
+        "10メートル以内"
       ],
       "us_customary_lengths": [
-        "<MILES> マイル",
+        "<MILES>マイル",
         "1 マイル",
         "0.5 マイル",
         "0.25 マイル",
-        "<FEET> フィート",
-        "10 フィート以内"
+        "<FEET>フィート",
+        "10フィート以内"
       ],
       "example_phrases": {
         "0": [
@@ -258,7 +258,7 @@
     "depart_verbal": {
       "phrases": {
         "0": "<TIME>に出発です。",
-        "1": "<TIME> に<TRANSIT_STOP>を出発です。"
+        "1": "<TIME>に<TRANSIT_STOP>を出発です。"
       },
       "example_phrases": {
         "0": [
@@ -272,9 +272,9 @@
     "destination": {
       "phrases": {
         "0": "目的地に到着しました。",
-        "1": " <DESTINATION>に到着しました。",
+        "1": "<DESTINATION>に到着しました。",
         "2": "目的地は<RELATIVE_DIRECTION>側です。",
-        "3": "<DESTINATION> は<RELATIVE_DIRECTION>側です。"
+        "3": "<DESTINATION>は<RELATIVE_DIRECTION>側です。"
       },
       "relative_directions": [
         "左",
@@ -299,9 +299,9 @@
     "destination_verbal": {
       "phrases": {
         "0": "目的地に到着しました。",
-        "1": " <DESTINATION>に到着しました。",
+        "1": "<DESTINATION>に到着しました。",
         "2": "目的地は<RELATIVE_DIRECTION>側です。",
-        "3": "<DESTINATION> は<RELATIVE_DIRECTION>側です。"
+        "3": "<DESTINATION>は<RELATIVE_DIRECTION>側です。"
       },
       "relative_directions": [
         "左",
@@ -328,7 +328,7 @@
         "0": "まもなく目的地に到着します。",
         "1": "まもなく<DESTINATION>に到着します。",
         "2": "目的地は<RELATIVE_DIRECTION>側です。",
-        "3": "<DESTINATION> は<RELATIVE_DIRECTION>側です。"
+        "3": "<DESTINATION>は<RELATIVE_DIRECTION>側です。"
       },
       "relative_directions": [
         "左",
@@ -353,8 +353,8 @@
     "enter_ferry": {
       "phrases": {
         "0": "フェリーに乗ります。",
-        "1": " <STREET_NAMES>です。",
-        "2": "<STREET_NAMES> です。その先、<FERRY_LABEL>です。",
+        "1": "<STREET_NAMES>です。",
+        "2": "<STREET_NAMES>です。その先、<FERRY_LABEL>です。",
         "3": "<TOWARD_SIGN>方面のフェリーに乗ります。"
       },
       "empty_street_name_labels": [
@@ -382,7 +382,7 @@
       "phrases": {
         "0": "フェリーに乗ります。",
         "1": "<STREET_NAMES>です。",
-        "2": "<STREET_NAMES> です。その先、<FERRY_LABEL>です。",
+        "2": "<STREET_NAMES>です。その先、<FERRY_LABEL>です。",
         "3": "<TOWARD_SIGN>方面のフェリーに乗ります。"
       },
       "empty_street_name_labels": [
@@ -409,33 +409,33 @@
     "enter_roundabout": {
       "phrases": {
         "0": "環状交差点に入ります。",
-        "1": "環状交差点に入り、<ORDINAL_VALUE> を出ます。",
-        "2": "環状交差点に入り、  <ORDINAL_VALUE>を出て <ROUNDABOUT_EXIT_STREET_NAMES>に入ります。",
-        "3": "環状交差点に入り、 <ORDINAL_VALUE> を出て <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>に入ります。その先、 <ROUNDABOUT_EXIT_STREET_NAMES>を進みます。",
-        "4": "環状交差点に入り、<TOWARD_SIGN> 方面に<ORDINAL_VALUE>を出ます。",
-        "5": "環状交差点に入り、 <ROUNDABOUT_EXIT_STREET_NAMES>方面に出ます。",
-        "6": "環状交差点に入り、 <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に出ます。その先、 <ROUNDABOUT_EXIT_STREET_NAMES>を進みます。",
-        "7": "環状交差点に入り、 <TOWARD_SIGN>方面に出ます。",
+        "1": "環状交差点に入り、<ORDINAL_VALUE>出口を出ます。",
+        "2": "環状交差点に入り、<ORDINAL_VALUE>出口を出て<ROUNDABOUT_EXIT_STREET_NAMES>に入ります。",
+        "3": "環状交差点に入り、<ORDINAL_VALUE>出口を出て<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>に入ります。その先、<ROUNDABOUT_EXIT_STREET_NAMES>を進みます。",
+        "4": "環状交差点に入り、<TOWARD_SIGN>方面に<ORDINAL_VALUE>出口を出ます。",
+        "5": "環状交差点に入り、<ROUNDABOUT_EXIT_STREET_NAMES>方面に出ます。",
+        "6": "環状交差点に入り、<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に出ます。その先、<ROUNDABOUT_EXIT_STREET_NAMES>を進みます。",
+        "7": "環状交差点に入り、<TOWARD_SIGN>方面に出ます。",
         "8": "<STREET_NAMES>に入ります。",
-        "9": "<STREET_NAMES> に入り、 <ORDINAL_VALUE> を出ます。",
-        "10": "<STREET_NAMES> に入り、<ROUNDABOUT_EXIT_STREET_NAMES>方面に <ORDINAL_VALUE> を出ます。",
-        "11": " <STREET_NAMES> に入り、<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に <ORDINAL_VALUE> を出ます。その先、<ROUNDABOUT_EXIT_STREET_NAMES>を進みます。",
-        "12": " <STREET_NAMES> に入り、<TOWARD_SIGN>方面に <ORDINAL_VALUE> を出ます。",
-        "13": "<STREET_NAMES> に入り、<ROUNDABOUT_EXIT_STREET_NAMES>方面に出ます。",
-        "14": "<STREET_NAMES> に入り、 <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に出ます。その先 <ROUNDABOUT_EXIT_STREET_NAMES>を進みます。",
-        "15": "<STREET_NAMES> に入り、<TOWARD_SIGN>方面に出ます。"
+        "9": "<STREET_NAMES>に入り、<ORDINAL_VALUE>出口を出ます。",
+        "10": "<STREET_NAMES>に入り、<ROUNDABOUT_EXIT_STREET_NAMES>方面に<ORDINAL_VALUE>出口を出ます。",
+        "11": "<STREET_NAMES>に入り、<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に<ORDINAL_VALUE>出口を出ます。その先、<ROUNDABOUT_EXIT_STREET_NAMES>を進みます。",
+        "12": "<STREET_NAMES>に入り、<TOWARD_SIGN>方面に<ORDINAL_VALUE>出口を出ます。",
+        "13": "<STREET_NAMES>に入り、<ROUNDABOUT_EXIT_STREET_NAMES>方面に出ます。",
+        "14": "<STREET_NAMES>に入り、<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に出ます。その先<ROUNDABOUT_EXIT_STREET_NAMES>を進みます。",
+        "15": "<STREET_NAMES>に入り、<TOWARD_SIGN>方面に出ます。"
       },
       "ordinal_values": [
-        "1 つ目の",
-        "2 つ目の",
-        "3 つ目の",
-        "4 つ目の",
-        "5 つ目の",
-        "6 つ目の",
-        "7 つ目の",
-        "8 つ目の",
-        "9 つ目の",
-        "10 番目の"
+        "1つ目の",
+        "2つ目の",
+        "3つ目の",
+        "4つ目の",
+        "5つ目の",
+        "6つ目の",
+        "7つ目の",
+        "8つ目の",
+        "9つ目の",
+        "10番目の"
       ],
       "empty_street_name_labels": [
         "歩道",
@@ -505,21 +505,21 @@
     "enter_roundabout_verbal": {
       "phrases": {
         "0": "環状交差点に入ります。",
-        "1": "環状交差点に入り、<ORDINAL_VALUE> を出ます。",
-        "2": "環状交差点に入り、  <ORDINAL_VALUE>を出て <ROUNDABOUT_EXIT_STREET_NAMES>に入ります。",
-        "3": "環状交差点に入り、<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に <ORDINAL_VALUE> を出ます。",
-        "4": "環状交差点に入り、<TOWARD_SIGN> 方面に<ORDINAL_VALUE>を出ます。",
-        "5": "環状交差点に入り、 <ROUNDABOUT_EXIT_STREET_NAMES>方面に出ます。",
-        "6": "環状交差点に入り、 <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に出ます。",
-        "7": "環状交差点に入り、 <TOWARD_SIGN>方面に出ます。",
+        "1": "環状交差点に入り、<ORDINAL_VALUE>出口を出ます。",
+        "2": "環状交差点に入り、<ORDINAL_VALUE>出口を出て<ROUNDABOUT_EXIT_STREET_NAMES>に入ります。",
+        "3": "環状交差点に入り、<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に<ORDINAL_VALUE>出口を出ます。",
+        "4": "環状交差点に入り、<TOWARD_SIGN>方面に<ORDINAL_VALUE>出口を出ます。",
+        "5": "環状交差点に入り、<ROUNDABOUT_EXIT_STREET_NAMES>方面に出ます。",
+        "6": "環状交差点に入り、<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に出ます。",
+        "7": "環状交差点に入り、<TOWARD_SIGN>方面に出ます。",
         "8": "<STREET_NAMES>に入ります。",
-        "9": "<STREET_NAMES> に入り、 <ORDINAL_VALUE> を出ます。",
-        "10": "<STREET_NAMES> に入り、<ROUNDABOUT_EXIT_STREET_NAMES>方面に <ORDINAL_VALUE> を出ます。",
-        "11": "<STREET_NAMES> に入り、<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に <ORDINAL_VALUE> を出ます。",
-        "12": "<STREET_NAMES> に入り、<TOWARD_SIGN>方面に <ORDINAL_VALUE> を出ます。",
-        "13": "<STREET_NAMES> に入り、<ROUNDABOUT_EXIT_STREET_NAMES>方面に出ます。",
-        "14": "<STREET_NAMES>に入り、 <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に出ます。",
-        "15": "<STREET_NAMES> に入り、<TOWARD_SIGN>方面に出ます。"
+        "9": "<STREET_NAMES>に入り、<ORDINAL_VALUE>出口を出ます。",
+        "10": "<STREET_NAMES>に入り、<ROUNDABOUT_EXIT_STREET_NAMES>方面に<ORDINAL_VALUE>出口を出ます。",
+        "11": "<STREET_NAMES>に入り、<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に<ORDINAL_VALUE>出口を出ます。",
+        "12": "<STREET_NAMES>に入り、<TOWARD_SIGN>方面に<ORDINAL_VALUE>出口を出ます。",
+        "13": "<STREET_NAMES>に入り、<ROUNDABOUT_EXIT_STREET_NAMES>方面に出ます。",
+        "14": "<STREET_NAMES>に入り、<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>方面に出ます。",
+        "15": "<STREET_NAMES>に入り、<TOWARD_SIGN>方面に出ます。"
       },
       "ordinal_values": [
         "1 つ目の",
@@ -600,16 +600,16 @@
     },
     "exit": {
       "phrases": {
-        "0": " <RELATIVE_DIRECTION>方向、出口です。",
-        "1": "<RELATIVE_DIRECTION>方向、 <NUMBER_SIGN> 番出口です。",
-        "2": "<RELATIVE_DIRECTION>方向、 <BRANCH_SIGN>出口です。",
+        "0": "<RELATIVE_DIRECTION>方向、出口です。",
+        "1": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。",
+        "2": "<RELATIVE_DIRECTION>方向、<BRANCH_SIGN>出口です。",
         "3": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<BRANCH_SIGN>です。",
-        "4": "<RELATIVE_DIRECTION>方向、 <TOWARD_SIGN>方面出口です。",
+        "4": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面出口です。",
         "5": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面<NUMBER_SIGN>番出口です。",
         "6": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面<BRANCH_SIGN>出口です。",
         "7": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<BRANCH_SIGN>、<TOWARD_SIGN>方面です。",
-        "8": "<RELATIVE_DIRECTION>方向、<NAME_SIGN> 出口です。",
-        "10": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向、 <NAME_SIGN> 出口です。",
+        "8": "<RELATIVE_DIRECTION>方向、<NAME_SIGN>出口です。",
+        "10": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向、<NAME_SIGN>出口です。",
         "12": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面<NAME_SIGN>出口です。",
         "14": "<RELATIVE_DIRECTION>方向、<NAME_SIGN>出口です。その先<BRANCH_SIGN>、<TOWARD_SIGN>方面です。",
         "15": "出口です。",
@@ -708,8 +708,8 @@
     "exit_roundabout": {
       "phrases": {
         "0": "環状交差点を出ます。",
-        "1": " <STREET_NAMES>方面に環状交差点を出ます。",
-        "2": "<BEGIN_STREET_NAMES>方面に環状交差点を出ます。その先、 <STREET_NAMES>を進みます。",
+        "1": "<STREET_NAMES>方面に環状交差点を出ます。",
+        "2": "<BEGIN_STREET_NAMES>方面に環状交差点を出ます。その先、<STREET_NAMES>を進みます。",
         "3": "<TOWARD_SIGN>方面に環状交差点を出ます。"
       },
       "empty_street_name_labels": [
@@ -737,7 +737,7 @@
         "0": "環状交差点を出ます。",
         "1": "<STREET_NAMES>方面に環状交差点を出ます。",
         "2": "<BEGIN_STREET_NAMES>方面に環状交差点を出ます。",
-        "3": " <TOWARD_SIGN>方面に環状交差点を出ます。"
+        "3": "<TOWARD_SIGN>方面に環状交差点を出ます。"
       },
       "empty_street_name_labels": [
         "歩道",
@@ -761,16 +761,16 @@
     },
     "exit_verbal": {
       "phrases": {
-        "0": " <RELATIVE_DIRECTION>方向、出口です。",
-        "1": "<RELATIVE_DIRECTION>方向、 <NUMBER_SIGN> 番出口です。",
-        "2": "<RELATIVE_DIRECTION>方向、 <BRANCH_SIGN>出口です。",
+        "0": "<RELATIVE_DIRECTION>方向、出口です。",
+        "1": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。",
+        "2": "<RELATIVE_DIRECTION>方向、<BRANCH_SIGN>出口です。",
         "3": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<BRANCH_SIGN>です。",
-        "4": "<RELATIVE_DIRECTION>方向、 <TOWARD_SIGN>方面出口です。",
+        "4": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面出口です。",
         "5": "<RELATIVE_DIRECTION>方向<TOWARD_SIGN>方面、<NUMBER_SIGN>番出口です。",
         "6": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面<BRANCH_SIGN>出口です。",
         "7": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<BRANCH_SIGN>、<TOWARD_SIGN>方面です。",
-        "8": "<RELATIVE_DIRECTION>方向、<NAME_SIGN> 出口です。",
-        "10": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向、 <NAME_SIGN> 出口です。",
+        "8": "<RELATIVE_DIRECTION>方向、<NAME_SIGN>出口です。",
+        "10": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向、<NAME_SIGN>出口です。",
         "12": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面<NAME_SIGN>出口です。",
         "14": "<RELATIVE_DIRECTION>方向、<NAME_SIGN>出口です。その先<BRANCH_SIGN>、<TOWARD_SIGN>方面です。",
         "15": "出口です。",
@@ -878,7 +878,7 @@
     },
     "keep": {
       "phrases": {
-        "0": "分岐を <RELATIVE_DIRECTION>方向です。",
+        "0": "分岐を<RELATIVE_DIRECTION>方向です。",
         "1": "<RELATIVE_DIRECTION>方向です。その先<NUMBER_SIGN>番出口です。",
         "2": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>です。",
         "3": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<STREET_NAMES>です。",
@@ -996,7 +996,7 @@
     },
     "keep_verbal": {
       "phrases": {
-        "0": "分岐を <RELATIVE_DIRECTION>方向です。",
+        "0": "分岐を<RELATIVE_DIRECTION>方向です。",
         "1": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。",
         "2": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>です。",
         "3": "<RELATIVE_DIRECTION>方向、<NUMBER_SIGN>番出口です。その先<STREET_NAMES>です。",
@@ -1048,10 +1048,10 @@
       "phrases": {
         "0": "合流です。",
         "1": "<RELATIVE_DIRECTION>方向に合流です。",
-        "2": "合流です。 <STREET_NAMES>に入ります。",
-        "3": "<RELATIVE_DIRECTION>方向 に合流です。<STREET_NAMES>に入ります。",
+        "2": "合流です。<STREET_NAMES>に入ります。",
+        "3": "<RELATIVE_DIRECTION>方向に合流です。<STREET_NAMES>に入ります。",
         "4": "<TOWARD_SIGN>方面に合流です。",
-        "5": "<RELATIVE_DIRECTION> 方向に合流です。<TOWARD_SIGN>方面に進みます。"
+        "5": "<RELATIVE_DIRECTION>方向に合流です。<TOWARD_SIGN>方面に進みます。"
       },
       "relative_directions": [
         "左",
@@ -1087,10 +1087,10 @@
       "phrases": {
         "0": "合流です。",
         "1": "<RELATIVE_DIRECTION>方向に合流です。",
-        "2": "合流です。 <STREET_NAMES>に入ります。",
-        "3": "<RELATIVE_DIRECTION> に合流です。<STREET_NAMES>に入ります。",
+        "2": "合流です。<STREET_NAMES>に入ります。",
+        "3": "<RELATIVE_DIRECTION>に合流です。<STREET_NAMES>に入ります。",
         "4": "<TOWARD_SIGN>方面に合流です。",
-        "5": " <RELATIVE_DIRECTION>方向に合流です。<TOWARD_SIGN>方面に進みます。"
+        "5": "<RELATIVE_DIRECTION>方向に合流です。<TOWARD_SIGN>方面に進みます。"
       },
       "relative_directions": [
         "左",
@@ -1140,7 +1140,7 @@
     "post_transition_verbal": {
       "phrases": {
         "0": "<LENGTH>直進です。",
-        "1": " <STREET_NAMES> を <LENGTH>直進です。"
+        "1": "<STREET_NAMES>を<LENGTH>直進です。"
       },
       "empty_street_name_labels": [
         "歩道",
@@ -1148,18 +1148,18 @@
         "自転車道"
       ],
       "metric_lengths": [
-        "<KILOMETERS> キロメートル",
-        "1 キロメートル",
-        "<METERS> メートル",
-        " 10メートル以内"
+        "<KILOMETERS>キロメートル",
+        "1キロメートル",
+        "<METERS>メートル",
+        "10メートル以内"
       ],
       "us_customary_lengths": [
-        "<MILES> マイル",
-        "1 マイル",
-        "0.5 マイル",
-        "0.25 マイル",
-        "<FEET> フィート",
-        "10 フィート以内"
+        "<MILES>マイル",
+        "1マイル",
+        "0.5マイル",
+        "0.25マイル",
+        "<FEET>フィート",
+        "10フィート以内"
       ],
       "example_phrases": {
         "0": [
@@ -1175,20 +1175,20 @@
     "ramp": {
       "phrases": {
         "0": "分岐を<RELATIVE_DIRECTION>方向です。",
-        "1": "<BRANCH_SIGN> を <RELATIVE_DIRECTION>方向です。",
-        "2": "分岐を <RELATIVE_DIRECTION> 方向です。その先<TOWARD_SIGN>方面です。",
+        "1": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向です。",
+        "2": "分岐を<RELATIVE_DIRECTION>方向です。その先<TOWARD_SIGN>方面です。",
         "3": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向です。その先<TOWARD_SIGN>方面です。",
-        "4": "<NAME_SIGN>を  <RELATIVE_DIRECTION>方向です。",
+        "4": "<NAME_SIGN>を<RELATIVE_DIRECTION>方向です。",
         "5": "分岐を<RELATIVE_DIRECTION>方向です。",
         "6": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向です。",
         "7": "分岐を<RELATIVE_DIRECTION>方向です。その先<TOWARD_SIGN>方面です。",
         "8": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向です。その先<TOWARD_SIGN>方面です。",
         "9": "<NAME_SIGN>を<RELATIVE_DIRECTION>方向です。",
         "10": "分岐です。",
-        "11": "分岐を<BRANCH_SIGN> 方面です。",
-        "12": "分岐を <TOWARD_SIGN>方面です。",
-        "13": "<BRANCH_SIGN> を <TOWARD_SIGN>方面です。",
-        "14": "<NAME_SIGN> 方面です。"
+        "11": "分岐を<BRANCH_SIGN>方面です。",
+        "12": "分岐を<TOWARD_SIGN>方面です。",
+        "13": "<BRANCH_SIGN>を<TOWARD_SIGN>方面です。",
+        "14": "<NAME_SIGN>方面です。"
       },
       "relative_directions": [
         "左",
@@ -1299,20 +1299,20 @@
     "ramp_verbal": {
       "phrases": {
         "0": "分岐を<RELATIVE_DIRECTION>方向です。",
-        "1": "<BRANCH_SIGN> を <RELATIVE_DIRECTION>方向です。",
-        "2": "分岐を <RELATIVE_DIRECTION> 方向です。その先<TOWARD_SIGN>方面です。",
+        "1": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向です。",
+        "2": "分岐を<RELATIVE_DIRECTION>方向です。その先<TOWARD_SIGN>方面です。",
         "3": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向です。その先<TOWARD_SIGN>方面です。",
-        "4": "<NAME_SIGN>を  <RELATIVE_DIRECTION>方向です。",
+        "4": "<NAME_SIGN>を<RELATIVE_DIRECTION>方向です。",
         "5": "分岐を<RELATIVE_DIRECTION>方向です。",
         "6": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向です。",
         "7": "分岐を<RELATIVE_DIRECTION>方向です。その先<TOWARD_SIGN>方面です。",
         "8": "<BRANCH_SIGN>を<RELATIVE_DIRECTION>方向です。その先<TOWARD_SIGN>方面です。",
         "9": "<NAME_SIGN>を<RELATIVE_DIRECTION>方向です。",
         "10": "分岐です。",
-        "11": "分岐を<BRANCH_SIGN> 方面です。",
-        "12": "分岐を <TOWARD_SIGN>方面です。",
-        "13": "<BRANCH_SIGN> を <TOWARD_SIGN>方面です。",
-        "14": "分岐を<NAME_SIGN> 方面です。"
+        "11": "分岐を<BRANCH_SIGN>方面です。",
+        "12": "分岐を<TOWARD_SIGN>方面です。",
+        "13": "<BRANCH_SIGN>を<TOWARD_SIGN>方面です。",
+        "14": "分岐を<NAME_SIGN>方面です。"
       },
       "relative_directions": [
         "左",
@@ -1371,10 +1371,10 @@
     "sharp": {
       "phrases": {
         "0": "斜め<RELATIVE_DIRECTION>手前方向です。",
-        "1": "斜め<RELATIVE_DIRECTION> 手前方向です。その先<STREET_NAMES>です。",
-        "2": "斜め <RELATIVE_DIRECTION>手前方向、<BEGIN_STREET_NAMES>です。その先、<STREET_NAMES>です。",
-        "3": "斜め <RELATIVE_DIRECTION> 手前方向です。その先<STREET_NAMES>です。",
-        "4": "<JUNCTION_NAME>を斜め <RELATIVE_DIRECTION> 手前方向です。",
+        "1": "斜め<RELATIVE_DIRECTION>手前方向です。その先<STREET_NAMES>です。",
+        "2": "斜め<RELATIVE_DIRECTION>手前方向、<BEGIN_STREET_NAMES>です。その先、<STREET_NAMES>です。",
+        "3": "斜め<RELATIVE_DIRECTION>手前方向です。その先<STREET_NAMES>です。",
+        "4": "<JUNCTION_NAME>を斜め<RELATIVE_DIRECTION>手前方向です。",
         "5": "斜め<RELATIVE_DIRECTION>手前方向、<TOWARD_SIGN>方面です。"
       },
       "empty_street_name_labels": [
@@ -1410,10 +1410,10 @@
     "sharp_verbal": {
       "phrases": {
         "0": "斜め<RELATIVE_DIRECTION>手前方向です。",
-        "1": "斜め<RELATIVE_DIRECTION> 手前方向です。その先<STREET_NAMES>です。",
-        "2": "斜め<RELATIVE_DIRECTION> 手前方向です。その先<BEGIN_STREET_NAMES>です。",
-        "3": "斜め <RELATIVE_DIRECTION> 手前方向です。その先<STREET_NAMES>です。",
-        "4": "<JUNCTION_NAME>を斜め <RELATIVE_DIRECTION> 手前方向です。",
+        "1": "斜め<RELATIVE_DIRECTION>手前方向です。その先<STREET_NAMES>です。",
+        "2": "斜め<RELATIVE_DIRECTION>手前方向です。その先<BEGIN_STREET_NAMES>です。",
+        "3": "斜め<RELATIVE_DIRECTION>手前方向です。その先<STREET_NAMES>です。",
+        "4": "<JUNCTION_NAME>を斜め<RELATIVE_DIRECTION>手前方向です。",
         "5": "斜め<RELATIVE_DIRECTION>手前方向、<TOWARD_SIGN>方面です。"
       },
       "empty_street_name_labels": [
@@ -1448,18 +1448,18 @@
     },
     "start": {
       "phrases": {
-        "0": " <CARDINAL_DIRECTION>方向です。",
-        "1": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
-        "2": "<BEGIN_STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。その先、<STREET_NAMES>です。",
-        "4": " <CARDINAL_DIRECTION>方向です。",
-        "5": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
-        "6": "<BEGIN_STREET_NAMES>を<CARDINAL_DIRECTION> 方向です。その先、<STREET_NAMES>です。",
-        "8": " <CARDINAL_DIRECTION>方向です。",
-        "9": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
-        "10": "<BEGIN_STREET_NAMES>を <CARDINAL_DIRECTION>方向です。その先、<STREET_NAMES>です。",
+        "0": "<CARDINAL_DIRECTION>方向です。",
+        "1": "<STREET_NAMES>を<CARDINAL_DIRECTION>方向です。",
+        "2": "<BEGIN_STREET_NAMES>を<CARDINAL_DIRECTION>方向です。その先、<STREET_NAMES>です。",
+        "4": "<CARDINAL_DIRECTION>方向です。",
+        "5": "<STREET_NAMES>を<CARDINAL_DIRECTION>方向です。",
+        "6": "<BEGIN_STREET_NAMES>を<CARDINAL_DIRECTION>方向です。その先、<STREET_NAMES>です。",
+        "8": "<CARDINAL_DIRECTION>方向です。",
+        "9": "<STREET_NAMES>を<CARDINAL_DIRECTION>方向です。",
+        "10": "<BEGIN_STREET_NAMES>を<CARDINAL_DIRECTION>方向です。その先、<STREET_NAMES>です。",
         "16": "<CARDINAL_DIRECTION>方向です。",
-        "17": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
-        "18": "<BEGIN_STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。その先、<STREET_NAMES>です。"
+        "17": "<STREET_NAMES>を<CARDINAL_DIRECTION>方向です。",
+        "18": "<BEGIN_STREET_NAMES>を<CARDINAL_DIRECTION>方向です。その先、<STREET_NAMES>です。"
       },
       "cardinal_directions": [
         "北",
@@ -1527,26 +1527,26 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": " <CARDINAL_DIRECTION>方向です。",
-        "1": "<CARDINAL_DIRECTION>方向に <LENGTH>です。",
-        "2": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
-        "3": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向に <LENGTH>です。",
-        "4": "<BEGIN_STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
-        "5": " <CARDINAL_DIRECTION>方向です。",
-        "6": "<CARDINAL_DIRECTION>方向に <LENGTH>です。",
-        "7": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
-        "8": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向に <LENGTH>です。",
-        "9": "<BEGIN_STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
-        "10": " <CARDINAL_DIRECTION>方向です。",
-        "11": "<CARDINAL_DIRECTION> 方向に<LENGTH>です。",
-        "12": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
-        "13": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向に <LENGTH>です。",
-        "14": "<BEGIN_STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
+        "0": "<CARDINAL_DIRECTION>方向です。",
+        "1": "<CARDINAL_DIRECTION>方向に<LENGTH>です。",
+        "2": "<STREET_NAMES>を<CARDINAL_DIRECTION>方向です。",
+        "3": "<STREET_NAMES>を<CARDINAL_DIRECTION>方向に<LENGTH>です。",
+        "4": "<BEGIN_STREET_NAMES>を<CARDINAL_DIRECTION>方向です。",
+        "5": "<CARDINAL_DIRECTION>方向です。",
+        "6": "<CARDINAL_DIRECTION>方向に<LENGTH>です。",
+        "7": "<STREET_NAMES>を<CARDINAL_DIRECTION>方向です。",
+        "8": "<STREET_NAMES>を<CARDINAL_DIRECTION>方向に<LENGTH>です。",
+        "9": "<BEGIN_STREET_NAMES>を<CARDINAL_DIRECTION>方向です。",
+        "10": "<CARDINAL_DIRECTION>方向です。",
+        "11": "<CARDINAL_DIRECTION>方向に<LENGTH>です。",
+        "12": "<STREET_NAMES>を<CARDINAL_DIRECTION>方向です。",
+        "13": "<STREET_NAMES>を<CARDINAL_DIRECTION>方向に<LENGTH>です。",
+        "14": "<BEGIN_STREET_NAMES>を<CARDINAL_DIRECTION>方向です。",
         "15": "<CARDINAL_DIRECTION>方向です。",
-        "16": "<CARDINAL_DIRECTION> 方向に <LENGTH>です。",
-        "17": "<STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。",
-        "18": "<STREET_NAMES>を <CARDINAL_DIRECTION>方向に <LENGTH>です。",
-        "19": "<BEGIN_STREET_NAMES>を <CARDINAL_DIRECTION> 方向です。"
+        "16": "<CARDINAL_DIRECTION>方向に<LENGTH>です。",
+        "17": "<STREET_NAMES>を<CARDINAL_DIRECTION>方向です。",
+        "18": "<STREET_NAMES>を<CARDINAL_DIRECTION>方向に<LENGTH>です。",
+        "19": "<BEGIN_STREET_NAMES>を<CARDINAL_DIRECTION>方向です。"
       },
       "cardinal_directions": [
         "北",
@@ -1564,18 +1564,18 @@
         "自転車道"
       ],
       "metric_lengths": [
-        "<KILOMETERS> キロメートル",
-        "1 キロメートル",
-        "<METERS> メートル",
-        " 10メートル以内"
+        "<KILOMETERS>キロメートル",
+        "1キロメートル",
+        "<METERS>メートル",
+        "10メートル以内"
       ],
       "us_customary_lengths": [
-        "<MILES> マイル",
-        "1 マイル",
-        "0.5 マイル",
-        "0.25 マイル",
-        "<FEET> フィート",
-        "10 フィート以内"
+        "<MILES>マイル",
+        "1マイル",
+        "0.5マイル",
+        "0.25マイル",
+        "<FEET>フィート",
+        "10フィート以内"
       ],
       "example_phrases": {
         "0": [
@@ -1651,7 +1651,7 @@
     "transit": {
       "phrases": {
         "0": "<TRANSIT_NAME>に乗ります。(<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>)",
-        "1": "<TRANSIT_HEADSIGN>方面に<TRANSIT_NAME>に乗ります。 (<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>)"
+        "1": "<TRANSIT_HEADSIGN>方面に<TRANSIT_NAME>に乗ります。(<TRANSIT_STOP_COUNT><TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
         "トラム",
@@ -1926,10 +1926,10 @@
     "turn": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION>方向です。",
-        "1": "<RELATIVE_DIRECTION> 方向です。その先<STREET_NAMES>です。",
+        "1": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>です。",
         "2": "<RELATIVE_DIRECTION>方向、<BEGIN_STREET_NAMES>です。その先、<STREET_NAMES>です。",
-        "3": "<RELATIVE_DIRECTION> 方向です。その先<STREET_NAMES>です。",
-        "4": "<JUNCTION_NAME>を <RELATIVE_DIRECTION> 方向です。",
+        "3": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>です。",
+        "4": "<JUNCTION_NAME>を<RELATIVE_DIRECTION>方向です。",
         "5": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面です。"
       },
       "empty_street_name_labels": [
@@ -1965,10 +1965,10 @@
     "turn_verbal": {
       "phrases": {
         "0": "<RELATIVE_DIRECTION>方向です。",
-        "1": "<RELATIVE_DIRECTION> 方向です。その先<STREET_NAMES>です。",
-        "2": "<RELATIVE_DIRECTION> 方向です。その先 <BEGIN_STREET_NAMES>です。",
-        "3": "<RELATIVE_DIRECTION> 方向です。その先<STREET_NAMES>です。",
-        "4": "<JUNCTION_NAME>を <RELATIVE_DIRECTION> 方向です。",
+        "1": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>です。",
+        "2": "<RELATIVE_DIRECTION>方向です。その先<BEGIN_STREET_NAMES>です。",
+        "3": "<RELATIVE_DIRECTION>方向です。その先<STREET_NAMES>です。",
+        "4": "<JUNCTION_NAME>を<RELATIVE_DIRECTION>方向です。",
         "5": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面です。"
       },
       "empty_street_name_labels": [
@@ -2003,14 +2003,14 @@
     },
     "uturn": {
       "phrases": {
-        "0": "<RELATIVE_DIRECTION> 方向、Uターンです。",
-        "1": "<RELATIVE_DIRECTION> 方向、Uターンです。その先<STREET_NAMES>です。",
+        "0": "<RELATIVE_DIRECTION>方向、Uターンです。",
+        "1": "<RELATIVE_DIRECTION>方向、Uターンです。その先<STREET_NAMES>です。",
         "2": "<RELATIVE_DIRECTION>方向、Uターンです。その先<STREET_NAMES>です。",
-        "3": "<CROSS_STREET_NAMES>を <RELATIVE_DIRECTION> 方向、Uターンです。",
-        "4": "<CROSS_STREET_NAMES>を <RELATIVE_DIRECTION>方向、Uターンです。その先 <STREET_NAMES>です。",
-        "5": "<CROSS_STREET_NAMES>を<RELATIVE_DIRECTION> 方向、Uターンです。その先<STREET_NAMES>です。",
-        "6": "<JUNCTION_NAME>を<RELATIVE_DIRECTION> 方向、Uターンです。",
-        "7": "<RELATIVE_DIRECTION> 方向、<TOWARD_SIGN>方面にUターンです。"
+        "3": "<CROSS_STREET_NAMES>を<RELATIVE_DIRECTION>方向、Uターンです。",
+        "4": "<CROSS_STREET_NAMES>を<RELATIVE_DIRECTION>方向、Uターンです。その先<STREET_NAMES>です。",
+        "5": "<CROSS_STREET_NAMES>を<RELATIVE_DIRECTION>方向、Uターンです。その先<STREET_NAMES>です。",
+        "6": "<JUNCTION_NAME>を<RELATIVE_DIRECTION>方向、Uターンです。",
+        "7": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面にUターンです。"
       },
       "empty_street_name_labels": [
         "歩道",
@@ -2050,14 +2050,14 @@
     },
     "uturn_verbal": {
       "phrases": {
-        "0": "<RELATIVE_DIRECTION> 方向、Uターンです。",
-        "1": " <RELATIVE_DIRECTION> 方向、Uターンです。その先<STREET_NAMES>です。",
-        "2": " <RELATIVE_DIRECTION>方向、Uターンです。その先<STREET_NAMES>です。",
-        "3": "<CROSS_STREET_NAMES>を <RELATIVE_DIRECTION> 方向、Uターンです。",
-        "4": "<CROSS_STREET_NAMES>を <RELATIVE_DIRECTION>方向、Uターンです。その先 <STREET_NAMES>です。",
-        "5": "<CROSS_STREET_NAMES>を<RELATIVE_DIRECTION> 方向、Uターンです。その先<STREET_NAMES>です。",
-        "6": "<JUNCTION_NAME>を<RELATIVE_DIRECTION> 方向、Uターンです。",
-        "7": "<RELATIVE_DIRECTION> 方向、<TOWARD_SIGN>方面にUターンです。"
+        "0": "<RELATIVE_DIRECTION>方向、Uターンです。",
+        "1": "<RELATIVE_DIRECTION>方向、Uターンです。その先<STREET_NAMES>です。",
+        "2": "<RELATIVE_DIRECTION>方向、Uターンです。その先<STREET_NAMES>です。",
+        "3": "<CROSS_STREET_NAMES>を<RELATIVE_DIRECTION>方向、Uターンです。",
+        "4": "<CROSS_STREET_NAMES>を<RELATIVE_DIRECTION>方向、Uターンです。その先<STREET_NAMES>です。",
+        "5": "<CROSS_STREET_NAMES>を<RELATIVE_DIRECTION>方向、Uターンです。その先<STREET_NAMES>です。",
+        "6": "<JUNCTION_NAME>を<RELATIVE_DIRECTION>方向、Uターンです。",
+        "7": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面にUターンです。"
       },
       "empty_street_name_labels": [
         "歩道",
@@ -2097,22 +2097,22 @@
     },
     "verbal_multi_cue": {
       "phrases": {
-        "0": "<CURRENT_VERBAL_CUE> その先 <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> 。その先<LENGTH> で <NEXT_VERBAL_CUE>"
+        "0": "<CURRENT_VERBAL_CUE>。その先<NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE>。その先<LENGTH>で<NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> キロメートル",
-        "1 キロメートル",
-        "<METERS> メートル",
-        " 10メートル以内"
+        "<KILOMETERS>キロメートル",
+        "1キロメートル",
+        "<METERS>メートル",
+        "10メートル以内"
       ],
       "us_customary_lengths": [
-        "<MILES> マイル",
-        "1 マイル",
-        "0.5 マイル",
-        "0.25 マイル",
-        "<FEET> フィート",
-        "10 フィート以内"
+        "<MILES>マイル",
+        "1マイル",
+        "0.5マイル",
+        "0.25マイル",
+        "<FEET>フィート",
+        "10フィート以内"
       ],
       "example_phrases": {
         "0": [
@@ -2125,21 +2125,21 @@
     },
     "approach_verbal_alert": {
       "phrases": {
-        "0": "<LENGTH>先、 <CURRENT_VERBAL_CUE>"
+        "0": "<LENGTH>先、<CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> キロメートル",
-        "1 キロメートル",
-        "<METERS> メートル",
-        " 10メートル以内"
+        "<KILOMETERS>キロメートル",
+        "1キロメートル",
+        "<METERS>メートル",
+        "10メートル以内"
       ],
       "us_customary_lengths": [
-        "<MILES> マイル",
-        "1 マイル",
-        "0.5 マイル",
-        "0.25 マイル",
-        "<FEET> フィート",
-        "10 フィート以内"
+        "<MILES>マイル",
+        "1マイル",
+        "0.5マイル",
+        "0.25マイル",
+        "<FEET>フィート",
+        "10フィート以内"
       ],
       "example_phrases": {
         "0": [

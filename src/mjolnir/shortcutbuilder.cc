@@ -97,7 +97,7 @@ bool EdgesMatch(const GraphTile* tile, const DirectedEdge* edge1, const Directed
 GraphId GetOpposingEdge(const GraphId& node,
                         const DirectedEdge* edge,
                         GraphReader& reader,
-                        const uint32_t wayid) {
+                        const uint64_t wayid) {
   // Get the tile at the end node
   const GraphTile* tile = reader.GetGraphTile(edge->endnode());
   const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
@@ -246,9 +246,9 @@ bool CanContract(GraphReader& reader,
   // Get the directed edges - these are the outbound edges from the node.
   // Get the opposing directed edges - these are the inbound edges to the node.
   const DirectedEdge* edge1 = tile->directededge(edges[match.first]);
-  uint32_t wayid1 = tile->edgeinfo(edge1->edgeinfo_offset()).wayid();
+  uint64_t wayid1 = tile->edgeinfo(edge1->edgeinfo_offset()).wayid();
   const DirectedEdge* edge2 = tile->directededge(edges[match.second]);
-  uint32_t wayid2 = tile->edgeinfo(edge2->edgeinfo_offset()).wayid();
+  uint64_t wayid2 = tile->edgeinfo(edge2->edgeinfo_offset()).wayid();
   GraphId oppedge1 = GetOpposingEdge(node, edge1, reader, wayid1);
   GraphId oppedge2 = GetOpposingEdge(node, edge2, reader, wayid2);
   const DirectedEdge* oppdiredge1 = reader.GetGraphTile(oppedge1)->directededge(oppedge1);

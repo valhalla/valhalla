@@ -18,10 +18,11 @@ TEST(Traffic, TileConstruction) {
   TestTile testdata = {};
 
   testdata.header.directed_edge_count = 3;
+  testdata.header.traffic_tile_version = TRAFFIC_TILE_VERSION;
   testdata.speed3.overall_speed = 98 >> 1;
   testdata.speed3.speed1 = 98 >> 1;
-  testdata.speed3.speed2 = UNKNOWN_TRAFFIC_SPEED_VALUE;
-  testdata.speed3.speed3 = UNKNOWN_TRAFFIC_SPEED_VALUE;
+  testdata.speed3.speed2 = UNKNOWN_TRAFFIC_SPEED_RAW;
+  testdata.speed3.speed3 = UNKNOWN_TRAFFIC_SPEED_RAW;
   testdata.speed3.breakpoint1 = 255;
 
   TrafficTile tile(reinterpret_cast<char*>(&testdata));
@@ -31,7 +32,14 @@ TEST(Traffic, TileConstruction) {
   EXPECT_FALSE(speed.closed());
   EXPECT_EQ(speed.get_overall_speed(), 98);
   EXPECT_EQ(speed.get_speed(0), 98);
-  EXPECT_EQ(speed.get_speed(1), UNKNOWN_TRAFFIC_SPEED_VALUE << 1);
+  EXPECT_EQ(speed.get_speed(1), UNKNOWN_TRAFFIC_SPEED_RAW << 1);
+
+  // Verify the version (Expect this value to change when traffictile.h is updated)
+  EXPECT_EQ(0xab6e, TRAFFIC_TILE_VERSION);
+  // Test with an invalid version
+  testdata.header.traffic_tile_version = 78;
+  auto const volatile& invalid_speed = tile.trafficspeed(2);
+  EXPECT_FALSE(invalid_speed.valid());
 }
 
 TEST(Traffic, NullTileConstruction) {
@@ -68,7 +76,7 @@ TEST(Traffic, SpeedValid) {
   EXPECT_TRUE(speed.closed());
 
   // Test wraparound
-  speed.speed1 = UNKNOWN_TRAFFIC_SPEED_VALUE + 1;
+  speed.speed1 = UNKNOWN_TRAFFIC_SPEED_RAW + 1;
   EXPECT_EQ(speed.speed1, 0);
 }
 

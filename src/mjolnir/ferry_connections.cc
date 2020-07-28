@@ -222,7 +222,7 @@ bool ShortFerry(const uint32_t node_index,
     }
     return shape;
   };
-  uint32_t wayid = 0;
+  uint64_t wayid = 0;
   bool short_edge = false;
   for (const auto& edge : bundle.node_edges) {
     // Check ferry edge. If the end node has a non-ferry edge check

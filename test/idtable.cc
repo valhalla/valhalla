@@ -1,19 +1,16 @@
-#include "mjolnir/idtable.h"
+#include "../src/mjolnir/idtable.h"
+
 #include <cstdint>
 #include <cstdlib>
 #include <unordered_set>
 
-#include "test.h"
+#include <gtest/gtest.h>
 
-namespace {
-
-using namespace std;
 using namespace valhalla::mjolnir;
-
 constexpr uint64_t kTableSize = 40000;
 
-TEST(IdTable, SetGet) {
-  IdTable t(kTableSize);
+TEST(UnorderedIdTable, SetGet) {
+  UnorderedIdTable t(kTableSize);
 
   // set them all and check them all
   for (uint64_t i = 0; i < kTableSize; ++i) {
@@ -27,9 +24,9 @@ TEST(IdTable, SetGet) {
   }
 }
 
-TEST(IdTable, Random) {
+TEST(UnorderedIdTable, Random) {
   // randomly set and then go get some
-  IdTable t(kTableSize);
+  UnorderedIdTable t(kTableSize);
   std::unordered_set<uint64_t> ids;
   for (uint64_t i = 0; i < kTableSize; ++i) {
     uint64_t r = rand() % kTableSize;
@@ -45,36 +42,21 @@ TEST(IdTable, Random) {
   }
 }
 
-TEST(IdTable, Bounds) {
-  IdTable t(10);
+TEST(UnorderedIdTable, SerializeDeserialize) {
+  uint64_t node_count = 1300000000; // this is about how many there are in real life
+  node_count = 1000;
 
-  for (int i = 60; i < 70; ++i) {
-    EXPECT_FALSE(t.get(i)) << "No bits can be set when they are higher than max";
+  UnorderedIdTable a(node_count);
+  for (uint64_t i = 0; i < node_count; ++i) {
+    a.set(i * 2);
+    EXPECT_FALSE(a.get(i * 2 - 1));
+    EXPECT_TRUE(a.get(i * 2));
   }
-
-  EXPECT_EQ(t.max(), 63) << "Max id should be 10";
-
-  for (int i = 60; i < 70; ++i) {
-    if (i % 2)
-      t.set(i);
-  }
-
-  for (int i = 60; i < 70; ++i) {
-    EXPECT_EQ(t.get(i), i % 2) << "The odd ids should be set";
-  }
-
-  EXPECT_EQ(t.max(), 191) << "The max id should have been increased to 191";
+  a.serialize("foo.bar");
+  UnorderedIdTable b(node_count);
+  b.deserialize("foo.bar");
+  EXPECT_EQ(a, b);
 }
-
-TEST(IdTable, X86) {
-  IdTable t(10000000000);
-  uint64_t old_max = t.max();
-
-  t.set(5528037441);
-  EXPECT_EQ(t.max(), old_max) << "The max id shouldn't be changed";
-}
-
-} // namespace
 
 int main(int argc, char* argv[]) {
   testing::InitGoogleTest(&argc, argv);

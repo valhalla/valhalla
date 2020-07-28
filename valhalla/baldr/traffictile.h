@@ -17,6 +17,7 @@
 #else
 #include <stdint.h>
 #endif
+#include "baldr/traffic_tile_version.h"
 
 #ifndef C_ONLY_INTERFACE
 namespace valhalla {
@@ -27,10 +28,13 @@ using std::uint32_t;
 using std::uint64_t;
 #endif
 
+// This value _of bitfield_ (not in kph) signals that the live speed is not known (max value of 7 bit
+// number)
+constexpr uint32_t UNKNOWN_TRAFFIC_SPEED_RAW = (1 << 7) - 1;
 // Traffic speeds are encoded as 7 bits in `TrafficSpeed` below with a 2kph multiplier
-constexpr uint32_t MAX_TRAFFIC_SPEED_KPH = 252;
-// This value _of bitfield_ (not in kph) signals that the live speed is not known
-constexpr uint32_t UNKNOWN_TRAFFIC_SPEED_VALUE = (MAX_TRAFFIC_SPEED_KPH >> 1) + 1;
+constexpr uint32_t MAX_TRAFFIC_SPEED_KPH = (UNKNOWN_TRAFFIC_SPEED_RAW - 1) << 1;
+// This is the value in kph that signifies a traffic speed is unknown
+constexpr uint32_t UNKNOWN_TRAFFIC_SPEED_KPH = UNKNOWN_TRAFFIC_SPEED_RAW << 1;
 
 struct TrafficSpeed {
   uint64_t overall_speed : 7; // 0-255kph in 2kph resolution (access with `get_overall_speed()`)
@@ -53,7 +57,6 @@ struct TrafficSpeed {
   }
 
   inline bool closed(std::size_t subsegment) const volatile {
-    assert(subsegment <= 2);
     if (!valid())
       return false;
     switch (subsegment) {
@@ -65,18 +68,24 @@ struct TrafficSpeed {
         return breakpoint2 < 255 && speed3 == 0;
       default:
         assert(false);
+        throw std::logic_error("Bad subsegment");
     }
   }
+
   /// Returns overall speed in kph across edge
   inline uint8_t get_overall_speed() const volatile {
     return overall_speed << 1;
   }
 
-  /// Returns speed in a certain subsegment in kph
+  /**
+   * Returns speed in a certain subsegment in kph
+   * If the speed is unknown UNKNOWN_TRAFFIC_SPEED_KPH is returned
+   * @param subsegment   the index of the subsegment you want
+   * @return returns the speed of the subsegment or UNKNOWN_TRAFFIC_SPEED_KPH if unknown
+   */
   inline uint8_t get_speed(std::size_t subsegment) const volatile {
-    assert(subsegment <= 2);
     if (!valid())
-      return false;
+      return UNKNOWN_TRAFFIC_SPEED_KPH;
     switch (subsegment) {
       case 0:
         return speed1 << 1;
@@ -86,6 +95,7 @@ struct TrafficSpeed {
         return speed3 << 1;
       default:
         assert(false);
+        throw std::logic_error("Bad subsegment");
     }
   }
 #endif
@@ -96,7 +106,7 @@ struct TrafficTileHeader {
   uint64_t tile_id;
   uint64_t last_update; // seconds since epoch
   uint32_t directed_edge_count;
-  uint32_t spare1;
+  uint32_t traffic_tile_version;
   uint32_t spare2;
   uint32_t spare3;
 };
@@ -119,10 +129,10 @@ static_assert(sizeof(TrafficSpeed) == sizeof(uint64_t),
  */
 #ifndef C_ONLY_INTERFACE
 namespace {
-static constexpr volatile TrafficSpeed INVALID_SPEED{0u,
-                                                     UNKNOWN_TRAFFIC_SPEED_VALUE,
-                                                     UNKNOWN_TRAFFIC_SPEED_VALUE,
-                                                     UNKNOWN_TRAFFIC_SPEED_VALUE,
+static constexpr volatile TrafficSpeed INVALID_SPEED{UNKNOWN_TRAFFIC_SPEED_RAW,
+                                                     UNKNOWN_TRAFFIC_SPEED_RAW,
+                                                     UNKNOWN_TRAFFIC_SPEED_RAW,
+                                                     UNKNOWN_TRAFFIC_SPEED_RAW,
                                                      0u,
                                                      0u,
                                                      0u,
@@ -143,8 +153,9 @@ public:
   }
 
   const volatile TrafficSpeed& trafficspeed(const uint32_t directed_edge_offset) const {
-    if (header == nullptr)
+    if (header == nullptr || header->traffic_tile_version != TRAFFIC_TILE_VERSION) {
       return INVALID_SPEED;
+    }
     if (directed_edge_offset >= header->directed_edge_count)
       throw std::runtime_error("TrafficSpeed requested for edgeid beyond bounds of tile (offset: " +
                                std::to_string(directed_edge_offset) +

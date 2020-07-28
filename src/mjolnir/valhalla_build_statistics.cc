@@ -487,7 +487,7 @@ void build(const boost::property_tree::ptree& pt,
     AABB2<PointLL> bb = tiles.TileBounds(tileid);
     float area = ((bb.maxy() - bb.miny()) * kMetersPerDegreeLat * kKmPerMeter) *
                  ((bb.maxx() - bb.minx()) *
-                  DistanceApproximator::MetersPerLngDegree(bb.Center().y()) * kKmPerMeter);
+                  DistanceApproximator<PointLL>::MetersPerLngDegree(bb.Center().y()) * kKmPerMeter);
     stats.add_tile_area(tileid, area);
     stats.add_tile_geom(tileid, tiles.TileBounds(tileid));
 
