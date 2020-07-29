@@ -43,6 +43,9 @@ constexpr uint32_t MAX_TRAFFIC_SPEED_KPH = (UNKNOWN_TRAFFIC_SPEED_RAW - 1) << 1;
 // This is the value in kph that signifies a traffic speed is unknown
 constexpr uint32_t UNKNOWN_TRAFFIC_SPEED_KPH = UNKNOWN_TRAFFIC_SPEED_RAW << 1;
 
+constexpr uint8_t UNKNOWN_CONGESTION_VAL = 0;
+constexpr uint8_t MAX_CONGESTION_VAL = 63;
+
 struct TrafficSpeed {
   uint64_t overall_speed : 7; // 0-255kph in 2kph resolution (access with `get_overall_speed()`)
   uint64_t speed1 : 7;        // 0-255kph in 2kph resolution (access with `get_speed(0)`)
@@ -60,7 +63,7 @@ struct TrafficSpeed {
     return breakpoint1 != 0;
   }
   inline bool closed() const volatile {
-    return breakpoint1 != 0 && overall_speed == 0;
+    return valid() && overall_speed == 0;
   }
 
   inline bool closed(std::size_t subsegment) const volatile {
@@ -68,11 +71,11 @@ struct TrafficSpeed {
       return false;
     switch (subsegment) {
       case 0:
-        return speed1 == 0;
+        return speed1 == 0 || congestion1 == MAX_CONGESTION_VAL;
       case 1:
-        return breakpoint1 < 255 && speed2 == 0;
+        return breakpoint1 < 255 && (speed2 == 0 || congestion2 == MAX_CONGESTION_VAL);
       case 2:
-        return breakpoint2 < 255 && speed3 == 0;
+        return breakpoint2 < 255 && (speed3 == 0 || congestion3 == MAX_CONGESTION_VAL);
       default:
         assert(false);
         throw std::logic_error("Bad subsegment");
@@ -104,6 +107,30 @@ struct TrafficSpeed {
         assert(false);
         throw std::logic_error("Bad subsegment");
     }
+  }
+
+  constexpr TrafficSpeed()
+      : overall_speed{0}, speed1{0}, speed2{0}, speed3{0}, breakpoint1{0}, breakpoint2{0},
+        congestion1{0}, congestion2{0}, congestion3{0}, spare{0} {
+  }
+
+  constexpr TrafficSpeed(const TrafficSpeed& other) = default;
+
+  constexpr TrafficSpeed(const uint32_t overall_speed,
+                         const uint32_t s1,
+                         const uint32_t s2,
+                         const uint32_t s3,
+                         const uint32_t b1,
+                         const uint32_t b2,
+                         const uint32_t c1,
+                         const uint32_t c2,
+                         const uint32_t c3)
+      : overall_speed{overall_speed}, speed1{s1}, speed2{s2}, speed3{s3}, breakpoint1{b1},
+        breakpoint2{b2}, congestion1{c1}, congestion2{c2}, congestion3{c3}, spare{0} {
+  }
+
+  constexpr TrafficSpeed(const volatile TrafficSpeed& other)
+      : TrafficSpeed(const_cast<const TrafficSpeed&>(other)) {
   }
 #endif
 };
@@ -140,7 +167,6 @@ static constexpr volatile TrafficSpeed INVALID_SPEED{UNKNOWN_TRAFFIC_SPEED_RAW,
                                                      UNKNOWN_TRAFFIC_SPEED_RAW,
                                                      UNKNOWN_TRAFFIC_SPEED_RAW,
                                                      UNKNOWN_TRAFFIC_SPEED_RAW,
-                                                     0u,
                                                      0u,
                                                      0u,
                                                      0u,
