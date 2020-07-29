@@ -516,27 +516,6 @@ inline void build_pbf(const nodelayout& node_locations,
 } // namespace detail
 
 /**
- * Generate a new GraphReader that doesn't re-use a previously
- * statically initizalized tile_extract member variable.
- *
- * Useful if you need to reload a tile extract within the same
- * process
- */
-std::shared_ptr<valhalla::baldr::GraphReader>
-make_clean_graphreader(const boost::property_tree::ptree& pt) {
-
-  // Wrapper sub-class to allow replacing the statically initialized
-  // tile_extract member variable
-  struct ResettingGraphReader : valhalla::baldr::GraphReader {
-    ResettingGraphReader(boost::property_tree::ptree pt) : GraphReader(pt) {
-      // Reset the statically initialized tile_extract_ member variable
-      tile_extract_.reset(new valhalla::baldr::GraphReader::tile_extract_t(pt));
-    }
-  };
-  return std::make_shared<ResettingGraphReader>(pt);
-}
-
-/**
  * Given a node layout, set of ways, node properties and relations, generates an OSM PBF file,
  * and builds a set of Valhalla tiles for it.
  *

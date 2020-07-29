@@ -47,7 +47,8 @@ foreach(test ${tests})
   endif()
   target_include_directories(${test} SYSTEM PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
-      ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
+      ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
+      ${VALHALLA_SOURCE_DIR}/test)
 endforeach()
 
 set(cost_tests autocost bicyclecost motorcyclecost motorscootercost pedestriancost transitcost truckcost)
