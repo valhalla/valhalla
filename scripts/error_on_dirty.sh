@@ -4,8 +4,7 @@ set -o pipefail
 set -o nounset
 
 MSG="The following files have been modified:"
-# ignore the package-lock, which npm install modifies if it was created with a different version of node
-dirty=$(git ls-files --modified | grep -v package-lock.json)
+dirty=$(git ls-files --modified)
 
 if [[ $dirty ]]; then
     echo $MSG
