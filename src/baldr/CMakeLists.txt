@@ -25,17 +25,6 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
 
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/baldr/*.h)
 
-# Builds a checksum of the traffictile header and store it in `traffic_tile_version.h`
-set(GENERATED_VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/traffic_tile_version.h")
-message("Generating traffictile version header")
-configure_file(${VALHALLA_SOURCE_DIR}/valhalla/baldr/traffictile.h
-               ${CMAKE_CURRENT_BINARY_DIR}/traffictile.h.junk)
-file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/traffictile.h.junk)
-
-file(SHA1 ${VALHALLA_SOURCE_DIR}/valhalla/baldr/traffictile.h traffic_tile_version_full)
-string(SUBSTRING ${traffic_tile_version_full} 0 4 traffic_tile_version_short)
-file(WRITE ${GENERATED_VERSION_HEADER} "const uint32_t TRAFFIC_TILE_VERSION = 0x${traffic_tile_version_short};")
-
 set(includes
     ${VALHALLA_SOURCE_DIR}
      ${VALHALLA_SOURCE_DIR}/valhalla
@@ -83,7 +72,6 @@ set(sources
     verbal_text_formatter_factory.cc)
 
 list(APPEND sources
-    ${GENERATED_VERSION_HEADER}
     #basic timezone stuff
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_africa.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_antarctica.h
