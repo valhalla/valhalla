@@ -57,7 +57,7 @@ typedef struct {
 //
 /*************************************************************/
 void build_live_traffic_data(const boost::property_tree::ptree& config,
-                             uint32_t traffic_tile_version = TRAFFIC_TILE_VERSION) {
+                             uint32_t traffic_tile_version = valhalla::baldr::TRAFFIC_TILE_VERSION) {
 
   std::string tile_dir = config.get<std::string>("mjolnir.tile_dir");
   std::string traffic_extract = config.get<std::string>("mjolnir.traffic_extract");
