@@ -87,7 +87,7 @@ void update_all_edges_but_bd(const valhalla::gurka::map& map, uint16_t new_speed
 }
 
 void blank_traffic(const valhalla::gurka::map& map,
-                   uint32_t traffic_tile_version = TRAFFIC_TILE_VERSION) {
+                   uint32_t traffic_tile_version = valhalla::baldr::TRAFFIC_TILE_VERSION) {
   const auto& traffic_extract = map.config.get<std::string>("mjolnir.traffic_extract");
   mtar_t tar;
   auto tar_open_result = mtar_open(&tar, traffic_extract.c_str(), "w");
