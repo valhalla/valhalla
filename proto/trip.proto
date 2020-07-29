@@ -40,6 +40,7 @@ message TripLeg {
     kDriveThruUse = 8;         // Commercial drive-thru (banks/fast-food)
     kCuldesacUse = 9;          // Cul-de-sac (edge that forms a loop and is only
                                // connected at one node to another edge.
+    kLivingStreetUse = 10;     // Shared space for cars, bikes, pedestrians
 
     // Bicycle specific uses
     kCyclewayUse = 20;          // Dedicated bicycle path
@@ -214,6 +215,7 @@ message TripLeg {
     optional bool has_time_restrictions = 43;
     optional float default_speed = 44;       // km/h
     optional Restriction restriction = 45;
+    optional bool destination_only = 46;
   }
 
   message IntersectingEdge {
