@@ -34,8 +34,8 @@ TEST(Traffic, TileConstruction) {
   EXPECT_EQ(speed.get_speed(0), 98);
   EXPECT_EQ(speed.get_speed(1), UNKNOWN_TRAFFIC_SPEED_RAW << 1);
 
-  // Verify the version (Expect this value to change when traffictile.h is updated)
-  EXPECT_EQ(0xce2f, TRAFFIC_TILE_VERSION);
+  // Verify the version
+  EXPECT_EQ(3, TRAFFIC_TILE_VERSION);
   // Test with an invalid version
   testdata.header.traffic_tile_version = 78;
   auto const volatile& invalid_speed = tile.trafficspeed(2);
