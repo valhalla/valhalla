@@ -59,11 +59,11 @@ constexpr ranged_default_t<float> kTransferPenaltyRange{0, kDefaultTransferPenal
 class TransitCost : public DynamicCost {
 public:
   /**
-   * Construct transit costing. Pass in cost type and options using protocol buffer(pbf).
+   * Construct transit costing. Pass in cost type and costing_options using protocol buffer(pbf).
    * @param  costing specified costing type.
-   * @param  options pbf with request options.
+   * @param  costing_options pbf with request costing_options.
    */
-  TransitCost(const CostingOptions& options);
+  TransitCost(const CostingOptions& costing_options);
 
   virtual ~TransitCost();
 
@@ -319,25 +319,25 @@ public:
 
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
-TransitCost::TransitCost(const CostingOptions& options)
-    : DynamicCost(options, TravelMode::kPublicTransit) {
+TransitCost::TransitCost(const CostingOptions& costing_options)
+    : DynamicCost(costing_options, TravelMode::kPublicTransit) {
 
-  mode_factor_ = options.mode_factor();
+  mode_factor_ = costing_options.mode_factor();
 
-  wheelchair_ = options.wheelchair();
-  bicycle_ = options.bicycle();
+  wheelchair_ = costing_options.wheelchair();
+  bicycle_ = costing_options.bicycle();
 
   // Willingness to use buses. Make sure this is within range [0, 1]
   // Otherwise it will default
-  use_bus_ = options.use_bus();
+  use_bus_ = costing_options.use_bus();
 
   // Willingness to use rail. Make sure this is within range [0, 1].
   // Otherwise it will default
-  use_rail_ = options.use_rail();
+  use_rail_ = costing_options.use_rail();
 
   // Willingness to make transfers. Make sure this is within range [0, 1].
   // Otherwise it will default
-  use_transfers_ = options.use_transfers();
+  use_transfers_ = costing_options.use_transfers();
 
   // Set the factors. The factors above 0.5 start to reduce the weight
   // for this mode while factors below 0.5 start to increase the weight for
@@ -348,13 +348,13 @@ TransitCost::TransitCost(const CostingOptions& options)
 
   transfer_factor_ = (use_transfers_ >= 0.5f) ? 1.5f - use_transfers_ : 5.0f - use_transfers_ * 8.0f;
 
-  transfer_cost_ = options.transfer_cost();
-  transfer_penalty_ = options.transfer_penalty();
+  transfer_cost_ = costing_options.transfer_cost();
+  transfer_penalty_ = costing_options.transfer_penalty();
 
   // Process stop filters
-  if (options.has_filter_stop_action()) {
-    auto stop_action = options.filter_stop_action();
-    for (const auto& id : options.filter_stop_ids()) {
+  if (costing_options.has_filter_stop_action()) {
+    auto stop_action = costing_options.filter_stop_action();
+    for (const auto& id : costing_options.filter_stop_ids()) {
       if (stop_action == FilterAction::exclude) {
         stop_exclude_onestops_.emplace(id);
       } else if (stop_action == FilterAction::include) {
@@ -364,9 +364,9 @@ TransitCost::TransitCost(const CostingOptions& options)
   }
 
   // Process operator filters
-  if (options.has_filter_operator_action()) {
-    auto operator_action = options.filter_operator_action();
-    for (const auto& id : options.filter_operator_ids()) {
+  if (costing_options.has_filter_operator_action()) {
+    auto operator_action = costing_options.filter_operator_action();
+    for (const auto& id : costing_options.filter_operator_ids()) {
       if (operator_action == FilterAction::exclude) {
         operator_exclude_onestops_.emplace(id);
       } else if (operator_action == FilterAction::include) {
@@ -376,9 +376,9 @@ TransitCost::TransitCost(const CostingOptions& options)
   }
 
   // Process route filters
-  if (options.has_filter_route_action()) {
-    auto route_action = options.filter_route_action();
-    for (const auto& id : options.filter_route_ids()) {
+  if (costing_options.has_filter_route_action()) {
+    auto route_action = costing_options.filter_route_action();
+    for (const auto& id : costing_options.filter_route_ids()) {
       if (route_action == FilterAction::exclude) {
         route_exclude_onestops_.emplace(id);
       } else if (route_action == FilterAction::include) {
@@ -755,8 +755,8 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateTransitCost(const CostingOptions& options) {
-  return std::make_shared<TransitCost>(options);
+cost_ptr_t CreateTransitCost(const CostingOptions& costing_options) {
+  return std::make_shared<TransitCost>(costing_options);
 }
 
 } // namespace sif

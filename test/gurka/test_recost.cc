@@ -27,8 +27,9 @@ TEST(recosting, all_algorithms) {
   // run all the permutations
   std::string named_locations = "1A2B3C4D5E6F7";
   std::vector<std::unordered_map<std::string, std::string>> options{
-      {}, {{"/date_time/type", "1"}, {"/date_time/value", "2020-06-16T14:12"}},
-      //{{"/date_time/type", "2"}, {"/date_time/value", "2020-06-16T14:12"}},
+      {},
+      {{"/date_time/type", "1"}, {"/date_time/value", "2020-06-16T14:12"}},
+      {{"/date_time/type", "2"}, {"/date_time/value", "2020-06-16T14:12"}},
   };
   for (const auto& option : options) {
     for (size_t i = 0; i < named_locations.size(); ++i) {

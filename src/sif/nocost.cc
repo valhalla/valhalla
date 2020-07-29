@@ -26,11 +26,11 @@ namespace sif {
 class NoCost : public DynamicCost {
 public:
   /**
-   * Construct costing. Pass in cost type and options using protocol buffer(pbf).
+   * Construct costing. Pass in cost type and costing_options using protocol buffer(pbf).
    * @param  costing specified costing type.
-   * @param  options pbf with request options.
+   * @param  costing_options pbf with request costing_options.
    */
-  NoCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kDrive) {
+  NoCost(const CostingOptions& costing_options) : DynamicCost(costing_options, TravelMode::kDrive) {
   }
 
   virtual ~NoCost() {
@@ -210,8 +210,8 @@ void ParseNoCostOptions(const rapidjson::Document& doc,
   pbf_costing_options->set_costing(Costing::none_);
 }
 
-cost_ptr_t CreateNoCost(const CostingOptions& options) {
-  return std::make_shared<NoCost>(options);
+cost_ptr_t CreateNoCost(const CostingOptions& costing_options) {
+  return std::make_shared<NoCost>(costing_options);
 }
 
 } // namespace sif

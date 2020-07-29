@@ -119,11 +119,11 @@ constexpr float kSurfaceFactor[] = {
 class MotorcycleCost : public DynamicCost {
 public:
   /**
-   * Construct motorcycle costing. Pass in cost type and options using protocol buffer(pbf).
+   * Construct motorcycle costing. Pass in cost type and costing_options using protocol buffer(pbf).
    * @param  costing specified costing type.
-   * @param  options pbf with request options.
+   * @param  costing_options pbf with request costing_options.
    */
-  MotorcycleCost(const CostingOptions& options);
+  MotorcycleCost(const CostingOptions& costing_options);
 
   virtual ~MotorcycleCost();
 
@@ -326,8 +326,8 @@ public:
 };
 
 // Constructor
-MotorcycleCost::MotorcycleCost(const CostingOptions& options)
-    : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
+MotorcycleCost::MotorcycleCost(const CostingOptions& costing_options)
+    : DynamicCost(costing_options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
                                                                       1.0f, 1.1f, 1.2f, 1.3f,
                                                                       1.4f, 1.6f, 1.9f, 2.2f,
                                                                       2.5f, 2.8f, 3.1f, 3.5f} {
@@ -336,14 +336,14 @@ MotorcycleCost::MotorcycleCost(const CostingOptions& options)
   type_ = VehicleType::kMotorcycle;
 
   // Get the base costs
-  get_base_costs(options);
+  get_base_costs(costing_options);
 
   // Preference to use highways. Is a value from 0 to 1
   // Factor for highway use - use a non-linear factor with values at 0.5 being neutral (factor
   // of 0). Values between 0.5 and 1 slowly decrease to a maximum of -0.125 (to slightly prefer
   // highways) while values between 0.5 to 0 slowly increase to a maximum of kMaxHighwayBiasFactor
   // to avoid/penalize highways.
-  float use_highways = options.use_highways();
+  float use_highways = costing_options.use_highways();
   if (use_highways >= 0.5f) {
     float f = (0.5f - use_highways);
     highway_factor_ = f * f * f;
@@ -356,13 +356,13 @@ MotorcycleCost::MotorcycleCost(const CostingOptions& options)
   // Toll factor of 0 would indicate no adjustment to weighting for toll roads.
   // use_tolls = 1 would reduce weighting slightly (a negative delta) while
   // use_tolls = 0 would penalize (positive delta to weighting factor).
-  float use_tolls = options.use_tolls();
+  float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (2.0f - 4 * use_tolls) : // ranges from 2 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
 
   // Set the surface factor based on the use trails value - this is a
   // preference to use trails/tracks/bad surface types (a value from 0 to 1).
-  float use_trails = options.use_trails();
+  float use_trails = costing_options.use_trails();
 
   // Factor for trail use - use a non-linear factor with values at 0.5 being neutral (factor
   // of 0). Values between 0.5 and 1 slowly decrease to a maximum of -0.125 (to slightly prefer
@@ -666,8 +666,8 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateMotorcycleCost(const CostingOptions& options) {
-  return std::make_shared<MotorcycleCost>(options);
+cost_ptr_t CreateMotorcycleCost(const CostingOptions& costing_options) {
+  return std::make_shared<MotorcycleCost>(costing_options);
 }
 
 } // namespace sif
@@ -684,7 +684,7 @@ namespace {
 
 class TestMotorcycleCost : public MotorcycleCost {
 public:
-  TestMotorcycleCost(const CostingOptions& options) : MotorcycleCost(options){};
+  TestMotorcycleCost(const CostingOptions& costing_options) : MotorcycleCost(costing_options){};
 
   using MotorcycleCost::alley_penalty_;
   using MotorcycleCost::country_crossing_cost_;

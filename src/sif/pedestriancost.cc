@@ -154,11 +154,11 @@ constexpr float kSacScaleCostFactor[] = {
 class PedestrianCost : public DynamicCost {
 public:
   /**
-   * Construct pedestrian costing. Pass in cost type and options using protocol buffer(pbf).
+   * Construct pedestrian costing. Pass in cost type and costing_options using protocol buffer(pbf).
    * @param  costing specified costing type.
-   * @param  options pbf with request options.
+   * @param  costing_options pbf with request costing_options.
    */
-  PedestrianCost(const CostingOptions& options);
+  PedestrianCost(const CostingOptions& costing_options);
 
   // virtual destructor
   virtual ~PedestrianCost() {
@@ -524,8 +524,8 @@ public:
 
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
-PedestrianCost::PedestrianCost(const CostingOptions& options)
-    : DynamicCost(options, TravelMode::kPedestrian) {
+PedestrianCost::PedestrianCost(const CostingOptions& costing_options)
+    : DynamicCost(costing_options, TravelMode::kPedestrian) {
   // Set hierarchy to allow unlimited transitions
   for (auto& h : hierarchy_limits_) {
     h.max_up_transitions = kUnlimitedTransitions;
@@ -534,10 +534,10 @@ PedestrianCost::PedestrianCost(const CostingOptions& options)
   allow_transit_connections_ = false;
 
   // Get the base costs
-  get_base_costs(options);
+  get_base_costs(costing_options);
 
   // Get the pedestrian type - enter as string and convert to enum
-  const std::string& type = options.transport_type();
+  const std::string& type = costing_options.transport_type();
   if (type == "wheelchair") {
     type_ = PedestrianType::kWheelchair;
   } else if (type == "segway") {
@@ -555,24 +555,24 @@ PedestrianCost::PedestrianCost(const CostingOptions& options)
     access_mask_ = kPedestrianAccess;
     minimal_allowed_surface_ = Surface::kPath;
   }
-  max_distance_ = options.max_distance();
-  speed_ = options.walking_speed();
-  step_penalty_ = options.step_penalty();
-  max_grade_ = options.max_grade();
+  max_distance_ = costing_options.max_distance();
+  speed_ = costing_options.walking_speed();
+  step_penalty_ = costing_options.step_penalty();
+  max_grade_ = costing_options.max_grade();
 
   if (type_ == PedestrianType::kFoot) {
-    max_hiking_difficulty_ = static_cast<SacScale>(options.max_hiking_difficulty());
+    max_hiking_difficulty_ = static_cast<SacScale>(costing_options.max_hiking_difficulty());
   } else {
     max_hiking_difficulty_ = SacScale::kNone;
   }
 
-  mode_factor_ = options.mode_factor();
-  walkway_factor_ = options.walkway_factor();
-  sidewalk_factor_ = options.sidewalk_factor();
-  alley_factor_ = options.alley_factor();
-  driveway_factor_ = options.driveway_factor();
-  transit_start_end_max_distance_ = options.transit_start_end_max_distance();
-  transit_transfer_max_distance_ = options.transit_transfer_max_distance();
+  mode_factor_ = costing_options.mode_factor();
+  walkway_factor_ = costing_options.walkway_factor();
+  sidewalk_factor_ = costing_options.sidewalk_factor();
+  alley_factor_ = costing_options.alley_factor();
+  driveway_factor_ = costing_options.driveway_factor();
+  transit_start_end_max_distance_ = costing_options.transit_start_end_max_distance();
+  transit_transfer_max_distance_ = costing_options.transit_transfer_max_distance();
 
   // Set the speed factor (to avoid division in costing)
   speedfactor_ = (kSecPerHour * 0.001f) / speed_;
@@ -883,8 +883,8 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreatePedestrianCost(const CostingOptions& options) {
-  return std::make_shared<PedestrianCost>(options);
+cost_ptr_t CreatePedestrianCost(const CostingOptions& costing_options) {
+  return std::make_shared<PedestrianCost>(costing_options);
 }
 
 } // namespace sif
@@ -901,7 +901,7 @@ namespace {
 
 class TestPedestrianCost : public PedestrianCost {
 public:
-  TestPedestrianCost(const CostingOptions& options) : PedestrianCost(options){};
+  TestPedestrianCost(const CostingOptions& costing_options) : PedestrianCost(costing_options){};
 
   using PedestrianCost::alley_penalty_;
   using PedestrianCost::country_crossing_cost_;

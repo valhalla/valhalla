@@ -128,10 +128,10 @@ constexpr float kSurfaceFactor[] = {
 class AutoCost : public DynamicCost {
 public:
   /**
-   * Construct auto costing. Pass in cost type and options using protocol buffer(pbf).
-   * @param  options pbf with request options.
+   * Construct auto costing. Pass in cost type and costing_options using protocol buffer(pbf).
+   * @param  costing_options pbf with request costing_options.
    */
-  AutoCost(const CostingOptions& options);
+  AutoCost(const CostingOptions& costing_options);
 
   virtual ~AutoCost() {
   }
@@ -330,8 +330,8 @@ public:
 };
 
 // Constructor
-AutoCost::AutoCost(const CostingOptions& options)
-    : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
+AutoCost::AutoCost(const CostingOptions& costing_options)
+    : DynamicCost(costing_options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
                                                                       1.0f, 1.1f, 1.2f, 1.3f,
                                                                       1.4f, 1.6f, 1.9f, 2.2f,
                                                                       2.5f, 2.8f, 3.1f, 3.5f} {
@@ -339,7 +339,7 @@ AutoCost::AutoCost(const CostingOptions& options)
   // Get the vehicle type - enter as string and convert to enum.
   // Used to set the surface factor - penalize some roads based on surface type.
   surface_factor_ = 0.5f;
-  const std::string& type = options.transport_type();
+  const std::string& type = costing_options.transport_type();
   if (type == "motorcycle") {
     type_ = VehicleType::kMotorcycle;
     surface_factor_ = 1.0f;
@@ -355,20 +355,20 @@ AutoCost::AutoCost(const CostingOptions& options)
   }
 
   // Get the base transition costs
-  get_base_costs(options);
+  get_base_costs(costing_options);
 
   // Get alley factor from costing options.
-  alley_factor_ = options.alley_factor();
+  alley_factor_ = costing_options.alley_factor();
 
   // Preference to use highways. Is a value from 0 to 1
-  float use_highways_ = options.use_highways();
+  float use_highways_ = costing_options.use_highways();
   highway_factor_ = 1.0f - use_highways_;
 
   // Preference to use toll roads (separate from toll booth penalty). Sets a toll
   // factor. A toll factor of 0 would indicate no adjustment to weighting for toll roads.
   // use_tolls = 1 would reduce weighting slightly (a negative delta) while
   // use_tolls = 0 would penalize (positive delta to weighting factor).
-  float use_tolls = options.use_tolls();
+  float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) : // ranges from 4 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
 
@@ -670,8 +670,8 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateAutoCost(const CostingOptions& options) {
-  return std::make_shared<AutoCost>(options);
+cost_ptr_t CreateAutoCost(const CostingOptions& costing_options) {
+  return std::make_shared<AutoCost>(costing_options);
 }
 
 /**
@@ -682,10 +682,10 @@ class AutoShorterCost : public AutoCost {
 public:
   /**
    * Construct auto costing for shorter (not absolute shortest) path.
-   * Pass in options with protocol buffer(pbf).
-   * @param  options  pbf with options.
+   * Pass in costing_options with protocol buffer(pbf).
+   * @param  costing_options  pbf with costing_options.
    */
-  AutoShorterCost(const CostingOptions& options) : AutoCost(options) {
+  AutoShorterCost(const CostingOptions& costing_options) : AutoCost(costing_options) {
     // Create speed cost table that reduces the impact of speed
     adjspeedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
     for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
@@ -737,8 +737,8 @@ void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
   pbf_costing_options->set_costing(Costing::auto_shorter);
 }
 
-cost_ptr_t CreateAutoShorterCost(const CostingOptions& options) {
-  return std::make_shared<AutoShorterCost>(options);
+cost_ptr_t CreateAutoShorterCost(const CostingOptions& costing_options) {
+  return std::make_shared<AutoShorterCost>(costing_options);
 }
 
 /**
@@ -751,7 +751,7 @@ public:
    * Pass in configuration using property tree.
    * @param  pt  Property tree with configuration/options.
    */
-  BusCost(const CostingOptions& options) : AutoCost(options) {
+  BusCost(const CostingOptions& costing_options) : AutoCost(costing_options) {
     type_ = VehicleType::kBus;
   }
 
@@ -920,8 +920,8 @@ void ParseBusCostOptions(const rapidjson::Document& doc,
   pbf_costing_options->set_costing(Costing::bus);
 }
 
-cost_ptr_t CreateBusCost(const CostingOptions& options) {
-  return std::make_shared<BusCost>(options);
+cost_ptr_t CreateBusCost(const CostingOptions& costing_options) {
+  return std::make_shared<BusCost>(costing_options);
 }
 
 /**
@@ -932,10 +932,10 @@ class HOVCost : public AutoCost {
 public:
   /**
    * Construct hov costing.
-   * Pass in options using protocol buffer(pbf).
-   * @param  options  pbf with options.
+   * Pass in costing_options using protocol buffer(pbf).
+   * @param  costing_options  pbf with costing_options.
    */
-  HOVCost(const CostingOptions& options) : AutoCost(options) {
+  HOVCost(const CostingOptions& costing_options) : AutoCost(costing_options) {
   }
 
   virtual ~HOVCost() {
@@ -1125,8 +1125,8 @@ void ParseHOVCostOptions(const rapidjson::Document& doc,
   pbf_costing_options->set_costing(Costing::hov);
 }
 
-cost_ptr_t CreateHOVCost(const CostingOptions& options) {
-  return std::make_shared<HOVCost>(options);
+cost_ptr_t CreateHOVCost(const CostingOptions& costing_options) {
+  return std::make_shared<HOVCost>(costing_options);
 }
 
 /**
@@ -1137,10 +1137,10 @@ class TaxiCost : public AutoCost {
 public:
   /**
    * Construct taxi costing.
-   * Pass in options using protocol buffer(pbf).
-   * @param  options  pbf with options.
+   * Pass in costing_options using protocol buffer(pbf).
+   * @param  costing_options  pbf with costing_options.
    */
-  TaxiCost(const CostingOptions& options) : AutoCost(options) {
+  TaxiCost(const CostingOptions& costing_options) : AutoCost(costing_options) {
   }
 
   virtual ~TaxiCost() {
@@ -1329,8 +1329,8 @@ void ParseTaxiCostOptions(const rapidjson::Document& doc,
   pbf_costing_options->set_costing(Costing::taxi);
 }
 
-cost_ptr_t CreateTaxiCost(const CostingOptions& options) {
-  return std::make_shared<TaxiCost>(options);
+cost_ptr_t CreateTaxiCost(const CostingOptions& costing_options) {
+  return std::make_shared<TaxiCost>(costing_options);
 }
 
 /**
@@ -1345,7 +1345,7 @@ public:
    * Pass in configuration using property tree.
    * @param  pt  Property tree with configuration/options.
    */
-  AutoDataFix(const CostingOptions& options) : AutoCost(options) {
+  AutoDataFix(const CostingOptions& costing_options) : AutoCost(costing_options) {
   }
 
   virtual ~AutoDataFix() {
@@ -1414,8 +1414,8 @@ void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
   pbf_costing_options->set_costing(Costing::auto_data_fix);
 }
 
-cost_ptr_t CreateAutoDataFixCost(const CostingOptions& options) {
-  return std::make_shared<AutoDataFix>(options);
+cost_ptr_t CreateAutoDataFixCost(const CostingOptions& costing_options) {
+  return std::make_shared<AutoDataFix>(costing_options);
 }
 
 } // namespace sif
@@ -1432,7 +1432,7 @@ namespace {
 
 class TestAutoCost : public AutoCost {
 public:
-  TestAutoCost(const CostingOptions& options) : AutoCost(options){};
+  TestAutoCost(const CostingOptions& costing_options) : AutoCost(costing_options){};
 
   using AutoCost::alley_penalty_;
   using AutoCost::country_crossing_cost_;

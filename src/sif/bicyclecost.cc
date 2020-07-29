@@ -214,11 +214,11 @@ constexpr ranged_default_t<float> kAvoidBadSurfacesRange{0.0f, kDefaultAvoidBadS
 class BicycleCost : public DynamicCost {
 public:
   /**
-   * Construct bicycle costing. Pass in cost type and options using protocol buffer(pbf).
+   * Construct bicycle costing. Pass in cost type and costing_options using protocol buffer(pbf).
    * @param  costing specified costing type.
-   * @param  options pbf with request options.
+   * @param  costing_options pbf with request costing_options.
    */
-  BicycleCost(const CostingOptions& options);
+  BicycleCost(const CostingOptions& costing_options);
 
   // virtual destructor
   virtual ~BicycleCost() {
@@ -434,17 +434,18 @@ protected:
 // is modulated based on surface type and grade factors.
 
 // Constructor
-BicycleCost::BicycleCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kBicycle) {
+BicycleCost::BicycleCost(const CostingOptions& costing_options)
+    : DynamicCost(costing_options, TravelMode::kBicycle) {
   // Set hierarchy to allow unlimited transitions
   for (auto& h : hierarchy_limits_) {
     h.max_up_transitions = kUnlimitedTransitions;
   }
 
   // Get the base costs
-  get_base_costs(options);
+  get_base_costs(costing_options);
 
   // Get the bicycle type - enter as string and convert to enum
-  const std::string& bicycle_type = options.transport_type();
+  const std::string& bicycle_type = costing_options.transport_type();
   if (bicycle_type == "Cross") {
     type_ = BicycleType::kCross;
   } else if (bicycle_type == "Road") {
@@ -455,8 +456,8 @@ BicycleCost::BicycleCost(const CostingOptions& options) : DynamicCost(options, T
     type_ = BicycleType::kHybrid;
   }
 
-  speed_ = options.cycling_speed();
-  avoid_bad_surfaces_ = options.avoid_bad_surfaces();
+  speed_ = costing_options.cycling_speed();
+  avoid_bad_surfaces_ = costing_options.avoid_bad_surfaces();
   minimal_surface_penalized_ = kWorstAllowedSurface[static_cast<uint32_t>(type_)];
   worst_allowed_surface_ = avoid_bad_surfaces_ == 1.0f ? minimal_surface_penalized_ : Surface::kPath;
 
@@ -472,7 +473,7 @@ BicycleCost::BicycleCost(const CostingOptions& options) : DynamicCost(options, T
   }
 
   // Willingness to use roads. Make sure this is within range [0, 1].
-  use_roads_ = options.use_roads();
+  use_roads_ = costing_options.use_roads();
 
   // Set the road classification factor. use_roads factors above 0.5 start to
   // reduce the weight difference between road classes while factors below 0.5
@@ -503,7 +504,7 @@ BicycleCost::BicycleCost(const CostingOptions& options) : DynamicCost(options, T
   }
 
   // Populate the grade penalties (based on use_hills factor - value between 0 and 1)
-  float use_hills = options.use_hills();
+  float use_hills = costing_options.use_hills();
   float avoid_hills = (1.0f - use_hills);
   for (uint32_t i = 0; i <= kMaxGradeFactor; i++) {
     grade_penalty[i] = avoid_hills * kAvoidHillsStrength[i];
@@ -967,8 +968,8 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateBicycleCost(const CostingOptions& options) {
-  return std::make_shared<BicycleCost>(options);
+cost_ptr_t CreateBicycleCost(const CostingOptions& costing_options) {
+  return std::make_shared<BicycleCost>(costing_options);
 }
 
 } // namespace sif
@@ -985,7 +986,7 @@ namespace {
 
 class TestBicycleCost : public BicycleCost {
 public:
-  TestBicycleCost(const CostingOptions& options) : BicycleCost(options){};
+  TestBicycleCost(const CostingOptions& costing_options) : BicycleCost(costing_options){};
 
   using BicycleCost::alley_penalty_;
   using BicycleCost::country_crossing_cost_;
