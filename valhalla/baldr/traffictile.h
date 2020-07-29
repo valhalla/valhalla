@@ -17,6 +17,7 @@
 #else
 #include <stdint.h>
 #endif
+#include "valhalla.h"
 
 #ifndef C_ONLY_INTERFACE
 namespace valhalla {
@@ -33,7 +34,7 @@ using std::uint64_t;
 // the spare bits available.
 // This is more of a break-the-glass escape hatch for when the current format has
 // reached its limits
-const uint8_t TRAFFIC_TILE_VERSION = 3;
+const uint8_t TRAFFIC_TILE_VERSION = VALHALLA_VERSION_MAJOR;
 
 // This value _of bitfield_ (not in kph) signals that the live speed is not known (max value of 7 bit
 // number)
