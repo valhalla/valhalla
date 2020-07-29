@@ -271,9 +271,40 @@ TEST(recosting, api) {
     greater_equal(n.recosts(3), n.recosts(4));
   }
 
-  // TODO: verify json has the right info
+  // verify json has the right info
+  {
+    rapidjson::Document d;
+    d.Parse(json);
+    EXPECT_FALSE(d.HasParseError());
+    const auto& trip = d["trip"].GetObject();
+    const auto& trip_summary = trip["summary"].GetObject();
+    EXPECT_TRUE(trip_summary["time"].IsNumber());
+    EXPECT_TRUE(trip_summary["time_same"].IsNumber());
+    EXPECT_TRUE(trip_summary["time_avoid_highways"].IsNumber());
+    EXPECT_TRUE(trip_summary["time_slower"].IsNumber());
+    EXPECT_TRUE(trip_summary["time_slower_still"].IsNumber());
+    EXPECT_TRUE(trip_summary["time_slowest"].IsNumber());
+    for (const auto& leg : trip["legs"].GetArray()) {
+      const auto& leg_summary = leg["summary"].GetObject();
+      EXPECT_TRUE(leg_summary["time"].IsNumber());
+      EXPECT_TRUE(leg_summary["time_same"].IsNumber());
+      EXPECT_TRUE(leg_summary["time_avoid_highways"].IsNumber());
+      EXPECT_TRUE(leg_summary["time_slower"].IsNumber());
+      EXPECT_TRUE(leg_summary["time_slower_still"].IsNumber());
+      EXPECT_TRUE(leg_summary["time_slowest"].IsNumber());
+      for (const auto& man : leg["maneuvers"].GetArray()) {
+        EXPECT_TRUE(man["time"].IsNumber());
+        EXPECT_TRUE(man["time_same"].IsNumber());
+        EXPECT_TRUE(man["time_avoid_highways"].IsNumber());
+        EXPECT_TRUE(man["time_slower"].IsNumber());
+        EXPECT_TRUE(man["time_slower_still"].IsNumber());
+        EXPECT_TRUE(man["time_slowest"].IsNumber());
+      }
+    }
+  }
 
-  // TODO: do it again for osrm format
+  // do it again for osrm format
+  api.Clear();
   json = actor.route(R"({"costing":"auto","format":"osrm", "locations":[)" + locations +
                          R"(],"recostings":[
       {"costing":"auto","name":"same"},
@@ -283,6 +314,56 @@ TEST(recosting, api) {
       {"costing":"pedestrian","name":"slowest","walking_speed":2}]})",
                      {}, &api);
 
+  // verify json has the right info
+  {
+    rapidjson::Document d;
+    d.Parse(json);
+    EXPECT_FALSE(d.HasParseError());
+    for (const auto& route : d["routes"].GetArray()) {
+      EXPECT_TRUE(route["duration"].IsNumber());
+      EXPECT_TRUE(route["duration_same"].IsNumber());
+      EXPECT_TRUE(route["duration_avoid_highways"].IsNumber());
+      EXPECT_TRUE(route["duration_slower"].IsNumber());
+      EXPECT_TRUE(route["duration_slower_still"].IsNumber());
+      EXPECT_TRUE(route["duration_slowest"].IsNumber());
+      EXPECT_TRUE(route["weight"].IsNumber());
+      EXPECT_TRUE(route["weight_same"].IsNumber());
+      EXPECT_TRUE(route["weight_avoid_highways"].IsNumber());
+      EXPECT_TRUE(route["weight_slower"].IsNumber());
+      EXPECT_TRUE(route["weight_slower_still"].IsNumber());
+      EXPECT_TRUE(route["weight_slowest"].IsNumber());
+      for (const auto& leg : route["legs"].GetArray()) {
+        EXPECT_TRUE(leg["duration"].IsNumber());
+        EXPECT_TRUE(leg["duration_same"].IsNumber());
+        EXPECT_TRUE(leg["duration_avoid_highways"].IsNumber());
+        EXPECT_TRUE(leg["duration_slower"].IsNumber());
+        EXPECT_TRUE(leg["duration_slower_still"].IsNumber());
+        EXPECT_TRUE(leg["duration_slowest"].IsNumber());
+        EXPECT_TRUE(leg["weight"].IsNumber());
+        EXPECT_TRUE(leg["weight_same"].IsNumber());
+        EXPECT_TRUE(leg["weight_avoid_highways"].IsNumber());
+        EXPECT_TRUE(leg["weight_slower"].IsNumber());
+        EXPECT_TRUE(leg["weight_slower_still"].IsNumber());
+        EXPECT_TRUE(leg["weight_slowest"].IsNumber());
+        for (const auto& step : leg["steps"].GetArray()) {
+          EXPECT_TRUE(step["duration"].IsNumber());
+          EXPECT_TRUE(step["duration_same"].IsNumber());
+          EXPECT_TRUE(step["duration_avoid_highways"].IsNumber());
+          EXPECT_TRUE(step["duration_slower"].IsNumber());
+          EXPECT_TRUE(step["duration_slower_still"].IsNumber());
+          EXPECT_TRUE(step["duration_slowest"].IsNumber());
+          EXPECT_TRUE(step["weight"].IsNumber());
+          EXPECT_TRUE(step["weight_same"].IsNumber());
+          EXPECT_TRUE(step["weight_avoid_highways"].IsNumber());
+          EXPECT_TRUE(step["weight_slower"].IsNumber());
+          EXPECT_TRUE(step["weight_slower_still"].IsNumber());
+          EXPECT_TRUE(step["weight_slowest"].IsNumber());
+        }
+      }
+    }
+  }
+
+  // do it again and verify that truck doesnt work
   api.Clear();
   json = actor.route(R"({"costing":"auto","locations":[)" + locations + R"(],"recostings":[
       {"costing":"truck","name":"nope"},
@@ -298,12 +379,64 @@ TEST(recosting, api) {
     EXPECT_TRUE(n.recosts(1).has_transition_cost());
   }
 
-  // TODO: verify json has the right info
+  // verify json has the right info
+  {
+    rapidjson::Document d;
+    d.Parse(json);
+    EXPECT_FALSE(d.HasParseError());
+    const auto& trip = d["trip"].GetObject();
+    const auto& trip_summary = trip["summary"].GetObject();
+    EXPECT_TRUE(trip_summary["time"].IsNumber());
+    EXPECT_TRUE(trip_summary["time_same"].IsNumber());
+    EXPECT_TRUE(trip_summary["time_nope"].IsNull());
+    for (const auto& leg : trip["legs"].GetArray()) {
+      const auto& leg_summary = leg["summary"].GetObject();
+      EXPECT_TRUE(leg_summary["time"].IsNumber());
+      EXPECT_TRUE(leg_summary["time_same"].IsNumber());
+      EXPECT_TRUE(leg_summary["time_nope"].IsNull());
+      for (const auto& man : leg["maneuvers"].GetArray()) {
+        EXPECT_TRUE(man["time"].IsNumber());
+        EXPECT_TRUE(man["time_same"].IsNumber());
+        EXPECT_TRUE(man["time_nope"].IsNull());
+      }
+    }
+  }
 
-  // TODO: do it again for osrm format
+  // do it again for osrm format
   json = actor.route(R"({"costing":"auto","format":"osrm","locations":[)" + locations +
                          R"(],"recostings":[
       {"costing":"truck","name":"nope"},
       {"costing":"auto","name":"same"}]})",
                      {}, &api);
+
+  // verify json has the right info
+  {
+    rapidjson::Document d;
+    d.Parse(json);
+    EXPECT_FALSE(d.HasParseError());
+    for (const auto& route : d["routes"].GetArray()) {
+      EXPECT_TRUE(route["duration"].IsNumber());
+      EXPECT_TRUE(route["duration_same"].IsNumber());
+      EXPECT_TRUE(route["duration_nope"].IsNull());
+      EXPECT_TRUE(route["weight"].IsNumber());
+      EXPECT_TRUE(route["weight_same"].IsNumber());
+      EXPECT_TRUE(route["weight_nope"].IsNull());
+      for (const auto& leg : route["legs"].GetArray()) {
+        EXPECT_TRUE(leg["duration"].IsNumber());
+        EXPECT_TRUE(leg["duration_same"].IsNumber());
+        EXPECT_TRUE(leg["duration_nope"].IsNull());
+        EXPECT_TRUE(leg["weight"].IsNumber());
+        EXPECT_TRUE(leg["weight_same"].IsNumber());
+        EXPECT_TRUE(leg["weight_nope"].IsNull());
+        for (const auto& step : leg["steps"].GetArray()) {
+          EXPECT_TRUE(step["duration"].IsNumber());
+          EXPECT_TRUE(step["duration_same"].IsNumber());
+          EXPECT_TRUE(step["duration_nope"].IsNull());
+          EXPECT_TRUE(step["weight"].IsNumber());
+          EXPECT_TRUE(step["weight_same"].IsNumber());
+          EXPECT_TRUE(step["weight_nope"].IsNull());
+        }
+      }
+    }
+  }
 }
