@@ -41,8 +41,8 @@ public:
    *                   Must be an integer value.
    * @param labelcost  Functor to get a cost given a label index.
    */
-  DoubleBucketQueue(const float mincost,
-                    const float range,
+  DoubleBucketQueue(const double mincost,
+                    const double range,
                     const uint32_t bucketsize,
                     const LabelCost& labelcost) {
     // We need at least a bucketsize of 1 or more
@@ -60,7 +60,7 @@ public:
     currentcost_ = (c - (c % bucketsize));
     mincost_ = currentcost_;
     bucketrange_ = range;
-    bucketsize_ = static_cast<float>(bucketsize);
+    bucketsize_ = static_cast<double>(bucketsize);
     inv_ = 1.0f / bucketsize_;
 
     // Set the maximum cost (above this goes into the overflow bucket)
@@ -111,7 +111,7 @@ public:
    * @param  label        Label index to reorder.
    * @param  newcost      New sort cost.
    */
-  void decrease(const uint32_t label, const float newcost) {
+  void decrease(const uint32_t label, const double newcost) {
     // Get the buckets of the previous and new costs. Nothing needs to be done
     // if old cost and the new cost are in the same buckets.
     bucket_t& prevbucket = get_bucket(labelcost_(label));
@@ -178,7 +178,7 @@ private:
    * @param  cost  Cost.
    * @return Returns the bucket that the cost lies within.
    */
-  bucket_t& get_bucket(const float cost) {
+  bucket_t& get_bucket(const double cost) {
     return (cost < currentcost_)
                ? *currentbucket_
                : (cost < maxcost_) ? buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)]
@@ -212,7 +212,7 @@ private:
     if (itr != overflowbucket_.end()) {
 
       // Adjust cost range so smallest element is in the buckets_
-      float min = labelcost_(*itr);
+      double min = labelcost_(*itr);
       mincost_ += (std::floor((min - mincost_) / bucketrange_)) * bucketrange_;
 
       // Avoid precision issues
@@ -227,7 +227,7 @@ private:
       bucket_t tmp;
       for (const auto& label : overflowbucket_) {
         // Get the cost (using the label cost function)
-        float cost = labelcost_(label);
+        double cost = labelcost_(label);
         if (cost < maxcost_) {
           buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)].push_back(label);
         } else {
