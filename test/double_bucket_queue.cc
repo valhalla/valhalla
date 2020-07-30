@@ -21,13 +21,15 @@ void TryAddRemove(const std::vector<uint32_t>& costs, const std::vector<uint32_t
   const auto edgecost = [&edgelabels](const uint32_t label) { return edgelabels[label]; };
 
   uint32_t i = 0;
-  DoubleBucketQueue adjlist(0, 10000, 5, edgecost);
+  DoubleBucketQueue adjlist(0, 10000, 1, edgecost);
   for (auto cost : costs) {
     edgelabels.emplace_back(cost);
     adjlist.add(i);
     i++;
   }
   for (auto expected : expectedorder) {
+    // Do the same transform that's done in `edgecost()`
+    expected = (uint32_t)(float)expected;
     uint32_t labelindex = adjlist.pop();
     EXPECT_EQ(edgelabels[labelindex], expected) << "TryAddRemove: expected order test failed";
   }
