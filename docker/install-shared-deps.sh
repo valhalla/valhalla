@@ -78,7 +78,6 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     locales \
     luajit \
     make \
-    ninja-build \
     osmium-tool \
     parallel \
     pkg-config \
@@ -89,6 +88,5 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     python3-minimal \
     spatialite-bin \
     unzip \
-    vim-common \
     zlib1g-dev \
   && rm -rf /var/lib/apt/lists/*
