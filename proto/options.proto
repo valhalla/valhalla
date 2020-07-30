@@ -106,6 +106,7 @@ message CostingOptions {
   optional uint32 flow_mask = 55;
   optional float rail_ferry_cost = 56;
   optional float use_rail_ferry = 57;
+  optional bool ignore_restrictions = 58;
 }
 
 message AvoidEdge {
@@ -190,5 +191,4 @@ message Options {
   optional uint32 height_precision = 43 [default = 0];                    // Number of digits precision for heights returned
   optional bool roundabout_exits = 44 [default = true];                   // Whether to announce roundabout exit maneuvers
   optional bool linear_references = 45;                                   // Include linear references for graph edges returned in certain responses.
-  optional bool match_on_restrictions = 46;                               // User input parameter to allow map-match on restricted edges
 }

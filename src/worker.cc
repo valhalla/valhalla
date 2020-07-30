@@ -948,13 +948,6 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_interpolation_distance(*interpolation_distance);
   }
 
-  // if specified, get the match_on_restrictions value in there
-  auto match_on_restrictions =
-      rapidjson::get_optional<bool>(doc, "/trace_options/match_on_restrictions");
-  if (match_on_restrictions) {
-    options.set_match_on_restrictions(*match_on_restrictions);
-  }
-
   // if specified, get the filter_action value in there
   auto filter_action_str = rapidjson::get_optional<std::string>(doc, "/filters/action");
   FilterAction filter_action;

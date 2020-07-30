@@ -25,8 +25,7 @@ public:
                       float breakage_distance,
                       float max_route_distance_factor,
                       float max_route_time_factor,
-                      float turn_penalty_factor,
-                      bool match_on_restrictions);
+                      float turn_penalty_factor);
 
   TransitionCostModel(baldr::GraphReader& graphreader,
                       const IViterbiSearch& vs,

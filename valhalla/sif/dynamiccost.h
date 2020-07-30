@@ -433,7 +433,7 @@ public:
                                    const uint64_t current_time,
                                    const uint32_t tz_index,
                                    int& restriction_idx) const {
-    if (edge->access_restriction()) {
+    if (!ignore_restrictions_ && edge->access_restriction()) {
       const std::vector<baldr::AccessRestriction>& restrictions =
           tile->GetAccessRestrictions(edgeid.id(), auto_type);
 
@@ -697,6 +697,7 @@ protected:
 
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
+  bool ignore_restrictions_{false};
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.

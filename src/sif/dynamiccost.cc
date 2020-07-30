@@ -40,7 +40,7 @@ namespace sif {
 
 DynamicCost::DynamicCost(const Options& options, const TravelMode mode)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
-      flow_mask_(kDefaultFlowMask) {
+      flow_mask_(kDefaultFlowMask), ignore_restrictions_(false) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
@@ -201,6 +201,7 @@ void DynamicCost::AddUserAvoidEdges(const std::vector<AvoidEdge>& avoid_edges) {
 void ParseCostOptions(const rapidjson::Value& value, CostingOptions* pbf_costing_options) {
   auto speed_types = rapidjson::get_child_optional(value, "/speed_types");
   pbf_costing_options->set_flow_mask(SpeedMask_Parse(speed_types));
+  pbf_costing_options->set_ignore_restrictions(rapidjson::get(value, "/ignore_restrictions", false));
 }
 
 } // namespace sif

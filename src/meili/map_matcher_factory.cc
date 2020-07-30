@@ -60,7 +60,6 @@ MapMatcher* MapMatcherFactory::Create(const Options& options) {
 boost::property_tree::ptree MapMatcherFactory::MergeConfig(const Options& options) {
   // Copy the default child config
   auto config = config_.get_child("default");
-  bool val = config.get<bool>("match_on_restrictions");
   // Get a list of customizable options
   std::unordered_set<std::string> customizable;
   for (const auto& item : config_.get_child("customizable")) {
@@ -85,10 +84,6 @@ boost::property_tree::ptree MapMatcherFactory::MergeConfig(const Options& option
   if (options.has_interpolation_distance() &&
       customizable.find("interpolation_distance") != customizable.end()) {
     config.put<float>("interpolation_distance", options.interpolation_distance());
-  }
-  if (options.has_match_on_restrictions() &&
-      customizable.find("match_on_restrictions") != customizable.cend()) {
-    config.put<bool>("match_on_restrictions", options.match_on_restrictions());
   }
 
   // Give it back

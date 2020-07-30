@@ -165,12 +165,11 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
                           const sif::cost_ptr_t& costing,
                           const Label& pred_edgelabel,
                           const baldr::GraphTile* tile,
-                          bool allow_match_on_restrictions,
                           int& restriction_idx) {
   bool valid_pred = (!pred_edgelabel.edgeid().Is_Valid() && costing->GetEdgeFilter()(edge) != 0.f) ||
                     edgeid == pred_edgelabel.edgeid();
   bool restricted = !costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0, restriction_idx);
-  return valid_pred || !restricted || (restricted && allow_match_on_restrictions);
+  return valid_pred || !restricted;
 }
 
 /**
@@ -356,8 +355,7 @@ find_shortest_path(baldr::GraphReader& reader,
                    const Label* edgelabel,
                    const float turn_cost_table[181],
                    const float max_dist,
-                   const float max_time,
-                   bool allow_match_on_restrictions) {
+                   const float max_time) {
   Label label;
   const sif::TravelMode travelmode = costing->travel_mode();
 
@@ -406,8 +404,7 @@ find_shortest_path(baldr::GraphReader& reader,
 
       // Skip it if its not allowed
       int restriction_idx = -1;
-      if (!IsEdgeAllowed(directededge, edgeid, costing, label, tile, allow_match_on_restrictions,
-                         restriction_idx)) {
+      if (!IsEdgeAllowed(directededge, edgeid, costing, label, tile, restriction_idx)) {
         continue;
       }
 
@@ -548,9 +545,8 @@ find_shortest_path(baldr::GraphReader& reader,
 
         // Skip if edge is not allowed
         int restriction_idx = -1;
-        if (!directed_edge ||
-            !IsEdgeAllowed(directed_edge, origin_edge.id, costing, label, start_tile,
-                           allow_match_on_restrictions, restriction_idx)) {
+        if (!directed_edge || !IsEdgeAllowed(directed_edge, origin_edge.id, costing, label,
+                                             start_tile, restriction_idx)) {
           continue;
         }
 

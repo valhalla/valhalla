@@ -408,7 +408,7 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
   // region.
   if (!(edge->forwardaccess() & kAutoAccess) ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (pred.restrictions() & (1 << edge->localedgeidx())) ||
+      (((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_)) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
@@ -436,7 +436,7 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kAutoAccess) ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
+      (((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_)) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
@@ -877,7 +877,7 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
   // Allow U-turns at dead-end nodes.
   if (!(edge->forwardaccess() & kBusAccess) ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (pred.restrictions() & (1 << edge->localedgeidx())) ||
+      (((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_)) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
@@ -905,7 +905,7 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kBusAccess) ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
+      ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
@@ -1079,7 +1079,7 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
   // region.
   if (!(edge->forwardaccess() & kHOVAccess) ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (pred.restrictions() & (1 << edge->localedgeidx())) ||
+      (((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_)) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
@@ -1109,7 +1109,7 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kHOVAccess) ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
+      ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
@@ -1283,7 +1283,7 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
   // region.
   if (!(edge->forwardaccess() & kTaxiAccess) ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (pred.restrictions() & (1 << edge->localedgeidx())) ||
+      (((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_)) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
@@ -1313,7 +1313,7 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kTaxiAccess) ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
+      ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;

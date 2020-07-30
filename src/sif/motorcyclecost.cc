@@ -414,8 +414,8 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
   // Allow U-turns at dead-end nodes.
   if (!(edge->forwardaccess() & kMotorcycleAccess) ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (pred.restrictions() & (1 << edge->localedgeidx())) || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
+      (((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_)) ||
+      IsUserAvoidEdge(edgeid) || (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
   if (edge->surface() > kMinimumMotorcycleSurface) {
@@ -444,7 +444,8 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // Allow U-turns at dead-end nodes.
   if (!(opp_edge->forwardaccess() & kMotorcycleAccess) ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (opp_edge->restrictions() & (1 << pred.opp_local_idx())) || IsUserAvoidEdge(opp_edgeid) ||
+      ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
+      IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
   }

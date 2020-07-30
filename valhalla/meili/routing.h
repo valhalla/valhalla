@@ -301,8 +301,7 @@ find_shortest_path(baldr::GraphReader& reader,
                    const Label* edgelabel,
                    const float turn_cost_table[181],
                    const float max_dist,
-                   const float max_time,
-                   bool allow_match_on_restrictions);
+                   const float max_time);
 
 // Route path iterator. Methods to assist recovering route paths from Labels.
 class RoutePathIterator : public std::iterator<std::forward_iterator_tag, const Label> {
