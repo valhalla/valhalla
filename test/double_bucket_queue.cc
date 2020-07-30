@@ -90,7 +90,6 @@ TEST(DoubleBucketQueue, RC4FloatPrecisionErrors) {
   TryAddRemove(costs, expectedorder);
 }
 
-
 /**
    void TestDecreseCost() {
    std::vector<uint32_t> costs = { 67, 325, 25, 466, 1000, 100005, 758, 167,
