@@ -31,7 +31,14 @@ void TryAddRemove(const std::vector<uint32_t>& costs, const std::vector<uint32_t
     // Do the same transform that's done in `edgecost()`
     expected = (uint32_t)(float)expected;
     uint32_t labelindex = adjlist.pop();
-    EXPECT_EQ(edgelabels[labelindex], expected) << "TryAddRemove: expected order test failed";
+    auto edgelabel = 0;
+    if (labelindex != kInvalidLabel) {
+      edgelabel = edgelabels[labelindex];
+    } else {
+      fprintf(stderr, "#####################################  INVALID LABEL INDEX\n");
+      // continue;
+    }
+    EXPECT_EQ(edgelabel, expected) << "TryAddRemove: expected order test failed";
   }
 }
 
@@ -73,6 +80,16 @@ TEST(DoubleBucketQueue, TestClear) {
                                  758, 167, 258, 16442, 278,  111111000};
   TryClear(costs);
 }
+
+TEST(DoubleBucketQueue, RC4FloatPrecisionErrors) {
+  // Tests what happens when the internal floats in DoubleBucketQueue loses
+  // precision
+  std::vector<uint32_t> costs = {1320209856};
+  std::vector<uint32_t> expectedorder = costs;
+  std::sort(expectedorder.begin(), expectedorder.end());
+  TryAddRemove(costs, expectedorder);
+}
+
 
 /**
    void TestDecreseCost() {
