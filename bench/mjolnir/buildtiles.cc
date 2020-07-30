@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
 
   const auto build_tiles = [](benchmark::State& state, const std::string& pbf_path,
                               BuildStage stage) {
-    const std::string kConfigFilePath = VALHALLA_SOURCE_DIR "bench/mjolnir/config.json";
+    const std::string kConfigFilePath = "bench/mjolnir/config.json";
     boost::property_tree::ptree config;
     rapidjson::read_json(kConfigFilePath, config);
     config.get_child("mjolnir").erase("tile_extract");
