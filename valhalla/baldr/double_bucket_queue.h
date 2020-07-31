@@ -41,8 +41,8 @@ public:
    *                   Must be an integer value.
    * @param labelcost  Functor to get a cost given a label index.
    */
-  DoubleBucketQueue(const double mincost,
-                    const double range,
+  DoubleBucketQueue(const float mincost,
+                    const float range,
                     const uint32_t bucketsize,
                     const LabelCost& labelcost) {
     // We need at least a bucketsize of 1 or more
@@ -60,7 +60,7 @@ public:
     currentcost_ = (c - (c % bucketsize));
     mincost_ = currentcost_;
     bucketrange_ = range;
-    bucketsize_ = static_cast<double>(bucketsize);
+    bucketsize_ = static_cast<float>(bucketsize);
     inv_ = 1.0f / bucketsize_;
 
     // Set the maximum cost (above this goes into the overflow bucket)
@@ -111,7 +111,7 @@ public:
    * @param  label        Label index to reorder.
    * @param  newcost      New sort cost.
    */
-  void decrease(const uint32_t label, const double newcost) {
+  void decrease(const uint32_t label, const float newcost) {
     // Get the buckets of the previous and new costs. Nothing needs to be done
     // if old cost and the new cost are in the same buckets.
     bucket_t& prevbucket = get_bucket(labelcost_(label));
@@ -157,7 +157,7 @@ private:
   float bucketrange_; // Total range of costs in lower level buckets
   float bucketsize_;  // Bucket size (range of costs in same bucket)
   float inv_;         // 1/bucketsize (so we can avoid division)
-  double mincost_;     // Minimum cost within the low level buckets
+  double mincost_;    // Minimum cost within the low level buckets
   float maxcost_;     // Above this goes into overflow bucket
   float currentcost_; // Current cost
 
@@ -178,7 +178,7 @@ private:
    * @param  cost  Cost.
    * @return Returns the bucket that the cost lies within.
    */
-  bucket_t& get_bucket(const double cost) {
+  bucket_t& get_bucket(const float cost) {
     return (cost < currentcost_)
                ? *currentbucket_
                : (cost < maxcost_) ? buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)]
@@ -212,7 +212,7 @@ private:
     if (itr != overflowbucket_.end()) {
 
       // Adjust cost range so smallest element is in the buckets_
-      double min = labelcost_(*itr);
+      float min = labelcost_(*itr);
       mincost_ += (std::floor((min - mincost_) / bucketrange_)) * bucketrange_;
 
       // Avoid precision issues
@@ -222,13 +222,13 @@ private:
         mincost_ += bucketrange_;
       }
       maxcost_ = mincost_ + bucketrange_;
-      //fprintf(stderr, "##    min %f mincost_ %f maxcost_ %f\n", min, mincost_, maxcost_);
+      // fprintf(stderr, "##    min %f mincost_ %f maxcost_ %f\n", min, mincost_, maxcost_);
 
       // Move elements within the range from overflow to buckets
       bucket_t tmp;
       for (const auto& label : overflowbucket_) {
         // Get the cost (using the label cost function)
-        double cost = labelcost_(label);
+        float cost = labelcost_(label);
         if (cost < maxcost_) {
           buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)].push_back(label);
         } else {

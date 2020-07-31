@@ -5,8 +5,8 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "test.h"
 
@@ -20,10 +20,11 @@ void TryAddRemove(const std::vector<uint32_t>& costs, const std::vector<uint32_t
   std::vector<float> edgelabels;
 
   fprintf(stderr, "Expected %u, cast expected %u float %e\n", expectedorder[0],
-    (uint32_t)(float)expectedorder[0], std::numeric_limits<float>::epsilon());
+          (uint32_t)(float)expectedorder[0], std::numeric_limits<float>::epsilon());
   const auto edgecost = [&edgelabels](const uint32_t label) {
     fprintf(stderr, "edgecost %f\n", edgelabels[label]);
-    return edgelabels[label]; };
+    return edgelabels[label];
+  };
 
   uint32_t i = 0;
   DoubleBucketQueue adjlist(0, 10000, 1, edgecost);
@@ -91,7 +92,8 @@ TEST(DoubleBucketQueue, RC4FloatPrecisionErrors) {
   // precision
   // Build the value from stoi to prevent failure on x86 release build
   // due to compiler "doing tricks with literals"
-  uint32_t buggy_value = std::stol("1320209856");;
+  uint32_t buggy_value = std::stol("1320209856");
+  ;
   std::vector<uint32_t> costs = {buggy_value};
   std::vector<uint32_t> expectedorder = costs;
   std::sort(expectedorder.begin(), expectedorder.end());
