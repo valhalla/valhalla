@@ -1,10 +1,69 @@
 #include "gurka.h"
+#include "mjolnir/graphtilebuilder.h"
 #include "sif/recost.h"
 #include <gtest/gtest.h>
 
 using namespace valhalla;
 
 const std::unordered_map<std::string, std::string> build_config{{"mjolnir.shortcuts", "false"}};
+
+TEST(recosting, same_historical) {
+  const std::string ascii_map = R"(A--1--B-2-3-C
+                                         |     |
+                                         |     |
+                                         4     5
+                                         |     |
+                                         |     |
+                                         D--6--E--7--F)";
+  const gurka::ways ways = {
+      {"A1B23C", {{"highway", "residential"}}},
+      {"D6E7F", {{"highway", "residential"}}},
+      {"B4D", {{"highway", "trunk"}}},
+      {"C5E", {{"highway", "trunk"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  std::string tile_dir = "test/data/gurka_recost";
+  auto map = gurka::buildtiles(layout, ways, {}, {}, tile_dir, build_config);
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+
+  // add historical traffic so that we can get different costs at different times
+  // TODO: move this into test utils with a callback per edge to get speed from the test
+  for (const auto& tile_id : reader->GetTileSet()) {
+    valhalla::mjolnir::GraphTileBuilder tile(tile_dir, tile_id, false);
+    std::vector<valhalla::baldr::DirectedEdge> edges;
+    edges.reserve(tile.header()->directededgecount());
+    for (const auto& edge : tile.GetDirectedEdges()) {
+      edges.push_back(edge);
+      edges.back().set_free_flow_speed(100);
+      edges.back().set_constrained_flow_speed(10);
+      // TODO: add historical 5 minutely buckets
+      // tile.AddPredictedSpeed();
+    }
+    tile.UpdatePredictedSpeeds(edges);
+  }
+
+  // run a route and check that the costs are the same for the same options
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+  std::string locations = R"({"lon":)" + std::to_string(map.nodes["F"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["F"].lat()) + R"(},{"lon":)" +
+                          std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["A"].lat()) + "}";
+
+  // lets also do a bunch of costings
+  Api api;
+  auto json = actor.route(R"({"costing":"auto","locations":[)" + locations +
+                              R"(],"recostings":[{"costing":"auto","name":"same"}]})",
+                          {}, &api);
+
+  // check we have the same cost at all places
+  for (const auto& n : api.trip().routes(0).legs(0).node()) {
+    EXPECT_EQ(n.recosts_size(), 1);
+    EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
+    EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
+    EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
+    EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
+  }
+}
 
 TEST(recosting, all_algorithms) {
   const std::string ascii_map = R"(A--1--B-2-3-C
@@ -21,15 +80,16 @@ TEST(recosting, all_algorithms) {
       {"C5E", {{"highway", "trunk"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_recost", build_config);
+  std::string tile_dir = "test/data/gurka_recost";
+  auto map = gurka::buildtiles(layout, ways, {}, {}, tile_dir, build_config);
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
 
   // run all the permutations
   std::string named_locations = "1A2B3C4D5E6F7";
   std::vector<std::unordered_map<std::string, std::string>> options{
       {},
-      {{"/date_time/type", "1"}, {"/date_time/value", "2020-06-16T14:12"}},
-      {{"/date_time/type", "2"}, {"/date_time/value", "2020-06-16T14:12"}},
+      {{"/date_time/type", "1"}, {"/date_time/value", "2020-06-9T14:12"}},
+      {{"/date_time/type", "2"}, {"/date_time/value", "2020-06-22T14:12"}},
   };
   for (const auto& option : options) {
     for (size_t i = 0; i < named_locations.size(); ++i) {
@@ -94,16 +154,11 @@ TEST(recosting, all_algorithms) {
         auto dt_itr = option.find("/date_time/value");
         std::string date_time = dt_itr != option.cend() ? dt_itr->second : "";
         auto type_itr = option.find("/date_time/type");
-        bool forward = type_itr != option.cend() ? std::stoi(type_itr->second) != 2 : true;
         // build up the costing object
         auto costing = sif::CostFactory().Create(api.options());
 
         // recost the path
-        if (forward) {
-          sif::recost_forward(*reader, *costing, edge_cb, label_cb, src_pct, tgt_pct, date_time);
-        } else {
-          // sif::recost_reverse(*reader, &mode_costing[0], date_time, edge_cb, label_cb);
-        }
+        sif::recost_forward(*reader, *costing, edge_cb, label_cb, src_pct, tgt_pct, date_time);
       }
     }
   }
