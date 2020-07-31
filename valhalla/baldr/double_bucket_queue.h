@@ -222,7 +222,6 @@ private:
         mincost_ += bucketrange_;
       }
       maxcost_ = mincost_ + bucketrange_;
-      // fprintf(stderr, "##    min %f mincost_ %f maxcost_ %f\n", min, mincost_, maxcost_);
 
       // Move elements within the range from overflow to buckets
       bucket_t tmp;
