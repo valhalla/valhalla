@@ -19,9 +19,7 @@ namespace {
 void TryAddRemove(const std::vector<uint32_t>& costs, const std::vector<uint32_t>& expectedorder) {
   std::vector<float> edgelabels;
 
-  const auto edgecost = [&edgelabels](const uint32_t label) {
-    return edgelabels[label];
-  };
+  const auto edgecost = [&edgelabels](const uint32_t label) { return edgelabels[label]; };
 
   uint32_t i = 0;
   DoubleBucketQueue adjlist(0, 10000, 1, edgecost);
