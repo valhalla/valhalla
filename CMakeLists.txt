@@ -22,7 +22,6 @@ option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
 option(ENABLE_HTTP "Enable the use of CURL" ON)
 option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
-option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" ON)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_COMPILER_WARNINGS "Build with compiler warnings" OFF)
@@ -242,11 +241,6 @@ if(ENABLE_PYTHON_BINDINGS)
   install(FILES COPYING CHANGELOG.md
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
     COMPONENT python)
-endif()
-
-# NodeJS bindings
-if (ENABLE_NODE_BINDINGS)
-  add_subdirectory(src/bindings/node)
 endif()
 
 ## Executable targets

@@ -16,7 +16,9 @@ add_dependencies(benchmarks utrecht_tiles)
 # Macro for defining Google Benchmark microbenchmark targets
 macro (add_valhalla_benchmark target_file)
   set(target_name benchmark-${target_file})
-  add_executable(${target_name} ${target_file}.cc)
+  add_executable(${target_name}
+    ${target_file}.cc
+    ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c)
   set_target_properties(${target_name} PROPERTIES FOLDER "Benchmarks")
   set_target_properties(${target_name}
     PROPERTIES
@@ -32,7 +34,12 @@ macro (add_valhalla_benchmark target_file)
     COMMENT "Running ${target_name} in ${CMAKE_CURRENT_BINARY_DIR}"
     DEPENDS ${target_name})
   set_target_properties(run-${target_name} PROPERTIES FOLDER "Benchmarks")
+  add_dependencies(run-${target_name} utrecht_tiles)
   add_dependencies(run-benchmarks run-${target_name})
+  target_include_directories(benchmark-${target_file} SYSTEM PRIVATE
+      ${VALHALLA_SOURCE_DIR}/third_party/microtar/src
+      ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
+      ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
 endmacro()
 
 add_subdirectory(meili)
