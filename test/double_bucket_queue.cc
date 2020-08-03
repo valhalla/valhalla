@@ -90,11 +90,8 @@ TEST(DoubleBucketQueue, TestClear) {
 TEST(DoubleBucketQueue, RC4FloatPrecisionErrors) {
   // Tests what happens when the internal floats in DoubleBucketQueue loses
   // precision
-  // Build the value from stoi to prevent failure on x86 release build
-  // due to compiler "doing tricks with literals"
-  uint32_t buggy_value = std::stol("1320209856");
-  ;
-  std::vector<uint32_t> costs = {buggy_value};
+
+  std::vector<uint32_t> costs = {1320209856};
   std::vector<uint32_t> expectedorder = costs;
   std::sort(expectedorder.begin(), expectedorder.end());
   TryAddRemove(costs, expectedorder);
