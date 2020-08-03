@@ -19,10 +19,7 @@ namespace {
 void TryAddRemove(const std::vector<uint32_t>& costs, const std::vector<uint32_t>& expectedorder) {
   std::vector<float> edgelabels;
 
-  fprintf(stderr, "Expected %u, cast expected %u float %e\n", expectedorder[0],
-          (uint32_t)(float)expectedorder[0], std::numeric_limits<float>::epsilon());
   const auto edgecost = [&edgelabels](const uint32_t label) {
-    fprintf(stderr, "edgecost %f\n", edgelabels[label]);
     return edgelabels[label];
   };
 
@@ -42,7 +39,6 @@ void TryAddRemove(const std::vector<uint32_t>& costs, const std::vector<uint32_t
       edgelabel = edgelabels[labelindex];
     } else {
       fprintf(stderr, "#####################################  INVALID LABEL INDEX\n");
-      // continue;
     }
     EXPECT_EQ(edgelabel, expected) << "TryAddRemove: expected order test failed";
   }
