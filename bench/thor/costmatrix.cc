@@ -64,12 +64,11 @@ const auto config = json_to_pt(R"({
     }
   })");
 
-baldr::GraphReader reader(config.get_child("mjolnir"));
-
 constexpr float kMaxRange = 256;
 
 static void BM_UtrechtCostMatrix(benchmark::State& state) {
   const int size = state.range(0);
+  baldr::GraphReader reader(config.get_child("mjolnir"));
 
   // Generate N random locations within the Utrect bounding box;
   std::vector<valhalla::baldr::Location> locations;
@@ -92,6 +91,9 @@ static void BM_UtrechtCostMatrix(benchmark::State& state) {
   auto costs = sif::CreateAutoCost(Costing::auto_, options);
 
   const auto projections = loki::Search(locations, reader, costs);
+  if (projections.size() == 0) {
+    throw std::runtime_error("Found no matching locations");
+  }
 
   google::protobuf::RepeatedPtrField<valhalla::Location> sources;
 
@@ -106,7 +108,7 @@ static void BM_UtrechtCostMatrix(benchmark::State& state) {
     thor::CostMatrix matrix;
     auto result =
         matrix.SourceToTarget(sources, sources, reader, &costs, sif::TravelMode::kDrive, 100000.);
-    result_size = result.size();
+    result_size += result.size();
   }
   state.counters["Routes"] = benchmark::Counter(size, benchmark::Counter::kIsIterationInvariantRate);
 }

@@ -325,10 +325,10 @@
     },
     "destination_verbal_alert": {
       "phrases": {
-        "0": "Ziel fast erreicht.",
-        "1": "<DESTINATION> fast erreicht.",
-        "2": "Gleich befindet sich das Ziel auf der <RELATIVE_DIRECTION> Seite.",
-        "3": "Gleich befindet sich <DESTINATION> auf der <RELATIVE_DIRECTION> Seite."
+        "0": "Das Ziel wird erreicht.",
+        "1": "<DESTINATION> wird erreicht.",
+        "2": "Das Ziel befindet sich auf der <RELATIVE_DIRECTION> Seite.",
+        "3": "<DESTINATION> befindet sich auf der <RELATIVE_DIRECTION> Seite."
       },
       "relative_directions": [
         "linken",

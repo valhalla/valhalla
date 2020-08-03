@@ -339,6 +339,14 @@ public:
     return mutable_edge_->mutable_turn_lanes();
   }
 
+  bool has_restriction() const {
+    return mutable_edge_->has_restriction();
+  }
+
+  bool destination_only() const {
+    return mutable_edge_->destination_only();
+  }
+
   bool IsUnnamed() const;
 
   // Use

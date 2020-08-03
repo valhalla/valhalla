@@ -68,6 +68,7 @@ const std::string kEdgeSpeedLimit = "edge.speed_limit";
 const std::string kEdgeTruckSpeed = "edge.truck_speed";
 const std::string kEdgeTruckRoute = "edge.truck_route";
 const std::string kEdgeDefaultSpeed = "edge.default_speed";
+const std::string kEdgeDestinationOnly = "edge.destination_only";
 
 // Node keys
 const std::string kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";
