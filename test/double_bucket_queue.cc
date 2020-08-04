@@ -35,8 +35,6 @@ void TryAddRemove(const std::vector<uint32_t>& costs, const std::vector<uint32_t
     auto edgelabel = 0;
     if (labelindex != kInvalidLabel) {
       edgelabel = edgelabels[labelindex];
-    } else {
-      fprintf(stderr, "#####################################  INVALID LABEL INDEX\n");
     }
     EXPECT_EQ(edgelabel, expected) << "TryAddRemove: expected order test failed";
   }
