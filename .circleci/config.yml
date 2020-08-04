@@ -103,6 +103,7 @@ jobs:
       - run: make -C build -j4
       - run: make -C build utrecht_tiles
       - run: make -C build -j2 tests
+      # Leak Sanitizer is disabled as it is not supported on all platforms
       - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j2 check
       - run: make -C build -j2 benchmarks
       - run: make -C build run-benchmarks
