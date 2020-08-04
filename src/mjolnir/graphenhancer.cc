@@ -212,7 +212,7 @@ void GetTurnTypes(const DirectedEdge& directededge,
 
   // Get the heading value at the end of incoming edge based on edge shape
   auto incoming_shape = tile->edgeinfo(directededge.edgeinfo_offset()).shape();
-  if (directededge.forward())  {
+  if (directededge.forward()) {
     std::reverse(incoming_shape.begin(), incoming_shape.end());
   }
   uint32_t heading = std::round(
@@ -231,7 +231,7 @@ void GetTurnTypes(const DirectedEdge& directededge,
 
   // Iterate through outbound edges and get turn degrees from the candidate
   // edge onto outbound driveable edges.
-  const auto *diredge = tile->directededge(node->edge_index());
+  const auto* diredge = tile->directededge(node->edge_index());
   for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
     // Skip opposing directed edge and any edge that is not a road. Skip any
     // edges that are not driveable outbound.
@@ -256,9 +256,7 @@ void GetTurnTypes(const DirectedEdge& directededge,
 }
 
 // Update the rightmost lane as needed.
-void EnhanceRightLane(const DirectedEdge directededge,
-                      const uint32_t idx,
-                      NodeInfo& startnodeinfo,
+void EnhanceRightLane(const DirectedEdge& directededge,
                       GraphTileBuilder& tilebuilder,
                       GraphReader& reader,
                       std::mutex& lock,
@@ -285,9 +283,7 @@ void EnhanceRightLane(const DirectedEdge directededge,
 }
 
 // Update the leftmost lane as needed.
-void EnhanceLeftLane(const DirectedEdge directededge,
-                     const uint32_t idx,
-                     NodeInfo& startnodeinfo,
+void EnhanceLeftLane(const DirectedEdge& directededge,
                      GraphTileBuilder& tilebuilder,
                      GraphReader& reader,
                      std::mutex& lock,
@@ -366,7 +362,6 @@ bool ProcessLanes(bool isLeft, bool endOnTurn, std::vector<uint16_t>& enhanced_t
 void UpdateTurnLanes(const OSMData& osmdata,
                      const uint32_t idx,
                      DirectedEdge& directededge,
-                     NodeInfo& startnodeinfo,
                      GraphTileBuilder& tilebuilder,
                      GraphReader& reader,
                      std::mutex& lock,
@@ -416,7 +411,7 @@ void UpdateTurnLanes(const OSMData& osmdata,
         // Should have a left.
         if (has_turn_left(outgoing_turn_type)) {
           // check for a right.
-          EnhanceRightLane(directededge, idx, startnodeinfo, tilebuilder, reader, lock, enhanced_tls);
+          EnhanceRightLane(directededge, tilebuilder, reader, lock, enhanced_tls);
         }
       }
     }
@@ -441,8 +436,7 @@ void UpdateTurnLanes(const OSMData& osmdata,
           // Should have a right.  check for a left.
           if (has_turn_right(outgoing_turn_type)) {
             // check for a left
-            EnhanceLeftLane(directededge, idx, startnodeinfo, tilebuilder, reader, lock,
-                            enhanced_tls);
+            EnhanceLeftLane(directededge, tilebuilder, reader, lock, enhanced_tls);
           }
         }
       }
@@ -468,9 +462,9 @@ void UpdateTurnLanes(const OSMData& osmdata,
 
         if (bUpdated) {
           // check for a right.
-          EnhanceRightLane(directededge, idx, startnodeinfo, tilebuilder, reader, lock, enhanced_tls);
+          EnhanceRightLane(directededge, tilebuilder, reader, lock, enhanced_tls);
           // check for a left
-          EnhanceLeftLane(directededge, idx, startnodeinfo, tilebuilder, reader, lock, enhanced_tls);
+          EnhanceLeftLane(directededge, tilebuilder, reader, lock, enhanced_tls);
         }
       }
     }
@@ -496,9 +490,9 @@ void UpdateTurnLanes(const OSMData& osmdata,
 
         if (bUpdated) {
           // check for a right.
-          EnhanceRightLane(directededge, idx, startnodeinfo, tilebuilder, reader, lock, enhanced_tls);
+          EnhanceRightLane(directededge, tilebuilder, reader, lock, enhanced_tls);
           // check for a left
-          EnhanceLeftLane(directededge, idx, startnodeinfo, tilebuilder, reader, lock, enhanced_tls);
+          EnhanceLeftLane(directededge, tilebuilder, reader, lock, enhanced_tls);
         }
       }
     }
@@ -1773,8 +1767,8 @@ void enhance(const boost::property_tree::ptree& pt,
         // Enhance and add turn lanes if not an internal edge.
         if (!directededge.internal() && directededge.turnlanes()) {
           // Update turn lanes.
-          UpdateTurnLanes(osmdata, nodeinfo.edge_index() + j, directededge, nodeinfo, tilebuilder,
-                          reader, lock, turn_lanes);
+          UpdateTurnLanes(osmdata, nodeinfo.edge_index() + j, directededge, tilebuilder, reader, lock,
+                          turn_lanes);
         }
 
         // Check for not_thru edge (only on low importance edges). Exclude
