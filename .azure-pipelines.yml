@@ -30,7 +30,8 @@ jobs:
         displayName: 'Pull submodules'
 
       - script: |
-          git clone --depth 1 https://github.com/microsoft/vcpkg %VCPKG_DIR%
+          git clone https://github.com/microsoft/vcpkg %VCPKG_DIR%
+          git -C %VCPKG_DIR% checkout f4bd6423
           echo.set(VCPKG_BUILD_TYPE release)>> %VCPKG_DIR%\triplets\%PLATFORM%-windows.cmake
           call %VCPKG_DIR%\bootstrap-vcpkg.bat
           %VCPKG_DIR%\vcpkg.exe version
@@ -56,7 +57,7 @@ jobs:
 
       - script: |
           cmake --version
-          cmake -H$(Build.SourcesDirectory) -B%BUILD_DIR% -G "%GENERATOR%" -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_CCACHE=OFF -DENABLE_DATA_TOOLS=OFF -DENABLE_HTTP=OFF -DENABLE_NODE_BINDINGS=OFF -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_SERVICES=OFF -DENABLE_TOOLS=OFF -DENABLE_BENCHMARKS=OFF
+          cmake -H$(Build.SourcesDirectory) -B%BUILD_DIR% -G "%GENERATOR%" -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_CCACHE=OFF -DENABLE_DATA_TOOLS=OFF -DENABLE_HTTP=OFF -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_SERVICES=OFF -DENABLE_TOOLS=OFF -DENABLE_BENCHMARKS=OFF
         displayName: 'Run CMake to configure build'
 
       - script: |

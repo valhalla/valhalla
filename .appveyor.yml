@@ -61,6 +61,6 @@ before_build:
 build_script:
   - cmd: cmake --version
   - ps: 'Write-Host "Run CMake to configure build" -ForegroundColor Magenta'
-  - cmd: cmake -H%APPVEYOR_BUILD_FOLDER% -B%BUILD_DIR% -G "%GENERATOR%" -T "%TOOLSET%" -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DBOOST_ROOT=C:\Libraries\boost_1_67_0 -DENABLE_CCACHE=OFF -DENABLE_DATA_TOOLS=OFF -DENABLE_HTTP=OFF -DENABLE_NODE_BINDINGS=OFF -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_SERVICES=OFF -DENABLE_TOOLS=OFF
+  - cmd: cmake -H%APPVEYOR_BUILD_FOLDER% -B%BUILD_DIR% -G "%GENERATOR%" -T "%TOOLSET%" -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DBOOST_ROOT=C:\Libraries\boost_1_67_0 -DENABLE_CCACHE=OFF -DENABLE_DATA_TOOLS=OFF -DENABLE_HTTP=OFF -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_SERVICES=OFF -DENABLE_TOOLS=OFF
   - ps: 'Write-Host "Run CMake to build" -ForegroundColor Magenta'
   - cmd: cmake --build %BUILD_DIR% --config %BUILD_CFG%

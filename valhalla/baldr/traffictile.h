@@ -115,8 +115,6 @@ struct TrafficSpeed {
         congestion1{0}, congestion2{0}, congestion3{0}, spare{0} {
   }
 
-  constexpr TrafficSpeed(const TrafficSpeed& other) = default;
-
   constexpr TrafficSpeed(const uint32_t overall_speed,
                          const uint32_t s1,
                          const uint32_t s2,
@@ -128,10 +126,6 @@ struct TrafficSpeed {
                          const uint32_t c3)
       : overall_speed{overall_speed}, speed1{s1}, speed2{s2}, speed3{s3}, breakpoint1{b1},
         breakpoint2{b2}, congestion1{c1}, congestion2{c2}, congestion3{c3}, spare{0} {
-  }
-
-  constexpr TrafficSpeed(const volatile TrafficSpeed& other)
-      : TrafficSpeed(const_cast<const TrafficSpeed&>(other)) {
   }
 #endif
 };

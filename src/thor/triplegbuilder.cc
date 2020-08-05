@@ -337,6 +337,8 @@ TripLeg_Use GetTripLegUse(const Use use) {
       return TripLeg_Use_kDriveThruUse;
     case Use::kCuldesac:
       return TripLeg_Use_kCuldesacUse;
+    case Use::kLivingStreet:
+      return TripLeg_Use_kLivingStreetUse;
     case Use::kCycleway:
       return TripLeg_Use_kCyclewayUse;
     case Use::kMountainBike:
@@ -530,43 +532,6 @@ void AddTransitNodes(TripLeg_Node* trip_node,
   }
 }
 
-void SetTripEdgeRoadClass(TripLeg_Edge* trip_edge,
-                          const DirectedEdge* directededge,
-                          const GraphTile* graphtile,
-                          GraphReader& graphreader) {
-  trip_edge->set_road_class(GetRoadClass(directededge->classification()));
-  // If this is a ramp it may have been reclassified in graph enhancer.
-  // To restore the original road class for motorway_links, we check if any of the adjacent edges is
-  // a motorway.
-  if (directededge->use() == Use::kRamp) {
-    const DirectedEdge* opposing_edge = graphreader.GetOpposingEdge(directededge, graphtile);
-    for (const auto* edge : {directededge, opposing_edge}) {
-      if (!edge || !graphreader.GetGraphTile(edge->endnode(), graphtile)) {
-        // If this edge was invalid or we couldn't get the opposing edge's tile, skip
-        continue;
-      }
-      // check edges leaving node
-      for (const auto& adjacent_edge : graphtile->GetDirectedEdges(edge->endnode())) {
-        if (adjacent_edge.classification() == baldr::RoadClass::kMotorway) {
-          trip_edge->set_road_class(valhalla::RoadClass::kMotorway);
-          return;
-        }
-      }
-      // check transition nodes too
-      auto transition_nodes = graphtile->GetNodeTransitions(edge->endnode());
-      for (const auto& transition : transition_nodes) {
-        auto trans_tile = graphreader.GetGraphTile(transition.endnode());
-        for (const auto& adjacent_edge : trans_tile->GetDirectedEdges(transition.endnode())) {
-          if (adjacent_edge.classification() == baldr::RoadClass::kMotorway) {
-            trip_edge->set_road_class(valhalla::RoadClass::kMotorway);
-            return;
-          }
-        }
-      }
-    }
-  }
-}
-
 /**
  * Add trip edge. (TODO more comments)
  * @param  controller         Controller to determine which attributes to set.
@@ -729,7 +694,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   // Set road class if requested
   if (controller.attributes.at(kEdgeRoadClass)) {
-    SetTripEdgeRoadClass(trip_edge, directededge, graphtile, graphreader);
+    trip_edge->set_road_class(GetRoadClass(directededge->classification()));
   }
 
   // Set speed if requested
@@ -838,6 +803,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Set surface if requested
   if (controller.attributes.at(kEdgeSurface)) {
     trip_edge->set_surface(GetTripLegSurface(directededge->surface()));
+  }
+
+  if (directededge->destonly() && controller.attributes.at(kEdgeDestinationOnly)) {
+    trip_edge->set_destination_only(directededge->destonly());
   }
 
   // Set the mode and travel type
