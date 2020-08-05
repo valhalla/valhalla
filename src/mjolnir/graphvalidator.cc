@@ -556,7 +556,8 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   for (const auto& id : tileset) {
     tilequeue.emplace_back(id);
   }
-  std::random_shuffle(tilequeue.begin(), tilequeue.end());
+  // fixate seed for reproducible tile build
+  std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(3));
 
   // Remember what the dataset id is in case we have to make some tiles
   auto dataset_id = GraphTile(tile_dir, *tilequeue.begin()).header()->dataset_id();
