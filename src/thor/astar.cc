@@ -266,7 +266,7 @@ AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
   uint32_t density = SetDestination(graphreader, destination);
-  SetOrigin(graphreader, origin, destination, kInvalidSecondsOfWeek);
+  SetOrigin(graphreader, origin, destination, kConstrainedFlowSecondOfDay);
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);

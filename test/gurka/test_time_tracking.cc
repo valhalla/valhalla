@@ -24,6 +24,9 @@ TEST(TimeTracking, make) {
   // need to access the tiles
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
 
+  // this is what the default should be, with constrained second of day
+  baldr::TimeInfo basic_ti{false, 0, 0, baldr::kConstrainedFlowSecondOfDay};
+
   // once without tz cache and once with
   for (auto* cache : std::vector<baldr::DateTime::tz_sys_info_cache_t*>{
            nullptr,
@@ -37,7 +40,7 @@ TEST(TimeTracking, make) {
 
     // no time
     auto ti = baldr::TimeInfo::make(location, reader, cache);
-    ASSERT_EQ(ti, baldr::TimeInfo{});
+    ASSERT_EQ(ti, basic_ti);
     ASSERT_FALSE(location.has_date_time());
 
     // bad timezone defaults to UTC
@@ -89,7 +92,7 @@ TEST(TimeTracking, make) {
     // messed up date time
     location.set_date_time("4000BC");
     ti = baldr::TimeInfo::make(location, reader, cache);
-    ASSERT_EQ(ti, baldr::TimeInfo{});
+    ASSERT_EQ(ti, basic_ti);
     ASSERT_EQ(location.date_time(), "4000BC");
 
     // user specified date time
