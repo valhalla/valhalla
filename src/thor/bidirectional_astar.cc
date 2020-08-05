@@ -249,8 +249,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   // Get cost. Separate out transition cost.
   Cost transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
   // TODO: actually use time_info
-  Cost newcost = pred.cost() + transition_cost +
-                 costing_->EdgeCost(meta.edge, tile, kConstrainedFlowSecondOfDay);
+  Cost newcost = pred.cost() + transition_cost + costing_->EdgeCost(meta.edge, tile);
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -457,8 +456,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // can properly recover elapsed time on the reverse path.
   Cost transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
-  Cost newcost =
-      pred.cost() + costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay) + transition_cost;
+  Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2) + transition_cost;
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -807,8 +805,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
     // Get cost and sort cost (based on distance from endnode of this edge
     // to the destination
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay) *
-                (1.0f - edge.percent_along());
+    Cost cost = costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
 
     // Store a node-info for later timezone retrieval (approximate for closest)
     if (closest_ni == nullptr) {
@@ -888,8 +885,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     // directed edge for costing, as this is the forward direction along the
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
-    Cost cost =
-        costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay) * edge.percent_along();
+    Cost cost = costing_->EdgeCost(directededge, tile) * edge.percent_along();
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route

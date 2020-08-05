@@ -12,6 +12,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/signinfo.h"
 #include "baldr/tilehierarchy.h"
+#include "baldr/time_info.h"
 #include "meili/match_result.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -543,7 +544,7 @@ void AddTransitNodes(TripLeg_Node* trip_node,
  * @param  trip_node          Trip node to add the edge information to.
  * @param  graphtile          Graph tile for accessing data.
  * @param  second_of_week     The time, from the beginning of the week in seconds at which
- *                            the path entered this edge
+ *                            the path entered this edge (always monday at noon on timeless route)
  * @param  start_node_idx     The start node index
  * @param  has_junction_name  True if named junction exists, false otherwise
  * @param  start_tile         The start tile of the start node
@@ -1225,14 +1226,10 @@ void TripLegBuilder::Build(
   auto* tp_orig = trip_path.mutable_location(0);
   auto* tp_dest = trip_path.mutable_location(trip_path.location_size() - 1);
 
-  // TODO: use TimeInfo
-  uint32_t origin_second_of_week = kInvalidSecondsOfWeek;
-  std::string date_time;
-  if (origin.has_date_time()) {
-    date_time = origin.date_time();
-    origin_second_of_week = DateTime::day_of_week(origin.date_time()) * kSecondsPerDay +
-                            DateTime::seconds_from_midnight(origin.date_time());
-  }
+  // Keep track of the time
+  auto date_time = origin.has_date_time() ? origin.date_time() : "";
+  baldr::DateTime::tz_sys_info_cache_t tz_cache;
+  auto time_info = baldr::TimeInfo::make(origin, graphreader, &tz_cache);
 
   // Create an array of travel types per mode
   uint8_t travel_types[4];
@@ -1346,7 +1343,7 @@ void TripLegBuilder::Build(
     auto trip_edge =
         AddTripEdge(controller, path_begin->edgeid, path_begin->trip_id, 0, path_begin->mode,
                     travel_types[static_cast<int>(path_begin->mode)], costing, edge, drive_on_right,
-                    trip_path.add_node(), tile, graphreader, origin_second_of_week, startnode.id(),
+                    trip_path.add_node(), tile, graphreader, time_info.second_of_week, startnode.id(),
                     false, nullptr, path_begin->restriction_index);
 
     // Set length if requested. Convert to km
@@ -1425,7 +1422,6 @@ void TripLegBuilder::Build(
   size_t edge_index = 0;
   const DirectedEdge* prev_de = nullptr;
   const GraphTile* graphtile = nullptr;
-  uint32_t origin_epoch = 0;
   // TODO: this is temp until we use transit stop type from transitland
   TransitPlatformInfo_Type prev_transit_node_type = TransitPlatformInfo_Type_kStop;
 
@@ -1447,23 +1443,12 @@ void TripLegBuilder::Build(
       osmchangeset = start_tile->header()->dataset_id();
     }
 
-    // cache this the first time
-    if (origin.has_date_time() && origin_epoch == 0) {
-      origin_epoch =
-          DateTime::seconds_since_epoch(origin.date_time(),
-                                        DateTime::get_tz_db().from_index(node->timezone()));
-    }
-
     // have to always compute the offset in case the timezone changes along the path
     // we could cache the timezone and just add seconds when the timezone doesnt change
-    uint32_t second_of_week = kInvalidSecondsOfWeek;
-    if (origin_epoch != 0) {
-      auto elapsed_seconds = static_cast<uint32_t>(
-          trip_path.node_size() == 0 ? 0
-                                     : trip_path.node().rbegin()->cost().elapsed_cost().seconds());
-      second_of_week = DateTime::second_of_week(origin_epoch + elapsed_seconds,
-                                                DateTime::get_tz_db().from_index(node->timezone()));
-    }
+    time_info = time_info.forward(trip_path.node_size() == 0
+                                      ? 0.0
+                                      : trip_path.node().rbegin()->cost().elapsed_cost().seconds(),
+                                  node->timezone());
 
     // Add a node to the trip path and set its attributes.
     TripLeg_Node* trip_node = trip_path.add_node();
@@ -1606,7 +1591,7 @@ void TripLegBuilder::Build(
 
         const TransitDeparture* transit_departure =
             graphtile->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(), trip_id,
-                                           second_of_week % kSecondsPerDay);
+                                           time_info.second_of_week % kSecondsPerDay);
 
         assumed_schedule = false;
         uint32_t date, day = 0;
@@ -1638,7 +1623,7 @@ void TripLegBuilder::Build(
 
           std::string dt = DateTime::get_duration(origin.date_time(),
                                                   (transit_departure->departure_time() -
-                                                   (origin_second_of_week % kSecondsPerDay)),
+                                                   (time_info.second_of_week % kSecondsPerDay)),
                                                   DateTime::get_tz_db().from_index(node->timezone()));
 
           std::size_t found = dt.find_last_of(' '); // remove tz abbrev.
@@ -1657,7 +1642,7 @@ void TripLegBuilder::Build(
           arrival_time = DateTime::get_duration(origin.date_time(),
                                                 (transit_departure->departure_time() +
                                                  transit_departure->elapsed_time()) -
-                                                    (origin_second_of_week % kSecondsPerDay),
+                                                    (time_info.second_of_week % kSecondsPerDay),
                                                 DateTime::get_tz_db().from_index(node->timezone()));
 
           found = arrival_time.find_last_of(' '); // remove tz abbrev.
@@ -1687,8 +1672,8 @@ void TripLegBuilder::Build(
     // Add edge to the trip node and set its attributes
     TripLeg_Edge* trip_edge =
         AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, costing, directededge,
-                    node->drive_on_right(), trip_node, graphtile, graphreader, second_of_week,
-                    startnode.id(), node->named_intersection(), start_tile,
+                    node->drive_on_right(), trip_node, graphtile, graphreader,
+                    time_info.second_of_week, startnode.id(), node->named_intersection(), start_tile,
                     edge_itr->restriction_index);
 
     // Get the shape and set shape indexes (directed edge forward flag

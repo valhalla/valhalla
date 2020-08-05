@@ -174,7 +174,7 @@ bool expand_from_node(const sif::mode_costing_t& mode_costing,
           de->length() < length_comparison(length, true)) {
 
         // Get seconds from beginning of the week accounting for any changes to timezone on the path
-        uint32_t second_of_week = kInvalidSecondsOfWeek;
+        uint32_t second_of_week = kConstrainedFlowSecondOfDay;
         if (origin_epoch != 0 && nodeinfo) {
           second_of_week =
               DateTime::second_of_week(origin_epoch + static_cast<uint32_t>(elapsed.secs),
@@ -349,7 +349,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           de_remaining_length < length_comparison(length, true)) {
 
         // Get seconds from beginning of the week accounting for any changes to timezone on the path
-        uint32_t second_of_week = kInvalidSecondsOfWeek;
+        uint32_t second_of_week = kConstrainedFlowSecondOfDay;
         if (origin_epoch != 0 && nodeinfo) {
           second_of_week =
               DateTime::second_of_week(origin_epoch + static_cast<uint32_t>(elapsed.secs),
@@ -397,7 +397,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           const DirectedEdge* end_de = end_edge_tile->directededge(end_edge_graphid);
 
           // Get seconds from beginning of the week accounting for any changes to timezone on the path
-          uint32_t second_of_week = kInvalidSecondsOfWeek;
+          uint32_t second_of_week = kConstrainedFlowSecondOfDay;
           if (origin_epoch != 0 && nodeinfo) {
             second_of_week =
                 DateTime::second_of_week(origin_epoch + static_cast<uint32_t>(elapsed.secs),

@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include <valhalla/baldr/datetime.h>
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/midgard/logging.h>
@@ -28,6 +29,7 @@ struct TimeInfo {
 
   // the ordinal second from the beginning of the week (starting monday at 00:00)
   // used to look up historical traffic as the route progresses
+  // this defaults to mondays at noon if no time is provided (for constrained flow lookup)
   uint64_t second_of_week : 20;
 
   // the distance in seconds from now
@@ -60,7 +62,7 @@ struct TimeInfo {
        int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC")) {
     // No time to to track
     if (!location.has_date_time()) {
-      return {false};
+      return {false, 0, 0, kConstrainedFlowSecondOfDay};
     }
 
     // Find the first edge whose end node has a valid timezone index and keep it
@@ -99,7 +101,7 @@ struct TimeInfo {
        int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC")) {
     // No time to to track
     if (date_time.empty()) {
-      return {false};
+      return {false, 0, 0, kConstrainedFlowSecondOfDay};
     }
 
     // Set the origin timezone to be the timezone at the end node use this for timezone changes
@@ -130,7 +132,7 @@ struct TimeInfo {
       parsed_date = dt::get_formatted_date(date_time, true);
     } catch (...) {
       LOG_ERROR("Could not parse provided date_time: " + date_time);
-      return {false};
+      return {false, 0, 0, kConstrainedFlowSecondOfDay};
     }
     const auto then_date = date::make_zoned(tz, parsed_date);
     uint64_t local_time = date::to_utc_time(then_date.get_sys_time()).time_since_epoch().count();

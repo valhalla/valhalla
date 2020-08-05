@@ -8,15 +8,15 @@ using namespace valhalla;
 const std::unordered_map<std::string, std::string> build_config{{"mjolnir.shortcuts", "false"}};
 
 TEST(recosting, same_historical) {
-  const std::string ascii_map = R"(A--1--B-2-3-C
-                                         |     |
-                                         |     |
-                                         4     5
+  const std::string ascii_map = R"(A--1--B-2-3-C-----G
+                                         |     |     |
+                                         |     |     8
+                                         4     5     H
                                          |     |
                                          |     |
                                          D--6--E--7--F)";
   const gurka::ways ways = {
-      {"A1B23C", {{"highway", "residential"}}},
+      {"A1B23CG8H", {{"highway", "residential"}}},
       {"D6E7F", {{"highway", "residential"}}},
       {"B4D", {{"highway", "trunk"}}},
       {"C5E", {{"highway", "trunk"}}},
@@ -34,7 +34,8 @@ TEST(recosting, same_historical) {
     edges.reserve(tile.header()->directededgecount());
     for (const auto& edge : tile.GetDirectedEdges()) {
       edges.push_back(edge);
-      edges.back().set_free_flow_speed(100);
+      edges.back().set_free_flow_speed(80);
+      edges.back().set_speed(55);
       edges.back().set_constrained_flow_speed(10);
       // TODO: add historical 5 minutely buckets
       // tile.AddPredictedSpeed();
@@ -49,19 +50,147 @@ TEST(recosting, same_historical) {
                           std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
                           std::to_string(map.nodes["A"].lat()) + "}";
 
-  // lets also do a bunch of costings
-  Api api;
-  auto json = actor.route(R"({"costing":"auto","locations":[)" + locations +
-                              R"(],"recostings":[{"costing":"auto","name":"same"}]})",
-                          {}, &api);
+  // check the recostings all match using bidirectional a* with no time, should default to constrained
+  {
+    Api api;
+    actor.route(R"({"costing":"auto","locations":[)" + locations +
+                    R"(],"recostings":[{"costing":"auto","name":"same"}]})",
+                {}, &api);
 
-  // check we have the same cost at all places
-  for (const auto& n : api.trip().routes(0).legs(0).node()) {
-    EXPECT_EQ(n.recosts_size(), 1);
-    EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
-    EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
-    EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
-    EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
+    // check we have the same cost at all places
+    for (const auto& n : api.trip().routes(0).legs(0).node()) {
+      EXPECT_EQ(n.recosts_size(), 1);
+      EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
+      EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
+      EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
+      EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
+      if (n.has_edge()) {
+        EXPECT_NEAR(n.edge().speed(), 10.f, .1f);
+      }
+    }
+  }
+
+  // disable constrained flow to make sure we get back the default speed
+  {
+    Api api;
+    actor.route(R"({"costing":"auto","locations":[)" + locations +
+                    R"(],"recostings":[{"costing":"auto","name":"same","speed_types":[]}],)" +
+                    R"("costing_options":{"auto":{"speed_types":[]}}})",
+                {}, &api);
+
+    // check we have the same cost at all places
+    for (const auto& n : api.trip().routes(0).legs(0).node()) {
+      EXPECT_EQ(n.recosts_size(), 1);
+      EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
+      EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
+      EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
+      EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
+      if (n.has_edge()) {
+        EXPECT_NEAR(n.edge().speed(), 55.f, .1f);
+      }
+    }
+  }
+
+  // set the time should use time dep forward and freeflow at 1am
+  {
+    Api api;
+    actor.route(R"({"costing":"auto","locations":[)" + locations +
+                    R"(],"recostings":[{"costing":"auto","name":"same"}],)" +
+                    R"("date_time":{"type":1,"value":"2020-08-01T01:23"}})",
+                {}, &api);
+
+    // check we have the same cost at all places
+    for (const auto& n : api.trip().routes(0).legs(0).node()) {
+      EXPECT_EQ(n.recosts_size(), 1);
+      EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
+      EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
+      EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
+      EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
+      if (n.has_edge()) {
+        EXPECT_NEAR(n.edge().speed(), 80.f, .1f);
+      }
+    }
+  }
+
+  // trivial route should use astar and constrained
+  {
+    std::string trivial = R"({"lon":)" + std::to_string(map.nodes["D"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["D"].lat()) + R"(},{"lon":)" +
+                          std::to_string(map.nodes["B"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["B"].lat()) + "}";
+
+    Api api;
+    actor.route(R"({"costing":"auto","locations":[)" + trivial +
+                    R"(],"recostings":[{"costing":"auto","name":"same"}]})",
+                {}, &api);
+
+    // check we have the same cost at all places
+    for (const auto& n : api.trip().routes(0).legs(0).node()) {
+      EXPECT_EQ(n.recosts_size(), 1);
+      EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
+      EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
+      EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
+      EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
+      if (n.has_edge()) {
+        EXPECT_NEAR(n.edge().speed(), 10.f, .1f);
+      }
+    }
+  }
+
+  // TODO: There's a difference in the way a route is costed in reverse vs forward this could be
+  // a result of FormPath in timedep_reverse or it could be a result of the difference between
+  // TransitionCost and TransitionCostReverse. When that is resolved we can enable these tests
+  return;
+
+  // set times but different types and make sure the costings are the same
+  {
+    std::string unambiguous = R"({"lon":)" + std::to_string(map.nodes["8"].lng()) + R"(,"lat":)" +
+                              std::to_string(map.nodes["8"].lat()) + R"(},{"lon":)" +
+                              std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
+                              std::to_string(map.nodes["A"].lat()) + "}";
+    Api forward;
+    actor.route(R"({"costing":"auto","locations":[)" + unambiguous +
+                    R"(],"date_time":{"type":1,"value":"2020-08-01T11:12"}})",
+                {}, &forward);
+    printf("%s\n", forward.trip().routes(0).legs(0).shape().c_str());
+    Api reverse;
+    actor.route(R"({"costing":"auto","locations":[)" + unambiguous +
+                    R"(],"date_time":{"type":2,"value":"2020-08-01T11:12"}})",
+                {}, &reverse);
+    EXPECT_EQ(forward.trip().routes(0).legs(0).node_size(),
+              reverse.trip().routes(0).legs(0).node_size());
+    auto rn = reverse.trip().routes(0).legs(0).node().begin();
+    for (const auto& n : forward.trip().routes(0).legs(0).node()) {
+      EXPECT_EQ(n.cost().elapsed_cost().seconds(), rn->cost().elapsed_cost().seconds());
+      EXPECT_EQ(n.cost().elapsed_cost().cost(), rn->cost().elapsed_cost().cost());
+      EXPECT_EQ(n.cost().transition_cost().seconds(), rn->cost().transition_cost().seconds());
+      EXPECT_EQ(n.cost().transition_cost().cost(), rn->cost().transition_cost().cost());
+      if (n.has_edge()) {
+        EXPECT_EQ(n.edge().id(), rn->edge().id());
+      }
+      ++rn;
+    }
+  }
+
+  // set the time should use time dep reverse and constrained
+  {
+    Api api;
+    actor.route(R"({"costing":"auto","locations":[)" + locations +
+                    R"(],"recostings":[{"costing":"auto","name":"same"}],)" +
+                    R"("date_time":{"type":2,"value":"2020-08-01T11:12"}})",
+                {}, &api);
+
+    // check we have the same cost at all places
+    for (const auto& n : api.trip().routes(0).legs(0).node()) {
+      EXPECT_EQ(n.recosts_size(), 1);
+      EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
+      EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
+      EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
+      EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
+      if (n.has_edge()) {
+        EXPECT_NEAR(n.edge().speed(), 10.f, .1f);
+      }
+    }
   }
 }
 
@@ -88,7 +217,7 @@ TEST(recosting, all_algorithms) {
   std::string named_locations = "1A2B3C4D5E6F7";
   std::vector<std::unordered_map<std::string, std::string>> options{
       {},
-      {{"/date_time/type", "1"}, {"/date_time/value", "2020-06-9T14:12"}},
+      {{"/date_time/type", "1"}, {"/date_time/value", "2020-06-09T14:12"}},
       {{"/date_time/type", "2"}, {"/date_time/value", "2020-06-22T14:12"}},
   };
   for (const auto& option : options) {

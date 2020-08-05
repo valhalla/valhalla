@@ -243,7 +243,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     }
 
     // Get seconds from beginning of the week accounting for any changes to timezone on the path
-    uint32_t second_of_week = kInvalidSecondsOfWeek;
+    uint32_t second_of_week = kConstrainedFlowSecondOfDay;
     if (origin_epoch != 0 && nodeinfo) {
       second_of_week =
           DateTime::second_of_week(origin_epoch +

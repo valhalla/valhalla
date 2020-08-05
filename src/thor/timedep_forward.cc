@@ -262,8 +262,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
   uint32_t density = SetDestination(graphreader, destination);
   // Call SetOrigin with kFreeFlowSecondOfDay for now since we don't yet have
   // a timezone for converting a date_time of "current" to seconds_of_week
-  SetOrigin(graphreader, origin, destination,
-            kInvalidSecondsOfWeek /*forward_time_info.second_of_week*/);
+  SetOrigin(graphreader, origin, destination, forward_time_info.second_of_week);
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
