@@ -172,6 +172,9 @@ directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
   // fake up the input location
   const baldr::GraphTile* tile = nullptr;
   const auto* node = reader.GetEndNode(edge, tile);
+  if (node == nullptr) {
+    return reach;
+  }
   auto ll = node->latlng(tile->header()->base_ll());
   locations_.Mutable(0)->mutable_ll()->set_lng(ll.first);
   locations_.Mutable(0)->mutable_ll()->set_lat(ll.second);
