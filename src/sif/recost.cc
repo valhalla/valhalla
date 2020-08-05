@@ -1,5 +1,4 @@
 #include "sif/recost.h"
-#include "baldr/graphconstants.h"
 #include "baldr/time_info.h"
 
 namespace valhalla {
