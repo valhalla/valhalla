@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <string>
 #include <vector>
 
 #include "test.h"
@@ -21,15 +22,21 @@ void TryAddRemove(const std::vector<uint32_t>& costs, const std::vector<uint32_t
   const auto edgecost = [&edgelabels](const uint32_t label) { return edgelabels[label]; };
 
   uint32_t i = 0;
-  DoubleBucketQueue adjlist(0, 10000, 5, edgecost);
+  DoubleBucketQueue adjlist(0, 10000, 1, edgecost);
   for (auto cost : costs) {
     edgelabels.emplace_back(cost);
     adjlist.add(i);
     i++;
   }
   for (auto expected : expectedorder) {
+    // Do the same transform that's done in `edgecost()`
+    expected = (uint32_t)(float)expected;
     uint32_t labelindex = adjlist.pop();
-    EXPECT_EQ(edgelabels[labelindex], expected) << "TryAddRemove: expected order test failed";
+    auto edgelabel = 0;
+    if (labelindex != kInvalidLabel) {
+      edgelabel = edgelabels[labelindex];
+    }
+    EXPECT_EQ(edgelabel, expected) << "TryAddRemove: expected order test failed";
   }
 }
 
@@ -70,6 +77,16 @@ TEST(DoubleBucketQueue, TestClear) {
   std::vector<uint32_t> costs = {67,  325, 25,  466,   1000, 100005,
                                  758, 167, 258, 16442, 278,  111111000};
   TryClear(costs);
+}
+
+TEST(DoubleBucketQueue, RC4FloatPrecisionErrors) {
+  // Tests what happens when the internal floats in DoubleBucketQueue loses
+  // precision
+
+  std::vector<uint32_t> costs = {1320209856};
+  std::vector<uint32_t> expectedorder = costs;
+  std::sort(expectedorder.begin(), expectedorder.end());
+  TryAddRemove(costs, expectedorder);
 }
 
 /**
