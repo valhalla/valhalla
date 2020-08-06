@@ -99,6 +99,13 @@ function(valhalla_module)
     target_compile_options(${library} PUBLIC -ftest-coverage -fprofile-arcs)
   endif()
 
+  # On more modern x86 processors that support SSE2, specifying the compiler options -mfpmath=sse -msse2
+  # ensures all float and double operations are performed in SSE registers and correctly rounded.
+  # These options do not affect the ABI and should therefore be used whenever possible for
+  # predictable numerical results
+  # For the x86-64 compiler, these extensions are enabled by default.
+  target_add_compile_flags_if_supported(${library} PRIVATE -mfpmath=sse -msse2)
+
   if(ENABLE_COMPILER_WARNINGS)
     cxx_add_warning_flags(${library})
   endif()

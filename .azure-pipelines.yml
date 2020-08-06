@@ -30,7 +30,8 @@ jobs:
         displayName: 'Pull submodules'
 
       - script: |
-          git clone --depth 1 https://github.com/microsoft/vcpkg %VCPKG_DIR%
+          git clone https://github.com/microsoft/vcpkg %VCPKG_DIR%
+          git -C %VCPKG_DIR% checkout f4bd6423
           echo.set(VCPKG_BUILD_TYPE release)>> %VCPKG_DIR%\triplets\%PLATFORM%-windows.cmake
           call %VCPKG_DIR%\bootstrap-vcpkg.bat
           %VCPKG_DIR%\vcpkg.exe version
