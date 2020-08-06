@@ -2,7 +2,7 @@
 #define VALHALLA_MJOLNIR_LUA_H
 
 extern "C" {
-#include <lauxlib.h>
+#include <luaxlib.h>
 #include <lua.h>
 #include <lualib.h>
 }
