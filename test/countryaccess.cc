@@ -110,9 +110,12 @@ void CountryAccess(const std::string& config_file) {
                              {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
                              way_nodes_file, bss_nodes_file, osmdata);
 
+  std::map<baldr::GraphId, size_t> tiles =
+      GraphBuilder::BuildEdges(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin);
+
   // Build the graph using the OSMNodes and OSMWays from the parser
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file, cr_from_file,
-                      cr_to_file);
+                      cr_to_file, tiles);
 
   // load a tile and test the default access.
   GraphId id(820099, 2, 0);
