@@ -3,5 +3,6 @@ coverage:
   ignore:
     - third_party/.*
     - bench/.*
+    - test/.*
 
 comment: off
