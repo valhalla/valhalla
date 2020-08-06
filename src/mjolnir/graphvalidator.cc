@@ -568,8 +568,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   // Setup threads
   std::vector<std::shared_ptr<std::thread>> threads(
       std::max(static_cast<unsigned int>(1),
-               pt.get_child("mjolnir").get<unsigned int>("concurrency",
-                                                         std::thread::hardware_concurrency())));
+               pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency())));
 
   // Setup promises
   std::list<
