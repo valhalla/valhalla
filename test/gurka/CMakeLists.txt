@@ -1,6 +1,6 @@
 if(ENABLE_DATA_TOOLS)
   file(GLOB_RECURSE TEST_FILES "${CMAKE_CURRENT_LIST_DIR}/test_*.cc")
-
+  add_definitions(-Dgurka_tests)
   add_custom_target(gurka)
   set_target_properties(gurka PROPERTIES FOLDER "Tests")
   add_custom_target(run-gurka)

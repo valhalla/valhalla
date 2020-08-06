@@ -330,6 +330,14 @@ public:
   }
 
   /**
+   * Get the transition cost object. This is used in the bidirectional A* to
+   * determine the total transition cost
+   * @return Returns the full transition cost object
+   */
+  Cost transition_cost_object() const {
+    return transition_cost_;
+  }
+  /**
    * Get the transition cost in seconds. This is used in the bidirectional A*
    * reverse path search to allow the recovery of the true elapsed time along
    * the path. This is needed since the transition cost is applied at a

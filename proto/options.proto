@@ -48,6 +48,13 @@ enum Costing {
   none_ = 13;
 }
 
+message CostingConstraint{
+  optional bool max_inclusive = 1 [default = true];   //boolean to indicate whether the maximum should be included when evaluating constraint
+  optional bool min_inclusive = 2 [default = true];   //boolean to indicate whether the minimum should be included when evaluating constraint
+  optional double max_value = 3   [default = 1e99];   // maximum value of constraint
+  optional double min_value = 4   [default = -1e99];  // minimum value of constraint
+}
+
 message CostingOptions {
   optional float maneuver_penalty = 1;
   optional float destination_only_penalty = 2;
@@ -106,6 +113,7 @@ message CostingOptions {
   optional uint32 flow_mask = 55;
   optional float rail_ferry_cost = 56;
   optional float use_rail_ferry = 57;
+ repeated CostingConstraint costing_constraints = 58;
 }
 
 message AvoidEdge {

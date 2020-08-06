@@ -182,6 +182,9 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
       }
       newcost.cost = std::max(0.0f, newcost.cost);
 
+      // Secondary constraints not met. Don't add to queue.
+      if (!costing_->ConstraintsSatisfied(newcost))
+        continue;
       // Mark this as the best connection if that applies. This allows
       // a path to be formed even if the convergence test fails (can
       // happen with large edge scores)
@@ -190,6 +193,10 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
         best_path.second = newcost.cost;
       }
     }
+
+    // Secondary constraints not met. Don't add to queue.
+    if (!costing_->ConstraintsSatisfied(newcost))
+      continue;
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented

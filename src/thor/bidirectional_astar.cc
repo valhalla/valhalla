@@ -248,16 +248,22 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
 
   // Get cost. Separate out transition cost.
   Cost transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
-  // TODO: actually use time_info
-  Cost newcost = pred.cost() + transition_cost +
-                 costing_->EdgeCost(meta.edge, tile, kConstrainedFlowSecondOfDay);
+// TODO: actually use time_info
+  Cost newcost =
+      pred.cost() + transition_cost +
+      costing_->EdgeCost(meta.edge, tile,
+                         kConstrainedFlowSecondOfDay + pred.cost().secs + transition_cost.secs);
+
+  // Secondary constraints not met. Don't add to queue.
+  if (!costing_->ConstraintsSatisfied(newcost))
+    return false;
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
   // by the difference in real cost (A* heuristic doesn't change)
   if (meta.edge_status->set() == EdgeSet::kTemporary) {
     BDEdgeLabel& lab = edgelabels_forward_[meta.edge_status->index()];
-    if (newcost.cost < lab.cost().cost) {
+    if (newcost.cost < lab.cost().cost && costing_->ConstraintsSatisfied(newcost)) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       adjacencylist_forward_->decrease(meta.edge_status->index(), newsortcost);
       lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
@@ -457,8 +463,12 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // can properly recover elapsed time on the reverse path.
   Cost transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
-  Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay);
-  newcost.cost += transition_cost.cost;
+  Cost newcost = pred.cost() + costing_->EdgeCostReverse(opp_edge, t2, kConstrainedFlowSecondOfDay);
+  newcost += transition_cost;           // newcost is supposed to be total cost to end of edge?
+  newcost.secs -= transition_cost.secs; // separate out the transition seconds...
+  // Secondary constraints not met. Don't add to queue.
+  if (!costing_->ConstraintsSatisfied(newcost))
+    return false;
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -683,24 +693,25 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
 
   // Get the opposing edge - a candidate shortest path has been found to the
   // end node of this directed edge. Get total cost.
-  float c;
+  Cost c;
   if (pred.predecessor() != kInvalidLabel) {
     // Get the start of the predecessor edge on the forward path. Cost is to
     // the end this edge, plus the cost to the end of the reverse predecessor,
     // plus the transition cost.
-    c = edgelabels_forward_[pred.predecessor()].cost().cost + opp_pred.cost().cost +
-        pred.transition_cost();
+    c = edgelabels_forward_[pred.predecessor()].cost() + opp_pred.cost() +
+        pred.transition_cost_object();
   } else {
     // If no predecessor on the forward path get the predecessor on
     // the reverse path to form the cost.
     uint32_t predidx = opp_pred.predecessor();
-    float oppcost = (predidx == kInvalidLabel) ? 0 : edgelabels_reverse_[predidx].cost().cost;
-    c = pred.cost().cost + oppcost + opp_pred.transition_cost();
+    auto oppcost = (predidx == kInvalidLabel) ? Cost{0, 0} : edgelabels_reverse_[predidx].cost();
+    c = pred.cost() + oppcost + opp_pred.transition_cost_object();
   }
-
+  if (!costing_->ConstraintsSatisfied(c))
+    return false;
   // Set best_connection if cost is less than the best cost so far.
-  if (c < best_connection_.cost) {
-    best_connection_ = {pred.edgeid(), oppedge, c};
+  if (c.cost < best_connection_.cost) {
+    best_connection_ = {pred.edgeid(), oppedge, c.cost};
   }
 
   // Set a threshold to extend search
@@ -736,24 +747,25 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
 
   // Get the opposing edge - a candidate shortest path has been found to the
   // end node of this directed edge. Get total cost.
-  float c;
+  Cost c;
   if (rev_pred.predecessor() != kInvalidLabel) {
     // Get the start of the predecessor edge on the reverse path. Cost is to
     // the end this edge, plus the cost to the end of the forward predecessor,
     // plus the transition cost.
-    c = edgelabels_reverse_[rev_pred.predecessor()].cost().cost + fwd_pred.cost().cost +
-        rev_pred.transition_cost();
+    c = edgelabels_reverse_[rev_pred.predecessor()].cost() + fwd_pred.cost() +
+        rev_pred.transition_cost_object();
   } else {
     // If no predecessor on the reverse path get the predecessor on
     // the forward path to form the cost.
     uint32_t predidx = fwd_pred.predecessor();
-    float oppcost = (predidx == kInvalidLabel) ? 0 : edgelabels_forward_[predidx].cost().cost;
-    c = rev_pred.cost().cost + oppcost + fwd_pred.transition_cost();
+    Cost oppcost = (predidx == kInvalidLabel) ? Cost{0, 0} : edgelabels_forward_[predidx].cost();
+    c = rev_pred.cost() + oppcost + fwd_pred.transition_cost_object();
   }
-
+  if (!costing_->ConstraintsSatisfied(c))
+    return false;
   // Set best_connection if cost is less than the best cost so far.
-  if (c < best_connection_.cost) {
-    best_connection_ = {fwd_edge_id, rev_pred.edgeid(), c};
+  if (c.cost < best_connection_.cost) {
+    best_connection_ = {fwd_edge_id, rev_pred.edgeid(), c.cost};
   }
 
   // Set a threshold to extend search
@@ -888,8 +900,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     // directed edge for costing, as this is the forward direction along the
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
-    Cost cost =
-        costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay) * edge.percent_along();
+    Cost cost = costing_->EdgeCostReverse(directededge, tile, kConstrainedFlowSecondOfDay) *
+                edge.percent_along();
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
