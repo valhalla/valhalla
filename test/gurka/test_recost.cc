@@ -243,12 +243,16 @@ TEST(recosting, all_algorithms) {
           return edge_id;
         };
 
+        // TODO: remove this when costing works the same in the reverse direction (see comment above)
+        bool reverse =
+            option.count("/date_time/type") && option.find("/date_time/type")->second == "2";
+
         // setup a callback for the recosting to tell us about the new label each made
         auto elapsed_itr = leg.node().begin();
         double length = 0;
         uint32_t pred = baldr::kInvalidLabel;
-        sif::LabelCallback label_cb = [&elapsed_itr, &length,
-                                       &pred](const sif::EdgeLabel& label) -> void {
+        sif::LabelCallback label_cb = [&elapsed_itr, &length, &pred,
+                                       reverse](const sif::EdgeLabel& label) -> void {
           length += elapsed_itr->edge().length() * 1000.0;
           EXPECT_EQ(elapsed_itr->edge().id(), label.edgeid());
           EXPECT_EQ(pred++, label.predecessor());
@@ -257,10 +261,15 @@ TEST(recosting, all_algorithms) {
           EXPECT_NEAR(length, label.path_distance(), 2);
           EXPECT_NEAR(elapsed_itr->cost().transition_cost().seconds(), label.transition_cost().secs,
                       .1);
+          if (!reverse)
+            EXPECT_NEAR(elapsed_itr->cost().transition_cost().cost(), label.transition_cost().cost,
+                        .1);
           // TODO: test restrictions
           // we need to move to the next node which has the elapsed time at the end of the edge
           ++elapsed_itr;
           EXPECT_NEAR(elapsed_itr->cost().elapsed_cost().seconds(), label.cost().secs, .1);
+          if (!reverse)
+            EXPECT_NEAR(elapsed_itr->cost().elapsed_cost().cost(), label.cost().cost, .1);
         };
 
         // find the percentage of the edges used

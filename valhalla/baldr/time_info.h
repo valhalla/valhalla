@@ -80,7 +80,7 @@ struct TimeInfo {
   }
 
   /**
-   * Helper function to initialize the object from a location. Uses the graph to
+   * Helper function to initialize the object from a date time. Uses the graph to
    * find timezone information about the edge candidates at the location. If the
    * graph has no timezone information or the location has no edge candidates the
    * default timezone will be used (if unspecified UTC is used). If no datetime
