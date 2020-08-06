@@ -86,7 +86,7 @@ void assert_tile_equalish(const GraphTile& a, const GraphTile& b) {
 
 // 1. build tiles with the same input twice
 // 2. check that the same tile sets are generated
-struct Fixture : ::testing::Test {
+struct ReproducibleBuild : ::testing::Test {
   void BuildTiles(const std::string& ascii_map, const gurka::ways& ways, const double gridsize) {
     const auto build_tiles = [&](const std::string& dir) -> gurka::map {
       const gurka::nodelayout layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
@@ -127,7 +127,7 @@ struct Fixture : ::testing::Test {
   }
 };
 
-TEST_F(Fixture, First) {
+TEST_F(ReproducibleBuild, OneHighway) {
   const std::string ascii_map = R"(A-----B)";
   const gurka::ways ways = {
       {"ABA", {{"highway", "motorway"}}},
@@ -135,7 +135,7 @@ TEST_F(Fixture, First) {
   BuildTiles(ascii_map, ways, 100);
 }
 
-TEST_F(Fixture, Second) {
+TEST_F(ReproducibleBuild, BigGridSize) {
   const std::string ascii_map = R"(
     A----B----C
     |    .
