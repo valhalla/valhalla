@@ -930,7 +930,6 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
     auto bin = tile->GetBin(i % kBinsDim, i / kBinsDim);
     bins[i].assign(bin.begin(), bin.end());
     bins[i].insert(bins[i].end(), more_bins[i].cbegin(), more_bins[i].cend());
-    std::sort(bins[i].begin(), bins[i].end());
     shift += more_bins[i].size();
   }
   shift *= sizeof(GraphId);
