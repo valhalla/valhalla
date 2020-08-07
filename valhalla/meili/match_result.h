@@ -94,7 +94,7 @@ struct EdgeSegment {
 
 struct MatchResults {
   MatchResults(std::vector<MatchResult>&& results, std::vector<EdgeSegment>&& segments, float score)
-      : results(std::move(results)), segments(std::move(segments)), score(score) {
+      : results(results), segments(segments), score(score) {
     edges.reserve(this->segments.size());
     for (const auto& segment : this->segments)
       if (edges.empty() || edges.back() != segment.edgeid)
