@@ -15,6 +15,18 @@ if  ! which unzip >/dev/null; then
     exit 1
 fi
 
+config=$1
+if [ ! -f $config ]; then
+    echo "Config file not found $config"
+    exit 1
+fi
+tz_file=$(jq -r '.mjolnir.timezone' $config)
+if [ ! -d $(dirname $tz_file) ]; then
+    echo "Timezone directory not found $(dirname $tz_file)"
+    exit 1
+fi
+rm -f $tz_file
+
 rm -rf dist
 rm -f ./timezones-with-oceans.shapefile.zip
 
@@ -231,7 +243,6 @@ echo "downloading timezone polygon file." 1>&2
 curl -L -s -o ./timezones-with-oceans.shapefile.zip ${url} || error_exit "wget failed for " ${url}
 unzip ./timezones-with-oceans.shapefile.zip 1>&2 || error_exit "unzip failed"
 
-tz_file=$(mktemp)
 spatialite_tool -i -shp ./dist/combined-shapefile-with-oceans -d ${tz_file} -t tz_world -s 4326 -g geom -c UTF-8 1>&2 || error_exit "spatialite_tool import failed"
 spatialite ${tz_file} "SELECT CreateSpatialIndex('tz_world', 'geom');" 1>&2 || error_exit "SpatialIndex failed" 
 
@@ -244,4 +255,3 @@ spatialite ${tz_file} "ANALYZE;" 1>&2 || error_exit "ANALYZE failed"
 
 rm -rf dist
 rm -f ./timezones-with-oceans.shapefile.zip alias_tz.csv
-cat ${tz_file}
