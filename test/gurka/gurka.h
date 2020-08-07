@@ -164,10 +164,12 @@ build_config(const std::string& tiledir,
 }
 
 std::string
-build_valhalla_route_request(const map& map,
+build_valhalla_route_request(const std::string& location_type,
+                             const map& map,
                              const std::vector<std::string>& waypoints,
                              const std::string& costing = "auto",
-                             const std::unordered_map<std::string, std::string>& options = {}) {
+                             const std::unordered_map<std::string, std::string>& options = {},
+                             const std::string& stop_type = "") {
 
   rapidjson::Document doc;
   doc.SetObject();
@@ -178,6 +180,9 @@ build_valhalla_route_request(const map& map,
     rapidjson::Value p(rapidjson::kObjectType);
     p.AddMember("lon", map.nodes.at(waypoint).lng(), allocator);
     p.AddMember("lat", map.nodes.at(waypoint).lat(), allocator);
+    if (!stop_type.empty()) {
+      p.AddMember("type", stop_type, allocator);
+    }
     locations.PushBack(p, allocator);
   }
 
@@ -187,15 +192,7 @@ build_valhalla_route_request(const map& map,
   speed_types.PushBack("constrained", allocator);
   speed_types.PushBack("predicted", allocator);
 
-  // add the options using the pointer method
-  for (const auto& kv : options) {
-    if (kv.first.find("/date_time/type") != std::string::npos && kv.second == "0") {
-      speed_types.PushBack("current", allocator);
-    }
-    rapidjson::Pointer(kv.first).Set(doc, kv.second);
-  }
-
-  doc.AddMember("locations", locations, allocator);
+  doc.AddMember(rapidjson::Value(location_type, allocator), locations, allocator);
   doc.AddMember("costing", costing, allocator);
 
   rapidjson::Value costing_options(rapidjson::kObjectType);
@@ -204,46 +201,18 @@ build_valhalla_route_request(const map& map,
   costing_options.AddMember(rapidjson::Value(costing, allocator), co, allocator);
   doc.AddMember("costing_options", costing_options, allocator);
 
+  // we do this last so that options are additive/overwrite
+  for (const auto& kv : options) {
+    if (kv.first.find("/date_time/type") != std::string::npos && kv.second == "0") {
+      speed_types.PushBack("current", allocator);
+    }
+    rapidjson::Pointer(kv.first).Set(doc, kv.second);
+  }
+
   rapidjson::StringBuffer sb;
   rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
   doc.Accept(writer);
   return sb.GetString();
-}
-
-std::string build_valhalla_match_request(const map& map,
-                                         const std::vector<std::string>& waypoints,
-                                         const std::string& stop_type,
-                                         const std::string& costing = "auto",
-                                         const std::string& trace_options = "{}") {
-
-  rapidjson::Document doc;
-  doc.SetObject();
-  auto& allocator = doc.GetAllocator();
-
-  rapidjson::Value locations(rapidjson::kArrayType);
-  for (const auto& waypoint : waypoints) {
-    rapidjson::Value p(rapidjson::kObjectType);
-    p.AddMember("lon", map.nodes.at(waypoint).lng(), allocator);
-    p.AddMember("lat", map.nodes.at(waypoint).lat(), allocator);
-    p.AddMember("type", stop_type, allocator);
-    locations.PushBack(p, allocator);
-  }
-  doc.AddMember("shape", locations, allocator);
-  doc.AddMember("costing", costing, allocator);
-  doc.AddMember("shape_match", "map_snap", allocator);
-
-  rapidjson::StringBuffer sb;
-  rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
-  doc.Accept(writer);
-  std::string request = sb.GetString();
-  // inject more options directly
-  if (!trace_options.empty()) {
-    request.back() = ',';
-    request += R"("trace_options":)";
-    request += trace_options;
-    request.push_back('}');
-  }
-  return request;
 }
 
 std::vector<std::string> splitter(const std::string in_pattern, const std::string& content) {
@@ -645,7 +614,8 @@ valhalla::Api route(const map& map,
     first = false;
   };
   std::cerr << " with costing " << costing << std::endl;
-  auto request_json = detail::build_valhalla_route_request(map, waypoints, costing, options);
+  auto request_json =
+      detail::build_valhalla_route_request("locations", map, waypoints, costing, options);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -674,7 +644,7 @@ valhalla::Api match(const map& map,
                     const std::vector<std::string>& waypoints,
                     const std::string& stop_type,
                     const std::string& costing,
-                    const std::string& trace_options = "{}",
+                    const std::unordered_map<std::string, std::string>& options = {},
                     std::shared_ptr<valhalla::baldr::GraphReader> reader = {}) {
   if (!reader)
     reader.reset(new valhalla::baldr::GraphReader(map.config.get_child("mjolnir")));
@@ -692,7 +662,7 @@ valhalla::Api match(const map& map,
   };
   std::cerr << " with costing " << costing << std::endl;
   auto request_json =
-      detail::build_valhalla_match_request(map, waypoints, stop_type, costing, trace_options);
+      detail::build_valhalla_route_request("shape", map, waypoints, costing, options, stop_type);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -713,7 +683,8 @@ namespace osrm {
  */
 void expect_steps(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
-                  bool dedupe = true) {
+                  bool dedupe = true,
+                  const std::string& route_name = "routes") {
 
   raw_result.mutable_options()->set_format(valhalla::Options_Format_osrm);
   auto json = tyr::serializeDirections(raw_result);
@@ -724,17 +695,17 @@ void expect_steps(valhalla::Api& raw_result,
     FAIL();
   }
 
-  EXPECT_TRUE(result.HasMember("routes"));
-  EXPECT_TRUE(result["routes"].IsArray());
-  EXPECT_EQ(result["routes"].Size(), 1);
+  EXPECT_TRUE(result.HasMember(route_name));
+  EXPECT_TRUE(result[route_name].IsArray());
+  EXPECT_EQ(result[route_name].Size(), 1);
 
-  EXPECT_TRUE(result["routes"][0].IsObject());
-  EXPECT_TRUE(result["routes"][0].HasMember("legs"));
-  EXPECT_TRUE(result["routes"][0]["legs"].IsArray());
+  EXPECT_TRUE(result[route_name][0].IsObject());
+  EXPECT_TRUE(result[route_name][0].HasMember("legs"));
+  EXPECT_TRUE(result[route_name][0]["legs"].IsArray());
 
   std::vector<std::string> actual_names;
-  for (auto leg_iter = result["routes"][0]["legs"].Begin();
-       leg_iter != result["routes"][0]["legs"].End(); ++leg_iter) {
+  for (auto leg_iter = result[route_name][0]["legs"].Begin();
+       leg_iter != result[route_name][0]["legs"].End(); ++leg_iter) {
     EXPECT_TRUE(leg_iter->IsObject());
     EXPECT_TRUE(leg_iter->HasMember("steps"));
     EXPECT_TRUE(leg_iter->FindMember("steps")->value.IsArray());
@@ -743,7 +714,7 @@ void expect_steps(valhalla::Api& raw_result,
 
       // If we're on the last leg, append the last step, otherwise skip it, because it'll
       // exist on the first step of the next leg
-      if (leg_iter == result["routes"][0]["legs"].End() ||
+      if (leg_iter == result[route_name][0]["legs"].End() ||
           step_iter != leg_iter->FindMember("steps")->value.End()) {
         EXPECT_TRUE(step_iter->IsObject());
         auto name = step_iter->FindMember("name");
