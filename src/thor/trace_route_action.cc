@@ -397,12 +397,14 @@ void thor_worker_t::build_route(
       // and then we overwrite it. Since its a pair this handles the case when just one is set
 
       // if we uturn onto this edge we must trim the beginning
-      if (prev_segment && prev_segment->edgeid != segment->edgeid && prev_segment->target < 1.f) {
+      if (prev_segment && prev_segment->edgeid != segment->edgeid && prev_segment->target < 1.f &&
+          segment->first_match_idx > -1 && segment->first_match_idx < match_results.size()) {
         edge_trimming[i].first = {true, match_results[segment->first_match_idx].lnglat,
                                   segment->source};
       }
       // if we uturn off of this edge we must trim the end
-      if (next_segment && segment->edgeid != next_segment->edgeid && segment->target < 1.f) {
+      if (next_segment && segment->edgeid != next_segment->edgeid && segment->target < 1.f &&
+          segment->last_match_idx > -1 && segment->last_match_idx < match_results.size()) {
         edge_trimming[i].second = {true, match_results[segment->last_match_idx].lnglat,
                                    segment->target};
       }
