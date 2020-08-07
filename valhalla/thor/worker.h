@@ -108,8 +108,8 @@ protected:
 
   sif::TravelMode mode;
   std::vector<meili::Measurement> trace;
-  sif::CostFactory<sif::DynamicCost> factory;
-  sif::cost_ptr_t mode_costing[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
+  sif::CostFactory factory;
+  sif::mode_costing_t mode_costing;
   // Path algorithms (TODO - perhaps use a map?))
   AStarPathAlgorithm astar;
   BidirectionalAStar bidir_astar;

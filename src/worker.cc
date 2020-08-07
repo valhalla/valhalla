@@ -90,14 +90,14 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
 
     {110, 400}, {111, 400}, {112, 400}, {113, 400}, {114, 400},
 
-    {120, 400}, {121, 400}, {122, 400}, {123, 400}, {124, 400}, {125, 400}, {126, 400},
+    {120, 400}, {121, 400}, {122, 400}, {123, 400}, {124, 400}, {125, 400}, {126, 400}, {127, 400},
 
     {130, 400}, {131, 400}, {132, 400}, {133, 400}, {136, 400},
 
     {140, 400}, {141, 501}, {142, 501},
 
-    {150, 400}, {151, 400}, {152, 400}, {153, 400}, {154, 400}, {155, 400}, {156, 400},
-    {157, 400}, {158, 400}, {159, 400},
+    {150, 400}, {151, 400}, {152, 400}, {153, 400}, {154, 400}, {155, 400}, {156, 400}, {157, 400},
+    {158, 400}, {159, 400},
 
     {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400},
 
@@ -155,6 +155,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {124, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {125, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {126, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {127, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
 
     {130,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
@@ -775,73 +776,22 @@ void from_json(rapidjson::Document& doc, Options& options) {
     throw valhalla_exception_t{125, "'" + costing_str + "'"};
   }
 
-  // if specified, get the costing options in there
-  // the order of costing must reflect the enum order
-  for (const auto& costing : {auto_, auto_shorter, bicycle, bus, hov, motor_scooter, multimodal,
-                              pedestrian, transit, truck, motorcycle, auto_data_fix, taxi, none_}) {
-    // Create the costing string
-    const auto& costing_str = valhalla::Costing_Enum_Name(costing);
-    // Create the costing options key
-    const auto costing_options_key = "/costing_options/" + costing_str;
+  // Parse all of the costing options in their specified order
+  sif::ParseCostingOptions(doc, "/costing_options", options);
+  options.set_costing(costing);
 
-    switch (costing) {
-      case auto_: {
-        sif::ParseAutoCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case auto_shorter: {
-        sif::ParseAutoShorterCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case bicycle: {
-        sif::ParseBicycleCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case bus: {
-        sif::ParseBusCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case hov: {
-        sif::ParseHOVCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case taxi: {
-        sif::ParseTaxiCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case motor_scooter: {
-        sif::ParseMotorScooterCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case multimodal: {
-        options.add_costing_options(); // Nothing to parse for this one
-        break;
-      }
-      case pedestrian: {
-        sif::ParsePedestrianCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case transit: {
-        sif::ParseTransitCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case truck: {
-        sif::ParseTruckCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case motorcycle: {
-        sif::ParseMotorcycleCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case auto_data_fix: {
-        sif::ParseAutoDataFixCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case none_: {
-        sif::ParseNoCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
+  // parse any named costings for re-costing a given path
+  auto recostings = rapidjson::get_child_optional(doc, "/recostings");
+  if (recostings && recostings->IsArray()) {
+    for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
+      // parse the options
+      std::string key = "/recostings/" + std::to_string(i);
+      sif::ParseCostingOptions(doc, key, options.add_recostings());
+      if (!options.recostings().rbegin()->has_name()) {
+        throw valhalla_exception_t{127};
       }
     }
+    // TODO: throw if not all names are unique?
   }
 
   // get the locations in there

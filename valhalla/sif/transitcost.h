@@ -22,10 +22,9 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
 
 /**
  * Create a transit cost object.
- * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateTransitCost(const Costing costing, const Options& options);
+cost_ptr_t CreateTransitCost(const CostingOptions& options);
 
 } // namespace sif
 } // namespace valhalla
