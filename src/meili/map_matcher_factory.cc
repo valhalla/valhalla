@@ -34,27 +34,22 @@ MapMatcherFactory::MapMatcherFactory(const boost::property_tree::ptree& root,
   candidatequery_.reset(
       new CandidateGridQuery(*graphreader_, local_tile_size() / root.get<size_t>("meili.grid.size"),
                              local_tile_size() / root.get<size_t>("meili.grid.size")));
-  cost_factory_.RegisterStandardCostingModels();
 }
 
 MapMatcherFactory::~MapMatcherFactory() {
 }
 
-MapMatcher* MapMatcherFactory::Create(const Costing costing, const Options& options) {
+MapMatcher* MapMatcherFactory::Create(const Options& options) {
   // Merge any customizable options with the config defaults
   const auto& config = MergeConfig(options);
 
-  valhalla::sif::cost_ptr_t cost = cost_factory_.Create(costing, options);
+  valhalla::sif::cost_ptr_t cost = cost_factory_.Create(options);
   valhalla::sif::TravelMode mode = cost->travel_mode();
 
   mode_costing_[static_cast<uint32_t>(mode)] = cost;
 
   // TODO investigate exception safety
   return new MapMatcher(config, *graphreader_, *candidatequery_, mode_costing_, mode);
-}
-
-MapMatcher* MapMatcherFactory::Create(const Options& options) {
-  return Create(options.costing(), options);
 }
 
 boost::property_tree::ptree MapMatcherFactory::MergeConfig(const Options& options) {

@@ -154,11 +154,11 @@ constexpr float kSacScaleCostFactor[] = {
 class PedestrianCost : public DynamicCost {
 public:
   /**
-   * Construct pedestrian costing. Pass in cost type and options using protocol buffer(pbf).
+   * Construct pedestrian costing. Pass in cost type and costing_options using protocol buffer(pbf).
    * @param  costing specified costing type.
-   * @param  options pbf with request options.
+   * @param  costing_options pbf with request costing_options.
    */
-  PedestrianCost(const Costing costing, const Options& options);
+  PedestrianCost(const CostingOptions& costing_options);
 
   // virtual destructor
   virtual ~PedestrianCost() {
@@ -226,7 +226,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const baldr::GraphTile*& tile,
+                       const GraphTile* tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -253,7 +253,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const baldr::GraphTile*& tile,
+                              const GraphTile* tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -524,11 +524,8 @@ public:
 
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
-PedestrianCost::PedestrianCost(const Costing costing, const Options& options)
-    : DynamicCost(options, TravelMode::kPedestrian) {
-  // Grab the costing options based on the specified costing type
-  const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
-
+PedestrianCost::PedestrianCost(const CostingOptions& costing_options)
+    : DynamicCost(costing_options, TravelMode::kPedestrian) {
   // Set hierarchy to allow unlimited transitions
   for (auto& h : hierarchy_limits_) {
     h.max_up_transitions = kUnlimitedTransitions;
@@ -587,7 +584,7 @@ PedestrianCost::PedestrianCost(const Costing costing, const Options& options)
 // Disallow edges where max. distance will be exceeded.
 bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred,
-                             const baldr::GraphTile*& tile,
+                             const GraphTile* tile,
                              const baldr::GraphId& edgeid,
                              const uint64_t current_time,
                              const uint32_t tz_index,
@@ -614,7 +611,7 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
 bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const EdgeLabel& pred,
                                     const baldr::DirectedEdge* opp_edge,
-                                    const baldr::GraphTile*& tile,
+                                    const GraphTile* tile,
                                     const baldr::GraphId& opp_edgeid,
                                     const uint64_t current_time,
                                     const uint32_t tz_index,
@@ -722,11 +719,12 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
 void ParsePedestrianCostOptions(const rapidjson::Document& doc,
                                 const std::string& costing_options_key,
                                 CostingOptions* pbf_costing_options) {
+  pbf_costing_options->set_costing(Costing::pedestrian);
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
     // TODO: farm more common stuff out to parent class
-    ParseCostOptions(*json_costing_options, pbf_costing_options);
+    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
 
     // If specified, parse json and set pbf values
 
@@ -885,8 +883,8 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreatePedestrianCost(const Costing costing, const Options& options) {
-  return std::make_shared<PedestrianCost>(costing, options);
+cost_ptr_t CreatePedestrianCost(const CostingOptions& costing_options) {
+  return std::make_shared<PedestrianCost>(costing_options);
 }
 
 } // namespace sif
@@ -903,8 +901,7 @@ namespace {
 
 class TestPedestrianCost : public PedestrianCost {
 public:
-  TestPedestrianCost(const Costing costing, const Options& options)
-      : PedestrianCost(costing, options){};
+  TestPedestrianCost(const CostingOptions& costing_options) : PedestrianCost(costing_options){};
 
   using PedestrianCost::alley_penalty_;
   using PedestrianCost::country_crossing_cost_;
@@ -920,7 +917,8 @@ make_pedestriancost_from_json(const std::string& property, float testVal, const 
   ss << R"({"costing_options":{"pedestrian":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestPedestrianCost(valhalla::Costing::pedestrian, request.options());
+  return new TestPedestrianCost(
+      request.options().costing_options(static_cast<int>(Costing::pedestrian)));
 }
 
 std::uniform_real_distribution<float>*

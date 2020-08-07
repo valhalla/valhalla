@@ -63,7 +63,7 @@ protected:
   void init_transit_available(Api& request);
 
   boost::property_tree::ptree config;
-  sif::CostFactory<sif::DynamicCost> factory;
+  sif::CostFactory factory;
   sif::cost_ptr_t costing;
   std::shared_ptr<baldr::GraphReader> reader;
   std::shared_ptr<baldr::connectivity_map_t> connectivity_map;

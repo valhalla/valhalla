@@ -98,6 +98,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
       auto avoid_locations = PathLocation::fromPBF(options.avoid_locations());
       auto results = loki::Search(avoid_locations, *reader, costing);
       std::unordered_set<uint64_t> avoids;
+      auto* co = options.mutable_costing_options(static_cast<uint8_t>(costing->travel_mode()));
       for (const auto& result : results) {
         for (const auto& edge : result.second.edges) {
           auto inserted = avoids.insert(edge.id);
@@ -106,7 +107,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
           // Also insert shortcut edge if one includes this edge
           if (inserted.second) {
             // Add edge and percent along to pbf
-            auto* avoid = options.add_avoid_edges();
+            auto* avoid = co->add_avoid_edges();
             avoid->set_id(edge.id);
             avoid->set_percent_along(edge.percent_along);
 
@@ -119,7 +120,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
                 avoids.insert(shortcut);
 
                 // Add to pbf (with 0 percent along)
-                auto* avoid = options.add_avoid_edges();
+                auto* avoid = co->add_avoid_edges();
                 avoid->set_id(shortcut);
                 avoid->set_percent_along(0);
               }
@@ -231,9 +232,6 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_best_paths = config.get<unsigned int>("service_limits.trace.max_best_paths");
   max_best_paths_shape = config.get<size_t>("service_limits.trace.max_best_paths_shape");
   max_alternates = config.get<unsigned int>("service_limits.max_alternates");
-
-  // Register standard edge/node costing methods
-  factory.RegisterStandardCostingModels();
 }
 
 void loki_worker_t::cleanup() {

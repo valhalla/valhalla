@@ -35,6 +35,7 @@ public:
   /**
    * Form a trip leg out of a path (sequence of path infos)
    *
+   * @param options               Request options
    * @param controller            Which meta data attributes to include in the trip leg
    * @param graphreader           A way of accessing graph information
    * @param mode_costing          A costing object
@@ -46,16 +47,12 @@ public:
    * @param trip_path             The leg we will fill out
    * @param interrupt_callback    A way to abort the processing in case the request was cancelled
    * @param edge_trimming         Markers on edges with information on how to trim their shape
-   * @param trim_begin            For map matching we have one long sequence of path infos regardless
-   *                              of legs so we must supply an amount of elapsed time which we trim
-   *                              from the beginning
-   * @param trim_end              Similarly to trim_begin, we must also trim at the end of a map
-   *                              matched edge
    * @return
    */
-  static void Build(const AttributesController& controller,
+  static void Build(const valhalla::Options& options,
+                    const AttributesController& controller,
                     baldr::GraphReader& graphreader,
-                    const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                    const sif::mode_costing_t& mode_costing,
                     const std::vector<PathInfo>::const_iterator path_begin,
                     const std::vector<PathInfo>::const_iterator path_end,
                     valhalla::Location& origin,
@@ -64,9 +61,7 @@ public:
                     TripLeg& trip_path,
                     const std::function<void()>* interrupt_callback = nullptr,
                     std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>*
-                        edge_trimming = nullptr,
-                    float trim_begin = 0,
-                    float trim_end = 0);
+                        edge_trimming = nullptr);
 };
 
 } // namespace thor

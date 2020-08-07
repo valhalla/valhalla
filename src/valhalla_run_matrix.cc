@@ -159,8 +159,7 @@ int main(int argc, char* argv[]) {
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
   // Construct costing
-  CostFactory<DynamicCost> factory;
-  factory.RegisterStandardCostingModels();
+  CostFactory factory;
 
   // Get type of route - this provides the costing method to use.
   const std::string& routetype = valhalla::Costing_Enum_Name(options.costing());
@@ -168,21 +167,7 @@ int main(int argc, char* argv[]) {
 
   // Get the costing method - pass the JSON configuration
   TravelMode mode;
-  std::shared_ptr<DynamicCost> mode_costing[4];
-  if (routetype == "multimodal") {
-    // Create array of costing methods per mode and set initial mode to
-    // pedestrian
-    mode_costing[0] = factory.Create(valhalla::Costing::auto_, options);
-    mode_costing[1] = factory.Create(valhalla::Costing::pedestrian, options);
-    mode_costing[2] = factory.Create(valhalla::Costing::bicycle, options);
-    mode_costing[3] = factory.Create(valhalla::Costing::transit, options);
-    mode = TravelMode::kPedestrian;
-  } else {
-    // Assign costing method
-    std::shared_ptr<DynamicCost> cost = factory.Create(options);
-    mode = cost->travel_mode();
-    mode_costing[static_cast<uint32_t>(mode)] = cost;
-  }
+  auto mode_costing = factory.CreateModeCosting(options, mode);
 
   // Find path locations (loki) for sources and targets
   auto t0 = std::chrono::high_resolution_clock::now();

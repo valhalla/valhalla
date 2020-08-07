@@ -22,10 +22,9 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
 
 /**
  * Create a bicyclecost
- * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateBicycleCost(const Costing costing, const Options& options);
+cost_ptr_t CreateBicycleCost(const CostingOptions& options);
 
 } // namespace sif
 } // namespace valhalla

@@ -171,7 +171,7 @@ std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment
 MapMatcher::FormPath(meili::MapMatcher* matcher,
                      const std::vector<meili::MatchResult>& results,
                      const std::vector<meili::EdgeSegment>& edge_segments,
-                     const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                     const sif::mode_costing_t& mode_costing,
                      const sif::TravelMode mode,
                      Options& options) {
 
@@ -243,7 +243,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     }
 
     // Get seconds from beginning of the week accounting for any changes to timezone on the path
-    uint32_t second_of_week = kInvalidSecondsOfWeek;
+    uint32_t second_of_week = kConstrainedFlowSecondOfDay;
     if (origin_epoch != 0 && nodeinfo) {
       second_of_week =
           DateTime::second_of_week(origin_epoch +
@@ -281,9 +281,8 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
 
     // Update the predecessor EdgeLabel (for transition costing in the next round);
     pred = {kInvalidLabel, edge_id, directededge, elapsed, 0, 0, mode, 0, {}};
-
-    paths.back().first.emplace_back(PathInfo{mode, elapsed.secs, edge_id, 0, elapsed.cost,
-                                             edge_segment.restriction_idx, transition_cost.secs});
+    paths.back().first.emplace_back(
+        PathInfo{mode, elapsed, edge_id, 0, edge_segment.restriction_idx, transition_cost});
     paths.back().second.emplace_back(&edge_segment);
     --num_segments;
 
