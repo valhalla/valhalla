@@ -70,6 +70,7 @@
    * FIXED: Fix missing nullptr checks in graphreader and loki::Reach (causing segfault during routing with not all levels of tiles availble) [#2504](https://github.com/valhalla/valhalla/pull/2504)
    * FIXED: Fix mismatch of triplegedge roadclass and directededge roadclass [#2507](https://github.com/valhalla/valhalla/pull/2507)
    * FIXED: Improve german destination_verbal_alert phrases [#2509](https://github.com/valhalla/valhalla/pull/2509)
+   * FIXED: Fixed logic so verbal keep instructions use branch exit sign info for ramps [#2520](https://github.com/valhalla/valhalla/pull/2520)
 
 * **Enhancement**
    * ADDED: Add explicit include for sstream to be compatible with msvc_x64 toolset. [#2449](https://github.com/valhalla/valhalla/pull/2449)
