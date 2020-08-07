@@ -255,7 +255,6 @@ TEST(AstarBss, test_With_Mode_Changes_2) {
                                           "Rue Alphonse Baudin",
                                           "Rue Saint-Sébastien",
                                           "Boulevard Beaumarchais",
-                                          "Boulevard des Filles du Calvaire",
                                           "Rue du Pont aux Choux",
                                           "Rue de Turenne",
                                           "Rue du Parc Royal",
@@ -265,7 +264,7 @@ TEST(AstarBss, test_With_Mode_Changes_2) {
                                           "Rue Vieille du Temple"};
   const std::map<size_t, BssManeuverType>&
       expected_bss_maneuver{{2, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
-                            {12, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
+                            {11, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
 
   test(request, expected_travel_modes, expected_route, expected_bss_maneuver);
 }
