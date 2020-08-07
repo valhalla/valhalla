@@ -86,3 +86,23 @@ TEST(Standalone, UturnMatch) {
     gurka::assert::raw::expect_path_length(result, test_case.second / 1000, 0.001);
   }
 }
+
+TEST(Standalone, UturnTrimmingAsan) {
+  const std::string ascii_map = R"(
+A--1--2--B
+         |
+         |
+D--3--4--C--5--6--E)";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}}},
+      {"BC", {{"highway", "primary"}}},
+      {"DCE", {{"highway", "primary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/uturn_asan");
+
+  auto result =
+      gurka::match(map, {"2", "6", "3"}, "via", "auto", R"({"penalize_immediate_uturn":false})");
+}
