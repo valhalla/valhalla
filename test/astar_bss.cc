@@ -276,7 +276,7 @@ TEST(AstarBss, test_Pedestrian) {
   std::vector<valhalla::DirectionsLeg_TravelMode> expected_travel_modes{
       valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
   std::vector<std::string> expected_route{"Rue de la Perle", "Rue Vieille du Temple", "Rue Froissart",
-                                          "Rue Commines",    "Rue Oberkampf",         "Rue Amelot"};
+                                          "Rue Commines", "Rue Amelot"};
   // There shouldn't be any bss maneuvers
   const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
 
@@ -289,10 +289,8 @@ TEST(AstarBss, test_Bicycle) {
       R"({"locations":[{"lat":48.859895,"lon":2.3610976338},{"lat":48.86271911,"lon":2.367111146}],"costing":"bicycle"})";
   std::vector<valhalla::DirectionsLeg_TravelMode> expected_travel_modes{
       valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kBicycle};
-  std::vector<std::string> expected_route{"Rue de la Perle",  "Rue des Quatre Fils",
-                                          "Rue des Archives", "Rue de Bretagne",
-                                          "Rue Froissart",    "Rue Commines",
-                                          "Rue Oberkampf",    "Rue Amelot"};
+  std::vector<std::string> expected_route{"Rue de la Perle", "Rue des Archives", "Rue de Bretagne",
+                                          "Rue Commines", "Rue Amelot"};
   // There shouldn't be any bss maneuvers
   const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
 
@@ -309,8 +307,7 @@ TEST(AstarBss, test_Auto) {
                                           "Rue Barbette",      "Rue Elzévir",
                                           "Place de Thorigny", "Rue de Thorigny",
                                           "Rue Debelleyme",    "Rue de Turenne",
-                                          "Rue Commines",      "Rue Oberkampf",
-                                          "Rue Amelot"};
+                                          "Rue Commines",      "Rue Amelot"};
   // There shouldn't be any bss maneuvers
   const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
 
@@ -323,11 +320,10 @@ TEST(AstarBss, test_Truck) {
       R"({"locations":[{"lat":48.859895,"lon":2.3610976338},{"lat":48.86271911,"lon":2.367111146}],"costing":"truck"})";
   std::vector<valhalla::DirectionsLeg_TravelMode> expected_travel_modes{
       valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kDrive};
-  std::vector<std::string> expected_route{"Rue de la Perle",     "Rue des Quatre Fils",
-                                          "Rue des Archives",    "Rue Pastourelle",
-                                          "Rue du Temple",       "Place de la République",
-                                          "Boulevard du Temple", "Boulevard des Filles du Calvaire",
-                                          "Rue Oberkampf",       "Rue Amelot"};
+  std::vector<std::string> expected_route{"Rue de la Perle",        "Rue des Archives",
+                                          "Rue Pastourelle",        "Rue du Temple",
+                                          "Place de la République", "Boulevard du Temple",
+                                          "Rue Oberkampf",          "Rue Amelot"};
   // There shouldn't be any bss maneuvers
   const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
 
