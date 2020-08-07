@@ -1831,7 +1831,6 @@ public:
     bss_nodes_.reset(bss_nodes);
   }
 
-  // merkispavel
   using Fn = std::function<void()>;
   std::unordered_map<std::string, Fn> c;
   OSMWay w;
