@@ -54,7 +54,7 @@ If you would like timezone information within the route graph, please follow the
 
 1. If needed, update the timezone value under mjolnir in your valhalla.json config.  Default filename and directory is `/data/valhalla/tz_world.sqlite`.
 2. Go to `your_valhalla_directory/scripts`.
-3. Run `valhalla_build_timezones /path_to_your_config/valhalla.json`
+3. Run `valhalla_build_timezones > /path_to_your/tz_world.sqlite`
 4. The next time you run `valhalla_build_tiles`, timezone information will be added to the route graph.
 
 ### Elevation
