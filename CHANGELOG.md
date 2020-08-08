@@ -1,4 +1,7 @@
 ## Release Date: 2020-05-?? Valhalla 3.1.0
+* **Removed**
+   * REMOVED:  Remove Node bindings. [#2502](https://github.com/valhalla/valhalla/pull/2502)
+
 * **Bug Fix**
    * FIXED: Crazy ETAs.  If a way has forward speed with no backward speed and it is not oneway, then we must set the default speed.  The reverse logic applies as well.  If a way has no backward speed but has a forward speed and it is not a oneway, then set the default speed. [#2102](https://github.com/valhalla/valhalla/pull/2102)
    * FIXED: Map matching elapsed times spliced amongst different legs and discontinuities are now correct [#2104](https://github.com/valhalla/valhalla/pull/2104)
@@ -57,6 +60,17 @@
    * FIXED: Base64 encoding/decoding [#2452](https://github.com/valhalla/valhalla/pull/2452)
    * FIXED: Added post roundabout instruction when enter/exit roundabout maneuvers are combined [#2454](https://github.com/valhalla/valhalla/pull/2454)
    * FIXED: openlr: Explicitly check for linear reference option for Valhalla serialization. [#2458](https://github.com/valhalla/valhalla/pull/2458)
+   * FIXED: Fix segfault: Do not combine last turn channel maneuver. [#2463](https://github.com/valhalla/valhalla/pull/2463)
+   * FIXED: Remove extraneous whitespaces from ja-JP.json. [#2471](https://github.com/valhalla/valhalla/pull/2471)
+   * FIXED: Checks protobuf serialization/parsing success [#2477](https://github.com/valhalla/valhalla/pull/2477)
+   * FIXED: Fix dereferencing of end for std::lower_bound in sequence and possible UB [#2488](https://github.com/valhalla/valhalla/pull/2488)
+   * FIXED: Make tile building reproducible: fix UB-s [#2480](https://github.com/valhalla/valhalla/pull/2480)
+   * FIXED: Zero initialize EdgeInfoInner.spare0_. Uninitialized spare0_ field produced UB which causes gurka_reproduce_tile_build to fail intermittently. [2499](https://github.com/valhalla/valhalla/pull/2499)
+   * FIXED: Drop unused CHANGELOG validation script, straggling NodeJS references [#2506](https://github.com/valhalla/valhalla/pull/2506)
+   * FIXED: Fix missing nullptr checks in graphreader and loki::Reach (causing segfault during routing with not all levels of tiles availble) [#2504](https://github.com/valhalla/valhalla/pull/2504)
+   * FIXED: Fix mismatch of triplegedge roadclass and directededge roadclass [#2507](https://github.com/valhalla/valhalla/pull/2507)
+   * FIXED: Improve german destination_verbal_alert phrases [#2509](https://github.com/valhalla/valhalla/pull/2509)
+   * FIXED: Fix bug in trace_route for uturns causing garbage coordinates [#2517](https://github.com/valhalla/valhalla/pull/2517)
 
 * **Enhancement**
    * ADDED: Add explicit include for sstream to be compatible with msvc_x64 toolset. [#2449](https://github.com/valhalla/valhalla/pull/2449)
@@ -111,6 +125,8 @@
    * CHANGED: Point2/PointLL are now templated to allow for higher precision coordinate math when desired [#2429](https://github.com/valhalla/valhalla/pull/2429)
    * ADDED: Optional OpenLR Encoded Path Edges in API Response [#2424](https://github.com/valhalla/valhalla/pull/2424)
    * ADDED: Properly split returned path if traffic conditions change partway along edges [#2451](https://github.com/valhalla/valhalla/pull/2451/files)
+   * ADDED: Add Dutch locale. [#2464](https://github.com/valhalla/valhalla/pull/2464)
+   * ADDED: Check with address sanititizer in CI. Add support for undefined behavior sanitizer. [#2487](https://github.com/valhalla/valhalla/pull/2487)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

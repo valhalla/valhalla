@@ -12,33 +12,34 @@ namespace thor {
  * Simple(ish) structure to pass path information from PathAlgorithm
  * to TripLegBuilder
  */
+// TODO: just use the sif::Cost object for the pairs of floats below
 struct PathInfo {
-  sif::TravelMode mode; // Travel mode along this edge
-  float elapsed_time; // Elapsed time in seconds at the end of the edge including any turn cost at the
-                      // start of the edge
-  uint32_t trip_id;   // Trip Id (0 if not a transit edge).
-  baldr::GraphId edgeid; // Directed edge Id
-  float elapsed_cost;    // Cost to the end of the edge in cost units
-  int restriction_index; // Record which restriction
-  float turn_cost; // Turn cost in seconds at the beginning of the edge, only in map matching for now
+  sif::TravelMode mode;   // Travel mode along this edge
+  sif::Cost elapsed_cost; // Elapsed cost at the end of the edge including any turn cost at the start
+                          // of the edge
+  uint32_t trip_id;       // Trip Id (0 if not a transit edge).
+  baldr::GraphId edgeid;  // Directed edge Id
+  int restriction_index;  // Record which restrictionn
+  sif::Cost transition_cost; // Turn cost at the beginning of the edge
 
   // TODO: drop this superfluous constructor
   PathInfo(const sif::TravelMode m,
-           const float t,
+           const sif::Cost c,
            const baldr::GraphId& edge,
            const uint32_t tripid,
-           const float c,
            const int restriction_idx,
-           const float tcs = 0)
-      : mode(m), elapsed_time(t), trip_id(tripid), edgeid(edge), elapsed_cost(c),
-        restriction_index(restriction_idx), turn_cost(tcs) {
+           const sif::Cost tc = {})
+      : mode(m), elapsed_cost(c), trip_id(tripid), edgeid(edge), restriction_index(restriction_idx),
+        transition_cost(tc) {
   }
 
   // Stream output
   friend std::ostream& operator<<(std::ostream& os, const PathInfo& p) {
     os << std::fixed << std::setprecision(3);
-    os << "mode: " << static_cast<int>(p.mode) << ", elapsed_time: " << p.elapsed_time
-       << ", trip_id: " << p.trip_id << ", edgeid: " << p.edgeid << ", turn_cost: " << p.turn_cost;
+    os << "mode: " << static_cast<int>(p.mode) << ", elapsed_time: " << p.elapsed_cost.secs
+       << ", elapsed_cost: " << p.elapsed_cost.cost << ", trip_id: " << p.trip_id
+       << ", edgeid: " << p.edgeid << ", transition_time: " << p.transition_cost.secs
+       << ", transition_cost: " << p.transition_cost.cost;
     return os;
   }
 };

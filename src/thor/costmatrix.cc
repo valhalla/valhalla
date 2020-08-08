@@ -6,6 +6,8 @@
 #include "thor/costmatrix.h"
 #include "worker.h"
 
+#include <robin_hood.h>
+
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
@@ -29,10 +31,15 @@ bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
 namespace valhalla {
 namespace thor {
 
+class CostMatrix::TargetMap : public robin_hood::unordered_map<uint64_t, std::vector<uint32_t>> {};
+
 // Constructor with cost threshold.
 CostMatrix::CostMatrix()
     : mode_(TravelMode::kDrive), access_mode_(kAutoAccess), source_count_(0), remaining_sources_(0),
-      target_count_(0), remaining_targets_(0), current_cost_threshold_(0) {
+      target_count_(0), remaining_targets_(0), current_cost_threshold_(0), targets_{new TargetMap} {
+}
+
+CostMatrix::~CostMatrix() {
 }
 
 float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
@@ -59,7 +66,7 @@ float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
 // construction.
 void CostMatrix::Clear() {
   // Clear the target edge markings
-  targets_.clear();
+  targets_->clear();
 
   // Clear all source adjacency lists, edge labels, and edge status
   for (auto& adj : source_adjacency_) {
@@ -105,7 +112,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     GraphReader& graphreader,
-    const std::shared_ptr<DynamicCost>* mode_costing,
+    const sif::mode_costing_t& mode_costing,
     const TravelMode mode,
     const float max_matrix_distance) {
   // Set the mode and costing
@@ -395,8 +402,8 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
   // Get the opposing edge. Get a list of target locations whose reverse
   // search has reached this edge.
   GraphId oppedge = pred.opp_edgeid();
-  auto targets = targets_.find(oppedge);
-  if (targets == targets_.end()) {
+  auto targets = targets_->find(oppedge);
+  if (targets == targets_->end()) {
     return;
   }
 
@@ -425,13 +432,14 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
 
       // Special case - common edge for source and target are both initial edges
       if (pred.predecessor() == kInvalidLabel && predidx == kInvalidLabel) {
-        float s = std::abs(pred.cost().secs + opp_el.cost().secs - opp_el.transition_cost());
+        // TODO: shouldnt this use seconds? why is this using cost!?
+        float s = std::abs(pred.cost().secs + opp_el.cost().secs - opp_el.transition_cost().cost);
 
         // Update best connection and set found = true.
         // distance computation only works with the casts.
         uint32_t d = std::abs(static_cast<int>(pred.path_distance()) +
                               static_cast<int>(opp_el.path_distance()) -
-                              static_cast<int>(opp_el.transition_secs()));
+                              static_cast<int>(opp_el.transition_cost().secs));
         best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(s, s), d);
         best_connection_[idx].found = true;
 
@@ -440,13 +448,13 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
         UpdateStatus(source, target);
       } else {
         float oppcost = (predidx == kInvalidLabel) ? 0 : edgelabels[predidx].cost().cost;
-        float c = pred.cost().cost + oppcost + opp_el.transition_cost();
+        float c = pred.cost().cost + oppcost + opp_el.transition_cost().cost;
 
         // Check if best connection
         if (c < best_connection_[idx].cost.cost) {
           float oppsec = (predidx == kInvalidLabel) ? 0 : edgelabels[predidx].cost().secs;
           uint32_t oppdist = (predidx == kInvalidLabel) ? 0 : edgelabels[predidx].path_distance();
-          float s = pred.cost().secs + oppsec + opp_el.transition_secs();
+          float s = pred.cost().secs + oppsec + opp_el.transition_cost().secs;
           uint32_t d = pred.path_distance() + oppdist;
 
           // Update best connection and set a threshold
@@ -615,7 +623,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       adj->add(idx);
 
       // Add to the list of targets that have reached this edge
-      targets_[edgeid].push_back(index);
+      (*targets_)[edgeid].push_back(index);
     }
 
     // Handle transitions - expand from the end node of the transition
@@ -819,7 +827,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       target_adjacency_[index]->add(idx);
       target_edgestatus_[index].Set(opp_edge_id, EdgeSet::kUnreachedOrReset, idx,
                                     graphreader.GetGraphTile(opp_edge_id));
-      targets_[opp_edge_id].push_back(index);
+      (*targets_)[opp_edge_id].push_back(index);
     }
     index++;
   }
