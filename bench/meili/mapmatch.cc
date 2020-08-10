@@ -46,12 +46,13 @@ private:
   void InitEngineConfig() {
     rapidjson::read_json(VALHALLA_SOURCE_DIR "bench/meili/config.json", config_);
     const rapidjson::Document doc;
-    ParseAutoCostOptions(doc, "/costing_options/auto", options_.add_costing_options());
+    valhalla::sif::ParseCostingOptions(doc, "/costing_options", options_);
+    options_.set_costing(valhalla::Costing::auto_);
   }
 
   void InitMapMatcher() {
     matcher_factory_ = std::make_shared<MapMatcherFactory>(config_);
-    mapmatcher_.reset(matcher_factory_->Create(valhalla::Costing::auto_, options_));
+    mapmatcher_.reset(matcher_factory_->Create(options_));
   }
 
 protected:

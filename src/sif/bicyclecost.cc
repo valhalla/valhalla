@@ -214,11 +214,11 @@ constexpr ranged_default_t<float> kAvoidBadSurfacesRange{0.0f, kDefaultAvoidBadS
 class BicycleCost : public DynamicCost {
 public:
   /**
-   * Construct bicycle costing. Pass in cost type and options using protocol buffer(pbf).
+   * Construct bicycle costing. Pass in cost type and costing_options using protocol buffer(pbf).
    * @param  costing specified costing type.
-   * @param  options pbf with request options.
+   * @param  costing_options pbf with request costing_options.
    */
-  BicycleCost(const Costing costing, const Options& options);
+  BicycleCost(const CostingOptions& costing_options);
 
   // virtual destructor
   virtual ~BicycleCost() {
@@ -249,7 +249,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const baldr::GraphTile*& tile,
+                       const GraphTile* tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -276,7 +276,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const baldr::GraphTile*& tile,
+                              const GraphTile* tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -434,11 +434,8 @@ protected:
 // is modulated based on surface type and grade factors.
 
 // Constructor
-BicycleCost::BicycleCost(const Costing costing, const Options& options)
-    : DynamicCost(options, TravelMode::kBicycle) {
-  // Grab the costing options based on the specified costing type
-  const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
-
+BicycleCost::BicycleCost(const CostingOptions& costing_options)
+    : DynamicCost(costing_options, TravelMode::kBicycle) {
   // Set hierarchy to allow unlimited transitions
   for (auto& h : hierarchy_limits_) {
     h.max_up_transitions = kUnlimitedTransitions;
@@ -517,7 +514,7 @@ BicycleCost::BicycleCost(const Costing costing, const Options& options)
 // Check if access is allowed on the specified edge.
 bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
                           const EdgeLabel& pred,
-                          const baldr::GraphTile*& tile,
+                          const GraphTile* tile,
                           const baldr::GraphId& edgeid,
                           const uint64_t current_time,
                           const uint32_t tz_index,
@@ -551,7 +548,7 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
 bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                  const EdgeLabel& pred,
                                  const baldr::DirectedEdge* opp_edge,
-                                 const baldr::GraphTile*& tile,
+                                 const GraphTile* tile,
                                  const baldr::GraphId& opp_edgeid,
                                  const uint64_t current_time,
                                  const uint32_t tz_index,
@@ -852,11 +849,12 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
 void ParseBicycleCostOptions(const rapidjson::Document& doc,
                              const std::string& costing_options_key,
                              CostingOptions* pbf_costing_options) {
+  pbf_costing_options->set_costing(Costing::bicycle);
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
     // TODO: farm more common stuff out to parent class
-    ParseCostOptions(*json_costing_options, pbf_costing_options);
+    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
 
     // If specified, parse json and set pbf values
 
@@ -970,8 +968,8 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateBicycleCost(const Costing costing, const Options& options) {
-  return std::make_shared<BicycleCost>(costing, options);
+cost_ptr_t CreateBicycleCost(const CostingOptions& costing_options) {
+  return std::make_shared<BicycleCost>(costing_options);
 }
 
 } // namespace sif
@@ -988,7 +986,7 @@ namespace {
 
 class TestBicycleCost : public BicycleCost {
 public:
-  TestBicycleCost(const Costing costing, const Options& options) : BicycleCost(costing, options){};
+  TestBicycleCost(const CostingOptions& costing_options) : BicycleCost(costing_options){};
 
   using BicycleCost::alley_penalty_;
   using BicycleCost::country_crossing_cost_;
@@ -1003,7 +1001,7 @@ TestBicycleCost* make_bicyclecost_from_json(const std::string& property, float t
   ss << R"({"costing_options":{"bicycle":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestBicycleCost(valhalla::Costing::bicycle, request.options());
+  return new TestBicycleCost(request.options().costing_options(static_cast<int>(Costing::bicycle)));
 }
 
 std::uniform_real_distribution<float>*

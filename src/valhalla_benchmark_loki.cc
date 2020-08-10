@@ -161,9 +161,7 @@ valhalla::sif::cost_ptr_t create_costing() {
   } else {
     options.set_costing(valhalla::Costing::none_);
   }
-  valhalla::sif::CostFactory<valhalla::sif::DynamicCost> factory;
-  factory.RegisterStandardCostingModels();
-  return factory.Create(options);
+  return valhalla::sif::CostFactory{}.Create(options);
 }
 
 void work(const boost::property_tree::ptree& config, std::promise<results_t>& promise) {
