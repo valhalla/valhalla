@@ -23,7 +23,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                                          const bool signal,
                                          const uint32_t restrictions,
                                          const uint32_t bike_network,
-                                         const bool reclass_ferry)
+                                         const bool reclass_ferry,
+                                         const bool use_urban_tag)
     : DirectedEdge() {
   set_endnode(endnode);
   set_use(use);
@@ -45,6 +46,11 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   // Set flag indicating this edge has a bike network
   if (bike_network) {
     set_bike_network(true);
+  }
+
+  // Set flag set on the way indicates this edge is in an urban area, set the density to max urban density.
+  if (use_urban_tag && way.urban()) {
+    set_density(15);
   }
 
   set_truck_route(way.truck_route());

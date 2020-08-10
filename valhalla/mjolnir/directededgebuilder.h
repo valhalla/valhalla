@@ -46,7 +46,8 @@ public:
                       const bool signal,
                       const uint32_t restrictions,
                       const uint32_t bike_network,
-                      const bool reclass_ferry);
+                      const bool reclass_ferry,
+                      const bool use_urban_tag);
 };
 
 } // namespace mjolnir

@@ -417,6 +417,7 @@ void BuildTileSet(const std::string& ways_file,
   bool infer_internal_intersections =
       pt.get<bool>("data_processing.infer_internal_intersections", true);
   bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
+  bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
 
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
@@ -741,7 +742,7 @@ void BuildTileSet(const std::string& ways_file,
                                  static_cast<uint32_t>(std::get<0>(found->second) + .5), speed,
                                  truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
                                  n, has_signal, restrictions, bike_network,
-                                 edge.attributes.reclass_ferry);
+                                 edge.attributes.reclass_ferry, use_urban_tag);
           graphtile.directededges().emplace_back(de);
           DirectedEdge& directededge = graphtile.directededges().back();
           // temporarily set the leaves tile flag to indicate when we need to search the access.bin

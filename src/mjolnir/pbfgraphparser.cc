@@ -74,6 +74,8 @@ public:
     infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
     use_direction_on_ways_ = pt.get<bool>("data_processing.use_direction_on_ways", false);
     allow_alt_name_ = pt.get<bool>("data_processing.allow_alt_name", false);
+    use_urban_tag_ = pt.get<bool>("data_processing.use_urban_tag", false);
+
 
     empty_node_results_ = lua_.Transform(OSMType::kNode, 0, {});
     empty_way_results_ = lua_.Transform(OSMType::kWay, 0, {});
@@ -633,6 +635,8 @@ public:
         w.set_alt_name_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "official_name" && !tag.second.empty()) {
         w.set_official_name_index(osmdata_.name_offset_map.index(tag.second));
+      } else if (tag.first == "urban" && !tag.second.empty() && use_urban_tag_) {
+        w.set_urban(tag.second == "true" ? true : false);
       } else if (tag.first == "max_speed") {
         try {
           if (tag.second == "unlimited") {
@@ -1803,6 +1807,10 @@ public:
   // Configuration option indicating whether or not to process the alt_name key on the ways during the
   // parsing phase
   bool allow_alt_name_;
+
+  // Configuration option indicating whether or not to process the urban key on the ways during the
+  // parsing phase or to get the density during the enhancer phase
+  bool use_urban_tag_;
 
   // Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
   RoadClass highway_cutoff_rc_;
