@@ -245,7 +245,7 @@ std::vector<std::vector<PathInfo>>
 AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
                                 valhalla::Location& destination,
                                 GraphReader& graphreader,
-                                const std::shared_ptr<DynamicCost>* mode_costing,
+                                const sif::mode_costing_t& mode_costing,
                                 const TravelMode mode,
                                 const Options& options) {
   // Set the mode and costing
@@ -266,7 +266,7 @@ AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
   uint32_t density = SetDestination(graphreader, destination);
-  SetOrigin(graphreader, origin, destination, kInvalidSecondsOfWeek);
+  SetOrigin(graphreader, origin, destination, kConstrainedFlowSecondOfDay);
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
@@ -505,9 +505,8 @@ std::vector<PathInfo> AStarPathAlgorithm::FormPath(const uint32_t dest) {
   for (auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
-    path.emplace_back(edgelabel.mode(), edgelabel.cost().secs, edgelabel.edgeid(), 0,
-                      edgelabel.cost().cost, edgelabel.restriction_idx(),
-                      edgelabel.transition_secs());
+    path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), 0,
+                      edgelabel.restriction_idx(), edgelabel.transition_cost());
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {

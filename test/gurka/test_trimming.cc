@@ -69,16 +69,18 @@ TEST(Trimming, routes) {
   EXPECT_GT(offset * start_edge->length(), start_length);
 
   // fake a costing
-  valhalla::Options options;
   const rapidjson::Document doc;
-  sif::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
-  auto costing = sif::CreateAutoCost(valhalla::Costing::auto_, options);
-  sif::cost_ptr_t costings[int(sif::TravelMode::kMaxTravelMode)];
-  costings[static_cast<int>(costing->travel_mode())] = costing;
+  valhalla::Options options;
+  options.set_costing(Costing::auto_);
+  sif::ParseCostingOptions(doc, "/costing_options", options);
+  sif::TravelMode mode;
+  sif::CostFactory factory;
+  auto mode_costings = factory.CreateModeCosting(options, mode);
+  auto costing = mode_costings[static_cast<size_t>(mode)];
 
   // fake up a route
-  std::vector<thor::PathInfo> path{{costing->travel_mode(), .001, start_id, 0, .001, -1},
-                                   {costing->travel_mode(), 45, end_id, 0, 45, -1}};
+  std::vector<thor::PathInfo> path{{costing->travel_mode(), {.001, .001}, start_id, 0, -1},
+                                   {costing->travel_mode(), {45, 45}, end_id, 0, -1}};
   valhalla::Location origin = fake_location(start_id, start, offset);
   valhalla::Location dest = fake_location(end_id, end, 1);
 
@@ -89,7 +91,8 @@ TEST(Trimming, routes) {
   // sliver of the end of the edge
   thor::AttributesController c;
   valhalla::TripLeg leg;
-  thor::TripLegBuilder::Build(c, reader, costings, path.cbegin(), path.cend(), origin, dest, {}, leg);
+  thor::TripLegBuilder::Build({}, c, reader, mode_costings, path.cbegin(), path.cend(), origin, dest,
+                              {}, leg);
   auto leg_shape = midgard::decode<std::vector<midgard::PointLL>>(leg.shape());
   auto leg_length = midgard::length(leg_shape);
 
