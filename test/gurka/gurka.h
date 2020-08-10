@@ -191,7 +191,7 @@ std::string build_valhalla_request(const std::string& location_type,
   speed_types.PushBack("constrained", allocator);
   speed_types.PushBack("predicted", allocator);
   auto found = options.find("/date_time/type");
-  if (found != options.cend() &&  found->second == "0") {
+  if (found != options.cend() && found->second == "0") {
     speed_types.PushBack("current", allocator);
   }
 
