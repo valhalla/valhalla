@@ -141,7 +141,7 @@ std::vector<TimeDistance>
 TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
                               const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                               GraphReader& graphreader,
-                              const std::shared_ptr<DynamicCost>* mode_costing,
+                              const sif::mode_costing_t& mode_costing,
                               const TravelMode mode,
                               const float max_matrix_distance) {
   // Set the mode and costing
@@ -302,7 +302,7 @@ std::vector<TimeDistance>
 TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
                               const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                               GraphReader& graphreader,
-                              const std::shared_ptr<DynamicCost>* mode_costing,
+                              const sif::mode_costing_t& mode_costing,
                               const TravelMode mode,
                               const float max_matrix_distance) {
   // Set the mode and costing
@@ -373,7 +373,7 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
 std::vector<TimeDistance> TimeDistanceMatrix::ManyToMany(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     GraphReader& graphreader,
-    const std::shared_ptr<DynamicCost>* mode_costing,
+    const sif::mode_costing_t& mode_costing,
     const sif::TravelMode mode,
     const float max_matrix_distance) {
   return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance);
@@ -383,7 +383,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     baldr::GraphReader& graphreader,
-    const std::shared_ptr<sif::DynamicCost>* mode_costing,
+    const sif::mode_costing_t& mode_costing,
     const sif::TravelMode mode,
     const float max_matrix_distance) {
   // Run a series of one to many calls and concatenate the results.

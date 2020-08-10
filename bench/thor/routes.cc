@@ -18,9 +18,9 @@ using namespace valhalla;
 namespace {
 
 void create_costing_options(Options& options) {
-  const rapidjson::Document doc;
-  sif::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
-  options.add_costing_options();
+  options.set_costing(Costing::auto_);
+  rapidjson::Document doc;
+  sif::ParseCostingOptions(doc, "/costing_options", options);
 }
 
 boost::property_tree::ptree json_to_pt(const std::string& json) {
@@ -124,7 +124,9 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
 
   Options options;
   create_costing_options(options);
-  auto costs = sif::CreateAutoCost(Costing::auto_, options);
+  sif::TravelMode mode;
+  auto costs = sif::CostFactory().CreateModeCosting(options, mode);
+  auto cost = costs[static_cast<size_t>(mode)];
 
   // A few locations around Utrecht. Origins and destinations are constructed
   // from these for the queries
@@ -138,7 +140,7 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
   locations.emplace_back(midgard::PointLL{5.110077, 52.062043});
   locations.emplace_back(midgard::PointLL{5.025595, 52.067372});
 
-  const auto projections = loki::Search(locations, *clean_reader, costs);
+  const auto projections = loki::Search(locations, *clean_reader, cost);
   if (projections.size() == 0) {
     throw std::runtime_error("Found no matching locations");
   }
@@ -174,7 +176,7 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
     thor::BidirectionalAStar astar;
     for (int i = 0; i < origins.size(); ++i) {
       // LOG_WARN("Running index "+std::to_string(i));
-      auto result = astar.GetBestPath(origins[i], destinations[i], *clean_reader, &costs,
+      auto result = astar.GetBestPath(origins[i], destinations[i], *clean_reader, costs,
                                       sif::TravelMode::kDrive);
       route_size += 1;
     }
@@ -253,7 +255,9 @@ static void BM_Sif_Allowed(benchmark::State& state) {
 
   Options options;
   create_costing_options(options);
-  auto costs = sif::CreateAutoCost(Costing::auto_, options);
+  sif::TravelMode mode;
+  auto costs = sif::CostFactory().CreateModeCosting(options, mode);
+  auto cost = costs[static_cast<size_t>(mode)];
 
   auto tile = clean_reader->GetGraphTile(baldr::GraphId(tgt_edge_id));
   if (tile == nullptr) {
@@ -275,7 +279,7 @@ static void BM_Sif_Allowed(benchmark::State& state) {
   int restriction_idx;
 
   for (auto _ : state) {
-    costs->Allowed(edge, pred, tile, tgt_edge_id, 0, 0, restriction_idx);
+    cost->Allowed(edge, pred, tile, tgt_edge_id, 0, 0, restriction_idx);
   }
 }
 

@@ -35,7 +35,7 @@ public:
    * @param path_infos Returns PathInfo - list of edges and elapsed times.
    * @return Returns true if the edge walk forms a path, false if shape does not match.
    */
-  static bool FormPath(const std::shared_ptr<sif::DynamicCost>* mode_costing,
+  static bool FormPath(const sif::mode_costing_t& mode_costing,
                        const sif::TravelMode& mode,
                        baldr::GraphReader& reader,
                        const std::vector<meili::Measurement>& shape,

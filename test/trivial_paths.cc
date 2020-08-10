@@ -126,10 +126,10 @@ void try_path(GraphReader& reader,
   adjust_scores(*request.mutable_options());
 
   // For now this just tests auto costing - could extend to other
-  TravelMode mode = TravelMode::kDrive;
-  cost_ptr_t costing = CreateAutoCost(Costing::auto_, request.options());
-  std::shared_ptr<DynamicCost> mode_costing[4];
-  mode_costing[static_cast<uint32_t>(mode)] = costing;
+  request.mutable_options()->set_costing(Costing::auto_);
+  TravelMode mode;
+  auto mode_costing = sif::CostFactory{}.CreateModeCosting(*request.mutable_options(), mode);
+  cost_ptr_t costing = mode_costing[static_cast<size_t>(mode)];
 
   AStarPathAlgorithm astar;
   valhalla::Location origin = request.options().locations(0);
