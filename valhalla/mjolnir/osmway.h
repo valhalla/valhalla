@@ -1506,7 +1506,7 @@ struct OSMWay {
   }
 
   /**
-   * Sets the urban tag.
+   * Sets the urban flag.
    * @param  urban       Urban.
    */
   void set_urban(const bool urban) {
