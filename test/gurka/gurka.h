@@ -163,13 +163,12 @@ build_config(const std::string& tiledir,
   return ptree;
 }
 
-std::string
-build_valhalla_route_request(const std::string& location_type,
-                             const map& map,
-                             const std::vector<std::string>& waypoints,
-                             const std::string& costing = "auto",
-                             const std::unordered_map<std::string, std::string>& options = {},
-                             const std::string& stop_type = "") {
+std::string build_valhalla_request(const std::string& location_type,
+                                   const map& map,
+                                   const std::vector<std::string>& waypoints,
+                                   const std::string& costing = "auto",
+                                   const std::unordered_map<std::string, std::string>& options = {},
+                                   const std::string& stop_type = "") {
 
   rapidjson::Document doc;
   doc.SetObject();
@@ -208,6 +207,10 @@ build_valhalla_route_request(const std::string& location_type,
     }
     rapidjson::Pointer(kv.first).Set(doc, kv.second);
   }
+
+  // TODO: allow selecting this
+  // for map matching for now we just want to do real map matching rather than fast
+  doc.AddMember("shape_match", "map_snap", allocator);
 
   rapidjson::StringBuffer sb;
   rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
@@ -614,8 +617,7 @@ valhalla::Api route(const map& map,
     first = false;
   };
   std::cerr << " with costing " << costing << std::endl;
-  auto request_json =
-      detail::build_valhalla_route_request("locations", map, waypoints, costing, options);
+  auto request_json = detail::build_valhalla_request("locations", map, waypoints, costing, options);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -662,7 +664,7 @@ valhalla::Api match(const map& map,
   };
   std::cerr << " with costing " << costing << std::endl;
   auto request_json =
-      detail::build_valhalla_route_request("shape", map, waypoints, costing, options, stop_type);
+      detail::build_valhalla_request("shape", map, waypoints, costing, options, stop_type);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   valhalla::tyr::actor_t actor(map.config, *reader, true);
