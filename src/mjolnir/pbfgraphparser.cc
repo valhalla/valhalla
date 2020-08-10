@@ -76,7 +76,6 @@ public:
     allow_alt_name_ = pt.get<bool>("data_processing.allow_alt_name", false);
     use_urban_tag_ = pt.get<bool>("data_processing.use_urban_tag", false);
 
-
     empty_node_results_ = lua_.Transform(OSMType::kNode, 0, {});
     empty_way_results_ = lua_.Transform(OSMType::kWay, 0, {});
     empty_relation_results_ = lua_.Transform(OSMType::kRelation, 0, {});

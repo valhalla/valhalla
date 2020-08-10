@@ -1521,7 +1521,6 @@ struct OSMWay {
     return urban_;
   }
 
-
   /**
    * Get the names for the edge info based on the road class.
    * @param  ref              updated refs from relations.

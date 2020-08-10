@@ -48,7 +48,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
     set_bike_network(true);
   }
 
-  // Set flag set on the way indicates this edge is in an urban area, set the density to max urban density.
+  // Set flag set on the way indicates this edge is in an urban area, set the density to max urban
+  // density.
   if (use_urban_tag && way.urban()) {
     set_density(15);
   }
