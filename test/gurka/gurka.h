@@ -190,6 +190,10 @@ std::string build_valhalla_request(const std::string& location_type,
   speed_types.PushBack("freeflow", allocator);
   speed_types.PushBack("constrained", allocator);
   speed_types.PushBack("predicted", allocator);
+  auto found = options.find("/date_time/type");
+  if (found != options.cend() &&  found->second == "0") {
+    speed_types.PushBack("current", allocator);
+  }
 
   doc.AddMember(rapidjson::Value(location_type, allocator), locations, allocator);
   doc.AddMember("costing", costing, allocator);
@@ -202,9 +206,6 @@ std::string build_valhalla_request(const std::string& location_type,
 
   // we do this last so that options are additive/overwrite
   for (const auto& kv : options) {
-    if (kv.first.find("/date_time/type") != std::string::npos && kv.second == "0") {
-      speed_types.PushBack("current", allocator);
-    }
     rapidjson::Pointer(kv.first).Set(doc, kv.second);
   }
 
