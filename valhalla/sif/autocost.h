@@ -25,10 +25,9 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
 /**
  * Create an auto route cost method. This is generally shortest time but uses
  * hierarchies and can avoid "shortcuts" through residential areas.
- * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateAutoCost(const Costing costing, const Options& options);
+cost_ptr_t CreateAutoCost(const CostingOptions& options);
 
 /**
  * Parses the auto_shorter cost options from json and stores values in pbf.
@@ -45,10 +44,9 @@ void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
  * Create an auto shorter cost method. This is derived from auto costing and
  * uses the same rules except the edge cost uses an adjusted speed that
  * (non-linearly) reduces the importance of edge speed.
- * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateAutoShorterCost(const Costing costing, const Options& options);
+cost_ptr_t CreateAutoShorterCost(const CostingOptions& options);
 
 /**
  * Parses the auto_data_fix cost options from json and stores values in pbf.
@@ -66,10 +64,9 @@ void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
  * costing but overrides Allowed rules to allow driving against oneway and
  * it ignores turn restrictions. his can be useful for map-matching traces
  * when trying data that may have incorrect restrictions or oneway information.
- * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateAutoDataFixCost(const Costing costing, const Options& options);
+cost_ptr_t CreateAutoDataFixCost(const CostingOptions& options);
 
 /**
  * Parses the bus cost options from json and stores values in pbf.
@@ -86,10 +83,9 @@ void ParseBusCostOptions(const rapidjson::Document& doc,
  * Create a bus cost method. This is derived from auto costing and
  * uses the same rules except for using the bus access flag instead
  * of the auto access flag.
- * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateBusCost(const Costing costing, const Options& options);
+cost_ptr_t CreateBusCost(const CostingOptions& options);
 
 /**
  * Parses the hov cost options from json and stores values in pbf.
@@ -105,10 +101,9 @@ void ParseHOVCostOptions(const rapidjson::Document& doc,
 /**
  * Create a hov cost method. This is derived from auto costing and
  * uses the same rules except for favoring hov roads
- * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateHOVCost(const Costing costing, const Options& options);
+cost_ptr_t CreateHOVCost(const CostingOptions& options);
 
 /**
  * Parses the taxi cost options from json and stores values in pbf.
@@ -124,10 +119,9 @@ void ParseTaxiCostOptions(const rapidjson::Document& doc,
 /**
  * Create a taxi cost method. This is derived from auto costing and
  * uses the same rules except for favoring taxi roads
- * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateTaxiCost(const Costing costing, const Options& options);
+cost_ptr_t CreateTaxiCost(const CostingOptions& options);
 
 } // namespace sif
 } // namespace valhalla

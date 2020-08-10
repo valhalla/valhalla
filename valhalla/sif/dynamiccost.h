@@ -76,7 +76,7 @@ public:
    * @param  options Request options in a pbf
    * @param  mode Travel mode
    */
-  DynamicCost(const Options& options, const TravelMode mode);
+  DynamicCost(const CostingOptions& options, const TravelMode mode);
 
   virtual ~DynamicCost();
 
@@ -150,7 +150,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const baldr::GraphTile*& tile,
+                       const baldr::GraphTile* tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -177,7 +177,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const baldr::GraphTile*& tile,
+                              const baldr::GraphTile* tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -880,13 +880,38 @@ protected:
 };
 
 using cost_ptr_t = std::shared_ptr<DynamicCost>;
+using mode_costing_t = std::array<cost_ptr_t, static_cast<size_t>(TravelMode::kMaxTravelMode)>;
 
 /**
  * Parses the cost options from json and stores values in pbf.
  * @param object The json request represented as a DOM tree.
  * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
  */
-void ParseCostOptions(const rapidjson::Value& obj, CostingOptions* pbf_costing_options);
+void ParseSharedCostOptions(const rapidjson::Value& obj, CostingOptions* pbf_costing_options);
+
+/**
+ * Parses all the costing options for all supported costings
+ * @param doc                   json document
+ * @param costing_options_key   the key in the json document where the options are located
+ * @param options               where to store the parsed costing options
+ */
+void ParseCostingOptions(const rapidjson::Document& doc,
+                         const std::string& costing_options_key,
+                         Options& options);
+
+/**
+ * Parses the costing options for the costing specified within the json object. If the
+ * json object has no key named "costing" the type of costing cannot be found and an
+ * exception is thrown
+ * @param doc                   json document
+ * @param key                   the key in the json document where the options are located
+ * @param costing_options       where to store the parsed options
+ * @param costing               specify the costing you want to parse or let it check the json
+ */
+void ParseCostingOptions(const rapidjson::Document& doc,
+                         const std::string& key,
+                         CostingOptions* costing_options,
+                         Costing costing = static_cast<Costing>(Costing_ARRAYSIZE));
 
 } // namespace sif
 

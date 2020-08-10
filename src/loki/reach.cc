@@ -183,7 +183,7 @@ directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
   locations_.Mutable(0)->mutable_path_edges(0)->mutable_ll()->set_lat(ll.second);
 
   // fake up the costing array
-  std::shared_ptr<sif::DynamicCost> costings[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
+  sif::mode_costing_t costings;
   costings[static_cast<int>(costing->travel_mode())] = costing;
 
   // expand in the forward direction

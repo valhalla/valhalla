@@ -28,7 +28,7 @@ public:
   MapMatcher(const boost::property_tree::ptree& config,
              baldr::GraphReader& graphreader,
              CandidateQuery& candidatequery,
-             const sif::cost_ptr_t* mode_costing,
+             const sif::mode_costing_t& mode_costing,
              sif::TravelMode travelmode);
 
   ~MapMatcher();
@@ -94,7 +94,7 @@ private:
 
   CandidateQuery& candidatequery_;
 
-  const sif::cost_ptr_t* mode_costing_;
+  const sif::mode_costing_t mode_costing_;
 
   sif::TravelMode travelmode_;
 

@@ -243,7 +243,7 @@ std::vector<std::vector<PathInfo>>
 AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
                                valhalla::Location& destination,
                                GraphReader& graphreader,
-                               const std::shared_ptr<DynamicCost>* mode_costing,
+                               const sif::mode_costing_t& mode_costing,
                                const TravelMode mode,
                                const Options& options) {
   // Set the mode and costing
@@ -528,8 +528,8 @@ std::vector<PathInfo> AStarBSSAlgorithm::FormPath(baldr::GraphReader& graphreade
   for (auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
-    path.emplace_back(edgelabel.mode(), edgelabel.cost().secs, edgelabel.edgeid(), 0,
-                      edgelabel.cost().cost, edgelabel.restrictions());
+    path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), 0,
+                      edgelabel.restriction_idx(), edgelabel.transition_cost());
 
     const GraphTile* tile = graphreader.GetGraphTile(edgelabel.edgeid());
     const DirectedEdge* directededge = tile->directededge(edgelabel.edgeid());

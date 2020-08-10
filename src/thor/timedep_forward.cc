@@ -230,7 +230,7 @@ std::vector<std::vector<PathInfo>>
 TimeDepForward::GetBestPath(valhalla::Location& origin,
                             valhalla::Location& destination,
                             GraphReader& graphreader,
-                            const std::shared_ptr<DynamicCost>* mode_costing,
+                            const sif::mode_costing_t& mode_costing,
                             const TravelMode mode,
                             const Options& options) {
   // Set the mode and costing
@@ -262,8 +262,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
   uint32_t density = SetDestination(graphreader, destination);
   // Call SetOrigin with kFreeFlowSecondOfDay for now since we don't yet have
   // a timezone for converting a date_time of "current" to seconds_of_week
-  SetOrigin(graphreader, origin, destination,
-            kInvalidSecondsOfWeek /*forward_time_info.second_of_week*/);
+  SetOrigin(graphreader, origin, destination, forward_time_info.second_of_week);
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);

@@ -107,7 +107,7 @@ TEST(Summary, test_time_summary) {
         // check the transition times should be non-zero and less than equal to the maneuver time
         double transition_time = 0;
         for (auto n = maneuver.begin_path_index(); n < maneuver.end_path_index(); ++n) {
-          transition_time += trip_leg->node(n).transition_time();
+          transition_time += trip_leg->node(n).cost().transition_cost().seconds();
         }
         EXPECT_LE(transition_time, maneuver.time());
         // check the on edge times plus the transition times add up to the maneuver time
@@ -120,7 +120,7 @@ TEST(Summary, test_time_summary) {
         accumulated_edge_time += edge_time_ms / 1000.0;
       }
       // make sure the end of the trip path is the same as the legs
-      EXPECT_EQ(trip_leg->node().rbegin()->elapsed_time(), leg.summary().time());
+      EXPECT_EQ(trip_leg->node().rbegin()->cost().elapsed_cost().seconds(), leg.summary().time());
       // make sure the maneuvers add up to the leg as well
       EXPECT_EQ(accumulated_time, leg.summary().time());
       // we should have had some transition costs along the way

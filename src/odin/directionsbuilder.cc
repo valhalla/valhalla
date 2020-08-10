@@ -400,7 +400,8 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
 
   // Populate summary
   trip_directions.mutable_summary()->set_length(etp->GetLength(options.units()));
-  trip_directions.mutable_summary()->set_time(etp->node(etp->GetLastNodeIndex()).elapsed_time());
+  trip_directions.mutable_summary()->set_time(
+      etp->node(etp->GetLastNodeIndex()).cost().elapsed_cost().seconds());
   auto mutable_bbox = trip_directions.mutable_summary()->mutable_bbox();
   mutable_bbox->mutable_min_ll()->set_lat(etp->bbox().min_ll().lat());
   mutable_bbox->mutable_min_ll()->set_lng(etp->bbox().min_ll().lng());
