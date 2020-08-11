@@ -54,10 +54,10 @@ namespace meili {
 EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
                          float the_source,
                          float the_target,
-                         int the_restriction_idx,
+                         int the_last_match_idx,
                          int the_first_match_idx,
                          bool disconnect,
-                         int the_last_match_idx)
+                         int the_restriction_idx)
     : edgeid(the_edgeid), source(the_source), target(the_target),
       first_match_idx(the_first_match_idx), last_match_idx(the_last_match_idx),
       discontinuity(disconnect), restriction_idx(the_restriction_idx) {
