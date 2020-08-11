@@ -18,12 +18,11 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
+#include "proto/tripcommon.pb.h"
 #include "sif/costconstants.h"
 #include "sif/recost.h"
 #include "thor/attributes_controller.h"
 #include "thor/triplegbuilder.h"
-
-#include <valhalla/proto/tripcommon.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
