@@ -56,11 +56,11 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
                          float the_target,
                          int the_restriction_idx,
                          int the_first_match_idx,
-                         int the_last_match_idx,
-                         bool disconnect)
+                         bool disconnect,
+                         int the_last_match_idx)
     : edgeid(the_edgeid), source(the_source), target(the_target),
-      restriction_idx(the_restriction_idx), first_match_idx(the_first_match_idx),
-      last_match_idx(the_last_match_idx), discontinuity(disconnect) {
+      first_match_idx(the_first_match_idx), last_match_idx(the_last_match_idx),
+      discontinuity(disconnect), restriction_idx(the_restriction_idx) {
   if (!edgeid.Is_Valid()) {
     throw std::invalid_argument("Invalid edgeid");
   }
@@ -97,7 +97,7 @@ bool MergeRoute(const State& source,
   std::vector<EdgeSegment> segments;
   auto label = route_rbegin;
   for (; std::next(label) != route_rend; label++) {
-    segments.emplace_back(label->edgeid(), label->source(), label->target(), -1, -1,
+    segments.emplace_back(label->edgeid(), label->source(), label->target(), -1, -1, false,
                           label->restriction_idx());
   }
 
