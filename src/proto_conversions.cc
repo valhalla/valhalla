@@ -47,6 +47,10 @@ std::string incidentTypeToString(const TripLeg_Node_Incident_Type& incident_type
                            std::to_string(incident_type));
 }
 
+midgard::PointLL to_ll(const valhalla::Location& l) {
+  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
+}
+
 bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
   static const std::unordered_map<std::string, Options::Action> actions{
       {"route", Options::route},

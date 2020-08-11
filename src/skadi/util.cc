@@ -1,21 +1,18 @@
+#include "midgard/util.h"
 #include "skadi/util.h"
 #include <algorithm>
 
-namespace {
-
-template <class T> T clamp(T val, const T low, const T high) {
-  return std::min<T>(std::max<T>(val, low), high);
-}
+namespace util {
 
 constexpr double NO_DATA_VALUE = -32768;
-} // namespace
+} // namespace util
 
 namespace valhalla {
 namespace skadi {
 
 double energy_weighting(double& grade) {
   // dont consider anything steeper than -10% or +15%
-  grade = clamp(grade, -10.0, 15.0);
+  grade = midgard::clamp(grade, -10.0, 15.0);
   // ascent gets weighted more than descent
   return 1.0 + grade / (grade > 0 ? 7.0 : 17.0);
 }
@@ -34,7 +31,7 @@ weighted_grade(const std::vector<double>& heights,
   // Accumulate elevation - to compute mean_elevation
   uint32_t n = 0;
   double total_elev = 0.0;
-  if (heights.front() != NO_DATA_VALUE) {
+  if (heights.front() != util::NO_DATA_VALUE) {
     total_elev += heights.front();
     n++;
   }
@@ -43,7 +40,7 @@ weighted_grade(const std::vector<double>& heights,
   auto scale = 100.0 / interval_distance;
   for (auto h = heights.cbegin() + 1; h != heights.cend(); ++h) {
     // get the grade for this section. Ignore any invalid elevation postings
-    if (*h == NO_DATA_VALUE || *std::prev(h) == NO_DATA_VALUE) {
+    if (*h == util::NO_DATA_VALUE || *std::prev(h) == util::NO_DATA_VALUE) {
       grade = 0.0;
     } else {
       grade = (*h - *std::prev(h)) * scale;
@@ -51,7 +48,7 @@ weighted_grade(const std::vector<double>& heights,
 
     // Add the elevation so we can compute mean (assumes uniform
     // sampling along the path)
-    if (*h != NO_DATA_VALUE) {
+    if (*h != util::NO_DATA_VALUE) {
       total_elev += *h;
       n++;
     }

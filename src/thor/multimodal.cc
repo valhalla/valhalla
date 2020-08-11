@@ -11,9 +11,9 @@ using namespace valhalla::sif;
 namespace {
 
 // Method to get an operator Id from a map of operator strings vs. Id.
-uint32_t GetOperatorId(const GraphTile* tile,
-                       uint32_t routeid,
-                       std::unordered_map<std::string, uint32_t>& operators) {
+uint32_t GetOperatorIdMM(const GraphTile* tile,
+                         uint32_t routeid,
+                         std::unordered_map<std::string, uint32_t>& operators) {
   const TransitRoute* transit_route = tile->GetTransitRoute(routeid);
 
   // Test if the transit operator changed
@@ -38,7 +38,9 @@ uint32_t GetOperatorId(const GraphTile* tile,
 namespace valhalla {
 namespace thor {
 
+namespace multimodal {
 constexpr uint64_t kInitialEdgeLabelCount = 200000;
+} // namespace multimodal
 
 // Default constructor
 MultiModalPathAlgorithm::MultiModalPathAlgorithm()
@@ -60,7 +62,7 @@ void MultiModalPathAlgorithm::Init(const midgard::PointLL& origll,
 
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects
-  edgelabels_.reserve(kInitialEdgeLabelCount);
+  edgelabels_.reserve(multimodal::kInitialEdgeLabelCount);
 
   // Set up lambda to get sort costs
   const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
@@ -397,7 +399,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
           }
 
           // Get the operator Id
-          operator_id = GetOperatorId(tile, departure->routeid(), operators_);
+          operator_id = GetOperatorIdMM(tile, departure->routeid(), operators_);
 
           // Add transfer penalty and operator change penalty
           if (pred.transit_operator() > 0 && pred.transit_operator() != operator_id) {

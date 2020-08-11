@@ -23,10 +23,12 @@ static TravelMode get_other_travel_mode(const TravelMode current_mode) {
 namespace valhalla {
 namespace thor {
 
+namespace astar_bss {
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
 // Number of iterations to allow with no convergence to the destination
 constexpr uint32_t kMaxIterationsWithoutConvergence = 200000;
+} // namespace astar_bss
 
 // Default constructor
 AStarBSSAlgorithm::AStarBSSAlgorithm()
@@ -76,7 +78,7 @@ void AStarBSSAlgorithm::Init(const midgard::PointLL& origll, const midgard::Poin
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects.
   // TODO - reserve based on estimate based on distance and route type.
-  edgelabels_.reserve(kInitialEdgeLabelCount);
+  edgelabels_.reserve(astar_bss::kInitialEdgeLabelCount);
 
   // Set up lambda to get sort costs
   const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
@@ -330,7 +332,7 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
     if (dist2dest < mindist) {
       mindist = dist2dest;
       nc = 0;
-    } else if (nc++ > kMaxIterationsWithoutConvergence) {
+    } else if (nc++ > astar_bss::kMaxIterationsWithoutConvergence) {
       if (best_path.first >= 0) {
         return {FormPath(graphreader, best_path.first)};
       } else {

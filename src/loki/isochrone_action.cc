@@ -3,15 +3,12 @@
 #include "loki/search.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
+#include "proto_conversions.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
 
-namespace {
-midgard::PointLL to_ll(const valhalla::Location& l) {
-  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
-}
-
+namespace isochrone_action {
 void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                     float matrix_max_distance,
                     float& max_location_distance) {
@@ -31,7 +28,7 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
     }
   }
 }
-} // namespace
+} // namespace isochrone_action
 
 namespace valhalla {
 namespace loki {
@@ -73,7 +70,8 @@ void loki_worker_t::isochrones(Api& request) {
 
   // check the distances
   auto max_location_distance = std::numeric_limits<float>::min();
-  check_distance(options.locations(), max_distance.find("isochrone")->second, max_location_distance);
+  isochrone_action::check_distance(options.locations(), max_distance.find("isochrone")->second,
+                                   max_location_distance);
   if (!options.do_not_track()) {
     valhalla::midgard::logging::Log("max_location_distance::" +
                                         std::to_string(max_location_distance * midgard::kKmPerMeter) +

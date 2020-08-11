@@ -118,6 +118,11 @@ function(valhalla_module)
     set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
   endif()
 
+  # TODO: enable for remaining modules
+  if (ENABLE_UNITY_BUILD AND NOT "${library}" MATCHES ".*sif|.*tyr|.*mjolnir")
+    set_target_properties(${library} PROPERTIES UNITY_BUILD ON)
+  endif()
+
   ## Save properties of external dependencies and target objects to propagate to valhalla target
   string(REGEX REPLACE "(valhalla::[^;]+)" "" external_module_depends "${MODULE_DEPENDS}")
   string(REGEX REPLACE "([^;]+)" "$<TARGET_PROPERTY:\\1,INTERFACE_COMPILE_DEFINITIONS>" external_compile_definitions "${external_module_depends}")
@@ -180,6 +185,10 @@ endif()
 add_library(valhalla ${valhalla_src})
 set_target_properties(valhalla PROPERTIES FOLDER "Library")
 create_source_groups("Source Files" ${valhalla_src})
+
+if (ENABLE_UNITY_BUILD)
+  set_target_properties(valhalla PROPERTIES UNITY_BUILD ON)
+endif()
 
 target_compile_definitions(valhalla
   PUBLIC

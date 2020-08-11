@@ -12,9 +12,9 @@ using namespace valhalla::sif;
 namespace {
 
 // Method to get an operator Id from a map of operator strings vs. Id.
-uint32_t GetOperatorId(const GraphTile* tile,
-                       uint32_t routeid,
-                       std::unordered_map<std::string, uint32_t>& operators) {
+uint32_t GetOperatorIdDS(const GraphTile* tile,
+                         uint32_t routeid,
+                         std::unordered_map<std::string, uint32_t>& operators) {
   const TransitRoute* transit_route = tile->GetTransitRoute(routeid);
 
   // Test if the transit operator changed
@@ -560,7 +560,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
           }
 
           // Get the operator Id
-          operator_id = GetOperatorId(tile, departure->routeid(), operators_);
+          operator_id = GetOperatorIdDS(tile, departure->routeid(), operators_);
 
           // Add transfer penalty and operator change penalty
           if (pred.transit_operator() > 0 && pred.transit_operator() != operator_id) {

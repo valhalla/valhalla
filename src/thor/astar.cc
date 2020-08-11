@@ -15,10 +15,12 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
+namespace astar {
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
 // Number of iterations to allow with no convergence to the destination
 constexpr uint32_t kMaxIterationsWithoutConvergence = 200000;
+} // namespace astar
 
 // Default constructor
 AStarPathAlgorithm::AStarPathAlgorithm()
@@ -58,7 +60,7 @@ void AStarPathAlgorithm::Init(const midgard::PointLL& origll, const midgard::Poi
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects.
   // TODO - reserve based on estimate based on distance and route type.
-  edgelabels_.reserve(kInitialEdgeLabelCount);
+  edgelabels_.reserve(astar::kInitialEdgeLabelCount);
 
   // Set up lambda to get sort costs
   const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
@@ -325,7 +327,7 @@ AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
     if (dist2dest < mindist) {
       mindist = dist2dest;
       nc = 0;
-    } else if (nc++ > kMaxIterationsWithoutConvergence) {
+    } else if (nc++ > astar::kMaxIterationsWithoutConvergence) {
       if (best_path.first >= 0) {
         return {FormPath(best_path.first)};
       } else {
