@@ -4,10 +4,6 @@
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/costconstants.h>
 
-using namespace valhalla;
-using namespace valhalla::baldr;
-using namespace valhalla::sif;
-
 namespace valhalla {
 // Associate RoadClass values to TripLeg proto
 constexpr valhalla::RoadClass kTripLegRoadClass[] = {valhalla::RoadClass::kMotorway,
@@ -40,8 +36,8 @@ constexpr TripLeg_VehicleType kTripLegVehicleType[] =
      TripLeg_VehicleType::TripLeg_VehicleType_kTractorTrailer,
      TripLeg_VehicleType::TripLeg_VehicleType_kMotorScooter};
 inline TripLeg_VehicleType GetTripLegVehicleType(const uint8_t type) {
-  return (type <= static_cast<uint8_t>(VehicleType::kMotorScooter)) ? kTripLegVehicleType[type]
-                                                                    : kTripLegVehicleType[0];
+  return (type <= static_cast<uint8_t>(sif::VehicleType::kMotorScooter)) ? kTripLegVehicleType[type]
+                                                                         : kTripLegVehicleType[0];
 }
 
 // Associate pedestrian types to TripLeg proto
@@ -50,8 +46,8 @@ constexpr TripLeg_PedestrianType kTripLegPedestrianType[] =
      TripLeg_PedestrianType::TripLeg_PedestrianType_kWheelchair,
      TripLeg_PedestrianType::TripLeg_PedestrianType_kSegway};
 inline TripLeg_PedestrianType GetTripLegPedestrianType(const uint8_t type) {
-  return (type <= static_cast<uint8_t>(PedestrianType::kSegway)) ? kTripLegPedestrianType[type]
-                                                                 : kTripLegPedestrianType[0];
+  return (type <= static_cast<uint8_t>(sif::PedestrianType::kSegway)) ? kTripLegPedestrianType[type]
+                                                                      : kTripLegPedestrianType[0];
 }
 
 // Associate bicycle types to TripLeg proto
@@ -60,8 +56,8 @@ constexpr TripLeg_BicycleType kTripLegBicycleType[] =
      TripLeg_BicycleType::TripLeg_BicycleType_kHybrid,
      TripLeg_BicycleType::TripLeg_BicycleType_kMountain};
 inline TripLeg_BicycleType GetTripLegBicycleType(const uint8_t type) {
-  return (type <= static_cast<uint8_t>(BicycleType::kMountain)) ? kTripLegBicycleType[type]
-                                                                : kTripLegBicycleType[0];
+  return (type <= static_cast<uint8_t>(sif::BicycleType::kMountain)) ? kTripLegBicycleType[type]
+                                                                     : kTripLegBicycleType[0];
 }
 
 // Associate transit types to TripLeg proto
@@ -74,7 +70,7 @@ constexpr TripLeg_TransitType kTripLegTransitType[] =
      TripLeg_TransitType::TripLeg_TransitType_kCableCar,
      TripLeg_TransitType::TripLeg_TransitType_kGondola,
      TripLeg_TransitType::TripLeg_TransitType_kFunicular};
-inline TripLeg_TransitType GetTripLegTransitType(const TransitType transit_type) {
+inline TripLeg_TransitType GetTripLegTransitType(const baldr::TransitType transit_type) {
   return kTripLegTransitType[static_cast<uint32_t>(transit_type)];
 }
 
@@ -83,7 +79,7 @@ constexpr TripLeg_Traversability kTripLegTraversability[] = {TripLeg_Traversabil
                                                              TripLeg_Traversability_kForward,
                                                              TripLeg_Traversability_kBackward,
                                                              TripLeg_Traversability_kBoth};
-inline TripLeg_Traversability GetTripLegTraversability(const Traversability traversability) {
+inline TripLeg_Traversability GetTripLegTraversability(const baldr::Traversability traversability) {
   return kTripLegTraversability[static_cast<uint32_t>(traversability)];
 }
 
@@ -96,29 +92,29 @@ GetTripLegSideOfStreet(const valhalla::Location::SideOfStreet sos) {
   return kTripLegSideOfStreet[static_cast<uint32_t>(sos)];
 }
 
-inline TripLeg_Node_Type GetTripLegNodeType(const NodeType node_type) {
+inline TripLeg_Node_Type GetTripLegNodeType(const baldr::NodeType node_type) {
   switch (node_type) {
-    case NodeType::kStreetIntersection:
+    case baldr::NodeType::kStreetIntersection:
       return TripLeg_Node_Type_kStreetIntersection;
-    case NodeType::kGate:
+    case baldr::NodeType::kGate:
       return TripLeg_Node_Type_kGate;
-    case NodeType::kBollard:
+    case baldr::NodeType::kBollard:
       return TripLeg_Node_Type_kBollard;
-    case NodeType::kTollBooth:
+    case baldr::NodeType::kTollBooth:
       return TripLeg_Node_Type_kTollBooth;
-    case NodeType::kTransitEgress:
+    case baldr::NodeType::kTransitEgress:
       return TripLeg_Node_Type_kTransitEgress;
-    case NodeType::kTransitStation:
+    case baldr::NodeType::kTransitStation:
       return TripLeg_Node_Type_kTransitStation;
-    case NodeType::kMultiUseTransitPlatform:
+    case baldr::NodeType::kMultiUseTransitPlatform:
       return TripLeg_Node_Type_kTransitPlatform;
-    case NodeType::kBikeShare:
+    case baldr::NodeType::kBikeShare:
       return TripLeg_Node_Type_kBikeShare;
-    case NodeType::kParking:
+    case baldr::NodeType::kParking:
       return TripLeg_Node_Type_kParking;
-    case NodeType::kMotorWayJunction:
+    case baldr::NodeType::kMotorWayJunction:
       return TripLeg_Node_Type_kMotorwayJunction;
-    case NodeType::kBorderControl:
+    case baldr::NodeType::kBorderControl:
       return TripLeg_Node_Type_kBorderControl;
   }
   auto num = static_cast<uint8_t>(node_type);
@@ -131,67 +127,67 @@ constexpr TripLeg_CycleLane kTripLegCycleLane[] = {TripLeg_CycleLane_kNoCycleLan
                                                    TripLeg_CycleLane_kShared,
                                                    TripLeg_CycleLane_kDedicated,
                                                    TripLeg_CycleLane_kSeparated};
-inline TripLeg_CycleLane GetTripLegCycleLane(const CycleLane cyclelane) {
+inline TripLeg_CycleLane GetTripLegCycleLane(const baldr::CycleLane cyclelane) {
   return kTripLegCycleLane[static_cast<uint32_t>(cyclelane)];
 }
 
 // Associate Use to TripLeg proto
-inline TripLeg_Use GetTripLegUse(const Use use) {
+inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
   switch (use) {
-    case Use::kRoad:
+    case baldr::Use::kRoad:
       return TripLeg_Use_kRoadUse;
-    case Use::kRamp:
+    case baldr::Use::kRamp:
       return TripLeg_Use_kRampUse;
-    case Use::kTurnChannel:
+    case baldr::Use::kTurnChannel:
       return TripLeg_Use_kTurnChannelUse;
-    case Use::kTrack:
+    case baldr::Use::kTrack:
       return TripLeg_Use_kTrackUse;
-    case Use::kDriveway:
+    case baldr::Use::kDriveway:
       return TripLeg_Use_kDrivewayUse;
-    case Use::kAlley:
+    case baldr::Use::kAlley:
       return TripLeg_Use_kAlleyUse;
-    case Use::kParkingAisle:
+    case baldr::Use::kParkingAisle:
       return TripLeg_Use_kParkingAisleUse;
-    case Use::kEmergencyAccess:
+    case baldr::Use::kEmergencyAccess:
       return TripLeg_Use_kEmergencyAccessUse;
-    case Use::kDriveThru:
+    case baldr::Use::kDriveThru:
       return TripLeg_Use_kDriveThruUse;
-    case Use::kCuldesac:
+    case baldr::Use::kCuldesac:
       return TripLeg_Use_kCuldesacUse;
-    case Use::kLivingStreet:
+    case baldr::Use::kLivingStreet:
       return TripLeg_Use_kLivingStreetUse;
-    case Use::kCycleway:
+    case baldr::Use::kCycleway:
       return TripLeg_Use_kCyclewayUse;
-    case Use::kMountainBike:
+    case baldr::Use::kMountainBike:
       return TripLeg_Use_kMountainBikeUse;
-    case Use::kSidewalk:
+    case baldr::Use::kSidewalk:
       // return TripLeg_Use_kSidewalkUse;
       return TripLeg_Use_kFootwayUse; // TODO: update when odin has been updated
-    case Use::kFootway:
+    case baldr::Use::kFootway:
       return TripLeg_Use_kFootwayUse;
-    case Use::kSteps:
+    case baldr::Use::kSteps:
       return TripLeg_Use_kStepsUse;
-    case Use::kPath:
+    case baldr::Use::kPath:
       return TripLeg_Use_kPathUse;
-    case Use::kPedestrian:
+    case baldr::Use::kPedestrian:
       return TripLeg_Use_kPedestrianUse;
-    case Use::kBridleway:
+    case baldr::Use::kBridleway:
       return TripLeg_Use_kBridlewayUse;
-    case Use::kOther:
+    case baldr::Use::kOther:
       return TripLeg_Use_kOtherUse;
-    case Use::kFerry:
+    case baldr::Use::kFerry:
       return TripLeg_Use_kFerryUse;
-    case Use::kRailFerry:
+    case baldr::Use::kRailFerry:
       return TripLeg_Use_kRailFerryUse;
-    case Use::kRail:
+    case baldr::Use::kRail:
       return TripLeg_Use_kRailUse;
-    case Use::kBus:
+    case baldr::Use::kBus:
       return TripLeg_Use_kBusUse;
-    case Use::kEgressConnection:
+    case baldr::Use::kEgressConnection:
       return TripLeg_Use_kEgressConnectionUse;
-    case Use::kPlatformConnection:
+    case baldr::Use::kPlatformConnection:
       return TripLeg_Use_kPlatformConnectionUse;
-    case Use::kTransitConnection:
+    case baldr::Use::kTransitConnection:
       return TripLeg_Use_kTransitConnectionUse;
       // Should not see other values
     default:
