@@ -116,6 +116,7 @@ Maneuver::Maneuver()
       distant_verbal_multi_cue_(false), to_stay_on_(false), drive_on_right_(true),
       has_time_restrictions_(false), has_right_traversable_outbound_intersecting_edge_(false),
       has_left_traversable_outbound_intersecting_edge_(false),
+      bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction),
       include_verbal_pre_transition_length_(false), contains_obvious_maneuver_(false),
       has_combined_enter_exit_roundabout_(false), roundabout_length_(0.0f),
       roundabout_exit_length_(0.0f) {
@@ -986,6 +987,14 @@ const std::vector<DirectionsLeg_GuidanceView>& Maneuver::guidance_views() const 
 
 std::vector<DirectionsLeg_GuidanceView>* Maneuver::mutable_guidance_views() {
   return &guidance_views_;
+}
+
+DirectionsLeg_Maneuver_BssManeuverType Maneuver::bss_maneuver_type() const {
+  return bss_maneuver_type_;
+}
+
+void Maneuver::set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType type) {
+  bss_maneuver_type_ = type;
 }
 
 #ifdef LOGGING_LEVEL_TRACE
