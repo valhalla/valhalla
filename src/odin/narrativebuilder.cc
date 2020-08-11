@@ -2127,6 +2127,7 @@ std::string NarrativeBuilder::FormKeepInstruction(Maneuver& maneuver,
             maneuver.signs().GetExitBranchString(element_max_count, limit_by_consecutive_count);
       }
     }
+
     // If it exists, process the exit toward sign
     if (maneuver.HasExitTowardSign()) {
       // Assign toward sign
@@ -2188,18 +2189,24 @@ std::string NarrativeBuilder::FormVerbalAlertKeepInstruction(Maneuver& maneuver,
     toward_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count,
                                                   delim, maneuver.verbal_formatter());
   } else {
-
-    // Assign the street names
-    street_names = FormStreetNames(maneuver, maneuver.street_names(),
-                                   &dictionary_.keep_verbal_subset.empty_street_name_labels, true,
-                                   element_max_count, delim, maneuver.verbal_formatter());
-
-    // If street names string is empty and the maneuver has sign branch info
-    // then assign the sign branch name to the street names string
-    if (street_names.empty() && maneuver.HasExitBranchSign()) {
+    // For ramps with branch sign info - we use the sign info to match what users are seeing
+    if (maneuver.ramp() && maneuver.HasExitBranchSign()) {
       street_names =
           maneuver.signs().GetExitBranchString(element_max_count, limit_by_consecutive_count, delim,
                                                maneuver.verbal_formatter());
+    } else {
+      // Assign the street names
+      street_names = FormStreetNames(maneuver, maneuver.street_names(),
+                                     &dictionary_.keep_verbal_subset.empty_street_name_labels, true,
+                                     element_max_count, delim, maneuver.verbal_formatter());
+
+      // If street names string is empty and the maneuver has sign branch info
+      // then assign the sign branch name to the street names string
+      if (street_names.empty() && maneuver.HasExitBranchSign()) {
+        street_names =
+            maneuver.signs().GetExitBranchString(element_max_count, limit_by_consecutive_count, delim,
+                                                 maneuver.verbal_formatter());
+      }
     }
 
     // If it exists, process exit toward sign
@@ -2256,18 +2263,26 @@ std::string NarrativeBuilder::FormVerbalKeepInstruction(Maneuver& maneuver,
     toward_sign = maneuver.signs().GetGuideString(element_max_count, limit_by_consecutive_count,
                                                   delim, maneuver.verbal_formatter());
   } else {
-    // Assign the street names
-    street_names = FormStreetNames(maneuver, maneuver.street_names(),
-                                   &dictionary_.keep_verbal_subset.empty_street_name_labels, true,
-                                   element_max_count, delim, maneuver.verbal_formatter());
-
-    // If street names string is empty and the maneuver has sign branch info
-    // then assign the sign branch name to the street names string
-    if (street_names.empty() && maneuver.HasExitBranchSign()) {
+    // For ramps with branch sign info - we use the sign info to match what users are seeing
+    if (maneuver.ramp() && maneuver.HasExitBranchSign()) {
       street_names =
           maneuver.signs().GetExitBranchString(element_max_count, limit_by_consecutive_count, delim,
                                                maneuver.verbal_formatter());
+    } else {
+      // Assign the street names
+      street_names = FormStreetNames(maneuver, maneuver.street_names(),
+                                     &dictionary_.keep_verbal_subset.empty_street_name_labels, true,
+                                     element_max_count, delim, maneuver.verbal_formatter());
+
+      // If street names string is empty and the maneuver has sign branch info
+      // then assign the sign branch name to the street names string
+      if (street_names.empty() && maneuver.HasExitBranchSign()) {
+        street_names =
+            maneuver.signs().GetExitBranchString(element_max_count, limit_by_consecutive_count, delim,
+                                                 maneuver.verbal_formatter());
+      }
     }
+
     // If it exists, process exit toward sign
     if (maneuver.HasExitTowardSign()) {
       // Assign toward sign
