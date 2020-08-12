@@ -63,17 +63,17 @@ TEST(UtilMjolnir, NonEmptyTileManifestToString) {
 }
 
 TEST(UtilMjolnir, TileManifestLogToFile) {
-  const std::map<GraphId, size_t> tileset = {{GraphId{5970538}, 0},
-                                             {GraphId{5970546}, 54},
-                                             {GraphId{5970554}, 450}};
-  TileManifest manifest{tileset};
+  const std::map<GraphId, size_t> src = {{GraphId{5970538}, 0},
+                                         {GraphId{5970546}, 54},
+                                         {GraphId{5970554}, 450}};
+  TileManifest manifest{src};
   const std::string filename(VALHALLA_BINARY_DIR "dummy_tile_manifest0.json");
   manifest.LogToFile(filename);
   TileManifest read = TileManifest::ReadFromFile(filename);
   EXPECT_EQ(read.tileset.size(), 3);
-  EXPECT_EQ(read.tileset[GraphId{5970538}], 0);
-  EXPECT_EQ(read.tileset[GraphId{5970546}], 54);
-  EXPECT_EQ(read.tileset[GraphId{5970554}], 450);
+  EXPECT_EQ(read.tileset[GraphId{5970538}], manifest.tileset[GraphId{5970538}]);
+  EXPECT_EQ(read.tileset[GraphId{5970546}], manifest.tileset[GraphId{5970546}]);
+  EXPECT_EQ(read.tileset[GraphId{5970554}], manifest.tileset[GraphId{5970554}]);
 }
 
 } // namespace
