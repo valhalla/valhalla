@@ -45,6 +45,7 @@ public:
     Register(Costing::truck, CreateTruckCost);
     Register(Costing::transit, CreateTransitCost);
     Register(Costing::none_, CreateNoCost);
+    Register(Costing::bikeshare, CreateBikeShareCost);
   }
 
   /**
@@ -109,7 +110,8 @@ public:
   mode_costing_t CreateModeCosting(const Options& options, TravelMode& mode) {
     mode_costing_t mode_costing;
     // Set travel mode and construct costing
-    if (options.costing() == Costing::multimodal || options.costing() == Costing::transit) {
+    if (options.costing() == Costing::multimodal || options.costing() == Costing::transit ||
+        options.costing() == Costing::bikeshare) {
       // For multi-modal we construct costing for all modes and set the
       // initial mode to pedestrian. (TODO - allow other initial modes)
       mode_costing[0] = Create(options.costing_options(static_cast<int>(Costing::auto_)));

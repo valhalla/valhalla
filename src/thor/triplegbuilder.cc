@@ -268,6 +268,29 @@ void SetHeadings(TripLeg_Edge* trip_edge,
   }
 }
 
+void AddBssNode(TripLeg_Node* trip_node,
+                const NodeInfo* node,
+                const GraphId& startnode,
+                const GraphTile* start_tile,
+                const GraphTile* graphtile,
+                const sif::mode_costing_t& mode_costing,
+                const AttributesController& controller) {
+  auto pedestrian_costing = mode_costing[static_cast<size_t>(TravelMode::kPedestrian)];
+  auto bicycle_costing = mode_costing[static_cast<size_t>(TravelMode::kBicycle)];
+
+  if (node->type() == NodeType::kBikeShare && pedestrian_costing && bicycle_costing) {
+    auto* bss_station_info = trip_node->mutable_bss_info();
+    // TODO: import more BSS data, can be used to display capacity in real time
+    bss_station_info->set_name("BSS 42");
+    bss_station_info->set_ref("BSS 42 ref");
+    bss_station_info->set_capacity("42");
+    bss_station_info->set_network("universe");
+    bss_station_info->set_operator_("Douglas");
+    bss_station_info->set_rent_cost(pedestrian_costing->BSSCost().secs);
+    bss_station_info->set_return_cost(bicycle_costing->BSSCost().secs);
+  }
+}
+
 /**
  * @param trip_node   Trip node to add transit nodes.
  * @param node        Start nodeinfo of the current edge.
@@ -1304,6 +1327,7 @@ void TripLegBuilder::Build(
       trip_node->mutable_cost()->mutable_transition_cost()->set_cost(edge_itr->transition_cost.cost);
     }
 
+    AddBssNode(trip_node, node, startnode, start_tile, graphtile, mode_costing, controller);
     AddTransitNodes(trip_node, node, startnode, start_tile, graphtile, controller);
 
     ///////////////////////////////////////////////////////////////////////////

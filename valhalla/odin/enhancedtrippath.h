@@ -593,6 +593,10 @@ public:
     return mutable_node_->recosts();
   }
 
+  bool HasBssInfo() const {
+    return mutable_node_->has_bss_info();
+  }
+
   bool HasIntersectingEdges() const;
 
   bool HasIntersectingEdgeNameConsistency() const;
