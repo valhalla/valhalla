@@ -130,6 +130,8 @@
    * ADDED: Add Dutch locale. [#2464](https://github.com/valhalla/valhalla/pull/2464)
    * ADDED: Check with address sanititizer in CI. Add support for undefined behavior sanitizer. [#2487](https://github.com/valhalla/valhalla/pull/2487)
    * ADDED: Route through restrictions enabled by introducing a costing option. [#2469](https://github.com/valhalla/valhalla/pull/2469)   
+   * ADDED: Ability to recost a path and increased cost/time details along the trippath and json output [#2425](https://github.com/valhalla/valhalla/pull/2425)
+   * ADDED: Add the ability to do bikeshare based (ped/bike) multimodal routing [#2031](https://github.com/valhalla/valhalla/pull/2031)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
