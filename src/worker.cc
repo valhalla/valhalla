@@ -997,6 +997,7 @@ bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
       {"auto_data_fix", Costing::auto_data_fix},
       {"none", Costing::none_},
       {"", Costing::none_},
+      {"bikeshare", Costing::bikeshare},
   };
   auto i = costings.find(costing);
   if (i == costings.cend())
@@ -1022,6 +1023,7 @@ const std::string& Costing_Enum_Name(const Costing costing) {
       {Costing::motorcycle, "motorcycle"},
       {Costing::auto_data_fix, "auto_data_fix"},
       {Costing::none_, "none"},
+      {Costing::bikeshare, "bikeshare"},
   };
   auto i = costings.find(costing);
   return i == costings.cend() ? empty : i->second;
