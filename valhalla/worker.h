@@ -52,6 +52,7 @@ const std::unordered_map<unsigned, std::string>
                 {124, "No edge/node costing provided"},
                 {125, "No costing method found"},
                 {126, "No shape provided"},
+                {127, "Recostings require both name and costing parameters"},
 
                 {130, "Failed to parse location"},
                 {131, "Failed to parse source"},
