@@ -356,6 +356,10 @@ TripLeg_Use GetTripLegUse(const Use use) {
       return TripLeg_Use_kPedestrianUse;
     case Use::kBridleway:
       return TripLeg_Use_kBridlewayUse;
+    case Use::kRestArea:
+      return TripLeg_Use_kRestArea;
+    case Use::kServiceArea:
+      return TripLeg_Use_kServiceArea;
     case Use::kOther:
       return TripLeg_Use_kOtherUse;
     case Use::kFerry:

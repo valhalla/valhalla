@@ -55,6 +55,10 @@ message TripLeg {
     kPedestrianUse = 28;
     kBridlewayUse = 29;
 
+    //Rest/Service Areas
+    kRestArea = 30;
+    kServiceArea = 31;
+
     // Other...
     kOtherUse = 40;
 

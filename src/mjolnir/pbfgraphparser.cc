@@ -568,6 +568,12 @@ public:
           case Use::kTrack:
             w.set_use(Use::kTrack);
             break;
+          case Use::kRestArea:
+            w.set_use(Use::kRestArea);
+            break;
+          case Use::kServiceArea:
+            w.set_use(Use::kServiceArea);
+            break;
           case Use::kOther:
             w.set_use(Use::kOther);
             break;
