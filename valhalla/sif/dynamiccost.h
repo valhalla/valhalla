@@ -701,6 +701,8 @@ protected:
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
   bool ignore_restrictions_{false};
+  bool ignore_oneways_{false};
+  bool ignore_access_{false};
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
