@@ -193,8 +193,6 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 void GraphTileBuilder::StoreTileData() {
   std::string name{tile_dir_ + filesystem::path::preferred_separator +
                             GraphTile::FileSuffix(header_builder_.graphid())};
-  const char opp_sep = filesystem::path::preferred_separator == '/' ? '\\' : '/';
-  std::replace(name.begin(), name.end(), opp_sep, filesystem::path::preferred_separator);
   // Get the name of the file
   filesystem::path filename(name);
 

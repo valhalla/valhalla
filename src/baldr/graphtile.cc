@@ -43,7 +43,7 @@ constexpr float COMPRESSION_HINT = 3.5f;
 
 std::string MakeSingleTileUrl(const std::string& tile_url, const valhalla::baldr::GraphId& graphid) {
   auto id_pos = tile_url.find(valhalla::baldr::GraphTile::kTilePathPattern);
-  return tile_url.substr(0, id_pos) + valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base()) +
+  return tile_url.substr(0, id_pos) + valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base(), false, false) +
          tile_url.substr(id_pos + std::strlen(valhalla::baldr::GraphTile::kTilePathPattern));
 }
 
@@ -384,7 +384,7 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
   }
 }
 
-std::string GraphTile::FileSuffix(const GraphId& graphid, bool gzipped) {
+std::string GraphTile::FileSuffix(const GraphId& graphid, bool gzipped, bool isFilePath) {
   /*
   if you have a graphid where level == 8 and tileid == 24134109851 you should get:
   8/024/134/109/851.gph since the number of levels is likely to be very small this limits the total
@@ -418,18 +418,26 @@ std::string GraphTile::FileSuffix(const GraphId& graphid, bool gzipped) {
   std::ostringstream stream;
   stream.imbue(dir_locale);
 
+  std::string suffix;
   // if it starts with a zero the pow trick doesn't work
   if (graphid.level() == 0) {
     stream << static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << ".gph"
            << (gzipped ? ".gz" : "");
-    std::string suffix = stream.str();
+    suffix = stream.str();
     suffix[0] = '0';
-    return suffix;
+  } else {
+    // it was something else
+    stream << graphid.level() * static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid()
+          << ".gph" << (gzipped ? ".gz" : "");
+    suffix = stream.str();
   }
-  // it was something else
-  stream << graphid.level() * static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid()
-         << ".gph" << (gzipped ? ".gz" : "");
-  return stream.str();
+
+  if (isFilePath) {
+    const char opp_sep = filesystem::path::preferred_separator == '/' ? '\\' : '/';
+    std::replace(suffix.begin(), suffix.end(), opp_sep, filesystem::path::preferred_separator);
+  }
+
+  return suffix;
 }
 
 // Get the tile Id given the full path to the file.
