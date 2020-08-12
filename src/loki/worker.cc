@@ -246,7 +246,6 @@ void loki_worker_t::set_interrupt(const std::function<void()>* interrupt_functio
 }
 
 #ifdef HAVE_HTTP
-
 prime_server::worker_t::result_t
 loki_worker_t::work(const std::list<zmq::message_t>& job,
                     void* request_info,

@@ -28,6 +28,8 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
  */
 cost_ptr_t CreatePedestrianCost(const CostingOptions& options);
 
+cost_ptr_t CreateBikeShareCost(const CostingOptions& options);
+
 } // namespace sif
 } // namespace valhalla
 
