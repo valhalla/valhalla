@@ -12,6 +12,7 @@
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/meili/match_result.h>
 #include <valhalla/proto/trip.pb.h>
+#include <valhalla/proto_conversions.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/pathinfo.h>

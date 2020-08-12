@@ -70,7 +70,9 @@
    * FIXED: Fix missing nullptr checks in graphreader and loki::Reach (causing segfault during routing with not all levels of tiles availble) [#2504](https://github.com/valhalla/valhalla/pull/2504)
    * FIXED: Fix mismatch of triplegedge roadclass and directededge roadclass [#2507](https://github.com/valhalla/valhalla/pull/2507)
    * FIXED: Improve german destination_verbal_alert phrases [#2509](https://github.com/valhalla/valhalla/pull/2509)
+   * FIXED: Fixed logic so verbal keep instructions use branch exit sign info for ramps [#2520](https://github.com/valhalla/valhalla/pull/2520)
    * FIXED: Fix bug in trace_route for uturns causing garbage coordinates [#2517](https://github.com/valhalla/valhalla/pull/2517)
+   * FIXED: Simplify heading calculation for turn type. Remove undefined behavior case. [#2513](https://github.com/valhalla/valhalla/pull/2513)
 
 * **Enhancement**
    * ADDED: Add explicit include for sstream to be compatible with msvc_x64 toolset. [#2449](https://github.com/valhalla/valhalla/pull/2449)
@@ -127,6 +129,8 @@
    * ADDED: Properly split returned path if traffic conditions change partway along edges [#2451](https://github.com/valhalla/valhalla/pull/2451/files)
    * ADDED: Add Dutch locale. [#2464](https://github.com/valhalla/valhalla/pull/2464)
    * ADDED: Check with address sanititizer in CI. Add support for undefined behavior sanitizer. [#2487](https://github.com/valhalla/valhalla/pull/2487)
+   * ADDED: Ability to recost a path and increased cost/time details along the trippath and json output [#2425](https://github.com/valhalla/valhalla/pull/2425)
+   * ADDED: Add the ability to do bikeshare based (ped/bike) multimodal routing [#2031](https://github.com/valhalla/valhalla/pull/2031)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
