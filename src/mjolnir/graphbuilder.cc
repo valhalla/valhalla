@@ -552,6 +552,7 @@ void BuildTileSet(const std::string& ways_file,
         // of outbound edges from this node.
         uint32_t n = 0;
         RoadClass bestclass = RoadClass::kServiceOther;
+        uint32_t density = 0;
         for (const auto& edge_pair : bundle.node_edges) {
           // Get the edge and way
           const Edge& edge = edge_pair.first;
@@ -737,12 +738,15 @@ void BuildTileSet(const std::string& ways_file,
             speed = (spd == 0) ? 1 : spd;
           }
 
+          if (use_urban_tag && w.urban())
+            density = kMaxDensity;
+
           // Add a directed edge and get a reference to it
           DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward,
                                  static_cast<uint32_t>(std::get<0>(found->second) + .5), speed,
                                  truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
                                  n, has_signal, restrictions, bike_network,
-                                 edge.attributes.reclass_ferry, use_urban_tag);
+                                 edge.attributes.reclass_ferry);
           graphtile.directededges().emplace_back(de);
           DirectedEdge& directededge = graphtile.directededges().back();
           // temporarily set the leaves tile flag to indicate when we need to search the access.bin
@@ -1028,6 +1032,10 @@ void BuildTileSet(const std::string& ways_file,
             (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, node_ll);
 
         graphtile.nodes().back().set_timezone(tz_index);
+
+        //set the density as needed.
+        if (use_urban_tag)
+          graphtile.nodes().back().set_density(density);
 
         // if you need to look at the attributes for nodes, grab the LL and update the if statement.
         // if (equal(node_ll.lng(), 120.99157f) && equal(node_ll.lat(), 14.584733f)) {
