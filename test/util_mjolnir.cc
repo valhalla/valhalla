@@ -6,6 +6,7 @@
 
 #include "baldr/graphid.h"
 #include "baldr/rapidjson_utils.h"
+#include "filesystem.h"
 #include "mjolnir/util.h"
 
 #include "test.h"
@@ -29,10 +30,13 @@ using namespace valhalla::midgard;
 // Verify that this function runs
 TEST(UtilMjolnir, BuildTileSet) {
   ptree config;
-  config.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
+  const std::string tile_dir("test/data/parser_tiles");
+  config.put<std::string>("mjolnir.tile_dir", tile_dir);
   config.put<unsigned long>("mjolnir.id_table_size", 1000);
   EXPECT_TRUE(build_tile_set(config, {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"},
                              mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kCleanup));
+  // Clear the tile directory so it doesn't interfere with the next test.
+  EXPECT_TRUE(filesystem::remove_all(tile_dir));
 }
 
 TEST(UtilMjolnir, TileManifestReadFromFile) {

@@ -13,10 +13,11 @@
 #include "test.h"
 
 using boost::property_tree::ptree;
+using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
-using namespace valhalla;
 using valhalla::baldr::GraphId;
+using valhalla::baldr::GraphReader;
 using valhalla::mjolnir::build_tile_set;
 using valhalla::mjolnir::TileManifest;
 
@@ -50,7 +51,6 @@ TEST(GraphBuilder, TestConstructEdges) {
   config.put<std::string>("mjolnir.tile_dir", tile_dir);
   config.put<size_t>("mjolnir.id_table_size", id_table_size);
   OSMData osm_data{0};
-  std::string tile_dir = config.get<std::string>("mjolnir.tile_dir");
   osm_data.read_from_temp_files(tile_dir);
   std::map<baldr::GraphId, size_t> tiles =
       GraphBuilder::BuildEdges(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file);
@@ -59,9 +59,11 @@ TEST(GraphBuilder, TestConstructEdges) {
   EXPECT_EQ(tiles[GraphId{5993706}], 3084);
   EXPECT_EQ(tiles[GraphId{6005218}], 3113);
   EXPECT_EQ(tiles[GraphId{6005226}], 8953);
+  // This directory should be empty
+  filesystem::remove_all(tile_dir);
   GraphBuilder::Build(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file,
                       from_restriction_file, to_restriction_file, tiles);
-  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+  GraphReader reader(config.get_child("mjolnir"));
   EXPECT_EQ(reader.GetTileSet(2).size(), 4);
   // Clear the tile directory so it doesn't interfere with the next test with graphreader.
   EXPECT_TRUE(filesystem::remove_all(tile_dir));
@@ -73,17 +75,16 @@ TEST(graphbuilder, TestConstructEdgesSubset) {
   config.put<std::string>("mjolnir.tile_dir", tile_dir);
   config.put<size_t>("mjolnir.id_table_size", id_table_size);
   OSMData osm_data{0};
-  std::string tile_dir = config.get<std::string>("mjolnir.tile_dir");
   osm_data.read_from_temp_files(tile_dir);
   std::map<baldr::GraphId, size_t> tiles =
       GraphBuilder::BuildEdges(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file);
   // Redefine tiles to that we only build a single tile.
   tiles = {{GraphId{5993698}, 0}};
   // This directory should be empty
-  EXPECT_FALSE(filesystem::remove_all(tile_dir));
+  filesystem::remove_all(tile_dir);
   GraphBuilder::Build(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file,
                       from_restriction_file, to_restriction_file, tiles);
-  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+  GraphReader reader(config.get_child("mjolnir"));
   EXPECT_EQ(reader.GetTileSet(2).size(), 1);
   EXPECT_TRUE(reader.DoesTileExist(GraphId{5993698}));
 }
