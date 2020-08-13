@@ -1,3 +1,4 @@
+#include <fstream>
 #include <sstream>
 #include <unordered_map>
 
@@ -20,8 +21,19 @@
 namespace {
 using boost::property_tree::ptree;
 using valhalla::baldr::GraphId;
+using valhalla::mjolnir::build_tile_set;
 using valhalla::mjolnir::TileManifest;
+using namespace valhalla;
 using namespace valhalla::midgard;
+
+// Verify that this function runs
+TEST(UtilMjolnir, BuildTileSet) {
+  ptree config;
+  config.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
+  config.put<unsigned long>("mjolnir.id_table_size", 1000);
+  EXPECT_TRUE(build_tile_set(config, {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"},
+                             mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kCleanup));
+}
 
 TEST(UtilMjolnir, TileManifestReadFromFile) {
   const std::string filename(VALHALLA_SOURCE_DIR "test/data/tile_manifest0.json");
