@@ -22,23 +22,23 @@ jobs:
       - run:
           name: Build Valhalla base Dockerfile
           command: |
-            docker build -f ./docker/Dockerfile-build --tag valhalla/valhalla:build-latest ./docker
+            docker build -f ./docker/Dockerfile-build --tag valhalla/valhalla:build-3.0.9 ./docker
       - run:
           name: Build Valhalla base Dockerfile x86
           command: |
-            docker build -f ./docker/Dockerfile-build-x86 --tag valhalla/valhalla:build-x86-latest ./docker
+            docker build -f ./docker/Dockerfile-build-x86 --tag valhalla/valhalla:build-x86-3.0.9 ./docker
       - run:
           name: Push Valhalla base image
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-              docker push valhalla/valhalla:build-latest
-              docker push valhalla/valhalla:build-x86-latest
+              docker push valhalla/valhalla:build-3.0.9
+              docker push valhalla/valhalla:build-x86-3.0.9
             fi
 
   build-release-binary-linux:
     docker:
-      - image: valhalla/valhalla:build-latest
+      - image: valhalla/valhalla:build-3.0.9
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
@@ -61,7 +61,7 @@ jobs:
 
   build-debug-binary-linux:
     docker:
-      - image: valhalla/valhalla:build-latest
+      - image: valhalla/valhalla:build-3.0.9
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
@@ -84,7 +84,7 @@ jobs:
 
   lint-build-debug:
     docker:
-      - image: valhalla/valhalla:build-latest
+      - image: valhalla/valhalla:build-3.0.9
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
@@ -121,7 +121,7 @@ jobs:
 
   build-release:
     docker:
-      - image: valhalla/valhalla:build-latest
+      - image: valhalla/valhalla:build-3.0.9
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
@@ -149,7 +149,7 @@ jobs:
 
   build-release-x86:
     docker:
-      - image: valhalla/valhalla:build-x86-latest
+      - image: valhalla/valhalla:build-x86-3.0.9
     steps:
       - checkout
       #- run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
