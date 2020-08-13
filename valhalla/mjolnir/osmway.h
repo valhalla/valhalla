@@ -1598,7 +1598,6 @@ struct OSMWay {
   uint32_t sidewalk_right_ : 1;
   uint32_t sidewalk_left_ : 1;
   uint32_t sac_scale_ : 3;
-  uint32_t urban_ : 1;
 
   // Classification
   uint32_t road_class_ : 3; // Importance of the road/path
@@ -1613,7 +1612,8 @@ struct OSMWay {
   uint32_t pedestrian_ : 1;
   uint32_t has_user_tags_ : 1;
   uint32_t internal_ : 1;
-  uint32_t spare0_ : 4; // Spare
+  uint32_t urban_ : 1;
+  uint32_t spare0_ : 3; // Spare
 
   // Access
   uint16_t auto_forward_ : 1;

@@ -400,6 +400,8 @@ public:
         w.set_internal(tag.second == "true" ? true : false);
       } else if (tag.first == "turn_channel" && !infer_turn_channels_) {
         w.set_turn_channel(tag.second == "true" ? true : false);
+      } else if (use_urban_tag_ && tag.first == "urban") {
+        w.set_urban(tag.second == "true" ? true : false);
       } else if (tag.first == "road_class") {
         RoadClass roadclass = (RoadClass)std::stoi(tag.second);
         switch (roadclass) {
@@ -634,8 +636,6 @@ public:
         w.set_alt_name_index(osmdata_.name_offset_map.index(tag.second));
       } else if (tag.first == "official_name" && !tag.second.empty()) {
         w.set_official_name_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "urban" && !tag.second.empty() && use_urban_tag_) {
-        w.set_urban(tag.second == "true" ? true : false);
       } else if (tag.first == "max_speed") {
         try {
           if (tag.second == "unlimited") {

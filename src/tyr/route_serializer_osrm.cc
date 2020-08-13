@@ -356,7 +356,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     loc->emplace_back(json::fp_t{ll.lat(), 6});
     intersection->emplace("location", loc);
     intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
-    bool is_urban = (curr_edge->density() > 8) ? true : false;
+    bool is_urban = (!arrive_maneuver && curr_edge->density() > 8) ? true : false;
     intersection->emplace("is_urban", is_urban);
     if (node->cost().transition_cost().seconds() > 0)
       intersection->emplace("turn_duration", json::fp_t{node->cost().transition_cost().seconds(), 3});

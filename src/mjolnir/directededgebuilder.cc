@@ -50,9 +50,9 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
 
   // Set flag set on the way indicates this edge is in an urban area, set the density to max urban
   // density.
-  if (use_urban_tag && way.urban()) {
+  /*if (use_urban_tag && way.urban()) {
     set_density(15);
-  }
+  }*/
 
   set_truck_route(way.truck_route());
 
