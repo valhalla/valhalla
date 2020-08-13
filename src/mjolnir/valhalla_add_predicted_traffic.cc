@@ -61,7 +61,7 @@ struct TrafficSpeeds {
 };
 
 // Convert big endian bytes to little endian
-int16_t to_little_endian(const int16_t val) {
+int16_t to_little_endian(const uint16_t val) {
   return (val << 8) | ((val >> 8) & 0x00ff);
 }
 
@@ -146,7 +146,7 @@ ParseTrafficFile(const std::vector<std::string>& filenames, stats& stat) {
                   traffic->second.coefficients.reserve(kCoefficientCount);
                   for (uint32_t i = 0, idx = 0; i < kCoefficientCount; ++i, idx += 2) {
                     traffic->second.coefficients.push_back(
-                        to_little_endian(*(reinterpret_cast<const int16_t*>(&raw[idx]))));
+                        to_little_endian(*(reinterpret_cast<const uint16_t*>(&raw[idx]))));
                   }
                   stat.compressed_count++;
                 } catch (std::exception& e) {
