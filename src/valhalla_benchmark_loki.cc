@@ -7,6 +7,7 @@
 #include "midgard/pointll.h"
 #include "worker.h"
 
+#include "sif/costfactory.h"
 #include <algorithm>
 #include <atomic>
 #include <boost/optional.hpp>
@@ -19,7 +20,6 @@
 #include <string>
 #include <thread>
 #include <tuple>
-#include <valhalla/sif/costfactory.h>
 #include <vector>
 
 namespace bpo = boost::program_options;

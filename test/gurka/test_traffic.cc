@@ -2,9 +2,9 @@
 #include "microtar.h"
 #include <gtest/gtest.h>
 
+#include "baldr/graphreader.h"
+#include "baldr/traffictile.h"
 #include "test/util/traffic_utils.h"
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/traffictile.h>
 
 #include <boost/property_tree/ptree.hpp>
 

@@ -147,8 +147,7 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
       const auto newcost = std::floor(min_cost + 1 + test::rand01(gen) * max_increment_cost);
       if (i % 2 == 0 && !addedLabels.empty()) {
         // Decrease cost
-        const auto idx =
-            *std::next(addedLabels.begin(), test::rand01(gen) * (addedLabels.size() - 1));
+        const auto idx = *std::next(addedLabels.begin(), test::rand01(gen) * (addedLabels.size()));
         if (newcost < costs[idx]) {
           dbqueue.decrease(idx, newcost);
           costs[idx] = newcost;

@@ -1,10 +1,11 @@
 #include "sif/pedestriancost.h"
-#include "sif/costconstants.h"
-
 #include "baldr/accessrestriction.h"
 #include "baldr/graphconstants.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include "proto/options.pb.h"
+#include "proto_conversions.h"
+#include "sif/costconstants.h"
 
 #ifdef INLINE_TEST
 #include "test/test.h"
@@ -31,6 +32,8 @@ constexpr float kDefaultTollBoothCost = 15.0f;           // Seconds
 constexpr float kDefaultFerryCost = 300.0f;              // Seconds
 constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
+constexpr float kDefaultBssCost = 120.0f;                // Seconds
+constexpr float kDefaultBssPenalty = 0.0f;               // Seconds
 
 // Maximum route distances
 constexpr uint32_t kMaxDistanceFoot = 100000;      // 100 km
@@ -125,6 +128,9 @@ constexpr ranged_default_t<uint32_t> kTransitStartEndMaxDistanceRange{0, kTransi
 constexpr ranged_default_t<uint32_t> kTransitTransferMaxDistanceRange{0, kTransitTransferMaxDistance,
                                                                       50000}; // Max 50k
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
+
+constexpr ranged_default_t<float> kBSSCostRange{0, kDefaultBssCost, kMaxPenalty};
+constexpr ranged_default_t<float> kBSSPenaltyRange{0, kDefaultBssPenalty, kMaxPenalty};
 
 constexpr float kSacScaleSpeedFactor[] = {
     1.0f,  // kNone
@@ -376,9 +382,11 @@ public:
     // Throw back a lambda that checks the access for this type of costing
     auto access_mask = access_mask_;
     auto max_sac_scale = max_hiking_difficulty_;
-    return [access_mask, max_sac_scale](const baldr::DirectedEdge* edge) {
+    auto on_bss_connection = project_on_bss_connection;
+    return [access_mask, max_sac_scale, on_bss_connection](const baldr::DirectedEdge* edge) {
       return !(edge->is_shortcut() || edge->use() >= Use::kRail ||
-               edge->sac_scale() > max_sac_scale || !(edge->forwardaccess() & access_mask));
+               edge->sac_scale() > max_sac_scale || !(edge->forwardaccess() & access_mask) ||
+               (edge->bss_connection() && !on_bss_connection));
     };
   }
 
@@ -392,6 +400,10 @@ public:
     auto access_mask = access_mask_;
     return [access_mask](const baldr::NodeInfo* node) { return !(node->access() & access_mask); };
   }
+
+  virtual Cost BSSCost() const override {
+    return {kDefaultBssCost, kDefaultBssPenalty};
+  };
 
 public:
   // Type: foot (default), wheelchair, etc.
@@ -431,6 +443,9 @@ public:
   float driveway_factor_;          // Avoid driveways factor.
   float step_penalty_;             // Penalty applied to steps/stairs (seconds).
 
+  // Used in edgefilter, it tells if the location should be projected on a edge which is
+  // a bike share station connection
+  bool project_on_bss_connection = 0;
   /**
    * Override the base transition cost to not add maneuver penalties onto transit edges.
    * Base transition cost that all costing methods use. Includes costs for
@@ -460,6 +475,9 @@ public:
     }
     if (edge->use() == baldr::Use::kFerry && pred.use() != baldr::Use::kFerry) {
       c += ferry_transition_cost_;
+    }
+    if (node->type() == baldr::NodeType::kBikeShare) {
+      c += bike_share_cost_;
     }
 
     // Additional penalties without any time cost
@@ -591,6 +609,8 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              int& restriction_idx) const {
   if (!(edge->forwardaccess() & access_mask_) || (edge->surface() > minimal_allowed_surface_) ||
       edge->is_shortcut() || IsUserAvoidEdge(edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
+      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
+       pred.mode() == TravelMode::kPedestrian) ||
       //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
       ((pred.path_distance() + edge->length()) > max_distance_)) {
     return false;
@@ -624,6 +644,8 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (!(opp_edge->forwardaccess() & access_mask_) ||
       (opp_edge->surface() > minimal_allowed_surface_) || opp_edge->is_shortcut() ||
       IsUserAvoidEdge(opp_edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
+      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
+       pred.mode() == TravelMode::kPedestrian) ||
       //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
       opp_edge->use() == Use::kTransitConnection || opp_edge->use() == Use::kEgressConnection ||
       opp_edge->use() == Use::kPlatformConnection) {
@@ -720,6 +742,7 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
                                 const std::string& costing_options_key,
                                 CostingOptions* pbf_costing_options) {
   pbf_costing_options->set_costing(Costing::pedestrian);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
@@ -857,6 +880,13 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
         rapidjson::get_optional<uint32_t>(*json_costing_options, "/transit_transfer_max_distance")
             .get_value_or(kTransitTransferMaxDistance)));
 
+    // bss rent cost
+    pbf_costing_options->set_bike_share_cost(
+        kBSSCostRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_rent_cost")
+                          .get_value_or(kDefaultBssCost)));
+    pbf_costing_options->set_bike_share_penalty(
+        kBSSPenaltyRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_rent_penalty")
+                             .get_value_or(kDefaultBssPenalty)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -880,11 +910,19 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_driveway_factor(kDefaultDrivewayFactor);
     pbf_costing_options->set_transit_start_end_max_distance(kTransitStartEndMaxDistance);
     pbf_costing_options->set_transit_transfer_max_distance(kTransitTransferMaxDistance);
+    pbf_costing_options->set_bike_share_cost(kDefaultBssCost);
+    pbf_costing_options->set_bike_share_penalty(kDefaultBssPenalty);
   }
 }
 
 cost_ptr_t CreatePedestrianCost(const CostingOptions& costing_options) {
   return std::make_shared<PedestrianCost>(costing_options);
+}
+
+cost_ptr_t CreateBikeShareCost(const CostingOptions& costing_options) {
+  auto cost_ptr = std::make_shared<PedestrianCost>(costing_options);
+  cost_ptr->project_on_bss_connection = true;
+  return cost_ptr;
 }
 
 } // namespace sif

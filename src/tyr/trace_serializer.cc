@@ -3,6 +3,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/json.h"
 #include "odin/enhancedtrippath.h"
+#include "proto_conversions.h"
 #include "thor/attributes_controller.h"
 #include "tyr/serializers.h"
 

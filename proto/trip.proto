@@ -137,6 +137,16 @@ message TripLeg {
     optional string operator_url = 12;
   }
 
+  message BikeShareStationInfo {
+    optional string name = 1;
+    optional string ref = 2;
+    optional string capacity = 3;
+    optional string network = 4;
+    optional string operator = 5;
+    optional float rent_cost = 6;
+    optional float return_cost = 7;
+  }
+
   enum CycleLane {
     kNoCycleLane = 0;
     kShared = 1;    // Shared use lane (could be shared with pedestrians)
@@ -266,7 +276,8 @@ message TripLeg {
     optional string time_zone = 11;
     optional PathCost cost = 12;             // how much cost did it take at this node in the path
     repeated PathCost recosts = 13;          // how much cost did it take at this node in the path for optional recostings
-  }
+    optional BikeShareStationInfo bss_info = 14;
+ }
 
   message Admin {
     optional string country_code = 1;

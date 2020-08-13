@@ -10,7 +10,7 @@
 #include "sif/pedestriancost.h"
 #include "thor/attributes_controller.h"
 
-#include <valhalla/proto/tripcommon.pb.h>
+#include "proto/tripcommon.pb.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -183,6 +183,7 @@ std::string thor_worker_t::expansion(Api& request) {
            &timedep_reverse,
            &astar,
            &bidir_astar,
+           &bss_astar,
        }) {
     alg->set_track_expansion(track_expansion);
   }
@@ -197,6 +198,7 @@ std::string thor_worker_t::expansion(Api& request) {
            &timedep_reverse,
            &astar,
            &bidir_astar,
+           &bss_astar,
        }) {
     alg->set_track_expansion(nullptr);
   }
@@ -235,6 +237,11 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     valhalla::midgard::logging::Log("algorithm::multimodal ", " [ANALYTICS] ");
     multi_modal_astar.set_interrupt(interrupt);
     return &multi_modal_astar;
+  }
+
+  if (routetype == "bikeshare") {
+    bss_astar.set_interrupt(interrupt);
+    return &bss_astar;
   }
 
   // If the origin has date_time set use timedep_forward method if the distance

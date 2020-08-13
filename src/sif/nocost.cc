@@ -3,6 +3,7 @@
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
+#include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 
@@ -208,6 +209,7 @@ void ParseNoCostOptions(const rapidjson::Document& doc,
                         CostingOptions* pbf_costing_options) {
   // this is probably not needed but its part of the contract for costing..
   pbf_costing_options->set_costing(Costing::none_);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
 }
 
 cost_ptr_t CreateNoCost(const CostingOptions& costing_options) {

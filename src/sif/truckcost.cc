@@ -1,11 +1,11 @@
 #include "sif/truckcost.h"
-
 #include "baldr/accessrestriction.h"
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include "proto_conversions.h"
 #include <cassert>
 
 #ifdef INLINE_TEST
@@ -278,7 +278,7 @@ public:
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->is_shortcut() || !(edge->forwardaccess() & kTruckAccess)) {
+      if (edge->is_shortcut() || !(edge->forwardaccess() & kTruckAccess) || edge->bss_connection()) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -609,6 +609,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
                            const std::string& costing_options_key,
                            CostingOptions* pbf_costing_options) {
   pbf_costing_options->set_costing(Costing::truck);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {

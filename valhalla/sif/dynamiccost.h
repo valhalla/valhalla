@@ -659,6 +659,8 @@ public:
     return flow_mask_;
   }
 
+  virtual Cost BSSCost() const;
+
 protected:
   // Algorithm pass
   uint32_t pass_;
@@ -688,6 +690,7 @@ protected:
   sif::Cost gate_cost_;
   sif::Cost toll_booth_cost_;
   sif::Cost ferry_transition_cost_;
+  sif::Cost bike_share_cost_;
   sif::Cost rail_ferry_transition_cost_;
 
   // Penalties that all costing methods support
@@ -716,6 +719,9 @@ protected:
                               costing_options.country_crossing_cost()};
     gate_cost_ = {costing_options.gate_cost() + costing_options.gate_penalty(),
                   costing_options.gate_cost()};
+
+    bike_share_cost_ = {costing_options.bike_share_cost() + costing_options.bike_share_penalty(),
+                        costing_options.bike_share_cost()};
 
     // Set the cost (seconds) to enter a ferry (only apply entering since
     // a route must exit a ferry (except artificial test routes ending on
@@ -788,6 +794,9 @@ protected:
     if (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred.toll())) {
       c += toll_booth_cost_;
     }
+    if (node->type() == baldr::NodeType::kBikeShare) {
+      c += bike_share_cost_;
+    }
     if (edge->use() == baldr::Use::kFerry && pred.use() != baldr::Use::kFerry) {
       c += ferry_transition_cost_;
     }
@@ -830,6 +839,9 @@ protected:
     }
     if (node->type() == baldr::NodeType::kGate) {
       c += gate_cost_;
+    }
+    if (node->type() == baldr::NodeType::kBikeShare) {
+      c += bike_share_cost_;
     }
     if (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll())) {
       c += toll_booth_cost_;

@@ -1,5 +1,6 @@
 #include "sif/dynamiccost.h"
 #include "baldr/graphconstants.h"
+#include "proto_conversions.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/motorcyclecost.h"
@@ -205,6 +206,10 @@ void DynamicCost::AddUserAvoidEdges(const std::vector<AvoidEdge>& avoid_edges) {
     user_avoid_edges_.insert({edge.id, edge.percent_along});
   }
 }
+
+Cost DynamicCost::BSSCost() const {
+  return kNoCost;
+};
 
 void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_costing_options) {
   auto speed_types = rapidjson::get_child_optional(value, "/speed_types");
