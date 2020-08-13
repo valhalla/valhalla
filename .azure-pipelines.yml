@@ -38,7 +38,7 @@ jobs:
         displayName: 'Install vcpkg'
 
       - script: |
-          %VCPKG_DIR%\vcpkg.exe install boost-algorithm boost-config boost-core boost-heap boost-lexical-cast boost-property-tree boost-variant protobuf zlib curl sqlite3 proj4 luajit libspatialite geos --triplet %PLATFORM%-windows
+          %VCPKG_DIR%\vcpkg.exe install boost-algorithm boost-config boost-core boost-heap boost-lexical-cast boost-property-tree boost-variant boost-program-options boost-geometry protobuf zlib curl sqlite3 proj4 luajit libspatialite geos --triplet %PLATFORM%-windows
           %VCPKG_DIR%\vcpkg.exe list
           if exist %VCPKG_DIR%\downloads rmdir /S /Q %VCPKG_DIR%\downloads
           if exist %VCPKG_DIR%\packages rmdir /S /Q %VCPKG_DIR%\packages
