@@ -189,6 +189,7 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
   route->emplace("duration", json::fp_t{duration, 3});
 
   route->emplace("weight", json::fp_t{weight, 3});
+  assert(api.options().costing_options(api.options().costing()).has_name());
   route->emplace("weight_name", api.options().costing_options(api.options().costing()).name());
 
   auto recosting_itr = api.options().recostings().begin();
