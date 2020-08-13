@@ -9,14 +9,10 @@
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
 #include "midgard/util.h"
-
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "tyr/serializers.h"
-
-#include "proto/directions.pb.h"
-#include "proto/options.pb.h"
-#include "proto/trip.pb.h"
+#include "worker.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;

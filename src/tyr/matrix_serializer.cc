@@ -1,6 +1,7 @@
 #include <cstdint>
 
 #include "baldr/json.h"
+#include "proto_conversions.h"
 #include "thor/costmatrix.h"
 #include "tyr/serializers.h"
 
