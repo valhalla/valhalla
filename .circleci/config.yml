@@ -30,11 +30,11 @@ jobs:
       - run:
           name: Push Valhalla base image
           command: |
-            #if [ "${CIRCLE_BRANCH}" == "master" ]; then
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
               echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
               docker push valhalla/valhalla:build-latest
               docker push valhalla/valhalla:build-x86-latest
-            #fi
+            fi
 
   build-release-binary-linux:
     docker:
