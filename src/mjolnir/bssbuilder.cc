@@ -47,6 +47,7 @@ struct BSSConnection {
   uint32_t bss_oppo_edgelocalidx = -1;
   // oppo_edgelocalidx of the outbound edge from way node to bss node
   uint32_t way_oppo_edgelocalidx = -1;
+
   uint64_t wayid = -1;
   uint32_t speed = 0;
   std::vector<std::string> names = {};
@@ -116,8 +117,8 @@ DirectedEdge make_directed_edge(const GraphId endnode,
 using bss_by_tile_t = std::unordered_map<GraphId, std::vector<OSMNode>>;
 
 std::vector<BSSConnection> project(const GraphTile& local_tile,
-                                       GraphReader& reader_local_level,
-                                       const std::vector<OSMNode>& osm_bss) {
+                                   GraphReader& reader_local_level,
+                                   const std::vector<OSMNode>& osm_bss) {
   auto t1 = std::chrono::high_resolution_clock::now();
   auto scoped_finally = make_finally([&t1, size = osm_bss.size()]() {
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -162,8 +163,8 @@ std::vector<BSSConnection> project(const GraphTile& local_tile,
         }
 
         std::vector<PointLL> this_shape = edgeinfo.shape();
-        if (!directededge->forward()) { 
-            std::reverse(this_shape.begin(), this_shape.end());
+        if (!directededge->forward()) {
+          std::reverse(this_shape.begin(), this_shape.end());
         }
         auto this_closest = bss_ll.Project(this_shape);
 
@@ -178,75 +179,85 @@ std::vector<BSSConnection> project(const GraphTile& local_tile,
       }
     }
 
-    BSSConnection bss_conn_start = {};
-    {
-      bss_conn_start.bss_ll = bss_ll;
-      bss_conn_start.way_oppo_edgelocalidx = 0;
+    auto edgeinfo = local_tile.edgeinfo(best_directededge->edgeinfo_offset());
+    // Store the information of the edge start -> bss
+    BSSConnection conn_start = {bss_ll,
+                                // the bss node is to be created
+                                {},
+                                // we actually know the startnode id
+                                {local_tile.id().tileid(), local_level, best_startnode_index},
+                                // the oppo_edgelocalidx of the outbound edge from bss node to
+                                // startnode is the number of outbound edges from startnode
+                                bss_oppo_edgelocalidx,
+                                0,
+                                edgeinfo.wayid(),
+                                local_tile.GetSpeed(best_directededge),
+                                edgeinfo.GetNames(),
+                                // shape
+                                {},
+                                // In order to simplify the problem, we ALWAYS consider that the
+                                // outbound edge of start node is forward
+                                true,
+                                best_directededge->surface(),
+                                best_directededge->cyclelane(),
+                                best_directededge->classification(),
+                                best_directededge->use(),
+                                best_directededge->forwardaccess(),
+                                best_directededge->reverseaccess()};
 
-      auto edgeinfo = local_tile.edgeinfo(best_directededge->edgeinfo_offset());
-      bss_conn_start.speed = local_tile.GetSpeed(best_directededge);
-      bss_conn_start.names = edgeinfo.GetNames();
-      bss_conn_start.surface = best_directededge->surface();
-      bss_conn_start.cycle_lane = best_directededge->cyclelane();
-      bss_conn_start.road_class = best_directededge->classification();
-      bss_conn_start.use = best_directededge->use();
-      bss_conn_start.forward_access = best_directededge->forwardaccess();
-      bss_conn_start.reverse_access = best_directededge->reverseaccess();
+    // Store the information of the edge end -> bss
+    BSSConnection conn_end =
+        {bss_ll,
+         {},
+         // the endnode is filled temporarily, if startnode and endnode are not in the same tile, it's
+         // to be updated
+         best_directededge->endnode(),
+         // the oppo_edgelocalidx of the outbound edge from bss to endnode is to be updated
+         static_cast<uint32_t>(-1),
+         1,
+         edgeinfo.wayid(),
+         local_tile.GetSpeed(best_directededge),
+         edgeinfo.GetNames(),
+         // shape
+         {},
+         false,
+         best_directededge->surface(),
+         best_directededge->cyclelane(),
+         best_directededge->classification(),
+         best_directededge->use(),
+         best_directededge->forwardaccess(),
+         best_directededge->reverseaccess()};
 
-      bss_conn_start.is_forward = true;
-    }
-
-    BSSConnection bss_conn_end = {};
-    {
-      bss_conn_end.bss_ll = bss_ll;
-      bss_conn_end.way_oppo_edgelocalidx = 1;
-      auto edgeinfo = local_tile.edgeinfo(best_directededge->edgeinfo_offset());
-      bss_conn_end.speed = local_tile.GetSpeed(best_directededge);
-      bss_conn_end.names = edgeinfo.GetNames();
-      bss_conn_end.surface = best_directededge->surface();
-      bss_conn_end.cycle_lane = best_directededge->cyclelane();
-      bss_conn_end.road_class = best_directededge->classification();
-      bss_conn_end.use = best_directededge->use();
-      bss_conn_end.forward_access = best_directededge->forwardaccess();
-      bss_conn_end.reverse_access = best_directededge->reverseaccess();
-      bss_conn_end.is_forward = false;
-    }
-
+    // Calculate the new shape inluding the bss
     auto closest_point = std::get<0>(closest);
     auto cloest_index = std::get<2>(closest);
 
     std::copy(closest_shape.begin(), closest_shape.begin() + cloest_index + 1,
-              std::back_inserter(bss_conn_start.shape));
-    bss_conn_start.shape.push_back(closest_point);
-    bss_conn_start.shape.push_back(bss_ll);
+              std::back_inserter(conn_start.shape));
+    conn_start.shape.push_back(closest_point);
+    conn_start.shape.push_back(bss_ll);
 
-    bss_conn_end.shape.push_back(bss_ll);
-    bss_conn_end.shape.push_back(closest_point);
+    conn_end.shape.push_back(bss_ll);
+    conn_end.shape.push_back(closest_point);
     std::copy(closest_shape.begin() + cloest_index + 1, closest_shape.end(),
-              std::back_inserter(bss_conn_end.shape));
-    
-    // store the attributes of the best directed edge where to project the bss
-    bss_conn_start.way_node_id = {local_tile.id().tileid(), local_level, best_startnode_index};
-    bss_conn_start.bss_oppo_edgelocalidx = bss_oppo_edgelocalidx;
+              std::back_inserter(conn_end.shape));
 
-    bss_conn_end.way_node_id = best_directededge->endnode();
-
-    // we have to check if bss connection's end node is in the same tile as its start node and bss node
-    if (bss_conn_end.way_node_id.tileid() == bss_conn_start.way_node_id.tileid()) {
-      const NodeInfo* node = local_tile.node(bss_conn_end.way_node_id.id());
-      bss_conn_end.bss_oppo_edgelocalidx = node->edge_count();
+    // we have to check if bss connection's end node is in the same tile as its start node and bss
+    // node
+    if (conn_end.way_node_id.tileid() == conn_start.way_node_id.tileid()) {
+      const NodeInfo* node = local_tile.node(conn_end.way_node_id.id());
+      conn_end.bss_oppo_edgelocalidx = node->edge_count();
     } else {
-      auto end_local_tile = reader_local_level.GetGraphTile(bss_conn_end.way_node_id);
-      bss_conn_end.bss_oppo_edgelocalidx =
-          end_local_tile->node(bss_conn_end.way_node_id.id())->edge_count();
+      auto end_local_tile = reader_local_level.GetGraphTile(conn_end.way_node_id);
+      conn_end.bss_oppo_edgelocalidx = end_local_tile->node(conn_end.way_node_id.id())->edge_count();
     }
 
-    if (!bss_conn_start.way_node_id.Is_Valid() && !bss_conn_end.way_node_id.Is_Valid()) {
+    if (!conn_start.way_node_id.Is_Valid() && !conn_end.way_node_id.Is_Valid()) {
       LOG_ERROR("Cannot find any edge to project");
       continue;
     }
-    res.push_back(std::move(bss_conn_start));
-    res.push_back(std::move(bss_conn_end));
+    res.push_back(std::move(conn_start));
+    res.push_back(std::move(conn_end));
   }
 
   return res;
@@ -279,19 +290,19 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
 
     GraphId new_bss_node_graphid{tile.header()->graphid().tileid(), local_level,
                                  static_cast<uint32_t>(tilebuilder_local.nodes().size())};
-
+    // Now we can update bss_node_id
     bss_to_start.bss_node_id = bss_to_end.bss_node_id = new_bss_node_graphid;
 
     tilebuilder_local.nodes().emplace_back(std::move(new_bss_node));
     {
       bool added;
-      auto reversed_shape = bss_to_start.shape;
-      auto directededge = make_directed_edge(bss_to_start.way_node_id, reversed_shape, bss_to_start,
-    		                                false, 0, bss_to_start.bss_oppo_edgelocalidx);
+      auto directededge =
+          make_directed_edge(bss_to_start.way_node_id, bss_to_start.shape, bss_to_start, false, 0,
+                             bss_to_start.bss_oppo_edgelocalidx);
 
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, new_bss_node_graphid, bss_to_start.way_node_id,
-                                        bss_to_start.wayid, 0, 0, 0, reversed_shape,
+                                        bss_to_start.wayid, 0, 0, 0, bss_to_start.shape,
                                         bss_to_start.names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
@@ -299,12 +310,11 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
 
     {
       bool added;
-      auto reversed_shape = bss_to_end.shape;
-      auto directededge = make_directed_edge(bss_to_end.way_node_id, reversed_shape, bss_to_end, true,
-                                             0, bss_to_end.bss_oppo_edgelocalidx);
+      auto directededge = make_directed_edge(bss_to_end.way_node_id, bss_to_end.shape, bss_to_end,
+                                             true, 0, bss_to_end.bss_oppo_edgelocalidx);
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, new_bss_node_graphid, bss_to_end.way_node_id,
-                                        bss_to_end.wayid, 0, 0, 0, reversed_shape, bss_to_end.names,
+                                        bss_to_end.wayid, 0, 0, 0, bss_to_end.shape, bss_to_end.names,
                                         0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
@@ -492,6 +502,65 @@ namespace valhalla {
 namespace mjolnir {
 
 // Add bss to the graph
+/* The import of bike share staion(BSS) into the tiles is done in two steps with some hypothesis in
+ * order to simply the problem.
+ *
+ * We assume that the BSS node and the startnode of projected edge(either the forward edge or its evil
+ * twin reverse edge) are always in the same tile.
+ *
+ * We handle only two cases and we assume that there are very rare cases that the BSS node,
+ * the startnode and the endnode of projected edge are in 3 different tiles, but it's common that the
+ * projected edge crosses tiles.
+ *
+ * Case 1 (handled):
+ *
+ *
+ *  (Tile 1)             (Tile 1)
+ *       S ---------------> E
+ *           ^
+ *           |
+ *          Bss
+ *
+ *
+ *
+ * Case 2 (handled):
+ *
+ *                 |
+ *  (Tile 2)       |      (Tile 1)
+ *       S ---------------> E
+ *           ^     |
+ *           |     |
+ *          Bss
+ *
+ * Case 3 (not handled, rare):
+ *
+ *
+ *                 |
+ *  (Tile 1)       |      (Tile 2)
+ *       S ---------------> E
+ *           ^     |
+ *           |     |
+ *      _____|_____|________________
+ *           |     |
+ *          Bss    |
+ *   (Tile 3)      |
+ *
+ *
+ * The import is done in two steps:
+ *
+ * 1. Find the nearest edge on which the BSS node should be projected, then add the bss nodes and
+ * their outbound edge to the local tiles. In this step, we assume that every BSS node will have 2
+ * outbound edges: one is towards the start and another is towards the end. Since we know to which
+ * node these outbound edges point, we can easily compute their oppo_edgelocalidx which is essential.
+ *
+ * 2. Now the Bss nodes and their outbound edges are added into the local tiles, it's time to add
+ * their inbound edges(in other words, outbound edges of startnodes and endnodes). These edges are
+ * just considered as the same outbound edges from a way node (outbound edges of either startnode or
+ * endnode are technically the same). We group those edges whose orign are in the same tiles and work
+ * on it in batch.
+ *
+ *
+ * */
 void BssBuilder::Build(const boost::property_tree::ptree& pt, const std::string& bss_nodes_bin) {
 
   if (!pt.get<bool>("mjolnir.import_bike_share_stations", false)) {
@@ -564,8 +633,10 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt, const std::string&
     }
   }
 
+  // the collection is sorted so that the search will be much faster later.
   boost::sort(all);
 
+  // outboud edges from way node are grouped by tiles.
   std::unordered_map<GraphId, std::vector<BSSConnection>> map;
 
   auto chunk_start = all.begin();
