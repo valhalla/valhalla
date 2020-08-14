@@ -75,6 +75,7 @@
    * FIXED: Fixed logic so verbal keep instructions use branch exit sign info for ramps [#2520](https://github.com/valhalla/valhalla/pull/2520)
    * FIXED: Fix bug in trace_route for uturns causing garbage coordinates [#2517](https://github.com/valhalla/valhalla/pull/2517)
    * FIXED: Simplify heading calculation for turn type. Remove undefined behavior case. [#2513](https://github.com/valhalla/valhalla/pull/2513)
+   * FIXED: Always set costing name even if one is not provided for osrm serializer weight_name. [#2528](https://github.com/valhalla/valhalla/pull/2528)
    * FIXED: Make single-thread tile building reproducible: fix seed for shuffle, use concurrency configuration from the mjolnir section. [#2515](https://github.com/valhalla/valhalla/pull/2515)
 
 * **Enhancement**
