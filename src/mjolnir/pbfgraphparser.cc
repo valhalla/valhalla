@@ -176,33 +176,63 @@ public:
         way_.set_sidewalk_right(true);
       }
     };
-    tag_handlers_["auto_forward"] = [this]() { way_.set_auto_forward(tag_.second == "true" ? true : false); };
-    tag_handlers_["truck_forward"] = [this]() { way_.set_truck_forward(tag_.second == "true" ? true : false); };
-    tag_handlers_["bus_forward"] = [this]() { way_.set_bus_forward(tag_.second == "true" ? true : false); };
-    tag_handlers_["bike_forward"] = [this]() { way_.set_bike_forward(tag_.second == "true" ? true : false); };
+    tag_handlers_["auto_forward"] = [this]() {
+      way_.set_auto_forward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["truck_forward"] = [this]() {
+      way_.set_truck_forward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["bus_forward"] = [this]() {
+      way_.set_bus_forward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["bike_forward"] = [this]() {
+      way_.set_bike_forward(tag_.second == "true" ? true : false);
+    };
     tag_handlers_["emergency_forward"] = [this]() {
       way_.set_emergency_forward(tag_.second == "true" ? true : false);
     };
-    tag_handlers_["hov_forward"] = [this]() { way_.set_hov_forward(tag_.second == "true" ? true : false); };
-    tag_handlers_["taxi_forward"] = [this]() { way_.set_taxi_forward(tag_.second == "true" ? true : false); };
-    tag_handlers_["moped_forward"] = [this]() { way_.set_moped_forward(tag_.second == "true" ? true : false); };
+    tag_handlers_["hov_forward"] = [this]() {
+      way_.set_hov_forward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["taxi_forward"] = [this]() {
+      way_.set_taxi_forward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["moped_forward"] = [this]() {
+      way_.set_moped_forward(tag_.second == "true" ? true : false);
+    };
     tag_handlers_["motorcycle_forward"] = [this]() {
       way_.set_motorcycle_forward(tag_.second == "true" ? true : false);
     };
-    tag_handlers_["auto_backward"] = [this]() { way_.set_auto_backward(tag_.second == "true" ? true : false); };
-    tag_handlers_["truck_backward"] = [this]() { way_.set_truck_backward(tag_.second == "true" ? true : false); };
-    tag_handlers_["bus_backward"] = [this]() { way_.set_bus_backward(tag_.second == "true" ? true : false); };
-    tag_handlers_["bike_backward"] = [this]() { way_.set_bike_backward(tag_.second == "true" ? true : false); };
+    tag_handlers_["auto_backward"] = [this]() {
+      way_.set_auto_backward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["truck_backward"] = [this]() {
+      way_.set_truck_backward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["bus_backward"] = [this]() {
+      way_.set_bus_backward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["bike_backward"] = [this]() {
+      way_.set_bike_backward(tag_.second == "true" ? true : false);
+    };
     tag_handlers_["emergency_backward"] = [this]() {
       way_.set_emergency_backward(tag_.second == "true" ? true : false);
     };
-    tag_handlers_["hov_backward"] = [this]() { way_.set_hov_backward(tag_.second == "true" ? true : false); };
-    tag_handlers_["taxi_backward"] = [this]() { way_.set_taxi_backward(tag_.second == "true" ? true : false); };
-    tag_handlers_["moped_backward"] = [this]() { way_.set_moped_backward(tag_.second == "true" ? true : false); };
+    tag_handlers_["hov_backward"] = [this]() {
+      way_.set_hov_backward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["taxi_backward"] = [this]() {
+      way_.set_taxi_backward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["moped_backward"] = [this]() {
+      way_.set_moped_backward(tag_.second == "true" ? true : false);
+    };
     tag_handlers_["motorcycle_backward"] = [this]() {
       way_.set_motorcycle_backward(tag_.second == "true" ? true : false);
     };
-    tag_handlers_["pedestrian"] = [this]() { way_.set_pedestrian(tag_.second == "true" ? true : false); };
+    tag_handlers_["pedestrian"] = [this]() {
+      way_.set_pedestrian(tag_.second == "true" ? true : false);
+    };
     tag_handlers_["private"] = [this]() {
       // Make sure we do not unset this flag if set previously
       if (tag_.second == "true")
@@ -265,10 +295,16 @@ public:
           break;
       }
     };
-    tag_handlers_["no_thru_traffic"] = [this]() { way_.set_no_thru_traffic(tag_.second == "true" ? true : false); };
+    tag_handlers_["no_thru_traffic"] = [this]() {
+      way_.set_no_thru_traffic(tag_.second == "true" ? true : false);
+    };
     tag_handlers_["oneway"] = [this]() { way_.set_oneway(tag_.second == "true" ? true : false); };
-    tag_handlers_["oneway_reverse"] = [this]() { way_.set_oneway_reverse(tag_.second == "true" ? true : false); };
-    tag_handlers_["roundabout"] = [this]() { way_.set_roundabout(tag_.second == "true" ? true : false); };
+    tag_handlers_["oneway_reverse"] = [this]() {
+      way_.set_oneway_reverse(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["roundabout"] = [this]() {
+      way_.set_roundabout(tag_.second == "true" ? true : false);
+    };
     tag_handlers_["link"] = [this]() { way_.set_link(tag_.second == "true" ? true : false); };
     tag_handlers_["ferry"] = [this]() { way_.set_ferry(tag_.second == "true" ? true : false); };
     tag_handlers_["rail"] = [this]() { way_.set_rail(tag_.second == "true" ? true : false); };
@@ -375,48 +411,56 @@ public:
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
       }
     };
-    tag_handlers_["truck_route"] = [this]() { way_.set_truck_route(tag_.second == "true" ? true : false); };
+    tag_handlers_["truck_route"] = [this]() {
+      way_.set_truck_route(tag_.second == "true" ? true : false);
+    };
     tag_handlers_["hazmat"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kHazmat);
       restriction.set_value(tag_.second == "true" ? true : false);
       restriction.set_modes(kTruckAccess);
-      osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxheight"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxHeight);
       restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess);
-      osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxwidth"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWidth);
       restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess);
-      osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxlength"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxLength);
       restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess);
-      osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxweight"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWeight);
       restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess);
-      osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxaxleload"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxAxleLoad);
       restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess);
-      osmdata_.access_restrictions.insert(AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["default_speed"] = [this]() {
       try {
@@ -550,8 +594,12 @@ public:
         way_.set_use_sidepath(true);
       }
     };
-    tag_handlers_["shoulder_right"] = [this]() { way_.set_shoulder_right(tag_.second == "true" ? true : false); };
-    tag_handlers_["shoulder_left"] = [this]() { way_.set_shoulder_left(tag_.second == "true" ? true : false); };
+    tag_handlers_["shoulder_right"] = [this]() {
+      way_.set_shoulder_right(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["shoulder_left"] = [this]() {
+      way_.set_shoulder_left(tag_.second == "true" ? true : false);
+    };
     tag_handlers_["cycle_lane_right"] = [this]() {
       CycleLane cyclelane_right = (CycleLane)std::stoi(tag_.second);
       switch (cyclelane_right) {
@@ -935,7 +983,8 @@ public:
 
     // Transform tags. If no results that means the way does not have tags
     // suitable for use in routing.
-    Tags results = tags.size() == 0 ? empty_way_results_ : lua_.Transform(OSMType::kWay, osmid_, tags);
+    Tags results =
+        tags.size() == 0 ? empty_way_results_ : lua_.Transform(OSMType::kWay, osmid_, tags);
     if (results.size() == 0) {
       return;
     }
@@ -1830,7 +1879,6 @@ public:
     complex_restrictions_to_.reset(complex_restrictions_to);
     bss_nodes_.reset(bss_nodes);
   }
-
 
   // WayCallback tag handlers
   using TagHandler = std::function<void()>;
