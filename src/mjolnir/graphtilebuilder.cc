@@ -191,10 +191,9 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 
 // Output the tile to file. Stores as binary data.
 void GraphTileBuilder::StoreTileData() {
-  std::string name{tile_dir_ + filesystem::path::preferred_separator +
-                            GraphTile::FileSuffix(header_builder_.graphid())};
   // Get the name of the file
-  filesystem::path filename(name);
+  filesystem::path filename(tile_dir_ + filesystem::path::preferred_separator +
+                            GraphTile::FileSuffix(header_builder_.graphid()));
 
   // Make sure the directory exists on the system
   if (!filesystem::exists(filename.parent_path())) {

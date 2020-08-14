@@ -97,10 +97,10 @@ public:
    * Gets the directory like filename suffix given the graphId
    * @param  graphid  Graph Id to construct filename.
    * @param  gzipped  Modifies the suffix if you expect gzipped file names
-   * @param  isFilePath Modifies the path separator based on OS 
+   * @param  is_file_path Determines the 1000 separator to be used for file or URL access 
    * @return  Returns a filename including directory path as a suffix to be appended to another uri
    */
-  static std::string FileSuffix(const GraphId& graphid, bool gzipped = false, bool isFilePath = true);
+  static std::string FileSuffix(const GraphId& graphid, bool gzipped = false, bool is_file_path = true);
 
   /**
    * Get the tile Id given the full path to the file.
@@ -593,6 +593,7 @@ public:
    * @return  Returns offset into the text table.
    */
   uint32_t turnlanes_offset(const uint32_t idx) const;
+
 
   /**
    * Convenience method to determine whether an edge is currently closed
