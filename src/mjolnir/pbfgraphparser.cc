@@ -526,7 +526,7 @@ public:
     };
     // surface tag should win over tracktype.
     c["tracktype"] = [this]() {
-      if (!has_surface) {
+      if (!has_surface_tag) {
         has_surface = true;
         if (tag.second == "grade1") {
           w.set_surface(Surface::kPavedRough);
@@ -1009,7 +1009,7 @@ public:
     ref = int_ref = direction = int_direction = {};
 
     const auto& surface_exists = results.find("surface");
-    bool has_surface_tag = (surface_exists != results.end());
+    has_surface_tag = (surface_exists != results.end());
     if (!has_surface_tag) {
       has_surface = false;
     }
@@ -1841,6 +1841,7 @@ public:
   bool has_default_speed = false, has_max_speed = false;
   bool has_average_speed = false, has_advisory_speed = false;
   bool has_surface = true;
+  bool has_surface_tag = true;
   OSMAccess access;
   bool has_user_tags = false;
   std::string ref, int_ref, direction, int_direction;
