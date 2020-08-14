@@ -17,6 +17,7 @@ struct OSMAccess {
    * Constructor
    */
   OSMAccess() {
+    memset(this, 0, sizeof(OSMAccess));
     osmwayid_ = 0;
     attributes_ = {0};
   }
@@ -26,6 +27,7 @@ struct OSMAccess {
    * @param   id  way id
    */
   OSMAccess(const uint64_t id) {
+    memset(this, 0, sizeof(OSMAccess));
     set_way_id(id);
     attributes_ = {0};
   }
