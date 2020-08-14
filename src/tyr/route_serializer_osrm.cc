@@ -9,14 +9,10 @@
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
 #include "midgard/util.h"
-
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "tyr/serializers.h"
-
-#include "proto/directions.pb.h"
-#include "proto/options.pb.h"
-#include "proto/trip.pb.h"
+#include "worker.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -189,6 +185,7 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
   route->emplace("duration", json::fp_t{duration, 3});
 
   route->emplace("weight", json::fp_t{weight, 3});
+  assert(api.options().costing_options(api.options().costing()).has_name());
   route->emplace("weight_name", api.options().costing_options(api.options().costing()).name());
 
   auto recosting_itr = api.options().recostings().begin();

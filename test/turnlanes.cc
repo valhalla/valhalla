@@ -10,10 +10,10 @@
 #include "odin/directionsbuilder.h"
 #include "odin/enhancedtrippath.h"
 
-#include <valhalla/proto/api.pb.h>
-#include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/options.pb.h>
-#include <valhalla/proto/trip.pb.h>
+#include "proto/api.pb.h"
+#include "proto/directions.pb.h"
+#include "proto/options.pb.h"
+#include "proto/trip.pb.h"
 
 #include "test.h"
 
