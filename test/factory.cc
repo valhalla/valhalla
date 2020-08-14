@@ -1,8 +1,8 @@
+#include "proto/options.pb.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/costfactory.h"
 #include "sif/pedestriancost.h"
-#include <valhalla/proto/options.pb.h>
 
 #include "test.h"
 

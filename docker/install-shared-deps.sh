@@ -1,19 +1,26 @@
 #!/usr/bin/env bash
 # Script for shared dependencies
 
-set -o errexit -o pipefail -o nounset
+set -x -o errexit -o pipefail -o nounset
 
-apt-get update -y && apt-get install -y software-properties-common
-add-apt-repository -y ppa:valhalla-core/valhalla && apt-get update -y
+# Adds the primeserver ppa
+apt-get update --assume-yes
+apt-get install --assume-yes software-properties-common
+add-apt-repository ppa:valhalla-core/valhalla
 
-apt-get install -y \
+readonly primeserver_version=0.6.7
+
+# Now, go through and install the build dependencies
+apt-get update --assume-yes
+env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     autoconf \
     automake \
     ccache \
-    clang-5.0 \
-    clang-tidy-5.0 \
+    clang \
+    clang-tidy \
     coreutils \
     curl \
+    cmake \
     g++ \
     gcc \
     git \
@@ -25,7 +32,8 @@ apt-get install -y \
     libgeos-dev \
     libluajit-5.1-dev \
     liblz4-dev \
-    libprime-server0.6.3-dev \
+    libprime-server${primeserver_version} \
+    libprime-server${primeserver_version}-dev \
     libprotobuf-dev \
     libspatialite-dev \
     libsqlite3-dev \
@@ -34,23 +42,15 @@ apt-get install -y \
     locales \
     luajit \
     make \
-    ninja-build \
     osmium-tool \
     parallel \
     pkg-config \
-    prime-server0.6.3-bin \
+    prime-server${primeserver_version}-bin \
     protobuf-compiler \
     python-all-dev \
-    python-minimal \
     python3-all-dev \
     python3-minimal \
     spatialite-bin \
     unzip \
-    vim-common \
     zlib1g-dev \
   && rm -rf /var/lib/apt/lists/*
-
-# install cmake
-curl https://cmake.org/files/v3.16/cmake-3.16.0-Linux-$(uname --machine).sh > /tmp/cmake.sh
-sh /tmp/cmake.sh --prefix=/usr/local --skip-license && /bin/rm /tmp/cmake.sh
-cmake --version

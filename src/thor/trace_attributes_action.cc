@@ -16,8 +16,8 @@
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
-#include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/trip.pb.h>
+#include "proto/directions.pb.h"
+#include "proto/trip.pb.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;

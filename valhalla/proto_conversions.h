@@ -197,4 +197,24 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
       return TripLeg_Use_kRoadUse;
   }
 }
+
+// to use protobuflite we cant use descriptors which means we cant translate enums to strings
+// and so we reimplement the ones we use here. newer versions of protobuf provide these even
+// for the lite bindings so we avoid collisions by picking somewhat goofy names. an alternative
+// which would allow us to delete this completely would be to target a newer protobuf version
+bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a);
+const std::string& Options_Action_Enum_Name(const Options::Action action);
+bool Costing_Enum_Parse(const std::string& costing, Costing* c);
+const std::string& Costing_Enum_Name(const Costing costing);
+bool ShapeMatch_Enum_Parse(const std::string& match, ShapeMatch* s);
+const std::string& ShapeMatch_Enum_Name(const ShapeMatch match);
+bool Options_Format_Enum_Parse(const std::string& format, Options::Format* f);
+const std::string& Options_Format_Enum_Name(const Options::Format match);
+const std::string& Options_Units_Enum_Name(const Options::Units unit);
+bool FilterAction_Enum_Parse(const std::string& action, FilterAction* a);
+const std::string& FilterAction_Enum_Name(const FilterAction action);
+bool DirectionsType_Enum_Parse(const std::string& dtype, DirectionsType* t);
+bool PreferredSide_Enum_Parse(const std::string& pside, valhalla::Location::PreferredSide* p);
+bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc);
+
 } // namespace valhalla
