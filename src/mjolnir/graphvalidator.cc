@@ -556,7 +556,8 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   for (const auto& id : tileset) {
     tilequeue.emplace_back(id);
   }
-  std::random_shuffle(tilequeue.begin(), tilequeue.end());
+  // fixed seed for reproducible tile build
+  std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(3));
 
   // Remember what the dataset id is in case we have to make some tiles
   auto dataset_id = GraphTile(tile_dir, *tilequeue.begin()).header()->dataset_id();
@@ -567,7 +568,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   // Setup threads
   std::vector<std::shared_ptr<std::thread>> threads(
       std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency())));
+               pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency())));
 
   // Setup promises
   std::list<
