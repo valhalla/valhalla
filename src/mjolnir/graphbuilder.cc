@@ -1033,7 +1033,7 @@ void BuildTileSet(const std::string& ways_file,
 
         graphtile.nodes().back().set_timezone(tz_index);
 
-        //set the density as needed.
+        // set the density as needed.
         if (use_urban_tag)
           graphtile.nodes().back().set_density(density);
 
