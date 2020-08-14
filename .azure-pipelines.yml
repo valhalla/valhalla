@@ -24,6 +24,8 @@ jobs:
       BUILD_CFG: 'Release'
       BUILD_DIR: '$(Agent.WorkFolder)\build'
       VCPKG_DIR: '$(Agent.WorkFolder)\vcpkg'
+      LUA_INC: '%VCPKG_DIR%\vcpkg\installed\%PLATFORM%-windows\include\luajit'
+      LUA_LIB: '%VCPKG_DIR%\vcpkg\installed\%PLATFORM%-windows\lib\lua51.lib'
 
     steps:
       - script: git submodule update --init --recursive
@@ -57,7 +59,7 @@ jobs:
 
       - script: |
           cmake --version
-          cmake -H$(Build.SourcesDirectory) -B%BUILD_DIR% -G "%GENERATOR%" -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_CCACHE=OFF -DENABLE_DATA_TOOLS=ON -DENABLE_HTTP=OFF -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_SERVICES=OFF -DENABLE_TOOLS=ON -DENABLE_BENCHMARKS=OFF
+          cmake -H$(Build.SourcesDirectory) -B%BUILD_DIR% -G "%GENERATOR%" -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_CCACHE=OFF -DENABLE_DATA_TOOLS=ON -DENABLE_HTTP=OFF -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_SERVICES=OFF -DENABLE_TOOLS=ON -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR=%LUA_INC% -DLUA_LIBRARIES=%LUA_LIB%
         displayName: 'Run CMake to configure build'
 
       - script: |

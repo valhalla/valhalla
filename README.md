@@ -177,9 +177,9 @@ C:\path\to\vcpkg.exe install boost-algorithm boost-config boost-core boost-heap 
 # If you want to build with DATA_TOOLS & TOOLS
 C:\path\to\vcpkg.exe sqlite3 proj4 luajit libspatialite geos --triplet x64-windows
 ```
-2. Let CMake configure the build, but make sure to only enable the modules you need, e.g. the final command could look like
+2. Let CMake configure the build with the required modules enabled. **Note**, you have to manually link LuaJIT for some reason, e.g. the final command could look like
 ```
-"C:\Program Files\CMake\bin\cmake.EXE" --no-warn-unused-cli -DENABLE_TOOLS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_SERVICES=OFF -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_BENCHMARKS=OFF -DENABLE_TESTS=OFF -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=path\to\vcpkg\scripts\buildsystems\vcpkg.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -Hpath/to/project -Bpath/to/project/build -G "Visual Studio 16 2019" -T host=x64 -A x64
+"C:\Program Files\CMake\bin\cmake.EXE" --no-warn-unused-cli -DENABLE_TOOLS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_SERVICES=OFF -DENABLE_PYTHON_BINDINGS=OFF -DLUA_LIBRARIES=path\to\vcpkg\installed\x64-windows\lib\lua51.lib -DLUA_INCLUDE_DIR=path\to\vcpkg\installed\x64-windows\include\luajit -DENABLE_BENCHMARKS=OFF -DENABLE_TESTS=OFF -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=path\to\vcpkg\scripts\buildsystems\vcpkg.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -Hpath/to/project -Bpath/to/project/build -G "Visual Studio 16 2019" -T host=x64 -A x64
 ```
 3. Run the build for all targets.
 
