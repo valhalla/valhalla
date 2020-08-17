@@ -1,12 +1,12 @@
 #include "sif/motorscootercost.h"
-#include "sif/costconstants.h"
-
 #include "baldr/accessrestriction.h"
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include "proto_conversions.h"
+#include "sif/costconstants.h"
 #include <cassert>
 
 #ifdef INLINE_TEST
@@ -156,11 +156,12 @@ constexpr float kSurfaceSpeedFactors[] = {1.0f, 1.0f, 0.9f, 0.6f, 0.1f, 0.0f, 0.
 class MotorScooterCost : public DynamicCost {
 public:
   /**
-   * Construct motor scooter costing. Pass in cost type and options using protocol buffer(pbf).
+   * Construct motor scooter costing. Pass in cost type and costing_options using protocol
+   * buffer(pbf).
    * @param  costing specified costing type.
-   * @param  options pbf with request options.
+   * @param  costing_options pbf with request costing_options.
    */
-  MotorScooterCost(const Costing costing, const Options& options);
+  MotorScooterCost(const CostingOptions& costing_options);
 
   // virtual destructor
   virtual ~MotorScooterCost() {
@@ -200,7 +201,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const baldr::GraphTile*& tile,
+                       const GraphTile* tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -227,7 +228,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const baldr::GraphTile*& tile,
+                              const GraphTile* tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -325,7 +326,7 @@ public:
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
       if (edge->is_shortcut() || !(edge->forwardaccess() & kMopedAccess) ||
-          edge->surface() > kMinimumScooterSurface) {
+          edge->surface() > kMinimumScooterSurface || edge->bss_connection()) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -364,14 +365,10 @@ public:
 };
 
 // Constructor
-MotorScooterCost::MotorScooterCost(const Costing costing, const Options& options)
-    : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
-                                                                      1.0f, 1.1f, 1.2f, 1.3f,
-                                                                      1.4f, 1.6f, 1.9f, 2.2f,
-                                                                      2.5f, 2.8f, 3.1f, 3.5f} {
-  // Grab the costing options based on the specified costing type
-  const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
-
+MotorScooterCost::MotorScooterCost(const CostingOptions& costing_options)
+    : DynamicCost(costing_options, TravelMode::kDrive),
+      trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
+                            1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
   // Get the base costs
   get_base_costs(costing_options);
 
@@ -409,7 +406,7 @@ MotorScooterCost::MotorScooterCost(const Costing costing, const Options& options
 // Check if access is allowed on the specified edge.
 bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
                                const EdgeLabel& pred,
-                               const baldr::GraphTile*& tile,
+                               const GraphTile* tile,
                                const baldr::GraphId& edgeid,
                                const uint64_t current_time,
                                const uint32_t tz_index,
@@ -438,7 +435,7 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
 bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                       const EdgeLabel& pred,
                                       const baldr::DirectedEdge* opp_edge,
-                                      const baldr::GraphTile*& tile,
+                                      const GraphTile* tile,
                                       const baldr::GraphId& opp_edgeid,
                                       const uint64_t current_time,
                                       const uint32_t tz_index,
@@ -579,11 +576,13 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
 void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
                                   const std::string& costing_options_key,
                                   CostingOptions* pbf_costing_options) {
+  pbf_costing_options->set_costing(Costing::motor_scooter);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
     // TODO: farm more common stuff out to parent class
-    ParseCostOptions(*json_costing_options, pbf_costing_options);
+    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
 
     // If specified, parse json and set pbf values
 
@@ -664,8 +663,8 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateMotorScooterCost(const Costing costing, const Options& options) {
-  return std::make_shared<MotorScooterCost>(costing, options);
+cost_ptr_t CreateMotorScooterCost(const CostingOptions& costing_options) {
+  return std::make_shared<MotorScooterCost>(costing_options);
 }
 
 } // namespace sif
@@ -682,8 +681,7 @@ namespace {
 
 class TestMotorScooterCost : public MotorScooterCost {
 public:
-  TestMotorScooterCost(const Costing costing, const Options& options)
-      : MotorScooterCost(costing, options){};
+  TestMotorScooterCost(const CostingOptions& costing_options) : MotorScooterCost(costing_options){};
 
   using MotorScooterCost::alley_penalty_;
   using MotorScooterCost::country_crossing_cost_;
@@ -698,7 +696,8 @@ TestMotorScooterCost* make_motorscootercost_from_json(const std::string& propert
   ss << R"({"costing_options":{"motor_scooter":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestMotorScooterCost(valhalla::Costing::motor_scooter, request.options());
+  return new TestMotorScooterCost(
+      request.options().costing_options(static_cast<int>(Costing::motor_scooter)));
 }
 
 template <typename T>

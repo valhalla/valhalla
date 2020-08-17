@@ -1,5 +1,5 @@
 #include "mjolnir/ferry_connections.h"
-#include <valhalla/mjolnir/node_expander.h>
+#include "mjolnir/node_expander.h"
 
 #include <list>
 #include <queue>

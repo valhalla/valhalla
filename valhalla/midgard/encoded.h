@@ -88,7 +88,7 @@ std::string encode(const container_t& points, const int precision = 1e6) {
   // handy lambda to turn an integer into an encoded string
   auto serialize = [&output](int number) {
     // move the bits left 1 position and flip all the bits if it was a negative number
-    number = number < 0 ? ~(number << 1) : (number << 1);
+    number = number < 0 ? ~(static_cast<unsigned int>(number) << 1) : (number << 1);
     // write 5 bit chunks of the number
     while (number >= 0x20) {
       int nextValue = (0x20 | (number & 0x1f)) + 63;
@@ -134,7 +134,7 @@ template <class container_t> std::string encode7(const container_t& points) {
   auto serialize = [&output](int number) {
     // get the sign bit down on the least significant end to
     // make the most significant bits mostly zeros
-    number = number < 0 ? ~(number << 1) : number << 1;
+    number = number < 0 ? ~(static_cast<unsigned int>(number) << 1) : number << 1;
     // we take 7 bits of this at a time
     while (number > 0x7f) {
       // marking the most significant bit means there are more pieces to come

@@ -242,6 +242,12 @@ config = {
       'max_best_paths': 4,
       'max_best_paths_shape': 100
     },
+    'bikeshare': {
+      'max_distance': 500000.0,
+      'max_locations': 50,
+      'max_matrix_distance': 200000.0,
+      'max_matrix_locations': 50
+    },
     'max_avoid_locations': 50,
     'max_reachability': 100,
     'max_radius': 200,
@@ -482,6 +488,12 @@ help_text = {
       'max_shape': 'Maximum number of input shape points',
       'max_best_paths': 'Maximum number of best paths',
       'max_best_paths_shape': 'Maximum number of input shape points when requesting multiple paths'
+    },
+    'bikeshare': {
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations',
+      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
+      'max_matrix_locations': 'Maximum number of input locations for a matrix'
     },
     'max_avoid_locations': 'Maximum number of avoid locations to allow in a request',
     'max_reachability': 'Maximum reachability (number of nodes reachable) allowed on any one location',

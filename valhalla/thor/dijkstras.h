@@ -57,7 +57,7 @@ public:
    */
   virtual void Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locs,
                        baldr::GraphReader& graphreader,
-                       const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                       const sif::mode_costing_t& mode_costing,
                        const sif::TravelMode mode);
 
   /**
@@ -69,7 +69,7 @@ public:
    */
   virtual void ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
                               baldr::GraphReader& graphreader,
-                              const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                              const sif::mode_costing_t& mode_costing,
                               const sif::TravelMode mode);
 
   /**
@@ -82,7 +82,7 @@ public:
   virtual void
   ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
                     baldr::GraphReader& graphreader,
-                    const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                    const sif::mode_costing_t& mode_costing,
                     const sif::TravelMode mode);
 
 protected:
@@ -205,7 +205,7 @@ protected:
                                const bool from_transition,
                                const std::shared_ptr<sif::DynamicCost>& pc,
                                const std::shared_ptr<sif::DynamicCost>& tc,
-                               const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                               const sif::mode_costing_t& mode_costing,
                                const baldr::TimeInfo& time_info);
 
   /**

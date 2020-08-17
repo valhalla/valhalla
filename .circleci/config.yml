@@ -98,13 +98,15 @@ jobs:
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
           cd build \
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
-                -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On
+                -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
+                -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_PYTHON_BINDINGS=Off
       - run: make -C build -j4
       - run: make -C build utrecht_tiles
       - run: make -C build -j2 tests
-      - run: make -C build -j2 check
+      # Leak Sanitizer is disabled as it is not supported on all platforms
+      - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j2 check
       - run: make -C build -j2 benchmarks
-      - run: make -C build run-benchmarks
+      - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build run-benchmarks
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
       - save_cache:
@@ -114,7 +116,7 @@ jobs:
       - run: scripts/clang-tidy-only-diff.sh 4
       - run: make -C build install
       - run: make -C build package
-      - run: make -C build coverage
+      - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build coverage
       - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
 
   build-release:
