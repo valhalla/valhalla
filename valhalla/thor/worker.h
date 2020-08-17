@@ -19,6 +19,7 @@
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/astar.h>
+#include <valhalla/thor/astar_bss.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/bidirectional_astar.h>
 #include <valhalla/thor/isochrone.h>
@@ -108,11 +109,13 @@ protected:
 
   sif::TravelMode mode;
   std::vector<meili::Measurement> trace;
-  sif::CostFactory<sif::DynamicCost> factory;
-  sif::cost_ptr_t mode_costing[static_cast<int>(sif::TravelMode::kMaxTravelMode)];
+  sif::CostFactory factory;
+  sif::mode_costing_t mode_costing;
   // Path algorithms (TODO - perhaps use a map?))
   AStarPathAlgorithm astar;
   BidirectionalAStar bidir_astar;
+  AStarBSSAlgorithm bss_astar;
+
   MultiModalPathAlgorithm multi_modal_astar;
   TimeDepForward timedep_forward;
   TimeDepReverse timedep_reverse;

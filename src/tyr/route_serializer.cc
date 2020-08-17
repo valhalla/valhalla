@@ -10,9 +10,9 @@
 #include "route_serializer_valhalla.cc"
 #include "tyr/serializers.h"
 
-#include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/options.pb.h>
-#include <valhalla/proto/trip.pb.h>
+#include "proto/directions.pb.h"
+#include "proto/options.pb.h"
+#include "proto/trip.pb.h"
 
 using namespace valhalla;
 using namespace valhalla::tyr;

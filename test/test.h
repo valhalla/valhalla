@@ -13,13 +13,13 @@
 
 namespace test {
 
-// Return a random number between 0 and 1
+// Return a random number inside [0, 1)
 inline float rand01(std::mt19937& gen) {
-  std::uniform_real_distribution<> dis(0, 1);
-  return static_cast<float>(dis(gen));
+  std::uniform_real_distribution<float> dis(0, 1);
+  return dis(gen);
 }
 
-inline std::string load_binary_file(const std::string filename) {
+inline std::string load_binary_file(const std::string& filename) {
   std::string bytes;
   std::ifstream input_pbf(filename, std::ios::in | std::ios::binary);
   if (input_pbf.is_open()) {

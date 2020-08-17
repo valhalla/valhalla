@@ -26,10 +26,9 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
  * Create motorcycle cost method. This is derived from auto costing and
  * uses the same rules except for some different access restrictions
  * and the tendency to avoid hills
- * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateMotorcycleCost(const Costing costing, const Options& options);
+cost_ptr_t CreateMotorcycleCost(const CostingOptions& options);
 
 } // namespace sif
 } // namespace valhalla

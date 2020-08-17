@@ -570,7 +570,7 @@ public:
   }
 
   double elapsed_time() const {
-    return mutable_node_->elapsed_time();
+    return mutable_node_->cost().elapsed_cost().seconds();
   }
 
   uint32_t admin_index() const {
@@ -585,12 +585,16 @@ public:
     return mutable_node_->time_zone();
   }
 
-  bool has_transition_time() const {
-    return mutable_node_->has_transition_time();
+  TripLeg::PathCost cost() const {
+    return mutable_node_->cost();
   }
 
-  double transition_time() const {
-    return mutable_node_->transition_time();
+  const google::protobuf::RepeatedPtrField<TripLeg::PathCost> recosts() const {
+    return mutable_node_->recosts();
+  }
+
+  bool HasBssInfo() const {
+    return mutable_node_->has_bss_info();
   }
 
   bool HasIntersectingEdges() const;

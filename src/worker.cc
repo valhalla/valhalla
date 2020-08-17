@@ -9,6 +9,7 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "odin/util.h"
+#include "proto_conversions.h"
 #include "sif/costfactory.h"
 #include "worker.h"
 
@@ -90,14 +91,14 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
 
     {110, 400}, {111, 400}, {112, 400}, {113, 400}, {114, 400},
 
-    {120, 400}, {121, 400}, {122, 400}, {123, 400}, {124, 400}, {125, 400}, {126, 400},
+    {120, 400}, {121, 400}, {122, 400}, {123, 400}, {124, 400}, {125, 400}, {126, 400}, {127, 400},
 
     {130, 400}, {131, 400}, {132, 400}, {133, 400}, {136, 400},
 
     {140, 400}, {141, 501}, {142, 501},
 
-    {150, 400}, {151, 400}, {152, 400}, {153, 400}, {154, 400}, {155, 400}, {156, 400},
-    {157, 400}, {158, 400}, {159, 400},
+    {150, 400}, {151, 400}, {152, 400}, {153, 400}, {154, 400}, {155, 400}, {156, 400}, {157, 400},
+    {158, 400}, {159, 400},
 
     {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400},
 
@@ -155,6 +156,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
     {124, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {125, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {126, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
+    {127, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
 
     {130,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
@@ -775,73 +777,22 @@ void from_json(rapidjson::Document& doc, Options& options) {
     throw valhalla_exception_t{125, "'" + costing_str + "'"};
   }
 
-  // if specified, get the costing options in there
-  // the order of costing must reflect the enum order
-  for (const auto& costing : {auto_, auto_shorter, bicycle, bus, hov, motor_scooter, multimodal,
-                              pedestrian, transit, truck, motorcycle, auto_data_fix, taxi, none_}) {
-    // Create the costing string
-    const auto& costing_str = valhalla::Costing_Enum_Name(costing);
-    // Create the costing options key
-    const auto costing_options_key = "/costing_options/" + costing_str;
+  // Parse all of the costing options in their specified order
+  sif::ParseCostingOptions(doc, "/costing_options", options);
+  options.set_costing(costing);
 
-    switch (costing) {
-      case auto_: {
-        sif::ParseAutoCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case auto_shorter: {
-        sif::ParseAutoShorterCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case bicycle: {
-        sif::ParseBicycleCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case bus: {
-        sif::ParseBusCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case hov: {
-        sif::ParseHOVCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case taxi: {
-        sif::ParseTaxiCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case motor_scooter: {
-        sif::ParseMotorScooterCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case multimodal: {
-        options.add_costing_options(); // Nothing to parse for this one
-        break;
-      }
-      case pedestrian: {
-        sif::ParsePedestrianCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case transit: {
-        sif::ParseTransitCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case truck: {
-        sif::ParseTruckCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case motorcycle: {
-        sif::ParseMotorcycleCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case auto_data_fix: {
-        sif::ParseAutoDataFixCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
-      }
-      case none_: {
-        sif::ParseNoCostOptions(doc, costing_options_key, options.add_costing_options());
-        break;
+  // parse any named costings for re-costing a given path
+  auto recostings = rapidjson::get_child_optional(doc, "/recostings");
+  if (recostings && recostings->IsArray()) {
+    for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
+      // parse the options
+      std::string key = "/recostings/" + std::to_string(i);
+      sif::ParseCostingOptions(doc, key, options.add_recostings());
+      if (!options.recostings().rbegin()->has_name()) {
+        throw valhalla_exception_t{127};
       }
     }
+    // TODO: throw if not all names are unique?
   }
 
   // get the locations in there
@@ -991,215 +942,6 @@ void from_json(rapidjson::Document& doc, Options& options) {
 } // namespace
 
 namespace valhalla {
-
-bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
-  static const std::unordered_map<std::string, Options::Action> actions{
-      {"route", Options::route},
-      {"locate", Options::locate},
-      {"sources_to_targets", Options::sources_to_targets},
-      {"optimized_route", Options::optimized_route},
-      {"isochrone", Options::isochrone},
-      {"trace_route", Options::trace_route},
-      {"trace_attributes", Options::trace_attributes},
-      {"height", Options::height},
-      {"transit_available", Options::transit_available},
-      {"expansion", Options::expansion},
-  };
-  auto i = actions.find(action);
-  if (i == actions.cend())
-    return false;
-  *a = i->second;
-  return true;
-}
-
-const std::string& Options_Action_Enum_Name(const Options::Action action) {
-  static const std::string empty;
-  static const std::unordered_map<int, std::string> actions{
-      {Options::route, "route"},
-      {Options::locate, "locate"},
-      {Options::sources_to_targets, "sources_to_targets"},
-      {Options::optimized_route, "optimized_route"},
-      {Options::isochrone, "isochrone"},
-      {Options::trace_route, "trace_route"},
-      {Options::trace_attributes, "trace_attributes"},
-      {Options::height, "height"},
-      {Options::transit_available, "transit_available"},
-      {Options::expansion, "expansion"},
-  };
-  auto i = actions.find(action);
-  return i == actions.cend() ? empty : i->second;
-}
-
-bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
-  static const std::unordered_map<std::string, Costing> costings{
-      {"auto", Costing::auto_},
-      {"auto_shorter", Costing::auto_shorter},
-      {"bicycle", Costing::bicycle},
-      {"bus", Costing::bus},
-      {"hov", Costing::hov},
-      {"taxi", Costing::taxi},
-      {"motor_scooter", Costing::motor_scooter},
-      {"multimodal", Costing::multimodal},
-      {"pedestrian", Costing::pedestrian},
-      {"transit", Costing::transit},
-      {"truck", Costing::truck},
-      {"motorcycle", Costing::motorcycle},
-      {"auto_data_fix", Costing::auto_data_fix},
-      {"none", Costing::none_},
-      {"", Costing::none_},
-  };
-  auto i = costings.find(costing);
-  if (i == costings.cend())
-    return false;
-  *c = i->second;
-  return true;
-}
-
-const std::string& Costing_Enum_Name(const Costing costing) {
-  static const std::string empty;
-  static const std::unordered_map<int, std::string> costings{
-      {Costing::auto_, "auto"},
-      {Costing::auto_shorter, "auto_shorter"},
-      {Costing::bicycle, "bicycle"},
-      {Costing::bus, "bus"},
-      {Costing::hov, "hov"},
-      {Costing::taxi, "taxi"},
-      {Costing::motor_scooter, "motor_scooter"},
-      {Costing::multimodal, "multimodal"},
-      {Costing::pedestrian, "pedestrian"},
-      {Costing::transit, "transit"},
-      {Costing::truck, "truck"},
-      {Costing::motorcycle, "motorcycle"},
-      {Costing::auto_data_fix, "auto_data_fix"},
-      {Costing::none_, "none"},
-  };
-  auto i = costings.find(costing);
-  return i == costings.cend() ? empty : i->second;
-}
-
-bool ShapeMatch_Enum_Parse(const std::string& match, ShapeMatch* s) {
-  static const std::unordered_map<std::string, ShapeMatch> matches{
-      {"edge_walk", ShapeMatch::edge_walk},
-      {"map_snap", ShapeMatch::map_snap},
-      {"walk_or_snap", ShapeMatch::walk_or_snap},
-  };
-  auto i = matches.find(match);
-  if (i == matches.cend())
-    return false;
-  *s = i->second;
-  return true;
-}
-
-const std::string& ShapeMatch_Enum_Name(const ShapeMatch match) {
-  static const std::string empty;
-  static const std::unordered_map<int, std::string> matches{
-      {ShapeMatch::edge_walk, "edge_walk"},
-      {ShapeMatch::map_snap, "map_snap"},
-      {ShapeMatch::walk_or_snap, "walk_or_snap"},
-  };
-  auto i = matches.find(match);
-  return i == matches.cend() ? empty : i->second;
-}
-
-bool Options_Format_Enum_Parse(const std::string& format, Options::Format* f) {
-  static const std::unordered_map<std::string, Options::Format> formats{
-      {"json", Options::json},
-      {"gpx", Options::gpx},
-      {"osrm", Options::osrm},
-  };
-  auto i = formats.find(format);
-  if (i == formats.cend())
-    return false;
-  *f = i->second;
-  return true;
-}
-
-const std::string& Options_Format_Enum_Name(const Options::Format match) {
-  static const std::string empty;
-  static const std::unordered_map<int, std::string> formats{
-      {Options::json, "json"},
-      {Options::gpx, "gpx"},
-      {Options::osrm, "osrm"},
-  };
-  auto i = formats.find(match);
-  return i == formats.cend() ? empty : i->second;
-}
-
-const std::string& Options_Units_Enum_Name(const Options::Units unit) {
-  static const std::string empty;
-  static const std::unordered_map<int, std::string> units{
-      {Options::kilometers, "kilometers"},
-      {Options::miles, "miles"},
-  };
-  auto i = units.find(unit);
-  return i == units.cend() ? empty : i->second;
-}
-
-bool FilterAction_Enum_Parse(const std::string& action, FilterAction* a) {
-  static const std::unordered_map<std::string, FilterAction> actions{
-      {"exclude", FilterAction::exclude},
-      {"include", FilterAction::include},
-  };
-  auto i = actions.find(action);
-  if (i == actions.cend())
-    return false;
-  *a = i->second;
-  return true;
-}
-
-const std::string& FilterAction_Enum_Name(const FilterAction action) {
-  static const std::string empty;
-  static const std::unordered_map<int, std::string> actions{
-      {FilterAction::exclude, "exclude"},
-      {FilterAction::include, "include"},
-  };
-  auto i = actions.find(action);
-  return i == actions.cend() ? empty : i->second;
-}
-
-bool DirectionsType_Enum_Parse(const std::string& dtype, DirectionsType* t) {
-  static const std::unordered_map<std::string, DirectionsType> types{
-      {"none", DirectionsType::none},
-      {"maneuvers", DirectionsType::maneuvers},
-      {"instructions", DirectionsType::instructions},
-  };
-  auto i = types.find(dtype);
-  if (i == types.cend())
-    return false;
-  *t = i->second;
-  return true;
-}
-
-bool PreferredSide_Enum_Parse(const std::string& pside, valhalla::Location::PreferredSide* p) {
-  static const std::unordered_map<std::string, valhalla::Location::PreferredSide> types{
-      {"either", valhalla::Location::either},
-      {"same", valhalla::Location::same},
-      {"opposite", valhalla::Location::opposite},
-  };
-  auto i = types.find(pside);
-  if (i == types.cend())
-    return false;
-  *p = i->second;
-  return true;
-}
-
-bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc) {
-  static const std::unordered_map<std::string, valhalla::RoadClass> types{
-      {"motorway", valhalla::RoadClass::kMotorway},
-      {"trunk", valhalla::RoadClass::kTrunk},
-      {"primary", valhalla::RoadClass::kPrimary},
-      {"secondary", valhalla::RoadClass::kSecondary},
-      {"tertiary", valhalla::RoadClass::kTertiary},
-      {"unclassified", valhalla::RoadClass::kUnclassified},
-      {"residential", valhalla::RoadClass::kResidential},
-      {"service_other", valhalla::RoadClass::kServiceOther},
-  };
-  auto i = types.find(rc_name);
-  if (i == types.cend())
-    return false;
-  *rc = i->second;
-  return true;
-}
 
 valhalla_exception_t::valhalla_exception_t(unsigned code, const boost::optional<std::string>& extra)
     : std::runtime_error(""), code(code), extra(extra) {

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <valhalla/baldr/traffictile.h>
+#include "baldr/traffictile.h"
 
 TEST(Traffic, TileConstruction) {
   using namespace valhalla::baldr;

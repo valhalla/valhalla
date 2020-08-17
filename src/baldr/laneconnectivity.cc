@@ -1,8 +1,8 @@
 #include "baldr/laneconnectivity.h"
+#include "midgard/logging.h"
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <string.h>
-#include <valhalla/midgard/logging.h>
 #include <vector>
 
 namespace valhalla {

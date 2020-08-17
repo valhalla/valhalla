@@ -55,7 +55,7 @@ public:
   GetBestPath(valhalla::Location& origin,
               valhalla::Location& dest,
               baldr::GraphReader& graphreader,
-              const std::shared_ptr<sif::DynamicCost>* mode_costing,
+              const sif::mode_costing_t& mode_costing,
               const sif::TravelMode mode,
               const Options& options = Options::default_instance());
 
@@ -181,7 +181,7 @@ protected:
                      const bool from_transition,
                      const std::shared_ptr<sif::DynamicCost>& pc,
                      const std::shared_ptr<sif::DynamicCost>& tc,
-                     const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                     const sif::mode_costing_t& mode_costing,
                      const baldr::TimeInfo& time_info);
 
   /**
