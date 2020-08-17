@@ -50,7 +50,8 @@ constexpr float COMPRESSION_HINT = 3.5f;
 
 std::string MakeSingleTileUrl(const std::string& tile_url, const valhalla::baldr::GraphId& graphid) {
   auto id_pos = tile_url.find(valhalla::baldr::GraphTile::kTilePathPattern);
-  return tile_url.substr(0, id_pos) + valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base(), false, false) +
+  return tile_url.substr(0, id_pos) +
+         valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base(), false, false) +
          tile_url.substr(id_pos + std::strlen(valhalla::baldr::GraphTile::kTilePathPattern));
 }
 
@@ -436,7 +437,7 @@ std::string GraphTile::FileSuffix(const GraphId& graphid, bool gzipped, bool is_
     std::string suffix = stream.str();
     suffix[0] = '0';
     return suffix;
-  } 
+  }
   // it was something else
   stream << graphid.level() * static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid()
          << ".gph" << (gzipped ? ".gz" : "");
