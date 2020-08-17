@@ -83,7 +83,7 @@ void EndToEndTileBuild(benchmark::State& state) {
   const boost::property_tree::ptree config = GetConfig();
   for (auto _ : state) {
     benchmark::DoNotOptimize(
-        build_tile_set(config, {VALHALLA_SOURCE_DIR "bench/mjolnir/pbf/boston.osm.pbf"}));
+        build_tile_set(config, {VALHALLA_SOURCE_DIR "bench/mjolnir/pbf/stockholm.osm.pbf"}));
   }
 }
 
