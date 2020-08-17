@@ -18,7 +18,7 @@
 #include "tyr/serializers.h"
 #include "worker.h"
 
-#include <valhalla/proto/options.pb.h>
+#include "proto/options.pb.h"
 
 #include "config.h"
 

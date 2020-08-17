@@ -36,9 +36,9 @@
 
 #include "gurka/gurka.h"
 
-#include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/options.pb.h>
-#include <valhalla/proto/trip.pb.h>
+#include "proto/directions.pb.h"
+#include "proto/options.pb.h"
+#include "proto/trip.pb.h"
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/format.hpp>
