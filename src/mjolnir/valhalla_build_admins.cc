@@ -394,6 +394,31 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Created admin access table.");
 
+  /* creating a data_processing table.
+   * These are optional config overrides.
+   */
+
+  sql = "CREATE TABLE data_processing (";
+  sql += "admin_id INTEGER NOT NULL,";
+  sql += "iso_code TEXT,";
+  sql += "allow_alt_name INTEGER DEFAULT NULL,";
+  sql += "apply_country_overrides INTEGER DEFAULT NULL,";
+  sql += "infer_internal_intersections INTEGER DEFAULT NULL,";
+  sql += "infer_turn_channels INTEGER DEFAULT NULL,";
+  sql += "reclassify_links INTEGER DEFAULT NULL,";
+  sql += "use_admin_db INTEGER DEFAULT NULL,";
+  sql += "use_direction_on_ways INTEGER DEFAULT NULL)";
+
+  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db_handle);
+    return;
+  }
+
+  LOG_INFO("Created data_processing table.");
+
   /* creating a MULTIPOLYGON Geometry column */
   sql = "SELECT AddGeometryColumn('admins', ";
   sql += "'geom', 4326, 'MULTIPOLYGON', 2)";

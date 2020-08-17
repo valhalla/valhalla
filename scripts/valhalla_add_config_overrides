@@ -1,0 +1,29 @@
+#!/bin/sh
+
+error_exit() {
+  echo "$1" 1>&2
+  exit 1
+}
+
+config=$1
+
+if  ! which spatialite >/dev/null; then
+    echo "spatialite not found which is required.  Please install via:  sudo apt-get install spatialite-bin"
+    exit 1
+fi
+
+if  ! which jq >/dev/null; then
+    echo "jq not found which is required.  Please install via:  sudo apt-get install jq"
+    exit 1
+fi
+
+admin_file=$(jq -r '.mjolnir.admin' $config)
+if [ ! -d $(dirname $admin_file) ]; then
+    echo "Admin db not found $(dirname $admin_file)"
+    exit 1
+fi
+
+spatialite ${admin_file} "INSERT INTO data_processing VALUES ((select rowid from admins where iso_code = 'JP'),'JP','0','0','0','0','1','0','0');" 1>&2 || error_exit "config update failed" 
+spatialite ${admin_file} "VACUUM;" 1>&2 || error_exit "VACUUM failed"
+spatialite ${admin_file} "ANALYZE;" 1>&2 || error_exit "ANALYZE failed"
+

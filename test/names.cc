@@ -32,7 +32,7 @@ TEST(Names, NamesTest) {
   w3.set_road_class(RoadClass::kPrimary);
 
   uint16_t types;
-  std::vector<std::string> w1_names = w1.GetNames(ref, name_offset_map, types);
+  std::vector<std::string> w1_names = w1.GetNames(ref, name_offset_map, types, false, false);
 
   // if road class = kTrunk or kMotorway, then ref comes first.  ref from relation overrides
   // ref from name_offset_map
@@ -41,7 +41,7 @@ TEST(Names, NamesTest) {
 
   EXPECT_EQ(types, 1) << "relation ref failed.  ref not in correct position.";
 
-  std::vector<std::string> w2_names = w2.GetNames("", name_offset_map, types);
+  std::vector<std::string> w2_names = w2.GetNames("", name_offset_map, types, false, false);
 
   // if road class = kTrunk or kMotorway, then ref comes first.  use ref from name_offset_map
   EXPECT_EQ(w2_names.at(0), "PA 43");
@@ -49,7 +49,7 @@ TEST(Names, NamesTest) {
 
   EXPECT_EQ(types, 1) << "ref_map failed.  ref not in correct position.";
 
-  std::vector<std::string> w3_names = w3.GetNames("", name_offset_map, types);
+  std::vector<std::string> w3_names = w3.GetNames("", name_offset_map, types, false, false);
 
   // if Road class < kTrunk, then name first then ref using ref from name_offset_map
   EXPECT_EQ(w3_names.at(0), "Lancaster Pike") << "Road class < kTrunk test failed.";
@@ -58,7 +58,7 @@ TEST(Names, NamesTest) {
   EXPECT_EQ(types, 2) << "Road class < kTrunk test failed.  ref not in correct position.";
 
   w3_names.clear();
-  w3_names = w3.GetNames("PA 555", name_offset_map, types);
+  w3_names = w3.GetNames("PA 555", name_offset_map, types, false, false);
 
   // if Road class < kTrunk, then name first then ref using ref from relations
   EXPECT_EQ(w3_names.at(0), "Lancaster Pike") << "ref from relations";
@@ -72,7 +72,7 @@ TEST(Names, NamesTest) {
   w3.set_name_en_index(name_offset_map.index("LancP"));
 
   w3_names.clear();
-  w3_names = w3.GetNames("", name_offset_map, types);
+  w3_names = w3.GetNames("", name_offset_map, types, true, false);
 
   EXPECT_EQ(types, 2) << "all other names test failed.  ref not in correct position.";
 
