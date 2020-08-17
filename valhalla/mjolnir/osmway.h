@@ -2,6 +2,7 @@
 #define VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMWAY_H
 
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -13,6 +14,14 @@ namespace mjolnir {
 
 // OSM way
 struct OSMWay {
+  OSMWay() {
+    memset(this, 0, sizeof(OSMWay));
+  }
+
+  OSMWay(uint64_t id) {
+    memset(this, 0, sizeof(OSMWay));
+    osmwayid_ = id;
+  }
 
   /**
    * Set way id.
