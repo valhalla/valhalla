@@ -435,9 +435,9 @@ public:
                                    int& restriction_idx) const {
     // If this edge won't have a restruction for this mode of travel we are allowed
     if (edge->access_restriction() & auto_type) {
-      return true; 
+      return true;
     }
-    
+
     // There is 1 or more restrictions here so we need to find them
     const std::vector<baldr::AccessRestriction>& restrictions =
         tile->GetAccessRestrictions(edgeid.id(), auto_type);
