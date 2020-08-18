@@ -100,10 +100,9 @@ jobs:
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
                 -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
                 -DENABLE_PYTHON_BINDINGS=On
-      - run: make -C build -j4
+      - run: make -C build -j3
       - run: make -C build utrecht_tiles
       - run: make -C build -j2 tests
-      # Leak Sanitizer is disabled as it is not supported on all platforms
       - run: make -C build -j2 check
       - run: make -C build -j2 benchmarks
       - run: make -C build run-benchmarks
@@ -134,11 +133,12 @@ jobs:
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
           -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_ADDRESS_SANITIZER=ON
-      - run: make -C build -j4
+      - run: make -C build -j3
       - run: make -C build utrecht_tiles
-      - run: make -C build -j2 tests
+      - run: make -C build -j3 tests
+      # leaks in glibc we cant control for
       - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j2 check
-      - run: make -C build -j2 benchmarks
+      - run: make -C build -j3 benchmarks
       - run: make -C build run-benchmarks
       - save_cache:
           key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
