@@ -441,10 +441,10 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kFerryUse) {
         classes.push_back("ferry");
       }
-      if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kRestArea) {
+      if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kRestAreaUse) {
         classes.push_back("rest_area");
       }
-      if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kServiceArea) {
+      if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kServiceAreaUse) {
         classes.push_back("service_area");
       }
 
