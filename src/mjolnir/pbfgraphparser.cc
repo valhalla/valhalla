@@ -78,6 +78,677 @@ public:
     empty_node_results_ = lua_.Transform(OSMType::kNode, 0, {});
     empty_way_results_ = lua_.Transform(OSMType::kWay, 0, {});
     empty_relation_results_ = lua_.Transform(OSMType::kRelation, 0, {});
+
+    tag_handlers_["internal_intersection"] = [this]() {
+      if (!infer_internal_intersections_) {
+        way_.set_internal(tag_.second == "true" ? true : false);
+      }
+    };
+    tag_handlers_["turn_channel"] = [this]() {
+      if (!infer_turn_channels_) {
+        way_.set_turn_channel(tag_.second == "true" ? true : false);
+      }
+    };
+
+    tag_handlers_["road_class"] = [this]() {
+      RoadClass roadclass = (RoadClass)std::stoi(tag_.second);
+      switch (roadclass) {
+
+        case RoadClass::kMotorway:
+          way_.set_road_class(RoadClass::kMotorway);
+          break;
+        case RoadClass::kTrunk:
+          way_.set_road_class(RoadClass::kTrunk);
+          break;
+        case RoadClass::kPrimary:
+          way_.set_road_class(RoadClass::kPrimary);
+          break;
+        case RoadClass::kSecondary:
+          way_.set_road_class(RoadClass::kSecondary);
+          break;
+        case RoadClass::kTertiary:
+          way_.set_road_class(RoadClass::kTertiary);
+          break;
+        case RoadClass::kUnclassified:
+          way_.set_road_class(RoadClass::kUnclassified);
+          break;
+        case RoadClass::kResidential:
+          way_.set_road_class(RoadClass::kResidential);
+          break;
+        default:
+          way_.set_road_class(RoadClass::kServiceOther);
+          break;
+      }
+    };
+    // these flags indicate if a user set the access tags on this way.
+    tag_handlers_["auto_tag"] = [this]() {
+      osm_access_.set_auto_tag(true);
+      has_user_tags_ = true;
+    };
+    tag_handlers_["truck_tag"] = [this]() {
+      osm_access_.set_truck_tag(true);
+      has_user_tags_ = true;
+    };
+    tag_handlers_["bus_tag"] = [this]() {
+      osm_access_.set_bus_tag(true);
+      has_user_tags_ = true;
+    };
+    tag_handlers_["foot_tag"] = [this]() {
+      osm_access_.set_foot_tag(true);
+      has_user_tags_ = true;
+    };
+    tag_handlers_["bike_tag"] = [this]() {
+      osm_access_.set_bike_tag(true);
+      has_user_tags_ = true;
+    };
+    tag_handlers_["moped_tag"] = [this]() {
+      osm_access_.set_moped_tag(true);
+      has_user_tags_ = true;
+    };
+    tag_handlers_["motorcycle_tag"] = [this]() {
+      osm_access_.set_motorcycle_tag(true);
+      has_user_tags_ = true;
+    };
+    tag_handlers_["hov_tag"] = [this]() {
+      osm_access_.set_hov_tag(true);
+      has_user_tags_ = true;
+    };
+    tag_handlers_["taxi_tag"] = [this]() {
+      osm_access_.set_taxi_tag(true);
+      has_user_tags_ = true;
+    };
+    tag_handlers_["motorroad_tag"] = [this]() {
+      osm_access_.set_motorroad_tag(true);
+      has_user_tags_ = true;
+    };
+    tag_handlers_["wheelchair"] = [this]() {
+      way_.set_wheelchair_tag(true);
+      way_.set_wheelchair(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["sidewalk"] = [this]() {
+      if (tag_.second == "both" || tag_.second == "yes" || tag_.second == "shared" ||
+          tag_.second == "raised") {
+        way_.set_sidewalk_left(true);
+        way_.set_sidewalk_right(true);
+      } else if (tag_.second == "left") {
+        way_.set_sidewalk_left(true);
+      } else if (tag_.second == "right") {
+        way_.set_sidewalk_right(true);
+      }
+    };
+    tag_handlers_["auto_forward"] = [this]() {
+      way_.set_auto_forward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["truck_forward"] = [this]() {
+      way_.set_truck_forward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["bus_forward"] = [this]() {
+      way_.set_bus_forward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["bike_forward"] = [this]() {
+      way_.set_bike_forward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["emergency_forward"] = [this]() {
+      way_.set_emergency_forward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["hov_forward"] = [this]() {
+      way_.set_hov_forward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["taxi_forward"] = [this]() {
+      way_.set_taxi_forward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["moped_forward"] = [this]() {
+      way_.set_moped_forward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["motorcycle_forward"] = [this]() {
+      way_.set_motorcycle_forward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["auto_backward"] = [this]() {
+      way_.set_auto_backward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["truck_backward"] = [this]() {
+      way_.set_truck_backward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["bus_backward"] = [this]() {
+      way_.set_bus_backward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["bike_backward"] = [this]() {
+      way_.set_bike_backward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["emergency_backward"] = [this]() {
+      way_.set_emergency_backward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["hov_backward"] = [this]() {
+      way_.set_hov_backward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["taxi_backward"] = [this]() {
+      way_.set_taxi_backward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["moped_backward"] = [this]() {
+      way_.set_moped_backward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["motorcycle_backward"] = [this]() {
+      way_.set_motorcycle_backward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["pedestrian"] = [this]() {
+      way_.set_pedestrian(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["private"] = [this]() {
+      // Make sure we do not unset this flag if set previously
+      if (tag_.second == "true")
+        way_.set_destination_only(true);
+    };
+    tag_handlers_["use"] = [this]() {
+      Use use = (Use)std::stoi(tag_.second);
+      switch (use) {
+        case Use::kCycleway:
+          way_.set_use(Use::kCycleway);
+          break;
+        case Use::kFootway:
+          way_.set_use(Use::kFootway);
+          break;
+        case Use::kSidewalk:
+          way_.set_use(Use::kSidewalk);
+          break;
+        case Use::kPedestrian:
+          way_.set_use(Use::kPedestrian);
+          break;
+        case Use::kPath:
+          way_.set_use(Use::kPath);
+          break;
+        case Use::kSteps:
+          way_.set_use(Use::kSteps);
+          break;
+        case Use::kBridleway:
+          way_.set_use(Use::kBridleway);
+          break;
+        case Use::kLivingStreet:
+          way_.set_use(Use::kLivingStreet);
+          break;
+        case Use::kParkingAisle:
+          way_.set_destination_only(true);
+          way_.set_use(Use::kParkingAisle);
+          break;
+        case Use::kDriveway:
+          way_.set_destination_only(true);
+          way_.set_use(Use::kDriveway);
+          break;
+        case Use::kAlley:
+          way_.set_use(Use::kAlley);
+          break;
+        case Use::kEmergencyAccess:
+          way_.set_use(Use::kEmergencyAccess);
+          break;
+        case Use::kDriveThru:
+          way_.set_destination_only(true);
+          way_.set_use(Use::kDriveThru);
+          break;
+        case Use::kTrack:
+          way_.set_use(Use::kTrack);
+          break;
+        case Use::kOther:
+          way_.set_use(Use::kOther);
+          break;
+        case Use::kRoad:
+        default:
+          way_.set_use(Use::kRoad);
+          break;
+      }
+    };
+    tag_handlers_["no_thru_traffic"] = [this]() {
+      way_.set_no_thru_traffic(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["oneway"] = [this]() { way_.set_oneway(tag_.second == "true" ? true : false); };
+    tag_handlers_["oneway_reverse"] = [this]() {
+      way_.set_oneway_reverse(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["roundabout"] = [this]() {
+      way_.set_roundabout(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["link"] = [this]() { way_.set_link(tag_.second == "true" ? true : false); };
+    tag_handlers_["ferry"] = [this]() { way_.set_ferry(tag_.second == "true" ? true : false); };
+    tag_handlers_["rail"] = [this]() { way_.set_rail(tag_.second == "true" ? true : false); };
+    tag_handlers_["duration"] = [this]() {
+      std::size_t found = tag_.second.find(":");
+      if (found != std::string::npos) {
+        std::vector<std::string> time = GetTagTokens(tag_.second, ':');
+        uint32_t hour = 0, min = 0, sec = 0;
+        if (time.size() == 1) { // minutes
+          std::stringstream ss(time.at(0));
+          ss >> min;
+          min *= 60;
+        } else if (time.size() == 2) { // hours and min
+          std::stringstream ss(tag_.second);
+          ss >> hour;
+          ss.ignore();
+          hour *= 3600;
+
+          ss >> min;
+          min *= 60;
+        } else if (time.size() == 3) { // hours, min, and sec
+          std::stringstream ss(tag_.second);
+          ss >> hour;
+          ss.ignore();
+          hour *= 3600;
+
+          ss >> min;
+          ss.ignore();
+          min *= 60;
+
+          ss >> sec;
+        }
+        way_.set_duration(hour + min + sec);
+      }
+    };
+    tag_handlers_["name"] = [this]() {
+      if (!tag_.second.empty())
+        name_ = tag_.second;
+    };
+    tag_handlers_["name:en"] = [this]() {
+      if (!tag_.second.empty())
+        way_.set_name_en_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["alt_name"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_)
+        way_.set_alt_name_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["official_name"] = [this]() {
+      if (!tag_.second.empty())
+        way_.set_official_name_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["max_speed"] = [this]() {
+      try {
+        if (tag_.second == "unlimited") {
+          // this way has an unlimited speed limit (german autobahn)
+          max_speed_ = kUnlimitedSpeedLimit;
+        } else {
+          max_speed_ = std::stof(tag_.second);
+        }
+        way_.set_tagged_speed(true);
+        has_max_speed_ = true;
+      } catch (const std::out_of_range& oor) {
+        LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
+      }
+    };
+    tag_handlers_["average_speed"] = [this]() {
+      try {
+        average_speed_ = std::stof(tag_.second);
+        has_average_speed_ = true;
+        way_.set_tagged_speed(true);
+      } catch (const std::out_of_range& oor) {
+        LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
+      }
+    };
+    tag_handlers_["advisory_speed"] = [this]() {
+      try {
+        advisory_speed_ = std::stof(tag_.second);
+        has_advisory_speed_ = true;
+        way_.set_tagged_speed(true);
+      } catch (const std::out_of_range& oor) {
+        LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
+      }
+    };
+    tag_handlers_["forward_speed"] = [this]() {
+      try {
+        way_.set_forward_speed(std::stof(tag_.second));
+        way_.set_forward_tagged_speed(true);
+      } catch (const std::out_of_range& oor) {
+        LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
+      }
+    };
+    tag_handlers_["backward_speed"] = [this]() {
+      try {
+        way_.set_backward_speed(std::stof(tag_.second));
+        way_.set_backward_tagged_speed(true);
+      } catch (const std::out_of_range& oor) {
+        LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
+      }
+    };
+    tag_handlers_["maxspeed:hgv"] = [this]() {
+      try {
+        way_.set_truck_speed(std::stof(tag_.second));
+      } catch (const std::out_of_range& oor) {
+        LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
+      }
+    };
+    tag_handlers_["truck_route"] = [this]() {
+      way_.set_truck_route(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["hazmat"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kHazmat);
+      restriction.set_value(tag_.second == "true" ? true : false);
+      restriction.set_modes(kTruckAccess);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxheight"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxHeight);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxwidth"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxWidth);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxlength"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxLength);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxweight"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxWeight);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxaxleload"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxAxleLoad);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["default_speed"] = [this]() {
+      try {
+        default_speed_ = std::stof(tag_.second);
+        has_default_speed_ = true;
+      } catch (const std::out_of_range& oor) {
+        LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
+      }
+    };
+    tag_handlers_["ref"] = [this]() {
+      if (!tag_.second.empty()) {
+        if (!use_direction_on_ways_)
+          way_.set_ref_index(osmdata_.name_offset_map.index(tag_.second));
+        else
+          ref_ = tag_.second;
+      }
+    };
+    tag_handlers_["int_ref"] = [this]() {
+      if (!tag_.second.empty()) {
+        if (!use_direction_on_ways_)
+          way_.set_int_ref_index(osmdata_.name_offset_map.index(tag_.second));
+        else
+          int_ref_ = tag_.second;
+      }
+    };
+    tag_handlers_["direction"] = [this]() {
+      if (!tag_.second.empty() && use_direction_on_ways_)
+        direction_ = tag_.second;
+    };
+    tag_handlers_["int_direction"] = [this]() {
+      if (!tag_.second.empty() && use_direction_on_ways_)
+        int_direction_ = tag_.second;
+    };
+    tag_handlers_["sac_scale"] = [this]() {
+      std::string value = tag_.second;
+      boost::algorithm::to_lower(value);
+
+      if (value.find("difficult_alpine_hiking") != std::string::npos) {
+        way_.set_sac_scale(SacScale::kDifficultAlpineHiking);
+
+      } else if (value.find("demanding_alpine_hiking") != std::string::npos) {
+        way_.set_sac_scale(SacScale::kDemandingAlpineHiking);
+
+      } else if (value.find("alpine_hiking") != std::string::npos) {
+        way_.set_sac_scale(SacScale::kAlpineHiking);
+
+      } else if (value.find("demanding_mountain_hiking") != std::string::npos) {
+        way_.set_sac_scale(SacScale::kDemandingMountainHiking);
+
+      } else if (value.find("mountain_hiking") != std::string::npos) {
+        way_.set_sac_scale(SacScale::kMountainHiking);
+
+      } else if (value.find("hiking") != std::string::npos) {
+        way_.set_sac_scale(SacScale::kHiking);
+
+      } else {
+        way_.set_sac_scale(SacScale::kNone);
+      }
+    };
+    tag_handlers_["surface"] = [this]() {
+      std::string value = tag_.second;
+      boost::algorithm::to_lower(value);
+
+      // Find unpaved before paved since they have common string
+      if (value.find("unpaved") != std::string::npos) {
+        way_.set_surface(Surface::kGravel);
+
+      } else if (value.find("paved") != std::string::npos ||
+                 value.find("pavement") != std::string::npos ||
+                 value.find("asphalt") != std::string::npos ||
+                 value.find("concrete") != std::string::npos ||
+                 value.find("cement") != std::string::npos) {
+        way_.set_surface(Surface::kPavedSmooth);
+
+      } else if (value.find("tartan") != std::string::npos ||
+                 value.find("pavingstone") != std::string::npos ||
+                 value.find("paving_stones") != std::string::npos ||
+                 value.find("sett") != std::string::npos) {
+        way_.set_surface(Surface::kPaved);
+
+      } else if (value.find("cobblestone") != std::string::npos ||
+                 value.find("brick") != std::string::npos) {
+        way_.set_surface(Surface::kPavedRough);
+
+      } else if (value.find("compacted") != std::string::npos ||
+                 value.find("wood") != std::string::npos ||
+                 value.find("boardwalk") != std::string::npos) {
+        way_.set_surface(Surface::kCompacted);
+
+      } else if (value.find("dirt") != std::string::npos ||
+                 value.find("natural") != std::string::npos ||
+                 value.find("earth") != std::string::npos ||
+                 value.find("ground") != std::string::npos ||
+                 value.find("mud") != std::string::npos) {
+        way_.set_surface(Surface::kDirt);
+
+      } else if (value.find("gravel") != std::string::npos ||
+                 value.find("pebblestone") != std::string::npos ||
+                 value.find("sand") != std::string::npos) {
+        way_.set_surface(Surface::kGravel);
+      } else if (value.find("grass") != std::string::npos) {
+        way_.set_surface(Surface::kPath);
+        // We have to set a flag as surface may come before Road classes and Uses
+      } else {
+        has_surface_ = false;
+      }
+    };
+    // surface tag should win over tracktype.
+    tag_handlers_["tracktype"] = [this]() {
+      if (!has_surface_tag_) {
+        has_surface_ = true;
+        if (tag_.second == "grade1") {
+          way_.set_surface(Surface::kPavedRough);
+        } else if (tag_.second == "grade2") {
+          way_.set_surface(Surface::kCompacted);
+        } else if (tag_.second == "grade3") {
+          way_.set_surface(Surface::kDirt);
+        } else if (tag_.second == "grade4") {
+          way_.set_surface(Surface::kGravel);
+        } else if (tag_.second == "grade5") {
+          way_.set_surface(Surface::kPath);
+        } else {
+          has_surface_ = false;
+        }
+      }
+    };
+    tag_handlers_["bicycle"] = [this]() {
+      if (tag_.second == "dismount") {
+        way_.set_dismount(true);
+      } else if (tag_.second == "use_sidepath") {
+        way_.set_use_sidepath(true);
+      }
+    };
+    tag_handlers_["shoulder_right"] = [this]() {
+      way_.set_shoulder_right(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["shoulder_left"] = [this]() {
+      way_.set_shoulder_left(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["cycle_lane_right"] = [this]() {
+      CycleLane cyclelane_right = (CycleLane)std::stoi(tag_.second);
+      switch (cyclelane_right) {
+        case CycleLane::kDedicated:
+          way_.set_cyclelane_right(CycleLane::kDedicated);
+          break;
+        case CycleLane::kSeparated:
+          way_.set_cyclelane_right(CycleLane::kSeparated);
+          break;
+        case CycleLane::kShared:
+          way_.set_cyclelane_right(CycleLane::kShared);
+          break;
+        case CycleLane::kNone:
+        default:
+          way_.set_cyclelane_right(CycleLane::kNone);
+          break;
+      }
+    };
+    tag_handlers_["cycle_lane_left"] = [this]() {
+      CycleLane cyclelane_left = (CycleLane)std::stoi(tag_.second);
+      switch (cyclelane_left) {
+        case CycleLane::kDedicated:
+          way_.set_cyclelane_left(CycleLane::kDedicated);
+          break;
+        case CycleLane::kSeparated:
+          way_.set_cyclelane_left(CycleLane::kSeparated);
+          break;
+        case CycleLane::kShared:
+          way_.set_cyclelane_left(CycleLane::kShared);
+          break;
+        case CycleLane::kNone:
+        default:
+          way_.set_cyclelane_left(CycleLane::kNone);
+          break;
+      }
+    };
+    tag_handlers_["cycle_lane_right_opposite"] = [this]() {
+      way_.set_cyclelane_right_opposite(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["cycle_lane_left_opposite"] = [this]() {
+      way_.set_cyclelane_left_opposite(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["lanes"] = [this]() {
+      way_.set_lanes(std::stoi(tag_.second));
+      way_.set_tagged_lanes(true);
+    };
+    tag_handlers_["forward_lanes"] = [this]() {
+      way_.set_forward_lanes(std::stoi(tag_.second));
+      way_.set_forward_tagged_lanes(true);
+    };
+    tag_handlers_["backward_lanes"] = [this]() {
+      way_.set_backward_lanes(std::stoi(tag_.second));
+      way_.set_backward_tagged_lanes(true);
+    };
+    tag_handlers_["tunnel"] = [this]() { way_.set_tunnel(tag_.second == "true" ? true : false); };
+    tag_handlers_["toll"] = [this]() { way_.set_toll(tag_.second == "true" ? true : false); };
+    tag_handlers_["bridge"] = [this]() { way_.set_bridge(tag_.second == "true" ? true : false); };
+    tag_handlers_["seasonal"] = [this]() { way_.set_seasonal(tag_.second == "true" ? true : false); };
+    tag_handlers_["bike_network_mask"] = [this]() { way_.set_bike_network(std::stoi(tag_.second)); };
+    tag_handlers_["bike_national_ref"] = [this]() {
+      if (!tag_.second.empty())
+        way_.set_bike_national_ref_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["bike_regional_ref"] = [this]() {
+      if (!tag_.second.empty())
+        way_.set_bike_regional_ref_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["bike_local_ref"] = [this]() {
+      if (!tag_.second.empty())
+        way_.set_bike_local_ref_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["destination"] = [this]() {
+      if (!tag_.second.empty()) {
+        way_.set_destination_index(osmdata_.name_offset_map.index(tag_.second));
+        way_.set_exit(true);
+      }
+    };
+    tag_handlers_["destination:forward"] = [this]() {
+      if (!tag_.second.empty()) {
+        way_.set_destination_forward_index(osmdata_.name_offset_map.index(tag_.second));
+        way_.set_exit(true);
+      }
+    };
+    tag_handlers_["destination:backward"] = [this]() {
+      if (!tag_.second.empty()) {
+        way_.set_destination_backward_index(osmdata_.name_offset_map.index(tag_.second));
+        way_.set_exit(true);
+      }
+    };
+    tag_handlers_["destination:ref"] = [this]() {
+      if (!tag_.second.empty()) {
+        way_.set_destination_ref_index(osmdata_.name_offset_map.index(tag_.second));
+        way_.set_exit(true);
+      }
+    };
+    tag_handlers_["destination:ref:to"] = [this]() {
+      if (!tag_.second.empty()) {
+        way_.set_destination_ref_to_index(osmdata_.name_offset_map.index(tag_.second));
+        way_.set_exit(true);
+      }
+    };
+    tag_handlers_["destination:street"] = [this]() {
+      if (!tag_.second.empty()) {
+        way_.set_destination_street_index(osmdata_.name_offset_map.index(tag_.second));
+        way_.set_exit(true);
+      }
+    };
+    tag_handlers_["destination:street:to"] = [this]() {
+      if (!tag_.second.empty()) {
+        way_.set_destination_street_to_index(osmdata_.name_offset_map.index(tag_.second));
+        way_.set_exit(true);
+      }
+    };
+    tag_handlers_["junction:ref"] = [this]() {
+      if (!tag_.second.empty()) {
+        way_.set_junction_ref_index(osmdata_.name_offset_map.index(tag_.second));
+        way_.set_exit(true);
+      }
+    };
+    tag_handlers_["turn:lanes"] = [this]() {
+      // Turn lanes in the forward direction
+      way_.set_fwd_turn_lanes_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["turn:lanes:forward"] = [this]() {
+      // Turn lanes in the forward direction
+      way_.set_fwd_turn_lanes_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["turn:lanes:backward"] = [this]() {
+      // Turn lanes in the reverse direction
+      way_.set_bwd_turn_lanes_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["guidance_view:jct:base"] = [this]() {
+      way_.set_fwd_jct_base_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["guidance_view:jct:base:forward"] = [this]() {
+      way_.set_fwd_jct_base_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["guidance_view:jct:overlay"] = [this]() {
+      way_.set_fwd_jct_overlay_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["guidance_view:jct:overlay:forward"] = [this]() {
+      way_.set_fwd_jct_overlay_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["guidance_view:jct:base:backward"] = [this]() {
+      way_.set_bwd_jct_base_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["guidance_view:jct:overlay:backward"] = [this]() {
+      way_.set_bwd_jct_overlay_index(osmdata_.name_offset_map.index(tag_.second));
+    };
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
@@ -177,7 +848,6 @@ public:
     }
 
     for (const auto& tag : *results) {
-
       if (tag.first == "highway") {
         n.set_traffic_signal(tag.second == "traffic_signals" ? true : false);
       } else if (tag.first == "forward_signal") {
@@ -285,11 +955,13 @@ public:
   virtual void way_callback(const uint64_t osmid,
                             const OSMPBF::Tags& tags,
                             const std::vector<uint64_t>& nodes) override {
+    osmid_ = osmid;
+
     // unsorted extracts are just plain nasty, so they can bugger off!
-    if (osmid < last_way_) {
+    if (osmid_ < last_way_) {
       throw std::runtime_error("Detected unsorted input data");
     }
-    last_way_ = osmid;
+    last_way_ = osmid_;
 
     // Do not add ways with < 2 nodes. Log error or add to a problem list
     // TODO - find out if we do need these, why they exist...
@@ -311,7 +983,8 @@ public:
 
     // Transform tags. If no results that means the way does not have tags
     // suitable for use in routing.
-    Tags results = tags.size() == 0 ? empty_way_results_ : lua_.Transform(OSMType::kWay, osmid, tags);
+    Tags results =
+        tags.size() == 0 ? empty_way_results_ : lua_.Transform(OSMType::kWay, osmid_, tags);
     if (results.size() == 0) {
       return;
     }
@@ -329,9 +1002,9 @@ public:
         }
       }
     } catch (const std::invalid_argument& arg) {
-      LOG_INFO("invalid_argument thrown for way id: " + std::to_string(osmid));
+      LOG_INFO("invalid_argument thrown for way id: " + std::to_string(osmid_));
     } catch (const std::out_of_range& oor) {
-      LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
+      LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
     }
 
     // Add the refs to the reference list and mark the nodes that care about when processing nodes
@@ -369,343 +1042,55 @@ public:
     ++osmdata_.osm_way_count;
     osmdata_.osm_way_node_count += nodes.size();
 
-    float default_speed = 0.0f, max_speed = 0.0f;
-    float average_speed = 0.0f, advisory_speed = 0.0f;
-    bool has_default_speed = false, has_max_speed = false;
-    bool has_average_speed = false, has_advisory_speed = false;
-    bool has_surface = true;
-    std::string name;
+    default_speed_ = 0.0f, max_speed_ = 0.0f;
+    average_speed_ = 0.0f, advisory_speed_ = 0.0f;
+    has_default_speed_ = false, has_max_speed_ = false;
+    has_average_speed_ = false, has_advisory_speed_ = false;
+    has_surface_ = true;
+    name_ = {};
 
     // Process tags
-    OSMWay w{osmid};
-    w.set_node_count(nodes.size());
+    way_ = OSMWay{osmid_};
+    way_.set_node_count(nodes.size());
 
-    OSMAccess access{osmid};
-    bool has_user_tags = false;
-    std::string ref, int_ref, direction, int_direction;
+    osm_access_ = OSMAccess{osmid_};
+    has_user_tags_ = false;
+    ref_ = int_ref_ = direction_ = int_direction_ = {};
 
     const auto& surface_exists = results.find("surface");
-    bool has_surface_tag = (surface_exists != results.end());
-    if (!has_surface_tag) {
-      has_surface = false;
+    has_surface_tag_ = (surface_exists != results.end());
+    if (!has_surface_tag_) {
+      has_surface_ = false;
     }
 
     const auto& highway_junction = results.find("highway");
     bool is_highway_junction =
         ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
 
-    for (const auto& tag : results) {
-      if (tag.first == "internal_intersection" && !infer_internal_intersections_) {
-        w.set_internal(tag.second == "true" ? true : false);
-      } else if (tag.first == "turn_channel" && !infer_turn_channels_) {
-        w.set_turn_channel(tag.second == "true" ? true : false);
-      } else if (tag.first == "road_class") {
-        RoadClass roadclass = (RoadClass)std::stoi(tag.second);
-        switch (roadclass) {
-
-          case RoadClass::kMotorway:
-            w.set_road_class(RoadClass::kMotorway);
-            break;
-          case RoadClass::kTrunk:
-            w.set_road_class(RoadClass::kTrunk);
-            break;
-          case RoadClass::kPrimary:
-            w.set_road_class(RoadClass::kPrimary);
-            break;
-          case RoadClass::kSecondary:
-            w.set_road_class(RoadClass::kSecondary);
-            break;
-          case RoadClass::kTertiary:
-            w.set_road_class(RoadClass::kTertiary);
-            break;
-          case RoadClass::kUnclassified:
-            w.set_road_class(RoadClass::kUnclassified);
-            break;
-          case RoadClass::kResidential:
-            w.set_road_class(RoadClass::kResidential);
-            break;
-          default:
-            w.set_road_class(RoadClass::kServiceOther);
-            break;
-        }
-      }
-      // these flags indicate if a user set the access tags on this way.
-      else if (tag.first == "auto_tag") {
-        access.set_auto_tag(true);
-        has_user_tags = true;
-      } else if (tag.first == "truck_tag") {
-        access.set_truck_tag(true);
-        has_user_tags = true;
-      } else if (tag.first == "bus_tag") {
-        access.set_bus_tag(true);
-        has_user_tags = true;
-      } else if (tag.first == "foot_tag") {
-        access.set_foot_tag(true);
-        has_user_tags = true;
-      } else if (tag.first == "bike_tag") {
-        access.set_bike_tag(true);
-        has_user_tags = true;
-      } else if (tag.first == "moped_tag") {
-        access.set_moped_tag(true);
-        has_user_tags = true;
-      } else if (tag.first == "motorcycle_tag") {
-        access.set_motorcycle_tag(true);
-        has_user_tags = true;
-      } else if (tag.first == "hov_tag") {
-        access.set_hov_tag(true);
-        has_user_tags = true;
-      } else if (tag.first == "taxi_tag") {
-        access.set_taxi_tag(true);
-        has_user_tags = true;
-      } else if (tag.first == "motorroad_tag") {
-        access.set_motorroad_tag(true);
-        has_user_tags = true;
-      }
-
-      else if (tag.first == "wheelchair") {
-        w.set_wheelchair_tag(true);
-        w.set_wheelchair(tag.second == "true" ? true : false);
-      }
-
-      else if (tag.first == "sidewalk") {
-        if (tag.second == "both" || tag.second == "yes" || tag.second == "shared" ||
-            tag.second == "raised") {
-          w.set_sidewalk_left(true);
-          w.set_sidewalk_right(true);
-        } else if (tag.second == "left") {
-          w.set_sidewalk_left(true);
-        } else if (tag.second == "right") {
-          w.set_sidewalk_right(true);
-        }
-      }
-
-      else if (tag.first == "auto_forward") {
-        w.set_auto_forward(tag.second == "true" ? true : false);
-      } else if (tag.first == "truck_forward") {
-        w.set_truck_forward(tag.second == "true" ? true : false);
-      } else if (tag.first == "bus_forward") {
-        w.set_bus_forward(tag.second == "true" ? true : false);
-      } else if (tag.first == "bike_forward") {
-        w.set_bike_forward(tag.second == "true" ? true : false);
-      } else if (tag.first == "emergency_forward") {
-        w.set_emergency_forward(tag.second == "true" ? true : false);
-      } else if (tag.first == "hov_forward") {
-        w.set_hov_forward(tag.second == "true" ? true : false);
-      } else if (tag.first == "taxi_forward") {
-        w.set_taxi_forward(tag.second == "true" ? true : false);
-      } else if (tag.first == "moped_forward") {
-        w.set_moped_forward(tag.second == "true" ? true : false);
-      } else if (tag.first == "motorcycle_forward") {
-        w.set_motorcycle_forward(tag.second == "true" ? true : false);
-      } else if (tag.first == "auto_backward") {
-        w.set_auto_backward(tag.second == "true" ? true : false);
-      } else if (tag.first == "truck_backward") {
-        w.set_truck_backward(tag.second == "true" ? true : false);
-      } else if (tag.first == "bus_backward") {
-        w.set_bus_backward(tag.second == "true" ? true : false);
-      } else if (tag.first == "bike_backward") {
-        w.set_bike_backward(tag.second == "true" ? true : false);
-      } else if (tag.first == "emergency_backward") {
-        w.set_emergency_backward(tag.second == "true" ? true : false);
-      } else if (tag.first == "hov_backward") {
-        w.set_hov_backward(tag.second == "true" ? true : false);
-      } else if (tag.first == "taxi_backward") {
-        w.set_taxi_backward(tag.second == "true" ? true : false);
-      } else if (tag.first == "moped_backward") {
-        w.set_moped_backward(tag.second == "true" ? true : false);
-      } else if (tag.first == "motorcycle_backward") {
-        w.set_motorcycle_backward(tag.second == "true" ? true : false);
-      } else if (tag.first == "pedestrian") {
-        w.set_pedestrian(tag.second == "true" ? true : false);
-      } else if (tag.first == "private" && tag.second == "true") {
-        // Make sure we do not unset this flag if set previously
-        w.set_destination_only(true);
-      } else if (tag.first == "use") {
-        Use use = (Use)std::stoi(tag.second);
-        switch (use) {
-          case Use::kCycleway:
-            w.set_use(Use::kCycleway);
-            break;
-          case Use::kFootway:
-            w.set_use(Use::kFootway);
-            break;
-          case Use::kSidewalk:
-            w.set_use(Use::kSidewalk);
-            break;
-          case Use::kPedestrian:
-            w.set_use(Use::kPedestrian);
-            break;
-          case Use::kPath:
-            w.set_use(Use::kPath);
-            break;
-          case Use::kSteps:
-            w.set_use(Use::kSteps);
-            break;
-          case Use::kBridleway:
-            w.set_use(Use::kBridleway);
-            break;
-          case Use::kLivingStreet:
-            w.set_use(Use::kLivingStreet);
-            break;
-          case Use::kParkingAisle:
-            w.set_destination_only(true);
-            w.set_use(Use::kParkingAisle);
-            break;
-          case Use::kDriveway:
-            w.set_destination_only(true);
-            w.set_use(Use::kDriveway);
-            break;
-          case Use::kAlley:
-            w.set_use(Use::kAlley);
-            break;
-          case Use::kEmergencyAccess:
-            w.set_use(Use::kEmergencyAccess);
-            break;
-          case Use::kDriveThru:
-            w.set_destination_only(true);
-            w.set_use(Use::kDriveThru);
-            break;
-          case Use::kTrack:
-            w.set_use(Use::kTrack);
-            break;
-          case Use::kOther:
-            w.set_use(Use::kOther);
-            break;
-          case Use::kRoad:
-          default:
-            w.set_use(Use::kRoad);
-            break;
-        }
-      } else if (tag.first == "no_thru_traffic") {
-        w.set_no_thru_traffic(tag.second == "true" ? true : false);
-      } else if (tag.first == "oneway") {
-        w.set_oneway(tag.second == "true" ? true : false);
-      } else if (tag.first == "oneway_reverse") {
-        w.set_oneway_reverse(tag.second == "true" ? true : false);
-      } else if (tag.first == "roundabout") {
-        w.set_roundabout(tag.second == "true" ? true : false);
-      } else if (tag.first == "link") {
-        w.set_link(tag.second == "true" ? true : false);
-      } else if (tag.first == "ferry") {
-        w.set_ferry(tag.second == "true" ? true : false);
-      } else if (tag.first == "rail") {
-        w.set_rail(tag.second == "true" ? true : false);
-
-      } else if (tag.first == "duration") {
-        std::size_t found = tag.second.find(":");
-        if (found == std::string::npos) {
-          continue;
-        }
-        std::vector<std::string> time = GetTagTokens(tag.second, ':');
-        uint32_t hour = 0, min = 0, sec = 0;
-        if (time.size() == 1) { // minutes
-          std::stringstream ss(time.at(0));
-          ss >> min;
-          min *= 60;
-        } else if (time.size() == 2) { // hours and min
-          std::stringstream ss(tag.second);
-          ss >> hour;
-          ss.ignore();
-          hour *= 3600;
-
-          ss >> min;
-          min *= 60;
-        } else if (time.size() == 3) { // hours, min, and sec
-          std::stringstream ss(tag.second);
-          ss >> hour;
-          ss.ignore();
-          hour *= 3600;
-
-          ss >> min;
-          ss.ignore();
-          min *= 60;
-
-          ss >> sec;
-        }
-        w.set_duration(hour + min + sec);
-      }
-
-      else if (tag.first == "name" && !tag.second.empty()) {
-        name = tag.second;
-      } else if (tag.first == "name:en" && !tag.second.empty()) {
-        w.set_name_en_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "alt_name" && !tag.second.empty() && allow_alt_name_) {
-        w.set_alt_name_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "official_name" && !tag.second.empty()) {
-        w.set_official_name_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "max_speed") {
-        try {
-          if (tag.second == "unlimited") {
-            // this way has an unlimited speed limit (german autobahn)
-            max_speed = kUnlimitedSpeedLimit;
-          } else {
-            max_speed = std::stof(tag.second);
-          }
-          w.set_tagged_speed(true);
-          has_max_speed = true;
-        } catch (const std::out_of_range& oor) {
-          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
-        }
-
-      } else if (tag.first == "average_speed") {
-        try {
-          average_speed = std::stof(tag.second);
-          has_average_speed = true;
-          w.set_tagged_speed(true);
-        } catch (const std::out_of_range& oor) {
-          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
-        }
-      } else if (tag.first == "advisory_speed") {
-        try {
-          advisory_speed = std::stof(tag.second);
-          has_advisory_speed = true;
-          w.set_tagged_speed(true);
-        } catch (const std::out_of_range& oor) {
-          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
-        }
-      } else if (tag.first == "forward_speed") {
-        try {
-          w.set_forward_speed(std::stof(tag.second));
-          w.set_forward_tagged_speed(true);
-        } catch (const std::out_of_range& oor) {
-          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
-        }
-      } else if (tag.first == "backward_speed") {
-        try {
-          w.set_backward_speed(std::stof(tag.second));
-          w.set_backward_tagged_speed(true);
-        } catch (const std::out_of_range& oor) {
-          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
-        }
-      }
-
-      else if (tag.first == "maxspeed:hgv") {
-        try {
-          w.set_truck_speed(std::stof(tag.second));
-        } catch (const std::out_of_range& oor) {
-          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
-        }
-      } else if (tag.first == "truck_route") {
-        w.set_truck_route(tag.second == "true" ? true : false);
+    for (const auto& kv : results) {
+      tag_ = kv;
+      const auto it = tag_handlers_.find(tag_.first);
+      if (it != tag_handlers_.end()) {
+        it->second();
       }
 
       // motor_vehicle:conditional=no @ (16:30-07:00)
-      else if (tag.first.substr(0, 20) == "motorcar:conditional" ||
-               tag.first.substr(0, 25) == "motor_vehicle:conditional" ||
-               tag.first.substr(0, 19) == "bicycle:conditional" ||
-               tag.first.substr(0, 22) == "motorcycle:conditional" ||
-               tag.first.substr(0, 16) == "foot:conditional" ||
-               tag.first.substr(0, 22) == "pedestrian:conditional" ||
-               tag.first.substr(0, 15) == "hgv:conditional" ||
-               tag.first.substr(0, 17) == "moped:conditional" ||
-               tag.first.substr(0, 16) == "mofa:conditional" ||
-               tag.first.substr(0, 15) == "psv:conditional" ||
-               tag.first.substr(0, 16) == "taxi:conditional" ||
-               tag.first.substr(0, 15) == "bus:conditional" ||
-               tag.first.substr(0, 15) == "hov:conditional" ||
-               tag.first.substr(0, 21) == "emergency:conditional") {
+      else if (tag_.first.substr(0, 20) == "motorcar:conditional" ||
+               tag_.first.substr(0, 25) == "motor_vehicle:conditional" ||
+               tag_.first.substr(0, 19) == "bicycle:conditional" ||
+               tag_.first.substr(0, 22) == "motorcycle:conditional" ||
+               tag_.first.substr(0, 16) == "foot:conditional" ||
+               tag_.first.substr(0, 22) == "pedestrian:conditional" ||
+               tag_.first.substr(0, 15) == "hgv:conditional" ||
+               tag_.first.substr(0, 17) == "moped:conditional" ||
+               tag_.first.substr(0, 16) == "mofa:conditional" ||
+               tag_.first.substr(0, 15) == "psv:conditional" ||
+               tag_.first.substr(0, 16) == "taxi:conditional" ||
+               tag_.first.substr(0, 15) == "bus:conditional" ||
+               tag_.first.substr(0, 15) == "hov:conditional" ||
+               tag_.first.substr(0, 21) == "emergency:conditional") {
 
-        std::vector<std::string> tokens = GetTagTokens(tag.second, '@');
+        std::vector<std::string> tokens = GetTagTokens(tag_.second, '@');
         std::string tmp = tokens.at(0);
         boost::algorithm::trim(tmp);
 
@@ -719,31 +1104,31 @@ public:
         if (tokens.size() == 2 && tmp.size()) {
 
           uint16_t mode = 0;
-          if (tag.first.substr(0, 20) == "motorcar:conditional" ||
-              tag.first.substr(0, 25) == "motor_vehicle:conditional") {
+          if (tag_.first.substr(0, 20) == "motorcar:conditional" ||
+              tag_.first.substr(0, 25) == "motor_vehicle:conditional") {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                     kHOVAccess | kMopedAccess | kMotorcycleAccess);
-          } else if (tag.first.substr(0, 19) == "bicycle:conditional") {
+          } else if (tag_.first.substr(0, 19) == "bicycle:conditional") {
             mode = kBicycleAccess;
-          } else if (tag.first.substr(0, 16) == "foot:conditional" ||
-                     tag.first.substr(0, 22) == "pedestrian:conditional") {
+          } else if (tag_.first.substr(0, 16) == "foot:conditional" ||
+                     tag_.first.substr(0, 22) == "pedestrian:conditional") {
             mode = (kPedestrianAccess | kWheelchairAccess);
-          } else if (tag.first.substr(0, 15) == "hgv:conditional") {
+          } else if (tag_.first.substr(0, 15) == "hgv:conditional") {
             mode = kTruckAccess;
-          } else if (tag.first.substr(0, 17) == "moped:conditional" ||
-                     tag.first.substr(0, 16) == "mofa:conditional") {
+          } else if (tag_.first.substr(0, 17) == "moped:conditional" ||
+                     tag_.first.substr(0, 16) == "mofa:conditional") {
             mode = kMopedAccess;
-          } else if (tag.first.substr(0, 22) == "motorcycle:conditional") {
+          } else if (tag_.first.substr(0, 22) == "motorcycle:conditional") {
             mode = kMotorcycleAccess;
-          } else if (tag.first.substr(0, 15) == "psv:conditional") {
+          } else if (tag_.first.substr(0, 15) == "psv:conditional") {
             mode = (kTaxiAccess | kBusAccess);
-          } else if (tag.first.substr(0, 16) == "taxi:conditional") {
+          } else if (tag_.first.substr(0, 16) == "taxi:conditional") {
             mode = kTaxiAccess;
-          } else if (tag.first.substr(0, 15) == "bus:conditional") {
+          } else if (tag_.first.substr(0, 15) == "bus:conditional") {
             mode = kBusAccess;
-          } else if (tag.first.substr(0, 15) == "hov:conditional") {
+          } else if (tag_.first.substr(0, 15) == "hov:conditional") {
             mode = kHOVAccess;
-          } else if (tag.first.substr(0, 21) == "emergency:conditional") {
+          } else if (tag_.first.substr(0, 21) == "emergency:conditional") {
             mode = kEmergencyAccess;
           }
           std::string tmp = tokens.at(1);
@@ -758,309 +1143,19 @@ public:
               restriction.set_type(static_cast<AccessType>(type));
               restriction.set_modes(mode);
               restriction.set_value(v);
-              osmdata_.access_restrictions.insert({osmid, restriction});
+              osmdata_.access_restrictions.insert({osmid_, restriction});
             }
           }
         }
       }
-
-      else if (tag.first == "hazmat") {
-        OSMAccessRestriction restriction;
-        restriction.set_type(AccessType::kHazmat);
-        restriction.set_value(tag.second == "true" ? true : false);
-        restriction.set_modes(kTruckAccess);
-        osmdata_.access_restrictions.insert(
-            AccessRestrictionsMultiMap::value_type(osmid, restriction));
-      } else if (tag.first == "maxheight") {
-        OSMAccessRestriction restriction;
-        restriction.set_type(AccessType::kMaxHeight);
-        restriction.set_value(std::stof(tag.second) * 100);
-        restriction.set_modes(kTruckAccess);
-        osmdata_.access_restrictions.insert(
-            AccessRestrictionsMultiMap::value_type(osmid, restriction));
-      } else if (tag.first == "maxwidth") {
-        OSMAccessRestriction restriction;
-        restriction.set_type(AccessType::kMaxWidth);
-        restriction.set_value(std::stof(tag.second) * 100);
-        restriction.set_modes(kTruckAccess);
-        osmdata_.access_restrictions.insert(
-            AccessRestrictionsMultiMap::value_type(osmid, restriction));
-      } else if (tag.first == "maxlength") {
-        OSMAccessRestriction restriction;
-        restriction.set_type(AccessType::kMaxLength);
-        restriction.set_value(std::stof(tag.second) * 100);
-        restriction.set_modes(kTruckAccess);
-        osmdata_.access_restrictions.insert(
-            AccessRestrictionsMultiMap::value_type(osmid, restriction));
-      } else if (tag.first == "maxweight") {
-        OSMAccessRestriction restriction;
-        restriction.set_type(AccessType::kMaxWeight);
-        restriction.set_value(std::stof(tag.second) * 100);
-        restriction.set_modes(kTruckAccess);
-        osmdata_.access_restrictions.insert(
-            AccessRestrictionsMultiMap::value_type(osmid, restriction));
-      } else if (tag.first == "maxaxleload") {
-        OSMAccessRestriction restriction;
-        restriction.set_type(AccessType::kMaxAxleLoad);
-        restriction.set_value(std::stof(tag.second) * 100);
-        restriction.set_modes(kTruckAccess);
-        osmdata_.access_restrictions.insert(
-            AccessRestrictionsMultiMap::value_type(osmid, restriction));
-      }
-
-      else if (tag.first == "default_speed") {
-        try {
-          default_speed = std::stof(tag.second);
-          has_default_speed = true;
-        } catch (const std::out_of_range& oor) {
-          LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid));
-        }
-      }
-
-      else if (tag.first == "ref" && !tag.second.empty()) {
-        if (!use_direction_on_ways_)
-          w.set_ref_index(osmdata_.name_offset_map.index(tag.second));
-        else
-          ref = tag.second;
-      } else if (tag.first == "int_ref" && !tag.second.empty()) {
-        if (!use_direction_on_ways_)
-          w.set_int_ref_index(osmdata_.name_offset_map.index(tag.second));
-        else
-          int_ref = tag.second;
-      } else if (tag.first == "direction" && !tag.second.empty() && use_direction_on_ways_) {
-        direction = tag.second;
-      } else if (tag.first == "int_direction" && !tag.second.empty() && use_direction_on_ways_) {
-        int_direction = tag.second;
-      } else if (tag.first == "sac_scale") {
-        std::string value = tag.second;
-        boost::algorithm::to_lower(value);
-
-        if (value.find("difficult_alpine_hiking") != std::string::npos) {
-          w.set_sac_scale(SacScale::kDifficultAlpineHiking);
-
-        } else if (value.find("demanding_alpine_hiking") != std::string::npos) {
-          w.set_sac_scale(SacScale::kDemandingAlpineHiking);
-
-        } else if (value.find("alpine_hiking") != std::string::npos) {
-          w.set_sac_scale(SacScale::kAlpineHiking);
-
-        } else if (value.find("demanding_mountain_hiking") != std::string::npos) {
-          w.set_sac_scale(SacScale::kDemandingMountainHiking);
-
-        } else if (value.find("mountain_hiking") != std::string::npos) {
-          w.set_sac_scale(SacScale::kMountainHiking);
-
-        } else if (value.find("hiking") != std::string::npos) {
-          w.set_sac_scale(SacScale::kHiking);
-
-        } else {
-          w.set_sac_scale(SacScale::kNone);
-        }
-      }
-
-      else if (tag.first == "surface") {
-        std::string value = tag.second;
-        boost::algorithm::to_lower(value);
-
-        // Find unpaved before paved since they have common string
-        if (value.find("unpaved") != std::string::npos) {
-          w.set_surface(Surface::kGravel);
-
-        } else if (value.find("paved") != std::string::npos ||
-                   value.find("pavement") != std::string::npos ||
-                   value.find("asphalt") != std::string::npos ||
-                   value.find("concrete") != std::string::npos ||
-                   value.find("cement") != std::string::npos) {
-          w.set_surface(Surface::kPavedSmooth);
-
-        } else if (value.find("tartan") != std::string::npos ||
-                   value.find("pavingstone") != std::string::npos ||
-                   value.find("paving_stones") != std::string::npos ||
-                   value.find("sett") != std::string::npos) {
-          w.set_surface(Surface::kPaved);
-
-        } else if (value.find("cobblestone") != std::string::npos ||
-                   value.find("brick") != std::string::npos) {
-          w.set_surface(Surface::kPavedRough);
-
-        } else if (value.find("compacted") != std::string::npos ||
-                   value.find("wood") != std::string::npos ||
-                   value.find("boardwalk") != std::string::npos) {
-          w.set_surface(Surface::kCompacted);
-
-        } else if (value.find("dirt") != std::string::npos ||
-                   value.find("natural") != std::string::npos ||
-                   value.find("earth") != std::string::npos ||
-                   value.find("ground") != std::string::npos ||
-                   value.find("mud") != std::string::npos) {
-          w.set_surface(Surface::kDirt);
-
-        } else if (value.find("gravel") != std::string::npos ||
-                   value.find("pebblestone") != std::string::npos ||
-                   value.find("sand") != std::string::npos) {
-          w.set_surface(Surface::kGravel);
-        } else if (value.find("grass") != std::string::npos) {
-          w.set_surface(Surface::kPath);
-          // We have to set a flag as surface may come before Road classes and Uses
-        } else {
-          has_surface = false;
-        }
-      }
-
-      // surface tag should win over tracktype.
-      else if (tag.first == "tracktype" && !has_surface_tag) {
-
-        has_surface = true;
-
-        if (tag.second == "grade1") {
-          w.set_surface(Surface::kPavedRough);
-        } else if (tag.second == "grade2") {
-          w.set_surface(Surface::kCompacted);
-        } else if (tag.second == "grade3") {
-          w.set_surface(Surface::kDirt);
-        } else if (tag.second == "grade4") {
-          w.set_surface(Surface::kGravel);
-        } else if (tag.second == "grade5") {
-          w.set_surface(Surface::kPath);
-        } else {
-          has_surface = false;
-        }
-      }
-
-      else if (tag.first == "bicycle") {
-        if (tag.second == "dismount") {
-          w.set_dismount(true);
-        } else if (tag.second == "use_sidepath") {
-          w.set_use_sidepath(true);
-        }
-      }
-
-      else if (tag.first == "shoulder_right") {
-        w.set_shoulder_right(tag.second == "true" ? true : false);
-      } else if (tag.first == "shoulder_left") {
-        w.set_shoulder_left(tag.second == "true" ? true : false);
-      }
-
-      else if (tag.first == "cycle_lane_right") {
-        CycleLane cyclelane_right = (CycleLane)std::stoi(tag.second);
-        switch (cyclelane_right) {
-          case CycleLane::kDedicated:
-            w.set_cyclelane_right(CycleLane::kDedicated);
-            break;
-          case CycleLane::kSeparated:
-            w.set_cyclelane_right(CycleLane::kSeparated);
-            break;
-          case CycleLane::kShared:
-            w.set_cyclelane_right(CycleLane::kShared);
-            break;
-          case CycleLane::kNone:
-          default:
-            w.set_cyclelane_right(CycleLane::kNone);
-            break;
-        }
-      } else if (tag.first == "cycle_lane_left") {
-        CycleLane cyclelane_left = (CycleLane)std::stoi(tag.second);
-        switch (cyclelane_left) {
-          case CycleLane::kDedicated:
-            w.set_cyclelane_left(CycleLane::kDedicated);
-            break;
-          case CycleLane::kSeparated:
-            w.set_cyclelane_left(CycleLane::kSeparated);
-            break;
-          case CycleLane::kShared:
-            w.set_cyclelane_left(CycleLane::kShared);
-            break;
-          case CycleLane::kNone:
-          default:
-            w.set_cyclelane_left(CycleLane::kNone);
-            break;
-        }
-      }
-
-      else if (tag.first == "cycle_lane_right_opposite") {
-        w.set_cyclelane_right_opposite(tag.second == "true" ? true : false);
-      } else if (tag.first == "cycle_lane_left_opposite") {
-        w.set_cyclelane_left_opposite(tag.second == "true" ? true : false);
-      }
-
-      else if (tag.first == "lanes") {
-        w.set_lanes(std::stoi(tag.second));
-        w.set_tagged_lanes(true);
-      } else if (tag.first == "forward_lanes") {
-        w.set_forward_lanes(std::stoi(tag.second));
-        w.set_forward_tagged_lanes(true);
-      } else if (tag.first == "backward_lanes") {
-        w.set_backward_lanes(std::stoi(tag.second));
-        w.set_backward_tagged_lanes(true);
-      }
-
-      else if (tag.first == "tunnel") {
-        w.set_tunnel(tag.second == "true" ? true : false);
-      } else if (tag.first == "toll") {
-        w.set_toll(tag.second == "true" ? true : false);
-      } else if (tag.first == "bridge") {
-        w.set_bridge(tag.second == "true" ? true : false);
-      } else if (tag.first == "seasonal") {
-        w.set_seasonal(tag.second == "true" ? true : false);
-
-      } else if (tag.first == "bike_network_mask") {
-        w.set_bike_network(std::stoi(tag.second));
-      } else if (tag.first == "bike_national_ref" && !tag.second.empty()) {
-        w.set_bike_national_ref_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "bike_regional_ref" && !tag.second.empty()) {
-        w.set_bike_regional_ref_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "bike_local_ref" && !tag.second.empty()) {
-        w.set_bike_local_ref_index(osmdata_.name_offset_map.index(tag.second));
-
-      } else if (tag.first == "destination" && !tag.second.empty()) {
-        w.set_destination_index(osmdata_.name_offset_map.index(tag.second));
-        w.set_exit(true);
-      } else if (tag.first == "destination:forward" && !tag.second.empty()) {
-        w.set_destination_forward_index(osmdata_.name_offset_map.index(tag.second));
-        w.set_exit(true);
-      } else if (tag.first == "destination:backward" && !tag.second.empty()) {
-        w.set_destination_backward_index(osmdata_.name_offset_map.index(tag.second));
-        w.set_exit(true);
-      } else if (tag.first == "destination:ref" && !tag.second.empty()) {
-        w.set_destination_ref_index(osmdata_.name_offset_map.index(tag.second));
-        w.set_exit(true);
-      } else if (tag.first == "destination:ref:to" && !tag.second.empty()) {
-        w.set_destination_ref_to_index(osmdata_.name_offset_map.index(tag.second));
-        w.set_exit(true);
-      } else if (tag.first == "destination:street" && !tag.second.empty()) {
-        w.set_destination_street_index(osmdata_.name_offset_map.index(tag.second));
-        w.set_exit(true);
-      } else if (tag.first == "destination:street:to" && !tag.second.empty()) {
-        w.set_destination_street_to_index(osmdata_.name_offset_map.index(tag.second));
-        w.set_exit(true);
-      } else if (tag.first == "junction:ref" && !tag.second.empty()) {
-        w.set_junction_ref_index(osmdata_.name_offset_map.index(tag.second));
-        w.set_exit(true);
-      } else if (tag.first == "turn:lanes" || tag.first == "turn:lanes:forward") {
-        // Turn lanes in the forward direction
-        w.set_fwd_turn_lanes_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "turn:lanes:backward") {
-        // Turn lanes in the reverse direction
-        w.set_bwd_turn_lanes_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "guidance_view:jct:base" ||
-                 tag.first == "guidance_view:jct:base:forward") {
-        w.set_fwd_jct_base_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "guidance_view:jct:overlay" ||
-                 tag.first == "guidance_view:jct:overlay:forward") {
-        w.set_fwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "guidance_view:jct:base:backward") {
-        w.set_bwd_jct_base_index(osmdata_.name_offset_map.index(tag.second));
-      } else if (tag.first == "guidance_view:jct:overlay:backward") {
-        w.set_bwd_jct_overlay_index(osmdata_.name_offset_map.index(tag.second));
-      }
     }
 
-    if (use_direction_on_ways_ && !ref.empty()) {
-      if (direction.empty()) {
-        w.set_ref_index(osmdata_.name_offset_map.index(ref));
+    if (use_direction_on_ways_ && !ref_.empty()) {
+      if (direction_.empty()) {
+        way_.set_ref_index(osmdata_.name_offset_map.index(ref_));
       } else {
-        std::vector<std::string> refs = GetTagTokens(ref);
-        std::vector<std::string> directions = GetTagTokens(direction);
+        std::vector<std::string> refs = GetTagTokens(ref_);
+        std::vector<std::string> directions = GetTagTokens(direction_);
 
         std::string tmp_ref;
         if (refs.size() == directions.size()) {
@@ -1073,18 +1168,18 @@ public:
             else
               tmp_ref += refs.at(i);
           }
-          w.set_ref_index(osmdata_.name_offset_map.index(tmp_ref));
+          way_.set_ref_index(osmdata_.name_offset_map.index(tmp_ref));
         } else
-          w.set_ref_index(osmdata_.name_offset_map.index(ref));
+          way_.set_ref_index(osmdata_.name_offset_map.index(ref_));
       }
     }
 
-    if (use_direction_on_ways_ && !int_ref.empty()) {
-      if (int_direction.empty()) {
-        w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
+    if (use_direction_on_ways_ && !int_ref_.empty()) {
+      if (int_direction_.empty()) {
+        way_.set_int_ref_index(osmdata_.name_offset_map.index(int_ref_));
       } else {
-        std::vector<std::string> int_refs = GetTagTokens(int_ref);
-        std::vector<std::string> int_directions = GetTagTokens(int_direction);
+        std::vector<std::string> int_refs = GetTagTokens(int_ref_);
+        std::vector<std::string> int_directions = GetTagTokens(int_direction_);
 
         std::string tmp_ref;
         if (int_refs.size() == int_directions.size()) {
@@ -1097,18 +1192,18 @@ public:
             else
               tmp_ref += int_refs.at(i);
           }
-          w.set_int_ref_index(osmdata_.name_offset_map.index(tmp_ref));
+          way_.set_int_ref_index(osmdata_.name_offset_map.index(tmp_ref));
         } else
-          w.set_int_ref_index(osmdata_.name_offset_map.index(int_ref));
+          way_.set_int_ref_index(osmdata_.name_offset_map.index(int_ref_));
       }
     }
 
     // add int_refs to the end of the refs for now.  makes sure that we don't add dups.
-    if (use_direction_on_ways_ && w.int_ref_index()) {
-      std::string tmp = osmdata_.name_offset_map.name(w.ref_index());
+    if (use_direction_on_ways_ && way_.int_ref_index()) {
+      std::string tmp = osmdata_.name_offset_map.name(way_.ref_index());
 
       std::vector<std::string> rs = GetTagTokens(tmp);
-      std::vector<std::string> is = GetTagTokens(osmdata_.name_offset_map.name(w.int_ref_index()));
+      std::vector<std::string> is = GetTagTokens(osmdata_.name_offset_map.name(way_.int_ref_index()));
       bool bFound = false;
 
       for (auto& i : is) {
@@ -1127,10 +1222,10 @@ public:
         bFound = false;
       }
       if (!tmp.empty()) {
-        w.set_ref_index(osmdata_.name_offset_map.index(tmp));
+        way_.set_ref_index(osmdata_.name_offset_map.index(tmp));
       }
       // no matter what, clear out the int_ref.
-      w.set_int_ref_index(0);
+      way_.set_int_ref_index(0);
     }
 
     // Process mtb tags.
@@ -1142,21 +1237,21 @@ public:
         // Set surface based on scale
         uint32_t scale = stoi(mtb_scale->second);
         if (scale == 0) {
-          w.set_surface(Surface::kDirt);
+          way_.set_surface(Surface::kDirt);
         } else if (scale == 1) {
-          w.set_surface(Surface::kGravel);
+          way_.set_surface(Surface::kGravel);
         } else {
-          w.set_surface(Surface::kPath);
+          way_.set_surface(Surface::kPath);
         }
-        has_surface = true;
+        has_surface_ = true;
 
         // Set bicycle access to true for all but the highest scale.
         bool access = scale < kMaxMtbScale;
-        if (access && !w.oneway_reverse()) {
-          w.set_bike_forward(true);
+        if (access && !way_.oneway_reverse()) {
+          way_.set_bike_forward(true);
         }
-        if (access && !w.oneway()) {
-          w.set_bike_backward(true);
+        if (access && !way_.oneway()) {
+          way_.set_bike_backward(true);
         }
       }
     }
@@ -1170,20 +1265,20 @@ public:
         uint32_t scale = stoi(mtb_uphill_scale->second);
         if (!has_mtb_scale) {
           if (scale < 2) {
-            w.set_surface(Surface::kGravel);
+            way_.set_surface(Surface::kGravel);
           } else {
-            w.set_surface(Surface::kPath);
+            way_.set_surface(Surface::kPath);
           }
-          has_surface = true;
+          has_surface_ = true;
         }
 
         // Set bicycle access to true for all but the highest scale.
         bool access = scale < kMaxMtbUphillScale;
-        if (access && !w.oneway_reverse()) {
-          w.set_bike_forward(true);
+        if (access && !way_.oneway_reverse()) {
+          way_.set_bike_forward(true);
         }
-        if (access && !w.oneway()) {
-          w.set_bike_backward(true);
+        if (access && !way_.oneway()) {
+          way_.set_bike_backward(true);
         }
       }
     }
@@ -1194,11 +1289,11 @@ public:
     if (has_mtb_imba) {
       // Update bike access (only if neither mtb:scale nor mtb:scale:uphill is present)
       if (!has_mtb_scale && !has_mtb_uphill_scale) {
-        if (!w.oneway_reverse()) {
-          w.set_bike_forward(true);
+        if (!way_.oneway_reverse()) {
+          way_.set_bike_forward(true);
         }
-        if (!w.oneway()) {
-          w.set_bike_backward(true);
+        if (!way_.oneway()) {
+          way_.set_bike_backward(true);
         }
       }
     }
@@ -1206,21 +1301,21 @@ public:
     // Only has MTB description - set bicycle access.
     bool has_mtb_desc = results.find("mtb:description") != results.end();
     if (has_mtb_desc && !has_mtb_scale && !has_mtb_uphill_scale && !has_mtb_imba) {
-      if (!w.oneway_reverse()) {
-        w.set_bike_forward(true);
+      if (!way_.oneway_reverse()) {
+        way_.set_bike_forward(true);
       }
-      if (!w.oneway()) {
-        w.set_bike_backward(true);
+      if (!way_.oneway()) {
+        way_.set_bike_backward(true);
       }
     }
 
     // if no surface and tracktype but we have a sac_scale, set surface to path.
-    if (!has_surface) {
+    if (!has_surface_) {
       if (results.find("sac_scale") != results.end()) {
-        w.set_surface(Surface::kPath);
+        way_.set_surface(Surface::kPath);
       } else {
         // If no surface has been set by a user, assign a surface based on Road Class and Use
-        switch (w.road_class()) {
+        switch (way_.road_class()) {
 
           case RoadClass::kMotorway:
           case RoadClass::kTrunk:
@@ -1229,19 +1324,19 @@ public:
           case RoadClass::kTertiary:
           case RoadClass::kUnclassified:
           case RoadClass::kResidential:
-            w.set_surface(Surface::kPavedSmooth);
+            way_.set_surface(Surface::kPavedSmooth);
             break;
           default:
-            switch (w.use()) {
+            switch (way_.use()) {
               case Use::kFootway:
               case Use::kPedestrian:
               case Use::kSidewalk:
               case Use::kPath:
               case Use::kBridleway:
-                w.set_surface(Surface::kCompacted);
+                way_.set_surface(Surface::kCompacted);
                 break;
               case Use::kTrack:
-                w.set_surface(Surface::kDirt);
+                way_.set_surface(Surface::kDirt);
                 break;
               case Use::kRoad:
               case Use::kParkingAisle:
@@ -1250,16 +1345,16 @@ public:
               case Use::kEmergencyAccess:
               case Use::kDriveThru:
               case Use::kLivingStreet:
-                w.set_surface(Surface::kPavedSmooth);
+                way_.set_surface(Surface::kPavedSmooth);
                 break;
               case Use::kCycleway:
               case Use::kSteps:
-                w.set_surface(Surface::kPaved);
+                way_.set_surface(Surface::kPaved);
                 break;
               default:
                 // TODO:  see if we can add more logic when a user does not
                 // specify a surface.
-                w.set_surface(Surface::kPaved);
+                way_.set_surface(Surface::kPaved);
                 break;
             }
             break;
@@ -1268,50 +1363,50 @@ public:
     }
 
     // set the speed
-    if (has_average_speed) {
-      w.set_speed(average_speed);
-    } else if (has_advisory_speed) {
-      w.set_speed(advisory_speed);
-    } else if (has_max_speed && max_speed != kUnlimitedSpeedLimit) {
+    if (has_average_speed_) {
+      way_.set_speed(average_speed_);
+    } else if (has_advisory_speed_) {
+      way_.set_speed(advisory_speed_);
+    } else if (has_max_speed_ && max_speed_ != kUnlimitedSpeedLimit) {
       // don't use unlimited speed limit for default edge speed
-      w.set_speed(max_speed);
-    } else if (has_default_speed && !w.forward_tagged_speed() && !w.backward_tagged_speed()) {
-      w.set_speed(default_speed);
+      way_.set_speed(max_speed_);
+    } else if (has_default_speed_ && !way_.forward_tagged_speed() && !way_.backward_tagged_speed()) {
+      way_.set_speed(default_speed_);
     }
 
     // set the speed limit
-    if (has_max_speed) {
-      w.set_speed_limit(max_speed);
+    if (has_max_speed_) {
+      way_.set_speed_limit(max_speed_);
     }
 
     // I hope this does not happen, but it probably will (i.e., user sets forward speed
     // and not the backward speed and vice versa.)
-    if (w.forward_tagged_speed() && !w.backward_tagged_speed()) {
-      if (!w.oneway()) {
-        w.set_backward_speed(w.forward_speed());
-        w.set_backward_tagged_speed(true);
+    if (way_.forward_tagged_speed() && !way_.backward_tagged_speed()) {
+      if (!way_.oneway()) {
+        way_.set_backward_speed(way_.forward_speed());
+        way_.set_backward_tagged_speed(true);
       } else // fallback to default speed.
-        w.set_speed(default_speed);
-    } else if (!w.forward_tagged_speed() && w.backward_tagged_speed()) {
-      if (!w.oneway()) {
-        w.set_forward_speed(w.backward_speed());
-        w.set_forward_tagged_speed(true);
+        way_.set_speed(default_speed_);
+    } else if (!way_.forward_tagged_speed() && way_.backward_tagged_speed()) {
+      if (!way_.oneway()) {
+        way_.set_forward_speed(way_.backward_speed());
+        way_.set_forward_tagged_speed(true);
       } else // fallback to default speed.
-        w.set_speed(default_speed);
+        way_.set_speed(default_speed_);
     }
 
     // default to drive on right.
-    w.set_drive_on_right(true);
+    way_.set_drive_on_right(true);
 
     // ferries / auto trains need to be set to highway cut off in config.
-    if (w.ferry() || w.rail()) {
-      w.set_road_class(highway_cutoff_rc_);
+    if (way_.ferry() || way_.rail()) {
+      way_.set_road_class(highway_cutoff_rc_);
     }
 
     // Delete the name from from name field if it exists in the ref.
-    if (!name.empty() && w.ref_index()) {
-      std::vector<std::string> names = GetTagTokens(name);
-      std::vector<std::string> refs = GetTagTokens(osmdata_.name_offset_map.name(w.ref_index()));
+    if (!name_.empty() && way_.ref_index()) {
+      std::vector<std::string> names = GetTagTokens(name_);
+      std::vector<std::string> refs = GetTagTokens(osmdata_.name_offset_map.name(way_.ref_index()));
       bool bFound = false;
 
       std::string tmp;
@@ -1332,24 +1427,24 @@ public:
         bFound = false;
       }
       if (!tmp.empty()) {
-        w.set_name_index(osmdata_.name_offset_map.index(tmp));
+        way_.set_name_index(osmdata_.name_offset_map.index(tmp));
       }
     } else {
-      w.set_name_index(osmdata_.name_offset_map.index(name));
+      way_.set_name_index(osmdata_.name_offset_map.index(name_));
     }
 
     // Infer cul-de-sac if a road edge is a loop and is low classification.
-    if (!w.roundabout() && loop_nodes_.size() != nodes.size() && w.use() == Use::kRoad &&
-        w.road_class() > RoadClass::kTertiary) {
-      w.set_use(Use::kCuldesac);
+    if (!way_.roundabout() && loop_nodes_.size() != nodes.size() && way_.use() == Use::kRoad &&
+        way_.road_class() > RoadClass::kTertiary) {
+      way_.set_use(Use::kCuldesac);
     }
 
-    if (has_user_tags) {
-      w.set_has_user_tags(true);
-      access_->push_back(access);
+    if (has_user_tags_) {
+      way_.set_has_user_tags(true);
+      access_->push_back(osm_access_);
     }
     // Add the way to the list
-    ways_->push_back(w);
+    ways_->push_back(way_);
   }
 
   virtual void relation_callback(const uint64_t osmid,
@@ -1784,6 +1879,24 @@ public:
     complex_restrictions_to_.reset(complex_restrictions_to);
     bss_nodes_.reset(bss_nodes);
   }
+
+  // WayCallback tag handlers
+  using TagHandler = std::function<void()>;
+  std::unordered_map<std::string, TagHandler> tag_handlers_;
+  // Tag handlers capture these fields
+  OSMWay way_;
+  std::pair<std::string, std::string> tag_;
+  uint64_t osmid_;
+  float default_speed_ = 0.0f, max_speed_ = 0.0f;
+  float average_speed_ = 0.0f, advisory_speed_ = 0.0f;
+  bool has_default_speed_ = false, has_max_speed_ = false;
+  bool has_average_speed_ = false, has_advisory_speed_ = false;
+  bool has_surface_ = true;
+  bool has_surface_tag_ = true;
+  OSMAccess osm_access_;
+  bool has_user_tags_ = false;
+  std::string ref_, int_ref_, direction_, int_direction_;
+  std::string name_;
 
   // Configuration option to include driveways
   bool include_driveways_;
