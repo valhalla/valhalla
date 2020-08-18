@@ -279,6 +279,7 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
     COMMAND
       LOCPATH=${VALHALLA_SOURCE_DIR}/locales
       PYTHONPATH=src/bindings/python
+      ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
       /bin/bash -c "${PYTHON_EXECUTABLE} ${VALHALLA_SOURCE_DIR}/test/bindings/python/utrecht-test.py > test/python_valhalla.log"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
