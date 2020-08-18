@@ -33,7 +33,7 @@ public:
    * Constructor.
    * @param  options Request options in a pbf
    */
-  SimpleCost(const Options& options) : DynamicCost(options, TravelMode::kDrive) {
+  SimpleCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kDrive) {
   }
 
   ~SimpleCost() {
@@ -45,11 +45,11 @@ public:
 
   bool Allowed(const DirectedEdge* edge,
                const EdgeLabel& pred,
-               const GraphTile*& tile,
+               const GraphTile* tile,
                const GraphId& edgeid,
                const uint64_t current_time,
                const uint32_t tz_index,
-               bool& time_restricted) const {
+               int& restriction_idx) const {
     if (!(edge->forwardaccess() & kAutoAccess) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (pred.restrictions() & (1 << edge->localedgeidx())) ||
@@ -63,11 +63,11 @@ public:
   bool AllowedReverse(const DirectedEdge* edge,
                       const EdgeLabel& pred,
                       const DirectedEdge* opp_edge,
-                      const GraphTile*& tile,
+                      const GraphTile* tile,
                       const GraphId& opp_edgeid,
                       const uint64_t current_time,
                       const uint32_t tz_index,
-                      bool& has_time_restrictions) const {
+                      int& restriction_idx) const {
     if (!(opp_edge->forwardaccess() & kAutoAccess) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
@@ -123,7 +123,7 @@ public:
   }
 };
 
-cost_ptr_t CreateSimpleCost(const Options& options) {
+cost_ptr_t CreateSimpleCost(const CostingOptions& options) {
   return std::make_shared<SimpleCost>(options);
 }
 
@@ -199,7 +199,7 @@ const auto config = json_to_pt(R"({
     "loki":{
       "actions":["sources_to_targets"],
       "logging":{"long_request": 100},
-      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
+      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
     },
     "service_limits": {
       "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
@@ -272,12 +272,14 @@ TEST(Matrix, test_matrix) {
 
   GraphReader reader(config.get_child("mjolnir"));
 
-  cost_ptr_t costing = CreateSimpleCost(request.options());
+  sif::mode_costing_t mode_costing;
+  mode_costing[0] = CreateSimpleCost(
+      request.options().costing_options(static_cast<int>(request.options().costing())));
 
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results;
   results = cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                       reader, &costing, TravelMode::kDrive, 400000.0);
+                                       reader, mode_costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
         << "result " + std::to_string(i) + "'s distance is not close enough" +
@@ -290,7 +292,7 @@ TEST(Matrix, test_matrix) {
 
   TimeDistanceMatrix timedist_matrix;
   results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                           reader, &costing, TravelMode::kDrive, 400000.0);
+                                           reader, mode_costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
         << "result " + std::to_string(i) + "'s distance is not equal to" +
@@ -314,12 +316,14 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
 
   GraphReader reader(config.get_child("mjolnir"));
 
-  cost_ptr_t costing = CreateSimpleCost(request.options());
+  sif::mode_costing_t mode_costing;
+  mode_costing[0] = CreateSimpleCost(
+      request.options().costing_options(static_cast<int>(request.options().costing())));
 
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results;
   results = cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                       reader, &costing, TravelMode::kDrive, 400000.0);
+                                       reader, mode_costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_EQ(results[i].dist, matrix_answers[i].dist)
         << "result " + std::to_string(i) +
@@ -332,7 +336,7 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
 
   TimeDistanceMatrix timedist_matrix;
   results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                           reader, &costing, TravelMode::kDrive, 400000.0);
+                                           reader, mode_costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_EQ(results[i].dist, matrix_answers[i].dist)
         << "result " + std::to_string(i) +

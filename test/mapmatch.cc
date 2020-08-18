@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <random>
 #include <utility>
@@ -80,7 +81,7 @@ const auto conf = json_to_pt(R"({
     "loki":{
       "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
       "logging":{"long_request": 100},
-      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
+      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
     },
     "thor":{"logging":{"long_request": 110}},
     "skadi":{"actons":["height"],"logging":{"long_request": 5}},
@@ -163,9 +164,6 @@ std::string output_shape(const valhalla::Api& api) {
 }
 
 void compare_results(const valhalla::Api& expected, const valhalla::Api& result) {
-  std::cout << output_shape(expected) << std::endl;
-  std::cout << output_shape(result) << std::endl;
-
   // check the number of routes match
   ASSERT_EQ(result.trip().routes_size(), expected.trip().routes_size())
       << "Expected " << expected.trip().routes_size() << " routes but got "
@@ -183,8 +181,8 @@ void compare_results(const valhalla::Api& expected, const valhalla::Api& result)
     for (int l = 0; l < route.legs_size(); ++l) {
       const auto& leg = route.legs(l);
 
-      auto expected_seconds = leg.node().rbegin()->elapsed_time();
-      auto answer_seconds = leg_answer->node().rbegin()->elapsed_time();
+      auto expected_seconds = leg.node().rbegin()->cost().elapsed_cost().seconds();
+      auto answer_seconds = leg_answer->node().rbegin()->cost().elapsed_cost().seconds();
       ASSERT_NEAR(expected_seconds, answer_seconds, .1)
           << "Expected leg with elapsed time " << expected_seconds << " but got " << answer_seconds;
 
@@ -229,7 +227,6 @@ TEST(Mapmatch, test_matcher) {
     // get a route shape
     PointLL start, end;
     auto test_case = make_test_case(start, end);
-    std::cout << test_case << std::endl;
     boost::property_tree::ptree route;
     std::string route_json;
     try {
@@ -307,7 +304,6 @@ TEST(Mapmatch, test_matcher) {
                                  matched_edges.end() - 1);
     if (walked_it == walked_edges.end()) {
       if (looped) {
-        std::cout << "route had a possible loop" << std::endl;
         continue;
       }
       auto decoded_match = midgard::decode<std::vector<PointLL>>(matched.get<std::string>("shape"));
@@ -327,7 +323,6 @@ TEST(Mapmatch, test_matcher) {
       std::cout << geojson << std::endl;
       FAIL() << "The match did not match the walk";
     }
-    std::cout << "Iteration " << tested << " complete" << std::endl;
     ++tested;
   }
 }
@@ -724,7 +719,6 @@ TEST(Mapmatch, test_topk_fork_alternate) {
           {"lat":52.08511,"lon":5.15085,"accuracy":10,"time":2},
           {"lat":52.08533,"lon":5.15109,"accuracy":20,"time":4},
           {"lat":52.08539,"lon":5.15100,"accuracy":20,"time":6}]})");
-  std::cout << json << std::endl;
   auto matched = json_to_pt(json);
 
   /*** Primary path - left at the fork
@@ -1042,8 +1036,8 @@ TEST(Mapmatch, test_leg_duration_trimming) {
       EXPECT_EQ(rlegs.size(), mlegs.size()) << "Number of legs differs";
       printf("Route %zu\n", i);
       for (size_t j = 0; j < rlegs.size(); ++j) {
-        auto rtime = rlegs.Get(j).node().rbegin()->elapsed_time();
-        auto mtime = mlegs.Get(j).node().rbegin()->elapsed_time();
+        auto rtime = rlegs.Get(j).node().rbegin()->cost().elapsed_cost().seconds();
+        auto mtime = mlegs.Get(j).node().rbegin()->cost().elapsed_cost().seconds();
         printf("r: %.2f %s\n", rtime, rlegs.Get(j).shape().c_str());
         printf("m: %.2f %s\n", mtime, mlegs.Get(j).shape().c_str());
         EXPECT_NEAR(rtime, mtime, 0.1) << "Leg time differs";
@@ -1106,9 +1100,15 @@ TEST(Mapmatch, test_discontinuity_on_same_edge) {
             R"(,"node_snap_tolerance":0}]})";
 
         auto single_route_api = tester.route(route_test_case);
-        double route_duration =
-            single_route_api.trip().routes(0).legs(0).node().rbegin()->elapsed_time();
-        double duration = leg.node().rbegin()->elapsed_time();
+        double route_duration = single_route_api.trip()
+                                    .routes(0)
+                                    .legs(0)
+                                    .node()
+                                    .rbegin()
+                                    ->cost()
+                                    .elapsed_cost()
+                                    .seconds();
+        double duration = leg.node().rbegin()->cost().elapsed_cost().seconds();
         ASSERT_NEAR(duration, route_duration, .1) << "Expected legs with duration " +
                                                          std::to_string(route_duration) +
                                                          " but got " + std::to_string(duration);
@@ -1241,21 +1241,19 @@ TEST(Mapmatch, test_loop_matching) {
 TEST(Mapmatch, test_intersection_matching) {
   std::vector<std::string> test_cases = {
       R"({"shape":[
-          {"lat": 52.0981267, "lon": 5.1296180, "type": "break", "node_snap_tolerance": 0},
-          {"lat": 52.0981280, "lon": 5.1297250, "type": "break", "node_snap_tolerance": 0}],
+          {"lat": 52.098126, "lon": 5.129618, "type": "break", "node_snap_tolerance": 0},
+          {"lat": 52.098128, "lon": 5.129725, "type": "break", "node_snap_tolerance": 0}],
           "costing":"auto","shape_match":"map_snap"})",
       R"({"shape":[
-          {"lat": 52.0981346, "lon": 5.1300437, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.0981250, "lon": 5.1309460, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.0980642, "lon": 5.1314993, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.0980870, "lon": 5.1315040, "type": "break", "node_snap_tolerance": 5}],
+          {"lat": 52.098134, "lon": 5.130043, "type": "break", "node_snap_tolerance": 5},
+          {"lat": 52.098125, "lon": 5.130946, "type": "break", "node_snap_tolerance": 5},
+          {"lat": 52.098064, "lon": 5.131499, "type": "break", "node_snap_tolerance": 5},
+          {"lat": 52.098087, "lon": 5.131504, "type": "break", "node_snap_tolerance": 5}],
           "costing":"auto","shape_match":"map_snap"})",
       R"({"shape":[
-          {"lat": 52.0951641, "lon": 5.1285609, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.0952055, "lon": 5.1292756, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.0952520, "lon": 5.1301350, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.0952940, "lon": 5.1309060, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.0944788, "lon": 5.1304066, "type": "break", "node_snap_tolerance": 5}],
+          {"lat": 52.095164, "lon": 5.128560, "type": "break", "node_snap_tolerance": 5},
+          {"lat": 52.095294, "lon": 5.130906, "type": "break", "node_snap_tolerance": 5},
+          {"lat": 52.094478, "lon": 5.130406, "type": "break", "node_snap_tolerance": 5}],
           "costing":"auto","shape_match":"map_snap"})"};
 
   api_tester tester;
@@ -1413,7 +1411,6 @@ TEST(Mapmatch, test_breakage_distance_error_handling) {
   // tests expected error_code for trace_route edge_walk
   auto expected_error_code = 172;
   tyr::actor_t actor(conf, true);
-
   try {
     auto response = json_to_pt(actor.trace_route(
         R"({"costing":"auto","shape_match":"edge_walk","shape":[
@@ -1428,10 +1425,82 @@ TEST(Mapmatch, test_breakage_distance_error_handling) {
   // If we get here then fail the test!
   FAIL() << "Expected trace_route breakage distance exceed exception was not found";
 }
+
+// Spot check OpenLR linear references when asked for
+TEST(Mapmatch, openlr_parameter_true_osrm_api) {
+  // clang-format off
+  const std::string request = R"({"costing":"auto","linear_references": true,"format":"osrm","shape_match":"map_snap","shape":[{"lon":5.08531221,"lat":52.0938563,"type":"break"},{"lon":5.0865867,"lat":52.0930211,"type":"break"}]})";
+  // clang-format on
+  tyr::actor_t actor(conf, true);
+  const auto& response = json_to_pt(actor.trace_route(request));
+  const auto& matches = response.get_child("matchings");
+  EXPECT_EQ(matches.size(), 1);
+  const std::vector<std::string>& expected = {
+      "CwOduyULYhtpAAAV//0bGQ==", "CwOdxCULYBtqAAAM//4bGg==", "CwOdySULXxtrAAAf//EbGw==",
+      "CwOd1yULVxtrAQBV/9AbGw==", "CwOduyULYj/gAAACAAA/EA==",
+  };
+  for (const auto& match : matches) {
+    const auto& references = match.second.get_child("linear_references");
+    EXPECT_EQ(references.size(), 5);
+    for (const auto& reference : references) {
+      const std::string& actual = reference.second.get_value<std::string>();
+      EXPECT_TRUE(std::find(expected.begin(), expected.end(), actual) != expected.end());
+    }
+  }
+}
+
+// Replica of above test, but uses the Valhalla's native API
+TEST(Mapmatch, openlr_parameter_true_native_api) {
+  // clang-format off
+  const std::string request = R"({"costing":"auto","linear_references": true,"shape_match":"map_snap","shape":[{"lon":5.08531221,"lat":52.0938563,"type":"break"},{"lon":5.0865867,"lat":52.0930211,"type":"break"}]})";
+  // clang-format on
+  tyr::actor_t actor(conf, true);
+  const auto& response = json_to_pt(actor.trace_route(request));
+  const std::vector<std::string>& expected = {
+      "CwOduyULYhtpAAAV//0bGQ==", "CwOdxCULYBtqAAAM//4bGg==", "CwOdySULXxtrAAAf//EbGw==",
+      "CwOd1yULVxtrAQBV/9AbGw==", "CwOduyULYj/gAAACAAA/EA==",
+  };
+  const auto& references = response.get_child("trip.linear_references");
+  EXPECT_EQ(references.size(), 5);
+  for (const auto& reference : references) {
+    const std::string& actual = reference.second.get_value<std::string>();
+    EXPECT_TRUE(std::find(expected.begin(), expected.end(), actual) != expected.end());
+  }
+}
+
+// Verify that OpenLR references are not present in API response when not asked for
+TEST(Mapmatch, openlr_parameter_falsy_api) {
+  const std::vector<std::string> requests = {
+      R"({"costing":"auto","linear_references":false,"format":"osrm","shape_match":"map_snap","shape":[{"lon":5.08531221,"lat":52.0938563,"type":"break"},{"lon":5.0865867,"lat":52.0930211,"type":"break"}]})",
+      R"({"costing":"auto","format":"osrm","shape_match":"map_snap","shape":[{"lon":5.08531221,"lat":52.0938563,"type":"break"},{"lon":5.0865867,"lat":52.0930211,"type":"break"}]})",
+  };
+  tyr::actor_t actor(conf, true);
+  for (const auto& request : requests) {
+    const auto& response = json_to_pt(actor.trace_route(request));
+    const auto& matches = response.get_child("matchings");
+    EXPECT_EQ(matches.size(), 1);
+    for (const auto& match : matches) {
+      EXPECT_THROW(match.second.get_child("linear_references"), std::runtime_error);
+    }
+  }
+}
+
+// Replica of above test, but uses the Valhalla's native API
+TEST(Mapmatch, openlr_parameter_falsy_native_api) {
+  const std::vector<std::string> requests = {
+      R"({"costing":"auto","linear_references":false,"shape_match":"map_snap","shape":[{"lon":5.08531221,"lat":52.0938563,"type":"break"},{"lon":5.0865867,"lat":52.0930211,"type":"break"}]})",
+      R"({"costing":"auto","shape_match":"map_snap","shape":[{"lon":5.08531221,"lat":52.0938563,"type":"break"},{"lon":5.0865867,"lat":52.0930211,"type":"break"}]})",
+  };
+  tyr::actor_t actor(conf, true);
+  for (const auto& request : requests) {
+    const auto& response = json_to_pt(actor.trace_route(request));
+    EXPECT_THROW(response.get_child("trip.linear_references"), std::runtime_error);
+  }
+}
 } // namespace
 
 int main(int argc, char* argv[]) {
-  // midgard::logging::Configure({{"type", ""}}); // silence logs
+  midgard::logging::Configure({{"type", ""}});
   if (argc > 1 && std::string(argv[1]).find("gtest") == std::string::npos) {
     if (argc > 1)
       seed = std::stoi(argv[1]);

@@ -234,6 +234,29 @@ TEST(UtilMidgard, TestResampleDuplicate) {
   }
 }
 
+TEST(UtilMidgard, TestResampleNaN) {
+  std::vector<PointLL> polyline =
+      {{7.352027, 61.509228}, {7.351497, 61.509380}, {7.351492, 61.509380}, {7.351396, 61.509392},
+       {7.351055, 61.509422}, {7.350566, 61.509468}, {7.350335, 61.509457}, {7.349923, 61.509434},
+       {7.349367, 61.509399}, {7.348414, 61.509300}, {7.348321, 61.509289}, {7.347424, 61.509171},
+       {7.346537, 61.508907}, {7.346060, 61.508823}, {7.345624, 61.508743}, {7.344470, 61.508533},
+       {7.343616, 61.508457}, {7.342905, 61.508396}, {7.342904, 61.508396}, {7.342876, 61.508396},
+       {7.342579, 61.508369}, {7.341682, 61.508293}, {7.341307, 61.508297}, {7.340835, 61.508335},
+       {7.340475, 61.508385}, {7.339778, 61.508404}, {7.339155, 61.508469}, {7.338962, 61.508476},
+       {7.338703, 61.508492}, {7.337630, 61.508873}, {7.337096, 61.509018}, {7.337174, 61.509315},
+       {7.337319, 61.509407}, {7.337530, 61.509678}, {7.337515, 61.509705}, {7.337448, 61.509823},
+       {7.337380, 61.509937}, {7.337365, 61.509964}, {7.337200, 61.510159}, {7.337186, 61.510174},
+       {7.336964, 61.510437}, {7.336693, 61.510567}};
+  auto l = length(polyline);
+  uint32_t exp = 20;
+  std::vector<PointLL> resampled =
+      valhalla::midgard::uniform_resample_spherical_polyline(polyline, l, exp);
+  if (resampled.size() != exp) {
+    throw std::runtime_error(
+        "uniform_resample_spherical_polyline does not yield expected vertex count");
+  }
+}
+
 TEST(UtilMidgard, TestIterable) {
   int a[] = {1, 2, 3, 4, 5};
   char b[] = {'a', 'b', 'c', 'd', 'e'};
@@ -268,7 +291,7 @@ TEST(UtilMidgard, TestTrimPolyline) {
   std::vector<Point> line{{0, 0}, {0, 0}, {20, 20}, {31, 1}, {31, 1}, {12, 23}, {7, 2}, {7, 2}};
 
   auto clip = trim_polyline(line.begin(), line.end(), 0.f, 1.f);
-  EXPECT_EQ(length(clip.begin(), clip.end()), length(line.begin(), line.end()))
+  EXPECT_FLOAT_EQ(length(clip.begin(), clip.end()), length(line.begin(), line.end()))
       << "Should not clip anything if range is [0, 1]";
 
   clip = trim_polyline(line.begin(), line.end(), 0.f, 0.1f);
@@ -307,6 +330,220 @@ TEST(UtilMidgard, TestTrimPolyline) {
       << "nothing should be clipped since [1, 1]";
 
   EXPECT_EQ(trim_polyline(line.begin(), line.end(), 1.f, 2.f).front(), Point(7, 2))
+      << "nothing should be clipped since out of range [1, 2]";
+
+  EXPECT_TRUE(trim_polyline(line.begin(), line.end(), 1.001f, 2.f).empty())
+      << "nothing should be clipped since out of range [1.001, 2]";
+
+  EXPECT_TRUE(trim_polyline(line.begin(), line.end(), 0.5f, 0.1f).empty())
+      << "nothing should be clipped since empty set [0.5, 0.1]";
+
+  // Make sure length returns 0 when iterator is equal
+  EXPECT_EQ(length(clip.begin(), clip.begin()), 0.0f) << "incorrect length when iterators are equal";
+}
+
+TEST(UtilMidgard, TestTrimPolylineWithDoubles) {
+  using Point = valhalla::midgard::PointXY<double>;
+
+  std::vector<Point> line{{0, 0}, {0, 0}, {20, 20}, {31, 1}, {31, 1}, {12, 23}, {7, 2}, {7, 2}};
+
+  auto clip = trim_polyline(line.begin(), line.end(), 0.f, 1.f);
+  EXPECT_DOUBLE_EQ(length(clip.begin(), clip.end()), length(line.begin(), line.end()))
+      << "Should not clip anything if range is [0, 1]";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.f, 0.1f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.1f, 1e-5)
+      << "10% portion should be clipped";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.5f, 1.f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.5f, 1e-5)
+      << "50% portion should be clipped";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.5f, 0.7f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.2f, 1e-5)
+      << "0.2 portion should be clipped";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.65f, 0.7f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.05f, 1e-5)
+      << "5% portion should be clipped";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.4999f, 0.5f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.0001f, 1e-5)
+      << "0.1% portion should be clipped";
+
+  EXPECT_TRUE(trim_polyline(line.begin(), line.end(), 0.65f, 0.5f).empty())
+      << "nothing should be clipped since [0.65, 0.5]";
+
+  EXPECT_TRUE(trim_polyline(line.begin(), line.end(), -2.f, -1.f).empty())
+      << "nothing should be clipped since negative [-2, -1]";
+
+  EXPECT_EQ(trim_polyline(line.begin(), line.end(), 0.f, 0.f).back(), Point(0, 0))
+      << "nothing should be clipped since empty set [0, 0]";
+
+  EXPECT_EQ(trim_polyline(line.begin(), line.end(), -1.f, 0.f).back(), Point(0, 0))
+      << "nothing should be clipped since out of range [-1, 0]";
+
+  EXPECT_EQ(trim_polyline(line.begin(), line.end(), 1.f, 1.f).front(), Point(7, 2))
+      << "nothing should be clipped since [1, 1]";
+
+  EXPECT_EQ(trim_polyline(line.begin(), line.end(), 1.f, 2.f).front(), Point(7, 2))
+      << "nothing should be clipped since out of range [1, 2]";
+
+  EXPECT_TRUE(trim_polyline(line.begin(), line.end(), 1.001f, 2.f).empty())
+      << "nothing should be clipped since out of range [1.001, 2]";
+
+  EXPECT_TRUE(trim_polyline(line.begin(), line.end(), 0.5f, 0.1f).empty())
+      << "nothing should be clipped since empty set [0.5, 0.1]";
+
+  // Make sure length returns 0 when iterator is equal
+  EXPECT_EQ(length(clip.begin(), clip.begin()), 0.0f) << "incorrect length when iterators are equal";
+}
+
+TEST(UtilMidgard, TestTrimPolylineWithFloatGeoPoint) {
+  using Point = valhalla::midgard::GeoPoint<double>;
+
+  Point a = {-114.15266990661621, 51.037804967049205};
+  Point b = {-114.15078163146973, 51.03777798155202};
+  Point c = {-114.15073871612549, 51.03696840932836};
+  Point d = {-114.14949417114258, 51.036995395297026};
+  Point e = {-114.14897918701172, 51.03637471404114};
+
+  std::vector<Point> line{a, a, b, c, c, d, e, e};
+
+  // Floating point numbers can struggle to store lots of precision
+  // Worst case is they may quantized at 1.69m intervals (for an epsilon change).
+  //  https://stackoverflow.com/a/28420164
+  // The length comparisons below do better than that, but not a lot.
+  constexpr double MAX_FLOAT_PRECISION = 0.05; // Should be good for 5cm at this lon/lat
+
+  auto clip = trim_polyline(line.begin(), line.end(), 0.f, 1.f);
+  EXPECT_DOUBLE_EQ(length(clip.begin(), clip.end()), length(line.begin(), line.end()))
+      << "Should not clip anything if range is [0, 1]";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.f, 0.1f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.1f,
+              MAX_FLOAT_PRECISION)
+      << "10% portion should be clipped";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.5f, 1.f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.5f,
+              MAX_FLOAT_PRECISION)
+      << "50% portion should be clipped";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.5f, 0.7f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.2f,
+              MAX_FLOAT_PRECISION)
+      << "0.2 portion should be clipped";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.65f, 0.7f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.05f,
+              MAX_FLOAT_PRECISION)
+      << "5% portion should be clipped";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.4999f, 0.5f);
+#if __i386__
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.0001f, 0.07)
+      << "0.1% portion should be clipped";
+#else
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.0001f,
+              MAX_FLOAT_PRECISION)
+      << "0.1% portion should be clipped";
+#endif
+
+  EXPECT_TRUE(trim_polyline(line.begin(), line.end(), 0.65f, 0.5f).empty())
+      << "nothing should be clipped since [0.65, 0.5]";
+
+  EXPECT_TRUE(trim_polyline(line.begin(), line.end(), -2.f, -1.f).empty())
+      << "nothing should be clipped since negative [-2, -1]";
+
+  EXPECT_EQ(trim_polyline(line.begin(), line.end(), 0.f, 0.f).back(), a)
+      << "nothing should be clipped since empty set [0, 0]";
+
+  EXPECT_EQ(trim_polyline(line.begin(), line.end(), -1.f, 0.f).back(), a)
+      << "nothing should be clipped since out of range [-1, 0]";
+
+  EXPECT_EQ(trim_polyline(line.begin(), line.end(), 1.f, 1.f).front(), e)
+      << "nothing should be clipped since [1, 1]";
+
+  EXPECT_EQ(trim_polyline(line.begin(), line.end(), 1.f, 2.f).front(), e)
+      << "nothing should be clipped since out of range [1, 2]";
+
+  EXPECT_TRUE(trim_polyline(line.begin(), line.end(), 1.001f, 2.f).empty())
+      << "nothing should be clipped since out of range [1.001, 2]";
+
+  EXPECT_TRUE(trim_polyline(line.begin(), line.end(), 0.5f, 0.1f).empty())
+      << "nothing should be clipped since empty set [0.5, 0.1]";
+
+  // Make sure length returns 0 when iterator is equal
+  EXPECT_EQ(length(clip.begin(), clip.begin()), 0.0f) << "incorrect length when iterators are equal";
+}
+
+TEST(UtilMidgard, TestTrimPolylineWithDoubleGeoPoint) {
+  using Point = valhalla::midgard::GeoPoint<double>;
+
+  Point a = {-114.15266990661621, 51.037804967049205};
+  Point b = {-114.15078163146973, 51.03777798155202};
+  Point c = {-114.15073871612549, 51.03696840932836};
+  Point d = {-114.14949417114258, 51.036995395297026};
+  Point e = {-114.14897918701172, 51.03637471404114};
+
+  std::vector<Point> line{a, a, b, c, c, d, e, e};
+
+  constexpr double MAX_DOUBLE_PRECISION = 0.0002; // 0.2mm at this lon/lat using doubles
+
+  auto clip = trim_polyline(line.begin(), line.end(), 0.f, 1.f);
+  EXPECT_DOUBLE_EQ(length(clip.begin(), clip.end()), length(line.begin(), line.end()))
+      << "Should not clip anything if range is [0, 1]";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.f, 0.1f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.1,
+              MAX_DOUBLE_PRECISION)
+      << "10% portion should be clipped";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.5f, 1.f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.5,
+              MAX_DOUBLE_PRECISION)
+      << "50% portion should be clipped";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.5f, 0.7f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.2,
+              MAX_DOUBLE_PRECISION)
+      << "0.2 portion should be clipped";
+
+  clip = trim_polyline(line.begin(), line.end(), 0.65f, 0.7f);
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.05,
+              MAX_DOUBLE_PRECISION)
+      << "5% portion should be clipped";
+
+  // Special note: PointLL uses the law of cosines to measure distances.
+  // Our test ends up with points about 3cm apart, which is too close to accurately
+  // measure with the law of cosines.  We customize the threshold here to allow
+  // for this.  Precision is slightly worse on x86-32 by a few cm
+  clip = trim_polyline(line.begin(), line.end(), 0.4999, 0.5);
+#if __i386__
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.0001f, 0.07)
+      << "0.1% portion should be clipped";
+#else
+  EXPECT_NEAR(length(clip.begin(), clip.end()), length(line.begin(), line.end()) * 0.0001f, 0.04)
+      << "0.1% portion should be clipped";
+#endif
+
+  EXPECT_TRUE(trim_polyline(line.begin(), line.end(), 0.65f, 0.5f).empty())
+      << "nothing should be clipped since [0.65, 0.5]";
+
+  EXPECT_TRUE(trim_polyline(line.begin(), line.end(), -2.f, -1.f).empty())
+      << "nothing should be clipped since negative [-2, -1]";
+
+  EXPECT_EQ(trim_polyline(line.begin(), line.end(), 0.f, 0.f).back(), a)
+      << "nothing should be clipped since empty set [0, 0]";
+
+  EXPECT_EQ(trim_polyline(line.begin(), line.end(), -1.f, 0.f).back(), a)
+      << "nothing should be clipped since out of range [-1, 0]";
+
+  EXPECT_EQ(trim_polyline(line.begin(), line.end(), 1.f, 1.f).front(), e)
+      << "nothing should be clipped since [1, 1]";
+
+  EXPECT_EQ(trim_polyline(line.begin(), line.end(), 1.f, 2.f).front(), e)
       << "nothing should be clipped since out of range [1, 2]";
 
   EXPECT_TRUE(trim_polyline(line.begin(), line.end(), 1.001f, 2.f).empty())
@@ -388,7 +625,7 @@ TEST(UtilMidgard, TestExpandLocation) {
   PointLL loc(-77.0f, 39.0f);
   AABB2<PointLL> box = ExpandMeters(loc, 100);
   float area = (box.Height() * kMetersPerDegreeLat) * box.Width() *
-               DistanceApproximator::MetersPerLngDegree(loc.lat());
+               DistanceApproximator<PointLL>::MetersPerLngDegree(loc.lat());
   EXPECT_LE(area, 201.0f * 201.0f);
   EXPECT_GE(area, 199.0f * 199.0f);
 
@@ -434,6 +671,27 @@ TEST(UtilMidgard, TrimShapeEmpty) {
   std::vector<PointLL> shape;
   trim_shape(0, start_vertex, 0, end_vertex, shape);
   ASSERT_EQ(shape.size(), 0);
+}
+
+// Test cases from: https://tools.ietf.org/html/rfc4648#section-10
+TEST(UtilMidgard, Base64) {
+  // Cases: plaintext/decoded, encoded
+  std::vector<std::pair<std::string, std::string>> cases = {
+      {"", ""},
+      {"f", "Zg=="},
+      {"fo", "Zm8="},
+      {"foo", "Zm9v"},
+      {"foob", "Zm9vYg=="},
+      {"fooba", "Zm9vYmE="},
+      {"foobar", "Zm9vYmFy"},
+  };
+  for (const auto& test_case : cases) {
+    std::string decoded = test_case.first;
+    std::string encoded = test_case.second;
+    EXPECT_EQ(encode64(decoded), encoded);
+    EXPECT_EQ(decode64(encoded), decoded);
+    EXPECT_EQ(decode64(encode64(decoded)), decoded);
+  }
 }
 
 } // namespace

@@ -157,7 +157,7 @@ private:
   float bucketrange_; // Total range of costs in lower level buckets
   float bucketsize_;  // Bucket size (range of costs in same bucket)
   float inv_;         // 1/bucketsize (so we can avoid division)
-  float mincost_;     // Minimum cost within the low level buckets
+  double mincost_;    // Minimum cost within the low level buckets
   float maxcost_;     // Above this goes into overflow bucket
   float currentcost_; // Current cost
 

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <valhalla/baldr/traffictile.h>
+#include "baldr/traffictile.h"
 
 TEST(Traffic, TileConstruction) {
   using namespace valhalla::baldr;
@@ -8,65 +8,76 @@ TEST(Traffic, TileConstruction) {
 // Example of how data would be packed into an real tile on disk
 #pragma pack(push, 1)
   struct TestTile {
-    traffic::TileHeader header;
-    traffic::Speed speed1;
-    traffic::Speed speed2;
-    traffic::Speed speed3;
+    TrafficTileHeader header;
+    TrafficSpeed speed1;
+    TrafficSpeed speed2;
+    TrafficSpeed speed3;
   };
 #pragma pack(pop)
 
   TestTile testdata = {};
 
   testdata.header.directed_edge_count = 3;
-  testdata.speed3.speed_kmh = 99;
-  testdata.speed3.age_bucket = traffic::MAX_SPEED_AGE_BUCKET;
+  testdata.header.traffic_tile_version = TRAFFIC_TILE_VERSION;
+  testdata.speed3.overall_speed = 98 >> 1;
+  testdata.speed3.speed1 = 98 >> 1;
+  testdata.speed3.speed2 = UNKNOWN_TRAFFIC_SPEED_RAW;
+  testdata.speed3.speed3 = UNKNOWN_TRAFFIC_SPEED_RAW;
+  testdata.speed3.breakpoint1 = 255;
 
-  traffic::Tile tile(reinterpret_cast<char*>(&testdata));
+  TrafficTile tile(reinterpret_cast<char*>(&testdata));
 
-  auto const volatile& speed = tile.getTrafficForDirectedEdge(2);
+  auto const volatile& speed = tile.trafficspeed(2);
   EXPECT_TRUE(speed.valid());
   EXPECT_FALSE(speed.closed());
-  auto speed_val =
-      speed.speed_kmh; // have to make a copy as gtest can't accept a reference to a bitfield
-  EXPECT_EQ(speed_val, 99);
+  EXPECT_EQ(speed.get_overall_speed(), 98);
+  EXPECT_EQ(speed.get_speed(0), 98);
+  EXPECT_EQ(speed.get_speed(1), UNKNOWN_TRAFFIC_SPEED_RAW << 1);
+
+  // Verify the version
+  EXPECT_EQ(3, TRAFFIC_TILE_VERSION);
+  // Test with an invalid version
+  testdata.header.traffic_tile_version = 78;
+  auto const volatile& invalid_speed = tile.trafficspeed(2);
+  EXPECT_FALSE(invalid_speed.valid());
 }
 
 TEST(Traffic, NullTileConstruction) {
   using namespace valhalla::baldr;
-  traffic::Tile tile(nullptr); // Should not segfault
+  TrafficTile tile(nullptr); // Should not segfault
 
-  auto volatile& speed = tile.getTrafficForDirectedEdge(99);
+  auto volatile& speed = tile.trafficspeed(99);
   EXPECT_FALSE(speed.valid());
   EXPECT_FALSE(speed.closed());
 }
 
 TEST(Traffic, SpeedValid) {
   using namespace valhalla::baldr;
-  traffic::Speed speed = {};
+  TrafficSpeed speed = {};
   EXPECT_FALSE(speed.valid());
 
-  speed.speed_kmh = 1;
-  EXPECT_FALSE(speed.valid());
-  EXPECT_FALSE(speed.closed());
-
-  speed.speed_kmh = 0;
-  speed.congestion_level = 1;
+  speed.speed1 = 1;
   EXPECT_FALSE(speed.valid());
   EXPECT_FALSE(speed.closed());
 
-  speed.speed_kmh = 0;
-  speed.congestion_level = 4;
+  speed.speed1 = 0;
+  speed.congestion1 = 1;
   EXPECT_FALSE(speed.valid());
   EXPECT_FALSE(speed.closed());
 
-  speed.speed_kmh = 0;
-  speed.age_bucket = traffic::MAX_SPEED_AGE_BUCKET;
+  speed.speed1 = 0;
+  speed.congestion1 = 4;
+  EXPECT_FALSE(speed.valid());
+  EXPECT_FALSE(speed.closed());
+
+  speed.speed1 = 0;
+  speed.breakpoint1 = 255;
   EXPECT_TRUE(speed.valid());
   EXPECT_TRUE(speed.closed());
 
   // Test wraparound
-  speed.speed_kmh = valhalla::baldr::traffic::MAX_TRAFFIC_SPEED_KPH + 1;
-  EXPECT_EQ(speed.speed_kmh, 0);
+  speed.speed1 = UNKNOWN_TRAFFIC_SPEED_RAW + 1;
+  EXPECT_EQ(speed.speed1, 0);
 }
 
 int main(int argc, char* argv[]) {

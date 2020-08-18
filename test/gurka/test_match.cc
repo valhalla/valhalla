@@ -24,9 +24,9 @@ TEST(Standalone, BasicMatch) {
 
   auto result = gurka::match(map, {"1", "2", "3", "4", "5"}, "via", "auto");
 
-  gurka::assert::osrm::expect_match(result, {"AB", "BC", "CD"});
+  gurka::assert::osrm::expect_match(result, {"AB", "CD"});
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD"});
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg::Maneuver::kStart,
-                                                DirectionsLeg::Maneuver::kContinue,
                                                 DirectionsLeg::Maneuver::kRight,
                                                 DirectionsLeg::Maneuver::kDestination});
 
@@ -43,7 +43,7 @@ TEST(Standalone, UturnMatch) {
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/uturn_match");
-
+  std::vector<std::string> expected_names;
   for (const auto& test_case : std::vector<std::pair<std::string, float>>{{"break", 90},
                                                                           {"via", 90},
                                                                           {"through", 210},
@@ -59,6 +59,8 @@ TEST(Standalone, UturnMatch) {
         DirectionsLeg::Maneuver::kUturnRight,
         DirectionsLeg::Maneuver::kDestination,
     };
+    expected_names = {"AB", "AB", "AB"};
+
     // break will have destination at the trace point
     if (test_case.first == "break") {
       expected_maneuvers = {
@@ -66,6 +68,7 @@ TEST(Standalone, UturnMatch) {
           DirectionsLeg::Maneuver::kStart, DirectionsLeg::Maneuver::kDestination,
           DirectionsLeg::Maneuver::kStart, DirectionsLeg::Maneuver::kDestination,
       };
+      expected_names = {"AB", "AB", "AB"};
     } // break through will have destinations at the trace points but will have to make uturns
     else if (test_case.first == "break_through") {
       expected_maneuvers = {
@@ -74,10 +77,32 @@ TEST(Standalone, UturnMatch) {
           DirectionsLeg::Maneuver::kDestination, DirectionsLeg::Maneuver::kStart,
           DirectionsLeg::Maneuver::kUturnRight,  DirectionsLeg::Maneuver::kDestination,
       };
+      expected_names = {"AB", "AB", "AB", "AB", "AB"};
     }
 
     gurka::assert::osrm::expect_match(result, {"AB"});
+    gurka::assert::raw::expect_path(result, expected_names);
     gurka::assert::raw::expect_maneuvers(result, expected_maneuvers);
     gurka::assert::raw::expect_path_length(result, test_case.second / 1000, 0.001);
   }
+}
+
+TEST(Standalone, UturnTrimmingAsan) {
+  const std::string ascii_map = R"(
+A--1--2--B
+         |
+         |
+D--3--4--C--5--6--E)";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}}},
+      {"BC", {{"highway", "primary"}}},
+      {"DCE", {{"highway", "primary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/uturn_asan");
+
+  auto result =
+      gurka::match(map, {"2", "6", "3"}, "via", "auto", R"({"penalize_immediate_uturn":false})");
 }

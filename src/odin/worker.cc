@@ -16,7 +16,7 @@
 #include "odin/worker.h"
 #include "tyr/serializers.h"
 
-#include <valhalla/proto/trip.pb.h>
+#include "proto/trip.pb.h"
 
 using namespace valhalla;
 using namespace valhalla::tyr;
@@ -55,7 +55,12 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
     service_worker_t::set_interrupt(&interrupt_function);
 
     // crack open the in progress request
-    request.ParseFromArray(job.front().data(), job.front().size());
+    bool success = request.ParseFromArray(job.front().data(), job.front().size());
+    if (!success) {
+      LOG_ERROR("Failed parsing pbf in Odin::Worker");
+      throw valhalla_exception_t{200,
+                                 boost::optional<std::string>("Failed parsing pbf in Odin::Worker")};
+    }
 
     // narrate them and serialize them along
     narrate(request);

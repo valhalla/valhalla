@@ -12,7 +12,7 @@ class optional:
 config = {
   'mjolnir': {
     'max_cache_size': 1000000000,
-    'id_table_size': 10000000000,
+    'id_table_size': 1300000000,
     'use_lru_mem_cache': False,
     'lru_mem_cache_hard_control': False,
     'user_agent': optional(str),
@@ -62,6 +62,7 @@ config = {
       'search_cutoff': 35000,
       'node_snap_tolerance': 5,
       'street_side_tolerance': 5,
+      'street_side_max_distance': 1000,
       'heading_tolerance': 60
     },
     'logging': {
@@ -241,6 +242,12 @@ config = {
       'max_best_paths': 4,
       'max_best_paths_shape': 100
     },
+    'bikeshare': {
+      'max_distance': 500000.0,
+      'max_locations': 50,
+      'max_matrix_distance': 200000.0,
+      'max_matrix_locations': 50
+    },
     'max_avoid_locations': 50,
     'max_reachability': 100,
     'max_radius': 200,
@@ -302,6 +309,7 @@ help_text = {
       'search_cutoff': 'The cutoff at which we will assume the input is too far away from civilisation to be worth correlating to the nearest graph elements',
       'node_snap_tolerance': 'During edge correlation this is the tolerance used to determine whether or not to snap to the intersection rather than along the street, if the snap location is within this distance from the intersection the intersection is used instead',
       'street_side_tolerance': 'If your input coordinate is less than this tolerance away from the edge centerline then we set your side of street to none otherwise your side of street will be left or right depending on direction of travel',
+      'street_side_max_distance': 'The max distance in meters that the input coordinates or display ll can be from the edge centerline for them to be used for determining the side of street. Beyond this distance the side of street is set to none',
       'heading_tolerance': 'When a heading is supplied, this is the tolerance around that heading with which we determine whether an edges heading is similar enough to match the supplied heading'
     },
     'logging': {
@@ -480,6 +488,12 @@ help_text = {
       'max_shape': 'Maximum number of input shape points',
       'max_best_paths': 'Maximum number of best paths',
       'max_best_paths_shape': 'Maximum number of input shape points when requesting multiple paths'
+    },
+    'bikeshare': {
+      'max_distance': 'Maximum b-line distance between all locations in meters',
+      'max_locations': 'Maximum number of input locations',
+      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
+      'max_matrix_locations': 'Maximum number of input locations for a matrix'
     },
     'max_avoid_locations': 'Maximum number of avoid locations to allow in a request',
     'max_reachability': 'Maximum reachability (number of nodes reachable) allowed on any one location',

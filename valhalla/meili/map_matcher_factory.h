@@ -33,21 +33,19 @@ public:
     return *candidatequery_;
   }
 
-  MapMatcher* Create(const Costing costing, const Options& options);
+  MapMatcher* Create(const Options& options);
 
   MapMatcher* Create(const Costing costing) {
-    return Create(costing, Options());
+    Options options;
+    options.set_costing(costing);
+    return Create(options);
   }
-
-  MapMatcher* Create(const Options& options);
 
   boost::property_tree::ptree MergeConfig(const Options& options);
 
   void ClearFullCache();
 
   void ClearCache();
-
-  static constexpr size_t kModeCostingCount = 8;
 
 private:
   typedef sif::cost_ptr_t (*factory_function_t)(const boost::property_tree::ptree&);
@@ -56,9 +54,9 @@ private:
 
   std::shared_ptr<baldr::GraphReader> graphreader_;
 
-  valhalla::sif::cost_ptr_t mode_costing_[kModeCostingCount];
+  valhalla::sif::mode_costing_t mode_costing_;
 
-  sif::CostFactory<sif::DynamicCost> cost_factory_;
+  sif::CostFactory cost_factory_;
 
   std::shared_ptr<CandidateGridQuery> candidatequery_;
 

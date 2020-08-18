@@ -91,17 +91,13 @@ To install on a Debian or Ubuntu system you need to install its dependencies wit
 ```bash
 sudo add-apt-repository -y ppa:valhalla-core/valhalla
 sudo apt-get update
-sudo apt-get install -y cmake make libtool pkg-config g++ gcc curl jq lcov protobuf-compiler vim-common locales libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server-dev libprotobuf-dev prime-server-bin
+sudo apt-get install -y cmake make libtool pkg-config g++ gcc curl unzip jq lcov protobuf-compiler vim-common locales libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server-dev libprotobuf-dev prime-server-bin
 #if you plan to compile with data building support, see below for more info
 sudo apt-get install -y libgeos-dev libgeos++-dev libluajit-5.1-dev libspatialite-dev libsqlite3-dev wget sqlite3 spatialite-bin
 source /etc/lsb-release
 if [[ $(python -c "print int($DISTRIB_RELEASE > 15)") > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
 #if you plan to compile with python bindings, see below for more info
 sudo apt-get install -y python-all-dev
-#if you plan to compile with node bindings
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash #follow instructions in output to use nvm without starting a new bash session
-nvm install 10
-nvm use 10
 ```
 
 For instructions on installing Valhalla on Ubuntu 18.04.x see this [script](scripts/Ubuntu_Bionic_Install.sh).
@@ -110,10 +106,8 @@ To install on macOS, you need to install its dependencies with [Homebrew](http:/
 
 ```bash
 # install dependencies (automake & czmq are required by prime_server)
-brew install automake cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 jq curl wget czmq lz4 node@10 npm spatialite-tools unzip
+brew install automake cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 jq curl wget czmq lz4 spatialite-tools unzip luajit
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
-nvm use 10 # must use node 8.11.1 and up because of N-API
-npm install --ignore-scripts
 # following packages are needed for running Linux compatible scripts
 brew install bash coreutils binutils
 # Update your PATH env variable to include /usr/local/opt/binutils/bin:/usr/local/opt/coreutils/libexec/gnubin
@@ -123,8 +117,6 @@ Now, clone the Valhalla repository
 
 ```bash
 git clone --recurse-submodules https://github.com/valhalla/valhalla.git
-# if you wanted to enable node bindings
-npm install --ignore-scripts
 ```
 
 Then, build [`prime_server`](https://github.com/kevinkreiser/prime_server#build-and-install).
@@ -147,10 +139,12 @@ Important build options include:
 | `-DENABLE_PYTHON_BINDINGS` (`On`/`Off`) | Build the python bindings|
 | `-DENABLE_SERVICES` (`On` / `Off`) | Build the HTTP service|
 | `-DBUILD_SHARED_LIBS` (`On` / `Off`) | Build static or shared libraries|
-| `-DENABLE_NODE_BINDINGS` (`ON` / `OFF`) | Build the node bindings (defaults to on)|
 | `-DENABLE_COMPILER_WARNINGS` (`ON` / `OFF`) | Build with common compiler warnings (defaults to off)|
 | `-DENABLE_WERROR` (`ON` / `OFF`) | Treat compiler warnings as errors  (defaults to off). Requires `-DENABLE_COMPILER_WARNINGS=ON` to take effect.|
 | `-DENABLE_BENCHMARKS` (`ON` / `OFF`) | Enable microbenchmarking  (defaults to on).|
+| `-DENABLE_SANITIZERS` (`ON` / `OFF`) | Build with all the integrated sanitizers (defaults to off).|
+| `-DENABLE_ADDRESS_SANITIZER` (`ON` / `OFF`) | Build with address sanitizer (defaults to off).|
+| `-DENABLE_UNDEFINED_SANITIZER` (`ON` / `OFF`) | Build with undefined behavior sanitizer (defaults to off).|
 
 For more build options run the interactive GUI:
 
@@ -206,26 +200,7 @@ Also note that we run some `clang-tidy` linting over the code as well (see `.cla
 
 `scripts/clang-tidy-only-diff.sh` is run in CI and will the build if it detects any issues.
 
-Using the Node.js Bindings
---------------------------
-
-The Node.js bindings are still under construction. We are working on building binaries for as many environments as possible, but they may not all be available yet. We have exposed all of the `tyr::actor_t` actions to the bindings (`route`, `locate`, `height`, `isochrone`, `matrix`, `optimizedRoute`, `traceAttributes`, `traceRoute`, `transitAvailable`). Right now, the input and the output are both strings - THAT WILL LIKELY CHANGE. We plan on ingesting and producing protobufs and/or json.
-
-The Node.js bindings provide read-only access to the routing engine. You can install the Node.js bindings from this repository via `$npm install` which will check and use pre-built binaries if they're available for this release and your Node version. You can also run `npm install valhalla` to include the package as a dependency in another project, but we do not have a stable version of the bindings available on the npm org yet. Check the CHANGELOG for the details of the latest release. We also may not have built binaries for your particular setup. You can also build bindings from source with the ENABLE_NODE_BINDINGS option.
-
-We are using [node-pre-gyp](https://github.com/mapbox/node-pre-gyp) to manage the bindings for different build systems, and N-API to write the bindings themselves. Node-pre-gyp hooks into the `npm install` command and goes looking on s3 for the appropriate binary for the system on which it was run. CircleCI currently builds release and debug binaries for linux, and publishes them to s3. To use the debug binaries, run `npm install --debug` and node-pre-gyp will be told to go find the debug binary instead of the release one.
-
-N-API aims to provide ABI compatibility guarantees across different Node versions and also across different Node VMs - allowing N-API enabled native modules to just work across different versions and flavors of Node.js without recompilations. N-API is a new feature and was experimental until node 8.11.2, after which is it considered stable. Please make sure you are using node 8.11.2+ or node 10 if you want to use the node bindings. We have tested the bindings on 8.11.2, 10.3.0, and 10.6.0 - it is probably safest to pin your node version to one of those, since we have only built binaries for N-API v3. We will consider building binaries for newer N-API versions when and if they are released.
-
-Example of using in a node project:
-```js
-var Valhalla = require('valhalla');
-var valhalla = new Valhalla(configString);
-var hersheyRequest = '{"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"}, {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"}';
-var route = valhalla.route(hersheyRequest); // returns a string, other actions also available
-```
-
-Please see the [releasing docs](docs/releasing.md) for information on releasing a new version.
+Additionally, a check with [ASan](https://clang.llvm.org/docs/AddressSanitizer.html) is run in CI. We recommend testing with ASan  and debug symbols locally prior to commiting, with the `-DENABLE_ADDRESS_SANITIZER=ON -DCMAKE_BUILD_TYPE=Debug` flags during cmake configuration. As long as leak sanitizer (which is a part of address sanitizer) is not currently supported across different platforms it is disabled in the CI. You can disable it locally with the environment variable `ASAN_OPTIONS=detect_leaks=0`.
 
 Tests
 -----

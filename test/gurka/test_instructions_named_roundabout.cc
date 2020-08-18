@@ -1,4 +1,5 @@
 #include "gurka.h"
+#include <boost/format.hpp>
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -171,4 +172,36 @@ TEST_F(InstructionsNamedRoundabout, RoundaboutToward) {
       result, ++maneuver_index, "Exit the roundabout toward A 95/B 2/München/Kürten.", "",
       "Exit the roundabout toward A 95, München. Then You will arrive at your destination.",
       "Continue for 200 meters.");
+}
+
+TEST_F(InstructionsNamedRoundabout, RoundaboutExitSuppressed) {
+  auto from = "A";
+  auto to = "I";
+  const std::string& request =
+      (boost::format(
+           R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto","roundabout_exits":false})") %
+       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+          .str();
+  auto result = gurka::route(map, request);
+
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+  int maneuver_index = 1;
+
+  // Verify the enter_roundabout instructions
+  gurka::assert::raw::
+      expect_instructions_at_maneuver_index(result, maneuver_index,
+                                            "Enter Dupont Circle and take the 3rd exit.",
+                                            "Enter Dupont Circle and take the 3rd exit.",
+                                            "Enter Dupont Circle and take the 3rd exit.",
+                                            "Continue for 200 meters.");
+
+  // Verify the exit_roundabout is suppressed
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, ++maneuver_index,
+                                                            "You have arrived at your destination.",
+                                                            "You will arrive at your destination.",
+                                                            "You have arrived at your destination.",
+                                                            "");
 }

@@ -1,9 +1,10 @@
-#include "valhalla/midgard/util.h"
-#include "valhalla/midgard/constants.h"
-#include "valhalla/midgard/distanceapproximator.h"
-#include "valhalla/midgard/logging.h"
-#include "valhalla/midgard/point2.h"
-#include "valhalla/midgard/polyline2.h"
+#include "midgard/util.h"
+#include "midgard/constants.h"
+#include "midgard/distanceapproximator.h"
+#include "midgard/logging.h"
+#include "midgard/point2.h"
+#include "midgard/polyline2.h"
+#include "midgard/vector2.h"
 
 #include <algorithm>
 #include <array>
@@ -16,6 +17,11 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <vector>
+
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/remove_whitespace.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
 
 namespace {
 
@@ -72,7 +78,7 @@ template <class container_t> container_t trim_front(container_t& pts, const floa
     double segdist = p1->Distance(*p2);
     if ((d + segdist) > dist) {
       double frac = (dist - d) / segdist;
-      auto midpoint = p1->AffineCombination((1.0 - frac), frac, *p2);
+      auto midpoint = p1->PointAlongSegment(*p2, frac);
       result.push_back(midpoint);
 
       // Remove used part of polyline
@@ -146,7 +152,7 @@ float tangent_angle(size_t index,
     // are we done yet?
     if (remaining <= d) {
       auto coef = remaining / d;
-      u = u.AffineCombination(1 - coef, coef, *i);
+      u = u.PointAlongSegment(*i, coef);
       return u.Heading(point);
     }
     // next one
@@ -164,7 +170,7 @@ float tangent_angle(size_t index,
     // are we done yet?
     if (remaining <= d) {
       auto coef = remaining / d;
-      v = v.AffineCombination(1 - coef, coef, *i);
+      v = v.PointAlongSegment(*i, coef);
       return u.Heading(v);
     }
     // next one
@@ -258,6 +264,11 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
                           : acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
                                  cos(last.second * RAD_PER_DEG) * cos(lat2) *
                                      cos(last.first * -RAD_PER_DEG - lon2));
+    if (std::isnan(d)) {
+      // set d to 0, do not skip in case we are preserving coordinates
+      d = 0.0;
+    }
+
     // keep placing points while we can fit them
     while (d > remaining) {
       // some precomputed stuff
@@ -338,6 +349,9 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
                           : acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
                                  cos(last.second * RAD_PER_DEG) * cos(lat2) *
                                      cos(last.first * -RAD_PER_DEG - lon2));
+    if (std::isnan(d)) {
+      continue;
+    }
 
     // Place resampled points on this segment as long as remaining distance is < d
     while (remaining < d) {
@@ -481,10 +495,19 @@ y_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_t
   auto b = u.second - (u.first * m);
   return (y - b) / m;
 }
-template PointLL::first_type
-y_intercept<PointLL>(const PointLL& u, const PointLL& v, const PointLL::first_type y);
-template Point2::first_type
-y_intercept<Point2>(const Point2& u, const Point2& v, const Point2::first_type y);
+template PointXY<float>::first_type y_intercept<PointXY<float>>(const PointXY<float>&,
+                                                                const PointXY<float>&,
+                                                                const PointXY<float>::first_type);
+template GeoPoint<float>::first_type y_intercept<GeoPoint<float>>(const GeoPoint<float>&,
+                                                                  const GeoPoint<float>&,
+                                                                  const GeoPoint<float>::first_type);
+template PointXY<double>::first_type y_intercept<PointXY<double>>(const PointXY<double>&,
+                                                                  const PointXY<double>&,
+                                                                  const PointXY<double>::first_type);
+template GeoPoint<double>::first_type
+y_intercept<GeoPoint<double>>(const GeoPoint<double>&,
+                              const GeoPoint<double>&,
+                              const GeoPoint<double>::first_type);
 
 // Return the intercept of the line passing through uv with the vertical line defined by x
 template <class coord_t>
@@ -500,10 +523,19 @@ x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_t
   auto b = u.second - (u.first * m);
   return x * m + b;
 }
-template PointLL::second_type
-x_intercept<PointLL>(const PointLL& u, const PointLL& v, const PointLL::second_type x);
-template Point2::second_type
-x_intercept<Point2>(const Point2& u, const Point2& v, const Point2::second_type x);
+template PointXY<float>::first_type x_intercept<PointXY<float>>(const PointXY<float>&,
+                                                                const PointXY<float>&,
+                                                                const PointXY<float>::first_type);
+template GeoPoint<float>::first_type x_intercept<GeoPoint<float>>(const GeoPoint<float>&,
+                                                                  const GeoPoint<float>&,
+                                                                  const GeoPoint<float>::first_type);
+template PointXY<double>::first_type x_intercept<PointXY<double>>(const PointXY<double>&,
+                                                                  const PointXY<double>&,
+                                                                  const PointXY<double>::first_type);
+template GeoPoint<double>::first_type
+x_intercept<GeoPoint<double>>(const GeoPoint<double>&,
+                              const GeoPoint<double>&,
+                              const GeoPoint<double>::first_type);
 
 template <class container_t> float polygon_area(const container_t& polygon) {
   typename container_t::value_type::first_type area =
@@ -570,7 +602,7 @@ std::vector<midgard::PointLL> simulate_gps(const std::vector<gps_segment_t>& seg
       // meters of noise with extremely low likelihood its larger than accuracy
       auto noise = get_noise();
       // use the number of meters per degree in both axis to offset the point by the noise
-      auto metersPerDegreeLon = DistanceApproximator::MetersPerLngDegree(p.second);
+      auto metersPerDegreeLon = DistanceApproximator<PointLL>::MetersPerLngDegree(p.second);
       simulated.emplace_back(midgard::PointLL(p.first + noise.first / metersPerDegreeLon,
                                               p.second + noise.second / kMetersPerDegreeLat));
       // keep the distance to use for accuracy
@@ -687,6 +719,36 @@ polygon_t to_boundary(const std::unordered_set<uint32_t>& region, const Tiles<Po
 
   // give it back
   return polygon;
+}
+
+constexpr char PADDING_ENCODED = '=';
+constexpr char ZERO_ENCODED = 'A';
+
+std::string encode64(const std::string& text) {
+  using namespace boost::archive::iterators;
+  using Base64Encode = base64_from_binary<transform_width<std::string::const_iterator, 6, 8>>;
+  // Encode and add padding to string per octet encoding described here:
+  // https://tools.ietf.org/html/rfc4648#section-4
+  std::string encoded(Base64Encode(text.begin()), Base64Encode(text.end()));
+  size_t num_pad_chars = (3 - text.size() % 3) % 3;
+  encoded.append(num_pad_chars, PADDING_ENCODED);
+  return encoded;
+}
+
+std::string decode64(const std::string& encoded) {
+  using namespace boost::archive::iterators;
+  using Base64Decode =
+      transform_width<binary_from_base64<remove_whitespace<std::string::const_iterator>>, 8, 6>;
+  // NOTE(mookerji): Ugh, for more details, see:
+  // https://stackoverflow.com/questions/10521581/base64-encode-using-boost-throw-exception
+  size_t num_pad_chars = (4 - encoded.size() % 4) % 4;
+  std::string padded = encoded;
+  padded.append(num_pad_chars, PADDING_ENCODED);
+  size_t pad_chars = std::count(padded.begin(), padded.end(), PADDING_ENCODED);
+  std::replace(padded.begin(), padded.end(), PADDING_ENCODED, ZERO_ENCODED);
+  std::string decoded(Base64Decode(padded.begin()), Base64Decode(padded.end()));
+  decoded.erase(decoded.end() - pad_chars, decoded.end());
+  return decoded;
 }
 
 } // namespace midgard

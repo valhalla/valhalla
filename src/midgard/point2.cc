@@ -1,50 +1,25 @@
-#include "valhalla/midgard/point2.h"
-
-#include <cmath>
-#include <limits>
-#include <list>
-
-#include "midgard/util.h"
+#include "midgard/point2.h"
 #include "midgard/vector2.h"
+
+#include <list>
 
 namespace valhalla {
 namespace midgard {
 
-bool Point2::ApproximatelyEqual(const Point2& p, float e) const {
-  return equal<first_type>(first, p.first, e) && equal<second_type>(second, p.second, e);
-}
-
-float Point2::DistanceSquared(const Point2& p) const {
-  return sqr(first - p.first) + sqr(second - p.second);
-}
-
-float Point2::Distance(const Point2& p) const {
-  return sqrtf(sqr(first - p.first) + sqr(second - p.second));
-}
-
-Point2 Point2::AffineCombination(const float a0, const float a1, const Point2& p1) const {
-  return Point2(a0 * first + a1 * p1.first, a0 * second + a1 * p1.second);
-}
-
-Point2 Point2::MidPoint(const Point2& p1) const {
-  return Point2(0.5f * (first + p1.first), 0.5f * (second + p1.second));
-}
-
-Point2 Point2::operator+(const Vector2& v) const {
-  return Point2(first + v.x(), second + v.y());
-}
-
-Point2 Point2::operator-(const Vector2& v) const {
-  return Point2(first - v.x(), second - v.y());
-}
-
-Vector2 Point2::operator-(const Point2& p) const {
-  return Vector2(first - p.first, second - p.second);
-}
-
-std::tuple<Point2, float, int> Point2::ClosestPoint(const std::vector<Point2>& pts) const {
-  Point2 closest;
-  float mindist = std::numeric_limits<float>::max();
+/**
+ * Finds the closest point to the supplied polyline as well as the distance
+ * to that point and the index of the segment where the closest point lies.
+ * @param  pts     List of points on the polyline.
+ * @return  tuple of <Closest point along the polyline,
+ *                    Returns the distance of the closest point,
+ *                    Index of the segment of the polyline which contains the closest point
+ *                   >
+ */
+template <typename PrecisionT>
+std::tuple<PointXY<PrecisionT>, PrecisionT, int>
+PointXY<PrecisionT>::ClosestPoint(const std::vector<PointXY<PrecisionT>>& pts) const {
+  PointXY<PrecisionT> closest;
+  value_type mindist = std::numeric_limits<value_type>::max();
 
   // If there are no points we are done
   if (pts.size() == 0) {
@@ -56,19 +31,19 @@ std::tuple<Point2, float, int> Point2::ClosestPoint(const std::vector<Point2>& p
   }
 
   // Iterate through the pts
-  bool beyond_end = true; // Need to test past the end point?
-  int idx;                // Index of closest segment so far
-  Vector2 v1;             // Segment vector (v1)
-  Vector2 v2;             // Vector from origin to target (v2)
-  Point2 projpt;          // Projected point along v1
-  float dot;              // Dot product of v1 and v2
-  float comp;             // Component of v2 along v1
-  float dist;             // Squared distance from target to closest point on line
+  bool beyond_end = true;     // Need to test past the end point?
+  int idx;                    // Index of closest segment so far
+  VectorXY<PrecisionT> v1;    // Segment vector (v1)
+  VectorXY<PrecisionT> v2;    // Vector from origin to target (v2)
+  PointXY<PrecisionT> projpt; // Projected point along v1
+  value_type dot;             // Dot product of v1 and v2
+  value_type comp;            // Component of v2 along v1
+  value_type dist;            // Squared distance from target to closest point on line
 
   for (size_t index = 0; index < pts.size() - 1; ++index) {
     // Get the current segment
-    const Point2& p0 = pts[index];
-    const Point2& p1 = pts[index + 1];
+    const PointXY<PrecisionT>& p0 = pts[index];
+    const PointXY<PrecisionT>& p1 = pts[index + 1];
 
     // Construct vector v1 - represents the segment.  Skip 0 length segments
     v1.Set(p0, p1);
@@ -130,9 +105,16 @@ std::tuple<Point2, float, int> Point2::ClosestPoint(const std::vector<Point2>& p
   return std::make_tuple(std::move(closest), std::move(std::sqrt(mindist)), std::move(idx));
 }
 
-// Tests whether this point is within a polygon. Iterate through the
-// edges - to be inside the point must be to the same side of each edge.
-template <class container_t> bool Point2::WithinPolygon(const container_t& poly) const {
+/**
+ * Tests whether this point is within a polygon.
+ * @param  poly  List of vertices that form a polygon. Assumes
+ *               the following:
+ *                  Only the first and last vertices may be duplicated.
+ * @return  Returns true if the point is within the polygon, false if not.
+ */
+template <typename PrecisionT>
+template <typename container_t>
+bool PointXY<PrecisionT>::WithinPolygon(const container_t& poly) const {
   auto p1 = poly.front() == poly.back() ? poly.begin() : std::prev(poly.end());
   auto p2 = poly.front() == poly.back() ? std::next(p1) : poly.begin();
   // for each edge
@@ -153,13 +135,14 @@ template <class container_t> bool Point2::WithinPolygon(const container_t& poly)
   return winding_number != 0;
 }
 
-bool Point2::IsSpherical() {
-  return false;
-}
-
-// Explicit instantiations
-template bool Point2::WithinPolygon(const std::vector<Point2>&) const;
-template bool Point2::WithinPolygon(const std::list<Point2>&) const;
-
+// explicit instantiations
+template class VectorXY<float>;
+template class PointXY<float>;
+template class VectorXY<double>;
+template class PointXY<double>;
+template bool PointXY<float>::WithinPolygon(const std::vector<PointXY<float>>&) const;
+template bool PointXY<float>::WithinPolygon(const std::list<PointXY<float>>&) const;
+template bool PointXY<double>::WithinPolygon(const std::vector<PointXY<double>>&) const;
+template bool PointXY<double>::WithinPolygon(const std::list<PointXY<double>>&) const;
 } // namespace midgard
 } // namespace valhalla

@@ -11,16 +11,6 @@ commands:
   install_macos_dependencies:
     steps:
       - run: brew install protobuf cmake ccache libtool boost-python libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
-      - run:
-          name: Install Node
-          command: |
-            set +e
-            touch $BASH_ENV
-            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
-            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
-            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
-            echo 'nvm install v8.11.2' >> $BASH_ENV
-            echo 'nvm alias default v8.11.2' >> $BASH_ENV
 
 jobs:
   build-base:
@@ -45,27 +35,18 @@ jobs:
               docker push valhalla/valhalla:build-latest
               docker push valhalla/valhalla:build-x86-latest
             fi
+
   build-release-binary-linux:
     docker:
       - image: valhalla/valhalla:build-latest
     steps:
       - checkout
-      - run:
-          command: |
-            set +e
-            touch $BASH_ENV
-            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
-            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
-            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
-            echo 'nvm install v8.11.2' >> $BASH_ENV
-            echo 'nvm alias default v8.11.2' >> $BASH_ENV
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
             - ccache-release-linux-x86_64-{{ .Branch }}
             - ccache-release-linux-x86_64
-      - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
@@ -77,37 +58,18 @@ jobs:
             - ~/.ccache
       - run: make -C build install
       - run: make -C build package
-      - run:
-          command: |
-            export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
-            export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
-            echo circle_tag ${CIRCLE_TAG:-}
-            echo package_json_version ${PACKAGE_JSON_VERSION}
-            export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
-            export BUILD_TYPE=Release
-            ./scripts/publish.sh
 
   build-debug-binary-linux:
     docker:
       - image: valhalla/valhalla:build-latest
     steps:
       - checkout
-      - run:
-          command: |
-            set +e
-            touch $BASH_ENV
-            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
-            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
-            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
-            echo 'nvm install v8.11.2' >> $BASH_ENV
-            echo 'nvm alias default v8.11.2' >> $BASH_ENV
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
             - ccache-debug-linux-x86_64-{{ .Branch }}
             - ccache-debug-linux-x86_64
-      - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
@@ -119,13 +81,6 @@ jobs:
             - ~/.ccache
       - run: make -C build install
       - run: make -C build package
-      - run:
-          command: |
-            export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
-            export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
-            export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
-            export BUILD_TYPE=Debug
-            ./scripts/publish.sh
 
   lint-build-debug:
     docker:
@@ -133,25 +88,25 @@ jobs:
     steps:
       - checkout
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
-      - run: node ./scripts/validate_changelog.js
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
             - ccache-debug-linux-x86_64-{{ .Branch }}
             - ccache-debug-linux-x86_64
-      - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
           cd build \
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
-                -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On
+                -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
+                -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_PYTHON_BINDINGS=Off
       - run: make -C build -j4
       - run: make -C build utrecht_tiles
       - run: make -C build -j2 tests
-      - run: make -C build -j2 check
+      # Leak Sanitizer is disabled as it is not supported on all platforms
+      - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j2 check
       - run: make -C build -j2 benchmarks
-      - run: make -C build run-benchmarks
+      - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build run-benchmarks
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
       - save_cache:
@@ -161,7 +116,7 @@ jobs:
       - run: scripts/clang-tidy-only-diff.sh 4
       - run: make -C build install
       - run: make -C build package
-      - run: make -C build coverage
+      - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build coverage
       - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
 
   build-release:
@@ -175,7 +130,6 @@ jobs:
           keys:
             - ccache-release-linux-x86_64-{{ .Branch }}
             - ccache-release-linux-x86_64
-      - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
@@ -204,10 +158,9 @@ jobs:
           keys:
             - ccache-release-linux-x86_32-{{ .Branch }}
             - ccache-release-linux-x86_32
-      - run: npm install --ignore-scripts
       - run: mkdir build
       - run: |
-          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_NODE_BINDINGS=Off
+          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release
       - run: make -C build -j4
       - run: make -C build utrecht_tiles
       - run: make -C build -j2 tests
@@ -232,7 +185,6 @@ jobs:
             - ccache-release-macos
       - run: wget https://raw.githubusercontent.com/valhalla/homebrew-valhalla/master/Formula/prime_server.rb
       - run: brew install --build-from-source ./prime_server.rb
-      - run: npm install --ignore-scripts
       - run: mkdir -p build
       - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
       - run: make -C build -j4
@@ -257,7 +209,6 @@ jobs:
           keys:
             - ccache-release-macos-{{ .Branch }}
             - ccache-release-macos
-      - run: npm install --ignore-scripts
       - run: mkdir -p build
       - run: cd build && cmake .. -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
       - run: make -C build -j4
@@ -265,13 +216,6 @@ jobs:
           key: ccache-release-macos-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
-      - run:
-          command: |
-            export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
-            export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
-            export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
-            export BUILD_TYPE=Release
-            ./scripts/publish.sh
 
   build-debug-binary-osx:
     executor: macos
@@ -284,7 +228,6 @@ jobs:
           keys:
             - ccache-debug-macos-{{ .Branch }}
             - ccache-debug-macos
-      - run: npm install --ignore-scripts
       - run: mkdir -p build
       - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PYTHON_BINDINGS=Off -DBUILD_SHARED_LIBS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
       - run: make -C build -j4
@@ -292,13 +235,6 @@ jobs:
           key: ccache-debug-macos-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
-      - run:
-          command: |
-            export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
-            export PUBLISH=$([[ "${CIRCLE_TAG:-}" == "${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
-            export COMMIT_MESSAGE=$(git log --oneline --format=%B -n 1 ${CIRCLE_SHA1} | head -n 1)
-            export BUILD_TYPE=Debug
-            ./scripts/publish.sh
 
 workflows:
   version: 2

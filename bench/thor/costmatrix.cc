@@ -16,12 +16,6 @@ using namespace valhalla;
 
 namespace {
 
-void create_costing_options(Options& options) {
-  const rapidjson::Document doc;
-  sif::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
-  options.add_costing_options();
-}
-
 boost::property_tree::ptree json_to_pt(const std::string& json) {
   std::stringstream ss;
   ss << json;
@@ -35,7 +29,7 @@ const auto config = json_to_pt(R"({
     "loki":{
       "actions":["sources_to_targets"],
       "logging":{"long_request": 100},
-      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
+      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
     },
     "thor":{
       "logging":{"long_request": 100}
@@ -64,12 +58,11 @@ const auto config = json_to_pt(R"({
     }
   })");
 
-baldr::GraphReader reader(config.get_child("mjolnir"));
-
 constexpr float kMaxRange = 256;
 
 static void BM_UtrechtCostMatrix(benchmark::State& state) {
   const int size = state.range(0);
+  baldr::GraphReader reader(config.get_child("mjolnir"));
 
   // Generate N random locations within the Utrect bounding box;
   std::vector<valhalla::baldr::Location> locations;
@@ -88,10 +81,17 @@ static void BM_UtrechtCostMatrix(benchmark::State& state) {
   }
 
   Options options;
-  create_costing_options(options);
-  auto costs = sif::CreateAutoCost(Costing::auto_, options);
+  options.set_costing(Costing::auto_);
+  rapidjson::Document doc;
+  sif::ParseCostingOptions(doc, "/costing_options", options);
+  sif::TravelMode mode;
+  auto costs = sif::CostFactory().CreateModeCosting(options, mode);
+  auto cost = costs[static_cast<size_t>(mode)];
 
-  const auto projections = loki::Search(locations, reader, costs);
+  const auto projections = loki::Search(locations, reader, cost);
+  if (projections.size() == 0) {
+    throw std::runtime_error("Found no matching locations");
+  }
 
   google::protobuf::RepeatedPtrField<valhalla::Location> sources;
 
@@ -104,9 +104,8 @@ static void BM_UtrechtCostMatrix(benchmark::State& state) {
 
   for (auto _ : state) {
     thor::CostMatrix matrix;
-    auto result =
-        matrix.SourceToTarget(sources, sources, reader, &costs, sif::TravelMode::kDrive, 100000.);
-    result_size = result.size();
+    auto result = matrix.SourceToTarget(sources, sources, reader, costs, mode, 100000.);
+    result_size += result.size();
   }
   state.counters["Routes"] = benchmark::Counter(size, benchmark::Counter::kIsIterationInvariantRate);
 }

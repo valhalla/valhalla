@@ -2,6 +2,8 @@
 #define VALHALLA_MIDGARD_OPENLR_H_
 
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/util.h>
+#include <valhalla/proto/trip.pb.h>
 
 #include <assert.h>
 #include <bitset>
@@ -72,7 +74,7 @@ inline float integer2distance(
 } // namespace
 
 // Reference: OpenLR™ White Paper Version: 1.5 revision 2
-// http://www.openlr.org/data/docs/OpenLR-Whitepaper_v1.5.pdf
+// https://www.openlr-association.com/fileadmin/user_upload/openlr-whitepaper_v1.5.pdf
 
 // Location Reference Point, p.35, section 5.4
 struct LocationReferencePoint {
@@ -162,19 +164,22 @@ struct LocationReferencePoint {
 // Line locations, p.19, section 3.1
 // Only line location with 2 location reference points are supported
 struct LineLocation {
-  LineLocation(const std::string& reference) {
+  LineLocation(const std::string& reference, bool base64_encoded = false) {
+    const std::string& decoded = base64_encoded ? decode64(reference) : reference;
     //  Line location data size: 16 + (n-2)*7 + [0/1/2] bytes
-    if (reference.size() < 16)
-      throw std::invalid_argument("OpenLR reference is too small " + reference);
+    const size_t size = decoded.size();
+    if (size < 16) {
+      throw std::invalid_argument("OpenLR reference is too small reference=" + reference +
+                                  "size=" + std::to_string(decoded.size()));
+    }
 
-    const auto raw = reinterpret_cast<const unsigned char*>(reference.data());
-    const auto size = reference.size();
+    const auto raw = reinterpret_cast<const unsigned char*>(decoded.data());
     std::size_t index = 0;
 
     // Status, version 3, has attributes, ArF 'Circle or no area location'
     auto status = raw[index++] & 0x7f;
     if (status != 0x0b)
-      throw std::invalid_argument("OpenLR reference invalid status " + reference);
+      throw std::invalid_argument("OpenLR reference invalid status " + decoded);
 
     // First location reference point
     auto longitude = integer2decimal(fixed<std::int32_t, 3>(raw, index));
@@ -301,6 +306,10 @@ struct LineLocation {
     return result;
   }
 
+  std::string toBase64() const {
+    return encode64(toBinary());
+  }
+
   bool operator==(const LineLocation& lloc) const {
     return lrps.size() == lloc.lrps.size() && poff == lloc.poff && noff == lloc.noff &&
            std::equal(lrps.begin(), lrps.end(), lloc.lrps.begin());
@@ -312,6 +321,32 @@ struct LineLocation {
 };
 
 } // namespace OpenLR
+
+/**
+ * Maps Valhalla edge and road class to an OpenLR form-of-way.
+ *
+ * @param node   Node of single trip leg
+ * @return       OpenLR form-of-way classification. If this can't be determined
+ *               from the edge's road class or use information, will return FormOfWay::OTHER.
+ */
+OpenLR::LocationReferencePoint::FormOfWay road_class_to_fow(const TripLeg::Node& node);
+
+/**
+ * Compute base64-encoded OpenLR descriptor per-edge of a trip leg.
+ *
+ * @param   leg   TripPath leg
+ * @return        OpenLR descriptors for all edges in a path
+ */
+std::vector<std::string> openlr_edges(const TripLeg& leg);
+
+/**
+ * Compute base64-encoded OpenLR descriptor for an entire trip leg.
+ *
+ * @param   leg   TripPath leg
+ * @return        OpenLR descriptor for a single trip leg.
+ */
+std::vector<std::string> openlr_legs(const TripLeg& leg);
+
 } // namespace midgard
 } // namespace valhalla
 

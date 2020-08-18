@@ -3,6 +3,7 @@
 #include "baldr/rapidjson_utils.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
 
@@ -60,15 +61,8 @@ struct TrafficSpeeds {
 };
 
 // Convert big endian bytes to little endian
-int16_t to_little_endian(const int16_t val) {
+int16_t to_little_endian(const uint16_t val) {
   return (val << 8) | ((val >> 8) & 0x00ff);
-}
-
-// base64 decoding
-std::string decode64(const std::string& val) {
-  using namespace boost::archive::iterators;
-  using It = transform_width<binary_from_base64<std::string::const_iterator>, 8, 6>;
-  return std::string(It(std::begin(val)), It(std::end(val)));
 }
 
 /**
@@ -140,19 +134,19 @@ ParseTrafficFile(const std::vector<std::string>& filenames, stats& stat) {
                 try {
                   // Decode the base64 predicted speeds
                   // Decode the base64 string and cast the data to a raw string of signed bytes
-                  auto decoded_str = decode64(t);
-                  if (decoded_str.size() != 402) {
-                    throw std::runtime_error("Decoded speed string size should be 402 but is " +
-                                             std::to_string(decoded_str.size()));
+                  const std::string& decoded_str = decode64(t);
+                  if (decoded_str.size() != kDecodedSpeedSize) {
+                    throw std::runtime_error(
+                        "Decoded speed string size expected= " + std::to_string(kDecodedSpeedSize) +
+                        " actual=" + std::to_string(decoded_str.size()));
                   }
-                  auto raw = reinterpret_cast<const int8_t*>(decoded_str.data());
-
+                  const int8_t* raw = reinterpret_cast<const int8_t*>(decoded_str.data());
                   // Create the coefficients. Each group of 2 bytes represents a signed, int16 number
                   // (big endian). Convert to little endian.
                   traffic->second.coefficients.reserve(kCoefficientCount);
                   for (uint32_t i = 0, idx = 0; i < kCoefficientCount; ++i, idx += 2) {
                     traffic->second.coefficients.push_back(
-                        to_little_endian(*(reinterpret_cast<const int16_t*>(&raw[idx]))));
+                        to_little_endian(*(reinterpret_cast<const uint16_t*>(&raw[idx]))));
                   }
                   stat.compressed_count++;
                 } catch (std::exception& e) {

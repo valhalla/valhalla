@@ -25,8 +25,8 @@
 #include <thread>
 
 #include "config.h"
-#include <valhalla/proto/segment.pb.h>
-#include <valhalla/proto/tile.pb.h>
+#include "proto/segment.pb.h"
+#include "proto/tile.pb.h"
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
@@ -401,7 +401,7 @@ private:
 std::vector<vb::GraphId>
 find_nearby_nodes(vb::GraphReader& reader, const vm::PointLL& pt, const uint8_t level) {
   // Create a bounding box and find nodes within the bounding box
-  float meters_per_lng = vm::DistanceApproximator::MetersPerLngDegree(pt.lat());
+  float meters_per_lng = vm::DistanceApproximator<vm::PointLL>::MetersPerLngDegree(pt.lat());
   float delta_lng = kNodeDistanceTolerance / meters_per_lng;
   float delta_lat = kNodeDistanceTolerance / vm::kMetersPerDegreeLat;
   vm::AABB2<vm::PointLL> bbox({pt.lng() - delta_lng, pt.lat() - delta_lat},

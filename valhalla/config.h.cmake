@@ -12,7 +12,7 @@
 #define PACKAGE "valhalla-" VALHALLA_VERSION
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "https://github.com/valhalla/valahlla/issues"
+#define PACKAGE_BUGREPORT "https://github.com/valhalla/valhalla/issues"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "valhalla"
@@ -24,7 +24,7 @@
 #define PACKAGE_TARNAME "valhalla-" VALHALLA_VERSION
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL "https://github.com/valhalla/valahlla"
+#define PACKAGE_URL "https://github.com/valhalla/valhalla"
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION VALHALLA_VERSION

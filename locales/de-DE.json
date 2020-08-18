@@ -38,8 +38,8 @@
         "1": "Leicht nach <RELATIVE_DIRECTION> auf <STREET_NAMES> abbiegen.",
         "2": "Leicht nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
         "3": "Leicht nach <RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "An <JUNCTION_NAME> leicht nach <RELATIVE_DIRECTION> abbiegen.",
+        "5": "Leicht nach <RELATIVE_DIRECTION> in Richtung <TOWARD_SIGN> abbiegen."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -77,8 +77,8 @@
         "1": "Leicht nach <RELATIVE_DIRECTION> auf <STREET_NAMES> abbiegen.",
         "2": "Leicht nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
         "3": "Leicht nach <RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "An <JUNCTION_NAME> leicht nach <RELATIVE_DIRECTION> abbiegen.",
+        "5": "Leicht nach <RELATIVE_DIRECTION> in Richtung <TOWARD_SIGN> abbiegen."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -134,8 +134,8 @@
       "phrases": {
         "0": "Weiter.",
         "1": "Weiter auf <STREET_NAMES>.",
-        "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "2": "Weiter an <JUNCTION_NAME>.",
+        "3": "Weiter in Richtung <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -163,10 +163,10 @@
         "1": "<LENGTH> weiter.",
         "2": "Weiter auf <STREET_NAMES>.",
         "3": "<LENGTH> weiter auf <STREET_NAMES>.",
-        "4": "Continue at <JUNCTION_NAME>.",
-        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
-        "6": "Continue toward <TOWARD_SIGN>.",
-        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
+        "4": "Weiter an <JUNCTION_NAME>.",
+        "5": "An <JUNCTION_NAME> <LENGTH> weiter.",
+        "6": "Weiter in Richtung <TOWARD_SIGN>.",
+        "7": "<LENGTH> weiter in Richtung <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -183,7 +183,7 @@
         "<MILES> Meilen",
         "eine Meile",
         "eine halbe Meile",
-        "a quarter mile",
+        "eine viertel Meile",
         "<FEET> Fuß",
         "weniger als 10 Fuß"
       ],
@@ -218,8 +218,8 @@
       "phrases": {
         "0": "Weiter.",
         "1": "Weiter auf <STREET_NAMES>.",
-        "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "2": "Weiter an <JUNCTION_NAME>.",
+        "3": "Weiter in Richtung <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -325,10 +325,10 @@
     },
     "destination_verbal_alert": {
       "phrases": {
-        "0": "Ziel fast erreicht.",
-        "1": "<DESTINATION> fast erreicht.",
-        "2": "Gleich befindet sich das Ziel auf der <RELATIVE_DIRECTION> Seite.",
-        "3": "Gleich befindet sich <DESTINATION> auf der <RELATIVE_DIRECTION> Seite."
+        "0": "Das Ziel wird erreicht.",
+        "1": "<DESTINATION> wird erreicht.",
+        "2": "Das Ziel befindet sich auf der <RELATIVE_DIRECTION> Seite.",
+        "3": "<DESTINATION> befindet sich auf der <RELATIVE_DIRECTION> Seite."
       },
       "relative_directions": [
         "linken",
@@ -355,7 +355,7 @@
         "0": "Die Fähre nehmen.",
         "1": "Die <STREET_NAMES> nehmen.",
         "2": "Die <FERRY_LABEL> <STREET_NAMES> nehmen.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "3": "Die Fähre in Richtung <TOWARD_SIGN> nehmen."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -383,14 +383,14 @@
         "0": "Die Fähre nehmen.",
         "1": "Die <STREET_NAMES> nehmen.",
         "2": "Die <FERRY_LABEL> <STREET_NAMES> nehmen.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "3": "Die Fähre in Richtung <TOWARD_SIGN> nehmen."
       },
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke"
       ],
-      "ferry_label": "Ferry",
+      "ferry_label": "Fähre",
       "example_phrases": {
         "0": [
           "Take the Ferry."
@@ -410,20 +410,20 @@
       "phrases": {
         "0": "In den Kreisverkehr fahren.",
         "1": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt nehmen.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
-        "8": "Enter <STREET_NAMES>",
-        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
-        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "2": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt auf <ROUNDABOUT_EXIT_STREET_NAMES> nehmen.",
+        "3": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt auf <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> nehmen. Weiter auf <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt in Richtung <TOWARD_SIGN> nehmen.",
+        "5": "In den Kreisverkehr fahren und die Ausfahrt auf <ROUNDABOUT_EXIT_STREET_NAMES> nehmen.",
+        "6": "In den Kreisverkehr fahren und die Ausfahrt auf <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> nehmen. Weiter auf <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "In den Kreisverkehr fahren und die Ausfahrt in Richtung <TOWARD_SIGN> nehmen.",
+        "8": "Auf <STREET_NAMES> fahren.",
+        "9": "Auf <STREET_NAMES> fahren und die <ORDINAL_VALUE> Ausfahrt nehmen.",
+        "10": "Auf <STREET_NAMES> fahren und die <ORDINAL_VALUE> Ausfahrt auf <ROUNDABOUT_EXIT_STREET_NAMES> nehmen.",
+        "11": "Auf <STREET_NAMES> fahren und die <ORDINAL_VALUE> Ausfahrt auf <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> nehmen. Weiter auf <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Auf <STREET_NAMES> fahren und die <ORDINAL_VALUE> Ausfahrt in Richtung <TOWARD_SIGN> nehmen.",
+        "13": "Auf <STREET_NAMES> fahren und die Ausfahrt auf <ROUNDABOUT_EXIT_STREET_NAMES> nehmen.",
+        "14": "Auf <STREET_NAMES> fahren und die Ausfahrt auf <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> nehmen. Weiter auf <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Auf <STREET_NAMES> fahren und die Ausfahrt in Richtung <TOWARD_SIGN> nehmen."
       },
       "ordinal_values": [
         "1.",
@@ -438,9 +438,9 @@
         "10."
       ],
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
+        "Fußweg",
+        "Radweg",
+        "Mountainbike Strecke"
       ],
       "example_phrases": {
         "0": [
@@ -506,20 +506,20 @@
       "phrases": {
         "0": "In den Kreisverkehr fahren.",
         "1": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt nehmen.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
-        "8": "Enter <STREET_NAMES>",
-        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
-        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "2": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt nehmen auf <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt auf <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> nehmen.",
+        "4": "In den Kreisverkehr fahren und die <ORDINAL_VALUE> Ausfahrt in Richtung <TOWARD_SIGN> nehmen.",
+        "5": "In den Kreisverkehr fahren und die Ausfahrt auf <ROUNDABOUT_EXIT_STREET_NAMES> nehmen.",
+        "6": "In den Kreisverkehr fahren und die Ausfahrt auf <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> nehmen.",
+        "7": "In den Kreisverkehr fahren und die Ausfahrt in Richtung <TOWARD_SIGN> nehmen.",
+        "8": "Auf <STREET_NAMES> fahren.",
+        "9": "Auf <STREET_NAMES> fahren",
+        "10": "Auf <STREET_NAMES> fahren und die <ORDINAL_VALUE> Ausfahrt auf <ROUNDABOUT_EXIT_STREET_NAMES> nehmen.",
+        "11": "Auf <STREET_NAMES> fahren und die <ORDINAL_VALUE> Ausfahrt auf <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> nehmen.",
+        "12": "Auf <STREET_NAMES> fahren und die <ORDINAL_VALUE> Ausfahrt in Richtung <TOWARD_SIGN> nehmen.",
+        "13": "Auf <STREET_NAMES> fahren und die Ausfahrt auf <ROUNDABOUT_EXIT_STREET_NAMES> nehmen.",
+        "14": "Auf <STREET_NAMES> fahren und die Ausfahrt auf <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> nehmen.",
+        "15": "Auf <STREET_NAMES> fahren und die Ausfahrt in Richtung <TOWARD_SIGN> nehmen."
       },
       "ordinal_values": [
         "erste",
@@ -534,9 +534,9 @@
         "zehnte"
       ],
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
+        "Fußweg",
+        "Radweg",
+        "Mountainbike Strecke"
       ],
       "example_phrases": {
         "0": [
@@ -710,7 +710,7 @@
         "0": "Aus dem Kreisverkehr ausfahren.",
         "1": "Aus dem Kreisverkehr auf <STREET_NAMES> ausfahren.",
         "2": "Aus dem Kreisverkehr auf <BEGIN_STREET_NAMES> ausfahren. Dann weiter auf <STREET_NAMES>.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "3": "Aus dem Kreisverkehr in Richtung <TOWARD_SIGN> ausfahren."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -736,8 +736,8 @@
       "phrases": {
         "0": "Aus dem Kreisverkehr ausfahren.",
         "1": "Aus dem Kreisverkehr auf <STREET_NAMES> ausfahren.",
-        "2": "Aus dem Kreisverkehr auf <BEGIN_STREET_NAMES> ausfahren. Dann weiter auf <STREET_NAMES>.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "2": "Aus dem Kreisverkehr auf <BEGIN_STREET_NAMES> ausfahren.",
+        "3": "Aus dem Kreisverkehr in Richtung <TOWARD_SIGN> ausfahren."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -863,6 +863,16 @@
         ],
         "29": [
           "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Ausfahrt <EXIT_NUMBERS>"
+      },
+      "example_phrases": {
+        "0": [
+          "Exit 1A"
         ]
       }
     },
@@ -1040,8 +1050,8 @@
         "1": "<RELATIVE_DIRECTION> einfädeln.",
         "2": "Auf <STREET_NAMES> einfädeln.",
         "3": "<RELATIVE_DIRECTION> auf <STREET_NAMES> einfädeln.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "In Richtung <TOWARD_SIGN> einfädeln.",
+        "5": "In Richtung <TOWARD_SIGN> nach <RELATIVE_DIRECTION> einfädeln."
       },
       "relative_directions": [
         "Links",
@@ -1079,8 +1089,8 @@
         "1": "<RELATIVE_DIRECTION> einfädeln.",
         "2": "Auf <STREET_NAMES> einfädeln.",
         "3": "<RELATIVE_DIRECTION> auf <STREET_NAMES> einfädeln.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "In Richtung <TOWARD_SIGN> einfädeln.",
+        "5": "In Richtung <TOWARD_SIGN> nach <RELATIVE_DIRECTION> einfädeln."
       },
       "relative_directions": [
         "Links",
@@ -1147,7 +1157,7 @@
         "<MILES> Meilen",
         "eine Meile",
         "eine halbe Meile",
-        "a quarter mile",
+        "eine viertel Meile",
         "<FEET> Fuß",
         "weniger als 10 Fuß"
       ],
@@ -1364,8 +1374,8 @@
         "1": "Scharf nach <RELATIVE_DIRECTION> auf <STREET_NAMES> abbiegen.",
         "2": "Scharf nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
         "3": "Scharf nach <RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "An <JUNCTION_NAME> scharf nach <RELATIVE_DIRECTION> abbiegen.",
+        "5": "Scharf nach <RELATIVE_DIRECTION> in Richtung <TOWARD_SIGN> abbiegen."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -1401,10 +1411,10 @@
       "phrases": {
         "0": "Scharf nach <RELATIVE_DIRECTION> abbiegen.",
         "1": "Scharf nach <RELATIVE_DIRECTION> auf <STREET_NAMES> abbiegen.",
-        "2": "Scharf nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
+        "2": "Scharf nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen.",
         "3": "Scharf nach <RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "An <JUNCTION_NAME> scharf nach <RELATIVE_DIRECTION> abbiegen.",
+        "5": "Scharf nach <RELATIVE_DIRECTION> in Richtung <TOWARD_SIGN> abbiegen."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -1560,7 +1570,7 @@
         "<MILES> Meilen",
         "eine Meile",
         "eine halbe Meile",
-        "a quarter mile",
+        "eine viertel Meile",
         "<FEET> Fuß",
         "weniger als 10 Fuß"
       ],
@@ -1916,8 +1926,8 @@
         "1": "<RELATIVE_DIRECTION> auf <STREET_NAMES> abbiegen.",
         "2": "<RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
         "3": "<RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "An <JUNCTION_NAME> nach <RELATIVE_DIRECTION> abbiegen.",
+        "5": "In Richtung <TOWARD_SIGN> nach <RELATIVE_DIRECTION> abbiegen."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -1955,8 +1965,8 @@
         "1": "<RELATIVE_DIRECTION> auf <STREET_NAMES> abbiegen.",
         "2": "<RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
         "3": "<RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "An <JUNCTION_NAME> nach <RELATIVE_DIRECTION> abbiegen.",
+        "5": "In Richtung <TOWARD_SIGN> nach <RELATIVE_DIRECTION> abbiegen."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -1996,8 +2006,8 @@
         "3": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> machen.",
         "4": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> auf <STREET_NAMES> machen.",
         "5": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> machen um auf <STREET_NAMES> zu bleiben.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "6": "An <JUNCTION_NAME> eine Kehrtwende nach <RELATIVE_DIRECTION> machen.",
+        "7": "In Richtung <TOWARD_SIGN> eine Kehrtwende nach <RELATIVE_DIRECTION> machen."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -2043,8 +2053,8 @@
         "3": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> machen.",
         "4": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> auf <STREET_NAMES> machen.",
         "5": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> machen um auf <STREET_NAMES> zu bleiben.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "6": "An <JUNCTION_NAME> eine Kehrtwende nach <RELATIVE_DIRECTION> machen.",
+        "7": "In Richtung <TOWARD_SIGN> eine Kehrtwende nach <RELATIVE_DIRECTION> machen."
       },
       "empty_street_name_labels": [
         "Fußweg",
@@ -2085,19 +2095,19 @@
     "verbal_multi_cue": {
       "phrases": {
         "0": "<CURRENT_VERBAL_CUE> Dann <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+        "1": "<CURRENT_VERBAL_CUE> Dann, in <LENGTH>, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> Kilometer",
+        "<KILOMETERS> Kilometern",
         "einen Kilometer",
-        "<METERS> Meter",
-        "weniger als 10 Meter"
+        "<METERS> Metern",
+        "weniger als 10 Metern"
       ],
       "us_customary_lengths": [
         "<MILES> Meilen",
         "eine Meile",
         "eine halbe Meile",
-        "a quarter mile",
+        "eine viertel Meile",
         "<FEET> Fuß",
         "weniger als 10 Fuß"
       ],
@@ -2115,16 +2125,16 @@
         "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> Kilometer",
+        "<KILOMETERS> Kilometern",
         "einen Kilometer",
-        "<METERS> Meter",
-        "weniger als 10 Meter"
+        "<METERS> Metern",
+        "weniger als 10 Metern"
       ],
       "us_customary_lengths": [
         "<MILES> Meilen",
         "eine Meile",
         "eine halbe Meile",
-        "a quarter mile",
+        "eine viertel Meile",
         "<FEET> Fuß",
         "weniger als 10 Fuß"
       ],

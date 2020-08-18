@@ -25,10 +25,9 @@ void ParseNoCostOptions(const rapidjson::Document& doc,
 /**
  * Create an route cost method. This is generally shortest time but uses
  * hierarchies and can avoid "shortcuts" through residential areas.
- * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateNoCost(const Costing costing, const Options& options);
+cost_ptr_t CreateNoCost(const CostingOptions& options);
 
 } // namespace sif
 } // namespace valhalla

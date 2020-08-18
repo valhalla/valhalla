@@ -7,10 +7,10 @@
 #include "odin/directionsbuilder.h"
 #include "tyr/serializers.h"
 
-#include <valhalla/proto/api.pb.h>
-#include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/options.pb.h>
-#include <valhalla/proto/trip.pb.h>
+#include "proto/api.pb.h"
+#include "proto/directions.pb.h"
+#include "proto/options.pb.h"
+#include "proto/trip.pb.h"
 
 #include "test.h"
 
@@ -29,9 +29,9 @@ void test_instructions(const std::string& filename,
                        int expected_maneuvers_size,
                        int maneuver_index,
                        const std::string& expected_text_instruction,
-                       const std::string& expected_verbal_transition_alert_instruction = "",
-                       const std::string& expected_verbal_pre_transition_instruction = "",
-                       const std::string& expected_verbal_post_transition_instruction = "") {
+                       const std::string& expected_verbal_transition_alert_instruction,
+                       const std::string& expected_verbal_pre_transition_instruction,
+                       const std::string& expected_verbal_post_transition_instruction) {
   // Load pinpoint test
   std::string path_bytes = test::load_binary_file(filename);
   EXPECT_NE(path_bytes.size(), 0);
@@ -60,37 +60,29 @@ void test_instructions(const std::string& filename,
       request.directions().routes(0).legs(0).maneuver(maneuver_index).text_instruction();
   EXPECT_EQ(found_text_instruction, expected_text_instruction);
 
-  // Validate the verbal_transition_alert_instruction for the specified maneuver index, if requested
-  if (!expected_verbal_transition_alert_instruction.empty()) {
-    std::string found_verbal_transition_alert_instruction =
-        request.directions()
-            .routes(0)
-            .legs(0)
-            .maneuver(maneuver_index)
-            .verbal_transition_alert_instruction();
-    EXPECT_EQ(found_verbal_transition_alert_instruction,
-              expected_verbal_transition_alert_instruction);
-  }
-
-  // Validate the verbal_pre_transition_instruction for the specified maneuver index, if requested
-  if (!expected_verbal_pre_transition_instruction.empty()) {
-    std::string found_verbal_pre_transition_instruction = request.directions()
+  // Validate the verbal_transition_alert_instruction for the specified maneuver index
+  std::string found_verbal_transition_alert_instruction = request.directions()
                                                               .routes(0)
                                                               .legs(0)
                                                               .maneuver(maneuver_index)
-                                                              .verbal_pre_transition_instruction();
-    EXPECT_EQ(found_verbal_pre_transition_instruction, expected_verbal_pre_transition_instruction);
-  }
+                                                              .verbal_transition_alert_instruction();
+  EXPECT_EQ(found_verbal_transition_alert_instruction, expected_verbal_transition_alert_instruction);
 
-  // Validate the verbal_post_transition_instruction for the specified maneuver index, if requested
-  if (!expected_verbal_post_transition_instruction.empty()) {
-    std::string found_verbal_post_transition_instruction = request.directions()
-                                                               .routes(0)
-                                                               .legs(0)
-                                                               .maneuver(maneuver_index)
-                                                               .verbal_post_transition_instruction();
-    EXPECT_EQ(found_verbal_post_transition_instruction, expected_verbal_post_transition_instruction);
-  }
+  // Validate the verbal_pre_transition_instruction for the specified maneuver index
+  std::string found_verbal_pre_transition_instruction = request.directions()
+                                                            .routes(0)
+                                                            .legs(0)
+                                                            .maneuver(maneuver_index)
+                                                            .verbal_pre_transition_instruction();
+  EXPECT_EQ(found_verbal_pre_transition_instruction, expected_verbal_pre_transition_instruction);
+
+  // Validate the verbal_post_transition_instruction for the specified maneuver index
+  std::string found_verbal_post_transition_instruction = request.directions()
+                                                             .routes(0)
+                                                             .legs(0)
+                                                             .maneuver(maneuver_index)
+                                                             .verbal_post_transition_instruction();
+  EXPECT_EQ(found_verbal_post_transition_instruction, expected_verbal_post_transition_instruction);
 }
 
 void test_osrm_maneuver(const std::string& filename,
@@ -307,13 +299,14 @@ TEST(Instructions, validate_ramp_instructions) {
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Take the PA 283 West ramp toward Harrisburg.",
                     "Take the Pennsylvania 2 83 West ramp.",
-                    "Take the Pennsylvania 2 83 West ramp toward Harrisburg.");
+                    "Take the Pennsylvania 2 83 West ramp toward Harrisburg.", "");
 
   // Test take toward driving side left
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/ramp_take_toward_driving_side_left.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take the M11 ramp toward London.", "", "Take the M11 ramp toward London.");
+                    "Take the M11 ramp toward London.", "Take the M11 ramp.",
+                    "Take the M11 ramp toward London.", "");
 }
 
 TEST(Instructions, validate_osrm_ramp_maneuver) {
@@ -343,14 +336,16 @@ TEST(Instructions, validate_exit_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/exit_left_driving_side_right.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take the I 66 East exit on the left toward Washington.", "",
-                    "Take the Interstate 66 East exit on the left toward Washington.");
+                    "Take the I 66 East exit on the left toward Washington.",
+                    "Take the Interstate 66 East exit on the left.",
+                    "Take the Interstate 66 East exit on the left toward Washington.", "");
 
   // Test exit left on left driving side
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/exit_left_driving_side_left.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Take exit 8 onto A120(W)|A120(W).", "", "Take exit 8 onto A1 20(W)|A1 20(W).");
+                    "Take exit 8 onto A120(W)|A120(W).", "Take exit 8.",
+                    "Take exit 8 onto A1 20(W)|A1 20(W).", "");
 
   expected_maneuvers_size = 4;
   // Test exit non-motorway in PA
@@ -358,7 +353,7 @@ TEST(Instructions, validate_exit_instructions) {
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Take the PA 934 exit toward I 81/Fort Indiantown Gap/Annville.",
                     "Take the Pennsylvania 9 34 exit.",
-                    "Take the Pennsylvania 9 34 exit toward Interstate 81, Fort Indiantown Gap.");
+                    "Take the Pennsylvania 9 34 exit toward Interstate 81, Fort Indiantown Gap.", "");
 
   expected_maneuvers_size = 5;
   // Test exit non-motorway in VA
@@ -366,7 +361,7 @@ TEST(Instructions, validate_exit_instructions) {
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Take the US 15 North exit toward Frederick Maryland.",
                     "Take the U.S. 15 North exit.",
-                    "Take the U.S. 15 North exit toward Frederick Maryland.");
+                    "Take the U.S. 15 North exit toward Frederick Maryland.", "");
 }
 
 TEST(Instructions, validate_osrm_exit_maneuver) {
@@ -415,7 +410,8 @@ TEST(Instructions, validate_multi_cue_instructions) {
       {VALHALLA_SOURCE_DIR "test/pinpoints/instructions/multi_cue_start_turn_destination.pbf"},
       expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
       "Drive north on Hartman Bridge Road/PA 896.", "",
-      "Drive north on Hartman Bridge Road, Pennsylvania 8 96. Then Turn left onto U.S. 30.");
+      "Drive north on Hartman Bridge Road, Pennsylvania 8 96. Then Turn left onto U.S. 30.",
+      "Continue for 200 feet.");
 
   maneuver_index = 1;
   // Test the distant turn verbal multi-cue instruction
@@ -456,7 +452,7 @@ TEST(Instructions, validate_roundabout_unnamed_cycleway_instructions) {
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Enter the roundabout and take the 2nd exit.",
                     "Enter the roundabout and take the 2nd exit.",
-                    "Enter the roundabout and take the 2nd exit.");
+                    "Enter the roundabout and take the 2nd exit.", "");
 
   maneuver_index = 2;
   // Test exit roundabout onto unnamed cycleway
@@ -504,6 +500,57 @@ TEST(Instructions, validate_turn_at_instructions) {
                     "Turn left at 銀座七丁目.", "Turn left at 銀座七丁目.",
                     "Turn left at 銀座七丁目. Then You will arrive at 花椿通り.",
                     "Continue for 20 meters.");
+}
+
+TEST(Instructions, validate_obvious_maneuver_instructions) {
+
+  int expected_routes_size = 1;
+  int expected_legs_size = 1;
+  int expected_maneuvers_size = 4;
+  int maneuver_index = 1;
+
+  // Simple name change collapsed
+  test_instructions({VALHALLA_SOURCE_DIR
+                     "test/pinpoints/instructions/obvious_maneuver_simple_name_change.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Turn left onto Vine Street.", "Turn left onto Vine Street.",
+                    "Turn left onto Vine Street.", "Continue for 5 miles.");
+
+  // Turn channel to continue collapsed
+  test_instructions({VALHALLA_SOURCE_DIR
+                     "test/pinpoints/instructions/obvious_maneuver_turn_channel.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Bear right toward 8th Street.", "Bear right toward 8th Street.",
+                    "Bear right toward 8th Street.", "Continue for a quarter mile.");
+
+  // Suppress use of the begin street name when the step contains an obvious maneuver
+  expected_maneuvers_size = 5;
+  test_instructions({VALHALLA_SOURCE_DIR
+                     "test/pinpoints/instructions/obvious_maneuver_begin_name.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Turn left onto Hershey Road/PA 743/PA 341 Truck.",
+                    "Turn left onto Hershey Road.", "Turn left onto Hershey Road, Pennsylvania 7 43.",
+                    "Continue for 8 miles.");
+
+  // Short continue collapsed
+  // no continue on US 422; US 322 and then the PA 39 West/Hersheypark Drive Exit
+  expected_maneuvers_size = 6;
+  maneuver_index = 2;
+  test_instructions({VALHALLA_SOURCE_DIR
+                     "test/pinpoints/instructions/obvious_maneuver_short_continue.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Merge left onto US 322 East.", "", "Merge left onto U.S. 3 22 East.",
+                    "Continue for a half mile.");
+
+  // Exit onto PA 39 West/Hersheypark Drive
+  maneuver_index = 3;
+  test_instructions({VALHALLA_SOURCE_DIR
+                     "test/pinpoints/instructions/obvious_maneuver_short_continue.pbf"},
+                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+                    "Take the PA 39 West/Hersheypark Drive exit toward Attractions.",
+                    "Take the Pennsylvania 39 West exit.",
+                    "Take the Pennsylvania 39 West, Hersheypark Drive exit toward Attractions.",
+                    "Continue for a half mile.");
 }
 
 } // namespace

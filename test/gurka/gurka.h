@@ -29,9 +29,14 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+#include <valhalla/proto/trip.pb.h>
+
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
+#include <osmium/io/output_iterator.hpp>
 #include <osmium/io/pbf_output.hpp>
+#include <osmium/object_pointer_collection.hpp>
+#include <osmium/osm/object_comparisons.hpp>
 
 #include <regex>
 #include <string>
@@ -126,6 +131,7 @@ build_config(const std::string& tiledir,
          "search_cutoff" : 35000,
          "node_snap_tolerance" : 5,
          "street_side_tolerance" : 5,
+         "street_side_max_distance": 1000,
          "heading_tolerance" : 60
         }
      },
@@ -157,10 +163,11 @@ build_config(const std::string& tiledir,
   return ptree;
 }
 
-std::string build_valhalla_route_request(const map& map,
-                                         const std::vector<std::string>& waypoints,
-                                         const std::string& costing = "auto",
-                                         const std::string& datetime = "") {
+std::string
+build_valhalla_route_request(const map& map,
+                             const std::vector<std::string>& waypoints,
+                             const std::string& costing = "auto",
+                             const std::unordered_map<std::string, std::string>& options = {}) {
 
   rapidjson::Document doc;
   doc.SetObject();
@@ -179,20 +186,18 @@ std::string build_valhalla_route_request(const map& map,
   speed_types.PushBack("freeflow", allocator);
   speed_types.PushBack("constrained", allocator);
   speed_types.PushBack("predicted", allocator);
-  if (datetime == "current") {
-    dt.AddMember("type", 0, allocator);
-    dt.AddMember("value", "current", allocator);
-    speed_types.PushBack("current", allocator);
-  } else if (datetime != "") {
-    dt.AddMember("type", 1, allocator);
-    dt.AddMember("value", datetime, allocator);
+
+  // add the options using the pointer method
+  for (const auto& kv : options) {
+    if (kv.first.find("/date_time/type") != std::string::npos && kv.second == "0") {
+      speed_types.PushBack("current", allocator);
+    }
+    rapidjson::Pointer(kv.first).Set(doc, kv.second);
   }
 
   doc.AddMember("locations", locations, allocator);
   doc.AddMember("costing", costing, allocator);
-  if (datetime != "") {
-    doc.AddMember("date_time", dt, allocator);
-  }
+
   rapidjson::Value costing_options(rapidjson::kObjectType);
   rapidjson::Value co(rapidjson::kObjectType);
   co.AddMember("speed_types", speed_types, allocator);
@@ -346,7 +351,7 @@ inline void build_pbf(const nodelayout& node_locations,
                       const nodes& nodes,
                       const relations& relations,
                       const std::string& filename,
-                      const int initial_osm_id = 0) {
+                      const uint64_t initial_osm_id = 0) {
 
   const size_t initial_buffer_size = 10000;
   osmium::memory::Buffer buffer{initial_buffer_size, osmium::memory::Buffer::auto_grow::yes};
@@ -377,12 +382,12 @@ inline void build_pbf(const nodelayout& node_locations,
   }
 
   std::unordered_map<std::string, int> node_id_map;
-  std::unordered_map<std::string, int> node_osm_id_map;
+  std::unordered_map<std::string, uint64_t> node_osm_id_map;
   int id = 0;
   for (auto& loc : node_locations) {
     node_id_map[loc.first] = id++;
   }
-  int osm_id = initial_osm_id;
+  uint64_t osm_id = initial_osm_id;
   for (auto& loc : node_locations) {
     if (used_nodes.count(loc.first) > 0) {
       node_osm_id_map[loc.first] = osm_id++;
@@ -410,9 +415,20 @@ inline void build_pbf(const nodelayout& node_locations,
     }
   }
 
-  std::unordered_map<std::string, int> way_osm_id_map;
+  std::unordered_map<std::string, uint64_t> way_osm_id_map;
   for (const auto& way : ways) {
-    way_osm_id_map[way.first] = osm_id++;
+    // allow setting custom id
+    auto way_id = osm_id++;
+    auto found = way.second.find("osm_id");
+    if (found != way.second.cend()) {
+      uint64_t id = std::stoull(found->second);
+      if (id < osm_id) {
+        throw std::invalid_argument("Osm way id has already been used");
+      }
+      way_id = id;
+    }
+
+    way_osm_id_map[way.first] = way_id;
     std::vector<int> nodeids;
     for (const auto& ch : way.first) {
       nodeids.push_back(node_osm_id_map[std::string(1, ch)]);
@@ -434,16 +450,16 @@ inline void build_pbf(const nodelayout& node_locations,
   for (const auto& relation : relations) {
 
     std::vector<osmium::builder::attr::member_type> members;
-
     for (const auto& member : relation.members) {
       if (member.type == node_member) {
-        members.push_back(
-            {osmium::item_type::node, node_osm_id_map[member.ref], member.role.c_str()});
+        members.push_back({osmium::item_type::node, static_cast<int64_t>(node_osm_id_map[member.ref]),
+                           member.role.c_str()});
       } else {
         if (way_osm_id_map.count(member.ref) == 0) {
           throw std::runtime_error("Relation member refers to an undefined way " + member.ref);
         }
-        members.push_back({osmium::item_type::way, way_osm_id_map[member.ref], member.role.c_str()});
+        members.push_back({osmium::item_type::way, static_cast<int64_t>(way_osm_id_map[member.ref]),
+                           member.role.c_str()});
       }
     }
 
@@ -467,10 +483,28 @@ inline void build_pbf(const nodelayout& node_locations,
 
   // Initialize Writer using the header from above and tell it that it
   // is allowed to overwrite a possibly existing file.
-  osmium::io::Writer writer{output_file, header, osmium::io::overwrite::allow};
+  osmium::io::Writer writer{output_file, header, osmium::io::overwrite::allow, osmium::io::fsync::no};
 
-  // Write out the contents of the output buffer.
-  writer(std::move(buffer));
+  // Sort by id..
+  // TODO: why does everything use object_id_type of signed int64?
+  osmium::ObjectPointerCollection objects;
+  osmium::apply(buffer, objects);
+  struct object_order_type_unsigned_id_version {
+    bool operator()(const osmium::OSMObject* lhs, const osmium::OSMObject* rhs) const noexcept {
+      if (lhs->type() == rhs->type()) {
+        if (lhs->id() == rhs->id()) {
+          return lhs->version() < rhs->version();
+        }
+        return static_cast<uint64_t>(lhs->id()) < static_cast<uint64_t>(rhs->id());
+      }
+      return lhs->type() < rhs->type();
+    }
+  };
+  objects.sort(object_order_type_unsigned_id_version{});
+
+  // Write out the objects in sorted order
+  auto out = osmium::io::make_output_iterator(writer);
+  std::copy(objects.begin(), objects.end(), out);
 
   // Explicitly close the writer. Will throw an exception if there is
   // a problem. If you wait for the destructor to close the writer, you
@@ -479,27 +513,6 @@ inline void build_pbf(const nodelayout& node_locations,
 }
 
 } // namespace detail
-
-/**
- * Generate a new GraphReader that doesn't re-use a previously
- * statically initizalized tile_extract member variable.
- *
- * Useful if you need to reload a tile extract within the same
- * process
- */
-std::shared_ptr<valhalla::baldr::GraphReader>
-make_clean_graphreader(const boost::property_tree::ptree& pt) {
-
-  // Wrapper sub-class to allow replacing the statically initialized
-  // tile_extract member variable
-  struct ResettingGraphReader : valhalla::baldr::GraphReader {
-    ResettingGraphReader(boost::property_tree::ptree pt) : GraphReader(pt) {
-      // Reset the statically initialized tile_extract_ member variable
-      tile_extract_.reset(new valhalla::baldr::GraphReader::tile_extract_t(pt));
-    }
-  };
-  return std::make_shared<ResettingGraphReader>(pt);
-}
 
 /**
  * Given a node layout, set of ways, node properties and relations, generates an OSM PBF file,
@@ -615,7 +628,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
 valhalla::Api route(const map& map,
                     const std::vector<std::string>& waypoints,
                     const std::string& costing,
-                    const std::string& datetime,
+                    const std::unordered_map<std::string, std::string>& options = {},
                     std::shared_ptr<valhalla::baldr::GraphReader> reader = {}) {
   if (!reader)
     reader.reset(new valhalla::baldr::GraphReader(map.config.get_child("mjolnir")));
@@ -632,7 +645,7 @@ valhalla::Api route(const map& map,
     first = false;
   };
   std::cerr << " with costing " << costing << std::endl;
-  auto request_json = detail::build_valhalla_route_request(map, waypoints, costing, datetime);
+  auto request_json = detail::build_valhalla_route_request(map, waypoints, costing, options);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -645,9 +658,9 @@ valhalla::Api route(const map& map,
                     const std::string& from,
                     const std::string& to,
                     const std::string& costing,
-                    const std::string& datetime = "",
+                    const std::unordered_map<std::string, std::string>& options = {},
                     std::shared_ptr<valhalla::baldr::GraphReader> reader = {}) {
-  return route(map, {from, to}, costing, datetime, reader);
+  return route(map, {from, to}, costing, options, reader);
 }
 
 valhalla::Api route(const map& map, const std::string& request_json) {
@@ -688,27 +701,39 @@ valhalla::Api match(const map& map,
   return api;
 }
 
+/* Returns the raw_result formatted as a JSON document in the given format.
+ *
+ * @param raw_result the result of a /route or /match request
+ * @param format the response format to use for the JSON document
+ * @return A JSON document created from serialized raw_result. Caller should
+ * call HasParseError() on the returned document to verify its validity.
+ */
+rapidjson::Document convert_to_json(valhalla::Api& raw_result, valhalla::Options_Format format) {
+  raw_result.mutable_options()->set_format(format);
+
+  std::string json = tyr::serializeDirections(raw_result);
+  rapidjson::Document result;
+  result.Parse(json.c_str());
+  return result;
+}
+
 namespace assert {
 namespace osrm {
 
 /**
- * Tests if a found path traverses the expected roads in the expected order
+ * Tests if a found path traverses the expected steps in the expected order
  *
  * @param result the result of a /route or /match request
- * @param expected_names the names of the roads the path should traverse in order
+ * @param expected_names the names of the step roads the path should traverse in order
  * @param dedupe whether subsequent same-name roads should appear multiple times or not (default not)
  */
-void expect_route(valhalla::Api& raw_result,
+void expect_steps(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
                   bool dedupe = true) {
 
-  raw_result.mutable_options()->set_format(valhalla::Options_Format_osrm);
-  auto json = tyr::serializeDirections(raw_result);
-
-  rapidjson::Document result;
-  result.Parse(json.c_str());
+  rapidjson::Document result = convert_to_json(raw_result, valhalla::Options_Format_osrm);
   if (result.HasParseError()) {
-    FAIL();
+    FAIL() << "Error converting route response to JSON";
   }
 
   EXPECT_TRUE(result.HasMember("routes"));
@@ -746,7 +771,7 @@ void expect_route(valhalla::Api& raw_result,
     actual_names.erase(last, actual_names.end());
   }
 
-  EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path";
+  EXPECT_EQ(actual_names, expected_names) << "Actual steps didn't match expected steps";
 }
 /**
  * Tests if a found path traverses the expected roads in the expected order
@@ -759,13 +784,9 @@ void expect_match(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
                   bool dedupe = true) {
 
-  raw_result.mutable_options()->set_format(valhalla::Options_Format_osrm);
-  auto json = tyr::serializeDirections(raw_result);
-
-  rapidjson::Document result;
-  result.Parse(json.c_str());
+  rapidjson::Document result = convert_to_json(raw_result, valhalla::Options_Format_osrm);
   if (result.HasParseError()) {
-    FAIL();
+    FAIL() << "Error converting route response to JSON";
   }
 
   EXPECT_TRUE(result.HasMember("matchings"));
@@ -925,6 +946,40 @@ void expect_eta(const valhalla::Api& result,
   } else {
     EXPECT_NEAR(static_cast<float>(eta_sec), expected_eta_seconds, error_margin);
   }
+}
+
+std::string
+to_string(const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) {
+  std::string str;
+
+  for (const auto& street_name : street_names) {
+    if (!str.empty()) {
+      str += "/";
+    }
+    str += street_name.value();
+  }
+  return str;
+}
+
+/**
+ * Tests if a found path traverses the expected edges in the expected order
+ *
+ * @param result the result of a /route or /match request
+ * @param expected_names the names of the edges the path should traverse in order
+ */
+void expect_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
+  EXPECT_EQ(result.trip().routes_size(), 1);
+
+  std::vector<std::string> actual_names;
+  for (const auto& leg : result.trip().routes(0).legs()) {
+    for (const auto& node : leg.node()) {
+      if (node.has_edge()) {
+        actual_names.push_back(to_string(node.edge().name()));
+      }
+    }
+  }
+
+  EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path";
 }
 
 } // namespace raw

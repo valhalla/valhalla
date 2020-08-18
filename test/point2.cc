@@ -40,26 +40,14 @@ TEST(Point2, TestPointPlusVector) {
   TryPointPlusVector(Point2(4.0f, 4.0f), Vector2(4.0f, 4.0f), Point2(8.0f, 8.0f));
 }
 
-void TryMidpoint(const Point2& a, const Point2& b, const Point2& res) {
-  Point2 m = a.MidPoint(b);
+void TryMidpoint(const Point2& a, const Point2& b, const Point2& res, float mp = .5f) {
+  Point2 m = a.PointAlongSegment(b, mp);
   EXPECT_EQ(m.x(), res.x());
   EXPECT_EQ(m.y(), res.y());
 }
 TEST(Point2, TestMidpoint) {
   TryMidpoint(Point2(4.0f, 4.0f), Point2(8.0f, 8.0f), Point2(6.0f, 6.0f));
-}
-
-void TryAffineCombination(const Point2& a,
-                          const Point2& b,
-                          const float af,
-                          const float bf,
-                          const Point2& res) {
-  Point2 m = a.AffineCombination(af, bf, b);
-  EXPECT_EQ(m.x(), res.x());
-  EXPECT_EQ(m.y(), res.y());
-}
-TEST(Point2, TestAffineCombination) {
-  TryAffineCombination(Point2(4.0f, 4.0f), Point2(8.0f, 8.0f), 0.25f, 0.75f, Point2(7.0f, 7.0f));
+  TryMidpoint(Point2(4.0f, 4.0f), Point2(8.0f, 8.0f), Point2(7.0f, 7.0f), 0.75f);
 }
 
 void TryDistance(const Point2& a, const Point2& b, const float res) {

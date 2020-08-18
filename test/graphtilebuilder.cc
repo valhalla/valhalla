@@ -27,8 +27,8 @@ public:
   using GraphTileBuilder::GraphTileBuilder;
 };
 
-void assert_tile_equalish(const GraphTile a,
-                          const GraphTile b,
+void assert_tile_equalish(const GraphTile& a,
+                          const GraphTile& b,
                           size_t difference,
                           const std::array<std::vector<GraphId>, kBinCount>& bins,
                           const std::string& msg) {
@@ -215,14 +215,14 @@ public:
     header_->set_graphid(id);
     header_->set_directededgecount(1 + (id.tileid() == o_id.tileid()) * 1);
 
-    edgeinfo_ = new char[sizeof(uint64_t) + sizeof(EdgeInfo::PackedItem) + e.size()];
-    std::memset(static_cast<void*>(edgeinfo_), 0, sizeof(uint64_t));
-    EdgeInfo::PackedItem pi{0, static_cast<uint32_t>(e.size())};
-    std::memcpy(static_cast<void*>(edgeinfo_ + sizeof(uint64_t)), static_cast<void*>(&pi),
-                sizeof(EdgeInfo::PackedItem));
+    auto ei_size = sizeof(EdgeInfo::EdgeInfoInner) + e.size();
+    edgeinfo_ = new char[ei_size];
+    EdgeInfo::EdgeInfoInner pi{0, 0, 0, 0, 0, 0, static_cast<uint32_t>(e.size())};
+    std::memcpy(static_cast<void*>(edgeinfo_), static_cast<void*>(&pi),
+                sizeof(EdgeInfo::EdgeInfoInner));
     textlist_ = edgeinfo_;
     textlist_size_ = 0;
-    std::memcpy(static_cast<void*>(edgeinfo_ + sizeof(uint64_t) + sizeof(EdgeInfo::PackedItem)),
+    std::memcpy(static_cast<void*>(edgeinfo_ + sizeof(EdgeInfo::EdgeInfoInner)),
                 static_cast<void*>(&e[0]), e.size());
 
     directededges_ = new DirectedEdge[2];
@@ -238,7 +238,7 @@ public:
 };
 
 TEST(GraphTileBuilder, TestBinEdges) {
-  fake_tile fake(
+  std::string encoded_shape5 =
       "gsoyLcpczmFgJOsMzAwGtDmDtEmApG|@tE|EdF~PjKlRjLbKhLrJnTdD`\\oEz`@wAlJKjVnHfMpRbQdQbRvTtNrM~"
       "ShNdZ|HjLfCbPfIbGdNxBjOyBjPOnJm@rDvD~BbFxFzA|IjAdEdFy@tOqBbPv@`HfHj`@"
       "pGxMtNbFlUjBtNvMhLbQfOxLhNzVTrFkGhMsQ|J_N{AqKkBqRxCoZpGu^jLqMz@sQwCmPmJwLgNcHePwIqG{"
@@ -247,7 +247,12 @@ TEST(GraphTileBuilder, TestBinEdges) {
       "JtOsOvXyBvMbBtOlAtO}EdF}GjA_QhBiKjBsHxLoGtYkGdd@yJbf@fAxWvEtO]fCcFl@{ZlJcKnI{@lJtDpH`I|J~"
       "GbFtG|@hCz@MtEoCxB_QpGmKdE_KtPyAdO~BvNUdEyBxB_HjB{NxBwOxAuHrFwF~IXjLbDjKbKbFnIzArBvDwAdE{"
       "GtEyE|IElJ~B`H_AvCyDjBgH?mRgDy`@]{OtDaKxLiCvNiFjLgMxL_XdPgr@re@yi@vb@mWrQuFjKqHnSuH|"
-      "JiGlJqAfDbAtE~A~GgBdFyKlJy[xWqMvMqTlKoPfCeKiBkHeF}E{KoD{JaLsGwSeEg~BqR");
+      "JiGlJqAfDbAtE~A~GgBdFyKlJy[xWqMvMqTlKoPfCeKiBkHeF}E{KoD{JaLsGwSeEg~BqR";
+  auto decoded_shape = valhalla::midgard::decode<std::vector<PointLL>>(encoded_shape5);
+  auto encoded_shape7 = valhalla::midgard::encode7(decoded_shape);
+  fake_tile fake(encoded_shape5);
+  auto info = fake.edgeinfo(fake.directededge(0)->edgeinfo_offset());
+  EXPECT_EQ(info.encoded_shape(), encoded_shape7);
   GraphTileBuilder::tweeners_t tweeners;
   auto bins = GraphTileBuilder::BinEdges(&fake, tweeners);
   EXPECT_EQ(tweeners.size(), 1) << "This edge leaves a tile for 1 other tile and comes back.";

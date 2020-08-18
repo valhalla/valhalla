@@ -30,7 +30,9 @@ set(includes
      ${VALHALLA_SOURCE_DIR}/valhalla
      $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-     ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+     ${VALHALLA_SOURCE_DIR}/third_party/date/include
+     ${CMAKE_CURRENT_BINARY_DIR}/src/baldr
+     )
 
 set(sources
     accessrestriction.cc
@@ -48,6 +50,7 @@ set(sources
     edgetracker.cc
     merge.cc
     nodeinfo.cc
+    openlr.cc
     location.cc
     pathlocation.cc
     tilehierarchy.cc
@@ -68,8 +71,8 @@ set(sources
     verbal_text_formatter_us_tx.cc
     verbal_text_formatter_factory.cc)
 
-#basic timezone stuff
 list(APPEND sources
+    #basic timezone stuff
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_africa.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_antarctica.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_asia.h

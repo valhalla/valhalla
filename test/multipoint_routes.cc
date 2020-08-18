@@ -34,7 +34,7 @@ boost::property_tree::ptree get_conf() {
         "logging":{"long_request": 100,
         "type": "std_out"
         },
-        "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
+        "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
       },
       "thor":{"logging":{"long_request": 100,
         "type": "std_out"
@@ -381,9 +381,10 @@ TEST(MultiPointRoutesBreakThrough, test_mid_break_through_elapsed) {
   // even without turncost, have taken some non zero time to traverse
   auto last_node = legs.rbegin()->node().rbegin();
   auto previous_node = std::next(last_node);
-  EXPECT_LT(previous_node->elapsed_time(),
-            last_node->elapsed_time() - previous_node->transition_time());
-  EXPECT_NEAR(legs.rbegin()->node().rbegin()->elapsed_time(), 18.2, .2);
+  EXPECT_LT(previous_node->cost().elapsed_cost().seconds(),
+            last_node->cost().elapsed_cost().seconds() -
+                previous_node->cost().transition_cost().seconds());
+  EXPECT_NEAR(legs.rbegin()->node().rbegin()->cost().elapsed_cost().seconds(), 18.2, .2);
 }
 
 } // namespace

@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-#include "filesystem.h"
+#include <valhalla/filesystem.h>
 
 #ifdef _MSC_VER
 #include <io.h>
@@ -468,6 +468,11 @@ public:
     // if we did find it return the iterator to it
     auto* found = std::lower_bound(static_cast<const T*>(memmap),
                                    static_cast<const T*>(memmap) + memmap.size(), target, predicate);
+    // if we got to the end, no element we have
+    if (found == static_cast<const T*>(memmap) + memmap.size()) {
+      return end();
+    }
+
     if (!(predicate(target, *found) || predicate(*found, target))) {
       return at(found - static_cast<const T*>(memmap));
     }

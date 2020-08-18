@@ -558,11 +558,24 @@ protected:
    */
   bool IsWithinVerbalMultiCueBounds(Maneuver& maneuver);
 
+  std::string FormBssManeuverType(DirectionsLeg_Maneuver_BssManeuverType);
   /**
    * Combines a simple preposition and a definite article for certain languages.
    */
   virtual void FormArticulatedPrepositions(std::string& instruction) {
   }
+
+  /**
+   * If begin_street_names exist, assign begin_street_names to street_names and clear the
+   * begin_street_names.
+   *
+   * @param maneuver The current maneuver to process.
+   * @param begin_street_names The begin street names string.
+   * @param street_names The street names string.
+   */
+  void UpdateObviousManeuverStreetNames(Maneuver& maneuver,
+                                        std::string& begin_street_names,
+                                        std::string& street_names);
 
   /////////////////////////////////////////////////////////////////////////////
   const Options& options_;

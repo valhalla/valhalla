@@ -13,6 +13,7 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
@@ -62,7 +63,7 @@ public:
       throw std::invalid_argument("invalid cost = " + std::to_string(cost.cost));
     }
     if (turn_cost < 0.f) {
-      throw std::invalid_argument("invalid turn_cost = " + std::to_string(turn_cost));
+      throw std::invalid_argument("invalid transition_time = " + std::to_string(turn_cost));
     }
   }
 
@@ -282,7 +283,7 @@ find_shortest_path(baldr::GraphReader& reader,
                    const std::vector<baldr::PathLocation>& destinations,
                    uint16_t origin_idx,
                    labelset_ptr_t labelset,
-                   const midgard::DistanceApproximator& approximator,
+                   const midgard::DistanceApproximator<midgard::PointLL>& approximator,
                    const float search_radius,
                    sif::cost_ptr_t costing,
                    const Label* edgelabel,

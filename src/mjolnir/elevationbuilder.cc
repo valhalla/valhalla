@@ -197,7 +197,7 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt) {
   // Setup threads
   uint32_t nthreads =
       std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+               pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
   std::vector<std::shared_ptr<std::thread>> threads(nthreads);
 
   // Setup promises. Hold the results for the threads

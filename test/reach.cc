@@ -5,7 +5,8 @@
 #include "loki/reach.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
-#include "sif/autocost.h"
+#include "sif/costfactory.h"
+#include "sif/dynamiccost.h"
 
 #include <algorithm>
 #include <boost/property_tree/ptree.hpp>
@@ -18,16 +19,6 @@ namespace vs = valhalla::sif;
 
 namespace {
 
-std::shared_ptr<vs::DynamicCost> create_costing() {
-  Options options;
-  const rapidjson::Document doc;
-  sif::ParseAutoCostOptions(doc, "/costing_options/auto", options.add_costing_options());
-  sif::ParseAutoShorterCostOptions(doc, "/costing_options/auto_shorter",
-                                   options.add_costing_options());
-  options.add_costing_options();
-  return vs::CreateAutoCost(Costing::auto_, options);
-}
-
 boost::property_tree::ptree get_conf() {
   std::stringstream ss;
   ss << R"({
@@ -35,7 +26,7 @@ boost::property_tree::ptree get_conf() {
       "loki":{
         "actions":["route"],
         "logging":{"long_request": 100},
-        "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
+        "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
       },
       "thor":{"logging":{"long_request": 100}},
       "odin":{"logging":{"long_request": 100}},
@@ -80,7 +71,7 @@ TEST(Reach, check_all_reach) {
   auto conf = get_conf();
   GraphReader reader(conf.get_child("mjolnir"));
 
-  auto costing = create_costing();
+  auto costing = vs::CostFactory{}.Create(Costing::auto_);
   Reach reach_finder;
 
   // look at all the edges
