@@ -295,6 +295,9 @@ bool build_tile_set(const boost::property_tree::ptree& config,
       if (filesystem::exists(tile_manifest)) {
         tiles = TileManifest::ReadFromFile(tile_manifest).tileset;
       } else {
+        // TODO: Remove this backfill in the future, and make calling constructedges stage
+        // explicitly required in the future.
+        LOG_WARN("Tile manifest not found, rebuilding edges and manifest");
         tiles =
             GraphBuilder::BuildEdges(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin);
       }
