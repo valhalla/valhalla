@@ -426,21 +426,21 @@ public:
                                                   baldr::DateTime::get_tz_db().from_index(tz_index));
   }
 
-  inline bool EvaluateRestrictions(uint16_t auto_type,
+  inline bool EvaluateRestrictions(uint16_t mode,
                                    const baldr::DirectedEdge* edge,
                                    const baldr::GraphTile*& tile,
                                    const baldr::GraphId& edgeid,
                                    const uint64_t current_time,
                                    const uint32_t tz_index,
                                    int& restriction_idx) const {
-    // If this edge won't have a restruction for this mode of travel we are allowed
-    if (edge->access_restriction() & auto_type) {
+    // If this edge won't have a restriction for this mode of travel we are allowed
+    if (edge->access_restriction() & mode) {
       return true;
     }
 
     // There is 1 or more restrictions here so we need to find them
     const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(edgeid.id(), auto_type);
+        tile->GetAccessRestrictions(edgeid.id(), mode);
     bool time_allowed = false;
     for (int i = 0, n = static_cast<int>(restrictions.size()); i < n; ++i) {
       const auto& restriction = restrictions[i];
