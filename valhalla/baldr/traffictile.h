@@ -17,7 +17,7 @@
 #else
 #include <stdint.h>
 #endif
-#include "valhalla.h"
+#include <valhalla.h>
 
 #ifndef C_ONLY_INTERFACE
 namespace valhalla {

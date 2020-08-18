@@ -55,7 +55,7 @@ public:
   Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locs,
           const unsigned int max_minutes,
           baldr::GraphReader& graphreader,
-          const std::shared_ptr<sif::DynamicCost>* mode_costing,
+          const sif::mode_costing_t& mode_costing,
           const sif::TravelMode mode);
 
   // Compute iso-tile that we can use to generate isochrones. This is used for
@@ -65,7 +65,7 @@ public:
   ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
                  const unsigned int max_minutes,
                  baldr::GraphReader& graphreader,
-                 const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                 const sif::mode_costing_t& mode_costing,
                  const sif::TravelMode mode);
 
   /**
@@ -84,7 +84,7 @@ public:
   ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
                     const unsigned int max_minutes,
                     baldr::GraphReader& graphreader,
-                    const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                    const sif::mode_costing_t& mode_costing,
                     const sif::TravelMode mode);
 
 protected:

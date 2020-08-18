@@ -1,11 +1,14 @@
 #include "mjolnir/osmaccessrestriction.h"
 
+#include <cstring>
+
 using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {
 
-OSMAccessRestriction::OSMAccessRestriction() : attributes_{} {
+OSMAccessRestriction::OSMAccessRestriction() {
+  memset(this, 0, sizeof(OSMAccessRestriction));
 }
 
 OSMAccessRestriction::~OSMAccessRestriction() {

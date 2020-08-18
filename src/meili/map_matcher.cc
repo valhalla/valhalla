@@ -495,7 +495,7 @@ namespace meili {
 MapMatcher::MapMatcher(const boost::property_tree::ptree& config,
                        baldr::GraphReader& graphreader,
                        CandidateQuery& candidatequery,
-                       const sif::cost_ptr_t* mode_costing,
+                       const sif::mode_costing_t& mode_costing,
                        sif::TravelMode travelmode)
     : config_(config), graphreader_(graphreader), candidatequery_(candidatequery),
       mode_costing_(mode_costing), travelmode_(travelmode), interrupt_(nullptr), vs_(), ts_(vs_),

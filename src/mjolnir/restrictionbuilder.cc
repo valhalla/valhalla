@@ -630,7 +630,7 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
 
     std::vector<std::shared_ptr<std::thread>> threads(
         std::max(static_cast<unsigned int>(1),
-                 pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency())));
+                 pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency())));
     // Hold the results (DataQuality/stats) for the threads
     std::vector<std::promise<DataQuality>> results(threads.size());
 

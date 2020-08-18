@@ -28,8 +28,8 @@
 #include "odin/sign.h"
 #include "odin/signs.h"
 
-#include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/options.pb.h>
+#include "proto/directions.pb.h"
+#include "proto/options.pb.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -1125,8 +1125,8 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
   // Set the time based on the delta of the elapsed time between the begin
   // and end nodes
-  maneuver.set_time(trip_path_->node(maneuver.end_node_index()).elapsed_time() -
-                    trip_path_->node(maneuver.begin_node_index()).elapsed_time());
+  maneuver.set_time(trip_path_->node(maneuver.end_node_index()).cost().elapsed_cost().seconds() -
+                    trip_path_->node(maneuver.begin_node_index()).cost().elapsed_cost().seconds());
 
   // if possible, set the turn degree and relative direction
   if (prev_edge) {
@@ -1188,6 +1188,17 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
     if (curr_edge_names->size() > common_base_names->size()) {
       maneuver.set_begin_street_names(std::move(curr_edge_names));
     }
+  }
+
+  if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare && prev_edge &&
+      (prev_edge->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kBicycle) &&
+      maneuver.travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kPedestrian) {
+    maneuver.set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare);
+  }
+  if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare && prev_edge &&
+      (prev_edge->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kPedestrian) &&
+      maneuver.travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kBicycle) {
+    maneuver.set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare);
   }
 
   // Set the verbal text formatter
@@ -1657,7 +1668,11 @@ ManeuversBuilder::DetermineCardinalDirection(uint32_t heading) {
 bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_index) {
   auto prev_edge = trip_path_->GetPrevEdge(node_index);
   auto curr_edge = trip_path_->GetCurrEdge(node_index);
+  auto node = trip_path_->GetEnhancedNode(node_index);
 
+  if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare) {
+    return false;
+  }
   /////////////////////////////////////////////////////////////////////////////
   // Process transit
   if ((maneuver.travel_mode() == TripLeg_TravelMode_kTransit) &&

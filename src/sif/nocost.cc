@@ -3,6 +3,7 @@
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
+#include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 
@@ -26,11 +27,11 @@ namespace sif {
 class NoCost : public DynamicCost {
 public:
   /**
-   * Construct costing. Pass in cost type and options using protocol buffer(pbf).
+   * Construct costing. Pass in cost type and costing_options using protocol buffer(pbf).
    * @param  costing specified costing type.
-   * @param  options pbf with request options.
+   * @param  costing_options pbf with request costing_options.
    */
-  NoCost(const Costing costing, const Options& options) : DynamicCost(options, TravelMode::kDrive) {
+  NoCost(const CostingOptions& costing_options) : DynamicCost(costing_options, TravelMode::kDrive) {
   }
 
   virtual ~NoCost() {
@@ -61,7 +62,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const baldr::GraphTile*& tile,
+                       const GraphTile* tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -90,7 +91,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const baldr::GraphTile*& tile,
+                              const GraphTile* tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -207,10 +208,12 @@ void ParseNoCostOptions(const rapidjson::Document& doc,
                         const std::string& costing_options_key,
                         CostingOptions* pbf_costing_options) {
   // this is probably not needed but its part of the contract for costing..
+  pbf_costing_options->set_costing(Costing::none_);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
 }
 
-cost_ptr_t CreateNoCost(const Costing costing, const Options& options) {
-  return std::make_shared<NoCost>(costing, options);
+cost_ptr_t CreateNoCost(const CostingOptions& costing_options) {
+  return std::make_shared<NoCost>(costing_options);
 }
 
 } // namespace sif

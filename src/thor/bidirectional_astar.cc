@@ -249,8 +249,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   // Get cost. Separate out transition cost.
   Cost transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
   // TODO: actually use time_info
-  Cost newcost = pred.cost() + transition_cost +
-                 costing_->EdgeCost(meta.edge, tile, kConstrainedFlowSecondOfDay);
+  Cost newcost = pred.cost() + transition_cost + costing_->EdgeCost(meta.edge, tile);
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -457,8 +456,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // can properly recover elapsed time on the reverse path.
   Cost transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
-  Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay);
-  newcost.cost += transition_cost.cost;
+  Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2) + transition_cost;
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -502,7 +500,7 @@ std::vector<std::vector<PathInfo>>
 BidirectionalAStar::GetBestPath(valhalla::Location& origin,
                                 valhalla::Location& destination,
                                 GraphReader& graphreader,
-                                const std::shared_ptr<DynamicCost>* mode_costing,
+                                const sif::mode_costing_t& mode_costing,
                                 const sif::TravelMode mode,
                                 const Options& options) {
   // Set the mode and costing
@@ -689,13 +687,13 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
     // the end this edge, plus the cost to the end of the reverse predecessor,
     // plus the transition cost.
     c = edgelabels_forward_[pred.predecessor()].cost().cost + opp_pred.cost().cost +
-        pred.transition_cost();
+        pred.transition_cost().cost;
   } else {
     // If no predecessor on the forward path get the predecessor on
     // the reverse path to form the cost.
     uint32_t predidx = opp_pred.predecessor();
     float oppcost = (predidx == kInvalidLabel) ? 0 : edgelabels_reverse_[predidx].cost().cost;
-    c = pred.cost().cost + oppcost + opp_pred.transition_cost();
+    c = pred.cost().cost + oppcost + opp_pred.transition_cost().cost;
   }
 
   // Set best_connection if cost is less than the best cost so far.
@@ -742,13 +740,13 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
     // the end this edge, plus the cost to the end of the forward predecessor,
     // plus the transition cost.
     c = edgelabels_reverse_[rev_pred.predecessor()].cost().cost + fwd_pred.cost().cost +
-        rev_pred.transition_cost();
+        rev_pred.transition_cost().cost;
   } else {
     // If no predecessor on the reverse path get the predecessor on
     // the forward path to form the cost.
     uint32_t predidx = fwd_pred.predecessor();
     float oppcost = (predidx == kInvalidLabel) ? 0 : edgelabels_forward_[predidx].cost().cost;
-    c = rev_pred.cost().cost + oppcost + fwd_pred.transition_cost();
+    c = rev_pred.cost().cost + oppcost + fwd_pred.transition_cost().cost;
   }
 
   // Set best_connection if cost is less than the best cost so far.
@@ -807,8 +805,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
     // Get cost and sort cost (based on distance from endnode of this edge
     // to the destination
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay) *
-                (1.0f - edge.percent_along());
+    Cost cost = costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
 
     // Store a node-info for later timezone retrieval (approximate for closest)
     if (closest_ni == nullptr) {
@@ -888,8 +885,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     // directed edge for costing, as this is the forward direction along the
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
-    Cost cost =
-        costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay) * edge.percent_along();
+    Cost cost = costing_->EdgeCost(directededge, tile) * edge.percent_along();
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -941,9 +937,8 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
   for (auto edgelabel_index = idx1; edgelabel_index != kInvalidLabel;
        edgelabel_index = edgelabels_forward_[edgelabel_index].predecessor()) {
     const BDEdgeLabel& edgelabel = edgelabels_forward_[edgelabel_index];
-    path.emplace_back(edgelabel.mode(), edgelabel.cost().secs, edgelabel.edgeid(), 0,
-                      edgelabel.cost().cost, edgelabel.restriction_idx(),
-                      edgelabel.transition_secs());
+    path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), 0,
+                      edgelabel.restriction_idx(), edgelabel.transition_cost());
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
@@ -964,12 +959,12 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     // destination edge) to recompute the elapsed time and cost. dont forget the transition cost from
     // the forward path
     if (path.size() > 1) {
-      path.back().elapsed_time = path[path.size() - 2].elapsed_time +
-                                 edgelabels_reverse_[idx2].cost().secs +
-                                 edgelabels_forward_[idx1].transition_secs();
-      path.back().elapsed_cost = path[path.size() - 2].elapsed_cost +
-                                 edgelabels_reverse_[idx2].cost().cost +
-                                 edgelabels_forward_[idx1].transition_cost();
+      path.back().elapsed_cost.secs = path[path.size() - 2].elapsed_cost.secs +
+                                      edgelabels_reverse_[idx2].cost().secs +
+                                      edgelabels_forward_[idx1].transition_cost().secs;
+      path.back().elapsed_cost.cost = path[path.size() - 2].elapsed_cost.cost +
+                                      edgelabels_reverse_[idx2].cost().cost +
+                                      edgelabels_forward_[idx1].transition_cost().cost;
       return paths;
     }
 
@@ -994,8 +989,8 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
         // which remove from the reverse cost which goes all the way to the start of the edge
         cost = edgelabels_reverse_[idx2].cost() - cost;
         // and we use that instead
-        path.back().elapsed_time = std::max(cost.secs, 0.f);
-        path.back().elapsed_cost = std::max(cost.cost, 0.f);
+        path.back().elapsed_cost.secs = std::max(cost.secs, 0.f);
+        path.back().elapsed_cost.cost = std::max(cost.cost, 0.f);
         return paths;
       }
     }
@@ -1008,11 +1003,10 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
   // stores elapsed time as uint32_t but EdgeLabels uses float. Need to
   // accumulate in float and cast to int so we do not accumulate roundoff
   // error.
-  Cost cost(path.back().elapsed_cost, path.back().elapsed_time);
+  Cost cost = path.back().elapsed_cost;
 
   // Get the transition cost at the last edge of the reverse path
-  Cost previous_transition_cost{edgelabels_reverse_[idx2].transition_cost(),
-                                edgelabels_reverse_[idx2].transition_secs()};
+  Cost previous_transition_cost = edgelabels_reverse_[idx2].transition_cost();
 
   // Append the reverse path from the destination - use opposing edges
   // The first edge on the reverse path is the same as the last on the forward
@@ -1021,17 +1015,18 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
   while (edgelabel_index != kInvalidLabel) {
     const BDEdgeLabel& edgelabel = edgelabels_reverse_[edgelabel_index];
 
-    // Get elapsed time on the edge, then add the transition cost at
-    // prior edge.
+    // The first edge has no previous edge with elapsed cost so we can just use it directly
     uint32_t predidx = edgelabel.predecessor();
     if (predidx == kInvalidLabel) {
       cost += edgelabel.cost();
-    } else {
-      cost += edgelabel.cost() - edgelabels_reverse_[predidx].cost();
+    } // This edge needs the elapsed cost between it and the previous edge, since its the reverse path
+    // in flipping the path around we also need to switch out the transition costs (shifting right)
+    else {
+      cost += edgelabel.cost() - edgelabels_reverse_[predidx].cost() - edgelabel.transition_cost();
     }
     cost += previous_transition_cost;
-    path.emplace_back(edgelabel.mode(), cost.secs, edgelabel.opp_edgeid(), 0, cost.cost,
-                      edgelabel.restriction_idx(), previous_transition_cost.secs);
+    path.emplace_back(edgelabel.mode(), cost, edgelabel.opp_edgeid(), 0, edgelabel.restriction_idx(),
+                      previous_transition_cost);
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
@@ -1043,8 +1038,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     // We apply the turn cost at the beginning of the edge, as is done in the forward path
     // Semantically this can be thought of is, how much time did it take to turn onto this edge
     // To do this we need to carry the cost forward to the next edge in the path so we cache it here
-    previous_transition_cost.secs = edgelabel.transition_secs();
-    previous_transition_cost.cost = edgelabel.transition_cost();
+    previous_transition_cost = edgelabel.transition_cost();
   }
   return paths;
 }

@@ -145,6 +145,12 @@ message DirectionsLeg {
       repeated SignElement junction_names = 7;          // The list of junction names, examples: 万年橋東 or Mannenbashi East
     }
 
+    enum BssManeuverType{
+      kNoneAction = 1;	
+      kRentBikeAtBikeShare = 2;
+      kReturnBikeAtBikeShare = 3;
+    }
+
     optional Type type = 1;                                  // Maneuver type
     optional string text_instruction = 2;                    // text instruction
     repeated StreetName street_name = 3;                     // street names
@@ -180,6 +186,7 @@ message DirectionsLeg {
     optional uint32 turn_degree = 33;                        // Turn degree of maneuver
     optional bool has_time_restrictions = 34;                // Whether edge has any time restrictions or not
     repeated GuidanceView guidance_views = 35;               // List of guidance views
+    optional BssManeuverType bss_maneuver_type = 36;  
   }
 
   optional uint64 trip_id = 1;
