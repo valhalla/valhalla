@@ -394,11 +394,6 @@ TEST(recosting, error_request) {
   } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 125); }
 
   try {
-    actor.route(R"({"costing":"auto","locations":[],"recostings":[{"costing":"auto"}]})");
-    FAIL() << "No name should have thrown";
-  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 127); }
-
-  try {
     actor.route(R"({"costing":"auto","locations":[],"recostings":[{"name":"foo"}]})");
     FAIL() << "No costing should have thrown";
   } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 127); }
