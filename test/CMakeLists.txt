@@ -17,7 +17,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller astar_bss c
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
-    idtable matrix minbb multipoint_routes names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary thor_worker timedep_paths timeparsing trivial_paths uniquenames utrecht lua)
+    idtable matrix minbb multipoint_routes names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban thor_worker timedep_paths timeparsing trivial_paths uniquenames utrecht lua)
   if(ENABLE_HTTP)
     list(APPEND tests http_tiles)
   endif()
@@ -259,6 +259,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-reach utrecht_tiles)
   add_dependencies(run-shape_attributes utrecht_tiles)
   add_dependencies(run-summary utrecht_tiles)
+  add_dependencies(run-urban utrecht_tiles)
   add_dependencies(run-thor_worker utrecht_tiles)
   add_dependencies(run-recover_shortcut utrecht_tiles)
   add_dependencies(run-minbb utrecht_tiles)
