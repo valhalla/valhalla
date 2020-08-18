@@ -701,6 +701,22 @@ valhalla::Api match(const map& map,
   return api;
 }
 
+/* Returns the raw_result formatted as a JSON document in the given format.
+ *
+ * @param raw_result the result of a /route or /match request
+ * @param format the response format to use for the JSON document
+ * @return A JSON document created from serialized raw_result. Caller should
+ * call HasParseError() on the returned document to verify its validity.
+ */
+rapidjson::Document convert_to_json(valhalla::Api& raw_result, valhalla::Options_Format format) {
+  raw_result.mutable_options()->set_format(format);
+
+  std::string json = tyr::serializeDirections(raw_result);
+  rapidjson::Document result;
+  result.Parse(json.c_str());
+  return result;
+}
+
 namespace assert {
 namespace osrm {
 
@@ -715,13 +731,9 @@ void expect_steps(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
                   bool dedupe = true) {
 
-  raw_result.mutable_options()->set_format(valhalla::Options_Format_osrm);
-  auto json = tyr::serializeDirections(raw_result);
-
-  rapidjson::Document result;
-  result.Parse(json.c_str());
+  rapidjson::Document result = convert_to_json(raw_result, valhalla::Options_Format_osrm);
   if (result.HasParseError()) {
-    FAIL();
+    FAIL() << "Error converting route response to JSON";
   }
 
   EXPECT_TRUE(result.HasMember("routes"));
@@ -772,13 +784,9 @@ void expect_match(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
                   bool dedupe = true) {
 
-  raw_result.mutable_options()->set_format(valhalla::Options_Format_osrm);
-  auto json = tyr::serializeDirections(raw_result);
-
-  rapidjson::Document result;
-  result.Parse(json.c_str());
+  rapidjson::Document result = convert_to_json(raw_result, valhalla::Options_Format_osrm);
   if (result.HasParseError()) {
-    FAIL();
+    FAIL() << "Error converting route response to JSON";
   }
 
   EXPECT_TRUE(result.HasMember("matchings"));
