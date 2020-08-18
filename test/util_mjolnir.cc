@@ -30,7 +30,7 @@ using namespace valhalla::midgard;
 // Verify that this function runs
 TEST(UtilMjolnir, BuildTileSet) {
   ptree config;
-  const std::string tile_dir("test/data/parser_tiles");
+  const std::string tile_dir("test/data/util_mjolnir_test_tiles");
   config.put<std::string>("mjolnir.tile_dir", tile_dir);
   config.put<unsigned long>("mjolnir.id_table_size", 1000);
   EXPECT_TRUE(build_tile_set(config, {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"},

@@ -32,7 +32,7 @@ using valhalla::mjolnir::TileManifest;
 namespace {
 
 const std::string pbf_file = {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"};
-const std::string tile_dir = "test/data/parser_tiles";
+const std::string tile_dir = "test/data/graphbuilder_tiles";
 const size_t id_table_size = 1000;
 
 const std::string access_file = "test_access_harrisburg.bin";

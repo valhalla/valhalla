@@ -385,6 +385,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     remove_temp_file(cr_to_bin);
     remove_temp_file(new_to_old_bin);
     remove_temp_file(old_to_new_bin);
+    remove_temp_file(tile_manifest);
     OSMData::cleanup_temp_files(tile_dir);
   }
   return true;
