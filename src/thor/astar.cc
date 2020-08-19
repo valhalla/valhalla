@@ -432,6 +432,7 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
             cost.cost += dest_path_edge.distance();
             cost.cost = std::max(0.0f, cost.cost);
             dist = 0.0;
+            break;
           }
         }
       }
