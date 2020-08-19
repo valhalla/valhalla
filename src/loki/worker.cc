@@ -149,7 +149,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       max_contours(config.get<size_t>("service_limits.isochrone.max_contours")),
       max_time(config.get<size_t>("service_limits.isochrone.max_time")),
       max_trace_shape(config.get<size_t>("service_limits.trace.max_shape")),
-      sample(config.get<std::string>("additional_data.elevation", "test/data/")),
+      sample(config.get<std::string>("additional_data.elevation", "")),
       max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
       min_resample(config.get<float>("service_limits.skadi.min_resample")) {
   // If we weren't provided with a graph reader make our own
