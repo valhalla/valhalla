@@ -95,6 +95,11 @@ jobs:
             - ccache-debug-linux-x86_64
       - run: mkdir build
       - run: |
+          # Directly download python script for coverage
+          cd build \
+          && curl https://raw.githubusercontent.com/RPGillespie6/fastcov/master/fastcov.py -o fastcov.py \
+          && chmod +x fastcov.py
+      - run: |
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
           cd build \
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
