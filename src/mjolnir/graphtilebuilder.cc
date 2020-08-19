@@ -761,7 +761,7 @@ DirectedEdge& GraphTileBuilder::directededge(const size_t idx) {
 }
 
 // Gets a pointer to directed edges within the list being built.
-const DirectedEdge* GraphTileBuilder::directededges(const size_t idx) {
+const DirectedEdge* GraphTileBuilder::directededges(const size_t idx) const {
   if (idx < header_->directededgecount()) {
     return &directededges_builder_[idx];
   }
