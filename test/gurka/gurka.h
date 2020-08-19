@@ -22,14 +22,13 @@
 #include "midgard/util.h"
 #include "mjolnir/util.h"
 #include "odin/worker.h"
+#include "proto/trip.pb.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-
-#include <valhalla/proto/trip.pb.h>
 
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
