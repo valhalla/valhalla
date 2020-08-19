@@ -1,5 +1,121 @@
 #include "proto_conversions.h"
 
+using namespace valhalla;
+
+std::string valhalla::incidentTypeToString(const TripLeg_Edge_Incident& incident) {
+  std::string incident_type;
+  switch (incident.type()) {
+    case TripLeg_Edge_Incident_Type_ACCIDENT:
+      incident_type = "accident";
+      break;
+    case TripLeg_Edge_Incident_Type_CONGESTION:
+      incident_type = "congestion";
+      break;
+    case TripLeg_Edge_Incident_Type_CONSTRUCTION:
+      incident_type = "construction";
+      break;
+    case TripLeg_Edge_Incident_Type_DISABLED_VEHICLE:
+      incident_type = "disabled_vehicle";
+      break;
+    case TripLeg_Edge_Incident_Type_LANE_RESTRICTION:
+      incident_type = "lane_restriction";
+      break;
+    case TripLeg_Edge_Incident_Type_MASS_TRANSIT:
+      incident_type = "mass_transit";
+      break;
+    case TripLeg_Edge_Incident_Type_MISCELLANEOUS:
+      incident_type = "miscellaneous";
+      break;
+    case TripLeg_Edge_Incident_Type_OTHER_NEWS:
+      incident_type = "other_news";
+      break;
+    case TripLeg_Edge_Incident_Type_PLANNED_EVENT:
+      incident_type = "planned_event";
+      break;
+    case TripLeg_Edge_Incident_Type_ROAD_CLOSURE:
+      incident_type = "road_closure";
+      break;
+    case TripLeg_Edge_Incident_Type_ROAD_HAZARD:
+      incident_type = "road_hazard";
+      break;
+    case TripLeg_Edge_Incident_Type_WEATHER:
+      incident_type = "weather";
+      break;
+  };
+  return incident_type;
+}
+
+TripLeg_Edge_Incident mockSingleIncident(std::mt19937& rng) {
+  auto incident = TripLeg_Edge_Incident();
+  {
+    // Make up some times, while ensuring they are somewhat stable, similar to the seeding
+    auto now = time(nullptr);
+    auto nowish_time = (now / 3600) * 3600; // Round off to some stable time
+    std::uniform_int_distribution<int> random_timestamp(0, 24 * 3600);
+    uint64_t creation_time = nowish_time + random_timestamp(rng);
+    incident.set_creation_time(creation_time);
+    incident.set_start_time(creation_time + 3600);
+    incident.set_end_time(creation_time + 3600 + random_timestamp(rng));
+  }
+  {
+    std::uniform_int_distribution<int> random_type(0, 10);
+    TripLeg_Edge_Incident_Type type;
+    switch (random_type(rng)) {
+      case 0:
+        type = TripLeg_Edge_Incident_Type::TripLeg_Edge_Incident_Type_ACCIDENT;
+      case 1:
+        type = TripLeg_Edge_Incident_Type::TripLeg_Edge_Incident_Type_CONGESTION;
+        break;
+      case 2:
+        type = TripLeg_Edge_Incident_Type::TripLeg_Edge_Incident_Type_CONSTRUCTION;
+        break;
+      case 3:
+        type = TripLeg_Edge_Incident_Type::TripLeg_Edge_Incident_Type_DISABLED_VEHICLE;
+        break;
+      case 4:
+        type = TripLeg_Edge_Incident_Type::TripLeg_Edge_Incident_Type_MASS_TRANSIT;
+        break;
+      case 5:
+        type = TripLeg_Edge_Incident_Type::TripLeg_Edge_Incident_Type_MISCELLANEOUS;
+        break;
+      case 6:
+        type = TripLeg_Edge_Incident_Type::TripLeg_Edge_Incident_Type_OTHER_NEWS;
+        break;
+      case 7:
+        type = TripLeg_Edge_Incident_Type::TripLeg_Edge_Incident_Type_PLANNED_EVENT;
+        break;
+      case 8:
+        type = TripLeg_Edge_Incident_Type::TripLeg_Edge_Incident_Type_ROAD_CLOSURE;
+        break;
+      case 9:
+        type = TripLeg_Edge_Incident_Type::TripLeg_Edge_Incident_Type_ROAD_HAZARD;
+        break;
+      case 10:
+        type = TripLeg_Edge_Incident_Type::TripLeg_Edge_Incident_Type_WEATHER;
+        break;
+    };
+
+    incident.set_type(type);
+  }
+
+  return incident;
+}
+
+std::vector<TripLeg_Edge_Incident> valhalla::mockIncidentData(const baldr::GraphId edge_id) {
+  std::vector<TripLeg_Edge_Incident> incidents;
+
+  std::mt19937 rng(
+      // Seed rng from edge id
+      edge_id.id() +
+      // as well as time to change incidents every so often
+      (time(nullptr) / 600));
+
+  std::uniform_real_distribution<float> uniform(0.0, 1.0);
+  while (uniform(rng) < valhalla::FREQ_INCIDENT_PER_EDGE) {
+    incidents.push_back(mockSingleIncident(rng));
+  }
+  return incidents;
+}
 namespace valhalla {
 
 bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {

@@ -121,6 +121,8 @@ void SetShapeAttributes(const AttributesController& controller,
           }
         }
       }
+
+      // TODO Inject and cut for incidents here
     }
     // Cap the end so that we always have something to use
     if (speeds.empty() || std::get<0>(speeds.back()) < tgt_pct) {
@@ -489,6 +491,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
+          default: { break; }
         }
       }
     }
@@ -508,6 +511,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
               trip_sign_junction_name->set_text(sign.text());
               trip_sign_junction_name->set_is_route_number(sign.is_route_num());
             }
+            break;
+          }
+          case Sign::Type::kJunctionName: {
+            // TODO
             break;
           }
         }
@@ -863,6 +870,8 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
       }
     }
   }
+
+  valhalla::thor::addIncidents(*trip_edge, graphreader, edge);
 
   return trip_edge;
 }

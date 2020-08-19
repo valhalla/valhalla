@@ -416,6 +416,8 @@ public:
 
   std::string TurnLanesToString() const;
 
+  const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Edge_Incident>& incidents() const;
+
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToParameterString() const;
 #endif

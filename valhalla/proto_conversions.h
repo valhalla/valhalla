@@ -1,8 +1,9 @@
 #pragma once
-
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/costconstants.h>
+
+#include <random>
 
 namespace valhalla {
 // Associate RoadClass values to TripLeg proto
@@ -195,6 +196,15 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
       return TripLeg_Use_kRoadUse;
   }
 }
+
+// Generate mock incidents on this many edges
+const float FREQ_INCIDENT_PER_EDGE = 0.02;
+
+// A Temporary code for mocking incidents until we have the real deal
+std::vector<TripLeg_Edge_Incident> mockIncidentData(const baldr::GraphId edge_id);
+
+// Get the string representing the incident-type
+std::string incidentTypeToString(const TripLeg_Edge_Incident& incident);
 
 // to use protobuflite we cant use descriptors which means we cant translate enums to strings
 // and so we reimplement the ones we use here. newer versions of protobuf provide these even

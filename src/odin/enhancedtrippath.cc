@@ -1760,6 +1760,16 @@ std::string EnhancedTripLeg_Admin::ToString() const {
 
   return str;
 }
+google::protobuf::RepeatedPtrField<valhalla::TripLeg_Edge_Incident> empty;
+
+const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Edge_Incident>&
+EnhancedTripLeg_Edge::incidents() const {
+  if (mutable_edge_) {
+    return mutable_edge_->incidents();
+  } else {
+    return empty;
+  }
+}
 
 } // namespace odin
 } // namespace valhalla
