@@ -137,6 +137,8 @@
    * ADDED: Ability to recost a path and increased cost/time details along the trippath and json output [#2425](https://github.com/valhalla/valhalla/pull/2425)
    * ADDED: Add the ability to do bikeshare based (ped/bike) multimodal routing [#2031](https://github.com/valhalla/valhalla/pull/2031)
    * ADDED: Migrated to Ubuntu 20.04 base-image [#2508](https://github.com/valhalla/valhalla/pull/2508)
+   * CHANGED: Speed up parseways stage by avoiding multiple string comparisons [#2518](https://github.com/valhalla/valhalla/pull/2518)
+   * CHANGED: Speed up enhance stage by avoiding GraphTileBuilder copying [#2468](https://github.com/valhalla/valhalla/pull/2468)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
