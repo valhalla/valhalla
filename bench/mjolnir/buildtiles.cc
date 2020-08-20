@@ -19,7 +19,7 @@ boost::property_tree::ptree GetConfig(const std::string& tile_dir = "bench/mjoln
   return config;
 }
 
-void CopyFile(std::string const& src, const std::string& dst) {
+void CopyFile(const std::string& src, const std::string& dst) {
   std::ifstream in(src, std::ios::binary);
   std::ofstream out(dst, std::ios::binary);
   out << in.rdbuf();
@@ -49,8 +49,8 @@ void RegisterByStageBenchmark() {
                               BuildStage stage) {
     const std::string kStageDir = "bench/mjolnir/stage_files";
     const std::string kTileDir = "bench/mjolnir/tiles";
-    const boost::property_tree::ptree stage_config = GetConfig(kStageDir);
     // prepare files for the stage once and copy them every time before running the stage
+    const boost::property_tree::ptree stage_config = GetConfig(kStageDir);
     build_tile_set(stage_config, {pbf_path}, BuildStage::kInitialize,
                    static_cast<BuildStage>(static_cast<uint8_t>(stage) - 1), false);
 
@@ -65,16 +65,16 @@ void RegisterByStageBenchmark() {
     }
   };
 
-  const std::string kProtobufs[] = {"stockholm.osm.pbf"};
+  const std::string kProtobufs[] = {VALHALLA_SOURCE_DIR "bench/mjolnir/pbf/stockholm.osm.pbf"};
   const BuildStage kStages[] = {BuildStage::kParseWays, BuildStage::kParseRelations,
                                 BuildStage::kParseNodes, BuildStage::kBuild, BuildStage::kEnhance};
   for (const BuildStage stage : kStages) {
-    for (const std::string& filename : kProtobufs) {
-      std::string bench_name = filename.substr(0, filename.size() - 8) + "/" + to_string(stage);
-      benchmark::RegisterBenchmark(bench_name.c_str(), build_tiles,
-                                   VALHALLA_SOURCE_DIR "bench/mjolnir/pbf/" + filename, stage)
-          ->Unit(benchmark::kMillisecond)
-          ->Iterations(50);
+    for (const std::string& pbf_path : kProtobufs) {
+      const std::string file_name = pbf_path.substr(pbf_path.find_last_of('/'));
+      const std::string bench_name =
+          file_name.substr(0, file_name.size() - 8) + "/" + to_string(stage);
+      benchmark::RegisterBenchmark(bench_name.c_str(), build_tiles, pbf_path, stage)
+          ->Unit(benchmark::kMillisecond);
     }
   }
 }
