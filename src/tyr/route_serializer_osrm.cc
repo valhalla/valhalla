@@ -354,8 +354,8 @@ void addsIncidents(const EnhancedTripLeg_Edge* prev_edge,
       incidents_on_previous_edge.emplace(prev_incident.id());
     }
   }
+  json::ArrayPtr serialized_incidents = std::shared_ptr<json::Jarray>(new json::Jarray());
   for (const auto& incident : curr_edge.incidents()) {
-    json::ArrayPtr serialized_incidents = std::shared_ptr<json::Jarray>(new json::Jarray());
     {
       // Bring up any already existing array
       auto existing = doc.find("incidents");
@@ -371,8 +371,8 @@ void addsIncidents(const EnhancedTripLeg_Edge* prev_edge,
     bool only_id = incidents_on_previous_edge.count(incident.id()) > 0;
     auto json_incident = serialize_incident(incident, only_id);
     serialized_incidents->emplace_back(json_incident);
-    doc.emplace("incidents", serialized_incidents);
   }
+  doc.emplace("incidents", serialized_incidents);
 }
 
 // Add intersections along a step/maneuver.
