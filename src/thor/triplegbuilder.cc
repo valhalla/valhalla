@@ -400,8 +400,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const uint32_t start_node_idx,
                           const bool has_junction_name,
                           const GraphTile* start_tile,
-                          const int restrictions_idx,
-                          const bool add_incidents) {
+                          const int restrictions_idx) {
 
   // Index of the directed edge within the tile
   uint32_t idx = edge.id();
@@ -1184,7 +1183,7 @@ void TripLegBuilder::Build(
         AddTripEdge(controller, path_begin->edgeid, path_begin->trip_id, 0, path_begin->mode,
                     travel_types[static_cast<int>(path_begin->mode)], costing, edge, drive_on_right,
                     trip_path.add_node(), tile, graphreader, time_info.second_of_week, startnode.id(),
-                    false, nullptr, path_begin->restriction_index, options.incidents());
+                    false, nullptr, path_begin->restriction_index);
 
     // Set length if requested. Convert to km
     if (controller.attributes.at(kEdgeLength)) {
@@ -1515,7 +1514,7 @@ void TripLegBuilder::Build(
         AddTripEdge(controller, edge, trip_id, block_id, mode, travel_type, costing, directededge,
                     node->drive_on_right(), trip_node, graphtile, graphreader,
                     time_info.second_of_week, startnode.id(), node->named_intersection(), start_tile,
-                    edge_itr->restriction_index, options.incidents());
+                    edge_itr->restriction_index);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).

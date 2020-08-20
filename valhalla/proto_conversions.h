@@ -3,8 +3,6 @@
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/costconstants.h>
 
-#include <random>
-
 namespace valhalla {
 // Associate RoadClass values to TripLeg proto
 constexpr valhalla::RoadClass kTripLegRoadClass[] = {valhalla::RoadClass::kMotorway,
