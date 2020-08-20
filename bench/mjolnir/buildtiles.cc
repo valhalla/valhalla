@@ -52,7 +52,7 @@ void RegisterByStageBenchmark() {
     const boost::property_tree::ptree stage_config = GetConfig(kStageDir);
     // prepare files for the stage once and copy them every time before running the stage
     build_tile_set(stage_config, {pbf_path}, BuildStage::kInitialize,
-                   static_cast<BuildStage>(static_cast<uint8_t>(stage) - 1));
+                   static_cast<BuildStage>(static_cast<uint8_t>(stage) - 1), false);
 
     for (auto _ : state) {
       state.PauseTiming();
@@ -61,7 +61,7 @@ void RegisterByStageBenchmark() {
       const boost::property_tree::ptree config = GetConfig(kTileDir);
       state.ResumeTiming();
 
-      benchmark::DoNotOptimize(build_tile_set(config, {pbf_path}, stage, stage));
+      benchmark::DoNotOptimize(build_tile_set(config, {pbf_path}, stage, stage, false));
     }
   };
 
@@ -83,7 +83,8 @@ void EndToEndTileBuild(benchmark::State& state) {
   const boost::property_tree::ptree config = GetConfig();
   for (auto _ : state) {
     benchmark::DoNotOptimize(
-        build_tile_set(config, {VALHALLA_SOURCE_DIR "bench/mjolnir/pbf/stockholm.osm.pbf"}));
+        build_tile_set(config, {VALHALLA_SOURCE_DIR "bench/mjolnir/pbf/stockholm.osm.pbf"},
+                       BuildStage::kInitialize, BuildStage::kCleanup, false));
   }
 }
 
