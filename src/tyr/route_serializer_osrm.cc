@@ -623,11 +623,19 @@ valhalla::baldr::json::MapPtr serialize_incident(const TripLeg_Edge_Incident& in
     metadata_json->emplace("id", id);
   }
   if (!only_id) {
-    metadata_json->emplace("description", incident.description());
-    metadata_json->emplace("creation_time", static_cast<uint64_t>(incident.creation_time()));
-    metadata_json->emplace("end_time", static_cast<uint64_t>(incident.end_time()));
-    metadata_json->emplace("start_time", static_cast<uint64_t>(incident.start_time()));
+    if (incident.creation_time()) {
+      metadata_json->emplace("creation_time", static_cast<uint64_t>(incident.creation_time()));
+    }
+    if (incident.end_time()) {
+      metadata_json->emplace("end_time", static_cast<uint64_t>(incident.end_time()));
+    }
+    if (incident.start_time()) {
+      metadata_json->emplace("start_time", static_cast<uint64_t>(incident.start_time()));
+    }
     metadata_json->emplace("incident_type", valhalla::incidentTypeToString(incident));
+    if (!incident.description().empty()) {
+      metadata_json->emplace("description", incident.description());
+    }
   }
 
   return metadata_json;
