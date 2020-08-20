@@ -1531,7 +1531,6 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
       "incidents": [
         {
           "id": 1337,
-          "description": "",
           "creation_time": 1597241829,
           "start_time": 1597241929,
           "end_time": 1597243629,
@@ -1562,9 +1561,8 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
       auto incident = incidents->Add();
       uint64_t creation_time = 1597241829;
       incident->set_id(1337);
+      incident->set_description("Fooo");
       incident->set_creation_time(creation_time);
-      incident->set_start_time(creation_time + 100);
-      incident->set_end_time(creation_time + 1800);
       incident->set_type(TripLeg_Edge_Incident_Type::TripLeg_Edge_Incident_Type_WEATHER);
     }
     {
@@ -1593,15 +1591,12 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
       "incidents": [
         {
           "id": 1337,
-          "description": "",
+          "description": "Fooo",
           "creation_time": 1597241829,
-          "start_time": 1597241929,
-          "end_time": 1597243629,
           "incident_type": "weather"
         },
         {
           "id": 2448,
-          "description": "",
           "creation_time": 1597241800,
           "start_time": 1597241900,
           "end_time": 1597243600,
