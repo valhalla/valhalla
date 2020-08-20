@@ -868,7 +868,9 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     }
   }
 
-  valhalla::thor::addIncidents(*trip_edge, graphreader, edge);
+  if (controller.attributes.at(kEdgeShowIncidents)) {
+    valhalla::thor::addIncidents(*trip_edge, graphreader, edge);
+  }
 
   return trip_edge;
 }

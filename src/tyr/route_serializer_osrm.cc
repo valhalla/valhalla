@@ -440,7 +440,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       intersection->emplace("tunnel_entrance", tunnel_entrance_json);
     }
 
-    if (curr_edge.get()) {
+    if (curr_edge.get() && curr_edge.get()->incidents().size() > 0) {
       addsIncidents(prev_edge.get(), *curr_edge, *intersection);
     } else {
       // Why would curr_edge not be set? Happens in test/junctions.cc
