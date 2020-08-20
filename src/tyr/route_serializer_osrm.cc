@@ -417,6 +417,10 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         intersection->emplace("weight", json::fp_t{cost, 3});
     }
 
+    // Mark country_code and state_code
+    intersection->emplace("country_code", etp->GetCountryCode(i));
+    intersection->emplace("state_code", etp->GetStateCode(i));
+
     // Mark toll collection points
     if (node->type() == TripLeg_Node_Type_kTollBooth) {
       auto toll_collection_point_json = json::map({});
@@ -424,19 +428,10 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       intersection->emplace("toll_collection", toll_collection_point_json);
     }
 
-    // Mark border crossings
-    auto curr_country_code = etp->GetCountryCode(i);
-    auto prev_country_code = (i > 0) ? etp->GetCountryCode(i - 1) : "";
-    if (prev_country_code != "" && prev_country_code != curr_country_code) {
-      auto border_crossing_json = json::map({});
-      border_crossing_json->emplace("country_code", curr_country_code);
-      intersection->emplace("border_crossing", border_crossing_json);
-    }
-
     // Mark tunnel entrances
     if (prev_edge && !prev_edge->tunnel() && curr_edge && curr_edge->tunnel()) {
       auto tunnel_entrance_json = json::map({});
-      tunnel_entrance_json->emplace("tunnel_name", std::string("TODO"));
+      // tunnel_entrance_json->emplace("tunnel_name", std::string("TODO"));
       intersection->emplace("tunnel_entrance", tunnel_entrance_json);
     }
 
