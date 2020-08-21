@@ -12,5 +12,5 @@ Builds are automated: pushing a tag in the form of {major}.{minor}.{release} wil
 The routing engine will listen on and expose port 8002, and load any tile data found in `${VALHALLA_DOCKER_DATAPATH}`.
 
 ### To build/publish images manually
-* `./build.sh [ppa|source|build|build-x86] [version_tag]`
-* `docker push valhalla/docker:{ppa|source|build}-[version_tag]`
+* `docker build -f Dockerfile-[build|build-x86] --tag valhalla/valhalla:[build|build-x86]-[version_tag] --no-cache --force-rm .`
+* `docker push valhalla/valhalla:[build|build-x86]-[version_tag]`

@@ -105,7 +105,7 @@ public:
 
 protected:
   // Fixed size information
-  baldr::EdgeInfo::EdgeInfoInner ei_;
+  baldr::EdgeInfo::EdgeInfoInner ei_{};
 
   // Where we optionally keep the last 2 bytes of a 64bit wayid
   uint8_t extended_wayid2_;

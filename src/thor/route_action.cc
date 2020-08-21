@@ -10,7 +10,7 @@
 #include "sif/pedestriancost.h"
 #include "thor/attributes_controller.h"
 
-#include <valhalla/proto/tripcommon.pb.h>
+#include "proto/tripcommon.pb.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -183,6 +183,7 @@ std::string thor_worker_t::expansion(Api& request) {
            &timedep_reverse,
            &astar,
            &bidir_astar,
+           &bss_astar,
        }) {
     alg->set_track_expansion(track_expansion);
   }
@@ -197,6 +198,7 @@ std::string thor_worker_t::expansion(Api& request) {
            &timedep_reverse,
            &astar,
            &bidir_astar,
+           &bss_astar,
        }) {
     alg->set_track_expansion(nullptr);
   }
@@ -235,6 +237,11 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     valhalla::midgard::logging::Log("algorithm::multimodal ", " [ANALYTICS] ");
     multi_modal_astar.set_interrupt(interrupt);
     return &multi_modal_astar;
+  }
+
+  if (routetype == "bikeshare") {
+    bss_astar.set_interrupt(interrupt);
+    return &bss_astar;
   }
 
   // If the origin has date_time set use timedep_forward method if the distance
@@ -370,7 +377,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
       // back propagate time information
       if (destination->has_date_time()) {
         auto origin_dt = offset_date(*reader, destination->date_time(), temp_path.back().edgeid,
-                                     -temp_path.back().elapsed_time, temp_path.front().edgeid);
+                                     -temp_path.back().elapsed_cost.secs, temp_path.front().edgeid);
         origin->set_date_time(origin_dt);
       }
 
@@ -379,9 +386,9 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
 
       // Merge through legs by updating the time and splicing the lists
       if (!temp_path.empty()) {
-        auto offset = path.back().elapsed_time;
+        auto offset = path.back().elapsed_cost.secs;
         std::for_each(temp_path.begin(), temp_path.end(),
-                      [offset](PathInfo& i) { i.elapsed_time += offset; });
+                      [offset](PathInfo& i) { i.elapsed_cost.secs += offset; });
         // Connects via the same edge so we only need it once
         if (path.back().edgeid == temp_path.front().edgeid) {
           path.pop_back();
@@ -417,8 +424,8 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
           route = api.mutable_trip()->mutable_routes()->Add();
         auto& leg = *route->mutable_legs()->Add();
-        TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(), *origin,
-                              *destination, throughs, leg, interrupt, &vias);
+        TripLegBuilder::Build(api.options(), controller, *reader, mode_costing, path.begin(),
+                              path.end(), *origin, *destination, throughs, leg, interrupt, &vias);
         path.clear();
         vias.clear();
       }
@@ -462,8 +469,9 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
     for (auto& temp_path : temp_paths) {
       // forward propagate time information
       if (origin->has_date_time()) {
-        auto destination_dt = offset_date(*reader, origin->date_time(), temp_path.front().edgeid,
-                                          temp_path.back().elapsed_time, temp_path.back().edgeid);
+        auto destination_dt =
+            offset_date(*reader, origin->date_time(), temp_path.front().edgeid,
+                        temp_path.back().elapsed_cost.secs, temp_path.back().edgeid);
         destination->set_date_time(destination_dt);
       }
 
@@ -471,9 +479,9 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
 
       // Merge through legs by updating the time and splicing the lists
       if (!path.empty()) {
-        auto offset = path.back().elapsed_time;
+        auto offset = path.back().elapsed_cost.secs;
         std::for_each(temp_path.begin(), temp_path.end(),
-                      [offset](PathInfo& i) { i.elapsed_time += offset; });
+                      [offset](PathInfo& i) { i.elapsed_cost.secs += offset; });
         // Connects via the same edge so we only need it once
         if (path.back().edgeid == temp_path.front().edgeid) {
           path.pop_back();
@@ -505,8 +513,9 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
           route = api.mutable_trip()->mutable_routes()->Add();
         auto& leg = *route->mutable_legs()->Add();
-        thor::TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(),
-                                    *origin, *destination, throughs, leg, interrupt, &vias);
+        thor::TripLegBuilder::Build(api.options(), controller, *reader, mode_costing, path.begin(),
+                                    path.end(), *origin, *destination, throughs, leg, interrupt,
+                                    &vias);
         path.clear();
         vias.clear();
       }

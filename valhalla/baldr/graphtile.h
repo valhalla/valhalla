@@ -97,9 +97,11 @@ public:
    * Gets the directory like filename suffix given the graphId
    * @param  graphid  Graph Id to construct filename.
    * @param  gzipped  Modifies the suffix if you expect gzipped file names
+   * @param  is_file_path Determines the 1000 separator to be used for file or URL access
    * @return  Returns a filename including directory path as a suffix to be appended to another uri
    */
-  static std::string FileSuffix(const GraphId& graphid, bool gzipped = false);
+  static std::string
+  FileSuffix(const GraphId& graphid, bool gzipped = false, bool is_file_path = true);
 
   /**
    * Get the tile Id given the full path to the file.
@@ -276,12 +278,19 @@ public:
   }
 
   /**
-   * Get an iterable set of transitions from a node in this tile
-   * @param  node  GraphId of the node from which the transitions leave
-   * @return returns an iterable collection of node transitions
+   * Get an iterable set of nodes in this tile
+   * @return returns an iterable collection of nodes
    */
   midgard::iterable_t<const NodeInfo> GetNodes() const {
     return midgard::iterable_t<const NodeInfo>{nodes_, header_->nodecount()};
+  }
+
+  /**
+   * Get an iterable set of edges in this tile
+   * @return returns an iterable collection of edges
+   */
+  midgard::iterable_t<const DirectedEdge> GetDirectedEdges() const {
+    return midgard::iterable_t<const DirectedEdge>{directededges_, header_->directededgecount()};
   }
 
   /**

@@ -17,6 +17,7 @@
 #else
 #include <stdint.h>
 #endif
+#include <valhalla.h>
 
 #ifndef C_ONLY_INTERFACE
 namespace valhalla {
@@ -27,6 +28,14 @@ using std::uint32_t;
 using std::uint64_t;
 #endif
 
+// The version of traffic tile format
+// This is not intended to allow for easy migration between in-compatible data-formats
+// Changes are still expected to be applied in a backwards compatible way by using
+// the spare bits available.
+// This is more of a break-the-glass escape hatch for when the current format has
+// reached its limits
+const uint8_t TRAFFIC_TILE_VERSION = VALHALLA_VERSION_MAJOR;
+
 // This value _of bitfield_ (not in kph) signals that the live speed is not known (max value of 7 bit
 // number)
 constexpr uint32_t UNKNOWN_TRAFFIC_SPEED_RAW = (1 << 7) - 1;
@@ -34,6 +43,9 @@ constexpr uint32_t UNKNOWN_TRAFFIC_SPEED_RAW = (1 << 7) - 1;
 constexpr uint32_t MAX_TRAFFIC_SPEED_KPH = (UNKNOWN_TRAFFIC_SPEED_RAW - 1) << 1;
 // This is the value in kph that signifies a traffic speed is unknown
 constexpr uint32_t UNKNOWN_TRAFFIC_SPEED_KPH = UNKNOWN_TRAFFIC_SPEED_RAW << 1;
+
+constexpr uint8_t UNKNOWN_CONGESTION_VAL = 0;
+constexpr uint8_t MAX_CONGESTION_VAL = 63;
 
 struct TrafficSpeed {
   uint64_t overall_speed : 7; // 0-255kph in 2kph resolution (access with `get_overall_speed()`)
@@ -52,7 +64,7 @@ struct TrafficSpeed {
     return breakpoint1 != 0;
   }
   inline bool closed() const volatile {
-    return breakpoint1 != 0 && overall_speed == 0;
+    return valid() && overall_speed == 0;
   }
 
   inline bool closed(std::size_t subsegment) const volatile {
@@ -60,15 +72,17 @@ struct TrafficSpeed {
       return false;
     switch (subsegment) {
       case 0:
-        return speed1 == 0;
+        return speed1 == 0 || congestion1 == MAX_CONGESTION_VAL;
       case 1:
-        return breakpoint1 < 255 && speed2 == 0;
+        return breakpoint1 < 255 && (speed2 == 0 || congestion2 == MAX_CONGESTION_VAL);
       case 2:
-        return breakpoint2 < 255 && speed3 == 0;
+        return breakpoint2 < 255 && (speed3 == 0 || congestion3 == MAX_CONGESTION_VAL);
       default:
         assert(false);
+        throw std::logic_error("Bad subsegment");
     }
   }
+
   /// Returns overall speed in kph across edge
   inline uint8_t get_overall_speed() const volatile {
     return overall_speed << 1;
@@ -92,7 +106,26 @@ struct TrafficSpeed {
         return speed3 << 1;
       default:
         assert(false);
+        throw std::logic_error("Bad subsegment");
     }
+  }
+
+  constexpr TrafficSpeed()
+      : overall_speed{0}, speed1{0}, speed2{0}, speed3{0}, breakpoint1{0}, breakpoint2{0},
+        congestion1{0}, congestion2{0}, congestion3{0}, spare{0} {
+  }
+
+  constexpr TrafficSpeed(const uint32_t overall_speed,
+                         const uint32_t s1,
+                         const uint32_t s2,
+                         const uint32_t s3,
+                         const uint32_t b1,
+                         const uint32_t b2,
+                         const uint32_t c1,
+                         const uint32_t c2,
+                         const uint32_t c3)
+      : overall_speed{overall_speed}, speed1{s1}, speed2{s2}, speed3{s3}, breakpoint1{b1},
+        breakpoint2{b2}, congestion1{c1}, congestion2{c2}, congestion3{c3}, spare{0} {
   }
 #endif
 };
@@ -102,7 +135,7 @@ struct TrafficTileHeader {
   uint64_t tile_id;
   uint64_t last_update; // seconds since epoch
   uint32_t directed_edge_count;
-  uint32_t spare1;
+  uint32_t traffic_tile_version;
   uint32_t spare2;
   uint32_t spare3;
 };
@@ -133,7 +166,6 @@ static constexpr volatile TrafficSpeed INVALID_SPEED{UNKNOWN_TRAFFIC_SPEED_RAW,
                                                      0u,
                                                      0u,
                                                      0u,
-                                                     0u,
                                                      0u};
 
 // Assert these constants are the same
@@ -149,8 +181,9 @@ public:
   }
 
   const volatile TrafficSpeed& trafficspeed(const uint32_t directed_edge_offset) const {
-    if (header == nullptr)
+    if (header == nullptr || header->traffic_tile_version != TRAFFIC_TILE_VERSION) {
       return INVALID_SPEED;
+    }
     if (directed_edge_offset >= header->directed_edge_count)
       throw std::runtime_error("TrafficSpeed requested for edgeid beyond bounds of tile (offset: " +
                                std::to_string(directed_edge_offset) +

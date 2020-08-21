@@ -1,12 +1,12 @@
 #include "sif/autocost.h"
-#include "sif/costconstants.h"
-
 #include "baldr/accessrestriction.h"
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include "proto_conversions.h"
+#include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 #include <cassert>
 
@@ -128,11 +128,10 @@ constexpr float kSurfaceFactor[] = {
 class AutoCost : public DynamicCost {
 public:
   /**
-   * Construct auto costing. Pass in cost type and options using protocol buffer(pbf).
-   * @param  costing specified costing type.
-   * @param  options pbf with request options.
+   * Construct auto costing. Pass in cost type and costing_options using protocol buffer(pbf).
+   * @param  costing_options pbf with request costing_options.
    */
-  AutoCost(const Costing costing, const Options& options);
+  AutoCost(const CostingOptions& costing_options);
 
   virtual ~AutoCost() {
   }
@@ -171,7 +170,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const baldr::GraphTile*& tile,
+                       const GraphTile* tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -198,7 +197,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const baldr::GraphTile*& tile,
+                              const GraphTile* tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -296,7 +295,7 @@ public:
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
-      if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess)) {
+      if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess) || edge->bss_connection()) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -331,14 +330,10 @@ public:
 };
 
 // Constructor
-AutoCost::AutoCost(const Costing costing, const Options& options)
-    : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
-                                                                      1.0f, 1.1f, 1.2f, 1.3f,
-                                                                      1.4f, 1.6f, 1.9f, 2.2f,
-                                                                      2.5f, 2.8f, 3.1f, 3.5f} {
-
-  // Grab the costing options based on the specified costing type
-  const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
+AutoCost::AutoCost(const CostingOptions& costing_options)
+    : DynamicCost(costing_options, TravelMode::kDrive),
+      trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
+                            1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
 
   // Get the vehicle type - enter as string and convert to enum.
   // Used to set the surface factor - penalize some roads based on surface type.
@@ -392,7 +387,7 @@ AutoCost::AutoCost(const Costing costing, const Options& options)
 // Check if access is allowed on the specified edge.
 bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const baldr::GraphTile*& tile,
+                       const GraphTile* tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -423,7 +418,7 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
 bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const baldr::GraphTile*& tile,
+                              const GraphTile* tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -560,11 +555,13 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
 void ParseAutoCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
                           CostingOptions* pbf_costing_options) {
+  pbf_costing_options->set_costing(Costing::auto_);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
     // TODO: farm more common stuff out to parent class
-    ParseCostOptions(*json_costing_options, pbf_costing_options);
+    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
 
     // If specified, parse json and set pbf values
 
@@ -673,8 +670,8 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateAutoCost(const Costing costing, const Options& options) {
-  return std::make_shared<AutoCost>(costing, options);
+cost_ptr_t CreateAutoCost(const CostingOptions& costing_options) {
+  return std::make_shared<AutoCost>(costing_options);
 }
 
 /**
@@ -685,10 +682,10 @@ class AutoShorterCost : public AutoCost {
 public:
   /**
    * Construct auto costing for shorter (not absolute shortest) path.
-   * Pass in options with protocol buffer(pbf).
-   * @param  options  pbf with options.
+   * Pass in costing_options with protocol buffer(pbf).
+   * @param  costing_options  pbf with costing_options.
    */
-  AutoShorterCost(const Costing costing, const Options& options) : AutoCost(costing, options) {
+  AutoShorterCost(const CostingOptions& costing_options) : AutoCost(costing_options) {
     // Create speed cost table that reduces the impact of speed
     adjspeedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
     for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
@@ -737,10 +734,12 @@ void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
                                  const std::string& costing_options_key,
                                  CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+  pbf_costing_options->set_costing(Costing::auto_shorter);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
 }
 
-cost_ptr_t CreateAutoShorterCost(const Costing costing, const Options& options) {
-  return std::make_shared<AutoShorterCost>(costing, options);
+cost_ptr_t CreateAutoShorterCost(const CostingOptions& costing_options) {
+  return std::make_shared<AutoShorterCost>(costing_options);
 }
 
 /**
@@ -753,7 +752,7 @@ public:
    * Pass in configuration using property tree.
    * @param  pt  Property tree with configuration/options.
    */
-  BusCost(const Costing costing, const Options& options) : AutoCost(costing, options) {
+  BusCost(const CostingOptions& costing_options) : AutoCost(costing_options) {
     type_ = VehicleType::kBus;
   }
 
@@ -786,7 +785,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const baldr::GraphTile*& tile,
+                       const GraphTile* tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -813,7 +812,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const baldr::GraphTile*& tile,
+                              const GraphTile* tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -862,7 +861,7 @@ public:
 // Check if access is allowed on the specified edge.
 bool BusCost::Allowed(const baldr::DirectedEdge* edge,
                       const EdgeLabel& pred,
-                      const baldr::GraphTile*& tile,
+                      const GraphTile* tile,
                       const baldr::GraphId& edgeid,
                       const uint64_t current_time,
                       const uint32_t tz_index,
@@ -892,7 +891,7 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
 bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred,
                              const baldr::DirectedEdge* opp_edge,
-                             const baldr::GraphTile*& tile,
+                             const GraphTile* tile,
                              const baldr::GraphId& opp_edgeid,
                              const uint64_t current_time,
                              const uint32_t tz_index,
@@ -919,10 +918,12 @@ void ParseBusCostOptions(const rapidjson::Document& doc,
                          const std::string& costing_options_key,
                          CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+  pbf_costing_options->set_costing(Costing::bus);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
 }
 
-cost_ptr_t CreateBusCost(const Costing costing, const Options& options) {
-  return std::make_shared<BusCost>(costing, options);
+cost_ptr_t CreateBusCost(const CostingOptions& costing_options) {
+  return std::make_shared<BusCost>(costing_options);
 }
 
 /**
@@ -933,10 +934,10 @@ class HOVCost : public AutoCost {
 public:
   /**
    * Construct hov costing.
-   * Pass in options using protocol buffer(pbf).
-   * @param  options  pbf with options.
+   * Pass in costing_options using protocol buffer(pbf).
+   * @param  costing_options  pbf with costing_options.
    */
-  HOVCost(const Costing costing, const Options& options) : AutoCost(costing, options) {
+  HOVCost(const CostingOptions& costing_options) : AutoCost(costing_options) {
   }
 
   virtual ~HOVCost() {
@@ -967,7 +968,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const baldr::GraphTile*& tile,
+                       const GraphTile* tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -993,7 +994,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const baldr::GraphTile*& tile,
+                              const GraphTile* tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -1062,7 +1063,7 @@ public:
 // Check if access is allowed on the specified edge.
 bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
                       const EdgeLabel& pred,
-                      const baldr::GraphTile*& tile,
+                      const GraphTile* tile,
                       const baldr::GraphId& edgeid,
                       const uint64_t current_time,
                       const uint32_t tz_index,
@@ -1094,7 +1095,7 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
 bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred,
                              const baldr::DirectedEdge* opp_edge,
-                             const baldr::GraphTile*& tile,
+                             const GraphTile* tile,
                              const baldr::GraphId& opp_edgeid,
                              const uint64_t current_time,
                              const uint32_t tz_index,
@@ -1123,10 +1124,12 @@ void ParseHOVCostOptions(const rapidjson::Document& doc,
                          const std::string& costing_options_key,
                          CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+  pbf_costing_options->set_costing(Costing::hov);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
 }
 
-cost_ptr_t CreateHOVCost(const Costing costing, const Options& options) {
-  return std::make_shared<HOVCost>(costing, options);
+cost_ptr_t CreateHOVCost(const CostingOptions& costing_options) {
+  return std::make_shared<HOVCost>(costing_options);
 }
 
 /**
@@ -1137,10 +1140,10 @@ class TaxiCost : public AutoCost {
 public:
   /**
    * Construct taxi costing.
-   * Pass in options using protocol buffer(pbf).
-   * @param  options  pbf with options.
+   * Pass in costing_options using protocol buffer(pbf).
+   * @param  costing_options  pbf with costing_options.
    */
-  TaxiCost(const Costing costing, const Options& options) : AutoCost(costing, options) {
+  TaxiCost(const CostingOptions& costing_options) : AutoCost(costing_options) {
   }
 
   virtual ~TaxiCost() {
@@ -1171,7 +1174,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const baldr::GraphTile*& tile,
+                       const GraphTile* tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -1197,7 +1200,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const baldr::GraphTile*& tile,
+                              const GraphTile* tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -1266,7 +1269,7 @@ public:
 // Check if access is allowed on the specified edge.
 bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const baldr::GraphTile*& tile,
+                       const GraphTile* tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -1298,7 +1301,7 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
 bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const baldr::GraphTile*& tile,
+                              const GraphTile* tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -1326,10 +1329,12 @@ void ParseTaxiCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
                           CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+  pbf_costing_options->set_costing(Costing::taxi);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
 }
 
-cost_ptr_t CreateTaxiCost(const Costing costing, const Options& options) {
-  return std::make_shared<TaxiCost>(costing, options);
+cost_ptr_t CreateTaxiCost(const CostingOptions& costing_options) {
+  return std::make_shared<TaxiCost>(costing_options);
 }
 
 /**
@@ -1344,7 +1349,7 @@ public:
    * Pass in configuration using property tree.
    * @param  pt  Property tree with configuration/options.
    */
-  AutoDataFix(const Costing costing, const Options& options) : AutoCost(costing, options) {
+  AutoDataFix(const CostingOptions& costing_options) : AutoCost(costing_options) {
   }
 
   virtual ~AutoDataFix() {
@@ -1367,7 +1372,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const baldr::GraphTile*& tile,
+                       const GraphTile* tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -1410,10 +1415,12 @@ void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
                                  const std::string& costing_options_key,
                                  CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
+  pbf_costing_options->set_costing(Costing::auto_data_fix);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
 }
 
-cost_ptr_t CreateAutoDataFixCost(const Costing costing, const Options& options) {
-  return std::make_shared<AutoDataFix>(costing, options);
+cost_ptr_t CreateAutoDataFixCost(const CostingOptions& costing_options) {
+  return std::make_shared<AutoDataFix>(costing_options);
 }
 
 } // namespace sif
@@ -1430,7 +1437,7 @@ namespace {
 
 class TestAutoCost : public AutoCost {
 public:
-  TestAutoCost(const Costing costing, const Options& options) : AutoCost(costing, options){};
+  TestAutoCost(const CostingOptions& costing_options) : AutoCost(costing_options){};
 
   using AutoCost::alley_penalty_;
   using AutoCost::country_crossing_cost_;
@@ -1450,7 +1457,8 @@ make_autocost_from_json(const std::string& property, T testVal, const std::strin
      << "}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return std::make_shared<TestAutoCost>(valhalla::Costing::auto_, request.options());
+  return std::make_shared<TestAutoCost>(
+      request.options().costing_options(static_cast<int>(Costing::auto_)));
 }
 
 std::uniform_real_distribution<float>

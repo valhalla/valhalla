@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include <valhalla/baldr/datetime.h>
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/midgard/logging.h>
@@ -28,6 +29,7 @@ struct TimeInfo {
 
   // the ordinal second from the beginning of the week (starting monday at 00:00)
   // used to look up historical traffic as the route progresses
+  // this defaults to mondays at noon if no time is provided (for constrained flow lookup)
   uint64_t second_of_week : 20;
 
   // the distance in seconds from now
@@ -49,6 +51,7 @@ struct TimeInfo {
    *
    * @param location                 location for which to initialize the TimeInfo
    * @param reader                   used to get timezone information from the graph
+   * @param tz_cache                 non-owning pointer to timezone info cache
    * @param default_timezone_index   used when no timezone information is available
    * @return the initialized TimeInfo
    */
@@ -59,7 +62,7 @@ struct TimeInfo {
        int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC")) {
     // No time to to track
     if (!location.has_date_time()) {
-      return {false};
+      return {false, 0, 0, kConstrainedFlowSecondOfDay};
     }
 
     // Find the first edge whose end node has a valid timezone index and keep it
@@ -70,6 +73,35 @@ struct TimeInfo {
       timezone_index = reader.GetTimezone(edge->endnode(), tile);
       if (timezone_index != 0)
         break;
+    }
+
+    // return the time info based on this location information
+    return make(*location.mutable_date_time(), timezone_index, tz_cache, default_timezone_index);
+  }
+
+  /**
+   * Helper function to initialize the object from a date time. Uses the graph to
+   * find timezone information about the edge candidates at the location. If the
+   * graph has no timezone information or the location has no edge candidates the
+   * default timezone will be used (if unspecified UTC is used). If no datetime
+   * is provided on the location or an invalid one is provided the TimeInfo will
+   * be invalid.
+   *
+   * @param date_time               string representing the time from which to make this time info
+   *                                if the string is 'current' it will be replaced with the now time
+   * @param timezone_index          the timezone index at which to make this time info, 0 if unknown
+   * @param tz_cache                timezone info cache used when crossing timezones while tracking
+   * @param default_timezone_index  the index to use when the timezone index is 0 or unknown
+   * @return the initialized TimeInfo
+   */
+  static TimeInfo
+  make(std::string& date_time,
+       int timezone_index,
+       baldr::DateTime::tz_sys_info_cache_t* tz_cache = nullptr,
+       int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC")) {
+    // No time to to track
+    if (date_time.empty()) {
+      return {false, 0, 0, kConstrainedFlowSecondOfDay};
     }
 
     // Set the origin timezone to be the timezone at the end node use this for timezone changes
@@ -88,19 +120,19 @@ struct TimeInfo {
     const auto now_date =
         date::make_zoned(tz, sc::time_point_cast<sc::seconds>(
                                  sc::time_point_cast<sc::minutes>(sc::system_clock::now())));
-    if (location.date_time() == "current") {
+    if (date_time == "current") {
       std::ostringstream iso_dt;
       iso_dt << date::format("%FT%R", now_date);
-      location.set_date_time(iso_dt.str());
+      date_time = iso_dt.str();
     }
 
     // Convert the requested time into seconds from epoch
     date::local_seconds parsed_date;
     try {
-      parsed_date = dt::get_formatted_date(location.date_time(), true);
+      parsed_date = dt::get_formatted_date(date_time, true);
     } catch (...) {
-      LOG_ERROR("Could not parse provided date_time: " + location.date_time());
-      return {false};
+      LOG_ERROR("Could not parse provided date_time: " + date_time);
+      return {false, 0, 0, kConstrainedFlowSecondOfDay};
     }
     const auto then_date = date::make_zoned(tz, parsed_date);
     uint64_t local_time = date::to_utc_time(then_date.get_sys_time()).time_since_epoch().count();

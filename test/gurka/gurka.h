@@ -22,14 +22,13 @@
 #include "midgard/util.h"
 #include "mjolnir/util.h"
 #include "odin/worker.h"
+#include "proto/trip.pb.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-
-#include <valhalla/proto/trip.pb.h>
 
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
@@ -163,10 +162,11 @@ build_config(const std::string& tiledir,
   return ptree;
 }
 
-std::string build_valhalla_route_request(const map& map,
-                                         const std::vector<std::string>& waypoints,
-                                         const std::string& costing = "auto",
-                                         const std::string& datetime = "") {
+std::string
+build_valhalla_route_request(const map& map,
+                             const std::vector<std::string>& waypoints,
+                             const std::string& costing = "auto",
+                             const std::unordered_map<std::string, std::string>& options = {}) {
 
   rapidjson::Document doc;
   doc.SetObject();
@@ -185,20 +185,18 @@ std::string build_valhalla_route_request(const map& map,
   speed_types.PushBack("freeflow", allocator);
   speed_types.PushBack("constrained", allocator);
   speed_types.PushBack("predicted", allocator);
-  if (datetime == "current") {
-    dt.AddMember("type", 0, allocator);
-    dt.AddMember("value", "current", allocator);
-    speed_types.PushBack("current", allocator);
-  } else if (datetime != "") {
-    dt.AddMember("type", 1, allocator);
-    dt.AddMember("value", datetime, allocator);
+
+  // add the options using the pointer method
+  for (const auto& kv : options) {
+    if (kv.first.find("/date_time/type") != std::string::npos && kv.second == "0") {
+      speed_types.PushBack("current", allocator);
+    }
+    rapidjson::Pointer(kv.first).Set(doc, kv.second);
   }
 
   doc.AddMember("locations", locations, allocator);
   doc.AddMember("costing", costing, allocator);
-  if (datetime != "") {
-    doc.AddMember("date_time", dt, allocator);
-  }
+
   rapidjson::Value costing_options(rapidjson::kObjectType);
   rapidjson::Value co(rapidjson::kObjectType);
   co.AddMember("speed_types", speed_types, allocator);
@@ -516,27 +514,6 @@ inline void build_pbf(const nodelayout& node_locations,
 } // namespace detail
 
 /**
- * Generate a new GraphReader that doesn't re-use a previously
- * statically initizalized tile_extract member variable.
- *
- * Useful if you need to reload a tile extract within the same
- * process
- */
-std::shared_ptr<valhalla::baldr::GraphReader>
-make_clean_graphreader(const boost::property_tree::ptree& pt) {
-
-  // Wrapper sub-class to allow replacing the statically initialized
-  // tile_extract member variable
-  struct ResettingGraphReader : valhalla::baldr::GraphReader {
-    ResettingGraphReader(boost::property_tree::ptree pt) : GraphReader(pt) {
-      // Reset the statically initialized tile_extract_ member variable
-      tile_extract_.reset(new valhalla::baldr::GraphReader::tile_extract_t(pt));
-    }
-  };
-  return std::make_shared<ResettingGraphReader>(pt);
-}
-
-/**
  * Given a node layout, set of ways, node properties and relations, generates an OSM PBF file,
  * and builds a set of Valhalla tiles for it.
  *
@@ -650,7 +627,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
 valhalla::Api route(const map& map,
                     const std::vector<std::string>& waypoints,
                     const std::string& costing,
-                    const std::string& datetime,
+                    const std::unordered_map<std::string, std::string>& options = {},
                     std::shared_ptr<valhalla::baldr::GraphReader> reader = {}) {
   if (!reader)
     reader.reset(new valhalla::baldr::GraphReader(map.config.get_child("mjolnir")));
@@ -667,7 +644,7 @@ valhalla::Api route(const map& map,
     first = false;
   };
   std::cerr << " with costing " << costing << std::endl;
-  auto request_json = detail::build_valhalla_route_request(map, waypoints, costing, datetime);
+  auto request_json = detail::build_valhalla_route_request(map, waypoints, costing, options);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -680,9 +657,9 @@ valhalla::Api route(const map& map,
                     const std::string& from,
                     const std::string& to,
                     const std::string& costing,
-                    const std::string& datetime = "",
+                    const std::unordered_map<std::string, std::string>& options = {},
                     std::shared_ptr<valhalla::baldr::GraphReader> reader = {}) {
-  return route(map, {from, to}, costing, datetime, reader);
+  return route(map, {from, to}, costing, options, reader);
 }
 
 valhalla::Api route(const map& map, const std::string& request_json) {
@@ -723,6 +700,22 @@ valhalla::Api match(const map& map,
   return api;
 }
 
+/* Returns the raw_result formatted as a JSON document in the given format.
+ *
+ * @param raw_result the result of a /route or /match request
+ * @param format the response format to use for the JSON document
+ * @return A JSON document created from serialized raw_result. Caller should
+ * call HasParseError() on the returned document to verify its validity.
+ */
+rapidjson::Document convert_to_json(valhalla::Api& raw_result, valhalla::Options_Format format) {
+  raw_result.mutable_options()->set_format(format);
+
+  std::string json = tyr::serializeDirections(raw_result);
+  rapidjson::Document result;
+  result.Parse(json.c_str());
+  return result;
+}
+
 namespace assert {
 namespace osrm {
 
@@ -737,13 +730,9 @@ void expect_steps(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
                   bool dedupe = true) {
 
-  raw_result.mutable_options()->set_format(valhalla::Options_Format_osrm);
-  auto json = tyr::serializeDirections(raw_result);
-
-  rapidjson::Document result;
-  result.Parse(json.c_str());
+  rapidjson::Document result = convert_to_json(raw_result, valhalla::Options_Format_osrm);
   if (result.HasParseError()) {
-    FAIL();
+    FAIL() << "Error converting route response to JSON";
   }
 
   EXPECT_TRUE(result.HasMember("routes"));
@@ -794,13 +783,9 @@ void expect_match(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
                   bool dedupe = true) {
 
-  raw_result.mutable_options()->set_format(valhalla::Options_Format_osrm);
-  auto json = tyr::serializeDirections(raw_result);
-
-  rapidjson::Document result;
-  result.Parse(json.c_str());
+  rapidjson::Document result = convert_to_json(raw_result, valhalla::Options_Format_osrm);
   if (result.HasParseError()) {
-    FAIL();
+    FAIL() << "Error converting route response to JSON";
   }
 
   EXPECT_TRUE(result.HasMember("matchings"));
