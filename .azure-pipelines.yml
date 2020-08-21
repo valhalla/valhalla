@@ -5,20 +5,20 @@
 # TODO: Once CMake 3.13 is available replace -H with -S option
 #
 jobs:
-  - job: VS2017
-    displayName: 'Windows 2016 | VS2017'
+  - job: VS2019
+    displayName: 'Windows 2019 | VS2019'
 
     pool:
-      vmImage: 'vs2017-win2016'
+      vmImage: 'windows-2019'
 
     strategy:
       matrix:
         x86:
-          PLATFORM: 'x86'
-          GENERATOR: 'Visual Studio 15 2017'
+          PLATFORM: 'Win32'
+          TRIPLET: 'x86'
         x64:
           PLATFORM: 'x64'
-          GENERATOR: 'Visual Studio 15 2017 Win64'
+          TRIPLET: 'x64'
 
     variables:
       BUILD_CFG: 'Release'
@@ -31,14 +31,15 @@ jobs:
 
       - script: |
           git clone https://github.com/microsoft/vcpkg %VCPKG_DIR%
+          # TODO: check if https://github.com/microsoft/vcpkg/issues/12606 resolves regularly
           git -C %VCPKG_DIR% checkout f4bd6423
-          echo.set(VCPKG_BUILD_TYPE release)>> %VCPKG_DIR%\triplets\%PLATFORM%-windows.cmake
+          echo.set(VCPKG_BUILD_TYPE release)>> %VCPKG_DIR%\triplets\%TRIPLET%-windows.cmake
           call %VCPKG_DIR%\bootstrap-vcpkg.bat
           %VCPKG_DIR%\vcpkg.exe version
         displayName: 'Install vcpkg'
 
       - script: |
-          %VCPKG_DIR%\vcpkg.exe install boost-algorithm boost-config boost-core boost-heap boost-lexical-cast boost-property-tree boost-variant protobuf zlib --triplet %PLATFORM%-windows
+          %VCPKG_DIR%\vcpkg.exe install boost-algorithm boost-config boost-core boost-heap boost-lexical-cast boost-property-tree boost-variant boost-program-options boost-geometry protobuf zlib curl sqlite3 proj4 luajit libspatialite geos --triplet %TRIPLET%-windows
           %VCPKG_DIR%\vcpkg.exe list
           if exist %VCPKG_DIR%\downloads rmdir /S /Q %VCPKG_DIR%\downloads
           if exist %VCPKG_DIR%\packages rmdir /S /Q %VCPKG_DIR%\packages
@@ -57,9 +58,15 @@ jobs:
 
       - script: |
           cmake --version
-          cmake -H$(Build.SourcesDirectory) -B%BUILD_DIR% -G "%GENERATOR%" -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_CCACHE=OFF -DENABLE_DATA_TOOLS=OFF -DENABLE_HTTP=OFF -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_SERVICES=OFF -DENABLE_TOOLS=OFF -DENABLE_BENCHMARKS=OFF
+          cmake -H$(Build.SourcesDirectory) -B%BUILD_DIR% -G "Visual Studio 16 2019" -A %PLATFORM% -T host=%TRIPLET% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_CCACHE=OFF -DENABLE_DATA_TOOLS=ON -DENABLE_HTTP=OFF -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_SERVICES=OFF -DENABLE_TOOLS=ON -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR=%VCPKG_DIR%\installed\%TRIPLET%-windows\include\luajit -DLUA_LIBRARIES=%VCPKG_DIR%\installed\%TRIPLET%-windows\lib\lua51.lib
         displayName: 'Run CMake to configure build'
 
       - script: |
           cmake --build %BUILD_DIR% --config %BUILD_CFG%
         displayName: 'Run CMake to build'
+
+      - script: |
+          %BUILD_DIR%\%BUILD_CFG%\valhalla_build_tiles.exe -c .\test\win\valhalla.json .\test\data\utrecht_netherlands.osm.pbf
+          %BUILD_DIR%\%BUILD_CFG%\valhalla_run_route.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}, {\"lat\": 52.093113, \"lon\": 5.100918}], \"costing\": \"auto\"}"
+          %BUILD_DIR%\%BUILD_CFG%\\valhalla_run_isochrone.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
+        displayName: 'Test some executables'
