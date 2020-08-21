@@ -51,7 +51,7 @@ Transit read_pbf(const std::string& file_name) {
 Transit read_pbf(const GraphId& id, const std::string& transit_dir, std::string& file_name) {
   std::string fname = GraphTile::FileSuffix(id);
   fname = fname.substr(0, fname.size() - 3) + "pbf";
-  file_name = transit_dir + '/' + fname;
+  file_name = transit_dir + filesystem::path::preferred_separator + fname;
   Transit transit;
   transit = read_pbf(file_name);
   return transit;
