@@ -417,24 +417,6 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         intersection->emplace("weight", json::fp_t{cost, 3});
     }
 
-    // Mark country_code and state_code
-    intersection->emplace("country_code", etp->GetCountryCode(i));
-    intersection->emplace("state_code", etp->GetStateCode(i));
-
-    // Mark toll collection points
-    if (node->type() == TripLeg_Node_Type_kTollBooth) {
-      auto toll_collection_point_json = json::map({});
-      toll_collection_point_json->emplace("type", std::string("toll_booth"));
-      intersection->emplace("toll_collection", toll_collection_point_json);
-    }
-
-    // Mark tunnel entrances
-    if (prev_edge && !prev_edge->tunnel() && curr_edge && curr_edge->tunnel()) {
-      auto tunnel_entrance_json = json::map({});
-      // tunnel_entrance_json->emplace("tunnel_name", std::string("TODO"));
-      intersection->emplace("tunnel_entrance", tunnel_entrance_json);
-    }
-
     if (curr_edge.get() && curr_edge.get()->incidents().size() > 0) {
       addsIncidents(prev_edge.get(), *curr_edge, *intersection);
     } else {
