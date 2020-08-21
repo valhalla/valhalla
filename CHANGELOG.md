@@ -141,6 +141,7 @@
    * ADDED: Migrated to Ubuntu 20.04 base-image [#2508](https://github.com/valhalla/valhalla/pull/2508)
    * CHANGED: Speed up parseways stage by avoiding multiple string comparisons [#2518](https://github.com/valhalla/valhalla/pull/2518)
    * CHANGED: Speed up enhance stage by avoiding GraphTileBuilder copying [#2468](https://github.com/valhalla/valhalla/pull/2468)
+   * ADDED: Incidents in intersections [#2547](https://github.com/valhalla/valhalla/pull/2547)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
