@@ -37,10 +37,14 @@ protected:
     return "\03";
   }
 };
-struct url_facet : dir_facet {
+struct url_facet : public std::numpunct<char> {
 protected:
   virtual char do_thousands_sep() const {
     return '/';
+  }
+
+  virtual std::string do_grouping() const {
+    return "\03";
   }
 };
 const std::locale url_locale(std::locale("C"), new url_facet());
