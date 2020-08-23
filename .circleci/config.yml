@@ -95,11 +95,6 @@ jobs:
             - ccache-debug-linux-x86_64
       - run: mkdir build
       - run: |
-          # Directly download python script for coverage
-          cd build \
-          && curl https://raw.githubusercontent.com/RPGillespie6/fastcov/master/fastcov.py -o fastcov.py \
-          && chmod +x fastcov.py
-      - run: |
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
           cd build \
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
@@ -108,7 +103,6 @@ jobs:
       - run: make -C build -j3
       - run: make -C build utrecht_tiles
       - run: make -C build -j2 tests
-      - run: make -C build -j2 check
       - run: make -C build -j2 benchmarks
       - run: make -C build run-benchmarks
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
@@ -120,7 +114,9 @@ jobs:
       - run: scripts/clang-tidy-only-diff.sh 4
       - run: make -C build install
       - run: make -C build package
-      - run: make -C build coverage
+      - run: |
+          # Note: run (compile) tests and make code coverage report.
+          make -C build -j2 coverage
       - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
 
   build-release:

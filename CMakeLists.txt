@@ -103,14 +103,12 @@ include(cmake/SanitizerOptions.cmake)
 
 ## Coverage report targets
 if(ENABLE_COVERAGE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")
-
-  find_program(FASTCOV_PATH NAMES fastcov.py fastcov HINTS ${CMAKE_CURRENT_BINARY_DIR})
   find_program(GENHTML_PATH NAMES genhtml genhtml.perl genhtml.bat)
-  if(NOT FASTCOV_PATH OR NOT GENHTML_PATH)
-    message(FATAL_ERROR "no fastcov or genhtml installed")
+  if(NOT GENHTML_PATH)
+    message(FATAL_ERROR "no genhtml installed")
   endif()
 
+  set(FASTCOV_PATH ${VALHALLA_SOURCE_DIR}/third_party/fastcov/fastcov.py)
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/coverage.info
     COMMAND ${FASTCOV_PATH} -d . --exclude /usr/ third_party/ ${CMAKE_CURRENT_BINARY_DIR}/ --lcov -o coverage.info
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
