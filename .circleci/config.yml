@@ -165,7 +165,7 @@ jobs:
       - run: make -C build -j4
       - run: make -C build utrecht_tiles
       - run: make -C build -j2 tests
-      - run: make -C build -j2 check
+      - run: make -C build check
       - run: make -C build -j2 benchmarks
       - run: make -C build run-benchmarks
       - save_cache:
