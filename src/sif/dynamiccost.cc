@@ -50,7 +50,7 @@ namespace sif {
 
 DynamicCost::DynamicCost(const CostingOptions& options, const TravelMode mode)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
-      flow_mask_(kDefaultFlowMask), shortest_(options.shotest()) {
+      flow_mask_(kDefaultFlowMask), shortest_(options.shortest()) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
@@ -219,7 +219,7 @@ void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_c
     pbf_costing_options->set_name(*name);
   }
   auto shortest = rapidjson::get<bool>(value, "/shortest", false);
-  pbf_costing_options.set_shortest(shortest);
+  pbf_costing_options->set_shortest(shortest);
 }
 
 void ParseCostingOptions(const rapidjson::Document& doc,
