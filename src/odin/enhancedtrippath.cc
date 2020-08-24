@@ -1760,12 +1760,12 @@ std::string EnhancedTripLeg_Admin::ToString() const {
 
   return str;
 }
-google::protobuf::RepeatedPtrField<valhalla::TripLeg_Edge_Incident> empty;
+google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident> empty;
 
-const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Edge_Incident>&
-EnhancedTripLeg_Edge::incidents() const {
-  if (mutable_edge_) {
-    return mutable_edge_->incidents();
+const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident>&
+EnhancedTripLeg_Node::incidents() const {
+  if (mutable_node_) {
+    return mutable_node_->incidents();
   } else {
     return empty;
   }

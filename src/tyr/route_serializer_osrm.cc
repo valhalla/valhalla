@@ -335,27 +335,18 @@ struct IntersectionEdges {
 };
 
 // Forward declaration
-valhalla::baldr::json::MapPtr serialize_incident(const TripLeg_Edge_Incident& incident,
-                                                 bool only_id = false);
+valhalla::baldr::json::MapPtr serialize_incident(const TripLeg_Node_Incident& incident);
 
 // Serializes incidents and adds to json-document
-void addsIncidents(const EnhancedTripLeg_Edge* prev_edge,
-                   const EnhancedTripLeg_Edge& curr_edge,
-                   json::Jmap& doc) {
-  if (curr_edge.incidents().size() == 0) {
+void addsIncidents(
+    const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident>& incidents,
+    json::Jmap& doc) {
+  if (incidents.size() == 0) {
     // No incidents, nothing to do
     return;
   }
-  // Remember incidents on previous edge, an incident that continues
-  // over many edges need only to display the id again
-  std::unordered_set<uint32_t> incidents_on_previous_edge;
-  if (prev_edge) {
-    for (const auto& prev_incident : prev_edge->incidents()) {
-      incidents_on_previous_edge.emplace(prev_incident.id());
-    }
-  }
   json::ArrayPtr serialized_incidents = std::shared_ptr<json::Jarray>(new json::Jarray());
-  for (const auto& incident : curr_edge.incidents()) {
+  for (const auto& incident : incidents) {
     {
       // Bring up any already existing array
       auto existing = doc.find("incidents");
@@ -368,8 +359,7 @@ void addsIncidents(const EnhancedTripLeg_Edge* prev_edge,
         }
       }
     }
-    bool only_id = incidents_on_previous_edge.count(incident.id()) > 0;
-    auto json_incident = serialize_incident(incident, only_id);
+    auto json_incident = serialize_incident(incident);
     serialized_incidents->emplace_back(json_incident);
   }
   doc.emplace("incidents", serialized_incidents);
@@ -385,6 +375,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
   count = 0;
   auto intersections = json::array({});
   uint32_t n = arrive_maneuver ? maneuver.end_path_index() + 1 : maneuver.end_path_index();
+  EnhancedTripLeg_Node* prev_node = nullptr;
   for (uint32_t i = maneuver.begin_path_index(); i < n; i++) {
     auto intersection = json::map({});
 
@@ -417,10 +408,31 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         intersection->emplace("weight", json::fp_t{cost, 3});
     }
 
-    if (curr_edge.get() && curr_edge.get()->incidents().size() > 0) {
-      addsIncidents(prev_edge.get(), *curr_edge, *intersection);
-    } else {
-      // Why would curr_edge not be set? Happens in test/junctions.cc
+    // Mark toll collection points
+    if (node->type() == TripLeg_Node_Type_kTollBooth) {
+      auto toll_collection_point_json = json::map({});
+      toll_collection_point_json->emplace("type", std::string("toll_booth"));
+      intersection->emplace("toll_collection", toll_collection_point_json);
+    }
+
+    // Mark border crossings
+    auto curr_country_code = etp->GetCountryCode(i);
+    auto prev_country_code = (i > 0) ? etp->GetCountryCode(i - 1) : "";
+    if (prev_country_code != "" && prev_country_code != curr_country_code) {
+      auto border_crossing_json = json::map({});
+      border_crossing_json->emplace("country_code", curr_country_code);
+      intersection->emplace("border_crossing", border_crossing_json);
+    }
+
+    // Mark tunnel entrances
+    if (prev_edge && !prev_edge->tunnel() && curr_edge && curr_edge->tunnel()) {
+      auto tunnel_entrance_json = json::map({});
+      tunnel_entrance_json->emplace("tunnel_name", std::string("TODO"));
+      intersection->emplace("tunnel_entrance", tunnel_entrance_json);
+    }
+
+    if (node->incidents().size() > 0) {
+      addsIncidents(node->incidents(), *intersection);
     }
 
     // TODO: add recosted durations to the intersection?
@@ -591,28 +603,25 @@ std::string exits(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
   return exits;
 }
 
-valhalla::baldr::json::MapPtr serialize_incident(const TripLeg_Edge_Incident& incident,
-                                                 bool only_id) {
+valhalla::baldr::json::MapPtr serialize_incident(const TripLeg_Node_Incident& incident) {
   auto metadata_json = json::map({});
 
   {
     uint64_t id = static_cast<uint32_t>(incident.id());
     metadata_json->emplace("id", id);
   }
-  if (!only_id) {
-    if (incident.creation_time()) {
-      metadata_json->emplace("creation_time", static_cast<uint64_t>(incident.creation_time()));
-    }
-    if (incident.end_time()) {
-      metadata_json->emplace("end_time", static_cast<uint64_t>(incident.end_time()));
-    }
-    if (incident.start_time()) {
-      metadata_json->emplace("start_time", static_cast<uint64_t>(incident.start_time()));
-    }
-    metadata_json->emplace("incident_type", valhalla::incidentTypeToString(incident));
-    if (!incident.description().empty()) {
-      metadata_json->emplace("description", incident.description());
-    }
+  if (incident.creation_time()) {
+    metadata_json->emplace("creation_time", static_cast<uint64_t>(incident.creation_time()));
+  }
+  if (incident.end_time()) {
+    metadata_json->emplace("end_time", static_cast<uint64_t>(incident.end_time()));
+  }
+  if (incident.start_time()) {
+    metadata_json->emplace("start_time", static_cast<uint64_t>(incident.start_time()));
+  }
+  metadata_json->emplace("incident_type", valhalla::incidentTypeToString(incident));
+  if (!incident.description().empty()) {
+    metadata_json->emplace("description", incident.description());
   }
 
   return metadata_json;
@@ -1481,20 +1490,19 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
   rapidjson::Document serialized_to_json;
   {
     auto intersection_doc = json::Jmap();
-    auto inner_edge = TripLeg_Edge();
-    auto edge = EnhancedTripLeg_Edge(&inner_edge);
+    auto inner_node = TripLeg_Node();
     // Sets up the incident
-    auto incidents = inner_edge.mutable_incidents();
+    auto incidents = inner_node.mutable_incidents();
     auto incident = incidents->Add();
     uint64_t creation_time = 1597241829;
     incident->set_id(1337);
     incident->set_creation_time(creation_time);
     incident->set_start_time(creation_time + 100);
     incident->set_end_time(creation_time + 1800);
-    incident->set_type(TripLeg_Edge_Incident_Type::TripLeg_Edge_Incident_Type_WEATHER);
+    incident->set_type(TripLeg_Node_Incident_Type::TripLeg_Node_Incident_Type_WEATHER);
 
     // Finally call the function under test to serialize to json
-    addsIncidents(nullptr, edge, intersection_doc);
+    addsIncidents(*incidents, intersection_doc);
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
@@ -1529,10 +1537,9 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
   rapidjson::Document serialized_to_json;
   {
     auto intersection_doc = json::Jmap();
-    auto inner_edge = TripLeg_Edge();
-    auto edge = EnhancedTripLeg_Edge(&inner_edge);
+    auto inner_node = TripLeg_Node();
     // Sets up the incident
-    auto incidents = inner_edge.mutable_incidents();
+    auto incidents = inner_node.mutable_incidents();
     {
       // First incident
       auto incident = incidents->Add();
@@ -1540,7 +1547,7 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
       incident->set_id(1337);
       incident->set_description("Fooo");
       incident->set_creation_time(creation_time);
-      incident->set_type(TripLeg_Edge_Incident_Type::TripLeg_Edge_Incident_Type_WEATHER);
+      incident->set_type(TripLeg_Node_Incident_Type::TripLeg_Node_Incident_Type_WEATHER);
     }
     {
       // second incident
@@ -1550,11 +1557,11 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
       incident->set_creation_time(creation_time);
       incident->set_start_time(creation_time + 100);
       incident->set_end_time(creation_time + 1800);
-      incident->set_type(TripLeg_Edge_Incident_Type::TripLeg_Edge_Incident_Type_ACCIDENT);
+      incident->set_type(TripLeg_Node_Incident_Type::TripLeg_Node_Incident_Type_ACCIDENT);
     }
 
     // Finally call the function under test to serialize to json
-    addsIncidents(nullptr, edge, intersection_doc);
+    addsIncidents(*incidents, intersection_doc);
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
@@ -1588,69 +1595,16 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
   assert_json_equality(serialized_to_json, expected_json);
 }
 
-TEST(RouteSerializerOsrm, testAddsIncidentsSingleIncidentMultipleIntersections) {
-  // Test that with an incident covering multiple edges,
-  // that only the incident-id is stored in subsequent intersections
-  // after the first
-
-  rapidjson::Document serialized_to_json;
-  {
-    auto intersection_doc = json::Jmap();
-    auto inner_edge_1 = TripLeg_Edge();
-    auto edge_1 = EnhancedTripLeg_Edge(&inner_edge_1);
-    auto inner_edge_2 = TripLeg_Edge();
-    auto edge_2 = EnhancedTripLeg_Edge(&inner_edge_2);
-    // Sets up the incident
-    {
-      auto incident = inner_edge_1.mutable_incidents()->Add();
-      uint64_t creation_time = 1597241829;
-      incident->set_id(1337);
-      incident->set_creation_time(creation_time);
-      incident->set_start_time(creation_time + 100);
-      incident->set_end_time(creation_time + 1800);
-      incident->set_type(TripLeg_Edge_Incident_Type::TripLeg_Edge_Incident_Type_WEATHER);
-
-      auto incident2 = inner_edge_2.mutable_incidents()->Add();
-      *incident2 = *incident;
-    }
-
-    // Finally call the function under test to serialize to json
-    addsIncidents(&edge_1, edge_2, intersection_doc);
-
-    // Lastly, convert to rapidjson
-    std::stringstream ss;
-    ss << intersection_doc;
-    serialized_to_json.Parse(ss.str().c_str());
-  }
-
-  rapidjson::Document expected_json;
-  {
-    // Only the `id` field is expected for edge_2 since all metadata was in edge_1
-    expected_json.Parse(R"({
-      "incidents": [
-        {
-          "id": 1337
-        }
-      ]
-    })");
-    // Ensure the json was parsed
-    ASSERT_TRUE(expected_json.IsObject());
-  }
-
-  assert_json_equality(serialized_to_json, expected_json);
-}
-
 TEST(RouteSerializerOsrm, testAddsIncidentsNothingToAdd) {
   // Test serializing an edge without incident
 
   rapidjson::Document serialized_to_json;
   {
     auto intersection_doc = json::Jmap();
-    auto inner_edge = TripLeg_Edge();
-    auto edge = EnhancedTripLeg_Edge(&inner_edge);
+    auto node = TripLeg_Node();
 
     // Finally call the function under test to serialize to json
-    addsIncidents(nullptr, edge, intersection_doc);
+    addsIncidents(node.incidents(), intersection_doc);
 
     // Lastly, convert to rapidjson
     std::stringstream ss;

@@ -226,30 +226,6 @@ message TripLeg {
     optional float default_speed = 44;       // km/h
     optional Restriction restriction = 45;
     optional bool destination_only = 46;
-
-    message Incident {
-      enum Type {
-        ACCIDENT = 0;
-        CONGESTION = 1;
-        CONSTRUCTION = 2;
-        DISABLED_VEHICLE = 3;
-        LANE_RESTRICTION = 4;
-        MASS_TRANSIT = 5;
-        MISCELLANEOUS = 6;
-        OTHER_NEWS = 7;
-        PLANNED_EVENT = 8;
-        ROAD_CLOSURE = 9;
-        ROAD_HAZARD = 10;
-        WEATHER = 11;
-      };
-      optional Type type = 1;
-      optional string description = 2;
-      optional uint64 start_time = 3;     // START_TIME as seconds since epoch UTC
-      optional uint64 end_time = 4;       // END_TIME seconds since epoch UTC
-      optional uint64 creation_time = 5;  // time the incident was created/updated in seconds since epoch UTC
-      optional uint32 id = 6;
-    };
-    repeated Incident incidents = 47;
   }
 
   message IntersectingEdge {
@@ -301,6 +277,30 @@ message TripLeg {
     optional PathCost cost = 12;             // how much cost did it take at this node in the path
     repeated PathCost recosts = 13;          // how much cost did it take at this node in the path for optional recostings
     optional BikeShareStationInfo bss_info = 14;
+
+    message Incident {
+      enum Type {
+        ACCIDENT = 0;
+        CONGESTION = 1;
+        CONSTRUCTION = 2;
+        DISABLED_VEHICLE = 3;
+        LANE_RESTRICTION = 4;
+        MASS_TRANSIT = 5;
+        MISCELLANEOUS = 6;
+        OTHER_NEWS = 7;
+        PLANNED_EVENT = 8;
+        ROAD_CLOSURE = 9;
+        ROAD_HAZARD = 10;
+        WEATHER = 11;
+      };
+      optional Type type = 1;
+      optional string description = 2;
+      optional uint64 start_time = 3;     // START_TIME as seconds since epoch UTC
+      optional uint64 end_time = 4;       // END_TIME seconds since epoch UTC
+      optional uint64 creation_time = 5;  // time the incident was created/updated in seconds since epoch UTC
+      optional uint32 id = 6;
+    };
+    repeated Incident incidents = 15;
  }
 
   message Admin {

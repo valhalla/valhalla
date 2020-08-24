@@ -4,43 +4,43 @@ using namespace valhalla;
 
 namespace valhalla {
 
-std::string incidentTypeToString(const TripLeg_Edge_Incident& incident) {
+std::string incidentTypeToString(const TripLeg_Node_Incident& incident) {
   std::string incident_type;
   switch (incident.type()) {
-    case TripLeg_Edge_Incident_Type_ACCIDENT:
+    case TripLeg_Node_Incident_Type_ACCIDENT:
       incident_type = "accident";
       break;
-    case TripLeg_Edge_Incident_Type_CONGESTION:
+    case TripLeg_Node_Incident_Type_CONGESTION:
       incident_type = "congestion";
       break;
-    case TripLeg_Edge_Incident_Type_CONSTRUCTION:
+    case TripLeg_Node_Incident_Type_CONSTRUCTION:
       incident_type = "construction";
       break;
-    case TripLeg_Edge_Incident_Type_DISABLED_VEHICLE:
+    case TripLeg_Node_Incident_Type_DISABLED_VEHICLE:
       incident_type = "disabled_vehicle";
       break;
-    case TripLeg_Edge_Incident_Type_LANE_RESTRICTION:
+    case TripLeg_Node_Incident_Type_LANE_RESTRICTION:
       incident_type = "lane_restriction";
       break;
-    case TripLeg_Edge_Incident_Type_MASS_TRANSIT:
+    case TripLeg_Node_Incident_Type_MASS_TRANSIT:
       incident_type = "mass_transit";
       break;
-    case TripLeg_Edge_Incident_Type_MISCELLANEOUS:
+    case TripLeg_Node_Incident_Type_MISCELLANEOUS:
       incident_type = "miscellaneous";
       break;
-    case TripLeg_Edge_Incident_Type_OTHER_NEWS:
+    case TripLeg_Node_Incident_Type_OTHER_NEWS:
       incident_type = "other_news";
       break;
-    case TripLeg_Edge_Incident_Type_PLANNED_EVENT:
+    case TripLeg_Node_Incident_Type_PLANNED_EVENT:
       incident_type = "planned_event";
       break;
-    case TripLeg_Edge_Incident_Type_ROAD_CLOSURE:
+    case TripLeg_Node_Incident_Type_ROAD_CLOSURE:
       incident_type = "road_closure";
       break;
-    case TripLeg_Edge_Incident_Type_ROAD_HAZARD:
+    case TripLeg_Node_Incident_Type_ROAD_HAZARD:
       incident_type = "road_hazard";
       break;
-    case TripLeg_Edge_Incident_Type_WEATHER:
+    case TripLeg_Node_Incident_Type_WEATHER:
       incident_type = "weather";
       break;
   };

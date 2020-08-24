@@ -196,7 +196,7 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
 }
 
 // Get the string representing the incident-type
-std::string incidentTypeToString(const TripLeg_Edge_Incident& incident);
+std::string incidentTypeToString(const TripLeg_Node_Incident& incident);
 
 // to use protobuflite we cant use descriptors which means we cant translate enums to strings
 // and so we reimplement the ones we use here. newer versions of protobuf provide these even
