@@ -492,21 +492,21 @@ struct path_t {
 namespace valhalla {
 namespace meili {
 
-MapMatcher::MapMatcher(const boost::property_tree::ptree& config,
+MapMatcher::MapMatcher(const Config& config,
                        baldr::GraphReader& graphreader,
                        CandidateQuery& candidatequery,
                        const sif::mode_costing_t& mode_costing,
                        sif::TravelMode travelmode)
     : config_(config), graphreader_(graphreader), candidatequery_(candidatequery),
       mode_costing_(mode_costing), travelmode_(travelmode), interrupt_(nullptr), vs_(), ts_(vs_),
-      container_(), emission_cost_model_(graphreader_, container_, config_),
+      container_(), emission_cost_model_(graphreader_, container_, config_.emission_cost),
       transition_cost_model_(graphreader_,
                              vs_,
                              ts_,
                              container_,
                              mode_costing_,
                              travelmode_,
-                             config_) {
+                             config_.transition_cost) {
   vs_.set_emission_cost_model(emission_cost_model_);
   vs_.set_transition_cost_model(transition_cost_model_);
 }
@@ -826,10 +826,10 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
 
 std::unordered_map<StateId::Time, std::vector<Measurement>>
 MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements) {
-  const float max_search_radius = config_.get<float>("max_search_radius"),
-              sq_max_search_radius = max_search_radius * max_search_radius;
-  const float interpolation_distance = config_.get<float>("interpolation_distance"),
-              sq_interpolation_distance = interpolation_distance * interpolation_distance;
+  const float sq_max_search_radius = config_.candidate_search.max_search_radius_meters *
+                                     config_.candidate_search.max_search_radius_meters;
+  const float sq_interpolation_distance =
+      config_.routing.interpolation_distance_meters * config_.routing.interpolation_distance_meters;
   std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated;
 
   // Always match the first measurement
