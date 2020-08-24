@@ -701,6 +701,10 @@ protected:
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
 
+  // Whether or not to do shortest (by length) routes
+  // Note: hierarchy pruning means some costings (auto, truck, etc) won't do absolute shortest
+  bool shortest_;
+
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
@@ -785,6 +789,9 @@ protected:
                                          const uint32_t idx) const {
     // Cases with both time and penalty: country crossing, ferry, rail_ferry, gate, toll booth
     sif::Cost c;
+    if (shortest_) {
+      return c; // shortest ignores any penalties in favor of path length
+    }
     if (node->type() == baldr::NodeType::kBorderControl) {
       c += country_crossing_cost_;
     }

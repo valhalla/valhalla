@@ -446,6 +446,13 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::GraphTile* tile,
                         const uint32_t seconds) const {
   auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
+  assert(speed < speedfactor_.size());
+  float sec = (edge->length() * speedfactor_[speed]);
+
+  if (shortest_) {
+    return Cost(edge->length(), sec);
+  }
+
   float factor =
       (edge->use() == Use::kFerry)
           ? ferry_factor_
@@ -453,6 +460,7 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
+
   if (edge->toll()) {
     factor += toll_factor_;
   }
@@ -461,8 +469,6 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= alley_factor_;
   }
 
-  assert(speed < speedfactor_.size());
-  float sec = (edge->length() * speedfactor_[speed]);
   return Cost(sec * factor, sec);
 }
 
@@ -502,7 +508,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-    c.cost += seconds;
+    c.cost += shortest_ ? 0.f : seconds;
     c.secs += seconds;
   }
   return c;
@@ -546,8 +552,8 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
+    c.cost += shortest_ ? 0 : seconds;
     c.secs += seconds;
-    c.cost += seconds;
   }
   return c;
 }
@@ -675,6 +681,7 @@ cost_ptr_t CreateAutoCost(const CostingOptions& costing_options) {
 }
 
 /**
+ * //TODO: delete this in favor of just using the "shortest" costing option
  * Derived class providing an alternate costing for driving that is intended
  * to provide a short path.
  */
@@ -709,9 +716,14 @@ public:
                         const baldr::GraphTile* tile,
                         const uint32_t seconds) const {
     auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
+    float sec = edge->length() * speedfactor_[speed];
+
+    if (shortest_) {
+      return Cost(edge->length(), sec);
+    }
+
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : 1.0f;
-    return Cost(edge->length() * adjspeedfactor_[speed] * factor,
-                edge->length() * speedfactor_[speed]);
+    return Cost(edge->length() * adjspeedfactor_[speed] * factor, sec);
   }
 
   /**
@@ -1012,11 +1024,16 @@ public:
                         const baldr::GraphTile* tile,
                         const uint32_t seconds) const {
     auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
+    float sec = edge->length() * speedfactor_[speed];
+
+    if (shortest_) {
+      return Cost(edge->length(), sec);
+    }
+
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
     if ((edge->forwardaccess() & kHOVAccess) && !(edge->forwardaccess() & kAutoAccess)) {
       factor *= kHOVFactor;
     }
-    float sec = (edge->length() * speedfactor_[speed]);
     return Cost(sec * factor, sec);
   }
 
@@ -1218,11 +1235,16 @@ public:
                         const baldr::GraphTile* tile,
                         const uint32_t seconds) const {
     auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
+    float sec = edge->length() * speedfactor_[speed];
+
+    if (shortest_) {
+      return Cost(edge->length(), sec);
+    }
+
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
     if ((edge->forwardaccess() & kTaxiAccess) && !(edge->forwardaccess() & kAutoAccess)) {
       factor *= kTaxiFactor;
     }
-    float sec = (edge->length() * speedfactor_[speed]);
     return Cost(sec * factor, sec);
   }
 
