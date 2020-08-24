@@ -3,6 +3,7 @@
    * REMOVED:  Remove Node bindings. [#2502](https://github.com/valhalla/valhalla/pull/2502)
 
 * **Bug Fix**
+   * FIXED: More Windows compatibility: build tiles and some run actions work now (including CI tests) [#2300](https://github.com/valhalla/valhalla/issues/2300)
    * FIXED: Crazy ETAs.  If a way has forward speed with no backward speed and it is not oneway, then we must set the default speed.  The reverse logic applies as well.  If a way has no backward speed but has a forward speed and it is not a oneway, then set the default speed. [#2102](https://github.com/valhalla/valhalla/pull/2102)
    * FIXED: Map matching elapsed times spliced amongst different legs and discontinuities are now correct [#2104](https://github.com/valhalla/valhalla/pull/2104)
    * FIXED: Date time information is now propogated amongst different legs and discontinuities [#2107](https://github.com/valhalla/valhalla/pull/2107)
@@ -74,6 +75,10 @@
    * FIXED: Fixed logic so verbal keep instructions use branch exit sign info for ramps [#2520](https://github.com/valhalla/valhalla/pull/2520)
    * FIXED: Fix bug in trace_route for uturns causing garbage coordinates [#2517](https://github.com/valhalla/valhalla/pull/2517)
    * FIXED: Simplify heading calculation for turn type. Remove undefined behavior case. [#2513](https://github.com/valhalla/valhalla/pull/2513)
+   * FIXED: Always set costing name even if one is not provided for osrm serializer weight_name. [#2528](https://github.com/valhalla/valhalla/pull/2528)
+   * FIXED: Make single-thread tile building reproducible: fix seed for shuffle, use concurrency configuration from the mjolnir section. [#2515](https://github.com/valhalla/valhalla/pull/2515)
+   * FIXED: Transcoding of c++ location to pbf location used path edges in the place of filtered edges. [#2542](https://github.com/valhalla/valhalla/pull/2542)
+   * FIXED: Add back whitelisting action types. [#2545](https://github.com/valhalla/valhalla/pull/2545)
 
 * **Enhancement**
    * ADDED: Add explicit include for sstream to be compatible with msvc_x64 toolset. [#2449](https://github.com/valhalla/valhalla/pull/2449)
@@ -133,6 +138,10 @@
    * ADDED: Ability to recost a path and increased cost/time details along the trippath and json output [#2425](https://github.com/valhalla/valhalla/pull/2425)
    * ADDED: Add the ability to do bikeshare based (ped/bike) multimodal routing [#2031](https://github.com/valhalla/valhalla/pull/2031)
    * ADDED: Route through restrictions enabled by introducing a costing option. [#2469](https://github.com/valhalla/valhalla/pull/2469)
+   * ADDED: Migrated to Ubuntu 20.04 base-image [#2508](https://github.com/valhalla/valhalla/pull/2508)
+   * CHANGED: Speed up parseways stage by avoiding multiple string comparisons [#2518](https://github.com/valhalla/valhalla/pull/2518)
+   * CHANGED: Speed up enhance stage by avoiding GraphTileBuilder copying [#2468](https://github.com/valhalla/valhalla/pull/2468)
+   * CHANGED: Refactor mapmatching configuration to use a struct (instead of `boost::property_tree::ptree`). [#2485](https://github.com/valhalla/valhalla/pull/2485)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

@@ -1,9 +1,9 @@
 #include "sif/transitcost.h"
-
 #include "baldr/accessrestriction.h"
 #include "baldr/graphconstants.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
+#include "proto_conversions.h"
 #include "worker.h"
 
 #ifdef INLINE_TEST
@@ -642,6 +642,7 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
                              const std::string& costing_options_key,
                              CostingOptions* pbf_costing_options) {
   pbf_costing_options->set_costing(Costing::transit);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {

@@ -14,23 +14,6 @@
 
 namespace valhalla {
 
-// to use protobuflite we cant use descriptors which means we cant translate enums to strings
-// and so we reimplement the ones we use here
-bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a);
-const std::string& Options_Action_Enum_Name(const Options::Action action);
-bool Costing_Enum_Parse(const std::string& costing, Costing* c);
-const std::string& Costing_Enum_Name(const Costing costing);
-bool ShapeMatch_Enum_Parse(const std::string& match, ShapeMatch* s);
-const std::string& ShapeMatch_Enum_Name(const ShapeMatch match);
-bool Options_Format_Enum_Parse(const std::string& format, Options::Format* f);
-const std::string& Options_Format_Enum_Name(const Options::Format match);
-const std::string& Options_Units_Enum_Name(const Options::Units unit);
-bool FilterAction_Enum_Parse(const std::string& action, FilterAction* a);
-const std::string& FilterAction_Enum_Name(const FilterAction action);
-bool DirectionsType_Enum_Parse(const std::string& dtype, DirectionsType* t);
-bool PreferredSide_Enum_Parse(const std::string& pside, valhalla::Location::PreferredSide* p);
-bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc);
-
 const std::unordered_map<unsigned, std::string>
     error_codes{// loki project 1xx
                 {100, "Failed to parse json request"},

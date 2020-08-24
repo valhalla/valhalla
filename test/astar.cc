@@ -36,9 +36,9 @@
 
 #include "gurka/gurka.h"
 
-#include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/options.pb.h>
-#include <valhalla/proto/trip.pb.h>
+#include "proto/directions.pb.h"
+#include "proto/options.pb.h"
+#include "proto/trip.pb.h"
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/format.hpp>
@@ -225,7 +225,8 @@ void make_tile() {
   ASSERT_EQ(tile.FileSuffix(tile_id, false), std::string("2/000/519/120.gph"))
       << "Tile ID didn't match the expected filename";
 
-  ASSERT_PRED1(filesystem::exists, test_dir + "/" + tile.FileSuffix(tile_id, false))
+  ASSERT_PRED1(filesystem::exists,
+               test_dir + filesystem::path::preferred_separator + tile.FileSuffix(tile_id, false))
       << "Expected tile file didn't show up on disk - are the fixtures in the right location?";
 }
 

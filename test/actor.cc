@@ -3,12 +3,10 @@
 #include <stdexcept>
 #include <string>
 
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-
 #include "tyr/actor.h"
 
 #include "test.h"
+#include "utils.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -18,17 +16,9 @@ using namespace valhalla;
 
 namespace {
 
-boost::property_tree::ptree json_to_pt(const std::string& json) {
-  std::stringstream ss;
-  ss << json;
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(ss, pt);
-  return pt;
-}
-
 boost::property_tree::ptree make_conf() {
   // fake up config against pine grove traffic extract
-  auto conf = json_to_pt(R"({
+  auto conf = test::json_to_pt(R"({
       "mjolnir":{"tile_dir":"test/traffic_matcher_tiles"},
       "loki":{
         "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","transit_available"],
@@ -74,7 +64,7 @@ TEST(Actor, Basic) {
   auto route_json = actor.route(R"({"locations":[{"lat":40.546115,"lon":-76.385076,"type":"break"},
           {"lat":40.544232,"lon":-76.385752,"type":"break"}],"costing":"auto"})");
   actor.cleanup();
-  auto route = json_to_pt(route_json);
+  auto route = test::json_to_pt(route_json);
   route_json.find("Tulpehocken");
 
   actor.trace_attributes(R"({"shape":[{"lat":40.546115,"lon":-76.385076},
@@ -83,7 +73,7 @@ TEST(Actor, Basic) {
   auto attributes_json = actor.trace_attributes(R"({"shape":[{"lat":40.546115,"lon":-76.385076},
       {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})");
   actor.cleanup();
-  auto attributes = json_to_pt(attributes_json);
+  auto attributes = test::json_to_pt(attributes_json);
   attributes_json.find("Tulpehocken");
 
   actor.transit_available(R"({"locations":[{"lat":35.647452, "lon":-79.597477, "radius":20},
@@ -93,7 +83,7 @@ TEST(Actor, Basic) {
       actor.transit_available(R"({"locations":[{"lat":35.647452, "lon":-79.597477, "radius":20},
       {"lat":34.766908, "lon":-80.325936,"radius":10}]})");
   actor.cleanup();
-  auto transit = json_to_pt(transit_json);
+  auto transit = test::json_to_pt(transit_json);
   transit_json.find(std::to_string(false));
 
   // TODO: test the rest of them

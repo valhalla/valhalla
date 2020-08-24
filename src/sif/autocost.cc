@@ -1,12 +1,12 @@
 #include "sif/autocost.h"
-#include "sif/costconstants.h"
-
 #include "baldr/accessrestriction.h"
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include "proto_conversions.h"
+#include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 #include <cassert>
 
@@ -564,6 +564,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
                           CostingOptions* pbf_costing_options) {
   pbf_costing_options->set_costing(Costing::auto_);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
@@ -742,6 +743,7 @@ void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
                                  CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
   pbf_costing_options->set_costing(Costing::auto_shorter);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
 }
 
 cost_ptr_t CreateAutoShorterCost(const CostingOptions& costing_options) {
@@ -932,6 +934,7 @@ void ParseBusCostOptions(const rapidjson::Document& doc,
                          CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
   pbf_costing_options->set_costing(Costing::bus);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
 }
 
 cost_ptr_t CreateBusCost(const CostingOptions& costing_options) {
@@ -1143,6 +1146,7 @@ void ParseHOVCostOptions(const rapidjson::Document& doc,
                          CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
   pbf_costing_options->set_costing(Costing::hov);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
 }
 
 cost_ptr_t CreateHOVCost(const CostingOptions& costing_options) {
@@ -1353,6 +1357,7 @@ void ParseTaxiCostOptions(const rapidjson::Document& doc,
                           CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
   pbf_costing_options->set_costing(Costing::taxi);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
 }
 
 cost_ptr_t CreateTaxiCost(const CostingOptions& costing_options) {
@@ -1442,6 +1447,7 @@ void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
                                  CostingOptions* pbf_costing_options) {
   ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
   pbf_costing_options->set_costing(Costing::auto_data_fix);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
 }
 
 cost_ptr_t CreateAutoDataFixCost(const CostingOptions& costing_options) {

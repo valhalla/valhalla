@@ -43,6 +43,7 @@ struct OSMNode {
   // Lat,lng of the node
   float lng_;
   float lat_;
+  uint32_t spare2_;
 
   OSMNode() {
     memset(this, 0, sizeof(OSMNode));

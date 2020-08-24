@@ -1,4 +1,5 @@
 #include "test.h"
+#include "utils.h"
 
 #include <iostream>
 #include <string>
@@ -11,24 +12,13 @@
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
 
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 using namespace valhalla::midgard;
 
 namespace {
 
-boost::property_tree::ptree json_to_pt(const std::string& json) {
-  std::stringstream ss;
-  ss << json;
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(ss, pt);
-  return pt;
-}
-
-const auto config = json_to_pt(R"({
+const auto config = test::json_to_pt(R"({
     "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1}
   })");
 

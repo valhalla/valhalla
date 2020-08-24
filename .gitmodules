@@ -28,3 +28,6 @@
 [submodule "third_party/robin-hood-hashing"]
 	path = third_party/robin-hood-hashing
 	url = https://github.com/martinus/robin-hood-hashing.git
+[submodule "third_party/fastcov"]
+	path = third_party/fastcov
+	url = https://github.com/RPGillespie6/fastcov.git

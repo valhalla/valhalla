@@ -1,5 +1,6 @@
 #include "sif/dynamiccost.h"
 #include "baldr/graphconstants.h"
+#include "proto_conversions.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/motorcyclecost.h"
