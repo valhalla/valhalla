@@ -27,24 +27,22 @@ namespace meili {
 
 MapMatcherFactory::MapMatcherFactory(const boost::property_tree::ptree& root,
                                      const std::shared_ptr<baldr::GraphReader>& graph_reader)
-    : config_(root.get_child("meili")), graphreader_(graph_reader),
-      max_grid_cache_size_(root.get<float>("meili.grid.cache_size")) {
+    : config_(root.get_child("meili")), graphreader_(graph_reader) {
   if (!graphreader_)
     graphreader_.reset(new baldr::GraphReader(root.get_child("mjolnir")));
   candidatequery_.reset(
-      new CandidateGridQuery(*graphreader_, local_tile_size() / root.get<size_t>("meili.grid.size"),
-                             local_tile_size() / root.get<size_t>("meili.grid.size")));
-  cost_factory_.RegisterStandardCostingModels();
+      new CandidateGridQuery(*graphreader_, local_tile_size() / config_.candidate_search.grid_size,
+                             local_tile_size() / config_.candidate_search.grid_size));
 }
 
 MapMatcherFactory::~MapMatcherFactory() {
 }
 
-MapMatcher* MapMatcherFactory::Create(const Costing costing, const Options& options) {
+MapMatcher* MapMatcherFactory::Create(const Options& options) {
   // Merge any customizable options with the config defaults
   const auto& config = MergeConfig(options);
 
-  valhalla::sif::cost_ptr_t cost = cost_factory_.Create(costing, options);
+  valhalla::sif::cost_ptr_t cost = cost_factory_.Create(options);
   valhalla::sif::TravelMode mode = cost->travel_mode();
 
   mode_costing_[static_cast<uint32_t>(mode)] = cost;
@@ -53,37 +51,26 @@ MapMatcher* MapMatcherFactory::Create(const Costing costing, const Options& opti
   return new MapMatcher(config, *graphreader_, *candidatequery_, mode_costing_, mode);
 }
 
-MapMatcher* MapMatcherFactory::Create(const Options& options) {
-  return Create(options.costing(), options);
-}
-
-boost::property_tree::ptree MapMatcherFactory::MergeConfig(const Options& options) {
-  // Copy the default child config
-  auto config = config_.get_child("default");
-
-  // Get a list of customizable options
-  std::unordered_set<std::string> customizable;
-  for (const auto& item : config_.get_child("customizable")) {
-    customizable.insert(item.second.get_value<std::string>());
-  }
+Config MapMatcherFactory::MergeConfig(const Options& options) const {
+  // Copy the default config
+  auto config = config_;
 
   // Check for overrides of matcher related directions options. Override these values in config.
-  if (options.search_radius() && customizable.find("search_radius") != customizable.end()) {
-    config.put<float>("search_radius", options.search_radius());
+  if (options.has_search_radius() && config.candidate_search.is_search_radius_customizable) {
+    config.candidate_search.search_radius_meters = options.search_radius();
   }
-  if (options.turn_penalty_factor() &&
-      customizable.find("turn_penalty_factor") != customizable.end()) {
-    config.put<float>("turn_penalty_factor", options.turn_penalty_factor());
+  if (options.has_turn_penalty_factor() &&
+      config.transition_cost.is_turn_penalty_factor_customizable) {
+    config.transition_cost.turn_penalty_factor = options.turn_penalty_factor();
   }
-  if (options.gps_accuracy() && customizable.find("gps_accuracy") != customizable.end()) {
-    config.put<float>("gps_accuracy", options.gps_accuracy());
+  if (options.has_gps_accuracy() && config.emission_cost.is_gps_accuracy_customizable) {
+    config.emission_cost.gps_accuracy_meters = options.gps_accuracy();
   }
-  if (options.breakage_distance() && customizable.find("breakage_distance") != customizable.end()) {
-    config.put<float>("breakage_distance", options.breakage_distance());
+  if (options.has_breakage_distance() && config.transition_cost.is_breakage_distance_customizable) {
+    config.transition_cost.breakage_distance_meters = options.breakage_distance();
   }
-  if (options.has_interpolation_distance() &&
-      customizable.find("interpolation_distance") != customizable.end()) {
-    config.put<float>("interpolation_distance", options.interpolation_distance());
+  if (options.has_interpolation_distance() && config.routing.is_interpolation_distance_customizable) {
+    config.routing.interpolation_distance_meters = options.interpolation_distance();
   }
 
   // Give it back
@@ -95,7 +82,7 @@ void MapMatcherFactory::ClearFullCache() {
     graphreader_->Trim();
   }
 
-  if (candidatequery_->size() > max_grid_cache_size_) {
+  if (candidatequery_->size() > config_.candidate_search.cache_size) {
     candidatequery_->Clear();
   }
 }

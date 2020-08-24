@@ -5,7 +5,7 @@
 #include "odin/narrativebuilder.h"
 #include "odin/util.h"
 
-#include <valhalla/proto/options.pb.h>
+#include "proto/options.pb.h"
 
 namespace valhalla {
 namespace odin {

@@ -28,7 +28,7 @@ boost::property_tree::ptree get_conf() {
       "loki":{
         "actions":["route"],
         "logging":{"long_request": 100},
-        "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
+        "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
       },
       "thor":{"logging":{"long_request": 100}},
       "odin":{"logging":{"long_request": 100}},
@@ -107,7 +107,7 @@ TEST(Summary, test_time_summary) {
         // check the transition times should be non-zero and less than equal to the maneuver time
         double transition_time = 0;
         for (auto n = maneuver.begin_path_index(); n < maneuver.end_path_index(); ++n) {
-          transition_time += trip_leg->node(n).transition_time();
+          transition_time += trip_leg->node(n).cost().transition_cost().seconds();
         }
         EXPECT_LE(transition_time, maneuver.time());
         // check the on edge times plus the transition times add up to the maneuver time
@@ -120,13 +120,13 @@ TEST(Summary, test_time_summary) {
         accumulated_edge_time += edge_time_ms / 1000.0;
       }
       // make sure the end of the trip path is the same as the legs
-      EXPECT_EQ(trip_leg->node().rbegin()->elapsed_time(), leg.summary().time());
+      EXPECT_EQ(trip_leg->node().rbegin()->cost().elapsed_cost().seconds(), leg.summary().time());
       // make sure the maneuvers add up to the leg as well
       EXPECT_EQ(accumulated_time, leg.summary().time());
       // we should have had some transition costs along the way
       EXPECT_GT(accumulated_transition_time, 0);
       // we should have the edge time plus the transition time add up to the leg time
-      EXPECT_NEAR(accumulated_edge_time + accumulated_transition_time, accumulated_time, .15);
+      EXPECT_NEAR(accumulated_edge_time + accumulated_transition_time, accumulated_time, .16);
       ++trip_leg;
     }
     ++trip_route;

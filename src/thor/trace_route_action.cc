@@ -159,7 +159,7 @@ void thor_worker_t::route_match(Api& request) {
 
     // Form the trip path based on mode costing, origin, destination, and path edges
     auto& leg = *request.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
-    thor::TripLegBuilder::Build(controller, *reader, mode_costing, path.begin(), path.end(),
+    thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
                                 *options.mutable_locations()->begin(),
                                 *options.mutable_locations()->rbegin(),
                                 std::list<valhalla::Location>{}, leg, interrupt);
@@ -262,7 +262,7 @@ void thor_worker_t::build_trace(
     throw valhalla_exception_t{442};
 
   // here we enumerate the discontinuities and set the edge index of each input trace point
-  std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>> route_discontinuities;
+  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> edge_trimming;
   baldr::GraphId last_id;
   size_t edge_index = 0;
   for (const auto& path : paths) {
@@ -287,9 +287,8 @@ void thor_worker_t::build_trace(
     const auto* first_segment = path.second.front();
     const auto& first_match = match_results[first_segment->first_match_idx];
     if (first_match.ends_discontinuity) {
-      route_discontinuities[first_match.edge_index] = {{true, first_match.lnglat,
-                                                        first_match.distance_along},
-                                                       {false, {}, 1.f}};
+      edge_trimming[first_match.edge_index] = {{true, first_match.lnglat, first_match.distance_along},
+                                               {false, {}, 1.f}};
     }
 
     // handle the start of a discontinuity, could be on the same edge where we just ended one. in that
@@ -298,8 +297,8 @@ void thor_worker_t::build_trace(
     const auto* last_segment = path.second.back();
     const auto& last_match = match_results[last_segment->last_match_idx]; // cant use edge_index
     if (last_match.begins_discontinuity) {
-      auto found = route_discontinuities[last_match.edge_index].second = {true, last_match.lnglat,
-                                                                          last_match.distance_along};
+      auto found = edge_trimming[last_match.edge_index].second = {true, last_match.lnglat,
+                                                                  last_match.distance_along};
     }
   }
 
@@ -314,10 +313,8 @@ void thor_worker_t::build_trace(
 
   // initialize the origin and destination location for route
   const meili::EdgeSegment* origin_segment = paths.front().second.front();
-  std::cout << *origin_segment << std::endl;
   const meili::MatchResult& origin_match = match_results[origin_segment->first_match_idx];
   const meili::EdgeSegment* dest_segment = paths.back().second.back();
-  std::cout << *dest_segment << std::endl;
   const meili::MatchResult& dest_match = match_results[dest_segment->last_match_idx];
   Location* origin_location = options.mutable_shape(&origin_match - &match_results.front());
   Location* destination_location = options.mutable_shape(&dest_match - &match_results.front());
@@ -334,10 +331,10 @@ void thor_worker_t::build_trace(
 
   // actually build the leg and add it to the route
   auto* leg = request.mutable_trip()->add_routes()->add_legs();
-  thor::TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, path_edges.begin(),
-                              path_edges.end(), *origin_location, *destination_location,
-                              std::list<valhalla::Location>{}, *leg, interrupt,
-                              &route_discontinuities);
+  thor::TripLegBuilder::Build(options, controller, matcher->graphreader(), mode_costing,
+                              path_edges.begin(), path_edges.end(), *origin_location,
+                              *destination_location, std::list<valhalla::Location>{}, *leg, interrupt,
+                              &edge_trimming);
 }
 
 void thor_worker_t::build_route(
@@ -353,6 +350,7 @@ void thor_worker_t::build_route(
   valhalla::TripRoute* route = nullptr;
   std::vector<PathInfo> edges;
   int route_index = 0;
+  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> edge_trimming;
   for (const auto& path : paths) {
     if (route == nullptr) {
       route = request.mutable_trip()->mutable_routes()->Add();
@@ -389,12 +387,37 @@ void thor_worker_t::build_route(
     add_path_edge(destination_location, dest_segment->edgeid, dest_segment->target, dest_match.lnglat,
                   dest_match.distance_from);
 
+    // build up the discontinuities so we can trim shape where we do uturns
+    edge_trimming.clear();
+    for (size_t i = 0; i < path.second.size(); ++i) {
+      const auto* prev_segment = i > 0 ? path.second[i - 1] : nullptr;
+      const auto* segment = path.second[i];
+      const auto* next_segment = i < path.second.size() - 1 ? path.second[i + 1] : nullptr;
+
+      // Note: below we use the operator[] to default initialize the "trim" boolean to false
+      // and then we overwrite it. Since its a pair this handles the case when just one is set
+
+      // if we uturn onto this edge we must trim the beginning
+      if (prev_segment && prev_segment->edgeid != segment->edgeid && prev_segment->target < 1.f &&
+          segment->first_match_idx > -1 && segment->first_match_idx < match_results.size()) {
+        edge_trimming[i].first = {true, match_results[segment->first_match_idx].lnglat,
+                                  segment->source};
+      }
+      // if we uturn off of this edge we must trim the end
+      if (next_segment && segment->edgeid != next_segment->edgeid && segment->target < 1.f &&
+          segment->last_match_idx > -1 && segment->last_match_idx < match_results.size()) {
+        edge_trimming[i].second = {true, match_results[segment->last_match_idx].lnglat,
+                                   segment->target};
+      }
+    }
+
     // TODO: do we actually need to supply the via/through type locations?
 
     // actually build the leg and add it to the route
-    TripLegBuilder::Build(controller, matcher->graphreader(), mode_costing, path.first.cbegin(),
-                          path.first.cend(), *origin_location, *destination_location,
-                          std::list<valhalla::Location>{}, *route->mutable_legs()->Add(), interrupt);
+    TripLegBuilder::Build(options, controller, matcher->graphreader(), mode_costing,
+                          path.first.cbegin(), path.first.cend(), *origin_location,
+                          *destination_location, std::list<valhalla::Location>{},
+                          *route->mutable_legs()->Add(), interrupt, &edge_trimming);
 
     if (path.second.back()->discontinuity) {
       ++route_index;

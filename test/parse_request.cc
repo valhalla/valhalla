@@ -2,10 +2,10 @@
 #include <string>
 #include <vector>
 
+#include "proto/options.pb.h"
+#include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "worker.h"
-
-#include <valhalla/proto/options.pb.h>
 
 #include "test.h"
 

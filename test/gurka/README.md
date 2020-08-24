@@ -178,13 +178,19 @@ in the `gurka::assert::raw` namespace:
 void expect_maneuvers(const valhalla::Api& result,
                       const std::vector<valhalla::DirectionsLeg_Maneuver_Type>& expected_maneuvers);
 
-void expect_instructions_at_maneuver_index(const valhalla::Api& result,
-                                           int maneuver_index,
-                                           const std::vector<std::string>& expected_instructions);
+void expect_instructions_at_maneuver_index(
+    const valhalla::Api& result,
+    int maneuver_index,
+    const std::string& expected_text_instruction,
+    const std::string& expected_verbal_transition_alert_instruction,
+    const std::string& expected_verbal_pre_transition_instruction,
+    const std::string& expected_verbal_post_transition_instruction);
 
 void expect_path_length(const valhalla::Api& result,
                         const float expected_length_km,
                         const float error_margin = 0);
+
+void expect_path(const valhalla::Api& result, const std::vector<std::string>& expected_names);
 ```
 
 ## `gurka::assert::osrm`
@@ -195,7 +201,7 @@ These functions will first serialize the raw `valhalla::Api` object into a JSON 
 (using `tyr::serializeDirections`), then perform assertions within the JSON document only.
 
 ```cpp
-void expect_route(valhalla::Api& raw_result,
+void expect_steps(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
                   bool dedupe = true);
 

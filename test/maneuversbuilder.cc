@@ -10,7 +10,7 @@
 #include "odin/maneuver.h"
 #include "odin/maneuversbuilder.h"
 
-#include <valhalla/proto/options.pb.h>
+#include "proto/options.pb.h"
 
 #include "test.h"
 

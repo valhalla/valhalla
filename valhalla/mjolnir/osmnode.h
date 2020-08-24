@@ -11,7 +11,6 @@
 namespace valhalla {
 namespace mjolnir {
 
-constexpr uint64_t kMaxOSMNodeId = 68719476735;
 constexpr uint32_t kMaxNodeNameIndex = 2097151;
 
 /**
@@ -19,29 +18,32 @@ constexpr uint32_t kMaxNodeNameIndex = 2097151;
  */
 struct OSMNode {
   // The osm id of the node
-  uint64_t osmid_ : 36; // Allows up to 64B Ids
-  uint64_t access_ : 12;
-  uint64_t type_ : 4;
-  uint64_t intersection_ : 1;
-  uint64_t traffic_signal_ : 1;
-  uint64_t forward_signal_ : 1;
-  uint64_t backward_signal_ : 1;
-  uint64_t non_link_edge_ : 1;
-  uint64_t link_edge_ : 1;
-  uint64_t shortlink_ : 1; // Link edge < kMaxInternalLength
-  uint64_t non_ferry_edge_ : 1;
-  uint64_t ferry_edge_ : 1;
-  uint64_t spare_ : 3;
-
-  // Lat,lng of the node
-  float lng_;
-  float lat_;
+  uint64_t osmid_;
 
   // Store node names in a separate list (so they don't require as many indexes)
   uint64_t name_index_ : 21;
   uint64_t ref_index_ : 21;
   uint64_t exit_to_index_ : 21;
   uint64_t named_intersection_ : 1;
+
+  uint32_t access_ : 12;
+  uint32_t type_ : 4;
+  uint32_t intersection_ : 1;
+  uint32_t traffic_signal_ : 1;
+  uint32_t forward_signal_ : 1;
+  uint32_t backward_signal_ : 1;
+  uint32_t non_link_edge_ : 1;
+  uint32_t link_edge_ : 1;
+  uint32_t shortlink_ : 1; // Link edge < kMaxInternalLength
+  uint32_t non_ferry_edge_ : 1;
+  uint32_t ferry_edge_ : 1;
+  uint32_t flat_loop_ : 1; // A node which on a section of a way that is doubled back on itself
+  uint32_t spare_ : 6;
+
+  // Lat,lng of the node
+  float lng_;
+  float lat_;
+  uint32_t spare2_;
 
   OSMNode() {
     memset(this, 0, sizeof(OSMNode));
@@ -64,10 +66,6 @@ struct OSMNode {
    * @param id Node Id.
    */
   void set_id(const uint64_t id) {
-    // Check for overflow
-    if (id > kMaxOSMNodeId) {
-      throw std::runtime_error("OSMNode: exceeded maximum OSM node Id: " + std::to_string(id));
-    }
     osmid_ = id;
   }
 

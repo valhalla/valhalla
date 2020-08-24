@@ -46,6 +46,12 @@ enum Costing {
   auto_data_fix = 11;
   taxi = 12;
   none_ = 13;
+  bikeshare = 14;
+}
+
+message AvoidEdge {
+  optional uint64 id = 1;
+  optional float percent_along = 2;
 }
 
 message CostingOptions {
@@ -104,11 +110,15 @@ message CostingOptions {
   optional FilterAction filter_route_action = 53;
   repeated string filter_route_ids = 54;
   optional uint32 flow_mask = 55;
-}
+  optional float bike_share_cost = 56;
+  optional float bike_share_penalty = 57;
+  optional float rail_ferry_cost = 58;
+  optional float use_rail_ferry = 59;
 
-message AvoidEdge {
-  optional uint64 id = 1;
-  optional float percent_along = 2;
+  // these are not specified directly by the user but they get filled in as the request is parsed and fulfilled
+  optional Costing costing = 90;
+  optional string name = 91;
+  repeated AvoidEdge avoid_edges = 92;                       // Avoid edges for any costing - derived from avoid_locations
 }
 
 message Options {
@@ -127,14 +137,14 @@ message Options {
   enum Action {
     route = 1;
     locate = 2;
-    sources_to_targets = 6;
-    optimized_route = 7;
-    isochrone = 8;
-    trace_route = 9;
-    trace_attributes = 10;
-    height = 11;
-    transit_available = 12;
-    expansion = 13;
+    sources_to_targets = 3;
+    optimized_route = 4;
+    isochrone = 5;
+    trace_route = 6;
+    trace_attributes = 7;
+    height = 8;
+    transit_available = 9;
+    expansion = 10;
   }
 
   enum DateTimeType {
@@ -177,7 +187,7 @@ message Options {
   optional float turn_penalty_factor = 32;                                // The turn penalty factor associated with the supplied trace points
   optional FilterAction filter_action = 33;                               // The trace filter action - either exclude or include
   repeated string filter_attributes = 34;                                 // The filter list for trace attributes
-  repeated AvoidEdge avoid_edges = 35;                                    // Avoid edges for any costing - derived from avoid_locations
+
   optional float breakage_distance = 36;                                  // Map-matching breaking distance (distance between GPS trace points)
   optional bool use_timestamps = 37 [default = false];                    // Use timestamps to compute elapsed time for trace_route and trace_attributes
   optional ShapeFormat shape_format = 38 [default = polyline6];           // Shape format (defaults to polyline6 encoding)
@@ -186,4 +196,7 @@ message Options {
   optional bool guidance_views = 41;                                      // Whether to return guidance_views in the response
   // 42 is reserved
   optional uint32 height_precision = 43 [default = 0];                    // Number of digits precision for heights returned
+  optional bool roundabout_exits = 44 [default = true];                   // Whether to announce roundabout exit maneuvers
+  optional bool linear_references = 45;                                   // Include linear references for graph edges returned in certain responses.
+  repeated CostingOptions recostings = 46;                                // Costing options to use to recost a path after it has been found
 }

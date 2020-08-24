@@ -97,9 +97,11 @@ public:
    * Gets the directory like filename suffix given the graphId
    * @param  graphid  Graph Id to construct filename.
    * @param  gzipped  Modifies the suffix if you expect gzipped file names
+   * @param  is_file_path Determines the 1000 separator to be used for file or URL access
    * @return  Returns a filename including directory path as a suffix to be appended to another uri
    */
-  static std::string FileSuffix(const GraphId& graphid, bool gzipped = false);
+  static std::string
+  FileSuffix(const GraphId& graphid, bool gzipped = false, bool is_file_path = true);
 
   /**
    * Get the tile Id given the full path to the file.
@@ -276,12 +278,19 @@ public:
   }
 
   /**
-   * Get an iterable set of transitions from a node in this tile
-   * @param  node  GraphId of the node from which the transitions leave
-   * @return returns an iterable collection of node transitions
+   * Get an iterable set of nodes in this tile
+   * @return returns an iterable collection of nodes
    */
   midgard::iterable_t<const NodeInfo> GetNodes() const {
     return midgard::iterable_t<const NodeInfo>{nodes_, header_->nodecount()};
+  }
+
+  /**
+   * Get an iterable set of edges in this tile
+   * @return returns an iterable collection of edges
+   */
+  midgard::iterable_t<const DirectedEdge> GetDirectedEdges() const {
+    return midgard::iterable_t<const DirectedEdge>{directededges_, header_->directededgecount()};
   }
 
   /**
@@ -504,10 +513,10 @@ public:
     //               speeds into any historic/predictive/average value we'd normally use
     if ((flow_mask & kCurrentFlowMask) && traffic_tile()) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
-      auto volatile& live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
+      auto volatile& live_speed = traffic_tile.trafficspeed(directed_edge_index);
       if (live_speed.valid()) {
         *flow_sources |= kCurrentFlowMask;
-        return live_speed.speed_kmh;
+        return live_speed.get_overall_speed();
       }
     }
 
@@ -563,16 +572,9 @@ public:
     return de->speed();
   }
 
-  inline uint32_t GetCongestion(const DirectedEdge* de) const {
-    // TODO(danpat): this needs to consider the time - we should not use live speeds if
-    //               the request is not for "now", or we're some X % along the route
-    // TODO(danpat): for short-ish durations along the route, we should fade live
-    //               speeds into any historic/predictive/average value we'd normally use
+  inline const volatile TrafficSpeed& trafficspeed(const DirectedEdge* de) const {
     auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
-    auto volatile& live_speed = traffic_tile.getTrafficForDirectedEdge(directed_edge_index);
-    if (live_speed.valid())
-      return live_speed.congestion_level;
-    return 0;
+    return traffic_tile.trafficspeed(directed_edge_index);
   }
 
   /**
@@ -603,11 +605,11 @@ public:
    * If we have 0 speed, it might be that we don't have a record for
    */
   inline bool IsClosedDueToTraffic(const GraphId& edge_id) const {
-    auto volatile& live_speed = traffic_tile.getTrafficForDirectedEdge(edge_id.id());
+    auto volatile& live_speed = traffic_tile.trafficspeed(edge_id.id());
     return live_speed.closed();
   }
 
-  const traffic::Tile& get_traffic_tile() const {
+  const TrafficTile& get_traffic_tile() const {
     return traffic_tile;
   }
 
@@ -710,7 +712,7 @@ protected:
   std::unordered_map<std::string, std::list<GraphId>> oper_one_stops;
 
   // Pointer to live traffic data (can be nullptr if not active)
-  traffic::Tile traffic_tile;
+  TrafficTile traffic_tile;
 
   /**
    * Set pointers to internal tile data structures.

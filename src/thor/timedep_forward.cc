@@ -22,8 +22,6 @@ TimeDepForward::TimeDepForward() : AStarPathAlgorithm() {
   travel_type_ = 0;
   adjacencylist_ = nullptr;
   max_label_count_ = std::numeric_limits<uint32_t>::max();
-  origin_tz_index_ = 0;
-  seconds_of_week_ = 0;
 }
 
 // Destructor
@@ -40,8 +38,7 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
                                    EdgeLabel& pred,
                                    const uint32_t pred_idx,
                                    const bool from_transition,
-                                   uint64_t localtime,
-                                   int32_t seconds_of_week,
+                                   const TimeInfo& time_info,
                                    const valhalla::Location& destination,
                                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
@@ -55,15 +52,11 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
     return false;
   }
 
-  // Adjust for time zone (if different from timezone at the start).
-  if (nodeinfo->timezone() != origin_tz_index_) {
-    // Get the difference in seconds between the origin tz and current tz
-    int tz_diff =
-        DateTime::timezone_diff(localtime, DateTime::get_tz_db().from_index(origin_tz_index_),
-                                DateTime::get_tz_db().from_index(nodeinfo->timezone()));
-    localtime += tz_diff;
-    seconds_of_week = DateTime::normalize_seconds_of_week(seconds_of_week + tz_diff);
-  }
+  // Update the time information
+  auto offset_time =
+      from_transition ? time_info
+                      : time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
+  // std::cout << pred.edgeid() << " " << offset_time << std::endl;
 
   // Expand from start node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
@@ -85,7 +78,7 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
     }
 
     found_valid_edge = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, meta, tile,
-                                          localtime, seconds_of_week, destination, best_path) ||
+                                          offset_time, destination, best_path) ||
                        found_valid_edge;
   }
 
@@ -96,11 +89,11 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
       if (trans->up()) {
         hierarchy_limits_[node.level()].up_transition_count++;
         found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true,
-                                         localtime, seconds_of_week, destination, best_path) ||
+                                         offset_time, destination, best_path) ||
                            found_valid_edge;
       } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) {
         found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true,
-                                         localtime, seconds_of_week, destination, best_path) ||
+                                         offset_time, destination, best_path) ||
                            found_valid_edge;
       }
     }
@@ -124,7 +117,7 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
       } else {
         // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
         found_valid_edge = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, uturn_meta, tile,
-                                              localtime, seconds_of_week, destination, best_path) ||
+                                              offset_time, destination, best_path) ||
                            found_valid_edge;
       }
     }
@@ -143,8 +136,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
                                                const uint32_t pred_idx,
                                                const EdgeMetadata& meta,
                                                const GraphTile* tile,
-                                               uint64_t localtime,
-                                               uint32_t seconds_of_week,
+                                               const TimeInfo& time_info,
                                                const valhalla::Location& destination,
                                                std::pair<int32_t, float>& best_path) {
 
@@ -155,17 +147,17 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   }
   // Skip shortcut edges for time dependent routes, if no access is allowed to this edge
   // (based on costing method)
-  bool has_time_restrictions = false;
+  int restriction_idx = -1;
   if (meta.edge->is_shortcut() ||
-      !costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, nodeinfo->timezone(),
-                         has_time_restrictions) ||
+      !costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
+                         nodeinfo->timezone(), restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
-                           localtime, nodeinfo->timezone())) {
+                           time_info.local_time, nodeinfo->timezone())) {
     return false;
   }
 
   // Compute the cost to the end of this edge
-  auto edge_cost = costing_->EdgeCost(meta.edge, tile, seconds_of_week);
+  auto edge_cost = costing_->EdgeCost(meta.edge, tile, time_info.second_of_week);
   auto transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
   Cost newcost = pred.cost() + edge_cost + transition_cost;
 
@@ -204,7 +196,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
       adjacencylist_->decrease(meta.edge_status->index(), newsortcost);
-      lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
+      lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
     }
     return true;
   }
@@ -226,7 +218,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   // Add to the adjacency list and edge labels.
   uint32_t idx = edgelabels_.size();
   edgelabels_.emplace_back(pred_idx, meta.edge_id, meta.edge, newcost, sortcost, dist, mode_, 0,
-                           transition_cost, has_time_restrictions);
+                           transition_cost, restriction_idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   adjacencylist_->add(idx);
   return true;
@@ -238,7 +230,7 @@ std::vector<std::vector<PathInfo>>
 TimeDepForward::GetBestPath(valhalla::Location& origin,
                             valhalla::Location& destination,
                             GraphReader& graphreader,
-                            const std::shared_ptr<DynamicCost>* mode_costing,
+                            const sif::mode_costing_t& mode_costing,
                             const TravelMode mode,
                             const Options& options) {
   // Set the mode and costing
@@ -262,28 +254,16 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
+  // Get time information for forward
+  auto forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
+
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
   uint32_t density = SetDestination(graphreader, destination);
   // Call SetOrigin with kFreeFlowSecondOfDay for now since we don't yet have
   // a timezone for converting a date_time of "current" to seconds_of_week
-  SetOrigin(graphreader, origin, destination, kInvalidSecondsOfWeek);
+  SetOrigin(graphreader, origin, destination, forward_time_info.second_of_week);
 
-  // Set the origin timezone to be the timezone at the end node
-  origin_tz_index_ = edgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, edgelabels_[0].endnode());
-  if (origin_tz_index_ == 0) {
-    // TODO - do not throw exception at this time
-    LOG_WARN("Could not get the timezone at the origin");
-  }
-
-  // Set route start time (seconds from epoch)
-  uint64_t start_time =
-      DateTime::seconds_since_epoch(origin.date_time(),
-                                    DateTime::get_tz_db().from_index(origin_tz_index_));
-
-  // Set seconds from beginning of the week
-  seconds_of_week_ = DateTime::day_of_week(origin.date_time()) * midgard::kSecondsPerDay +
-                     DateTime::seconds_from_midnight(origin.date_time());
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
 
@@ -359,16 +339,9 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
       continue;
     }
 
-    // Set local time and seconds of the week.
-    uint64_t localtime = start_time + static_cast<uint32_t>(pred.cost().secs);
-    int32_t seconds_of_week = seconds_of_week_ + static_cast<uint32_t>(pred.cost().secs);
-    if (seconds_of_week > midgard::kSecondsPerWeek) {
-      seconds_of_week -= midgard::kSecondsPerWeek;
-    }
-
     // Expand forward from the end node of the predecessor edge.
-    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, localtime, seconds_of_week,
-                  destination, best_path);
+    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, forward_time_info, destination,
+                  best_path);
   }
   return {}; // Should never get here
 }

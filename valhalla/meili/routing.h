@@ -13,6 +13,7 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
@@ -62,7 +63,7 @@ public:
       throw std::invalid_argument("invalid cost = " + std::to_string(cost.cost));
     }
     if (turn_cost < 0.f) {
-      throw std::invalid_argument("invalid turn_cost = " + std::to_string(turn_cost));
+      throw std::invalid_argument("invalid transition_time = " + std::to_string(turn_cost));
     }
   }
 
@@ -260,13 +261,29 @@ using labelset_ptr_t = std::shared_ptr<LabelSet>;
 
 /**
  * Find the shortest paths between an origin and a set of destinations.
+ * @param reader            a graph reader for tile access
+ * @param destinations      a vector of locations, usually the origin is at index 0 an the rest are
+ *                          destinations
+ * @param origin_idx        the index of the origin location in the destinations vector
+ * @param labelset          labelset to associate with this computation for later look up/path
+ *                          recovery
+ * @param approximator      used for quick approximation of the distance to goal for a* heuristic
+ * @param search_radius     also used for a* heuristic
+ * @param costing           used for doing best first expansion and checking access/restrictions
+ * @param edgelabel         the last label from the previous expansion that lead to this expansion
+ *                          being run
+ * @param turn_cost_table   array of turn costs based on turn angle
+ * @param max_dist          how far to allow the expansion to run
+ * @param max_time          how long to allow the expansion to run
+ * @return a map of destination index to label index so that you can recover a path for any
+ * destination
  */
 std::unordered_map<uint16_t, uint32_t>
 find_shortest_path(baldr::GraphReader& reader,
                    const std::vector<baldr::PathLocation>& destinations,
                    uint16_t origin_idx,
                    labelset_ptr_t labelset,
-                   const midgard::DistanceApproximator& approximator,
+                   const midgard::DistanceApproximator<midgard::PointLL>& approximator,
                    const float search_radius,
                    sif::cost_ptr_t costing,
                    const Label* edgelabel,

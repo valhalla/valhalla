@@ -27,6 +27,7 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
+#include "midgard/vector2.h"
 
 #include "mjolnir/admin.h"
 #include "mjolnir/graphtilebuilder.h"
@@ -34,7 +35,7 @@
 #include "mjolnir/transitpbf.h"
 #include "mjolnir/validatetransit.h"
 
-#include <valhalla/proto/transit.pb.h>
+#include "proto/transit.pb.h"
 
 using namespace boost::property_tree;
 using namespace valhalla::midgard;

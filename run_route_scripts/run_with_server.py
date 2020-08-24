@@ -85,19 +85,19 @@ if __name__ == "__main__":
 
   # make a worker pool to work on the requests
   work = [(body, args.format) for body in get_post_bodies(args.test_file)]
-  pool = multiprocessing.Pool(initializer=initialize(args.url, args.output_dir), processes=args.concurrency)
-  result = pool.map_async(make_request, work)
+  with multiprocessing.Pool(initializer=initialize(args.url, args.output_dir), processes=args.concurrency) as pool:
+    result = pool.map_async(make_request, work)
 
-  # check progress
-  print('Placing %d results in %s' % (len(work), args.output_dir))
-  progress = 0
-  increment = 5
-  while not result.ready():
-    result.wait(timeout=5)
-    done = len([f for f in os.listdir(args.output_dir) if os.path.isfile(os.path.join(args.output_dir, f))])
-    next_progress = int(done / len(work) * 100)
-    if int(next_progress / increment) > progress:
-      print('%d%%' % next_progress)
-      progress = int(next_progress / increment)
-  if progress != 100 / increment:
-    print('100%')
+    # check progress
+    print('Placing %d results in %s' % (len(work), args.output_dir))
+    progress = 0
+    increment = 5
+    while not result.ready():
+      result.wait(timeout=5)
+      done = len([f for f in os.listdir(args.output_dir) if os.path.isfile(os.path.join(args.output_dir, f))])
+      next_progress = int(done / len(work) * 100)
+      if int(next_progress / increment) > progress:
+        print('%d%%' % next_progress)
+        progress = int(next_progress / increment)
+    if progress != 100 / increment:
+      print('100%')

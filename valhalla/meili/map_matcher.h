@@ -5,11 +5,10 @@
 #include <unordered_set>
 #include <vector>
 
-#include <boost/property_tree/ptree.hpp>
-
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/meili/candidate_search.h>
+#include <valhalla/meili/config.h>
 #include <valhalla/meili/emission_cost_model.h>
 #include <valhalla/meili/match_result.h>
 #include <valhalla/meili/measurement.h>
@@ -25,10 +24,10 @@ namespace meili {
 // A facade that connects everything
 class MapMatcher final {
 public:
-  MapMatcher(const boost::property_tree::ptree& config,
+  MapMatcher(const Config& config,
              baldr::GraphReader& graphreader,
              CandidateQuery& candidatequery,
-             const sif::cost_ptr_t* mode_costing,
+             const sif::mode_costing_t& mode_costing,
              sif::TravelMode travelmode);
 
   ~MapMatcher();
@@ -59,7 +58,7 @@ public:
     return travelmode_;
   }
 
-  const boost::property_tree::ptree& config() const {
+  const Config& config() const {
     return config_;
   }
 
@@ -88,13 +87,13 @@ private:
   void RemoveRedundancies(const std::vector<StateId>& result,
                           const std::vector<MatchResult>& results);
 
-  boost::property_tree::ptree config_;
+  Config config_;
 
   baldr::GraphReader& graphreader_;
 
   CandidateQuery& candidatequery_;
 
-  const sif::cost_ptr_t* mode_costing_;
+  const sif::mode_costing_t mode_costing_;
 
   sif::TravelMode travelmode_;
 

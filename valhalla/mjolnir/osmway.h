@@ -2,6 +2,7 @@
 #define VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMWAY_H
 
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -13,12 +14,20 @@ namespace mjolnir {
 
 // OSM way
 struct OSMWay {
+  OSMWay() {
+    memset(this, 0, sizeof(OSMWay));
+  }
+
+  OSMWay(uint64_t id) {
+    memset(this, 0, sizeof(OSMWay));
+    osmwayid_ = id;
+  }
 
   /**
    * Set way id.
    * @param   id  way id
    */
-  void set_way_id(const uint32_t id) {
+  void set_way_id(const uint64_t id) {
     osmwayid_ = id;
   }
 
@@ -26,7 +35,7 @@ struct OSMWay {
    * Get the way id
    * @return  Returns way id.
    */
-  uint32_t way_id() const {
+  uint64_t way_id() const {
     return osmwayid_;
   }
 
@@ -1515,7 +1524,7 @@ struct OSMWay {
   GetNames(const std::string& ref, const UniqueNames& name_offset_map, uint16_t& types) const;
 
   // OSM way Id
-  uint32_t osmwayid_;
+  uint64_t osmwayid_;
 
   // Reference name (highway numbers)
   uint32_t ref_index_;

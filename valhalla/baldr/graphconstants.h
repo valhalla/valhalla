@@ -86,7 +86,7 @@ constexpr uint8_t kUnlimitedSpeedLimit = std::numeric_limits<uint8_t>::max();
 // The max assumed speed we know from static data
 constexpr uint8_t kMaxAssumedSpeed = 140; // ~85 MPH
 // Actual speed from traffic
-constexpr uint8_t kMaxTrafficSpeed = 255; // ~160 MPH
+constexpr uint8_t kMaxTrafficSpeed = 252; // ~157 MPH
 // Maximum speed. This impacts the effectiveness of A* for driving routes
 // so it should be set as low as is reasonable. Speeds above this in OSM are
 // clamped to this maximum value.
@@ -299,7 +299,6 @@ enum class Use : uint8_t {
   kEgressConnection = 52,   // Connection to a egress node
   kPlatformConnection = 53, // Connection to a platform node
   kTransitConnection = 54,  // Connection to multi-use transit stop
-  kBikeShareConnection = 55 // Connection to multi-use transit stop
 
 };
 inline std::string to_string(Use u) {
@@ -331,7 +330,6 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kEgressConnection), "egress_connection"},
       {static_cast<uint8_t>(Use::kPlatformConnection), "platform_connnection"},
       {static_cast<uint8_t>(Use::kTransitConnection), "transit_connection"},
-      {static_cast<uint8_t>(Use::kBikeShareConnection), "bike_share_connection"},
   };
 
   auto i = UseStrings.find(static_cast<uint8_t>(u));

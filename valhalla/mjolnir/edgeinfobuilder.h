@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
@@ -27,14 +28,14 @@ public:
    * Set the OSM way Id.
    * @param wayid  Way Id.
    */
-  void set_wayid(const uint32_t wayid);
+  void set_wayid(const uint64_t wayid);
 
   /**
    * Get the mean elevation along the edge.
    * @return  Returns mean elevation in meters relative to sea level.
    */
   float mean_elevation() const {
-    return kMinElevation + (w0_.mean_elevation_ * kElevationBinSize);
+    return kMinElevation + (ei_.mean_elevation_ * kElevationBinSize);
   }
 
   /**
@@ -54,7 +55,7 @@ public:
    * @return  Returns the bike network mask for this directed edge.
    */
   uint32_t bike_network() const {
-    return w0_.bike_network_;
+    return ei_.bike_network_;
   }
 
   /**
@@ -103,18 +104,12 @@ public:
   std::size_t SizeOf() const;
 
 protected:
-  // 1st 8-byte word
-  union Word0 {
-    struct {
-      uint64_t wayid_ : 32;          // OSM way Id
-      uint64_t mean_elevation_ : 12; // Mean elevation with 2 meter precision
-      uint64_t bike_network_ : 4;    // Mask of bicycle network types (see graphconstants.h)
-      uint64_t speed_limit_ : 8;     // Speed limit (kph)
-      uint64_t spare0_ : 8;
-    };
-    uint64_t value_;
-  };
-  Word0 w0_;
+  // Fixed size information
+  baldr::EdgeInfo::EdgeInfoInner ei_{};
+
+  // Where we optionally keep the last 2 bytes of a 64bit wayid
+  uint8_t extended_wayid2_;
+  uint8_t extended_wayid3_;
 
   // List of name info (offsets, etc.)
   std::vector<baldr::NameInfo> name_info_list_;

@@ -9,14 +9,10 @@
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
 #include "midgard/util.h"
-
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "tyr/serializers.h"
-
-#include "proto/directions.pb.h"
-#include "proto/options.pb.h"
-#include "proto/trip.pb.h"
+#include "worker.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -158,105 +154,29 @@ OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
 }
 */
 
-/**********OLD OSRM CODE - delete
-    const std::unordered_map<int, std::string> maneuver_type = {
-        { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kNone),             "0"
-},//NoTurn = 0, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kContinue), "1"
-},//GoStraight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kBecomes), "1"
-},//GoStraight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kRampStraight), "1"
-},//GoStraight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kStayStraight), "1"
-},//GoStraight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kMerge), "1"
-},//GoStraight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kFerryEnter), "1"
-},//GoStraight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kFerryExit), "1"
-},//GoStraight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kSlightRight), "2"
-},//TurnSlightRight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kRight), "3"
-},//TurnRight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kRampRight), "3"
-},//TurnRight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kExitRight), "3"
-},//TurnRight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kStayRight), "3"
-},//TurnRight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kSharpRight), "4"
-},//TurnSharpRight, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kUturnLeft), "5"
-},//UTurn, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kUturnRight),       "5"
-},//UTurn, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kSharpLeft),        "6"
-},//TurnSharpLeft, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kLeft), "7"
-},//TurnLeft, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kRampLeft), "7"
-},//TurnLeft, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kExitLeft), "7"
-},//TurnLeft, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kStayLeft), "7"
-},//TurnLeft, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kSlightLeft), "8"
-},//TurnSlightLeft,
-        //{ static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_k),               "9"
-},//ReachViaLocation, {
-static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kRoundaboutEnter),  "11"
-},//EnterRoundAbout, {
-static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kRoundaboutExit),   "12"
-},//LeaveRoundAbout,
-        //{ static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_k),               "13"
-},//StayOnRoundAbout, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kStart), "14"
-},//StartAtEndOfStreet, {
-static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kStartRight),       "14"
-},//StartAtEndOfStreet, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kStartLeft),
-"14" },//StartAtEndOfStreet, {
-static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kDestination),      "15"
-},//ReachedYourDestination, {
-static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kDestinationRight), "15"
-},//ReachedYourDestination, {
-static_cast<int>(valhalla::DirectionsLeg_Maneuver_Type_kDestinationLeft),  "15"
-},//ReachedYourDestination,
-        //{ static_cast<int>valhalla::DirectionsLeg_Maneuver_Type_k),                "16"
-},//EnterAgainstAllowedDirection,
-        //{ static_cast<int>valhalla::DirectionsLeg_Maneuver_Type_k),                "17"
-},//LeaveAgainstAllowedDirection
-    };
-
-    const std::unordered_map<int, std::string> cardinal_direction_string = {
-      { static_cast<int>(valhalla::DirectionsLeg_Maneuver_CardinalDirection_kNorth),     "N"
-}, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_CardinalDirection_kNorthEast), "NE" },
-      { static_cast<int>(valhalla::DirectionsLeg_Maneuver_CardinalDirection_kEast),      "E"
-}, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_CardinalDirection_kSouthEast), "SE" },
-      { static_cast<int>(valhalla::DirectionsLeg_Maneuver_CardinalDirection_kSouth),     "S"
-}, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_CardinalDirection_kSouthWest), "SW" },
-      { static_cast<int>(valhalla::DirectionsLeg_Maneuver_CardinalDirection_kWest),      "W"
-}, { static_cast<int>(valhalla::DirectionsLeg_Maneuver_CardinalDirection_kNorthWest), "NW" }
-    };
-
-    json::ArrayPtr route_instructions(const
-google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs){ auto route_instructions =
-json::array({}); for(const auto& leg : legs) { for(const auto& maneuver : leg.maneuver()) {
-          //if we dont know the type of maneuver then skip it
-          auto maneuver_text = maneuver_type.find(static_cast<int>(maneuver.type()));
-          if(maneuver_text == maneuver_type.end())
-            continue;
-
-          //length
-          std::ostringstream length;
-          length << static_cast<uint64_t>(maneuver.length()*1000.f) << "m";
-
-          //json
-          route_instructions->emplace_back(json::array({
-            maneuver_text->second, //maneuver type
-            (maneuver.street_name_size() ? maneuver.street_name(0) : string("")), //street name
-            static_cast<uint64_t>(maneuver.length() * 1000.f), //length in meters
-            static_cast<uint64_t>(maneuver.begin_shape_index()), //index in the shape
-            static_cast<uint64_t>(maneuver.time()), //time in seconds
-            length.str(), //length as a string with a unit suffix
-            cardinal_direction_string.find(static_cast<int>(maneuver.begin_cardinal_direction()))->second,
-// one of: N S E W NW NE SW SE static_cast<uint64_t>(maneuver.begin_heading())
-          }));
-        }
-      }
-      return route_instructions;
-    }
-**/
-
 // Add OSRM route summary information: distance, duration
-void route_summary(json::MapPtr& route,
-                   const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
-                   bool imperial) {
+void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial, int route_index) {
   // Compute total distance and duration
-  double duration = 0.0f;
-  double distance = 0.0f;
-  for (const auto& leg : legs) {
+  double duration = 0;
+  double distance = 0;
+  double weight = 0;
+  auto leg_itr = api.trip().routes(route_index).legs().begin();
+  std::vector<std::pair<double, double>> recosts(api.options().recostings_size(), {0, 0});
+  for (const auto& leg : api.directions().routes(route_index).legs()) {
     distance += leg.summary().length();
     duration += leg.summary().time();
+    weight += leg_itr->node().rbegin()->cost().elapsed_cost().cost();
+    for (int i = 0; i < leg_itr->node().rbegin()->recosts_size(); ++i) {
+      const auto& recost = leg_itr->node().rbegin()->recosts(i);
+      if (!recost.has_elapsed_cost() || recosts[i].first < 0) {
+        recosts[i].first = -1;
+        recosts[i].second = -1;
+      } else {
+        recosts[i].first += recost.elapsed_cost().seconds();
+        recosts[i].second += recost.elapsed_cost().cost();
+      }
+    }
+    ++leg_itr;
   }
 
   // Convert distance to meters. Output distance and duration.
@@ -264,11 +184,21 @@ void route_summary(json::MapPtr& route,
   route->emplace("distance", json::fp_t{distance, 3});
   route->emplace("duration", json::fp_t{duration, 3});
 
-  // TODO - support returning weight based on costing method
-  // as well as returning the costing method
-  float weight = duration;
   route->emplace("weight", json::fp_t{weight, 3});
-  route->emplace("weight_name", std::string("Valhalla default"));
+  assert(api.options().costing_options(api.options().costing()).has_name());
+  route->emplace("weight_name", api.options().costing_options(api.options().costing()).name());
+
+  auto recosting_itr = api.options().recostings().begin();
+  for (const auto& recost : recosts) {
+    if (recost.first < 0) {
+      route->emplace("duration_" + recosting_itr->name(), nullptr_t());
+      route->emplace("weight_" + recosting_itr->name(), nullptr_t());
+    } else {
+      route->emplace("duration_" + recosting_itr->name(), json::fp_t{recost.first, 3});
+      route->emplace("weight_" + recosting_itr->name(), json::fp_t{recost.second, 3});
+    }
+    ++recosting_itr;
+  }
 }
 
 // Generate leg shape in geojson format.
@@ -284,14 +214,12 @@ json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
 }
 
 // Generate full shape of the route.
-std::vector<PointLL>
-full_shape(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
-           const valhalla::Options& options) {
+std::vector<PointLL> full_shape(const valhalla::DirectionsRoute& directions,
+                                const valhalla::Options& options) {
   // If just one leg and it we want polyline6 then we just return the encoded leg shape
-  if (legs.size() == 1 && options.shape_format() == polyline6) {
-    return midgard::decode<std::vector<PointLL>>(legs.begin()->shape());
+  if (directions.legs().size() == 1 && options.shape_format() == polyline6) {
+    return midgard::decode<std::vector<PointLL>>(directions.legs().begin()->shape());
   }
-
   // TODO: there is a tricky way to do this... since the end of each leg is the same as the
   // beginning we essentially could just peel off the first encoded shape point of all the legs (but
   // the first) this way we wouldn't really have to do any decoding (would be far faster). it might
@@ -299,7 +227,7 @@ full_shape(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& le
   // great!) have to have a look should make this a function in midgard probably so the logic is all
   // in the same place
   std::vector<PointLL> decoded;
-  for (const auto& leg : legs) {
+  for (const auto& leg : directions.legs()) {
     auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
     decoded.insert(decoded.end(), decoded.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
                    decoded_leg.end());
@@ -308,16 +236,13 @@ full_shape(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& le
 }
 
 // Generate simplified shape of the route.
-std::vector<PointLL>
-simplified_shape(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
-                 const valhalla::Options& options) {
+std::vector<PointLL> simplified_shape(const valhalla::DirectionsRoute& directions,
+                                      const valhalla::Options& options) {
   Coordinate south_west(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
   Coordinate north_east(std::numeric_limits<int>::min(), std::numeric_limits<int>::min());
-
   std::vector<PointLL> simple_shape;
   std::unordered_set<size_t> indices;
-
-  for (const auto& leg : legs) {
+  for (const auto& leg : directions.legs()) {
     auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
     for (const auto& coord : decoded_leg) {
       south_west.lng = std::min(south_west.lng, toFixed(coord.lng()));
@@ -342,18 +267,14 @@ simplified_shape(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLe
 }
 
 void route_geometry(json::MapPtr& route,
-                    const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
+                    const valhalla::DirectionsRoute& directions,
                     const valhalla::Options& options) {
-  // full geom = !has_generalize()
-  // simplified geom = has_generalize && generalize == 0
-  // no geom = has_generalize && generalize == -1
   std::vector<PointLL> shape;
   if (options.has_generalize() && options.generalize() == 0.0f) {
-    shape = simplified_shape(legs, options);
+    shape = simplified_shape(directions, options);
   } else if (!options.has_generalize() || (options.has_generalize() && options.generalize() > 0.0f)) {
-    shape = full_shape(legs, options);
+    shape = full_shape(directions, options);
   }
-
   if (options.shape_format() == geojson) {
     route->emplace("geometry", geojson_shape(shape));
   } else {
@@ -432,8 +353,21 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     loc->emplace_back(json::fp_t{ll.lat(), 6});
     intersection->emplace("location", loc);
     intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
-    if (node->has_transition_time())
-      intersection->emplace("duration", json::fp_t{node->transition_time(), 3});
+    if (node->cost().transition_cost().seconds() > 0)
+      intersection->emplace("turn_duration", json::fp_t{node->cost().transition_cost().seconds(), 3});
+    if (node->cost().transition_cost().cost() > 0)
+      intersection->emplace("turn_weight", json::fp_t{node->cost().transition_cost().cost(), 3});
+    auto next_node = i + 1 < n ? etp->GetEnhancedNode(i + 1) : nullptr;
+    if (next_node) {
+      auto secs = next_node->cost().elapsed_cost().seconds() - node->cost().elapsed_cost().seconds();
+      auto cost = next_node->cost().elapsed_cost().cost() - node->cost().elapsed_cost().cost();
+      if (secs > 0)
+        intersection->emplace("duration", json::fp_t{secs, 3});
+      if (cost > 0)
+        intersection->emplace("weight", json::fp_t{cost, 3});
+    }
+
+    // TODO: add recosted durations to the intersection?
 
     // Get bearings and access to outgoing intersecting edges. Do not add
     // any intersecting edges for the first depart intersection and for
@@ -1240,9 +1174,32 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
       step->emplace("mode", mode);
       step->emplace("driving_side", drive_side);
-      step->emplace("duration", json::fp_t{duration, 3});
-      step->emplace("weight", json::fp_t{duration, 3});
       step->emplace("distance", json::fp_t{distance, 3});
+      step->emplace("duration", json::fp_t{duration, 3});
+      const auto& end_node = path_leg.node(maneuver.end_path_index());
+      const auto& begin_node = path_leg.node(maneuver.begin_path_index());
+      auto weight = end_node.cost().elapsed_cost().cost() - begin_node.cost().elapsed_cost().cost();
+      step->emplace("weight", json::fp_t{weight, 3});
+      auto recost_itr = options.recostings().begin();
+      auto begin_recost_itr = begin_node.recosts().begin();
+      for (const auto& end_recost : end_node.recosts()) {
+        if (end_recost.has_elapsed_cost()) {
+          step->emplace("duration_" + recost_itr->name(),
+                        json::fp_t{end_recost.elapsed_cost().seconds() -
+                                       begin_recost_itr->elapsed_cost().seconds(),
+                                   3});
+          step->emplace("weight_" + recost_itr->name(),
+                        json::fp_t{end_recost.elapsed_cost().cost() -
+                                       begin_recost_itr->elapsed_cost().cost(),
+                                   3});
+        } else {
+          step->emplace("duration_" + recost_itr->name(), nullptr_t());
+          step->emplace("weight_" + recost_itr->name(), nullptr_t());
+        }
+        ++recost_itr;
+        ++begin_recost_itr;
+      }
+
       step->emplace("name", name);
       if (!ref.empty()) {
         step->emplace("ref", ref);
@@ -1331,7 +1288,21 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     output_leg->emplace("summary", summarize_leg(leg));
     output_leg->emplace("distance", json::fp_t{distance, 3});
     output_leg->emplace("duration", json::fp_t{duration, 3});
-    output_leg->emplace("weight", json::fp_t{duration, 3});
+    output_leg->emplace("weight",
+                        json::fp_t{path_leg.node().rbegin()->cost().elapsed_cost().cost(), 3});
+    auto recost_itr = options.recostings().begin();
+    for (const auto& recost : path_leg.node().rbegin()->recosts()) {
+      if (recost.has_elapsed_cost()) {
+        output_leg->emplace("duration_" + recost_itr->name(),
+                            json::fp_t{recost.elapsed_cost().seconds(), 3});
+        output_leg->emplace("weight_" + recost_itr->name(),
+                            json::fp_t{recost.elapsed_cost().cost(), 3});
+      } else {
+        output_leg->emplace("duration_" + recost_itr->name(), nullptr_t());
+        output_leg->emplace("weight_" + recost_itr->name(), nullptr_t());
+      }
+      ++recost_itr;
+    }
 
     // Add steps to the leg
     output_leg->emplace("steps", steps);
@@ -1377,16 +1348,18 @@ std::string serialize(valhalla::Api& api) {
   for (int i = 0; i < api.trip().routes_size(); ++i) {
     // Create a route to add to the array
     auto route = json::map({});
-
-    // TODO: phase 1, just hardcode score. phase 2: do real implementation
-    if (options.action() == valhalla::Options::trace_route)
+    if (options.action() == Options::trace_route) {
+      // NOTE(mookerji): confidence value here is a placeholder for future implementation.
       route->emplace("confidence", json::fp_t{1, 1});
+    }
+    // Add linear references, if applicable
+    route_references(route, api.trip().routes(i), options);
 
     // Concatenated route geometry
-    route_geometry(route, api.directions().routes(i).legs(), options);
+    route_geometry(route, api.directions().routes(i), options);
 
     // Other route summary information
-    route_summary(route, api.directions().routes(i).legs(), imperial);
+    route_summary(route, api, imperial, i);
 
     // Serialize route legs
     route->emplace("legs", serialize_legs(api.directions().routes(i).legs(),

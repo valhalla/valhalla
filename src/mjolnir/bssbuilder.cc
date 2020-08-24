@@ -48,6 +48,9 @@ struct OSMConnectionEdge {
   RoadClass road_class = RoadClass::kUnclassified;
   Use use = Use::kOther;
 
+  uint32_t forward_access = kPedestrianAccess | kBicycleAccess;
+  uint32_t reverse_access = kPedestrianAccess | kBicycleAccess;
+
   uint32_t start_to_bss_edge_idx = -1;
   uint32_t end_to_bss_edge_idx = -1;
 
@@ -91,7 +94,7 @@ std::vector<OSMConnectionEdge> project(const GraphTile& local_tile,
     auto latlng = bss.latlng();
     osm_conn.bss_ll = PointLL{latlng.first, latlng.second};
 
-    float mindist = 10000000.0f;
+    float mindist = std::numeric_limits<float>::max();
 
     const DirectedEdge* best_directededge = nullptr;
     uint32_t best_startnode_index = 0;
@@ -144,12 +147,22 @@ std::vector<OSMConnectionEdge> project(const GraphTile& local_tile,
       osm_conn.cycle_lane = best_directededge->cyclelane();
       osm_conn.road_class = best_directededge->classification();
       osm_conn.use = best_directededge->use();
+      osm_conn.forward_access = best_directededge->forwardaccess();
+      osm_conn.reverse_access = best_directededge->reverseaccess();
     }
 
     if (!osm_conn.startnode.Is_Valid() && !osm_conn.endnode.Is_Valid()) {
       LOG_ERROR("Cannot find any edge to project");
       continue;
     }
+
+    // TODO - This is a temporary fix to address issues where the start node and end node
+    // of the edge are not in the same tile. Skip these for now...
+    if (osm_conn.startnode.tileid() != osm_conn.endnode.tileid()) {
+      LOG_DEBUG("Skip Bikeshare node that connects to an edge that crosses tile boundaries");
+      continue;
+    }
+
     // Create a temporary connection which starts from a existing way node in the tile and point to
     // the bss node
     {
@@ -189,8 +202,11 @@ DirectedEdge make_directed_edge(const GraphId endnode,
   directededge.set_cyclelane(conn.cycle_lane);
   directededge.set_classification(conn.road_class);
   directededge.set_localedgeidx(localedgeidx);
-  directededge.set_forwardaccess(kPedestrianAccess | kBicycleAccess);
-  directededge.set_reverseaccess(kPedestrianAccess | kBicycleAccess);
+
+  auto accesses = std::vector<uint32_t>{conn.forward_access, conn.reverse_access};
+  directededge.set_forwardaccess(accesses[static_cast<size_t>(!is_forward)]);
+  directededge.set_reverseaccess(accesses[static_cast<size_t>(is_forward)]);
+
   directededge.set_named(conn.names.size());
   directededge.set_forward(is_forward);
   directededge.set_opp_local_idx(oppo_local_idx);
@@ -242,7 +258,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
   uint32_t added_nodes = 0;
 
   for (auto& nb : currentnodes) {
-    uint32_t nodeid = tilebuilder_local.nodes().size();
+    size_t nodeid = tilebuilder_local.nodes().size();
     size_t edge_index = tilebuilder_local.directededges().size();
 
     // recreate the node and its edges
@@ -292,8 +308,8 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
         // the oppo_local_idx must be set, or in some cases, the transition will be
         // incorrectly considered as a U turn.
         // we assume 0 for bss->startnode and 1 for bss->endnode
-        uint32_t oppo_local_idx = 0;
-        uint32_t local_idx = tilebuilder_local.directededges().size() - edge_index;
+        size_t oppo_local_idx = 0;
+        size_t local_idx = tilebuilder_local.directededges().size() - edge_index;
 
         auto directededge =
             make_directed_edge({}, conn.startshape, conn, true, local_idx, oppo_local_idx);
@@ -309,11 +325,11 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
         // the oppo_local_idx must be set, or in some cases, the transition will be
         // incorrectly considered as a U turn.
         // we assume 0 for bss->startnode and 1 for bss->endnode
-        uint32_t oppo_local_idx = 1;
-        uint32_t local_idx = tilebuilder_local.directededges().size() - edge_index;
+        size_t oppo_local_idx = 1;
+        size_t local_idx = tilebuilder_local.directededges().size() - edge_index;
 
         auto directededge =
-            make_directed_edge({}, conn.endshape, conn, true, local_idx, oppo_local_idx);
+            make_directed_edge({}, conn.endshape, conn, false, local_idx, oppo_local_idx);
         conn.end_to_bss_edge_idx = tilebuilder_local.directededges().size();
         tilebuilder_local.directededges().emplace_back(std::move(directededge));
         ++added_edges;
@@ -362,9 +378,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
       bool added;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, conn.endnode, new_bss_node_graphid, conn.wayid, 0, 0, 0,
-                                        std::vector<PointLL>{conn.endshape.rbegin(),
-                                                             conn.endshape.rend()},
-                                        conn.names, 0, added);
+                                        conn.endshape, conn.names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
     }
 
@@ -378,9 +392,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
       bool added;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, new_bss_node_graphid, conn.startnode, conn.wayid, 0, 0, 0,
-                                        std::vector<PointLL>{conn.startshape.rbegin(),
-                                                             conn.startshape.rend()},
-                                        conn.names, 0, added);
+                                        conn.startshape, conn.names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
       ++added_edges;
@@ -390,7 +402,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
     {
       auto& oppo_directededge = tilebuilder_local.directededges()[conn.end_to_bss_edge_idx];
       uint32_t local_idx = 1;
-      auto directededge = make_directed_edge(conn.endnode, conn.endshape, conn, false, local_idx,
+      auto directededge = make_directed_edge(conn.endnode, conn.endshape, conn, true, local_idx,
                                              oppo_directededge.localedgeidx());
       bool added;
       uint32_t edge_info_offset =

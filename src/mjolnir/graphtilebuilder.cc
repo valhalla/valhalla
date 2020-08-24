@@ -509,7 +509,7 @@ template <class shape_container_t>
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const GraphId& nodea,
                                        const baldr::GraphId& nodeb,
-                                       const uint32_t wayid,
+                                       const uint64_t wayid,
                                        const float elev,
                                        const uint32_t bike_network,
                                        const uint32_t speed_limit,
@@ -579,7 +579,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint32_t edgeindex,
                                                                       const GraphId&,
                                                                       const baldr::GraphId&,
-                                                                      const uint32_t,
+                                                                      const uint64_t,
                                                                       const float,
                                                                       const uint32_t,
                                                                       const uint32_t,
@@ -591,7 +591,7 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32_t edgeindex,
                                                                     const GraphId&,
                                                                     const baldr::GraphId&,
-                                                                    const uint32_t,
+                                                                    const uint64_t,
                                                                     const float,
                                                                     const uint32_t,
                                                                     const uint32_t,
@@ -605,7 +605,7 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const baldr::GraphId& nodea,
                                        const baldr::GraphId& nodeb,
-                                       const uint32_t wayid,
+                                       const uint64_t wayid,
                                        const float elev,
                                        const uint32_t bike_network,
                                        const uint32_t speed_limit,
@@ -761,7 +761,7 @@ DirectedEdge& GraphTileBuilder::directededge(const size_t idx) {
 }
 
 // Gets a pointer to directed edges within the list being built.
-const DirectedEdge* GraphTileBuilder::directededges(const size_t idx) {
+const DirectedEdge* GraphTileBuilder::directededges(const size_t idx) const {
   if (idx < header_->directededgecount()) {
     return &directededges_builder_[idx];
   }

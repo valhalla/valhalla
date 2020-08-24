@@ -5,9 +5,8 @@
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "odin/util.h"
+#include "proto_conversions.h"
 #include "tyr/serializers.h"
-
-#include <valhalla/proto/options.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -93,15 +92,28 @@ valhalla output looks like this:
 */
 using namespace std;
 
-json::MapPtr summary(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs) {
+json::MapPtr summary(const valhalla::Api& api) {
 
   double time = 0;
   double length = 0;
   bool has_time_restrictions = false;
   AABB2<PointLL> bbox(10000.0f, 10000.0f, -10000.0f, -10000.0f);
-  for (const auto& leg : legs) {
+  std::vector<double> recost_times(api.options().recostings_size(), 0);
+  for (int leg_index = 0; leg_index < api.directions().routes(0).legs_size(); ++leg_index) {
+    const auto& leg = api.directions().routes(0).legs(leg_index);
     time += leg.summary().time();
     length += leg.summary().length();
+
+    // recostings
+    const auto& recosts = api.trip().routes(0).legs(leg_index).node().rbegin()->recosts();
+    auto recost_time_itr = recost_times.begin();
+    for (const auto& recost : recosts) {
+      if (!recost.has_elapsed_cost() || (*recost_time_itr) < 0)
+        (*recost_time_itr) = -1;
+      else
+        (*recost_time_itr) += recost.elapsed_cost().seconds();
+      ++recost_time_itr;
+    }
 
     AABB2<PointLL> leg_bbox(leg.summary().bbox().min_ll().lng(), leg.summary().bbox().min_ll().lat(),
                             leg.summary().bbox().max_ll().lng(), leg.summary().bbox().max_ll().lat());
@@ -117,6 +129,14 @@ json::MapPtr summary(const google::protobuf::RepeatedPtrField<valhalla::Directio
   route_summary->emplace("max_lat", json::fp_t{bbox.maxy(), 6});
   route_summary->emplace("max_lon", json::fp_t{bbox.maxx(), 6});
   route_summary->emplace("has_time_restrictions", json::Value{has_time_restrictions});
+  auto recost_itr = api.options().recostings().begin();
+  for (auto recost : recost_times) {
+    if (recost < 0)
+      route_summary->emplace("time_" + recost_itr->name(), nullptr_t());
+    else
+      route_summary->emplace("time_" + recost_itr->name(), json::fp_t{recost, 3});
+    ++recost_itr;
+  }
   LOG_DEBUG("trip_time::" + std::to_string(time) + "s");
   return route_summary;
 }
@@ -248,11 +268,11 @@ travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver) {
   throw std::runtime_error("Unhandled case");
 }
 
-json::ArrayPtr
-legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directions_legs) {
+json::ArrayPtr legs(const valhalla::Api& api) {
 
-  // TODO: multiple legs.
   auto legs = json::array({});
+  const auto& directions_legs = api.directions().routes(0).legs();
+  auto trip_leg_itr = api.trip().routes(0).legs().begin();
   for (const auto& directions_leg : directions_legs) {
     auto leg = json::map({});
     auto summary = json::map({});
@@ -304,6 +324,18 @@ legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directio
       man->emplace("length", json::fp_t{maneuver.length(), 3});
       man->emplace("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
       man->emplace("end_shape_index", static_cast<uint64_t>(maneuver.end_shape_index()));
+      auto recost_itr = api.options().recostings().begin();
+      auto begin_recost_itr = trip_leg_itr->node(maneuver.begin_path_index()).recosts().begin();
+      for (const auto& end_recost : trip_leg_itr->node(maneuver.end_path_index()).recosts()) {
+        if (end_recost.has_elapsed_cost())
+          man->emplace("time_" + recost_itr->name(),
+                       json::fp_t{end_recost.elapsed_cost().seconds() -
+                                      begin_recost_itr->elapsed_cost().seconds(),
+                                  3});
+        else
+          man->emplace("time_" + recost_itr->name(), nullptr_t());
+        ++recost_itr;
+      }
 
       // Portions toll and rough
       if (maneuver.portions_toll()) {
@@ -553,6 +585,17 @@ legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directio
     summary->emplace("max_lat", json::fp_t{directions_leg.summary().bbox().max_ll().lat(), 6});
     summary->emplace("max_lon", json::fp_t{directions_leg.summary().bbox().max_ll().lng(), 6});
     summary->emplace("has_time_restrictions", json::Value{has_time_restrictions});
+    auto recost_itr = api.options().recostings().begin();
+    for (const auto& recost : trip_leg_itr->node().rbegin()->recosts()) {
+      if (recost.has_elapsed_cost())
+        summary->emplace("time_" + recost_itr->name(),
+                         json::fp_t{recost.elapsed_cost().seconds(), 3});
+      else
+        summary->emplace("time_" + recost_itr->name(), nullptr_t());
+      ++recost_itr;
+    }
+    ++trip_leg_itr;
+
     leg->emplace("summary", summary);
     leg->emplace("shape", directions_leg.shape());
 
@@ -563,18 +606,18 @@ legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& directio
 
 std::string serialize(const Api& api) {
   // build up the json object
-  auto json = json::map(
-      {{"trip", json::map({{"locations", locations(api.directions().routes(0).legs())},
-                           {"summary", summary(api.directions().routes(0).legs())},
-                           {"legs", legs(api.directions().routes(0).legs())},
-                           {"status_message", string("Found route between points")},
-                           {"status", static_cast<uint64_t>(0)}, // 0 success
-                           {"units", valhalla::Options_Units_Enum_Name(api.options().units())},
-                           {"language", api.options().language()}})}});
+  auto trip_json = json::map({{"locations", locations(api.directions().routes(0).legs())},
+                              {"summary", summary(api)},
+                              {"legs", legs(api)},
+                              {"status_message", string("Found route between points")},
+                              {"status", static_cast<uint64_t>(0)}, // 0 success
+                              {"units", valhalla::Options_Units_Enum_Name(api.options().units())},
+                              {"language", api.options().language()}});
+  tyr::route_references(trip_json, api.trip().routes(0), api.options());
+  auto json = json::map({{"trip", trip_json}});
   if (api.options().has_id()) {
     json->emplace("id", api.options().id());
   }
-
   std::stringstream ss;
   ss << *json;
   return ss.str();

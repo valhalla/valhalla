@@ -307,35 +307,45 @@ TEST(PointLL, TestWithinConvexPolygon) {
 TEST(PointLL, TestMidPoint) {
   // lines of longitude are geodesics so the mid point of points
   // on the same line of longitude should still be at the same longitude
-  auto mid = PointLL(0, 90).MidPoint({0, 0});
+  auto mid = PointLL(0, 90).PointAlongSegment({0, 0});
   ASSERT_POINTLL_EQUAL(mid, PointLL(0, 45));
-  mid = PointLL(0, 90).MidPoint({0, -66});
+  mid = PointLL(0, 90).PointAlongSegment({0, -66});
   ASSERT_POINTLL_EQUAL(mid, PointLL(0, 12));
 
   // lines of latitude are not geodesics so if we put them 180 degrees apart
   // the shortest path between them is actually the geodesic that intersects
   // the pole. longitude is meaningless then
-  mid = PointLL(-23, 45).MidPoint({157, 45});
+  mid = PointLL(-23, 45).PointAlongSegment({157, 45});
   EXPECT_EQ(mid.second, 90);
 
   // in the northern hemisphere we should expect midpoints on
   // geodesics between point of the same latitude to have higher latitude
-  mid = PointLL(-15, 45).MidPoint({15, 45});
+  mid = PointLL(-15, 45).PointAlongSegment({15, 45});
   EXPECT_GT(mid.second, 45.1);
-  mid = PointLL(-80, 1).MidPoint({80, 1});
+  mid = PointLL(-80, 1).PointAlongSegment({80, 1});
   EXPECT_GT(mid.second, 1.1);
 
   // conversely in the southern hemisphere we should expect them lower
-  mid = PointLL(-15, -45).MidPoint({15, -45});
+  mid = PointLL(-15, -45).PointAlongSegment({15, -45});
   EXPECT_LT(mid.second, -45.1);
-  mid = PointLL(-80, -1).MidPoint({80, -1});
+  mid = PointLL(-80, -1).PointAlongSegment({80, -1});
   EXPECT_LT(mid.second, -1.1);
 
   // the equator is the only line of latitude that is also a geodesic
-  mid = PointLL(-15, 0).MidPoint({15, 0});
+  mid = PointLL(-15, 0).PointAlongSegment({15, 0});
   ASSERT_POINTLL_EQUAL(mid, PointLL(0, 0));
-  mid = PointLL(-170, 0).MidPoint({160, 0});
+  mid = PointLL(-170, 0).PointAlongSegment({160, 0});
   ASSERT_POINTLL_EQUAL(mid, PointLL(175, 0));
+
+  // take a random geodesic and see if the midpoint is the correct distance along it
+  mid = PointLL(-12.5, 4).PointAlongSegment(PointLL(7.123, -18.945), .33f);
+  float mdist = PointLL(-12.5, 4).Distance(mid);
+  float dist = PointLL(-12.5, 4).Distance(PointLL(7.123, -18.945));
+  ASSERT_FLOAT_EQ(mdist, .33f * dist);
+  mid = PointLL(81.2366, -34.54987).PointAlongSegment(PointLL(-176.123, 81.945), .66f);
+  mdist = PointLL(81.2366, -34.54987).Distance(mid);
+  dist = PointLL(81.2366, -34.54987).Distance(PointLL(-176.123, 81.945));
+  ASSERT_FLOAT_EQ(mdist, .66f * dist);
 }
 
 TEST(PointLL, TestDistance) {

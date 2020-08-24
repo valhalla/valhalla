@@ -1,12 +1,12 @@
 #include "sif/motorcyclecost.h"
-#include "sif/costconstants.h"
-
 #include "baldr/accessrestriction.h"
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include "proto_conversions.h"
+#include "sif/costconstants.h"
 #include <cassert>
 
 #ifdef INLINE_TEST
@@ -119,11 +119,11 @@ constexpr float kSurfaceFactor[] = {
 class MotorcycleCost : public DynamicCost {
 public:
   /**
-   * Construct motorcycle costing. Pass in cost type and options using protocol buffer(pbf).
+   * Construct motorcycle costing. Pass in cost type and costing_options using protocol buffer(pbf).
    * @param  costing specified costing type.
-   * @param  options pbf with request options.
+   * @param  costing_options pbf with request costing_options.
    */
-  MotorcycleCost(const Costing costing, const Options& options);
+  MotorcycleCost(const CostingOptions& costing_options);
 
   virtual ~MotorcycleCost();
 
@@ -161,11 +161,11 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const baldr::GraphTile*& tile,
+                       const GraphTile* tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       bool& time_restricted) const;
+                       int& restriction_idx) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -188,11 +188,11 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const baldr::GraphTile*& tile,
+                              const GraphTile* tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              bool& has_time_restrictions) const;
+                              int& restriction_idx) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -291,7 +291,7 @@ public:
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
       if (edge->is_shortcut() || !(edge->forwardaccess() & kMotorcycleAccess) ||
-          edge->surface() > kMinimumMotorcycleSurface)
+          edge->surface() > kMinimumMotorcycleSurface || edge->bss_connection())
         return 0.0f;
       else {
         // TODO - use classification/use to alter the factor
@@ -326,14 +326,10 @@ public:
 };
 
 // Constructor
-MotorcycleCost::MotorcycleCost(const Costing costing, const Options& options)
-    : DynamicCost(options, TravelMode::kDrive), trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f,
-                                                                      1.0f, 1.1f, 1.2f, 1.3f,
-                                                                      1.4f, 1.6f, 1.9f, 2.2f,
-                                                                      2.5f, 2.8f, 3.1f, 3.5f} {
-
-  // Grab the costing options based on the specified costing type
-  const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
+MotorcycleCost::MotorcycleCost(const CostingOptions& costing_options)
+    : DynamicCost(costing_options, TravelMode::kDrive),
+      trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
+                            1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
 
   // Vehicle type is motorcycle
   type_ = VehicleType::kMotorcycle;
@@ -400,11 +396,11 @@ MotorcycleCost::~MotorcycleCost() {
 // Check if access is allowed on the specified edge.
 bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred,
-                             const baldr::GraphTile*& tile,
+                             const GraphTile* tile,
                              const baldr::GraphId& edgeid,
                              const uint64_t current_time,
                              const uint32_t tz_index,
-                             bool& has_time_restrictions) const {
+                             int& restriction_idx) const {
   if (flow_mask_ & kCurrentFlowMask) {
     if (tile->IsClosedDueToTraffic(edgeid))
       return false;
@@ -422,7 +418,7 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
   return DynamicCost::EvaluateRestrictions(kMotorcycleAccess, edge, tile, edgeid, current_time,
-                                           tz_index, has_time_restrictions);
+                                           tz_index, restriction_idx);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -430,11 +426,11 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
 bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const EdgeLabel& pred,
                                     const baldr::DirectedEdge* opp_edge,
-                                    const baldr::GraphTile*& tile,
+                                    const GraphTile* tile,
                                     const baldr::GraphId& opp_edgeid,
                                     const uint64_t current_time,
                                     const uint32_t tz_index,
-                                    bool& has_time_restrictions) const {
+                                    int& restriction_idx) const {
   if (flow_mask_ & kCurrentFlowMask) {
     if (tile->IsClosedDueToTraffic(opp_edgeid))
       return false;
@@ -453,7 +449,7 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
   return DynamicCost::EvaluateRestrictions(kMotorcycleAccess, edge, tile, opp_edgeid, current_time,
-                                           tz_index, has_time_restrictions);
+                                           tz_index, restriction_idx);
 }
 
 Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
@@ -571,11 +567,13 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
 void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
                                 const std::string& costing_options_key,
                                 CostingOptions* pbf_costing_options) {
+  pbf_costing_options->set_costing(Costing::motorcycle);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
     // TODO: farm more common stuff out to parent class
-    ParseCostOptions(*json_costing_options, pbf_costing_options);
+    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
 
     // If specified, parse json and set pbf values
 
@@ -668,8 +666,8 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateMotorcycleCost(const Costing costing, const Options& options) {
-  return std::make_shared<MotorcycleCost>(costing, options);
+cost_ptr_t CreateMotorcycleCost(const CostingOptions& costing_options) {
+  return std::make_shared<MotorcycleCost>(costing_options);
 }
 
 } // namespace sif
@@ -686,8 +684,7 @@ namespace {
 
 class TestMotorcycleCost : public MotorcycleCost {
 public:
-  TestMotorcycleCost(const Costing costing, const Options& options)
-      : MotorcycleCost(costing, options){};
+  TestMotorcycleCost(const CostingOptions& costing_options) : MotorcycleCost(costing_options){};
 
   using MotorcycleCost::alley_penalty_;
   using MotorcycleCost::country_crossing_cost_;
@@ -703,7 +700,8 @@ TestMotorcycleCost* make_motorcyclecost_from_json(const std::string& property, f
   ss << R"({"costing_options":{"motorcycle":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestMotorcycleCost(valhalla::Costing::auto_, request.options());
+  return new TestMotorcycleCost(
+      request.options().costing_options(static_cast<int>(Costing::motorcycle)));
 }
 
 template <typename T>

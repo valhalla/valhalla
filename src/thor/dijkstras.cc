@@ -41,8 +41,7 @@ namespace thor {
 
 // Default constructor
 Dijkstras::Dijkstras()
-    : has_date_time_(false), start_tz_index_(0), access_mode_(kAutoAccess), mode_(TravelMode::kDrive),
-      adjacencylist_(nullptr) {
+    : access_mode_(kAutoAccess), mode_(TravelMode::kDrive), adjacencylist_(nullptr) {
 }
 
 // Clear the temporary information generated during path construction.
@@ -78,60 +77,17 @@ Dijkstras::Initialize<decltype(Dijkstras::mmedgelabels_)>(decltype(Dijkstras::mm
                                                           const uint32_t);
 
 // Initializes the time of the expansion if there is one
-std::pair<uint64_t, uint32_t>
+std::vector<TimeInfo>
 Dijkstras::SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                   const GraphId& node_id,
                    GraphReader& reader) {
-
-  // No time for this expansion
-  const auto& location = locations.Get(0);
-  has_date_time_ = false;
-  if (!location.has_date_time() || !node_id.Is_Valid())
-    return {};
-
-  // Set the timezone to be the timezone at the end node
-  start_tz_index_ = GetTimezone(reader, node_id);
-  if (start_tz_index_ == 0)
-    LOG_WARN("Could not get the timezone at the destination location");
-
-  // Set route start time (seconds from epoch)
-  auto start_time = DateTime::seconds_since_epoch(location.date_time(),
-                                                  DateTime::get_tz_db().from_index(start_tz_index_));
-
-  // Set seconds from beginning of the week
-  auto start_seconds_of_week = DateTime::day_of_week(location.date_time()) * kSecondsPerDay +
-                               DateTime::seconds_from_midnight(location.date_time());
-  has_date_time_ = true;
-
   // loop over all locations setting the date time with timezone
+  std::vector<TimeInfo> infos;
   for (auto& location : locations) {
-    // no time skip
-    if (!location.has_date_time())
-      continue;
-    // find a node
-    for (const auto& e : location.path_edges()) {
-      // get the edge and then the end node
-      GraphId edge_id(e.graph_id());
-      const auto* tile = reader.GetGraphTile(edge_id);
-      GraphId node_id = tile ? tile->directededge(edge_id)->endnode() : GraphId{};
-      if (reader.GetGraphTile(node_id, tile)) {
-        // if its current time  use that otherwise use the time provided
-        const auto* node = tile->node(node_id);
-        auto tz_index = DateTime::get_tz_db().from_index(node->timezone());
-        auto date_time =
-            location.date_time() == "current"
-                ? DateTime::iso_date_time(tz_index)
-                : DateTime::seconds_to_date(DateTime::seconds_since_epoch(location.date_time(),
-                                                                          tz_index),
-                                            tz_index);
-        location.set_date_time(date_time);
-        break;
-      }
-    }
+    infos.emplace_back(TimeInfo::make(location, reader, &tz_cache_));
   }
 
-  // Hand back the start time and second of the week
-  return {start_time, start_seconds_of_week};
+  // Hand back the time information
+  return infos;
 }
 
 // Expand from a node in the forward direction
@@ -140,8 +96,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
                               const EdgeLabel& pred,
                               const uint32_t pred_idx,
                               const bool from_transition,
-                              uint64_t localtime,
-                              int32_t seconds_of_week) {
+                              const TimeInfo& time_info) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
@@ -165,15 +120,10 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     return;
   }
 
-  // Adjust for time zone (if different from timezone at the start).
-  if (nodeinfo->timezone() != start_tz_index_) {
-    // Get the difference in seconds between the origin tz and current tz
-    int tz_diff =
-        DateTime::timezone_diff(localtime, DateTime::get_tz_db().from_index(start_tz_index_),
-                                DateTime::get_tz_db().from_index(nodeinfo->timezone()));
-    localtime += tz_diff;
-    seconds_of_week = DateTime::normalize_seconds_of_week(seconds_of_week + tz_diff);
-  }
+  // Update the time information
+  auto offset_time =
+      from_transition ? time_info
+                      : time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
 
   // Expand from end node in forward direction.
   GraphId edgeid = {node.tileid(), node.level(), nodeinfo->edge_index()};
@@ -191,17 +141,17 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
 
     // Check if the edge is allowed or if a restriction occurs
     EdgeStatus* todo = nullptr;
-    bool has_time_restrictions = false;
-    if (has_date_time_) {
+    int restriction_idx = -1;
+    if (offset_time.valid) {
       // With date time we check time dependent restrictions and access
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, localtime, nodeinfo->timezone(),
-                             has_time_restrictions) ||
-          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true, todo, localtime,
-                               nodeinfo->timezone())) {
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, offset_time.local_time,
+                             nodeinfo->timezone(), restriction_idx) ||
+          costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true, todo,
+                               offset_time.local_time, nodeinfo->timezone())) {
         continue;
       }
     } else {
-      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
+      if (!costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true)) {
         continue;
       }
@@ -209,11 +159,11 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
 
     // Compute the cost to the end of this edge
     Cost transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
-    Cost newcost =
-        pred.cost() +
-        costing_->EdgeCost(directededge, tile,
-                           has_date_time_ ? seconds_of_week : kConstrainedFlowSecondOfDay) +
-        transition_cost;
+    Cost newcost = pred.cost() +
+                   costing_->EdgeCost(directededge, tile,
+                                      offset_time.valid ? offset_time.second_of_week
+                                                        : kConstrainedFlowSecondOfDay) +
+                   transition_cost;
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
@@ -223,7 +173,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
       }
       continue;
     }
@@ -236,7 +186,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, newcost.cost, 0.0f,
-                               mode_, transition_cost, false, has_time_restrictions);
+                               mode_, transition_cost, false, restriction_idx);
     adjacencylist_->add(idx);
   }
 
@@ -244,7 +194,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
   if (!from_transition && nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, localtime, seconds_of_week);
+      ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, offset_time);
     }
   }
 }
@@ -252,7 +202,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
 // Compute the forward graph traversal
 void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
                         GraphReader& graphreader,
-                        const std::shared_ptr<DynamicCost>* mode_costing,
+                        const sif::mode_costing_t& mode_costing,
                         const TravelMode mode) {
 
   // Set the mode and costing
@@ -264,11 +214,8 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
   Initialize(bdedgelabels_, costing_->UnitSize());
   SetOriginLocations(graphreader, origin_locations, costing_);
 
-  // Check if date_time is set on the origin location. Set the seconds_of_week if it is set
-  uint64_t start_time;
-  uint32_t start_seconds_of_week;
-  auto node_id = bdedgelabels_.empty() ? GraphId{} : bdedgelabels_[0].endnode();
-  std::tie(start_time, start_seconds_of_week) = SetTime(origin_locations, node_id, graphreader);
+  // Get the time information for all the origin locations
+  auto time_infos = SetTime(origin_locations, graphreader);
 
   // Compute the isotile
   auto cb_decision = ExpansionRecommendation::continue_expansion;
@@ -284,18 +231,11 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
     EdgeLabel pred = bdedgelabels_[predindex];
     edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
 
-    // Update local time and seconds from beginning of the week
-    uint64_t localtime = start_time + static_cast<uint32_t>(pred.cost().secs);
-    int32_t seconds_of_week = start_seconds_of_week + static_cast<uint32_t>(pred.cost().secs);
-    if (seconds_of_week > midgard::kSecondsPerWeek) {
-      seconds_of_week -= midgard::kSecondsPerWeek;
-    }
-
     // Check if we should stop
     cb_decision = ShouldExpand(graphreader, pred, InfoRoutingType::forward);
     if (cb_decision != ExpansionRecommendation::prune_expansion) {
       // Expand from the end node in forward direction.
-      ExpandForward(graphreader, pred.endnode(), pred, predindex, false, localtime, seconds_of_week);
+      ExpandForward(graphreader, pred.endnode(), pred, predindex, false, time_infos.front());
     }
   }
 }
@@ -307,8 +247,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
                               const uint32_t pred_idx,
                               const DirectedEdge* opp_pred_edge,
                               const bool from_transition,
-                              uint64_t localtime,
-                              int32_t seconds_of_week) {
+                              const TimeInfo& time_info) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
@@ -332,15 +271,10 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     return;
   }
 
-  // Adjust for time zone (if different from timezone at the start).
-  if (nodeinfo->timezone() != start_tz_index_) {
-    // Get the difference in seconds between the origin tz and current tz
-    int tz_diff =
-        DateTime::timezone_diff(localtime, DateTime::get_tz_db().from_index(start_tz_index_),
-                                DateTime::get_tz_db().from_index(nodeinfo->timezone()));
-    localtime += tz_diff;
-    seconds_of_week = DateTime::normalize_seconds_of_week(seconds_of_week + tz_diff);
-  }
+  // Update the time information
+  auto offset_time =
+      from_transition ? time_info
+                      : time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
 
   // Expand from end node in reverse direction.
   GraphId edgeid = {node.tileid(), node.level(), nodeinfo->edge_index()};
@@ -364,18 +298,18 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
 
     // Check if the edge is allowed or if a restriction occurs
     EdgeStatus* todo = nullptr;
-    bool has_time_restrictions = false;
-    if (has_date_time_) {
+    int restriction_idx = -1;
+    if (offset_time.valid) {
       // With date time we check time dependent restrictions and access
-      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id, localtime,
-                                    nodeinfo->timezone(), has_time_restrictions) ||
+      if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id,
+                                    offset_time.local_time, nodeinfo->timezone(), restriction_idx) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false, todo,
-                               localtime, nodeinfo->timezone())) {
+                               offset_time.local_time, nodeinfo->timezone())) {
         continue;
       }
     } else {
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id, 0, 0,
-                                    has_time_restrictions) ||
+                                    restriction_idx) ||
           costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, false)) {
         continue;
       }
@@ -384,9 +318,9 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     // Compute the cost to the end of this edge with separate transition cost
     Cost transition_cost = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo,
                                                            opp_edge, opp_pred_edge);
-    Cost newcost = pred.cost() +
-                   costing_->EdgeCost(opp_edge, t2,
-                                      has_date_time_ ? seconds_of_week : kConstrainedFlowSecondOfDay);
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2,
+                                                    offset_time.valid ? offset_time.second_of_week
+                                                                      : kConstrainedFlowSecondOfDay);
     newcost.cost += transition_cost.cost;
 
     // Check if edge is temporarily labeled and this path has less cost. If
@@ -397,7 +331,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
       }
       continue;
     }
@@ -406,7 +340,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, opp_edge_id, directededge, newcost, newcost.cost,
-                               0.0f, mode_, transition_cost, false, has_time_restrictions);
+                               0.0f, mode_, transition_cost, false, restriction_idx);
     adjacencylist_->add(idx);
   }
 
@@ -414,8 +348,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
   if (!from_transition && nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true, localtime,
-                    seconds_of_week);
+      ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge, true, offset_time);
     }
   }
 }
@@ -423,7 +356,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
 // Compute the reverse graph traversal
 void Dijkstras::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
                                GraphReader& graphreader,
-                               const std::shared_ptr<DynamicCost>* mode_costing,
+                               const sif::mode_costing_t& mode_costing,
                                const TravelMode mode) {
   // Set the mode and costing
   mode_ = mode;
@@ -434,11 +367,8 @@ void Dijkstras::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Loca
   Initialize(bdedgelabels_, costing_->UnitSize());
   SetDestinationLocations(graphreader, dest_locations, costing_);
 
-  // Check if date_time is set on the destination location. Set the seconds_of_week if it is set
-  uint64_t start_time;
-  uint32_t start_seconds_of_week;
-  auto node_id = bdedgelabels_.empty() ? GraphId{} : bdedgelabels_[0].endnode();
-  std::tie(start_time, start_seconds_of_week) = SetTime(dest_locations, node_id, graphreader);
+  // Get the time information for all the destination locations
+  auto time_infos = SetTime(dest_locations, graphreader);
 
   // Compute the isotile
   auto cb_decision = ExpansionRecommendation::continue_expansion;
@@ -459,17 +389,12 @@ void Dijkstras::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Loca
     const DirectedEdge* opp_pred_edge =
         graphreader.GetGraphTile(pred.opp_edgeid())->directededge(pred.opp_edgeid());
 
-    // Update local time and seconds from beginning of the week
-    uint64_t localtime = start_time + static_cast<uint32_t>(pred.cost().secs);
-    int32_t seconds_of_week = DateTime::normalize_seconds_of_week(
-        start_seconds_of_week - static_cast<uint32_t>(pred.cost().secs));
-
     // Check if we should stop
     cb_decision = ShouldExpand(graphreader, pred, InfoRoutingType::forward);
     if (cb_decision != ExpansionRecommendation::prune_expansion) {
       // Expand from the end node in forward direction.
-      ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false, localtime,
-                    seconds_of_week);
+      ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false,
+                    time_infos.front());
     }
   }
 }
@@ -482,7 +407,8 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
                                         const bool from_transition,
                                         const std::shared_ptr<DynamicCost>& pc,
                                         const std::shared_ptr<DynamicCost>& tc,
-                                        const std::shared_ptr<DynamicCost>* mode_costing) {
+                                        const sif::mode_costing_t& mode_costing,
+                                        const TimeInfo& time_info) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
@@ -506,13 +432,10 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     return;
   }
 
-  // Set local time and adjust for time zone  (if different from timezone at the start).
-  uint32_t localtime = start_time_ + pred.cost().secs;
-  if (nodeinfo->timezone() != start_tz_index_) {
-    // Get the difference in seconds between the origin tz and current tz
-    localtime += DateTime::timezone_diff(localtime, DateTime::get_tz_db().from_index(start_tz_index_),
-                                         DateTime::get_tz_db().from_index(nodeinfo->timezone()));
-  }
+  // Update the time information
+  auto offset_time =
+      from_transition ? time_info
+                      : time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
 
   // Set a default transfer penalty at a stop (if not same trip Id and block Id)
   Cost transfer_cost = tc->DefaultTransferCost();
@@ -540,9 +463,10 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     }
 
     // Add transfer time to the local time when entering a stop as a pedestrian. This
-    // is a small added cost on top of any costs along paths and roads
-    if (mode_ == TravelMode::kPedestrian) {
-      localtime += transfer_cost.secs;
+    // is a small added cost on top of any costs along paths and roads. We only do this
+    // once so if its from a transition we don't need to do it again
+    if (mode_ == TravelMode::kPedestrian && !from_transition) {
+      offset_time.local_time += transfer_cost.secs;
     }
 
     // Update prior stop. TODO - parent/child stop info?
@@ -588,10 +512,10 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     // costing - assume if you get a transit edge you walked to the transit stop
     uint32_t tripid = 0;
     uint32_t blockid = 0;
-    bool has_time_restrictions = false;
+    int restriction_idx = -1;
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
-      if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions)) {
+      if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx)) {
         continue;
       }
 
@@ -602,8 +526,8 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
 
       // Look up the next departure along this edge
       const TransitDeparture* departure =
-          tile->GetNextDeparture(directededge->lineid(), localtime, day_, dow_, date_before_tile_,
-                                 tc->wheelchair(), tc->bicycle());
+          tile->GetNextDeparture(directededge->lineid(), offset_time.local_time, day_, dow_,
+                                 date_before_tile_, tc->wheelchair(), tc->bicycle());
       if (departure) {
         // Check if there has been a mode change
         mode_change = (mode_ == TravelMode::kPedestrian);
@@ -625,9 +549,10 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
             // call GetNextDeparture again if we cannot make the current
             // departure.
             // TODO - is there a better way?
-            if (localtime + 30 > departure->departure_time()) {
-              departure = tile->GetNextDeparture(directededge->lineid(), localtime + 30, day_, dow_,
-                                                 date_before_tile_, tc->wheelchair(), tc->bicycle());
+            if (offset_time.local_time + 30 > departure->departure_time()) {
+              departure =
+                  tile->GetNextDeparture(directededge->lineid(), offset_time.local_time + 30, day_,
+                                         dow_, date_before_tile_, tc->wheelchair(), tc->bicycle());
               if (!departure) {
                 continue;
               }
@@ -648,7 +573,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
 
         // Change mode and costing to transit. Add edge cost.
         mode_ = TravelMode::kPublicTransit;
-        newcost += tc->EdgeCost(directededge, departure, localtime);
+        newcost += tc->EdgeCost(directededge, departure, offset_time.local_time);
       } else {
         // No matching departures found for this edge
         continue;
@@ -668,7 +593,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
       // is allowed. If mode is pedestrian this will validate walking
       // distance has not been exceeded.
       if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, pred, tile, edgeid, 0, 0,
-                                                               has_time_restrictions)) {
+                                                               restriction_idx)) {
         continue;
       }
 
@@ -715,11 +640,9 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     }
 
     // Make the label in advance, we may not end up using it but we need it for the expansion decision
-    MMEdgeLabel edge_label{pred_idx,    edgeid,           directededge,
-                           newcost,     newcost.cost,     0.0f,
-                           mode_,       walking_distance, tripid,
-                           prior_stop,  blockid,          operator_id,
-                           has_transit, transition_cost,  has_time_restrictions};
+    MMEdgeLabel edge_label{pred_idx, edgeid,      directededge,     newcost,         newcost.cost,
+                           0.0f,     mode_,       walking_distance, tripid,          prior_stop,
+                           blockid,  operator_id, has_transit,      transition_cost, restriction_idx};
 
     // See if this is even worth expanding
     auto maybe_expand = ShouldExpand(graphreader, edge_label, InfoRoutingType::multi_modal);
@@ -738,7 +661,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid, transition_cost,
-                   has_time_restrictions);
+                   restriction_idx);
       }
       continue;
     }
@@ -755,7 +678,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       ExpandForwardMultiModal(graphreader, trans->endnode(), pred, pred_idx, true, pc, tc,
-                              mode_costing);
+                              mode_costing, offset_time);
     }
   }
 }
@@ -764,7 +687,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
 void Dijkstras::ComputeMultiModal(
     google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
     GraphReader& graphreader,
-    const std::shared_ptr<DynamicCost>* mode_costing,
+    const sif::mode_costing_t& mode_costing,
     const TravelMode mode) {
   // For pedestrian costing - set flag allowing use of transit connections
   // Set pedestrian costing to use max distance. TODO - need for other modes
@@ -780,33 +703,25 @@ void Dijkstras::ComputeMultiModal(
   // TODO - want to allow unlimited walking once you get off the transit stop...
   max_transfer_distance_ = 99999.0f; // costing->GetMaxTransferDistanceMM();
 
-  // Prepare for graph traversal
-  Initialize(mmedgelabels_, mode_costing[static_cast<uint8_t>(mode_)]->UnitSize());
-  SetOriginLocationsMultiModal(graphreader, origin_locations,
-                               mode_costing[static_cast<uint8_t>(mode_)]);
-
   // For now the date_time must be set on the origin.
   if (!origin_locations.Get(0).has_date_time()) {
     LOG_ERROR("No date time set on the origin location");
     return;
   }
 
+  // Get the time information for all the origin locations
+  auto time_infos = SetTime(origin_locations, graphreader);
+
+  // Prepare for graph traversal
+  Initialize(mmedgelabels_, mode_costing[static_cast<uint8_t>(mode_)]->UnitSize());
+  SetOriginLocationsMultiModal(graphreader, origin_locations,
+                               mode_costing[static_cast<uint8_t>(mode_)]);
+
   // Update start time
   date_set_ = false;
   date_before_tile_ = false;
-  if (origin_locations.Get(0).has_date_time()) {
-    // Set the timezone to be the timezone at the end node
-    start_tz_index_ =
-        mmedgelabels_.size() == 0 ? 0 : GetTimezone(graphreader, mmedgelabels_[0].endnode());
-    if (start_tz_index_ == 0) {
-      // TODO - should we throw an exception and return an error
-      LOG_WARN("Could not get the timezone at the origin location");
-    }
-    origin_date_time_ = origin_locations.Get(0).date_time();
-
-    // Set route start time (seconds from midnight), date, and day of week
-    start_time_ = DateTime::seconds_from_midnight(origin_locations.Get(0).date_time());
-  }
+  origin_date_time_ = origin_locations.Get(0).date_time();
+  start_time_ = DateTime::seconds_from_midnight(origin_locations.Get(0).date_time());
 
   // Clear operators and processed tiles
   operators_.clear();
@@ -832,7 +747,7 @@ void Dijkstras::ComputeMultiModal(
     if (cb_decision != ExpansionRecommendation::prune_expansion) {
       // Expand from the end node of the predecessor edge.
       ExpandForwardMultiModal(graphreader, pred.endnode(), pred, predindex, false, pc, tc,
-                              mode_costing);
+                              mode_costing, time_infos.front());
     }
   }
 }
@@ -888,9 +803,9 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // Construct the edge label. Set the predecessor edge index to invalid
       // to indicate the origin of the path.
       uint32_t idx = bdedgelabels_.size();
-      const bool has_time_restrictions = false;
+      int restriction_idx = -1;
       bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, cost.cost,
-                                 0., mode_, Cost{}, false, has_time_restrictions);
+                                 0., mode_, Cost{}, false, restriction_idx);
       // Set the origin flag
       bdedgelabels_.back().set_origin();
 
@@ -954,9 +869,9 @@ void Dijkstras::SetDestinationLocations(
       // to invalid to indicate the origin of the path. Make sure the opposing
       // edge (edgeid) is set.
       uint32_t idx = bdedgelabels_.size();
-      const bool has_time_restrictions = false;
+      int restriction_idx = -1;
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, cost.cost,
-                                 0., mode_, Cost{}, false, has_time_restrictions);
+                                 0., mode_, Cost{}, false, restriction_idx);
       adjacencylist_->add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id));
     }
@@ -1016,11 +931,11 @@ void Dijkstras::SetOriginLocationsMultiModal(
       uint32_t idx = mmedgelabels_.size();
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
       // TODO Do we care about time restrictions at origin edges?
-      bool has_time_restrictions = false;
+      int restriction_idx = -1;
       // TODO How about transition cost?
       auto transition_cost = Cost{};
       MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, 0,
-                             GraphId(), 0, 0, false, transition_cost, has_time_restrictions);
+                             GraphId(), 0, 0, false, transition_cost, restriction_idx);
 
       // Set the origin flag
       edge_label.set_origin();

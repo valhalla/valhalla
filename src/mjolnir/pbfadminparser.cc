@@ -1,20 +1,17 @@
 
 #include "mjolnir/pbfadminparser.h"
 #include "admin_lua_proc.h"
-#include "mjolnir/idtable.h"
+#include "baldr/tilehierarchy.h"
+#include "idtable.h"
+#include "midgard/logging.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmadmin.h"
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/util.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
-#include <future>
-#include <thread>
-#include <utility>
 
-#include "baldr/tilehierarchy.h"
-#include "midgard/logging.h"
+#include <utility>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -22,9 +19,9 @@ using namespace valhalla::mjolnir;
 
 namespace {
 // This value controls the initial size of the Id table. If this is exceeded
-// the table will be resized and a warning is generated (indicating we should
-// increase this value).
-constexpr uint64_t kMaxOSMNodeId = 10000000000;
+// the table will be resized. We should keep this number just higher than
+// reality to maintain performance
+constexpr uint64_t kMaxOSMNodesHint = 1300000000;
 
 // Node equality
 const auto WayNodeEquals = [](const OSMWayNode& a, const OSMWayNode& b) {
@@ -39,7 +36,8 @@ public:
   }
   // Construct PBFAdminParser based on properties file and input PBF extract
   admin_callback(const boost::property_tree::ptree& pt, OSMAdminData& osmdata)
-      : shape_(kMaxOSMNodeId), members_(kMaxOSMNodeId), osm_admin_data_(osmdata),
+      : shape_(pt.get<unsigned long>("id_table_size", kMaxOSMNodesHint)),
+        members_(pt.get<unsigned long>("id_table_size", kMaxOSMNodesHint)), osm_admin_data_(osmdata),
         lua_(std::string(lua_admin_lua, lua_admin_lua + lua_admin_lua_len)) {
   }
 
@@ -133,7 +131,8 @@ public:
   LuaTagTransform lua_;
 
   // Mark the OSM Ids used by the ways and relations
-  IdTable shape_, members_;
+  // TODO: just use robin_hood::unordered_set<uint64_t> since these are probably relatively small
+  UnorderedIdTable shape_, members_;
 
   // Pointer to all the OSM data (for use by callbacks)
   OSMAdminData& osm_admin_data_;

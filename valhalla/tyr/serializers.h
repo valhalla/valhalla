@@ -8,17 +8,15 @@
 #include <vector>
 
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/json.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/meili/match_result.h>
 #include <valhalla/midgard/gridded_data.h>
-#include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/options.pb.h>
-#include <valhalla/proto/trip.pb.h>
+#include <valhalla/proto/api.pb.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/costmatrix.h>
 #include <valhalla/tyr/actor.h>
-#include <valhalla/worker.h>
 
 namespace valhalla {
 namespace tyr {
@@ -97,6 +95,12 @@ std::string serializeTraceAttributes(
     const Api& request,
     const thor::AttributesController& controller,
     std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>& results);
+
+// Return a JSON array of OpenLR 1.5 line location references for each edge of a map matching
+// result. For the time being, result is only non-empty for auto costing requests.
+void route_references(baldr::json::MapPtr& route_json,
+                      const TripRoute& route,
+                      const Options& options);
 
 } // namespace tyr
 } // namespace valhalla

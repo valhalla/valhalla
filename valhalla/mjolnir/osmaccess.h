@@ -17,6 +17,7 @@ struct OSMAccess {
    * Constructor
    */
   OSMAccess() {
+    memset(this, 0, sizeof(OSMAccess));
     osmwayid_ = 0;
     attributes_ = {0};
   }
@@ -25,7 +26,8 @@ struct OSMAccess {
    * Constructor with way id arg.
    * @param   id  way id
    */
-  OSMAccess(const uint32_t id) {
+  OSMAccess(const uint64_t id) {
+    memset(this, 0, sizeof(OSMAccess));
     set_way_id(id);
     attributes_ = {0};
   }
@@ -34,7 +36,7 @@ struct OSMAccess {
    * Set way id.
    * @param   id  way id
    */
-  void set_way_id(const uint32_t id) {
+  void set_way_id(const uint64_t id) {
     osmwayid_ = id;
   }
 
@@ -42,7 +44,7 @@ struct OSMAccess {
    * Get the way id
    * @return  Returns way id.
    */
-  uint32_t way_id() const {
+  uint64_t way_id() const {
     return osmwayid_;
   }
 
@@ -207,7 +209,7 @@ struct OSMAccess {
   }
 
   // OSM way Id
-  uint32_t osmwayid_;
+  uint64_t osmwayid_;
 
   // Access attributes
   union AccessAttributes {
@@ -224,7 +226,7 @@ struct OSMAccess {
       uint16_t motorcycle_tag : 1;
       uint16_t spare : 6;
     } fields;
-    uint32_t v;
+    uint32_t v; // this should be 64bits wide for architectures who require word alignment
   };
   AccessAttributes attributes_;
 };

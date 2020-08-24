@@ -22,10 +22,9 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
 
 /**
  * Create a truckcost
- * @param  costing specified costing type.
  * @param  options pbf with request options.
  */
-cost_ptr_t CreateTruckCost(const Costing costing, const Options& options);
+cost_ptr_t CreateTruckCost(const CostingOptions& options);
 
 } // namespace sif
 } // namespace valhalla

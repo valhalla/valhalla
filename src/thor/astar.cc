@@ -153,9 +153,9 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge), if no access is allowed to this edge (based on costing method),
     // or if a complex restriction exists.
-    bool has_time_restrictions = false;
+    int restriction_idx = -1;
     if (es->set() == EdgeSet::kPermanent ||
-        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
+        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, &edgestatus_)) {
       continue;
     }
@@ -199,7 +199,7 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
       }
       continue;
     }
@@ -245,7 +245,7 @@ std::vector<std::vector<PathInfo>>
 AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
                                 valhalla::Location& destination,
                                 GraphReader& graphreader,
-                                const std::shared_ptr<DynamicCost>* mode_costing,
+                                const sif::mode_costing_t& mode_costing,
                                 const TravelMode mode,
                                 const Options& options) {
   // Set the mode and costing
@@ -266,7 +266,7 @@ AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
   uint32_t density = SetDestination(graphreader, destination);
-  SetOrigin(graphreader, origin, destination, kInvalidSecondsOfWeek);
+  SetOrigin(graphreader, origin, destination, kConstrainedFlowSecondOfDay);
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
@@ -372,8 +372,6 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
   };
 
   // Iterate through edges and add to adjacency list
-  const NodeInfo* nodeinfo = nullptr;
-  const NodeInfo* closest_ni = nullptr;
   for (const auto& edge : origin.path_edges()) {
     // If origin is at a node - skip any inbound edge (dist = 1) unless the
     // destination is also at the same end node (trivial path).
@@ -399,7 +397,6 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     }
 
     // Get cost
-    nodeinfo = endtile->node(directededge->endnode());
     Cost cost =
         costing_->EdgeCost(directededge, tile, seconds_of_week) * (1.0f - edge.percent_along());
     float dist = astarheuristic_.GetDistance(endtile->get_node_ll(directededge->endnode()));
@@ -435,14 +432,10 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
             cost.cost += dest_path_edge.distance();
             cost.cost = std::max(0.0f, cost.cost);
             dist = 0.0;
+            break;
           }
         }
       }
-    }
-
-    // Store a node-info for later timezone retrieval (approximate for closest)
-    if (closest_ni == nullptr) {
-      closest_ni = nodeinfo;
     }
 
     // Compute sortcost
@@ -462,12 +455,6 @@ void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
     adjacencylist_->add(idx);
 
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
-  }
-
-  // Set the origin timezone
-  if (closest_ni != nullptr && origin.has_date_time() && origin.date_time() == "current") {
-    origin.set_date_time(
-        DateTime::iso_date_time(DateTime::get_tz_db().from_index(closest_ni->timezone())));
   }
 }
 
@@ -519,9 +506,8 @@ std::vector<PathInfo> AStarPathAlgorithm::FormPath(const uint32_t dest) {
   for (auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
-    path.emplace_back(edgelabel.mode(), edgelabel.cost().secs, edgelabel.edgeid(), 0,
-                      edgelabel.cost().cost, edgelabel.has_time_restriction(),
-                      edgelabel.transition_secs());
+    path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), 0,
+                      edgelabel.restriction_idx(), edgelabel.transition_cost());
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {

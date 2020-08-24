@@ -74,9 +74,8 @@ public:
   void set_instruction(const std::string& instruction);
   void set_instruction(std::string&& instruction);
 
-  // Kilometers
   float length(const Options::Units& units = Options::kilometers) const;
-  void set_length(float length);
+  void set_length(float km_length); // Kilometers
 
   // Seconds
   double time() const;
@@ -250,6 +249,18 @@ public:
   bool include_verbal_pre_transition_length() const;
   void set_include_verbal_pre_transition_length(bool include_verbal_pre_transition_length);
 
+  bool contains_obvious_maneuver() const;
+  void set_contains_obvious_maneuver(bool contains_obvious_maneuver);
+
+  bool has_combined_enter_exit_roundabout() const;
+  void set_has_combined_enter_exit_roundabout(bool has_combined_enter_exit_roundabout);
+
+  float roundabout_length(const Options::Units& units = Options::kilometers) const;
+  void set_roundabout_length(float roundabout_km_length); // Kilometers
+
+  float roundabout_exit_length(const Options::Units& units = Options::kilometers) const;
+  void set_roundabout_exit_length(float roundabout_exit_km_length); // Kilometers
+
   TripLeg_TravelMode travel_mode() const;
   void set_travel_mode(TripLeg_TravelMode travel_mode);
 
@@ -321,6 +332,9 @@ public:
   const std::vector<DirectionsLeg_GuidanceView>& guidance_views() const;
   std::vector<DirectionsLeg_GuidanceView>* mutable_guidance_views();
 
+  DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type() const;
+  void set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType);
+
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
 
@@ -380,6 +394,10 @@ protected:
   bool has_right_traversable_outbound_intersecting_edge_;
   bool has_left_traversable_outbound_intersecting_edge_;
   bool include_verbal_pre_transition_length_;
+  bool contains_obvious_maneuver_;
+  bool has_combined_enter_exit_roundabout_;
+  float roundabout_length_;      // Kilometers
+  float roundabout_exit_length_; // Kilometers
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support
@@ -410,6 +428,8 @@ protected:
   TripLeg_PedestrianType pedestrian_type_;
   TripLeg_BicycleType bicycle_type_;
   TripLeg_TransitType transit_type_;
+
+  DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type_;
 
   std::unique_ptr<VerbalTextFormatter> verbal_formatter_;
 

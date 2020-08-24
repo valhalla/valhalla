@@ -40,7 +40,6 @@ uint32_t GetOperatorId(const GraphTile* tile,
 namespace valhalla {
 namespace thor {
 
-constexpr uint32_t kBucketCount = 20000;
 constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Default constructor
@@ -92,7 +91,7 @@ void Isochrone::ConstructIsoTile(
   // Range of grids in latitude space
   float dlat = max_distance / kMetersPerDegreeLat;
   // Range of grids in longitude space
-  float dlon = max_distance / DistanceApproximator::MetersPerLngDegree(center_ll.lat());
+  float dlon = max_distance / DistanceApproximator<PointLL>::MetersPerLngDegree(center_ll.lat());
 
   // Optimize for 600 cells in latitude (slightly larger for multimodal).
   // Round off to nearest 0.001 degree. TODO - revisit min and max grid sizes
@@ -144,7 +143,7 @@ std::shared_ptr<const GriddedData<PointLL>>
 Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
                    const unsigned int max_minutes,
                    GraphReader& graphreader,
-                   const std::shared_ptr<DynamicCost>* mode_costing,
+                   const sif::mode_costing_t& mode_costing,
                    const TravelMode mode) {
   // Initialize and create the isotile
   ConstructIsoTile(false, max_minutes, origin_locations, mode);
@@ -158,7 +157,7 @@ std::shared_ptr<const GriddedData<PointLL>>
 Isochrone::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
                           const unsigned int max_minutes,
                           GraphReader& graphreader,
-                          const std::shared_ptr<DynamicCost>* mode_costing,
+                          const sif::mode_costing_t& mode_costing,
                           const TravelMode mode) {
 
   // Initialize and create the isotile
@@ -173,7 +172,7 @@ std::shared_ptr<const GriddedData<PointLL>>
 Isochrone::ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
                              const unsigned int max_minutes,
                              GraphReader& graphreader,
-                             const std::shared_ptr<DynamicCost>* mode_costing,
+                             const sif::mode_costing_t& mode_costing,
                              const TravelMode mode) {
   // Initialize and create the isotile
   ConstructIsoTile(true, max_minutes, origin_locations, mode);

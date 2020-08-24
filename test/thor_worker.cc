@@ -1,35 +1,26 @@
 #include "test.h"
+#include "utils.h"
 
 #include "midgard/logging.h"
 #include "thor/attributes_controller.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
-#include <boost/property_tree/ptree.hpp>
 #include <thread>
 #include <unistd.h>
 
-using namespace prime_server;
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::thor;
 
 namespace {
 
-boost::property_tree::ptree json_to_pt(const std::string& json) {
-  std::stringstream ss;
-  ss << json;
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(ss, pt);
-  return pt;
-}
-
 // fake config
-const auto conf = json_to_pt(R"({
+const auto conf = test::json_to_pt(R"({
     "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
     "loki":{
       "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
       "logging":{"long_request": 100},
-      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60}
+      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
     },
     "thor":{"logging":{"long_request": 110}},
     "skadi":{"actons":["height"],"logging":{"long_request": 5}},
@@ -59,7 +50,7 @@ const auto conf = json_to_pt(R"({
 TEST(ThorWorker, test_parse_filter_attributes_defaults) {
   tyr::actor_t actor(conf, true);
 
-  auto result = json_to_pt(actor.trace_attributes(
+  auto result = test::json_to_pt(actor.trace_attributes(
       R"({"costing":"auto","shape_match":"map_snap","shape":[
           {"lat":52.09110,"lon":5.09806},
           {"lat":52.09098,"lon":5.09679}]})"));
@@ -97,7 +88,7 @@ TEST(ThorWorker, test_parse_filter_attributes_excludes) {
   std::vector<std::string> excluded_keys = {"shape", "trip.legs..shape", "trip.legs..shape"};
 
   for (size_t i = 0; i < test_cases.size(); ++i) {
-    auto result = json_to_pt(test_cases[i]);
+    auto result = test::json_to_pt(test_cases[i]);
     EXPECT_FALSE(result.get_child_optional(excluded_keys[i]))
         << "Expected excluded shape | found " + excluded_keys[i] + "=" +
                result.get<std::string>(excluded_keys[i]);
@@ -126,11 +117,37 @@ TEST(ThorWorker, test_parse_filter_attributes_includes) {
   std::vector<std::string> included_keys = {"shape", "trip.legs..shape", "trip.legs..shape"};
 
   for (size_t i = 0; i < test_cases.size(); ++i) {
-    auto result = json_to_pt(test_cases[i]);
+    auto result = test::json_to_pt(test_cases[i]);
     EXPECT_TRUE(result.get_child_optional(included_keys[i]))
         << "Expected " + included_keys[i] + " to be present";
   }
 }
+
+TEST(ThorWorker, test_linear_references) {
+  std::vector<std::string> requests = {
+      R"({"costing":"auto","linear_references":true,"locations":[
+          {"lat":52.09110,"lon":5.09806},
+          {"lat":52.09098,"lon":5.09679}],
+          "action":"include"})",
+  };
+  const std::vector<std::string>& expected = {
+      "CwOgEyUK5Rt3AP/H//wbBw==",
+      "CwOf+CUK4ht3AP/k//8bBw==",
+      "CwOf6yUK4Rt3AP/Y//0bBw==",
+      "CwOgEyUK5T/gAAABAAE/EA==",
+  };
+  tyr::actor_t actor(conf, true);
+  for (const auto& request : requests) {
+    auto result = test::json_to_pt(actor.route(request));
+    const auto& references = result.get_child("trip.linear_references");
+    EXPECT_EQ(references.size(), 4);
+    for (const auto& reference : references) {
+      const std::string& actual = reference.second.get_value<std::string>();
+      EXPECT_TRUE(std::find(expected.begin(), expected.end(), actual) != expected.end());
+    }
+  }
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {

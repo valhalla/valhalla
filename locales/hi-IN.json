@@ -37,7 +37,9 @@
         "0": "<RELATIVE_DIRECTION> ओर बढ़े.",
         "1": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बढ़े.",
         "2": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बढ़े. <STREET_NAMES> पर बने रहें.",
-        "3": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बने रहें."
+        "3": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बने रहें.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -60,6 +62,12 @@
         ],
         "3": [
           "बाईं ओर US 15 South पर बने रहें."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -68,7 +76,9 @@
         "0": "<RELATIVE_DIRECTION> ओर बढ़े.",
         "1": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बढ़े.",
         "2": "<RELATIVE_DIRECTION> ओर <BEGIN_STREET_NAMES> पर बढ़े.",
-        "3": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बने रहें."
+        "3": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बने रहें.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -91,6 +101,12 @@
         ],
         "3": [
           "बाईं ओर US 15 South पर बने रहें."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
         ]
       }
     },
@@ -117,7 +133,9 @@
     "continue": {
       "phrases": {
         "0": "जारी रहें.",
-        "1": "<STREET_NAMES> पर जारी रहें."
+        "1": "<STREET_NAMES> पर जारी रहें.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -130,6 +148,12 @@
         ],
         "1": [
           "10th Avenue पर जारी रहें."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -138,7 +162,11 @@
         "0": "जारी रहें.",
         "1": "<LENGTH> के लिए जारी रहें.",
         "2": "<STREET_NAMES> पर जारी रहें.",
-        "3": "<STREET_NAMES> पर <LENGTH> के लिए जारी रहें."
+        "3": "<STREET_NAMES> पर <LENGTH> के लिए जारी रहें.",
+        "4": "Continue at <JUNCTION_NAME>.",
+        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
+        "6": "Continue toward <TOWARD_SIGN>.",
+        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -171,13 +199,27 @@
         ],
         "3": [
           "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
         ]
       }
     },
     "continue_verbal_alert": {
       "phrases": {
         "0": "जारी रहें.",
-        "1": "<STREET_NAMES> पर जारी रहें."
+        "1": "<STREET_NAMES> पर जारी रहें.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -190,6 +232,12 @@
         ],
         "1": [
           "10th Avenue पर जारी रहें."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
         ]
       }
     },
@@ -306,7 +354,8 @@
       "phrases": {
         "0": "नौका लें.",
         "1": "<STREET_NAMES> लें.",
-        "2": "<STREET_NAMES> <FERRY_LABEL> नौका लें."
+        "2": "<STREET_NAMES> <FERRY_LABEL> नौका लें.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -323,6 +372,9 @@
         ],
         "2": [
           "Bridgeport - Port Jefferson नौका लें."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -330,7 +382,8 @@
       "phrases": {
         "0": "नौका लें.",
         "1": "<STREET_NAMES> लें.",
-        "2": "<STREET_NAMES> <FERRY_LABEL> नौका लें."
+        "2": "<STREET_NAMES> <FERRY_LABEL> नौका लें.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -347,6 +400,9 @@
         ],
         "2": [
           "Bridgeport - Port Jefferson नौका लें."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
         ]
       }
     },
@@ -810,6 +866,16 @@
         ]
       }
     },
+    "exit_visual": {
+      "phrases": {
+        "0": "निकलें. <EXIT_NUMBERS>"
+      },
+      "example_phrases": {
+        "0": [
+          "निकलें.  1A"
+        ]
+      }
+    },
     "keep": {
       "phrases": {
         "0": "दोराहे पर <RELATIVE_DIRECTION> बने रहें.",
@@ -983,7 +1049,9 @@
         "0": "मिलें.",
         "1": "<RELATIVE_DIRECTION> मिलें.",
         "2": "<STREET_NAMES> पर मिलें.",
-        "3": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मिलें."
+        "3": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मिलें.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "बाएं",
@@ -1006,6 +1074,12 @@
         ],
         "3": [
           "I 83 South पर दाएँ मिलें."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1014,7 +1088,9 @@
         "0": "मिलें.",
         "1": "<RELATIVE_DIRECTION> मिलें.",
         "2": "<STREET_NAMES> पर मिलें.",
-        "3": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मिलें."
+        "3": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मिलें.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "relative_directions": [
         "बाएं",
@@ -1037,6 +1113,12 @@
         ],
         "3": [
           "I 83 South पर दाएँ मिलें."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
         ]
       }
     },
@@ -1291,7 +1373,9 @@
         "0": "तेज <RELATIVE_DIRECTION> मुड़ें.",
         "1": "<STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें.",
         "2": "<BEGIN_STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें. <STREET_NAMES> पर बने रहें.",
-        "3": "<STREET_NAMES> पर बने रहने के लिए तेज <RELATIVE_DIRECTION> मुड़ें."
+        "3": "<STREET_NAMES> पर बने रहने के लिए तेज <RELATIVE_DIRECTION> मुड़ें.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -1314,6 +1398,12 @@
         ],
         "3": [
           "Sunstone Drive पर बने रहने के लिए तेज दाएँ मुड़ें."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1322,7 +1412,9 @@
         "0": "तेज <RELATIVE_DIRECTION> मुड़ें.",
         "1": "<STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें.",
         "2": "<BEGIN_STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें.",
-        "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें."
+        "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -1345,6 +1437,12 @@
         ],
         "3": [
           "Sunstone Drive पर बने रहने के लिए तेज दाएँ मुड़ें."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
         ]
       }
     },
@@ -1830,7 +1928,9 @@
         "0": "<RELATIVE_DIRECTION> मुड़ें.",
         "1": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें.",
         "2": "<BEGIN_STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें. <STREET_NAMES> पर बने रहें.",
-        "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें."
+        "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -1853,6 +1953,12 @@
         ],
         "3": [
           "Sunstone Drive पर बने रहने के लिए दाएँ मुड़ें."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1861,7 +1967,9 @@
         "0": "<RELATIVE_DIRECTION> मुड़ें.",
         "1": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें.",
         "2": "<BEGIN_STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें.",
-        "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें."
+        "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -1884,6 +1992,12 @@
         ],
         "3": [
           "Sunstone Drive पर बने रहने के लिए दाएँ मुड़ें."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
         ]
       }
     },
@@ -1894,7 +2008,9 @@
         "2": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> यू-टर्न लें.",
         "3": "<CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
         "4": "<CROSS_STREET_NAMES> पर <STREET_NAMES> की ओर <RELATIVE_DIRECTION> यू-टर्न लें.",
-        "5": "<STREET_NAMES> पर बने रहने के लिए <CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें."
+        "5": "<STREET_NAMES> पर बने रहने के लिए <CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -1923,6 +2039,12 @@
         ],
         "5": [
           "Jonestown Road/US 22 पर बने रहने के लिए Devonshire Road पर बाएं यू-टर्न लें."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },
@@ -1933,7 +2055,9 @@
         "2": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> यू-टर्न लें.",
         "3": "<CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
         "4": "<CROSS_STREET_NAMES> पर <STREET_NAMES> की ओर <RELATIVE_DIRECTION> यू-टर्न लें.",
-        "5": "<STREET_NAMES> पर बने रहने के लिए <CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न ले."
+        "5": "<STREET_NAMES> पर बने रहने के लिए <CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न ले.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "रास्ते",
@@ -1962,6 +2086,12 @@
         ],
         "5": [
           "Jonestown Road/US 22 पर बने रहने के लिए Devonshire Road पर बाएं यू-टर्न लें."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
         ]
       }
     },

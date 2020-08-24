@@ -4,6 +4,7 @@
 #include <functional>
 
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/meili/config.h>
 #include <valhalla/meili/measurement.h>
 #include <valhalla/meili/state.h>
 #include <valhalla/meili/topk_search.h>
@@ -19,7 +20,7 @@ public:
                       const IViterbiSearch& vs,
                       const TopKSearch& ts,
                       const StateContainer& container,
-                      const sif::cost_ptr_t* mode_costing,
+                      const sif::mode_costing_t& mode_costing,
                       const sif::TravelMode travelmode,
                       float beta,
                       float breakage_distance,
@@ -31,12 +32,12 @@ public:
                       const IViterbiSearch& vs,
                       const TopKSearch& ts,
                       const StateContainer& container,
-                      const sif::cost_ptr_t* mode_costing,
+                      const sif::mode_costing_t& mode_costing,
                       const sif::TravelMode travelmode,
-                      const boost::property_tree::ptree& config);
+                      const Config::TransitionCost& config);
 
   // we use the difference between the original two measurements and the distance along the route
-  // network to compute a transition cost of a given candidate, turn_cost may be added if
+  // network to compute a transition cost of a given candidate, transition_time may be added if
   // the turn_penalty_table_ is enabled, one could make use of time in this computation but
   // this is not advisable as traffic at the time may make readings unreliable and time information
   // is not strictly required to perform the matching
@@ -73,7 +74,7 @@ private:
 
   const StateContainer& container_;
 
-  const sif::cost_ptr_t* mode_costing_;
+  const sif::mode_costing_t& mode_costing_;
 
   const sif::TravelMode travelmode_;
 

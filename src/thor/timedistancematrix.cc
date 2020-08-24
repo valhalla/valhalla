@@ -93,9 +93,9 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction prevents this path.
-    bool has_time_restrictions = false;
+    int restriction_idx = -1;
     if (es->set() == EdgeSet::kPermanent ||
-        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
+        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx) ||
         costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
       continue;
     }
@@ -113,7 +113,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, restriction_idx);
       }
       continue;
     }
@@ -121,7 +121,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                             distance, transition_cost, has_time_restrictions);
+                             distance, transition_cost, restriction_idx);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_->add(idx);
   }
@@ -141,7 +141,7 @@ std::vector<TimeDistance>
 TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
                               const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                               GraphReader& graphreader,
-                              const std::shared_ptr<DynamicCost>* mode_costing,
+                              const sif::mode_costing_t& mode_costing,
                               const TravelMode mode,
                               const float max_matrix_distance) {
   // Set the mode and costing
@@ -254,9 +254,9 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
 
     // Get opposing directed edge and check if allowed.
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
-    bool has_time_restrictions = false;
-    if (opp_edge == nullptr || !costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0,
-                                                         0, has_time_restrictions)) {
+    int restriction_idx = -1;
+    if (opp_edge == nullptr ||
+        !costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0, restriction_idx)) {
       continue;
     }
 
@@ -274,7 +274,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, has_time_restrictions);
+        lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, restriction_idx);
       }
       continue;
     }
@@ -282,7 +282,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                             distance, transition_cost, has_time_restrictions);
+                             distance, transition_cost, restriction_idx);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_->add(idx);
   }
@@ -302,7 +302,7 @@ std::vector<TimeDistance>
 TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
                               const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                               GraphReader& graphreader,
-                              const std::shared_ptr<DynamicCost>* mode_costing,
+                              const sif::mode_costing_t& mode_costing,
                               const TravelMode mode,
                               const float max_matrix_distance) {
   // Set the mode and costing
@@ -373,7 +373,7 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
 std::vector<TimeDistance> TimeDistanceMatrix::ManyToMany(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     GraphReader& graphreader,
-    const std::shared_ptr<DynamicCost>* mode_costing,
+    const sif::mode_costing_t& mode_costing,
     const sif::TravelMode mode,
     const float max_matrix_distance) {
   return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance);
@@ -383,7 +383,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     baldr::GraphReader& graphreader,
-    const std::shared_ptr<sif::DynamicCost>* mode_costing,
+    const sif::mode_costing_t& mode_costing,
     const sif::TravelMode mode,
     const float max_matrix_distance) {
   // Run a series of one to many calls and concatenate the results.

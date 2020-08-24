@@ -63,6 +63,7 @@ protected:
     uint16_t modes_ : 12;
   };
   Attributes attributes_;
+  uint16_t spare_[3];
 };
 
 } // namespace mjolnir

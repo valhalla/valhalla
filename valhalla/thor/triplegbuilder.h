@@ -12,6 +12,7 @@
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/meili/match_result.h>
 #include <valhalla/proto/trip.pb.h>
+#include <valhalla/proto_conversions.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/pathinfo.h>
@@ -21,8 +22,8 @@ namespace thor {
 
 // Allows you to trim shape for when you need to cut an edge for a discontinuity in map matching
 // or for a uturn in the middle of the edge
-struct RouteDiscontinuity {
-  bool exists;
+struct EdgeTrimmingInfo {
+  bool trim;
   midgard::PointLL vertex;
   float distance_along;
 };
@@ -35,6 +36,7 @@ public:
   /**
    * Form a trip leg out of a path (sequence of path infos)
    *
+   * @param options               Request options
    * @param controller            Which meta data attributes to include in the trip leg
    * @param graphreader           A way of accessing graph information
    * @param mode_costing          A costing object
@@ -45,17 +47,13 @@ public:
    * @param through_loc           The list of through locations along this leg if any
    * @param trip_path             The leg we will fill out
    * @param interrupt_callback    A way to abort the processing in case the request was cancelled
-   * @param route_discontinuities Markers at places in the leg where there are discontinuities
-   * @param trim_begin            For map matching we have one long sequence of path infos regardless
-   *                              of legs so we must supply an amount of elapsed time which we trim
-   *                              from the beginning
-   * @param trim_end              Similarly to trim_begin, we must also trim at the end of a map
-   *                              matched edge
+   * @param edge_trimming         Markers on edges with information on how to trim their shape
    * @return
    */
-  static void Build(const AttributesController& controller,
+  static void Build(const valhalla::Options& options,
+                    const AttributesController& controller,
                     baldr::GraphReader& graphreader,
-                    const std::shared_ptr<sif::DynamicCost>* mode_costing,
+                    const sif::mode_costing_t& mode_costing,
                     const std::vector<PathInfo>::const_iterator path_begin,
                     const std::vector<PathInfo>::const_iterator path_end,
                     valhalla::Location& origin,
@@ -63,10 +61,8 @@ public:
                     const std::list<valhalla::Location>& through_loc,
                     TripLeg& trip_path,
                     const std::function<void()>* interrupt_callback = nullptr,
-                    std::unordered_map<size_t, std::pair<RouteDiscontinuity, RouteDiscontinuity>>*
-                        route_discontinuities = nullptr,
-                    float trim_begin = 0,
-                    float trim_end = 0);
+                    std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>*
+                        edge_trimming = nullptr);
 };
 
 } // namespace thor

@@ -206,7 +206,7 @@ public:
   uint32_t AddEdgeInfo(const uint32_t edgeindex,
                        const baldr::GraphId& nodea,
                        const baldr::GraphId& nodeb,
-                       const uint32_t wayid,
+                       const uint64_t wayid,
                        const float elev,
                        const uint32_t bn,
                        const uint32_t spd,
@@ -243,7 +243,7 @@ public:
   uint32_t AddEdgeInfo(const uint32_t edgeindex,
                        const baldr::GraphId& nodea,
                        const baldr::GraphId& nodeb,
-                       const uint32_t wayid,
+                       const uint64_t wayid,
                        const float elev,
                        const uint32_t bn,
                        const uint32_t spd,
@@ -323,7 +323,7 @@ public:
    * @return  Returns a pointer to the directed edge builder (allows
    *          accessing all directed edges from a node).
    */
-  const DirectedEdge* directededges(const size_t idx);
+  const DirectedEdge* directededges(const size_t idx) const;
 
   /**
    * Get the directed edge builder at the specified index.

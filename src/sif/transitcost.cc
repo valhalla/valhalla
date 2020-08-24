@@ -1,9 +1,9 @@
 #include "sif/transitcost.h"
-
 #include "baldr/accessrestriction.h"
 #include "baldr/graphconstants.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
+#include "proto_conversions.h"
 #include "worker.h"
 
 #ifdef INLINE_TEST
@@ -59,11 +59,11 @@ constexpr ranged_default_t<float> kTransferPenaltyRange{0, kDefaultTransferPenal
 class TransitCost : public DynamicCost {
 public:
   /**
-   * Construct transit costing. Pass in cost type and options using protocol buffer(pbf).
+   * Construct transit costing. Pass in cost type and costing_options using protocol buffer(pbf).
    * @param  costing specified costing type.
-   * @param  options pbf with request options.
+   * @param  costing_options pbf with request costing_options.
    */
-  TransitCost(const Costing costing, const Options& options);
+  TransitCost(const CostingOptions& costing_options);
 
   virtual ~TransitCost();
 
@@ -107,11 +107,11 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const baldr::GraphTile*& tile,
+                       const GraphTile* tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       bool& time_restricted) const;
+                       int& restriction_idx) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -133,11 +133,11 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const baldr::GraphTile*& tile,
+                              const GraphTile* tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              bool& has_time_restrictions) const;
+                              int& restriction_idx) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -227,7 +227,7 @@ public:
     // Throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge) {
       if (edge->is_shortcut() || edge->use() >= Use::kFerry ||
-          !(edge->forwardaccess() & kPedestrianAccess)) {
+          !(edge->forwardaccess() & kPedestrianAccess) || edge->bss_connection()) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -319,11 +319,8 @@ public:
 
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
-TransitCost::TransitCost(const Costing costing, const Options& options)
-    : DynamicCost(options, TravelMode::kPublicTransit) {
-
-  // Grab the costing options based on the specified costing type
-  const CostingOptions& costing_options = options.costing_options(static_cast<int>(costing));
+TransitCost::TransitCost(const CostingOptions& costing_options)
+    : DynamicCost(costing_options, TravelMode::kPublicTransit) {
 
   mode_factor_ = costing_options.mode_factor();
 
@@ -533,15 +530,11 @@ uint32_t TransitCost::access_mode() const {
 // Check if access is allowed on the specified edge.
 bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
                           const EdgeLabel& pred,
-                          const baldr::GraphTile*& tile,
+                          const GraphTile* tile,
                           const baldr::GraphId& edgeid,
                           const uint64_t current_time,
                           const uint32_t tz_index,
-                          bool& has_time_restrictions) const {
-  if (flow_mask_ & kCurrentFlowMask) {
-    if (tile->IsClosedDueToTraffic(edgeid))
-      return false;
-  }
+                          int& restriction_idx) const {
   // TODO - obtain and check the access restrictions.
 
   if (exclude_stops_.size()) {
@@ -556,9 +549,9 @@ bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
   }
 
   if (edge->use() == Use::kBus) {
-    return (use_bus_ > 0.0f) ? true : false;
+    return use_bus_ > 0.0f;
   } else if (edge->use() == Use::kRail) {
-    return (use_rail_ > 0.0f) ? true : false;
+    return use_rail_ > 0.0f;
   }
   return true;
 }
@@ -568,11 +561,11 @@ bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
 bool TransitCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                  const EdgeLabel& pred,
                                  const baldr::DirectedEdge* opp_edge,
-                                 const baldr::GraphTile*& tile,
+                                 const GraphTile* tile,
                                  const baldr::GraphId& opp_edgeid,
                                  const uint64_t current_time,
                                  const uint32_t tz_index,
-                                 bool& has_time_restrictions) const {
+                                 int& restriction_idx) const {
   // This method should not be called since time based routes do not use
   // bidirectional A*
   return false;
@@ -648,11 +641,13 @@ uint32_t TransitCost::UnitSize() const {
 void ParseTransitCostOptions(const rapidjson::Document& doc,
                              const std::string& costing_options_key,
                              CostingOptions* pbf_costing_options) {
+  pbf_costing_options->set_costing(Costing::transit);
+  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
   auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
 
   if (json_costing_options) {
     // TODO: farm more common stuff out to parent class
-    ParseCostOptions(*json_costing_options, pbf_costing_options);
+    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
 
     // If specified, parse json and set pbf values
 
@@ -761,8 +756,8 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateTransitCost(const Costing costing, const Options& options) {
-  return std::make_shared<TransitCost>(costing, options);
+cost_ptr_t CreateTransitCost(const CostingOptions& costing_options) {
+  return std::make_shared<TransitCost>(costing_options);
 }
 
 } // namespace sif
@@ -782,7 +777,7 @@ TransitCost* make_transitcost_from_json(const std::string& property, float testV
   ss << R"({"costing_options":{"transit":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TransitCost(valhalla::Costing::transit, request.options());
+  return new TransitCost(request.options().costing_options(static_cast<int>(Costing::transit)));
 }
 
 std::uniform_real_distribution<float>*
