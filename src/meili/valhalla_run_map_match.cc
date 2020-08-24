@@ -52,8 +52,8 @@ int main(int argc, char* argv[]) {
   MapMatcherFactory matcher_factory(config);
   auto mapmatcher = matcher_factory.Create(costing);
 
-  const float default_gps_accuracy = mapmatcher->config().get<float>("gps_accuracy"),
-              default_search_radius = mapmatcher->config().get<float>("search_radius");
+  const float default_gps_accuracy = mapmatcher->config().emission_cost.gps_accuracy_meters,
+              default_search_radius = mapmatcher->config().candidate_search.search_radius_meters;
 
   size_t index = 0;
   for (auto measurements = ReadMeasurements(std::cin, default_gps_accuracy, default_search_radius);

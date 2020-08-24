@@ -6,9 +6,9 @@
 #include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
 #include "thor/worker.h"
-#include <boost/property_tree/ptree.hpp>
 
 #include "test.h"
+#include "utils.h"
 
 using namespace valhalla;
 using namespace valhalla::thor;
@@ -20,15 +20,7 @@ using namespace valhalla::tyr;
 
 namespace {
 
-boost::property_tree::ptree json_to_pt(const std::string& json) {
-  std::stringstream ss;
-  ss << json;
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(ss, pt);
-  return pt;
-}
-
-const auto config = json_to_pt(R"({
+const auto config = test::json_to_pt(R"({
     "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
     "loki":{
       "actions":["sources_to_targets"],
