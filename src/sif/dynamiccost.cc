@@ -50,7 +50,7 @@ namespace sif {
 DynamicCost::DynamicCost(const CostingOptions& options, const TravelMode mode)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
       flow_mask_(kDefaultFlowMask), ignore_restrictions_(options.ignore_restrictions()),
-      ignore_oneways_(options.ignore_oneways()), ignore_access_(options.ignore_access) {
+      ignore_oneways_(options.ignore_oneways()), ignore_access_(options.ignore_access()) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);

@@ -607,8 +607,13 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const uint64_t current_time,
                              const uint32_t tz_index,
                              int& restriction_idx) const {
-  if (!(edge->forwardaccess() & access_mask_) || (edge->surface() > minimal_allowed_surface_) ||
-      edge->is_shortcut() || IsUserAvoidEdge(edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
+
+  bool accessable = (edge->forwardaccess() & access_mask_) ||
+                    (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
+                    (ignore_oneways_ && (edge->reverseaccess() & access_mask_));
+
+  if (!accessable || (edge->surface() > minimal_allowed_surface_) || edge->is_shortcut() ||
+      IsUserAvoidEdge(edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kPedestrian) ||
       //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
@@ -638,11 +643,14 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     int& restriction_idx) const {
   // TODO - obtain and check the access restrictions.
 
+  bool accessable = (opp_edge->forwardaccess() & access_mask_) ||
+                    (ignore_access_ && (opp_edge->forwardaccess() & kAllAccess)) ||
+                    (ignore_oneways_ && (opp_edge->reverseaccess() & access_mask_));
+
   // Do not check max walking distance and assume we are not allowing
   // transit connections. Assume this method is never used in
   // multimodal routes).
-  if (!(opp_edge->forwardaccess() & access_mask_) ||
-      (opp_edge->surface() > minimal_allowed_surface_) || opp_edge->is_shortcut() ||
+  if (!accessable || (opp_edge->surface() > minimal_allowed_surface_) || opp_edge->is_shortcut() ||
       IsUserAvoidEdge(opp_edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kPedestrian) ||

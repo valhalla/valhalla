@@ -415,11 +415,15 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
     if (tile->IsClosedDueToTraffic(edgeid))
       return false;
   }
+
+  bool accessable = (edge->forwardaccess() & kMopedAccess) ||
+                    (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
+                    (ignore_oneways_ && (edge->reverseaccess() & kMopedAccess));
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(edge->forwardaccess() & kMopedAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_)) ||
+  if (!accessable || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       IsUserAvoidEdge(edgeid) || (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
@@ -444,10 +448,14 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
     if (tile->IsClosedDueToTraffic(opp_edgeid))
       return false;
   }
+
+  bool accessable = (opp_edge->forwardaccess() & kMopedAccess) ||
+                    (ignore_access_ && (opp_edge->forwardaccess() & kAllAccess)) ||
+                    (ignore_oneways_ && (opp_edge->reverseaccess() & kMopedAccess));
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(opp_edge->forwardaccess() & kMopedAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+  if (!accessable || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {

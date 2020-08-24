@@ -397,13 +397,17 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
     if (tile->IsClosedDueToTraffic(edgeid))
       return false;
   }
+
+  bool accessable = (edge->forwardaccess() & kAutoAccess) ||
+                    (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
+                    (ignore_oneways_ && (edge->reverseaccess() & kAutoAccess));
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes in case the origin is inside
   // a not thru region and a heading selected an edge entering the
   // region.
-  if (!(edge->forwardaccess() & kAutoAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_)) ||
+  if (!accessable || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
@@ -427,11 +431,15 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
     if (tile->IsClosedDueToTraffic(opp_edgeid))
       return false;
   }
+
+  bool accessable = (opp_edge->forwardaccess() & kAutoAccess) ||
+                    (ignore_access_ && (opp_edge->forwardaccess() & kAllAccess)) ||
+                    (ignore_oneways_ && (opp_edge->reverseaccess() & kAutoAccess));
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(opp_edge->forwardaccess() & kAutoAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_)) ||
+  if (!accessable || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
@@ -870,11 +878,14 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
   }
   // TODO - obtain and check the access restrictions.
 
+  bool accessable = (edge->forwardaccess() & kBusAccess) ||
+                    (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
+                    (ignore_oneways_ && (edge->reverseaccess() & kBusAccess));
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(edge->forwardaccess() & kBusAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_)) ||
+  if (!accessable || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
@@ -898,10 +909,14 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
     if (tile->IsClosedDueToTraffic(opp_edgeid))
       return false;
   }
+
+  bool accessable = (opp_edge->forwardaccess() & kBusAccess) ||
+                    (ignore_access_ && (opp_edge->forwardaccess() & kAllAccess)) ||
+                    (ignore_oneways_ && (opp_edge->reverseaccess() & kBusAccess));
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(opp_edge->forwardaccess() & kBusAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+  if (!accessable || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
@@ -1071,13 +1086,16 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
   }
   // TODO - obtain and check the access restrictions.
 
+  bool accessable = (edge->forwardaccess() & kHOVAccess) ||
+                    (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
+                    (ignore_oneways_ && (edge->reverseaccess() & kHOVAccess));
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes in case the origin is inside
   // a not thru region and a heading selected an edge entering the
   // region.
-  if (!(edge->forwardaccess() & kHOVAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_)) ||
+  if (!accessable || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
@@ -1103,10 +1121,13 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
   }
   // TODO - obtain and check the access restrictions.
 
+  bool accessable = (opp_edge->forwardaccess() & kHOVAccess) ||
+                    (ignore_access_ && (opp_edge->forwardaccess() & kAllAccess)) ||
+                    (ignore_oneways_ && (opp_edge->reverseaccess() & kHOVAccess));
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(opp_edge->forwardaccess() & kHOVAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+  if (!accessable || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
@@ -1276,13 +1297,16 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
   }
   // TODO - obtain and check the access restrictions.
 
+  bool accessable = (edge->forwardaccess() & kTaxiAccess) ||
+                    (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
+                    (ignore_oneways_ && (edge->reverseaccess() & kTaxiAccess));
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes in case the origin is inside
   // a not thru region and a heading selected an edge entering the
   // region.
-  if (!(edge->forwardaccess() & kTaxiAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_)) ||
+  if (!accessable || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
@@ -1308,10 +1332,13 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
   }
   // TODO - obtain and check the access restrictions.
 
+  bool accessable = (opp_edge->forwardaccess() & kTaxiAccess) ||
+                    (ignore_access_ && (opp_edge->forwardaccess() & kAllAccess)) ||
+                    (ignore_oneways_ && (opp_edge->reverseaccess() & kTaxiAccess));
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(opp_edge->forwardaccess() & kTaxiAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+  if (!accessable || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
@@ -1375,10 +1402,14 @@ public:
 
     // Note: this profile ignores closures in live traffic, so that check is not
     //       present, unlike other Allowed() implementations
+
+    bool accessable = (edge->forwardaccess() & kAutoAccess) ||
+                      (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
+                      (edge->reverseaccess() & kAutoAccess);
+
     // Check access and return false (not allowed if no auto access is allowed in either
     // direction. Also disallow simple U-turns except at dead-end nodes.
-    if (!((edge->forwardaccess() & kAutoAccess) || (edge->reverseaccess() & kAutoAccess)) ||
-        (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+    if (!accessable || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
         (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
       return false;
