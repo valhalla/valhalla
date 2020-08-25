@@ -752,7 +752,6 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   if (controller.attributes.at(kEdgeDensity)) {
     trip_edge->set_density(directededge->density());
-    // std::cout << "density on current edge :: " << directededge->density() << std::endl;
   }
 
   if (controller.attributes.at(kEdgeSpeedLimit)) {

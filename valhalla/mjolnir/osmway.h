@@ -1515,22 +1515,6 @@ struct OSMWay {
   }
 
   /**
-   * Sets the urban flag.
-   * @param  urban       Urban.
-   */
-  void set_urban(const bool urban) {
-    urban_ = urban;
-  }
-
-  /**
-   * Get the urban flag.
-   * @return  Returns urban flag.
-   */
-  bool urban() const {
-    return urban_;
-  }
-
-  /**
    * Get the names for the edge info based on the road class.
    * @param  ref              updated refs from relations.
    * @param  name_offset_map  map of unique names and refs from ways.
@@ -1621,8 +1605,7 @@ struct OSMWay {
   uint32_t pedestrian_ : 1;
   uint32_t has_user_tags_ : 1;
   uint32_t internal_ : 1;
-  uint32_t urban_ : 1;
-  uint32_t spare0_ : 3; // Spare
+  uint32_t spare0_ : 4; // Spare
 
   // Access
   uint16_t auto_forward_ : 1;
