@@ -121,6 +121,8 @@ void SetShapeAttributes(const AttributesController& controller,
           }
         }
       }
+
+      // TODO Inject and cut for incidents here
     }
     // Cap the end so that we always have something to use
     if (speeds.empty() || std::get<0>(speeds.back()) < tgt_pct) {
@@ -489,6 +491,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
+          default: { break; }
         }
       }
     }
@@ -862,6 +865,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
         }
       }
     }
+  }
+
+  if (controller.attributes.at(kNodeIncidents)) {
+    valhalla::thor::addIncidents(*trip_edge, graphreader, edge);
   }
 
   return trip_edge;
