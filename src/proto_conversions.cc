@@ -43,7 +43,8 @@ std::string incidentTypeToString(const TripLeg_Node_Incident& incident) {
       return "weather";
       break;
   };
-  return "Unhandled case";
+  throw std::runtime_error("Unhandled case in incidentTypeToString: " +
+                           std::to_string(incident.type()));
 }
 
 bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {

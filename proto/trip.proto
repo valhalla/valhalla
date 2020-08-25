@@ -298,7 +298,7 @@ message TripLeg {
       optional uint64 start_time = 3;     // START_TIME as seconds since epoch UTC
       optional uint64 end_time = 4;       // END_TIME seconds since epoch UTC
       optional uint64 creation_time = 5;  // time the incident was created/updated in seconds since epoch UTC
-      optional uint32 id = 6;
+      optional uint64 id = 6;             // An id that can be used for joining incidents in route with map
     };
     repeated Incident incidents = 15;
  }

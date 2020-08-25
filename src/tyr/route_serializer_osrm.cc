@@ -335,7 +335,7 @@ struct IntersectionEdges {
 };
 
 // Forward declaration
-valhalla::baldr::json::MapPtr serialize_incident(const TripLeg_Node_Incident& incident);
+valhalla::baldr::json::MapPtr serializeIncident(const TripLeg_Node_Incident& incident);
 
 // Serializes incidents and adds to json-document
 void addsIncidents(
@@ -358,7 +358,7 @@ void addsIncidents(
     }
   }
   for (const auto& incident : incidents) {
-    auto json_incident = serialize_incident(incident);
+    auto json_incident = serializeIncident(incident);
     serialized_incidents->emplace_back(json_incident);
   }
   doc.emplace("incidents", serialized_incidents);
@@ -602,13 +602,10 @@ std::string exits(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
   return exits;
 }
 
-valhalla::baldr::json::MapPtr serialize_incident(const TripLeg_Node_Incident& incident) {
+valhalla::baldr::json::MapPtr serializeIncident(const TripLeg_Node_Incident& incident) {
   auto metadata_json = json::map({});
 
-  {
-    uint64_t id = static_cast<uint32_t>(incident.id());
-    metadata_json->emplace("id", id);
-  }
+  { metadata_json->emplace("id", incident.id()); }
   if (incident.creation_time()) {
     metadata_json->emplace("creation_time", static_cast<uint64_t>(incident.creation_time()));
   }
