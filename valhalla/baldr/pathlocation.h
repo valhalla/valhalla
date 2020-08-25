@@ -161,7 +161,7 @@ public:
     }
 
     auto* filtered_edges = l->mutable_filtered_edges();
-    for (const auto& e : pl.edges) {
+    for (const auto& e : pl.filtered_edges) {
       auto* edge = filtered_edges->Add();
       edge->set_graph_id(e.id);
       edge->set_percent_along(e.percent_along);

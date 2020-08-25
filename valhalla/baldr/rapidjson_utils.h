@@ -229,6 +229,15 @@ void read_json(const std::string& filename, Ptree& pt, const std::locale& loc = 
   rapidjson::read_json(stream, pt);
 }
 
+inline std::string serialize(const rapidjson::Document& doc) {
+  rapidjson::StringBuffer buffer;
+  rapidjson::PrettyWriter<rapidjson::StringBuffer, rapidjson::Document::EncodingType,
+                          rapidjson::ASCII<>>
+      writer(buffer);
+  doc.Accept(writer);
+  return buffer.GetString();
+}
+
 } // namespace rapidjson
 
 #endif /* VALHALLA_BALDR_RAPIDJSON_UTILS_H_ */

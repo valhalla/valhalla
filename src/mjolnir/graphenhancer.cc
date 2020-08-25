@@ -667,8 +667,8 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
                             GraphReader& reader,
                             std::mutex& lock,
                             const GraphId& startnode,
-                            NodeInfo& startnodeinfo,
-                            DirectedEdge& directededge,
+                            const NodeInfo& startnodeinfo,
+                            const DirectedEdge& directededge,
                             const uint32_t idx) {
   // Internal intersection edges must be short and cannot be a roundabout.
   // Also they must be a road use (not footway, cycleway, etc.).
@@ -834,7 +834,7 @@ bool IsIntersectionInternal(const GraphTile* start_tile,
 }
 
 // Get the Headings for the node.
-void GetHeadings(GraphTileBuilder& tile, NodeInfo& nodeinfo, uint32_t ntrans) {
+void GetHeadings(const GraphTileBuilder& tile, NodeInfo& nodeinfo, uint32_t ntrans) {
   if (ntrans == 0) {
     throw std::runtime_error("edge transitions set is empty");
   }
@@ -842,15 +842,15 @@ void GetHeadings(GraphTileBuilder& tile, NodeInfo& nodeinfo, uint32_t ntrans) {
   std::vector<uint32_t> heading(ntrans);
   nodeinfo.set_local_edge_count(ntrans);
   for (uint32_t j = 0; j < ntrans; j++) {
-    DirectedEdge& de = tile.directededge_builder(nodeinfo.edge_index() + j);
+    const DirectedEdge* de = tile.directededges(nodeinfo.edge_index() + j);
 
-    auto e_offset = tile.edgeinfo(de.edgeinfo_offset());
+    auto e_offset = tile.edgeinfo(de->edgeinfo_offset());
     auto shape = e_offset.shape();
-    if (!de.forward()) {
+    if (!de->forward()) {
       std::reverse(shape.begin(), shape.end());
     }
     heading[j] = std::round(
-        PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(de.classification(), de.use())));
+        PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(de->classification(), de->use())));
 
     // Set heading in NodeInfo. TODO - what if 2 edges have nearly the
     // same heading - should one be "adjusted" so the relative direction
@@ -859,59 +859,67 @@ void GetHeadings(GraphTileBuilder& tile, NodeInfo& nodeinfo, uint32_t ntrans) {
   }
 }
 
-// Is the next edge from the end node of the directededge is internal or not.
-bool IsNextEdgeInternal(const DirectedEdge directededge,
-                        GraphTileBuilder& tilebuilder,
-                        GraphReader& reader,
-                        std::mutex& lock,
-                        bool infer_internal_intersections) {
-  // Get the tile at the startnode
-  GraphTileBuilder tile = tilebuilder;
-  // Get the tile at the end node. and find inbound heading of the candidate
-  // edge to the end node.
-  bool b_diff_tile = false;
-  if (tile.id() != directededge.endnode().Tile_Base()) {
-    lock.lock();
-    tile = GraphTileBuilder(reader.tile_dir(), directededge.endnode(), true, false);
-    b_diff_tile = true;
-    lock.unlock();
-  }
-  NodeInfo& nodeinfo = tile.node_builder(directededge.endnode().id());
-
-  // this tile may not have been updated yet; therefore, we must
-  // compute the headings for the end node as they are needed for the
-  // IsIntersectionInternal function
-  if (b_diff_tile) {
-    // Get headings of the edges - set in NodeInfo.
-    uint32_t count = nodeinfo.edge_count();
-    uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
-
-    GetHeadings(tile, nodeinfo, ntrans);
-  }
+bool IsNextEdgeInternalImpl(const DirectedEdge directededge,
+                            const GraphTileBuilder& tilebuilder,
+                            const GraphTileBuilder& end_node_tile,
+                            const NodeInfo& end_node_info,
+                            GraphReader& reader,
+                            std::mutex& lock,
+                            bool infer_internal_intersections) {
   // Iterate through outbound edges to find the next edge
-  for (uint32_t i = 0; i < nodeinfo.edge_count(); i++) {
-    DirectedEdge& diredge = tile.directededge_builder(nodeinfo.edge_index() + i);
+  for (uint32_t i = 0; i < end_node_info.edge_count(); i++) {
+    const DirectedEdge* diredge = end_node_tile.directededges(end_node_info.edge_index() + i);
 
     // Skip opposing directed edge and any edge that is not a road. Skip any
     // edges that are not driveable outbound.
-    if (i == directededge.opp_local_idx() || (diredge.use() != Use::kRoad) ||
-        !(diredge.forwardaccess() & kAutoAccess)) {
+    if (i == directededge.opp_local_idx() || (diredge->use() != Use::kRoad) ||
+        !(diredge->forwardaccess() & kAutoAccess)) {
       continue;
     }
 
     // if the edge from the endnode is the next edge for this way, then
     // check if it is internal.
     if (tilebuilder.edgeinfo(directededge.edgeinfo_offset()).wayid() ==
-        tile.edgeinfo(diredge.edgeinfo_offset()).wayid()) {
+        end_node_tile.edgeinfo(diredge->edgeinfo_offset()).wayid()) {
 
       if (!infer_internal_intersections)
-        return diredge.internal();
+        return diredge->internal();
       else
-        return IsIntersectionInternal(&tile, reader, lock, directededge.endnode(), nodeinfo, diredge,
-                                      i);
+        return IsIntersectionInternal(&end_node_tile, reader, lock, directededge.endnode(),
+                                      end_node_info, *diredge, i);
     }
   }
   return false;
+}
+
+// Is the next edge from the end node of the directededge is internal or not.
+bool IsNextEdgeInternal(const DirectedEdge directededge,
+                        GraphTileBuilder& tilebuilder,
+                        GraphReader& reader,
+                        std::mutex& lock,
+                        bool infer_internal_intersections) {
+  if (tilebuilder.id() == directededge.endnode().Tile_Base()) {
+    const NodeInfo& end_node_info = tilebuilder.node_builder(directededge.endnode().id());
+    return IsNextEdgeInternalImpl(directededge, tilebuilder, tilebuilder, end_node_info, reader, lock,
+                                  infer_internal_intersections);
+  } else {
+    // Get the tile at the end node. and find inbound heading of the candidate
+    // edge to the end node.
+    lock.lock();
+    GraphTileBuilder end_node_tile =
+        GraphTileBuilder(reader.tile_dir(), directededge.endnode(), true, false);
+    lock.unlock();
+
+    // this tile may not have been updated yet; therefore, we must
+    // compute the headings for the end node as they are needed for the
+    // IsIntersectionInternal function
+    NodeInfo& end_node_info = end_node_tile.node_builder(directededge.endnode().id());
+    uint32_t count = end_node_info.edge_count();
+    uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
+    GetHeadings(end_node_tile, end_node_info, ntrans);
+    return IsNextEdgeInternalImpl(directededge, tilebuilder, end_node_tile, end_node_info, reader,
+                                  lock, infer_internal_intersections);
+  }
 }
 
 /**

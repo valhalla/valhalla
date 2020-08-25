@@ -4,6 +4,7 @@
 #include <functional>
 
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/meili/config.h>
 #include <valhalla/meili/measurement.h>
 #include <valhalla/meili/state.h>
 #include <valhalla/meili/topk_search.h>
@@ -33,7 +34,7 @@ public:
                       const StateContainer& container,
                       const sif::mode_costing_t& mode_costing,
                       const sif::TravelMode travelmode,
-                      const boost::property_tree::ptree& config);
+                      const Config::TransitionCost& config);
 
   // we use the difference between the original two measurements and the distance along the route
   // network to compute a transition cost of a given candidate, transition_time may be added if

@@ -30,6 +30,16 @@ namespace {
 struct dir_facet : public std::numpunct<char> {
 protected:
   virtual char do_thousands_sep() const {
+    return filesystem::path::preferred_separator;
+  }
+
+  virtual std::string do_grouping() const {
+    return "\03";
+  }
+};
+struct url_facet : public std::numpunct<char> {
+protected:
+  virtual char do_thousands_sep() const {
     return '/';
   }
 
@@ -37,13 +47,15 @@ protected:
     return "\03";
   }
 };
+const std::locale url_locale(std::locale("C"), new url_facet());
 const std::locale dir_locale(std::locale("C"), new dir_facet());
 const AABB2<PointLL> world_box(PointLL(-180, -90), PointLL(180, 90));
 constexpr float COMPRESSION_HINT = 3.5f;
 
 std::string MakeSingleTileUrl(const std::string& tile_url, const valhalla::baldr::GraphId& graphid) {
   auto id_pos = tile_url.find(valhalla::baldr::GraphTile::kTilePathPattern);
-  return tile_url.substr(0, id_pos) + valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base()) +
+  return tile_url.substr(0, id_pos) +
+         valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base(), false, false) +
          tile_url.substr(id_pos + std::strlen(valhalla::baldr::GraphTile::kTilePathPattern));
 }
 
@@ -384,7 +396,7 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
   }
 }
 
-std::string GraphTile::FileSuffix(const GraphId& graphid, bool gzipped) {
+std::string GraphTile::FileSuffix(const GraphId& graphid, bool gzipped, bool is_file_path) {
   /*
   if you have a graphid where level == 8 and tileid == 24134109851 you should get:
   8/024/134/109/851.gph since the number of levels is likely to be very small this limits the total
@@ -416,7 +428,11 @@ std::string GraphTile::FileSuffix(const GraphId& graphid, bool gzipped) {
 
   // make a locale to use as a formatter for numbers
   std::ostringstream stream;
-  stream.imbue(dir_locale);
+  if (is_file_path) {
+    stream.imbue(dir_locale);
+  } else {
+    stream.imbue(url_locale);
+  }
 
   // if it starts with a zero the pow trick doesn't work
   if (graphid.level() == 0) {
