@@ -5,46 +5,45 @@ using namespace valhalla;
 namespace valhalla {
 
 std::string incidentTypeToString(const TripLeg_Node_Incident& incident) {
-  std::string incident_type;
   switch (incident.type()) {
     case TripLeg_Node_Incident_Type_ACCIDENT:
-      incident_type = "accident";
+      return "accident";
       break;
     case TripLeg_Node_Incident_Type_CONGESTION:
-      incident_type = "congestion";
+      return "congestion";
       break;
     case TripLeg_Node_Incident_Type_CONSTRUCTION:
-      incident_type = "construction";
+      return "construction";
       break;
     case TripLeg_Node_Incident_Type_DISABLED_VEHICLE:
-      incident_type = "disabled_vehicle";
+      return "disabled_vehicle";
       break;
     case TripLeg_Node_Incident_Type_LANE_RESTRICTION:
-      incident_type = "lane_restriction";
+      return "lane_restriction";
       break;
     case TripLeg_Node_Incident_Type_MASS_TRANSIT:
-      incident_type = "mass_transit";
+      return "mass_transit";
       break;
     case TripLeg_Node_Incident_Type_MISCELLANEOUS:
-      incident_type = "miscellaneous";
+      return "miscellaneous";
       break;
     case TripLeg_Node_Incident_Type_OTHER_NEWS:
-      incident_type = "other_news";
+      return "other_news";
       break;
     case TripLeg_Node_Incident_Type_PLANNED_EVENT:
-      incident_type = "planned_event";
+      return "planned_event";
       break;
     case TripLeg_Node_Incident_Type_ROAD_CLOSURE:
-      incident_type = "road_closure";
+      return "road_closure";
       break;
     case TripLeg_Node_Incident_Type_ROAD_HAZARD:
-      incident_type = "road_hazard";
+      return "road_hazard";
       break;
     case TripLeg_Node_Incident_Type_WEATHER:
-      incident_type = "weather";
+      return "weather";
       break;
   };
-  return incident_type;
+  return "Unhandled case";
 }
 
 bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {

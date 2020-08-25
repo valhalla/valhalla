@@ -1760,7 +1760,8 @@ std::string EnhancedTripLeg_Admin::ToString() const {
 
   return str;
 }
-google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident> empty;
+
+const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident> empty;
 
 const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident>&
 EnhancedTripLeg_Node::incidents() const {

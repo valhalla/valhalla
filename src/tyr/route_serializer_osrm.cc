@@ -346,19 +346,18 @@ void addsIncidents(
     return;
   }
   json::ArrayPtr serialized_incidents = std::shared_ptr<json::Jarray>(new json::Jarray());
-  for (const auto& incident : incidents) {
-    {
-      // Bring up any already existing array
-      auto existing = doc.find("incidents");
-      if (existing != doc.end()) {
-        if (auto* ptr =
-                boost::get<std::shared_ptr<valhalla::baldr::json::Jarray>>(&existing->second)) {
-          serialized_incidents = *ptr;
-        } else {
-          throw std::logic_error("This should not be possible");
-        }
+  {
+    // Bring up any already existing array
+    auto existing = doc.find("incidents");
+    if (existing != doc.end()) {
+      if (auto* ptr = boost::get<std::shared_ptr<valhalla::baldr::json::Jarray>>(&existing->second)) {
+        serialized_incidents = *ptr;
+      } else {
+        throw std::logic_error("Invalid state: stored ptr should not be null");
       }
     }
+  }
+  for (const auto& incident : incidents) {
     auto json_incident = serialize_incident(incident);
     serialized_incidents->emplace_back(json_incident);
   }
