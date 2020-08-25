@@ -61,6 +61,16 @@ foreach(test ${cost_tests})
   target_link_libraries(${test} valhalla gtest gmock pthread)
 endforeach()
 
+set(tyr_tests route_serializer_osrm)
+foreach(test ${tyr_tests})
+  add_executable(${test} EXCLUDE_FROM_ALL ${VALHALLA_SOURCE_DIR}/src/tyr/${test}.cc)
+  set_target_properties(${test} PROPERTIES
+    FOLDER "Tests"
+    COMPILE_DEFINITIONS INLINE_TEST)
+  create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/tyr/${test}.cc)
+  target_link_libraries(${test} valhalla gtest gmock pthread)
+endforeach()
+
 ## Test-specific data, properties and dependencies
 set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
 
@@ -224,7 +234,7 @@ set_target_properties(test_directories PROPERTIES FOLDER "Tests")
 
 
 ## Test run targets
-foreach(test ${tests} ${cost_tests})
+foreach(test ${tests} ${cost_tests} ${tyr_tests})
   add_custom_command(OUTPUT ${test}.log
     COMMAND
       LOCPATH=${VALHALLA_SOURCE_DIR}/locales
@@ -294,10 +304,10 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
 endif()
 
 ## High-level targets
-string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${python_tests}")
+string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${tyr_tests};${python_tests}")
 
 add_custom_target(check DEPENDS ${test_targets})
 set_target_properties(check PROPERTIES FOLDER "Tests")
-add_custom_target(tests DEPENDS ${tests} ${cost_tests})
+add_custom_target(tests DEPENDS ${tests} ${cost_tests} ${tyr_tests})
 set_target_properties(tests PROPERTIES FOLDER "Tests")
 add_subdirectory(gurka)
