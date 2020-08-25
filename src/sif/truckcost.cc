@@ -428,8 +428,8 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
       return false;
   }
   // Check access, U-turn, and simple turn restriction.
-  // TODO - perhaps allow U-turns at dead-end nodes?
-  if (!(edge->forwardaccess() & kTruckAccess) || (pred.opp_local_idx() == edge->localedgeidx()) ||
+  if (!(edge->forwardaccess() & kTruckAccess) ||
+      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
@@ -455,8 +455,8 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
       return false;
   }
   // Check access, U-turn, and simple turn restriction.
-  // TODO - perhaps allow U-turns at dead-end nodes?
-  if (!(opp_edge->forwardaccess() & kTruckAccess) || (pred.opp_local_idx() == edge->localedgeidx()) ||
+  if (!(opp_edge->forwardaccess() & kTruckAccess) ||
+      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
