@@ -28,7 +28,7 @@ constexpr size_t CONSECUTIVE_COUNT = 2;
 // Sub class to test protected methods
 class ManeuversBuilderTest : public ManeuversBuilder {
 public:
-  ManeuversBuilderTest() : ManeuversBuilder(Options(), nullptr) {
+  ManeuversBuilderTest(const Options& options = Options()) : ManeuversBuilder(options, nullptr) {
   }
 
   ManeuversBuilderTest(const Options& options, EnhancedTripLeg* etp)
@@ -37,6 +37,10 @@ public:
 
   void Combine(std::list<Maneuver>& maneuvers) {
     ManeuversBuilder::Combine(maneuvers);
+  }
+
+  void ProcessRoundabouts(std::list<Maneuver>& maneuvers) {
+    ManeuversBuilder::ProcessRoundabouts(maneuvers);
   }
 
   void CountAndSortSigns(std::list<Maneuver>& maneuvers) {
@@ -1838,6 +1842,93 @@ TEST(Maneuversbuilder, TestPathSlightRightXSlightLeftIsIntersectingForwardEdge) 
   ManeuversBuilderTest mbTest(options, &etp);
 
   TryIsIntersectingForwardEdge(mbTest, 1, true);
+}
+
+void TryCombineRoundaboutManeuvers(std::list<Maneuver>& maneuvers,
+                                   const std::list<Maneuver>& expected_maneuvers) {
+  Options options;
+  options.set_roundabout_exits(false);
+  ManeuversBuilderTest mbTest(options);
+
+  mbTest.ProcessRoundabouts(maneuvers);
+
+  ASSERT_EQ(maneuvers.size(), expected_maneuvers.size());
+
+  for (auto man = maneuvers.cbegin(), expected_man = expected_maneuvers.cbegin();
+       man != maneuvers.end(); ++man, ++expected_man) {
+    // Test specific properties that get combined for roundabouts when
+    // roundabout_exit=false
+    EXPECT_EQ(man->type(), expected_man->type());
+    EXPECT_EQ(man->has_combined_enter_exit_roundabout(),
+              expected_man->has_combined_enter_exit_roundabout());
+    EXPECT_NEAR(man->roundabout_length(), expected_man->roundabout_length(), .00001);
+    EXPECT_NEAR(man->roundabout_exit_length(), expected_man->roundabout_exit_length(), .00001);
+    EXPECT_EQ(man->roundabout_exit_begin_heading(), expected_man->roundabout_exit_begin_heading());
+  }
+}
+
+TEST(Maneuversbuilder, TestCombineRoundaboutManeuvers) {
+  // Create maneuver list
+  std::list<Maneuver> maneuvers;
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, DirectionsLeg_Maneuver_Type_kStart, {{"first st", 0}}, {}, {}, "", 1.0,
+                   1, 0, Maneuver::RelativeDirection::kNone,
+                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, DirectionsLeg_Maneuver_Type_kRoundaboutEnter, {}, {}, {}, "", 1.0, 1, 0,
+                   Maneuver::RelativeDirection::kRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 150, 250, 0, 0, 0, 0, 0, 0, 0, 0,
+                   1, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver3 = maneuvers.back();
+  PopulateManeuver(maneuver3, DirectionsLeg_Maneuver_Type_kRoundaboutExit, {}, {}, {}, "", 2.0, 1, 0,
+                   Maneuver::RelativeDirection::kRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 280, 310, 0, 0, 0, 0, 0, 0, 0, 0,
+                   1, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver4 = maneuvers.back();
+  PopulateManeuver(maneuver4, DirectionsLeg_Maneuver_Type_kDestination, {}, {}, {}, "", 0.0, 1, 0,
+                   Maneuver::RelativeDirection::kRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, {}, {}, {}, {}, 0, 0, 0);
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create expected combined maneuver list
+  std::list<Maneuver> expected_maneuvers;
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver1 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver1, DirectionsLeg_Maneuver_Type_kStart, {{"first st", 0}}, {}, {},
+                   "", 1.0, 1, 0, Maneuver::RelativeDirection::kNone,
+                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0);
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver2 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver2, DirectionsLeg_Maneuver_Type_kRoundaboutEnter, {}, {}, {}, "",
+                   1.0, 2, 0, Maneuver::RelativeDirection::kRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 150, 310, 0, 0, 0, 0, 0, 0, 0, 0,
+                   1, 0, 0, 0, 0, {}, {}, {}, {}, 0, 0, 0);
+  // Manually update remaining maneuver attributes
+  expected_maneuver2.set_has_combined_enter_exit_roundabout(true);
+  expected_maneuver2.set_roundabout_exit_begin_heading(280);
+  expected_maneuver2.set_roundabout_length(1.0);
+  expected_maneuver2.set_roundabout_exit_length(2.0);
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver3 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver3, DirectionsLeg_Maneuver_Type_kDestination, {}, {}, {}, "", 0.0,
+                   1, 0, Maneuver::RelativeDirection::kRight,
+                   DirectionsLeg_Maneuver_CardinalDirection_kWest, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   0, 0, 0, {}, {}, {}, {}, 0, 0, 0);
+
+  TryCombineRoundaboutManeuvers(maneuvers, expected_maneuvers);
 }
 
 } // namespace
