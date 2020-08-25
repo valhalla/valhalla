@@ -605,7 +605,7 @@ std::string exits(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
 valhalla::baldr::json::MapPtr serializeIncident(const TripLeg_Node_Incident& incident) {
   auto metadata_json = json::map({});
 
-  { metadata_json->emplace("id", incident.id()); }
+  metadata_json->emplace("id", incident.id());
   if (incident.creation_time()) {
     metadata_json->emplace("creation_time", static_cast<uint64_t>(incident.creation_time()));
   }
@@ -615,7 +615,9 @@ valhalla::baldr::json::MapPtr serializeIncident(const TripLeg_Node_Incident& inc
   if (incident.start_time()) {
     metadata_json->emplace("start_time", static_cast<uint64_t>(incident.start_time()));
   }
-  metadata_json->emplace("incident_type", valhalla::incidentTypeToString(incident));
+  if (incident.type()) {
+    metadata_json->emplace("incident_type", valhalla::incidentTypeToString(incident.type()));
+  }
   if (!incident.description().empty()) {
     metadata_json->emplace("description", incident.description());
   }

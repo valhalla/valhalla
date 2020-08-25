@@ -280,18 +280,19 @@ message TripLeg {
 
     message Incident {
       enum Type {
-        ACCIDENT = 0;
-        CONGESTION = 1;
-        CONSTRUCTION = 2;
-        DISABLED_VEHICLE = 3;
-        LANE_RESTRICTION = 4;
-        MASS_TRANSIT = 5;
-        MISCELLANEOUS = 6;
-        OTHER_NEWS = 7;
-        PLANNED_EVENT = 8;
-        ROAD_CLOSURE = 9;
-        ROAD_HAZARD = 10;
-        WEATHER = 11;
+        NOT_SET = 0;
+        ACCIDENT = 1;
+        CONGESTION = 2;
+        CONSTRUCTION = 3;
+        DISABLED_VEHICLE = 4;
+        LANE_RESTRICTION = 5;
+        MASS_TRANSIT = 6;
+        MISCELLANEOUS = 7;
+        OTHER_NEWS = 8;
+        PLANNED_EVENT = 9;
+        ROAD_CLOSURE = 10;
+        ROAD_HAZARD = 11;
+        WEATHER = 12;
       };
       optional Type type = 1;
       optional string description = 2;

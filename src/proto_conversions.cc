@@ -4,8 +4,8 @@ using namespace valhalla;
 
 namespace valhalla {
 
-std::string incidentTypeToString(const TripLeg_Node_Incident& incident) {
-  switch (incident.type()) {
+std::string incidentTypeToString(const TripLeg_Node_Incident_Type& incident_type) {
+  switch (incident_type) {
     case TripLeg_Node_Incident_Type_ACCIDENT:
       return "accident";
       break;
@@ -44,7 +44,7 @@ std::string incidentTypeToString(const TripLeg_Node_Incident& incident) {
       break;
   };
   throw std::runtime_error("Unhandled case in incidentTypeToString: " +
-                           std::to_string(incident.type()));
+                           std::to_string(incident_type));
 }
 
 bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
