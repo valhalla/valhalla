@@ -35,4 +35,7 @@ TEST(Standalone, AutoIgnoreOneway) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/ignore_oneway");
 
   EXPECT_THROW(gurka::route(map, {"2", "1"}, "auto"), std::runtime_error);
+
+  EXPECT_NO_THROW(
+      gurka::route(map, {"2", "1"}, "auto", {{"/costing_options/auto/ignore_oneways", "1"}}));
 }
