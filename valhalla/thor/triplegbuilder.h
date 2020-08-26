@@ -65,6 +65,11 @@ public:
                         edge_trimming = nullptr);
 };
 
+// Adds incidents to the TripLeg_Edge
+void addIncidents(TripLeg_Edge& trip_edge,
+                  baldr::GraphReader& graphreader,
+                  const baldr::GraphId& edge_id);
+
 } // namespace thor
 } // namespace valhalla
 
