@@ -4,6 +4,7 @@
 
 #include <baldr/datetime.h>
 #include <baldr/graphtile.h>
+#include <baldr/util.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -44,21 +45,6 @@ json::MapPtr admin_json(const AdminInfo& admin, uint16_t tz_index) {
   }
 
   return m;
-}
-
-/**
- * Get the updated bit field.
- * @param dst  Data member to be updated.
- * @param src  Value to be updated.
- * @param pos  Position (pos element within the bit field).
- * @param len  Length of each element within the bit field.
- * @return  Returns an updated value for the bit field.
- */
-uint32_t
-OverwriteBitsNI(const uint32_t dst, const uint32_t src, const uint32_t pos, const uint32_t len) {
-  uint32_t shift = (pos * len);
-  uint32_t mask = (((uint32_t)1 << len) - 1) << shift;
-  return (dst & ~mask) | (src << shift);
 }
 
 } // namespace
@@ -158,7 +144,7 @@ void NodeInfo::set_local_driveability(const uint32_t localidx, const Traversabil
   if (localidx > kMaxLocalEdgeIndex) {
     LOG_WARN("Exceeding max local index on set_local_driveability - skip");
   } else {
-    local_driveability_ = OverwriteBitsNI(local_driveability_, static_cast<uint32_t>(t), localidx, 2);
+    local_driveability_ = OverwriteBits(local_driveability_, static_cast<uint32_t>(t), localidx, 2);
   }
 }
 
