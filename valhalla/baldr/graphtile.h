@@ -613,6 +613,15 @@ public:
     return traffic_tile;
   }
 
+  /**
+   * Convenience method to get an operator Id from a map of operator strings vs. Id
+   * @param  routeid Id of route
+   * @param  operators  Map of operator strings vs. Id
+   * @return  Returns offset into the text table.
+   */
+  uint32_t GetOperatorId(uint32_t routeid,
+                         std::unordered_map<std::string, uint32_t>& operators) const;
+
 protected:
   // Graph tile memory, this must be shared so that we can put it into cache
   std::shared_ptr<std::vector<char>> graphtile_;
