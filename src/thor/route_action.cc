@@ -75,7 +75,7 @@ void via_discontinuity(
     // Insert a second discontinuity so the next (opposing) edge is trimmed at the end from
     // 1-dist along to 1
     vias.insert({path_index + (flip_index ? 0 : 1),
-                 {{false, snap_ll, 1.0f - dist_along}, {true, PointLL(), 1.0f}}});
+                 {{true, snap_ll, 1.0f - dist_along}, {false, PointLL(), 1.0f}}});
   }
 }
 

@@ -60,6 +60,8 @@ TEST(ThorWorker, test_parse_filter_attributes_defaults) {
   EXPECT_TRUE(result.get_child_optional("edges")) << "Expected included edges";
 
   EXPECT_TRUE(result.get_child_optional("shape")) << "Expected included shape";
+  EXPECT_FALSE(result.get_child_optional("edge.show_incidents"))
+      << "Expected excluded edge.show_incidents";
 }
 
 TEST(ThorWorker, test_parse_filter_attributes_excludes) {

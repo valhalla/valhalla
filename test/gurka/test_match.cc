@@ -1,4 +1,6 @@
 #include "gurka.h"
+#include "midgard/encoded.h"
+#include "midgard/util.h"
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -105,4 +107,17 @@ D--3--4--C--5--6--E)";
 
   auto result = gurka::match(map, {"2", "6", "3"}, "via", "auto",
                              {{"/trace_options/penalize_immediate_uturn", "0"}});
+
+  auto shape =
+      midgard::decode<std::vector<midgard::PointLL>>(result.trip().routes(0).legs(0).shape());
+  // TODO: Remove the duplicate 6 when we fix odin to handle uturn maneuver generation with only one
+  // turn around point
+  auto expected_shape = decltype(shape){
+      map.nodes["2"], map.nodes["B"], map.nodes["C"], map.nodes["6"],
+      map.nodes["6"], map.nodes["C"], map.nodes["3"],
+  };
+  EXPECT_EQ(shape.size(), expected_shape.size());
+  for (int i = 0; i < shape.size(); ++i) {
+    EXPECT_TRUE(shape[i].ApproximatelyEqual(expected_shape[i]));
+  }
 }
