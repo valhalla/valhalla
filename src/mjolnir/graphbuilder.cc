@@ -372,6 +372,7 @@ void BuildTileSet(const std::string& ways_file,
   bool infer_internal_intersections =
       pt.get<bool>("data_processing.infer_internal_intersections", true);
   bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
+  bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
 
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
@@ -982,6 +983,19 @@ void BuildTileSet(const std::string& ways_file,
             (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, node_ll);
 
         graphtile.nodes().back().set_timezone(tz_index);
+
+
+        // set the density as needed.
+        if (use_urban_tag && node.urban())
+          graphtile.nodes().back().set_density(kMaxDensity);
+
+        // if you need to look at the attributes for nodes, grab the LL and update the if statement.
+        // if (equal(node_ll.lng(), 120.99157f) && equal(node_ll.lat(), 14.584733f)) {
+        //  std::cout <<
+        //  std::to_string(GraphId(tile_id.id(),tile_id.level(),graphtile.nodes().size()).value) <<
+        //  std::endl; std::cout << std::to_string(tile_within_one_admin) << " " <<
+        //  std::to_string(tile_id.tileid()) << std::endl;
+        // }
 
         // Increment the counts in the histogram
         stats.nodecount++;

@@ -4180,8 +4180,10 @@ bool NarrativeBuilder::IsVerbalMultiCuePossible(Maneuver& maneuver, Maneuver& ne
        next_maneuver.HasVerbalPreTransitionInstruction()) &&
       IsWithinVerbalMultiCueBounds(maneuver) && !next_maneuver.IsMergeType() &&
       (!maneuver.roundabout() || maneuver.has_combined_enter_exit_roundabout()) &&
-      !next_maneuver.roundabout() && !maneuver.IsTransit() && !next_maneuver.IsTransit() &&
-      !maneuver.transit_connection() && !next_maneuver.transit_connection()) {
+      !((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) &&
+        next_maneuver.roundabout()) &&
+      !maneuver.IsTransit() && !next_maneuver.IsTransit() && !maneuver.transit_connection() &&
+      !next_maneuver.transit_connection()) {
     return true;
   }
   return false;

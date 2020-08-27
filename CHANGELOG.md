@@ -1,4 +1,4 @@
-## Release Date: 2020-05-?? Valhalla 3.1.0
+## Release Date: 2020-08-?? Valhalla 3.1.0
 * **Removed**
    * REMOVED:  Remove Node bindings. [#2502](https://github.com/valhalla/valhalla/pull/2502)
 
@@ -82,6 +82,7 @@
    * FIXED: Add back whitelisting action types. [#2545](https://github.com/valhalla/valhalla/pull/2545)
    * FIXED: Allow uturns for truck costing now that we have derived deadends marked in the edge label [#2559](https://github.com/valhalla/valhalla/pull/2559)
    * FIXED: Map matching uturn trimming at the end of an edge where it wasn't needed. [#2558](https://github.com/valhalla/valhalla/pull/2558)
+   * FIXED: Multicue enter roundabout [#2556](https://github.com/valhalla/valhalla/pull/2556)
 
 * **Enhancement**
    * ADDED: Add explicit include for sstream to be compatible with msvc_x64 toolset. [#2449](https://github.com/valhalla/valhalla/pull/2449)
@@ -146,6 +147,7 @@
    * ADDED: Incidents in intersections [#2547](https://github.com/valhalla/valhalla/pull/2547)
    * CHANGED: Refactor mapmatching configuration to use a struct (instead of `boost::property_tree::ptree`). [#2485](https://github.com/valhalla/valhalla/pull/2485)
    * ADDED: Save exit maneuver's begin heading when combining enter & exit roundabout maneuvers. [#2554](https://github.com/valhalla/valhalla/pull/2554)
+   * ADDED: Added new urban flag that can be set if edge is within city boundaries to data processing; new use_urban_tag config option; added to osrm response within intersections. [#2522](https://github.com/valhalla/valhalla/pull/2522)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
