@@ -115,7 +115,7 @@ struct LocationReferencePoint {
 
   /**
    * Useful for generating an openlr record from non-openlr data. You can create LRPs with this
-   * constructor and then feed them to the special constructor for the LineLocation
+   * constructor and then feed them to the special constructor for the OpenLr
    * @param longitude
    * @param latitude
    * @param bearing
@@ -190,8 +190,8 @@ enum Orientation {
 
 // Line locations, p.19, section 3.1
 // Only line location with 2 location reference points are supported
-struct LineLocation {
-  LineLocation(const std::string& reference, bool base64_encoded = false) {
+struct OpenLr {
+  OpenLr(const std::string& reference, bool base64_encoded = false) {
     const std::string& decoded = base64_encoded ? decode64(reference) : reference;
     const size_t size = decoded.size();
 
@@ -269,9 +269,9 @@ struct LineLocation {
     noff = (index < size) && flags[5] ? raw[index++] : 0;
   }
 
-  LineLocation(const std::vector<LocationReferencePoint>& lrps,
-               uint8_t positive_offset_bucket,
-               uint8_t negative_offset_bucket)
+  OpenLr(const std::vector<LocationReferencePoint>& lrps,
+         uint8_t positive_offset_bucket,
+         uint8_t negative_offset_bucket)
       : lrps(lrps), poff(positive_offset_bucket), noff(negative_offset_bucket),
         isPointAlongLine(false), orientation(Orientation::NoOrientation),
         sideOfTheRoad(SideOfTheRoad::DirectlyOnRoadOrNotApplicable) {
@@ -377,9 +377,10 @@ struct LineLocation {
     return encode64(toBinary());
   }
 
-  bool operator==(const LineLocation& lloc) const {
+  bool operator==(const OpenLr& lloc) const {
     return lrps.size() == lloc.lrps.size() && poff == lloc.poff && noff == lloc.noff &&
-           std::equal(lrps.begin(), lrps.end(), lloc.lrps.begin());
+           std::equal(lrps.begin(), lrps.end(), lloc.lrps.begin()) &&
+           orientation == lloc.orientation && sideOfTheRoad == lloc.sideOfTheRoad;
   }
 
   std::vector<LocationReferencePoint> lrps;

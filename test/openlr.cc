@@ -77,8 +77,8 @@ const testfixture testfixtures[] = {
 TEST(OpenLR, Decode) {
 
   for (auto& fixture : testfixtures) {
-    EXPECT_NO_THROW(LineLocation(fixture.descriptor, true));
-    auto locRef = LineLocation(fixture.descriptor, true);
+    EXPECT_NO_THROW(OpenLr(fixture.descriptor, true));
+    auto locRef = OpenLr(fixture.descriptor, true);
     EXPECT_NEAR(locRef.getFirstCoordinate().lng(), fixture.expectedFirstCoordinateLongitude, 1e-5);
     EXPECT_NEAR(locRef.getFirstCoordinate().lat(), fixture.expectedFirstCoordinateLatitude, 1e-5);
     EXPECT_NEAR(locRef.lrps[0].bearing, fixture.expectedFirstCoordinateBearing, 1e-5);
@@ -118,7 +118,7 @@ TEST(OpenLR, Decode) {
 TEST(OpenLR, InternalReferencePoints) {
   auto location = "CwG1ASK3PhD82sz0CIAQ89r83hRxEAM=";
 
-  auto locRef = LineLocation(location, true);
+  auto locRef = OpenLr(location, true);
 
   EXPECT_EQ(locRef.toBase64(), location);
   EXPECT_EQ(locRef.lrps.size(), 3) << "Incorrectly number of intermediate LRP";
@@ -147,7 +147,7 @@ TEST(OpenLR, InternalReferencePoints) {
          noff += locRef.lrps[1].distance / 3) { // NOLINT
       locRef.poff = poff;
       locRef.noff = noff;
-      LineLocation tryRef(locRef.toBinary());
+      OpenLr tryRef(locRef.toBinary());
 
       EXPECT_NEAR(tryRef.getLength(), 2 * 12774.8, 1e-3) << "Distance incorrect.";
       EXPECT_NEAR(tryRef.poff, locRef.poff, 58.6) << "Positive offset incorrect.";
@@ -167,7 +167,7 @@ TEST(OpenLR, InternalReferencePoints) {
 
 TEST(OpenLR, OffsetsOverrun) {
   auto location = "CwG1ASK3PhD82sz0CIAQ89oAAAAAEPPa/N4UcRBj";
-  auto locRef = LineLocation(location, true);
+  auto locRef = OpenLr(location, true);
   EXPECT_EQ(locRef.poff, 0.f);
   EXPECT_EQ(locRef.noff, 0.f);
 }
@@ -175,7 +175,7 @@ TEST(OpenLR, OffsetsOverrun) {
 TEST(OpenLR, TooSmallReference) {
   // This location is a substring of the OpenLR segment in InternalReferencePoints above.
   auto location = "83hRxEAM=";
-  EXPECT_THROW(auto locRef = LineLocation(location, true), std::invalid_argument);
+  EXPECT_THROW(auto locRef = OpenLr(location, true), std::invalid_argument);
 }
 
 TEST(OpenLR, CreateLinearReference) {
@@ -209,25 +209,24 @@ TEST(OpenLR, CreateLinearReference) {
     fow = static_cast<LocationReferencePoint::FormOfWay>(static_cast<uint8_t>(fow) + 1);
     --lowest_frc_next_point;
   }
-  LineLocation line_location(lrps, 12, 234);
+  OpenLr line_location(lrps, 12, 234);
 
   // do a round trip conversion
-  LineLocation converted(line_location.toBinary());
+  OpenLr converted(line_location.toBinary());
 
   // compare to the original reference before conversion
   EXPECT_EQ(line_location, converted);
 
   // If only one LRP, should error
-  EXPECT_THROW(LineLocation({lrps.front()}, 0, 0), std::invalid_argument);
+  EXPECT_THROW(OpenLr({lrps.front()}, 0, 0), std::invalid_argument);
   // If we only have 2 LRPs, and the pos/neg offsets would overlap, should throw
-  EXPECT_THROW(LineLocation({lrps.front(), lrps.back()}, 0.6 * 255, 0.6 * 255),
-               std::invalid_argument);
+  EXPECT_THROW(OpenLr({lrps.front(), lrps.back()}, 0.6 * 255, 0.6 * 255), std::invalid_argument);
 
   // make a short line location so that poff and noff must be 0
   lrps.clear();
   lrps.emplace_back(0, 0, 90, frc, fow, nullptr, 5, lowest_frc_next_point);
   lrps.emplace_back(.000005, 0, 270, frc, fow, &lrps.back());
-  LineLocation short_location(lrps, 0, 0);
+  OpenLr short_location(lrps, 0, 0);
   EXPECT_EQ(short_location.poff, 0);
   EXPECT_EQ(short_location.noff, 0);
 }
@@ -270,7 +269,7 @@ TEST(OpenLR, openlr_edges) {
   EXPECT_EQ(openlrs.size(), 1);
   EXPECT_EQ(openlrs.at(0), "CwOdwSULZhtsAgCA/60bHA==");
   // Check decoding
-  LineLocation decoded(openlrs.at(0), true);
+  OpenLr decoded(openlrs.at(0), true);
   EXPECT_EQ(decoded.lrps.size(), 2);
   PointLL first = decoded.getFirstCoordinate();
   EXPECT_NEAR(first.lat(), points.at(0).lat(), 0.0001);
@@ -291,7 +290,7 @@ TEST(OpenLR, openlr_edges_duplicate) {
   EXPECT_EQ(openlrs.size(), 1);
   EXPECT_EQ(openlrs.at(0), "CwOdwSULZhtgAAAAAAAbEA==");
   // Check decoding
-  LineLocation decoded(openlrs.at(0), true);
+  OpenLr decoded(openlrs.at(0), true);
   EXPECT_EQ(decoded.lrps.size(), 2);
   PointLL first = decoded.getFirstCoordinate();
   EXPECT_NEAR(first.lat(), points.at(0).lat(), 0.0001);
