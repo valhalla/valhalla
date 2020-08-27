@@ -14,7 +14,7 @@ namespace {
 constexpr double RAD_PER_DEG = valhalla::midgard::kPiDouble / 180.0;
 constexpr double DEG_PER_RAD = 180.0 / valhalla::midgard::kPiDouble;
 } // namespace
-constexpr float INVALID_LL = 0xBADBADBAD;
+constexpr float INVALID_LL = (float)0xBADBADBAD;
 /**
  * Longitude, Latitude  point. Derives from Point2 and allows access methods
  * using lng,lat naming. Extends functionality to add heading, curvature,
@@ -36,6 +36,8 @@ public:
    * Default constructor.  Sets longitude and latitude to INVALID_LL.
    */
   GeoPoint() : PointXY<PrecisionT>(INVALID_LL, INVALID_LL) {
+  }
+  virtual ~GeoPoint() {
   }
 
   /**
@@ -208,6 +210,7 @@ public:
   virtual value_type IsLeft(const GeoPoint& p1, const GeoPoint& p2) const {
     return (p2.lng() - p1.lng()) * (lat() - p1.lat()) - (lng() - p1.lng()) * (p2.lat() - p1.lat());
   }
+  using PointXY<PrecisionT>::IsLeft;
 
   /**
    * Tests whether this point is within a polygon.
