@@ -37,6 +37,8 @@ public:
    */
   GeoPoint() : PointXY<PrecisionT>(INVALID_LL, INVALID_LL) {
   }
+  virtual ~GeoPoint() {
+  }
 
   /**
    * Parent constructor. Forwards to parent.
