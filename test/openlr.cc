@@ -44,35 +44,36 @@ struct testfixture {
   SideOfTheRoad expectedSideOfRoad;
 };
 
-const testfixture testfixtures[] = {
-    {"CwOa9yUQACODBQEqAL4jEw==", 5.069987, 52.119130, 39.375, 5.072967, 52.121030, 219.375, 293, 0,
-     0},
-    {"CwOa9yUQACODqgEqAL4jEw==", 5.069987, 52.119130, 39.375, 5.072967, 52.121030, 219.375, 9962, 0,
-     0},
-    {"CwOiYCUMoBNWAv9P/+MSBg==", 5.110692, 52.100590, 253.125, 5.108922, 52.100300, 73.125, 117.2, 0,
-     0},
-    {"CxWj2OogyxJBDhDSAvwSUL4=", 30.431259, -30.757352, 16.875, 30.474319, -30.749712, 185.625, 820.4,
-     190, 0},
-    {"CxWj2OogyxJBDhDSAvwSMA0=", 30.431259, -30.757352, 16.875, 30.474319, -30.749712, 185.625, 820.4,
-     0, 13},
-    {"CxWj2OogyxJBDhDSAvwScL4N", 30.431259, -30.757352, 16.875, 30.474319, -30.749712, 185.625, 820.4,
-     190, 13},
-    {"C6i8rRtM3BjgAAAAAAUYAA==", -122.713562, 38.390942, 5.625, -122.713562, 38.390991, 5.625, 0, 0,
-     0},
-    {"CwRbWyNG9RpsCQCb/jsbtAT/6/+jK1lE", 6.1268198, 49.6085178, 140.625, 6.1281598, 49.6030578,
-     286.875, 527.4, 68, 0},
-    {"CwB67CGukRxiCACyAbwaMXU=", 0.6752192, 47.3651611, 28.125, 0.6769992, 47.3696011, 196.875, 468.8,
-     0, 117},
-    {"CwcX6CItqAs6AQAAAAALGg==", 9.9750602, 48.0632865, 298.125, 9.9750602, 48.0632865, 298.125, 58.6,
-     0, 0},
-    {"CwRbWyNG9BpgAACa/jsboAD/6/+kKwA=", 6.1268198, 49.6084964, 5.625, 6.1281498, 49.6030464, 5.625,
-     0, 0, 0},
-    // PointAlongLine
-    {"K6m3URtxwCOLAwDF/5MjW+g=", -121.33676, 38.59359, 129.375, -121.33478546, 38.592496, 309.375,
-     175.8, 232, 0, Orientation::NoOrientation, SideOfTheRoad::DirectlyOnRoadOrNotApplicable},
-    {"KwRbWyNG9dpsCQCb/jvbVEQ=", 6.1268198, 49.6085178, 140.625, 6.1283698, 49.6039878, 230.625,
-     527.4, 68, 0, Orientation::BothDirections, SideOfTheRoad::BothSidesOfRoad}
-};
+const testfixture testfixtures[] = {{"CwOa9yUQACODBQEqAL4jEw==", 5.069987, 52.119130, 39.375,
+                                     5.072967, 52.121030, 219.375, 293, 0, 0},
+                                    {"CwOa9yUQACODqgEqAL4jEw==", 5.069987, 52.119130, 39.375,
+                                     5.072967, 52.121030, 219.375, 9962, 0, 0},
+                                    {"CwOiYCUMoBNWAv9P/+MSBg==", 5.110692, 52.100590, 253.125,
+                                     5.108922, 52.100300, 73.125, 117.2, 0, 0},
+                                    {"CxWj2OogyxJBDhDSAvwSUL4=", 30.431259, -30.757352, 16.875,
+                                     30.474319, -30.749712, 185.625, 820.4, 190, 0},
+                                    {"CxWj2OogyxJBDhDSAvwSMA0=", 30.431259, -30.757352, 16.875,
+                                     30.474319, -30.749712, 185.625, 820.4, 0, 13},
+                                    {"CxWj2OogyxJBDhDSAvwScL4N", 30.431259, -30.757352, 16.875,
+                                     30.474319, -30.749712, 185.625, 820.4, 190, 13},
+                                    {"C6i8rRtM3BjgAAAAAAUYAA==", -122.713562, 38.390942, 5.625,
+                                     -122.713562, 38.390991, 5.625, 0, 0, 0},
+                                    {"CwRbWyNG9RpsCQCb/jsbtAT/6/+jK1lE", 6.1268198, 49.6085178,
+                                     140.625, 6.1281598, 49.6030578, 286.875, 527.4, 68, 0},
+                                    {"CwB67CGukRxiCACyAbwaMXU=", 0.6752192, 47.3651611, 28.125,
+                                     0.6769992, 47.3696011, 196.875, 468.8, 0, 117},
+                                    {"CwcX6CItqAs6AQAAAAALGg==", 9.9750602, 48.0632865, 298.125,
+                                     9.9750602, 48.0632865, 298.125, 58.6, 0, 0},
+                                    {"CwRbWyNG9BpgAACa/jsboAD/6/+kKwA=", 6.1268198, 49.6084964, 5.625,
+                                     6.1281498, 49.6030464, 5.625, 0, 0, 0},
+                                    // PointAlongLine
+                                    {"K6m3URtxwCOLAwDF/5MjW+g=", -121.33676, 38.59359, 129.375,
+                                     -121.33478546, 38.592496, 309.375, 175.8, 232, 0,
+                                     Orientation::NoOrientation,
+                                     SideOfTheRoad::DirectlyOnRoadOrNotApplicable},
+                                    {"KwRbWyNG9dpsCQCb/jvbVEQ=", 6.1268198, 49.6085178, 140.625,
+                                     6.1283698, 49.6039878, 230.625, 527.4, 68, 0,
+                                     Orientation::BothDirections, SideOfTheRoad::BothSidesOfRoad}};
 
 TEST(OpenLR, Decode) {
 
