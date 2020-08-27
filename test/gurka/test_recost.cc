@@ -222,12 +222,7 @@ TEST(recosting, all_algorithms) {
   };
   for (const auto& option : options) {
     for (size_t i = 0; i < named_locations.size(); ++i) {
-      for (size_t j = i + 1; j < named_locations.size(); ++j) {
-        // skip uninterestingly close routes
-        if (i == j) {
-          continue;
-        }
-
+      for (size_t j = i + 2; j < named_locations.size(); j += 2) {
         // get the api response out using the normal means
         auto start = named_locations.substr(i, 1);
         auto end = named_locations.substr(j, 1);
@@ -392,11 +387,6 @@ TEST(recosting, error_request) {
     actor.route(R"({"costing":"auto","locations":[],"recostings":[{"costing":"foo"}]})");
     FAIL() << "Wrong costing should have thrown";
   } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 125); }
-
-  try {
-    actor.route(R"({"costing":"auto","locations":[],"recostings":[{"costing":"auto"}]})");
-    FAIL() << "No name should have thrown";
-  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 127); }
 
   try {
     actor.route(R"({"costing":"auto","locations":[],"recostings":[{"name":"foo"}]})");

@@ -101,6 +101,9 @@ public:
   uint32_t end_heading() const;
   void set_end_heading(uint32_t endHeading);
 
+  uint32_t roundabout_exit_begin_heading() const;
+  void set_roundabout_exit_begin_heading(uint32_t beginHeading);
+
   uint32_t begin_node_index() const;
   void set_begin_node_index(uint32_t beginNodeIndex);
 
@@ -355,6 +358,7 @@ protected:
   DirectionsLeg_Maneuver_CardinalDirection begin_cardinal_direction_;
   uint32_t begin_heading_;
   uint32_t end_heading_;
+  uint32_t roundabout_exit_begin_heading_;
   uint32_t begin_node_index_;
   uint32_t end_node_index_;
   uint32_t begin_shape_index_;

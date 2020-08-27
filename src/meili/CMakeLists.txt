@@ -8,7 +8,8 @@ set(sources
   transition_cost_model.cc
   map_matcher.cc
   map_matcher_factory.cc
-  match_route.cc)
+  match_route.cc
+  config.cc)
 
 valhalla_module(NAME meili
   SOURCES ${sources}
