@@ -172,6 +172,12 @@ set(valhalla_src
     ${valhalla_hdrs}
     ${libvalhalla_link_objects})
 
+if (UNIX)
+  # Enables stricter compiler checks on a file-by-file basis
+  # which allows us to migrate piecemeal
+  set_source_files_properties(proto_conversions.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
+endif (UNIX)
+
 if (ENABLE_SERVICES)
   set(valhalla_hdrs ${valhalla_hdrs} ${VALHALLA_SOURCE_DIR}/valhalla/tile_server.h)
   set(valhalla_src ${valhalla_src} tile_server.cc)
