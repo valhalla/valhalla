@@ -32,6 +32,12 @@ if(NOT APPLE)
   list(APPEND tests narrativebuilder util_odin)
 endif()
 
+if (UNIX)
+  # Enables stricter compiler checks on a file-by-file basis
+  # which allows us to migrate piecemeal
+  set_source_files_properties(openlr.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
+endif (UNIX)
+
 ## Add executable targets
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )

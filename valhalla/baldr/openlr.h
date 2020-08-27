@@ -138,8 +138,8 @@ struct LocationReferencePoint {
         latitude(!prev ? integer2decimal(decimal2integer(latitude))
                        : prev->latitude +
                              (std::round((latitude - prev->latitude) * geom_scale) / geom_scale)),
-        bearing(integer2bearing(bearing2integer(bearing))), frc(frc), fow(fow),
-        distance(integer2distance(distance2integer(distance))), lfrcnp(lfrcnp) {
+        bearing(integer2bearing(bearing2integer(bearing))),
+        distance(integer2distance(distance2integer(distance))), frc(frc), lfrcnp(lfrcnp), fow(fow) {
   }
 
   /**
@@ -183,9 +183,9 @@ enum SideOfTheRoad {
 // or the direction of the point might be unknown.
 enum Orientation {
   NoOrientation = 0,
-  FirstLrpTowardsSecond=1,
-  SecondLrpTowardsFirst=2,
-  BothDirections=3,
+  FirstLrpTowardsSecond = 1,
+  SecondLrpTowardsFirst = 2,
+  BothDirections = 3,
 };
 
 // Line locations, p.19, section 3.1
