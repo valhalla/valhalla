@@ -6,6 +6,9 @@ namespace valhalla {
 
 std::string incidentTypeToString(const TripLeg_Node_Incident_Type& incident_type) {
   switch (incident_type) {
+    case TripLeg_Node_Incident_Type_NOT_SET:
+      return "not_set";
+      break;
     case TripLeg_Node_Incident_Type_ACCIDENT:
       return "accident";
       break;
