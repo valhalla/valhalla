@@ -161,25 +161,64 @@ struct LocationReferencePoint {
   FormOfWay fow;        // 5.2.3. Form of way
 };
 
+const uint8_t IS_POINT_ALONG_LINE_STATUS = 0x2b;
+const uint8_t IS_LINE_STATUS = 0x0b;
+
+// 5.3.1
+// The side of road information (SOR) describes the relationship between the
+// point of interest and a referenced line. The point can be on the right
+// side of the line, on the left side of the line, on both sides of
+// the line or directly on the line.
+enum SideOfTheRoad {
+  DirectlyOnRoadOrNotApplicable = 0,
+  RightSideOfRoad = 1,
+  LeftSideOfRoad = 2,
+  BothSidesOfRoad = 3,
+};
+
+// 5.3.2
+// The orientation information (ORI) describes the relationship between the point
+// of interest and the direction of a referenced line. The point may be directed
+// in the same direction as the line, against that direction, both directions,
+// or the direction of the point might be unknown.
+enum Orientation {
+  NoOrientation = 0,
+  FirstLrpTowardsSecond=1,
+  SecondLrpTowardsFirst=2,
+  BothDirections=3,
+};
+
 // Line locations, p.19, section 3.1
 // Only line location with 2 location reference points are supported
 struct LineLocation {
   LineLocation(const std::string& reference, bool base64_encoded = false) {
     const std::string& decoded = base64_encoded ? decode64(reference) : reference;
-    //  Line location data size: 16 + (n-2)*7 + [0/1/2] bytes
     const size_t size = decoded.size();
-    if (size < 16) {
-      throw std::invalid_argument("OpenLR reference is too small reference=" + reference +
-                                  "size=" + std::to_string(decoded.size()));
-    }
 
     const auto raw = reinterpret_cast<const unsigned char*>(decoded.data());
     std::size_t index = 0;
 
     // Status, version 3, has attributes, ArF 'Circle or no area location'
     auto status = raw[index++] & 0x7f;
-    if (status != 0x0b)
+    if (status != IS_LINE_STATUS && status != IS_POINT_ALONG_LINE_STATUS) {
       throw std::invalid_argument("OpenLR reference invalid status " + decoded);
+    }
+    isPointAlongLine = status == IS_POINT_ALONG_LINE_STATUS;
+
+    if (isPointAlongLine) {
+      if (size != 17) {
+        throw std::invalid_argument(
+            "OpenLR PointAlongLine reference is not the expected 17 bytes: reference=" + reference +
+            "size=" + std::to_string(decoded.size()));
+      }
+    } else {
+      // LineLocation
+      //  Line location data size: 16 + (n-2)*7 + [0/1/2] bytes
+      if (size < 16) {
+        throw std::invalid_argument("OpenLR Line reference is too small reference=" + reference +
+                                    "size=" + std::to_string(decoded.size()));
+      }
+    }
 
     // First location reference point
     auto longitude = integer2decimal(fixed<std::int32_t, 3>(raw, index));
@@ -189,6 +228,10 @@ struct LineLocation {
     auto attribute3 = raw[index++];
 
     lrps.emplace_back(longitude, latitude, attribute1, attribute2, attribute3);
+
+    if (isPointAlongLine) {
+      orientation = static_cast<Orientation>(attribute1 & 0xc0);
+    }
 
     // Intermediate location reference points
     while (index + 7 + 6 <= size) {
@@ -206,6 +249,10 @@ struct LineLocation {
     latitude += fixed<std::int32_t, 2>(raw, index) / geom_scale;
     attribute1 = raw[index++];
     auto attribute4 = raw[index++];
+
+    if (isPointAlongLine) {
+      sideOfTheRoad = static_cast<SideOfTheRoad>(attribute1 & 0xc0);
+    }
 
     lrps.emplace_back(longitude, latitude, attribute1, attribute4);
 
@@ -318,6 +365,9 @@ struct LineLocation {
   std::vector<LocationReferencePoint> lrps;
   uint8_t poff; // 5.2.9.1 Positive offset - stored as 1/256ths of the path length
   uint8_t noff; // 5.2.9.2 Negative offset - stored as 1/256ths of the path length
+  bool isPointAlongLine;
+  Orientation orientation;
+  SideOfTheRoad sideOfTheRoad;
 };
 
 } // namespace OpenLR
