@@ -234,7 +234,6 @@ struct LineLocation {
 
     if (isPointAlongLine) {
       orientation = static_cast<Orientation>((attribute1 & 0xc0) >> 6);
-      //fprintf(stderr, "orientation %i\n", orientation);
     } else {
       orientation = Orientation::NoOrientation;
     }
@@ -258,7 +257,6 @@ struct LineLocation {
 
     if (isPointAlongLine) {
       sideOfTheRoad = static_cast<SideOfTheRoad>((attribute1 & 0xc0) >> 6);
-      //fprintf(stderr, "sideOfTheRoad %i\n", sideOfTheRoad);
     } else {
       sideOfTheRoad = SideOfTheRoad::DirectlyOnRoadOrNotApplicable;
     }
@@ -274,7 +272,9 @@ struct LineLocation {
   LineLocation(const std::vector<LocationReferencePoint>& lrps,
                uint8_t positive_offset_bucket,
                uint8_t negative_offset_bucket)
-      : lrps(lrps), poff(positive_offset_bucket), noff(negative_offset_bucket), isPointAlongLine(false), orientation(Orientation::NoOrientation), sideOfTheRoad(SideOfTheRoad::DirectlyOnRoadOrNotApplicable) {
+      : lrps(lrps), poff(positive_offset_bucket), noff(negative_offset_bucket),
+        isPointAlongLine(false), orientation(Orientation::NoOrientation),
+        sideOfTheRoad(SideOfTheRoad::DirectlyOnRoadOrNotApplicable) {
     if (lrps.size() < 2) {
       throw std::invalid_argument(
           "Only descriptors with at least 2 LRPs are supported by this implementation");
@@ -328,11 +328,9 @@ struct LineLocation {
     append3(decimal2integer(latitude));
     {
       uint8_t attr1 = ((first.frc & 0x7) << 3) | (first.fow & 0x7);
-      //fprintf(stderr, "attr1:1 %i\n", attr1);
       if (isPointAlongLine) {
         attr1 |= (orientation << 6);
       }
-      //fprintf(stderr, "attr1:2 %i\n", attr1);
       result.push_back(attr1);
     }
     result.push_back(((first.lfrcnp & 0x7) << 5) | (bearing2integer(first.bearing) & 0x1f));

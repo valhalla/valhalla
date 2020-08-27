@@ -70,6 +70,8 @@ const testfixture testfixtures[] = {
     // PointAlongLine
     {"K6m3URtxwCOLAwDF/5MjW+g=", -121.33676, 38.59359, 129.375, -121.33478546, 38.592496, 309.375,
      175.8, 232, 0, Orientation::NoOrientation, SideOfTheRoad::DirectlyOnRoadOrNotApplicable},
+    {"KwRbWyNG9dpsCQCb/jvbVEQ=", 6.1268198, 49.6085178, 140.625, 6.1283698, 49.6039878, 230.625,
+     527.4, 68, 0, Orientation::BothDirections, SideOfTheRoad::BothSidesOfRoad},
 };
 
 TEST(OpenLR, Decode) {
