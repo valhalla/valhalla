@@ -39,6 +39,9 @@ struct testfixture {
   double expectedDistance;
   double expectedPoff;
   double expectedNoff;
+
+  Orientation expectedOrientation;
+  SideOfTheRoad expectedSideOfRoad;
 };
 
 const testfixture testfixtures[] = {
@@ -64,6 +67,9 @@ const testfixture testfixtures[] = {
      0, 0},
     {"CwRbWyNG9BpgAACa/jsboAD/6/+kKwA=", 6.1268198, 49.6084964, 5.625, 6.1281498, 49.6030464, 5.625,
      0, 0, 0},
+    // PointAlongLine
+    {"K6m3URtxwCOLAwDF/5MjW+g=", -121.33676, 38.59359, 129.375, -121.33478546, 38.592496, 309.375,
+     175.8, 232, 0, Orientation::NoOrientation, SideOfTheRoad::DirectlyOnRoadOrNotApplicable},
 };
 
 TEST(OpenLR, Decode) {
@@ -82,6 +88,9 @@ TEST(OpenLR, Decode) {
     EXPECT_NEAR(locRef.poff, fixture.expectedPoff, 1e-3);
     EXPECT_NEAR(locRef.noff, fixture.expectedNoff, 1e-3);
 
+    EXPECT_EQ(locRef.orientation, fixture.expectedOrientation);
+    EXPECT_EQ(locRef.sideOfTheRoad, fixture.expectedSideOfRoad);
+
     // This test can be faulty - we check if the coordinates and bearing are close (but not
     // exact) above. If they are not exact then this test will fail! Try again with expected
     // values. TODO - this currently fails for 32 bit
@@ -96,6 +105,8 @@ TEST(OpenLR, Decode) {
       locRef.lrps[0].distance = fixture.expectedDistance;
       locRef.poff = fixture.expectedPoff;
       locRef.noff = fixture.expectedNoff;
+      locRef.orientation = fixture.expectedOrientation;
+      locRef.sideOfTheRoad = fixture.expectedSideOfRoad;
       EXPECT_EQ(locRef.toBase64(), fixture.descriptor);
     }
 #endif

@@ -61,6 +61,7 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
     bearing_deg = fmod(bearing_deg + 180., 360.);
     lrps.emplace_back(end.lng(), end.lat(), bearing_deg, frc, fow, &lrps.back());
     openlrs.emplace_back(OpenLR::LineLocation{lrps, 0, 0}.toBase64());
+    //openlrs.emplace_back(OpenLR::LineLocation{lrps, 0, 0, false, OpenLR::DirectlyOnRoadOrNotApplicable, SideOfTheRoad::DirectlyOnRoadOrNotApplicable}.toBase64());
   }
   return openlrs;
 }

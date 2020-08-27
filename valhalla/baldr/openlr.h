@@ -200,16 +200,19 @@ struct LineLocation {
 
     // Status, version 3, has attributes, ArF 'Circle or no area location'
     auto status = raw[index++] & 0x7f;
-    if (status != IS_LINE_STATUS && status != IS_POINT_ALONG_LINE_STATUS) {
+    if (status == IS_LINE_STATUS) {
+      isPointAlongLine = false;
+    } else if (status == IS_POINT_ALONG_LINE_STATUS) {
+      isPointAlongLine = true;
+    } else {
       throw std::invalid_argument("OpenLR reference invalid status " + decoded);
     }
-    isPointAlongLine = status == IS_POINT_ALONG_LINE_STATUS;
 
     if (isPointAlongLine) {
-      if (size != 17) {
+      if (size != 17 && size != 16) {
         throw std::invalid_argument(
-            "OpenLR PointAlongLine reference is not the expected 17 bytes: reference=" + reference +
-            "size=" + std::to_string(decoded.size()));
+            "OpenLR PointAlongLine reference is not the expected 17 bytes: size=" +
+            std::to_string(size) + " reference=" + reference);
       }
     } else {
       // LineLocation
@@ -230,7 +233,10 @@ struct LineLocation {
     lrps.emplace_back(longitude, latitude, attribute1, attribute2, attribute3);
 
     if (isPointAlongLine) {
-      orientation = static_cast<Orientation>(attribute1 & 0xc0);
+      orientation = static_cast<Orientation>((attribute1 & 0xc0) >> 6);
+      //fprintf(stderr, "orientation %i\n", orientation);
+    } else {
+      orientation = Orientation::NoOrientation;
     }
 
     // Intermediate location reference points
@@ -251,7 +257,10 @@ struct LineLocation {
     auto attribute4 = raw[index++];
 
     if (isPointAlongLine) {
-      sideOfTheRoad = static_cast<SideOfTheRoad>(attribute1 & 0xc0);
+      sideOfTheRoad = static_cast<SideOfTheRoad>((attribute1 & 0xc0) >> 6);
+      //fprintf(stderr, "sideOfTheRoad %i\n", sideOfTheRoad);
+    } else {
+      sideOfTheRoad = SideOfTheRoad::DirectlyOnRoadOrNotApplicable;
     }
 
     lrps.emplace_back(longitude, latitude, attribute1, attribute4);
@@ -265,7 +274,7 @@ struct LineLocation {
   LineLocation(const std::vector<LocationReferencePoint>& lrps,
                uint8_t positive_offset_bucket,
                uint8_t negative_offset_bucket)
-      : lrps(lrps), poff(positive_offset_bucket), noff(negative_offset_bucket) {
+      : lrps(lrps), poff(positive_offset_bucket), noff(negative_offset_bucket), isPointAlongLine(false), orientation(Orientation::NoOrientation), sideOfTheRoad(SideOfTheRoad::DirectlyOnRoadOrNotApplicable) {
     if (lrps.size() < 2) {
       throw std::invalid_argument(
           "Only descriptors with at least 2 LRPs are supported by this implementation");
@@ -307,7 +316,9 @@ struct LineLocation {
     };
 
     // Status
-    result.push_back(0b00001011);
+    const uint8_t status =
+        0b00000000 | (isPointAlongLine ? IS_POINT_ALONG_LINE_STATUS : IS_LINE_STATUS);
+    result.push_back(status);
 
     // First location reference point
     const auto& first = lrps.front();
@@ -315,7 +326,15 @@ struct LineLocation {
     auto latitude = first.latitude;
     append3(decimal2integer(longitude));
     append3(decimal2integer(latitude));
-    result.push_back(((first.frc & 0x7) << 3) | (first.fow & 0x7));
+    {
+      uint8_t attr1 = ((first.frc & 0x7) << 3) | (first.fow & 0x7);
+      //fprintf(stderr, "attr1:1 %i\n", attr1);
+      if (isPointAlongLine) {
+        attr1 |= (orientation << 6);
+      }
+      //fprintf(stderr, "attr1:2 %i\n", attr1);
+      result.push_back(attr1);
+    }
     result.push_back(((first.lfrcnp & 0x7) << 5) | (bearing2integer(first.bearing) & 0x1f));
     result.push_back(distance2integer(first.distance));
 
@@ -338,7 +357,10 @@ struct LineLocation {
     const auto& last = lrps.back();
     append2(static_cast<std::int32_t>(std::round(geom_scale * (last.longitude - longitude))));
     append2(static_cast<std::int32_t>(std::round(geom_scale * (last.latitude - latitude))));
-    result.push_back(((last.frc & 0x7) << 3) | (last.fow & 0x7));
+    {
+      const uint8_t attr6 = (sideOfTheRoad << 6) | ((last.frc & 0x7) << 3) | (last.fow & 0x7);
+      result.push_back(attr6);
+    }
     result.push_back((pofff << 6) | (nofff << 5) | (bearing2integer(last.bearing) & 0x1f));
 
     // Offsets
