@@ -31,8 +31,8 @@ using namespace valhalla::midgard;
 TEST(UtilMjolnir, BuildTileSet) {
   ptree config;
   const std::string tile_dir("test/data/util_mjolnir_test_tiles");
-  config.put<std::string>("mjolnir.tile_dir", tile_dir);
-  config.put<unsigned long>("mjolnir.id_table_size", 1000);
+  config.put("mjolnir.tile_dir", tile_dir);
+  config.put("mjolnir.concurrency", 1);
   EXPECT_TRUE(build_tile_set(config, {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"},
                              mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kCleanup));
   // Clear the tile directory so it doesn't interfere with the next test.
