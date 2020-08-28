@@ -188,13 +188,50 @@ enum Orientation {
   BothDirections = 3,
 };
 
+const uint8_t OPENLR_VERSION = 3;
+
+// The first byte of the OpenLr identifier, page 55
 struct OpenLrStatus {
-  uint8_t rfu : 1;
-  uint8_t ArF1 : 1;
-  uint8_t is_point : 1;
-  uint8_t ArF0 : 1;
-  uint8_t has_attributes : 1;
   uint8_t version : 3;
+  uint8_t has_attributes : 1;
+  uint8_t ArF0 : 1;
+  uint8_t is_point : 1;
+  uint8_t ArF1 : 1;
+  uint8_t rfu : 1;
+
+  // Page 53
+  static OpenLrStatus Line() {
+    OpenLrStatus status;
+    status.version = OPENLR_VERSION;
+    status.has_attributes = 1;
+    status.ArF0 = 0;
+    status.is_point = 0;
+    status.ArF1 = 0;
+    status.rfu = 0;
+    return status;
+  }
+  // Page 55
+  static OpenLrStatus PointAlongLine() {
+    OpenLrStatus status;
+    status.version = OPENLR_VERSION;
+    status.has_attributes = 1;
+    status.ArF0 = 0;
+    status.is_point = 1;
+    status.ArF1 = 0;
+    status.rfu = 0;
+    return status;
+  }
+};
+
+struct Attribute5 {
+  uint8_t form_of_way : 3;
+  uint8_t functional_road_class : 3;
+  uint8_t orientation : 2;
+};
+struct Attribute6 {
+  uint8_t form_of_way : 3;
+  uint8_t functional_road_class : 3;
+  uint8_t side_of_the_road : 2;
 };
 
 // Line locations, p.19, section 3.1
@@ -208,10 +245,10 @@ struct OpenLr {
     std::size_t index = 0;
 
     // Status, version 3, has attributes, ArF 'Circle or no area location'
-    OpenLrStatus status = static_cast<OpenLrStatus>(raw[index++]);
+    const OpenLrStatus status = *reinterpret_cast<const OpenLrStatus*>(&raw[index++]);
     if (status.version != 3) {
-      throw std::invalid_argument("invalid_version " << std::to_string(status.version)
-                                                     << ": Can only parse openlr version 3");
+      throw std::invalid_argument("invalid_version " + std::to_string(status.version) +
+                                  ": Can only parse openlr version 3");
     }
     if (!status.ArF1 && !status.ArF0 && status.has_attributes) {
       isPointAlongLine = status.is_point;
@@ -244,7 +281,8 @@ struct OpenLr {
     lrps.emplace_back(longitude, latitude, attribute1, attribute2, attribute3);
 
     if (isPointAlongLine) {
-      orientation = static_cast<Orientation>((attribute1 & 0xc0) >> 6);
+      const Attribute5 attr5 = *reinterpret_cast<const Attribute5*>(&attribute1);
+      orientation = static_cast<Orientation>(attr5.orientation);
     } else {
       orientation = Orientation::NoOrientation;
     }
@@ -267,7 +305,8 @@ struct OpenLr {
     auto attribute4 = raw[index++];
 
     if (isPointAlongLine) {
-      sideOfTheRoad = static_cast<SideOfTheRoad>((attribute1 & 0xc0) >> 6);
+      const Attribute6 attr6 = *reinterpret_cast<const Attribute6*>(&attribute1);
+      sideOfTheRoad = static_cast<SideOfTheRoad>(attr6.side_of_the_road);
     } else {
       sideOfTheRoad = SideOfTheRoad::DirectlyOnRoadOrNotApplicable;
     }
@@ -327,9 +366,11 @@ struct OpenLr {
     };
 
     // Status
-    const uint8_t status =
-        0b00000000 | (isPointAlongLine ? IS_POINT_ALONG_LINE_STATUS : IS_LINE_STATUS);
-    result.push_back(status);
+    {
+      const OpenLrStatus status =
+          isPointAlongLine ? OpenLrStatus::PointAlongLine() : OpenLrStatus::Line();
+      result.push_back(*reinterpret_cast<const uint8_t*>(&status));
+    }
 
     // First location reference point
     const auto& first = lrps.front();
