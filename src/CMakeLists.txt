@@ -160,7 +160,9 @@ configure_file(../valhalla/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/valhalla/c
 set(valhalla_hdrs
     ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla.h
     ${VALHALLA_SOURCE_DIR}/valhalla/worker.h
-    ${VALHALLA_SOURCE_DIR}/valhalla/filesystem.h)
+    ${VALHALLA_SOURCE_DIR}/valhalla/filesystem.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/proto_conversions.h
+    )
 
 set(valhalla_src
     worker.cc
@@ -169,6 +171,12 @@ set(valhalla_src
     ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.h
     ${valhalla_hdrs}
     ${libvalhalla_link_objects})
+
+if (UNIX)
+  # Enables stricter compiler checks on a file-by-file basis
+  # which allows us to migrate piecemeal
+  set_source_files_properties(proto_conversions.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
+endif (UNIX)
 
 if (ENABLE_SERVICES)
   set(valhalla_hdrs ${valhalla_hdrs} ${VALHALLA_SOURCE_DIR}/valhalla/tile_server.h)
