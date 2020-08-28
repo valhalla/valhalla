@@ -48,8 +48,8 @@ const std::string ways_file = "test_ways_harrisburg.bin";
 // build tiles step that follows.
 TEST(GraphBuilder, TestConstructEdges) {
   ptree config;
-  config.put<std::string>("mjolnir.tile_dir", tile_dir);
-  config.put<size_t>("mjolnir.id_table_size", id_table_size);
+  config.put("mjolnir.tile_dir", tile_dir);
+  config.put("mjolnir.concurrency", 1);
   OSMData osm_data{0};
   osm_data.read_from_temp_files(tile_dir);
   std::map<baldr::GraphId, size_t> tiles =
@@ -73,7 +73,7 @@ TEST(GraphBuilder, TestConstructEdges) {
 TEST(graphbuilder, TestConstructEdgesSubset) {
   ptree config;
   config.put<std::string>("mjolnir.tile_dir", tile_dir);
-  config.put<size_t>("mjolnir.id_table_size", id_table_size);
+  config.put("mjolnir.concurrency", 1);
   OSMData osm_data{0};
   osm_data.read_from_temp_files(tile_dir);
   std::map<baldr::GraphId, size_t> tiles =
