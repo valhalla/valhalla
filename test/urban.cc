@@ -115,7 +115,6 @@ TEST(Urban2, test_urban) {
 }
 
 TEST(Urban2, test_urban_excluded_by_default) {
-  bool is_urban;
   route_tester tester;
   std::string request =
       R"({"locations":[{"lat":52.10160225589803,"lon":5.116925239562988},{"lat":52.09403591712907,"lon":5.113234519958496}],"costing":"auto","units":"miles","format":"osrm"})";
