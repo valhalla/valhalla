@@ -31,10 +31,18 @@ jobs:
         displayName: 'Pull submodules'
       
       - task: Cache@2
-        displayName: "Cache vcpkg's artifacts"
+        displayName: "Cache vcpkg's packages"
         inputs:
           key: .\.vcpkg_deps.txt | "$(VCPKG_REF)" | "$(Agent.OS)"
           path: "$(VCPKG_DIR)/installed"
+
+      - script: |
+          git clone https://github.com/microsoft/vcpkg %VCPKG_DIR%
+          git -C %VCPKG_DIR% checkout %VCPKG_REF%
+          echo.set(VCPKG_BUILD_TYPE release)>> %VCPKG_DIR%\triplets\%TRIPLET%-windows.cmake
+          call %VCPKG_DIR%\bootstrap-vcpkg.bat
+          %VCPKG_DIR%\vcpkg.exe version
+        displayName: 'Install vcpkg'
 
       - script: |
           %VCPKG_DIR%\vcpkg.exe install --triplet %TRIPLET%-windows "@.vcpkg_deps.txt"
