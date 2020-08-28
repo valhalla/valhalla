@@ -119,7 +119,7 @@ Maneuver::Maneuver()
       bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction),
       include_verbal_pre_transition_length_(false), contains_obvious_maneuver_(false),
       has_combined_enter_exit_roundabout_(false), roundabout_length_(0.0f),
-      roundabout_exit_length_(0.0f) {
+      roundabout_exit_length_(0.0f), roundabout_exit_begin_heading_(0) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
@@ -331,6 +331,14 @@ uint32_t Maneuver::end_heading() const {
 
 void Maneuver::set_end_heading(uint32_t endHeading) {
   end_heading_ = endHeading;
+}
+
+uint32_t Maneuver::roundabout_exit_begin_heading() const {
+  return roundabout_exit_begin_heading_;
+}
+
+void Maneuver::set_roundabout_exit_begin_heading(uint32_t beginHeading) {
+  roundabout_exit_begin_heading_ = beginHeading;
 }
 
 uint32_t Maneuver::begin_node_index() const {

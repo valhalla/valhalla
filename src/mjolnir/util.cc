@@ -32,6 +32,7 @@ const std::string ways_file = "ways.bin";
 const std::string way_nodes_file = "way_nodes.bin";
 const std::string nodes_file = "nodes.bin";
 const std::string edges_file = "edges.bin";
+const std::string tile_manifest_file = "tile_manifest.json";
 const std::string access_file = "access.bin";
 const std::string bss_nodes_file = "bss_nodes.bin";
 const std::string cr_from_file = "complex_from_restrictions.bin";
@@ -214,6 +215,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   std::string way_nodes_bin = tile_dir + way_nodes_file;
   std::string nodes_bin = tile_dir + nodes_file;
   std::string edges_bin = tile_dir + edges_file;
+  std::string tile_manifest = tile_dir + tile_manifest_file;
   std::string access_bin = tile_dir + access_file;
   std::string bss_nodes_bin = tile_dir + bss_nodes_file;
   std::string cr_from_bin = tile_dir + cr_from_file;
@@ -277,17 +279,34 @@ bool build_tile_set(const boost::property_tree::ptree& config,
       osm_data.write_to_temp_files(tile_dir);
     }
   }
+  // Construct edges
+  std::map<baldr::GraphId, size_t> tiles;
+  if (start_stage <= BuildStage::kConstructEdges && BuildStage::kConstructEdges <= end_stage) {
+    tiles = GraphBuilder::BuildEdges(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin);
+    // Output manifest
+    TileManifest manifest{tiles};
+    manifest.LogToFile(tile_manifest);
+  }
 
   // Build Valhalla routing tiles
   if (start_stage <= BuildStage::kBuild && BuildStage::kBuild <= end_stage) {
     // Read OSMData from files if building tiles is the first stage
     if (start_stage == BuildStage::kBuild) {
+      if (filesystem::exists(tile_manifest)) {
+        tiles = TileManifest::ReadFromFile(tile_manifest).tileset;
+      } else {
+        // TODO: Remove this backfill in the future, and make calling constructedges stage
+        // explicitly required in the future.
+        LOG_WARN("Tile manifest not found, rebuilding edges and manifest");
+        tiles =
+            GraphBuilder::BuildEdges(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin);
+      }
       osm_data.read_from_temp_files(tile_dir);
     }
 
     // Build the graph using the OSMNodes and OSMWays from the parser
     GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin, cr_from_bin,
-                        cr_to_bin);
+                        cr_to_bin, tiles);
   }
 
   // Enhance the local level of the graph. This adds information to the local
@@ -369,6 +388,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
     remove_temp_file(cr_to_bin);
     remove_temp_file(new_to_old_bin);
     remove_temp_file(old_to_new_bin);
+    remove_temp_file(tile_manifest);
     OSMData::cleanup_temp_files(tile_dir);
   }
   return true;

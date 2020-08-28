@@ -683,6 +683,8 @@ public:
 
   std::string ToString() const;
 
+  const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident>& incidents() const;
+
 protected:
   TripLeg_Node* mutable_node_;
 };

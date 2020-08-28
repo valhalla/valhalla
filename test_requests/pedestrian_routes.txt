@@ -41,3 +41,4 @@
 -j '{"locations":[{"lat":45.848179,"lon":6.226011},{"lat":45.859264,"lon":6.249594}],"costing":"pedestrian","costing_options":{"pedestrian":{"max_hiking_difficulty":1}},"directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":45.848179,"lon":6.226011},{"lat":45.859264,"lon":6.249594}],"costing":"pedestrian","costing_options":{"pedestrian":{"max_hiking_difficulty":2}},"directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":48.85752653288673,"lon":2.379750442551377},{"lat":48.8550339,"lon":2.3781273}],"costing":"pedestrian"}'
+-j '{"locations":[{"lat":-22.880413590190354,"lon":-43.17967670499184,"radius":0,"search_cutoff":21000000},{"lat":-22.87021699810092,"lon":-43.18037300631114,"radius":0,"search_cutoff":21000000}],"costing":"pedestrian","costing_options":{"pedestrian":{"walking_speed":5.112,"walkway_factor":1,"alley_factor":2,"max_hiking_difficulty":6}}}'
