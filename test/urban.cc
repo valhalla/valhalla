@@ -106,9 +106,9 @@ TEST(Urban2, test_urban) {
         for (const auto& intersection : step["intersections"].GetArray()) {
           if (intersection.HasMember("is_urban")) {
             is_urban = intersection["is_urban"].GetBool();
+            EXPECT_EQ(is_urban, true);
           }
         }
-        EXPECT_EQ(is_urban, true);
       }
     }
   }
@@ -135,7 +135,6 @@ TEST(Urban2, test_urban_excluded_by_default) {
         for (const auto& intersection : step["intersections"].GetArray()) {
           EXPECT_EQ(intersection.HasMember("is_urban"), false);
         }
-        EXPECT_EQ(is_urban, true);
       }
     }
   }
