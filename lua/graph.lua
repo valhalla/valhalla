@@ -1330,11 +1330,10 @@ function filter_tags_generic(kv)
   end
 
   if kv["service"] == "rest_area" then
-    if kv["amentity"] == "no" then
-      use = 30
-    elseif kv["amenity"] == "yes" then
-      use = 31
-    end
+     use = 30 --rest_area
+     if kv["amenity"] == "yes" then
+        use = 31 --service_area
+     end
   end
 
   if use == nil and kv["service"] then
