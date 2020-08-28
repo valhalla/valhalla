@@ -230,6 +230,7 @@ message TripLeg {
     optional float default_speed = 44;       // km/h
     optional Restriction restriction = 45;
     optional bool destination_only = 46;
+    optional bool is_urban = 47; // uses edge density to decide if edge is in an urban area
   }
 
   message IntersectingEdge {
