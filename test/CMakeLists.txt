@@ -12,7 +12,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller astar_bss c
   narrative_dictionary nodeinfo nodetransition obb2 openlr optimizer parse_request point2 pointll
   polyline2 predictedspeeds queue routing sample sequence sign signs streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
-  transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
+  transitstop turn turnlanes util_midgard util_skadi util_mjolnir vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem traffictile)
 
 if(ENABLE_DATA_TOOLS)
