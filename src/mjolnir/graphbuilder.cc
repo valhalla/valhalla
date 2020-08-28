@@ -1,16 +1,10 @@
-#include "mjolnir/graphbuilder.h"
-#include "mjolnir/admin.h"
-#include "mjolnir/ferry_connections.h"
-#include "mjolnir/linkclassification.h"
-#include "mjolnir/node_expander.h"
-#include "mjolnir/util.h"
-
-#include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
 #include <future>
 #include <set>
 #include <thread>
 #include <utility>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
 
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
@@ -24,9 +18,14 @@
 #include "midgard/polyline2.h"
 #include "midgard/tiles.h"
 #include "midgard/util.h"
-
+#include "mjolnir/admin.h"
 #include "mjolnir/edgeinfobuilder.h"
+#include "mjolnir/ferry_connections.h"
+#include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/linkclassification.h"
+#include "mjolnir/node_expander.h"
+#include "mjolnir/util.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -247,50 +246,6 @@ void ConstructEdges(const OSMData& osmdata,
   LOG_INFO("Finished with " + std::to_string(edges.size()) + " graph edges");
 }
 
-/*
-struct DuplicateEdgeInfo {
-  uint32_t edgeindex;
-  uint32_t length;
-
-  DuplicateEdgeInfo() : edgeindex(0), length(0) { }
-  DuplicateEdgeInfo(const uint32_t idx, const uint32_t l)
-      : edgeindex(idx),
-        length(l) {
-  }
-};
-
-void CheckForDuplicates(const GraphId& nodeid, const Node& node,
-                const std::vector<uint32_t>& edgelengths,
-                const std::unordered_map<GraphId, std::vector<Node>>& nodes,
-                const std::vector<Edge>& edges,
-                const std::vector<OSMWay>& ways, std::atomic<DataQuality*>& stats) {
-  uint32_t edgeindex;
-  GraphId endnode;
-  std::unordered_map<GraphId, DuplicateEdgeInfo> endnodes;
-  uint32_t n = 0;
-  for (auto edgeindex : node.edges) {
-    const Edge& edge = edges[edgeindex];
-    if (edge.sourcenode_ == nodeid) {
-      endnode = edge.targetnode_;
-    } else {
-      endnode = edge.sourcenode_;
-    }
-
-    // Check if the end node is already in the set of edges from this node
-    const auto en = endnodes.find(endnode);
-    if (en != endnodes.end() && en->second.length == edgelengths[n]) {
-      uint64_t wayid1 = ways[edges[en->second.edgeindex].wayindex_].way_id();
-      uint64_t wayid2 = ways[edges[edgeindex].wayindex_].way_id();
-      (*stats).AddIssue(kDuplicateWays, GraphId(), wayid1, wayid2);
-    } else {
-      endnodes.emplace(std::piecewise_construct,
-                       std::forward_as_tuple(endnode),
-                       std::forward_as_tuple(edgeindex, edgelengths[n]));
-    }
-    n++;
-  }
-}
-*/
 uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
                                      const size_t endnode,
                                      sequence<Node>& nodes,
@@ -1091,7 +1046,6 @@ void BuildLocalTiles(const unsigned int thread_count,
                      const std::string& tile_dir,
                      DataQuality& stats,
                      const boost::property_tree::ptree& pt) {
-
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
   uint32_t tile_creation_date =
       DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
@@ -1154,6 +1108,24 @@ void BuildLocalTiles(const unsigned int thread_count,
 namespace valhalla {
 namespace mjolnir {
 
+std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::ptree& pt,
+                                                   const OSMData& osmdata,
+                                                   const std::string& ways_file,
+                                                   const std::string& way_nodes_file,
+                                                   const std::string& nodes_file,
+                                                   const std::string& edges_file) {
+  const auto& tl = TileHierarchy::levels().rbegin();
+  uint8_t level = tl->second.level;
+  // Make the edges and nodes in the graph
+  ConstructEdges(osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
+                 tl->second.tiles.TileSize(),
+                 [&level](const OSMNode& node) {
+                   return TileHierarchy::GetGraphId({node.lng_, node.lat_}, level);
+                 },
+                 pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
+  return SortGraph(nodes_file, edges_file, level);
+}
+
 // Build the graph from the input
 void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const OSMData& osmdata,
@@ -1162,25 +1134,8 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const std::string& nodes_file,
                          const std::string& edges_file,
                          const std::string& complex_from_restriction_file,
-                         const std::string& complex_to_restriction_file) {
-  std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  unsigned int threads =
-      std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
-  const auto& tl = TileHierarchy::levels().rbegin();
-  uint8_t level = tl->second.level;
-
-  // Make the edges and nodes in the graph
-  ConstructEdges(osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                 tl->second.tiles.TileSize(),
-                 [&level](const OSMNode& node) {
-                   return TileHierarchy::GetGraphId({node.lng_, node.lat_}, level);
-                 },
-                 pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
-
-  // Line up the nodes and then re-map the edges that the edges to them
-  auto tiles = SortGraph(nodes_file, edges_file, level);
-
+                         const std::string& complex_to_restriction_file,
+                         const std::map<GraphId, size_t>& tiles) {
   // Reclassify links (ramps). Cannot do this when building tiles since the
   // edge list needs to be modified
   DataQuality stats;
@@ -1200,12 +1155,15 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   }
   ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file,
                              static_cast<uint32_t>(rc), stats);
+  unsigned int threads =
+      std::max(static_cast<unsigned int>(1),
+               pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
+  std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                   complex_from_restriction_file, complex_to_restriction_file, tiles, tile_dir, stats,
                   pt);
-
   stats.LogStatistics();
 }
 
