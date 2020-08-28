@@ -23,26 +23,25 @@ jobs:
     variables:
       BUILD_CFG: 'Release'
       BUILD_DIR: '$(Agent.WorkFolder)\build'
-      VCPKG_DIR: '$(Agent.WorkFolder)\vcpkg'
+      VCPKG_DIR: '$(Build.SourcesDirectory)\vcpkg'
       VCPKG_REF: 'f4bd6423'
 
     steps:
       - script: git submodule update --init --recursive
         displayName: 'Pull submodules'
-
       
       - task: Cache@2
         displayName: "Cache vcpkg's artifacts"
         inputs:
           key: .\.vcpkg_deps.txt | "$(VCPKG_REF)" | "$(Agent.OS)"
-          path: "$(VCPKG_DIR)"
+          path: "$(VCPKG_DIR)/installed"
 
-      - task: run-vcpkg@0
-        displayName: 'Run vcpkg'
-        inputs:
-          vcpkgArguments: .\vcpkg_deps.txt
-          vcpkgTriplet: "$(TRIPLET)-windows"
-          vcpkgGitCommitId: $(VCPKG_REF)
+      - script: |
+          %VCPKG_DIR%\vcpkg.exe install --triplet %TRIPLET%-windows "@.vcpkg_deps.txt"
+          %VCPKG_DIR%\vcpkg.exe list
+          if exist %VCPKG_DIR%\downloads rmdir /S /Q %VCPKG_DIR%\downloads
+          if exist %VCPKG_DIR%\packages rmdir /S /Q %VCPKG_DIR%\packages
+        displayName: 'Install vcpkg packages'
 
       - script: |
           move /Y third_party\OSM-binary\src\fileformat.proto third_party\OSM-binary\src\fileformat.proto.orig
