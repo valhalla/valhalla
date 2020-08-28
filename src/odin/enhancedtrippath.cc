@@ -68,7 +68,9 @@ const std::string& TripLeg_Use_Name(int v) {
       {27, "kPathUse"},
       {28, "kPedestrianUse"},
       {29, "kBridlewayUse"},
-      {40, "kOtherUse"},
+      {30, "kBridlewayUse"},
+      {31, "kRestAreaUse"},
+      {40, "kServiceAreaUse"},
       {41, "kFerryUse"},
       {42, "kRailFerryUse"},
       {50, "kRailUse"},
@@ -362,6 +364,14 @@ bool EnhancedTripLeg_Edge::IsPedestrianUse() const {
 
 bool EnhancedTripLeg_Edge::IsBridlewayUse() const {
   return (use() == TripLeg_Use_kBridlewayUse);
+}
+
+bool EnhancedTripLeg_Edge::IsRestAreaUse() const {
+  return (use() == TripLeg_Use_kRestAreaUse);
+}
+
+bool EnhancedTripLeg_Edge::IsServiceAreaUse() const {
+  return (use() == TripLeg_Use_kServiceAreaUse);
 }
 
 bool EnhancedTripLeg_Edge::IsOtherUse() const {

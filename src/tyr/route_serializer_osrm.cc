@@ -373,12 +373,22 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // any intersecting edges for the first depart intersection and for
     // the arrive step.
     std::vector<IntersectionEdges> edges;
+    auto rest_area = json::map({});
+    auto service_area = json::map({});
     if (i > 0 && !arrive_maneuver) {
       for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
         auto intersecting_edge = node->GetIntersectingEdge(m);
         bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
         uint32_t bearing = static_cast<uint32_t>(intersecting_edge->begin_heading());
         edges.emplace_back(bearing, routeable, false, false);
+
+        if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kRestAreaUse) {
+          intersection->emplace("rest_area", rest_area);
+          break;
+        } else if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kServiceAreaUse) {
+          intersection->emplace("service_area", service_area);
+          break;
+        }
       }
     }
 
@@ -440,12 +450,6 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       }
       if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kFerryUse) {
         classes.push_back("ferry");
-      }
-      if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kRestAreaUse) {
-        classes.push_back("rest_area");
-      }
-      if (curr_edge->use() == TripLeg::Use::TripLeg_Use_kServiceAreaUse) {
-        classes.push_back("service_area");
       }
 
       /** TODO
