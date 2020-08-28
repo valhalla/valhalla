@@ -32,7 +32,7 @@ jobs:
 
       
       - task: Cache@2
-        displayName: 'Cache vcpkg's artifacts'
+        displayName: "Cache vcpkg's artifacts"
         inputs:
           key: .\.vcpkg_deps.txt | "$(VCPKG_REF)" | "$(Agent.OS)"
           path: "$(VCPKG_DIR)"
