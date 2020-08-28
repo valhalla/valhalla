@@ -347,6 +347,10 @@ public:
     return mutable_edge_->destination_only();
   }
 
+  bool has_density() const {
+    return mutable_edge_->has_density();
+  }
+
   bool IsUnnamed() const;
 
   // Use

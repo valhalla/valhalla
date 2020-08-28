@@ -115,6 +115,34 @@ TEST(Urban2, test_density) {
   }
 }
 
+TEST(Urban2, test_density_excluded) {
+  bool is_urban;
+  route_tester tester;
+  std::string request =
+      R"({"locations":[{"lat":52.10160225589803,"lon":5.116925239562988},{"lat":52.09403591712907,"lon":5.113234519958496}],"costing":"auto","units":"miles","format":"osrm","filters":{"action":"exclude","attributes":["edge.density"]}})";
+  auto response = tester.test(request);
+
+  // get the osrm json
+  auto json_str = serializeDirections(response);
+  rapidjson::Document json;
+  json.Parse(json_str);
+  std::cout << "json :: " << json_str << std::endl;
+
+  ASSERT_FALSE(json.HasParseError());
+
+  // loop over all routes all legs
+  for (const auto& route : json["routes"].GetArray()) {
+    for (const auto& leg : route["legs"].GetArray()) {
+      for (const auto& step : leg["steps"].GetArray()) {
+        for (const auto& intersection : step["intersections"].GetArray()) {
+          EXPECT_EQ(intersection.HasMember("is_urban"), false);
+        }
+        EXPECT_EQ(is_urban, true);
+      }
+    }
+  }
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
