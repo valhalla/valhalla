@@ -96,7 +96,6 @@ TEST(Urban2, test_urban) {
   auto json_str = serializeDirections(response);
   rapidjson::Document json;
   json.Parse(json_str);
-  std::cout << "json :: " << json_str << std::endl;
 
   ASSERT_FALSE(json.HasParseError());
 
@@ -126,7 +125,6 @@ TEST(Urban2, test_urban_excluded_by_default) {
   auto json_str = serializeDirections(response);
   rapidjson::Document json;
   json.Parse(json_str);
-  std::cout << "json :: " << json_str << std::endl;
 
   ASSERT_FALSE(json.HasParseError());
 
