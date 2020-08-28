@@ -150,6 +150,7 @@
    * ADDED: Added new urban flag that can be set if edge is within city boundaries to data processing; new use_urban_tag config option; added to osrm response within intersections. [#2522](https://github.com/valhalla/valhalla/pull/2522)
    * ADDED: Parses OpenLr of type PointAlongLine [#2565](https://github.com/valhalla/valhalla/pull/2565)
 
+   * ADDED: Use edge.is_urban is set for serializing is_urban. [#2568](https://github.com/valhalla/valhalla/pull/2568)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
