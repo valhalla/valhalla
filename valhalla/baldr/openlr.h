@@ -161,9 +161,6 @@ struct LocationReferencePoint {
   FormOfWay fow;        // 5.2.3. Form of way
 };
 
-const uint8_t IS_POINT_ALONG_LINE_STATUS = 0x2b;
-const uint8_t IS_LINE_STATUS = 0x0b;
-
 // 5.3.1
 // The side of road information (SOR) describes the relationship between the
 // point of interest and a referenced line. The point can be on the right
