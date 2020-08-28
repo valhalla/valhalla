@@ -347,8 +347,12 @@ public:
     return mutable_edge_->destination_only();
   }
 
-  bool has_density() const {
-    return mutable_edge_->has_density();
+  bool has_is_urban() const {
+    return mutable_edge_->has_is_urban();
+  }
+
+  bool is_urban() const {
+    return mutable_edge_->is_urban();
   }
 
   bool IsUnnamed() const;
