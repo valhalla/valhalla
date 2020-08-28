@@ -40,7 +40,7 @@ jobs:
       - task: run-vcpkg@0
         displayName: 'Run vcpkg'
         inputs:
-          vcpkgArguments: @$(Build.SourcesDirectory)/vcpkg_deps.txt
+          vcpkgArguments: .\vcpkg_deps.txt
           vcpkgTriplet: "$(TRIPLET)-windows"
           vcpkgGitCommitId: $(VCPKG_REF)
 
