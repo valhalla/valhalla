@@ -188,6 +188,15 @@ enum Orientation {
   BothDirections = 3,
 };
 
+struct OpenLrStatus {
+  uint8_t rfu : 1;
+  uint8_t ArF1 : 1;
+  uint8_t is_point : 1;
+  uint8_t ArF0 : 1;
+  uint8_t has_attributes : 1;
+  uint8_t version : 3;
+};
+
 // Line locations, p.19, section 3.1
 // Only line location with 2 location reference points are supported
 struct OpenLr {
@@ -195,15 +204,17 @@ struct OpenLr {
     const std::string& decoded = base64_encoded ? decode64(reference) : reference;
     const size_t size = decoded.size();
 
-    const auto raw = reinterpret_cast<const unsigned char*>(decoded.data());
+    const auto raw = reinterpret_cast<const uint8_t*>(decoded.data());
     std::size_t index = 0;
 
     // Status, version 3, has attributes, ArF 'Circle or no area location'
-    auto status = raw[index++] & 0x7f;
-    if (status == IS_LINE_STATUS) {
-      isPointAlongLine = false;
-    } else if (status == IS_POINT_ALONG_LINE_STATUS) {
-      isPointAlongLine = true;
+    OpenLrStatus status = static_cast<OpenLrStatus>(raw[index++]);
+    if (status.version != 3) {
+      throw std::invalid_argument("invalid_version " << std::to_string(status.version)
+                                                     << ": Can only parse openlr version 3");
+    }
+    if (!status.ArF1 && !status.ArF0 && status.has_attributes) {
+      isPointAlongLine = status.is_point;
     } else {
       throw std::invalid_argument("OpenLR reference invalid status " + decoded);
     }
