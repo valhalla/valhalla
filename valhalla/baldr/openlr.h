@@ -196,7 +196,7 @@ struct OpenLrStatus {
   uint8_t ArF1 : 1;
   uint8_t rfu : 1;
 
-  // Page 53
+  // Status-byte of a Line segment (page 53)
   static OpenLrStatus Line() {
     OpenLrStatus status;
     status.version = OPENLR_VERSION;
@@ -207,7 +207,7 @@ struct OpenLrStatus {
     status.rfu = 0;
     return status;
   }
-  // Page 55
+  // Status-byte of a PointAlongLine segment (page 55)
   static OpenLrStatus PointAlongLine() {
     OpenLrStatus status;
     status.version = OPENLR_VERSION;
@@ -220,15 +220,17 @@ struct OpenLrStatus {
   }
 };
 
+// The first metadata byte after the first coordinate
 struct Attribute5 {
   uint8_t form_of_way : 3;
   uint8_t functional_road_class : 3;
-  uint8_t orientation : 2;
+  uint8_t orientation : 2;  // Only defined for PointAlongLine
 };
+// The first metadata byte after the non-first coordinate
 struct Attribute6 {
   uint8_t form_of_way : 3;
   uint8_t functional_road_class : 3;
-  uint8_t side_of_the_road : 2;
+  uint8_t side_of_the_road : 2;  // Only defined for PointAlongLine
 };
 
 // Line locations, p.19, section 3.1
