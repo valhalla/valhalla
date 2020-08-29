@@ -33,8 +33,9 @@ jobs:
       - task: Cache@2
         displayName: "Cache vcpkg's packages"
         inputs:
-          key: .\.vcpkg_deps.txt | "$(VCPKG_REF)" | "$(Agent.OS)"
-          path: "$(VCPKG_DIR)/installed"
+          key: .\.vcpkg_deps.txt | "$(VCPKG_REF)" | "$(TRIPLET)"
+          path: "$(VCPKG_DIR)"
+          cacheHitVar: CACHE_RESTORED
 
       - script: |
           git clone https://github.com/microsoft/vcpkg %VCPKG_DIR%
@@ -43,6 +44,7 @@ jobs:
           call %VCPKG_DIR%\bootstrap-vcpkg.bat
           %VCPKG_DIR%\vcpkg.exe version
         displayName: 'Install vcpkg'
+        condition: ne(variables.CACHE_RESTORED, 'true')
 
       - script: |
           %VCPKG_DIR%\vcpkg.exe install --triplet %TRIPLET%-windows "@.vcpkg_deps.txt"
@@ -50,6 +52,7 @@ jobs:
           if exist %VCPKG_DIR%\downloads rmdir /S /Q %VCPKG_DIR%\downloads
           if exist %VCPKG_DIR%\packages rmdir /S /Q %VCPKG_DIR%\packages
         displayName: 'Install vcpkg packages'
+        condition: ne(variables.CACHE_RESTORED, 'true')
 
       - script: |
           move /Y third_party\OSM-binary\src\fileformat.proto third_party\OSM-binary\src\fileformat.proto.orig
