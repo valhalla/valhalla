@@ -758,6 +758,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_density(directededge->density());
   }
 
+  if (controller.attributes.at(kEdgeIsUrban)) {
+    bool is_urban = (directededge->density() > 8) ? true : false;
+    trip_edge->set_is_urban(is_urban);
+  }
+
   if (controller.attributes.at(kEdgeSpeedLimit)) {
     trip_edge->set_speed_limit(edgeinfo.speed_limit());
   }
