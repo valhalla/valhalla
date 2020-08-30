@@ -1,4 +1,5 @@
 #include "test.h"
+#include "utils.h"
 
 #include <iostream>
 #include <string>
@@ -11,7 +12,6 @@
 #include "thor/timedep.h"
 #include "thor/worker.h"
 #include "worker.h"
-#include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla;
 using namespace valhalla::thor;
@@ -22,24 +22,6 @@ using namespace valhalla::midgard;
 using namespace valhalla::tyr;
 
 namespace {
-
-boost::property_tree::ptree json_to_pt(const std::string& json) {
-  std::stringstream ss;
-  ss << json;
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(ss, pt);
-  return pt;
-}
-
-rapidjson::Document to_document(const std::string& request) {
-  rapidjson::Document d;
-  auto& allocator = d.GetAllocator();
-  d.Parse(request.c_str());
-  if (d.HasParseError())
-    throw valhalla_exception_t{100};
-  return d;
-}
-
 // Maximum edge score - base this on costing type.
 // Large values can cause very bad performance. Setting this back
 // to 2 hours for bike and pedestrian and 12 hours for driving routes.
@@ -89,7 +71,7 @@ void adjust_scores(Options& options) {
   }
 }
 
-const auto config = json_to_pt(R"({
+const auto config = test::json_to_pt(R"({
     "meili": {"default": {"breakage_distance": 2000}},
     "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
     "loki":{

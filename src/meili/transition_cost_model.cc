@@ -48,18 +48,18 @@ TransitionCostModel::TransitionCostModel(baldr::GraphReader& graphreader,
                                          const StateContainer& container,
                                          const sif::mode_costing_t& mode_costing,
                                          const sif::TravelMode travelmode,
-                                         const boost::property_tree::ptree& config)
+                                         const Config::TransitionCost& config)
     : TransitionCostModel(graphreader,
                           vs,
                           ts,
                           container,
                           mode_costing,
                           travelmode,
-                          config.get<float>("beta"),
-                          config.get<float>("breakage_distance"),
-                          config.get<float>("max_route_distance_factor"),
-                          config.get<float>("max_route_time_factor"),
-                          config.get<float>("turn_penalty_factor")) {
+                          config.beta,
+                          config.breakage_distance_meters,
+                          config.max_route_distance_factor,
+                          config.max_route_time_factor,
+                          config.turn_penalty_factor) {
 }
 
 float TransitionCostModel::operator()(const StateId& lhs, const StateId& rhs) const {

@@ -38,7 +38,8 @@ struct OSMNode {
   uint32_t non_ferry_edge_ : 1;
   uint32_t ferry_edge_ : 1;
   uint32_t flat_loop_ : 1; // A node which on a section of a way that is doubled back on itself
-  uint32_t spare_ : 6;
+  uint32_t urban_ : 1;
+  uint32_t spare_ : 5;
 
   // Lat,lng of the node
   float lng_;
@@ -270,6 +271,22 @@ struct OSMNode {
    */
   bool named_intersection() const {
     return named_intersection_;
+  }
+
+  /**
+   * Sets the urban flag.
+   * @param  urban       Urban.
+   */
+  void set_urban(const bool urban) {
+    urban_ = urban;
+  }
+
+  /**
+   * Get the urban flag.
+   * @return  Returns urban flag.
+   */
+  bool urban() const {
+    return urban_;
   }
 };
 

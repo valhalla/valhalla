@@ -2560,6 +2560,11 @@ void ManeuversBuilder::ProcessRoundabouts(std::list<Maneuver>& maneuvers) {
           // Set the roundabout exit length
           curr_man->set_roundabout_exit_length(next_man->length());
 
+          // Store the next maneuver's begin heading. This can be used to
+          // calculate correct turn angles when exit roundabout maneuver is
+          // suppressed
+          curr_man->set_roundabout_exit_begin_heading(next_man->begin_heading());
+
           // Set the traversable_outbound_intersecting_edge booleans
           curr_man->set_has_left_traversable_outbound_intersecting_edge(
               next_man->has_left_traversable_outbound_intersecting_edge());
