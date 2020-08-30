@@ -1,6 +1,6 @@
 ## Release Date: 2020-08-?? Valhalla 3.1.0
 * **Removed**
-   * REMOVED:  Remove Node bindings. [#2502](https://github.com/valhalla/valhalla/pull/2502)  
+   * REMOVED:  Remove Node bindings. [#2502](https://github.com/valhalla/valhalla/pull/2502)
 
 * **Bug Fix**
    * FIXED: More Windows compatibility: build tiles and some run actions work now (including CI tests) [#2300](https://github.com/valhalla/valhalla/issues/2300)
@@ -85,7 +85,6 @@
    * FIXED: Multicue enter roundabout [#2556](https://github.com/valhalla/valhalla/pull/2556)
 
 * **Enhancement**
-   * ADDED: Dependency cache for Azure [#2567](https://github.com/valhalla/valhalla/pull/2567)
    * ADDED: Add explicit include for sstream to be compatible with msvc_x64 toolset. [#2449](https://github.com/valhalla/valhalla/pull/2449)
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
    * ADDED: Cancellation of tile downloading. [#2319](https://github.com/valhalla/valhalla/pull/2319)
@@ -150,6 +149,7 @@
    * ADDED: Save exit maneuver's begin heading when combining enter & exit roundabout maneuvers. [#2554](https://github.com/valhalla/valhalla/pull/2554)
    * ADDED: Added new urban flag that can be set if edge is within city boundaries to data processing; new use_urban_tag config option; added to osrm response within intersections. [#2522](https://github.com/valhalla/valhalla/pull/2522)
    * ADDED: Use edge.is_urban is set for serializing is_urban. [#2568](https://github.com/valhalla/valhalla/pull/2568)
+   * ADDED: Dependency cache for Azure [#2567](https://github.com/valhalla/valhalla/pull/2567)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
