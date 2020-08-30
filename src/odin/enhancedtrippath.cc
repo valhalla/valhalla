@@ -1687,6 +1687,10 @@ bool EnhancedTripLeg_Node::IsBorderControl() const {
   return (type() == TripLeg_Node_Type_kBorderControl);
 }
 
+bool EnhancedTripLeg_Node::IsTollGantry() const {
+  return (type() == TripLeg_Node_Type_kTollGantry);
+}
+
 std::string EnhancedTripLeg_Node::ToString() const {
   std::string str;
   str.reserve(256);

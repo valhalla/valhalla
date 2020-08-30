@@ -678,6 +678,7 @@ public:
   bool IsParking() const;
   bool IsMotorwayJunction() const;
   bool IsBorderControl() const;
+  bool IsTollGantry() const;
 
   std::string ToString() const;
 
