@@ -12,9 +12,183 @@
 #include "baldr/curl_tilegetter.h"
 #include "filesystem.h"
 
+// move these and the stuff below
+#include "midgard/sequence.h"
+#include <ctime>
+#include <memory>
+#include <mutex>
+#include <thread>
+
 using namespace valhalla::midgard;
 
 namespace {
+
+// some typedefs until we have the real things
+using incident_tile_t = std::vector<char>;
+using incident_cache_t = std::unordered_map<uint64_t, std::shared_ptr<incident_tile_t>>;
+
+/**
+ * Read the contents of a file into an incident tile
+ * @param filename   name of the file on the file system to read into memory
+ * @return a shared pointer with the data of the tile or an empty pointer if it could not be read
+ */
+std::shared_ptr<incident_tile_t> read_tile(const std::string& filename) {
+  // crack the file open
+  std::ifstream file(filename, std::ios::in | std::ios::binary | std::ios::ate);
+  std::shared_ptr<incident_tile_t> tile;
+  if (file.is_open()) {
+    // get the size and allocate it
+    size_t filesize = file.tellg();
+    tile.reset(new std::vector<char>(filesize));
+    // read the data in
+    file.seekg(0, std::ios::beg);
+    file.read(tile->data(), filesize);
+    file.close();
+  }
+  return tile;
+}
+
+/**
+ * Thread work function that continually checks for updates to incident tiles. The updates come in
+ * the form of timestamps in a memory mapped file of 64bit integers (one per tile). The first 25 bits
+ * are the tile id and level (as a normal graphid) the remaining 39 bits are the timestamp. When
+ * the timestamp for the last check is older than a timestamp for a given file that file is replaced
+ * with whatever its contents are on disk.
+ *
+ * The thread begins by deciding whether its just scaning the directory (works for a small number of
+ * incidents) or using a memory mapped changelog to communicate about which incidents chnaged last. If
+ * the latter is used we preallocate
+ * @param root
+ * @param running
+ * @param last_scan
+ * @param cache
+ */
+void watch(const boost::property_tree::ptree& config,
+           std::atomic<bool>& running,
+           std::atomic<uint64_t>& last_scan,
+           std::mutex& lock,
+           incident_cache_t& cache) {
+  // figure out which configuration we are doing here
+  std::unique_ptr<valhalla::midgard::sequence<uint64_t>> changelog;
+  filesystem::path changelog_path(config.get<std::string>("incidents_mmap", ""));
+  try {
+    changelog.reset(new decltype(changelog)::element_type(changelog_path.string()));
+  } catch (...) {}
+  auto directory = config.get<std::string>("incidents_root", "");
+
+  // wait for someone to tell us to stop
+  while (running.load()) {
+    auto next_time = time(NULL);
+    // we are in memory map mode
+    if (changelog) {
+      // check all of the timestamps
+      for (auto tilestamp : *changelog) {
+        // spare last 39 bits are the timestamp, leaves us with something like 17k years
+        uint64_t timestamp = (tilestamp >> 46) & (uint64_t(1) << (18 - 1));
+        if (last_scan.load() <= timestamp) {
+          // first 25 bits are the tile id
+          valhalla::baldr::GraphId tile_id((uint64_t(1) << (46 - 1)) & tilestamp);
+          // concoct a file name from the tile_id
+          auto file_location = changelog_path.parent_path().replace_filename(
+              valhalla::baldr::GraphTile::FileSuffix(tile_id));
+          // get the tile
+          auto tile = read_tile(file_location.string());
+          // swap it in
+          std::atomic_store_explicit(&cache[tile_id], tile, std::memory_order_release);
+        }
+      }
+    } // we are in directory scan mode
+    else if (!directory.empty()) {
+      // check all of the files
+      for (filesystem::recursive_directory_iterator i(directory), end; i != end; ++i) {
+        // has this been updated recently
+        struct stat s;
+        valhalla::baldr::GraphId tile_id;
+        if (i->is_regular_file() &&
+            (tile_id = valhalla::baldr::GraphTile::GetTileId(i->path().string())).Is_Valid() &&
+            stat(i->path().c_str(), &s) == 0 && last_scan.load() <= s.st_mtim.tv_sec) {
+          // get the tile
+          auto tile = read_tile(i->path().string());
+          // because we are sharing a growing cache with the main thread we need a write lock
+          lock.lock();
+          cache[tile_id] = tile;
+          lock.unlock();
+        }
+      }
+    } // there is nothing to watch
+    else {
+      break;
+    }
+    // we finished a round
+    last_scan.store(next_time);
+    // wait just a little before we check again (scanning the memory map is cheap)
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
+}
+
+struct incident_singleton_t {
+private:
+  std::atomic<bool> running;
+  std::atomic<uint64_t> last_scan;
+  std::mutex lock;
+  incident_cache_t cache;
+  std::thread watcher;
+
+  /**
+   * Singleton private constructor that static function uses to instnatiate the singleton
+   * @param root  The root directory to scan, sould probably be a config rather than just root
+   */
+  incident_singleton_t(const boost::property_tree::ptree& config)
+      : running(true), last_scan(0), watcher(watch,
+                                             config,
+                                             std::ref(running),
+                                             std::ref(last_scan),
+                                             std::ref(lock),
+                                             std::ref(cache)) {
+
+    // let this run forever
+    watcher.detach();
+  }
+
+  /**
+   * Destructor tells the thread to suicide
+   */
+  ~incident_singleton_t() {
+    running.store(false);
+  }
+
+  /**
+   * Whether or not all is well with the incident daemon
+   * @return true if the background thread is updating the incident cache in a reasonable time
+   */
+  bool watching() const {
+    auto now = time(NULL);
+    return now - last_scan.load() < 300; // TODO: configure this number
+  }
+
+public:
+  static std::shared_ptr<incident_tile_t> get(const valhalla::baldr::GraphId& tile_id,
+                                              const boost::property_tree::ptree& config = {}) {
+    // spawn a daemon to watch for incidents
+    static incident_singleton_t singleton{config};
+
+    // if its not running die violently
+    if (!singleton.watching())
+      throw std::runtime_error("The incident watcher isn't running or is behind");
+
+    // try to get the tile, when in mapped mode, locking should be close to free..
+    singleton.lock.lock();
+    auto found = singleton.cache.find(tile_id);
+    if (found == singleton.cache.cend()) {
+      singleton.lock.unlock();
+      return {};
+    }
+    auto tile = std::atomic_load_explicit(&found->second, std::memory_order_acquire);
+    singleton.lock.unlock();
+    return tile;
+  }
+};
+
 constexpr size_t DEFAULT_MAX_CACHE_SIZE = 1073741824; // 1 gig
 constexpr size_t AVERAGE_TILE_SIZE = 2097152;         // 2 megs
 constexpr size_t AVERAGE_MM_TILE_SIZE = 1024;         // 1k
@@ -688,8 +862,8 @@ std::vector<GraphId> GraphReader::RecoverShortcut(const GraphId& shortcut_id) {
     for (const DirectedEdge& edge : tile->GetDirectedEdges(node_index)) {
       // are they the same enough that its part of the shortcut
       // NOTE: this fails in about .05% of cases where there are two candidates and its not clear
-      // which edge is the right one. looking at shortcut builder its not obvious how this is possible
-      // as it seems to terminate a shortcut if more than one edge pair can be contracted...
+      // which edge is the right one. looking at shortcut builder its not obvious how this is
+      // possible as it seems to terminate a shortcut if more than one edge pair can be contracted...
       // NOTE: because we change the speed of the edge in graph enhancer we cant use speed as a
       // reliable determining factor
       if (begin_node != edge.endnode() && !edge.is_shortcut() &&
