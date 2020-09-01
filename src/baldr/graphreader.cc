@@ -14,6 +14,8 @@
 
 // move these and the stuff below
 #include "midgard/sequence.h"
+#include <chrono>
+#include <condition_variable>
 #include <ctime>
 #include <memory>
 #include <mutex>
@@ -22,6 +24,13 @@
 using namespace valhalla::midgard;
 
 namespace {
+#ifdef _MSC_VER
+#define MTIME(st_stat) st_stat.st_mtime
+#elif __APPLE__
+#define MTIME(st_stat) st_stat.st_mtime.tv_sec
+#else
+#define MTIME(st_stat) st_stat.st_mtim.tv_sec
+#endif
 
 // some typedefs until we have the real things
 using incident_tile_t = std::vector<char>;
@@ -65,8 +74,9 @@ std::shared_ptr<incident_tile_t> read_tile(const std::string& filename) {
  */
 void watch(const boost::property_tree::ptree& config,
            std::atomic<bool>& running,
+           std::condition_variable& signal,
            std::atomic<uint64_t>& last_scan,
-           std::mutex& lock,
+           std::mutex& mutex,
            incident_cache_t& cache) {
   // figure out which configuration we are doing here
   std::unique_ptr<valhalla::midgard::sequence<uint64_t>> changelog;
@@ -74,10 +84,14 @@ void watch(const boost::property_tree::ptree& config,
   try {
     changelog.reset(new decltype(changelog)::element_type(changelog_path.string()));
   } catch (...) {}
-  auto directory = config.get<std::string>("incidents_root", "");
+  auto directory = filesystem::path(config.get<std::string>("incidents_root", ""));
+  if (!filesystem::is_directory(directory)) {
+    directory = {};
+  }
 
   // wait for someone to tell us to stop
-  while (running.load()) {
+  bool first_run = true;
+  do {
     auto next_time = time(NULL);
     // we are in memory map mode
     if (changelog) {
@@ -98,7 +112,7 @@ void watch(const boost::property_tree::ptree& config,
         }
       }
     } // we are in directory scan mode
-    else if (!directory.empty()) {
+    else if (!directory.string().empty()) {
       // check all of the files
       for (filesystem::recursive_directory_iterator i(directory), end; i != end; ++i) {
         // has this been updated recently
@@ -106,31 +120,40 @@ void watch(const boost::property_tree::ptree& config,
         valhalla::baldr::GraphId tile_id;
         if (i->is_regular_file() &&
             (tile_id = valhalla::baldr::GraphTile::GetTileId(i->path().string())).Is_Valid() &&
-            stat(i->path().c_str(), &s) == 0 && last_scan.load() <= s.st_mtim.tv_sec) {
+            stat(i->path().c_str(), &s) == 0 && last_scan.load() <= MTIME(s)) {
           // get the tile
           auto tile = read_tile(i->path().string());
           // because we are sharing a growing cache with the main thread we need a write lock
-          lock.lock();
+          mutex.lock();
           cache[tile_id] = tile;
-          lock.unlock();
+          mutex.unlock();
         }
       }
-    } // there is nothing to watch
-    else {
-      break;
     }
     // we finished a round
     last_scan.store(next_time);
+    // signal we completed our first batch
+    if (first_run) {
+      first_run = false;
+      running.store(true);
+      signal.notify_one();
+    }
+    // bail if there is nothing to do
+    if (!changelog && directory.string().empty()) {
+      break;
+    }
     // wait just a little before we check again (scanning the memory map is cheap)
+    // TODO: configurable
     std::this_thread::sleep_for(std::chrono::seconds(1));
-  }
+  } while (running.load());
 }
 
 struct incident_singleton_t {
 private:
   std::atomic<bool> running;
+  std::condition_variable first_run;
   std::atomic<uint64_t> last_scan;
-  std::mutex lock;
+  std::mutex mutex;
   incident_cache_t cache;
   std::thread watcher;
 
@@ -139,13 +162,20 @@ private:
    * @param root  The root directory to scan, sould probably be a config rather than just root
    */
   incident_singleton_t(const boost::property_tree::ptree& config)
-      : running(true), last_scan(0), watcher(watch,
-                                             config,
-                                             std::ref(running),
-                                             std::ref(last_scan),
-                                             std::ref(lock),
-                                             std::ref(cache)) {
-
+      : running(false), last_scan(0), watcher(watch,
+                                              config,
+                                              std::ref(running),
+                                              std::ref(first_run),
+                                              std::ref(last_scan),
+                                              std::ref(mutex),
+                                              std::ref(cache)) {
+    // see if the thread can start up and do a pass to load all the incidents
+    using namespace std::chrono_literals;
+    std::unique_lock<std::mutex> lock(mutex);
+    auto now = std::chrono::system_clock::now();
+    if (!first_run.wait_until(lock, now + 30s, [this]() -> bool { return running.load(); })) {
+      throw std::runtime_error("Unable to load initial incidents in the configured time period");
+    }
     // let this run forever
     watcher.detach();
   }
@@ -177,14 +207,12 @@ public:
       throw std::runtime_error("The incident watcher isn't running or is behind");
 
     // try to get the tile, when in mapped mode, locking should be close to free..
-    singleton.lock.lock();
+    std::lock_guard<std::mutex> lock(singleton.mutex);
     auto found = singleton.cache.find(tile_id);
     if (found == singleton.cache.cend()) {
-      singleton.lock.unlock();
       return {};
     }
     auto tile = std::atomic_load_explicit(&found->second, std::memory_order_acquire);
-    singleton.lock.unlock();
     return tile;
   }
 };
@@ -533,6 +561,8 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
   // Reserve cache (based on whether using individual tile files or shared,
   // mmap'd file
   cache_->Reserve(tile_extract_->tiles.empty() ? AVERAGE_TILE_SIZE : AVERAGE_MM_TILE_SIZE);
+  // Initialize the incident cache singleton
+  incident_singleton_t::get({}, pt);
 }
 
 // Method to test if tile exists
