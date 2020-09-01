@@ -27,7 +27,7 @@ namespace {
 #ifdef _MSC_VER
 #define MTIME(st_stat) st_stat.st_mtime
 #elif __APPLE__
-#define MTIME(st_stat) st_stat.st_mtime.tv_sec
+#define MTIME(st_stat) st_stat.st_mtime
 #else
 #define MTIME(st_stat) st_stat.st_mtim.tv_sec
 #endif
