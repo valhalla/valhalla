@@ -383,9 +383,17 @@ public:
     auto access_mask = access_mask_;
     auto max_sac_scale = max_hiking_difficulty_;
     auto on_bss_connection = project_on_bss_connection;
-    return [access_mask, max_sac_scale, on_bss_connection](const baldr::DirectedEdge* edge) {
+    auto i_access = ignore_access_;
+    auto i_oneways = ignore_oneways_;
+
+    return [access_mask, max_sac_scale, on_bss_connection, i_access,
+            i_oneways](const baldr::DirectedEdge* edge) {
+      bool accessable = (edge->forwardaccess() & access_mask) ||
+                        (i_access && (edge->forwardaccess() & kAllAccess)) ||
+                        (i_oneways && (edge->reverseaccess() & access_mask));
+
       return !(edge->is_shortcut() || edge->use() >= Use::kRail ||
-               edge->sac_scale() > max_sac_scale || !(edge->forwardaccess() & access_mask) ||
+               edge->sac_scale() > max_sac_scale || !accessable ||
                (edge->bss_connection() && !on_bss_connection));
     };
   }
@@ -607,7 +615,6 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const uint64_t current_time,
                              const uint32_t tz_index,
                              int& restriction_idx) const {
-
   bool accessable = (edge->forwardaccess() & access_mask_) ||
                     (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
                     (ignore_oneways_ && (edge->reverseaccess() & access_mask_));
@@ -641,8 +648,6 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const uint64_t current_time,
                                     const uint32_t tz_index,
                                     int& restriction_idx) const {
-  // TODO - obtain and check the access restrictions.
-
   bool accessable = (opp_edge->forwardaccess() & access_mask_) ||
                     (ignore_access_ && (opp_edge->forwardaccess() & kAllAccess)) ||
                     (ignore_oneways_ && (opp_edge->reverseaccess() & access_mask_));

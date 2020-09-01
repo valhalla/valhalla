@@ -416,10 +416,14 @@ protected:
     // Throw back a lambda that checks the access for this type of costing
     Surface s = worst_allowed_surface_;
     float a = avoid_bad_surfaces_;
-    return [s, a](const baldr::DirectedEdge* edge) {
-      if (edge->is_shortcut() || !(edge->forwardaccess() & kBicycleAccess) ||
-          edge->use() == Use::kSteps || (a == 1.0f && edge->surface() > s) ||
-          edge->bss_connection()) {
+    return [s, a, i_oneways = ignore_oneways_,
+            i_access = ignore_access_](const baldr::DirectedEdge* edge) {
+      bool accessable = (edge->forwardaccess() & kBicycleAccess) ||
+                        (i_access && (edge->forwardaccess() & kAllAccess)) ||
+                        (i_oneways && (edge->reverseaccess() & kBicycleAccess));
+
+      if (edge->is_shortcut() || !accessable || edge->use() == Use::kSteps ||
+          (a == 1.0f && edge->surface() > s) || edge->bss_connection()) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -529,7 +533,6 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
                           const uint64_t current_time,
                           const uint32_t tz_index,
                           int& restriction_idx) const {
-
   // you can go on it if:
   // you have forward access for the mode you care about
   // you dont care about what mode has access so long as its forward
@@ -537,7 +540,6 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
   bool accessable = (edge->forwardaccess() & kBicycleAccess) ||
                     (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
                     (ignore_oneways_ && (edge->reverseaccess() & kBicycleAccess));
-
   // Check bicycle access and turn restrictions. Bicycles should obey
   // vehicular turn restrictions. Allow Uturns at dead ends only.
   // Skip impassable edges and shortcut edges.
@@ -574,11 +576,9 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                  const uint64_t current_time,
                                  const uint32_t tz_index,
                                  int& restriction_idx) const {
-
   bool accessable = (opp_edge->forwardaccess() & kBicycleAccess) ||
                     (ignore_access_ && (opp_edge->forwardaccess() & kAllAccess)) ||
                     (ignore_oneways_ && (opp_edge->reverseaccess() & kBicycleAccess));
-
   // Check access, U-turn (allow at dead-ends), and simple turn restriction.
   // Do not allow transit connection edges.
   if (!accessable || opp_edge->is_shortcut() || opp_edge->use() == Use::kTransitConnection ||

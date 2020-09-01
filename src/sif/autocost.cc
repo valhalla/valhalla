@@ -294,8 +294,11 @@ public:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess) || edge->bss_connection()) {
+    return [i_access = ignore_access_, i_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
+      bool accessable = (edge->forwardaccess() & kAutoAccess) ||
+                        (i_access && (edge->forwardaccess() & kAllAccess)) ||
+                        (i_oneways && (edge->reverseaccess() & kAutoAccess));
+      if (edge->is_shortcut() || !accessable || edge->bss_connection()) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -845,8 +848,11 @@ public:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      if (!(edge->forwardaccess() & kBusAccess)) {
+    return [i_access = ignore_access_, i_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
+      bool accessable = (edge->forwardaccess() & kBusAccess) ||
+                        (i_access && (edge->forwardaccess() & kAllAccess)) ||
+                        (i_oneways && (edge->reverseaccess() & kBusAccess));
+      if (!accessable) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -1054,8 +1060,11 @@ public:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      if (!(edge->forwardaccess() & kHOVAccess)) {
+    return [i_access = ignore_access_, i_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
+      bool accessable = (edge->forwardaccess() & kHOVAccess) ||
+                        (i_access && (edge->forwardaccess() & kAllAccess)) ||
+                        (i_oneways && (edge->reverseaccess() & kHOVAccess));
+      if (!accessable) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -1266,8 +1275,11 @@ public:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      if (!(edge->forwardaccess() & kTaxiAccess)) {
+    return [i_access = ignore_access_, i_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
+      bool accessable = (edge->forwardaccess() & kTaxiAccess) ||
+                        (i_access && (edge->forwardaccess() & kAllAccess)) ||
+                        (i_oneways && (edge->reverseaccess() & kTaxiAccess));
+      if (!accessable) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -1431,9 +1443,16 @@ public:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
+    return [i_access = ignore_access_, i_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
       // Do not allow edges with no auto access in either direction
-      if (!((edge->forwardaccess() & kAutoAccess) || (edge->reverseaccess() & kAutoAccess))) {
+      bool allow_forward = edge->forwardaccess() & kAutoAccess;
+      bool allow_reverse = edge->reverseaccess() & kAutoAccess;
+
+      bool accessable =
+          (allow_forward && allow_reverse) || (i_oneways && (allow_forward || allow_reverse)) ||
+          (i_access && (edge->forwardaccess() & kAllAccess) && (edge->reverseaccess() & kAllAccess));
+
+      if (!accessable) {
         return 0.0f;
       } else {
         return 1.0f;
