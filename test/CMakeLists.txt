@@ -5,19 +5,19 @@ set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock_main PROPERTIES FOLDER "Dependencies")
 
 ## Lists tests
-set(tests aabb2 access_restriction actor admin attributes_controller astar_bss complexrestriction countryaccess datetime directededge
+set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
   enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions
-  json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch mapmatch_config
+  json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
   narrative_dictionary nodeinfo nodetransition obb2 openlr optimizer parse_request point2 pointll
   polyline2 predictedspeeds queue routing sample sequence sign signs streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
-  transitstop turn turnlanes util_midgard util_skadi util_mjolnir vector2 verbal_text_formatter verbal_text_formatter_us
+  transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem traffictile)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
-    idtable matrix minbb multipoint_routes names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary thor_worker timedep_paths timeparsing trivial_paths uniquenames urban utrecht lua)
+  list(APPEND tests astar astar_bss complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
+    idtable mapmatch matrix minbb multipoint_routes names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua)
   if(ENABLE_HTTP)
     list(APPEND tests http_tiles)
   endif()
@@ -205,6 +205,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/07
 add_custom_target(nh_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/074.gph)
 set_target_properties(nh_ar_tiles PROPERTIES FOLDER "Tests")
 
+
 file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.json")
 add_custom_command(OUTPUT .locales.timestamp
   COMMAND /bin/bash -c "for loc in $(jq --raw-output .posix_locale *.json); do \
@@ -268,12 +269,12 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-reach utrecht_tiles)
   add_dependencies(run-shape_attributes utrecht_tiles)
   add_dependencies(run-summary utrecht_tiles)
+  add_dependencies(run-urban utrecht_tiles)
   add_dependencies(run-thor_worker utrecht_tiles)
   add_dependencies(run-recover_shortcut utrecht_tiles)
   add_dependencies(run-minbb utrecht_tiles)
   add_dependencies(run-astar_bss paris_bss_tiles)
   add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
-  add_dependencies(run-urban utrecht_tiles)
 if(ENABLE_HTTP)
     add_dependencies(run-http_tiles utrecht_tiles)
   endif()

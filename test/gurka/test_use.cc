@@ -96,7 +96,7 @@ TEST_F(Use, test_rest_area_use) {
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
   auto json = actor.route(
-      R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["edge.rest_area_use"]},"locations":[)" +
+      R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["edge.rest_area"]},"locations":[)" +
           locations + R"(]})",
       {}, &api);
 
@@ -151,7 +151,7 @@ TEST_F(Use, test_service_area_use) {
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
   auto json = actor.route(
-      R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["edge.service_area_use"]},"locations":[)" +
+      R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["edge.service_area"]},"locations":[)" +
           locations + R"(]})",
       {}, &api);
 
@@ -181,7 +181,7 @@ TEST_F(Use, test_all_use) {
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
   auto json = actor.route(
-      R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["edge.rest_area_use", "edge.service_area_use"]},"locations":[)" +
+      R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["edge.rest_area", "edge.service_area"]},"locations":[)" +
           locations + R"(]})",
       {}, &api);
 
