@@ -355,6 +355,22 @@ public:
     return mutable_edge_->is_urban();
   }
 
+  bool has_is_rest_area_use() const {
+    return mutable_edge_->has_is_rest_area_use();
+  }
+
+  bool is_rest_area_use() const {
+    return mutable_edge_->is_rest_area_use();
+  }
+
+  bool has_is_service_area_use() const {
+    return mutable_edge_->has_is_service_area_use();
+  }
+
+  bool is_service_area_use() const {
+    return mutable_edge_->is_service_area_use();
+  }
+
   bool IsUnnamed() const;
 
   // Use

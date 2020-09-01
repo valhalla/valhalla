@@ -431,10 +431,10 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         uint32_t bearing = static_cast<uint32_t>(intersecting_edge->begin_heading());
         edges.emplace_back(bearing, routeable, false, false);
 
-        if (curr_edge->IsRestAreaUse()) {
+        if (curr_edge->has_is_rest_area_use()) {
           intersection->emplace("rest_area", rest_area);
           break;
-        } else if (curr_edge->IsServiceAreaUse()) {
+        } else if (curr_edge->has_is_service_area_use()) {
           intersection->emplace("service_area", service_area);
           break;
         }

@@ -1,11 +1,22 @@
 #include "gurka.h"
+#include <boost/format.hpp>
 #include <gtest/gtest.h>
+
+#if !defined(VALHALLA_SOURCE_DIR)
+#define VALHALLA_SOURCE_DIR
+#endif
 
 using namespace valhalla;
 const std::unordered_map<std::string, std::string> build_config{{"mjolnir.shortcuts", "false"}};
 
-TEST(Use, Standalone) {
-  const std::string ascii_map = R"(
+class Use : public ::testing::Test {
+protected:
+  static gurka::map map;
+
+  static void SetUpTestSuite() {
+    constexpr double gridsize_metres = 100;
+
+    const std::string ascii_map = R"(
                           A
                           |
                           | 
@@ -18,15 +29,24 @@ TEST(Use, Standalone) {
                           E----F
   )";
 
-  const gurka::ways ways =
-      {{"AB", {{"highway", "motorway"}}},
-       {"BC", {{"highway", "motorway"}, {"service", "rest_area"}}},
-       {"BD", {{"highway", "motorway"}}},
-       {"DE", {{"highway", "motorway"}}},
-       {"EF", {{"highway", "motorway"}, {"service", "rest_area"}, {"amenity", "yes"}}}};
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_use");
+    const gurka::ways ways =
+        {{"AB", {{"highway", "motorway"}}},
+         {"BC", {{"highway", "motorway"}, {"service", "rest_area"}}},
+         {"BD", {{"highway", "motorway"}}},
+         {"DE", {{"highway", "motorway"}}},
+         {"EF", {{"highway", "motorway"}, {"service", "rest_area"}, {"amenity", "yes"}}}};
 
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_use", build_config);
+  }
+};
+gurka::map Use::map = {};
+Api api;
+rapidjson::Document d;
+
+/*************************************************************/
+
+TEST_F(Use, EdgeUse) {
   auto result = gurka::route(map, "A", "C", "auto");
 
   // rest_area
@@ -41,43 +61,18 @@ TEST(Use, Standalone) {
   EXPECT_EQ(leg.node(3).edge().use(), TripLeg::Use::TripLeg_Use_kServiceAreaUse); // EF
 }
 
-TEST(Use, test_rest_area_use_excluded_by_default) {
-  const std::string ascii_map = R"(
-                          A
-                          |
-                          | 
-                          B----C
-                          |
-                          |
-                          D
-                          |
-                          |
-                          E----F
-  )";
-
-  const gurka::ways ways =
-      {{"AB", {{"highway", "motorway"}}},
-       {"BC", {{"highway", "motorway"}, {"service", "rest_area"}}},
-       {"BD", {{"highway", "motorway"}}},
-       {"DE", {{"highway", "motorway"}}},
-       {"EF", {{"highway", "motorway"}, {"service", "rest_are"}, {"amenity", "yes"}}}};
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, {},
-                               "test/data/gurka_rest_area_use_excluded_by_default", build_config);
-  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
-  valhalla::tyr::actor_t actor(map.config, *reader, true);
-
+TEST_F(Use, test_rest_area_use_excluded_by_default) {
   std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) +
                           R"(,"lat":)" + std::to_string(map.nodes["A"].lat()) +
                           R"(},{"lon":)" + std::to_string(map.nodes["C"].lng()) +
                           R"(,"lat":)" + std::to_string(map.nodes["C"].lat()) + "}";
 
-  Api api;
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
   auto json = actor.route(R"({"costing":"auto","format":"osrm","locations":[)" + locations + R"(]})",
                           {}, &api);
 
   // get the osrm json
-  rapidjson::Document d;
   d.Parse(json);
   EXPECT_FALSE(d.HasParseError());
 
@@ -92,44 +87,20 @@ TEST(Use, test_rest_area_use_excluded_by_default) {
   }
 }
 
-TEST(Use, test_rest_area_use) {
-  const std::string ascii_map = R"(
-                          A
-                          |
-                          | 
-                          B----C
-                          |
-                          |
-                          D
-                          |
-                          |
-                          E----F
-  )";
-
-  const gurka::ways ways =
-      {{"AB", {{"highway", "motorway"}}},
-       {"BC", {{"highway", "motorway"}, {"service", "rest_area"}}},
-       {"BD", {{"highway", "motorway"}}},
-       {"DE", {{"highway", "motorway"}}},
-       {"EF", {{"highway", "motorway"}, {"service", "rest_area"}, {"amenity", "yes"}}}};
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_rest_area_use", build_config);
-  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
-  valhalla::tyr::actor_t actor(map.config, *reader, true);
-
+TEST_F(Use, test_rest_area_use) {
   std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) +
                           R"(,"lat":)" + std::to_string(map.nodes["A"].lat()) +
                           R"(},{"lon":)" + std::to_string(map.nodes["C"].lng()) +
                           R"(,"lat":)" + std::to_string(map.nodes["C"].lat()) + "}";
 
-  Api api;
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
   auto json = actor.route(
       R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["edge.rest_area_use"]},"locations":[)" +
           locations + R"(]})",
       {}, &api);
 
   // get the osrm json
-  rapidjson::Document d;
   d.Parse(json);
   EXPECT_FALSE(d.HasParseError());
 
@@ -145,43 +116,18 @@ TEST(Use, test_rest_area_use) {
     }
   }
 }
-TEST(Use, test_service_area_use_excluded_by_default) {
-  const std::string ascii_map = R"(
-                          A
-                          |
-                          | 
-                          B----C
-                          |
-                          |
-                          D
-                          |
-                          |
-                          E----F
-  )";
-
-  const gurka::ways ways =
-      {{"AB", {{"highway", "motorway"}}},
-       {"BC", {{"highway", "motorway"}, {"service", "rest_area"}}},
-       {"BD", {{"highway", "motorway"}}},
-       {"DE", {{"highway", "motorway"}}},
-       {"EF", {{"highway", "motorway"}, {"service", "rest_area"}, {"amenity", "yes"}}}};
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, {},
-                               "test/data/gurka_service_area_use_excluded_by_default", build_config);
-  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
-  valhalla::tyr::actor_t actor(map.config, *reader, true);
-
+TEST_F(Use, test_service_area_use_excluded_by_default) {
   std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) +
                           R"(,"lat":)" + std::to_string(map.nodes["A"].lat()) +
                           R"(},{"lon":)" + std::to_string(map.nodes["F"].lng()) +
                           R"(,"lat":)" + std::to_string(map.nodes["F"].lat()) + "}";
 
-  Api api;
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
   auto json = actor.route(R"({"costing":"auto","format":"osrm","locations":[)" + locations + R"(]})",
                           {}, &api);
 
   // get the osrm json
-  rapidjson::Document d;
   d.Parse(json);
   EXPECT_FALSE(d.HasParseError());
 
@@ -196,45 +142,20 @@ TEST(Use, test_service_area_use_excluded_by_default) {
   }
 }
 
-TEST(Use, test_service_area_use) {
-  const std::string ascii_map = R"(
-                          A
-                          |
-                          | 
-                          B----C
-                          |
-                          |
-                          D
-                          |
-                          |
-                          E----F
-  )";
-
-  const gurka::ways ways =
-      {{"AB", {{"highway", "motorway"}}},
-       {"BC", {{"highway", "motorway"}, {"service", "rest_area"}}},
-       {"BD", {{"highway", "motorway"}}},
-       {"DE", {{"highway", "motorway"}}},
-       {"EF", {{"highway", "motorway"}, {"service", "rest_area"}, {"amenity", "yes"}}}};
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_service_area_use", build_config);
-  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
-  valhalla::tyr::actor_t actor(map.config, *reader, true);
-
+TEST_F(Use, test_service_area_use) {
   std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) +
                           R"(,"lat":)" + std::to_string(map.nodes["A"].lat()) +
                           R"(},{"lon":)" + std::to_string(map.nodes["F"].lng()) +
                           R"(,"lat":)" + std::to_string(map.nodes["F"].lat()) + "}";
 
-  Api api;
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
   auto json = actor.route(
       R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["edge.service_area_use"]},"locations":[)" +
           locations + R"(]})",
       {}, &api);
 
   // get the osrm json
-  rapidjson::Document d;
   d.Parse(json);
   EXPECT_FALSE(d.HasParseError());
 
@@ -242,6 +163,39 @@ TEST(Use, test_service_area_use) {
     for (const auto& leg : route["legs"].GetArray()) {
       for (const auto& step : leg["steps"].GetArray()) {
         for (const auto& intersection : step["intersections"].GetArray()) {
+          if (intersection.HasMember("service_area")) {
+            EXPECT_EQ(intersection.HasMember("service_area"), true);
+          }
+        }
+      }
+    }
+  }
+}
+
+TEST_F(Use, test_all_use) {
+  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) +
+                          R"(,"lat":)" + std::to_string(map.nodes["A"].lat()) +
+                          R"(},{"lon":)" + std::to_string(map.nodes["F"].lng()) +
+                          R"(,"lat":)" + std::to_string(map.nodes["F"].lat()) + "}";
+
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+  auto json = actor.route(
+      R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["edge.rest_area_use", "edge.service_area_use"]},"locations":[)" +
+          locations + R"(]})",
+      {}, &api);
+
+  // get the osrm json
+  d.Parse(json);
+  EXPECT_FALSE(d.HasParseError());
+
+  for (const auto& route : d["routes"].GetArray()) {
+    for (const auto& leg : route["legs"].GetArray()) {
+      for (const auto& step : leg["steps"].GetArray()) {
+        for (const auto& intersection : step["intersections"].GetArray()) {
+          if (intersection.HasMember("rest_area")) {
+            EXPECT_EQ(intersection.HasMember("rest_area"), true);
+          }
           if (intersection.HasMember("service_area")) {
             EXPECT_EQ(intersection.HasMember("service_area"), true);
           }
