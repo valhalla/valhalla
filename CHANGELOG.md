@@ -1,6 +1,7 @@
 ## Release Date: 2020-08-?? Valhalla 3.1.0
 * **Removed**
    * REMOVED:  Remove Node bindings. [#2502](https://github.com/valhalla/valhalla/pull/2502)
+   * REMOVED: appveyor builds. [#2544](https://github.com/valhalla/valhalla/issues/2544)
 
 * **Bug Fix**
    * FIXED: More Windows compatibility: build tiles and some run actions work now (including CI tests) [#2300](https://github.com/valhalla/valhalla/issues/2300)
