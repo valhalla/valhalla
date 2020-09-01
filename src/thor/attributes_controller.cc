@@ -73,6 +73,8 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeDefaultSpeed, true},
     {kEdgeDestinationOnly, true},
     {kEdgeIsUrban, false},
+    {kEdgeRestAreaUse, false},
+    {kEdgeServiceAreaUse, false},
 
     // Node keys
     {kNodeIncidents, false},

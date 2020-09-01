@@ -70,6 +70,8 @@ const std::string kEdgeTruckRoute = "edge.truck_route";
 const std::string kEdgeDefaultSpeed = "edge.default_speed";
 const std::string kEdgeDestinationOnly = "edge.destination_only";
 const std::string kEdgeIsUrban = "edge.is_urban";
+const std::string kEdgeRestAreaUse = "edge.rest_area_use";
+const std::string kEdgeServiceAreaUse = "edge.service_area_use";
 
 // Node keys
 const std::string kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";
