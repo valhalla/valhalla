@@ -1,6 +1,7 @@
 ## Release Date: 2020-08-?? Valhalla 3.1.0
 * **Removed**
    * REMOVED:  Remove Node bindings. [#2502](https://github.com/valhalla/valhalla/pull/2502)
+   * REMOVED: appveyor builds. [#2544](https://github.com/valhalla/valhalla/issues/2544)
 
 * **Bug Fix**
    * FIXED: More Windows compatibility: build tiles and some run actions work now (including CI tests) [#2300](https://github.com/valhalla/valhalla/issues/2300)
@@ -148,6 +149,7 @@
    * CHANGED: Refactor mapmatching configuration to use a struct (instead of `boost::property_tree::ptree`). [#2485](https://github.com/valhalla/valhalla/pull/2485)
    * ADDED: Save exit maneuver's begin heading when combining enter & exit roundabout maneuvers. [#2554](https://github.com/valhalla/valhalla/pull/2554)
    * ADDED: Added new urban flag that can be set if edge is within city boundaries to data processing; new use_urban_tag config option; added to osrm response within intersections. [#2522](https://github.com/valhalla/valhalla/pull/2522)
+   * ADDED: Use edge.is_urban is set for serializing is_urban. [#2568](https://github.com/valhalla/valhalla/pull/2568)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
