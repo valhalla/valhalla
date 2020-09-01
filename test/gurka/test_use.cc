@@ -62,10 +62,10 @@ TEST_F(Use, EdgeUse) {
 }
 
 TEST_F(Use, test_rest_area_use_excluded_by_default) {
-  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) +
-                          R"(,"lat":)" + std::to_string(map.nodes["A"].lat()) +
-                          R"(},{"lon":)" + std::to_string(map.nodes["C"].lng()) +
-                          R"(,"lat":)" + std::to_string(map.nodes["C"].lat()) + "}";
+  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["A"].lat()) + R"(},{"lon":)" +
+                          std::to_string(map.nodes["C"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["C"].lat()) + "}";
 
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -88,10 +88,10 @@ TEST_F(Use, test_rest_area_use_excluded_by_default) {
 }
 
 TEST_F(Use, test_rest_area_use) {
-  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) +
-                          R"(,"lat":)" + std::to_string(map.nodes["A"].lat()) +
-                          R"(},{"lon":)" + std::to_string(map.nodes["C"].lng()) +
-                          R"(,"lat":)" + std::to_string(map.nodes["C"].lat()) + "}";
+  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["A"].lat()) + R"(},{"lon":)" +
+                          std::to_string(map.nodes["C"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["C"].lat()) + "}";
 
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -117,10 +117,10 @@ TEST_F(Use, test_rest_area_use) {
   }
 }
 TEST_F(Use, test_service_area_use_excluded_by_default) {
-  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) +
-                          R"(,"lat":)" + std::to_string(map.nodes["A"].lat()) +
-                          R"(},{"lon":)" + std::to_string(map.nodes["F"].lng()) +
-                          R"(,"lat":)" + std::to_string(map.nodes["F"].lat()) + "}";
+  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["A"].lat()) + R"(},{"lon":)" +
+                          std::to_string(map.nodes["F"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["F"].lat()) + "}";
 
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -143,10 +143,10 @@ TEST_F(Use, test_service_area_use_excluded_by_default) {
 }
 
 TEST_F(Use, test_service_area_use) {
-  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) +
-                          R"(,"lat":)" + std::to_string(map.nodes["A"].lat()) +
-                          R"(},{"lon":)" + std::to_string(map.nodes["F"].lng()) +
-                          R"(,"lat":)" + std::to_string(map.nodes["F"].lat()) + "}";
+  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["A"].lat()) + R"(},{"lon":)" +
+                          std::to_string(map.nodes["F"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["F"].lat()) + "}";
 
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -173,10 +173,10 @@ TEST_F(Use, test_service_area_use) {
 }
 
 TEST_F(Use, test_all_use) {
-  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) +
-                          R"(,"lat":)" + std::to_string(map.nodes["A"].lat()) +
-                          R"(},{"lon":)" + std::to_string(map.nodes["F"].lng()) +
-                          R"(,"lat":)" + std::to_string(map.nodes["F"].lat()) + "}";
+  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["A"].lat()) + R"(},{"lon":)" +
+                          std::to_string(map.nodes["F"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["F"].lat()) + "}";
 
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
