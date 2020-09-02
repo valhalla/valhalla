@@ -736,8 +736,8 @@ TEST(GraphParser, TestImportBssNode) {
   EXPECT_EQ(local_tile->node(count - 1)->type(), NodeType::kBikeShare)
       << "The added node is not bike share";
 
-  EXPECT_EQ(local_tile->node(count - 1)->edge_count(), 2)
-      << "The bike share node must have 2 outbound edges";
+  EXPECT_EQ(local_tile->node(count - 1)->edge_count(), 4)
+      << "The bike share node must have 4 outbound edges";
 
   auto check_edge_attribute = [](const DirectedEdge* directededge) {
     EXPECT_TRUE(directededge->bss_connection())
