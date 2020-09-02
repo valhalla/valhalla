@@ -191,6 +191,14 @@ public:
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const = 0;
 
+  /**
+   * Checks if access is allowed for the provided edge. The access check based on mode
+   * of travel and the access modes allowed on the edge.
+   * @param   edge  Pointer to edge information.
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool IsAccessable(const baldr::DirectedEdge* edge) const = 0;
+
   inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
     return true;
   };

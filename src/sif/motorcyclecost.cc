@@ -201,7 +201,19 @@ public:
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const {
-    return (node->access() & kMotorcycleAccess);
+    return (node->access() & (ignore_access_ ? kAllAccess : kMotorcycleAccess));
+  }
+
+  /**
+   * Checks if access is allowed for the provided edge. The access check based on mode
+   * of travel and the access modes allowed on the edge.
+   * @param   edge  Pointer to edge information.
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool IsAccessable(const baldr::DirectedEdge* edge) const {
+    return (edge->forwardaccess() & kMotorcycleAccess) ||
+           (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
+           (ignore_oneways_ && (edge->reverseaccess() & kMotorcycleAccess));
   }
 
   /**
@@ -310,7 +322,8 @@ public:
    */
   virtual const NodeFilter GetNodeFilter() const {
     // throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node) { return !(node->access() & kMotorcycleAccess); };
+    auto access_mask = (ignore_access_ ? kAllAccess : kMotorcycleAccess);
+    return [access_mask](const baldr::NodeInfo* node) { return !(node->access() & access_mask); };
   }
 
   // Hidden in source file so we don't need it to be protected
@@ -408,14 +421,9 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
     if (tile->IsClosedDueToTraffic(edgeid))
       return false;
   }
-
-  bool accessable = (edge->forwardaccess() & kMotorcycleAccess) ||
-                    (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
-                    (ignore_oneways_ && (edge->reverseaccess() & kMotorcycleAccess));
-
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!accessable || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+  if (!IsAccessable(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       IsUserAvoidEdge(edgeid) || (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
@@ -441,14 +449,9 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
     if (tile->IsClosedDueToTraffic(opp_edgeid))
       return false;
   }
-
-  bool accessable = (opp_edge->forwardaccess() & kMotorcycleAccess) ||
-                    (ignore_access_ && (opp_edge->forwardaccess() & kAllAccess)) ||
-                    (ignore_oneways_ && (opp_edge->reverseaccess() & kMotorcycleAccess));
-
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!accessable || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+  if (!IsAccessable(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {

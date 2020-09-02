@@ -48,8 +48,7 @@ public:
                const uint64_t current_time,
                const uint32_t tz_index,
                int& restriction_idx) const {
-    if (!(edge->forwardaccess() & kAutoAccess) ||
-        (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+    if (!IsAccessable(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (pred.restrictions() & (1 << edge->localedgeidx())) ||
         edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
         (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
@@ -66,7 +65,7 @@ public:
                       const uint64_t current_time,
                       const uint32_t tz_index,
                       int& restriction_idx) const {
-    if (!(opp_edge->forwardaccess() & kAutoAccess) ||
+    if (!IsAccessable(opp_edge) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
         opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
@@ -78,6 +77,10 @@ public:
 
   bool Allowed(const NodeInfo* node) const {
     return (node->access() & kAutoAccess);
+  }
+
+  bool IsAccessable(const DirectedEdge* edge) const {
+    return (edge->forwardaccess() & kAutoAccess);
   }
 
   Cost EdgeCost(const baldr::DirectedEdge* edge,

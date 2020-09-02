@@ -294,7 +294,23 @@ public:
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::NodeInfo* node) const {
-    return (node->access() & kBicycleAccess);
+    return (node->access() & (ignore_access_ ? kAllAccess : kBicycleAccess));
+  }
+
+  /**
+   * Checks if access is allowed for the provided edge. The access check based on mode
+   * of travel and the access modes allowed on the edge.
+   * @param   edge  Pointer to edge information.
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool IsAccessable(const baldr::DirectedEdge* edge) const {
+    // you can go on it if:
+    // you have forward access for the mode you care about
+    // you dont care about what mode has access so long as its forward
+    // you dont care about the direction the mode has access to
+    return (edge->forwardaccess() & kBicycleAccess) ||
+           (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
+           (ignore_oneways_ && (edge->reverseaccess() & kBicycleAccess));
   }
 
   /**
@@ -416,8 +432,9 @@ protected:
     // Throw back a lambda that checks the access for this type of costing
     Surface s = worst_allowed_surface_;
     float a = avoid_bad_surfaces_;
-    return [s, a, i_oneways = ignore_oneways_,
-            i_access = ignore_access_](const baldr::DirectedEdge* edge) {
+    bool i_oneways = ignore_oneways_;
+    bool i_access = ignore_access_;
+    return [s, a, i_oneways, i_access](const baldr::DirectedEdge* edge) {
       bool accessable = (edge->forwardaccess() & kBicycleAccess) ||
                         (i_access && (edge->forwardaccess() & kAllAccess)) ||
                         (i_oneways && (edge->reverseaccess() & kBicycleAccess));
@@ -439,7 +456,8 @@ protected:
    */
   virtual const NodeFilter GetNodeFilter() const {
     // throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node) { return !(node->access() & kBicycleAccess); };
+    bool access_mask = (ignore_access_ ? kAllAccess : kBicycleAccess);
+    return [access_mask](const baldr::NodeInfo* node) { return (node->access() & access_mask); };
   }
 };
 
@@ -533,17 +551,10 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
                           const uint64_t current_time,
                           const uint32_t tz_index,
                           int& restriction_idx) const {
-  // you can go on it if:
-  // you have forward access for the mode you care about
-  // you dont care about what mode has access so long as its forward
-  // you dont care about the direction the mode has access to
-  bool accessable = (edge->forwardaccess() & kBicycleAccess) ||
-                    (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
-                    (ignore_oneways_ && (edge->reverseaccess() & kBicycleAccess));
   // Check bicycle access and turn restrictions. Bicycles should obey
   // vehicular turn restrictions. Allow Uturns at dead ends only.
   // Skip impassable edges and shortcut edges.
-  if (!accessable || edge->is_shortcut() ||
+  if (!IsAccessable(edge) || edge->is_shortcut() ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kBicycle) ||
       (!ignore_restrictions_ && (pred.restrictions() & (1 << edge->localedgeidx()))) ||
@@ -576,13 +587,11 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                  const uint64_t current_time,
                                  const uint32_t tz_index,
                                  int& restriction_idx) const {
-  bool accessable = (opp_edge->forwardaccess() & kBicycleAccess) ||
-                    (ignore_access_ && (opp_edge->forwardaccess() & kAllAccess)) ||
-                    (ignore_oneways_ && (opp_edge->reverseaccess() & kBicycleAccess));
   // Check access, U-turn (allow at dead-ends), and simple turn restriction.
   // Do not allow transit connection edges.
-  if (!accessable || opp_edge->is_shortcut() || opp_edge->use() == Use::kTransitConnection ||
-      opp_edge->use() == Use::kEgressConnection || opp_edge->use() == Use::kPlatformConnection ||
+  if (!IsAccessable(opp_edge) || opp_edge->is_shortcut() ||
+      opp_edge->use() == Use::kTransitConnection || opp_edge->use() == Use::kEgressConnection ||
+      opp_edge->use() == Use::kPlatformConnection ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kBicycle) ||
       (!ignore_restrictions_ && (opp_edge->restrictions() & (1 << pred.opp_local_idx()))) ||

@@ -148,6 +148,14 @@ public:
   virtual bool Allowed(const baldr::NodeInfo* node) const;
 
   /**
+   * Checks if access is allowed for the provided edge. The access check based on mode
+   * of travel and the access modes allowed on the edge.
+   * @param   edge  Pointer to edge information.
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool IsAccessable(const baldr::DirectedEdge* edge) const;
+
+  /**
    * Get the cost to traverse the specified directed edge using a transit
    * departure (schedule based edge traversal). Cost includes
    * the time (seconds) to traverse the edge.
@@ -225,9 +233,12 @@ public:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      if (edge->is_shortcut() || edge->use() >= Use::kFerry ||
-          !(edge->forwardaccess() & kPedestrianAccess) || edge->bss_connection()) {
+    return [i_access = ignore_access_, i_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
+      bool accessable = (edge->forwardaccess() & kPedestrianAccess) ||
+                        (i_access && (edge->forwardaccess() & kAllAccess)) ||
+                        (i_oneways && (edge->reverseaccess() & kPedestrianAccess));
+      if (edge->is_shortcut() || edge->use() >= Use::kFerry || !accessable ||
+          edge->bss_connection()) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
@@ -243,7 +254,8 @@ public:
    */
   virtual const NodeFilter GetNodeFilter() const {
     // throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node) { return !(node->access() & kPedestrianAccess); };
+    auto access_mask = (ignore_access_ ? kAllAccess : kPedestrianAccess);
+    return [access_mask](const baldr::NodeInfo* node) { return !(node->access() & access_mask); };
   }
 
   /**This method adds to the exclude list based on the
@@ -574,6 +586,12 @@ bool TransitCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // Check if access is allowed at the specified node.
 bool TransitCost::Allowed(const baldr::NodeInfo* node) const {
   return true;
+}
+
+bool TransitCost::IsAccessable(const baldr::DirectedEdge* edge) const {
+  return (edge->forwardaccess() & kPedestrianAccess) ||
+         (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
+         (ignore_oneways_ && (edge->reverseaccess() & kPedestrianAccess));
 }
 
 // Get the cost to traverse the specified directed edge using a transit
