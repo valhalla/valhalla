@@ -78,6 +78,7 @@ void watch(const boost::property_tree::ptree& config,
            std::atomic<uint64_t>& last_scan,
            std::mutex& mutex,
            incident_cache_t& cache) {
+  LOG_INFO("Incident watcher started");
   // figure out which configuration we are doing here
   std::unique_ptr<valhalla::midgard::sequence<uint64_t>> changelog;
   filesystem::path changelog_path(config.get<std::string>("incidents_mmap", ""));
@@ -109,6 +110,8 @@ void watch(const boost::property_tree::ptree& config,
           auto tile = read_tile(file_location.string());
           // swap it in
           std::atomic_store_explicit(&cache[tile_id], tile, std::memory_order_release);
+          LOG_INFO("Incident watcher " + std::string(tile ? "loaded " : "unloaded ") +
+                   std::to_string(tile_id));
         }
       }
     } // we are in directory scan mode
@@ -127,6 +130,8 @@ void watch(const boost::property_tree::ptree& config,
           mutex.lock();
           cache[tile_id] = tile;
           mutex.unlock();
+          LOG_INFO("Incident watcher " + std::string(tile ? "loaded " : "unloaded ") +
+                   std::to_string(tile_id));
         }
       }
     }
@@ -134,18 +139,21 @@ void watch(const boost::property_tree::ptree& config,
     last_scan.store(next_time);
     // signal we completed our first batch
     if (first_run) {
+      LOG_INFO("Incident watcher initialized");
       first_run = false;
       running.store(true);
       signal.notify_one();
     }
     // bail if there is nothing to do
     if (!changelog && directory.string().empty()) {
+      LOG_INFO("Incident watcher disabled");
       break;
     }
     // wait just a little before we check again (scanning the memory map is cheap)
     // TODO: configurable
     std::this_thread::sleep_for(std::chrono::seconds(1));
   } while (running.load());
+  LOG_INFO("Incident watcher stopped");
 }
 
 struct incident_singleton_t {
@@ -170,6 +178,7 @@ private:
                                               std::ref(mutex),
                                               std::ref(cache)) {
     // see if the thread can start up and do a pass to load all the incidents
+    // TODO: make timeout configurable
     using namespace std::chrono_literals;
     std::unique_lock<std::mutex> lock(mutex);
     auto now = std::chrono::system_clock::now();
