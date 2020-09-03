@@ -150,10 +150,10 @@ DirectedEdge make_directed_edge(const GraphId endnode,
 using bss_by_tile_t = std::unordered_map<GraphId, std::vector<OSMNode>>;
 
 void compute_and_fill_shape(const BestProjection& best,
-                            PointLL bss_ll,
+                            const PointLL& bss_ll,
                             BSSConnection& start,
                             BSSConnection& end) {
-  auto closest_point = std::get<0>(best.closest);
+  const auto& closest_point = std::get<0>(best.closest);
   auto cloest_index = std::get<2>(best.closest);
 
   std::copy(best.shape.begin(), best.shape.begin() + cloest_index + 1,
@@ -166,9 +166,7 @@ void compute_and_fill_shape(const BestProjection& best,
   std::copy(best.shape.begin() + cloest_index + 1, best.shape.end(), std::back_inserter(end.shape));
 }
 
-std::vector<BSSConnection> project(const GraphTile& local_tile,
-                                   GraphReader& reader_local_level,
-                                   const std::vector<OSMNode>& osm_bss) {
+std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vector<OSMNode>& osm_bss) {
   auto t1 = std::chrono::high_resolution_clock::now();
   auto scoped_finally = make_finally([&t1, size = osm_bss.size()]() {
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -298,8 +296,6 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
   });
 
   for (auto it = new_connections.begin(); it != new_connections.end(); std::advance(it, 4)) {
-    size_t bss_node_id = tilebuilder_local.nodes().size();
-
     size_t edge_index = tilebuilder_local.directededges().size();
     NodeInfo new_bss_node{tile.header()->base_ll(),
                           it->bss_ll,
@@ -357,7 +353,7 @@ void project_and_add_bss_nodes(const boost::property_tree::ptree& pt,
       tilebuilder_local.reset(new GraphTileBuilder{reader_local_level.tile_dir(), tile_id, true});
     }
 
-    auto new_connections = project(*local_tile, reader_local_level, tile_start->second);
+    auto new_connections = project(*local_tile, tile_start->second);
     add_bss_nodes_and_edges(*tilebuilder_local, *local_tile, lock, new_connections);
     {
       std::lock_guard<std::mutex> l{lock};
@@ -370,9 +366,6 @@ void create_edges(GraphTileBuilder& tilebuilder_local,
                   const GraphTile& tile,
                   std::mutex& lock,
                   const std::vector<BSSConnection>& bss_connections) {
-  // GraphTileBuilder tilebuilder_local(reader.tile_dir(), tile.header()->graphid(), true);
-  auto local_level = TileHierarchy::levels().rbegin()->first;
-
   auto t1 = std::chrono::high_resolution_clock::now();
 
   auto scoped_finally = make_finally([&tilebuilder_local, &tile, &lock, t1]() {
@@ -391,7 +384,6 @@ void create_edges(GraphTileBuilder& tilebuilder_local,
 
   tilebuilder_local.nodes().clear();
   std::vector<DirectedEdge> currentedges(std::move(tilebuilder_local.directededges()));
-  uint32_t edgecount = currentedges.size();
   tilebuilder_local.directededges().clear();
 
   // Get the directed edge index of the first sign. If no signs are
@@ -412,7 +404,6 @@ void create_edges(GraphTileBuilder& tilebuilder_local,
   // Iterate through the nodes - add back any stored edges and insert any
   // connections from a node to a transit stop. Update each nodes edge index.
   uint32_t added_edges = 0;
-  uint32_t added_nodes = 0;
 
   for (auto& nb : currentnodes) {
     size_t nodeid = tilebuilder_local.nodes().size();

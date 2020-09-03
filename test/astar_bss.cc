@@ -108,7 +108,7 @@ void test(const std::string& request,
           const std::vector<std::string>& expected_route,
           // We mark only the maneuvers that are RentBikbe and ReturnBike
           const std::map<size_t, BssManeuverType>& expected_bss_maneuver,
-          boost::optional<const std::string&> expected_shape = {}) {
+          const boost::optional<const std::string&>& expected_shape = {}) {
 
   auto conf = get_conf("paris_bss_tiles");
   route_tester tester(conf);
