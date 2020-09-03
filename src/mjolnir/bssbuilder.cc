@@ -5,7 +5,6 @@
 #include "mjolnir/graphtilebuilder.h"
 
 #include <algorithm>
-#include <bits/stdint-uintn.h>
 #include <fstream>
 #include <future>
 #include <iostream>
