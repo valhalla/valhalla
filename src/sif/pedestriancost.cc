@@ -208,14 +208,6 @@ public:
   }
 
   /**
-   * Get the access mode used by this costing method.
-   * @return  Returns access mode.
-   */
-  uint32_t access_mode() const {
-    return access_mask_;
-  }
-
-  /**
    * Checks if access is allowed for the provided directed edge.
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
@@ -264,28 +256,6 @@ public:
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               int& restriction_idx) const;
-
-  /**
-   * Checks if access is allowed for the provided node. Node access can
-   * be restricted if bollards or gates are present.
-   * @param  node  Pointer to node information.
-   * @return  Returns true if access is allowed, false if not.
-   */
-  virtual bool Allowed(const baldr::NodeInfo* node) const {
-    return (node->access() & (ignore_access_ ? kAllAccess : access_mask_));
-  }
-
-  /**
-   * Checks if access is allowed for the provided edge. The access check based on mode
-   * of travel and the access modes allowed on the edge.
-   * @param   edge  Pointer to edge information.
-   * @return  Returns true if access is allowed, false if not.
-   */
-  virtual bool IsAccessable(const baldr::DirectedEdge* edge) const {
-    return (edge->forwardaccess() & access_mask_) ||
-           (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
-           (ignore_oneways_ && (edge->reverseaccess() & access_mask_));
-  }
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -392,33 +362,20 @@ public:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    auto access_mask = access_mask_;
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     auto max_sac_scale = max_hiking_difficulty_;
     auto on_bss_connection = project_on_bss_connection;
-    auto i_access = ignore_access_;
-    auto i_oneways = ignore_oneways_;
+    auto ignore_oneways = ignore_oneways_;
 
-    return [access_mask, max_sac_scale, on_bss_connection, i_access,
-            i_oneways](const baldr::DirectedEdge* edge) {
+    return [access_mask, max_sac_scale, on_bss_connection,
+            ignore_oneways](const baldr::DirectedEdge* edge) {
       bool accessable = (edge->forwardaccess() & access_mask) ||
-                        (i_access && (edge->forwardaccess() & kAllAccess)) ||
-                        (i_oneways && (edge->reverseaccess() & access_mask));
+                        (ignore_oneways && (edge->reverseaccess() & access_mask));
 
       return !(edge->is_shortcut() || edge->use() >= Use::kRail ||
                edge->sac_scale() > max_sac_scale || !accessable ||
                (edge->bss_connection() && !on_bss_connection));
     };
-  }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each node's attribution
-   * @return Function/functor to be used in filtering out nodes
-   */
-  virtual const NodeFilter GetNodeFilter() const {
-    // throw back a lambda that checks the access for this type of costing
-    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    return [access_mask](const baldr::NodeInfo* node) { return !(node->access() & access_mask); };
   }
 
   virtual Cost BSSCost() const override {
@@ -428,8 +385,6 @@ public:
 public:
   // Type: foot (default), wheelchair, etc.
   PedestrianType type_;
-
-  uint32_t access_mask_;
 
   // Maximum pedestrian distance.
   uint32_t max_distance_;
@@ -563,7 +518,7 @@ public:
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
 PedestrianCost::PedestrianCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kPedestrian) {
+    : DynamicCost(costing_options, TravelMode::kPedestrian, kPedestrianAccess) {
   // Set hierarchy to allow unlimited transitions
   for (auto& h : hierarchy_limits_) {
     h.max_up_transitions = kUnlimitedTransitions;

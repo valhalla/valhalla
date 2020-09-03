@@ -230,14 +230,6 @@ public:
   }
 
   /**
-   * Get the access mode used by this costing method.
-   * @return  Returns access mode.
-   */
-  uint32_t access_mode() const {
-    return kBicycleAccess;
-  }
-
-  /**
    * Checks if access is allowed for the provided directed edge.
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
@@ -286,32 +278,6 @@ public:
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               int& restriction_idx) const;
-
-  /**
-   * Checks if access is allowed for the provided node. Node access can
-   * be restricted if bollards or gates are present. (TODO - others?)
-   * @param  node  Pointer to node information.
-   * @return  Returns true if access is allowed, false if not.
-   */
-  virtual bool Allowed(const baldr::NodeInfo* node) const {
-    return (node->access() & (ignore_access_ ? kAllAccess : kBicycleAccess));
-  }
-
-  /**
-   * Checks if access is allowed for the provided edge. The access check based on mode
-   * of travel and the access modes allowed on the edge.
-   * @param   edge  Pointer to edge information.
-   * @return  Returns true if access is allowed, false if not.
-   */
-  virtual bool IsAccessable(const baldr::DirectedEdge* edge) const {
-    // you can go on it if:
-    // you have forward access for the mode you care about
-    // you dont care about what mode has access so long as its forward
-    // you dont care about the direction the mode has access to
-    return (edge->forwardaccess() & kBicycleAccess) ||
-           (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
-           (ignore_oneways_ && (edge->reverseaccess() & kBicycleAccess));
-  }
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -432,12 +398,11 @@ protected:
     // Throw back a lambda that checks the access for this type of costing
     Surface s = worst_allowed_surface_;
     float a = avoid_bad_surfaces_;
-    bool i_oneways = ignore_oneways_;
-    bool i_access = ignore_access_;
-    return [s, a, i_oneways, i_access](const baldr::DirectedEdge* edge) {
-      bool accessable = (edge->forwardaccess() & kBicycleAccess) ||
-                        (i_access && (edge->forwardaccess() & kAllAccess)) ||
-                        (i_oneways && (edge->reverseaccess() & kBicycleAccess));
+    bool ignore_oneways = ignore_oneways_;
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
+    return [s, a, ignore_oneways, access_mask](const baldr::DirectedEdge* edge) {
+      bool accessable = (edge->forwardaccess() & access_mask) ||
+                        (ignore_oneways && (edge->reverseaccess() & access_mask));
 
       if (edge->is_shortcut() || !accessable || edge->use() == Use::kSteps ||
           (a == 1.0f && edge->surface() > s) || edge->bss_connection()) {
@@ -448,17 +413,6 @@ protected:
       }
     };
   }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each node's attribution
-   * @return Function to be used in filtering out nodes
-   */
-  virtual const NodeFilter GetNodeFilter() const {
-    // throw back a lambda that checks the access for this type of costing
-    bool access_mask = (ignore_access_ ? kAllAccess : kBicycleAccess);
-    return [access_mask](const baldr::NodeInfo* node) { return (node->access() & access_mask); };
-  }
 };
 
 // Bicycle route costs are distance based with some favor/avoid based on
@@ -467,7 +421,7 @@ protected:
 
 // Constructor
 BicycleCost::BicycleCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kBicycle) {
+    : DynamicCost(costing_options, TravelMode::kBicycle, kBicycleAccess) {
   // Set hierarchy to allow unlimited transitions
   for (auto& h : hierarchy_limits_) {
     h.max_up_transitions = kUnlimitedTransitions;
@@ -573,7 +527,7 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
   if (edge->surface() > worst_allowed_surface_) {
     return false;
   }
-  return DynamicCost::EvaluateRestrictions(kBicycleAccess, edge, tile, edgeid, current_time, tz_index,
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, edgeid, current_time, tz_index,
                                            restriction_idx);
 }
 
@@ -603,7 +557,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (edge->surface() > worst_allowed_surface_) {
     return false;
   }
-  return DynamicCost::EvaluateRestrictions(kBicycleAccess, edge, tile, opp_edgeid, current_time,
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, opp_edgeid, current_time,
                                            tz_index, restriction_idx);
 }
 

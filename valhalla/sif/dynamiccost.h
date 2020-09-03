@@ -75,8 +75,9 @@ public:
    * Constructor.
    * @param  options Request options in a pbf
    * @param  mode Travel mode
+   * @param  access_mask Access mask
    */
-  DynamicCost(const CostingOptions& options, const TravelMode mode);
+  DynamicCost(const CostingOptions& options, const TravelMode mode, uint32_t access_mask);
 
   virtual ~DynamicCost();
 
@@ -131,7 +132,9 @@ public:
    * Get the access mode used by this costing method.
    * @return  Returns access mode.
    */
-  virtual uint32_t access_mode() const = 0;
+  virtual uint32_t access_mode() const {
+    return access_mask_;
+  }
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -189,7 +192,9 @@ public:
    * @param   node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::NodeInfo* node) const = 0;
+  virtual bool Allowed(const baldr::NodeInfo* node) const {
+    return (node->access() & access_mask_) || ignore_access_;
+  }
 
   /**
    * Checks if access is allowed for the provided edge. The access check based on mode
@@ -197,7 +202,15 @@ public:
    * @param   edge  Pointer to edge information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool IsAccessable(const baldr::DirectedEdge* edge) const = 0;
+  inline virtual bool IsAccessable(const baldr::DirectedEdge* edge) const {
+    // you can go on it if:
+    // you have forward access for the mode you care about
+    // you dont care about what mode has access so long as its forward
+    // you dont care about the direction the mode has access to
+    return (edge->forwardaccess() & access_mask_) ||
+           (ignore_access_ && (edge->forwardaccess() & baldr::kAllAccess)) ||
+           (ignore_oneways_ && (edge->reverseaccess() & access_mask_));
+  }
 
   inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
     return true;
@@ -581,7 +594,12 @@ public:
    * Returns a function/functor to be used in location searching which will
    * exclude results from the search by looking at each node's attribution
    */
-  virtual const NodeFilter GetNodeFilter() const = 0;
+  virtual const NodeFilter GetNodeFilter() const {
+    // throw back a lambda that checks the access for this type of costing
+    return [mask = access_mask_, ignore_access = ignore_access_](const baldr::NodeInfo* node) {
+      return !((node->access() & mask) || ignore_access);
+    };
+  }
 
   /**
    * Gets the hierarchy limits.
@@ -683,6 +701,9 @@ protected:
 
   // Travel mode
   TravelMode travel_mode_;
+
+  // Access mask based on travel mode
+  uint32_t access_mask_;
 
   // Hierarchy limits.
   std::vector<HierarchyLimits> hierarchy_limits_;

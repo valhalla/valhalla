@@ -132,12 +132,6 @@ public:
   virtual bool AllowMultiPass() const;
 
   /**
-   * Get the access mode used by this costing method.
-   * @return  Returns access mode.
-   */
-  uint32_t access_mode() const;
-
-  /**
    * Checks if access is allowed for the provided directed edge.
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
@@ -186,22 +180,6 @@ public:
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               int& restriction_idx) const;
-
-  /**
-   * Checks if access is allowed for the provided node. Node access can
-   * be restricted if bollards or gates are present.
-   * @param  node  Pointer to node information.
-   * @return  Returns true if access is allowed, false if not.
-   */
-  virtual bool Allowed(const baldr::NodeInfo* node) const;
-
-  /**
-   * Checks if access is allowed for the provided edge. The access check based on mode
-   * of travel and the access modes allowed on the edge.
-   * @param   edge  Pointer to edge information.
-   * @return  Returns true if access is allowed, false if not.
-   */
-  virtual bool IsAccessable(const baldr::DirectedEdge* edge) const;
 
   /**
    * Callback for Allowed doing mode  specific restriction checks
@@ -285,10 +263,10 @@ public:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    return [i_access = ignore_access_, i_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
-      bool accessable = (edge->forwardaccess() & kTruckAccess) ||
-                        (i_access && (edge->forwardaccess() & kAllAccess)) ||
-                        (i_oneways && (edge->reverseaccess() & kTruckAccess));
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
+    return [access_mask, ignore_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
+      bool accessable = (edge->forwardaccess() & access_mask) ||
+                        (ignore_oneways && (edge->reverseaccess() & access_mask));
 
       if (edge->is_shortcut() || !accessable || edge->bss_connection()) {
         return 0.0f;
@@ -297,17 +275,6 @@ public:
         return 1.0f;
       }
     };
-  }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each node's attribution
-   * @return Function/functor to be used in filtering out nodes
-   */
-  virtual const NodeFilter GetNodeFilter() const {
-    // throw back a lambda that checks the access for this type of costing
-    bool access_mask = (ignore_access_ ? kAllAccess : kTruckAccess);
-    return [access_mask](const baldr::NodeInfo* node) { return !(node->access() & access_mask); };
   }
 
 public:
@@ -331,7 +298,7 @@ public:
 
 // Constructor
 TruckCost::TruckCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kDrive),
+    : DynamicCost(costing_options, TravelMode::kDrive, kTruckAccess),
       trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
                             1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
 
@@ -383,11 +350,6 @@ bool TruckCost::AllowTransitions() const {
 // limits).
 bool TruckCost::AllowMultiPass() const {
   return true;
-}
-
-// Get the access mode used by this costing method.
-uint32_t TruckCost::access_mode() const {
-  return kTruckAccess;
 }
 
 bool TruckCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const {
@@ -448,7 +410,7 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(kTruckAccess, edge, tile, edgeid, current_time, tz_index,
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, edgeid, current_time, tz_index,
                                            restriction_idx);
 }
 
@@ -474,19 +436,8 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(kTruckAccess, edge, tile, opp_edgeid, current_time,
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, opp_edgeid, current_time,
                                            tz_index, restriction_idx);
-}
-
-// Check if access is allowed at the specified node.
-bool TruckCost::Allowed(const baldr::NodeInfo* node) const {
-  return (node->access() & (ignore_access_ ? kAllAccess : kTruckAccess));
-}
-
-bool TruckCost::IsAccessable(const baldr::DirectedEdge* edge) const {
-  return (edge->forwardaccess() & kTruckAccess) ||
-         (ignore_access_ && (edge->forwardaccess() & kAllAccess)) ||
-         (ignore_oneways_ && (edge->reverseaccess() & kTruckAccess));
 }
 
 // Get the cost to traverse the edge in seconds

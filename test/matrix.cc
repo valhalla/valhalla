@@ -31,14 +31,10 @@ public:
    * Constructor.
    * @param  options Request options in a pbf
    */
-  SimpleCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kDrive) {
+  SimpleCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kDrive, kAutoAccess) {
   }
 
   ~SimpleCost() {
-  }
-
-  uint32_t access_mode() const {
-    return kAutoAccess;
   }
 
   bool Allowed(const DirectedEdge* edge,
@@ -75,14 +71,6 @@ public:
     return true;
   }
 
-  bool Allowed(const NodeInfo* node) const {
-    return (node->access() & kAutoAccess);
-  }
-
-  bool IsAccessable(const DirectedEdge* edge) const {
-    return (edge->forwardaccess() & kAutoAccess);
-  }
-
   Cost EdgeCost(const baldr::DirectedEdge* edge,
                 const baldr::TransitDeparture* departure,
                 const uint32_t curr_time) const {
@@ -110,17 +98,16 @@ public:
   }
 
   const EdgeFilter GetEdgeFilter() const {
-    return [](const DirectedEdge* edge) {
-      if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess))
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
+    return [access_mask, ignore_oneways = ignore_oneways_](const DirectedEdge* edge) {
+      bool accessable = (edge->forwardaccess() & access_mask) ||
+                        (ignore_oneways && (edge->reverseaccess() & access_mask));
+      if (edge->is_shortcut() || !accessable)
         return 0.0f;
       else {
         return 1.0f;
       }
     };
-  }
-
-  const NodeFilter GetNodeFilter() const {
-    return [](const NodeInfo* node) { return !(node->access() & kAutoAccess); };
   }
 };
 

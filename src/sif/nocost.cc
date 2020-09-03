@@ -31,18 +31,11 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  NoCost(const CostingOptions& costing_options) : DynamicCost(costing_options, TravelMode::kDrive) {
+  NoCost(const CostingOptions& costing_options)
+      : DynamicCost(costing_options, TravelMode::kDrive, kAllAccess) {
   }
 
   virtual ~NoCost() {
-  }
-
-  /**
-   * Get the access mode used by this costing method.
-   * @return  Returns access mode.
-   */
-  uint32_t access_mode() const {
-    return kAllAccess;
   }
 
   /**

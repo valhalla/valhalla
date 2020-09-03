@@ -48,10 +48,11 @@ uint8_t SpeedMask_Parse(const boost::optional<const rapidjson::Value&>& speed_ty
 namespace valhalla {
 namespace sif {
 
-DynamicCost::DynamicCost(const CostingOptions& options, const TravelMode mode)
+DynamicCost::DynamicCost(const CostingOptions& options, const TravelMode mode, uint32_t access_mask)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
-      flow_mask_(kDefaultFlowMask), ignore_restrictions_(options.ignore_restrictions()),
-      ignore_oneways_(options.ignore_oneways()), ignore_access_(options.ignore_access()) {
+      access_mask_(access_mask), flow_mask_(kDefaultFlowMask),
+      ignore_restrictions_(options.ignore_restrictions()), ignore_oneways_(options.ignore_oneways()),
+      ignore_access_(options.ignore_access()) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
