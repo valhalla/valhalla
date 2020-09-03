@@ -447,62 +447,61 @@ public:
                                                   baldr::DateTime::get_tz_db().from_index(tz_index));
   }
 
-  inline bool EvaluateRestrictions(uint16_t auto_type,
+  inline bool EvaluateRestrictions(uint32_t access_mode,
                                    const baldr::DirectedEdge* edge,
                                    const baldr::GraphTile*& tile,
                                    const baldr::GraphId& edgeid,
                                    const uint64_t current_time,
                                    const uint32_t tz_index,
                                    int& restriction_idx) const {
-    if (!ignore_restrictions_ && edge->access_restriction()) {
-      const std::vector<baldr::AccessRestriction>& restrictions =
-          tile->GetAccessRestrictions(edgeid.id(), auto_type);
+    if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
+      return true;
 
-      bool time_allowed = false;
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(edgeid.id(), access_mode);
 
-      for (int i = 0, n = static_cast<int>(restrictions.size()); i < n; ++i) {
-        const auto& restriction = restrictions[i];
-        // Compare the time to the time-based restrictions
-        baldr::AccessType access_type = restriction.type();
-        if (access_type == baldr::AccessType::kTimedAllowed ||
-            access_type == baldr::AccessType::kTimedDenied) {
-          restriction_idx = i;
+    bool time_allowed = false;
 
-          if (access_type == baldr::AccessType::kTimedAllowed)
-            time_allowed = true;
+    for (int i = 0, n = static_cast<int>(restrictions.size()); i < n; ++i) {
+      const auto& restriction = restrictions[i];
+      // Compare the time to the time-based restrictions
+      baldr::AccessType access_type = restriction.type();
+      if (access_type == baldr::AccessType::kTimedAllowed ||
+          access_type == baldr::AccessType::kTimedDenied) {
+        restriction_idx = i;
 
-          if (current_time == 0) {
-            // No time supplied so ignore time-based restrictions
-            // (but mark the edge  (`has_time_restrictions`)
-            continue;
-          } else {
-            // is in range?
-            if (IsConditionalActive(restriction.value(), current_time, tz_index)) {
-              // If edge really is restricted at this time, we can exit early.
-              // If not, we should keep looking
+        if (access_type == baldr::AccessType::kTimedAllowed)
+          time_allowed = true;
 
-              // We are in range at the time we are allowed at this edge
-              if (access_type == baldr::AccessType::kTimedAllowed)
-                return true;
-              else
-                return false;
-            }
+        if (current_time == 0) {
+          // No time supplied so ignore time-based restrictions
+          // (but mark the edge  (`has_time_restrictions`)
+          continue;
+        } else {
+          // is in range?
+          if (IsConditionalActive(restriction.value(), current_time, tz_index)) {
+            // If edge really is restricted at this time, we can exit early.
+            // If not, we should keep looking
+
+            // We are in range at the time we are allowed at this edge
+            if (access_type == baldr::AccessType::kTimedAllowed)
+              return true;
+            else
+              return false;
           }
         }
-        // In case there are additional restriction checks for a particular  mode,
-        // check them now
-        if (!ModeSpecificAllowed(restriction)) {
-          return false;
-        }
       }
-
-      // if we have time allowed restrictions then these restrictions are
-      // the only time we can route here.  Meaning all other time is restricted.
-      // We looped over all the time allowed restrictions and we were never in range.
-      if (time_allowed && current_time != 0)
+      // In case there are additional restriction checks for a particular  mode,
+      // check them now
+      if (!ModeSpecificAllowed(restriction)) {
         return false;
+      }
     }
-    return true;
+
+    // if we have time allowed restrictions then these restrictions are
+    // the only time we can route here.  Meaning all other time is restricted.
+    // We looped over all the time allowed restrictions and we were never in range.
+    return !time_allowed || (current_time == 0);
   }
 
   /**
