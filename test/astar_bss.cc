@@ -170,16 +170,16 @@ void test(const std::string& request,
  */
 TEST(AstarBss, test_With_Mode_Changes) {
   std::string request =
-      R"({"locations":[{"lat":48.86481,"lon":2.361015},{"lat":48.859782,"lon":2.36101}],"costing":"bikeshare"})";
+      R"({"locations":[{"lat":48.864655,"lon":2.361374},{"lat":48.859608,"lon":2.36117}],"costing":"bikeshare"})";
   std::vector<valhalla::DirectionsLeg_TravelMode>
       expected_travel_modes{valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian,
                             valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kBicycle,
                             valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
-
-  std::vector<std::string> expected_route{"Rue Perrée",        "Rue Perrée",        "Rue Perrée",
-                                          "Rue Caffarelli",    "Rue de Bretagne",   "Rue de Turenne",
-                                          "Rue du Parc Royal", "Place de Thorigny", "Rue de la Perle",
-                                          "Rue de la Perle"};
+  std::vector<std::string> expected_route{"Rue Gabriel Vicaire", "Rue Perrée",
+                                          "Rue Perrée",          "Rue Caffarelli",
+                                          "Rue de Bretagne",     "Rue de Turenne",
+                                          "Rue du Parc Royal",   "Place de Thorigny",
+                                          "Rue de la Perle",     "Rue de la Perle"};
 
   const std::map<size_t, BssManeuverType>&
       expected_bss_maneuver{{2, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
