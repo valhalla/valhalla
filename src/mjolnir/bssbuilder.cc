@@ -48,8 +48,13 @@ struct BestProjection {
   std::tuple<PointLL, float, int> closest;
 };
 
-// We store in this struct all information about the bss connections which
-// connect the bss node and the way node
+/*
+ * We store in this struct all information about the bss connections which
+ * connect the bss node and the way node.
+ * From each instance of BSSConnection, we are going to create TWO edges:
+ *  BSS -> waynode
+ *  waynode -> BSS
+ */
 struct BSSConnection {
   PointLL bss_ll = {};
   GraphId bss_node_id = {};
