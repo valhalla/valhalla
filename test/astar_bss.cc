@@ -4,9 +4,11 @@
 #include "odin/worker.h"
 #include "thor/worker.h"
 
+#include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <algorithm> // std::copy
+#include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -105,7 +107,8 @@ void test(const std::string& request,
           const std::vector<TravelMode>& expected_travel_modes,
           const std::vector<std::string>& expected_route,
           // We mark only the maneuvers that are RentBikbe and ReturnBike
-          const std::map<size_t, BssManeuverType>& expected_bss_maneuver) {
+          const std::map<size_t, BssManeuverType>& expected_bss_maneuver,
+          boost::optional<const std::string&> expected_shape = {}) {
 
   auto conf = get_conf("paris_bss_tiles");
   route_tester tester(conf);
@@ -113,30 +116,28 @@ void test(const std::string& request,
   const auto& legs = response.trip().routes(0).legs();
   const auto& directions = response.directions().routes(0).legs();
 
-  if (legs.size() != 1) {
-    throw std::logic_error("Should have 1 leg");
-  }
+  EXPECT_EQ(legs.size(), 1);
+  EXPECT_EQ(directions.size(), 1);
+
   // We going to count how many times the travel_mode has been changed
   std::vector<valhalla::DirectionsLeg_TravelMode> travel_modes;
 
   std::vector<std::string> route;
 
   for (const auto& d : directions) {
-
+    if (expected_shape) {
+      EXPECT_EQ(d.shape(), *expected_shape) << "The shape is incorrect";
+    }
     size_t idx = -1;
     for (const auto& m : d.maneuver()) {
       auto it = expected_bss_maneuver.find(++idx);
       if (it == expected_bss_maneuver.end()) {
-        if (m.bss_maneuver_type() !=
-            BssManeuverType::DirectionsLeg_Maneuver_BssManeuverType_kNoneAction) {
-          throw std::logic_error(std::string("BSS maneuver type at ") + std::to_string(idx) +
-                                 " is incorrect");
-        }
+        EXPECT_EQ(m.bss_maneuver_type(),
+                  BssManeuverType::DirectionsLeg_Maneuver_BssManeuverType_kNoneAction)
+            << "BSS maneuver type at " << idx << " is incorrect";
       } else {
-        if (m.bss_maneuver_type() != it->second) {
-          throw std::logic_error(std::string("BSS maneuver type at ") + std::to_string(idx) +
-                                 " is incorrect");
-        }
+        EXPECT_EQ(m.bss_maneuver_type(), it->second)
+            << "BSS maneuver type at " << idx << " is incorrect";
       }
       travel_modes.push_back(m.travel_mode());
       std::string name;
@@ -153,16 +154,8 @@ void test(const std::string& request,
   }
 
   travel_modes.erase(std::unique(travel_modes.begin(), travel_modes.end()), travel_modes.end());
-  if (!std::equal(travel_modes.begin(), travel_modes.end(), expected_travel_modes.begin())) {
-    std::copy(travel_modes.begin(), travel_modes.end(), std::ostream_iterator<int>(std::cout, ", "));
-    throw std::logic_error(std::string("Should have ") +
-                           std::to_string(expected_travel_modes.size()) + " travel_modes");
-  }
-
-  if (!std::equal(route.begin(), route.end(), expected_route.begin())) {
-    std::copy(route.begin(), route.end(), std::ostream_iterator<std::string>(std::cout, ", "));
-    throw std::logic_error("The route is incorrect");
-  }
+  EXPECT_EQ(travel_modes, expected_travel_modes);
+  EXPECT_EQ(route, expected_route);
 }
 
 /*
@@ -337,6 +330,48 @@ public:
     write_config(config_file);
   }
 };
+
+// In this test case, the bike share station(48.8690345, 2.3622890) is located a dedicated cyclelane
+// and a pedestrian way.
+//
+//        (cyclelane) ------------------------------>
+//
+//           user ->> ____________
+//                               |
+//                               * Bike Share Station
+//                               |__________ ->>
+//
+//    (pedestrian way) ------------------------------>
+//
+// Since BSS connections are created over both Pedestrian mode and Bicycle mode, user should be able
+// to turn back the bike right on the cyclelane, change the travel mode and coninue his journey way on
+// the pedestrian way.
+TEST(AstarBss, test_BSSConnections_on_Pedestrian_and_Bicycle) {
+  std::string request =
+      R"({"locations":[{"lat":48.864218,"lon":2.362034},{"lat":48.869068,"lon":2.362151}],"costing":"bikeshare"})";
+  std::vector<valhalla::DirectionsLeg_TravelMode>
+      expected_travel_modes{valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian,
+                            valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kBicycle,
+                            valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
+  std::vector<std::string> expected_route{"Rue Perrée",
+                                          "Rue Perrée",
+                                          "Rue Perrée",
+                                          "Rue Eugène Spuller",
+                                          "Rue Béranger",
+                                          "Rue du Temple",
+                                          "Place de la République",
+                                          "Place de la République",
+                                          "Rue du Château d'Eau",
+                                          "Rue du Château d'Eau"};
+
+  const std::map<size_t, BssManeuverType>&
+      expected_bss_maneuver{{2, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
+                            {10, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
+
+  std::string expected_shape =
+      "c~le|AykdoCwDzIsArCkAvC]v@iBpEeAoAdAnAhBqE\\w@jAwC}c@_i@{AeBs@mCsF{T_@aB]uAyQez@e@eC{Ar@ig@dX{t@``@wCzAyBuH}EeLiCvEmD|Ga]~q@sFmHsPsTu@eA{AoBe@o@e@o@}D_CcB}@wChC_YfVt@hCjA~Dt@zB?nBeA|BV\\d@j@yBpE";
+  test(request, expected_travel_modes, expected_route, expected_bss_maneuver, expected_shape);
+}
 
 } // anonymous namespace
 
