@@ -397,6 +397,12 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       bool is_urban = (curr_edge->density() > 8) ? true : false;
       intersection->emplace("is_urban", is_urban);
     }
+
+    auto admin = json::map({});
+    admin->emplace("country_code", etp->GetCountryCode(node->admin_index()));
+    admin->emplace("state_code", etp->GetStateCode(node->admin_index()));
+    intersection->emplace("admin", admin);
+
     if (node->cost().transition_cost().seconds() > 0)
       intersection->emplace("turn_duration", json::fp_t{node->cost().transition_cost().seconds(), 3});
     if (node->cost().transition_cost().cost() > 0)

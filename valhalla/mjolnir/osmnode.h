@@ -26,6 +26,10 @@ struct OSMNode {
   uint64_t exit_to_index_ : 21;
   uint64_t named_intersection_ : 1;
 
+  uint64_t country_iso_index_ : 21;
+  uint64_t state_iso_index_ : 21;
+  uint64_t spare_ : 22;
+
   uint32_t access_ : 12;
   uint32_t type_ : 4;
   uint32_t intersection_ : 1;
@@ -39,12 +43,12 @@ struct OSMNode {
   uint32_t ferry_edge_ : 1;
   uint32_t flat_loop_ : 1; // A node which on a section of a way that is doubled back on itself
   uint32_t urban_ : 1;
-  uint32_t spare_ : 5;
+  uint32_t drive_on_right_ : 1;
+  uint32_t spare1_ : 4;
 
   // Lat,lng of the node
   float lng_;
   float lat_;
-  uint32_t spare2_;
 
   OSMNode() {
     memset(this, 0, sizeof(OSMNode));
@@ -287,6 +291,72 @@ struct OSMNode {
    */
   bool urban() const {
     return urban_;
+  }
+
+  /**
+   * Set the country iso code index
+   * @param country iso code Index into the 2 char Country ISO Code.
+   */
+  void set_country_iso_index(const uint32_t index) {
+    if (index > kMaxNodeNameIndex) {
+      throw std::runtime_error("OSMNode: exceeded maximum country iso index");
+    }
+    country_iso_index_ = index;
+  }
+
+  /**
+   * Get the country iso code.
+   * @return Returns the index into the 2 char Country ISO Code.
+   */
+  uint32_t country_iso_index() const {
+    return country_iso_index_;
+  }
+
+  /**
+   * Does the node have a 2 char code. Check if country_iso_index is non-zero
+   */
+  bool has_country_iso() const {
+    return country_iso_index_ > 0;
+  }
+
+  /**
+   * Set the country iso code index
+   * @param country iso code Index into the 2 char Country ISO Code.
+   */
+  void set_state_iso_index(const uint32_t index) {
+    if (index > kMaxNodeNameIndex) {
+      throw std::runtime_error("OSMNode: exceeded maximum state iso index");
+    }
+    state_iso_index_ = index;
+  }
+
+  /**
+   * Get the state iso code.
+   * @return Returns the index into the 2 char State ISO Code.
+   */
+  uint32_t state_iso_index() const {
+    return state_iso_index_;
+  }
+
+  /**
+   * Does the node have a 2 char code. Check if state_iso_index is non-zero
+   */
+  bool has_state_iso_index() const {
+    return state_iso_index_ > 0;
+  }
+  /**
+   * Sets the driving on right.
+   * @param driving_on_right   Driving on Right
+   */
+  void set_drive_on_right(const uint32_t drive_on_right) {
+    drive_on_right_ = drive_on_right;
+  }
+
+  /**
+   * Get driving on right.
+   */
+  uint32_t drive_on_right() const {
+    return drive_on_right_;
   }
 };
 

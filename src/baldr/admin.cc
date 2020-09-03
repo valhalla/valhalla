@@ -1,5 +1,7 @@
 #include "baldr/admin.h"
 
+#include <iostream>
+
 namespace valhalla {
 namespace baldr {
 

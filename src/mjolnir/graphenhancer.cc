@@ -1435,18 +1435,16 @@ void enhance(const boost::property_tree::ptree& pt,
   auto database = pt.get_optional<std::string>("admin");
   bool infer_internal_intersections =
       pt.get<bool>("data_processing.infer_internal_intersections", true);
-
   bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
-
   bool apply_country_overrides = pt.get<bool>("data_processing.apply_country_overrides", true);
-
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
+  bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
 
   // Initialize the admin DB (if it exists)
-  sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
-  if (!database) {
+  sqlite3* admin_db_handle = (database && use_admin_db) ? GetDBHandle(*database) : nullptr;
+  if (!database && use_admin_db) {
     LOG_WARN("Admin db not found.  Not saving admin information.");
-  } else if (!admin_db_handle) {
+  } else if (!admin_db_handle && use_admin_db) {
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
   }
 

@@ -1624,6 +1624,22 @@ function filter_tags_generic(kv)
 end
 
 function nodes_proc (kv, nokeys)
+
+  if kv["iso:3166_2"] then
+    i, j = string.find(kv["iso:3166_2"], '-', 1, true)
+    if i == 3 then
+      if string.len(kv["iso:3166_2"]) == 6 or string.len(kv["iso:3166_2"]) == 5 then
+        kv["state_iso_code"] = string.sub(kv["iso:3166_2"], 4)
+      end
+    elseif string.find(kv["iso:3166_2"], '-', 1, true) == nil then
+      if string.len(kv["iso:3166_2"]) == 2 or  string.len(kv["iso:3166_2"]) == 3 then
+        kv["state_iso_code"] = kv["iso:3166_2"]
+      elseif string.len(kv["iso:3166_2"]) == 4 or  string.len(kv["iso:3166_2"]) == 5 then
+        kv["state_iso_code"] = string.sub(kv["iso:3166_2"], 3)
+      end
+    end
+  end
+
   --normalize a few tags that we care about
   local access = access[kv["access"]] or "true"
 

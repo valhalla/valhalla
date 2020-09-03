@@ -22,6 +22,7 @@
 #include "sif/costconstants.h"
 #include "sif/recost.h"
 #include "thor/attributes_controller.h"
+#include "thor/iso.h"
 #include "thor/triplegbuilder.h"
 
 using namespace valhalla;
@@ -69,7 +70,9 @@ void AssignAdmins(const AttributesController& controller,
 
       // Set country code if requested
       if (controller.attributes.at(kAdminCountryCode)) {
-        trip_admin->set_country_code(admin_info.country_iso());
+        if (admin_info.country_iso() != "") {
+          trip_admin->set_country_code(iso2_to_iso3.find(admin_info.country_iso())->second);
+        }
       }
 
       // Set country text if requested
@@ -79,7 +82,9 @@ void AssignAdmins(const AttributesController& controller,
 
       // Set state code if requested
       if (controller.attributes.at(kAdminStateCode)) {
-        trip_admin->set_state_code(admin_info.state_iso());
+        if (admin_info.state_iso() != "") {
+          trip_admin->set_state_code(admin_info.state_iso());
+        }
       }
 
       // Set state text if requested
