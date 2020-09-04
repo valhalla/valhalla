@@ -337,7 +337,7 @@ if(ENABLE_TESTS)
 endif()
 
 # NOTE(mookerji): Windows CI seems to break on the gbench build, so shelve Win32 support for now.
-if(ENABLE_BENCHMARKS AND NOT WIN32)
+if(ENABLE_BENCHMARKS AND ENABLE_DATA_TOOLS AND NOT WIN32)
   add_subdirectory(bench)
 endif()
 
