@@ -70,9 +70,7 @@ void AssignAdmins(const AttributesController& controller,
 
       // Set country code if requested
       if (controller.attributes.at(kAdminCountryCode)) {
-        if (admin_info.country_iso() != "") {
-          trip_admin->set_country_code(iso2_to_iso3.find(admin_info.country_iso())->second);
-        }
+        trip_admin->set_country_code(iso2_to_iso3.find(admin_info.country_iso())->second);
       }
 
       // Set country text if requested
@@ -82,9 +80,7 @@ void AssignAdmins(const AttributesController& controller,
 
       // Set state code if requested
       if (controller.attributes.at(kAdminStateCode)) {
-        if (admin_info.state_iso() != "") {
-          trip_admin->set_state_code(admin_info.state_iso());
-        }
+        trip_admin->set_state_code(admin_info.state_iso());
       }
 
       // Set state text if requested
