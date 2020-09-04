@@ -1053,114 +1053,6 @@ void TripLegBuilder::Build(
     trip_path.mutable_shape_attributes();
   }
 
-  // If the path was only one edge we have a special case
-  if ((path_end - path_begin) == 1) {
-    const GraphTile* tile = graphreader.GetGraphTile(path_begin->edgeid);
-    const DirectedEdge* edge = tile->directededge(path_begin->edgeid);
-
-    // Get the shape. Reverse if the directed edge direction does
-    // not match the traversal direction (based on start and end percent).
-    auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
-    if (edge->forward() != (start_pct < end_pct)) {
-      std::reverse(shape.begin(), shape.end());
-    }
-
-    // If traversing the opposing direction: adjust start and end percent
-    // and reverse the edge and side of street if traversing the opposite
-    // direction
-    if (start_pct > end_pct) {
-      start_pct = 1.0f - start_pct;
-      end_pct = 1.0f - end_pct;
-      edge = graphreader.GetOpposingEdge(path_begin->edgeid, tile);
-      if (end_sos == valhalla::Location::SideOfStreet::Location_SideOfStreet_kLeft) {
-        tp_dest->set_side_of_street(
-            GetTripLegSideOfStreet(valhalla::Location::SideOfStreet::Location_SideOfStreet_kRight));
-      } else if (end_sos == valhalla::Location::SideOfStreet::Location_SideOfStreet_kRight) {
-        tp_dest->set_side_of_street(
-            GetTripLegSideOfStreet(valhalla::Location::SideOfStreet::Location_SideOfStreet_kLeft));
-      }
-    }
-
-    float total = static_cast<float>(edge->length());
-    trim_shape(start_pct * total, start_vrt, end_pct * total, end_vrt, shape);
-
-    // Driving on right from the start of the edge?
-    const GraphId start_node = graphreader.GetOpposingEdge(path_begin->edgeid)->endnode();
-    bool drive_on_right = graphreader.nodeinfo(start_node)->drive_on_right();
-
-    // Add trip edge
-    auto costing = mode_costing[static_cast<uint32_t>(path_begin->mode)];
-    auto trip_edge =
-        AddTripEdge(controller, path_begin->edgeid, path_begin->trip_id, 0, path_begin->mode,
-                    travel_types[static_cast<int>(path_begin->mode)], costing, edge, drive_on_right,
-                    trip_path.add_node(), tile, graphreader, time_info.second_of_week, startnode.id(),
-                    false, nullptr, path_begin->restriction_index);
-
-    // Set length if requested. Convert to km
-    if (controller.attributes.at(kEdgeLength)) {
-      float km = std::max((edge->length() * kKmPerMeter * std::abs(end_pct - start_pct)), 0.001f);
-      trip_edge->set_length(km);
-    }
-
-    // Set shape attributes
-    auto edge_seconds = path_begin->elapsed_cost.secs - path_begin->transition_cost.secs;
-    SetShapeAttributes(controller, tile, edge, shape, 0, trip_path, start_pct, end_pct, edge_seconds,
-                       costing->flow_mask() & kCurrentFlowMask);
-
-    // Set begin shape index if requested
-    if (controller.attributes.at(kEdgeBeginShapeIndex)) {
-      trip_edge->set_begin_shape_index(0);
-    }
-    // Set end shape index if requested
-    if (controller.attributes.at(kEdgeEndShapeIndex)) {
-      trip_edge->set_end_shape_index(shape.size() - 1);
-    }
-
-    // Set begin and end heading if requested. Uses shape so
-    // must be done after the edge's shape has been added.
-    SetHeadings(trip_edge, controller, edge, shape, 0);
-
-    auto* node = trip_path.add_node();
-    if (controller.attributes.at(kNodeElapsedTime)) {
-      node->mutable_cost()->mutable_elapsed_cost()->set_seconds(path_begin->elapsed_cost.secs);
-      node->mutable_cost()->mutable_elapsed_cost()->set_cost(path_begin->elapsed_cost.cost);
-    }
-
-    const GraphTile* end_tile = graphreader.GetGraphTile(edge->endnode());
-    if (end_tile == nullptr) {
-      if (controller.attributes.at(kNodeaAdminIndex)) {
-        node->set_admin_index(0);
-      }
-    } else {
-      if (controller.attributes.at(kNodeaAdminIndex)) {
-        node->set_admin_index(
-            GetAdminIndex(end_tile->admininfo(end_tile->node(edge->endnode())->admin_index()),
-                          admin_info_map, admin_info_list));
-      }
-    }
-
-    // Set the bounding box of the shape
-    SetBoundingBox(trip_path, shape);
-
-    // Set shape if requested
-    if (controller.attributes.at(kShape)) {
-      trip_path.set_shape(encode<std::vector<PointLL>>(shape));
-    }
-
-    if (controller.attributes.at(kOsmChangeset)) {
-      trip_path.set_osm_changeset(tile->header()->dataset_id());
-    }
-
-    // Assign the trip path admins
-    AssignAdmins(controller, trip_path, admin_info_list);
-
-    // Add that extra costing information if requested
-    AccumulateRecostingInfoForward(options, start_pct, end_pct, date_time, graphreader, trip_path);
-
-    // Trivial path is done
-    return;
-  }
-
   // Iterate through path
   bool is_first_edge = true;
   uint32_t prior_opp_local_index = -1;
@@ -1324,16 +1216,18 @@ void TripLegBuilder::Build(
         std::reverse(edge_shape.begin(), edge_shape.end());
       }
       float total = static_cast<float>(directededge->length());
-      // Note: that this cannot be both the first and last edge, that special case is handled above
-      // Trim the shape at the front for the first edge
-      if (is_first_edge) {
+      // Trim both ways
+      if (is_first_edge && is_last_edge) {
+        trim_shape(start_pct * total, start_vrt, end_pct * total, end_vrt, edge_shape);
+      } // Trim the shape at the front for the first edge
+      else if (is_first_edge) {
         trim_shape(start_pct * total, start_vrt, total, edge_shape.back(), edge_shape);
       } // And at the back if its the last edge
       else {
         trim_shape(0, edge_shape.front(), end_pct * total, end_vrt, edge_shape);
       }
       // Keep the shape
-      trip_shape.insert(trip_shape.end(), edge_shape.begin() + is_last_edge, edge_shape.end());
+      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge, edge_shape.end());
     } // Just get the shape in there in the right direction no clipping needed
     else {
       if (directededge->forward()) {
