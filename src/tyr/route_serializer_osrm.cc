@@ -395,8 +395,9 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     intersection->emplace("location", loc);
     intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
     if (!arrive_maneuver) {
-      bool is_urban = (curr_edge->density() > 8) ? true : false;
-      intersection->emplace("is_urban", is_urban);
+      if (curr_edge->has_is_urban()) {
+        intersection->emplace("is_urban", curr_edge->is_urban());
+      }
     }
 
     auto admin = json::map({});
