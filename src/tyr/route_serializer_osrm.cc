@@ -11,6 +11,7 @@
 #include "midgard/util.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
+#include "thor/iso.h"
 #include "tyr/serializers.h"
 #include "worker.h"
 
@@ -399,8 +400,10 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     }
 
     auto admin = json::map({});
-    admin->emplace("country_code", etp->GetCountryCode(node->admin_index()));
-    admin->emplace("state_code", etp->GetStateCode(node->admin_index()));
+    std::string country_iso3 =
+        iso2_to_iso3.find(etp->GetAdmin(node->admin_index())->country_code())->second;
+    admin->emplace("country_code", country_iso3);
+    admin->emplace("state_code", etp->GetAdmin(node->admin_index())->state_code());
     intersection->emplace("admin", admin);
 
     if (node->cost().transition_cost().seconds() > 0)

@@ -864,8 +864,7 @@ public:
           n.set_state_iso_index(osmdata_.node_names.index(tag.second));
           ++osmdata_.node_name_count;
         }
-      }
-      if (tag.first == "highway") {
+      } else if (tag.first == "highway") {
         n.set_traffic_signal(tag.second == "traffic_signals" ? true : false);
       } else if (tag.first == "forward_signal") {
         n.set_forward_signal(tag.second == "true" ? true : false);
@@ -1092,22 +1091,26 @@ public:
       if (it != tag_handlers_.end()) {
         it->second();
       }
-
+      if (tag_.first == "driving_side") {
+        way_.set_drive_on_right(tag_.second == "right" ? true : false);
+      } else {
+        way_.set_drive_on_right(true);
+      }
       // motor_vehicle:conditional=no @ (16:30-07:00)
-      else if (tag_.first.substr(0, 20) == "motorcar:conditional" ||
-               tag_.first.substr(0, 25) == "motor_vehicle:conditional" ||
-               tag_.first.substr(0, 19) == "bicycle:conditional" ||
-               tag_.first.substr(0, 22) == "motorcycle:conditional" ||
-               tag_.first.substr(0, 16) == "foot:conditional" ||
-               tag_.first.substr(0, 22) == "pedestrian:conditional" ||
-               tag_.first.substr(0, 15) == "hgv:conditional" ||
-               tag_.first.substr(0, 17) == "moped:conditional" ||
-               tag_.first.substr(0, 16) == "mofa:conditional" ||
-               tag_.first.substr(0, 15) == "psv:conditional" ||
-               tag_.first.substr(0, 16) == "taxi:conditional" ||
-               tag_.first.substr(0, 15) == "bus:conditional" ||
-               tag_.first.substr(0, 15) == "hov:conditional" ||
-               tag_.first.substr(0, 21) == "emergency:conditional") {
+      if (tag_.first.substr(0, 20) == "motorcar:conditional" ||
+          tag_.first.substr(0, 25) == "motor_vehicle:conditional" ||
+          tag_.first.substr(0, 19) == "bicycle:conditional" ||
+          tag_.first.substr(0, 22) == "motorcycle:conditional" ||
+          tag_.first.substr(0, 16) == "foot:conditional" ||
+          tag_.first.substr(0, 22) == "pedestrian:conditional" ||
+          tag_.first.substr(0, 15) == "hgv:conditional" ||
+          tag_.first.substr(0, 17) == "moped:conditional" ||
+          tag_.first.substr(0, 16) == "mofa:conditional" ||
+          tag_.first.substr(0, 15) == "psv:conditional" ||
+          tag_.first.substr(0, 16) == "taxi:conditional" ||
+          tag_.first.substr(0, 15) == "bus:conditional" ||
+          tag_.first.substr(0, 15) == "hov:conditional" ||
+          tag_.first.substr(0, 21) == "emergency:conditional") {
 
         std::vector<std::string> tokens = GetTagTokens(tag_.second, '@');
         std::string tmp = tokens.at(0);
@@ -1413,9 +1416,6 @@ public:
       } else // fallback to default speed.
         way_.set_speed(default_speed_);
     }
-
-    // default to drive on right.
-    way_.set_drive_on_right(true);
 
     // ferries / auto trains need to be set to highway cut off in config.
     if (way_.ferry() || way_.rail()) {

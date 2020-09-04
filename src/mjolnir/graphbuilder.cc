@@ -491,10 +491,6 @@ void BuildTileSet(const std::string& ways_file,
                                                 : GetMultiPolyId(admin_polys, node_ll, graphtile);
           dor = drive_on_right[admin_index];
         } else {
-          // std::cout << "***in Graphbuilder :: "<<
-          // std::string(osmdata.node_names.name(node.country_iso_index())) << ", " <<
-          // std::string(osmdata.node_names.name(node.state_iso_index())) << std::endl;
-
           admin_index = graphtile.AddAdmin("", "", osmdata.node_names.name(node.country_iso_index()),
                                            osmdata.node_names.name(node.state_iso_index()));
           dor = node.drive_on_right();
@@ -995,14 +991,6 @@ void BuildTileSet(const std::string& ways_file,
         // set the density as needed.
         if (use_urban_tag && node.urban())
           graphtile.nodes().back().set_density(kMaxDensity);
-
-        // if you need to look at the attributes for nodes, grab the LL and update the if statement.
-        /*if (equal(node_ll.lng(), -76.652313f) && equal(node_ll.lat(), 39.657623f)) {
-         std::cout << "***********************" <<
-         std::to_string(GraphId(tile_id.id(),tile_id.level(),graphtile.nodes().size()).value) <<
-         std::endl; std::cout << std::to_string(tile_within_one_admin) << " " <<
-         std::to_string(tile_id.tileid()) << std::endl;
-        }*/
 
         // Increment the counts in the histogram
         stats.nodecount++;
