@@ -121,6 +121,8 @@ void SetShapeAttributes(const AttributesController& controller,
           }
         }
       }
+
+      // TODO Inject and cut for incidents here
     }
     // Cap the end so that we always have something to use
     if (speeds.empty() || std::get<0>(speeds.back()) < tgt_pct) {
@@ -133,6 +135,7 @@ void SetShapeAttributes(const AttributesController& controller,
                                   [distance_total_pct](const decltype(speeds)::value_type& s) {
                                     return distance_total_pct <= std::get<0>(s);
                                   });
+    assert(speed_itr != speeds.cend());
     for (auto i = shape_begin + 1; i < shape.size(); ++i) {
       // If there is a change in speed here we need to make a new shape point and continue from
       // there
@@ -489,6 +492,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
+          default: { break; }
         }
       }
     }
@@ -754,6 +758,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_density(directededge->density());
   }
 
+  if (controller.attributes.at(kEdgeIsUrban)) {
+    bool is_urban = (directededge->density() > 8) ? true : false;
+    trip_edge->set_is_urban(is_urban);
+  }
+
   if (controller.attributes.at(kEdgeSpeedLimit)) {
     trip_edge->set_speed_limit(edgeinfo.speed_limit());
   }
@@ -862,6 +871,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
         }
       }
     }
+  }
+
+  if (controller.attributes.at(kNodeIncidents)) {
+    valhalla::thor::addIncidents(*trip_edge, graphreader, edge);
   }
 
   return trip_edge;
@@ -1536,6 +1549,10 @@ void TripLegBuilder::Build(
         edge_begin_info.trim = true;
         edge_begin_info.distance_along = start_pct;
         edge_begin_info.vertex = start_vrt;
+      } // No trimming needed
+      else if (!edge_begin_info.trim) {
+        edge_begin_info.distance_along = 0;
+        edge_begin_info.vertex = edge_shape.front();
       }
 
       // Handle partial shape for last edge
@@ -1543,6 +1560,10 @@ void TripLegBuilder::Build(
         edge_end_info.trim = true;
         edge_end_info.distance_along = end_pct;
         edge_end_info.vertex = end_vrt;
+      } // No trimming needed
+      else if (!edge_end_info.trim) {
+        edge_end_info.distance_along = 1;
+        edge_end_info.vertex = edge_shape.back();
       }
 
       // Overwrite the trimming information for the edge length now that we know what it is
@@ -1553,12 +1574,13 @@ void TripLegBuilder::Build(
       auto edge_length = static_cast<float>(directededge->length());
       trim_shape(edge_begin_info.distance_along * edge_length, edge_begin_info.vertex,
                  edge_end_info.distance_along * edge_length, edge_end_info.vertex, edge_shape);
-      // Add edge shape to trip
-      trip_shape.insert(trip_shape.end(),
-                        (edge_shape.begin() + ((edge_begin_info.trim || is_first_edge) ? 0 : 1)),
+      // Add edge shape to the trip and skip the first point when its redundant with the previous edge
+      // TODO: uncommment correct removal of redundant shape after odin can handle uturns
+      // trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge, edge_shape.end());
+      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !edge_begin_info.trim,
                         edge_shape.end());
 
-      // If edge_begin_info.exists and is not the first edge then increment begin_index since
+      // If edge_begin_info.trim and is not the first edge then increment begin_index since
       // the previous end shape index should not equal the current begin shape index because
       // of discontinuity
       if (edge_begin_info.trim && !is_first_edge) {

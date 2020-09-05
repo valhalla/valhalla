@@ -226,6 +226,7 @@ message TripLeg {
     optional float default_speed = 44;       // km/h
     optional Restriction restriction = 45;
     optional bool destination_only = 46;
+    optional bool is_urban = 47; // uses edge density to decide if edge is in an urban area
   }
 
   message IntersectingEdge {
@@ -278,6 +279,31 @@ message TripLeg {
     optional PathCost cost = 12;             // how much cost did it take at this node in the path
     repeated PathCost recosts = 13;          // how much cost did it take at this node in the path for optional recostings
     optional BikeShareStationInfo bss_info = 14;
+
+    message Incident {
+      enum Type {
+        NOT_SET = 0;
+        ACCIDENT = 1;
+        CONGESTION = 2;
+        CONSTRUCTION = 3;
+        DISABLED_VEHICLE = 4;
+        LANE_RESTRICTION = 5;
+        MASS_TRANSIT = 6;
+        MISCELLANEOUS = 7;
+        OTHER_NEWS = 8;
+        PLANNED_EVENT = 9;
+        ROAD_CLOSURE = 10;
+        ROAD_HAZARD = 11;
+        WEATHER = 12;
+      };
+      optional Type type = 1;
+      optional string description = 2;
+      optional uint64 start_time = 3;     // START_TIME as seconds since epoch UTC
+      optional uint64 end_time = 4;       // END_TIME seconds since epoch UTC
+      optional uint64 creation_time = 5;  // time the incident was created/updated in seconds since epoch UTC
+      optional uint64 id = 6;             // An id that can be used for joining incidents in route with map
+    };
+    repeated Incident incidents = 15;
  }
 
   message Admin {

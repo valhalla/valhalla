@@ -10,6 +10,7 @@
 #include "meili/map_matcher_factory.h"
 
 #include "test.h"
+#include "utils.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -82,7 +83,7 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
       config.put<int>("meili.default.search_radius", default_search_radius);
       auto matcher = factory.Create(options);
       EXPECT_EQ(matcher->travelmode(), sif::TravelMode::kPedestrian);
-      EXPECT_EQ(matcher->config().get<float>("search_radius"), preferred_search_radius)
+      EXPECT_EQ(matcher->config().candidate_search.search_radius_meters, preferred_search_radius)
           << "preference for pedestrian should override pedestrian config";
 
       delete matcher;
@@ -97,7 +98,7 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
       options.set_search_radius(preferred_search_radius);
       auto matcher = factory.Create(options);
       EXPECT_EQ(matcher->travelmode(), sif::TravelMode::kPedestrian);
-      EXPECT_EQ(matcher->config().get<float>("search_radius"), preferred_search_radius)
+      EXPECT_EQ(matcher->config().candidate_search.search_radius_meters, preferred_search_radius)
           << "preference for universal should override config";
       delete matcher;
     }

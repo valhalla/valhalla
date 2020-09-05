@@ -67,7 +67,7 @@ TEST(SimpleCache, CacheLimitsNoOvercommitAfterClear) {
 
 void touch_tile(const uint32_t tile_id, const std::string& tile_dir) {
   auto suffix = GraphTile::FileSuffix({tile_id, 2, 0});
-  auto fullpath = tile_dir + '/' + suffix;
+  auto fullpath = tile_dir + filesystem::path::preferred_separator + suffix;
   filesystem::create_directories(filesystem::path(fullpath).parent_path());
   int fd = open(fullpath.c_str(), O_CREAT | O_WRONLY, 0644);
   if (fd >= 0)

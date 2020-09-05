@@ -22,14 +22,13 @@
 #include "midgard/util.h"
 #include "mjolnir/util.h"
 #include "odin/worker.h"
+#include "proto/trip.pb.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-
-#include <valhalla/proto/trip.pb.h>
 
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
@@ -187,12 +186,9 @@ build_valhalla_route_request(const map& map,
   speed_types.PushBack("constrained", allocator);
   speed_types.PushBack("predicted", allocator);
 
-  // add the options using the pointer method
-  for (const auto& kv : options) {
-    if (kv.first.find("/date_time/type") != std::string::npos && kv.second == "0") {
-      speed_types.PushBack("current", allocator);
-    }
-    rapidjson::Pointer(kv.first).Set(doc, kv.second);
+  auto found = options.find("/date_time/type");
+  if (found != options.cend() && found->second == "0") {
+    speed_types.PushBack("current", allocator);
   }
 
   doc.AddMember("locations", locations, allocator);
@@ -203,6 +199,11 @@ build_valhalla_route_request(const map& map,
   co.AddMember("speed_types", speed_types, allocator);
   costing_options.AddMember(rapidjson::Value(costing, allocator), co, allocator);
   doc.AddMember("costing_options", costing_options, allocator);
+
+  // we do this last so that options are additive/overwrite
+  for (const auto& kv : options) {
+    rapidjson::Pointer(kv.first).Set(doc, kv.second);
+  }
 
   rapidjson::StringBuffer sb;
   rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
@@ -701,6 +702,22 @@ valhalla::Api match(const map& map,
   return api;
 }
 
+/* Returns the raw_result formatted as a JSON document in the given format.
+ *
+ * @param raw_result the result of a /route or /match request
+ * @param format the response format to use for the JSON document
+ * @return A JSON document created from serialized raw_result. Caller should
+ * call HasParseError() on the returned document to verify its validity.
+ */
+rapidjson::Document convert_to_json(valhalla::Api& raw_result, valhalla::Options_Format format) {
+  raw_result.mutable_options()->set_format(format);
+
+  std::string json = tyr::serializeDirections(raw_result);
+  rapidjson::Document result;
+  result.Parse(json.c_str());
+  return result;
+}
+
 namespace assert {
 namespace osrm {
 
@@ -715,13 +732,9 @@ void expect_steps(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
                   bool dedupe = true) {
 
-  raw_result.mutable_options()->set_format(valhalla::Options_Format_osrm);
-  auto json = tyr::serializeDirections(raw_result);
-
-  rapidjson::Document result;
-  result.Parse(json.c_str());
+  rapidjson::Document result = convert_to_json(raw_result, valhalla::Options_Format_osrm);
   if (result.HasParseError()) {
-    FAIL();
+    FAIL() << "Error converting route response to JSON";
   }
 
   EXPECT_TRUE(result.HasMember("routes"));
@@ -772,13 +785,9 @@ void expect_match(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
                   bool dedupe = true) {
 
-  raw_result.mutable_options()->set_format(valhalla::Options_Format_osrm);
-  auto json = tyr::serializeDirections(raw_result);
-
-  rapidjson::Document result;
-  result.Parse(json.c_str());
+  rapidjson::Document result = convert_to_json(raw_result, valhalla::Options_Format_osrm);
   if (result.HasParseError()) {
-    FAIL();
+    FAIL() << "Error converting route response to JSON";
   }
 
   EXPECT_TRUE(result.HasMember("matchings"));

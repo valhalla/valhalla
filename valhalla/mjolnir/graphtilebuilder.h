@@ -323,7 +323,7 @@ public:
    * @return  Returns a pointer to the directed edge builder (allows
    *          accessing all directed edges from a node).
    */
-  const DirectedEdge* directededges(const size_t idx);
+  const DirectedEdge* directededges(const size_t idx) const;
 
   /**
    * Get the directed edge builder at the specified index.
