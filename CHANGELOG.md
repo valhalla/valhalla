@@ -1,9 +1,9 @@
 ## Release Date: 2020-08-?? Valhalla 3.1.0
 * **Removed**
    * REMOVED:  Remove Node bindings. [#2502](https://github.com/valhalla/valhalla/pull/2502)
+   * REMOVED: appveyor builds. [#2544](https://github.com/valhalla/valhalla/issues/2544)
 
 * **Bug Fix**
-   * FIXED: More Windows compatibility: build tiles and some run actions work now (including CI tests) [#2300](https://github.com/valhalla/valhalla/issues/2300)
    * FIXED: Crazy ETAs.  If a way has forward speed with no backward speed and it is not oneway, then we must set the default speed.  The reverse logic applies as well.  If a way has no backward speed but has a forward speed and it is not a oneway, then set the default speed. [#2102](https://github.com/valhalla/valhalla/pull/2102)
    * FIXED: Map matching elapsed times spliced amongst different legs and discontinuities are now correct [#2104](https://github.com/valhalla/valhalla/pull/2104)
    * FIXED: Date time information is now propogated amongst different legs and discontinuities [#2107](https://github.com/valhalla/valhalla/pull/2107)
@@ -78,6 +78,7 @@
    * FIXED: Simplify heading calculation for turn type. Remove undefined behavior case. [#2513](https://github.com/valhalla/valhalla/pull/2513)
    * FIXED: Always set costing name even if one is not provided for osrm serializer weight_name. [#2528](https://github.com/valhalla/valhalla/pull/2528)
    * FIXED: Make single-thread tile building reproducible: fix seed for shuffle, use concurrency configuration from the mjolnir section. [#2515](https://github.com/valhalla/valhalla/pull/2515)
+   * FIXED: More Windows compatibility: build tiles and some run actions work now (including CI tests) [#2300](https://github.com/valhalla/valhalla/issues/2300)
    * FIXED: Transcoding of c++ location to pbf location used path edges in the place of filtered edges. [#2542](https://github.com/valhalla/valhalla/pull/2542)
    * FIXED: Add back whitelisting action types. [#2545](https://github.com/valhalla/valhalla/pull/2545)
    * FIXED: Allow uturns for truck costing now that we have derived deadends marked in the edge label [#2559](https://github.com/valhalla/valhalla/pull/2559)
@@ -85,7 +86,6 @@
    * FIXED: Multicue enter roundabout [#2556](https://github.com/valhalla/valhalla/pull/2556)
 
 * **Enhancement**
-   * ADDED: Add explicit include for sstream to be compatible with msvc_x64 toolset. [#2449](https://github.com/valhalla/valhalla/pull/2449)
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
    * ADDED: Cancellation of tile downloading. [#2319](https://github.com/valhalla/valhalla/pull/2319)
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)
@@ -136,6 +136,7 @@
    * ADDED: Support for 64bit osm node ids in parsing stage of tile building [#2422](https://github.com/valhalla/valhalla/pull/2422)
    * CHANGED: Point2/PointLL are now templated to allow for higher precision coordinate math when desired [#2429](https://github.com/valhalla/valhalla/pull/2429)
    * ADDED: Optional OpenLR Encoded Path Edges in API Response [#2424](https://github.com/valhalla/valhalla/pull/2424)
+   * ADDED: Add explicit include for sstream to be compatible with msvc_x64 toolset. [#2449](https://github.com/valhalla/valhalla/pull/2449)
    * ADDED: Properly split returned path if traffic conditions change partway along edges [#2451](https://github.com/valhalla/valhalla/pull/2451/files)
    * ADDED: Add Dutch locale. [#2464](https://github.com/valhalla/valhalla/pull/2464)
    * ADDED: Check with address sanititizer in CI. Add support for undefined behavior sanitizer. [#2487](https://github.com/valhalla/valhalla/pull/2487)
@@ -151,6 +152,7 @@
    * ADDED: Parses OpenLr of type PointAlongLine [#2565](https://github.com/valhalla/valhalla/pull/2565)
 
    * ADDED: Use edge.is_urban is set for serializing is_urban. [#2568](https://github.com/valhalla/valhalla/pull/2568)
+   * ADDED: Dependency cache for Azure [#2567](https://github.com/valhalla/valhalla/pull/2567)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

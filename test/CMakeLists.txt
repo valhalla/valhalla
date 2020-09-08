@@ -5,19 +5,19 @@ set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock_main PROPERTIES FOLDER "Dependencies")
 
 ## Lists tests
-set(tests aabb2 access_restriction actor admin attributes_controller astar_bss complexrestriction countryaccess datetime directededge
+set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
   enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions
-  json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch mapmatch_config
+  json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
   narrative_dictionary nodeinfo nodetransition obb2 openlr optimizer parse_request point2 pointll
   polyline2 predictedspeeds queue routing sample sequence sign signs streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
-  transitstop turn turnlanes util_midgard util_skadi util_mjolnir vector2 verbal_text_formatter verbal_text_formatter_us
+  transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem traffictile)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
-    idtable matrix minbb multipoint_routes names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban thor_worker timedep_paths timeparsing trivial_paths uniquenames utrecht lua)
+  list(APPEND tests astar astar_bss complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
+    idtable mapmatch matrix minbb multipoint_routes names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua)
   if(ENABLE_HTTP)
     list(APPEND tests http_tiles)
   endif()
