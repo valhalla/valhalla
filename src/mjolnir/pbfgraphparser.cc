@@ -849,6 +849,7 @@ public:
     }
 
     for (const auto& tag : *results) {
+      // std::cout << "ATTRIBUTES **************** " << tag.first << ", " << tag.second << std::endl;
       if (tag.first == "highway") {
         n.set_traffic_signal(tag.second == "traffic_signals" ? true : false);
       } else if (tag.first == "forward_signal") {

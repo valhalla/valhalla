@@ -399,9 +399,10 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       }
     }
 
-    if (node->IsTollBooth()) {
+    if (node->is_toll_booth()) {
       intersection->emplace("toll_collection", "toll_booth");
-    } else if (node->IsTollGantry()) {
+      break;
+    } else if (node->is_toll_gantry()) {
       intersection->emplace("toll_collection", "toll_gantry");
     }
 

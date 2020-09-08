@@ -39,9 +39,7 @@ struct OSMNode {
   uint32_t ferry_edge_ : 1;
   uint32_t flat_loop_ : 1; // A node which on a section of a way that is doubled back on itself
   uint32_t urban_ : 1;
-  uint32_t toll_booth_ : 1;
-  uint32_t toll_gantry_ : 1;
-  uint32_t spare_ : 3;
+  uint32_t spare_ : 5;
 
   // Lat,lng of the node
   float lng_;
@@ -289,38 +287,6 @@ struct OSMNode {
    */
   bool urban() const {
     return urban_;
-  }
-
-  /**
-   * Sets the toll_booth flag.
-   * @param  toll_booth       toll booth.
-   */
-  void set_toll_booth(const bool toll_booth) {
-    toll_booth_ = toll_booth;
-  }
-
-  /**
-   * Get the toll_booth flag.
-   * @return  Returns toll_booth flag.
-   */
-  bool toll_booth() const {
-    return toll_booth_;
-  }
-
-  /**
-   * Sets the toll_gantry flag.
-   * @param  toll_gantry       toll gantry.
-   */
-  void set_toll_gantry(const bool toll_gantry) {
-    toll_gantry_ = toll_gantry;
-  }
-
-  /**
-   * Get the toll_gantry flag.
-   * @return  Returns toll_gantry flag.
-   */
-  bool toll_gantry() const {
-    return toll_gantry_;
   }
 };
 
