@@ -399,12 +399,13 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       }
     }
 
-    if (node->is_toll_booth()) {
-      intersection->emplace("toll_collection", "toll_booth");
-      break;
-    } else if (node->is_toll_gantry()) {
-      intersection->emplace("toll_collection", "toll_gantry");
+    auto toll_collection = json::map({});
+    if (node->has_toll_booth()) {
+      toll_collection->emplace("type", std::string("toll_booth"));
+    } else if (node->has_toll_gantry()) {
+      toll_collection->emplace("type", std::string("toll_gantry"));
     }
+    if (!toll_collection->empty()) intersection->emplace("toll_collection", toll_collection);
 
     if (node->cost().transition_cost().seconds() > 0)
       intersection->emplace("turn_duration", json::fp_t{node->cost().transition_cost().seconds(), 3});

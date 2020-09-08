@@ -688,11 +688,19 @@ public:
   bool IsBorderControl() const;
   bool IsTollGantry() const;
 
-  bool is_toll_booth() const {
+  bool has_toll_booth() const {
+    return mutable_node_->has_toll_booth();
+  }
+
+  bool toll_booth() const {
     return mutable_node_->toll_booth();
   }
 
-  bool is_toll_gantry() const {
+  bool has_toll_gantry() const {
+    return mutable_node_->has_toll_gantry();
+  }
+
+  bool toll_gantry() const {
     return mutable_node_->toll_gantry();
   }
 
