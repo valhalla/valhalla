@@ -398,6 +398,13 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         intersection->emplace("is_urban", curr_edge->is_urban());
       }
     }
+
+    if (node->IsTollBooth()) {
+      intersection->emplace("toll_collection", "toll_booth");
+    } else if (node->IsTollGantry()) {
+      intersection->emplace("toll_collection", "toll_gantry");
+    }
+
     if (node->cost().transition_cost().seconds() > 0)
       intersection->emplace("turn_duration", json::fp_t{node->cost().transition_cost().seconds(), 3});
     if (node->cost().transition_cost().cost() > 0)

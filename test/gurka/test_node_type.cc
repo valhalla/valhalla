@@ -1,0 +1,181 @@
+#include "gurka.h"
+#include <boost/format.hpp>
+#include <gtest/gtest.h>
+
+#if !defined(VALHALLA_SOURCE_DIR)
+#define VALHALLA_SOURCE_DIR
+#endif
+
+using namespace valhalla;
+const std::unordered_map<std::string, std::string> build_config{
+    {"mjolnir.data_processing.use_admin_db", "true"}};
+
+class NodeType : public ::testing::Test {
+protected:
+  static gurka::map map;
+
+  static void SetUpTestSuite() {
+    constexpr double gridsize_metres = 100;
+
+    const std::string ascii_map = R"(
+                          A
+                          |
+                          |     
+                          B----E
+                          |
+                          |
+                          C
+                          |
+                          |
+                          D----F   
+  )";
+
+    const gurka::ways ways = {{"AB", {{"highway", "motorway"}}},
+                              {"BC", {{"highway", "motorway"}}},
+                              {"CD", {{"highway", "motorway"}}},
+                              {"BE", {{"highway", "motorway"}}},
+                              {"DF", {{"highway", "motorway"}}}};
+
+    const gurka::nodes nodes = {{"E", {{"barrier", "toll_booth"}}},
+                                {"F", {{"highway", "toll_gantry"}}}};
+
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
+    map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_node_type", build_config);
+  }
+};
+gurka::map NodeType::map = {};
+Api api;
+rapidjson::Document d;
+
+/*************************************************************/
+
+TEST_F(NodeType, Toll) {
+  auto result = gurka::route(map, "A", "E", "auto");
+
+  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+  auto leg = result.trip().routes(0).legs(0);
+  //EXPECT_EQ(leg.node(2).type(), TripLeg::Node::Type::TripLeg_Node_Type_kTollBooth); // AE
+
+  result = gurka::route(map, "A", "F", "auto");
+  leg = result.trip().routes(0).legs(0);
+  //EXPECT_EQ(leg.node(4).type(), TripLeg::Node::Type::TripLeg_Node_Type_kTollGantry); // AF
+}
+
+TEST_F(NodeType, test_toll_response) {
+  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["A"].lat()) + R"(},{"lon":)" +
+                          std::to_string(map.nodes["E"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["E"].lat()) + "}";
+
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+  auto json = actor.route(
+      R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["node.type.toll_booth"]},"locations":[)" +
+          locations + R"(]})",
+      {}, &api);
+
+  // get the osrm json
+  d.Parse(json);
+  EXPECT_FALSE(d.HasParseError());
+
+  for (const auto& route : d["routes"].GetArray()) {
+    for (const auto& leg : route["legs"].GetArray()) {
+      for (const auto& step : leg["steps"].GetArray()) {
+        for (const auto& intersection : step["intersections"].GetArray()) {
+          if (intersection.HasMember("toll_collection")) {
+            EXPECT_EQ(intersection.HasMember("toll_collection"), true);
+            EXPECT_TRUE(intersection["toll_collection"].GetString() == "toll_booth");
+          }
+        }
+      }
+    }
+  }
+}
+
+TEST_F(NodeType, test_toll_response2) {
+  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["A"].lat()) + R"(},{"lon":)" +
+                          std::to_string(map.nodes["F"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["F"].lat()) + "}";
+
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+  auto json = actor.route(
+      R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["node.type.toll_gantry"]},"locations":[)" +
+          locations + R"(]})",
+      {}, &api);
+
+  // get the osrm json
+  d.Parse(json);
+  EXPECT_FALSE(d.HasParseError());
+
+  for (const auto& route : d["routes"].GetArray()) {
+    for (const auto& leg : route["legs"].GetArray()) {
+      for (const auto& step : leg["steps"].GetArray()) {
+        for (const auto& intersection : step["intersections"].GetArray()) {
+          if (intersection.HasMember("toll_collection")) {
+            EXPECT_EQ(intersection.HasMember("toll_collection"), true);
+            EXPECT_TRUE(intersection["toll_collection"].GetString() == "toll_gantry");
+          }
+        }
+      }
+    }
+  }
+}
+
+TEST_F(NodeType, test_toll_all) {
+  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["A"].lat()) + R"(},{"lon":)" +
+                          std::to_string(map.nodes["E"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["E"].lat()) + "}";
+
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+  auto json = actor.route(
+      R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["node.type.toll_booth","node.type.toll_gantry"]},"locations":[)" +
+          locations + R"(]})",
+      {}, &api);
+
+  // get the osrm json
+  d.Parse(json);
+  EXPECT_FALSE(d.HasParseError());
+
+  for (const auto& route : d["routes"].GetArray()) {
+    for (const auto& leg : route["legs"].GetArray()) {
+      for (const auto& step : leg["steps"].GetArray()) {
+        for (const auto& intersection : step["intersections"].GetArray()) {
+          if (intersection.HasMember("toll_collection")) {
+            EXPECT_EQ(intersection.HasMember("toll_collection"), true);
+            EXPECT_TRUE(intersection["toll_collection"].GetString() == "toll_booth");
+          }
+        }
+      }
+    }
+  }
+}
+
+TEST_F(NodeType, test_toll_exclude_by_default) {
+  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["A"].lat()) + R"(},{"lon":)" +
+                          std::to_string(map.nodes["F"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["F"].lat()) + "}";
+
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+  auto json = actor.route(R"({"costing":"auto","format":"osrm","locations":[)" + locations + R"(]})",
+                          {}, &api);
+
+  // get the osrm json
+  d.Parse(json);
+  EXPECT_FALSE(d.HasParseError());
+
+  for (const auto& route : d["routes"].GetArray()) {
+    for (const auto& leg : route["legs"].GetArray()) {
+      for (const auto& step : leg["steps"].GetArray()) {
+        for (const auto& intersection : step["intersections"].GetArray()) {
+          EXPECT_EQ(intersection.HasMember("toll_collection"), false);
+        }
+      }
+    }
+  }
+}

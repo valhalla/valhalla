@@ -151,6 +151,7 @@
    * ADDED: Added new urban flag that can be set if edge is within city boundaries to data processing; new use_urban_tag config option; added to osrm response within intersections. [#2522](https://github.com/valhalla/valhalla/pull/2522)
    * ADDED: Use edge.is_urban is set for serializing is_urban. [#2568](https://github.com/valhalla/valhalla/pull/2568)
    * ADDED: Dependency cache for Azure [#2567](https://github.com/valhalla/valhalla/pull/2567)
+   * ADDED: Added toll gates and collection points (gantry) to the node;  [#2532](https://github.com/valhalla/valhalla/pull/2532)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
