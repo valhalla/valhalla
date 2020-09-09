@@ -22,6 +22,8 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeEndShapeIndex, true},
     {kEdgeTraversability, true},
     {kEdgeUse, true},
+    {kEdgeUseRestArea, false},
+    {kEdgeUseServiceArea, false},
     {kEdgeToll, true},
     {kEdgeUnpaved, true},
     {kEdgeTunnel, true},
@@ -73,8 +75,6 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeDefaultSpeed, true},
     {kEdgeDestinationOnly, true},
     {kEdgeIsUrban, false},
-    {kEdgeRestAreaUse, false},
-    {kEdgeServiceAreaUse, false},
 
     // Node keys
     {kNodeIncidents, false},

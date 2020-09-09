@@ -422,8 +422,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // any intersecting edges for the first depart intersection and for
     // the arrive step.
     std::vector<IntersectionEdges> edges;
-    auto rest_area = json::map({});
-    auto service_area = json::map({});
+    auto points_of_interest = json::map({});
     if (i > 0 && !arrive_maneuver) {
       for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
         auto intersecting_edge = node->GetIntersectingEdge(m);
@@ -432,13 +431,15 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         edges.emplace_back(bearing, routeable, false, false);
 
         if (curr_edge->has_is_rest_area_use()) {
-          intersection->emplace("rest_area", rest_area);
+          points_of_interest->emplace("type", std::string("rest_area"));
           break;
         } else if (curr_edge->has_is_service_area_use()) {
-          intersection->emplace("service_area", service_area);
+          points_of_interest->emplace("type", std::string("service_area"));
           break;
         }
       }
+      if (!points_of_interest->empty())
+        intersection->emplace("points_of_interest", points_of_interest);
     }
 
     // Add the edge departing the node

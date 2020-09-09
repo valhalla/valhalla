@@ -80,7 +80,7 @@ TEST_F(Use, test_rest_area_use_excluded_by_default) {
     for (const auto& leg : route["legs"].GetArray()) {
       for (const auto& step : leg["steps"].GetArray()) {
         for (const auto& intersection : step["intersections"].GetArray()) {
-          EXPECT_EQ(intersection.HasMember("rest_area"), false);
+          EXPECT_EQ(intersection.HasMember("points_of_interest"), false);
         }
       }
     }
@@ -96,7 +96,7 @@ TEST_F(Use, test_rest_area_use) {
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
   auto json = actor.route(
-      R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["edge.rest_area"]},"locations":[)" +
+      R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["edge.use.rest_area"]},"locations":[)" +
           locations + R"(]})",
       {}, &api);
 
@@ -108,8 +108,11 @@ TEST_F(Use, test_rest_area_use) {
     for (const auto& leg : route["legs"].GetArray()) {
       for (const auto& step : leg["steps"].GetArray()) {
         for (const auto& intersection : step["intersections"].GetArray()) {
-          if (intersection.HasMember("rest_area")) {
-            EXPECT_EQ(intersection.HasMember("rest_area"), true);
+          if (intersection.HasMember("points_of_interest")) {
+            EXPECT_EQ(intersection.HasMember("points_of_interest"), true);
+            const auto& poi = intersection["points_of_interest"].GetObject();
+            EXPECT_TRUE(poi["type"].IsString());
+            EXPECT_TRUE(poi["type"] == "rest_area");
           }
         }
       }
@@ -135,7 +138,7 @@ TEST_F(Use, test_service_area_use_excluded_by_default) {
     for (const auto& leg : route["legs"].GetArray()) {
       for (const auto& step : leg["steps"].GetArray()) {
         for (const auto& intersection : step["intersections"].GetArray()) {
-          EXPECT_EQ(intersection.HasMember("service_area"), false);
+          EXPECT_EQ(intersection.HasMember("points_of_interest"), false);
         }
       }
     }
@@ -151,7 +154,7 @@ TEST_F(Use, test_service_area_use) {
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
   auto json = actor.route(
-      R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["edge.service_area"]},"locations":[)" +
+      R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["edge.use.service_area"]},"locations":[)" +
           locations + R"(]})",
       {}, &api);
 
@@ -163,8 +166,11 @@ TEST_F(Use, test_service_area_use) {
     for (const auto& leg : route["legs"].GetArray()) {
       for (const auto& step : leg["steps"].GetArray()) {
         for (const auto& intersection : step["intersections"].GetArray()) {
-          if (intersection.HasMember("service_area")) {
-            EXPECT_EQ(intersection.HasMember("service_area"), true);
+          if (intersection.HasMember("points_of_interest")) {
+            EXPECT_EQ(intersection.HasMember("points_of_interest"), true);
+            const auto& poi = intersection["points_of_interest"].GetObject();
+            EXPECT_TRUE(poi["type"].IsString());
+            EXPECT_TRUE(poi["type"] == "service_area");
           }
         }
       }
@@ -173,15 +179,15 @@ TEST_F(Use, test_service_area_use) {
 }
 
 TEST_F(Use, test_all_use) {
-  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
-                          std::to_string(map.nodes["A"].lat()) + R"(},{"lon":)" +
+  std::string locations = R"({"lon":)" + std::to_string(map.nodes["B"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["B"].lat()) + R"(},{"lon":)" +
                           std::to_string(map.nodes["F"].lng()) + R"(,"lat":)" +
                           std::to_string(map.nodes["F"].lat()) + "}";
 
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
   auto json = actor.route(
-      R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["edge.rest_area", "edge.service_area"]},"locations":[)" +
+      R"({"costing":"auto","format":"osrm","filters":{"action":"include","attributes":["edge.use.rest_area", "edge.use.service_area"]},"locations":[)" +
           locations + R"(]})",
       {}, &api);
 
@@ -193,11 +199,12 @@ TEST_F(Use, test_all_use) {
     for (const auto& leg : route["legs"].GetArray()) {
       for (const auto& step : leg["steps"].GetArray()) {
         for (const auto& intersection : step["intersections"].GetArray()) {
-          if (intersection.HasMember("rest_area")) {
-            EXPECT_EQ(intersection.HasMember("rest_area"), true);
-          }
-          if (intersection.HasMember("service_area")) {
-            EXPECT_EQ(intersection.HasMember("service_area"), true);
+          if (intersection.HasMember("points_of_interest")) {
+            EXPECT_EQ(intersection.HasMember("points_of_interest"), true);
+            const auto& poi = intersection["points_of_interest"].GetObject();
+            EXPECT_TRUE(poi["type"].IsString());
+            EXPECT_FALSE(poi["type"] == "rest_area");
+            EXPECT_TRUE(poi["type"] == "service_area");
           }
         }
       }

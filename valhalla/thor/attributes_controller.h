@@ -18,6 +18,8 @@ const std::string kEdgeBeginShapeIndex = "edge.begin_shape_index";
 const std::string kEdgeEndShapeIndex = "edge.end_shape_index";
 const std::string kEdgeTraversability = "edge.traversability";
 const std::string kEdgeUse = "edge.use";
+const std::string kEdgeUseRestArea = "edge.use.rest_area";
+const std::string kEdgeUseServiceArea = "edge.use.service_area";
 const std::string kEdgeToll = "edge.toll";
 const std::string kEdgeUnpaved = "edge.unpaved";
 const std::string kEdgeTunnel = "edge.tunnel";
@@ -70,8 +72,6 @@ const std::string kEdgeTruckRoute = "edge.truck_route";
 const std::string kEdgeDefaultSpeed = "edge.default_speed";
 const std::string kEdgeDestinationOnly = "edge.destination_only";
 const std::string kEdgeIsUrban = "edge.is_urban";
-const std::string kEdgeRestAreaUse = "edge.rest_area";
-const std::string kEdgeServiceAreaUse = "edge.service_area";
 
 // Node keys
 const std::string kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";
