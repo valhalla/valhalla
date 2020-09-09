@@ -895,8 +895,6 @@ public:
           n.set_type(NodeType::kBollard);
         }
       } else if (tag.first == "toll_booth") {
-        // std::cout << "TOLL BOOTH **************** " << tag.first << ", " << tag.second << ", " <<
-        // std::to_string(n.latlng().first) << ", " << std::to_string(n.latlng().second) << std::endl;
         if (tag.second == "true") {
           if (!intersection) {
             intersection = true;
@@ -913,9 +911,6 @@ public:
           n.set_type(NodeType::kBorderControl);
         }
       } else if (tag.first == "toll_gantry") {
-        // std::cout << "TOLL GANTRY **************** " << tag.first << ", " << tag.second << ", "
-        // << std::to_string(n.latlng().first) << ", " << std::to_string(n.latlng().second)
-        // << std::endl;
         if (tag.second == "true") {
           if (!intersection) {
             intersection = true;
