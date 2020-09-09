@@ -231,8 +231,6 @@ message TripLeg {
     optional Restriction restriction = 45;
     optional bool destination_only = 46;
     optional bool is_urban = 47; // uses edge density to decide if edge is in an urban area
-    optional bool is_rest_area_use = 48;
-    optional bool is_service_area_use = 49;
   }
 
   message IntersectingEdge {
