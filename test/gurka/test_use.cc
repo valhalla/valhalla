@@ -80,7 +80,7 @@ TEST_F(Use, test_rest_area_use_excluded_by_default) {
     for (const auto& leg : route["legs"].GetArray()) {
       for (const auto& step : leg["steps"].GetArray()) {
         for (const auto& intersection : step["intersections"].GetArray()) {
-          EXPECT_EQ(intersection.HasMember("points_of_interest"), false);
+          EXPECT_EQ(intersection.HasMember("rest_stops"), false);
         }
       }
     }
@@ -108,11 +108,12 @@ TEST_F(Use, test_rest_area_use) {
     for (const auto& leg : route["legs"].GetArray()) {
       for (const auto& step : leg["steps"].GetArray()) {
         for (const auto& intersection : step["intersections"].GetArray()) {
-          if (intersection.HasMember("points_of_interest")) {
-            EXPECT_EQ(intersection.HasMember("points_of_interest"), true);
-            const auto& poi = intersection["points_of_interest"].GetObject();
-            EXPECT_TRUE(poi["type"].IsString());
-            EXPECT_TRUE(poi["type"] == "rest_area");
+          if (intersection.HasMember("rest_stops")) {
+            EXPECT_EQ(intersection.HasMember("rest_stops"), true);
+            for (const auto& stop : intersection["rest_stops"].GetArray()) {
+              EXPECT_TRUE(stop["type"].IsString());
+              // EXPECT_TRUE(stop["type"] == "rest_area");
+            }
           }
         }
       }
@@ -138,7 +139,7 @@ TEST_F(Use, test_service_area_use_excluded_by_default) {
     for (const auto& leg : route["legs"].GetArray()) {
       for (const auto& step : leg["steps"].GetArray()) {
         for (const auto& intersection : step["intersections"].GetArray()) {
-          EXPECT_EQ(intersection.HasMember("points_of_interest"), false);
+          EXPECT_EQ(intersection.HasMember("rest_stops"), false);
         }
       }
     }
@@ -146,8 +147,8 @@ TEST_F(Use, test_service_area_use_excluded_by_default) {
 }
 
 TEST_F(Use, test_service_area_use) {
-  std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
-                          std::to_string(map.nodes["A"].lat()) + R"(},{"lon":)" +
+  std::string locations = R"({"lon":)" + std::to_string(map.nodes["B"].lng()) + R"(,"lat":)" +
+                          std::to_string(map.nodes["B"].lat()) + R"(},{"lon":)" +
                           std::to_string(map.nodes["F"].lng()) + R"(,"lat":)" +
                           std::to_string(map.nodes["F"].lat()) + "}";
 
@@ -166,11 +167,12 @@ TEST_F(Use, test_service_area_use) {
     for (const auto& leg : route["legs"].GetArray()) {
       for (const auto& step : leg["steps"].GetArray()) {
         for (const auto& intersection : step["intersections"].GetArray()) {
-          if (intersection.HasMember("points_of_interest")) {
-            EXPECT_EQ(intersection.HasMember("points_of_interest"), true);
-            const auto& poi = intersection["points_of_interest"].GetObject();
-            EXPECT_TRUE(poi["type"].IsString());
-            EXPECT_TRUE(poi["type"] == "service_area");
+          if (intersection.HasMember("rest_stops")) {
+            EXPECT_EQ(intersection.HasMember("rest_stops"), true);
+            for (const auto& stop : intersection["rest_stops"].GetArray()) {
+              EXPECT_TRUE(stop["type"].IsString());
+              EXPECT_TRUE(stop["type"] == "service_area");
+            }
           }
         }
       }
@@ -199,12 +201,12 @@ TEST_F(Use, test_all_use) {
     for (const auto& leg : route["legs"].GetArray()) {
       for (const auto& step : leg["steps"].GetArray()) {
         for (const auto& intersection : step["intersections"].GetArray()) {
-          if (intersection.HasMember("points_of_interest")) {
-            EXPECT_EQ(intersection.HasMember("points_of_interest"), true);
-            const auto& poi = intersection["points_of_interest"].GetObject();
-            EXPECT_TRUE(poi["type"].IsString());
-            EXPECT_FALSE(poi["type"] == "rest_area");
-            EXPECT_TRUE(poi["type"] == "service_area");
+          if (intersection.HasMember("rest_stops")) {
+            EXPECT_EQ(intersection.HasMember("rest_stops"), true);
+            const auto& stop = intersection["rest_stops"].GetObject();
+            EXPECT_TRUE(stop["type"].IsString());
+            EXPECT_FALSE(stop["type"] == "rest_area");
+            EXPECT_TRUE(stop["type"] == "service_area");
           }
         }
       }

@@ -763,14 +763,6 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_is_urban(is_urban);
   }
 
-  if (controller.attributes.at(kEdgeUseRestArea)) {
-    trip_edge->set_is_rest_area_use(directededge->use() == baldr::Use::kRestArea);
-  }
-
-  if (controller.attributes.at(kEdgeUseServiceArea)) {
-    trip_edge->set_is_service_area_use(directededge->use() == baldr::Use::kServiceArea);
-  }
-
   if (controller.attributes.at(kEdgeSpeedLimit)) {
     trip_edge->set_speed_limit(edgeinfo.speed_limit());
   }

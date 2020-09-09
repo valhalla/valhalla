@@ -418,29 +418,35 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // TODO: add recosted durations to the intersection?
 
+    // Add rest_stops when passing by a rest_area or service_area
+    if (i > 0 && !arrive_maneuver) {
+      std::vector<std::string> rest_stop_types;
+      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+        auto intersecting_edge = node->GetIntersectingEdge(m);
+        bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
+
+        if (routeable && intersecting_edge->use() == TripLeg_Use_kRestAreaUse) {
+          rest_stop_types.push_back("rest_area");
+        } else if (routeable && intersecting_edge->use() == TripLeg_Use_kServiceAreaUse) {
+          rest_stop_types.push_back("service_area");
+        }
+      }
+
+      if (rest_stop_types.size() > 0) {
+        auto rest_stops = json::array({});
+        for (const auto& t : rest_stop_types) {
+          auto rest_stop = json::map({});
+          rest_stop->emplace("type", t);
+          rest_stops->emplace_back(rest_stop);
+        }
+        intersection->emplace("rest_stops", rest_stops);
+      }
+    }
+
     // Get bearings and access to outgoing intersecting edges. Do not add
     // any intersecting edges for the first depart intersection and for
     // the arrive step.
     std::vector<IntersectionEdges> edges;
-    auto points_of_interest = json::map({});
-    if (i > 0 && !arrive_maneuver) {
-      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
-        auto intersecting_edge = node->GetIntersectingEdge(m);
-        bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
-        uint32_t bearing = static_cast<uint32_t>(intersecting_edge->begin_heading());
-        edges.emplace_back(bearing, routeable, false, false);
-
-        if (curr_edge->has_is_rest_area_use()) {
-          points_of_interest->emplace("type", std::string("rest_area"));
-          break;
-        } else if (curr_edge->has_is_service_area_use()) {
-          points_of_interest->emplace("type", std::string("service_area"));
-          break;
-        }
-      }
-      if (!points_of_interest->empty())
-        intersection->emplace("points_of_interest", points_of_interest);
-    }
 
     // Add the edge departing the node
     if (!arrive_maneuver) {
