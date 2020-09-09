@@ -400,12 +400,13 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     }
 
     auto toll_collection = json::map({});
-    if (node->has_toll_booth()) {
+    if (node->type() == TripLeg_Node::kTollBooth) {
       toll_collection->emplace("type", std::string("toll_booth"));
-    } else if (node->has_toll_gantry()) {
+    } else if (node->type() == TripLeg_Node::kTollGantry) {
       toll_collection->emplace("type", std::string("toll_gantry"));
     }
-    if (!toll_collection->empty()) intersection->emplace("toll_collection", toll_collection);
+    if (!toll_collection->empty())
+      intersection->emplace("toll_collection", toll_collection);
 
     if (node->cost().transition_cost().seconds() > 0)
       intersection->emplace("turn_duration", json::fp_t{node->cost().transition_cost().seconds(), 3});

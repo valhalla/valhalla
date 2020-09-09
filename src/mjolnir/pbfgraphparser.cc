@@ -849,7 +849,6 @@ public:
     }
 
     for (const auto& tag : *results) {
-      // std::cout << "ATTRIBUTES **************** " << tag.first << ", " << tag.second << std::endl;
       if (tag.first == "highway") {
         n.set_traffic_signal(tag.second == "traffic_signals" ? true : false);
       } else if (tag.first == "forward_signal") {
@@ -896,6 +895,8 @@ public:
           n.set_type(NodeType::kBollard);
         }
       } else if (tag.first == "toll_booth") {
+        // std::cout << "TOLL BOOTH **************** " << tag.first << ", " << tag.second << ", " <<
+        // std::to_string(n.latlng().first) << ", " << std::to_string(n.latlng().second) << std::endl;
         if (tag.second == "true") {
           if (!intersection) {
             intersection = true;
@@ -912,6 +913,9 @@ public:
           n.set_type(NodeType::kBorderControl);
         }
       } else if (tag.first == "toll_gantry") {
+        // std::cout << "TOLL GANTRY **************** " << tag.first << ", " << tag.second << ", "
+        // << std::to_string(n.latlng().first) << ", " << std::to_string(n.latlng().second)
+        // << std::endl;
         if (tag.second == "true") {
           if (!intersection) {
             intersection = true;

@@ -304,8 +304,6 @@ message TripLeg {
       optional uint64 id = 6;             // An id that can be used for joining incidents in route with map
     };
     repeated Incident incidents = 15;
-    optional bool toll_booth = 16;
-    optional bool toll_gantry = 17;
  }
 
   message Admin {

@@ -688,22 +688,6 @@ public:
   bool IsBorderControl() const;
   bool IsTollGantry() const;
 
-  bool has_toll_booth() const {
-    return mutable_node_->has_toll_booth();
-  }
-
-  bool toll_booth() const {
-    return mutable_node_->toll_booth();
-  }
-
-  bool has_toll_gantry() const {
-    return mutable_node_->has_toll_gantry();
-  }
-
-  bool toll_gantry() const {
-    return mutable_node_->toll_gantry();
-  }
-
   std::string ToString() const;
 
   const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident>& incidents() const;

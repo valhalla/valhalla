@@ -87,8 +87,6 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kNodeElapsedTime, true},
     {kNodeaAdminIndex, true},
     {kNodeType, true},
-    {kNodeTypeTollBooth, false},
-    {kNodeTypeTollGantry, false},
     {kNodeFork, true},
     {kNodeTransitPlatformInfoType, true},
     {kNodeTransitPlatformInfoOnestopId, true},

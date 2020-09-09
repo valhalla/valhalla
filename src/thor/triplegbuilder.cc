@@ -1343,14 +1343,6 @@ void TripLegBuilder::Build(
     AddBssNode(trip_node, node, startnode, start_tile, graphtile, mode_costing, controller);
     AddTransitNodes(trip_node, node, startnode, start_tile, graphtile, controller);
 
-    if (controller.attributes.at(kNodeTypeTollBooth)) {
-      trip_node->set_toll_booth(node->type() == baldr::NodeType::kTollBooth);
-    }
-
-    if (controller.attributes.at(kNodeTypeTollGantry)) {
-      trip_node->set_toll_gantry(node->type() == baldr::NodeType::kTollGantry);
-    }
-
     ///////////////////////////////////////////////////////////////////////////
     // Add transit information if this is a transit stop. TODO - can we move
     // this to another method?
