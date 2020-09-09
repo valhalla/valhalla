@@ -324,6 +324,13 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
       bicycle_edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
+    auto endnode = pred.endnode();
+    auto l = graphreader.GetGraphTile(endnode)->get_node_ll(endnode);
+    std::cout << "------------------------------------------------" << std::endl;
+    std::cout << l.lat() << " "  << l.lng() << std::endl;
+    std::cout << "cost " << pred.cost().cost << std::endl;
+    std::cout << "time " << pred.cost().secs << std::endl;
+
     // Check that distance is converging towards the destination. Return route
     // failure if no convergence for TODO iterations
     float dist2dest = pred.distance();
@@ -499,9 +506,6 @@ uint32_t AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valha
     auto tile = graphreader.GetGraphTile(edgeid);
     assert(tile);
     const DirectedEdge* directededge = tile->directededge(edgeid);
-    auto* endonode = tile->node(directededge->endnode());
-    GraphId startnode =
-        tile->directededge(endonode->edge_index() + directededge->opp_index())->endnode();
 
     destinations_[edge.graph_id()] =
         pedestrian_costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
