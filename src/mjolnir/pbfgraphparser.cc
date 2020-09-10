@@ -77,9 +77,6 @@ public:
     use_urban_tag_ = pt.get<bool>("data_processing.use_urban_tag", false);
     use_rest_area_ = pt.get<bool>("data_processing.use_rest_area", false);
 
-    service_ == "";
-    amenity_ == "";
-
     empty_node_results_ = lua_.Transform(OSMType::kNode, 0, {});
     empty_way_results_ = lua_.Transform(OSMType::kWay, 0, {});
     empty_relation_results_ = lua_.Transform(OSMType::kRelation, 0, {});
@@ -1075,6 +1072,8 @@ public:
     has_average_speed_ = false, has_advisory_speed_ = false;
     has_surface_ = true;
     name_ = {};
+    service_ == "";
+    amenity_ == "";
 
     // Process tags
     way_ = OSMWay{osmid_};
