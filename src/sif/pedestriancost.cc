@@ -354,28 +354,21 @@ public:
   }
 
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by pedestrians.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
+  virtual float Filter(const baldr::DirectedEdge* edge) const override {
     // Throw back a lambda that checks the access for this type of costing
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    auto max_sac_scale = max_hiking_difficulty_;
-    auto on_bss_connection = project_on_bss_connection;
-    auto ignore_oneways = ignore_oneways_;
+    bool accessable = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
 
-    return [access_mask, max_sac_scale, on_bss_connection,
-            ignore_oneways](const baldr::DirectedEdge* edge) {
-      bool accessable = (edge->forwardaccess() & access_mask) ||
-                        (ignore_oneways && (edge->reverseaccess() & access_mask));
-
-      return !(edge->is_shortcut() || edge->use() >= Use::kRail ||
-               edge->sac_scale() > max_sac_scale || !accessable ||
-               (edge->bss_connection() && !on_bss_connection));
-    };
+    return !(edge->is_shortcut() || edge->use() >= Use::kRail ||
+             edge->sac_scale() > max_hiking_difficulty_ || !accessable ||
+             (edge->bss_connection() && !project_on_bss_connection));
   }
 
   virtual Cost BSSCost() const override {

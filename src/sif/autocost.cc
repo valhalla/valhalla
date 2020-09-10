@@ -268,25 +268,23 @@ public:
   }
 
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
+  virtual float Filter(const baldr::DirectedEdge* edge) const override {
     // Throw back a lambda that checks the access for this type of costing
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    return [access_mask, ignore_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
-      bool accessable = (edge->forwardaccess() & access_mask) ||
-                        (ignore_oneways && (edge->reverseaccess() & access_mask));
-      if (edge->is_shortcut() || !accessable || edge->bss_connection()) {
-        return 0.0f;
-      } else {
-        // TODO - use classification/use to alter the factor
-        return 1.0f;
-      }
-    };
+    bool accessable = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    if (edge->is_shortcut() || !accessable || edge->bss_connection()) {
+      return 0.0f;
+    } else {
+      // TODO - use classification/use to alter the factor
+      return 1.0f;
+    }
   }
 
   // Hidden in source file so we don't need it to be protected
@@ -367,7 +365,6 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const uint64_t current_time,
                        const uint32_t tz_index,
                        int& restriction_idx) const {
-
   if (flow_mask_ & kCurrentFlowMask) {
     if (tile->IsClosedDueToTraffic(edgeid))
       return false;
@@ -419,6 +416,7 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::GraphTile* tile,
                         const uint32_t seconds) const {
   auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
+
   float factor =
       (edge->use() == Use::kFerry)
           ? ferry_factor_
@@ -784,25 +782,23 @@ public:
                               int& restriction_idx) const;
 
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by bus.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
+  virtual float Filter(const baldr::DirectedEdge* edge) const override {
     // Throw back a lambda that checks the access for this type of costing
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    return [access_mask, i_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
-      bool accessable = (edge->forwardaccess() & access_mask) ||
-                        (i_oneways && (edge->reverseaccess() & access_mask));
-      if (!accessable) {
-        return 0.0f;
-      } else {
-        // TODO - use classification/use to alter the factor
-        return 1.0f;
-      }
-    };
+    bool accessable = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    if (!accessable) {
+      return 0.0f;
+    } else {
+      // TODO - use classification/use to alter the factor
+      return 1.0f;
+    }
   }
 };
 
@@ -957,25 +953,19 @@ public:
   }
 
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by hov.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
-    // Throw back a lambda that checks the access for this type of costing
-    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    return [access_mask, i_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
-      bool accessable = (edge->forwardaccess() & access_mask) ||
-                        (i_oneways && (edge->reverseaccess() & access_mask));
-      if (!accessable) {
-        return 0.0f;
-      } else {
-        // TODO - use classification/use to alter the factor
-        return 1.0f;
-      }
-    };
+  virtual float Filter(const baldr::DirectedEdge* edge) const override {
+    if (!(edge->forwardaccess() & kHOVAccess)) {
+      return 0.0f;
+    } else {
+      // TODO - use classification/use to alter the factor
+      return 1.0f;
+    }
   }
 };
 
@@ -1132,25 +1122,23 @@ public:
   }
 
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by taxi.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
+  virtual float Filter(const baldr::DirectedEdge* edge) const override {
     // Throw back a lambda that checks the access for this type of costing
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    return [access_mask, i_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
-      bool accessable = (edge->forwardaccess() & access_mask) ||
-                        (i_oneways && (edge->reverseaccess() & access_mask));
-      if (!accessable) {
-        return 0.0f;
-      } else {
-        // TODO - use classification/use to alter the factor
-        return 1.0f;
-      }
-    };
+    bool accessable = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    if (!accessable) {
+      return 0.0f;
+    } else {
+      // TODO - use classification/use to alter the factor
+      return 1.0f;
+    }
   }
 };
 
@@ -1289,27 +1277,25 @@ public:
   }
 
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by auto in either direction.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
+  virtual float Filter(const baldr::DirectedEdge* edge) const override {
     // Throw back a lambda that checks the access for this type of costing
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    return [access_mask, ignore_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
-      // Do not allow edges with no auto access in either direction
-      bool allow_forward = edge->forwardaccess() & access_mask;
-      bool allow_reverse = edge->reverseaccess() & access_mask;
-      bool accessable = (allow_forward && allow_reverse) || (ignore_oneways && allow_reverse);
+    // Do not allow edges with no auto access in either direction
+    bool allow_forward = edge->forwardaccess() & access_mask;
+    bool allow_reverse = edge->reverseaccess() & access_mask;
+    bool accessable = (allow_forward && allow_reverse) || (ignore_oneways_ && allow_reverse);
 
-      if (!accessable) {
-        return 0.0f;
-      } else {
-        return 1.0f;
-      }
-    };
+    if (!accessable) {
+      return 0.0f;
+    } else {
+      return 1.0f;
+    }
   }
 };
 

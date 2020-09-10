@@ -298,27 +298,25 @@ public:
     return static_cast<uint8_t>(VehicleType::kMotorScooter);
   }
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
+  virtual float Filter(const baldr::DirectedEdge* edge) const override {
     // Throw back a lambda that checks the access for this type of costing
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    return [access_mask, ignore_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
-      bool accessable = (edge->forwardaccess() & access_mask) ||
-                        (ignore_oneways && (edge->reverseaccess() & access_mask));
+    bool accessable = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
 
-      if (edge->is_shortcut() || !accessable || edge->surface() > kMinimumScooterSurface ||
-          edge->bss_connection()) {
-        return 0.0f;
-      } else {
-        // TODO - use classification/use to alter the factor
-        return 1.0f;
-      }
-    };
+    if (edge->is_shortcut() || !accessable || edge->surface() > kMinimumScooterSurface ||
+        edge->bss_connection()) {
+      return 0.0f;
+    } else {
+      // TODO - use classification/use to alter the factor
+      return 1.0f;
+    }
   }
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes

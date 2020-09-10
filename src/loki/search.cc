@@ -236,7 +236,6 @@ struct projector_wrapper {
 struct bin_handler_t {
   std::vector<projector_wrapper> pps;
   valhalla::baldr::GraphReader& reader;
-  EdgeFilter edge_filter;
   NodeFilter node_filter;
   std::shared_ptr<DynamicCost> costing;
   unsigned int max_reach_limit;
@@ -251,8 +250,7 @@ struct bin_handler_t {
   bin_handler_t(const std::vector<valhalla::baldr::Location>& locations,
                 valhalla::baldr::GraphReader& reader,
                 const std::shared_ptr<DynamicCost>& costing)
-      : reader(reader), costing(costing), edge_filter(costing->GetEdgeFilter()),
-        node_filter(costing->GetNodeFilter()) {
+      : reader(reader), costing(costing), node_filter(costing->GetNodeFilter()) {
     // get the unique set of input locations and the max reachability of them all
     std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
     pps.reserve(uniq_locations.size());
@@ -306,7 +304,7 @@ struct bin_handler_t {
             tangent_angle(index, candidate.point, info.shape(),
                           GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
         // do we want this edge
-        if (edge_filter(edge) != 0.0f) {
+        if (costing->Filter(edge) != 0.0f) {
           auto reach = get_reach(id, edge);
           PathLocation::PathEdge path_edge{std::move(id),
                                            0.f,
@@ -329,7 +327,7 @@ struct bin_handler_t {
           continue;
         }
         const auto* other_edge = other_tile->directededge(other_id);
-        if (edge_filter(other_edge) != 0.0f) {
+        if (costing->Filter(other_edge) != 0.0f) {
           auto reach = get_reach(other_id, other_edge);
           PathLocation::PathEdge path_edge{std::move(other_id),
                                            1.f,
@@ -414,7 +412,7 @@ struct bin_handler_t {
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_tile);
       const DirectedEdge* other_edge;
       if (opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) &&
-          edge_filter(other_edge) != 0.0f) {
+          costing->Filter(other_edge) != 0.0f) {
         auto reach = get_reach(opposing_edge_id, other_edge);
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point,
                                                distance,         flip_side(side),  reach.outbound,
@@ -478,7 +476,7 @@ struct bin_handler_t {
     // filtered then the reaches of both edges are the same
     const DirectedEdge* opp_edge = nullptr;
     if (reach.outbound > 0 && reach.inbound > 0 && (opp_edge = reader.GetOpposingEdge(edge, tile)) &&
-        edge_filter(opp_edge) > 0.f)
+        costing->Filter(opp_edge) > 0.f)
       directed_reaches[opp_edge] = reach;
 
     return reach;
@@ -498,14 +496,14 @@ struct bin_handler_t {
 
       // if this edge is filtered
       const auto* edge = tile->directededge(edge_id);
-      if (edge_filter(edge) == 0.0f) {
+      if (costing->Filter(edge) == 0.0f) {
         // then we try its opposing edge
         edge_id = reader.GetOpposingEdgeId(edge_id, tile);
         // but if we couldnt get it or its filtered too then we move on
         if (!edge_id.Is_Valid())
           continue;
         edge = tile->directededge(edge_id);
-        if (edge_filter(edge) == 0.0f)
+        if (costing->Filter(edge) == 0.0f)
           continue;
       }
 
@@ -583,7 +581,7 @@ struct bin_handler_t {
         const GraphTile* opp_tile = tile;
         const DirectedEdge* opp_edge = nullptr;
         if (!reachable && (opp_edge = reader.GetOpposingEdge(edge, opp_tile)) &&
-            edge_filter(opp_edge) > 0.f) {
+            costing->Filter(opp_edge) > 0.f) {
           auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, edge_id);
           if (opp_reach.outbound >= p_itr->location.min_outbound_reach_ &&
               opp_reach.inbound >= p_itr->location.min_inbound_reach_) {

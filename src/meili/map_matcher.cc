@@ -880,8 +880,8 @@ StateId::Time MapMatcher::AppendMeasurement(const Measurement& measurement,
   auto sq_radius = std::min(sq_max_search_radius,
                             std::max(measurement.sq_search_radius(), measurement.sq_gps_accuracy()));
 
-  const auto& candidates = candidatequery_.Query(measurement.lnglat(), measurement.stop_type(),
-                                                 sq_radius, costing()->GetEdgeFilter());
+  const auto& candidates =
+      candidatequery_.Query(measurement.lnglat(), measurement.stop_type(), sq_radius, costing());
 
   const auto time = container_.AppendMeasurement(measurement);
 

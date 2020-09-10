@@ -97,17 +97,12 @@ public:
     return 0.1f;
   }
 
-  const EdgeFilter GetEdgeFilter() const {
-    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    return [access_mask, ignore_oneways = ignore_oneways_](const DirectedEdge* edge) {
-      bool accessable = (edge->forwardaccess() & access_mask) ||
-                        (ignore_oneways && (edge->reverseaccess() & access_mask));
-      if (edge->is_shortcut() || !accessable)
-        return 0.0f;
-      else {
-        return 1.0f;
-      }
-    };
+  float Filter(const baldr::DirectedEdge* edge) const override {
+    if (edge->is_shortcut() || !(edge->forwardaccess() & access_mask_))
+      return 0.0f;
+    else {
+      return 1.0f;
+    }
   }
 };
 

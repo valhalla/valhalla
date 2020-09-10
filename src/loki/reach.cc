@@ -27,8 +27,6 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
   max_reach_ = max_reach;
 
   auto node_filter = costing->GetNodeFilter();
-  auto edge_filter = costing->GetEdgeFilter();
-
   // we keep a queue of nodes to expand from, to prevent duplicate expansion we use a set
   // each node we pop from the set will increase the reach and be added to the done set
   // the done set is used to avoid duplicate expansion of already dequeued nodes
@@ -64,7 +62,7 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
   // potential stopping point (maybe a path followed the restriction)
 
   // seed the expansion with a place to start expanding from
-  if (edge_filter(edge) > 0 && !edge->restrictions())
+  if (costing->Filter(edge) > 0 && !edge->restrictions())
     enqueue(edge->endnode());
 
   // get outbound reach by doing a simple forward expansion until you either hit the max_reach
@@ -85,7 +83,7 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
       // potential stopping point (maybe a path followed the restriction)
 
       // if this edge is traversable we enqueue its end node
-      if (edge_filter(&edge) > 0 && !edge.end_restriction() && !edge.restrictions())
+      if (costing->Filter(&edge) > 0 && !edge.end_restriction() && !edge.restrictions())
         enqueue(edge.endnode());
     }
   }
@@ -111,7 +109,7 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
 
   // seed the expansion with a place to start expanding from
   Clear();
-  if (edge_filter(edge) > 0)
+  if (costing->Filter(edge) > 0)
     enqueue(begin_node(edge));
 
   // get inbound reach by doing a simple reverse expansion until you either hit the max_reach
@@ -137,7 +135,8 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
       // at the start of a simple restriction because it could have been on our path
 
       // if this opposing edge is traversable we enqueue its begin node
-      if (edge_filter(opp_edge) > 0 && !opp_edge->start_restriction() && !opp_edge->restrictions())
+      if (costing->Filter(opp_edge) > 0.f && !opp_edge->start_restriction() &&
+          !opp_edge->restrictions())
         enqueue(edge.endnode());
     }
   }
@@ -165,7 +164,7 @@ directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
                             uint8_t direction) {
   // can we even try to expand?
   directed_reach reach{};
-  if (costing->GetEdgeFilter()(edge) == 0) {
+  if (costing->Filter(edge) == 0.f) {
     return reach;
   }
 

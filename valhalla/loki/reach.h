@@ -48,10 +48,10 @@ public:
    * @param direction   a mask of which directions we care about in or out or both
    * @return the reach in both directions for the given edge
    */
-  directed_reach operator()(const valhalla::baldr::DirectedEdge* edge,
+  directed_reach operator()(const baldr::DirectedEdge* edge,
                             const baldr::GraphId edge_id,
                             uint32_t max_reach,
-                            valhalla::baldr::GraphReader& reader,
+                            baldr::GraphReader& reader,
                             const std::shared_ptr<sif::DynamicCost>& costing,
                             uint8_t direction = kInbound | kOutbound);
 
@@ -60,10 +60,10 @@ protected:
   // edges which the costing could decide to skip (because of restrictions and possibly more?)
   // when that happens and the maximum reach is not found, this is then validated with a more
   // accurate exact expansion performed by the method below
-  directed_reach exact(const valhalla::baldr::DirectedEdge* edge,
+  directed_reach exact(const baldr::DirectedEdge* edge,
                        const baldr::GraphId edge_id,
                        uint32_t max_reach,
-                       valhalla::baldr::GraphReader& reader,
+                       baldr::GraphReader& reader,
                        const std::shared_ptr<sif::DynamicCost>& costing,
                        uint8_t direction = kInbound | kOutbound);
 

@@ -183,17 +183,14 @@ public:
   }
 
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
-    // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      return !(edge->is_shortcut() || edge->IsTransitLine());
-    };
+  virtual float Filter(const baldr::DirectedEdge* edge) const override {
+    return !(edge->is_shortcut() || edge->IsTransitLine());
   }
 
   /**

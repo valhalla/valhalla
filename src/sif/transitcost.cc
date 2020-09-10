@@ -214,29 +214,26 @@ public:
   virtual uint32_t UnitSize() const;
 
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. Function is also used to filter
    * edges not usable / inaccessible by transit route use.
    * This is used to conflate the stops to OSM way ids and we don't want to
    * include ferries.
-   * @return Function/functor to be used in filtering out edges
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
+  virtual float Filter(const baldr::DirectedEdge* edge) const override {
     // Throw back a lambda that checks the access for this type of costing
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    return [access_mask, i_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
-      bool accessable = (edge->forwardaccess() & access_mask) ||
-                        (i_oneways && (edge->reverseaccess() & access_mask));
-      if (edge->is_shortcut() || edge->use() >= Use::kFerry || !accessable ||
-          edge->bss_connection()) {
-        return 0.0f;
-      } else {
-        // TODO - use classification/use to alter the factor
-        return 1.0f;
-      }
-    };
+    bool accessable = (edge->forwardaccess() & access_mask) ||
+                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    if (edge->is_shortcut() || edge->use() >= Use::kFerry || !accessable ||
+        edge->bss_connection()) {
+      return 0.0f;
+    } else {
+      // TODO - use classification/use to alter the factor
+      return 1.0f;
+    }
   }
 
   /**This method adds to the exclude list based on the
