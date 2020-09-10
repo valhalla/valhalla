@@ -7,7 +7,8 @@
 #endif
 
 using namespace valhalla;
-const std::unordered_map<std::string, std::string> build_config{{"mjolnir.shortcuts", "false"}};
+const std::unordered_map<std::string, std::string> build_config{
+    {"mjolnir.data_processing.use_rest_area", "true"}};
 
 class Use : public ::testing::Test {
 protected:
