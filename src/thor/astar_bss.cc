@@ -66,8 +66,8 @@ void AStarBSSAlgorithm::Init(const midgard::PointLL& origll, const midgard::Poin
   auto common_astar_cost =
       std::min(pedestrian_costing_->AStarCostFactor(), bicycle_costing_->AStarCostFactor());
 
-  pedestrian_astarheuristic_.Init(destll, common_astar_cost);
-  bicycle_astarheuristic_.Init(destll, common_astar_cost);
+  pedestrian_astarheuristic_.Init(destll, 0);
+  bicycle_astarheuristic_.Init(destll, 0);
 
   // Get the initial cost based on A* heuristic from origin
   float mincost =
@@ -326,10 +326,6 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
 
     auto endnode = pred.endnode();
     auto l = graphreader.GetGraphTile(endnode)->get_node_ll(endnode);
-    std::cout << "------------------------------------------------" << std::endl;
-    std::cout << l.lat() << " "  << l.lng() << std::endl;
-    std::cout << "cost " << pred.cost().cost << std::endl;
-    std::cout << "time " << pred.cost().secs << std::endl;
 
     // Check that distance is converging towards the destination. Return route
     // failure if no convergence for TODO iterations

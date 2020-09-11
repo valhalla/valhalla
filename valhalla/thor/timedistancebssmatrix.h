@@ -117,8 +117,6 @@ protected:
   // computed).
   uint32_t settled_count_;
 
-  // sif::TravelMode mode_; // Current travel mode
-  uint8_t travel_type_;  // Current travel type
 
   // The cost threshold being used for the currently executing query
   float current_cost_threshold_;
