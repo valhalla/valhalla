@@ -30,7 +30,8 @@ void LabelSet::put(const baldr::GraphId& nodeid,
                    const float sortcost,
                    const uint32_t predecessor,
                    const baldr::DirectedEdge* edge,
-                   const sif::TravelMode mode) {
+                   const sif::TravelMode mode,
+                   int restriction_idx) {
   if (!nodeid.Is_Valid()) {
     throw std::runtime_error("invalid nodeid");
   }
@@ -41,7 +42,7 @@ void LabelSet::put(const baldr::GraphId& nodeid,
   if (it == node_status_.end()) {
     const uint32_t idx = labels_.size();
     labels_.emplace_back(nodeid, kInvalidDestination, edgeid, source, target, cost, turn_cost,
-                         sortcost, predecessor, edge, mode);
+                         sortcost, predecessor, edge, mode, restriction_idx);
     queue_->add(idx);
     node_status_.emplace(nodeid, idx);
   } else {
@@ -54,7 +55,7 @@ void LabelSet::put(const baldr::GraphId& nodeid,
       queue_->decrease(status.label_idx, sortcost);
       labels_[status.label_idx] = {nodeid, kInvalidDestination, edgeid,   source,      target,
                                    cost,   turn_cost,           sortcost, predecessor, edge,
-                                   mode};
+                                   mode,   restriction_idx};
     }
   }
 }
@@ -68,7 +69,8 @@ void LabelSet::put(const uint16_t dest,
                    const float sortcost,
                    const uint32_t predecessor,
                    const baldr::DirectedEdge* edge,
-                   const sif::TravelMode travelmode) {
+                   const sif::TravelMode travelmode,
+                   int restriction_idx) {
   if (dest == kInvalidDestination) {
     throw std::runtime_error("invalid destination");
   }
@@ -80,7 +82,7 @@ void LabelSet::put(const uint16_t dest,
   if (it == dest_status_.end()) {
     const uint32_t idx = labels_.size();
     labels_.emplace_back(inv, dest, edgeid, source, target, cost, turn_cost, sortcost, predecessor,
-                         edge, travelmode);
+                         edge, travelmode, restriction_idx);
     queue_->add(idx);
     dest_status_.emplace(dest, idx);
   } else {
@@ -90,8 +92,9 @@ void LabelSet::put(const uint16_t dest,
       // Update queue first since it uses the label cost within the decrease
       // method to determine the current bucket.
       queue_->decrease(status.label_idx, sortcost);
-      labels_[status.label_idx] = {inv,       dest,     edgeid,      source, target,    cost,
-                                   turn_cost, sortcost, predecessor, edge,   travelmode};
+      labels_[status.label_idx] = {inv,         dest, edgeid,     source,
+                                   target,      cost, turn_cost,  sortcost,
+                                   predecessor, edge, travelmode, restriction_idx};
     }
   }
 }
@@ -161,13 +164,12 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
                           const baldr::GraphId& edgeid,
                           const sif::cost_ptr_t& costing,
                           const Label& pred_edgelabel,
-                          const baldr::GraphTile* tile) {
-  // TODO We may want to optionally have map matching take time restrictions into account here
-  int i_dont_care_about_restriction_idx_here = -1;
-  return (!pred_edgelabel.edgeid().Is_Valid() && costing->GetEdgeFilter()(edge) != 0.f) ||
-         edgeid == pred_edgelabel.edgeid() ||
-         costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0,
-                          i_dont_care_about_restriction_idx_here);
+                          const baldr::GraphTile* tile,
+                          int& restriction_idx) {
+  bool valid_pred = (!pred_edgelabel.edgeid().Is_Valid() && costing->GetEdgeFilter()(edge) != 0.f) ||
+                    edgeid == pred_edgelabel.edgeid();
+  bool restricted = !costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0, restriction_idx);
+  return valid_pred || !restricted;
 }
 
 /**
@@ -401,7 +403,8 @@ find_shortest_path(baldr::GraphReader& reader,
       }
 
       // Skip it if its not allowed
-      if (!IsEdgeAllowed(directededge, edgeid, costing, label, tile)) {
+      int restriction_idx = -1;
+      if (!IsEdgeAllowed(directededge, edgeid, costing, label, tile, restriction_idx)) {
         continue;
       }
 
@@ -430,7 +433,7 @@ find_shortest_path(baldr::GraphReader& reader,
               // limit is 0
               if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
                 labelset->put(dest, edgeid, 0.f, edge.percent_along, cost, turn_cost, cost.cost,
-                              label_idx, directededge, travelmode);
+                              label_idx, directededge, travelmode, restriction_idx);
               }
             }
           }
@@ -450,7 +453,7 @@ find_shortest_path(baldr::GraphReader& reader,
         if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
           float sortcost = cost.cost + heuristic(endtile->get_node_ll(directededge->endnode()));
           labelset->put(directededge->endnode(), edgeid, 0.0f, 1.0f, cost, turn_cost, sortcost,
-                        label_idx, directededge, travelmode);
+                        label_idx, directededge, travelmode, restriction_idx);
         }
       }
     }
@@ -541,8 +544,9 @@ find_shortest_path(baldr::GraphReader& reader,
         const auto* directed_edge = reader.directededge(origin_edge.id, start_tile);
 
         // Skip if edge is not allowed
-        if (!directed_edge ||
-            !IsEdgeAllowed(directed_edge, origin_edge.id, costing, label, start_tile)) {
+        int restriction_idx = -1;
+        if (!directed_edge || !IsEdgeAllowed(directed_edge, origin_edge.id, costing, label,
+                                             start_tile, restriction_idx)) {
           continue;
         }
 
@@ -573,7 +577,7 @@ find_shortest_path(baldr::GraphReader& reader,
               if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
                 labelset->put(other_dest, origin_edge.id, origin_edge.percent_along,
                               destination_edge.percent_along, cost, turn_cost, cost.cost, label_idx,
-                              directed_edge, travelmode);
+                              directed_edge, travelmode, restriction_idx);
               }
             }
           }
@@ -595,7 +599,8 @@ find_shortest_path(baldr::GraphReader& reader,
           }
           float sortcost = cost.cost + heuristic(endtile->get_node_ll(directed_edge->endnode()));
           labelset->put(directed_edge->endnode(), origin_edge.id, origin_edge.percent_along, 1.f,
-                        cost, turn_cost, sortcost, label_idx, directed_edge, travelmode);
+                        cost, turn_cost, sortcost, label_idx, directed_edge, travelmode,
+                        restriction_idx);
         }
       }
     }
