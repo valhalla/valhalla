@@ -241,14 +241,14 @@ public:
         way_.set_destination_only(true);
     };
     tag_handlers_["service"] = [this]() {
-      if (tag_.second == "rest_area")
-        service_ = "rest_area";
+      if (tag_.second == "rest_area") {
+        service_ = tag_.second;
+      }
     };
     tag_handlers_["amenity"] = [this]() {
-      if (tag_.second == "yes")
-        amenity_ = "yes";
-      else
-        amenity_ = "no";
+      if (tag_.second == "yes") {
+        amenity_ = tag_.second;
+      }
     };
 
     tag_handlers_["use"] = [this]() {
@@ -306,15 +306,6 @@ public:
         default:
           way_.set_use(Use::kRoad);
           break;
-      }
-
-      // We need to set a data processing flag so we need to
-      // process in pbfgraphparser instead of lua because of config option use_rest_area
-      if (use_rest_area_ && service_ == "rest_area") {
-        if (amenity_ == "yes")
-          way_.set_use(Use::kServiceArea);
-        else
-          way_.set_use(Use::kRestArea);
       }
     };
     tag_handlers_["no_thru_traffic"] = [this]() {
@@ -1174,6 +1165,15 @@ public:
       }
     }
 
+    // We need to set a data processing flag so we need to
+    // process in pbfgraphparser instead of lua because of config option use_rest_area
+    if (use_rest_area_ && service_ == "rest_area") {
+      if (amenity_ == "yes") {
+        way_.set_use(Use::kServiceArea);
+      } else {
+        way_.set_use(Use::kRestArea);
+      }
+    }
     if (use_direction_on_ways_ && !ref_.empty()) {
       if (direction_.empty()) {
         way_.set_ref_index(osmdata_.name_offset_map.index(ref_));
