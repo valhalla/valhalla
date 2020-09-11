@@ -89,7 +89,7 @@ public:
    * Get the access mode used by this costing method.
    * @return  Returns access mode.
    */
-  uint32_t access_mode() const;
+  uint32_t access_mode() const override;
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -225,25 +225,18 @@ public:
    */
   virtual const EdgeFilter GetEdgeFilter() const {
     // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      if (edge->is_shortcut() || edge->use() >= Use::kFerry ||
-          !(edge->forwardaccess() & kPedestrianAccess) || edge->bss_connection()) {
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
+    return [access_mask, i_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
+      bool accessable = (edge->forwardaccess() & access_mask) ||
+                        (i_oneways && (edge->reverseaccess() & access_mask));
+      if (edge->is_shortcut() || edge->use() >= Use::kFerry || !accessable ||
+          edge->bss_connection()) {
         return 0.0f;
       } else {
         // TODO - use classification/use to alter the factor
         return 1.0f;
       }
     };
-  }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each node's attribution
-   * @return Function/functor to be used in filtering out nodes
-   */
-  virtual const NodeFilter GetNodeFilter() const {
-    // throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node) { return !(node->access() & kPedestrianAccess); };
   }
 
   /**This method adds to the exclude list based on the
@@ -320,7 +313,7 @@ public:
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
 TransitCost::TransitCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kPublicTransit) {
+    : DynamicCost(costing_options, TravelMode::kPublicTransit, kPedestrianAccess) {
 
   mode_factor_ = costing_options.mode_factor();
 
