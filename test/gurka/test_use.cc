@@ -7,8 +7,6 @@
 #endif
 
 using namespace valhalla;
-const std::unordered_map<std::string, std::string> build_config{
-    {"mjolnir.data_processing.use_rest_area", "true"}};
 
 class Use : public ::testing::Test {
 protected:
@@ -48,7 +46,8 @@ protected:
                               {"EG", {{"highway", "motorway"}}}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_use", build_config);
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_use",
+                            {{"mjolnir.data_processing.use_rest_area", "true"}});
   }
 };
 gurka::map Use::map = {};
