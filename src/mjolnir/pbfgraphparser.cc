@@ -84,8 +84,7 @@ public:
     tag_handlers_["driving_side"] = [this]() {
       if (!use_admin_db_) {
         way_.set_drive_on_right(tag_.second == "right" ? true : false);
-      } else
-        way_.set_drive_on_right(true);
+      }
     };
     tag_handlers_["internal_intersection"] = [this]() {
       if (!infer_internal_intersections_) {
@@ -1091,6 +1090,8 @@ public:
     const auto& highway_junction = results.find("highway");
     bool is_highway_junction =
         ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
+
+    way_.set_drive_on_right(true);//default
 
     for (const auto& kv : results) {
       tag_ = kv;
