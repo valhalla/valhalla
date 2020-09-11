@@ -43,8 +43,7 @@ struct OSMNode {
   uint32_t ferry_edge_ : 1;
   uint32_t flat_loop_ : 1; // A node which on a section of a way that is doubled back on itself
   uint32_t urban_ : 1;
-  uint32_t drive_on_right_ : 1;
-  uint32_t spare1_ : 4;
+  uint32_t spare1_ : 5;
 
   // Lat,lng of the node
   float lng_;
@@ -343,20 +342,6 @@ struct OSMNode {
    */
   bool has_state_iso_index() const {
     return state_iso_index_ > 0;
-  }
-  /**
-   * Sets the driving on right.
-   * @param driving_on_right   Driving on Right
-   */
-  void set_drive_on_right(const uint32_t drive_on_right) {
-    drive_on_right_ = drive_on_right;
-  }
-
-  /**
-   * Get driving on right.
-   */
-  uint32_t drive_on_right() const {
-    return drive_on_right_;
   }
 };
 
