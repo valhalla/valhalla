@@ -1223,11 +1223,11 @@ void TripLegBuilder::Build(
 
     const GraphTile* end_tile = graphreader.GetGraphTile(edge->endnode());
     if (end_tile == nullptr) {
-      if (controller.attributes.at(kNodeaAdminIndex)) {
+      if (controller.attributes.at(kNodeAdminIndex)) {
         node->set_admin_index(0);
       }
     } else {
-      if (controller.attributes.at(kNodeaAdminIndex)) {
+      if (controller.attributes.at(kNodeAdminIndex)) {
         node->set_admin_index(
             GetAdminIndex(end_tile->admininfo(end_tile->node(edge->endnode())->admin_index()),
                           admin_info_map, admin_info_list));
@@ -1322,7 +1322,7 @@ void TripLegBuilder::Build(
     }
 
     // Assign the admin index
-    if (controller.attributes.at(kNodeaAdminIndex)) {
+    if (controller.attributes.at(kNodeAdminIndex)) {
       trip_node->set_admin_index(
           GetAdminIndex(start_tile->admininfo(node->admin_index()), admin_info_map, admin_info_list));
     }
@@ -1730,7 +1730,7 @@ void TripLegBuilder::Build(
 
   // Add the last node
   auto* node = trip_path.add_node();
-  if (controller.attributes.at(kNodeaAdminIndex)) {
+  if (controller.attributes.at(kNodeAdminIndex)) {
     auto* last_tile = graphreader.GetGraphTile(startnode);
     node->set_admin_index(
         GetAdminIndex(last_tile->admininfo(last_tile->node(startnode)->admin_index()), admin_info_map,

@@ -11,6 +11,7 @@
 #include "midgard/util.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
+#include "thor/iso.h"
 #include "tyr/serializers.h"
 #include "worker.h"
 
@@ -393,6 +394,12 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     loc->emplace_back(json::fp_t{ll.lat(), 6});
     intersection->emplace("location", loc);
     intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
+
+    // Add index into admin list
+    if (node->has_admin_index()) {
+      intersection->emplace("admin_index", static_cast<uint64_t>(node->admin_index()));
+    }
+
     if (!arrive_maneuver) {
       if (curr_edge->has_is_urban()) {
         intersection->emplace("is_urban", curr_edge->is_urban());
@@ -428,18 +435,29 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // TODO: add recosted durations to the intersection?
 
+    // Add rest_stop when passing by a rest_area or service_area
+    if (i > 0 && !arrive_maneuver) {
+      auto rest_stop = json::map({});
+      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+        auto intersecting_edge = node->GetIntersectingEdge(m);
+        bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
+
+        if (routeable && intersecting_edge->use() == TripLeg_Use_kRestAreaUse) {
+          rest_stop->emplace("type", std::string("rest_area"));
+          intersection->emplace("rest_stop", rest_stop);
+          break;
+        } else if (routeable && intersecting_edge->use() == TripLeg_Use_kServiceAreaUse) {
+          rest_stop->emplace("type", std::string("service_area"));
+          intersection->emplace("rest_stop", rest_stop);
+          break;
+        }
+      }
+    }
+
     // Get bearings and access to outgoing intersecting edges. Do not add
     // any intersecting edges for the first depart intersection and for
     // the arrive step.
     std::vector<IntersectionEdges> edges;
-    if (i > 0 && !arrive_maneuver) {
-      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
-        auto intersecting_edge = node->GetIntersectingEdge(m);
-        bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
-        uint32_t bearing = static_cast<uint32_t>(intersecting_edge->begin_heading());
-        edges.emplace_back(bearing, routeable, false, false);
-      }
-    }
 
     // Add the edge departing the node
     if (!arrive_maneuver) {
@@ -1385,6 +1403,22 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       }
       ++recost_itr;
     }
+
+    // Add admin country codes to leg json
+    auto admins = json::array({});
+    for (const auto& admin : path_leg.admin()) {
+      auto admin_map = json::map({});
+      if (admin.has_country_code()) {
+        admin_map->emplace("iso_3166_1", admin.country_code());
+        auto country_iso3 = iso2_to_iso3.find(admin.country_code());
+        if (country_iso3 != iso2_to_iso3.end()) {
+          admin_map->emplace("iso_3166_1_alpha3", country_iso3->second);
+        }
+      }
+      // TODO: iso_3166_2 state code
+      admins->push_back(admin_map);
+    }
+    output_leg->emplace("admins", admins);
 
     // Add steps to the leg
     output_leg->emplace("steps", steps);
