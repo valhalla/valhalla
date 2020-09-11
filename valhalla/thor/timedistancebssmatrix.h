@@ -117,7 +117,6 @@ protected:
   // computed).
   uint32_t settled_count_;
 
-
   // The cost threshold being used for the currently executing query
   float current_cost_threshold_;
 
