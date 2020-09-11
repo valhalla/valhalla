@@ -347,6 +347,14 @@ public:
     return mutable_edge_->destination_only();
   }
 
+  bool has_is_urban() const {
+    return mutable_edge_->has_is_urban();
+  }
+
+  bool is_urban() const {
+    return mutable_edge_->is_urban();
+  }
+
   bool IsUnnamed() const;
 
   // Use
@@ -680,6 +688,8 @@ public:
   bool IsBorderControl() const;
 
   std::string ToString() const;
+
+  const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident>& incidents() const;
 
 protected:
   TripLeg_Node* mutable_node_;

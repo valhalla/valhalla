@@ -15,6 +15,8 @@
 namespace valhalla {
 namespace mjolnir {
 
+using boost::property_tree::ptree;
+
 /**
  * Class used to construct temporary data used to build the initial graph.
  */
@@ -41,7 +43,15 @@ public:
                     const std::string& nodes_file,
                     const std::string& edges_file,
                     const std::string& complex_from_restriction_file,
-                    const std::string& complex_to_restriction_file);
+                    const std::string& complex_to_restriction_file,
+                    const std::map<baldr::GraphId, size_t>& tiles);
+
+  static std::map<baldr::GraphId, size_t> BuildEdges(const ptree& conf,
+                                                     const OSMData& osmdata,
+                                                     const std::string& ways_file,
+                                                     const std::string& way_nodes_file,
+                                                     const std::string& nodes_file,
+                                                     const std::string& edges_file);
 
   static std::string GetRef(const std::string& way_ref, const std::string& relation_ref);
 
@@ -54,7 +64,6 @@ public:
                                  bool ramp,
                                  bool tc);
 };
-
 } // namespace mjolnir
 } // namespace valhalla
 

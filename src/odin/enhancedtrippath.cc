@@ -60,8 +60,9 @@ const std::string& TripLeg_Use_Name(int v) {
       {7, "kEmergencyAccessUse"},
       {8, "kDriveThruUse"},
       {9, "kCuldesacUse"},
+      {10, "kLivingStreetUse"},
       {20, "kCyclewayUse"},
-      {21, "keUse"},
+      {21, "kMountainBikeUse"},
       {24, "kUse"},
       {25, "kFootwayUse"},
       {26, "kStepsUse"},
@@ -1759,6 +1760,17 @@ std::string EnhancedTripLeg_Admin::ToString() const {
   str += state_text();
 
   return str;
+}
+
+const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident> empty;
+
+const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident>&
+EnhancedTripLeg_Node::incidents() const {
+  if (mutable_node_) {
+    return mutable_node_->incidents();
+  } else {
+    return empty;
+  }
 }
 
 } // namespace odin

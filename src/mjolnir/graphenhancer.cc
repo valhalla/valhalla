@@ -169,8 +169,10 @@ void UpdateSpeed(DirectedEdge& directededge,
       return;
     }
 
-    // Modify speed for roads in urban regions - anything above 8 (TBD) is
+    // Modify speed for roads in urban regions - anything above 8 is
     // assumed to be urban
+    // if this density check is changed to be greater than 8, then we need to modify the urban flag in
+    // the osrm response as well.
     if (density > 8) {
       uint32_t rc = static_cast<uint32_t>(directededge.classification());
       directededge.set_speed(urban_rc_speed[rc]);
@@ -1438,6 +1440,8 @@ void enhance(const boost::property_tree::ptree& pt,
 
   bool apply_country_overrides = pt.get<bool>("data_processing.apply_country_overrides", true);
 
+  bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
+
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
   if (!database) {
@@ -1584,10 +1588,12 @@ void enhance(const boost::property_tree::ptree& pt,
       GraphId startnode(id, local_level, i);
       NodeInfo& nodeinfo = tilebuilder.node_builder(i);
 
-      // Get relative road density and local density
-      uint32_t density =
-          GetDensity(reader, lock, nodeinfo.latlng(base_ll), stats, tiles, local_level);
-      nodeinfo.set_density(density);
+      // Get relative road density and local density if the urban tag is not set
+      uint32_t density = 0;
+      if (!use_urban_tag) {
+        density = GetDensity(reader, lock, nodeinfo.latlng(base_ll), stats, tiles, local_level);
+        nodeinfo.set_density(density);
+      }
 
       uint32_t admin_index = nodeinfo.admin_index();
       // Set the country code
