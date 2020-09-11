@@ -119,10 +119,10 @@ TEST_F(Use, test_entering_rest_area) {
   EXPECT_EQ(steps[step_idx]["intersections"].Size(), 1);
   EXPECT_FALSE(steps[step_idx]["intersections"][0].HasMember("rest_stops"));
 
-  // Expect no rest stops on second step
+  // Expect rest stops on second step
   step_idx++;
   EXPECT_EQ(steps[step_idx]["intersections"].Size(), 1);
-  EXPECT_FALSE(steps[step_idx]["intersections"][0].HasMember("rest_stops"));
+  EXPECT_TRUE(steps[step_idx]["intersections"][0].HasMember("rest_stops"));
 
   // Verify the second maneuver instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
@@ -186,10 +186,10 @@ TEST_F(Use, test_entering_service_area) {
   EXPECT_EQ(steps[step_idx]["intersections"].Size(), 1);
   EXPECT_FALSE(steps[step_idx]["intersections"][0].HasMember("rest_stops"));
 
-  // Expect no rest stops on second step
+  // Expect rest stops on second step
   step_idx++;
   EXPECT_EQ(steps[step_idx]["intersections"].Size(), 1);
-  EXPECT_FALSE(steps[step_idx]["intersections"][0].HasMember("rest_stops"));
+  EXPECT_TRUE(steps[step_idx]["intersections"][0].HasMember("rest_stops"));
 
   // Verify the second maneuver instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
