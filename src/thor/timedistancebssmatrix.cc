@@ -305,11 +305,6 @@ void TimeDistanceBSSMatrix::ExpandReverse(GraphReader& graphreader,
     }
 
     // Get cost. Use the opposing edge for EdgeCost.
-    if (from_bss) {
-
-      std::cout << "from_bss" << std::endl;
-      std::cout << int(mode) << std::endl;
-    }
     auto transition_cost = current_costing->TransitionCostReverse(directededge->localedgeidx(),
                                                                   nodeinfo, opp_edge, opp_pred_edge);
     auto edge_cost = current_costing->EdgeCost(opp_edge, t2);
@@ -433,7 +428,6 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ManyToOne(
 
     // Terminate when we are beyond the cost threshold
     if (pred.cost().cost > current_cost_threshold_) {
-      std::cout << "pred.cost().cost > current_cost_threshold_" << std::endl;
       return FormTimeDistanceMatrix();
     }
 
@@ -788,7 +782,6 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
   // Update cost threshold for early termination if at least one path has
   // been found to each destination
   if (allfound) {
-    std::cout << "current_cost_threshold?" << std::endl;
     current_cost_threshold_ = maxcost;
   }
   return settled_count_ == destinations_.size();

@@ -66,8 +66,8 @@ void AStarBSSAlgorithm::Init(const midgard::PointLL& origll, const midgard::Poin
   auto common_astar_cost =
       std::min(pedestrian_costing_->AStarCostFactor(), bicycle_costing_->AStarCostFactor());
 
-  pedestrian_astarheuristic_.Init(destll, 0);
-  bicycle_astarheuristic_.Init(destll, 0);
+  pedestrian_astarheuristic_.Init(destll, common_astar_cost);
+  bicycle_astarheuristic_.Init(destll, common_astar_cost);
 
   // Get the initial cost based on A* heuristic from origin
   float mincost =
