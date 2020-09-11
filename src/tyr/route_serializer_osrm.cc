@@ -400,12 +400,10 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       }
     }
 
-    auto admin = json::map({});
-    std::string country_iso3 =
-        iso2_to_iso3.find(etp->GetAdmin(node->admin_index())->country_code())->second;
-    admin->emplace("country_code", country_iso3);
-    admin->emplace("state_code", etp->GetAdmin(node->admin_index())->state_code());
-    intersection->emplace("admin", admin);
+    // Add index into admin list
+    if (node->has_admin_index()) {
+      intersection->emplace("admin_index", static_cast<uint64_t>(node->admin_index()));
+    }
 
     if (node->cost().transition_cost().seconds() > 0)
       intersection->emplace("turn_duration", json::fp_t{node->cost().transition_cost().seconds(), 3});
@@ -1384,6 +1382,22 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       }
       ++recost_itr;
     }
+
+    // Add admin country codes to leg json
+    auto admins = json::array({});
+    for (const auto& admin : path_leg.admin()) {
+      auto admin_map = json::map({});
+      if (admin.has_country_code()) {
+        admin_map->emplace("iso_3166_1", admin.country_code());
+        auto country_iso3 = iso2_to_iso3.find(admin.country_code());
+        if (country_iso3 != iso2_to_iso3.end()) {
+          admin_map->emplace("iso_3166_1_alpha3", country_iso3->second);
+        }
+      }
+      // TODO: iso_3166_2 state code
+      admins->push_back(admin_map);
+    }
+    output_leg->emplace("admins", admins);
 
     // Add steps to the leg
     output_leg->emplace("steps", steps);

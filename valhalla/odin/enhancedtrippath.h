@@ -581,6 +581,10 @@ public:
     return mutable_node_->cost().elapsed_cost().seconds();
   }
 
+  bool has_admin_index() const {
+    return mutable_node_->has_admin_index();
+  }
+
   uint32_t admin_index() const {
     return mutable_node_->admin_index();
   }
