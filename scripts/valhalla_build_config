@@ -44,7 +44,7 @@ config = {
       'use_direction_on_ways': False,
       'allow_alt_name': False,
       'use_urban_tag': False,
-      "use_rest_area": False
+      'use_rest_area': False
     },
     'logging': {
       'type': 'std_out',
