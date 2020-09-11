@@ -199,7 +199,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
   // Return an empty path (or throw exception) if path is not connected.
   Cost elapsed;
   std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>> paths;
-  GraphId prior_edge, prior_node;
+  GraphId prior_node;
   EdgeLabel pred;
   const meili::EdgeSegment* prev_segment = nullptr;
   const GraphTile* tile = nullptr;
@@ -281,14 +281,13 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
 
     // Update the predecessor EdgeLabel (for transition costing in the next round);
     pred = {kInvalidLabel, edge_id, directededge, elapsed, 0, 0, mode, 0, {}};
-
-    paths.back().first.emplace_back(PathInfo{mode, elapsed, edge_id, 0, -1, transition_cost});
+    paths.back().first.emplace_back(
+        PathInfo{mode, elapsed, edge_id, 0, edge_segment.restriction_idx, transition_cost});
     paths.back().second.emplace_back(&edge_segment);
     --num_segments;
 
     // Update the prior_edge and nodeinfo. TODO (protect against invalid tile)
     prev_segment = &edge_segment;
-    prior_edge = edge_id;
     prior_node = directededge->endnode();
     const GraphTile* end_tile = matcher->graphreader().GetGraphTile(prior_node);
     nodeinfo = end_tile->node(prior_node);
