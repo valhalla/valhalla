@@ -493,7 +493,6 @@ void BuildTileSet(const std::string& ways_file,
         } else {
           admin_index = graphtile.AddAdmin("", "", osmdata.node_names.name(node.country_iso_index()),
                                            osmdata.node_names.name(node.state_iso_index()));
-          dor = node.drive_on_right();
         }
 
         // Look for potential duplicates
@@ -529,6 +528,9 @@ void BuildTileSet(const std::string& ways_file,
           if (!forward) {
             std::swap(source, target);
           }
+
+          if (!use_admin_db)
+            dor = w.drive_on_right();
 
           // Validate speed. Set speed limit and truck speed.
           uint32_t speed = w.speed();
