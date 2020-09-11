@@ -292,6 +292,11 @@ public:
     throw std::runtime_error("BicycleCost::EdgeCost does not support transit edges");
   }
 
+  virtual bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
+                                    const baldr::GraphTile* tile) const override {
+    return false;
+  }
+
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
@@ -394,17 +399,19 @@ protected:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by bicycle.
    */
-  virtual float Filter(const baldr::DirectedEdge* edge) const override {
+  float Filter(const baldr::DirectedEdge* edge,
+               const baldr::GraphId& /*edgeid*/,
+               const baldr::GraphTile* /*tile*/) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    bool accessable = (edge->forwardaccess() & access_mask) ||
+    bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
 
-    if (edge->is_shortcut() || !accessable || edge->use() == Use::kSteps ||
+    if (edge->is_shortcut() || !accessible || edge->use() == Use::kSteps ||
         (avoid_bad_surfaces_ == 1.0f && edge->surface() > worst_allowed_surface_) ||
         edge->bss_connection()) {
       return 0.0f;
     } else {
-     // TODO - use classification/use to alter the factor
+      // TODO - use classification/use to alter the factor
       return 1.0f;
     }
   }
@@ -503,7 +510,7 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
   // Check bicycle access and turn restrictions. Bicycles should obey
   // vehicular turn restrictions. Allow Uturns at dead ends only.
   // Skip impassable edges and shortcut edges.
-  if (!IsAccessable(edge) || edge->is_shortcut() ||
+  if (!IsAccessible(edge) || edge->is_shortcut() ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kBicycle) ||
       (!ignore_restrictions_ && (pred.restrictions() & (1 << edge->localedgeidx()))) ||
@@ -538,7 +545,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                  int& restriction_idx) const {
   // Check access, U-turn (allow at dead-ends), and simple turn restriction.
   // Do not allow transit connection edges.
-  if (!IsAccessable(opp_edge) || opp_edge->is_shortcut() ||
+  if (!IsAccessible(opp_edge) || opp_edge->is_shortcut() ||
       opp_edge->use() == Use::kTransitConnection || opp_edge->use() == Use::kEgressConnection ||
       opp_edge->use() == Use::kPlatformConnection ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&

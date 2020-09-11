@@ -173,6 +173,11 @@ public:
     throw std::runtime_error("TransitCost::EdgeCost only supports transit edges");
   }
 
+  virtual bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
+                                    const baldr::GraphTile* tile) const override {
+    return false;
+  }
+
   /**
    * Returns the cost to make the transition from the predecessor edge.
    * Defaults to 0. Costing models that wish to include edge transition
@@ -222,13 +227,13 @@ public:
    * This is used to conflate the stops to OSM way ids and we don't want to
    * include ferries.
    */
-  virtual float Filter(const baldr::DirectedEdge* edge) const override {
-    // Throw back a lambda that checks the access for this type of costing
+  float Filter(const baldr::DirectedEdge* edge,
+               const baldr::GraphId& /*edgeid*/,
+               const baldr::GraphTile* /*tile*/) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    bool accessable = (edge->forwardaccess() & access_mask) ||
-                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-    if (edge->is_shortcut() || edge->use() >= Use::kFerry || !accessable ||
-        edge->bss_connection()) {
+    bool accessible = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    if (edge->is_shortcut() || edge->use() >= Use::kFerry || !accessible || edge->bss_connection()) {
       return 0.0f;
     } else {
       // TODO - use classification/use to alter the factor

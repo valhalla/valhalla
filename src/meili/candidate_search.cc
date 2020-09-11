@@ -75,7 +75,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
     baldr::PathLocation correlated(baldr::Location(location, stop_type));
 
     // For avoiding recomputing projection later
-    const bool edge_included = !costing || costing->Filter(edge) != 0.f;
+    const bool edge_included = !costing || costing->Filter(edge, edgeid, tile) != 0.f;
 
     if (edge_included) {
       std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape);
@@ -91,7 +91,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
       }
     }
 
-    bool oppedge_included = !costing || costing->Filter(opp_edge) != 0.f;
+    bool oppedge_included = !costing || costing->Filter(opp_edge, opp_edgeid, tile) != 0.f;
 
     // Correlate its opp edge
     if (oppedge_included) {

@@ -270,6 +270,11 @@ public:
     throw std::runtime_error("PedestrianCost::EdgeCost does not support transit edges");
   }
 
+  virtual bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
+                                    const baldr::GraphTile* tile) const override {
+    return false;
+  }
+
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
@@ -360,14 +365,15 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by pedestrians.
    */
-  virtual float Filter(const baldr::DirectedEdge* edge) const override {
-    // Throw back a lambda that checks the access for this type of costing
+  float Filter(const baldr::DirectedEdge* edge,
+               const baldr::GraphId& /*edgeid*/,
+               const baldr::GraphTile* /*tile*/) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    bool accessable = (edge->forwardaccess() & access_mask) ||
+    bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
 
     return !(edge->is_shortcut() || edge->use() >= Use::kRail ||
-             edge->sac_scale() > max_hiking_difficulty_ || !accessable ||
+             edge->sac_scale() > max_hiking_difficulty_ || !accessible ||
              (edge->bss_connection() && !project_on_bss_connection));
   }
 
@@ -575,7 +581,7 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const uint64_t current_time,
                              const uint32_t tz_index,
                              int& restriction_idx) const {
-  if (!IsAccessable(edge) || (edge->surface() > minimal_allowed_surface_) || edge->is_shortcut() ||
+  if (!IsAccessible(edge) || (edge->surface() > minimal_allowed_surface_) || edge->is_shortcut() ||
       IsUserAvoidEdge(edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kPedestrian) ||
@@ -607,7 +613,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // Do not check max walking distance and assume we are not allowing
   // transit connections. Assume this method is never used in
   // multimodal routes).
-  if (!IsAccessable(opp_edge) || (opp_edge->surface() > minimal_allowed_surface_) ||
+  if (!IsAccessible(opp_edge) || (opp_edge->surface() > minimal_allowed_surface_) ||
       opp_edge->is_shortcut() || IsUserAvoidEdge(opp_edgeid) ||
       edge->sac_scale() > max_hiking_difficulty_ ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&

@@ -269,12 +269,16 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  virtual float Filter(const baldr::DirectedEdge* edge) const override {
-    // Throw back a lambda that checks the access for this type of costing
+  float Filter(const baldr::DirectedEdge* edge,
+               const baldr::GraphId& edgeid,
+               const baldr::GraphTile* tile) const override {
+    if (IsClosedDueToTraffic(edgeid, tile))
+      return 0.0f;
+
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    bool accessable = (edge->forwardaccess() & access_mask) ||
+    bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-    if (edge->is_shortcut() || !accessable || edge->surface() > kMinimumMotorcycleSurface ||
+    if (edge->is_shortcut() || !accessible || edge->surface() > kMinimumMotorcycleSurface ||
         edge->bss_connection())
       return 0.0f;
     else {
@@ -373,13 +377,11 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
                              const uint64_t current_time,
                              const uint32_t tz_index,
                              int& restriction_idx) const {
-  if (flow_mask_ & kCurrentFlowMask) {
-    if (tile->IsClosedDueToTraffic(edgeid))
-      return false;
-  }
+  if (IsClosedDueToTraffic(edgeid, tile))
+    return false;
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!IsAccessable(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+  if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       IsUserAvoidEdge(edgeid) || (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
@@ -407,7 +409,7 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   }
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!IsAccessable(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+  if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {

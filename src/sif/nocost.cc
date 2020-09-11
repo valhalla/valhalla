@@ -108,8 +108,13 @@ public:
    * @param   edge  Pointer to edge information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool IsAccessable(const baldr::DirectedEdge* edge) const {
+  virtual bool IsAccessible(const baldr::DirectedEdge* edge) const {
     return true;
+  }
+
+  virtual bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
+                                    const baldr::GraphTile* tile) const override {
+    return false;
   }
 
   /**
@@ -189,7 +194,9 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  virtual float Filter(const baldr::DirectedEdge* edge) const override {
+  float Filter(const baldr::DirectedEdge* edge,
+               const baldr::GraphId& /*edgeid*/,
+               const baldr::GraphTile* /*tile*/) const override {
     return !(edge->is_shortcut() || edge->IsTransitLine());
   }
 

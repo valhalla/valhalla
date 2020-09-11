@@ -304,9 +304,9 @@ struct bin_handler_t {
             tangent_angle(index, candidate.point, info.shape(),
                           GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
         // do we want this edge
-        if (costing->Filter(edge) != 0.0f) {
+        if (costing->Filter(edge, id, tile) != 0.0f) {
           auto reach = get_reach(id, edge);
-          PathLocation::PathEdge path_edge{std::move(id),
+          PathLocation::PathEdge path_edge{id,
                                            0.f,
                                            node_ll,
                                            distance,
@@ -327,9 +327,9 @@ struct bin_handler_t {
           continue;
         }
         const auto* other_edge = other_tile->directededge(other_id);
-        if (costing->Filter(other_edge) != 0.0f) {
+        if (costing->Filter(other_edge, other_id, other_tile) != 0.0f) {
           auto reach = get_reach(other_id, other_edge);
-          PathLocation::PathEdge path_edge{std::move(other_id),
+          PathLocation::PathEdge path_edge{other_id,
                                            1.f,
                                            node_ll,
                                            distance,
@@ -412,7 +412,7 @@ struct bin_handler_t {
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_tile);
       const DirectedEdge* other_edge;
       if (opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) &&
-          costing->Filter(other_edge) != 0.0f) {
+          costing->Filter(other_edge, opposing_edge_id, other_tile) != 0.0f) {
         auto reach = get_reach(opposing_edge_id, other_edge);
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point,
                                                distance,         flip_side(side),  reach.outbound,
@@ -474,11 +474,14 @@ struct bin_handler_t {
 
     // if the inbound reach is not 0 and the outbound reach is not 0 and the opposing edge is not
     // filtered then the reaches of both edges are the same
-    const DirectedEdge* opp_edge = nullptr;
-    if (reach.outbound > 0 && reach.inbound > 0 && (opp_edge = reader.GetOpposingEdge(edge, tile)) &&
-        costing->Filter(opp_edge) > 0.f)
-      directed_reaches[opp_edge] = reach;
-
+    if (reach.outbound > 0 && reach.inbound > 0) {
+      const DirectedEdge* opp_edge = nullptr;
+      const auto opp_edgeid = reader.GetOpposingEdgeId(edge_id, tile);
+      if (opp_edgeid && (opp_edge = tile->directededge(opp_edgeid)) &&
+          costing->Filter(opp_edge, opp_edgeid, tile) > 0.f) {
+        directed_reaches[opp_edge] = reach;
+      }
+    }
     return reach;
   }
 
@@ -496,14 +499,14 @@ struct bin_handler_t {
 
       // if this edge is filtered
       const auto* edge = tile->directededge(edge_id);
-      if (costing->Filter(edge) == 0.0f) {
+      if (costing->Filter(edge, edge_id, tile) == 0.0f) {
         // then we try its opposing edge
         edge_id = reader.GetOpposingEdgeId(edge_id, tile);
         // but if we couldnt get it or its filtered too then we move on
         if (!edge_id.Is_Valid())
           continue;
         edge = tile->directededge(edge_id);
-        if (costing->Filter(edge) == 0.0f)
+        if (costing->Filter(edge, edge_id, tile) == 0.0f)
           continue;
       }
 
@@ -578,17 +581,22 @@ struct bin_handler_t {
         bool reachable = reach.outbound >= p_itr->location.min_outbound_reach_ &&
                          reach.inbound >= p_itr->location.min_inbound_reach_;
         // it's possible that it isnt reachable but the opposing is, switch to that if so
-        const GraphTile* opp_tile = tile;
-        const DirectedEdge* opp_edge = nullptr;
-        if (!reachable && (opp_edge = reader.GetOpposingEdge(edge, opp_tile)) &&
-            costing->Filter(opp_edge) > 0.f) {
-          auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, edge_id);
-          if (opp_reach.outbound >= p_itr->location.min_outbound_reach_ &&
-              opp_reach.inbound >= p_itr->location.min_inbound_reach_) {
-            tile = opp_tile;
-            edge = opp_edge;
-            reach = opp_reach;
-            reachable = true;
+        if (!reachable) {
+          const GraphTile* opp_tile = tile;
+          const GraphId opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_tile);
+          if (!opp_edgeid)
+            continue;
+
+          const DirectedEdge* opp_edge = opp_tile->directededge(opp_edgeid);
+          if (costing->Filter(opp_edge, opp_edgeid, opp_tile) > 0.f) {
+            auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, opp_edgeid);
+            if (opp_reach.outbound >= p_itr->location.min_outbound_reach_ &&
+                opp_reach.inbound >= p_itr->location.min_inbound_reach_) {
+              tile = opp_tile;
+              edge = opp_edge;
+              reach = opp_reach;
+              reachable = true;
+            }
           }
         }
 

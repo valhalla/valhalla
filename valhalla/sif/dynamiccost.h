@@ -192,7 +192,7 @@ public:
    * @param   edge  Pointer to edge information.
    * @return  Returns true if access is allowed, false if not.
    */
-  inline virtual bool IsAccessable(const baldr::DirectedEdge* edge) const {
+  inline virtual bool IsAccessible(const baldr::DirectedEdge* edge) const {
     // you can go on it if:
     // you have forward access for the mode you care about
     // you dont care about what mode has access so long as its forward
@@ -200,6 +200,19 @@ public:
     return (edge->forwardaccess() & access_mask_) ||
            (ignore_access_ && (edge->forwardaccess() & baldr::kAllAccess)) ||
            (ignore_oneways_ && (edge->reverseaccess() & access_mask_));
+  }
+
+  /*
+   * Determine whether an edge is currently closed due to traffic.
+   * @param  edgeid         GraphId of the opposing edge.
+   * @return  Returns true if the edge is closed due to live traffic constraints, false if not.
+   */
+  inline virtual bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
+                                           const baldr::GraphTile* tile) const {
+    if (flow_mask_ & baldr::kCurrentFlowMask) {
+      return tile->IsClosedDueToTraffic(edgeid);
+    }
+    return false;
   }
 
   inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
@@ -584,7 +597,9 @@ public:
    * edges attribution and suitability for use as a location by the travel
    * mode used by the costing method.
    */
-  virtual float Filter(const baldr::DirectedEdge* edge) const = 0;
+  virtual float Filter(const baldr::DirectedEdge* edge,
+                       const baldr::GraphId& edgeid,
+                       const baldr::GraphTile* tile) const = 0;
 
   /**
    * Returns a function/functor to be used in location searching which will
