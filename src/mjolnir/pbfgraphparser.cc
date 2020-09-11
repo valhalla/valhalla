@@ -75,6 +75,7 @@ public:
     use_direction_on_ways_ = pt.get<bool>("data_processing.use_direction_on_ways", false);
     allow_alt_name_ = pt.get<bool>("data_processing.allow_alt_name", false);
     use_urban_tag_ = pt.get<bool>("data_processing.use_urban_tag", false);
+    use_rest_area_ = pt.get<bool>("data_processing.use_rest_area", false);
 
     empty_node_results_ = lua_.Transform(OSMType::kNode, 0, {});
     empty_way_results_ = lua_.Transform(OSMType::kWay, 0, {});
@@ -239,6 +240,17 @@ public:
       if (tag_.second == "true")
         way_.set_destination_only(true);
     };
+    tag_handlers_["service"] = [this]() {
+      if (tag_.second == "rest_area") {
+        service_ = tag_.second;
+      }
+    };
+    tag_handlers_["amenity"] = [this]() {
+      if (tag_.second == "yes") {
+        amenity_ = tag_.second;
+      }
+    };
+
     tag_handlers_["use"] = [this]() {
       Use use = (Use)std::stoi(tag_.second);
       switch (use) {
@@ -1050,7 +1062,7 @@ public:
     has_default_speed_ = false, has_max_speed_ = false;
     has_average_speed_ = false, has_advisory_speed_ = false;
     has_surface_ = true;
-    name_ = {};
+    name_ = {}, service_ = {}, amenity_ = {};
 
     // Process tags
     way_ = OSMWay{osmid_};
@@ -1153,6 +1165,15 @@ public:
       }
     }
 
+    // We need to set a data processing flag so we need to
+    // process in pbfgraphparser instead of lua because of config option use_rest_area
+    if (use_rest_area_ && service_ == "rest_area") {
+      if (amenity_ == "yes") {
+        way_.set_use(Use::kServiceArea);
+      } else {
+        way_.set_use(Use::kRestArea);
+      }
+    }
     if (use_direction_on_ways_ && !ref_.empty()) {
       if (direction_.empty()) {
         way_.set_ref_index(osmdata_.name_offset_map.index(ref_));
@@ -1899,7 +1920,7 @@ public:
   OSMAccess osm_access_;
   bool has_user_tags_ = false;
   std::string ref_, int_ref_, direction_, int_direction_;
-  std::string name_;
+  std::string name_, service_, amenity_;
 
   // Configuration option to include driveways
   bool include_driveways_;
@@ -1923,6 +1944,10 @@ public:
   // Configuration option indicating whether or not to process the urban key on the ways during the
   // parsing phase or to get the density during the enhancer phase
   bool use_urban_tag_;
+
+  // Configuration option indicating whether or not to process the rest/service area keys on the ways
+  // during the parsing phase
+  bool use_rest_area_;
 
   // Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
   RoadClass highway_cutoff_rc_;

@@ -172,6 +172,10 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
       return TripLeg_Use_kPedestrianUse;
     case baldr::Use::kBridleway:
       return TripLeg_Use_kBridlewayUse;
+    case baldr::Use::kRestArea:
+      return TripLeg_Use_kRestAreaUse;
+    case baldr::Use::kServiceArea:
+      return TripLeg_Use_kServiceAreaUse;
     case baldr::Use::kOther:
       return TripLeg_Use_kOtherUse;
     case baldr::Use::kFerry:
