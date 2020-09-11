@@ -1072,8 +1072,8 @@ public:
     has_average_speed_ = false, has_advisory_speed_ = false;
     has_surface_ = true;
     name_ = {};
-    service_ == "";
-    amenity_ == "";
+    service_ = "";
+    amenity_ = "";
 
     // Process tags
     way_ = OSMWay{osmid_};
