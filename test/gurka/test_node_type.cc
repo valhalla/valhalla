@@ -69,8 +69,8 @@ TEST_F(NodeType, test_toll_response) {
 
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
-  auto json = actor.route(
-      R"({"costing":"auto","format":"osrm","locations":[)" + locations + R"(]})", {}, &api);
+  auto json = actor.route(R"({"costing":"auto","format":"osrm","locations":[)" + locations + R"(]})",
+                          {}, &api);
 
   // get the osrm json
   d.Parse(json);
@@ -102,8 +102,8 @@ TEST_F(NodeType, test_toll_response2) {
 
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
-  auto json = actor.route(
-      R"({"costing":"auto","format":"osrm","locations":[)" + locations + R"(]})", {}, &api);
+  auto json = actor.route(R"({"costing":"auto","format":"osrm","locations":[)" + locations + R"(]})",
+                          {}, &api);
 
   // get the osrm json
   d.Parse(json);
