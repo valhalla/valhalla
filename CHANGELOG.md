@@ -138,7 +138,7 @@
    * ADDED: Add explicit include for sstream to be compatible with msvc_x64 toolset. [#2449](https://github.com/valhalla/valhalla/pull/2449)
    * ADDED: Properly split returned path if traffic conditions change partway along edges [#2451](https://github.com/valhalla/valhalla/pull/2451/files)
    * ADDED: Add Dutch locale. [#2464](https://github.com/valhalla/valhalla/pull/2464)
-   * ADDED: Check with address sanititizer in CI. Add support for undefined behavior sanitizer. [#2487](https://github.com/valhalla/valhalla/pull/2487)   
+   * ADDED: Check with address sanititizer in CI. Add support for undefined behavior sanitizer. [#2487](https://github.com/valhalla/valhalla/pull/2487)
    * ADDED: Ability to recost a path and increased cost/time details along the trippath and json output [#2425](https://github.com/valhalla/valhalla/pull/2425)
    * ADDED: Add the ability to do bikeshare based (ped/bike) multimodal routing [#2031](https://github.com/valhalla/valhalla/pull/2031)
    * ADDED: Route through restrictions enabled by introducing a costing option. [#2469](https://github.com/valhalla/valhalla/pull/2469)
@@ -150,6 +150,7 @@
    * ADDED: Save exit maneuver's begin heading when combining enter & exit roundabout maneuvers. [#2554](https://github.com/valhalla/valhalla/pull/2554)
    * ADDED: Added new urban flag that can be set if edge is within city boundaries to data processing; new use_urban_tag config option; added to osrm response within intersections. [#2522](https://github.com/valhalla/valhalla/pull/2522)
    * ADDED: Use edge.is_urban is set for serializing is_urban. [#2568](https://github.com/valhalla/valhalla/pull/2568)
+   * ADDED: Added new rest/service area uses on the edge. [#2533](https://github.com/valhalla/valhalla/pull/2533)
    * ADDED: Dependency cache for Azure [#2567](https://github.com/valhalla/valhalla/pull/2567)
    * ADDED: Added flexibility to remove the use of the admindb and to use the country and state iso from the tiles; [#2579](https://github.com/valhalla/valhalla/pull/2579)
 

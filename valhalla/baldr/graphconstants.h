@@ -286,6 +286,10 @@ enum class Use : uint8_t {
   kPedestrian = 28,
   kBridleway = 29,
 
+  // Rest/Service Areas
+  kRestArea = 30,
+  kServiceArea = 31,
+
   // Other...
   kOther = 40,
 
@@ -322,6 +326,8 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kPath), "path"},
       {static_cast<uint8_t>(Use::kPedestrian), "pedestrian"},
       {static_cast<uint8_t>(Use::kBridleway), "bridleway"},
+      {static_cast<uint8_t>(Use::kRestArea), "rest_area"},
+      {static_cast<uint8_t>(Use::kServiceArea), "service_area"},
       {static_cast<uint8_t>(Use::kOther), "other"},
       {static_cast<uint8_t>(Use::kRailFerry), "rail-ferry"},
       {static_cast<uint8_t>(Use::kFerry), "ferry"},

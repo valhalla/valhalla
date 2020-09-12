@@ -245,6 +245,17 @@ public:
       if (tag_.second == "true")
         way_.set_destination_only(true);
     };
+    tag_handlers_["service"] = [this]() {
+      if (tag_.second == "rest_area") {
+        service_ = tag_.second;
+      }
+    };
+    tag_handlers_["amenity"] = [this]() {
+      if (tag_.second == "yes") {
+        amenity_ = tag_.second;
+      }
+    };
+
     tag_handlers_["use"] = [this]() {
       Use use = (Use)std::stoi(tag_.second);
       switch (use) {
@@ -1071,7 +1082,7 @@ public:
     has_default_speed_ = false, has_max_speed_ = false;
     has_average_speed_ = false, has_advisory_speed_ = false;
     has_surface_ = true;
-    name_ = {};
+    name_ = {}, service_ = {}, amenity_ = {};
 
     // Process tags
     way_ = OSMWay{osmid_};
@@ -1175,6 +1186,15 @@ public:
       }
     }
 
+    // We need to set a data processing flag so we need to
+    // process in pbfgraphparser instead of lua because of config option use_rest_area
+    if (use_rest_area_ && service_ == "rest_area") {
+      if (amenity_ == "yes") {
+        way_.set_use(Use::kServiceArea);
+      } else {
+        way_.set_use(Use::kRestArea);
+      }
+    }
     if (use_direction_on_ways_ && !ref_.empty()) {
       if (direction_.empty()) {
         way_.set_ref_index(osmdata_.name_offset_map.index(ref_));
@@ -1918,7 +1938,7 @@ public:
   OSMAccess osm_access_;
   bool has_user_tags_ = false;
   std::string ref_, int_ref_, direction_, int_direction_;
-  std::string name_;
+  std::string name_, service_, amenity_;
 
   // Configuration option to include driveways
   bool include_driveways_;
