@@ -943,6 +943,14 @@ public:
           }
           n.set_type(NodeType::kBorderControl);
         }
+      } else if (tag.first == "toll_gantry") {
+        if (tag.second == "true") {
+          if (!intersection) {
+            intersection = true;
+            ++osmdata_.edge_count;
+          }
+          n.set_type(NodeType::kTollGantry);
+        }
       } else if (tag.first == "access_mask") {
         n.set_access(std::stoi(tag.second));
       } else if (has_junction_name) {

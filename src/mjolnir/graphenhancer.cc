@@ -1813,8 +1813,9 @@ void enhance(const boost::property_tree::ptree& pt,
       }
 
       // Set the intersection type to false or dead-end (do not override
-      // gates or toll-booths).
-      if (nodeinfo.type() != NodeType::kGate && nodeinfo.type() != NodeType::kTollBooth) {
+      // gates or toll-booths or toll gantry).
+      if (nodeinfo.type() != NodeType::kGate && nodeinfo.type() != NodeType::kTollBooth &&
+          nodeinfo.type() != NodeType::kTollGantry) {
         if (driveable_count == 1) {
           nodeinfo.set_intersection(IntersectionType::kDeadEnd);
         } else if (nodeinfo.edge_count() == 2) {

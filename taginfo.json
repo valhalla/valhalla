@@ -299,6 +299,14 @@
       "description": "Sets the toll booth flag to true"
     },
     {
+      "key": "highway",
+      "value": "toll_gantry",
+      "object_types": [
+        "node"
+      ],
+      "description": "Sets the toll gantry flag to true"
+    },
+    {
       "key": "bicycle",
       "value": "yes",
       "object_types": [

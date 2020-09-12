@@ -1806,6 +1806,8 @@ function nodes_proc (kv, nokeys)
     kv["border_control"] = "true"
   elseif kv["barrier"] == "toll_booth" then
     kv["toll_booth"] = "true"
+  elseif kv["highway"] == "toll_gantry" then
+    kv["toll_gantry"] = "true"
   end
 
   local coins = toll[kv["payment:coins"]] or "false"
