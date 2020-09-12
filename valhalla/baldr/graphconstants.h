@@ -207,22 +207,23 @@ enum class NodeType : uint8_t {
   kBikeShare = 7,               // Bike share location
   kParking = 8,                 // Parking location
   kMotorWayJunction = 9,        // Highway = motorway_junction
-  kBorderControl = 10           // Border control
+  kBorderControl = 10,          // Border control
+  kTollGantry = 11              // Toll gantry
 };
 inline std::string to_string(NodeType n) {
-  static const std::unordered_map<uint8_t, std::string> NodeTypeStrings = {
-      {static_cast<uint8_t>(NodeType::kStreetIntersection), "street_intersection"},
-      {static_cast<uint8_t>(NodeType::kGate), "gate"},
-      {static_cast<uint8_t>(NodeType::kBollard), "bollard"},
-      {static_cast<uint8_t>(NodeType::kTollBooth), "toll_booth"},
-      {static_cast<uint8_t>(NodeType::kTransitEgress), "transit_egress"},
-      {static_cast<uint8_t>(NodeType::kTransitStation), "transit_station"},
-      {static_cast<uint8_t>(NodeType::kMultiUseTransitPlatform), "multi_use_transit_platform"},
-      {static_cast<uint8_t>(NodeType::kBikeShare), "bike_share"},
-      {static_cast<uint8_t>(NodeType::kParking), "parking"},
-      {static_cast<uint8_t>(NodeType::kMotorWayJunction), "motor_way_junction"},
-      {static_cast<uint8_t>(NodeType::kBorderControl), "border_control"},
-  };
+  static const std::unordered_map<uint8_t, std::string> NodeTypeStrings =
+      {{static_cast<uint8_t>(NodeType::kStreetIntersection), "street_intersection"},
+       {static_cast<uint8_t>(NodeType::kGate), "gate"},
+       {static_cast<uint8_t>(NodeType::kBollard), "bollard"},
+       {static_cast<uint8_t>(NodeType::kTollBooth), "toll_booth"},
+       {static_cast<uint8_t>(NodeType::kTransitEgress), "transit_egress"},
+       {static_cast<uint8_t>(NodeType::kTransitStation), "transit_station"},
+       {static_cast<uint8_t>(NodeType::kMultiUseTransitPlatform), "multi_use_transit_platform"},
+       {static_cast<uint8_t>(NodeType::kBikeShare), "bike_share"},
+       {static_cast<uint8_t>(NodeType::kParking), "parking"},
+       {static_cast<uint8_t>(NodeType::kMotorWayJunction), "motor_way_junction"},
+       {static_cast<uint8_t>(NodeType::kBorderControl), "border_control"},
+       {static_cast<uint8_t>(NodeType::kTollGantry), "toll_gantry"}};
 
   auto i = NodeTypeStrings.find(static_cast<uint8_t>(n));
   if (i == NodeTypeStrings.cend()) {
