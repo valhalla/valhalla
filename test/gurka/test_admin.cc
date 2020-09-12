@@ -27,7 +27,8 @@ protected:
                           C
   )";
 
-    const gurka::ways ways = {{"AB", {{"highway", "motorway"}}}, {"BC", {{"highway", "motorway"}}}};
+    const gurka::ways ways = {{"AB", {{"highway", "motorway"}, {"driving_side", "right"}}},
+                              {"BC", {{"highway", "motorway"}, {"driving_side", "left"}}}};
 
     const gurka::nodes nodes =
         {{"A", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-PA"}}},
@@ -54,4 +55,6 @@ TEST_F(Admin, Iso) {
   EXPECT_EQ(leg.admin(0).state_code(), "PA");   // AB
   EXPECT_EQ(leg.admin(1).country_code(), "US"); // BC
   EXPECT_EQ(leg.admin(1).state_code(), "MD");   // BC
+  EXPECT_TRUE(leg.node(0).edge().drive_on_right());
+  EXPECT_FALSE(leg.node(1).edge().drive_on_right());
 }
