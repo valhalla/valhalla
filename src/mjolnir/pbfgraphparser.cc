@@ -75,6 +75,7 @@ public:
     use_direction_on_ways_ = pt.get<bool>("data_processing.use_direction_on_ways", false);
     allow_alt_name_ = pt.get<bool>("data_processing.allow_alt_name", false);
     use_urban_tag_ = pt.get<bool>("data_processing.use_urban_tag", false);
+    use_rest_area_ = pt.get<bool>("data_processing.use_rest_area", false);
     use_admin_db_ = pt.get<bool>("data_processing.use_admin_db", true);
 
     empty_node_results_ = lua_.Transform(OSMType::kNode, 0, {});
@@ -1102,7 +1103,7 @@ public:
     bool is_highway_junction =
         ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
 
-    way_.set_drive_on_right(true);//default
+    way_.set_drive_on_right(true); // default
 
     for (const auto& kv : results) {
       tag_ = kv;
@@ -1962,6 +1963,10 @@ public:
   // Configuration option indicating whether or not to process the urban key on the ways during the
   // parsing phase or to get the density during the enhancer phase
   bool use_urban_tag_;
+
+  // Configuration option indicating whether or not to process the rest/service area keys on the ways
+  // during the parsing phase
+  bool use_rest_area_;
 
   // Configuration option indicating whether or not to process the admin iso code keys on the
   // nodes during the parsing phase or to get the admin info from the admin db
