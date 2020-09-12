@@ -76,11 +76,17 @@ public:
     allow_alt_name_ = pt.get<bool>("data_processing.allow_alt_name", false);
     use_urban_tag_ = pt.get<bool>("data_processing.use_urban_tag", false);
     use_rest_area_ = pt.get<bool>("data_processing.use_rest_area", false);
+    use_admin_db_ = pt.get<bool>("data_processing.use_admin_db", true);
 
     empty_node_results_ = lua_.Transform(OSMType::kNode, 0, {});
     empty_way_results_ = lua_.Transform(OSMType::kWay, 0, {});
     empty_relation_results_ = lua_.Transform(OSMType::kRelation, 0, {});
 
+    tag_handlers_["driving_side"] = [this]() {
+      if (!use_admin_db_) {
+        way_.set_drive_on_right(tag_.second == "right" ? true : false);
+      }
+    };
     tag_handlers_["internal_intersection"] = [this]() {
       if (!infer_internal_intersections_) {
         way_.set_internal(tag_.second == "true" ? true : false);
@@ -861,7 +867,22 @@ public:
     }
 
     for (const auto& tag : *results) {
-      if (tag.first == "highway") {
+      if (tag.first == "iso:3166_1") {
+        bool hasTag = (tag.second.length() ? true : false);
+        if (hasTag) {
+          // Add the country iso code to the unique node names list and store its index in the OSM
+          // node
+          n.set_country_iso_index(osmdata_.node_names.index(tag.second));
+          ++osmdata_.node_name_count;
+        }
+      } else if ((tag.first == "state_iso_code")) {
+        bool hasTag = (tag.second.length() ? true : false);
+        if (hasTag) {
+          // Add the state iso code to the unique node names list and store its index in the OSM node
+          n.set_state_iso_index(osmdata_.node_names.index(tag.second));
+          ++osmdata_.node_name_count;
+        }
+      } else if (tag.first == "highway") {
         n.set_traffic_signal(tag.second == "traffic_signals" ? true : false);
       } else if (tag.first == "forward_signal") {
         n.set_forward_signal(tag.second == "true" ? true : false);
@@ -1090,13 +1111,14 @@ public:
     bool is_highway_junction =
         ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
 
+    way_.set_drive_on_right(true); // default
+
     for (const auto& kv : results) {
       tag_ = kv;
       const auto it = tag_handlers_.find(tag_.first);
       if (it != tag_handlers_.end()) {
         it->second();
       }
-
       // motor_vehicle:conditional=no @ (16:30-07:00)
       else if (tag_.first.substr(0, 20) == "motorcar:conditional" ||
                tag_.first.substr(0, 25) == "motor_vehicle:conditional" ||
@@ -1426,9 +1448,6 @@ public:
       } else // fallback to default speed.
         way_.set_speed(default_speed_);
     }
-
-    // default to drive on right.
-    way_.set_drive_on_right(true);
 
     // ferries / auto trains need to be set to highway cut off in config.
     if (way_.ferry() || way_.rail()) {
@@ -1956,6 +1975,10 @@ public:
   // Configuration option indicating whether or not to process the rest/service area keys on the ways
   // during the parsing phase
   bool use_rest_area_;
+
+  // Configuration option indicating whether or not to process the admin iso code keys on the
+  // nodes during the parsing phase or to get the admin info from the admin db
+  bool use_admin_db_;
 
   // Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
   RoadClass highway_cutoff_rc_;

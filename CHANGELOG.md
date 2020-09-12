@@ -152,6 +152,7 @@
    * ADDED: Use edge.is_urban is set for serializing is_urban. [#2568](https://github.com/valhalla/valhalla/pull/2568)
    * ADDED: Added new rest/service area uses on the edge. [#2533](https://github.com/valhalla/valhalla/pull/2533)
    * ADDED: Dependency cache for Azure [#2567](https://github.com/valhalla/valhalla/pull/2567)
+   * ADDED: Added flexibility to remove the use of the admindb and to use the country and state iso from the tiles; [#2579](https://github.com/valhalla/valhalla/pull/2579)
    * ADDED: Added toll gates and collection points (gantry) to the node;  [#2532](https://github.com/valhalla/valhalla/pull/2532)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
