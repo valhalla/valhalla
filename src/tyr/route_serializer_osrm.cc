@@ -11,7 +11,7 @@
 #include "midgard/util.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
-#include "thor/iso.h"
+#include "tyr/iso.h"
 #include "tyr/serializers.h"
 #include "worker.h"
 
