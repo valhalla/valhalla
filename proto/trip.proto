@@ -55,6 +55,10 @@ message TripLeg {
     kPedestrianUse = 28;
     kBridlewayUse = 29;
 
+    //Rest/Service Areas
+    kRestAreaUse = 30;
+    kServiceAreaUse = 31;
+
     // Other...
     kOtherUse = 40;
 
@@ -264,6 +268,7 @@ message TripLeg {
       kParking = 8;                 // Parking location
       kMotorwayJunction = 9;        // Highway = motorway_junction
       kBorderControl = 10;          // Border control
+      kTollGantry = 11;             // Toll gantry
     }
 
     optional Edge edge = 1;
