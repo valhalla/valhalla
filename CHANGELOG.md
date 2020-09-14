@@ -149,6 +149,7 @@
    * CHANGED: Refactor mapmatching configuration to use a struct (instead of `boost::property_tree::ptree`). [#2485](https://github.com/valhalla/valhalla/pull/2485)
    * ADDED: Save exit maneuver's begin heading when combining enter & exit roundabout maneuvers. [#2554](https://github.com/valhalla/valhalla/pull/2554)
    * ADDED: Added new urban flag that can be set if edge is within city boundaries to data processing; new use_urban_tag config option; added to osrm response within intersections. [#2522](https://github.com/valhalla/valhalla/pull/2522)
+   * ADDED: Parses OpenLr of type PointAlongLine [#2565](https://github.com/valhalla/valhalla/pull/2565)
    * ADDED: Use edge.is_urban is set for serializing is_urban. [#2568](https://github.com/valhalla/valhalla/pull/2568)
    * ADDED: Added new rest/service area uses on the edge. [#2533](https://github.com/valhalla/valhalla/pull/2533)
    * ADDED: Dependency cache for Azure [#2567](https://github.com/valhalla/valhalla/pull/2567)

@@ -60,7 +60,7 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
                       lfrcnp);
     bearing_deg = fmod(bearing_deg + 180., 360.);
     lrps.emplace_back(end.lng(), end.lat(), bearing_deg, frc, fow, &lrps.back());
-    openlrs.emplace_back(OpenLR::LineLocation{lrps, 0, 0}.toBase64());
+    openlrs.emplace_back(OpenLR::OpenLr{lrps, 0, 0}.toBase64());
   }
   return openlrs;
 }
@@ -90,7 +90,7 @@ std::vector<std::string> openlr_legs(const TripLeg& leg) {
     lrps.emplace_back(location.lng(), location.lat(), bearing_deg, frc, fow,
                       lrps.empty() ? nullptr : &lrps.back(), distance_meters, lfrcnp);
   }
-  return {OpenLR::LineLocation{lrps, 0, 0}.toBase64()};
+  return {OpenLR::OpenLr{lrps, 0, 0}.toBase64()};
 }
 
 } // namespace midgard
