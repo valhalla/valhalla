@@ -63,7 +63,7 @@ const std::string& TripLeg_Use_Name(int v) {
       {10, "kLivingStreetUse"},
       {20, "kCyclewayUse"},
       {21, "kMountainBikeUse"},
-      {24, "kUse"},
+      {24, "kSidewalkUse"},
       {25, "kFootwayUse"},
       {26, "kStepsUse"},
       {27, "kPathUse"},
