@@ -34,8 +34,7 @@ def initialize(url_, output_dir_):
 def make_request(post_format):
   # open a file to put the result
   post_body = post_format[0]
-  out_format = json if post_format[1] == 'json' else 'csv'
-  output_file = os.path.join(output_dir, post_body['id'] + '.' + out_format)
+  output_file = os.path.join(output_dir, post_body['id'] + '.' + ('csv' if post_format[1] == 'csv' else 'json'))
   with open(output_file, 'w') as f:
     try:
       # make request
@@ -45,7 +44,11 @@ def make_request(post_format):
       elapsed = stop - start
 
       # raw json
-      if out_format == 'json':
+      if post_format[1] == 'raw':
+          f.write('%s' % json.dumps(response, sort_keys=True, indent=2))
+
+      # summary json
+      elif post_format[1] == 'json':
         out = {'routes':[{'legs':[]}]}
         for leg in response['trip']['legs']:
           out['routes'][-1]['legs'].append({'maneuvers':[]})
