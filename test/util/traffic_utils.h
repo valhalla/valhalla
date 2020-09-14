@@ -125,11 +125,11 @@ void build_live_traffic_data(const boost::property_tree::ptree& config,
 // `setter_cb` is a callback that can modify traffic for each edge
 // when building traffic data
 /*************************************************************/
-void customize_live_traffic_data(
-    const boost::property_tree::ptree& config,
-    std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>&
-        setter_cb) {
+using LiveTrafficCustomize = std::function<
+    void(baldr::GraphReader&, baldr::TrafficTile&, int, valhalla::baldr::TrafficSpeed*)>;
 
+void customize_live_traffic_data(const boost::property_tree::ptree& config,
+                                 LiveTrafficCustomize setter_cb) {
   // Now we have the tar-file and can go ahead with per edge customizations
   {
     int fd = open(config.get<std::string>("mjolnir.traffic_extract").c_str(), O_RDWR);
