@@ -247,7 +247,7 @@ struct OpenLr {
     std::size_t index = 0;
 
     // Status, version 3, has attributes, ArF 'Circle or no area location'
-    const OpenLrStatus status = *reinterpret_cast<const OpenLrStatus*>(&raw[index++]);
+    const OpenLrStatus& status = *reinterpret_cast<const OpenLrStatus*>(&raw[index++]);
     if (status.version != 3) {
       throw std::invalid_argument("invalid_version " + std::to_string(status.version) +
                                   ": Can only parse openlr version 3");
@@ -283,7 +283,7 @@ struct OpenLr {
     lrps.emplace_back(longitude, latitude, attribute1, attribute2, attribute3);
 
     if (isPointAlongLine) {
-      const Attribute5 attr5 = *reinterpret_cast<const Attribute5*>(&attribute1);
+      const Attribute5& attr5 = *reinterpret_cast<const Attribute5*>(&attribute1);
       orientation = static_cast<Orientation>(attr5.orientation);
     } else {
       orientation = Orientation::NoOrientation;
