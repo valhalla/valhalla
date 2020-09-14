@@ -376,6 +376,8 @@ public:
   bool IsPathUse() const;
   bool IsPedestrianUse() const;
   bool IsBridlewayUse() const;
+  bool IsRestAreaUse() const;
+  bool IsServiceAreaUse() const;
   bool IsOtherUse() const;
   bool IsFerryUse() const;
   bool IsRailFerryUse() const;
@@ -686,6 +688,7 @@ public:
   bool IsParking() const;
   bool IsMotorwayJunction() const;
   bool IsBorderControl() const;
+  bool IsTollGantry() const;
 
   std::string ToString() const;
 

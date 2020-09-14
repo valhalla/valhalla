@@ -52,7 +52,7 @@ TEST(Standalone, UturnMatch) {
                                                                           {"break_through", 210}}) {
 
     auto result = gurka::match(map, {"1", "2", "1", "2"}, test_case.first, "auto",
-                               R"({"penalize_immediate_uturn":false})");
+                               {{"/trace_options/penalize_immediate_uturn", "0"}});
 
     // throughs or vias will make a uturn without a destination notification (left hand driving)
     std::vector<DirectionsLeg::Maneuver::Type> expected_maneuvers{
@@ -105,8 +105,8 @@ D--3--4--C--5--6--E)";
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/uturn_asan");
 
-  auto result =
-      gurka::match(map, {"2", "6", "3"}, "via", "auto", R"({"penalize_immediate_uturn":false})");
+  auto result = gurka::match(map, {"2", "6", "3"}, "via", "auto",
+                             {{"/trace_options/penalize_immediate_uturn", "0"}});
 
   auto shape =
       midgard::decode<std::vector<midgard::PointLL>>(result.trip().routes(0).legs(0).shape());

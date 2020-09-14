@@ -51,8 +51,18 @@ public:
         float sortcost,
         const uint32_t predecessor,
         const baldr::DirectedEdge* edge,
-        const sif::TravelMode mode)
-      : sif::EdgeLabel(predecessor, edgeid, edge, cost, sortcost, 0.0f, mode, 0, sif::Cost{}),
+        const sif::TravelMode mode,
+        int restriction_idx)
+      : sif::EdgeLabel(predecessor,
+                       edgeid,
+                       edge,
+                       cost,
+                       sortcost,
+                       0.0f,
+                       mode,
+                       0,
+                       sif::Cost{},
+                       restriction_idx),
         nodeid_(nodeid), dest_(dest), source_(source), target_(target), turn_cost_(turn_cost) {
     // Validate inputs
     if (!(0.f <= source && source <= target && target <= 1.f)) {
@@ -203,7 +213,8 @@ public:
            const float sortcost,
            const uint32_t predecessor,
            const baldr::DirectedEdge* edge,
-           const sif::TravelMode mode);
+           const sif::TravelMode mode,
+           int restriction_idx);
 
   /**
    * Add a label with an edge and a destination index.
@@ -217,7 +228,8 @@ public:
            const float sortcost,
            const uint32_t predecessor,
            const baldr::DirectedEdge* edge,
-           const sif::TravelMode mode);
+           const sif::TravelMode mode,
+           int restriction_idx);
 
   /**
    * Get the next label from the priority queue. Marks the popped label
