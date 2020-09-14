@@ -1,5 +1,4 @@
-#ifndef VALHALLA_THOR_ISO_H_
-#define VALHALLA_THOR_ISO_H_
+#pragma once
 
 #include <string>
 #include <unordered_map>
@@ -47,5 +46,3 @@ std::unordered_map<std::string, std::string> iso2_to_iso3 =
      {"UY", "URY"}, {"UZ", "UZB"}, {"VA", "VAT"}, {"VC", "VCT"}, {"VE", "VEN"}, {"VG", "VGB"},
      {"VI", "VIR"}, {"VN", "VNM"}, {"VU", "VUT"}, {"WF", "WLF"}, {"WS", "WSM"}, {"YE", "YEM"},
      {"YT", "MYT"}, {"ZA", "ZAF"}, {"ZM", "ZMB"}, {"ZW", "ZWE"}, {"CS", "SCG"}, {"AN", "ANT"}};
-
-#endif // VALHALLA_THOR_ISO_H_
