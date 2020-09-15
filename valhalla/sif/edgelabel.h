@@ -26,7 +26,11 @@ public:
   /**
    * Default constructor.
    */
-  EdgeLabel() {
+  EdgeLabel()
+      : predecessor_(0), path_distance_(0), restrictions_(0), edgeid_(0), opp_index_(0),
+        opp_local_idx_(0), mode_(0), endnode_(0), use_(0), classification_(0), shortcut_(0),
+        dest_only_(0), origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0),
+        restriction_idx_(0), cost_(0, 0), sortcost_(0), distance_(0), transition_cost_(0, 0) {
   }
 
   /**

@@ -570,7 +570,7 @@ struct tar {
       int64_t sum = 0;
       uint64_t usum = 0;
       // compute the checksum
-      for (int i = 0; (size_t)i < sizeof(header_t); i++) {
+      for (int i = 0; static_cast<size_t>(i) < sizeof(header_t); i++) {
         usum += ((unsigned char*)&temp)[i];
         sum += ((char*)&temp)[i];
       }
