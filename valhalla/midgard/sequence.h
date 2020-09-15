@@ -313,9 +313,6 @@ public:
   // sort the file based on the predicate
   void sort(const std::function<bool(const T&, const T&)>& predicate,
             size_t buffer_size = 1024 * 1024 * 512 / sizeof(T)) {
-    using queue_t =
-        std::map<T, std::list<std::fstream>::iterator, std::function<bool(const T&, const T&)>>;
-
     flush();
     // if no elements we are done
     if (memmap.size() == 0) {
@@ -570,9 +567,10 @@ struct tar {
       // make a copy and blank the checksum
       header_t temp = *this;
       memset(temp.chksum, ' ', 8);
-      int64_t usum = 0, sum = 0;
+      int64_t sum = 0;
+      uint64_t usum = 0;
       // compute the checksum
-      for (int i = 0; i < sizeof(header_t); i++) {
+      for (int i = 0; static_cast<size_t>(i) < sizeof(header_t); i++) {
         usum += ((unsigned char*)&temp)[i];
         sum += ((char*)&temp)[i];
       }

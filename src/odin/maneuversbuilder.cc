@@ -413,11 +413,9 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         ++next_man;
       }
       // Do not combine
-      // if travel type is different (unnamed pedestrian/bike)
-      else if ((curr_man->unnamed_walkway() != next_man->unnamed_walkway()) ||
-               (curr_man->unnamed_cycleway() != next_man->unnamed_cycleway()) ||
-               (curr_man->unnamed_mountain_bike_trail() != next_man->unnamed_mountain_bike_trail())) {
-        LOG_TRACE("+++ Do Not Combine: if travel type is different +++");
+      // if trail type is different (unnamed/named pedestrian/bike/mtb)
+      else if (curr_man->trail_type() != next_man->trail_type()) {
+        LOG_TRACE("+++ Do Not Combine: if trail type is different +++");
         // Update with no combine
         prev_man = curr_man;
         curr_man = next_man;
@@ -955,14 +953,19 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_transit_type(prev_edge->transit_type());
   }
 
-  // Unnamed walkway
-  maneuver.set_unnamed_walkway(prev_edge->IsUnnamedWalkway());
-
-  // Unnamed cycleway
-  maneuver.set_unnamed_cycleway(prev_edge->IsUnnamedCycleway());
-
-  // Unnamed mountain bike trail
-  maneuver.set_unnamed_mountain_bike_trail(prev_edge->IsUnnamedMountainBikeTrail());
+  // Set trail type
+  if (prev_edge->IsFootwayUse()) {
+    maneuver.set_trail_type(prev_edge->IsUnnamed() ? TrailType::kUnnamedWalkway
+                                                   : TrailType::kNamedWalkway);
+  } else if (prev_edge->IsMountainBikeUse()) {
+    maneuver.set_trail_type(prev_edge->IsUnnamed() ? TrailType::kUnnamedMtbTrail
+                                                   : TrailType::kNamedMtbTrail);
+  } else if (prev_edge->IsCyclewayUse()) {
+    maneuver.set_trail_type(prev_edge->IsUnnamed() ? TrailType::kUnnamedCycleway
+                                                   : TrailType::kNamedCycleway);
+  } else {
+    maneuver.set_trail_type(TrailType::kNone);
+  }
 
   // Transit info
   if (prev_edge->travel_mode() == TripLeg_TravelMode_kTransit) {

@@ -111,8 +111,7 @@ Maneuver::Maneuver()
       bicycle_type_(TripLeg_BicycleType_kRoad), transit_type_(TripLeg_TransitType_kRail),
       transit_connection_(false), rail_(false), bus_(false), fork_(false),
       begin_intersecting_edge_name_consistency_(false), intersecting_forward_edge_(false),
-      tee_(false), unnamed_walkway_(false), unnamed_cycleway_(false),
-      unnamed_mountain_bike_trail_(false), imminent_verbal_multi_cue_(false),
+      tee_(false), trail_type_(TrailType::kNone), imminent_verbal_multi_cue_(false),
       distant_verbal_multi_cue_(false), to_stay_on_(false), drive_on_right_(true),
       has_time_restrictions_(false), has_right_traversable_outbound_intersecting_edge_(false),
       has_left_traversable_outbound_intersecting_edge_(false),
@@ -612,28 +611,36 @@ void Maneuver::set_tee(bool tee) {
   tee_ = tee;
 }
 
-bool Maneuver::unnamed_walkway() const {
-  return unnamed_walkway_;
+TrailType Maneuver::trail_type() const {
+  return trail_type_;
 }
 
-void Maneuver::set_unnamed_walkway(bool unnamed_walkway) {
-  unnamed_walkway_ = unnamed_walkway;
+void Maneuver::set_trail_type(const TrailType trail) {
+  trail_type_ = trail;
+}
+
+bool Maneuver::is_walkway() const {
+  return trail_type_ == TrailType::kNamedWalkway || trail_type_ == TrailType::kUnnamedWalkway;
+}
+
+bool Maneuver::unnamed_walkway() const {
+  return trail_type_ == TrailType::kUnnamedWalkway;
+}
+
+bool Maneuver::is_cycleway() const {
+  return trail_type_ == TrailType::kNamedCycleway || trail_type_ == TrailType::kUnnamedCycleway;
 }
 
 bool Maneuver::unnamed_cycleway() const {
-  return unnamed_cycleway_;
+  return trail_type_ == TrailType::kUnnamedCycleway;
 }
 
-void Maneuver::set_unnamed_cycleway(bool unnamed_cycleway) {
-  unnamed_cycleway_ = unnamed_cycleway;
+bool Maneuver::is_mountain_bike_trail() const {
+  return trail_type_ == TrailType::kNamedMtbTrail || trail_type_ == TrailType::kUnnamedMtbTrail;
 }
 
 bool Maneuver::unnamed_mountain_bike_trail() const {
-  return unnamed_mountain_bike_trail_;
-}
-
-void Maneuver::set_unnamed_mountain_bike_trail(bool unnamed_mountain_bike_trail) {
-  unnamed_mountain_bike_trail_ = unnamed_mountain_bike_trail;
+  return trail_type_ == TrailType::kUnnamedMtbTrail;
 }
 
 bool Maneuver::imminent_verbal_multi_cue() const {
@@ -1119,13 +1126,13 @@ std::string Maneuver::ToString() const {
   man_str += std::to_string(tee_);
 
   man_str += " | unnamed_walkway=";
-  man_str += std::to_string(unnamed_walkway_);
+  man_str += std::to_string(unnamed_walkway());
 
   man_str += " | unnamed_cycleway=";
-  man_str += std::to_string(unnamed_cycleway_);
+  man_str += std::to_string(unnamed_cycleway());
 
   man_str += " | unnamed_mountain_bike_trail=";
-  man_str += std::to_string(unnamed_mountain_bike_trail_);
+  man_str += std::to_string(unnamed_mountain_bike_trail());
 
   man_str += " | basic_time=";
   man_str += std::to_string(basic_time_);
@@ -1310,13 +1317,13 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(tee_);
 
   man_str += delim;
-  man_str += std::to_string(unnamed_walkway_);
+  man_str += std::to_string(unnamed_walkway());
 
   man_str += delim;
-  man_str += std::to_string(unnamed_cycleway_);
+  man_str += std::to_string(unnamed_cycleway());
 
   man_str += delim;
-  man_str += std::to_string(unnamed_mountain_bike_trail_);
+  man_str += std::to_string(unnamed_mountain_bike_trail());
 
   man_str += delim;
   man_str += std::to_string(basic_time_);
