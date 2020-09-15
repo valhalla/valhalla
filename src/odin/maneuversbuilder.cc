@@ -37,6 +37,9 @@ using namespace valhalla::odin;
 
 namespace {
 
+constexpr uint32_t kRelativeStraightTurnDegreeLowerBound = 330;
+constexpr uint32_t kRelativeStraightTurnDegreeUpperBound = 30;
+
 constexpr float kShortForkThreshold = 0.05f; // Kilometers
 
 // Kilometers - picked since the next rounded maneuver announcement will happen
@@ -2995,7 +2998,8 @@ void ManeuversBuilder::UpdateManeuverPlacementForInternalIntersectionTurns(
   };
 
   auto is_relative_straight = [](uint32_t turn_degree) -> bool {
-    return ((turn_degree > 315) || (turn_degree < 45));
+    return ((turn_degree >= kRelativeStraightTurnDegreeLowerBound) ||
+            (turn_degree <= kRelativeStraightTurnDegreeUpperBound));
   };
 
   Maneuver* prev_maneuver = nullptr;
@@ -3094,9 +3098,7 @@ void ManeuversBuilder::MoveInternalEdgeToPreviousManeuver(Maneuver& prev_maneuve
 
   /////////////////////////////////////////////////////////////////////////////
   // Update the edge turn lanes with the previous edge turn lanes
-  if ((edge->turn_lanes_size() == 0) && (prev_edge->turn_lanes_size() > 0)) {
-    edge->mutable_turn_lanes()->CopyFrom(prev_edge->turn_lanes());
-  }
+  edge->mutable_turn_lanes()->CopyFrom(prev_edge->turn_lanes());
 }
 
 } // namespace odin
