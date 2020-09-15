@@ -60,7 +60,7 @@ public:
   /**
    * Clear the temporary information generated during path construction.
    */
-  virtual void Clear();
+  virtual void Clear() override;
 
   /**
    * Set a maximum label count. The path algorithm terminates if this
