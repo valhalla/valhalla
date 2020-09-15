@@ -44,8 +44,8 @@ public:
   float CalculateTransitionCost(float turn_cost,
                                 float route_distance,
                                 float measurement_distance,
-                                float route_time,
-                                float measurement_time) const {
+                                float,
+                                float) const {
     return (turn_cost + std::abs(route_distance - measurement_distance)) * inv_beta_;
   }
 
