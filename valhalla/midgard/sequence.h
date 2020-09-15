@@ -567,7 +567,8 @@ struct tar {
       // make a copy and blank the checksum
       header_t temp = *this;
       memset(temp.chksum, ' ', 8);
-      uint64_t usum = 0, sum = 0;
+      int64_t sum = 0;
+      uint64_t usum = 0;
       // compute the checksum
       for (int i = 0; (size_t)i < sizeof(header_t); i++) {
         usum += ((unsigned char*)&temp)[i];

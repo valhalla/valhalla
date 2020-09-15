@@ -180,7 +180,7 @@ struct TimeInfo {
     if (sw < 0) {
       sw += valhalla::midgard::kSecondsPerWeek;
     } // wrap the week second if it went past the end
-    else if (sw > (int32_t)valhalla::midgard::kSecondsPerWeek) {
+    else if (sw > static_cast<int32_t>(valhalla::midgard::kSecondsPerWeek)) {
       sw -= valhalla::midgard::kSecondsPerWeek;
     }
 
@@ -227,7 +227,7 @@ struct TimeInfo {
     if (sw < 0) {
       sw += valhalla::midgard::kSecondsPerWeek;
     } // wrap the week second if it went past the end
-    else if (sw > (int32_t)valhalla::midgard::kSecondsPerWeek) {
+    else if (sw > static_cast<int32_t>(valhalla::midgard::kSecondsPerWeek)) {
       sw -= valhalla::midgard::kSecondsPerWeek;
     }
 
