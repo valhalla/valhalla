@@ -57,15 +57,15 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
       continue;
     const auto* node = tile->node(node_id);
 
+    GraphId edge_id = tile->id();
+    edge_id.set_id(node->edge_index());
+
     auto directed_edges = tile->GetDirectedEdges(node_id);
-    for (const auto* edge = directed_edges.begin(); edge != directed_edges.end(); ++edge) {
+    for (const auto* edge = directed_edges.begin(); edge != directed_edges.end(); ++edge, ++edge_id) {
       // TODO: we'd rather say !edge.end_simple_restriction() and not !edge.restrictions()
       // TODO: but we'd need the predecessor information to do that so we punt 1 edge earlier
       // NOTE: we can go through the start of the restriction because only the end would mark a
       // potential stopping point (maybe a path followed the restriction)
-
-      GraphId edge_id = tile->id();
-      edge_id.set_id(node->edge_index() + (edge - directed_edges.begin()));
 
       // if this edge is traversable we enqueue its end node
       if (costing->Filter(edge, edge_id, tile) > 0 && !edge->end_restriction() &&

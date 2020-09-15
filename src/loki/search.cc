@@ -320,12 +320,12 @@ struct bin_handler_t {
         }
 
         // do we want the evil twin
+        const DirectedEdge* other_edge = nullptr;
         const GraphTile* other_tile;
-        const auto other_id = reader.GetOpposingEdgeId(id, other_tile);
-        if (!other_tile) {
+        const auto other_id = reader.GetOpposingEdgeId(id, other_edge, other_tile);
+        if (!other_edge)
           continue;
-        }
-        const auto* other_edge = other_tile->directededge(other_id);
+
         if (costing->Filter(other_edge, other_id, other_tile) != 0.0f) {
           auto reach = get_reach(other_id, other_edge);
           PathLocation::PathEdge path_edge{other_id,
@@ -407,11 +407,11 @@ struct bin_handler_t {
         correlated.edges.push_back(std::move(path_edge));
       }
       // correlate its evil twin
+      const DirectedEdge* other_edge = nullptr;
       const GraphTile* other_tile;
-      auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_tile);
-      const DirectedEdge* other_edge;
-      if (opposing_edge_id.Is_Valid() && (other_edge = other_tile->directededge(opposing_edge_id)) &&
-          costing->Filter(other_edge, opposing_edge_id, other_tile) != 0.0f) {
+      auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_edge, other_tile);
+
+      if (other_edge && costing->Filter(other_edge, opposing_edge_id, other_tile) != 0.0f) {
         auto reach = get_reach(opposing_edge_id, other_edge);
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point,
                                                distance,         flip_side(side),  reach.outbound,
@@ -473,13 +473,13 @@ struct bin_handler_t {
 
     // if the inbound reach is not 0 and the outbound reach is not 0 and the opposing edge is not
     // filtered then the reaches of both edges are the same
-    if (reach.outbound > 0 && reach.inbound > 0) {
-      const DirectedEdge* opp_edge = nullptr;
-      const auto opp_edgeid = reader.GetOpposingEdgeId(edge_id, tile);
-      if (opp_edgeid && (opp_edge = tile->directededge(opp_edgeid)) &&
-          costing->Filter(opp_edge, opp_edgeid, tile) > 0.f) {
-        directed_reaches[opp_edge] = reach;
-      }
+
+    const DirectedEdge* opp_edge = nullptr;
+    const auto opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, tile);
+
+    if (reach.outbound > 0 && reach.inbound > 0 && opp_edge &&
+        costing->Filter(opp_edge, opp_edgeid, tile) > 0.f) {
+      directed_reaches[opp_edge] = reach;
     }
     return reach;
   }
@@ -500,12 +500,9 @@ struct bin_handler_t {
       const auto* edge = tile->directededge(edge_id);
       if (costing->Filter(edge, edge_id, tile) == 0.0f) {
         // then we try its opposing edge
-        edge_id = reader.GetOpposingEdgeId(edge_id, tile);
+        edge_id = reader.GetOpposingEdgeId(edge_id, edge, tile);
         // but if we couldnt get it or its filtered too then we move on
-        if (!edge_id.Is_Valid())
-          continue;
-        edge = tile->directededge(edge_id);
-        if (costing->Filter(edge, edge_id, tile) == 0.0f)
+        if (!edge_id || costing->Filter(edge, edge_id, tile) == 0.0f)
           continue;
       }
 
@@ -581,12 +578,12 @@ struct bin_handler_t {
                          reach.inbound >= p_itr->location.min_inbound_reach_;
         // it's possible that it isnt reachable but the opposing is, switch to that if so
         if (!reachable) {
+          const DirectedEdge* opp_edge = nullptr;
           const GraphTile* opp_tile = tile;
-          const GraphId opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_tile);
-          if (!opp_edgeid)
+          const GraphId opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
+          if (!opp_edge)
             continue;
 
-          const DirectedEdge* opp_edge = opp_tile->directededge(opp_edgeid);
           if (costing->Filter(opp_edge, opp_edgeid, opp_tile) > 0.f) {
             auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, opp_edgeid);
             if (opp_reach.outbound >= p_itr->location.min_outbound_reach_ &&

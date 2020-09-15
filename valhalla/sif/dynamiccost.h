@@ -196,19 +196,6 @@ public:
            (ignore_oneways_ && (edge->reverseaccess() & access_mask_));
   }
 
-  /*
-   * Determine whether an edge is currently closed due to traffic.
-   * @param  edgeid         GraphId of the opposing edge.
-   * @return  Returns true if the edge is closed due to live traffic constraints, false if not.
-   */
-  inline virtual bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
-                                           const baldr::GraphTile* tile) const {
-    if (flow_mask_ & baldr::kCurrentFlowMask) {
-      return tile->IsClosedDueToTraffic(edgeid);
-    }
-    return false;
-  }
-
   inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
     return true;
   };
@@ -902,6 +889,16 @@ protected:
    */
   float TransitionFactor(const bool has_traffic, const float density) const {
     return has_traffic ? kTrafficTransitionFactor : density;
+  }
+
+  /*
+   * Determine whether an edge is currently closed due to traffic.
+   * @param  edgeid         GraphId of the opposing edge.
+   * @return  Returns true if the edge is closed due to live traffic constraints, false if not.
+   */
+  inline virtual bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
+                                           const baldr::GraphTile* tile) const {
+    return (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosedDueToTraffic(edgeid);
   }
 };
 
