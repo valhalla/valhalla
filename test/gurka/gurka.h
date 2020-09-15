@@ -295,7 +295,7 @@ nodelayout map_to_coordinates(const std::string& map,
   // In-place remove leading whitespace from each line
   for (auto& line : lines) {
     // This must be a blank line or something
-    if (line.size() < min_whitespace)
+    if (line.size() < (size_t)min_whitespace)
       continue;
     line.erase(line.begin(), line.begin() + min_whitespace);
   }

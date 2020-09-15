@@ -15,7 +15,7 @@ namespace {
 using namespace valhalla;
 using namespace valhalla::meili;
 
-constexpr float MAX_ACCUMULATED_COST = 99999999;
+constexpr float MAX_ACCUMULATED_COST = (float)99999999;
 
 inline float GreatCircleDistanceSquared(const Measurement& left, const Measurement& right) {
   return left.lnglat().DistanceSquared(right.lnglat());
