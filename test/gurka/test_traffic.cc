@@ -690,7 +690,7 @@ TEST(Traffic, CutGeoms) {
 /*************************************************************/
 class WaypointsOnClosuresTest : public ::testing::Test {
 protected:
-  static gurka::map waypoints_on_closures_map;
+  static gurka::map closure_map;
   static int const default_speed;
   static std::string const tile_dir;
   static std::shared_ptr<baldr::GraphReader> clean_reader;
@@ -713,17 +713,17 @@ protected:
                               {"DA", {{"highway", "primary"}, {"maxspeed", speed_str}}}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
-    waypoints_on_closures_map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
+    closure_map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
 
-    waypoints_on_closures_map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
-    valhalla_tests::utils::build_live_traffic_data(waypoints_on_closures_map.config);
+    closure_map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
+    valhalla_tests::utils::build_live_traffic_data(closure_map.config);
 
-    clean_reader = valhalla_tests::utils::make_clean_graphreader(
-        waypoints_on_closures_map.config.get_child("mjolnir"));
+    clean_reader =
+        valhalla_tests::utils::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
   }
 };
 
-gurka::map WaypointsOnClosuresTest::waypoints_on_closures_map = {};
+gurka::map WaypointsOnClosuresTest::closure_map = {};
 const int WaypointsOnClosuresTest::default_speed = 36;
 const std::string WaypointsOnClosuresTest::tile_dir = "test/data/traffic_waypoints_on_closures";
 std::shared_ptr<baldr::GraphReader> WaypointsOnClosuresTest::clean_reader;
@@ -737,41 +737,42 @@ inline void SetLiveSpeed(baldr::TrafficSpeed* live_speed, uint64_t speed) {
 } // namespace
 
 TEST_F(WaypointsOnClosuresTest, DepartPointAtClosure) {
-  auto& map = waypoints_on_closures_map;
   const float eta_margin = 0.01f;
 
   // start from an edge that is closed in a one direction
   {
-    LiveTrafficCustomize close_edge = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                             int index, baldr::TrafficSpeed* current) -> void {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
       baldr::GraphId tile_id(tile.header->tile_id);
-      auto BC = gurka::findEdge(reader, map.nodes, "BC", "C", tile_id);
+      auto BC = gurka::findEdge(reader, closure_map.nodes, "BC", "C", tile_id);
 
       bool const is_bc = (std::get<1>(BC) != nullptr && std::get<0>(BC).id() == index);
 
       SetLiveSpeed(current, (is_bc ? 0 : default_speed));
     };
-    valhalla_tests::utils::customize_live_traffic_data(map.config, close_edge);
+    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
 
-    auto result = gurka::route(map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    auto result =
+        gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::raw::expect_path(result, {"BC", "AB"});
     gurka::assert::raw::expect_eta(result, 7.f, eta_margin);
   }
 
   // start from an edge that is closed in a one direction
   {
-    LiveTrafficCustomize close_edge = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                             int index, baldr::TrafficSpeed* current) -> void {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
       baldr::GraphId tile_id(tile.header->tile_id);
-      auto CB = gurka::findEdge(reader, map.nodes, "BC", "B", tile_id);
+      auto CB = gurka::findEdge(reader, closure_map.nodes, "BC", "B", tile_id);
 
       bool const is_cb = (std::get<1>(CB) != nullptr && std::get<0>(CB).id() == index);
 
       SetLiveSpeed(current, (is_cb ? 0 : default_speed));
     };
-    valhalla_tests::utils::customize_live_traffic_data(map.config, close_edge);
+    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
 
-    auto result = gurka::route(map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    auto result =
+        gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::raw::expect_path(result, {"BC", "CD", "DA"});
     gurka::assert::raw::expect_eta(result, 23.f, eta_margin);
   }
@@ -780,62 +781,64 @@ TEST_F(WaypointsOnClosuresTest, DepartPointAtClosure) {
   // - closed edge should be ignored;
   // - depart point should be matched to the nearest node;
   {
-    LiveTrafficCustomize close_edge = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                             int index, baldr::TrafficSpeed* current) -> void {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
       baldr::GraphId tile_id(tile.header->tile_id);
 
-      auto BC = gurka::findEdge(reader, map.nodes, "BC", "C", tile_id);
-      auto CB = gurka::findEdge(reader, map.nodes, "BC", "B", tile_id);
+      auto BC = gurka::findEdge(reader, closure_map.nodes, "BC", "C", tile_id);
+      auto CB = gurka::findEdge(reader, closure_map.nodes, "BC", "B", tile_id);
 
       bool const is_bc = (std::get<1>(BC) != nullptr && std::get<0>(BC).id() == index);
       bool const is_cb = (std::get<1>(CB) != nullptr && std::get<0>(CB).id() == index);
 
       SetLiveSpeed(current, ((is_cb || is_bc) ? 0 : default_speed));
     };
-    valhalla_tests::utils::customize_live_traffic_data(map.config, close_edge);
+    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
 
-    auto result = gurka::route(map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    auto result =
+        gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::raw::expect_path(result, {"AB"});
     gurka::assert::raw::expect_eta(result, 5.f, eta_margin);
   }
 }
 
 TEST_F(WaypointsOnClosuresTest, ArrivePointAtClosure) {
-  auto& map = waypoints_on_closures_map;
   const float eta_margin = 0.01f;
 
   // end at edge that is closed in a one direction
   {
-    LiveTrafficCustomize close_edge = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                             int index, baldr::TrafficSpeed* current) -> void {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
       baldr::GraphId tile_id(tile.header->tile_id);
-      auto DA = gurka::findEdge(reader, map.nodes, "DA", "A", tile_id);
+      auto DA = gurka::findEdge(reader, closure_map.nodes, "DA", "A", tile_id);
 
       bool const is_da = (std::get<1>(DA) != nullptr && std::get<0>(DA).id() == index);
 
       SetLiveSpeed(current, (is_da ? 0 : default_speed));
     };
-    valhalla_tests::utils::customize_live_traffic_data(map.config, close_edge);
+    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
 
-    auto result = gurka::route(map, "B", "2", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    auto result =
+        gurka::route(closure_map, "B", "2", "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::raw::expect_path(result, {"AB", "DA"});
     gurka::assert::raw::expect_eta(result, 7.f, eta_margin);
   }
 
   // end at edge that is closed in a one direction
   {
-    LiveTrafficCustomize close_edge = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                             int index, baldr::TrafficSpeed* current) -> void {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
       baldr::GraphId tile_id(tile.header->tile_id);
-      auto AD = gurka::findEdge(reader, map.nodes, "DA", "D", tile_id);
+      auto AD = gurka::findEdge(reader, closure_map.nodes, "DA", "D", tile_id);
 
       bool const is_ad = (std::get<1>(AD) != nullptr && std::get<0>(AD).id() == index);
 
       SetLiveSpeed(current, (is_ad ? 0 : default_speed));
     };
-    valhalla_tests::utils::customize_live_traffic_data(map.config, close_edge);
+    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
 
-    auto result = gurka::route(map, "B", "2", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    auto result =
+        gurka::route(closure_map, "B", "2", "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::raw::expect_path(result, {"BC", "CD", "DA"});
     gurka::assert::raw::expect_eta(result, 23.f, eta_margin);
   }
@@ -844,21 +847,22 @@ TEST_F(WaypointsOnClosuresTest, ArrivePointAtClosure) {
   // - closed edge should be ignored;
   // - arrive point should be matched to the nearest node;
   {
-    LiveTrafficCustomize close_edge = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                             int index, baldr::TrafficSpeed* current) -> void {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
       baldr::GraphId tile_id(tile.header->tile_id);
 
-      auto DA = gurka::findEdge(reader, map.nodes, "DA", "A", tile_id);
-      auto AD = gurka::findEdge(reader, map.nodes, "DA", "D", tile_id);
+      auto DA = gurka::findEdge(reader, closure_map.nodes, "DA", "A", tile_id);
+      auto AD = gurka::findEdge(reader, closure_map.nodes, "DA", "D", tile_id);
 
       bool const is_da = (std::get<1>(DA) != nullptr && std::get<0>(DA).id() == index);
       bool const is_ad = (std::get<1>(AD) != nullptr && std::get<0>(AD).id() == index);
 
       SetLiveSpeed(current, ((is_da || is_ad) ? 0 : default_speed));
     };
-    valhalla_tests::utils::customize_live_traffic_data(map.config, close_edge);
+    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
 
-    auto result = gurka::route(map, "B", "2", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    auto result =
+        gurka::route(closure_map, "B", "2", "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::raw::expect_path(result, {"AB"});
     gurka::assert::raw::expect_eta(result, 5.f, eta_margin);
   }
