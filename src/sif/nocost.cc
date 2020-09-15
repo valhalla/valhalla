@@ -98,7 +98,7 @@ public:
    * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::NodeInfo* node) const {
+  bool Allowed(const baldr::NodeInfo* node) const override {
     return true;
   }
 
@@ -112,8 +112,8 @@ public:
     return true;
   }
 
-  virtual bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
-                                    const baldr::GraphTile* tile) const override {
+  bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
+                            const baldr::GraphTile* tile) const override {
     return false;
   }
 
@@ -198,16 +198,6 @@ public:
                const baldr::GraphId& /*edgeid*/,
                const baldr::GraphTile* /*tile*/) const override {
     return !(edge->is_shortcut() || edge->IsTransitLine());
-  }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each node's attribution
-   * @return Function/functor to be used in filtering out nodes
-   */
-  virtual const NodeFilter GetNodeFilter() const {
-    // throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node) { return false; };
   }
 };
 

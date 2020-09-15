@@ -173,8 +173,8 @@ public:
     throw std::runtime_error("TransitCost::EdgeCost only supports transit edges");
   }
 
-  virtual bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
-                                    const baldr::GraphTile* tile) const override {
+  bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
+                            const baldr::GraphTile* tile) const override {
     return false;
   }
 

@@ -285,7 +285,6 @@ public:
   bool Allowed(const vb::NodeInfo* node) const;
   vs::Cost EdgeCost(const vb::DirectedEdge* edge, const uint32_t speed) const;
   float Filter(const vb::DirectedEdge* edge) const override;
-  vs::NodeFilter GetNodeFilter() const;
   float AStarCostFactor() const;
 };
 
@@ -332,10 +331,6 @@ vs::Cost DistanceOnlyCost::EdgeCost(const vb::DirectedEdge* edge, const uint32_t
 
 float DistanceOnlyCost::Filter(const baldr::DirectedEdge* edge) const {
   return allow_edge_pred(edge) ? 1.0f : 0.0f;
-}
-
-vs::NodeFilter DistanceOnlyCost::GetNodeFilter() const {
-  return [](const vb::NodeInfo*) -> bool { return false; };
 }
 
 float DistanceOnlyCost::AStarCostFactor() const {

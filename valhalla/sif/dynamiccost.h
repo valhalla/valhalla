@@ -29,12 +29,6 @@ namespace sif {
 
 const sif::Cost kNoCost(0.0f, 0.0f);
 
-/**
- * A callable element which returns true if a node should be
- * filtered out/ not used and false if the node is usable
- */
-using NodeFilter = std::function<bool(const baldr::NodeInfo*)>;
-
 // Default unit size (seconds) for cost sorting.
 constexpr uint32_t kDefaultUnitSize = 1;
 
@@ -182,7 +176,7 @@ public:
    * @param   node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::NodeInfo* node) const {
+  inline virtual bool Allowed(const baldr::NodeInfo* node) const {
     return (node->access() & access_mask_) || ignore_access_;
   }
 
@@ -600,17 +594,6 @@ public:
   virtual float Filter(const baldr::DirectedEdge* edge,
                        const baldr::GraphId& edgeid,
                        const baldr::GraphTile* tile) const = 0;
-
-  /**
-   * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each node's attribution
-   */
-  virtual const NodeFilter GetNodeFilter() const {
-    // throw back a lambda that checks the access for this type of costing
-    return [mask = access_mask_, ignore_access = ignore_access_](const baldr::NodeInfo* node) {
-      return !((node->access() & mask) || ignore_access);
-    };
-  }
 
   /**
    * Gets the hierarchy limits.

@@ -236,7 +236,6 @@ struct projector_wrapper {
 struct bin_handler_t {
   std::vector<projector_wrapper> pps;
   valhalla::baldr::GraphReader& reader;
-  NodeFilter node_filter;
   std::shared_ptr<DynamicCost> costing;
   unsigned int max_reach_limit;
   std::vector<candidate_t> bin_candidates;
@@ -250,7 +249,7 @@ struct bin_handler_t {
   bin_handler_t(const std::vector<valhalla::baldr::Location>& locations,
                 valhalla::baldr::GraphReader& reader,
                 const std::shared_ptr<DynamicCost>& costing)
-      : reader(reader), costing(costing), node_filter(costing->GetNodeFilter()) {
+      : reader(reader), costing(costing) {
     // get the unique set of input locations and the max reachability of them all
     std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
     pps.reserve(uniq_locations.size());

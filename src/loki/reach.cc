@@ -192,7 +192,7 @@ void Reach::enqueue(const baldr::GraphId& node_id,
   if (!reader.GetGraphTile(node_id, tile))
     return;
   const auto* node = tile->node(node_id);
-  if (costing->GetNodeFilter()(node))
+  if (!costing->Allowed(node))
     return;
   // otherwise we enqueue it
   queue_.insert(node_id);
