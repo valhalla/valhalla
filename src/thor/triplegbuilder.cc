@@ -786,90 +786,6 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 }
 
 /**
- * Add trip intersecting edge.
- * @param  controller   Controller to determine which attributes to set.
- * @param  directededge Directed edge on the path.
- * @param  prev_de  Previous directed edge on the path.
- * @param  local_edge_index  Index of the local intersecting path edge at intersection.
- * @param  nodeinfo  Node information of the intersection.
- * @param  trip_node  Trip node that will store the intersecting edge information.
- * @param  intersecting_de Intersecting directed edge. Will be nullptr except when
- *                         on the local hierarchy.
- */
-void AddTripIntersectingEdge(const AttributesController& controller,
-                             const DirectedEdge* directededge,
-                             const DirectedEdge* prev_de,
-                             uint32_t local_edge_index,
-                             const NodeInfo* nodeinfo,
-                             TripLeg_Node* trip_node,
-                             const DirectedEdge* intersecting_de) {
-  TripLeg_IntersectingEdge* itersecting_edge = trip_node->add_intersecting_edge();
-
-  // Set the heading for the intersecting edge if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeBeginHeading)) {
-    itersecting_edge->set_begin_heading(nodeinfo->heading(local_edge_index));
-  }
-
-  Traversability traversability = Traversability::kNone;
-  // Determine walkability
-  if (intersecting_de->forwardaccess() & kPedestrianAccess) {
-    traversability = (intersecting_de->reverseaccess() & kPedestrianAccess)
-                         ? Traversability::kBoth
-                         : Traversability::kForward;
-  } else {
-    traversability = (intersecting_de->reverseaccess() & kPedestrianAccess)
-                         ? Traversability::kBackward
-                         : Traversability::kNone;
-  }
-  // Set the walkability flag for the intersecting edge if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeWalkability)) {
-    itersecting_edge->set_walkability(GetTripLegTraversability(traversability));
-  }
-
-  traversability = Traversability::kNone;
-  // Determine cyclability
-  if (intersecting_de->forwardaccess() & kBicycleAccess) {
-    traversability = (intersecting_de->reverseaccess() & kBicycleAccess) ? Traversability::kBoth
-                                                                         : Traversability::kForward;
-  } else {
-    traversability = (intersecting_de->reverseaccess() & kBicycleAccess) ? Traversability::kBackward
-                                                                         : Traversability::kNone;
-  }
-  // Set the cyclability flag for the intersecting edge if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeCyclability)) {
-    itersecting_edge->set_cyclability(GetTripLegTraversability(traversability));
-  }
-
-  // Set the driveability flag for the intersecting edge if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeDriveability)) {
-    itersecting_edge->set_driveability(
-        GetTripLegTraversability(nodeinfo->local_driveability(local_edge_index)));
-  }
-
-  // Set the previous/intersecting edge name consistency if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeFromEdgeNameConsistency)) {
-    bool name_consistency =
-        (prev_de == nullptr) ? false : prev_de->name_consistency(local_edge_index);
-    itersecting_edge->set_prev_name_consistency(name_consistency);
-  }
-
-  // Set the current/intersecting edge name consistency if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeToEdgeNameConsistency)) {
-    itersecting_edge->set_curr_name_consistency(directededge->name_consistency(local_edge_index));
-  }
-
-  // Set the use for the intersecting edge if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeUse)) {
-    itersecting_edge->set_use(GetTripLegUse(intersecting_de->use()));
-  }
-
-  // Set the road class for the intersecting edge if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeRoadClass)) {
-    itersecting_edge->set_road_class(GetRoadClass(intersecting_de->classification()));
-  }
-}
-
-/**
  * This adds cost information at every node using supplementary costings provided at request time
  * There are some limitations here:
  * For multipoint routes the date_time used will not reflect the time offset that would have been if
@@ -1244,10 +1160,12 @@ void TripLegBuilder::Build(
       trip_edge->set_length(km);
     }
 
-    // Set shape attributes
+    // How long on this edge?
     auto edge_seconds = edge_itr->elapsed_cost.secs - edge_itr->transition_cost.secs;
     if (edge_itr != path_begin)
       edge_seconds -= std::prev(edge_itr)->elapsed_cost.secs;
+
+    // Set shape attributes
     SetShapeAttributes(controller, graphtile, directededge, trip_shape, begin_index, trip_path,
                        trim_start_pct, trim_end_pct, edge_seconds,
                        costing->flow_mask() & kCurrentFlowMask);
@@ -1266,75 +1184,19 @@ void TripLegBuilder::Build(
     // must be done after the edge's shape has been added.
     SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
 
-    // Add connected edges from the start node. Do this after the first trip
-    // edge is added
-    //
-    // Our path is from 1 to 2 to 3 (nodes) to ... n nodes.
-    // Each letter represents the edge info.
-    // So at node 2, we will store the edge info for D and we will store the
-    // intersecting edge info for B, C, E, F, and G.  We need to make sure
-    // that we don't store the edge info from A and D again.
-    //
-    //     (X)    (3)   (X)
-    //       \\   ||   //
-    //      C \\ D|| E//
-    //         \\ || //
-    //      B   \\||//   F
-    // (X)======= (2) ======(X)
-    //            ||\\
-    //          A || \\ G
-    //            ||  \\
-    //            (1)  (X)
+    // Add the intersecting edges at the node
     if (startnode.Is_Valid()) {
-      // Iterate through edges on this level to find any intersecting edges
-      // Follow any upwards or downward transitions
-      const DirectedEdge* de = start_tile->directededge(node->edge_index());
-      for (uint32_t idx1 = 0; idx1 < node->edge_count(); ++idx1, de++) {
-
-        // Skip shortcut edges AND the opposing edge of the previous edge in the path AND
-        // the current edge in the path AND the superceded edge of the current edge in the path
-        // if the current edge in the path is a shortcut
-        if (de->is_shortcut() || de->localedgeidx() == prior_opp_local_index ||
-            de->localedgeidx() == directededge->localedgeidx() ||
-            (directededge->is_shortcut() && directededge->shortcut() & de->superseded())) {
-          continue;
-        }
-
-        // Add intersecting edges on the same hierarchy level and not on the path
-        AddTripIntersectingEdge(controller, directededge, prev_de, de->localedgeidx(), node,
-                                trip_node, de);
-      }
-
-      // Add intersecting edges on different levels (follow NodeTransitions)
-      if (node->transition_count() > 0) {
-        const NodeTransition* trans = start_tile->transition(node->transition_index());
-        for (uint32_t i = 0; i < node->transition_count(); ++i, ++trans) {
-          // Get the end node tile and its directed edges
-          GraphId endnode = trans->endnode();
-          const GraphTile* endtile = graphreader.GetGraphTile(endnode);
-          if (endtile == nullptr) {
-            continue;
-          }
-          const NodeInfo* nodeinfo2 = endtile->node(endnode);
-          const DirectedEdge* de2 = endtile->directededge(nodeinfo2->edge_index());
-          for (uint32_t idx2 = 0; idx2 < nodeinfo2->edge_count(); ++idx2, de2++) {
-            // Skip shortcut edges and edges on the path
-            if (de2->is_shortcut() || de2->localedgeidx() == prior_opp_local_index ||
-                de2->localedgeidx() == directededge->localedgeidx()) {
-              continue;
-            }
-            AddTripIntersectingEdge(controller, directededge, prev_de, de2->localedgeidx(), nodeinfo2,
-                                    trip_node, de2);
-          }
-        }
-      }
+      AddIntersectingEdges(controller, start_tile, node, directededge, prev_de, prior_opp_local_index,
+                           graphreader, trip_node);
     }
+
+    ////////////// Prepare for the next iteration
 
     // Set the endnode of this directed edge as the startnode of the next edge.
     startnode = directededge->endnode();
 
+    // Save the opposing edge as the previous DirectedEdge (for name consistency)
     if (!directededge->IsTransitLine()) {
-      // Save the opposing edge as the previous DirectedEdge (for name consistency)
       const GraphTile* t2 =
           directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : graphtile;
       if (t2 == nullptr) {
