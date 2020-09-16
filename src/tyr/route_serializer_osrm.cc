@@ -563,10 +563,9 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         classes.push_back("ferry");
       }
 
-      /** TODO
-      if ( ) {
+      if (curr_edge->destination_only()) {
         classes.push_back("restricted");
-      } */
+      }
       if (classes.size() > 0) {
         auto class_list = json::array({});
         for (const auto& cl : classes) {
