@@ -17,7 +17,7 @@ public:
   /**
    * Constructor.
    */
-  AStarHeuristic() : costfactor_(1.0f), distapprox_({}) {
+  AStarHeuristic() : distapprox_({}), costfactor_(1.0f) {
   }
 
   /**
