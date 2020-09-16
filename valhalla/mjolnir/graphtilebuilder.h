@@ -542,6 +542,13 @@ protected:
   // Text list. List of names used within this tile
   std::list<std::string> textlistbuilder_;
 
+  // Tunnel Name list offset and map
+  uint32_t tunnel_name_list_offset_ = 0;
+  std::unordered_map<std::string, uint32_t> tunnel_name_offset_map_;
+
+  // Tunnel Name list used within this tile
+  std::list<std::string> tunnelnamelistbuilder_;
+
   // List of lane connectivity records.
   std::vector<LaneConnectivity> lane_connectivity_builder_;
 

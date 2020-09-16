@@ -375,6 +375,10 @@ public:
       if (!tag_.second.empty())
         way_.set_official_name_index(osmdata_.name_offset_map.index(tag_.second));
     };
+    tag_handlers_["tunnel_name"] = [this]() {
+      if (!tag_.second.empty())
+        way_.set_tunnel_name_index(osmdata_.name_offset_map.index(tag_.second));
+    };
     tag_handlers_["max_speed"] = [this]() {
       try {
         if (tag_.second == "unlimited") {

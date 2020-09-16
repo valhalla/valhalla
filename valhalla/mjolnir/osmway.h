@@ -218,6 +218,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the index for tunnel name
+   * @param  idx  Index for the tunnel name.
+   */
+  void set_tunnel_name_index(const uint32_t idx) {
+    tunnel_name_index_ = idx;
+  }
+
+  /**
+   * Get the tunnel name index.
+   * @return  Returns the index for the tunnel name.
+   */
+  uint32_t tunnel_name_index() const {
+    return tunnel_name_index_;
+  }
+
+  /**
    * Sets the index for forward turn lanes string.
    * @param  idx  Index for the forward turn lanes string.
    */
@@ -1535,6 +1551,7 @@ struct OSMWay {
   uint32_t name_en_index_;
   uint32_t alt_name_index_;
   uint32_t official_name_index_;
+  uint32_t tunnel_name_index_;
 
   // Turn lanes
   uint32_t fwd_turn_lanes_index_;
