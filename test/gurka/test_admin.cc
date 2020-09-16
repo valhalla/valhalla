@@ -58,3 +58,39 @@ TEST_F(Admin, Iso) {
   EXPECT_TRUE(leg.node(0).edge().drive_on_right());
   EXPECT_FALSE(leg.node(1).edge().drive_on_right());
 }
+
+TEST_F(Admin, test_admin_response) {
+  auto result = gurka::route(map, "A", "C", "auto");
+  auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
+
+  ASSERT_EQ(d["routes"].Size(), 1);
+  ASSERT_EQ(d["routes"][0]["legs"].Size(), 1);
+  ASSERT_EQ(d["routes"][0]["legs"][0]["steps"].Size(), 3);
+
+  // Expect admin list at leg level
+  auto leg = d["routes"][0]["legs"][0].GetObject();
+  EXPECT_TRUE(leg.HasMember("admins"));
+  EXPECT_STREQ(leg["admins"][0]["iso_3166_1"].GetString(), "US");
+  EXPECT_STREQ(leg["admins"][0]["iso_3166_1_alpha3"].GetString(), "USA");
+  EXPECT_EQ(leg["admins"].Size(), 2);
+
+  auto steps = leg["steps"].GetArray();
+
+  // First step has admin_index=0
+  int step_index = 0;
+  EXPECT_EQ(steps[step_index]["intersections"].Size(), 1);
+  EXPECT_TRUE(steps[step_index]["intersections"][0].HasMember("admin_index"));
+  EXPECT_EQ(steps[step_index]["intersections"][0]["admin_index"].GetInt(), 0);
+
+  // Second step has admin_index=0
+  step_index++;
+  EXPECT_EQ(steps[step_index]["intersections"].Size(), 1);
+  EXPECT_TRUE(steps[step_index]["intersections"][0].HasMember("admin_index"));
+  EXPECT_EQ(steps[step_index]["intersections"][0]["admin_index"].GetInt(), 0);
+
+  // Third step has admin_index=1
+  step_index++;
+  EXPECT_EQ(steps[step_index]["intersections"].Size(), 1);
+  EXPECT_TRUE(steps[step_index]["intersections"][0].HasMember("admin_index"));
+  EXPECT_EQ(steps[step_index]["intersections"][0]["admin_index"].GetInt(), 1);
+}
