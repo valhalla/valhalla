@@ -489,16 +489,6 @@ GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& 
   return id;
 }
 
-GraphId GraphReader::GetBeginNodeId(const DirectedEdge* edge, const GraphTile*& tile) {
-  // grab the node
-  if (!GetGraphTile(edge->endnode(), tile))
-    return {};
-  const auto* node = tile->node(edge->endnode());
-  // grab the opp edges end node
-  const auto* opp_edge = tile->directededge(node->edge_index() + edge->opp_index());
-  return opp_edge->endnode();
-}
-
 // Convenience method to determine if 2 directed edges are connected.
 bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) {
   // Check if there is a transition edge between n1 and n2

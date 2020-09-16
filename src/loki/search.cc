@@ -475,9 +475,9 @@ struct bin_handler_t {
     // filtered then the reaches of both edges are the same
 
     const DirectedEdge* opp_edge = nullptr;
-    const auto opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, tile);
-
-    if (reach.outbound > 0 && reach.inbound > 0 && opp_edge &&
+    GraphId opp_edgeid;
+    if (reach.outbound > 0 && reach.inbound > 0 &&
+        (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, tile)) &&
         costing->Filter(opp_edge, opp_edgeid, tile) > 0.f) {
       directed_reaches[opp_edge] = reach;
     }
@@ -576,23 +576,19 @@ struct bin_handler_t {
         // is this edge reachable in the right way
         bool reachable = reach.outbound >= p_itr->location.min_outbound_reach_ &&
                          reach.inbound >= p_itr->location.min_inbound_reach_;
+        const DirectedEdge* opp_edge = nullptr;
+        const GraphTile* opp_tile = tile;
+        GraphId opp_edgeid;
         // it's possible that it isnt reachable but the opposing is, switch to that if so
-        if (!reachable) {
-          const DirectedEdge* opp_edge = nullptr;
-          const GraphTile* opp_tile = tile;
-          const GraphId opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
-          if (!opp_edge)
-            continue;
-
-          if (costing->Filter(opp_edge, opp_edgeid, opp_tile) > 0.f) {
-            auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, opp_edgeid);
-            if (opp_reach.outbound >= p_itr->location.min_outbound_reach_ &&
-                opp_reach.inbound >= p_itr->location.min_inbound_reach_) {
-              tile = opp_tile;
-              edge = opp_edge;
-              reach = opp_reach;
-              reachable = true;
-            }
+        if (!reachable && (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
+            costing->Filter(opp_edge, opp_edgeid, opp_tile) > 0.f) {
+          auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, opp_edgeid);
+          if (opp_reach.outbound >= p_itr->location.min_outbound_reach_ &&
+              opp_reach.inbound >= p_itr->location.min_inbound_reach_) {
+            tile = opp_tile;
+            edge = opp_edge;
+            reach = opp_reach;
+            reachable = true;
           }
         }
 

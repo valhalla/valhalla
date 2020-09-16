@@ -67,6 +67,11 @@ protected:
                        const std::shared_ptr<sif::DynamicCost>& costing,
                        uint8_t direction = kInbound | kOutbound);
 
+  // we keep a queue of nodes to expand from, to prevent duplicate expansion we use a set
+  // each node we pop from the set will increase the reach and be added to the done set
+  // the done set is used to avoid duplicate expansion of already dequeued nodes
+  // we also track how many nodes were added as transitions from other levels
+  // this allows us to have "duplicate" nodes but not do any trickery with the expansion
   void enqueue(const baldr::GraphId& node_id,
                baldr::GraphReader& reader,
                const std::shared_ptr<sif::DynamicCost>& costing,

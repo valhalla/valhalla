@@ -530,7 +530,15 @@ public:
    * @param tile    reference to a pointer to a const tile
    * @return        returns GraphId of begin node of the edge (empty if couldn't find)
    */
-  GraphId GetBeginNodeId(const DirectedEdge* edge, const GraphTile*& tile);
+  GraphId GetBeginNodeId(const DirectedEdge* edge, const GraphTile*& tile) {
+    // grab the node
+    if (!GetGraphTile(edge->endnode(), tile))
+      return {};
+    const auto* node = tile->node(edge->endnode());
+    // grab the opp edges end node
+    const auto* opp_edge = tile->directededge(node->edge_index() + edge->opp_index());
+    return opp_edge->endnode();
+  }
 
   /**
    * Convenience method to determine if 2 directed edges are connected.

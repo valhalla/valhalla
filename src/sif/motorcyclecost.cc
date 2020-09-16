@@ -377,18 +377,16 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
                              const uint64_t current_time,
                              const uint32_t tz_index,
                              int& restriction_idx) const {
-  if (IsClosedDueToTraffic(edgeid, tile))
-    return false;
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
-      IsUserAvoidEdge(edgeid) || (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
+      (edge->surface() > kMinimumMotorcycleSurface) || IsUserAvoidEdge(edgeid) ||
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      IsClosedDueToTraffic(edgeid, tile)) {
     return false;
   }
-  if (edge->surface() > kMinimumMotorcycleSurface) {
-    return false;
-  }
+
   return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, edgeid, current_time, tz_index,
                                            restriction_idx);
 }

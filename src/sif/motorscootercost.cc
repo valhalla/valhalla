@@ -389,18 +389,16 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
                                const uint64_t current_time,
                                const uint32_t tz_index,
                                int& restriction_idx) const {
-  if (IsClosedDueToTraffic(edgeid, tile))
-    return false;
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
-      IsUserAvoidEdge(edgeid) || (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
+      (edge->surface() > kMinimumScooterSurface) || IsUserAvoidEdge(edgeid) ||
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      IsClosedDueToTraffic(edgeid, tile)) {
     return false;
   }
-  if (edge->surface() > kMinimumScooterSurface) {
-    return false;
-  }
+
   return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, edgeid, current_time, tz_index,
                                            restriction_idx);
 }
@@ -415,19 +413,16 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                       const uint64_t current_time,
                                       const uint32_t tz_index,
                                       int& restriction_idx) const {
-  if (IsClosedDueToTraffic(opp_edgeid, tile))
-    return false;
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
-      IsUserAvoidEdge(opp_edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
+      (opp_edge->surface() > kMinimumScooterSurface) || IsUserAvoidEdge(opp_edgeid) ||
+      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
+      IsClosedDueToTraffic(opp_edgeid, tile)) {
     return false;
   }
-  if (opp_edge->surface() > kMinimumScooterSurface) {
-    return false;
-  }
+
   return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, opp_edgeid, current_time,
                                            tz_index, restriction_idx);
 }

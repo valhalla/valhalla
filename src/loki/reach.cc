@@ -26,12 +26,6 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
     return reach;
   max_reach_ = max_reach;
 
-  // we keep a queue of nodes to expand from, to prevent duplicate expansion we use a set
-  // each node we pop from the set will increase the reach and be added to the done set
-  // the done set is used to avoid duplicate expansion of already dequeued nodes
-  // we also track how many nodes were added as transitions from other levels
-  // this allows us to have "duplicate" nodes but not do any trickery with the expansion
-
   // TODO: here we stay extra conservative by avoiding starting on a simple restriction because we
   // TODO: dont have predecessor information in the simple reach expansion so we bail 1 edge earlier
   // NOTE: we can expand from the end of a complex restriction because it cant possibly be on our path
