@@ -31,14 +31,10 @@ public:
    * Constructor.
    * @param  options Request options in a pbf
    */
-  SimpleCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kDrive) {
+  SimpleCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kDrive, kAutoAccess) {
   }
 
   ~SimpleCost() {
-  }
-
-  uint32_t access_mode() const {
-    return kAutoAccess;
   }
 
   bool Allowed(const DirectedEdge* edge,
@@ -48,8 +44,7 @@ public:
                const uint64_t current_time,
                const uint32_t tz_index,
                int& restriction_idx) const {
-    if (!(edge->forwardaccess() & kAutoAccess) ||
-        (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+    if (!IsAccessable(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (pred.restrictions() & (1 << edge->localedgeidx())) ||
         edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
         (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
@@ -66,7 +61,7 @@ public:
                       const uint64_t current_time,
                       const uint32_t tz_index,
                       int& restriction_idx) const {
-    if (!(opp_edge->forwardaccess() & kAutoAccess) ||
+    if (!IsAccessable(opp_edge) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
         opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
@@ -74,10 +69,6 @@ public:
       return false;
     }
     return true;
-  }
-
-  bool Allowed(const NodeInfo* node) const {
-    return (node->access() & kAutoAccess);
   }
 
   Cost EdgeCost(const baldr::DirectedEdge* edge,
@@ -107,17 +98,16 @@ public:
   }
 
   const EdgeFilter GetEdgeFilter() const {
-    return [](const DirectedEdge* edge) {
-      if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess))
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
+    return [access_mask, ignore_oneways = ignore_oneways_](const DirectedEdge* edge) {
+      bool accessable = (edge->forwardaccess() & access_mask) ||
+                        (ignore_oneways && (edge->reverseaccess() & access_mask));
+      if (edge->is_shortcut() || !accessable)
         return 0.0f;
       else {
         return 1.0f;
       }
     };
-  }
-
-  const NodeFilter GetNodeFilter() const {
-    return [](const NodeInfo* node) { return !(node->access() & kAutoAccess); };
   }
 };
 

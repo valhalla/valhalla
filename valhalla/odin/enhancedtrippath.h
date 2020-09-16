@@ -376,6 +376,8 @@ public:
   bool IsPathUse() const;
   bool IsPedestrianUse() const;
   bool IsBridlewayUse() const;
+  bool IsRestAreaUse() const;
+  bool IsServiceAreaUse() const;
   bool IsOtherUse() const;
   bool IsFerryUse() const;
   bool IsRailFerryUse() const;
@@ -581,6 +583,10 @@ public:
     return mutable_node_->cost().elapsed_cost().seconds();
   }
 
+  bool has_admin_index() const {
+    return mutable_node_->has_admin_index();
+  }
+
   uint32_t admin_index() const {
     return mutable_node_->admin_index();
   }
@@ -686,6 +692,7 @@ public:
   bool IsParking() const;
   bool IsMotorwayJunction() const;
   bool IsBorderControl() const;
+  bool IsTollGantry() const;
 
   std::string ToString() const;
 

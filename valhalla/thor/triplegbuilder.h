@@ -1,5 +1,4 @@
-#ifndef VALHALLA_THOR_TRIPPATHBUILDER_H_
-#define VALHALLA_THOR_TRIPPATHBUILDER_H_
+#pragma once
 
 #include <cstdint>
 #include <map>
@@ -65,12 +64,5 @@ public:
                         edge_trimming = nullptr);
 };
 
-// Adds incidents to the TripLeg_Edge
-void addIncidents(TripLeg_Edge& trip_edge,
-                  baldr::GraphReader& graphreader,
-                  const baldr::GraphId& edge_id);
-
 } // namespace thor
 } // namespace valhalla
-
-#endif // VALHALLA_THOR_TRIPPATHBUILDER_H_
