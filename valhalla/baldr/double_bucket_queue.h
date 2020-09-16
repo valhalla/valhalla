@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_DOUBLE_BUCKET_QUEUE_H_
 
 #include <algorithm>
+#include <baldr/graphconstants.h>
 #include <cmath>
 #include <cstdint>
 #include <valhalla/midgard/util.h>
@@ -9,8 +10,6 @@
 
 namespace valhalla {
 namespace baldr {
-
-constexpr uint32_t kInvalidLabel = std::numeric_limits<uint32_t>::max();
 
 /**
  * A callable element which returns the cost for a label.
@@ -136,13 +135,13 @@ public:
         // Reset currentbucket to the last bucket - in case another access of
         // adjacency list is done.
         currentbucket_--;
-        return kInvalidLabel;
+        return baldr::kInvalidLabel;
       } else {
         // Move labels from the overflow bucket to the low level buckets.
         // Return invalid label if still empty.
         empty_overflow();
         if (empty()) {
-          return kInvalidLabel;
+          return baldr::kInvalidLabel;
         }
       }
     }
