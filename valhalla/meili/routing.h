@@ -31,8 +31,6 @@ constexpr uint16_t kInvalidDestination = std::numeric_limits<uint16_t>::max();
 class Label : public sif::EdgeLabel {
 public:
   Label() {
-    // zero out the data but set the node Id and edge Id to invalid
-    memset(this, 0, sizeof(Label));
     nodeid_ = baldr::GraphId();
     edgeid_ = baldr::GraphId();
     predecessor_ = baldr::kInvalidLabel;
