@@ -277,14 +277,11 @@ public:
   float Filter(const baldr::DirectedEdge* edge,
                const baldr::GraphId& edgeid,
                const baldr::GraphTile* tile) const override {
-    // take into account live traffic constraints
-    if (IsClosedDueToTraffic(edgeid, tile))
-      return 0.0f;
-
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-    if (edge->is_shortcut() || !accessible || edge->bss_connection()) {
+    if (edge->is_shortcut() || !accessible || edge->bss_connection() ||
+        IsClosedDueToTraffic(edgeid, tile)) {
       return 0.0f;
     } else {
       // TODO - use classification/use to alter the factor
@@ -789,14 +786,10 @@ public:
   float Filter(const baldr::DirectedEdge* edge,
                const baldr::GraphId& edgeid,
                const baldr::GraphTile* tile) const override {
-    // take into account live traffic constraints
-    if (IsClosedDueToTraffic(edgeid, tile))
-      return 0.0f;
-
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-    if (!accessible) {
+    if (!accessible || IsClosedDueToTraffic(edgeid, tile)) {
       return 0.0f;
     } else {
       // TODO - use classification/use to alter the factor
@@ -959,14 +952,10 @@ public:
   float Filter(const baldr::DirectedEdge* edge,
                const baldr::GraphId& edgeid,
                const baldr::GraphTile* tile) const override {
-    // take into account live traffic constraints
-    if (IsClosedDueToTraffic(edgeid, tile))
-      return 0.f;
-
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-    if (!accessible) {
+    if (!accessible || IsClosedDueToTraffic(edgeid, tile)) {
       return 0.0f;
     } else {
       // TODO - use classification/use to alter the factor
@@ -1131,14 +1120,10 @@ public:
   float Filter(const baldr::DirectedEdge* edge,
                const baldr::GraphId& edgeid,
                const baldr::GraphTile* tile) const override {
-    // take into account live traffic constraints
-    if (IsClosedDueToTraffic(edgeid, tile))
-      return 0.f;
-
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-    if (!accessible) {
+    if (!accessible || IsClosedDueToTraffic(edgeid, tile)) {
       return 0.0f;
     } else {
       // TODO - use classification/use to alter the factor
@@ -1285,17 +1270,13 @@ public:
   float Filter(const baldr::DirectedEdge* edge,
                const baldr::GraphId& edgeid,
                const baldr::GraphTile* tile) const override {
-    // take into account live traffic
-    if (IsClosedDueToTraffic(edgeid, tile))
-      return 0.0f;
-
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     // Do not allow edges with no auto access in either direction
     bool allow_forward = edge->forwardaccess() & access_mask;
     bool allow_reverse = edge->reverseaccess() & access_mask;
     bool accessible = (allow_forward && allow_reverse) || (ignore_oneways_ && allow_reverse);
 
-    if (!accessible) {
+    if (!accessible || IsClosedDueToTraffic(edgeid, tile)) {
       return 0.0f;
     } else {
       return 1.0f;

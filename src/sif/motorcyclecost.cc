@@ -272,14 +272,11 @@ public:
   float Filter(const baldr::DirectedEdge* edge,
                const baldr::GraphId& edgeid,
                const baldr::GraphTile* tile) const override {
-    if (IsClosedDueToTraffic(edgeid, tile))
-      return 0.0f;
-
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
     if (edge->is_shortcut() || !accessible || edge->surface() > kMinimumMotorcycleSurface ||
-        edge->bss_connection())
+        edge->bss_connection() || IsClosedDueToTraffic(edgeid, tile))
       return 0.0f;
     else {
       // TODO - use classification/use to alter the factor
@@ -401,22 +398,16 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const uint64_t current_time,
                                     const uint32_t tz_index,
                                     int& restriction_idx) const {
-  if (flow_mask_ & kCurrentFlowMask) {
-    if (tile->IsClosedDueToTraffic(opp_edgeid))
-      return false;
-  }
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
-      IsUserAvoidEdge(opp_edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
+      (opp_edge->surface() > kMinimumMotorcycleSurface) || IsUserAvoidEdge(opp_edgeid) ||
+      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
+      IsClosedDueToTraffic(opp_edgeid, tile)) {
     return false;
   }
 
-  if (opp_edge->surface() > kMinimumMotorcycleSurface) {
-    return false;
-  }
   return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, opp_edgeid, current_time,
                                            tz_index, restriction_idx);
 }

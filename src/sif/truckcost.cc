@@ -264,15 +264,12 @@ public:
   float Filter(const baldr::DirectedEdge* edge,
                const baldr::GraphId& edgeid,
                const baldr::GraphTile* tile) const override {
-    // take into account live traffic constraints
-    if (IsClosedDueToTraffic(edgeid, tile))
-      return 0.0f;
-
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
 
-    if (edge->is_shortcut() || !accessible || edge->bss_connection()) {
+    if (edge->is_shortcut() || !accessible || edge->bss_connection() ||
+        IsClosedDueToTraffic(edgeid, tile)) {
       return 0.0f;
     } else {
       // TODO - use classification/use to alter the factor
