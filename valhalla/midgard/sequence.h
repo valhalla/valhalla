@@ -576,7 +576,7 @@ struct tar {
       }
       // check if its right
       uint64_t rsum = octal_to_int(chksum);
-      return rsum == usum || rsum == sum;
+      return rsum == usum || static_cast<int64_t>(rsum) == sum;
     }
   };
 
