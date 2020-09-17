@@ -179,20 +179,6 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     uint32_t offset = ni.name_offset_;
     text_offset_map_.emplace(str, offset);
     text_list_offset_ += str.length() + 1;
-
-    // Tunnel Names
-    while (ni.tagged_ != tunnel_name_list_offset_) {
-      std::string unused_string(tunnelnamelist_ + tunnel_name_list_offset_);
-      tunnelnamelistbuilder_.push_back(unused_string);
-      tunnel_name_offset_map_.emplace(unused_string, tunnel_name_list_offset_);
-      tunnel_name_list_offset_ += unused_string.length() + 1;
-      LOG_WARN("Unused text string: " + unused_string);
-    }
-    /*std::string tunnel_str(tunnelnamelist_ + std::to_string(ni.tagged_));
-    tunnelnamelistbuilder_.push_back(tunnel_str);
-    uint32_t tunnel_offset = ni.tagged_;
-    tunnel_name_offset_map_.emplace(tunnel_str, tunnel_offset);
-    tunnel_name_list_offset_ += tunnel_str.length() + 1;*/
   }
 
   // Lane connectivity

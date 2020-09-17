@@ -688,10 +688,6 @@ protected:
   // offsets into this array.
   char* textlist_;
 
-  // Tunnel names as sets of null-terminated char arrays. Edge info has
-  // offsets into this array.
-  char* tunnelnamelist_;
-
   // Number of bytes in the text/name list
   std::size_t textlist_size_;
 
