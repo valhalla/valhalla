@@ -375,7 +375,7 @@ public:
       if (!tag_.second.empty())
         way_.set_official_name_index(osmdata_.name_offset_map.index(tag_.second));
     };
-    tag_handlers_["tunnel_name"] = [this]() {
+    tag_handlers_["tunnel:name"] = [this]() {
       if (!tag_.second.empty())
         way_.set_tunnel_name_index(osmdata_.name_offset_map.index(tag_.second));
     };
