@@ -502,7 +502,7 @@ struct bin_handler_t {
         // then we try its opposing edge
         edge_id = reader.GetOpposingEdgeId(edge_id, edge, tile);
         // but if we couldnt get it or its filtered too then we move on
-        if (!edge_id || costing->Filter(edge, edge_id, tile) == 0.0f)
+        if (!edge_id.Is_Valid() || costing->Filter(edge, edge_id, tile) == 0.0f)
           continue;
       }
 
