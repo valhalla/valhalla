@@ -163,6 +163,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     if (!Options_Action_Enum_Parse(path, &action)) {
       throw std::runtime_error("Action not supported " + path);
     }
+    actions.insert(action);
     action_str.append("'/" + path + "' ");
   }
   // Make sure we have at least something to support!
@@ -264,7 +265,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     const auto& options = request.options();
 
     // check there is a valid action
-    if (!options.has_action()) {
+    if (!options.has_action() || actions.find(options.action()) == actions.cend()) {
       return jsonify_error({106, action_str}, info, request);
     }
 
