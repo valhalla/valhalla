@@ -324,6 +324,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
       trip_edge_name->set_value(name_and_type.first);
       trip_edge_name->set_is_route_number(name_and_type.second);
     }
+
+    auto tagged_names_and_types = edgeinfo.GetTaggedNamesAndTypes();
+    for (const auto& tagged_name_and_type : tagged_names_and_types) {
+      std::cout << tagged_name_and_type.first << " " << std::to_string(tagged_name_and_type.second) << std::endl;
+    }
   }
 
 #ifdef LOGGING_LEVEL_TRACE
