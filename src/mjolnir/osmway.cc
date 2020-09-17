@@ -170,8 +170,7 @@ OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uin
 }
 
 // Get the tagged names for an edge
-std::vector<std::string>
-OSMWay::GetTaggedNames(const UniqueNames& name_offset_map) const {
+std::vector<std::string> OSMWay::GetTaggedNames(const UniqueNames& name_offset_map) const {
 
   std::vector<std::string> names;
   std::vector<std::string> tokens;

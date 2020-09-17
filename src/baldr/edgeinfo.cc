@@ -76,8 +76,7 @@ std::vector<std::string> EdgeInfo::GetNames(bool only_tagged_names) const {
   names.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
-    if ((only_tagged_names && !ni->tagged_) ||
-        (!only_tagged_names && ni->tagged_)) {
+    if ((only_tagged_names && !ni->tagged_) || (!only_tagged_names && ni->tagged_)) {
       continue;
     }
     if (ni->name_offset_ < names_list_length_) {
@@ -90,7 +89,8 @@ std::vector<std::string> EdgeInfo::GetNames(bool only_tagged_names) const {
 }
 
 // Get a list of names
-std::vector<std::pair<std::string, bool>> EdgeInfo::GetNamesAndTypes(bool include_tagged_names) const {
+std::vector<std::pair<std::string, bool>>
+EdgeInfo::GetNamesAndTypes(bool include_tagged_names) const {
   // Get each name
   std::vector<std::pair<std::string, bool>> name_type_pairs;
   name_type_pairs.reserve(name_count());
@@ -123,7 +123,7 @@ std::vector<std::pair<std::string, uint8_t>> EdgeInfo::GetTaggedNamesAndTypes() 
         if (name.size() > 1) {
           uint8_t num = 0;
           try {
-            num = std::stoi(name.substr(0,1));
+            num = std::stoi(name.substr(0, 1));
             name_type_pairs.push_back({name.substr(1), num});
 
           } catch (const std::invalid_argument& arg) {

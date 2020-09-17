@@ -838,8 +838,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     std::list<PointLL> shape = {platform_ll, station_ll};
 
     // TODO - these need to be valhalla graph Ids
-    uint32_t edge_info_offset = tilebuilder_transit.AddEdgeInfo(0, platform_graphid, station_graphid,
-                                                                0, 0, 0, 0, shape, names, tagged_names, 0, added);
+    uint32_t edge_info_offset =
+        tilebuilder_transit.AddEdgeInfo(0, platform_graphid, station_graphid, 0, 0, 0, 0, shape,
+                                        names, tagged_names, 0, added);
     directededge.set_edgeinfo_offset(edge_info_offset);
     directededge.set_forward(true);
 

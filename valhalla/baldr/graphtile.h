@@ -328,7 +328,8 @@ public:
    *
    * @return  Returns a list (vector) of names.
    */
-  std::vector<std::string> GetNames(const uint32_t edgeinfo_offset, bool only_tagged_names = false) const;
+  std::vector<std::string> GetNames(const uint32_t edgeinfo_offset,
+                                    bool only_tagged_names = false) const;
 
   /**
    * Convenience method to get the types for the names given the offset to the
