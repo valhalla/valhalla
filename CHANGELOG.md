@@ -84,6 +84,7 @@
    * FIXED: Map matching uturn trimming at the end of an edge where it wasn't needed. [#2558](https://github.com/valhalla/valhalla/pull/2558)
    * FIXED: Multicue enter roundabout [#2556](https://github.com/valhalla/valhalla/pull/2556)
    * FIXED: Fixed a bug where the temp files were not getting read in if you started with the construct edges or build phase for valhalla_build_tiles. [#2601](https://github.com/valhalla/valhalla/pull/2601)
+   * FIXED: Updated fr-FR.json with partial translations. [#2605](https://github.com/valhalla/valhalla/pull/2605)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
