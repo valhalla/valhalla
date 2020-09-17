@@ -135,6 +135,51 @@ inline unsigned getFittedZoom(Coordinate south_west, Coordinate north_east) {
     return MIN_ZOOM;
 }
 
+// For transforming ISO 3166-1 country codes from alpha2 to alpha3
+std::unordered_map<std::string, std::string> iso2_to_iso3 =
+    {{"AD", "AND"}, {"AE", "ARE"}, {"AF", "AFG"}, {"AG", "ATG"}, {"AI", "AIA"}, {"AL", "ALB"},
+     {"AM", "ARM"}, {"AO", "AGO"}, {"AQ", "ATA"}, {"AR", "ARG"}, {"AS", "ASM"}, {"AT", "AUT"},
+     {"AU", "AUS"}, {"AW", "ABW"}, {"AX", "ALA"}, {"AZ", "AZE"}, {"BA", "BIH"}, {"BB", "BRB"},
+     {"BD", "BGD"}, {"BE", "BEL"}, {"BF", "BFA"}, {"BG", "BGR"}, {"BH", "BHR"}, {"BI", "BDI"},
+     {"BJ", "BEN"}, {"BL", "BLM"}, {"BM", "BMU"}, {"BN", "BRN"}, {"BO", "BOL"}, {"BQ", "BES"},
+     {"BR", "BRA"}, {"BS", "BHS"}, {"BT", "BTN"}, {"BV", "BVT"}, {"BW", "BWA"}, {"BY", "BLR"},
+     {"BZ", "BLZ"}, {"CA", "CAN"}, {"CC", "CCK"}, {"CD", "COD"}, {"CF", "CAF"}, {"CG", "COG"},
+     {"CH", "CHE"}, {"CI", "CIV"}, {"CK", "COK"}, {"CL", "CHL"}, {"CM", "CMR"}, {"CN", "CHN"},
+     {"CO", "COL"}, {"CR", "CRI"}, {"CU", "CUB"}, {"CV", "CPV"}, {"CW", "CUW"}, {"CX", "CXR"},
+     {"CY", "CYP"}, {"CZ", "CZE"}, {"DE", "DEU"}, {"DJ", "DJI"}, {"DK", "DNK"}, {"DM", "DMA"},
+     {"DO", "DOM"}, {"DZ", "DZA"}, {"EC", "ECU"}, {"EE", "EST"}, {"EG", "EGY"}, {"EH", "ESH"},
+     {"ER", "ERI"}, {"ES", "ESP"}, {"ET", "ETH"}, {"FI", "FIN"}, {"FJ", "FJI"}, {"FK", "FLK"},
+     {"FM", "FSM"}, {"FO", "FRO"}, {"FR", "FRA"}, {"GA", "GAB"}, {"GB", "GBR"}, {"GD", "GRD"},
+     {"GE", "GEO"}, {"GF", "GUF"}, {"GG", "GGY"}, {"GH", "GHA"}, {"GI", "GIB"}, {"GL", "GRL"},
+     {"GM", "GMB"}, {"GN", "GIN"}, {"GP", "GLP"}, {"GQ", "GNQ"}, {"GR", "GRC"}, {"GS", "SGS"},
+     {"GT", "GTM"}, {"GU", "GUM"}, {"GW", "GNB"}, {"GY", "GUY"}, {"HK", "HKG"}, {"HM", "HMD"},
+     {"HN", "HND"}, {"HR", "HRV"}, {"HT", "HTI"}, {"HU", "HUN"}, {"ID", "IDN"}, {"IE", "IRL"},
+     {"IL", "ISR"}, {"IM", "IMN"}, {"IN", "IND"}, {"IO", "IOT"}, {"IQ", "IRQ"}, {"IR", "IRN"},
+     {"IS", "ISL"}, {"IT", "ITA"}, {"JE", "JEY"}, {"JM", "JAM"}, {"JO", "JOR"}, {"JP", "JPN"},
+     {"KE", "KEN"}, {"KG", "KGZ"}, {"KH", "KHM"}, {"KI", "KIR"}, {"KM", "COM"}, {"KN", "KNA"},
+     {"KP", "PRK"}, {"KR", "KOR"}, {"XK", "XKX"}, {"KW", "KWT"}, {"KY", "CYM"}, {"KZ", "KAZ"},
+     {"LA", "LAO"}, {"LB", "LBN"}, {"LC", "LCA"}, {"LI", "LIE"}, {"LK", "LKA"}, {"LR", "LBR"},
+     {"LS", "LSO"}, {"LT", "LTU"}, {"LU", "LUX"}, {"LV", "LVA"}, {"LY", "LBY"}, {"MA", "MAR"},
+     {"MC", "MCO"}, {"MD", "MDA"}, {"ME", "MNE"}, {"MF", "MAF"}, {"MG", "MDG"}, {"MH", "MHL"},
+     {"MK", "MKD"}, {"ML", "MLI"}, {"MM", "MMR"}, {"MN", "MNG"}, {"MO", "MAC"}, {"MP", "MNP"},
+     {"MQ", "MTQ"}, {"MR", "MRT"}, {"MS", "MSR"}, {"MT", "MLT"}, {"MU", "MUS"}, {"MV", "MDV"},
+     {"MW", "MWI"}, {"MX", "MEX"}, {"MY", "MYS"}, {"MZ", "MOZ"}, {"NA", "NAM"}, {"NC", "NCL"},
+     {"NE", "NER"}, {"NF", "NFK"}, {"NG", "NGA"}, {"NI", "NIC"}, {"NL", "NLD"}, {"NO", "NOR"},
+     {"NP", "NPL"}, {"NR", "NRU"}, {"NU", "NIU"}, {"NZ", "NZL"}, {"OM", "OMN"}, {"PA", "PAN"},
+     {"PE", "PER"}, {"PF", "PYF"}, {"PG", "PNG"}, {"PH", "PHL"}, {"PK", "PAK"}, {"PL", "POL"},
+     {"PM", "SPM"}, {"PN", "PCN"}, {"PR", "PRI"}, {"PS", "PSE"}, {"PT", "PRT"}, {"PW", "PLW"},
+     {"PY", "PRY"}, {"QA", "QAT"}, {"RE", "REU"}, {"RO", "ROU"}, {"RS", "SRB"}, {"RU", "RUS"},
+     {"RW", "RWA"}, {"SA", "SAU"}, {"SB", "SLB"}, {"SC", "SYC"}, {"SD", "SDN"}, {"SS", "SSD"},
+     {"SE", "SWE"}, {"SG", "SGP"}, {"SH", "SHN"}, {"SI", "SVN"}, {"SJ", "SJM"}, {"SK", "SVK"},
+     {"SL", "SLE"}, {"SM", "SMR"}, {"SN", "SEN"}, {"SO", "SOM"}, {"SR", "SUR"}, {"ST", "STP"},
+     {"SV", "SLV"}, {"SX", "SXM"}, {"SY", "SYR"}, {"SZ", "SWZ"}, {"TC", "TCA"}, {"TD", "TCD"},
+     {"TF", "ATF"}, {"TG", "TGO"}, {"TH", "THA"}, {"TJ", "TJK"}, {"TK", "TKL"}, {"TL", "TLS"},
+     {"TM", "TKM"}, {"TN", "TUN"}, {"TO", "TON"}, {"TR", "TUR"}, {"TT", "TTO"}, {"TV", "TUV"},
+     {"TW", "TWN"}, {"TZ", "TZA"}, {"UA", "UKR"}, {"UG", "UGA"}, {"UM", "UMI"}, {"US", "USA"},
+     {"UY", "URY"}, {"UZ", "UZB"}, {"VA", "VAT"}, {"VC", "VCT"}, {"VE", "VEN"}, {"VG", "VGB"},
+     {"VI", "VIR"}, {"VN", "VNM"}, {"VU", "VUT"}, {"WF", "WLF"}, {"WS", "WSM"}, {"YE", "YEM"},
+     {"YT", "MYT"}, {"ZA", "ZAF"}, {"ZM", "ZMB"}, {"ZW", "ZWE"}, {"CS", "SCG"}, {"AN", "ANT"}};
+
 namespace osrm_serializers {
 /*
 OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
@@ -393,6 +438,12 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     loc->emplace_back(json::fp_t{ll.lat(), 6});
     intersection->emplace("location", loc);
     intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
+
+    // Add index into admin list
+    if (node->has_admin_index()) {
+      intersection->emplace("admin_index", static_cast<uint64_t>(node->admin_index()));
+    }
+
     if (!arrive_maneuver) {
       if (curr_edge->has_is_urban()) {
         intersection->emplace("is_urban", curr_edge->is_urban());
@@ -428,18 +479,29 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // TODO: add recosted durations to the intersection?
 
+    // Add rest_stop when passing by a rest_area or service_area
+    if (i > 0 && !arrive_maneuver) {
+      auto rest_stop = json::map({});
+      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+        auto intersecting_edge = node->GetIntersectingEdge(m);
+        bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
+
+        if (routeable && intersecting_edge->use() == TripLeg_Use_kRestAreaUse) {
+          rest_stop->emplace("type", std::string("rest_area"));
+          intersection->emplace("rest_stop", rest_stop);
+          break;
+        } else if (routeable && intersecting_edge->use() == TripLeg_Use_kServiceAreaUse) {
+          rest_stop->emplace("type", std::string("service_area"));
+          intersection->emplace("rest_stop", rest_stop);
+          break;
+        }
+      }
+    }
+
     // Get bearings and access to outgoing intersecting edges. Do not add
     // any intersecting edges for the first depart intersection and for
     // the arrive step.
     std::vector<IntersectionEdges> edges;
-    if (i > 0 && !arrive_maneuver) {
-      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
-        auto intersecting_edge = node->GetIntersectingEdge(m);
-        bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
-        uint32_t bearing = static_cast<uint32_t>(intersecting_edge->begin_heading());
-        edges.emplace_back(bearing, routeable, false, false);
-      }
-    }
 
     // Add the edge departing the node
     if (!arrive_maneuver) {
@@ -501,10 +563,9 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         classes.push_back("ferry");
       }
 
-      /** TODO
-      if ( ) {
+      if (curr_edge->destination_only()) {
         classes.push_back("restricted");
-      } */
+      }
       if (classes.size() > 0) {
         auto class_list = json::array({});
         for (const auto& cl : classes) {
@@ -1385,6 +1446,22 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       }
       ++recost_itr;
     }
+
+    // Add admin country codes to leg json
+    auto admins = json::array({});
+    for (const auto& admin : path_leg.admin()) {
+      auto admin_map = json::map({});
+      if (admin.has_country_code()) {
+        admin_map->emplace("iso_3166_1", admin.country_code());
+        auto country_iso3 = iso2_to_iso3.find(admin.country_code());
+        if (country_iso3 != iso2_to_iso3.end()) {
+          admin_map->emplace("iso_3166_1_alpha3", country_iso3->second);
+        }
+      }
+      // TODO: iso_3166_2 state code
+      admins->push_back(admin_map);
+    }
+    output_leg->emplace("admins", admins);
 
     // Add steps to the leg
     output_leg->emplace("steps", steps);
