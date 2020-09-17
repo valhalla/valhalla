@@ -39,7 +39,7 @@
         "2": "Serrez à <RELATIVE_DIRECTION> dans <BEGIN_STREET_NAMES>. Continuez sur <STREET_NAMES>.",
         "3": "Serrez à <RELATIVE_DIRECTION> pour rester sur <STREET_NAMES>.",
         "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Serrez à <RELATIVE_DIRECTION>vers<TOWARD_SIGN>."
+        "5": "Serrez à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -78,7 +78,7 @@
         "2": "Serrez à <RELATIVE_DIRECTION> dans <BEGIN_STREET_NAMES>.",
         "3": "Serrez à <RELATIVE_DIRECTION> pour rester sur <STREET_NAMES>.",
         "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Serrez à <RELATIVE_DIRECTION>vers<TOWARD_SIGN>."
+        "5": "Serrez à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
