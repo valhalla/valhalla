@@ -169,5 +169,21 @@ OSMWay::GetNames(const std::string& ref, const UniqueNames& name_offset_map, uin
   return names;
 }
 
+// Get the tagged names for an edge
+std::vector<std::string>
+OSMWay::GetTaggedNames(const UniqueNames& name_offset_map) const {
+
+  std::vector<std::string> names;
+  std::vector<std::string> tokens;
+
+  // tunnel names
+  tokens = GetTagTokens(name_offset_map.name(name_index_));
+  for (const auto& t : tokens) {
+    names.emplace_back(std::to_string(static_cast<uint8_t>(TaggedName::kTunnel)) + t);
+  }
+
+  return names;
+}
+
 } // namespace mjolnir
 } // namespace valhalla
