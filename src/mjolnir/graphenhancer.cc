@@ -1727,7 +1727,7 @@ void enhance(const boost::property_tree::ptree& pt,
         UpdateSpeed(directededge, density, urban_rc_speed, infer_turn_channels);
 
         // Update the named flag
-        auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNamesAndTypes();
+        auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNamesAndTypes(true);
         directededge.set_named(names.size() > 0);
 
         // Name continuity - on the directededge.
