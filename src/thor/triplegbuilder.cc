@@ -800,6 +800,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
  * @param reader      graph reader for tile access
  * @param leg         the already constructed trip leg to which extra cost information is added
  */
+// TODO: care about the src and tgt pct per edge not just on first and last edges
 void AccumulateRecostingInfoForward(const valhalla::Options& options,
                                     float src_pct,
                                     float tgt_pct,
@@ -861,6 +862,29 @@ void AccumulateRecostingInfoForward(const valhalla::Options& options,
       }
     }
   }
+}
+
+void CutEdgeForIncidents(const GraphTile* tile,
+                         const DirectedEdge* edge,
+                         const GraphId& edge_id,
+                         GraphReader& reader,
+                         valhalla::TripLeg& leg) {
+  // get the incidents
+  auto incidents = reader.GetIncidents(edge_id, tile);
+  if (incidents.empty())
+    return;
+
+  // loop over incidents start and end points, sorting start and end positions
+  // where incidents end the incident is removed from the incident vector
+  // std::vector<std::pair<float, incident_idx>> incidents
+
+  // loop over incident vector above, cut the shape at each location
+  // for those locations which already align with the shape, do not cut
+  // store the incidents on the newly cut nodes
+  // at each cut we must modify the length, shapeattributes, begin and end shape index, and time on
+  // the new and old edge skipping those that start before the start pct of this edge and skipping
+  // those that end after the end pct of this edge for those that are right on (especially first or
+  // last shape point) dont cut just mark for all other you cut a new edge
 }
 
 } // namespace
@@ -1153,6 +1177,11 @@ void TripLegBuilder::Build(
       }
     }
 
+    // Set the portion of the edge we used
+    // TODO: attributes controller
+    trip_edge->set_source_along_edge(trim_start_pct);
+    trip_edge->set_target_along_edge(trim_end_pct);
+
     // Set length if requested. Convert to km
     if (controller.attributes.at(kEdgeLength)) {
       float km =
@@ -1189,6 +1218,8 @@ void TripLegBuilder::Build(
       AddIntersectingEdges(controller, start_tile, node, directededge, prev_de, prior_opp_local_index,
                            graphreader, trip_node);
     }
+
+    // TODO: cut this edge where incidents occur
 
     ////////////// Prepare for the next iteration
 

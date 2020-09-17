@@ -127,7 +127,7 @@ void build_live_traffic_data(const boost::property_tree::ptree& config,
 /*************************************************************/
 void customize_live_traffic_data(
     const boost::property_tree::ptree& config,
-    std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>&
+    const std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>&
         setter_cb) {
 
   // Now we have the tar-file and can go ahead with per edge customizations

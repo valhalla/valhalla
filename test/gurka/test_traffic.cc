@@ -49,9 +49,8 @@ TEST(Traffic, BasicUpdates) {
     printf("Make some updates to the traffic .tar file. "
            "Mostly just updates every edge in the file to 24km/h, except for one "
            "specific edge (B->D) where we simulate a closure (speed=0, congestion high)");
-    std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, valhalla::baldr::TrafficSpeed*)>
-        cb_setter_24kmh = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
-                                 valhalla::baldr::TrafficSpeed* current) -> void {
+    auto cb_setter_24kmh = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
+                                  valhalla::baldr::TrafficSpeed* current) -> void {
       baldr::GraphId tile_id(tile.header->tile_id);
       auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
       current->breakpoint1 = 255;
@@ -74,9 +73,8 @@ TEST(Traffic, BasicUpdates) {
       gurka::assert::raw::expect_eta(result, 151.5);
     }
     printf("Next, set the speed to the highest possible to ensure nothing breaks");
-    std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>
-        cb_setter_max = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
-                               baldr::TrafficSpeed* current) -> void {
+    auto cb_setter_max = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
+                                baldr::TrafficSpeed* current) -> void {
       baldr::GraphId tile_id(tile.header->tile_id);
       auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
       current->breakpoint1 = 255;
@@ -187,23 +185,25 @@ TEST(Traffic, CutGeoms) {
 
   // then we add one portion of the edge having traffic
   {
-    valhalla::baldr::TrafficSpeed ts{valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                     valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                     valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                     valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                     0u,
-                                     0u,
-                                     0u,
-                                     0u,
-                                     0u};
+    valhalla::baldr::TrafficSpeed ts{
+        valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+        valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+        valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+        valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+        0u,
+        0u,
+        0u,
+        0u,
+        0u,
+        0u,
+    };
     ts.overall_speed = 42 >> 1;
     ts.speed1 = 42 >> 1;
     ts.congestion1 = baldr::MAX_CONGESTION_VAL - 1;
     ts.breakpoint1 = 127;
 
-    std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>
-        cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
-                                      baldr::TrafficSpeed* current) -> void {
+    auto cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                       int index, baldr::TrafficSpeed* current) -> void {
       baldr::GraphId tile_id(tile.header->tile_id);
       auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
       current->breakpoint1 = 255;
@@ -255,15 +255,18 @@ TEST(Traffic, CutGeoms) {
   // Another permutation of subsegments
   {
     {
-      valhalla::baldr::TrafficSpeed ts{valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                       valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                       valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                       valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                       0u,
-                                       0u,
-                                       0u,
-                                       0u,
-                                       0u};
+      valhalla::baldr::TrafficSpeed ts{
+          valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+          valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+          valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+          valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+          0u,
+          0u,
+          0u,
+          0u,
+          0u,
+          0u,
+      };
       ts.overall_speed = 30 >> 1;
 
       ts.speed1 = 20 >> 1;
@@ -274,9 +277,8 @@ TEST(Traffic, CutGeoms) {
       ts.congestion2 = 1; // low but not unknown - 0 = unknown
       ts.breakpoint2 = 200;
 
-      std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>
-          cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                        int index, baldr::TrafficSpeed* current) -> void {
+      auto cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
         baldr::GraphId tile_id(tile.header->tile_id);
         auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
         baldr::TrafficSpeed* existing =
@@ -336,15 +338,18 @@ TEST(Traffic, CutGeoms) {
   // Another permutation of subsegments
   {
     {
-      valhalla::baldr::TrafficSpeed ts{valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                       valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                       valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                       valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                       0u,
-                                       0u,
-                                       0u,
-                                       0u,
-                                       0u};
+      valhalla::baldr::TrafficSpeed ts{
+          valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+          valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+          valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+          valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+          0u,
+          0u,
+          0u,
+          0u,
+          0u,
+          0u,
+      };
       ts.overall_speed = 36 >> 1;
 
       ts.speed1 = 20 >> 1;
@@ -357,9 +362,8 @@ TEST(Traffic, CutGeoms) {
 
       ts.speed3 = 60 >> 1;
       ts.congestion3 = 1;
-      std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>
-          cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                        int index, baldr::TrafficSpeed* current) -> void {
+      auto cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
         baldr::GraphId tile_id(tile.header->tile_id);
         auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
         current->breakpoint1 = 255;
@@ -454,15 +458,18 @@ TEST(Traffic, CutGeoms) {
     }
     {
       {
-        valhalla::baldr::TrafficSpeed ts{valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                         valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                         valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                         valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                         0u,
-                                         0u,
-                                         0u,
-                                         0u,
-                                         0u};
+        valhalla::baldr::TrafficSpeed ts{
+            valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+            valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+            valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+            valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+            0u,
+            0u,
+            0u,
+            0u,
+            0u,
+            0u,
+        };
         ts.overall_speed = 36 >> 1;
 
         ts.speed1 = 20 >> 1;
@@ -475,9 +482,8 @@ TEST(Traffic, CutGeoms) {
 
         ts.speed3 = 60 >> 1;
         ts.congestion3 = 50;
-        std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>
-            cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                          int index, baldr::TrafficSpeed* current) -> void {
+        auto cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                           int index, baldr::TrafficSpeed* current) -> void {
           baldr::GraphId tile_id(tile.header->tile_id);
           auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
           current->breakpoint1 = 255;
