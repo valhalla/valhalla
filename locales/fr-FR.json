@@ -39,7 +39,7 @@
         "2": "Serrez à <RELATIVE_DIRECTION> dans <BEGIN_STREET_NAMES>. Continuez sur <STREET_NAMES>.",
         "3": "Serrez à <RELATIVE_DIRECTION> pour rester sur <STREET_NAMES>.",
         "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "5": "Serrez à <RELATIVE_DIRECTION>vers<TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -78,7 +78,7 @@
         "2": "Serrez à <RELATIVE_DIRECTION> dans <BEGIN_STREET_NAMES>.",
         "3": "Serrez à <RELATIVE_DIRECTION> pour rester sur <STREET_NAMES>.",
         "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "5": "Serrez à <RELATIVE_DIRECTION>vers<TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -135,7 +135,7 @@
         "0": "Continuez.",
         "1": "Continuez sur <STREET_NAMES>.",
         "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "3": "Continuez vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -159,13 +159,13 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Continuez.",
+        "0": "Continue.",
         "1": "Continuez pendant <LENGTH>.",
         "2": "Continuez sur <STREET_NAMES>.",
-        "3": "Continuez sur <STREET_NAMES> pendant <LENGTH>.",
+        "3": "Continuez vers <STREET_NAMES> pendant <LENGTH>.",
         "4": "Continue at <JUNCTION_NAME>.",
         "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
-        "6": "Continue toward <TOWARD_SIGN>.",
+        "6": "Continuez vers <TOWARD_SIGN>.",
         "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
       },
       "empty_street_name_labels": [
@@ -183,7 +183,7 @@
         "<MILES> miles",
         "1 mile",
         "un demi mile",
-        "a quarter mile",
+        "un quart de mile",
         "<FEET> pieds",
         "moins de 10 pieds"
       ],
@@ -219,7 +219,7 @@
         "0": "Continuez.",
         "1": "Continuez sur <STREET_NAMES>.",
         "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "3": "Continuez vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -336,26 +336,26 @@
       ],
       "example_phrases": {
         "0": [
-          "Vous arriverez à votre destination."
+          "You will arrive at your destination."
         ],
         "1": [
-          "Vous arriverez à 32 o6 Powelton Avenue."
+          "You will arrive at 32 o6 Powelton Avenue."
         ],
         "2": [
-          "Votre destination sera sur la gauche.",
-          "Votre destination sera sur la droite."
+          "Your destination will be on the left.",
+          "Your destination will be on the right."
         ],
         "3": [
-          "Lancaster Brewing Company sera sur la gauche."
+          "Lancaster Brewing Company will be on the left."
         ]
       }
     },
     "enter_ferry": {
       "phrases": {
-        "0": "Prenez le ferry.",
+        "0": "Prenez le Ferry.",
         "1": "Prenez <STREET_NAMES>.",
-        "2": "Prenez la <STREET_NAMES> <FERRY_LABEL>.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "2": "Prenez <STREET_NAMES> <FERRY_LABEL>.",
+        "3": "Prenez le Ferry vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -383,7 +383,7 @@
         "0": "Prenez le Ferry.",
         "1": "Prenez <STREET_NAMES>.",
         "2": "Prenez <STREET_NAMES> <FERRY_LABEL>.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "3": "Prenez le Ferry vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -410,12 +410,12 @@
       "phrases": {
         "0": "Entrez dans le rond-point.",
         "1": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE> sortie.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "2": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE> sortie dans <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE> sortie dans <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continuez sur <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE>sortie vers<TOWARD_SIGN>.",
+        "5": "Entrez dans le rond-point et prenez la sortie dans <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Entrez dans le rond-point et prenez la sortie dans <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continuez sur <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Entrez sur le rond-point et prenez la sortie vers <TOWARD_SIGN>.",
         "8": "Enter <STREET_NAMES>",
         "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
         "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
@@ -438,9 +438,9 @@
         "10ème"
       ],
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
+        "l'allée",
+        "la piste cyclable",
+        "la piste de vélo de montagne"
       ],
       "example_phrases": {
         "0": [
@@ -506,12 +506,12 @@
       "phrases": {
         "0": "Entrez dans le rond-point.",
         "1": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE> sortie.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "2": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE> sortie dans <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE> sortie dans <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE>sortie vers<TOWARD_SIGN>.",
+        "5": "Entrez dans le rond-point et prenez la sortie dans <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Entrez dans le rond-point et prenez la sortie dans <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Entrez sur le rond-point et prenez la sortie vers <TOWARD_SIGN>.",
         "8": "Enter <STREET_NAMES>",
         "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
         "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
@@ -534,9 +534,9 @@
         "10ème"
       ],
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail"
+        "l'allée",
+        "la piste cyclable",
+        "la piste de vélo de montagne"
       ],
       "example_phrases": {
         "0": [
@@ -616,14 +616,14 @@
         "16": "Prenez la sortie <NUMBER_SIGN>.",
         "17": "Prenez la sortie <BRANCH_SIGN>.",
         "18": "Prenez la sortie <NUMBER_SIGN> dans <BRANCH_SIGN>.",
-        "19": "Prenez la sortie toward <TOWARD_SIGN>.",
-        "20": "Prenez la sortie <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-        "21": "Prenez la sortie <BRANCH_SIGN> toward <TOWARD_SIGN>.",
-        "22": "Prenez la sortie <NUMBER_SIGN> dans <BRANCH_SIGN> toward <TOWARD_SIGN>.",
+        "19": "Prenez la sortie vers <TOWARD_SIGN>.",
+        "20": "Prenez la sortie <NUMBER_SIGN> vers <TOWARD_SIGN>.",
+        "21": "Prenez la sortie <BRANCH_SIGN> vers <TOWARD_SIGN>.",
+        "22": "Prenez la sortie <NUMBER_SIGN> dans <BRANCH_SIGN> vers <TOWARD_SIGN>.",
         "23": "Prenez la sortie <NAME_SIGN>.",
         "25": "Prenez la sortie <NAME_SIGN> dans <BRANCH_SIGN>.",
-        "27": "Prenez la sortie <NAME_SIGN> toward <TOWARD_SIGN>.",
-        "29": "Prenez la sortie <NAME_SIGN> dans <BRANCH_SIGN> toward <TOWARD_SIGN>."
+        "27": "Prenez la sortie <NAME_SIGN> vers <TOWARD_SIGN>.",
+        "29": "Prenez la sortie <NAME_SIGN> dans <BRANCH_SIGN> vers <TOWARD_SIGN>."
       },
       "relative_directions": [
         "gauche",
@@ -710,7 +710,7 @@
         "0": "Quittez le rond-point.",
         "1": "Quittez le rond-point dans <STREET_NAMES>.",
         "2": "Quittez le rond-point dans <BEGIN_STREET_NAMES>. Continuez sur <STREET_NAMES>.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "3": "Quittez le rond-point vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -735,9 +735,9 @@
     "exit_roundabout_verbal": {
       "phrases": {
         "0": "Quittez le rond-point.",
-        "1": "Quittez le rond-point pour <STREET_NAMES>.",
+        "1": "Quittez le rond-point dans <STREET_NAMES>.",
         "2": "Quittez le rond-point pour <BEGIN_STREET_NAMES>.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "3": "Quittez le rond-point vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -1149,7 +1149,7 @@
       ],
       "metric_lengths": [
         "<KILOMETERS> kilomètres",
-        "1 kilomètre",
+        "1 kilometre",
         "<METERS> mètres",
         "moins de 10 mètres"
       ],
@@ -1157,7 +1157,7 @@
         "<MILES> miles",
         "1 mile",
         "un demi mile",
-        "a quarter mile",
+        "un quart de mile",
         "<FEET> pieds",
         "moins de 10 pieds"
       ],
@@ -1573,7 +1573,7 @@
         "<MILES> miles",
         "1 mile",
         "un demi mile",
-        "a quarter mile",
+        "un quart de mile",
         "<FEET> pieds",
         "moins de 10 pieds"
       ],
@@ -1657,8 +1657,8 @@
         "le tram",
         "le metro",
         "le train",
-        " le bus",
-        " le ferry",
+        "le bus",
+        "le ferry",
         "le téléphérique",
         "la gondole",
         "le funiculaire"
@@ -1802,8 +1802,8 @@
         "le tram",
         "le metro",
         "le train",
-        " le bus",
-        " le ferry",
+        "le bus",
+        "le ferry",
         "le téléphérique",
         "la gondole",
         "le funiculaire"
@@ -1831,8 +1831,8 @@
         "le tram",
         "le metro",
         "le train",
-        " le bus",
-        " le ferry",
+        "le bus",
+        "le ferry",
         "le téléphérique",
         "la gondole",
         "le funiculaire"
@@ -1855,8 +1855,8 @@
         "le tram",
         "le metro",
         "le train",
-        " le bus",
-        " le ferry",
+        "le bus",
+        "le ferry",
         "le téléphérique",
         "la gondole",
         "le funiculaire"
@@ -1884,8 +1884,8 @@
         "le tram",
         "le metro",
         "le train",
-        " le bus",
-        " le ferry",
+        "le bus",
+        "le ferry",
         "le téléphérique",
         "la gondole",
         "le funiculaire"
@@ -1908,8 +1908,8 @@
         "le tram",
         "le metro",
         "le train",
-        " le bus",
-        " le ferry",
+        "le bus",
+        "le ferry",
         "le téléphérique",
         "la gondole",
         "le funiculaire"
@@ -2098,7 +2098,7 @@
     "verbal_multi_cue": {
       "phrases": {
         "0": "<CURRENT_VERBAL_CUE> Ensuite, <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+        "1": "<CURRENT_VERBAL_CUE> Ensuite, dans <LENGTH>, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
         "<KILOMETERS> kilomètres",
@@ -2110,7 +2110,7 @@
         "<MILES> miles",
         "1 mile",
         "un demi mile",
-        "a quarter mile",
+        "un quart de mile",
         "<FEET> pieds",
         "moins de 10 pieds"
       ],
@@ -2137,7 +2137,7 @@
         "<MILES> miles",
         "1 mile",
         "un demi mile",
-        "a quarter mile",
+        "un quart de mile",
         "<FEET> pieds",
         "moins de 10 pieds"
       ],
