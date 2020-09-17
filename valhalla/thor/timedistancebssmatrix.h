@@ -39,7 +39,8 @@ public:
    * @param  locations     List of locations.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  mode_costing  Costing methods.
-   * @param  mode          Travel mode to use.
+   * @param  mode          Travel mode to use. Actually It doesn't make sense in matrix_bss, because
+   * the travel mode must be pedestrian and bicycle
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance from origin index to all other locations
    */
@@ -48,7 +49,7 @@ public:
             const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
             baldr::GraphReader& graphreader,
             const sif::mode_costing_t& mode_costing,
-            const sif::TravelMode mode,
+            const sif::TravelMode /*mode*/,
             const float max_matrix_distance);
 
   /**
@@ -58,7 +59,8 @@ public:
    * @param  locations     List of locations.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  mode_costing  Costing methods.
-   * @param  mode          Travel mode to use.
+   * @param  mode          Travel mode to use. Actually It doesn't make sense in matrix_bss, because
+   * the travel mode must be pedestrian and bicycle
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance to the destination index from all other locations
    */
@@ -67,7 +69,7 @@ public:
             const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
             baldr::GraphReader& graphreader,
             const sif::mode_costing_t& mode_costing,
-            const sif::TravelMode mode,
+            const sif::TravelMode /*mode*/,
             const float max_matrix_distance);
 
   /**
@@ -76,7 +78,8 @@ public:
    * @param  locations     List of locations.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  mode_costing  Costing methods.
-   * @param  mode          Travel mode to use.
+   * @param  mode          Travel mode to use. Actually It doesn't make sense in matrix_bss, because
+   * the travel mode must be pedestrian and bicycle
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance between all pairs of locations
    */
@@ -84,7 +87,7 @@ public:
   ManyToMany(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
              baldr::GraphReader& graphreader,
              const sif::mode_costing_t& mode_costing,
-             const sif::TravelMode mode,
+             const sif::TravelMode /*mode*/,
              const float max_matrix_distance);
 
   /**
@@ -94,7 +97,8 @@ public:
    * @param  target_location_list  List of target/destination locations.
    * @param  graphreader           Graph reader for accessing routing graph.
    * @param  mode_costing          Costing methods.
-   * @param  mode                  Travel mode to use.
+   * @param  mode                  Travel mode to use. Actually It doesn't make sense in matrix_bss,
+   * because the travel mode must be pedestrian and bicycle
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance from origin index to all other locations
    */
@@ -103,7 +107,7 @@ public:
                  const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
                  baldr::GraphReader& graphreader,
                  const sif::mode_costing_t& mode_costing,
-                 const sif::TravelMode mode,
+                 const sif::TravelMode /*mode*/,
                  const float max_matrix_distance);
 
   /**
@@ -156,6 +160,8 @@ protected:
    * @param  pred_idx     Predecessor index into the EdgeLabel list.
    * @param  from_transition True if this method is called from a transition
    *                         edge.
+   * @param  from_bss     Is this Expansion done from a bike share station?
+   * @param  mode         the current travel mode
    */
   void ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
@@ -176,6 +182,8 @@ protected:
    * @param  pred_idx     Predecessor index into the EdgeLabel list.
    * @param  from_transition True if this method is called from a transition
    *                         edge.
+   * @param  from_bss     Is this Expansion done from a bike share station?
+   * @param  mode         the current travel mode
    */
   void ExpandReverse(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,

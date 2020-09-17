@@ -162,7 +162,7 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::OneToMany(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const TravelMode mode,
+    const TravelMode /*mode*/,
     const float max_matrix_distance) {
 
   pedestrian_costing_ = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
@@ -358,7 +358,7 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ManyToOne(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const TravelMode mode,
+    const TravelMode /*mode*/,
     const float max_matrix_distance) {
 
   pedestrian_costing_ = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
@@ -443,9 +443,9 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ManyToMany(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const sif::TravelMode mode,
+    const sif::TravelMode _,
     const float max_matrix_distance) {
-  return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance);
+  return SourceToTarget(locations, locations, graphreader, mode_costing, _, max_matrix_distance);
 }
 
 std::vector<TimeDistance> TimeDistanceBSSMatrix::SourceToTarget(
@@ -453,21 +453,21 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::SourceToTarget(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     baldr::GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const sif::TravelMode mode,
+    const sif::TravelMode _,
     const float max_matrix_distance) {
   // Run a series of one to many calls and concatenate the results.
   std::vector<TimeDistance> many_to_many;
   if (source_location_list.size() <= target_location_list.size()) {
     for (const auto& origin : source_location_list) {
-      std::vector<TimeDistance> td = OneToMany(origin, target_location_list, graphreader,
-                                               mode_costing, mode, max_matrix_distance);
+      std::vector<TimeDistance> td =
+          OneToMany(origin, target_location_list, graphreader, mode_costing, _, max_matrix_distance);
       many_to_many.insert(many_to_many.end(), td.begin(), td.end());
       Clear();
     }
   } else {
     for (const auto& destination : target_location_list) {
       std::vector<TimeDistance> td = ManyToOne(destination, source_location_list, graphreader,
-                                               mode_costing, mode, max_matrix_distance);
+                                               mode_costing, _, max_matrix_distance);
       many_to_many.insert(many_to_many.end(), td.begin(), td.end());
       Clear();
     }
