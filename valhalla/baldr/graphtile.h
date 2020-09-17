@@ -324,9 +324,11 @@ public:
    * Convenience method to get the names for an edge given the offset to the
    * edge information.
    * @param  edgeinfo_offset  Offset to the edge info.
+   * @param  only_tagged_names  Bool indicating whether or not to return only the tagged names
+   *
    * @return  Returns a list (vector) of names.
    */
-  std::vector<std::string> GetNames(const uint32_t edgeinfo_offset) const;
+  std::vector<std::string> GetNames(const uint32_t edgeinfo_offset, bool only_tagged_names = false) const;
 
   /**
    * Convenience method to get the types for the names given the offset to the
