@@ -255,26 +255,26 @@ public:
   virtual uint8_t travel_type() const;
 
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by truck.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
-    // Throw back a lambda that checks the access for this type of costing
+  float Filter(const baldr::DirectedEdge* edge,
+               const baldr::GraphId& edgeid,
+               const baldr::GraphTile* tile) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    return [access_mask, ignore_oneways = ignore_oneways_](const baldr::DirectedEdge* edge) {
-      bool accessable = (edge->forwardaccess() & access_mask) ||
-                        (ignore_oneways && (edge->reverseaccess() & access_mask));
+    bool accessible = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
 
-      if (edge->is_shortcut() || !accessable || edge->bss_connection()) {
-        return 0.0f;
-      } else {
-        // TODO - use classification/use to alter the factor
-        return 1.0f;
-      }
-    };
+    if (edge->is_shortcut() || !accessible || edge->bss_connection() ||
+        IsClosedDueToTraffic(edgeid, tile)) {
+      return 0.0f;
+    } else {
+      // TODO - use classification/use to alter the factor
+      return 1.0f;
+    }
   }
 
 public:
@@ -398,15 +398,12 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
                                const uint64_t current_time,
                                const uint32_t tz_index,
                                int& restriction_idx) const {
-  if (flow_mask_ & kCurrentFlowMask) {
-    if (tile->IsClosedDueToTraffic(edgeid))
-      return false;
-  }
   // Check access, U-turn, and simple turn restriction.
-  if (!IsAccessable(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+  if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      IsClosedDueToTraffic(edgeid, tile)) {
     return false;
   }
 
@@ -424,15 +421,12 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                const uint64_t current_time,
                                const uint32_t tz_index,
                                int& restriction_idx) const {
-  if (flow_mask_ & kCurrentFlowMask) {
-    if (tile->IsClosedDueToTraffic(opp_edgeid))
-      return false;
-  }
   // Check access, U-turn, and simple turn restriction.
-  if (!IsAccessable(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+  if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
+      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
+      IsClosedDueToTraffic(opp_edgeid, tile)) {
     return false;
   }
 
