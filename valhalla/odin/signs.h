@@ -63,23 +63,23 @@ public:
   const std::vector<Sign>& guide_branch_list() const;
   std::vector<Sign>* mutable_guide_branch_list();
 
-  const std::string GetGuideBranchString(uint32_t max_count = 0,
-                                         bool limit_by_consecutive_count = false,
-                                         const std::string& delim = "/",
-                                         const VerbalTextFormatter* verbal_formatter = nullptr) const;
+  std::string GetGuideBranchString(uint32_t max_count = 0,
+                                   bool limit_by_consecutive_count = false,
+                                   const std::string& delim = "/",
+                                   const VerbalTextFormatter* verbal_formatter = nullptr) const;
 
   const std::vector<Sign>& guide_toward_list() const;
   std::vector<Sign>* mutable_guide_toward_list();
 
-  const std::string GetGuideTowardString(uint32_t max_count = 0,
-                                         bool limit_by_consecutive_count = false,
-                                         const std::string& delim = "/",
-                                         const VerbalTextFormatter* verbal_formatter = nullptr) const;
-
-  const std::string GetGuideString(uint32_t max_count = 0,
+  std::string GetGuideTowardString(uint32_t max_count = 0,
                                    bool limit_by_consecutive_count = false,
                                    const std::string& delim = "/",
                                    const VerbalTextFormatter* verbal_formatter = nullptr) const;
+
+  std::string GetGuideString(uint32_t max_count = 0,
+                             bool limit_by_consecutive_count = false,
+                             const std::string& delim = "/",
+                             const VerbalTextFormatter* verbal_formatter = nullptr) const;
 
   std::vector<Sign> GetGuideSigns(uint32_t max_count = 0,
                                   bool limit_by_consecutive_count = false) const;
@@ -87,11 +87,10 @@ public:
   const std::vector<Sign>& junction_name_list() const;
   std::vector<Sign>* mutable_junction_name_list();
 
-  const std::string
-  GetJunctionNameString(uint32_t max_count = 0,
-                        bool limit_by_consecutive_count = false,
-                        const std::string& delim = "/",
-                        const VerbalTextFormatter* verbal_formatter = nullptr) const;
+  std::string GetJunctionNameString(uint32_t max_count = 0,
+                                    bool limit_by_consecutive_count = false,
+                                    const std::string& delim = "/",
+                                    const VerbalTextFormatter* verbal_formatter = nullptr) const;
 
   bool HasExit() const;
   bool HasExitNumber() const;
