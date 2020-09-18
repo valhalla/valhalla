@@ -325,6 +325,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
       trip_edge_name->set_is_route_number(name_and_type.second);
     }
   }
+
   // Add tagged names to the edge
   auto tagged_names_and_types = edgeinfo.GetTaggedNamesAndTypes();
   for (const auto& tagged_name_and_type : tagged_names_and_types) {

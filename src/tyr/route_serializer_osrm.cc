@@ -552,11 +552,9 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       std::vector<std::string> classes;
       if (curr_edge->tunnel()) {
         classes.push_back("tunnel");
-        for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
-          if (curr_edge->tagged_name().size() > 0 &&
-              curr_edge->tagged_name().Get(m).type() == TaggedName_Type_kTunnel) {
-            intersection->emplace("tunnel_name", curr_edge->tagged_name().Get(m).value());
-          }
+        if (!curr_edge->tagged_name().empty() &&
+            curr_edge->tagged_name().Get(0).type() == TaggedName_Type_kTunnel) {
+          intersection->emplace("tunnel_name", curr_edge->tagged_name().Get(0).value());
         }
       }
 
