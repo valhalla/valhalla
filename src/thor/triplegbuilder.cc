@@ -91,21 +91,45 @@ void AssignAdmins(const AttributesController& controller,
   }
 }
 
+/**
+ * Chops up the shape for an edge so that we have shape points where speeds change along the edge
+ * and where incidents occur along the edge. Also sets the various per shape point attributes
+ * such as time, distance, speed. Also updates the incidents list on the edge with their shape indices
+ * @param controller
+ * @param tile
+ * @param edge
+ * @param shape
+ * @param shape_begin
+ * @param leg
+ * @param src_pct
+ * @param tgt_pct
+ * @param edge_seconds
+ * @param cut_for_traffic
+ * @param incidents
+ */
 void SetShapeAttributes(const AttributesController& controller,
                         const GraphTile* tile,
                         const DirectedEdge* edge,
                         std::vector<PointLL>& shape,
                         size_t shape_begin,
-                        TripLeg& trip_path,
+                        TripLeg& leg,
                         double src_pct,
                         double tgt_pct,
                         double edge_seconds,
-                        bool cut_for_traffic) {
+                        bool cut_for_traffic,
+                        const std::vector<baldr::GraphReader::Incident>& incidents) {
   // TODO: if this is a transit edge then the costing will throw
 
-  if (trip_path.has_shape_attributes()) {
-    // A list of percent along the edge and corresponding speed (meters per second)
-    std::vector<std::tuple<double, double>> speeds;
+  // convenient for bundling info about the spots where we cut the shape
+  struct cut_t {
+    double percent_along;
+    double speed; // meters per second
+    std::vector<const baldr::GraphReader::Incident*> incidents;
+  };
+
+  if (leg.has_shape_attributes()) {
+    // A list of percent along the edge, corresponding speed (meters per second), incident id
+    std::vector<cut_t> cuts;
     double speed = (edge->length() * (tgt_pct - src_pct)) / edge_seconds;
     if (cut_for_traffic) {
       // TODO: we'd like to use the speed from traffic here but because there are synchronization
@@ -114,72 +138,117 @@ void SetShapeAttributes(const AttributesController& controller,
       // cutting for now
       const auto& traffic_speed = tile->trafficspeed(edge);
       if (traffic_speed.breakpoint1 > 0) {
-        speeds.emplace_back(traffic_speed.breakpoint1 / 255.0, speed);
+        cuts.emplace_back(cut_t{traffic_speed.breakpoint1 / 255.0, speed});
         if (traffic_speed.breakpoint2 > 0) {
-          speeds.emplace_back(traffic_speed.breakpoint2 / 255.0, speed);
+          cuts.emplace_back(cut_t{traffic_speed.breakpoint2 / 255.0, speed});
           if (traffic_speed.speed3 != UNKNOWN_TRAFFIC_SPEED_RAW) {
-            speeds.emplace_back(1, speed);
+            cuts.emplace_back(cut_t{1, speed});
           }
         }
       }
 
-      // TODO Inject and cut for incidents here
-    }
-    // Cap the end so that we always have something to use
-    if (speeds.empty() || std::get<0>(speeds.back()) < tgt_pct) {
-      speeds.emplace_back(tgt_pct, speed);
+      // sort the start and ends of the incidents along this edge
+      for (const auto& i : incidents) {
+        // if the incident is actually on the part of the edge we are using
+        if (i.start_offset > tgt_pct || i.end_offset < src_pct) {
+          // insert the start point and end points
+          for (auto offset : {std::max(i.start_offset, src_pct), std::min(i.end_offset, tgt_pct)}) {
+            // where does it go in the sorted list
+            auto itr = std::partition_point(cuts.begin(), cuts.end(), [offset](const cut_t& c) {
+              return c.percent_along < offset;
+            });
+            // there is already a cut here so we just add the incident
+            if (itr != cuts.end() && itr->percent_along == offset) {
+              itr->incidents.push_back(&i);
+            } // there wasnt a cut here so we need to make one
+            else {
+              cuts.insert(itr, cut_t{offset, itr == cuts.end() ? speed : itr->speed, {&i}});
+            }
+          }
+        }
+      }
     }
 
-    // Set the shape attributes
+    // Cap the end so that we always have something to use
+    if (cuts.empty() || cuts.back().percent_along < tgt_pct) {
+      cuts.emplace_back(cut_t{tgt_pct, speed});
+    }
+
+    // Lambda used to find the incidents with the same id, could do something more exotic
+    // to avoid linear scan, like keeping a separate lookup outside of the pbf
+    auto find_incident = [&leg](uint64_t id) -> valhalla::TripLeg::Incident* {
+      auto found = std::find_if(leg.mutable_incidents()->begin(), leg.mutable_incidents()->end(),
+                                [id](const valhalla::TripLeg::Incident& i) { return i.id() == id; });
+      return found == leg.mutable_incidents()->end() ? nullptr : &(*found);
+    };
+
+    // Find the first cut to the right of where we start on this edge
     double distance_total_pct = src_pct;
-    auto speed_itr = std::find_if(speeds.cbegin(), speeds.cend(),
-                                  [distance_total_pct](const decltype(speeds)::value_type& s) {
-                                    return distance_total_pct <= std::get<0>(s);
-                                  });
-    assert(speed_itr != speeds.cend());
+    auto cut_itr = std::find_if(cuts.cbegin(), cuts.cend(),
+                                [distance_total_pct](const decltype(cuts)::value_type& s) {
+                                  return distance_total_pct <= s.percent_along;
+                                });
+    assert(cut_itr != cuts.cend());
+
+    // Set the shape attributes
     for (auto i = shape_begin + 1; i < shape.size(); ++i) {
-      // If there is a change in speed here we need to make a new shape point and continue from
-      // there
+      // when speed changes we need to make a new shape point and continue from there
       double distance = shape[i].Distance(shape[i - 1]); // meters
       double distance_pct = distance / edge->length();
       double next_total = distance_total_pct + distance_pct;
       size_t shift = 0;
-      if (next_total > std::get<0>(*speed_itr) && std::next(speed_itr) != speeds.cend()) {
+      if (next_total > cut_itr->percent_along && std::next(cut_itr) != cuts.cend()) {
         // Calculate where the cut point should be between these two existing shape points
-        auto coef =
-            (std::get<0>(*speed_itr) - distance_total_pct) / (next_total - distance_total_pct);
+        auto coef = (cut_itr->percent_along - distance_total_pct) / (next_total - distance_total_pct);
         auto point = shape[i - 1].PointAlongSegment(shape[i], coef);
         shape.insert(shape.begin() + i, point);
-        next_total = std::get<0>(*speed_itr);
+        next_total = cut_itr->percent_along;
         distance *= coef;
         shift = 1;
       }
       distance_total_pct = next_total;
-      double time = distance / std::get<1>(*speed_itr); // seconds
+      double time = distance / cut_itr->speed; // seconds
 
       // Set shape attributes time per shape point if requested
       if (controller.attributes.at(kShapeAttributesTime)) {
         // convert time to milliseconds and then round to an integer
-        trip_path.mutable_shape_attributes()->add_time((time * kMillisecondPerSec) + 0.5);
+        leg.mutable_shape_attributes()->add_time((time * kMillisecondPerSec) + 0.5);
       }
 
       // Set shape attributes length per shape point if requested
       if (controller.attributes.at(kShapeAttributesLength)) {
         // convert length to decimeters and then round to an integer
-        trip_path.mutable_shape_attributes()->add_length((distance * kDecimeterPerMeter) + 0.5);
+        leg.mutable_shape_attributes()->add_length((distance * kDecimeterPerMeter) + 0.5);
       }
 
       // Set shape attributes speed per shape point if requested
       if (controller.attributes.at(kShapeAttributesSpeed)) {
         // convert speed to decimeters per sec and then round to an integer
-        trip_path.mutable_shape_attributes()->add_speed((distance * kDecimeterPerMeter / time) + 0.5);
+        leg.mutable_shape_attributes()->add_speed((distance * kDecimeterPerMeter / time) + 0.5);
+      }
+
+      // Set the incidents
+      if (shift && controller.attributes.at(kIncidents) && !cut_itr->incidents.empty()) {
+        for (const auto* incident : cut_itr->incidents) {
+          // Are we continuing an incident (this could be a hash look up)
+          if (auto* found = find_incident(incident->id)) {
+            found->set_end_shape_index(shape.size() - 1);
+          } // We are starting a new incident
+          else {
+            auto* new_incident = leg.mutable_incidents()->Add();
+            new_incident->set_id(incident->id);
+            new_incident->set_begin_shape_index(shape.size() - 1);
+            new_incident->set_end_shape_index(shape.size() - 1);
+            // TODO: copy the rest of the metadata
+          }
+        }
       }
 
       // If we just cut the shape we need to go on to the next marker only after setting the attribs
-      std::advance(speed_itr, shift);
+      std::advance(cut_itr, shift);
     }
   }
-}
+} // namespace
 
 // Set the bounding box (min,max lat,lon) for the shape
 void SetBoundingBox(TripLeg& trip_path, std::vector<PointLL>& shape) {
@@ -778,10 +847,6 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     }
   }
 
-  if (controller.attributes.at(kNodeIncidents)) {
-    addIncidents(*trip_edge, graphreader, edge);
-  }
-
   return trip_edge;
 }
 
@@ -864,12 +929,7 @@ void AccumulateRecostingInfoForward(const valhalla::Options& options,
   }
 }
 
-bool HasIncident(const valhalla::TripLeg::Node& node, uint64_t id) {
-  return std::find_if(node.incidents().begin(), node.incidents().end(),
-                      [id](const valhalla::TripLeg::Node::Incident& i) { return i.id() == id; }) !=
-         node.incidents().end();
-}
-
+/*
 void CutEdgeForIncidents(const GraphTile* tile,
                          const DirectedEdge* edge,
                          const GraphId& edge_id,
@@ -918,7 +978,7 @@ void CutEdgeForIncidents(const GraphTile* tile,
     bool new_cut = current_cut != event.first;
   }
 }
-
+*/
 } // namespace
 
 namespace valhalla {
@@ -1026,7 +1086,6 @@ void TripLegBuilder::Build(
   }
 
   // Iterate through path
-  bool is_first_edge = true;
   uint32_t prior_opp_local_index = -1;
   std::vector<PointLL> trip_shape;
   uint64_t osmchangeset = 0;
@@ -1115,17 +1174,15 @@ void TripLegBuilder::Build(
                     graphreader, time_info.second_of_week, startnode.id(), node->named_intersection(),
                     start_tile, edge_itr->restriction_index);
 
-    // Get the shape and set shape indexes (directed edge forward flag
-    // determines whether shape is traversed forward or reverse).
-    auto edgeinfo = graphtile->edgeinfo(directededge->edgeinfo_offset());
-    uint32_t begin_index = (is_first_edge) ? 0 : trip_shape.size() - 1;
-
     // some information regarding shape/length trimming
+    auto is_first_edge = edge_itr == path_begin;
     auto is_last_edge = edge_itr == (path_end - 1);
     float trim_start_pct = is_first_edge ? start_pct : 0;
     float trim_end_pct = is_last_edge ? end_pct : 1;
 
     // Process the shape for edges where a route discontinuity occurs
+    uint32_t begin_index = (is_first_edge) ? 0 : trip_shape.size() - 1;
+    auto edgeinfo = graphtile->edgeinfo(directededge->edgeinfo_offset());
     if (edge_trimming && !edge_trimming->empty() && edge_trimming->count(edge_index) > 0) {
       // Get edge shape and reverse it if directed edge is not forward.
       auto edge_shape = edgeinfo.shape();
@@ -1226,9 +1283,12 @@ void TripLegBuilder::Build(
       edge_seconds -= std::prev(edge_itr)->elapsed_cost.secs;
 
     // Set shape attributes
+    auto incidents = controller.attributes.at(kIncidents)
+                         ? graphreader.GetIncidents(edge_itr->edgeid, graphtile)
+                         : std::vector<GraphReader::Incident>{};
     SetShapeAttributes(controller, graphtile, directededge, trip_shape, begin_index, trip_path,
                        trim_start_pct, trim_end_pct, edge_seconds,
-                       costing->flow_mask() & kCurrentFlowMask);
+                       costing->flow_mask() & kCurrentFlowMask, incidents);
 
     // Set begin shape index if requested
     if (controller.attributes.at(kEdgeBeginShapeIndex)) {
@@ -1268,9 +1328,6 @@ void TripLegBuilder::Build(
 
     // Save the index of the opposing local directed edge at the end node
     prior_opp_local_index = directededge->opp_local_idx();
-
-    // set is_first edge to false
-    is_first_edge = false;
   }
 
   // Add the last node

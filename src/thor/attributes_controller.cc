@@ -75,7 +75,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeIsUrban, false},
 
     // Node keys
-    {kNodeIncidents, false},
+    {kIncidents, false},
     {kNodeIntersectingEdgeBeginHeading, true},
     {kNodeIntersectingEdgeFromEdgeNameConsistency, true},
     {kNodeIntersectingEdgeToEdgeNameConsistency, true},

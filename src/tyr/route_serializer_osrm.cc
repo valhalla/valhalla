@@ -334,36 +334,6 @@ struct IntersectionEdges {
   }
 };
 
-// Forward declaration
-valhalla::baldr::json::MapPtr serializeIncident(const TripLeg_Node_Incident& incident);
-
-// Serializes incidents and adds to json-document
-void addsIncidents(
-    const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident>& incidents,
-    json::Jmap& doc) {
-  if (incidents.size() == 0) {
-    // No incidents, nothing to do
-    return;
-  }
-  json::ArrayPtr serialized_incidents = std::shared_ptr<json::Jarray>(new json::Jarray());
-  {
-    // Bring up any already existing array
-    auto existing = doc.find("incidents");
-    if (existing != doc.end()) {
-      if (auto* ptr = boost::get<std::shared_ptr<valhalla::baldr::json::Jarray>>(&existing->second)) {
-        serialized_incidents = *ptr;
-      } else {
-        throw std::logic_error("Invalid state: stored ptr should not be null");
-      }
-    }
-  }
-  for (const auto& incident : incidents) {
-    auto json_incident = serializeIncident(incident);
-    serialized_incidents->emplace_back(json_incident);
-  }
-  doc.emplace("incidents", serialized_incidents);
-}
-
 // Add intersections along a step/maneuver.
 json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
                              valhalla::odin::EnhancedTripLeg* etp,
@@ -420,10 +390,6 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         intersection->emplace("duration", json::fp_t{secs, 3});
       if (cost > 0)
         intersection->emplace("weight", json::fp_t{cost, 3});
-    }
-
-    if (node->incidents().size() > 0) {
-      addsIncidents(node->incidents(), *intersection);
     }
 
     // TODO: add recosted durations to the intersection?
@@ -594,7 +560,7 @@ std::string exits(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
   return exits;
 }
 
-valhalla::baldr::json::MapPtr serializeIncident(const TripLeg_Node_Incident& incident) {
+valhalla::baldr::json::MapPtr serializeIncident(const TripLeg::Incident& incident) {
   auto metadata_json = json::map({});
 
   metadata_json->emplace("id", incident.id());
@@ -610,11 +576,29 @@ valhalla::baldr::json::MapPtr serializeIncident(const TripLeg_Node_Incident& inc
   if (incident.type()) {
     metadata_json->emplace("incident_type", valhalla::incidentTypeToString(incident.type()));
   }
-  if (!incident.description().empty()) {
+  if (incident.has_description() && !incident.description().empty()) {
     metadata_json->emplace("description", incident.description());
+  }
+  if (incident.has_begin_shape_index()) {
+    metadata_json->emplace("geometry_index_start",
+                           static_cast<uint64_t>(incident.begin_shape_index()));
+  }
+  if (incident.has_end_shape_index()) {
+    metadata_json->emplace("geometry_index_end", static_cast<uint64_t>(incident.end_shape_index()));
   }
 
   return metadata_json;
+}
+
+// Serializes incidents and adds to json-document
+valhalla::baldr::json::ArrayPtr
+serializeIncidents(const google::protobuf::RepeatedPtrField<valhalla::TripLeg::Incident>& incidents) {
+  auto serialized_incidents = json::array({});
+  for (const auto& incident : incidents) {
+    auto json_incident = serializeIncident(incident);
+    serialized_incidents->emplace_back(json_incident);
+  }
+  return serialized_incidents;
 }
 
 // Compile and return the refs of the specified list
@@ -1388,6 +1372,13 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
     // Add steps to the leg
     output_leg->emplace("steps", steps);
+
+    // Add incidents to the leg
+    if (path_leg.incidents_size()) {
+      output_leg->emplace("incidents", serializeIncidents(path_leg.incidents()));
+    }
+
+    // Keep the leg
     output_legs->emplace_back(output_leg);
     leg++;
   }

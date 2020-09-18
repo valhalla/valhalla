@@ -763,8 +763,8 @@ public:
   // TODO: temporary until we have real incidents loaded from incident loading singleton
   struct Incident {
     uint32_t edge_index;
-    float start_offset;
-    float end_offset;
+    double start_offset;
+    double end_offset;
     uint64_t id;
   };
   using incident_tile_t = std::vector<Incident>;
