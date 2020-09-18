@@ -361,12 +361,13 @@ TEST(AstarBss, test_BSSConnections_on_Pedestrian_and_Bicycle) {
                                           "Rue du Temple",
                                           "Place de la République",
                                           "Place de la République",
+                                          "Boulevard de Magenta",
                                           "Rue du Château d'Eau",
                                           "Rue du Château d'Eau"};
 
   const std::map<size_t, BssManeuverType>&
       expected_bss_maneuver{{2, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
-                            {10, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
+                            {11, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
 
   std::string expected_shape =
       "c~le|AykdoCwDzIsArCkAvC]v@iBpEeAoAdAnAhBqE\\w@jAwC}c@_i@{AeBs@mCsF{T_@aB]uAyQez@e@eC{Ar@ig@dX{t@``@wCzAyBuH}EeLiCvEmD|Ga]~q@sFmHsPsTu@eA{AoBe@o@e@o@}D_CcB}@wChC_YfVt@hCjA~Dt@zB?nBeA|BV\\d@j@yBpE";
