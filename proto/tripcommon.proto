@@ -145,3 +145,12 @@ enum RoadClass {
   kResidential = 6;
   kServiceOther = 7;
 }
+
+message TaggedName {
+  enum Type {
+    kTunnel = 1;
+    kBridge = 2;
+  }
+  optional string value = 1;   // The actual tagged name value, examples: Ted Williams Tunnel
+  optional Type type = 2;      // The type of tagged name (tunnel or bridge)
+}
