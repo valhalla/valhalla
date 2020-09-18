@@ -210,13 +210,13 @@ public:
   void set_tee(bool tee);
 
   TrailType trail_type() const;
+  void set_trail_type(const TrailType trail);
   bool is_walkway() const;
   bool unnamed_walkway() const;
   bool is_cycleway() const;
   bool unnamed_cycleway() const;
   bool is_mountain_bike_trail() const;
   bool unnamed_mountain_bike_trail() const;
-  void set_trail_type(const TrailType trail);
 
   bool imminent_verbal_multi_cue() const;
   void set_imminent_verbal_multi_cue(bool imminent_verbal_multi_cue);
