@@ -765,6 +765,7 @@ public:
     uint32_t edge_index;
     float start_offset;
     float end_offset;
+    uint64_t id;
   };
   using incident_tile_t = std::vector<Incident>;
 

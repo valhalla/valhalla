@@ -864,27 +864,59 @@ void AccumulateRecostingInfoForward(const valhalla::Options& options,
   }
 }
 
+bool HasIncident(const valhalla::TripLeg::Node& node, uint64_t id) {
+  return std::find_if(node.incidents().begin(), node.incidents().end(),
+                      [id](const valhalla::TripLeg::Node::Incident& i) { return i.id() == id; }) !=
+         node.incidents().end();
+}
+
 void CutEdgeForIncidents(const GraphTile* tile,
                          const DirectedEdge* edge,
                          const GraphId& edge_id,
                          GraphReader& reader,
-                         valhalla::TripLeg& leg) {
+                         valhalla::TripLeg& leg,
+                         std::vector<PointLL>& shape) {
   // get the incidents
   auto incidents = reader.GetIncidents(edge_id, tile);
   if (incidents.empty())
     return;
 
-  // loop over incidents start and end points, sorting start and end positions
-  // where incidents end the incident is removed from the incident vector
-  // std::vector<std::pair<float, incident_idx>> incidents
+  // sort the start and ends of the incidents along this edge, if its a partial
+  std::vector<std::pair<float, uint64_t>> events;
+  events.reserve(incidents.size() * 2);
+  const auto& trip_edge = leg.node().rbegin()->edge();
+  for (const auto& i : incidents) {
+    // if the incident is actually on the part of the edge we are using
+    if (i.start_offset > trip_edge.target_along_edge() ||
+        i.end_offset < trip_edge.source_along_edge()) {
+      events.emplace_back(std::max(i.start_offset, trip_edge.source_along_edge()), i.id);
+      events.emplace_back(std::min(i.end_offset, trip_edge.target_along_edge()), i.id);
+    }
+  }
+  std::sort(events.begin(), events.end());
 
-  // loop over incident vector above, cut the shape at each location
-  // for those locations which already align with the shape, do not cut
-  // store the incidents on the newly cut nodes
-  // at each cut we must modify the length, shapeattributes, begin and end shape index, and time on
-  // the new and old edge skipping those that start before the start pct of this edge and skipping
-  // those that end after the end pct of this edge for those that are right on (especially first or
-  // last shape point) dont cut just mark for all other you cut a new edge
+  // go to the previous node in the path and copy the incidents we will be continuing
+  for (size_t i = 0;
+       leg.node_size() > 1 && i < events.size() && events[i].first == trip_edge.source_along_edge();
+       ++i) {
+    if (HasIncident(*(leg.node().rbegin() + 1), events[i].second)) {
+      auto* incident = leg.mutable_node()->rbegin()->add_incidents();
+      incident->set_id(events[i].second);
+    }
+  }
+
+  // scan along the cut locations and keep track of which incidents are in play and not
+  // each cut affects length, time, cost, shape attributes, begin/end shape index, begin/end angle
+  std::unordered_set<decltype(events)::value_type::second_type> current_incidents;
+  current_incidents.reserve(incidents.size());
+  float current_cut = trip_edge.source_along_edge();
+  for (size_t i = 0; i < events.size(); ++i) {
+    const auto& event = events[i];
+    // is this incident is starting or ending?
+    bool new_incident = current_incidents.insert(event.second).second;
+    // is this a new place we need to cut or is it another incident at the same cut
+    bool new_cut = current_cut != event.first;
+  }
 }
 
 } // namespace
@@ -1147,7 +1179,6 @@ void TripLegBuilder::Build(
       if (edge_begin_info.trim && !is_first_edge) {
         ++begin_index;
       }
-
     } // We need to clip the shape if its at the beginning or end
     else if (is_first_edge || is_last_edge) {
       // Get edge shape and reverse it if directed edge is not forward.
@@ -1218,8 +1249,6 @@ void TripLegBuilder::Build(
       AddIntersectingEdges(controller, start_tile, node, directededge, prev_de, prior_opp_local_index,
                            graphreader, trip_node);
     }
-
-    // TODO: cut this edge where incidents occur
 
     ////////////// Prepare for the next iteration
 
