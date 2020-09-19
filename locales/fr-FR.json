@@ -159,7 +159,7 @@
     },
     "continue_verbal": {
       "phrases": {
-        "0": "Continue.",
+        "0": "Continuez.",
         "1": "Continuez pendant <LENGTH>.",
         "2": "Continuez sur <STREET_NAMES>.",
         "3": "Continuez vers <STREET_NAMES> pendant <LENGTH>.",
@@ -336,26 +336,26 @@
       ],
       "example_phrases": {
         "0": [
-          "You will arrive at your destination."
+          "Vous arriverez à votre destination."
         ],
         "1": [
-          "You will arrive at 32 o6 Powelton Avenue."
+          "Vous arriverez à 32 o6 Powelton Avenue."
         ],
         "2": [
-          "Your destination will be on the left.",
-          "Your destination will be on the right."
+          "Votre destination sera sur la gauche.",
+          "Votre destination sera sur la droite."
         ],
         "3": [
-          "Lancaster Brewing Company will be on the left."
+          "Lancaster Brewing Company sera sur la gauche."
         ]
       }
     },
     "enter_ferry": {
       "phrases": {
-        "0": "Prenez le Ferry.",
+        "0": "Prenez le ferry.",
         "1": "Prenez <STREET_NAMES>.",
         "2": "Prenez <STREET_NAMES> <FERRY_LABEL>.",
-        "3": "Prenez le Ferry vers <TOWARD_SIGN>."
+        "3": "Prenez le ferry vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -365,7 +365,7 @@
       "ferry_label": "Ferry",
       "example_phrases": {
         "0": [
-          "Prenez le Ferry."
+          "Prenez le ferry."
         ],
         "1": [
           "Prenez Millersburg Ferry."
@@ -412,7 +412,7 @@
         "1": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE> sortie.",
         "2": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE> sortie dans <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "3": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE> sortie dans <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continuez sur <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE>sortie vers<TOWARD_SIGN>.",
+        "4": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE> sortie vers <TOWARD_SIGN>.",
         "5": "Entrez dans le rond-point et prenez la sortie dans <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "6": "Entrez dans le rond-point et prenez la sortie dans <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continuez sur <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "7": "Entrez sur le rond-point et prenez la sortie vers <TOWARD_SIGN>.",
@@ -508,7 +508,7 @@
         "1": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE> sortie.",
         "2": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE> sortie dans <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "3": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE> sortie dans <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE>sortie vers<TOWARD_SIGN>.",
+        "4": "Entrez dans le rond-point et prenez la <ORDINAL_VALUE> sortie vers <TOWARD_SIGN>.",
         "5": "Entrez dans le rond-point et prenez la sortie dans <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "6": "Entrez dans le rond-point et prenez la sortie dans <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
         "7": "Entrez sur le rond-point et prenez la sortie vers <TOWARD_SIGN>.",
@@ -1149,7 +1149,7 @@
       ],
       "metric_lengths": [
         "<KILOMETERS> kilomètres",
-        "1 kilometre",
+        "1 kilomètre",
         "<METERS> mètres",
         "moins de 10 mètres"
       ],
