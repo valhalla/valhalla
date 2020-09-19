@@ -591,14 +591,18 @@ valhalla::baldr::json::MapPtr serializeIncident(const TripLeg::Incident& inciden
 }
 
 // Serializes incidents and adds to json-document
-valhalla::baldr::json::ArrayPtr
-serializeIncidents(const google::protobuf::RepeatedPtrField<valhalla::TripLeg::Incident>& incidents) {
+void serializeIncidents(
+    const google::protobuf::RepeatedPtrField<valhalla::TripLeg::Incident>& incidents,
+    json::MapPtr json_leg) {
+  if (incidents.empty()) {
+    return;
+  }
   auto serialized_incidents = json::array({});
   for (const auto& incident : incidents) {
     auto json_incident = serializeIncident(incident);
     serialized_incidents->emplace_back(json_incident);
   }
-  return serialized_incidents;
+  json_leg->emplace("incidents", serialized_incidents);
 }
 
 // Compile and return the refs of the specified list
@@ -1374,9 +1378,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     output_leg->emplace("steps", steps);
 
     // Add incidents to the leg
-    if (path_leg.incidents_size()) {
-      output_leg->emplace("incidents", serializeIncidents(path_leg.incidents()));
-    }
+    serializeIncidents(path_leg.incidents(), output_leg);
 
     // Keep the leg
     output_legs->emplace_back(output_leg);
@@ -1470,24 +1472,26 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
 
   rapidjson::Document serialized_to_json;
   {
-    auto intersection_doc = json::Jmap();
-    auto inner_node = TripLeg_Node();
+    auto intersection_doc = json::map({});
+    auto leg = TripLeg();
     // Sets up the incident
-    auto incidents = inner_node.mutable_incidents();
-    auto incident = incidents->Add();
+    auto incidents = leg.mutable_incidents();
+    auto* incident = incidents->Add();
     uint64_t creation_time = 1597241829;
     incident->set_id(1337);
     incident->set_creation_time(creation_time);
     incident->set_start_time(creation_time + 100);
     incident->set_end_time(creation_time + 1800);
-    incident->set_type(TripLeg_Node_Incident_Type::TripLeg_Node_Incident_Type_WEATHER);
+    incident->set_type(TripLeg::Incident::WEATHER);
+    incident->set_begin_shape_index(42);
+    incident->set_end_shape_index(42);
 
     // Finally call the function under test to serialize to json
-    addsIncidents(*incidents, intersection_doc);
+    serializeIncidents(*incidents, intersection_doc);
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
-    ss << intersection_doc;
+    ss << *intersection_doc;
     serialized_to_json.Parse(ss.str().c_str());
   }
 
@@ -1500,7 +1504,9 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
           "creation_time": 1597241829,
           "start_time": 1597241929,
           "end_time": 1597243629,
-          "incident_type": "weather"
+          "incident_type": "weather",
+          "geometry_index_start": 42,
+          "geometry_index_end": 42
         }
       ]
     })");
@@ -1517,10 +1523,10 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
 
   rapidjson::Document serialized_to_json;
   {
-    auto intersection_doc = json::Jmap();
-    auto inner_node = TripLeg_Node();
+    auto intersection_doc = json::map({});
+    auto leg = TripLeg();
     // Sets up the incident
-    auto incidents = inner_node.mutable_incidents();
+    auto* incidents = leg.mutable_incidents();
     {
       // First incident
       auto incident = incidents->Add();
@@ -1528,7 +1534,9 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
       incident->set_id(1337);
       incident->set_description("Fooo");
       incident->set_creation_time(creation_time);
-      incident->set_type(TripLeg_Node_Incident_Type::TripLeg_Node_Incident_Type_WEATHER);
+      incident->set_type(TripLeg::Incident::WEATHER);
+      incident->set_begin_shape_index(87);
+      incident->set_end_shape_index(92);
     }
     {
       // second incident
@@ -1538,15 +1546,17 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
       incident->set_creation_time(creation_time);
       incident->set_start_time(creation_time + 100);
       incident->set_end_time(creation_time + 1800);
-      incident->set_type(TripLeg_Node_Incident_Type::TripLeg_Node_Incident_Type_ACCIDENT);
+      incident->set_type(TripLeg::Incident::ACCIDENT);
+      incident->set_begin_shape_index(21);
+      incident->set_end_shape_index(104);
     }
 
     // Finally call the function under test to serialize to json
-    addsIncidents(*incidents, intersection_doc);
+    serializeIncidents(*incidents, intersection_doc);
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
-    ss << intersection_doc;
+    ss << *intersection_doc;
     serialized_to_json.Parse(ss.str().c_str());
   }
 
@@ -1558,14 +1568,18 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
           "id": 1337,
           "description": "Fooo",
           "creation_time": 1597241829,
-          "incident_type": "weather"
+          "incident_type": "weather",
+          "geometry_index_start": 87,
+          "geometry_index_end": 92
         },
         {
           "id": 2448,
           "creation_time": 1597241800,
           "start_time": 1597241900,
           "end_time": 1597243600,
-          "incident_type": "accident"
+          "incident_type": "accident",
+          "geometry_index_start": 21,
+          "geometry_index_end": 104
         }
       ]
     })");
@@ -1577,19 +1591,18 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
 }
 
 TEST(RouteSerializerOsrm, testAddsIncidentsNothingToAdd) {
-  // Test serializing an edge without incident
 
   rapidjson::Document serialized_to_json;
   {
-    auto intersection_doc = json::Jmap();
-    auto node = TripLeg_Node();
+    auto intersection_doc = json::map({});
+    auto leg = TripLeg();
 
     // Finally call the function under test to serialize to json
-    addsIncidents(node.incidents(), intersection_doc);
+    serializeIncidents(leg.incidents(), intersection_doc);
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
-    ss << intersection_doc;
+    ss << *intersection_doc;
     serialized_to_json.Parse(ss.str().c_str());
   }
 
