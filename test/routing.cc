@@ -172,10 +172,10 @@ TEST(Routing, TestRoutePathIterator) {
   labelset.put(0, travelmode, nullptr);
   labelset.put(1, travelmode, nullptr);
   labelset.put(2, travelmode, nullptr);
-  labelset.put(3, baldr::GraphId(), 0.f, 1.f, {0.f, 0.0f}, 0.f, 0.f, 1, &de, travelmode);
-  labelset.put(4, baldr::GraphId(), 0.f, 1.f, {0.f, 0.0f}, 0.f, 0.f, 1, &de, travelmode);
-  labelset.put(5, baldr::GraphId(), 0.f, 1.f, {0.f, 0.0f}, 0.f, 0.f, 3, &de, travelmode);
-  labelset.put(6, baldr::GraphId(), 0.f, 1.f, {0.f, 0.0f}, 0.f, 0.f, 3, &de, travelmode);
+  labelset.put(3, baldr::GraphId(), 0.f, 1.f, {0.f, 0.0f}, 0.f, 0.f, 1, &de, travelmode, -1);
+  labelset.put(4, baldr::GraphId(), 0.f, 1.f, {0.f, 0.0f}, 0.f, 0.f, 1, &de, travelmode, -1);
+  labelset.put(5, baldr::GraphId(), 0.f, 1.f, {0.f, 0.0f}, 0.f, 0.f, 3, &de, travelmode, -1);
+  labelset.put(6, baldr::GraphId(), 0.f, 1.f, {0.f, 0.0f}, 0.f, 0.f, 3, &de, travelmode, -1);
 
   meili::RoutePathIterator the_end(&labelset, baldr::kInvalidLabel), it0(&labelset, 0),
       it1(&labelset, 1), it2(&labelset, 2), it3(&labelset, 3), it4(&labelset, 4), it5(&labelset, 5),

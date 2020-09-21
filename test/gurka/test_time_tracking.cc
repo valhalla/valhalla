@@ -75,10 +75,8 @@ TEST(TimeTracking, make) {
 
     // offset the time from now a bit
     now_str = dt::iso_date_time(tz);
-    auto minutes = std::atoi(now_str.substr(now_str.size() - 2, 2).c_str());
-    int offset = 7;
-    if (minutes + offset > 60)
-      offset = -offset;
+    int minutes = std::atoi(now_str.substr(now_str.size() - 2, 2).c_str());
+    int offset = minutes > 52 ? -7 : 7;
     now_str = now_str.substr(0, now_str.size() - 2) + (minutes + offset < 10 ? "0" : "") +
               std::to_string(minutes + offset);
     location.set_date_time(now_str);

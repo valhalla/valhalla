@@ -198,9 +198,15 @@ void PopulateManeuver(Maneuver& maneuver,
   maneuver.set_verbal_pre_transition_instruction(verbal_pre_transition_instruction);
   maneuver.set_verbal_post_transition_instruction(verbal_post_transition_instruction);
   maneuver.set_tee(tee);
-  maneuver.set_unnamed_walkway(unnamed_walkway);
-  maneuver.set_unnamed_cycleway(unnamed_cycleway);
-  maneuver.set_unnamed_mountain_bike_trail(unnamed_mountain_bike_trail);
+  if (unnamed_walkway) {
+    maneuver.set_trail_type(TrailType::kUnnamedWalkway);
+  }
+  if (unnamed_cycleway) {
+    maneuver.set_trail_type(TrailType::kUnnamedCycleway);
+  }
+  if (unnamed_mountain_bike_trail) {
+    maneuver.set_trail_type(TrailType::kUnnamedMtbTrail);
+  }
   maneuver.set_basic_time(basic_time);
   maneuver.set_imminent_verbal_multi_cue(imminent_verbal_multi_cue);
 }

@@ -131,7 +131,7 @@ public:
    * Construct auto costing. Pass in cost type and costing_options using protocol buffer(pbf).
    * @param  costing_options pbf with request costing_options.
    */
-  AutoCost(const CostingOptions& costing_options);
+  AutoCost(const CostingOptions& costing_options, uint32_t access_mask = kAutoAccess);
 
   virtual ~AutoCost() {
   }
@@ -143,14 +143,6 @@ public:
    */
   virtual bool AllowMultiPass() const {
     return true;
-  }
-
-  /**
-   * Get the access mode used by this costing method.
-   * @return  Returns access mode.
-   */
-  uint32_t access_mode() const {
-    return kAutoAccess;
   }
 
   /**
@@ -202,16 +194,6 @@ public:
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               int& restriction_idx) const;
-
-  /**
-   * Checks if access is allowed for the provided node. Node access can
-   * be restricted if bollards or gates are present.
-   * @param  node  Pointer to node information.
-   * @return  Returns true if access is allowed, false if not.
-   */
-  virtual bool Allowed(const baldr::NodeInfo* node) const {
-    return (node->access() & kAutoAccess);
-  }
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -286,34 +268,26 @@ public:
   }
 
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
-    // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess) || edge->bss_connection()) {
-        return 0.0f;
-      } else {
-        // TODO - use classification/use to alter the factor
-        return 1.0f;
-      }
-    };
+  float Filter(const baldr::DirectedEdge* edge,
+               const baldr::GraphId& edgeid,
+               const baldr::GraphTile* tile) const override {
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
+    bool accessible = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    if (edge->is_shortcut() || !accessible || edge->bss_connection() ||
+        IsClosedDueToTraffic(edgeid, tile)) {
+      return 0.0f;
+    } else {
+      // TODO - use classification/use to alter the factor
+      return 1.0f;
+    }
   }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each node's attribution
-   * @return Function/functor to be used in filtering out nodes
-   */
-  virtual const NodeFilter GetNodeFilter() const {
-    // throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node) { return !(node->access() & kAutoAccess); };
-  }
-
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 public:
@@ -330,8 +304,8 @@ public:
 };
 
 // Constructor
-AutoCost::AutoCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kDrive),
+AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
+    : DynamicCost(costing_options, TravelMode::kDrive, access_mask),
       trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
                             1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
 
@@ -392,24 +366,19 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const uint64_t current_time,
                        const uint32_t tz_index,
                        int& restriction_idx) const {
-
-  if (flow_mask_ & kCurrentFlowMask) {
-    if (tile->IsClosedDueToTraffic(edgeid))
-      return false;
-  }
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes in case the origin is inside
   // a not thru region and a heading selected an edge entering the
   // region.
-  if (!(edge->forwardaccess() & kAutoAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (pred.restrictions() & (1 << edge->localedgeidx())) ||
+  if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      IsClosedDueToTraffic(edgeid, tile)) {
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(kAutoAccess, edge, tile, edgeid, current_time, tz_index,
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, edgeid, current_time, tz_index,
                                            restriction_idx);
 }
 
@@ -423,21 +392,17 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               int& restriction_idx) const {
-  if (flow_mask_ & kCurrentFlowMask) {
-    if (tile->IsClosedDueToTraffic(opp_edgeid))
-      return false;
-  }
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(opp_edge->forwardaccess() & kAutoAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
+  if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
+      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
+      IsClosedDueToTraffic(opp_edgeid, tile)) {
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(kAutoAccess, edge, tile, opp_edgeid, current_time,
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, opp_edgeid, current_time,
                                            tz_index, restriction_idx);
 }
 
@@ -764,20 +729,12 @@ public:
    * Pass in configuration using property tree.
    * @param  pt  Property tree with configuration/options.
    */
-  BusCost(const CostingOptions& costing_options) : AutoCost(costing_options) {
+  BusCost(const CostingOptions& costing_options) : AutoCost(costing_options, kBusAccess) {
     type_ = VehicleType::kBus;
   }
 
   /// virtual destructor
   virtual ~BusCost() {
-  }
-
-  /**
-   * Get the access mode used by this costing method.
-   * @return  Returns access mode.
-   */
-  uint32_t access_mode() const {
-    return kBusAccess;
   }
 
   /**
@@ -831,42 +788,24 @@ public:
                               int& restriction_idx) const;
 
   /**
-   * Checks if access is allowed for the provided node. Node access can
-   * be restricted if bollards or gates are present.
-   * @param  node  Pointer to node information.
-   * @return  Returns true if access is allowed, false if not.
-   */
-  virtual bool Allowed(const baldr::NodeInfo* node) const {
-    return (node->access() & kBusAccess);
-  }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by bus.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
-    // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      if (!(edge->forwardaccess() & kBusAccess)) {
-        return 0.0f;
-      } else {
-        // TODO - use classification/use to alter the factor
-        return 1.0f;
-      }
-    };
-  }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each node's attribution
-   * @return Function/functor to be used in filtering out nodes
-   */
-  virtual const NodeFilter GetNodeFilter() const {
-    // throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node) { return !(node->access() & kBusAccess); };
+  float Filter(const baldr::DirectedEdge* edge,
+               const baldr::GraphId& edgeid,
+               const baldr::GraphTile* tile) const override {
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
+    bool accessible = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    if (!accessible || IsClosedDueToTraffic(edgeid, tile)) {
+      return 0.0f;
+    } else {
+      // TODO - use classification/use to alter the factor
+      return 1.0f;
+    }
   }
 };
 
@@ -878,23 +817,17 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
                       const uint64_t current_time,
                       const uint32_t tz_index,
                       int& restriction_idx) const {
-  if (flow_mask_ & kCurrentFlowMask) {
-    if (tile->IsClosedDueToTraffic(edgeid))
-      return false;
-  }
-  // TODO - obtain and check the access restrictions.
-
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(edge->forwardaccess() & kBusAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (pred.restrictions() & (1 << edge->localedgeidx())) ||
+  if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      IsClosedDueToTraffic(edgeid, tile)) {
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(kBusAccess, edge, tile, edgeid, current_time, tz_index,
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, edgeid, current_time, tz_index,
                                            restriction_idx);
 }
 
@@ -908,22 +841,18 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const uint64_t current_time,
                              const uint32_t tz_index,
                              int& restriction_idx) const {
-  if (flow_mask_ & kCurrentFlowMask) {
-    if (tile->IsClosedDueToTraffic(opp_edgeid))
-      return false;
-  }
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(opp_edge->forwardaccess() & kBusAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
+  if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
+      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
+      IsClosedDueToTraffic(opp_edgeid, tile)) {
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(kBusAccess, edge, tile, opp_edgeid, current_time, tz_index,
-                                           restriction_idx);
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, opp_edgeid, current_time,
+                                           tz_index, restriction_idx);
 }
 
 void ParseBusCostOptions(const rapidjson::Document& doc,
@@ -949,18 +878,10 @@ public:
    * Pass in costing_options using protocol buffer(pbf).
    * @param  costing_options  pbf with costing_options.
    */
-  HOVCost(const CostingOptions& costing_options) : AutoCost(costing_options) {
+  HOVCost(const CostingOptions& costing_options) : AutoCost(costing_options, kHOVAccess) {
   }
 
   virtual ~HOVCost() {
-  }
-
-  /**
-   * Get the access mode used by this costing method.
-   * @return  Returns access mode.
-   */
-  uint32_t access_mode() const {
-    return kHOVAccess;
   }
 
   /**
@@ -1038,42 +959,24 @@ public:
   }
 
   /**
-   * Checks if access is allowed for the provided node. Node access can
-   * be restricted if bollards or gates are present.
-   * @param  node  Pointer to node information.
-   * @return  Returns true if access is allowed, false if not.
-   */
-  virtual bool Allowed(const baldr::NodeInfo* node) const {
-    return (node->access() & kHOVAccess);
-  }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by hov.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
-    // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      if (!(edge->forwardaccess() & kHOVAccess)) {
-        return 0.0f;
-      } else {
-        // TODO - use classification/use to alter the factor
-        return 1.0f;
-      }
-    };
-  }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each node's attribution
-   * @return Function/functor to be used in filtering out nodes
-   */
-  virtual const NodeFilter GetNodeFilter() const {
-    // throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node) { return !(node->access() & kHOVAccess); };
+  float Filter(const baldr::DirectedEdge* edge,
+               const baldr::GraphId& edgeid,
+               const baldr::GraphTile* tile) const override {
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
+    bool accessible = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    if (!accessible || IsClosedDueToTraffic(edgeid, tile)) {
+      return 0.0f;
+    } else {
+      // TODO - use classification/use to alter the factor
+      return 1.0f;
+    }
   }
 };
 
@@ -1085,25 +988,19 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
                       const uint64_t current_time,
                       const uint32_t tz_index,
                       int& restriction_idx) const {
-  if (flow_mask_ & kCurrentFlowMask) {
-    if (tile->IsClosedDueToTraffic(edgeid))
-      return false;
-  }
-  // TODO - obtain and check the access restrictions.
-
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes in case the origin is inside
   // a not thru region and a heading selected an edge entering the
   // region.
-  if (!(edge->forwardaccess() & kHOVAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (pred.restrictions() & (1 << edge->localedgeidx())) ||
+  if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      IsClosedDueToTraffic(edgeid, tile)) {
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(kHOVAccess, edge, tile, edgeid, current_time, tz_index,
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, edgeid, current_time, tz_index,
                                            restriction_idx);
 }
 
@@ -1117,24 +1014,18 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const uint64_t current_time,
                              const uint32_t tz_index,
                              int& restriction_idx) const {
-  if (flow_mask_ & kCurrentFlowMask) {
-    if (tile->IsClosedDueToTraffic(opp_edgeid))
-      return false;
-  }
-  // TODO - obtain and check the access restrictions.
-
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(opp_edge->forwardaccess() & kHOVAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
+  if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
+      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
+      IsClosedDueToTraffic(opp_edgeid, tile)) {
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(kHOVAccess, edge, tile, opp_edgeid, current_time, tz_index,
-                                           restriction_idx);
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, opp_edgeid, current_time,
+                                           tz_index, restriction_idx);
 }
 
 void ParseHOVCostOptions(const rapidjson::Document& doc,
@@ -1160,18 +1051,10 @@ public:
    * Pass in costing_options using protocol buffer(pbf).
    * @param  costing_options  pbf with costing_options.
    */
-  TaxiCost(const CostingOptions& costing_options) : AutoCost(costing_options) {
+  TaxiCost(const CostingOptions& costing_options) : AutoCost(costing_options, kTaxiAccess) {
   }
 
   virtual ~TaxiCost() {
-  }
-
-  /**
-   * Get the access mode used by this costing method.
-   * @return  Returns access mode.
-   */
-  uint32_t access_mode() const {
-    return kTaxiAccess;
   }
 
   /**
@@ -1249,42 +1132,24 @@ public:
   }
 
   /**
-   * Checks if access is allowed for the provided node. Node access can
-   * be restricted if bollards or gates are present.
-   * @param  node  Pointer to node information.
-   * @return  Returns true if access is allowed, false if not.
-   */
-  virtual bool Allowed(const baldr::NodeInfo* node) const {
-    return (node->access() & kTaxiAccess);
-  }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by taxi.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
-    // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      if (!(edge->forwardaccess() & kTaxiAccess)) {
-        return 0.0f;
-      } else {
-        // TODO - use classification/use to alter the factor
-        return 1.0f;
-      }
-    };
-  }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each node's attribution
-   * @return Function/functor to be used in filtering out nodes
-   */
-  virtual const NodeFilter GetNodeFilter() const {
-    // throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node) { return !(node->access() & kTaxiAccess); };
+  float Filter(const baldr::DirectedEdge* edge,
+               const baldr::GraphId& edgeid,
+               const baldr::GraphTile* tile) const override {
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
+    bool accessible = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    if (!accessible || IsClosedDueToTraffic(edgeid, tile)) {
+      return 0.0f;
+    } else {
+      // TODO - use classification/use to alter the factor
+      return 1.0f;
+    }
   }
 };
 
@@ -1296,25 +1161,19 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
                        const uint64_t current_time,
                        const uint32_t tz_index,
                        int& restriction_idx) const {
-  if (flow_mask_ & kCurrentFlowMask) {
-    if (tile->IsClosedDueToTraffic(edgeid))
-      return false;
-  }
-  // TODO - obtain and check the access restrictions.
-
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes in case the origin is inside
   // a not thru region and a heading selected an edge entering the
   // region.
-  if (!(edge->forwardaccess() & kTaxiAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (pred.restrictions() & (1 << edge->localedgeidx())) ||
+  if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      IsClosedDueToTraffic(edgeid, tile)) {
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(kTaxiAccess, edge, tile, edgeid, current_time, tz_index,
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, edgeid, current_time, tz_index,
                                            restriction_idx);
 }
 
@@ -1328,23 +1187,17 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               int& restriction_idx) const {
-  if (flow_mask_ & kCurrentFlowMask) {
-    if (tile->IsClosedDueToTraffic(opp_edgeid))
-      return false;
-  }
-  // TODO - obtain and check the access restrictions.
-
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(opp_edge->forwardaccess() & kTaxiAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
+  if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
+      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
+      IsClosedDueToTraffic(opp_edgeid, tile)) {
     return false;
   }
-  return DynamicCost::EvaluateRestrictions(kHOVAccess, edge, tile, opp_edgeid, current_time, tz_index,
-                                           restriction_idx);
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, opp_edgeid, current_time,
+                                           tz_index, restriction_idx);
 }
 
 void ParseTaxiCostOptions(const rapidjson::Document& doc,
@@ -1378,6 +1231,21 @@ public:
   }
 
   /**
+   * Checks if access is allowed for the provided edge. The access check based on mode
+   * of travel and the access modes allowed on the edge.
+   * @param   edge  Pointer to edge information.
+   * @return  Returns true if access is allowed, false if not.
+   */
+  bool IsAccessible(const baldr::DirectedEdge* edge) const override {
+    bool allow_forward = (edge->forwardaccess() & access_mask_) ||
+                         (ignore_access_ && (edge->forwardaccess() & kAllAccess));
+    bool allow_reverse = (edge->reverseaccess() & access_mask_) ||
+                         (ignore_access_ && (edge->reverseaccess() & kAllAccess));
+    // Do not allow edges with no auto access in either direction
+    return (allow_forward && allow_reverse) || (ignore_oneways_ && allow_reverse);
+  }
+
+  /**
    * Checks if access is allowed for the provided directed edge.
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
@@ -1402,10 +1270,10 @@ public:
 
     // Note: this profile ignores closures in live traffic, so that check is not
     //       present, unlike other Allowed() implementations
+
     // Check access and return false (not allowed if no auto access is allowed in either
     // direction. Also disallow simple U-turns except at dead-end nodes.
-    if (!((edge->forwardaccess() & kAutoAccess) || (edge->reverseaccess() & kAutoAccess)) ||
-        (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+    if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
         (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
       return false;
@@ -1414,22 +1282,26 @@ public:
   }
 
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by auto in either direction.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
-    // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      // Do not allow edges with no auto access in either direction
-      if (!((edge->forwardaccess() & kAutoAccess) || (edge->reverseaccess() & kAutoAccess))) {
-        return 0.0f;
-      } else {
-        return 1.0f;
-      }
-    };
+  float Filter(const baldr::DirectedEdge* edge,
+               const baldr::GraphId& edgeid,
+               const baldr::GraphTile* tile) const override {
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
+    // Do not allow edges with no auto access in either direction
+    bool allow_forward = edge->forwardaccess() & access_mask;
+    bool allow_reverse = edge->reverseaccess() & access_mask;
+    bool accessible = (allow_forward && allow_reverse) || (ignore_oneways_ && allow_reverse);
+
+    if (!accessible || IsClosedDueToTraffic(edgeid, tile)) {
+      return 0.0f;
+    } else {
+      return 1.0f;
+    }
   }
 };
 

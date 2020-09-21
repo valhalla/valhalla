@@ -51,8 +51,8 @@ public:
       : vs_(vs), claim_stateid_(claim_stateid),
         original_emission_cost_model_(vs.emission_cost_model()),
         original_transition_cost_model_(vs.transition_cost_model()), origin_(), clone_(),
-        clone_start_time_(kInvalidTime), clone_end_time_(kInvalidTime),
-        initial_origins_(initial_origins), removed_origins_(removed_origins) {
+        initial_origins_(initial_origins), removed_origins_(removed_origins),
+        clone_start_time_(kInvalidTime), clone_end_time_(kInvalidTime) {
     vs_.set_emission_cost_model(EnlargedEmissionCostModel(*this));
     vs_.set_transition_cost_model(EnlargedTransitionCostModel(*this));
   }

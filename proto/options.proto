@@ -114,7 +114,10 @@ message CostingOptions {
   optional float bike_share_penalty = 57;
   optional float rail_ferry_cost = 58;
   optional float use_rail_ferry = 59;
-  optional bool shortest = 60;
+  optional bool ignore_restrictions = 60;
+  optional bool ignore_oneways = 61;
+  optional bool ignore_access = 62;
+  optional bool shortest = 63;
 
   // these are not specified directly by the user but they get filled in as the request is parsed and fulfilled
   optional Costing costing = 90;

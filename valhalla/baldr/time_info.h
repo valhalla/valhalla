@@ -62,7 +62,7 @@ struct TimeInfo {
        int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC")) {
     // No time to to track
     if (!location.has_date_time()) {
-      return {false, 0, 0, kConstrainedFlowSecondOfDay};
+      return {false, 0, 0, kConstrainedFlowSecondOfDay, 0, false, nullptr};
     }
 
     // Find the first edge whose end node has a valid timezone index and keep it
@@ -101,7 +101,7 @@ struct TimeInfo {
        int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC")) {
     // No time to to track
     if (date_time.empty()) {
-      return {false, 0, 0, kConstrainedFlowSecondOfDay};
+      return {false, 0, 0, kConstrainedFlowSecondOfDay, 0, false, nullptr};
     }
 
     // Set the origin timezone to be the timezone at the end node use this for timezone changes
@@ -132,7 +132,7 @@ struct TimeInfo {
       parsed_date = dt::get_formatted_date(date_time, true);
     } catch (...) {
       LOG_ERROR("Could not parse provided date_time: " + date_time);
-      return {false, 0, 0, kConstrainedFlowSecondOfDay};
+      return {false, 0, 0, kConstrainedFlowSecondOfDay, 0, false, nullptr};
     }
     const auto then_date = date::make_zoned(tz, parsed_date);
     uint64_t local_time = date::to_utc_time(then_date.get_sys_time()).time_since_epoch().count();
@@ -180,7 +180,7 @@ struct TimeInfo {
     if (sw < 0) {
       sw += valhalla::midgard::kSecondsPerWeek;
     } // wrap the week second if it went past the end
-    else if (sw > valhalla::midgard::kSecondsPerWeek) {
+    else if (sw > static_cast<int32_t>(valhalla::midgard::kSecondsPerWeek)) {
       sw -= valhalla::midgard::kSecondsPerWeek;
     }
 
@@ -227,7 +227,7 @@ struct TimeInfo {
     if (sw < 0) {
       sw += valhalla::midgard::kSecondsPerWeek;
     } // wrap the week second if it went past the end
-    else if (sw > valhalla::midgard::kSecondsPerWeek) {
+    else if (sw > static_cast<int32_t>(valhalla::midgard::kSecondsPerWeek)) {
       sw -= valhalla::midgard::kSecondsPerWeek;
     }
 
