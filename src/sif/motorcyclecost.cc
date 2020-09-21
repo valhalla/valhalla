@@ -416,12 +416,18 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                               const baldr::GraphTile* tile,
                               const uint32_t seconds) const {
   auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
+  assert(speed < speedfactor_.size());
+  float sec = (edge->length() * speedfactor_[speed]);
+
+  if (shortest_) {
+    return Cost(edge->length(), sec);
+  }
 
   // Special case for travel on a ferry
   if (edge->use() == Use::kFerry) {
     // Use the edge speed (should be the speed of the ferry)
     assert(edge->speed() < speedfactor_.size());
-    float sec = (edge->length() * speedfactor_[edge->speed()]);
+    sec = (edge->length() * speedfactor_[edge->speed()]);
     return {sec * ferry_factor_, sec};
   }
 
@@ -432,8 +438,6 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor += toll_factor_;
   }
 
-  assert(speed < speedfactor_.size());
-  float sec = (edge->length() * speedfactor_[speed]);
   return {sec * factor, sec};
 }
 
@@ -473,7 +477,7 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-    c.cost += seconds;
+    c.cost += shortest_ ? 0.f : seconds;
     c.secs += seconds;
   }
   return c;
@@ -518,7 +522,7 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-    c.cost += seconds;
+    c.cost += shortest_ ? 0.f : seconds;
     c.secs += seconds;
   }
   return c;

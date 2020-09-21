@@ -569,18 +569,22 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                            const baldr::GraphTile* tile,
                            const uint32_t seconds) const {
   auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
+  assert(speed < speedfactor_.size());
+  float sec = (edge->length() * speedfactor_[speed]);
+
+  if (shortest_) {
+    return Cost(edge->length(), sec);
+  }
 
   // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
   if (edge->use() == Use::kSteps) {
-    float sec = (edge->length() * speedfactor_[1]);
+    sec = (edge->length() * speedfactor_[1]);
     return {sec * kBicycleStepsFactor, sec};
   }
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
     // Compute elapsed time based on speed. Modulate cost with weighting factors.
-    assert(speed < speedfactor_.size());
-    float sec = (edge->length() * speedfactor_[speed]);
     return {sec * ferry_factor_, sec};
   }
 
@@ -676,7 +680,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   // Compute elapsed time based on speed. Modulate cost with weighting factors.
   assert(bike_speed < speedfactor_.size());
-  float sec = (edge->length() * speedfactor_[bike_speed]);
+  sec = (edge->length() * speedfactor_[bike_speed]);
   return {sec * factor, sec};
 }
 
@@ -753,7 +757,7 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   penalty *= (bike_accom * avoid_roads) + use_roads_;
 
   // Return cost (time and penalty)
-  c.cost += (seconds * (turn_stress + 1.0f)) + penalty;
+  c.cost += shortest_ ? 0.f : (seconds * (turn_stress + 1.0f)) + penalty;
   c.secs += seconds;
   return c;
 }
@@ -833,7 +837,7 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
   penalty *= (bike_accom * avoid_roads) + use_roads_;
 
   // Return cost (time and penalty)
-  c.cost += (seconds * (turn_stress + 1.0f)) + penalty;
+  c.cost += shortest_ ? 0.f : (seconds * (turn_stress + 1.0f)) + penalty;
   c.secs += seconds;
   return c;
 }
