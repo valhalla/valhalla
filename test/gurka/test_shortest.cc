@@ -37,7 +37,7 @@ protected:
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
     shortest_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/shortest");
   }
-  
+
   inline void getSummary(const valhalla::Api& route, double& distance, double& duration) {
     auto summary = route.directions().routes(0).legs(0).summary();
     distance = summary.length();

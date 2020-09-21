@@ -639,7 +639,7 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
     float sec = edge->length() * (kSecPerHour * 0.001f) / static_cast<float>(speed);
     return Cost(edge->length(), sec);
   }
-  
+
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
     float sec = edge->length() * (kSecPerHour * 0.001f) / static_cast<float>(edge->speed());
