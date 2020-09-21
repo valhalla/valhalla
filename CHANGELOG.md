@@ -85,6 +85,7 @@
    * FIXED: Multicue enter roundabout [#2556](https://github.com/valhalla/valhalla/pull/2556)
    * FIXED: Changed reachability computation to take into account live speed [#2597](https://github.com/valhalla/valhalla/pull/2597)
    * FIXED: Fixed a bug where the temp files were not getting read in if you started with the construct edges or build phase for valhalla_build_tiles. [#2601](https://github.com/valhalla/valhalla/pull/2601)
+   * FIXED: Updated fr-FR.json with partial translations. [#2605](https://github.com/valhalla/valhalla/pull/2605)
    * FIXED: Removed superfluous const qualifier from odin/signs [#2609](https://github.com/valhalla/valhalla/pull/2609)
 
 * **Enhancement**
