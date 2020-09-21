@@ -140,14 +140,14 @@ message Options {
   enum Action {
     route = 1;
     locate = 2;
-    sources_to_targets = 6;
-    optimized_route = 7;
-    isochrone = 8;
-    trace_route = 9;
-    trace_attributes = 10;
-    height = 11;
-    transit_available = 12;
-    expansion = 13;
+    sources_to_targets = 3;
+    optimized_route = 4;
+    isochrone = 5;
+    trace_route = 6;
+    trace_attributes = 7;
+    height = 8;
+    transit_available = 9;
+    expansion = 10;
   }
 
   enum DateTimeType {
