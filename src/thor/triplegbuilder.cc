@@ -92,6 +92,31 @@ void AssignAdmins(const AttributesController& controller,
 }
 
 /**
+ * Used to add or update incidents attached to the provided leg. We could do something more exotic to
+ * avoid linear scan, like keeping a separate lookup outside of the pbf
+ * @param leg        the leg to update
+ * @param incident   the incident that applies
+ * @param index      what shape index of the leg the index apples to
+ */
+void UpdateIncident(TripLeg& leg, const baldr::GraphReader::Incident* incident, uint32_t index) {
+  auto found = std::find_if(leg.mutable_incidents()->begin(), leg.mutable_incidents()->end(),
+                            [incident](const valhalla::TripLeg::Incident& i) {
+                              return i.id() == incident->id;
+                            });
+  // Are we continuing an incident (this could be a hash look up)
+  if (found != leg.mutable_incidents()->end()) {
+    found->set_end_shape_index(index);
+  } // We are starting a new incident
+  else {
+    auto* new_incident = leg.mutable_incidents()->Add();
+    new_incident->set_id(incident->id);
+    new_incident->set_begin_shape_index(index);
+    new_incident->set_end_shape_index(index);
+    // TODO: copy the rest of the metadata
+  }
+}
+
+/**
  * Chops up the shape for an edge so that we have shape points where speeds change along the edge
  * and where incidents occur along the edge. Also sets the various per shape point attributes
  * such as time, distance, speed. Also updates the incidents list on the edge with their shape indices
@@ -161,6 +186,11 @@ void SetShapeAttributes(const AttributesController& controller,
     }
   }
 
+  // Cap the end so that we always have something to use
+  if (cuts.empty() || cuts.back().percent_along < tgt_pct) {
+    cuts.emplace_back(cut_t{tgt_pct, speed, UNKNOWN_CONGESTION_VAL, {}});
+  }
+
   // sort the start and ends of the incidents along this edge
   for (const auto& i : incidents) {
     // if the incident is actually on the part of the edge we are using
@@ -168,6 +198,13 @@ void SetShapeAttributes(const AttributesController& controller,
       continue;
     // insert the start point and end points
     for (auto offset : {std::max(i.start_offset, src_pct), std::min(i.end_offset, tgt_pct)}) {
+      // if this is clipped at the beginning of the edge then its not a new cut but we still need to
+      // attach the incidents information to the leg
+      if (offset == src_pct) {
+        UpdateIncident(leg, &i, shape_begin);
+        continue;
+      }
+
       // where does it go in the sorted list
       auto itr = std::partition_point(cuts.begin(), cuts.end(),
                                       [offset](const cut_t& c) { return c.percent_along < offset; });
@@ -183,19 +220,6 @@ void SetShapeAttributes(const AttributesController& controller,
       }
     }
   }
-
-  // Cap the end so that we always have something to use
-  if (cuts.empty() || cuts.back().percent_along < tgt_pct) {
-    cuts.emplace_back(cut_t{tgt_pct, speed, UNKNOWN_CONGESTION_VAL, {}});
-  }
-
-  // Lambda used to find the incidents with the same id, could do something more exotic
-  // to avoid linear scan, like keeping a separate lookup outside of the pbf
-  auto find_incident = [&leg](uint64_t id) -> valhalla::TripLeg::Incident* {
-    auto found = std::find_if(leg.mutable_incidents()->begin(), leg.mutable_incidents()->end(),
-                              [id](const valhalla::TripLeg::Incident& i) { return i.id() == id; });
-    return found == leg.mutable_incidents()->end() ? nullptr : &(*found);
-  };
 
   // Find the first cut to the right of where we start on this edge
   double distance_total_pct = src_pct;
@@ -242,20 +266,10 @@ void SetShapeAttributes(const AttributesController& controller,
       leg.mutable_shape_attributes()->add_speed((distance * kDecimeterPerMeter / time) + 0.5);
     }
 
-    // Set the incidents
-    if (shift && !cut_itr->incidents.empty()) {
+    // Set the incidents if we just cut or we are at the end
+    if ((shift || i == shape.size() - 1) && !cut_itr->incidents.empty()) {
       for (const auto* incident : cut_itr->incidents) {
-        // Are we continuing an incident (this could be a hash look up)
-        if (auto* found = find_incident(incident->id)) {
-          found->set_end_shape_index(i);
-        } // We are starting a new incident
-        else {
-          auto* new_incident = leg.mutable_incidents()->Add();
-          new_incident->set_id(incident->id);
-          new_incident->set_begin_shape_index(i);
-          new_incident->set_end_shape_index(i);
-          // TODO: copy the rest of the metadata
-        }
+        UpdateIncident(leg, incident, i);
       }
     }
 
