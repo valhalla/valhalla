@@ -457,7 +457,7 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
   if (edge->toll()) {
     factor += toll_factor_;
   }
-  
+
   return {sec * factor, sec};
 }
 

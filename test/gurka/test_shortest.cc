@@ -4,98 +4,95 @@
 
 using namespace valhalla;
 
-TEST(Standalone, ShortestAuto) {
-  const std::string ascii_map = R"(
-      A--B----C--D
-         |    |
-         E----F
-  )";
+class ShortestTest : public ::testing::Test {
+protected:
+  static gurka::map shortest_map;
 
-  const gurka::ways ways = {
-      {"AB", {{"highway", "secondary"}, {"maxspeed", "25"}}},
-      {"BC", {{"highway", "secondary"}, {"maxspeed", "25"}}},
-      {"CD", {{"highway", "secondary"}, {"maxspeed", "25"}}},
-      {"BE", {{"highway", "secondary"}, {"maxspeed", "120"}}},
-      {"EF", {{"highway", "secondary"}, {"maxspeed", "120"}}},
-      {"FC", {{"highway", "secondary"}, {"maxspeed", "120"}}},
-  };
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_shortest");
+  static void SetUpTestSuite() {
+    constexpr double gridsize = 2000;
 
-  // fastest (default) route
-  valhalla::Api fastest = gurka::route(map, "A", "D", "auto");
-  auto summary_fastest = fastest.directions().routes(0).legs(0).summary();
-  double length_fastest = summary_fastest.length();
-  double time_fastest = summary_fastest.time();
+    const std::string ascii_map = R"(
+          G----H
+          |    | 
+       A--B----C--D
+          |    |
+          E----F
+    )";
 
-  gurka::assert::raw::expect_path(fastest, {"AB", "BE", "EF", "FC", "CD"});
+    const gurka::ways ways = {
+        // segments expected for shortest routes for all profiles
+        {"AB", {{"highway", "primary"}, {"maxspeed", "20"}}},
+        {"BC", {{"highway", "primary"}, {"maxspeed", "20"}}},
+        {"CD", {{"highway", "primary"}, {"maxspeed", "20"}}},
+        // segments expected for fastest routes for motor_vehicles
+        {"BE", {{"highway", "primary"}, {"maxspeed", "100"}}},
+        {"EF", {{"highway", "primary"}, {"maxspeed", "100"}}},
+        {"FC", {{"highway", "primary"}, {"maxspeed", "100"}}},
+        // segments expected for fastest routes for ped/bikes
+        {"BG", {{"highway", "primary"}, {"motor_vehicle", "no"}}},
+        {"GH", {{"highway", "primary"}, {"motor_vehicle", "no"}}},
+        {"HC", {{"highway", "primary"}, {"motor_vehicle", "no"}}},
+    };
 
-  // shortest route 
-  const std::string& request =
-      (boost::format(
-           R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto", "costing_options": {"auto": {"shortest": true}}})") %
-       std::to_string(map.nodes.at("A").lat()) % std::to_string(map.nodes.at("A").lng()) %
-       std::to_string(map.nodes.at("D").lat()) % std::to_string(map.nodes.at("D").lng()))
-          .str();
-  valhalla::Api shortest = gurka::route(map, request);
-  auto summary_shortest = shortest.directions().routes(0).legs(0).summary();
-  double length_shortest = summary_shortest.length();
-  double time_shortest = summary_shortest.time();
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+    shortest_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/shortest");
+  }
 
-  std::cout << "Auto Time: " << time_fastest << " and " << time_shortest;
-  std::cout << "Auto Distance: " << length_fastest << " and " << length_shortest;
+  inline void getSummary(const valhalla::Api& route, double& distance, double& duration) {
+    auto summary = route.directions().routes(0).legs(0).summary();
+    distance = summary.length();
+    duration = summary.time();
+  }
 
-  gurka::assert::raw::expect_path(shortest, {"AB", "BC", "CD"});
+  void doTests(const std::string& profile,
+               const std::vector<std::string>& fastest_path,
+               const std::unordered_map<std::string, std::string>& shortest_options) {
+    double fastest_l, fastest_t, shortest_l, shortest_t;
 
-  // Much more time, much less distance for shortest: true
-  ASSERT_GT(length_fastest, length_shortest);
-  ASSERT_LT(time_fastest, time_shortest);
+    valhalla::Api fastest = gurka::route(shortest_map, "A", "D", profile);
+    getSummary(fastest, fastest_l, fastest_t);
+
+    valhalla::Api shortest = gurka::route(shortest_map, "A", "D", profile, shortest_options);
+    getSummary(shortest, shortest_l, shortest_t);
+
+    gurka::assert::raw::expect_path(fastest, fastest_path);
+    gurka::assert::raw::expect_path(shortest, {"AB", "BC", "CD"});
+    ASSERT_GT(fastest_l, shortest_l);
+    ASSERT_LT(fastest_t, shortest_t);
+  }
+};
+
+gurka::map ShortestTest::shortest_map = {};
+
+TEST_F(ShortestTest, AutoShortest) {
+  std::string profile = "auto";
+  doTests(profile, {"AB", "BE", "EF", "FC", "CD"},
+          {{"/costing_options/" + profile + "/shortest", "1"}});
 }
 
-TEST(Standalone, ShortestTruck) {
-  const std::string ascii_map = R"(
-      A--B----C--D
-         |    |
-         E----F
-  )";
+TEST_F(ShortestTest, TruckShortest) {
+  std::string profile = "truck";
+  doTests(profile, {"AB", "BE", "EF", "FC", "CD"},
+          {{"/costing_options/" + profile + "/shortest", "1"}});
+}
 
-  const gurka::ways ways = {
-      {"AB", {{"highway", "secondary"}, {"maxspeed", "25"}}},
-      {"BC", {{"highway", "secondary"}, {"maxspeed", "25"}}},
-      {"CD", {{"highway", "secondary"}, {"maxspeed", "25"}}},
-      {"BE", {{"highway", "secondary"}, {"maxspeed", "120"}}},
-      {"EF", {{"highway", "secondary"}, {"maxspeed", "120"}}},
-      {"FC", {{"highway", "secondary"}, {"maxspeed", "120"}}},
-  };
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_shortest");
+TEST_F(ShortestTest, MotorbikeShortest) {
+  std::string profile = "motorcycle";
+  doTests(profile, {"AB", "BE", "EF", "FC", "CD"},
+          {{"/costing_options/" + profile + "/shortest", "1"}});
+}
 
-  // fastest (default) route
-  valhalla::Api fastest = gurka::route(map, "A", "D", "truck");
-  auto summary_fastest = fastest.directions().routes(0).legs(0).summary();
-  double length_fastest = summary_fastest.length();
-  double time_fastest = summary_fastest.time();
+TEST_F(ShortestTest, ScooterShortest) {
+  std::string profile = "motor_scooter";
+  doTests(profile, {"AB", "BE", "EF", "FC", "CD"},
+          {{"/costing_options/" + profile + "/shortest", "1"},
+           {"/costing_options/" + profile + "/top_speed", "120"},
+           {"/costing_options/" + profile + "/use_primary", "1.0"}});
+}
 
-  gurka::assert::raw::expect_path(fastest, {"AB", "BE", "EF", "FC", "CD"});
-
-  // shortest route 
-  const std::string& request =
-      (boost::format(
-           R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"truck", "costing_options": {"truck": {"shortest": true}}})") %
-       std::to_string(map.nodes.at("A").lat()) % std::to_string(map.nodes.at("A").lng()) %
-       std::to_string(map.nodes.at("D").lat()) % std::to_string(map.nodes.at("D").lng()))
-          .str();
-  valhalla::Api shortest = gurka::route(map, request);
-  auto summary_shortest = shortest.directions().routes(0).legs(0).summary();
-  double length_shortest = summary_shortest.length();
-  double time_shortest = summary_shortest.time();
-
-  std::cout << "Truck Time: " << time_fastest << " and " << time_shortest;
-  std::cout << "Truck Distance: " << length_fastest << " and " << length_shortest;
-
-  gurka::assert::raw::expect_path(shortest, {"AB", "BC", "CD"});
-
-  // Much more time, much less distance for shortest: true
-  ASSERT_GT(length_fastest, length_shortest);
-  ASSERT_LT(time_fastest, time_shortest);
+TEST_F(ShortestTest, BikeShortest) {
+  std::string profile = "bicycle";
+  doTests(profile, {"AB", "BG", "GH", "HC", "CD"},
+          {{"/costing_options/" + profile + "/shortest", "1"},
+           {"/costing_options/" + profile + "/use_roads", "1.0"}});
 }
