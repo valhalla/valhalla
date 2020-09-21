@@ -871,23 +871,21 @@ public:
     }
 
     for (const auto& tag : *results) {
-      if (!use_admin_db_) {
-        if (tag.first == "iso:3166_1") {
-          bool hasTag = (tag.second.length() ? true : false);
-          if (hasTag) {
-            // Add the country iso code to the unique node names list and store its index in the OSM
-            // node
-            n.set_country_iso_index(osmdata_.node_names.index(tag.second));
-            ++osmdata_.node_name_count;
-          }
-        } else if ((tag.first == "state_iso_code")) {
-          bool hasTag = (tag.second.length() ? true : false);
-          if (hasTag) {
-            // Add the state iso code to the unique node names list and store its index in the OSM
-            // node
-            n.set_state_iso_index(osmdata_.node_names.index(tag.second));
-            ++osmdata_.node_name_count;
-          }
+      if (tag.first == "iso:3166_1" && !use_admin_db_) {
+        bool hasTag = (tag.second.length() ? true : false);
+        if (hasTag) {
+          // Add the country iso code to the unique node names list and store its index in the OSM
+          // node
+          n.set_country_iso_index(osmdata_.node_names.index(tag.second));
+          ++osmdata_.node_name_count;
+        }
+      } else if ((tag.first == "state_iso_code" && !use_admin_db_)) {
+        bool hasTag = (tag.second.length() ? true : false);
+        if (hasTag) {
+          // Add the state iso code to the unique node names list and store its index in the OSM
+          // node
+          n.set_state_iso_index(osmdata_.node_names.index(tag.second));
+          ++osmdata_.node_name_count;
         }
       } else if (tag.first == "highway") {
         n.set_traffic_signal(tag.second == "traffic_signals" ? true : false);
