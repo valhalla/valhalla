@@ -31,7 +31,7 @@ public:
   virtual std::vector<baldr::PathLocation> Query(const midgard::PointLL& point,
                                                  baldr::Location::StopType stop_type,
                                                  float radius,
-                                                 sif::EdgeFilter filter = nullptr) const = 0;
+                                                 const sif::cost_ptr_t& costing = nullptr) const = 0;
 };
 
 class CandidateGridQuery final : public CandidateQuery {
@@ -45,13 +45,13 @@ public:
   std::vector<baldr::PathLocation> Query(const midgard::PointLL& location,
                                          baldr::Location::StopType stop_type,
                                          float sq_search_radius,
-                                         sif::EdgeFilter filter) const override;
+                                         const sif::cost_ptr_t& costing) const override;
 
   template <typename Collector>
   auto Query(const midgard::PointLL& location,
              baldr::Location::StopType stop_type,
              float sq_search_radius,
-             sif::EdgeFilter filter,
+             const sif::cost_ptr_t& costing,
              const Collector& collector) const {
     if (!location.IsValid()) {
       throw std::invalid_argument("Expect a valid location");
@@ -61,7 +61,7 @@ public:
     const auto edgeids = RangeQuery(range);
 
     return collector.WithinSquaredDistance(location, stop_type, sq_search_radius, edgeids.begin(),
-                                           edgeids.end(), filter);
+                                           edgeids.end(), costing);
   }
 
   std::unordered_map<baldr::GraphId, grid_t>::size_type size() const {
