@@ -109,19 +109,32 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   // add edge info for node 0 to node 1
   bool added = false;
   test.AddEdgeInfo(0, GraphId(0, 2, 0), GraphId(0, 2, 1), 1234, 555, 0, 120,
-                   std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, {}, 0, added);
-  EXPECT_EQ(test.edge_offset_map_.size(), 1) << "There should be exactly one of these in here";
+                   std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, {"xyz tunnel"}, 0, added);
+  EXPECT_EQ(test.edge_offset_map_.size(), 1) << "There should be exactly two of these in here";
 
   // add edge info for node 1 to node 0
   test.AddEdgeInfo(0, GraphId(0, 2, 1), GraphId(0, 2, 0), 1234, 555, 0, 120,
-                   std::list<PointLL>{{1, 1}, {0, 0}}, {"einzelweg"}, {}, 0, added);
-  EXPECT_EQ(test.edge_offset_map_.size(), 1) << "There should still be exactly one of these in here";
+                   std::list<PointLL>{{1, 1}, {0, 0}}, {"einzelweg"}, {"xyz tunnel"}, 0, added);
+  EXPECT_EQ(test.edge_offset_map_.size(), 1) << "There should still be exactly two of these in here";
 
   test.StoreTileData();
   test_graph_tile_builder test2(test_dir, GraphId(0, 2, 0), false);
   auto ei = test2.edgeinfo(0);
   EXPECT_NEAR(ei.mean_elevation(), 555.0f, kElevationBinSize);
   EXPECT_EQ(ei.speed_limit(), 120);
+
+  auto n1 = test.GetNames(0,false);
+  EXPECT_EQ(n1.size(), 1);
+  EXPECT_EQ(n1.at(0), "einzelweg");
+
+  auto n2 = test.GetNames(0);//defaults to false
+  EXPECT_EQ(n2.size(), 1);
+  EXPECT_EQ(n2.at(0), "einzelweg");
+
+  auto n3 = test.GetNames(0,true);
+  EXPECT_EQ(n3.size(), 1);
+  EXPECT_EQ(n3.at(0), "xyz tunnel");
+
 }
 
 TEST(GraphTileBuilder, TestAddBins) {
