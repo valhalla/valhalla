@@ -109,12 +109,12 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   // add edge info for node 0 to node 1
   bool added = false;
   test.AddEdgeInfo(0, GraphId(0, 2, 0), GraphId(0, 2, 1), 1234, 555, 0, 120,
-                   std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, {"xyz tunnel"}, 0, added);
+                   std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, {"1xyz tunnel"}, 0, added);
   EXPECT_EQ(test.edge_offset_map_.size(), 1) << "There should be exactly two of these in here";
 
   // add edge info for node 1 to node 0
   test.AddEdgeInfo(0, GraphId(0, 2, 1), GraphId(0, 2, 0), 1234, 555, 0, 120,
-                   std::list<PointLL>{{1, 1}, {0, 0}}, {"einzelweg"}, {"xyz tunnel"}, 0, added);
+                   std::list<PointLL>{{1, 1}, {0, 0}}, {"einzelweg"}, {"1xyz tunnel"}, 0, added);
   EXPECT_EQ(test.edge_offset_map_.size(), 1) << "There should still be exactly two of these in here";
 
   test.StoreTileData();
@@ -134,6 +134,37 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   auto n3 = test.GetNames(0, true);
   EXPECT_EQ(n3.size(), 1);
   EXPECT_EQ(n3.at(0), "xyz tunnel");
+
+  auto names_and_types = ei.GetNamesAndTypes(true);
+  EXPECT_EQ(names_and_types.size(), 2);
+
+  auto n4 = names_and_types.at(0);
+  EXPECT_EQ(n4.first, "einzelweg");
+  EXPECT_EQ(n4.second, false);
+
+  auto n5 = names_and_types.at(1);
+  EXPECT_EQ(n5.first, "xyz tunnel");
+  EXPECT_EQ(n5.second, false);
+
+  names_and_types = ei.GetNamesAndTypes(false);
+  EXPECT_EQ(names_and_types.size(), 1);
+
+  n4 = names_and_types.at(0);
+  EXPECT_EQ(n4.first, "einzelweg");
+  EXPECT_EQ(n4.second, false);
+
+  names_and_types = ei.GetNamesAndTypes(); // defaults to false
+  EXPECT_EQ(names_and_types.size(), 1);
+
+  n4 = names_and_types.at(0);
+  EXPECT_EQ(n4.first, "einzelweg");
+  EXPECT_EQ(n4.second, false);
+
+  auto tagged_names_and_types = ei.GetTaggedNamesAndTypes();
+  for (const auto& tagged_name_and_type : tagged_names_and_types) {
+    EXPECT_EQ(tagged_name_and_type.first, "xyz tunnel");
+    EXPECT_EQ(tagged_name_and_type.second, 1);
+  }
 }
 
 TEST(GraphTileBuilder, TestAddBins) {
