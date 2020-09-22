@@ -139,6 +139,11 @@ void check_incident_locations(const valhalla::Api& api,
   ASSERT_EQ(incident_count, locations.size()) << "Expected number of incidents does not match actual";
 }
 
+std::shared_ptr<std::vector<int>> foo() {
+  std::vector<int> bar;
+  return std::shared_ptr<std::vector<int>>(&bar, [](auto*) {});
+}
+
 // provides us an easy way to mock having incident tiles, each test can override the tile in question
 // a bit more work is needed if we want to do it for more than one tile at a time
 struct test_reader : public baldr::GraphReader {
@@ -147,24 +152,33 @@ struct test_reader : public baldr::GraphReader {
   }
   virtual std::shared_ptr<baldr::GraphReader::incident_tile_t>
   GetIncidentTile(const baldr::GraphId& tile_id) const {
-    return incident_tile_;
+    auto i = incidents.find(tile_id.Tile_Base());
+    if (i == incidents.cend())
+      return {};
+    return std::shared_ptr<
+        baldr::GraphReader::incident_tile_t>(&i->second, [](baldr::GraphReader::incident_tile_t*) {});
+  }
+  void add(const baldr::GraphId& id, baldr::GraphReader::Incident&& incident) {
+    incidents[id.Tile_Base()].emplace_back(incident);
   }
   void sort() {
-    std::sort(incident_tile_->begin(), incident_tile_->end(),
-              [](const GraphReader::Incident& a, const GraphReader::Incident& b) {
-                if (a.edge_index == b.edge_index) {
-                  if (a.start_offset == b.start_offset) {
-                    if (a.end_offset == b.end_offset) {
-                      return a.id < b.id;
+    for (auto& kv : incidents) {
+      std::sort(kv.second.begin(), kv.second.end(),
+                [](const GraphReader::Incident& a, const GraphReader::Incident& b) {
+                  if (a.edge_index == b.edge_index) {
+                    if (a.start_offset == b.start_offset) {
+                      if (a.end_offset == b.end_offset) {
+                        return a.id < b.id;
+                      }
+                      return a.end_offset < b.end_offset;
                     }
-                    return a.end_offset < b.end_offset;
+                    return a.start_offset < b.start_offset;
                   }
-                  return a.start_offset < b.start_offset;
-                }
-                return a.edge_index < b.edge_index;
-              });
+                  return a.edge_index < b.edge_index;
+                });
+    }
   }
-  std::shared_ptr<baldr::GraphReader::incident_tile_t> incident_tile_;
+  mutable std::unordered_map<baldr::GraphId, baldr::GraphReader::incident_tile_t> incidents;
 };
 
 // used to make a graphreader and mark some edges as having incidents
@@ -189,7 +203,7 @@ std::shared_ptr<test_reader> setup_test(const gurka::map& map,
   }
 
   // prepare for incidents
-  reader->incident_tile_.reset(new decltype(reader->incident_tile_)::element_type);
+  reader->incidents.clear();
   return reader;
 }
 
@@ -201,8 +215,7 @@ TEST_F(incidents, simple_cut) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(
-      baldr::GraphReader::Incident{edge_ids[0].id(), .25, .75, 1234});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .25, .75, 1234});
 
   // do the route
   auto result = gurka::route(map, {"C", "B"}, "auto",
@@ -222,7 +235,7 @@ TEST_F(incidents, whole_edge) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), 0., 1., 1234});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), 0., 1., 1234});
 
   // do the route
   auto result = gurka::route(map, {"C", "B"}, "auto",
@@ -242,7 +255,7 @@ TEST_F(incidents, left) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), 0., .5, 1234});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), 0., .5, 1234});
 
   // do the route
   auto result = gurka::route(map, {"C", "B"}, "auto",
@@ -262,7 +275,7 @@ TEST_F(incidents, right) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 1234});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 1234});
 
   // do the route
   auto result = gurka::route(map, {"C", "B"}, "auto",
@@ -282,9 +295,9 @@ TEST_F(incidents, multiedge) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 1234});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 1234});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), 0., .5, 1234});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 1234});
+  reader->add(edge_ids[1], baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 1234});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), 0., .5, 1234});
   reader->sort();
 
   // do the route
@@ -305,11 +318,11 @@ TEST_F(incidents, multiincident) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .25, .4, 123});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), 0., .5, 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), .75, .9, 789});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .25, .4, 123});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 456});
+  reader->add(edge_ids[1], baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 456});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), 0., .5, 456});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), .75, .9, 789});
   reader->sort();
 
   // do the route
@@ -332,11 +345,11 @@ TEST_F(incidents, interleaved) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .25, .75, 123});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), 0., .5, 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), .25, .9, 789});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .25, .75, 123});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 456});
+  reader->add(edge_ids[1], baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 456});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), 0., .5, 456});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), .25, .9, 789});
   reader->sort();
 
   // do the route
@@ -359,11 +372,11 @@ TEST_F(incidents, collisions) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .25, .5, 123});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), 0., .5, 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), .5, .9, 789});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .25, .5, 123});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 456});
+  reader->add(edge_ids[1], baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 456});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), 0., .5, 456});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), .5, .9, 789});
   reader->sort();
 
   // do the route
@@ -386,8 +399,8 @@ TEST_F(incidents, full_overlap) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 123});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 456});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 123});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 456});
   reader->sort();
 
   // do the route
@@ -409,14 +422,14 @@ TEST_F(incidents, multileg) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .25, .75, 123});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 456});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .25, .75, 123});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 456});
 
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 789});
+  reader->add(edge_ids[1], baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 456});
+  reader->add(edge_ids[1], baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 789});
 
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), 0., .5, 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), 0., .9, 789});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), 0., .5, 456});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), 0., .9, 789});
   reader->sort();
 
   // do the route
@@ -442,8 +455,8 @@ TEST_F(incidents, clipped) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .25, .75, 123});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[3].id(), .25, .75, 456});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .25, .75, 123});
+  reader->add(edge_ids[3], baldr::GraphReader::Incident{edge_ids[3].id(), .25, .75, 456});
   reader->sort();
 
   // do the route
@@ -465,8 +478,8 @@ TEST_F(incidents, missed) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .1, .2, 123});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[3].id(), .6, .7, 456});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .1, .2, 123});
+  reader->add(edge_ids[3], baldr::GraphReader::Incident{edge_ids[3].id(), .6, .7, 456});
   reader->sort();
 
   // do the route
@@ -485,7 +498,7 @@ TEST_F(incidents, simple_point) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .25, .25, 123});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .25, .25, 123});
   reader->sort();
 
   // do the route
@@ -506,7 +519,7 @@ TEST_F(incidents, left_point) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), 0., 0., 123});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), 0., 0., 123});
   reader->sort();
 
   // do the route
@@ -527,7 +540,7 @@ TEST_F(incidents, right_point) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), 1., 1., 123});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), 1., 1., 123});
   reader->sort();
 
   // do the route
@@ -548,9 +561,9 @@ TEST_F(incidents, multipoint) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .5, .5, 123});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), 0., 0., 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), .2, .2, 789});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .5, .5, 123});
+  reader->add(edge_ids[1], baldr::GraphReader::Incident{edge_ids[1].id(), 0., 0., 456});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), .2, .2, 789});
   reader->sort();
 
   // do the route
@@ -573,12 +586,12 @@ TEST_F(incidents, point_collisions) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .5, .5, 123});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .5, .5, 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), 1., 1., 789});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), 1., 1., 987});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), .9, .9, 654});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), .9, .9, 321});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .5, .5, 123});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .5, .5, 456});
+  reader->add(edge_ids[1], baldr::GraphReader::Incident{edge_ids[1].id(), 1., 1., 789});
+  reader->add(edge_ids[1], baldr::GraphReader::Incident{edge_ids[1].id(), 1., 1., 987});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), .9, .9, 654});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), .9, .9, 321});
   reader->sort();
 
   // do the route
@@ -604,10 +617,10 @@ TEST_F(incidents, point_shared) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), 1., 1., 123});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), 0., 0., 123});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), 1., 1., 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), 0., 0., 456});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), 1., 1., 123});
+  reader->add(edge_ids[1], baldr::GraphReader::Incident{edge_ids[1].id(), 0., 0., 123});
+  reader->add(edge_ids[1], baldr::GraphReader::Incident{edge_ids[1].id(), 1., 1., 456});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), 0., 0., 456});
   reader->sort();
 
   // do the route
@@ -629,32 +642,32 @@ TEST_F(incidents, armageddon) {
   std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .25, .75, 123});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .5, .5, 987});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), 1., 1., 666});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .25, .75, 123});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 456});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .5, .5, 987});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), 1., 1., 666});
 
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), .0, .0, 666});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 789});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), .6, .6, 321});
+  reader->add(edge_ids[1], baldr::GraphReader::Incident{edge_ids[1].id(), .0, .0, 666});
+  reader->add(edge_ids[1], baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 456});
+  reader->add(edge_ids[1], baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 789});
+  reader->add(edge_ids[1], baldr::GraphReader::Incident{edge_ids[1].id(), .6, .6, 321});
 
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), 0., .5, 456});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), 0., .6, 789});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), .65, .65, 0});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), .69, .69, 1});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), .7, 1., 2});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), .8, 1., 3});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), 0., .5, 456});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), 0., .6, 789});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), .65, .65, 0});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), .69, .69, 1});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), .7, 1., 2});
+  reader->add(edge_ids[2], baldr::GraphReader::Incident{edge_ids[2].id(), .8, 1., 3});
 
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[3].id(), 0., .1, 2});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[3].id(), 0., .7, 3});
+  reader->add(edge_ids[3], baldr::GraphReader::Incident{edge_ids[3].id(), 0., .1, 2});
+  reader->add(edge_ids[3], baldr::GraphReader::Incident{edge_ids[3].id(), 0., .7, 3});
 
   // out of bounds
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .3, .3, 654});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .25, .25, 4});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .1, .3, 5});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[3].id(), .9, .9, 6});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[3].id(), .6, .95, 7});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .3, .3, 654});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .25, .25, 4});
+  reader->add(edge_ids[0], baldr::GraphReader::Incident{edge_ids[0].id(), .1, .3, 5});
+  reader->add(edge_ids[3], baldr::GraphReader::Incident{edge_ids[3].id(), .9, .9, 6});
+  reader->add(edge_ids[3], baldr::GraphReader::Incident{edge_ids[3].id(), .6, .95, 7});
 
   reader->sort();
 

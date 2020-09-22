@@ -665,7 +665,7 @@ valhalla::baldr::json::MapPtr serializeIncident(const TripLeg::Incident& inciden
 // Serializes incidents and adds to json-document
 void serializeIncidents(
     const google::protobuf::RepeatedPtrField<valhalla::TripLeg::Incident>& incidents,
-    json::MapPtr json_leg) {
+    json::MapPtr& json_leg) {
   if (incidents.empty()) {
     return;
   }
