@@ -133,7 +133,7 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
 
   auto n3 = test.GetNames(0, true);
   EXPECT_EQ(n3.size(), 1);
-  EXPECT_EQ(n3.at(0), "xyz tunnel");
+  EXPECT_EQ(n3.at(0), "1xyz tunnel"); // we always return the tag type in getnames
 
   auto names_and_types = ei.GetNamesAndTypes(true);
   EXPECT_EQ(names_and_types.size(), 2);
@@ -143,7 +143,7 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   EXPECT_EQ(n4.second, false);
 
   auto n5 = names_and_types.at(1);
-  EXPECT_EQ(n5.first, "xyz tunnel");
+  EXPECT_EQ(n5.first, "xyz tunnel"); // no tag type in GetNamesAndTypes
   EXPECT_EQ(n5.second, false);
 
   names_and_types = ei.GetNamesAndTypes(false);
