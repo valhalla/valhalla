@@ -5,30 +5,18 @@
 #include "mjolnir/graphtilebuilder.h"
 
 #include <algorithm>
-#include <fstream>
-#include <future>
-#include <iostream>
 #include <list>
 #include <mutex>
-#include <queue>
-#include <set>
 #include <thread>
 #include <tuple>
-#include <unordered_map>
 #include <vector>
+#include <limits>
 
-#include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <boost/range/algorithm.hpp>
 
-#include <valhalla/proto/options.pb.h>
-
-#include "baldr/datetime.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
-#include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
 #include "midgard/util.h"
@@ -42,7 +30,7 @@ namespace {
 
 struct BestProjection {
   const DirectedEdge* directededge = nullptr;
-  uint32_t startnode = -1;
+  uint32_t startnode = std::numeric_limits<uint32_t>::max();
   std::vector<PointLL> shape;
   std::tuple<PointLL, float, int> closest;
 };
@@ -59,7 +47,7 @@ struct BSSConnection {
   GraphId bss_node_id = {};
   GraphId way_node_id = {};
 
-  uint64_t wayid = -1;
+  uint64_t wayid = std::numeric_limits<uint64_t>::max();
   std::vector<std::string> names = {};
   std::vector<PointLL> shape = {};
   // Is the outbound edge from the waynode is forward?
