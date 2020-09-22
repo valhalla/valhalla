@@ -153,7 +153,7 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   EXPECT_EQ(n4.first, "einzelweg");
   EXPECT_EQ(n4.second, false);
 
-  names_and_types = ei.GetNamesAndTypes();//defaults to false
+  names_and_types = ei.GetNamesAndTypes(); // defaults to false
   EXPECT_EQ(names_and_types.size(), 1);
 
   n4 = names_and_types.at(0);
@@ -162,8 +162,8 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
 
   auto tagged_names_and_types = ei.GetTaggedNamesAndTypes();
   for (const auto& tagged_name_and_type : tagged_names_and_types) {
-    EXPECT_EQ(tagged_name_and_type.first,"xyz tunnel");
-    EXPECT_EQ(tagged_name_and_type.second,1);
+    EXPECT_EQ(tagged_name_and_type.first, "xyz tunnel");
+    EXPECT_EQ(tagged_name_and_type.second, 1);
   }
 }
 
