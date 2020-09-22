@@ -123,15 +123,15 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   EXPECT_NEAR(ei.mean_elevation(), 555.0f, kElevationBinSize);
   EXPECT_EQ(ei.speed_limit(), 120);
 
-  auto n1 = test.GetNames(0,false);
+  auto n1 = test.GetNames(0, false);
   EXPECT_EQ(n1.size(), 1);
   EXPECT_EQ(n1.at(0), "einzelweg");
 
-  auto n2 = test.GetNames(0);//defaults to false
+  auto n2 = test.GetNames(0); // defaults to false
   EXPECT_EQ(n2.size(), 1);
   EXPECT_EQ(n2.at(0), "einzelweg");
 
-  auto n3 = test.GetNames(0,true);
+  auto n3 = test.GetNames(0, true);
   EXPECT_EQ(n3.size(), 1);
   EXPECT_EQ(n3.at(0), "xyz tunnel");
 
@@ -165,7 +165,6 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
     EXPECT_EQ(tagged_name_and_type.first,"xyz tunnel");
     EXPECT_EQ(tagged_name_and_type.second,1);
   }
-
 }
 
 TEST(GraphTileBuilder, TestAddBins) {
