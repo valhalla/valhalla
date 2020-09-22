@@ -812,6 +812,10 @@ std::string EnhancedTripLeg_Edge::ToString() const {
 std::string EnhancedTripLeg_Edge::TurnLanesToString() const {
   std::string str;
 
+  if (turn_lanes_size() == 0) {
+    return str;
+  }
+
   for (const auto& turn_lane : turn_lanes()) {
     if (str.empty()) {
       str = "[ ";
