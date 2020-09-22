@@ -632,8 +632,9 @@ TEST_F(incidents, armageddon) {
   reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .25, .75, 123});
   reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 456});
   reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .5, .5, 987});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .3, .3, 654});
+  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), 1., 1., 666});
 
+  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), .0, .0, 666});
   reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 456});
   reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 789});
   reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), .6, .6, 321});
@@ -643,10 +644,13 @@ TEST_F(incidents, armageddon) {
   reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), .65, .65, 0});
   reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), .69, .69, 1});
   reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), .7, 1., 2});
+  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), .8, 1., 3});
 
   reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[3].id(), 0., .1, 2});
+  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[3].id(), 0., .7, 3});
 
   // out of bounds
+  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .3, .3, 654});
   reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .25, .25, 4});
   reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .1, .3, 5});
   reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[3].id(), .9, .9, 6});
@@ -667,10 +671,13 @@ TEST_F(incidents, armageddon) {
 
   // check its right
   check_incident_locations(result, {
-                                       {123, 0, 0, .25, 0, .75},
-                                       {456, 0, 0, .5, 0, 1.},
-                                       {987, 0, 0, .5, 0, .5},
-                                       {654, 0, 0, .3, 0, .3},
+                                       // first edge is only half the edge because we start in the
+                                       // middle of it
+                                       {123, 0, 0, .0, 0, .5},
+                                       {456, 0, 0, .0, 0, 1.},
+                                       {987, 0, 0, .0, 0, .0},
+                                       {666, 0, 0, 1., 0, 1.},
+                                       {666, 1, 0, 0., 0, 0.},
                                        {456, 1, 0, 0., 0, 1.},
                                        {789, 1, 0, 0., 0, 1.},
                                        {321, 1, 0, .6, 0, .6},
@@ -678,6 +685,7 @@ TEST_F(incidents, armageddon) {
                                        {789, 2, 0, 0., 0, .6},
                                        {0, 2, 0, .65, 0, .65},
                                        {1, 2, 0, .69, 0, .69},
-                                       {2, 2, 0, .7, 1, .1},
+                                       {2, 2, 0, .7, 1, .2},
+                                       {3, 2, 0, .8, 1, 1.},
                                    });
 }
