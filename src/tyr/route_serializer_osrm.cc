@@ -546,6 +546,17 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     intersection->emplace("entry", entries);
     intersection->emplace("bearings", bearings);
 
+    // Add tunnel_name for tunnels
+    if (!arrive_maneuver) {
+      if (curr_edge->tunnel() && !curr_edge->tagged_name().empty()) {
+        for (uint32_t t = 0; t < curr_edge->tagged_name().size(); ++t) {
+          if (curr_edge->tagged_name().Get(t).type() == TaggedName_Type_kTunnel) {
+            intersection->emplace("tunnel_name", curr_edge->tagged_name().Get(t).value());
+          }
+        }
+      }
+    }
+
     // Add classes based on the first edge after the maneuver (not needed
     // for arrive maneuver).
     if (!arrive_maneuver) {

@@ -99,7 +99,7 @@ void make_tile() {
     uint32_t edge_info_offset = tile.AddEdgeInfo(localedgeidx, u.first, v.first, 123, // way_id
                                                  0, 0,
                                                  120, // speed limit in kph
-                                                 shape, {std::to_string(localedgeidx)}, 0, added);
+                                                 shape, {std::to_string(localedgeidx)}, {}, 0, added);
     // assert(added);
     edge_builder.set_edgeinfo_offset(edge_info_offset);
     tile.directededges().emplace_back(edge_builder);
