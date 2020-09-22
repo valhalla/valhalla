@@ -79,22 +79,7 @@ std::vector<std::string> EdgeInfo::GetNames(bool only_tagged_names) const {
     if ((only_tagged_names && !ni->tagged_) || (!only_tagged_names && ni->tagged_)) {
       continue;
     }
-    if (ni->tagged_) {
-      if (ni->name_offset_ < names_list_length_) {
-        std::string name = names_list_ + ni->name_offset_;
-        if (name.size() > 1) {
-          uint8_t num = 0;
-          try {
-            num = std::stoi(name.substr(0, 1));
-            names.push_back(name.substr(1));
-
-          } catch (const std::invalid_argument& arg) {
-            LOG_DEBUG("invalid_argument thrown for name: " + name);
-          }
-        }
-      } else
-        throw std::runtime_error("GetNames: offset exceeds size of text list");
-    } else if (ni->name_offset_ < names_list_length_) {
+    if (ni->name_offset_ < names_list_length_) {
       names.push_back(names_list_ + ni->name_offset_);
     } else {
       throw std::runtime_error("GetNames: offset exceeds size of text list");
