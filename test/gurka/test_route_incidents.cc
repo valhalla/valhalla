@@ -139,11 +139,6 @@ void check_incident_locations(const valhalla::Api& api,
   ASSERT_EQ(incident_count, locations.size()) << "Expected number of incidents does not match actual";
 }
 
-std::shared_ptr<std::vector<int>> foo() {
-  std::vector<int> bar;
-  return std::shared_ptr<std::vector<int>>(&bar, [](auto*) {});
-}
-
 // provides us an easy way to mock having incident tiles, each test can override the tile in question
 // a bit more work is needed if we want to do it for more than one tile at a time
 struct test_reader : public baldr::GraphReader {
