@@ -41,7 +41,10 @@ protected:
     // make the tiles
     std::string tile_dir = "test/data/route_incidents";
     map = gurka::buildtiles(layout, ways, {}, {}, tile_dir,
-                            {{"mjolnir.traffic_extract", tile_dir + "/traffic.tar"}});
+                            {
+                                {"mjolnir.traffic_extract", tile_dir + "/traffic.tar"},
+                                {"mjolnir.simulate_incidents", "true"},
+                            });
 
     // stage up some live traffic data
     valhalla_tests::utils::build_live_traffic_data(map.config);
@@ -67,12 +70,20 @@ void check_incident_locations(const valhalla::Api& api,
   // for every length we save the distance along the leg a given shape point is
   std::vector<std::vector<double>> leg_lengths;
   for (const auto& leg : api.trip().routes(0).legs()) {
+    // keep the distances between shape points for this leg
     auto shape = midgard::decode<std::vector<midgard::PointLL>>(leg.shape());
     std::vector<double> lengths;
     for (size_t i = 0; i < shape.size(); ++i) {
       lengths.push_back(i == 0 ? 0.0 : shape[i - 1].Distance(shape[i]) + lengths.back());
     }
     leg_lengths.emplace_back(std::move(lengths));
+
+    // also check that incidents are in the right order
+    uint32_t last_shape_index = 0;
+    for (const auto& i : leg.incidents()) {
+      ASSERT_GE(i.begin_shape_index(), last_shape_index);
+      last_shape_index = i.begin_shape_index();
+    }
   }
 
   // check all the incidents are in the right place in the route
@@ -126,28 +137,58 @@ struct test_reader : public baldr::GraphReader {
   GetIncidentTile(const baldr::GraphId& tile_id) const {
     return incident_tile_;
   }
+  void sort() {
+    std::sort(incident_tile_->begin(), incident_tile_->end(),
+              [](const GraphReader::Incident& a, const GraphReader::Incident& b) {
+                if (a.edge_index == b.edge_index) {
+                  if (a.start_offset == b.start_offset) {
+                    if (a.end_offset == b.end_offset) {
+                      return a.id < b.id;
+                    }
+                    return a.end_offset < b.end_offset;
+                  }
+                  return a.start_offset < b.start_offset;
+                }
+                return a.edge_index < b.edge_index;
+              });
+  }
   std::shared_ptr<baldr::GraphReader::incident_tile_t> incident_tile_;
 };
 
-// via some macro magic we are inside the scope of the incidents class above
-TEST_F(incidents, simple_cut) {
+// used to make a graphreader and mark some edges as having incidents
+std::shared_ptr<test_reader> setup_test(const gurka::map& map,
+                                        const std::vector<std::string>& names,
+                                        std::vector<baldr::GraphId>& edge_ids) {
   // make our reader that we can manipulate
-  map.config.put("mjolnir.simulate_incidents", true);
-  test_reader reader(map.config.get_child("mjolnir"));
-  std::shared_ptr<baldr::GraphReader> graphreader(&reader, [](baldr::GraphReader*) {});
+  auto reader = std::make_shared<test_reader>(map.config.get_child("mjolnir"));
 
   // modify traffic speed info to say that this edge has an incident
-  auto edge_id = std::get<0>(gurka::findEdge(reader, map.nodes, "BC", "B"));
-  auto has_incident_cb = [edge_id](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                   int edge_index, valhalla::baldr::TrafficSpeed* current) -> void {
-    if (edge_id.Tile_Base() == tile.header->tile_id && edge_id.id() == edge_index)
-      current->has_incidents = true;
-  };
-  valhalla_tests::utils::customize_live_traffic_data(map.config, has_incident_cb);
+  for (const auto& name : names) {
+    auto edge_id = std::get<0>(gurka::findEdge(*reader, map.nodes, name));
+    auto has_incident_cb = [edge_id](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                     int edge_index, valhalla::baldr::TrafficSpeed* current) -> void {
+      if (edge_id.Tile_Base() == tile.header->tile_id && edge_id.id() == edge_index)
+        current->has_incidents = true;
+    };
+    valhalla_tests::utils::customize_live_traffic_data(map.config, has_incident_cb);
+    edge_ids.push_back(edge_id);
+  }
+
+  // prepare for incidents
+  reader->incident_tile_.reset(new decltype(reader->incident_tile_)::element_type);
+  return reader;
+}
+
+// via some macro magic we are inside the scope of the incidents class above
+TEST_F(incidents, simple_cut) {
+  // mark the edges with incidents
+  std::vector<baldr::GraphId> edge_ids;
+  auto reader = setup_test(map, {"CB"}, edge_ids);
+  std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader.incident_tile_.reset(new decltype(reader.incident_tile_)::element_type);
-  reader.incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_id.id(), .25, .75, 1234});
+  reader->incident_tile_->emplace_back(
+      baldr::GraphReader::Incident{edge_ids.front().id(), .25, .75, 1234});
 
   // do the route
   auto result = gurka::route(map, {"C", "B"}, "auto",
@@ -161,23 +202,14 @@ TEST_F(incidents, simple_cut) {
 }
 
 TEST_F(incidents, whole_edge) {
-  // make our reader that we can manipulate
-  map.config.put("mjolnir.simulate_incidents", true);
-  test_reader reader(map.config.get_child("mjolnir"));
-  std::shared_ptr<baldr::GraphReader> graphreader(&reader, [](baldr::GraphReader*) {});
-
-  // modify traffic speed info to say that this edge has an incident
-  auto edge_id = std::get<0>(gurka::findEdge(reader, map.nodes, "BC", "B"));
-  auto has_incident_cb = [edge_id](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                   int edge_index, valhalla::baldr::TrafficSpeed* current) -> void {
-    if (edge_id.Tile_Base() == tile.header->tile_id && edge_id.id() == edge_index)
-      current->has_incidents = true;
-  };
-  valhalla_tests::utils::customize_live_traffic_data(map.config, has_incident_cb);
+  // mark the edges with incidents
+  std::vector<baldr::GraphId> edge_ids;
+  auto reader = setup_test(map, {"CB"}, edge_ids);
+  std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
 
   // modify the incident tile to have incidents on this edge
-  reader.incident_tile_.reset(new decltype(reader.incident_tile_)::element_type);
-  reader.incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_id.id(), 0., 1., 1234});
+  reader->incident_tile_->emplace_back(
+      baldr::GraphReader::Incident{edge_ids.front().id(), 0., 1., 1234});
 
   // do the route
   auto result = gurka::route(map, {"C", "B"}, "auto",
@@ -187,5 +219,70 @@ TEST_F(incidents, whole_edge) {
   // check its right
   check_incident_locations(result, {
                                        {1234, 0, 0, 0., 0, 1.},
+                                   });
+}
+
+TEST_F(incidents, left) {
+  // mark the edges with incidents
+  std::vector<baldr::GraphId> edge_ids;
+  auto reader = setup_test(map, {"CB"}, edge_ids);
+  std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
+
+  // modify the incident tile to have incidents on this edge
+  reader->incident_tile_->emplace_back(
+      baldr::GraphReader::Incident{edge_ids.front().id(), 0., .5, 1234});
+
+  // do the route
+  auto result = gurka::route(map, {"C", "B"}, "auto",
+                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                             graphreader);
+
+  // check its right
+  check_incident_locations(result, {
+                                       {1234, 0, 0, 0., 0, .5},
+                                   });
+}
+
+TEST_F(incidents, right) {
+  // mark the edges with incidents
+  std::vector<baldr::GraphId> edge_ids;
+  auto reader = setup_test(map, {"CB"}, edge_ids);
+  std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
+
+  // modify the incident tile to have incidents on this edge
+  reader->incident_tile_->emplace_back(
+      baldr::GraphReader::Incident{edge_ids.front().id(), .5, 1., 1234});
+
+  // do the route
+  auto result = gurka::route(map, {"C", "B"}, "auto",
+                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                             graphreader);
+
+  // check its right
+  check_incident_locations(result, {
+                                       {1234, 0, 0, .5, 0, 1.},
+                                   });
+}
+
+TEST_F(incidents, multiedge) {
+  // mark the edges with incidents
+  std::vector<baldr::GraphId> edge_ids;
+  auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
+  std::shared_ptr<baldr::GraphReader> graphreader(reader.get(), [](baldr::GraphReader*) {});
+
+  // modify the incident tile to have incidents on this edge
+  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .5, 1., 1234});
+  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[1].id(), 0., 1., 1234});
+  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[2].id(), 0., .5, 1234});
+  reader->sort();
+
+  // do the route
+  auto result = gurka::route(map, {"C", "H"}, "auto",
+                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                             graphreader);
+
+  // check its right
+  check_incident_locations(result, {
+                                       {1234, 0, 0, .5, 2, .5},
                                    });
 }

@@ -595,6 +595,48 @@ findEdge(valhalla::baldr::GraphReader& reader,
 }
 
 /**
+ * Finds an edge in the graph based on its way name, which is comprised of two node names
+ * The order of the node names in the way name determines the direction of the edge
+ * Passing the name AB will get you the edge from A to B and passing BA will give you its
+ * opposing edge
+ *
+ * NOTE: we only support node names 1 character long :O)
+ * @param reader        graph reader to look up tiles and edges
+ * @param nodes         map of node names to nodes
+ * @param way_name      the name of the edge you want to look up as described above
+ * @return the edge_id and its edge
+ */
+std::tuple<const baldr::GraphId, const baldr::DirectedEdge*>
+findEdge(valhalla::baldr::GraphReader& reader, const nodelayout& nodes, const std::string& way_name) {
+  auto way_name_reversed = way_name;
+  auto end_node_name = way_name.substr(way_name.size() - 1); // single char only sorry
+  std::reverse(way_name_reversed.begin(), way_name_reversed.end());
+  // Iterate over all the tiles, there wont be many in unit tests..
+  for (auto tile_id : reader.GetTileSet()) {
+    auto* tile = reader.GetGraphTile(tile_id);
+    // Iterate over all directed edges to find one with the name we want
+    for (const auto& e : tile->GetDirectedEdges()) {
+      // Bail if wrong end node
+      auto ll = tile->get_node_ll(e.endnode());
+      if (!ll.ApproximatelyEqual(nodes.at(end_node_name))) {
+        continue;
+      }
+
+      // Check if the name matches
+      auto names = tile->GetNames(e.edgeinfo_offset());
+      for (const auto& name : names) {
+        if (name == way_name || name == way_name_reversed) {
+          auto edge_id = tile_id;
+          edge_id.set_id(&e - tile->directededge(0));
+          return std::make_tuple(edge_id, &e);
+        }
+      }
+    }
+  }
+  return std::make_tuple(baldr::GraphId{}, nullptr);
+}
+
+/**
  * Calculates a route along a set of waypoints with a given costing model, and returns the
  * valhalla::Api result.
  *
