@@ -87,6 +87,7 @@
    * FIXED: Fixed a bug where the temp files were not getting read in if you started with the construct edges or build phase for valhalla_build_tiles. [#2601](https://github.com/valhalla/valhalla/pull/2601)
    * FIXED: Updated fr-FR.json with partial translations. [#2605](https://github.com/valhalla/valhalla/pull/2605)
    * FIXED: Removed superfluous const qualifier from odin/signs [#2609](https://github.com/valhalla/valhalla/pull/2609)
+   * FIXED: Internal maneuver placement [#2600](https://github.com/valhalla/valhalla/pull/2600)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
