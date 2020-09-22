@@ -67,6 +67,7 @@ protected:
   sif::cost_ptr_t costing;
   std::shared_ptr<baldr::GraphReader> reader;
   std::shared_ptr<baldr::connectivity_map_t> connectivity_map;
+  std::unordered_set<Options::Action> actions;
   std::string action_str;
   std::unordered_map<std::string, size_t> max_locations;
   std::unordered_map<std::string, float> max_distance;
