@@ -457,6 +457,24 @@ public:
   GraphId GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& tile);
 
   /**
+   * Helper method to get an opposing directed edge with it's id.
+   * @param  edgeid      Graph Id of the directed edge.
+   * @param  opp_edge    Reference to a pointer to a const directed edge.
+   * @param  tile        Reference to a pointer to a const tile.
+   * @return  Returns the graph Id of the opposing directed edge. An
+   *          invalid graph Id is returned if the opposing edge does not
+   *          exist (can occur with a regional extract where adjacent tile
+   *          is missing).
+   */
+  GraphId
+  GetOpposingEdgeId(const GraphId& edgeid, const DirectedEdge*& opp_edge, const GraphTile*& tile) {
+    GraphId opp_edgeid = GetOpposingEdgeId(edgeid, tile);
+    if (opp_edgeid)
+      opp_edge = tile->directededge(opp_edgeid);
+    return opp_edgeid;
+  }
+
+  /**
    * Convenience method to get an opposing directed edge.
    * @param  edgeid  Graph Id of the directed edge.
    * @return  Returns the opposing directed edge or nullptr if the
@@ -505,6 +523,22 @@ public:
    */
   const NodeInfo* GetEndNode(const DirectedEdge* edge, const GraphTile*& tile) {
     return GetGraphTile(edge->endnode(), tile) ? tile->node(edge->endnode()) : nullptr;
+  }
+
+  /**
+   * Method to get the begin node of an edge by using its opposing edges end node
+   * @param edge    the edge whose begin node you want
+   * @param tile    reference to a pointer to a const tile
+   * @return        returns GraphId of begin node of the edge (empty if couldn't find)
+   */
+  GraphId GetBeginNodeId(const DirectedEdge* edge, const GraphTile*& tile) {
+    // grab the node
+    if (!GetGraphTile(edge->endnode(), tile))
+      return {};
+    const auto* node = tile->node(edge->endnode());
+    // grab the opp edges end node
+    const auto* opp_edge = tile->directededge(node->edge_index() + edge->opp_index());
+    return opp_edge->endnode();
   }
 
   /**

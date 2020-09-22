@@ -279,9 +279,15 @@ bool build_tile_set(const boost::property_tree::ptree& config,
       osm_data.write_to_temp_files(tile_dir);
     }
   }
+
   // Construct edges
   std::map<baldr::GraphId, size_t> tiles;
   if (start_stage <= BuildStage::kConstructEdges && BuildStage::kConstructEdges <= end_stage) {
+
+    // Read OSMData from files if construct edges is the first stage
+    if (start_stage == BuildStage::kConstructEdges)
+      osm_data.read_from_temp_files(tile_dir);
+
     tiles = GraphBuilder::BuildEdges(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin);
     // Output manifest
     TileManifest manifest{tiles};
@@ -290,8 +296,9 @@ bool build_tile_set(const boost::property_tree::ptree& config,
 
   // Build Valhalla routing tiles
   if (start_stage <= BuildStage::kBuild && BuildStage::kBuild <= end_stage) {
-    // Read OSMData from files if building tiles is the first stage
     if (start_stage == BuildStage::kBuild) {
+      // Read OSMData from files if building tiles is the first stage
+      osm_data.read_from_temp_files(tile_dir);
       if (filesystem::exists(tile_manifest)) {
         tiles = TileManifest::ReadFromFile(tile_manifest).tileset;
       } else {
@@ -301,7 +308,6 @@ bool build_tile_set(const boost::property_tree::ptree& config,
         tiles =
             GraphBuilder::BuildEdges(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin);
       }
-      osm_data.read_from_temp_files(tile_dir);
     }
 
     // Build the graph using the OSMNodes and OSMWays from the parser

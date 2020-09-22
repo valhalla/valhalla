@@ -306,7 +306,7 @@ nodelayout map_to_coordinates(const std::string& map,
   // In-place remove leading whitespace from each line
   for (auto& line : lines) {
     // This must be a blank line or something
-    if (line.size() < min_whitespace)
+    if (line.size() < static_cast<size_t>(min_whitespace))
       continue;
     line.erase(line.begin(), line.begin() + min_whitespace);
   }
@@ -689,6 +689,15 @@ valhalla::Api route(const map& map,
   return route(map, request_json, reader);
 }
 
+valhalla::Api route(const map& map,
+                    const std::string& from,
+                    const std::string& to,
+                    const std::string& costing,
+                    const std::unordered_map<std::string, std::string>& options = {},
+                    std::shared_ptr<valhalla::baldr::GraphReader> reader = {}) {
+  return route(map, {from, to}, costing, options, reader);
+}
+
 valhalla::Api match(const map& map,
                     const std::vector<std::string>& waypoints,
                     const std::string& stop_type,
@@ -870,6 +879,30 @@ void expect_maneuvers(const valhalla::Api& result,
 
   EXPECT_EQ(actual_maneuvers, expected_maneuvers)
       << "Actual maneuvers didn't match expected maneuvers";
+}
+
+/**
+ * Tests whether the expected sequence of maneuver begin path indexes is emitted for the route.
+ * Looks at the output of Odin in the result.
+ *
+ * @param result the result of a /route or /match request
+ * @param expected_indexes all the maneuver begin path indexes expected in the DirectionsLeg
+ *                         for the route
+ */
+void expect_maneuver_begin_path_indexes(const valhalla::Api& result,
+                                        const std::vector<uint32_t>& expected_indexes) {
+
+  EXPECT_EQ(result.directions().routes_size(), 1);
+
+  std::vector<uint32_t> actual_indexes;
+  for (const auto& leg : result.directions().routes(0).legs()) {
+    for (const auto& maneuver : leg.maneuver()) {
+      actual_indexes.push_back(maneuver.begin_path_index());
+    }
+  }
+
+  EXPECT_EQ(actual_indexes, expected_indexes)
+      << "Actual maneuver begin path indexes didn't match expected indexes";
 }
 
 /**

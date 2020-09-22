@@ -423,6 +423,16 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     }
   }
 
+  // Add tagged names to the edge if requested
+  if (controller.attributes.at(kEdgeTaggedNames)) {
+    auto tagged_names_and_types = edgeinfo.GetTaggedNamesAndTypes();
+    for (const auto& tagged_name_and_type : tagged_names_and_types) {
+      auto* trip_edge_tag_name = trip_edge->mutable_tagged_name()->Add();
+      trip_edge_tag_name->set_value(tagged_name_and_type.first);
+      trip_edge_tag_name->set_type(static_cast<TaggedName_Type>(tagged_name_and_type.second));
+    }
+  }
+
 #ifdef LOGGING_LEVEL_TRACE
   LOG_TRACE(std::string("wayid=") + std::to_string(edgeinfo.wayid()));
 #endif
@@ -1118,7 +1128,7 @@ void TripLegBuilder::Build(
     }
 
     // Assign the admin index
-    if (controller.attributes.at(kNodeaAdminIndex)) {
+    if (controller.attributes.at(kNodeAdminIndex)) {
       trip_node->set_admin_index(
           GetAdminIndex(start_tile->admininfo(node->admin_index()), admin_info_map, admin_info_list));
     }
@@ -1305,7 +1315,7 @@ void TripLegBuilder::Build(
 
   // Add the last node
   auto* node = trip_path.add_node();
-  if (controller.attributes.at(kNodeaAdminIndex)) {
+  if (controller.attributes.at(kNodeAdminIndex)) {
     auto* last_tile = graphreader.GetGraphTile(startnode);
     node->set_admin_index(
         GetAdminIndex(last_tile->admininfo(last_tile->node(startnode)->admin_index()), admin_info_map,

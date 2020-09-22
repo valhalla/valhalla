@@ -1,6 +1,6 @@
 ## Release Date: 2020-08-?? Valhalla 3.1.0
 * **Removed**
-   * REMOVED:  Remove Node bindings. [#2502](https://github.com/valhalla/valhalla/pull/2502)
+   * REMOVED: Remove Node bindings. [#2502](https://github.com/valhalla/valhalla/pull/2502)
    * REMOVED: appveyor builds. [#2544](https://github.com/valhalla/valhalla/issues/2544)
 
 * **Bug Fix**
@@ -83,6 +83,11 @@
    * FIXED: Allow uturns for truck costing now that we have derived deadends marked in the edge label [#2559](https://github.com/valhalla/valhalla/pull/2559)
    * FIXED: Map matching uturn trimming at the end of an edge where it wasn't needed. [#2558](https://github.com/valhalla/valhalla/pull/2558)
    * FIXED: Multicue enter roundabout [#2556](https://github.com/valhalla/valhalla/pull/2556)
+   * FIXED: Changed reachability computation to take into account live speed [#2597](https://github.com/valhalla/valhalla/pull/2597)
+   * FIXED: Fixed a bug where the temp files were not getting read in if you started with the construct edges or build phase for valhalla_build_tiles. [#2601](https://github.com/valhalla/valhalla/pull/2601)
+   * FIXED: Updated fr-FR.json with partial translations. [#2605](https://github.com/valhalla/valhalla/pull/2605)
+   * FIXED: Removed superfluous const qualifier from odin/signs [#2609](https://github.com/valhalla/valhalla/pull/2609)
+   * FIXED: Internal maneuver placement [#2600](https://github.com/valhalla/valhalla/pull/2600)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
@@ -155,6 +160,10 @@
    * ADDED: Dependency cache for Azure [#2567](https://github.com/valhalla/valhalla/pull/2567)
    * ADDED: Added flexibility to remove the use of the admindb and to use the country and state iso from the tiles; [#2579](https://github.com/valhalla/valhalla/pull/2579)
    * ADDED: Added toll gates and collection points (gantry) to the node;  [#2532](https://github.com/valhalla/valhalla/pull/2532)
+   * ADDED: Added osrm serialization for rest/service areas and admins. [#2594](https://github.com/valhalla/valhalla/pull/2594)
+   * ADDED: Support restricted class in intersection annotations [#2589](https://github.com/valhalla/valhalla/pull/2589)
+   * ADDED: Added trail type trace [#2606](https://github.com/valhalla/valhalla/pull/2606)
+   * ADDED: Added tunnel names to the edges as a tagged name.  [#2608](https://github.com/valhalla/valhalla/pull/2608)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

@@ -134,6 +134,10 @@ public:
     return mutable_edge_->name();
   }
 
+  const ::google::protobuf::RepeatedPtrField<::valhalla::TaggedName>& tagged_name() const {
+    return mutable_edge_->tagged_name();
+  }
+
   float length() const {
     return mutable_edge_->length();
   }
@@ -581,6 +585,10 @@ public:
 
   double elapsed_time() const {
     return mutable_node_->cost().elapsed_cost().seconds();
+  }
+
+  bool has_admin_index() const {
+    return mutable_node_->has_admin_index();
   }
 
   uint32_t admin_index() const {

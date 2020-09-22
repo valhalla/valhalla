@@ -656,12 +656,6 @@ TEST_F(incidents, armageddon) {
   reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[3].id(), .9, .9, 6});
   reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[3].id(), .6, .95, 7});
 
-  // clipped
-  /*reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .25, .25, 5});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[0].id(), .1, .3, 6});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[3].id(), .9, .9, 3});
-  reader->incident_tile_->emplace_back(baldr::GraphReader::Incident{edge_ids[3].id(), .6, .95, 4});*/
-
   reader->sort();
 
   // do the route

@@ -18,6 +18,9 @@ constexpr uint32_t kMaxGraphTileId = 4194303;
 // Maximum id/index within a tile. 21 bits
 constexpr uint32_t kMaxGraphId = 2097151;
 
+// Invalid edge label
+constexpr uint32_t kInvalidLabel = std::numeric_limits<uint32_t>::max();
+
 // A value to use for invalid latitude/longitudes (i.e. uninitialized)
 constexpr float kInvalidLatitude = std::numeric_limits<float>::max();
 constexpr float kInvalidLongitude = std::numeric_limits<float>::max();
@@ -345,6 +348,11 @@ inline std::string to_string(Use u) {
   }
   return i->second;
 }
+
+enum class TaggedName : uint8_t { // must start at 1 due to nulls
+  kTunnel = 1,
+  kBridge = 2
+};
 
 // Speed type
 enum class SpeedType : uint8_t {
