@@ -263,7 +263,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
                           stations_total +
                               10 /* + routes_total * 1000 + pairs_total*/}); // TODO: factor in stop
                                                                              // pairs as well
-      LOG_INFO(GraphTile::FileSuffix(tile, false, false) + " should have " + std::to_string(stations_total) +
+      LOG_INFO(GraphTile::FileSuffix(tile) + " should have " + std::to_string(stations_total) +
                " stations " /* +
           std::to_string(routes_total) +  " routes and " + std::to_string(pairs_total) +  " stop_pairs"*/);
     }
@@ -763,7 +763,7 @@ void fetch_tiles(const ptree& pt,
                             : "";
 
     Transit tile;
-    auto file_name = GraphTile::FileSuffix(current);
+    auto file_name = GraphTile::FileSuffix(current, SUFFIX_NON_COMPRESSED, false);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
     filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") +
                                     filesystem::path::preferred_separator + file_name;
