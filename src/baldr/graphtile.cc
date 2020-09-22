@@ -641,8 +641,9 @@ GraphTile::GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t
 
 // Convenience method to get the names for an edge given the offset to the
 // edge info
-std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) const {
-  return edgeinfo(edgeinfo_offset).GetNames();
+std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset,
+                                             bool only_tagged_names) const {
+  return edgeinfo(edgeinfo_offset).GetNames(only_tagged_names);
 }
 
 // Convenience method to get the types for the names given the offset to the

@@ -349,6 +349,11 @@ inline std::string to_string(Use u) {
   return i->second;
 }
 
+enum class TaggedName : uint8_t { // must start at 1 due to nulls
+  kTunnel = 1,
+  kBridge = 2
+};
+
 // Speed type
 enum class SpeedType : uint8_t {
   kTagged = 0,    // Tagged maximum speed
