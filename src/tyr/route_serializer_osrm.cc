@@ -646,7 +646,7 @@ valhalla::baldr::json::MapPtr serializeIncident(const TripLeg::Incident& inciden
     metadata_json->emplace("start_time", static_cast<uint64_t>(incident.start_time()));
   }
   if (incident.type()) {
-    metadata_json->emplace("incident_type", valhalla::incidentTypeToString(incident.type()));
+    metadata_json->emplace("type", valhalla::incidentTypeToString(incident.type()));
   }
   if (incident.has_description() && !incident.description().empty()) {
     metadata_json->emplace("description", incident.description());
@@ -1592,7 +1592,7 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
           "creation_time": 1597241829,
           "start_time": 1597241929,
           "end_time": 1597243629,
-          "incident_type": "weather",
+          "type": "weather",
           "geometry_index_start": 42,
           "geometry_index_end": 42
         }
@@ -1656,7 +1656,7 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
           "id": 1337,
           "description": "Fooo",
           "creation_time": 1597241829,
-          "incident_type": "weather",
+          "type": "weather",
           "geometry_index_start": 87,
           "geometry_index_end": 92
         },
@@ -1665,7 +1665,7 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
           "creation_time": 1597241800,
           "start_time": 1597241900,
           "end_time": 1597243600,
-          "incident_type": "accident",
+          "type": "accident",
           "geometry_index_start": 21,
           "geometry_index_end": 104
         }
