@@ -192,16 +192,19 @@ void SetShapeAttributes(const AttributesController& controller,
   }
 
   // sort the start and ends of the incidents along this edge
-  for (const auto& i : incidents) {
+  for (const auto& incident : incidents) {
     // if the incident is actually on the part of the edge we are using
-    if (i.start_offset > tgt_pct || i.end_offset < src_pct)
+    if (incident.start_offset > tgt_pct || incident.end_offset < src_pct)
       continue;
     // insert the start point and end points
-    for (auto offset : {std::max(i.start_offset, src_pct), std::min(i.end_offset, tgt_pct)}) {
+    for (auto offset : {
+             std::max(incident.start_offset, src_pct),
+             std::min(incident.end_offset, tgt_pct),
+         }) {
       // if this is clipped at the beginning of the edge then its not a new cut but we still need to
       // attach the incidents information to the leg
       if (offset == src_pct) {
-        UpdateIncident(leg, &i, shape_begin);
+        UpdateIncident(leg, &incident, shape_begin);
         continue;
       }
 
@@ -210,13 +213,13 @@ void SetShapeAttributes(const AttributesController& controller,
                                       [offset](const cut_t& c) { return c.percent_along < offset; });
       // there is already a cut here so we just add the incident
       if (itr != cuts.end() && itr->percent_along == offset) {
-        itr->incidents.push_back(&i);
+        itr->incidents.push_back(&incident);
       } // there wasnt a cut here so we need to make one
       else {
         cuts.insert(itr, cut_t{offset,
                                itr == cuts.end() ? speed : itr->speed,
                                itr == cuts.end() ? UNKNOWN_CONGESTION_VAL : itr->congestion,
-                               {&i}});
+                               {&incident}});
       }
     }
   }
