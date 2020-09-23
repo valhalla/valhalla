@@ -178,6 +178,9 @@ in the `gurka::assert::raw` namespace:
 void expect_maneuvers(const valhalla::Api& result,
                       const std::vector<valhalla::DirectionsLeg_Maneuver_Type>& expected_maneuvers);
 
+void expect_maneuver_begin_path_indexes(const valhalla::Api& result,
+                                        const std::vector<uint32_t>& expected_indexes);
+
 void expect_instructions_at_maneuver_index(
     const valhalla::Api& result,
     int maneuver_index,

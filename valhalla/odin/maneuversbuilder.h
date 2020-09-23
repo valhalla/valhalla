@@ -259,6 +259,28 @@ protected:
    */
   void SetTraversableOutboundIntersectingEdgeFlags(std::list<Maneuver>& maneuvers);
 
+  /**
+   * Update the transition point for internal intersection turns.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void UpdateManeuverPlacementForInternalIntersectionTurns(std::list<Maneuver>& maneuvers);
+
+  /**
+   * Update the transition point for internal intersection turns.
+   *
+   * @param prev_maneuver The previous maneuver that will add the straight internal edge.
+   * @param maneuver The turn maneuver that will remove the internal edge.
+   * @param new_node_index The new node index for the transition point.
+   * @param prev_edge The previous edge that may have turn lane info.
+   * @param edge The straight internal edge that will move to the previous maneuver.
+   */
+  void MoveInternalEdgeToPreviousManeuver(Maneuver& prev_maneuver,
+                                          Maneuver& maneuver,
+                                          uint32_t new_node_index,
+                                          EnhancedTripLeg_Edge* prev_edge,
+                                          EnhancedTripLeg_Edge* edge);
+
   const Options& options_;
   EnhancedTripLeg* trip_path_;
 };
