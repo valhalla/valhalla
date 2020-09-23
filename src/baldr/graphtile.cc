@@ -440,15 +440,14 @@ GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, b
 
   // if it starts with a zero the pow trick doesn't work
   if (graphid.level() == 0) {
-    stream << static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid()
-           << fname_suffix.c_str();
+    stream << static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << fname_suffix;
     std::string suffix = stream.str();
     suffix[0] = '0';
     return suffix;
   }
   // it was something else
   stream << graphid.level() * static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid()
-         << fname_suffix.c_str();
+         << fname_suffix;
   return stream.str();
 }
 
