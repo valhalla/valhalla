@@ -164,6 +164,7 @@
    * ADDED: Support restricted class in intersection annotations [#2589](https://github.com/valhalla/valhalla/pull/2589)
    * ADDED: Added trail type trace [#2606](https://github.com/valhalla/valhalla/pull/2606)
    * ADDED: Added tunnel names to the edges as a tagged name.  [#2608](https://github.com/valhalla/valhalla/pull/2608)
+   * ADDED: Costing option to ignore_closures when routing with current flow [#2615](https://github.com/valhalla/valhalla/pull/2615)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

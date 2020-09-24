@@ -49,22 +49,15 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
     // expand from the node
     if (!reader.GetGraphTile(node_id, tile))
       continue;
-    const auto* node = tile->node(node_id);
-
-    GraphId edge_id = tile->id();
-    edge_id.set_id(node->edge_index());
-
-    auto directed_edges = tile->GetDirectedEdges(node_id);
-    for (const auto* edge = directed_edges.begin(); edge != directed_edges.end(); ++edge, ++edge_id) {
+    for (const auto& edge : tile->GetDirectedEdges(node_id)) {
       // TODO: we'd rather say !edge.end_simple_restriction() and not !edge.restrictions()
       // TODO: but we'd need the predecessor information to do that so we punt 1 edge earlier
       // NOTE: we can go through the start of the restriction because only the end would mark a
       // potential stopping point (maybe a path followed the restriction)
 
       // if this edge is traversable we enqueue its end node
-      if (costing->Filter(edge, tile) > 0 && !edge->end_restriction() &&
-          !edge->restrictions())
-        enqueue(edge->endnode(), reader, costing, tile);
+      if (costing->Filter(&edge, tile) > 0 && !edge.end_restriction() && !edge.restrictions())
+        enqueue(edge.endnode(), reader, costing, tile);
     }
   }
   // settled nodes + will be settled nodes - duplicated transitions nodes
@@ -96,12 +89,9 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
       // get the opposing edge
       if (!reader.GetGraphTile(edge.endnode(), tile))
         continue;
+      const auto* node = tile->node(edge.endnode());
+      const auto* opp_edge = tile->directededge(node->edge_index() + edge.opp_index());
 
-      // get opposing edge id
-      GraphId opp_edgeid = edge.endnode();
-      opp_edgeid.set_id(tile->node(edge.endnode())->edge_index() + edge.opp_index());
-      // get opposing edge
-      const auto* opp_edge = tile->directededge(opp_edgeid);
       // NOTE: we can go through the end of the restriction because only the start would mark a
       // potential stopping point (maybe a path followed the restriction). We also have to stop
       // at the start of a simple restriction because it could have been on our path

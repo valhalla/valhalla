@@ -521,7 +521,10 @@ public:
     if ((flow_mask & kCurrentFlowMask) && traffic_tile()) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
       auto volatile& live_speed = traffic_tile.trafficspeed(directed_edge_index);
-      if (live_speed.valid()) {
+      // TODO: we only use the current flow on the edge if its valid and not closed
+      // TODO: if its valid and closed we cant use it because it makes costing crazy
+      // if (live_speed.valid()) {
+      if (!live_speed.closed()) {
         *flow_sources |= kCurrentFlowMask;
         return live_speed.get_overall_speed();
       }

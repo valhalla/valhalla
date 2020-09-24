@@ -475,9 +475,7 @@ struct bin_handler_t {
     // filtered then the reaches of both edges are the same
 
     const DirectedEdge* opp_edge = nullptr;
-    GraphId opp_edgeid;
-    if (reach.outbound > 0 && reach.inbound > 0 &&
-        (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, tile)) &&
+    if (reach.outbound > 0 && reach.inbound > 0 && (opp_edge = reader.GetOpposingEdge(edge, tile)) &&
         costing->Filter(opp_edge, tile) > 0.f) {
       directed_reaches[opp_edge] = reach;
     }
@@ -779,7 +777,7 @@ struct bin_handler_t {
     // give back all the results
     return searched;
   }
-};
+}; // namespace
 
 } // namespace
 
