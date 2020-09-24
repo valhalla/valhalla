@@ -722,7 +722,7 @@ protected:
                               {"CD", {{"highway", "primary"}, {"maxspeed", speed_str}}},
                               {"DA", {{"highway", "primary"}, {"maxspeed", speed_str}}}};
 
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10, {.05f, .2f});
     closure_map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
 
     closure_map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
@@ -875,5 +875,52 @@ TEST_F(WaypointsOnClosuresTest, ArrivePointAtClosure) {
         gurka::route(closure_map, "B", "2", "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::raw::expect_path(result, {"AB"});
     gurka::assert::raw::expect_eta(result, 5.f, eta_margin);
+  }
+}
+
+TEST_F(WaypointsOnClosuresTest, IgnoreDepartPointAtClosure) {
+  // the edge is not closed
+  {
+    auto result =
+        gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    gurka::assert::raw::expect_path(result, {"BC", "AB"});
+  }
+
+  // the edge is closed in both directions
+  {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
+      baldr::GraphId tile_id(tile.header->tile_id);
+      auto BC = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "BC", "C"));
+      auto CB = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "BC", "B"));
+      bool should_close = (BC.Tile_Base() == tile_id && BC.id() == index) ||
+                          (CB.Tile_Base() == tile_id && CB.id() == index);
+      SetLiveSpeed(current, should_close ? 0 : default_speed);
+    };
+    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
+
+    auto result =
+        gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    gurka::assert::raw::expect_path(result, {"AB"});
+  }
+
+  // the edge is closed in both directions but you say you dont care
+  {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
+      baldr::GraphId tile_id(tile.header->tile_id);
+      auto BC = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "BC", "C"));
+      auto CB = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "BC", "B"));
+      bool should_close = (BC.Tile_Base() == tile_id && BC.id() == index) ||
+                          (CB.Tile_Base() == tile_id && CB.id() == index);
+      SetLiveSpeed(current, should_close ? 0 : default_speed);
+    };
+    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
+
+    auto result =
+        gurka::route(closure_map, "1", "A", "auto",
+                     {{"/date_time/type", "0"}, {"/costing_options/auto/ignore_closures", "1"}},
+                     clean_reader);
+    gurka::assert::raw::expect_path(result, {"BC", "AB"});
   }
 }

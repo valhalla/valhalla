@@ -112,8 +112,7 @@ public:
     return true;
   }
 
-  bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
-                            const baldr::GraphTile* tile) const override {
+  bool IsClosed(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const override {
     return false;
   }
 
@@ -194,9 +193,7 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  float Filter(const baldr::DirectedEdge* edge,
-               const baldr::GraphId& /*edgeid*/,
-               const baldr::GraphTile* /*tile*/) const override {
+  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile*) const override {
     return !(edge->is_shortcut() || edge->IsTransitLine());
   }
 };
