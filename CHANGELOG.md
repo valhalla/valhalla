@@ -161,6 +161,7 @@
    * ADDED: Added flexibility to remove the use of the admindb and to use the country and state iso from the tiles; [#2579](https://github.com/valhalla/valhalla/pull/2579)
    * ADDED: Added toll gates and collection points (gantry) to the node;  [#2532](https://github.com/valhalla/valhalla/pull/2532)
    * ADDED: Added osrm serialization for rest/service areas and admins. [#2594](https://github.com/valhalla/valhalla/pull/2594)
+   * CHANGED: Improved Russian localization; [#2593](https://github.com/valhalla/valhalla/pull/2593)
    * ADDED: Support restricted class in intersection annotations [#2589](https://github.com/valhalla/valhalla/pull/2589)
    * ADDED: Added trail type trace [#2606](https://github.com/valhalla/valhalla/pull/2606)
    * ADDED: Added tunnel names to the edges as a tagged name.  [#2608](https://github.com/valhalla/valhalla/pull/2608)
