@@ -42,7 +42,9 @@ config = {
       'apply_country_overrides': True,
       'use_admin_db': True,
       'use_direction_on_ways': False,
-      'allow_alt_name': False
+      'allow_alt_name': False,
+      'use_urban_tag': False,
+      'use_rest_area': False
     },
     'logging': {
       'type': 'std_out',
@@ -287,9 +289,11 @@ help_text = {
       'infer_internal_intersections': 'bool indicating whether or not to infer internal intersections during the graph enhancer phase or use the internal_intersection key from the pbf',
       'infer_turn_channels': 'bool indicating whether or not to infer turn channels during the graph enhancer phase or use the turn_channel key from the pbf',
       'apply_country_overrides': 'bool indicating whether or not to apply country overrides during the graph enhancer phase',
-      'use_admin_db': 'bool indicating whether or not to use the administrative database during the graph enhancer phase or use the admin keys from the pbf that are set on the way',
+      'use_admin_db': 'bool indicating whether or not to use the administrative database during the graph enhancer phase or use the admin keys from the pbf that are set on the node',
       'use_direction_on_ways': 'bool indicating whether or not to process the direction key on the ways or utilize the guidance relation tags during the parsing phase',
-      'allow_alt_name': 'bool indicating whether or not to process the alt_name key on the ways during the parsing phase'
+      'allow_alt_name': 'bool indicating whether or not to process the alt_name key on the ways during the parsing phase',
+      'use_urban_tag': 'bool indicating whether or not to use the urban area tag on the ways or to utilize the getDensity function within the graph enhancer phase',
+      'use_rest_area': 'bool indicating whether or not to use the rest/service area tag on the ways'
     },
     'logging': {
       'type': 'Type of logger either std_out or file',

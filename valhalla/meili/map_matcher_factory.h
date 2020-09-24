@@ -6,13 +6,13 @@
 #include <string>
 
 #include <boost/property_tree/ptree.hpp>
-#include <rapidjson/rapidjson.h>
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/costfactory.h>
 
 #include <valhalla/meili/candidate_search.h>
+#include <valhalla/meili/config.h>
 #include <valhalla/meili/map_matcher.h>
 
 namespace valhalla {
@@ -41,7 +41,7 @@ public:
     return Create(options);
   }
 
-  boost::property_tree::ptree MergeConfig(const Options& options);
+  Config MergeConfig(const Options& options) const;
 
   void ClearFullCache();
 
@@ -50,7 +50,7 @@ public:
 private:
   typedef sif::cost_ptr_t (*factory_function_t)(const boost::property_tree::ptree&);
 
-  boost::property_tree::ptree config_;
+  Config config_;
 
   std::shared_ptr<baldr::GraphReader> graphreader_;
 
@@ -59,8 +59,6 @@ private:
   sif::CostFactory cost_factory_;
 
   std::shared_ptr<CandidateGridQuery> candidatequery_;
-
-  float max_grid_cache_size_;
 };
 
 } // namespace meili

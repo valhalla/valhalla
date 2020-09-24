@@ -134,6 +134,10 @@ public:
     return mutable_edge_->name();
   }
 
+  const ::google::protobuf::RepeatedPtrField<::valhalla::TaggedName>& tagged_name() const {
+    return mutable_edge_->tagged_name();
+  }
+
   float length() const {
     return mutable_edge_->length();
   }
@@ -347,6 +351,14 @@ public:
     return mutable_edge_->destination_only();
   }
 
+  bool has_is_urban() const {
+    return mutable_edge_->has_is_urban();
+  }
+
+  bool is_urban() const {
+    return mutable_edge_->is_urban();
+  }
+
   bool IsUnnamed() const;
 
   // Use
@@ -368,6 +380,8 @@ public:
   bool IsPathUse() const;
   bool IsPedestrianUse() const;
   bool IsBridlewayUse() const;
+  bool IsRestAreaUse() const;
+  bool IsServiceAreaUse() const;
   bool IsOtherUse() const;
   bool IsFerryUse() const;
   bool IsRailFerryUse() const;
@@ -573,6 +587,10 @@ public:
     return mutable_node_->cost().elapsed_cost().seconds();
   }
 
+  bool has_admin_index() const {
+    return mutable_node_->has_admin_index();
+  }
+
   uint32_t admin_index() const {
     return mutable_node_->admin_index();
   }
@@ -678,6 +696,7 @@ public:
   bool IsParking() const;
   bool IsMotorwayJunction() const;
   bool IsBorderControl() const;
+  bool IsTollGantry() const;
 
   std::string ToString() const;
 

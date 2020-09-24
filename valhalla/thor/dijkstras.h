@@ -87,11 +87,11 @@ public:
 
 protected:
   // A child-class must implement this to learn about what nodes were expanded
-  virtual void ExpandingNode(baldr::GraphReader& graphreader,
-                             const baldr::GraphTile* tile,
-                             const baldr::NodeInfo* node,
-                             const sif::EdgeLabel& current,
-                             const sif::EdgeLabel* previous){};
+  virtual void ExpandingNode(baldr::GraphReader&,
+                             const baldr::GraphTile*,
+                             const baldr::NodeInfo*,
+                             const sif::EdgeLabel&,
+                             const sif::EdgeLabel*) = 0;
 
   // A child-class must implement this to decide when to stop the expansion
   virtual ExpansionRecommendation ShouldExpand(baldr::GraphReader& graphreader,

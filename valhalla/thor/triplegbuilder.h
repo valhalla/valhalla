@@ -1,5 +1,4 @@
-#ifndef VALHALLA_THOR_TRIPPATHBUILDER_H_
-#define VALHALLA_THOR_TRIPPATHBUILDER_H_
+#pragma once
 
 #include <cstdint>
 #include <map>
@@ -67,5 +66,3 @@ public:
 
 } // namespace thor
 } // namespace valhalla
-
-#endif // VALHALLA_THOR_TRIPPATHBUILDER_H_

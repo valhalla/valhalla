@@ -29,22 +29,6 @@ namespace sif {
 
 const sif::Cost kNoCost(0.0f, 0.0f);
 
-/**
- * A callable element which returns a value between 0 and 1 indicating how
- * desirable the edge is for use as a location. A value of 0 indicates the
- * edge is not usable (no access for the travel mode used by this costing)
- * while 1 indicates the edge is highly preferred. Values in between can be
- * used to rank edges such that desirable edges that might be slightly
- * farther from the location than a less desirable edge can be chosen.
- */
-using EdgeFilter = std::function<float(const baldr::DirectedEdge*)>;
-
-/**
- * A callable element which returns true if a node should be
- * filtered out/ not used and false if the node is usable
- */
-using NodeFilter = std::function<bool(const baldr::NodeInfo*)>;
-
 // Default unit size (seconds) for cost sorting.
 constexpr uint32_t kDefaultUnitSize = 1;
 
@@ -75,8 +59,9 @@ public:
    * Constructor.
    * @param  options Request options in a pbf
    * @param  mode Travel mode
+   * @param  access_mask Access mask
    */
-  DynamicCost(const CostingOptions& options, const TravelMode mode);
+  DynamicCost(const CostingOptions& options, const TravelMode mode, uint32_t access_mask);
 
   virtual ~DynamicCost();
 
@@ -131,7 +116,9 @@ public:
    * Get the access mode used by this costing method.
    * @return  Returns access mode.
    */
-  virtual uint32_t access_mode() const = 0;
+  virtual uint32_t access_mode() const {
+    return access_mask_;
+  }
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -189,7 +176,25 @@ public:
    * @param   node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::NodeInfo* node) const = 0;
+  inline virtual bool Allowed(const baldr::NodeInfo* node) const {
+    return (node->access() & access_mask_) || ignore_access_;
+  }
+
+  /**
+   * Checks if access is allowed for the provided edge. The access check based on mode
+   * of travel and the access modes allowed on the edge.
+   * @param   edge  Pointer to edge information.
+   * @return  Returns true if access is allowed, false if not.
+   */
+  inline virtual bool IsAccessible(const baldr::DirectedEdge* edge) const {
+    // you can go on it if:
+    // you have forward access for the mode you care about
+    // you dont care about what mode has access so long as its forward
+    // you dont care about the direction the mode has access to
+    return (edge->forwardaccess() & access_mask_) ||
+           (ignore_access_ && (edge->forwardaccess() & baldr::kAllAccess)) ||
+           (ignore_oneways_ && (edge->reverseaccess() & access_mask_));
+  }
 
   inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
     return true;
@@ -426,62 +431,61 @@ public:
                                                   baldr::DateTime::get_tz_db().from_index(tz_index));
   }
 
-  inline bool EvaluateRestrictions(uint16_t auto_type,
+  inline bool EvaluateRestrictions(uint32_t access_mode,
                                    const baldr::DirectedEdge* edge,
                                    const baldr::GraphTile*& tile,
                                    const baldr::GraphId& edgeid,
                                    const uint64_t current_time,
                                    const uint32_t tz_index,
                                    int& restriction_idx) const {
-    if (edge->access_restriction()) {
-      const std::vector<baldr::AccessRestriction>& restrictions =
-          tile->GetAccessRestrictions(edgeid.id(), auto_type);
+    if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
+      return true;
 
-      bool time_allowed = false;
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(edgeid.id(), access_mode);
 
-      for (int i = 0, n = static_cast<int>(restrictions.size()); i < n; ++i) {
-        const auto& restriction = restrictions[i];
-        // Compare the time to the time-based restrictions
-        baldr::AccessType access_type = restriction.type();
-        if (access_type == baldr::AccessType::kTimedAllowed ||
-            access_type == baldr::AccessType::kTimedDenied) {
-          restriction_idx = i;
+    bool time_allowed = false;
 
-          if (access_type == baldr::AccessType::kTimedAllowed)
-            time_allowed = true;
+    for (int i = 0, n = static_cast<int>(restrictions.size()); i < n; ++i) {
+      const auto& restriction = restrictions[i];
+      // Compare the time to the time-based restrictions
+      baldr::AccessType access_type = restriction.type();
+      if (access_type == baldr::AccessType::kTimedAllowed ||
+          access_type == baldr::AccessType::kTimedDenied) {
+        restriction_idx = i;
 
-          if (current_time == 0) {
-            // No time supplied so ignore time-based restrictions
-            // (but mark the edge  (`has_time_restrictions`)
-            continue;
-          } else {
-            // is in range?
-            if (IsConditionalActive(restriction.value(), current_time, tz_index)) {
-              // If edge really is restricted at this time, we can exit early.
-              // If not, we should keep looking
+        if (access_type == baldr::AccessType::kTimedAllowed)
+          time_allowed = true;
 
-              // We are in range at the time we are allowed at this edge
-              if (access_type == baldr::AccessType::kTimedAllowed)
-                return true;
-              else
-                return false;
-            }
+        if (current_time == 0) {
+          // No time supplied so ignore time-based restrictions
+          // (but mark the edge  (`has_time_restrictions`)
+          continue;
+        } else {
+          // is in range?
+          if (IsConditionalActive(restriction.value(), current_time, tz_index)) {
+            // If edge really is restricted at this time, we can exit early.
+            // If not, we should keep looking
+
+            // We are in range at the time we are allowed at this edge
+            if (access_type == baldr::AccessType::kTimedAllowed)
+              return true;
+            else
+              return false;
           }
         }
-        // In case there are additional restriction checks for a particular  mode,
-        // check them now
-        if (!ModeSpecificAllowed(restriction)) {
-          return false;
-        }
       }
-
-      // if we have time allowed restrictions then these restrictions are
-      // the only time we can route here.  Meaning all other time is restricted.
-      // We looped over all the time allowed restrictions and we were never in range.
-      if (time_allowed && current_time != 0)
+      // In case there are additional restriction checks for a particular  mode,
+      // check them now
+      if (!ModeSpecificAllowed(restriction)) {
         return false;
+      }
     }
-    return true;
+
+    // if we have time allowed restrictions then these restrictions are
+    // the only time we can route here.  Meaning all other time is restricted.
+    // We looped over all the time allowed restrictions and we were never in range.
+    return !time_allowed || (current_time == 0);
   }
 
   /**
@@ -562,18 +566,21 @@ public:
   virtual bool bicycle() const;
 
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Returns a value between 0 and 1 indicating how
+   * desirable the edge is for use as a location. A value of 0 indicates the
+   * edge is not usable (no access for the travel mode used by this costing)
+   * while 1 indicates the edge is highly preferred. Values in between can be
+   * used to rank edges such that desirable edges that might be slightly
+   * farther from the location than a less desirable edge can be chosen.
+   *
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
    * mode used by the costing method.
    */
-  virtual const EdgeFilter GetEdgeFilter() const = 0;
-
-  /**
-   * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each node's attribution
-   */
-  virtual const NodeFilter GetNodeFilter() const = 0;
+  virtual float Filter(const baldr::DirectedEdge* edge,
+                       const baldr::GraphId& edgeid,
+                       const baldr::GraphTile* tile) const = 0;
 
   /**
    * Gets the hierarchy limits.
@@ -676,6 +683,9 @@ protected:
   // Travel mode
   TravelMode travel_mode_;
 
+  // Access mask based on travel mode
+  uint32_t access_mask_;
+
   // Hierarchy limits.
   std::vector<HierarchyLimits> hierarchy_limits_;
 
@@ -700,6 +710,9 @@ protected:
 
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
+  bool ignore_restrictions_{false};
+  bool ignore_oneways_{false};
+  bool ignore_access_{false};
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
@@ -876,6 +889,16 @@ protected:
    */
   float TransitionFactor(const bool has_traffic, const float density) const {
     return has_traffic ? kTrafficTransitionFactor : density;
+  }
+
+  /*
+   * Determine whether an edge is currently closed due to traffic.
+   * @param  edgeid         GraphId of the opposing edge.
+   * @return  Returns true if the edge is closed due to live traffic constraints, false if not.
+   */
+  inline virtual bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
+                                           const baldr::GraphTile* tile) const {
+    return (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosedDueToTraffic(edgeid);
   }
 };
 

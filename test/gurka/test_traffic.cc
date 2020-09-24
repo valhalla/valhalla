@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 
 using namespace valhalla;
+using LiveTrafficCustomize = valhalla_tests::utils::LiveTrafficCustomize;
 
 TEST(Traffic, BasicUpdates) {
 
@@ -49,9 +50,8 @@ TEST(Traffic, BasicUpdates) {
     printf("Make some updates to the traffic .tar file. "
            "Mostly just updates every edge in the file to 24km/h, except for one "
            "specific edge (B->D) where we simulate a closure (speed=0, congestion high)");
-    std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, valhalla::baldr::TrafficSpeed*)>
-        cb_setter_24kmh = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
-                                 valhalla::baldr::TrafficSpeed* current) -> void {
+    auto cb_setter_24kmh = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
+                                  valhalla::baldr::TrafficSpeed* current) -> void {
       baldr::GraphId tile_id(tile.header->tile_id);
       auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
       current->breakpoint1 = 255;
@@ -74,9 +74,9 @@ TEST(Traffic, BasicUpdates) {
       gurka::assert::raw::expect_eta(result, 151.5);
     }
     printf("Next, set the speed to the highest possible to ensure nothing breaks");
-    std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>
-        cb_setter_max = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
-                               baldr::TrafficSpeed* current) -> void {
+
+    auto cb_setter_max = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
+                                baldr::TrafficSpeed* current) -> void {
       baldr::GraphId tile_id(tile.header->tile_id);
       auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
       current->breakpoint1 = 255;
@@ -187,23 +187,25 @@ TEST(Traffic, CutGeoms) {
 
   // then we add one portion of the edge having traffic
   {
-    valhalla::baldr::TrafficSpeed ts{valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                     valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                     valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                     valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                     0u,
-                                     0u,
-                                     0u,
-                                     0u,
-                                     0u};
+    valhalla::baldr::TrafficSpeed ts{
+        valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+        valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+        valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+        valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+        0u,
+        0u,
+        0u,
+        0u,
+        0u,
+        0u,
+    };
     ts.overall_speed = 42 >> 1;
     ts.speed1 = 42 >> 1;
     ts.congestion1 = baldr::MAX_CONGESTION_VAL - 1;
     ts.breakpoint1 = 127;
 
-    std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>
-        cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
-                                      baldr::TrafficSpeed* current) -> void {
+    auto cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                       int index, baldr::TrafficSpeed* current) -> void {
       baldr::GraphId tile_id(tile.header->tile_id);
       auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
       current->breakpoint1 = 255;
@@ -255,15 +257,18 @@ TEST(Traffic, CutGeoms) {
   // Another permutation of subsegments
   {
     {
-      valhalla::baldr::TrafficSpeed ts{valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                       valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                       valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                       valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                       0u,
-                                       0u,
-                                       0u,
-                                       0u,
-                                       0u};
+      valhalla::baldr::TrafficSpeed ts{
+          valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+          valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+          valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+          valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+          0u,
+          0u,
+          0u,
+          0u,
+          0u,
+          0u,
+      };
       ts.overall_speed = 30 >> 1;
 
       ts.speed1 = 20 >> 1;
@@ -274,9 +279,8 @@ TEST(Traffic, CutGeoms) {
       ts.congestion2 = 1; // low but not unknown - 0 = unknown
       ts.breakpoint2 = 200;
 
-      std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>
-          cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                        int index, baldr::TrafficSpeed* current) -> void {
+      auto cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
         baldr::GraphId tile_id(tile.header->tile_id);
         auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
         baldr::TrafficSpeed* existing =
@@ -285,7 +289,6 @@ TEST(Traffic, CutGeoms) {
         if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
           current->overall_speed = 0;
           current->speed1 = 0;
-          current->breakpoint1 = 255;
         } else {
           *current = ts;
         }
@@ -336,15 +339,18 @@ TEST(Traffic, CutGeoms) {
   // Another permutation of subsegments
   {
     {
-      valhalla::baldr::TrafficSpeed ts{valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                       valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                       valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                       valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                       0u,
-                                       0u,
-                                       0u,
-                                       0u,
-                                       0u};
+      valhalla::baldr::TrafficSpeed ts{
+          valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+          valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+          valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+          valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+          0u,
+          0u,
+          0u,
+          0u,
+          0u,
+          0u,
+      };
       ts.overall_speed = 36 >> 1;
 
       ts.speed1 = 20 >> 1;
@@ -357,16 +363,15 @@ TEST(Traffic, CutGeoms) {
 
       ts.speed3 = 60 >> 1;
       ts.congestion3 = 1;
-      std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>
-          cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                        int index, baldr::TrafficSpeed* current) -> void {
+
+      auto cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
         baldr::GraphId tile_id(tile.header->tile_id);
         auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
         current->breakpoint1 = 255;
         if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
           current->overall_speed = 0;
           current->speed1 = 0;
-          current->breakpoint1 = 255;
         } else {
           *current = ts;
         }
@@ -454,15 +459,18 @@ TEST(Traffic, CutGeoms) {
     }
     {
       {
-        valhalla::baldr::TrafficSpeed ts{valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                         valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                         valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                         valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                         0u,
-                                         0u,
-                                         0u,
-                                         0u,
-                                         0u};
+        valhalla::baldr::TrafficSpeed ts{
+            valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+            valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+            valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+            valhalla::baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
+            0u,
+            0u,
+            0u,
+            0u,
+            0u,
+            0u,
+        };
         ts.overall_speed = 36 >> 1;
 
         ts.speed1 = 20 >> 1;
@@ -475,9 +483,9 @@ TEST(Traffic, CutGeoms) {
 
         ts.speed3 = 60 >> 1;
         ts.congestion3 = 50;
-        std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>
-            cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                          int index, baldr::TrafficSpeed* current) -> void {
+
+        auto cb_setter_speed = [&map, &ts](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                           int index, baldr::TrafficSpeed* current) -> void {
           baldr::GraphId tile_id(tile.header->tile_id);
           auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
           current->breakpoint1 = 255;
@@ -686,5 +694,186 @@ TEST(Traffic, CutGeoms) {
         EXPECT_TRUE(map.nodes["E"].ApproximatelyEqual(shapes[8]));
       }
     }
+  }
+}
+
+/*************************************************************/
+class WaypointsOnClosuresTest : public ::testing::Test {
+protected:
+  static gurka::map closure_map;
+  static int const default_speed;
+  static std::string const tile_dir;
+  static std::shared_ptr<baldr::GraphReader> clean_reader;
+  ;
+
+  static void SetUpTestSuite() {
+    const std::string ascii_map = R"(
+      A-2-------D
+      |         |
+      |         |
+      |         |
+      |         |
+      B-1-------C
+  )";
+
+    const std::string speed_str = std::to_string(default_speed);
+    const gurka::ways ways = {{"AB", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"BC", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"CD", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"DA", {{"highway", "primary"}, {"maxspeed", speed_str}}}};
+
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+    closure_map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
+
+    closure_map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
+    valhalla_tests::utils::build_live_traffic_data(closure_map.config);
+
+    clean_reader =
+        valhalla_tests::utils::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
+  }
+};
+
+gurka::map WaypointsOnClosuresTest::closure_map = {};
+const int WaypointsOnClosuresTest::default_speed = 36;
+const std::string WaypointsOnClosuresTest::tile_dir = "test/data/traffic_waypoints_on_closures";
+std::shared_ptr<baldr::GraphReader> WaypointsOnClosuresTest::clean_reader;
+
+namespace {
+inline void SetLiveSpeed(baldr::TrafficSpeed* live_speed, uint64_t speed) {
+  live_speed->breakpoint1 = 255;
+  live_speed->overall_speed = speed >> 1;
+  live_speed->speed1 = speed >> 1;
+}
+} // namespace
+
+TEST_F(WaypointsOnClosuresTest, DepartPointAtClosure) {
+  const float eta_margin = 0.01f;
+
+  // start from an edge that is closed in a one direction
+  {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
+      baldr::GraphId tile_id(tile.header->tile_id);
+      auto BC = gurka::findEdge(reader, closure_map.nodes, "BC", "C", tile_id);
+
+      bool const is_bc = (std::get<1>(BC) != nullptr && std::get<0>(BC).id() == index);
+
+      SetLiveSpeed(current, (is_bc ? 0 : default_speed));
+    };
+    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
+
+    auto result =
+        gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    gurka::assert::raw::expect_path(result, {"BC", "AB"});
+    gurka::assert::raw::expect_eta(result, 7.f, eta_margin);
+  }
+
+  // start from an edge that is closed in a one direction
+  {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
+      baldr::GraphId tile_id(tile.header->tile_id);
+      auto CB = gurka::findEdge(reader, closure_map.nodes, "BC", "B", tile_id);
+
+      bool const is_cb = (std::get<1>(CB) != nullptr && std::get<0>(CB).id() == index);
+
+      SetLiveSpeed(current, (is_cb ? 0 : default_speed));
+    };
+    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
+
+    auto result =
+        gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    gurka::assert::raw::expect_path(result, {"BC", "CD", "DA"});
+    gurka::assert::raw::expect_eta(result, 23.f, eta_margin);
+  }
+
+  // depart point at closed edge (ignore):
+  // - closed edge should be ignored;
+  // - depart point should be matched to the nearest node;
+  {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
+      baldr::GraphId tile_id(tile.header->tile_id);
+
+      auto BC = gurka::findEdge(reader, closure_map.nodes, "BC", "C", tile_id);
+      auto CB = gurka::findEdge(reader, closure_map.nodes, "BC", "B", tile_id);
+
+      bool const is_bc = (std::get<1>(BC) != nullptr && std::get<0>(BC).id() == index);
+      bool const is_cb = (std::get<1>(CB) != nullptr && std::get<0>(CB).id() == index);
+
+      SetLiveSpeed(current, ((is_cb || is_bc) ? 0 : default_speed));
+    };
+    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
+
+    auto result =
+        gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    gurka::assert::raw::expect_path(result, {"AB"});
+    gurka::assert::raw::expect_eta(result, 5.f, eta_margin);
+  }
+}
+
+TEST_F(WaypointsOnClosuresTest, ArrivePointAtClosure) {
+  const float eta_margin = 0.01f;
+
+  // end at edge that is closed in a one direction
+  {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
+      baldr::GraphId tile_id(tile.header->tile_id);
+      auto DA = gurka::findEdge(reader, closure_map.nodes, "DA", "A", tile_id);
+
+      bool const is_da = (std::get<1>(DA) != nullptr && std::get<0>(DA).id() == index);
+
+      SetLiveSpeed(current, (is_da ? 0 : default_speed));
+    };
+    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
+
+    auto result =
+        gurka::route(closure_map, "B", "2", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    gurka::assert::raw::expect_path(result, {"AB", "DA"});
+    gurka::assert::raw::expect_eta(result, 7.f, eta_margin);
+  }
+
+  // end at edge that is closed in a one direction
+  {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
+      baldr::GraphId tile_id(tile.header->tile_id);
+      auto AD = gurka::findEdge(reader, closure_map.nodes, "DA", "D", tile_id);
+
+      bool const is_ad = (std::get<1>(AD) != nullptr && std::get<0>(AD).id() == index);
+
+      SetLiveSpeed(current, (is_ad ? 0 : default_speed));
+    };
+    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
+
+    auto result =
+        gurka::route(closure_map, "B", "2", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    gurka::assert::raw::expect_path(result, {"BC", "CD", "DA"});
+    gurka::assert::raw::expect_eta(result, 23.f, eta_margin);
+  }
+
+  // arrive point at closed edge (ignore):
+  // - closed edge should be ignored;
+  // - arrive point should be matched to the nearest node;
+  {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
+      baldr::GraphId tile_id(tile.header->tile_id);
+
+      auto DA = gurka::findEdge(reader, closure_map.nodes, "DA", "A", tile_id);
+      auto AD = gurka::findEdge(reader, closure_map.nodes, "DA", "D", tile_id);
+
+      bool const is_da = (std::get<1>(DA) != nullptr && std::get<0>(DA).id() == index);
+      bool const is_ad = (std::get<1>(AD) != nullptr && std::get<0>(AD).id() == index);
+
+      SetLiveSpeed(current, ((is_da || is_ad) ? 0 : default_speed));
+    };
+    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
+
+    auto result =
+        gurka::route(closure_map, "B", "2", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    gurka::assert::raw::expect_path(result, {"AB"});
+    gurka::assert::raw::expect_eta(result, 5.f, eta_margin);
   }
 }

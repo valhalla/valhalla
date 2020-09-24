@@ -38,6 +38,9 @@
 namespace valhalla {
 namespace baldr {
 
+const std::string SUFFIX_NON_COMPRESSED = ".gph";
+const std::string SUFFIX_COMPRESSED = ".gph.gz";
+
 class tile_getter_t;
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
@@ -100,8 +103,9 @@ public:
    * @param  is_file_path Determines the 1000 separator to be used for file or URL access
    * @return  Returns a filename including directory path as a suffix to be appended to another uri
    */
-  static std::string
-  FileSuffix(const GraphId& graphid, bool gzipped = false, bool is_file_path = true);
+  static std::string FileSuffix(const GraphId& graphid,
+                                const std::string& suffix = valhalla::baldr::SUFFIX_NON_COMPRESSED,
+                                bool is_file_path = true);
 
   /**
    * Get the tile Id given the full path to the file.
@@ -324,9 +328,12 @@ public:
    * Convenience method to get the names for an edge given the offset to the
    * edge information.
    * @param  edgeinfo_offset  Offset to the edge info.
+   * @param  only_tagged_names  Bool indicating whether or not to return only the tagged names
+   *
    * @return  Returns a list (vector) of names.
    */
-  std::vector<std::string> GetNames(const uint32_t edgeinfo_offset) const;
+  std::vector<std::string> GetNames(const uint32_t edgeinfo_offset,
+                                    bool only_tagged_names = false) const;
 
   /**
    * Convenience method to get the types for the names given the offset to the

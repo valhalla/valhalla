@@ -515,6 +515,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const uint32_t speed_limit,
                                        const shape_container_t& lls,
                                        const std::vector<std::string>& names,
+                                       const std::vector<std::string>& tagged_names,
                                        const uint16_t types,
                                        bool& added,
                                        bool diff_names) {
@@ -556,6 +557,23 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       }
       location++;
     }
+    for (const auto& name : tagged_names) {
+      // Stop adding names if max count has been reached
+      if (name_count == kMaxNamesPerEdge) {
+        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+        break;
+      }
+
+      // Verify name is not empty
+      if (!(name.empty())) {
+        // Add name and add its offset to edge info's list.
+        NameInfo ni{AddName(name)};
+        ni.is_route_num_ = 0;
+        ni.tagged_ = 1;
+        name_info_list.emplace_back(ni);
+        ++name_count;
+      }
+    }
     edgeinfo.set_name_info_list(name_info_list);
 
     // Add to the map
@@ -585,6 +603,7 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint
                                                                       const uint32_t,
                                                                       const std::vector<PointLL>&,
                                                                       const std::vector<std::string>&,
+                                                                      const std::vector<std::string>&,
                                                                       const uint16_t,
                                                                       bool&,
                                                                       bool);
@@ -596,6 +615,7 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32
                                                                     const uint32_t,
                                                                     const uint32_t,
                                                                     const std::list<PointLL>&,
+                                                                    const std::vector<std::string>&,
                                                                     const std::vector<std::string>&,
                                                                     const uint16_t,
                                                                     bool&,
@@ -611,6 +631,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const uint32_t speed_limit,
                                        const std::string& llstr,
                                        const std::vector<std::string>& names,
+                                       const std::vector<std::string>& tagged_names,
                                        const uint16_t types,
                                        bool& added,
                                        bool diff_names) {
@@ -652,6 +673,24 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       }
       location++;
     }
+    for (const auto& name : tagged_names) {
+      // Stop adding names if max count has been reached
+      if (name_count == kMaxNamesPerEdge) {
+        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+        break;
+      }
+
+      // Verify name is not empty
+      if (!(name.empty())) {
+        // Add name and add its offset to edge info's list.
+        NameInfo ni{AddName(name)};
+        ni.is_route_num_ = 0;
+        ni.tagged_ = 1;
+        name_info_list.emplace_back(ni);
+        ++name_count;
+      }
+    }
+
     edgeinfo.set_name_info_list(name_info_list);
 
     // Add to the map
@@ -720,7 +759,8 @@ uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name,
                                     const std::string& country_iso,
                                     const std::string& state_iso) {
   // Check if admin already exists
-  auto existing_admin_info_offset_item = admin_info_offset_map_.find(country_iso + state_name);
+  auto existing_admin_info_offset_item =
+      admin_info_offset_map_.find(country_iso + state_iso + state_name);
   if (existing_admin_info_offset_item == admin_info_offset_map_.end()) {
     // Add names and add to the admin builder
     uint32_t country_offset = AddName(country_name);
@@ -728,7 +768,7 @@ uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name,
     admins_builder_.emplace_back(country_offset, state_offset, country_iso, state_iso);
 
     // Add to the map
-    admin_info_offset_map_.emplace(country_iso + state_name, admins_builder_.size() - 1);
+    admin_info_offset_map_.emplace(country_iso + state_iso + state_name, admins_builder_.size() - 1);
     return admins_builder_.size() - 1;
   } else {
     // Already have this admin - return the offset

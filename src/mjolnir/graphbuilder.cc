@@ -1,16 +1,10 @@
-#include "mjolnir/graphbuilder.h"
-#include "mjolnir/admin.h"
-#include "mjolnir/ferry_connections.h"
-#include "mjolnir/linkclassification.h"
-#include "mjolnir/node_expander.h"
-#include "mjolnir/util.h"
-
-#include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
 #include <future>
 #include <set>
 #include <thread>
 #include <utility>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
 
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
@@ -24,9 +18,14 @@
 #include "midgard/polyline2.h"
 #include "midgard/tiles.h"
 #include "midgard/util.h"
-
+#include "mjolnir/admin.h"
 #include "mjolnir/edgeinfobuilder.h"
+#include "mjolnir/ferry_connections.h"
+#include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/linkclassification.h"
+#include "mjolnir/node_expander.h"
+#include "mjolnir/util.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -247,50 +246,6 @@ void ConstructEdges(const OSMData& osmdata,
   LOG_INFO("Finished with " + std::to_string(edges.size()) + " graph edges");
 }
 
-/*
-struct DuplicateEdgeInfo {
-  uint32_t edgeindex;
-  uint32_t length;
-
-  DuplicateEdgeInfo() : edgeindex(0), length(0) { }
-  DuplicateEdgeInfo(const uint32_t idx, const uint32_t l)
-      : edgeindex(idx),
-        length(l) {
-  }
-};
-
-void CheckForDuplicates(const GraphId& nodeid, const Node& node,
-                const std::vector<uint32_t>& edgelengths,
-                const std::unordered_map<GraphId, std::vector<Node>>& nodes,
-                const std::vector<Edge>& edges,
-                const std::vector<OSMWay>& ways, std::atomic<DataQuality*>& stats) {
-  uint32_t edgeindex;
-  GraphId endnode;
-  std::unordered_map<GraphId, DuplicateEdgeInfo> endnodes;
-  uint32_t n = 0;
-  for (auto edgeindex : node.edges) {
-    const Edge& edge = edges[edgeindex];
-    if (edge.sourcenode_ == nodeid) {
-      endnode = edge.targetnode_;
-    } else {
-      endnode = edge.sourcenode_;
-    }
-
-    // Check if the end node is already in the set of edges from this node
-    const auto en = endnodes.find(endnode);
-    if (en != endnodes.end() && en->second.length == edgelengths[n]) {
-      uint64_t wayid1 = ways[edges[en->second.edgeindex].wayindex_].way_id();
-      uint64_t wayid2 = ways[edges[edgeindex].wayindex_].way_id();
-      (*stats).AddIssue(kDuplicateWays, GraphId(), wayid1, wayid2);
-    } else {
-      endnodes.emplace(std::piecewise_construct,
-                       std::forward_as_tuple(endnode),
-                       std::forward_as_tuple(edgeindex, edgelengths[n]));
-    }
-    n++;
-  }
-}
-*/
 uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
                                      const size_t endnode,
                                      sequence<Node>& nodes,
@@ -417,12 +372,14 @@ void BuildTileSet(const std::string& ways_file,
   bool infer_internal_intersections =
       pt.get<bool>("data_processing.infer_internal_intersections", true);
   bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
+  bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
+  bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
 
   // Initialize the admin DB (if it exists)
-  sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
-  if (!database) {
+  sqlite3* admin_db_handle = (database && use_admin_db) ? GetDBHandle(*database) : nullptr;
+  if (!database && use_admin_db) {
     LOG_WARN("Admin db not found.  Not saving admin information.");
-  } else if (!admin_db_handle) {
+  } else if (!admin_db_handle && use_admin_db) {
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
   }
 
@@ -526,9 +483,17 @@ void BuildTileSet(const std::string& ways_file,
         PointLL node_ll{node.lng_, node.lat_};
 
         // Get the admin index
-        uint32_t admin_index = (tile_within_one_admin)
-                                   ? admin_polys.begin()->first
-                                   : GetMultiPolyId(admin_polys, node_ll, graphtile);
+        uint32_t admin_index = 0;
+        bool dor = false;
+
+        if (use_admin_db) {
+          admin_index = (tile_within_one_admin) ? admin_polys.begin()->first
+                                                : GetMultiPolyId(admin_polys, node_ll, graphtile);
+          dor = drive_on_right[admin_index];
+        } else {
+          admin_index = graphtile.AddAdmin("", "", osmdata.node_names.name(node.country_iso_index()),
+                                           osmdata.node_names.name(node.state_iso_index()));
+        }
 
         // Look for potential duplicates
         // CheckForDuplicates(nodeid, node, edgelengths, nodes, edges, osmdata.ways, stats);
@@ -563,6 +528,9 @@ void BuildTileSet(const std::string& ways_file,
           if (!forward) {
             std::swap(source, target);
           }
+
+          if (!use_admin_db)
+            dor = w.drive_on_right();
 
           // Validate speed. Set speed limit and truck speed.
           uint32_t speed = w.speed();
@@ -692,6 +660,7 @@ void BuildTileSet(const std::string& ways_file,
 
             uint16_t types = 0;
             auto names = w.GetNames(ref, osmdata.name_offset_map, types);
+            auto tagged_names = w.GetTaggedNames(osmdata.name_offset_map);
 
             // Update bike_network type
             if (bike_network) {
@@ -701,10 +670,10 @@ void BuildTileSet(const std::string& ways_file,
             }
 
             // Add edge info. Mean elevation is set to 1234 as a placeholder, set later if we have it.
-            edge_info_offset =
-                graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
-                                      (*nodes[target]).graph_id, w.way_id(), 1234, bike_network,
-                                      speed_limit, shape, names, types, added, dual_refs);
+            edge_info_offset = graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
+                                                     (*nodes[target]).graph_id, w.way_id(), 1234,
+                                                     bike_network, speed_limit, shape, names,
+                                                     tagged_names, types, added, dual_refs);
             if (added) {
               stats.edgeinfocount++;
             }
@@ -759,7 +728,8 @@ void BuildTileSet(const std::string& ways_file,
           // Set use to ramp or turn channel
           if (edge.attributes.turn_channel) {
             directededge.set_use(Use::kTurnChannel);
-          } else if (edge.attributes.link) {
+            // Do not overwrite rest area or service area use for ramps
+          } else if (edge.attributes.link && (use != Use::kServiceArea && use != Use::kRestArea)) {
             directededge.set_use(Use::kRamp);
           }
 
@@ -917,11 +887,9 @@ void BuildTileSet(const std::string& ways_file,
           // Set shoulder based on current facing direction and which
           // side of the road is meant to be driven on.
           if (forward) {
-            directededge.set_shoulder(drive_on_right[admin_index] ? w.shoulder_right()
-                                                                  : w.shoulder_left());
+            directededge.set_shoulder(dor ? w.shoulder_right() : w.shoulder_left());
           } else {
-            directededge.set_shoulder(drive_on_right[admin_index] ? w.shoulder_left()
-                                                                  : w.shoulder_right());
+            directededge.set_shoulder(dor ? w.shoulder_left() : w.shoulder_right());
           }
 
           // Figure out cycle lanes
@@ -951,10 +919,8 @@ void BuildTileSet(const std::string& ways_file,
           // If road is not a oneway then we must consider contraflow lanes
           // as well as what side of the road people drive on
           else {
-            right_cyclelane_forward = w.cyclelane_right_opposite() ? !drive_on_right[admin_index]
-                                                                   : drive_on_right[admin_index];
-            left_cyclelane_forward = w.cyclelane_left_opposite() ? drive_on_right[admin_index]
-                                                                 : !drive_on_right[admin_index];
+            right_cyclelane_forward = w.cyclelane_right_opposite() ? !dor : dor;
+            left_cyclelane_forward = w.cyclelane_left_opposite() ? dor : !dor;
           }
 
           directededge.set_cyclelane(CycleLane::kNone);
@@ -1018,9 +984,7 @@ void BuildTileSet(const std::string& ways_file,
           }
         }
         // Set drive on right flag
-        if (admin_index != 0) {
-          graphtile.nodes().back().set_drive_on_right(drive_on_right[admin_index]);
-        }
+        graphtile.nodes().back().set_drive_on_right(dor);
 
         // Set the time zone index
         uint32_t tz_index =
@@ -1028,13 +992,9 @@ void BuildTileSet(const std::string& ways_file,
 
         graphtile.nodes().back().set_timezone(tz_index);
 
-        // if you need to look at the attributes for nodes, grab the LL and update the if statement.
-        // if (equal(node_ll.lng(), 120.99157f) && equal(node_ll.lat(), 14.584733f)) {
-        //  std::cout <<
-        //  std::to_string(GraphId(tile_id.id(),tile_id.level(),graphtile.nodes().size()).value) <<
-        //  std::endl; std::cout << std::to_string(tile_within_one_admin) << " " <<
-        //  std::to_string(tile_id.tileid()) << std::endl;
-        // }
+        // set the density as needed.
+        if (use_urban_tag && node.urban())
+          graphtile.nodes().back().set_density(kMaxDensity);
 
         // Increment the counts in the histogram
         stats.nodecount++;
@@ -1086,7 +1046,6 @@ void BuildLocalTiles(const unsigned int thread_count,
                      const std::string& tile_dir,
                      DataQuality& stats,
                      const boost::property_tree::ptree& pt) {
-
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
   uint32_t tile_creation_date =
       DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
@@ -1149,6 +1108,24 @@ void BuildLocalTiles(const unsigned int thread_count,
 namespace valhalla {
 namespace mjolnir {
 
+std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::ptree& pt,
+                                                   const OSMData& osmdata,
+                                                   const std::string& ways_file,
+                                                   const std::string& way_nodes_file,
+                                                   const std::string& nodes_file,
+                                                   const std::string& edges_file) {
+  const auto& tl = TileHierarchy::levels().rbegin();
+  uint8_t level = tl->second.level;
+  // Make the edges and nodes in the graph
+  ConstructEdges(osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
+                 tl->second.tiles.TileSize(),
+                 [&level](const OSMNode& node) {
+                   return TileHierarchy::GetGraphId({node.lng_, node.lat_}, level);
+                 },
+                 pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
+  return SortGraph(nodes_file, edges_file, level);
+}
+
 // Build the graph from the input
 void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const OSMData& osmdata,
@@ -1157,25 +1134,8 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const std::string& nodes_file,
                          const std::string& edges_file,
                          const std::string& complex_from_restriction_file,
-                         const std::string& complex_to_restriction_file) {
-  std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  unsigned int threads =
-      std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
-  const auto& tl = TileHierarchy::levels().rbegin();
-  uint8_t level = tl->second.level;
-
-  // Make the edges and nodes in the graph
-  ConstructEdges(osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                 tl->second.tiles.TileSize(),
-                 [&level](const OSMNode& node) {
-                   return TileHierarchy::GetGraphId({node.lng_, node.lat_}, level);
-                 },
-                 pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
-
-  // Line up the nodes and then re-map the edges that the edges to them
-  auto tiles = SortGraph(nodes_file, edges_file, level);
-
+                         const std::string& complex_to_restriction_file,
+                         const std::map<GraphId, size_t>& tiles) {
   // Reclassify links (ramps). Cannot do this when building tiles since the
   // edge list needs to be modified
   DataQuality stats;
@@ -1195,12 +1155,15 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   }
   ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file,
                              static_cast<uint32_t>(rc), stats);
+  unsigned int threads =
+      std::max(static_cast<unsigned int>(1),
+               pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
+  std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                   complex_from_restriction_file, complex_to_restriction_file, tiles, tile_dir, stats,
                   pt);
-
   stats.LogStatistics();
 }
 

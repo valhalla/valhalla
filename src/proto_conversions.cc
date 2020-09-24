@@ -1,6 +1,54 @@
 #include "proto_conversions.h"
 
+using namespace valhalla;
+
 namespace valhalla {
+
+std::string incidentTypeToString(const TripLeg::Incident::Type& incident_type) {
+  switch (incident_type) {
+    case TripLeg::Incident::NOT_SET:
+      return "not_set";
+      break;
+    case TripLeg::Incident::ACCIDENT:
+      return "accident";
+      break;
+    case TripLeg::Incident::CONGESTION:
+      return "congestion";
+      break;
+    case TripLeg::Incident::CONSTRUCTION:
+      return "construction";
+      break;
+    case TripLeg::Incident::DISABLED_VEHICLE:
+      return "disabled_vehicle";
+      break;
+    case TripLeg::Incident::LANE_RESTRICTION:
+      return "lane_restriction";
+      break;
+    case TripLeg::Incident::MASS_TRANSIT:
+      return "mass_transit";
+      break;
+    case TripLeg::Incident::MISCELLANEOUS:
+      return "miscellaneous";
+      break;
+    case TripLeg::Incident::OTHER_NEWS:
+      return "other_news";
+      break;
+    case TripLeg::Incident::PLANNED_EVENT:
+      return "planned_event";
+      break;
+    case TripLeg::Incident::ROAD_CLOSURE:
+      return "road_closure";
+      break;
+    case TripLeg::Incident::ROAD_HAZARD:
+      return "road_hazard";
+      break;
+    case TripLeg::Incident::WEATHER:
+      return "weather";
+      break;
+  };
+  throw std::runtime_error("Unhandled case in incidentTypeToString: " +
+                           std::to_string(incident_type));
+}
 
 bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
   static const std::unordered_map<std::string, Options::Action> actions{

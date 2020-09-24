@@ -22,6 +22,17 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace odin {
 
+// Trail type - for cycleways, walkways, mountain bike trails
+enum class TrailType {
+  kNone,
+  kNamedCycleway,
+  kUnnamedCycleway,
+  kNamedWalkway,
+  kUnnamedWalkway,
+  kNamedMtbTrail,
+  kUnnamedMtbTrail
+};
+
 /**
  * This class is a utility class that is used during the creation of the
  * maneuver list that will be used to populate the trip directions.
@@ -100,6 +111,9 @@ public:
 
   uint32_t end_heading() const;
   void set_end_heading(uint32_t endHeading);
+
+  uint32_t roundabout_exit_begin_heading() const;
+  void set_roundabout_exit_begin_heading(uint32_t beginHeading);
 
   uint32_t begin_node_index() const;
   void set_begin_node_index(uint32_t beginNodeIndex);
@@ -195,14 +209,14 @@ public:
   bool tee() const;
   void set_tee(bool tee);
 
+  TrailType trail_type() const;
+  void set_trail_type(const TrailType trail);
+  bool is_walkway() const;
   bool unnamed_walkway() const;
-  void set_unnamed_walkway(bool unnamed_walkway);
-
+  bool is_cycleway() const;
   bool unnamed_cycleway() const;
-  void set_unnamed_cycleway(bool unnamed_cycleway);
-
+  bool is_mountain_bike_trail() const;
   bool unnamed_mountain_bike_trail() const;
-  void set_unnamed_mountain_bike_trail(bool unnamed_mountain_bike_trail);
 
   bool imminent_verbal_multi_cue() const;
   void set_imminent_verbal_multi_cue(bool imminent_verbal_multi_cue);
@@ -355,6 +369,7 @@ protected:
   DirectionsLeg_Maneuver_CardinalDirection begin_cardinal_direction_;
   uint32_t begin_heading_;
   uint32_t end_heading_;
+  uint32_t roundabout_exit_begin_heading_;
   uint32_t begin_node_index_;
   uint32_t end_node_index_;
   uint32_t begin_shape_index_;
@@ -379,9 +394,7 @@ protected:
   std::string verbal_pre_transition_instruction_;
   std::string verbal_post_transition_instruction_;
   bool tee_;
-  bool unnamed_walkway_;
-  bool unnamed_cycleway_;
-  bool unnamed_mountain_bike_trail_;
+  TrailType trail_type_;
   bool imminent_verbal_multi_cue_;
   bool distant_verbal_multi_cue_;
   bool to_stay_on_;

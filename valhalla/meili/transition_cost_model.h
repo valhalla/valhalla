@@ -4,6 +4,7 @@
 #include <functional>
 
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/meili/config.h>
 #include <valhalla/meili/measurement.h>
 #include <valhalla/meili/state.h>
 #include <valhalla/meili/topk_search.h>
@@ -33,7 +34,7 @@ public:
                       const StateContainer& container,
                       const sif::mode_costing_t& mode_costing,
                       const sif::TravelMode travelmode,
-                      const boost::property_tree::ptree& config);
+                      const Config::TransitionCost& config);
 
   // we use the difference between the original two measurements and the distance along the route
   // network to compute a transition cost of a given candidate, transition_time may be added if
@@ -43,8 +44,8 @@ public:
   float CalculateTransitionCost(float turn_cost,
                                 float route_distance,
                                 float measurement_distance,
-                                float route_time,
-                                float measurement_time) const {
+                                float,
+                                float) const {
     return (turn_cost + std::abs(route_distance - measurement_distance)) * inv_beta_;
   }
 
@@ -90,6 +91,8 @@ private:
 
   // Cost for each degree in [0, 180]
   float turn_cost_table_[181];
+
+  bool match_on_restrictions_{false};
 };
 
 } // namespace meili

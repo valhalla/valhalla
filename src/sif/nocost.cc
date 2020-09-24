@@ -31,18 +31,11 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  NoCost(const CostingOptions& costing_options) : DynamicCost(costing_options, TravelMode::kDrive) {
+  NoCost(const CostingOptions& costing_options)
+      : DynamicCost(costing_options, TravelMode::kDrive, kAllAccess) {
   }
 
   virtual ~NoCost() {
-  }
-
-  /**
-   * Get the access mode used by this costing method.
-   * @return  Returns access mode.
-   */
-  uint32_t access_mode() const {
-    return kAllAccess;
   }
 
   /**
@@ -105,8 +98,23 @@ public:
    * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::NodeInfo* node) const {
+  bool Allowed(const baldr::NodeInfo* node) const override {
     return true;
+  }
+
+  /**
+   * Checks if access is allowed for the provided edge. The access check based on mode
+   * of travel and the access modes allowed on the edge.
+   * @param   edge  Pointer to edge information.
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool IsAccessible(const baldr::DirectedEdge* edge) const {
+    return true;
+  }
+
+  bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
+                            const baldr::GraphTile* tile) const override {
+    return false;
   }
 
   /**
@@ -180,27 +188,16 @@ public:
   }
 
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
-    // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      return !(edge->is_shortcut() || edge->IsTransitLine());
-    };
-  }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each node's attribution
-   * @return Function/functor to be used in filtering out nodes
-   */
-  virtual const NodeFilter GetNodeFilter() const {
-    // throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node) { return false; };
+  float Filter(const baldr::DirectedEdge* edge,
+               const baldr::GraphId& /*edgeid*/,
+               const baldr::GraphTile* /*tile*/) const override {
+    return !(edge->is_shortcut() || edge->IsTransitLine());
   }
 };
 

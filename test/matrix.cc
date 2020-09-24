@@ -1,11 +1,9 @@
 #include "test.h"
+#include "utils.h"
 
 #include <iostream>
 #include <string>
 #include <vector>
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
 
 #include "loki/worker.h"
 #include "midgard/logging.h"
@@ -33,14 +31,10 @@ public:
    * Constructor.
    * @param  options Request options in a pbf
    */
-  SimpleCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kDrive) {
+  SimpleCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kDrive, kAutoAccess) {
   }
 
   ~SimpleCost() {
-  }
-
-  uint32_t access_mode() const {
-    return kAutoAccess;
   }
 
   bool Allowed(const DirectedEdge* edge,
@@ -49,9 +43,8 @@ public:
                const GraphId& edgeid,
                const uint64_t current_time,
                const uint32_t tz_index,
-               int& restriction_idx) const {
-    if (!(edge->forwardaccess() & kAutoAccess) ||
-        (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+               int& restriction_idx) const override {
+    if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (pred.restrictions() & (1 << edge->localedgeidx())) ||
         edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
         (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
@@ -67,8 +60,8 @@ public:
                       const GraphId& opp_edgeid,
                       const uint64_t current_time,
                       const uint32_t tz_index,
-                      int& restriction_idx) const {
-    if (!(opp_edge->forwardaccess() & kAutoAccess) ||
+                      int& restriction_idx) const override {
+    if (!IsAccessible(opp_edge) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
         opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
@@ -78,70 +71,51 @@ public:
     return true;
   }
 
-  bool Allowed(const NodeInfo* node) const {
-    return (node->access() & kAutoAccess);
-  }
-
   Cost EdgeCost(const baldr::DirectedEdge* edge,
                 const baldr::TransitDeparture* departure,
-                const uint32_t curr_time) const {
+                const uint32_t curr_time) const override {
     throw std::runtime_error("We shouldnt be testing transit edges");
   }
 
-  Cost EdgeCost(const DirectedEdge* edge, const GraphTile* tile, const uint32_t seconds) const {
+  Cost
+  EdgeCost(const DirectedEdge* edge, const GraphTile* tile, const uint32_t seconds) const override {
     float sec = static_cast<float>(edge->length());
     return {sec / 10.0f, sec};
   }
 
-  Cost TransitionCost(const DirectedEdge* edge, const NodeInfo* node, const EdgeLabel& pred) const {
+  Cost TransitionCost(const DirectedEdge* edge,
+                      const NodeInfo* node,
+                      const EdgeLabel& pred) const override {
     return {5.0f, 5.0f};
   }
 
   Cost TransitionCostReverse(const uint32_t idx,
                              const NodeInfo* node,
                              const DirectedEdge* opp_edge,
-                             const DirectedEdge* opp_pred_edge) const {
+                             const DirectedEdge* opp_pred_edge) const override {
     return {5.0f, 5.0f};
   }
 
-  float AStarCostFactor() const {
+  float AStarCostFactor() const override {
     return 0.1f;
   }
 
-  const EdgeFilter GetEdgeFilter() const {
-    return [](const DirectedEdge* edge) {
-      if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess))
-        return 0.0f;
-      else {
-        return 1.0f;
-      }
-    };
-  }
-
-  const NodeFilter GetNodeFilter() const {
-    return [](const NodeInfo* node) { return !(node->access() & kAutoAccess); };
+  float Filter(const baldr::DirectedEdge* edge,
+               const baldr::GraphId& /*edgeid*/,
+               const baldr::GraphTile* /*tile*/) const override {
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
+    bool accessible = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    if (edge->is_shortcut() || !accessible)
+      return 0.0f;
+    else {
+      return 1.0f;
+    }
   }
 };
 
 cost_ptr_t CreateSimpleCost(const CostingOptions& options) {
   return std::make_shared<SimpleCost>(options);
-}
-
-boost::property_tree::ptree json_to_pt(const std::string& json) {
-  std::stringstream ss;
-  ss << json;
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(ss, pt);
-  return pt;
-}
-
-rapidjson::Document to_document(const std::string& request) {
-  rapidjson::Document d;
-  auto& allocator = d.GetAllocator();
-  d.Parse(request.c_str());
-  if (d.HasParseError())
-    throw valhalla_exception_t{100};
-  return d;
 }
 
 // Maximum edge score - base this on costing type.
@@ -193,7 +167,7 @@ void adjust_scores(Options& options) {
   }
 }
 
-const auto config = json_to_pt(R"({
+const auto config = test::json_to_pt(R"({
     "meili": { "default": { "breakage_distance": 2000} },
     "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
     "loki":{
