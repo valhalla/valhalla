@@ -831,6 +831,30 @@ void expect_maneuvers(const valhalla::Api& result,
 }
 
 /**
+ * Tests whether the expected sequence of maneuver begin path indexes is emitted for the route.
+ * Looks at the output of Odin in the result.
+ *
+ * @param result the result of a /route or /match request
+ * @param expected_indexes all the maneuver begin path indexes expected in the DirectionsLeg
+ *                         for the route
+ */
+void expect_maneuver_begin_path_indexes(const valhalla::Api& result,
+                                        const std::vector<uint32_t>& expected_indexes) {
+
+  EXPECT_EQ(result.directions().routes_size(), 1);
+
+  std::vector<uint32_t> actual_indexes;
+  for (const auto& leg : result.directions().routes(0).legs()) {
+    for (const auto& maneuver : leg.maneuver()) {
+      actual_indexes.push_back(maneuver.begin_path_index());
+    }
+  }
+
+  EXPECT_EQ(actual_indexes, expected_indexes)
+      << "Actual maneuver begin path indexes didn't match expected indexes";
+}
+
+/**
  * Tests whether the expected set of instructions is emitted for the specified maneuver index.
  * Looks at the output of Odin in the result.
  *

@@ -326,6 +326,16 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     }
   }
 
+  // Add tagged names to the edge if requested
+  if (controller.attributes.at(kEdgeTaggedNames)) {
+    auto tagged_names_and_types = edgeinfo.GetTaggedNamesAndTypes();
+    for (const auto& tagged_name_and_type : tagged_names_and_types) {
+      auto* trip_edge_tag_name = trip_edge->mutable_tagged_name()->Add();
+      trip_edge_tag_name->set_value(tagged_name_and_type.first);
+      trip_edge_tag_name->set_type(static_cast<TaggedName_Type>(tagged_name_and_type.second));
+    }
+  }
+
 #ifdef LOGGING_LEVEL_TRACE
   LOG_TRACE(std::string("wayid=") + std::to_string(edgeinfo.wayid()));
 #endif
