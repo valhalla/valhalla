@@ -777,7 +777,7 @@ struct bin_handler_t {
     // give back all the results
     return searched;
   }
-}; // namespace
+};
 
 } // namespace
 
