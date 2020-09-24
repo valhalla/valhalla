@@ -4,46 +4,47 @@ using namespace valhalla;
 
 namespace valhalla {
 
-std::string incidentTypeToString(const TripLeg::Incident::Type& incident_type) {
+std::string incidentTypeToString(const valhalla_sideloaded::Incident::Type& incident_type) {
   switch (incident_type) {
-    case TripLeg::Incident::NOT_SET:
-      return "not_set";
-      break;
-    case TripLeg::Incident::ACCIDENT:
+    case valhalla_sideloaded::Incident::ACCIDENT:
       return "accident";
       break;
-    case TripLeg::Incident::CONGESTION:
+    case valhalla_sideloaded::Incident::CONGESTION:
       return "congestion";
       break;
-    case TripLeg::Incident::CONSTRUCTION:
+    case valhalla_sideloaded::Incident::CONSTRUCTION:
       return "construction";
       break;
-    case TripLeg::Incident::DISABLED_VEHICLE:
+    case valhalla_sideloaded::Incident::DISABLED_VEHICLE:
       return "disabled_vehicle";
       break;
-    case TripLeg::Incident::LANE_RESTRICTION:
+    case valhalla_sideloaded::Incident::LANE_RESTRICTION:
       return "lane_restriction";
       break;
-    case TripLeg::Incident::MASS_TRANSIT:
+    case valhalla_sideloaded::Incident::MASS_TRANSIT:
       return "mass_transit";
       break;
-    case TripLeg::Incident::MISCELLANEOUS:
+    case valhalla_sideloaded::Incident::MISCELLANEOUS:
       return "miscellaneous";
       break;
-    case TripLeg::Incident::OTHER_NEWS:
+    case valhalla_sideloaded::Incident::OTHER_NEWS:
       return "other_news";
       break;
-    case TripLeg::Incident::PLANNED_EVENT:
+    case valhalla_sideloaded::Incident::PLANNED_EVENT:
       return "planned_event";
       break;
-    case TripLeg::Incident::ROAD_CLOSURE:
+    case valhalla_sideloaded::Incident::ROAD_CLOSURE:
       return "road_closure";
       break;
-    case TripLeg::Incident::ROAD_HAZARD:
+    case valhalla_sideloaded::Incident::ROAD_HAZARD:
       return "road_hazard";
       break;
-    case TripLeg::Incident::WEATHER:
+    case valhalla_sideloaded::Incident::WEATHER:
       return "weather";
+      break;
+    case valhalla_sideloaded::Incident_Type_Incident_Type_INT_MAX_SENTINEL_DO_NOT_USE_:
+    case valhalla_sideloaded::Incident_Type_Incident_Type_INT_MIN_SENTINEL_DO_NOT_USE_:
+      // Like the name says, do not use. Simply for ensuring full coverage of switch statement
       break;
   };
   throw std::runtime_error("Unhandled case in incidentTypeToString: " +

@@ -632,24 +632,23 @@ std::string exits(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
   return exits;
 }
 
-valhalla::baldr::json::MapPtr serializeIncident(const TripLeg::Incident& incident) {
+valhalla::baldr::json::MapPtr serializeIncident(const TripLeg::ValhallaIncident& incident) {
   auto metadata_json = json::map({});
+  const auto& meta = incident.metadata();
 
-  metadata_json->emplace("id", incident.id());
-  if (incident.creation_time()) {
-    metadata_json->emplace("creation_time", static_cast<uint64_t>(incident.creation_time()));
+  metadata_json->emplace("id", meta.id());
+  if (meta.creation_time()) {
+    metadata_json->emplace("creation_time", static_cast<uint64_t>(meta.creation_time()));
   }
-  if (incident.end_time()) {
-    metadata_json->emplace("end_time", static_cast<uint64_t>(incident.end_time()));
+  if (meta.end_time()) {
+    metadata_json->emplace("end_time", static_cast<uint64_t>(meta.end_time()));
   }
-  if (incident.start_time()) {
-    metadata_json->emplace("start_time", static_cast<uint64_t>(incident.start_time()));
+  if (meta.start_time()) {
+    metadata_json->emplace("start_time", static_cast<uint64_t>(meta.start_time()));
   }
-  if (incident.type()) {
-    metadata_json->emplace("type", valhalla::incidentTypeToString(incident.type()));
-  }
-  if (incident.has_description() && !incident.description().empty()) {
-    metadata_json->emplace("description", incident.description());
+  metadata_json->emplace("type", valhalla::incidentTypeToString(meta.type()));
+  if (!meta.description().empty()) {
+    metadata_json->emplace("description", meta.description());
   }
   if (incident.has_begin_shape_index()) {
     metadata_json->emplace("geometry_index_start",
@@ -664,7 +663,7 @@ valhalla::baldr::json::MapPtr serializeIncident(const TripLeg::Incident& inciden
 
 // Serializes incidents and adds to json-document
 void serializeIncidents(
-    const google::protobuf::RepeatedPtrField<valhalla::TripLeg::Incident>& incidents,
+    const google::protobuf::RepeatedPtrField<TripLeg::ValhallaIncident>& incidents,
     json::MapPtr& json_leg) {
   if (incidents.empty()) {
     return;
@@ -1565,14 +1564,17 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
     // Sets up the incident
     auto incidents = leg.mutable_incidents();
     auto* incident = incidents->Add();
-    uint64_t creation_time = 1597241829;
-    incident->set_id(1337);
-    incident->set_creation_time(creation_time);
-    incident->set_start_time(creation_time + 100);
-    incident->set_end_time(creation_time + 1800);
-    incident->set_type(TripLeg::Incident::WEATHER);
     incident->set_begin_shape_index(42);
     incident->set_end_shape_index(42);
+
+    valhalla_sideloaded::Incident meta;
+    meta.set_id(1337);
+    uint64_t creation_time = 1597241829;
+    meta.set_creation_time(creation_time);
+    meta.set_start_time(creation_time + 100);
+    meta.set_end_time(creation_time + 1800);
+    meta.set_type(valhalla_sideloaded::Incident::WEATHER);
+    *incident->mutable_metadata() = meta;
 
     // Finally call the function under test to serialize to json
     serializeIncidents(*incidents, intersection_doc);
@@ -1619,24 +1621,30 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
       // First incident
       auto incident = incidents->Add();
       uint64_t creation_time = 1597241829;
-      incident->set_id(1337);
-      incident->set_description("Fooo");
-      incident->set_creation_time(creation_time);
-      incident->set_type(TripLeg::Incident::WEATHER);
       incident->set_begin_shape_index(87);
       incident->set_end_shape_index(92);
+
+      valhalla_sideloaded::Incident meta;
+      meta.set_id(1337);
+      meta.set_description("Fooo");
+      meta.set_creation_time(creation_time);
+      meta.set_type(valhalla_sideloaded::Incident::WEATHER);
+      *incident->mutable_metadata() = meta;
     }
     {
       // second incident
       auto incident = incidents->Add();
       uint64_t creation_time = 1597241800;
-      incident->set_id(2448);
-      incident->set_creation_time(creation_time);
-      incident->set_start_time(creation_time + 100);
-      incident->set_end_time(creation_time + 1800);
-      incident->set_type(TripLeg::Incident::ACCIDENT);
       incident->set_begin_shape_index(21);
       incident->set_end_shape_index(104);
+
+      valhalla_sideloaded::Incident meta;
+      meta.set_id(2448);
+      meta.set_creation_time(creation_time);
+      meta.set_start_time(creation_time + 100);
+      meta.set_end_time(creation_time + 1800);
+      meta.set_type(valhalla_sideloaded::Incident::ACCIDENT);
+      *incident->mutable_metadata() = meta;
     }
 
     // Finally call the function under test to serialize to json
