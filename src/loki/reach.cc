@@ -34,8 +34,8 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
 
   // seed the expansion with a place to start expanding from
   Clear();
-  const GraphTile* tile = reader.GetGraphTile(edge_id);
-  if (tile && costing->Filter(edge, tile) > 0.f && !edge->restrictions())
+  const GraphTile *tile, *start_tile = reader.GetGraphTile(edge_id);
+  if ((tile = start_tile) && costing->Filter(edge, tile) > 0.f && !edge->restrictions())
     enqueue(edge->endnode(), reader, costing, tile);
 
   // get outbound reach by doing a simple forward expansion until you either hit the max_reach
@@ -68,9 +68,9 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
   // be on our path and we can expand from the end of a complex restriction because only the start
   // would mark a potential stopping point (maybe a path followed the restriction)
 
-  // seed the expansion with a place to start expanding from
+  // seed the expansion with a place to start expanding from, tile may have changed so reset it
   Clear();
-  if (tile && costing->Filter(edge, tile) > 0.f)
+  if ((tile = start_tile) && costing->Filter(edge, tile = start_tile) > 0.f)
     enqueue(reader.GetBeginNodeId(edge, tile), reader, costing, tile);
 
   // get inbound reach by doing a simple reverse expansion until you either hit the max_reach
