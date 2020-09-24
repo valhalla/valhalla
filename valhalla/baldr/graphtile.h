@@ -493,8 +493,11 @@ public:
   std::vector<LaneConnectivity> GetLaneConnectivity(const uint32_t idx) const;
 
   /**
-   * Convenience method to get the speed for an edge given the directed
-   * edge and a time (seconds since start of the week).
+   * Convenience method for use with costing to get the speed for an edge given the directed
+   * edge and a time (seconds since start of the week). If the current speed of the edge
+   * is 0 then the current speed is ignore and other speed sources are used to prevent
+   * issues with costing
+   *
    * @param  de            Directed edge information.
    * @param  traffic_mask  A mask denoting which types of traffic data should be used to get the speed
    * @param  seconds       Seconds of the week since midnight (ie Monday morning). Defaults to noon
@@ -521,12 +524,11 @@ public:
     if ((flow_mask & kCurrentFlowMask) && traffic_tile()) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
       auto volatile& live_speed = traffic_tile.trafficspeed(directed_edge_index);
-      // TODO: we only use the current flow on the edge if its valid and not closed
-      // TODO: if its valid and closed we cant use it because it makes costing crazy
-      // if (live_speed.valid()) {
-      if (!live_speed.closed()) {
+      // only use current speed if its valid and non zero, a speed of 0 makes costing values crazy
+      uint8_t overall_speed;
+      if (live_speed.valid() && (overall_speed = live_speed.get_overall_speed()) > 0) {
         *flow_sources |= kCurrentFlowMask;
-        return live_speed.get_overall_speed();
+        return overall_speed;
       }
     }
 
