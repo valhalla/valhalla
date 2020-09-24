@@ -604,15 +604,17 @@ public:
 
   /**
    * Convenience method to determine whether an edge is currently closed
-   * due to traffic.  Roads are considered closed when we
-   *   a) have traffic data
+   * due to traffic.  Roads are considered closed when the following are true
+   *   a) have traffic data for that tile
+   *   b) we have a valid record for that edge
    *   b) the speed is zero
-   *   c) the congestion is high
    *
-   * If we have 0 speed, it might be that we don't have a record for
+   * @param edge  the directed edge for which we need to know if its closed
+   * @return      whether or not its closed
    */
-  inline bool IsClosedDueToTraffic(const GraphId& edge_id) const {
-    auto volatile& live_speed = traffic_tile.trafficspeed(edge_id.id());
+  inline bool IsClosed(const DirectedEdge* edge) const {
+    auto volatile& live_speed =
+        traffic_tile.trafficspeed(static_cast<uint32_t>(edge - directededges_));
     return live_speed.closed();
   }
 
