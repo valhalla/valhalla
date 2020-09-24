@@ -1776,16 +1776,5 @@ std::string EnhancedTripLeg_Admin::ToString() const {
   return str;
 }
 
-const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident> empty;
-
-const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident>&
-EnhancedTripLeg_Node::incidents() const {
-  if (mutable_node_) {
-    return mutable_node_->incidents();
-  } else {
-    return empty;
-  }
-}
-
 } // namespace odin
 } // namespace valhalla

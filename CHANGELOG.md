@@ -166,6 +166,7 @@
    * ADDED: Support restricted class in intersection annotations [#2589](https://github.com/valhalla/valhalla/pull/2589)
    * ADDED: Added trail type trace [#2606](https://github.com/valhalla/valhalla/pull/2606)
    * ADDED: Added tunnel names to the edges as a tagged name.  [#2608](https://github.com/valhalla/valhalla/pull/2608)
+   * CHANGED: Moved incidents to the trip leg and cut the shape of the leg at that location [#2610](https://github.com/valhalla/valhalla/pull/2610)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
