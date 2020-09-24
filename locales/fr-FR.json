@@ -38,7 +38,7 @@
         "1": "Serrez à <RELATIVE_DIRECTION> dans <STREET_NAMES>.",
         "2": "Serrez à <RELATIVE_DIRECTION> dans <BEGIN_STREET_NAMES>. Continuez sur <STREET_NAMES>.",
         "3": "Serrez à <RELATIVE_DIRECTION> pour rester sur <STREET_NAMES>.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "4": "Serrez à <RELATIVE_DIRECTION> à <JUNCTION_NAME>.",
         "5": "Serrez à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
@@ -77,7 +77,7 @@
         "1": "Serrez à <RELATIVE_DIRECTION> dans <STREET_NAMES>.",
         "2": "Serrez à <RELATIVE_DIRECTION> dans <BEGIN_STREET_NAMES>.",
         "3": "Serrez à <RELATIVE_DIRECTION> pour rester sur <STREET_NAMES>.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "4": "Serrez à <RELATIVE_DIRECTION> à <JUNCTION_NAME>.",
         "5": "Serrez à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
@@ -134,7 +134,7 @@
       "phrases": {
         "0": "Continuez.",
         "1": "Continuez sur <STREET_NAMES>.",
-        "2": "Continue at <JUNCTION_NAME>.",
+        "2": "Continuez à <JUNCTION_NAME>.",
         "3": "Continuez vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
@@ -163,10 +163,10 @@
         "1": "Continuez pendant <LENGTH>.",
         "2": "Continuez sur <STREET_NAMES>.",
         "3": "Continuez vers <STREET_NAMES> pendant <LENGTH>.",
-        "4": "Continue at <JUNCTION_NAME>.",
-        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
+        "4": "Continuez à <JUNCTION_NAME>.",
+        "5": "Continuez à <JUNCTION_NAME> pendant <LENGTH>.",
         "6": "Continuez vers <TOWARD_SIGN>.",
-        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
+        "7": "Continuez vers <TOWARD_SIGN> pendant <LENGTH>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -218,7 +218,7 @@
       "phrases": {
         "0": "Continuez.",
         "1": "Continuez sur <STREET_NAMES>.",
-        "2": "Continue at <JUNCTION_NAME>.",
+        "2": "Continuez à <JUNCTION_NAME>.",
         "3": "Continuez vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
@@ -416,14 +416,14 @@
         "5": "Entrez dans le rond-point et prenez la sortie dans <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "6": "Entrez dans le rond-point et prenez la sortie dans <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continuez sur <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "7": "Entrez sur le rond-point et prenez la sortie vers <TOWARD_SIGN>.",
-        "8": "Enter <STREET_NAMES>",
-        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
-        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "8": "Entrez dans <STREET_NAMES>.",
+        "9": "Entrez dans <STREET_NAMES> et prenez la <ORDINAL_VALUE> sortie.",
+        "10": "Entrez dans <STREET_NAMES> et prenez la <ORDINAL_VALUE> sortie dans <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Entrez dans <STREET_NAMES> et prenez la <ORDINAL_VALUE> sortie dans <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continuez sur <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Entrez dans <STREET_NAMES> et prenez la <ORDINAL_VALUE> sortie vers <TOWARD_SIGN>.",
+        "13": "Entrez dans <STREET_NAMES> et prenez la sortie dans <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Entrez dans <STREET_NAMES> et prenez la sortie dans <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continuez sur <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Entrez dans <STREET_NAMES> et prenez la sortie vers <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "1er",
@@ -512,14 +512,14 @@
         "5": "Entrez dans le rond-point et prenez la sortie dans <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "6": "Entrez dans le rond-point et prenez la sortie dans <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
         "7": "Entrez sur le rond-point et prenez la sortie vers <TOWARD_SIGN>.",
-        "8": "Enter <STREET_NAMES>",
-        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
-        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "8": "Entrez dans <STREET_NAMES>.",
+        "9": "Entrez dans <STREET_NAMES> et prenez la <ORDINAL_VALUE> sortie.",
+        "10": "Entrez dans <STREET_NAMES> et prenez la <ORDINAL_VALUE> sortie dans <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Entrez dans <STREET_NAMES> et prenez la <ORDINAL_VALUE> sortie dans <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Entrez dans <STREET_NAMES> et prenez la <ORDINAL_VALUE> sortie vers <TOWARD_SIGN>.",
+        "13": "Entrez dans <STREET_NAMES> et prenez la sortie dans <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Entrez dans <STREET_NAMES> et prenez la sortie dans <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Entrez dans <STREET_NAMES> et prenez la sortie vers <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "1er",
@@ -1046,12 +1046,12 @@
     },
     "merge": {
       "phrases": {
-        "0": "Rejoignez.",
-        "1": "Rejoignez à <RELATIVE_DIRECTION>.",
-        "2": "Rejoignez <STREET_NAMES>.",
-        "3": "Rejoignez à <RELATIVE_DIRECTION> <STREET_NAMES>.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Insérez-vous.",
+        "1": "Insérez-vous à <RELATIVE_DIRECTION>.",
+        "2": "Insérez-vous sur <STREET_NAMES>.",
+        "3": "Insérez-vous à <RELATIVE_DIRECTION> sur <STREET_NAMES>.",
+        "4": "Insérez-vous vers <TOWARD_SIGN>.",
+        "5": "Insérez-vous à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>."
       },
       "relative_directions": [
         "gauche",
@@ -1085,12 +1085,12 @@
     },
     "merge_verbal": {
       "phrases": {
-        "0": "Rejoignez.",
-        "1": "Rejoignez à <RELATIVE_DIRECTION>.",
-        "2": "Rejoignez <STREET_NAMES>.",
-        "3": "Rejoignez à <RELATIVE_DIRECTION> <STREET_NAMES>.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Insérez-vous.",
+        "1": "Insérez-vous à <RELATIVE_DIRECTION>.",
+        "2": "Insérez-vous sur <STREET_NAMES>.",
+        "3": "Insérez-vous à <RELATIVE_DIRECTION> sur <STREET_NAMES>.",
+        "4": "Insérez-vous vers <TOWARD_SIGN>.",
+        "5": "Insérez-vous à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>."
       },
       "relative_directions": [
         "gauche",
@@ -1370,12 +1370,12 @@
     },
     "sharp": {
       "phrases": {
-        "0": "Tournez à tout de suite à <RELATIVE_DIRECTION>.",
-        "1": "Tournez à tout de suite à <RELATIVE_DIRECTION> dans <STREET_NAMES>.",
-        "2": "Tournez à tout de suite à <RELATIVE_DIRECTION> dans <BEGIN_STREET_NAMES>. Continuez sur <STREET_NAMES>.",
-        "3": "Tournez à tout de suite à <RELATIVE_DIRECTION> pour rester sur <STREET_NAMES>.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Tournez tout de suite à <RELATIVE_DIRECTION>.",
+        "1": "Tournez tout de suite à <RELATIVE_DIRECTION> dans <STREET_NAMES>.",
+        "2": "Tournez tout de suite à <RELATIVE_DIRECTION> dans <BEGIN_STREET_NAMES>. Continuez sur <STREET_NAMES>.",
+        "3": "Tournez tout de suite à <RELATIVE_DIRECTION> pour rester sur <STREET_NAMES>.",
+        "4": "Tournez tout de suite à <RELATIVE_DIRECTION> à <JUNCTION_NAME>.",
+        "5": "Tournez tout de suite à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -1409,12 +1409,12 @@
     },
     "sharp_verbal": {
       "phrases": {
-        "0": "Tournez à tout de suite à <RELATIVE_DIRECTION>.",
-        "1": "Tournez à tout de suite à <RELATIVE_DIRECTION> dans <STREET_NAMES>.",
-        "2": "Tournez à tout de suite à <RELATIVE_DIRECTION> dans <BEGIN_STREET_NAMES>.",
-        "3": "Tournez à tout de suite à <RELATIVE_DIRECTION> pour rester sur <STREET_NAMES>.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "0": "Tournez tout de suite à <RELATIVE_DIRECTION>.",
+        "1": "Tournez tout de suite à <RELATIVE_DIRECTION> dans <STREET_NAMES>.",
+        "2": "Tournez tout de suite à <RELATIVE_DIRECTION> dans <BEGIN_STREET_NAMES>.",
+        "3": "Tournez tout de suite à <RELATIVE_DIRECTION> pour rester sur <STREET_NAMES>.",
+        "4": "Tournez tout de suite à <RELATIVE_DIRECTION> à <JUNCTION_NAME>.",
+        "5": "Tournez tout de suite à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -1929,8 +1929,8 @@
         "1": "Tournez à <RELATIVE_DIRECTION> dans <STREET_NAMES>.",
         "2": "Tournez à <RELATIVE_DIRECTION> dans <BEGIN_STREET_NAMES>. Continuez sur <STREET_NAMES>.",
         "3": "Tournez à <RELATIVE_DIRECTION> pour rester sur <STREET_NAMES>.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Tournez à <RELATIVE_DIRECTION> à <JUNCTION_NAME>.",
+        "5": "Tournez à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -1968,8 +1968,8 @@
         "1": "Tournez à <RELATIVE_DIRECTION> dans <STREET_NAMES>.",
         "2": "Tournez à <RELATIVE_DIRECTION> dans <BEGIN_STREET_NAMES>.",
         "3": "Tournez à <RELATIVE_DIRECTION> pour rester sur <STREET_NAMES>.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Tournez à <RELATIVE_DIRECTION> à <JUNCTION_NAME>.",
+        "5": "Tournez à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -2009,8 +2009,8 @@
         "3": "Faites demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES>.",
         "4": "Faites demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES> dans <STREET_NAMES>.",
         "5": "Faites demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES> pour rester sur <STREET_NAMES>.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "6": "Faites demi-tour à <RELATIVE_DIRECTION> à <JUNCTION_NAME>.",
+        "7": "Faites demi-tour à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -2056,8 +2056,8 @@
         "3": "Faites demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES>.",
         "4": "Faites demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES> dans <STREET_NAMES>.",
         "5": "Faites demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES> pour rester sur <STREET_NAMES>.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "6": "Faites demi-tour à <RELATIVE_DIRECTION> à <JUNCTION_NAME>.",
+        "7": "Faites demi-tour à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "l'allée",
@@ -2125,7 +2125,7 @@
     },
     "approach_verbal_alert": {
       "phrases": {
-        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+        "0": "Dans <LENGTH>, <CURRENT_VERBAL_CUE>."
       },
       "metric_lengths": [
         "<KILOMETERS> kilomètres",

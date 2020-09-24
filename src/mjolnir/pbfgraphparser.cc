@@ -375,6 +375,10 @@ public:
       if (!tag_.second.empty())
         way_.set_official_name_index(osmdata_.name_offset_map.index(tag_.second));
     };
+    tag_handlers_["tunnel:name"] = [this]() {
+      if (!tag_.second.empty())
+        way_.set_tunnel_name_index(osmdata_.name_offset_map.index(tag_.second));
+    };
     tag_handlers_["max_speed"] = [this]() {
       try {
         if (tag_.second == "unlimited") {
@@ -867,7 +871,7 @@ public:
     }
 
     for (const auto& tag : *results) {
-      if (tag.first == "iso:3166_1") {
+      if (tag.first == "iso:3166_1" && !use_admin_db_) {
         bool hasTag = (tag.second.length() ? true : false);
         if (hasTag) {
           // Add the country iso code to the unique node names list and store its index in the OSM
@@ -875,10 +879,11 @@ public:
           n.set_country_iso_index(osmdata_.node_names.index(tag.second));
           ++osmdata_.node_name_count;
         }
-      } else if ((tag.first == "state_iso_code")) {
+      } else if ((tag.first == "state_iso_code" && !use_admin_db_)) {
         bool hasTag = (tag.second.length() ? true : false);
         if (hasTag) {
-          // Add the state iso code to the unique node names list and store its index in the OSM node
+          // Add the state iso code to the unique node names list and store its index in the OSM
+          // node
           n.set_state_iso_index(osmdata_.node_names.index(tag.second));
           ++osmdata_.node_name_count;
         }
