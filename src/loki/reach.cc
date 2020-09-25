@@ -70,7 +70,7 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
 
   // seed the expansion with a place to start expanding from, tile may have changed so reset it
   Clear();
-  if ((tile = start_tile) && costing->Filter(edge, tile = start_tile) > 0.f)
+  if ((tile = start_tile) && costing->Filter(edge, tile) > 0.f)
     enqueue(reader.GetBeginNodeId(edge, tile), reader, costing, tile);
 
   // get inbound reach by doing a simple reverse expansion until you either hit the max_reach
