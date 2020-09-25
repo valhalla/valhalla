@@ -2813,21 +2813,23 @@ ManeuversBuilder::GetExpectedTurnLaneDirection(std::unique_ptr<EnhancedTripLeg_E
 }
 
 void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
+  auto prev_man = maneuvers.begin();
   auto curr_man = maneuvers.begin();
   auto next_man = maneuvers.begin();
-  auto next_next_man = maneuvers.begin();
 
+  // Set current maneuver
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+    curr_man = next_man;
+  }
+
+  // Set next maneuver
   if (next_man != maneuvers.end()) {
     ++next_man;
   }
 
-  if (next_man != maneuvers.end()) {
-    ++next_next_man;
-    ++next_next_man;
-  }
-
   // Walk the maneuvers to activate turn lanes
-  while (next_man != maneuvers.end()) {
+  while (curr_man != maneuvers.end()) {
 
     // Only process driving maneuvers
     if (curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive) {
@@ -2852,14 +2854,13 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
 
       // Keep track of the remaining step distance in kilometers
       float remaining_step_distance = 0.f;
-      // Add the end node's prev_edge length as we skip it in the loop below
-      auto end_edge = trip_path_->GetPrevEdge(curr_man->end_node_index());
-      if (end_edge) {
-        remaining_step_distance += end_edge->length();
+      // Add the prev_edge length as we skip it in the loop below
+      if (prev_edge) {
+        remaining_step_distance += prev_edge->length();
       }
 
       // Assign turn lanes within step, walking backwards from end to begin node
-      for (auto index = (curr_man->end_node_index() - 1); index > curr_man->begin_node_index();
+      for (auto index = (prev_man->end_node_index() - 1); index > prev_man->begin_node_index();
            --index) {
         auto node = trip_path_->GetEnhancedNode(index);
         auto prev_edge = trip_path_->GetPrevEdge(index);
@@ -2872,9 +2873,9 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
             IntersectingEdgeCounts xedge_counts;
             node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
                                                            prev_edge->travel_mode(), xedge_counts);
-            if (xedge_counts.right_traversable_outbound > 0 && next_man->IsRightType()) {
+            if (xedge_counts.right_traversable_outbound > 0 && curr_man->IsRightType()) {
               has_directional_intersecting_edge = true;
-            } else if (xedge_counts.left_traversable_outbound > 0 && next_man->IsLeftType()) {
+            } else if (xedge_counts.left_traversable_outbound > 0 && curr_man->IsLeftType()) {
               has_directional_intersecting_edge = true;
             }
           }
@@ -2886,25 +2887,25 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
           // - then activate the lanes matching maneuver direction
           // - else activate one or all through lanes
           if (prev_edge->turn_lanes_size() > 0) {
-            auto turn_lane_direction = GetExpectedTurnLaneDirection(prev_edge, *(next_man));
+            auto turn_lane_direction = GetExpectedTurnLaneDirection(prev_edge, *(curr_man));
             if (remaining_step_distance < kUpcomingLanesThreshold &&
                 !has_directional_intersecting_edge && turn_lane_direction != kTurnLaneNone) {
               // Activate lanes matching upcoming turn direction
-              prev_edge->ActivateTurnLanes(turn_lane_direction, next_man->length(), next_man->type(),
-                                           next_next_man->type());
+              prev_edge->ActivateTurnLanes(turn_lane_direction, curr_man->length(), curr_man->type(),
+                                           next_man->type());
             } else {
               // Activate through lanes
               prev_edge->ActivateTurnLanes(kTurnLaneThrough, remaining_step_distance,
-                                           curr_man->type(), next_man->type());
+                                           prev_man->type(), curr_man->type());
             }
           }
         }
       }
     }
     // on to the next maneuver...
+    prev_man = curr_man;
     curr_man = next_man;
     ++next_man;
-    ++next_next_man;
   }
 }
 
