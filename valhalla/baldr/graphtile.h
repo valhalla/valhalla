@@ -260,6 +260,11 @@ public:
    * @return returns an iterable collection of node transitions
    */
   midgard::iterable_t<const NodeTransition> GetNodeTransitions(const NodeInfo* node) const {
+    if (node < nodes_ || node >= nodes_ + header_->nodecount()) {
+      throw std::logic_error(
+          std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+          " GraphTile NodeInfo out of bounds: " + std::to_string(header_->graphid()));
+    }
     const auto* trans = transitions_ + node->transition_index();
     return midgard::iterable_t<const NodeTransition>{trans, node->transition_count()};
   }
@@ -270,15 +275,15 @@ public:
    * @return returns an iterable collection of node transitions
    */
   midgard::iterable_t<const NodeTransition> GetNodeTransitions(const GraphId& node) const {
-    if (node.id() < header_->nodecount()) {
-      const auto* nodeinfo = nodes_ + node.id();
-      return GetNodeTransitions(nodeinfo);
+    if (node.id() >= header_->nodecount()) {
+      throw std::logic_error(
+          std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+          " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
+          std::to_string(node.level()) + "," + std::to_string(node.id()) +
+          " nodecount= " + std::to_string(header_->nodecount()));
     }
-    throw std::runtime_error(
-        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
-        " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
-        std::to_string(node.level()) + "," + std::to_string(node.id()) +
-        " nodecount= " + std::to_string(header_->nodecount()));
+    const auto* nodeinfo = nodes_ + node.id();
+    return GetNodeTransitions(nodeinfo);
   }
 
   /**

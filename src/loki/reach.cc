@@ -13,6 +13,28 @@ Reach::Reach() : Dijkstras() {
   path_edge->set_end_node(false);
 }
 
+void Reach::enqueue(const baldr::GraphId& node_id,
+                    baldr::GraphReader& reader,
+                    const std::shared_ptr<sif::DynamicCost>& costing,
+                    const baldr::GraphTile* tile) {
+  // skip nodes which are done or invalid
+  if (!node_id.Is_Valid() || done_.find(node_id) != done_.cend())
+    return;
+  // if the node isnt accessable bail
+  if (!reader.GetGraphTile(node_id, tile))
+    return;
+  const auto* node = tile->node(node_id);
+  if (!costing->Allowed(node))
+    return;
+  // otherwise we enqueue it
+  queue_.insert(node_id);
+  // and we enqueue it on the other levels
+  for (const auto& transition : tile->GetNodeTransitions(node))
+    queue_.insert(transition.endnode());
+  // and we remember how many duplicates we enqueued
+  transitions_ += node->transition_count();
+}
+
 directed_reach Reach::operator()(const DirectedEdge* edge,
                                  const baldr::GraphId edge_id,
                                  uint32_t max_reach,
@@ -163,28 +185,6 @@ directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
   }
 
   return reach;
-}
-
-void Reach::enqueue(const baldr::GraphId& node_id,
-                    baldr::GraphReader& reader,
-                    const std::shared_ptr<sif::DynamicCost>& costing,
-                    const baldr::GraphTile*& tile) {
-  // skip nodes which are done or invalid
-  if (!node_id.Is_Valid() || done_.find(node_id) != done_.cend())
-    return;
-  // if the node isnt accessable bail
-  if (!reader.GetGraphTile(node_id, tile))
-    return;
-  const auto* node = tile->node(node_id);
-  if (!costing->Allowed(node))
-    return;
-  // otherwise we enqueue it
-  queue_.insert(node_id);
-  // and we enqueue it on the other levels
-  for (const auto& transition : tile->GetNodeTransitions(node))
-    queue_.insert(transition.endnode());
-  // and we remember how many duplicates we enqueued
-  transitions_ += node->transition_count();
 }
 
 // callback fired when a node is expanded from, the node will be the end node of the previous label
