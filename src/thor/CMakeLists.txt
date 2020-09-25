@@ -22,7 +22,7 @@ set(sources
   trace_attributes_action.cc
   trace_route_action.cc
   triplegbuilder.cc
-  triplegbuilder_utils.cc
+  triplegbuilder_utils.h
   worker.cc)
 
 valhalla_module(NAME thor

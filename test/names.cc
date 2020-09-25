@@ -83,6 +83,25 @@ TEST(Names, NamesTest) {
   EXPECT_EQ(w3_names.at(4), "LancP") << "name en failed.";
 }
 
+TEST(Names, TaggedNamesTest) {
+
+  OSMWay w1{1234};
+  OSMWay w2{1234};
+
+  UniqueNames name_offset_map;
+
+  w1.set_tunnel_name_index(name_offset_map.index("Ted Williams Tunnel"));
+  w2.set_tunnel_name_index(name_offset_map.index("Fort McHenry Tunnel"));
+  w1.set_road_class(RoadClass::kMotorway);
+  w2.set_road_class(RoadClass::kMotorway);
+
+  std::vector<std::string> w1_tagged_names = w1.GetTaggedNames(name_offset_map);
+  EXPECT_EQ(w1_tagged_names.at(0), "1Ted Williams Tunnel");
+
+  std::vector<std::string> w2_tagged_names = w2.GetTaggedNames(name_offset_map);
+  EXPECT_EQ(w2_tagged_names.at(0), "1Fort McHenry Tunnel");
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {

@@ -373,12 +373,13 @@ void BuildTileSet(const std::string& ways_file,
       pt.get<bool>("data_processing.infer_internal_intersections", true);
   bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
+  bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
 
   // Initialize the admin DB (if it exists)
-  sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
-  if (!database) {
+  sqlite3* admin_db_handle = (database && use_admin_db) ? GetDBHandle(*database) : nullptr;
+  if (!database && use_admin_db) {
     LOG_WARN("Admin db not found.  Not saving admin information.");
-  } else if (!admin_db_handle) {
+  } else if (!admin_db_handle && use_admin_db) {
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
   }
 
@@ -482,9 +483,17 @@ void BuildTileSet(const std::string& ways_file,
         PointLL node_ll{node.lng_, node.lat_};
 
         // Get the admin index
-        uint32_t admin_index = (tile_within_one_admin)
-                                   ? admin_polys.begin()->first
-                                   : GetMultiPolyId(admin_polys, node_ll, graphtile);
+        uint32_t admin_index = 0;
+        bool dor = false;
+
+        if (use_admin_db) {
+          admin_index = (tile_within_one_admin) ? admin_polys.begin()->first
+                                                : GetMultiPolyId(admin_polys, node_ll, graphtile);
+          dor = drive_on_right[admin_index];
+        } else {
+          admin_index = graphtile.AddAdmin("", "", osmdata.node_names.name(node.country_iso_index()),
+                                           osmdata.node_names.name(node.state_iso_index()));
+        }
 
         // Look for potential duplicates
         // CheckForDuplicates(nodeid, node, edgelengths, nodes, edges, osmdata.ways, stats);
@@ -519,6 +528,9 @@ void BuildTileSet(const std::string& ways_file,
           if (!forward) {
             std::swap(source, target);
           }
+
+          if (!use_admin_db)
+            dor = w.drive_on_right();
 
           // Validate speed. Set speed limit and truck speed.
           uint32_t speed = w.speed();
@@ -648,6 +660,7 @@ void BuildTileSet(const std::string& ways_file,
 
             uint16_t types = 0;
             auto names = w.GetNames(ref, osmdata.name_offset_map, types);
+            auto tagged_names = w.GetTaggedNames(osmdata.name_offset_map);
 
             // Update bike_network type
             if (bike_network) {
@@ -657,10 +670,10 @@ void BuildTileSet(const std::string& ways_file,
             }
 
             // Add edge info. Mean elevation is set to 1234 as a placeholder, set later if we have it.
-            edge_info_offset =
-                graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
-                                      (*nodes[target]).graph_id, w.way_id(), 1234, bike_network,
-                                      speed_limit, shape, names, types, added, dual_refs);
+            edge_info_offset = graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
+                                                     (*nodes[target]).graph_id, w.way_id(), 1234,
+                                                     bike_network, speed_limit, shape, names,
+                                                     tagged_names, types, added, dual_refs);
             if (added) {
               stats.edgeinfocount++;
             }
@@ -715,7 +728,8 @@ void BuildTileSet(const std::string& ways_file,
           // Set use to ramp or turn channel
           if (edge.attributes.turn_channel) {
             directededge.set_use(Use::kTurnChannel);
-          } else if (edge.attributes.link) {
+            // Do not overwrite rest area or service area use for ramps
+          } else if (edge.attributes.link && (use != Use::kServiceArea && use != Use::kRestArea)) {
             directededge.set_use(Use::kRamp);
           }
 
@@ -873,11 +887,9 @@ void BuildTileSet(const std::string& ways_file,
           // Set shoulder based on current facing direction and which
           // side of the road is meant to be driven on.
           if (forward) {
-            directededge.set_shoulder(drive_on_right[admin_index] ? w.shoulder_right()
-                                                                  : w.shoulder_left());
+            directededge.set_shoulder(dor ? w.shoulder_right() : w.shoulder_left());
           } else {
-            directededge.set_shoulder(drive_on_right[admin_index] ? w.shoulder_left()
-                                                                  : w.shoulder_right());
+            directededge.set_shoulder(dor ? w.shoulder_left() : w.shoulder_right());
           }
 
           // Figure out cycle lanes
@@ -907,10 +919,8 @@ void BuildTileSet(const std::string& ways_file,
           // If road is not a oneway then we must consider contraflow lanes
           // as well as what side of the road people drive on
           else {
-            right_cyclelane_forward = w.cyclelane_right_opposite() ? !drive_on_right[admin_index]
-                                                                   : drive_on_right[admin_index];
-            left_cyclelane_forward = w.cyclelane_left_opposite() ? drive_on_right[admin_index]
-                                                                 : !drive_on_right[admin_index];
+            right_cyclelane_forward = w.cyclelane_right_opposite() ? !dor : dor;
+            left_cyclelane_forward = w.cyclelane_left_opposite() ? dor : !dor;
           }
 
           directededge.set_cyclelane(CycleLane::kNone);
@@ -974,9 +984,7 @@ void BuildTileSet(const std::string& ways_file,
           }
         }
         // Set drive on right flag
-        if (admin_index != 0) {
-          graphtile.nodes().back().set_drive_on_right(drive_on_right[admin_index]);
-        }
+        graphtile.nodes().back().set_drive_on_right(dor);
 
         // Set the time zone index
         uint32_t tz_index =
@@ -987,14 +995,6 @@ void BuildTileSet(const std::string& ways_file,
         // set the density as needed.
         if (use_urban_tag && node.urban())
           graphtile.nodes().back().set_density(kMaxDensity);
-
-        // if you need to look at the attributes for nodes, grab the LL and update the if statement.
-        // if (equal(node_ll.lng(), 120.99157f) && equal(node_ll.lat(), 14.584733f)) {
-        //  std::cout <<
-        //  std::to_string(GraphId(tile_id.id(),tile_id.level(),graphtile.nodes().size()).value) <<
-        //  std::endl; std::cout << std::to_string(tile_within_one_admin) << " " <<
-        //  std::to_string(tile_id.tileid()) << std::endl;
-        // }
 
         // Increment the counts in the histogram
         stats.nodecount++;

@@ -90,3 +90,16 @@ TEST_F(SimpleRestrictions, ForceDetourComplex) {
     {"lon":0.00359,"lat":0.0}],"costing":"auto","date_time":{"type":0}})");
   gurka::assert::raw::expect_path(result, {"GHI", "ADG", "DEF", "BE", "AB"});
 }
+TEST_F(SimpleRestrictions, IgnoreRestriction) {
+  auto result =
+      gurka::route(map, "C", "F", "auto", {{"/costing_options/auto/ignore_restrictions", "1"}});
+  gurka::assert::osrm::expect_steps(result, {"BC", "BE", "DEF"});
+  gurka::assert::raw::expect_path(result, {"BC", "BE", "DEF"});
+}
+
+TEST_F(SimpleRestrictions, IgnoreRestrictionMatching) {
+  auto result = gurka::match(map, {"C", "B", "E", "F"}, "break", "auto",
+                             {{"/costing_options/auto/ignore_restrictions", "1"}});
+  gurka::assert::osrm::expect_steps(result, {"BC", "BE", "DEF"}, true, "matchings");
+  gurka::assert::raw::expect_path(result, {"BC", "BE", "DEF"});
+}

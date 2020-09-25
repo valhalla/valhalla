@@ -60,14 +60,17 @@ const std::string& TripLeg_Use_Name(int v) {
       {7, "kEmergencyAccessUse"},
       {8, "kDriveThruUse"},
       {9, "kCuldesacUse"},
+      {10, "kLivingStreetUse"},
       {20, "kCyclewayUse"},
-      {21, "keUse"},
-      {24, "kUse"},
+      {21, "kMountainBikeUse"},
+      {24, "kSidewalkUse"},
       {25, "kFootwayUse"},
       {26, "kStepsUse"},
       {27, "kPathUse"},
       {28, "kPedestrianUse"},
       {29, "kBridlewayUse"},
+      {30, "kRestAreaUse"},
+      {31, "kServiceAreaUse"},
       {40, "kOtherUse"},
       {41, "kFerryUse"},
       {42, "kRailFerryUse"},
@@ -362,6 +365,14 @@ bool EnhancedTripLeg_Edge::IsPedestrianUse() const {
 
 bool EnhancedTripLeg_Edge::IsBridlewayUse() const {
   return (use() == TripLeg_Use_kBridlewayUse);
+}
+
+bool EnhancedTripLeg_Edge::IsRestAreaUse() const {
+  return (use() == TripLeg_Use_kRestAreaUse);
+}
+
+bool EnhancedTripLeg_Edge::IsServiceAreaUse() const {
+  return (use() == TripLeg_Use_kServiceAreaUse);
 }
 
 bool EnhancedTripLeg_Edge::IsOtherUse() const {
@@ -1687,6 +1698,10 @@ bool EnhancedTripLeg_Node::IsBorderControl() const {
   return (type() == TripLeg_Node_Type_kBorderControl);
 }
 
+bool EnhancedTripLeg_Node::IsTollGantry() const {
+  return (type() == TripLeg_Node_Type_kTollGantry);
+}
+
 std::string EnhancedTripLeg_Node::ToString() const {
   std::string str;
   str.reserve(256);
@@ -1759,17 +1774,6 @@ std::string EnhancedTripLeg_Admin::ToString() const {
   str += state_text();
 
   return str;
-}
-
-const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident> empty;
-
-const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident>&
-EnhancedTripLeg_Node::incidents() const {
-  if (mutable_node_) {
-    return mutable_node_->incidents();
-  } else {
-    return empty;
-  }
 }
 
 } // namespace odin

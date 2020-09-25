@@ -557,7 +557,8 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
     : tile_extract_(get_extract_instance(pt)), tile_dir_(pt.get<std::string>("tile_dir", "")),
       tile_getter_(std::move(tile_getter)),
       max_concurrent_users_(pt.get<size_t>("max_concurrent_reader_users", 1)),
-      tile_url_(pt.get<std::string>("tile_url", "")), cache_(TileCacheFactory::createTileCache(pt)) {
+      tile_url_(pt.get<std::string>("tile_url", "")), cache_(TileCacheFactory::createTileCache(pt)),
+      simulate_incidents_(pt.get<bool>("simulate_incidents", 0)) {
   if (!tile_getter_ && !tile_url_.empty()) {
     tile_getter_ = std::make_unique<curl_tile_getter_t>(max_concurrent_users_,
                                                         pt.get<std::string>("user_agent", ""),

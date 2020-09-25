@@ -1435,18 +1435,16 @@ void enhance(const boost::property_tree::ptree& pt,
   auto database = pt.get_optional<std::string>("admin");
   bool infer_internal_intersections =
       pt.get<bool>("data_processing.infer_internal_intersections", true);
-
   bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
-
   bool apply_country_overrides = pt.get<bool>("data_processing.apply_country_overrides", true);
-
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
+  bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
 
   // Initialize the admin DB (if it exists)
-  sqlite3* admin_db_handle = database ? GetDBHandle(*database) : nullptr;
-  if (!database) {
+  sqlite3* admin_db_handle = (database && use_admin_db) ? GetDBHandle(*database) : nullptr;
+  if (!database && use_admin_db) {
     LOG_WARN("Admin db not found.  Not saving admin information.");
-  } else if (!admin_db_handle) {
+  } else if (!admin_db_handle && use_admin_db) {
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
   }
 
@@ -1729,7 +1727,7 @@ void enhance(const boost::property_tree::ptree& pt,
         UpdateSpeed(directededge, density, urban_rc_speed, infer_turn_channels);
 
         // Update the named flag
-        auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNamesAndTypes();
+        auto names = tilebuilder.edgeinfo(directededge.edgeinfo_offset()).GetNamesAndTypes(true);
         directededge.set_named(names.size() > 0);
 
         // Name continuity - on the directededge.
@@ -1815,8 +1813,9 @@ void enhance(const boost::property_tree::ptree& pt,
       }
 
       // Set the intersection type to false or dead-end (do not override
-      // gates or toll-booths).
-      if (nodeinfo.type() != NodeType::kGate && nodeinfo.type() != NodeType::kTollBooth) {
+      // gates or toll-booths or toll gantry).
+      if (nodeinfo.type() != NodeType::kGate && nodeinfo.type() != NodeType::kTollBooth &&
+          nodeinfo.type() != NodeType::kTollGantry) {
         if (driveable_count == 1) {
           nodeinfo.set_intersection(IntersectionType::kDeadEnd);
         } else if (nodeinfo.edge_count() == 2) {

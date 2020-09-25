@@ -48,9 +48,11 @@ uint8_t SpeedMask_Parse(const boost::optional<const rapidjson::Value&>& speed_ty
 namespace valhalla {
 namespace sif {
 
-DynamicCost::DynamicCost(const CostingOptions& options, const TravelMode mode)
+DynamicCost::DynamicCost(const CostingOptions& options, const TravelMode mode, uint32_t access_mask)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
-      flow_mask_(kDefaultFlowMask) {
+      access_mask_(access_mask), flow_mask_(kDefaultFlowMask),
+      ignore_restrictions_(options.ignore_restrictions()), ignore_oneways_(options.ignore_oneways()),
+      ignore_access_(options.ignore_access()), ignore_closures_(options.ignore_closures()) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
@@ -214,6 +216,11 @@ Cost DynamicCost::BSSCost() const {
 void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_costing_options) {
   auto speed_types = rapidjson::get_child_optional(value, "/speed_types");
   pbf_costing_options->set_flow_mask(SpeedMask_Parse(speed_types));
+  pbf_costing_options->set_ignore_restrictions(
+      rapidjson::get<bool>(value, "/ignore_restrictions", false));
+  pbf_costing_options->set_ignore_oneways(rapidjson::get<bool>(value, "/ignore_oneways", false));
+  pbf_costing_options->set_ignore_access(rapidjson::get<bool>(value, "/ignore_access", false));
+  pbf_costing_options->set_ignore_closures(rapidjson::get<bool>(value, "/ignore_closures", false));
   auto name = rapidjson::get_optional<std::string>(value, "/name");
   if (name) {
     pbf_costing_options->set_name(*name);

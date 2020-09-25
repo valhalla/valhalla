@@ -137,14 +137,6 @@ public:
   }
 
   /**
-   * Get the access mode used by this costing method.
-   * @return  Returns access mode.
-   */
-  uint32_t access_mode() const {
-    return kMotorcycleAccess;
-  }
-
-  /**
    * Checks if access is allowed for the provided directed edge.
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
@@ -193,16 +185,6 @@ public:
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               int& restriction_idx) const;
-
-  /**
-   * Checks if access is allowed for the provided node. Node access can
-   * be restricted if bollards or gates are present.
-   * @param  node  Pointer to node information.
-   * @return  Returns true if access is allowed, false if not.
-   */
-  virtual bool Allowed(const baldr::NodeInfo* node) const {
-    return (node->access() & kMotorcycleAccess);
-  }
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -281,35 +263,24 @@ public:
   }
 
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
-    // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      if (edge->is_shortcut() || !(edge->forwardaccess() & kMotorcycleAccess) ||
-          edge->surface() > kMinimumMotorcycleSurface || edge->bss_connection())
-        return 0.0f;
-      else {
-        // TODO - use classification/use to alter the factor
-        return 1.0f;
-      }
-    };
+  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const override {
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
+    bool accessible = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    if (edge->is_shortcut() || !accessible || edge->surface() > kMinimumMotorcycleSurface ||
+        edge->bss_connection() || IsClosed(edge, tile))
+      return 0.0f;
+    else {
+      // TODO - use classification/use to alter the factor
+      return 1.0f;
+    }
   }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each node's attribution
-   * @return Function/functor to be used in filtering out nodes
-   */
-  virtual const NodeFilter GetNodeFilter() const {
-    // throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node) { return !(node->access() & kMotorcycleAccess); };
-  }
-
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 public:
@@ -327,7 +298,7 @@ public:
 
 // Constructor
 MotorcycleCost::MotorcycleCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kDrive),
+    : DynamicCost(costing_options, TravelMode::kDrive, kMotorcycleAccess),
       trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
                             1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
 
@@ -401,24 +372,17 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
                              const uint64_t current_time,
                              const uint32_t tz_index,
                              int& restriction_idx) const {
-  if (flow_mask_ & kCurrentFlowMask) {
-    if (tile->IsClosedDueToTraffic(edgeid))
-      return false;
-  }
-
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(edge->forwardaccess() & kMotorcycleAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (pred.restrictions() & (1 << edge->localedgeidx())) || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
+  if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
+      (edge->surface() > kMinimumMotorcycleSurface) || IsUserAvoidEdge(edgeid) ||
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) || IsClosed(edge, tile)) {
     return false;
   }
-  if (edge->surface() > kMinimumMotorcycleSurface) {
-    return false;
-  }
-  return DynamicCost::EvaluateRestrictions(kMotorcycleAccess, edge, tile, edgeid, current_time,
-                                           tz_index, restriction_idx);
+
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, edgeid, current_time, tz_index,
+                                           restriction_idx);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -431,24 +395,17 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const uint64_t current_time,
                                     const uint32_t tz_index,
                                     int& restriction_idx) const {
-  if (flow_mask_ & kCurrentFlowMask) {
-    if (tile->IsClosedDueToTraffic(opp_edgeid))
-      return false;
-  }
-
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!(opp_edge->forwardaccess() & kMotorcycleAccess) ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (opp_edge->restrictions() & (1 << pred.opp_local_idx())) || IsUserAvoidEdge(opp_edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
+  if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
+      (opp_edge->surface() > kMinimumMotorcycleSurface) || IsUserAvoidEdge(opp_edgeid) ||
+      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
+      IsClosed(opp_edge, tile)) {
     return false;
   }
 
-  if (opp_edge->surface() > kMinimumMotorcycleSurface) {
-    return false;
-  }
-  return DynamicCost::EvaluateRestrictions(kMotorcycleAccess, edge, tile, opp_edgeid, current_time,
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, opp_edgeid, current_time,
                                            tz_index, restriction_idx);
 }
 

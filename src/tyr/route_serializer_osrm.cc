@@ -135,6 +135,51 @@ inline unsigned getFittedZoom(Coordinate south_west, Coordinate north_east) {
     return MIN_ZOOM;
 }
 
+// For transforming ISO 3166-1 country codes from alpha2 to alpha3
+std::unordered_map<std::string, std::string> iso2_to_iso3 =
+    {{"AD", "AND"}, {"AE", "ARE"}, {"AF", "AFG"}, {"AG", "ATG"}, {"AI", "AIA"}, {"AL", "ALB"},
+     {"AM", "ARM"}, {"AO", "AGO"}, {"AQ", "ATA"}, {"AR", "ARG"}, {"AS", "ASM"}, {"AT", "AUT"},
+     {"AU", "AUS"}, {"AW", "ABW"}, {"AX", "ALA"}, {"AZ", "AZE"}, {"BA", "BIH"}, {"BB", "BRB"},
+     {"BD", "BGD"}, {"BE", "BEL"}, {"BF", "BFA"}, {"BG", "BGR"}, {"BH", "BHR"}, {"BI", "BDI"},
+     {"BJ", "BEN"}, {"BL", "BLM"}, {"BM", "BMU"}, {"BN", "BRN"}, {"BO", "BOL"}, {"BQ", "BES"},
+     {"BR", "BRA"}, {"BS", "BHS"}, {"BT", "BTN"}, {"BV", "BVT"}, {"BW", "BWA"}, {"BY", "BLR"},
+     {"BZ", "BLZ"}, {"CA", "CAN"}, {"CC", "CCK"}, {"CD", "COD"}, {"CF", "CAF"}, {"CG", "COG"},
+     {"CH", "CHE"}, {"CI", "CIV"}, {"CK", "COK"}, {"CL", "CHL"}, {"CM", "CMR"}, {"CN", "CHN"},
+     {"CO", "COL"}, {"CR", "CRI"}, {"CU", "CUB"}, {"CV", "CPV"}, {"CW", "CUW"}, {"CX", "CXR"},
+     {"CY", "CYP"}, {"CZ", "CZE"}, {"DE", "DEU"}, {"DJ", "DJI"}, {"DK", "DNK"}, {"DM", "DMA"},
+     {"DO", "DOM"}, {"DZ", "DZA"}, {"EC", "ECU"}, {"EE", "EST"}, {"EG", "EGY"}, {"EH", "ESH"},
+     {"ER", "ERI"}, {"ES", "ESP"}, {"ET", "ETH"}, {"FI", "FIN"}, {"FJ", "FJI"}, {"FK", "FLK"},
+     {"FM", "FSM"}, {"FO", "FRO"}, {"FR", "FRA"}, {"GA", "GAB"}, {"GB", "GBR"}, {"GD", "GRD"},
+     {"GE", "GEO"}, {"GF", "GUF"}, {"GG", "GGY"}, {"GH", "GHA"}, {"GI", "GIB"}, {"GL", "GRL"},
+     {"GM", "GMB"}, {"GN", "GIN"}, {"GP", "GLP"}, {"GQ", "GNQ"}, {"GR", "GRC"}, {"GS", "SGS"},
+     {"GT", "GTM"}, {"GU", "GUM"}, {"GW", "GNB"}, {"GY", "GUY"}, {"HK", "HKG"}, {"HM", "HMD"},
+     {"HN", "HND"}, {"HR", "HRV"}, {"HT", "HTI"}, {"HU", "HUN"}, {"ID", "IDN"}, {"IE", "IRL"},
+     {"IL", "ISR"}, {"IM", "IMN"}, {"IN", "IND"}, {"IO", "IOT"}, {"IQ", "IRQ"}, {"IR", "IRN"},
+     {"IS", "ISL"}, {"IT", "ITA"}, {"JE", "JEY"}, {"JM", "JAM"}, {"JO", "JOR"}, {"JP", "JPN"},
+     {"KE", "KEN"}, {"KG", "KGZ"}, {"KH", "KHM"}, {"KI", "KIR"}, {"KM", "COM"}, {"KN", "KNA"},
+     {"KP", "PRK"}, {"KR", "KOR"}, {"XK", "XKX"}, {"KW", "KWT"}, {"KY", "CYM"}, {"KZ", "KAZ"},
+     {"LA", "LAO"}, {"LB", "LBN"}, {"LC", "LCA"}, {"LI", "LIE"}, {"LK", "LKA"}, {"LR", "LBR"},
+     {"LS", "LSO"}, {"LT", "LTU"}, {"LU", "LUX"}, {"LV", "LVA"}, {"LY", "LBY"}, {"MA", "MAR"},
+     {"MC", "MCO"}, {"MD", "MDA"}, {"ME", "MNE"}, {"MF", "MAF"}, {"MG", "MDG"}, {"MH", "MHL"},
+     {"MK", "MKD"}, {"ML", "MLI"}, {"MM", "MMR"}, {"MN", "MNG"}, {"MO", "MAC"}, {"MP", "MNP"},
+     {"MQ", "MTQ"}, {"MR", "MRT"}, {"MS", "MSR"}, {"MT", "MLT"}, {"MU", "MUS"}, {"MV", "MDV"},
+     {"MW", "MWI"}, {"MX", "MEX"}, {"MY", "MYS"}, {"MZ", "MOZ"}, {"NA", "NAM"}, {"NC", "NCL"},
+     {"NE", "NER"}, {"NF", "NFK"}, {"NG", "NGA"}, {"NI", "NIC"}, {"NL", "NLD"}, {"NO", "NOR"},
+     {"NP", "NPL"}, {"NR", "NRU"}, {"NU", "NIU"}, {"NZ", "NZL"}, {"OM", "OMN"}, {"PA", "PAN"},
+     {"PE", "PER"}, {"PF", "PYF"}, {"PG", "PNG"}, {"PH", "PHL"}, {"PK", "PAK"}, {"PL", "POL"},
+     {"PM", "SPM"}, {"PN", "PCN"}, {"PR", "PRI"}, {"PS", "PSE"}, {"PT", "PRT"}, {"PW", "PLW"},
+     {"PY", "PRY"}, {"QA", "QAT"}, {"RE", "REU"}, {"RO", "ROU"}, {"RS", "SRB"}, {"RU", "RUS"},
+     {"RW", "RWA"}, {"SA", "SAU"}, {"SB", "SLB"}, {"SC", "SYC"}, {"SD", "SDN"}, {"SS", "SSD"},
+     {"SE", "SWE"}, {"SG", "SGP"}, {"SH", "SHN"}, {"SI", "SVN"}, {"SJ", "SJM"}, {"SK", "SVK"},
+     {"SL", "SLE"}, {"SM", "SMR"}, {"SN", "SEN"}, {"SO", "SOM"}, {"SR", "SUR"}, {"ST", "STP"},
+     {"SV", "SLV"}, {"SX", "SXM"}, {"SY", "SYR"}, {"SZ", "SWZ"}, {"TC", "TCA"}, {"TD", "TCD"},
+     {"TF", "ATF"}, {"TG", "TGO"}, {"TH", "THA"}, {"TJ", "TJK"}, {"TK", "TKL"}, {"TL", "TLS"},
+     {"TM", "TKM"}, {"TN", "TUN"}, {"TO", "TON"}, {"TR", "TUR"}, {"TT", "TTO"}, {"TV", "TUV"},
+     {"TW", "TWN"}, {"TZ", "TZA"}, {"UA", "UKR"}, {"UG", "UGA"}, {"UM", "UMI"}, {"US", "USA"},
+     {"UY", "URY"}, {"UZ", "UZB"}, {"VA", "VAT"}, {"VC", "VCT"}, {"VE", "VEN"}, {"VG", "VGB"},
+     {"VI", "VIR"}, {"VN", "VNM"}, {"VU", "VUT"}, {"WF", "WLF"}, {"WS", "WSM"}, {"YE", "YEM"},
+     {"YT", "MYT"}, {"ZA", "ZAF"}, {"ZM", "ZMB"}, {"ZW", "ZWE"}, {"CS", "SCG"}, {"AN", "ANT"}};
+
 namespace osrm_serializers {
 /*
 OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
@@ -334,36 +379,6 @@ struct IntersectionEdges {
   }
 };
 
-// Forward declaration
-valhalla::baldr::json::MapPtr serializeIncident(const TripLeg_Node_Incident& incident);
-
-// Serializes incidents and adds to json-document
-void addsIncidents(
-    const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Node_Incident>& incidents,
-    json::Jmap& doc) {
-  if (incidents.size() == 0) {
-    // No incidents, nothing to do
-    return;
-  }
-  json::ArrayPtr serialized_incidents = std::shared_ptr<json::Jarray>(new json::Jarray());
-  {
-    // Bring up any already existing array
-    auto existing = doc.find("incidents");
-    if (existing != doc.end()) {
-      if (auto* ptr = boost::get<std::shared_ptr<valhalla::baldr::json::Jarray>>(&existing->second)) {
-        serialized_incidents = *ptr;
-      } else {
-        throw std::logic_error("Invalid state: stored ptr should not be null");
-      }
-    }
-  }
-  for (const auto& incident : incidents) {
-    auto json_incident = serializeIncident(incident);
-    serialized_incidents->emplace_back(json_incident);
-  }
-  doc.emplace("incidents", serialized_incidents);
-}
-
 // Add intersections along a step/maneuver.
 json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
                              valhalla::odin::EnhancedTripLeg* etp,
@@ -393,11 +408,27 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     loc->emplace_back(json::fp_t{ll.lat(), 6});
     intersection->emplace("location", loc);
     intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
+
+    // Add index into admin list
+    if (node->has_admin_index()) {
+      intersection->emplace("admin_index", static_cast<uint64_t>(node->admin_index()));
+    }
+
     if (!arrive_maneuver) {
       if (curr_edge->has_is_urban()) {
         intersection->emplace("is_urban", curr_edge->is_urban());
       }
     }
+
+    auto toll_collection = json::map({});
+    if (node->type() == TripLeg_Node::kTollBooth) {
+      toll_collection->emplace("type", std::string("toll_booth"));
+    } else if (node->type() == TripLeg_Node::kTollGantry) {
+      toll_collection->emplace("type", std::string("toll_gantry"));
+    }
+    if (!toll_collection->empty())
+      intersection->emplace("toll_collection", toll_collection);
+
     if (node->cost().transition_cost().seconds() > 0)
       intersection->emplace("turn_duration", json::fp_t{node->cost().transition_cost().seconds(), 3});
     if (node->cost().transition_cost().cost() > 0)
@@ -412,24 +443,31 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         intersection->emplace("weight", json::fp_t{cost, 3});
     }
 
-    if (node->incidents().size() > 0) {
-      addsIncidents(node->incidents(), *intersection);
-    }
-
     // TODO: add recosted durations to the intersection?
+
+    // Add rest_stop when passing by a rest_area or service_area
+    if (i > 0 && !arrive_maneuver) {
+      auto rest_stop = json::map({});
+      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+        auto intersecting_edge = node->GetIntersectingEdge(m);
+        bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
+
+        if (routeable && intersecting_edge->use() == TripLeg_Use_kRestAreaUse) {
+          rest_stop->emplace("type", std::string("rest_area"));
+          intersection->emplace("rest_stop", rest_stop);
+          break;
+        } else if (routeable && intersecting_edge->use() == TripLeg_Use_kServiceAreaUse) {
+          rest_stop->emplace("type", std::string("service_area"));
+          intersection->emplace("rest_stop", rest_stop);
+          break;
+        }
+      }
+    }
 
     // Get bearings and access to outgoing intersecting edges. Do not add
     // any intersecting edges for the first depart intersection and for
     // the arrive step.
     std::vector<IntersectionEdges> edges;
-    if (i > 0 && !arrive_maneuver) {
-      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
-        auto intersecting_edge = node->GetIntersectingEdge(m);
-        bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
-        uint32_t bearing = static_cast<uint32_t>(intersecting_edge->begin_heading());
-        edges.emplace_back(bearing, routeable, false, false);
-      }
-    }
 
     // Add the edge departing the node
     if (!arrive_maneuver) {
@@ -474,6 +512,17 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     intersection->emplace("entry", entries);
     intersection->emplace("bearings", bearings);
 
+    // Add tunnel_name for tunnels
+    if (!arrive_maneuver) {
+      if (curr_edge->tunnel() && !curr_edge->tagged_name().empty()) {
+        for (uint32_t t = 0; t < curr_edge->tagged_name().size(); ++t) {
+          if (curr_edge->tagged_name().Get(t).type() == TaggedName_Type_kTunnel) {
+            intersection->emplace("tunnel_name", curr_edge->tagged_name().Get(t).value());
+          }
+        }
+      }
+    }
+
     // Add classes based on the first edge after the maneuver (not needed
     // for arrive maneuver).
     if (!arrive_maneuver) {
@@ -491,10 +540,9 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         classes.push_back("ferry");
       }
 
-      /** TODO
-      if ( ) {
+      if (curr_edge->destination_only()) {
         classes.push_back("restricted");
-      } */
+      }
       if (classes.size() > 0) {
         auto class_list = json::array({});
         for (const auto& cl : classes) {
@@ -584,7 +632,7 @@ std::string exits(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
   return exits;
 }
 
-valhalla::baldr::json::MapPtr serializeIncident(const TripLeg_Node_Incident& incident) {
+valhalla::baldr::json::MapPtr serializeIncident(const TripLeg::Incident& incident) {
   auto metadata_json = json::map({});
 
   metadata_json->emplace("id", incident.id());
@@ -598,13 +646,35 @@ valhalla::baldr::json::MapPtr serializeIncident(const TripLeg_Node_Incident& inc
     metadata_json->emplace("start_time", static_cast<uint64_t>(incident.start_time()));
   }
   if (incident.type()) {
-    metadata_json->emplace("incident_type", valhalla::incidentTypeToString(incident.type()));
+    metadata_json->emplace("type", valhalla::incidentTypeToString(incident.type()));
   }
-  if (!incident.description().empty()) {
+  if (incident.has_description() && !incident.description().empty()) {
     metadata_json->emplace("description", incident.description());
+  }
+  if (incident.has_begin_shape_index()) {
+    metadata_json->emplace("geometry_index_start",
+                           static_cast<uint64_t>(incident.begin_shape_index()));
+  }
+  if (incident.has_end_shape_index()) {
+    metadata_json->emplace("geometry_index_end", static_cast<uint64_t>(incident.end_shape_index()));
   }
 
   return metadata_json;
+}
+
+// Serializes incidents and adds to json-document
+void serializeIncidents(
+    const google::protobuf::RepeatedPtrField<valhalla::TripLeg::Incident>& incidents,
+    json::MapPtr& json_leg) {
+  if (incidents.empty()) {
+    return;
+  }
+  auto serialized_incidents = json::array({});
+  for (const auto& incident : incidents) {
+    auto json_incident = serializeIncident(incident);
+    serialized_incidents->emplace_back(json_incident);
+  }
+  json_leg->emplace("incidents", serialized_incidents);
 }
 
 // Compile and return the refs of the specified list
@@ -1376,8 +1446,29 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       ++recost_itr;
     }
 
+    // Add admin country codes to leg json
+    auto admins = json::array({});
+    for (const auto& admin : path_leg.admin()) {
+      auto admin_map = json::map({});
+      if (admin.has_country_code()) {
+        admin_map->emplace("iso_3166_1", admin.country_code());
+        auto country_iso3 = iso2_to_iso3.find(admin.country_code());
+        if (country_iso3 != iso2_to_iso3.end()) {
+          admin_map->emplace("iso_3166_1_alpha3", country_iso3->second);
+        }
+      }
+      // TODO: iso_3166_2 state code
+      admins->push_back(admin_map);
+    }
+    output_leg->emplace("admins", admins);
+
     // Add steps to the leg
     output_leg->emplace("steps", steps);
+
+    // Add incidents to the leg
+    serializeIncidents(path_leg.incidents(), output_leg);
+
+    // Keep the leg
     output_legs->emplace_back(output_leg);
     leg++;
   }
@@ -1469,24 +1560,26 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
 
   rapidjson::Document serialized_to_json;
   {
-    auto intersection_doc = json::Jmap();
-    auto inner_node = TripLeg_Node();
+    auto intersection_doc = json::map({});
+    auto leg = TripLeg();
     // Sets up the incident
-    auto incidents = inner_node.mutable_incidents();
-    auto incident = incidents->Add();
+    auto incidents = leg.mutable_incidents();
+    auto* incident = incidents->Add();
     uint64_t creation_time = 1597241829;
     incident->set_id(1337);
     incident->set_creation_time(creation_time);
     incident->set_start_time(creation_time + 100);
     incident->set_end_time(creation_time + 1800);
-    incident->set_type(TripLeg_Node_Incident_Type::TripLeg_Node_Incident_Type_WEATHER);
+    incident->set_type(TripLeg::Incident::WEATHER);
+    incident->set_begin_shape_index(42);
+    incident->set_end_shape_index(42);
 
     // Finally call the function under test to serialize to json
-    addsIncidents(*incidents, intersection_doc);
+    serializeIncidents(*incidents, intersection_doc);
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
-    ss << intersection_doc;
+    ss << *intersection_doc;
     serialized_to_json.Parse(ss.str().c_str());
   }
 
@@ -1499,7 +1592,9 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
           "creation_time": 1597241829,
           "start_time": 1597241929,
           "end_time": 1597243629,
-          "incident_type": "weather"
+          "type": "weather",
+          "geometry_index_start": 42,
+          "geometry_index_end": 42
         }
       ]
     })");
@@ -1516,10 +1611,10 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
 
   rapidjson::Document serialized_to_json;
   {
-    auto intersection_doc = json::Jmap();
-    auto inner_node = TripLeg_Node();
+    auto intersection_doc = json::map({});
+    auto leg = TripLeg();
     // Sets up the incident
-    auto incidents = inner_node.mutable_incidents();
+    auto* incidents = leg.mutable_incidents();
     {
       // First incident
       auto incident = incidents->Add();
@@ -1527,7 +1622,9 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
       incident->set_id(1337);
       incident->set_description("Fooo");
       incident->set_creation_time(creation_time);
-      incident->set_type(TripLeg_Node_Incident_Type::TripLeg_Node_Incident_Type_WEATHER);
+      incident->set_type(TripLeg::Incident::WEATHER);
+      incident->set_begin_shape_index(87);
+      incident->set_end_shape_index(92);
     }
     {
       // second incident
@@ -1537,15 +1634,17 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
       incident->set_creation_time(creation_time);
       incident->set_start_time(creation_time + 100);
       incident->set_end_time(creation_time + 1800);
-      incident->set_type(TripLeg_Node_Incident_Type::TripLeg_Node_Incident_Type_ACCIDENT);
+      incident->set_type(TripLeg::Incident::ACCIDENT);
+      incident->set_begin_shape_index(21);
+      incident->set_end_shape_index(104);
     }
 
     // Finally call the function under test to serialize to json
-    addsIncidents(*incidents, intersection_doc);
+    serializeIncidents(*incidents, intersection_doc);
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
-    ss << intersection_doc;
+    ss << *intersection_doc;
     serialized_to_json.Parse(ss.str().c_str());
   }
 
@@ -1557,14 +1656,18 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
           "id": 1337,
           "description": "Fooo",
           "creation_time": 1597241829,
-          "incident_type": "weather"
+          "type": "weather",
+          "geometry_index_start": 87,
+          "geometry_index_end": 92
         },
         {
           "id": 2448,
           "creation_time": 1597241800,
           "start_time": 1597241900,
           "end_time": 1597243600,
-          "incident_type": "accident"
+          "type": "accident",
+          "geometry_index_start": 21,
+          "geometry_index_end": 104
         }
       ]
     })");
@@ -1576,19 +1679,18 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
 }
 
 TEST(RouteSerializerOsrm, testAddsIncidentsNothingToAdd) {
-  // Test serializing an edge without incident
 
   rapidjson::Document serialized_to_json;
   {
-    auto intersection_doc = json::Jmap();
-    auto node = TripLeg_Node();
+    auto intersection_doc = json::map({});
+    auto leg = TripLeg();
 
     // Finally call the function under test to serialize to json
-    addsIncidents(node.incidents(), intersection_doc);
+    serializeIncidents(leg.incidents(), intersection_doc);
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
-    ss << intersection_doc;
+    ss << *intersection_doc;
     serialized_to_json.Parse(ss.str().c_str());
   }
 

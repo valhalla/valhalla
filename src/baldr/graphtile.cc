@@ -55,7 +55,8 @@ constexpr float COMPRESSION_HINT = 3.5f;
 std::string MakeSingleTileUrl(const std::string& tile_url, const valhalla::baldr::GraphId& graphid) {
   auto id_pos = tile_url.find(valhalla::baldr::GraphTile::kTilePathPattern);
   return tile_url.substr(0, id_pos) +
-         valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base(), false, false) +
+         valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base(),
+                                                valhalla::baldr::SUFFIX_NON_COMPRESSED, false) +
          tile_url.substr(id_pos + std::strlen(valhalla::baldr::GraphTile::kTilePathPattern));
 }
 
@@ -152,7 +153,7 @@ bool GraphTile::DecompressTile(const GraphId& graphid, std::vector<char>& compre
 
   // Decompress tile into memory
   if (!baldr::inflate(src_func, dst_func)) {
-    LOG_ERROR("Failed to gunzip " + FileSuffix(graphid, true));
+    LOG_ERROR("Failed to gunzip " + FileSuffix(graphid, SUFFIX_COMPRESSED));
     graphtile_.reset();
     return false;
   }
@@ -211,7 +212,9 @@ GraphTile GraphTile::CacheTileURL(const std::string& tile_url,
   }
   // try to cache it on disk so we dont have to keep fetching it from url
   if (!cache_location.empty()) {
-    auto suffix = FileSuffix(graphid.Tile_Base(), tile_getter->gzipped());
+    auto suffix = FileSuffix(graphid.Tile_Base(),
+                             (tile_getter->gzipped() ? valhalla::baldr::SUFFIX_COMPRESSED
+                                                     : valhalla::baldr::SUFFIX_NON_COMPRESSED));
     auto disk_location = cache_location + filesystem::path::preferred_separator + suffix;
     SaveTileToFile(result.bytes_, disk_location);
   }
@@ -396,7 +399,8 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
   }
 }
 
-std::string GraphTile::FileSuffix(const GraphId& graphid, bool gzipped, bool is_file_path) {
+std::string
+GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, bool is_file_path) {
   /*
   if you have a graphid where level == 8 and tileid == 24134109851 you should get:
   8/024/134/109/851.gph since the number of levels is likely to be very small this limits the total
@@ -436,15 +440,14 @@ std::string GraphTile::FileSuffix(const GraphId& graphid, bool gzipped, bool is_
 
   // if it starts with a zero the pow trick doesn't work
   if (graphid.level() == 0) {
-    stream << static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << ".gph"
-           << (gzipped ? ".gz" : "");
+    stream << static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << fname_suffix;
     std::string suffix = stream.str();
     suffix[0] = '0';
     return suffix;
   }
   // it was something else
   stream << graphid.level() * static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid()
-         << ".gph" << (gzipped ? ".gz" : "");
+         << fname_suffix;
   return stream.str();
 }
 
@@ -568,33 +571,38 @@ AABB2<PointLL> GraphTile::BoundingBox() const {
 }
 
 iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const NodeInfo* node) const {
+  if (node < nodes_ || node >= nodes_ + header_->nodecount()) {
+    throw std::logic_error(
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo out of bounds: " + std::to_string(header_->graphid()));
+  }
   const auto* edge = directededges_ + node->edge_index();
   return iterable_t<const DirectedEdge>{edge, node->edge_count()};
 }
 
 iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const GraphId& node) const {
-  if (node.id() < header_->nodecount()) {
-    const auto* nodeinfo = nodes_ + node.id();
-    return GetDirectedEdges(nodeinfo);
+  if (node.Tile_Base() != header_->graphid() || node.id() >= header_->nodecount()) {
+    throw std::logic_error(
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
+        std::to_string(node.level()) + "," + std::to_string(node.id()) +
+        " nodecount= " + std::to_string(header_->nodecount()));
   }
-  throw std::runtime_error(
-      std::string(__FILE__) + ":" + std::to_string(__LINE__) +
-      " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
-      std::to_string(node.level()) + "," + std::to_string(node.id()) +
-      " nodecount= " + std::to_string(header_->nodecount()));
+  const auto* nodeinfo = nodes_ + node.id();
+  return GetDirectedEdges(nodeinfo);
 }
 
 iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) const {
-  if (idx < header_->nodecount()) {
-    const auto& nodeinfo = nodes_[idx];
-    const auto* edge = directededge(nodeinfo.edge_index());
-    return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
+  if (idx >= header_->nodecount()) {
+    throw std::logic_error(
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo index out of bounds 5: " + std::to_string(header_->graphid().tileid()) +
+        "," + std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
+        " nodecount= " + std::to_string(header_->nodecount()));
   }
-  throw std::runtime_error(
-      std::string(__FILE__) + ":" + std::to_string(__LINE__) +
-      " GraphTile NodeInfo index out of bounds 5: " + std::to_string(header_->graphid().tileid()) +
-      "," + std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
-      " nodecount= " + std::to_string(header_->nodecount()));
+  const auto& nodeinfo = nodes_[idx];
+  const auto* edge = directededge(nodeinfo.edge_index());
+  return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
 }
 
 // Get a pointer to edge info.
@@ -641,8 +649,9 @@ GraphTile::GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t
 
 // Convenience method to get the names for an edge given the offset to the
 // edge info
-std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) const {
-  return edgeinfo(edgeinfo_offset).GetNames();
+std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset,
+                                             bool only_tagged_names) const {
+  return edgeinfo(edgeinfo_offset).GetNames(only_tagged_names);
 }
 
 // Convenience method to get the types for the names given the offset to the

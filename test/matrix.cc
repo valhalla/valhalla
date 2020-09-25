@@ -31,14 +31,10 @@ public:
    * Constructor.
    * @param  options Request options in a pbf
    */
-  SimpleCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kDrive) {
+  SimpleCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kDrive, kAutoAccess) {
   }
 
   ~SimpleCost() {
-  }
-
-  uint32_t access_mode() const {
-    return kAutoAccess;
   }
 
   bool Allowed(const DirectedEdge* edge,
@@ -47,9 +43,8 @@ public:
                const GraphId& edgeid,
                const uint64_t current_time,
                const uint32_t tz_index,
-               int& restriction_idx) const {
-    if (!(edge->forwardaccess() & kAutoAccess) ||
-        (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+               int& restriction_idx) const override {
+    if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (pred.restrictions() & (1 << edge->localedgeidx())) ||
         edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
         (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
@@ -65,8 +60,8 @@ public:
                       const GraphId& opp_edgeid,
                       const uint64_t current_time,
                       const uint32_t tz_index,
-                      int& restriction_idx) const {
-    if (!(opp_edge->forwardaccess() & kAutoAccess) ||
+                      int& restriction_idx) const override {
+    if (!IsAccessible(opp_edge) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
         opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
@@ -76,48 +71,44 @@ public:
     return true;
   }
 
-  bool Allowed(const NodeInfo* node) const {
-    return (node->access() & kAutoAccess);
-  }
-
   Cost EdgeCost(const baldr::DirectedEdge* edge,
                 const baldr::TransitDeparture* departure,
-                const uint32_t curr_time) const {
+                const uint32_t curr_time) const override {
     throw std::runtime_error("We shouldnt be testing transit edges");
   }
 
-  Cost EdgeCost(const DirectedEdge* edge, const GraphTile* tile, const uint32_t seconds) const {
+  Cost
+  EdgeCost(const DirectedEdge* edge, const GraphTile* tile, const uint32_t seconds) const override {
     float sec = static_cast<float>(edge->length());
     return {sec / 10.0f, sec};
   }
 
-  Cost TransitionCost(const DirectedEdge* edge, const NodeInfo* node, const EdgeLabel& pred) const {
+  Cost TransitionCost(const DirectedEdge* edge,
+                      const NodeInfo* node,
+                      const EdgeLabel& pred) const override {
     return {5.0f, 5.0f};
   }
 
   Cost TransitionCostReverse(const uint32_t idx,
                              const NodeInfo* node,
                              const DirectedEdge* opp_edge,
-                             const DirectedEdge* opp_pred_edge) const {
+                             const DirectedEdge* opp_pred_edge) const override {
     return {5.0f, 5.0f};
   }
 
-  float AStarCostFactor() const {
+  float AStarCostFactor() const override {
     return 0.1f;
   }
 
-  const EdgeFilter GetEdgeFilter() const {
-    return [](const DirectedEdge* edge) {
-      if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess))
-        return 0.0f;
-      else {
-        return 1.0f;
-      }
-    };
-  }
-
-  const NodeFilter GetNodeFilter() const {
-    return [](const NodeInfo* node) { return !(node->access() & kAutoAccess); };
+  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile*) const override {
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
+    bool accessible = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    if (edge->is_shortcut() || !accessible)
+      return 0.0f;
+    else {
+      return 1.0f;
+    }
   }
 };
 

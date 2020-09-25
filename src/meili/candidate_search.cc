@@ -19,7 +19,7 @@ public:
                                                          float sq_search_radius,
                                                          edgeid_iterator_t edgeid_begin,
                                                          edgeid_iterator_t edgeid_end,
-                                                         const sif::EdgeFilter& filter) const;
+                                                         const sif::cost_ptr_t& costing) const;
 
 private:
   baldr::GraphReader& reader_;
@@ -32,7 +32,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
                                           float sq_search_radius,
                                           edgeid_iterator_t edgeid_begin,
                                           edgeid_iterator_t edgeid_end,
-                                          const sif::EdgeFilter& edgefilter) const {
+                                          const sif::cost_ptr_t& costing) const {
   std::vector<baldr::PathLocation> candidates;
   std::unordered_set<baldr::GraphId> visited_nodes;
   midgard::projector_t projector(location);
@@ -75,7 +75,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
     baldr::PathLocation correlated(baldr::Location(location, stop_type));
 
     // For avoiding recomputing projection later
-    const bool edge_included = !edgefilter || edgefilter(edge) != 0.f;
+    const bool edge_included = !costing || costing->Filter(edge, tile) != 0.f;
 
     if (edge_included) {
       std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape);
@@ -91,7 +91,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
       }
     }
 
-    bool oppedge_included = !edgefilter || edgefilter(opp_edge) != 0.f;
+    bool oppedge_included = !costing || costing->Filter(opp_edge, tile) != 0.f;
 
     // Correlate its opp edge
     if (oppedge_included) {
@@ -227,9 +227,9 @@ CandidateGridQuery::RangeQuery(const AABB2<midgard::PointLL>& range) const {
 std::vector<baldr::PathLocation> CandidateGridQuery::Query(const midgard::PointLL& location,
                                                            baldr::Location::StopType stop_type,
                                                            float sq_search_radius,
-                                                           sif::EdgeFilter filter) const {
+                                                           const sif::cost_ptr_t& costing) const {
   CandidateCollector collector(reader_);
-  return Query(location, stop_type, sq_search_radius, filter, collector);
+  return Query(location, stop_type, sq_search_radius, costing, collector);
 }
 
 } // namespace meili
