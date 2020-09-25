@@ -173,8 +173,7 @@ public:
     throw std::runtime_error("TransitCost::EdgeCost only supports transit edges");
   }
 
-  bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
-                            const baldr::GraphTile* tile) const override {
+  bool IsClosed(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const override {
     return false;
   }
 
@@ -227,9 +226,7 @@ public:
    * This is used to conflate the stops to OSM way ids and we don't want to
    * include ferries.
    */
-  float Filter(const baldr::DirectedEdge* edge,
-               const baldr::GraphId& /*edgeid*/,
-               const baldr::GraphTile* /*tile*/) const override {
+  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile*) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));

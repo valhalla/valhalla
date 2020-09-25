@@ -4,45 +4,45 @@ using namespace valhalla;
 
 namespace valhalla {
 
-std::string incidentTypeToString(const TripLeg_Node_Incident_Type& incident_type) {
+std::string incidentTypeToString(const TripLeg::Incident::Type& incident_type) {
   switch (incident_type) {
-    case TripLeg_Node_Incident_Type_NOT_SET:
+    case TripLeg::Incident::NOT_SET:
       return "not_set";
       break;
-    case TripLeg_Node_Incident_Type_ACCIDENT:
+    case TripLeg::Incident::ACCIDENT:
       return "accident";
       break;
-    case TripLeg_Node_Incident_Type_CONGESTION:
+    case TripLeg::Incident::CONGESTION:
       return "congestion";
       break;
-    case TripLeg_Node_Incident_Type_CONSTRUCTION:
+    case TripLeg::Incident::CONSTRUCTION:
       return "construction";
       break;
-    case TripLeg_Node_Incident_Type_DISABLED_VEHICLE:
+    case TripLeg::Incident::DISABLED_VEHICLE:
       return "disabled_vehicle";
       break;
-    case TripLeg_Node_Incident_Type_LANE_RESTRICTION:
+    case TripLeg::Incident::LANE_RESTRICTION:
       return "lane_restriction";
       break;
-    case TripLeg_Node_Incident_Type_MASS_TRANSIT:
+    case TripLeg::Incident::MASS_TRANSIT:
       return "mass_transit";
       break;
-    case TripLeg_Node_Incident_Type_MISCELLANEOUS:
+    case TripLeg::Incident::MISCELLANEOUS:
       return "miscellaneous";
       break;
-    case TripLeg_Node_Incident_Type_OTHER_NEWS:
+    case TripLeg::Incident::OTHER_NEWS:
       return "other_news";
       break;
-    case TripLeg_Node_Incident_Type_PLANNED_EVENT:
+    case TripLeg::Incident::PLANNED_EVENT:
       return "planned_event";
       break;
-    case TripLeg_Node_Incident_Type_ROAD_CLOSURE:
+    case TripLeg::Incident::ROAD_CLOSURE:
       return "road_closure";
       break;
-    case TripLeg_Node_Incident_Type_ROAD_HAZARD:
+    case TripLeg::Incident::ROAD_HAZARD:
       return "road_hazard";
       break;
-    case TripLeg_Node_Incident_Type_WEATHER:
+    case TripLeg::Incident::WEATHER:
       return "weather";
       break;
   };

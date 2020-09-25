@@ -292,8 +292,7 @@ public:
     throw std::runtime_error("BicycleCost::EdgeCost does not support transit edges");
   }
 
-  bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
-                            const baldr::GraphTile* tile) const override {
+  bool IsClosed(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const override {
     return false;
   }
 
@@ -399,9 +398,7 @@ protected:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by bicycle.
    */
-  float Filter(const baldr::DirectedEdge* edge,
-               const baldr::GraphId& /*edgeid*/,
-               const baldr::GraphTile* /*tile*/) const override {
+  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile*) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
