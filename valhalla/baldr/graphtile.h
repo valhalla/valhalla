@@ -493,8 +493,11 @@ public:
   std::vector<LaneConnectivity> GetLaneConnectivity(const uint32_t idx) const;
 
   /**
-   * Convenience method to get the speed for an edge given the directed
-   * edge and a time (seconds since start of the week).
+   * Convenience method for use with costing to get the speed for an edge given the directed
+   * edge and a time (seconds since start of the week). If the current speed of the edge
+   * is 0 then the current speed is ignore and other speed sources are used to prevent
+   * issues with costing
+   *
    * @param  de            Directed edge information.
    * @param  traffic_mask  A mask denoting which types of traffic data should be used to get the speed
    * @param  seconds       Seconds of the week since midnight (ie Monday morning). Defaults to noon
@@ -518,12 +521,32 @@ public:
     //               the request is not for "now", or we're some X % along the route
     // TODO(danpat): for short-ish durations along the route, we should fade live
     //               speeds into any historic/predictive/average value we'd normally use
+    uint32_t partial_live_speed = 0;
+    float partial_live_pct = 0;
     if ((flow_mask & kCurrentFlowMask) && traffic_tile()) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
       auto volatile& live_speed = traffic_tile.trafficspeed(directed_edge_index);
-      if (live_speed.valid()) {
+      // only use current speed if its valid and non zero, a speed of 0 makes costing values crazy
+      if (live_speed.valid() && (partial_live_speed = live_speed.get_overall_speed()) > 0) {
         *flow_sources |= kCurrentFlowMask;
-        return live_speed.get_overall_speed();
+        // Live speed covers entire edge, can return early here
+        if (live_speed.breakpoint1 == 255) {
+          return partial_live_speed;
+        }
+
+        // Since live speed didn't cover the entire edge, lets calculate the coverage
+        // to facilitate blending with other sources for uncovered part
+        partial_live_pct =
+            (
+                // First section
+                (live_speed.breakpoint1 > 0 ? live_speed.breakpoint1 : 0)
+                // Second section
+                + (live_speed.breakpoint2 > 0 ? (live_speed.breakpoint2 - live_speed.breakpoint1) : 0)
+                // Third section
+                + (live_speed.speed3 != baldr::UNKNOWN_TRAFFIC_SPEED_RAW
+                       ? (255 - live_speed.breakpoint2)
+                       : 0)) /
+            255.0;
       }
     }
 
@@ -536,7 +559,8 @@ public:
       float speed = predictedspeeds_.speed(idx, seconds);
       if (valid_speed(speed)) {
         *flow_sources |= kPredictedFlowMask;
-        return static_cast<uint32_t>(speed + .5f);
+        return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
+                                     (1 - partial_live_pct) * (speed + 0.5f));
       }
 #ifdef LOGGING_LEVEL_TRACE
       else
@@ -552,7 +576,8 @@ public:
     if ((invalid_time || is_daytime) && (flow_mask & kConstrainedFlowMask) &&
         valid_speed(de->constrained_flow_speed())) {
       *flow_sources |= kConstrainedFlowMask;
-      return de->constrained_flow_speed();
+      return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
+                                   (1 - partial_live_pct) * de->constrained_flow_speed());
     }
 #ifdef LOGGING_LEVEL_TRACE
     else if (de->constrained_flow_speed() != 0)
@@ -566,7 +591,8 @@ public:
     if ((invalid_time || !is_daytime) && (flow_mask & kFreeFlowMask) &&
         valid_speed(de->free_flow_speed())) {
       *flow_sources |= kFreeFlowMask;
-      return de->free_flow_speed();
+      return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
+                                   (1 - partial_live_pct) * de->free_flow_speed());
     }
 #ifdef LOGGING_LEVEL_TRACE
     else if (de->free_flow_speed() != 0)
@@ -576,7 +602,8 @@ public:
 #endif
 
     // Fallback further to specified or derived speed
-    return de->speed();
+    return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
+                                 (1 - partial_live_pct) * de->speed());
   }
 
   inline const volatile TrafficSpeed& trafficspeed(const DirectedEdge* de) const {
@@ -604,15 +631,17 @@ public:
 
   /**
    * Convenience method to determine whether an edge is currently closed
-   * due to traffic.  Roads are considered closed when we
-   *   a) have traffic data
+   * due to traffic.  Roads are considered closed when the following are true
+   *   a) have traffic data for that tile
+   *   b) we have a valid record for that edge
    *   b) the speed is zero
-   *   c) the congestion is high
    *
-   * If we have 0 speed, it might be that we don't have a record for
+   * @param edge  the directed edge for which we need to know if its closed
+   * @return      whether or not its closed
    */
-  inline bool IsClosedDueToTraffic(const GraphId& edge_id) const {
-    auto volatile& live_speed = traffic_tile.trafficspeed(edge_id.id());
+  inline bool IsClosed(const DirectedEdge* edge) const {
+    auto volatile& live_speed =
+        traffic_tile.trafficspeed(static_cast<uint32_t>(edge - directededges_));
     return live_speed.closed();
   }
 

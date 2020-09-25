@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_GRAPHREADER_H_
 #define VALHALLA_BALDR_GRAPHREADER_H_
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -793,6 +794,52 @@ public:
    */
   int GetTimezone(const baldr::GraphId& node, const GraphTile*& tile);
 
+  // TODO: temporary until we have real incidents loaded from incident loading singleton
+  struct Incident {
+    uint32_t edge_index;
+    double start_offset;
+    double end_offset;
+    uint64_t id;
+  };
+  using incident_tile_t = std::vector<Incident>;
+
+  /**
+   * Returns an incident tile for the given tile id
+   * @param tile_id  the tile id for which incidents should be returned
+   * @return the incident tile for the tile id
+   */
+  virtual std::shared_ptr<incident_tile_t> GetIncidentTile(const GraphId& tile_id) const {
+    // TODO: hook this up to the incident loading singleton from the pr:
+    // https://github.com/valhalla/valhalla/pull/2573
+    // return incident_singleton_t::get(tile_id.Tile_Base());
+    return {};
+  }
+
+  /**
+   * Returns a vector of incidents for the given edge
+   * @param edge_id   which edge you need incidents for
+   * @param tile      which tile the edge lives in, is updated if not correct
+   * @return vector of incidents
+   */
+  std::vector<Incident> GetIncidents(const GraphId& edge_id, const GraphTile*& tile) {
+    // if we are not doing this for any reason then bail
+    std::shared_ptr<incident_tile_t> itile;
+    if (!simulate_incidents_ || !GetGraphTile(edge_id, tile) ||
+        !tile->trafficspeed(tile->directededge(edge_id)).has_incidents ||
+        !(itile = GetIncidentTile(edge_id))) {
+      return {};
+    }
+
+    // get the range of incidents we care about and hand it back, equal_range has no lambda option
+    auto begin = std::partition_point(itile->begin(), itile->end(), [&edge_id](const Incident& i) {
+      return i.edge_index < edge_id.id(); // first one that is >= the id we want
+    });
+    auto end = std::partition_point(begin, itile->end(), [&edge_id](const Incident& i) {
+      return i.edge_index <= edge_id.id(); // first one that is > the id we want
+    });
+    return std::vector<Incident>(begin, end);
+  }
+
 protected:
   // (Tar) extract of tiles - the contents are empty if not being used
   struct tile_extract_t {
@@ -819,6 +866,9 @@ protected:
   std::unordered_set<GraphId> _404s;
 
   std::unique_ptr<TileCache> cache_;
+
+  // TODO: delete me when incident singleton is ready
+  bool simulate_incidents_;
 };
 
 } // namespace baldr
