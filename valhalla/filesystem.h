@@ -17,12 +17,18 @@
 #include <sys/stat.h>
 #include <vector>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <direct.h> // _mkdir
 #include <fcntl.h>
 #include <io.h> // _chsize
 #else
 #include <unistd.h>
+#endif
+
+
+#ifdef __MINGW32__
+#include <limits>
+#define _SH_DENYNO 0x40
 #endif
 
 namespace filesystem {
@@ -370,7 +376,7 @@ inline bool create_directories(const path& p) {
     auto partial = p.path_name_.substr(0, sep);
     if (stat(partial.c_str(), &s) != 0) {
       // create this piece with filesystem::permissions::all
-#ifdef _MSC_VER
+#ifdef _WIN32
       if (_mkdir(partial.c_str()) != 0) {
 #else
       if (mkdir(partial.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
@@ -390,7 +396,7 @@ inline bool create_directories(const path& p) {
 }
 
 inline void resize_file(const path& p, std::uintmax_t new_size) {
-#ifdef _MSC_VER
+#ifdef _WIN32
   auto truncate = [](char const* filepath, std::uintmax_t length) -> int {
     // _chsize expects value in range of signed long
     if (length > (std::numeric_limits<long>::max)())

@@ -84,7 +84,10 @@ function(valhalla_module)
 
   target_compile_definitions(${library}
     PUBLIC
-      $<$<BOOL:${MSVC}>:VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI>
+      # ERROR macro clashes with windows.h -> NOGDI necessary (e.g. https://github.com/ipkn/crow/issues/87)
+      # However, NOGDI needs to be undefined in logging.h
+      $<$<BOOL:${WIN32}>:NOGDI;WIN32_LEAN_AND_MEAN>
+      $<$<BOOL:${MSVC}>:VC_EXTRALEAN;NOMINMAX;>
       RAPIDJSON_HAS_STDSTRING
       HAS_REMOTE_API=0
       AUTO_DOWNLOAD=0
@@ -212,7 +215,7 @@ target_include_directories(valhalla
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
     ${VALHALLA_SOURCE_DIR}/third_party/date/include
-    $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+    $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
   PRIVATE
     ${libvalhalla_include_directories})
 
