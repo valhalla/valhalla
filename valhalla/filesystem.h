@@ -25,7 +25,6 @@
 #include <unistd.h>
 #endif
 
-
 #ifdef __MINGW32__
 #include <limits>
 #define _SH_DENYNO 0x40

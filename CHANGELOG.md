@@ -168,6 +168,7 @@
    * ADDED: Added tunnel names to the edges as a tagged name.  [#2608](https://github.com/valhalla/valhalla/pull/2608)
    * CHANGED: Moved incidents to the trip leg and cut the shape of the leg at that location [#2610](https://github.com/valhalla/valhalla/pull/2610)
    * ADDED: Costing option to ignore_closures when routing with current flow [#2615](https://github.com/valhalla/valhalla/pull/2615)
+   * ADDED: Cross-compilation ability with MinGW64 [#2619](https://github.com/valhalla/valhalla/pull/2619)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
