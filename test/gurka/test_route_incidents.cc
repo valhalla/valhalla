@@ -238,9 +238,9 @@ std::shared_ptr<test_reader> setup_test(const gurka::map& map,
     auto begin_node = name.substr(0, 1);
     auto end_node = name.substr(1);
     auto edge_id = std::get<0>(gurka::findEdgeByNodes(*reader, map.nodes, begin_node, end_node));
-    auto has_incident_cb = [edge_id](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                     int edge_index, valhalla::baldr::TrafficSpeed* current) -> void {
-      if (edge_id.Tile_Base() == tile.header->tile_id && edge_id.id() == edge_index)
+    auto has_incident_cb = [edge_id](baldr::GraphReader&, baldr::TrafficTile& tile, int edge_index,
+                                     valhalla::baldr::TrafficSpeed* current) -> void {
+      if (edge_id.Tile_Base() == tile.header->tile_id && edge_id.id() == (uint32_t)edge_index)
         current->has_incidents = true;
     };
     valhalla_tests::utils::customize_live_traffic_data(map.config, has_incident_cb);

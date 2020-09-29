@@ -809,8 +809,7 @@ public:
    * @param tile_id  the tile id for which incidents should be returned
    * @return the incident tile for the tile id
    */
-  virtual std::shared_ptr<valhalla::incidents::IncidentsTile>
-  GetIncidentTile(const GraphId& tile_id) const {
+  virtual std::shared_ptr<valhalla::incidents::IncidentsTile> GetIncidentTile(const GraphId&) const {
     // TODO: hook this up to the incident loading singleton from the pr:
     // https://github.com/valhalla/valhalla/pull/2573
     // return incident_singleton_t::get(tile_id.Tile_Base());
