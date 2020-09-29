@@ -102,10 +102,8 @@ void UpdateIncident(const std::shared_ptr<valhalla::incidents::IncidentsTile>& i
                     TripLeg& leg,
                     const valhalla::incidents::IncidentLocation* incident_location,
                     uint32_t index) {
-  fprintf(stderr, "UpdateIncident\n");
   if (!incidents_tile) {
     // No incident tile
-    fprintf(stderr, "  early exit no tile\n");
     return;
   }
   auto candidate_index = 0;
@@ -165,14 +163,9 @@ void SetShapeAttributes(const AttributesController& controller,
                         const valhalla::baldr::IncidentResult& incidents) {
   // TODO: if this is a transit edge then the costing will throw
 
-  fprintf(stderr, "SetShapeAttributes entry incidents.tile %u %u\n",
-          incidents.tile->incident_locations_size(), incidents.tile == nullptr);
-
   // bail if nothing to do
   if (!cut_for_traffic && incidents.tile == nullptr &&
       !controller.category_attribute_enabled(kShapeAttributesCategory)) {
-    fprintf(stderr, "SetShapeAttributes early exit\n");
-    fprintf(stderr, "SetShapeAttributes early exit\n");
     return;
   }
 
@@ -189,7 +182,6 @@ void SetShapeAttributes(const AttributesController& controller,
     uint8_t congestion;
     std::vector<const valhalla::incidents::IncidentLocation*> incidents;
   };
-  fprintf(stderr, "SetShapeAttributes foo 2\n");
 
   // A list of percent along the edge, corresponding speed (meters per second), incident id
   std::vector<cut_t> cuts;
@@ -213,7 +205,6 @@ void SetShapeAttributes(const AttributesController& controller,
     }
   }
 
-  fprintf(stderr, "SetShapeAttributes foo 3\n");
   // Cap the end so that we always have something to use
   if (cuts.empty() || cuts.back().percent_along < tgt_pct) {
     cuts.emplace_back(cut_t{tgt_pct, speed, UNKNOWN_CONGESTION_VAL, {}});
@@ -221,10 +212,8 @@ void SetShapeAttributes(const AttributesController& controller,
 
   if (incidents.tile) {
     // sort the start and ends of the incidents along this edge
-    fprintf(stderr, "SetShapeAttributes iterating incidents\n");
     for (auto incident_location_index = incidents.start_index;
          incident_location_index != incidents.end_index; ++incident_location_index) {
-      fprintf(stderr, "SetShapeAttributes incident_location_index %lu\n", incident_location_index);
       if (incident_location_index >= incidents.tile->incident_locations_size()) {
         throw std::logic_error(
             "invalid incident_location_index: " + std::to_string(incident_location_index) + " vs " +
@@ -262,8 +251,6 @@ void SetShapeAttributes(const AttributesController& controller,
         }
       }
     }
-  } else {
-    fprintf(stderr, "SetShapeAttributes no incidents tile\n");
   }
 
   // Find the first cut to the right of where we start on this edge
@@ -1315,8 +1302,6 @@ void TripLegBuilder::Build(
                          ? graphreader.GetIncidents(edge_itr->edgeid, graphtile)
                          : valhalla::baldr::IncidentResult{};
 
-    fprintf(stderr, "before SetShapeAttributes incidents.tile %u\n",
-            incidents.tile->incident_locations_size());
     auto incidents_tile = graphreader.GetIncidentTile(edge);
     SetShapeAttributes(controller, graphtile, incidents_tile, directededge, trip_shape, begin_index,
                        trip_path, trim_start_pct, trim_end_pct, edge_seconds,

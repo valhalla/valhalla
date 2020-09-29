@@ -97,8 +97,6 @@ void check_incident_locations(const valhalla::Api& api,
     // find the incident
     const valhalla::TripLeg::ValhallaIncident* incident = nullptr;
     for (int j = 0; j < leg.incidents_size(); ++j) {
-      fprintf(stderr, "comparing incident_id %lu vs %lu\n", leg.incidents(j).metadata().id(),
-              location.incident_id);
       if (leg.incidents(j).metadata().id() == location.incident_id) {
         incident = &leg.incidents(j);
         break;
