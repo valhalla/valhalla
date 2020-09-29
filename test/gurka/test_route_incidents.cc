@@ -110,13 +110,13 @@ void check_incident_locations(const valhalla::Api& api,
     const auto& begin_edge = leg.node(location.begin_edge_index).edge();
     ASSERT_TRUE(begin_edge.begin_shape_index() <= incident->begin_shape_index() &&
                 incident->begin_shape_index() <= begin_edge.end_shape_index())
-        << "Incident " << location.edge_index << " on leg " << location.leg_index << " on edge "
+        << "IncidentMetadata " << location.edge_index << " on leg " << location.leg_index << " on edge "
         << location.begin_edge_index << " begins on wrong edge";
     const auto& end_edge = leg.node(location.end_edge_index).edge();
 
     ASSERT_TRUE(end_edge.begin_shape_index() <= incident->end_shape_index() &&
                 incident->end_shape_index() <= end_edge.end_shape_index())
-        << "Incident " << location.incident_id << " on edge_index " << location.edge_index
+        << "IncidentMetadata " << location.incident_id << " on edge_index " << location.edge_index
         << " on leg " << location.leg_index << " on edge " << location.end_edge_index
         << " ends on wrong edge";
 
@@ -128,7 +128,7 @@ void check_incident_locations(const valhalla::Api& api,
         (lengths[incident->begin_shape_index()] - lengths[begin_edge.begin_shape_index()]) /
         begin_edge_length;
     ASSERT_NEAR(begin_edge_pct, location.begin_pct, .01)
-        << "Incident " << location.edge_index << " on leg " << location.leg_index << " on edge "
+        << "IncidentMetadata " << location.edge_index << " on leg " << location.leg_index << " on edge "
         << location.begin_edge_index << " begins at wrong location along the edge";
 
     auto end_edge_length =
@@ -137,7 +137,7 @@ void check_incident_locations(const valhalla::Api& api,
         (lengths[incident->end_shape_index()] - lengths[end_edge.begin_shape_index()]) /
         end_edge_length;
     ASSERT_NEAR(end_edge_pct, location.end_pct, .1)
-        << "Incident " << location.incident_id << " on leg " << location.leg_index << " on edge "
+        << "IncidentMetadata " << location.incident_id << " on leg " << location.leg_index << " on edge "
         << location.end_edge_index << " ends at wrong location along the edge";
   }
 
@@ -168,7 +168,7 @@ struct test_reader : public baldr::GraphReader {
     valhalla::incidents::IncidentsTile& incidents_tile = incidents[id.Tile_Base()];
 
     uint32_t incident_index = 0;
-    valhalla::incidents::Incident* incident_metadata = nullptr;
+    valhalla::incidents::IncidentMetadata* incident_metadata = nullptr;
     // Check if this incident is already tracked
     for (auto& meta : *incidents_tile.mutable_incidents()) {
       if (incident_id == meta.id()) {
@@ -186,7 +186,7 @@ struct test_reader : public baldr::GraphReader {
       incident_index = incidents_tile.incidents().size();
 
       // Add the incident metadata to the array
-      valhalla::incidents::Incident* incident_metadata = incidents_tile.mutable_incidents()->Add();
+      valhalla::incidents::IncidentMetadata* incident_metadata = incidents_tile.mutable_incidents()->Add();
       incident_metadata->set_id(incident_id);
       incident_metadata->set_description(incident_description);
     }

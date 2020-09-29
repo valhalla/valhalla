@@ -1567,13 +1567,13 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
     incident->set_begin_shape_index(42);
     incident->set_end_shape_index(42);
 
-    valhalla::incidents::Incident meta;
+    valhalla::incidents::IncidentMetadata meta;
     meta.set_id(1337);
     uint64_t creation_time = 1597241829;
     meta.set_creation_time(creation_time);
     meta.set_start_time(creation_time + 100);
     meta.set_end_time(creation_time + 1800);
-    meta.set_type(valhalla::incidents::Incident::WEATHER);
+    meta.set_type(valhalla::incidents::IncidentMetadata::WEATHER);
     *incident->mutable_metadata() = meta;
 
     // Finally call the function under test to serialize to json
@@ -1624,11 +1624,11 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
       incident->set_begin_shape_index(87);
       incident->set_end_shape_index(92);
 
-      valhalla::incidents::Incident meta;
+      valhalla::incidents::IncidentMetadata meta;
       meta.set_id(1337);
       meta.set_description("Fooo");
       meta.set_creation_time(creation_time);
-      meta.set_type(valhalla::incidents::Incident::WEATHER);
+      meta.set_type(valhalla::incidents::IncidentMetadata::WEATHER);
       *incident->mutable_metadata() = meta;
     }
     {
@@ -1638,12 +1638,12 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
       incident->set_begin_shape_index(21);
       incident->set_end_shape_index(104);
 
-      valhalla::incidents::Incident meta;
+      valhalla::incidents::IncidentMetadata meta;
       meta.set_id(2448);
       meta.set_creation_time(creation_time);
       meta.set_start_time(creation_time + 100);
       meta.set_end_time(creation_time + 1800);
-      meta.set_type(valhalla::incidents::Incident::ACCIDENT);
+      meta.set_type(valhalla::incidents::IncidentMetadata::ACCIDENT);
       *incident->mutable_metadata() = meta;
     }
 

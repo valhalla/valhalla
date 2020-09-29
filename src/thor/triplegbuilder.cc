@@ -92,7 +92,7 @@ void AssignAdmins(const AttributesController& controller,
 }
 
 // Given the IncidentLocation relation, return the full metadata
-const valhalla::incidents::Incident&
+const valhalla::incidents::IncidentMetadata&
 grabMetadataFromEdgeRelation(const std::shared_ptr<valhalla::incidents::IncidentsTile>& tile,
                              const valhalla::incidents::IncidentLocation& incident_location) {
   auto incident_index = incident_location.incident_index();
@@ -123,7 +123,7 @@ void UpdateIncident(const std::shared_ptr<valhalla::incidents::IncidentsTile>& i
   auto found = std::find_if(leg.mutable_incidents()->begin(), leg.mutable_incidents()->end(),
                             [&candidate_index, &incidents_tile,
                              incident_location](const TripLeg::ValhallaIncident& candidate) {
-                              const valhalla::incidents::Incident& meta =
+                              const valhalla::incidents::IncidentMetadata& meta =
                                   grabMetadataFromEdgeRelation(incidents_tile, *incident_location);
                               bool is_match = meta.id() == candidate.metadata().id();
                               return is_match;

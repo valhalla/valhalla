@@ -13,7 +13,7 @@ message IncidentsTile {
   // Sorted list of edge_ids describing what incidents are attached to an edge_id
   repeated IncidentLocation incident_locations = 1;
   // Look at `incident_locations` to find how to index this array
-  repeated Incident incidents = 2;
+  repeated IncidentMetadata incidents = 2;
 }
 
 // Links (part of an edge) to incidents
@@ -26,7 +26,7 @@ message IncidentLocation {
 
 // A single incident is described by this
 // TODO This is not yet finalized
-message Incident {
+message IncidentMetadata {
     enum Type {
         ACCIDENT = 0;
         CONGESTION = 1;
@@ -67,6 +67,6 @@ message Incident {
     string clear_lanes = 15;
     uint64 num_lanes_blocked = 16;
 
-    // Incident id
+    // IncidentMetadata id
     uint64 id = 128;
 }
