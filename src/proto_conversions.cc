@@ -4,48 +4,46 @@ using namespace valhalla;
 
 namespace valhalla {
 
-std::string incidentTypeToString(const valhalla::incidents::IncidentMetadata::Type& incident_type) {
+std::string incidentTypeToString(const valhalla::incidents::Metadata::Type& incident_type) {
   switch (incident_type) {
-    case valhalla::incidents::IncidentMetadata::ACCIDENT:
+    case valhalla::incidents::Metadata::ACCIDENT:
       return "accident";
       break;
-    case valhalla::incidents::IncidentMetadata::CONGESTION:
+    case valhalla::incidents::Metadata::CONGESTION:
       return "congestion";
       break;
-    case valhalla::incidents::IncidentMetadata::CONSTRUCTION:
+    case valhalla::incidents::Metadata::CONSTRUCTION:
       return "construction";
       break;
-    case valhalla::incidents::IncidentMetadata::DISABLED_VEHICLE:
+    case valhalla::incidents::Metadata::DISABLED_VEHICLE:
       return "disabled_vehicle";
       break;
-    case valhalla::incidents::IncidentMetadata::LANE_RESTRICTION:
+    case valhalla::incidents::Metadata::LANE_RESTRICTION:
       return "lane_restriction";
       break;
-    case valhalla::incidents::IncidentMetadata::MASS_TRANSIT:
+    case valhalla::incidents::Metadata::MASS_TRANSIT:
       return "mass_transit";
       break;
-    case valhalla::incidents::IncidentMetadata::MISCELLANEOUS:
+    case valhalla::incidents::Metadata::MISCELLANEOUS:
       return "miscellaneous";
       break;
-    case valhalla::incidents::IncidentMetadata::OTHER_NEWS:
+    case valhalla::incidents::Metadata::OTHER_NEWS:
       return "other_news";
       break;
-    case valhalla::incidents::IncidentMetadata::PLANNED_EVENT:
+    case valhalla::incidents::Metadata::PLANNED_EVENT:
       return "planned_event";
       break;
-    case valhalla::incidents::IncidentMetadata::ROAD_CLOSURE:
+    case valhalla::incidents::Metadata::ROAD_CLOSURE:
       return "road_closure";
       break;
-    case valhalla::incidents::IncidentMetadata::ROAD_HAZARD:
+    case valhalla::incidents::Metadata::ROAD_HAZARD:
       return "road_hazard";
       break;
-    case valhalla::incidents::IncidentMetadata::WEATHER:
+    case valhalla::incidents::Metadata::WEATHER:
       return "weather";
       break;
-    case valhalla::incidents::
-        IncidentMetadata_Type_IncidentMetadata_Type_INT_MAX_SENTINEL_DO_NOT_USE_:
-    case valhalla::incidents::
-        IncidentMetadata_Type_IncidentMetadata_Type_INT_MIN_SENTINEL_DO_NOT_USE_:
+    case valhalla::incidents::Metadata_Type_Metadata_Type_INT_MAX_SENTINEL_DO_NOT_USE_:
+    case valhalla::incidents::Metadata_Type_Metadata_Type_INT_MIN_SENTINEL_DO_NOT_USE_:
       // Like the name says, do not use. Simply for ensuring full coverage of switch statement
       break;
   };

@@ -27,9 +27,9 @@ namespace baldr {
 
 struct IncidentResult {
   std::shared_ptr<incidents::IncidentsTile> tile;
-  // Index into the IncidentLocation array
+  // Index into the Location array
   int start_index;
-  // Index into the IncidentLocation array
+  // Index into the Location array
   int end_index;
 };
 
@@ -856,10 +856,10 @@ protected:
   bool simulate_incidents_;
 };
 
-// Given the IncidentLocation relation, return the full metadata
-const valhalla::incidents::IncidentMetadata
+// Given the Location relation, return the full metadata
+const valhalla::incidents::Metadata&
 grabMetadataFromEdgeRelation(const std::shared_ptr<valhalla::incidents::IncidentsTile>& tile,
-                             const valhalla::incidents::IncidentLocation& incident_location);
+                             const valhalla::incidents::Location& incident_location);
 } // namespace baldr
 } // namespace valhalla
 

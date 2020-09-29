@@ -100,7 +100,7 @@ void AssignAdmins(const AttributesController& controller,
  */
 void UpdateIncident(const std::shared_ptr<valhalla::incidents::IncidentsTile>& incidents_tile,
                     TripLeg& leg,
-                    const valhalla::incidents::IncidentLocation* incident_location,
+                    const valhalla::incidents::Location* incident_location,
                     uint32_t index) {
   const uint64_t current_incident_id =
       valhalla::baldr::grabMetadataFromEdgeRelation(incidents_tile, *incident_location).id();
@@ -116,7 +116,7 @@ void UpdateIncident(const std::shared_ptr<valhalla::incidents::IncidentsTile>& i
     auto* new_incident = leg.mutable_incidents()->Add();
 
     // Get the full incident metadata from the incident-tile
-    const valhalla::incidents::IncidentMetadata& meta =
+    const valhalla::incidents::Metadata& meta =
         valhalla::baldr::grabMetadataFromEdgeRelation(incidents_tile, *incident_location);
     *new_incident->mutable_metadata() = meta;
 
@@ -172,7 +172,7 @@ void SetShapeAttributes(const AttributesController& controller,
     double percent_along;
     double speed; // meters per second
     uint8_t congestion;
-    std::vector<const valhalla::incidents::IncidentLocation*> incidents;
+    std::vector<const valhalla::incidents::Location*> incidents;
   };
 
   // A list of percent along the edge, corresponding speed (meters per second), incident id
@@ -206,12 +206,12 @@ void SetShapeAttributes(const AttributesController& controller,
     // sort the start and ends of the incidents along this edge
     for (auto incident_location_index = incidents.start_index;
          incident_location_index != incidents.end_index; ++incident_location_index) {
-      if (incident_location_index >= incidents.tile->incident_locations_size()) {
+      if (incident_location_index >= incidents.tile->locations_size()) {
         throw std::logic_error(
             "invalid incident_location_index: " + std::to_string(incident_location_index) + " vs " +
-            std::to_string(incidents.tile->incident_locations_size()));
+            std::to_string(incidents.tile->locations_size()));
       }
-      const auto& incident = incidents.tile->incident_locations(incident_location_index);
+      const auto& incident = incidents.tile->locations(incident_location_index);
       // if the incident is actually on the part of the edge we are using
       if (incident.start_offset() > tgt_pct || incident.end_offset() < src_pct)
         continue;

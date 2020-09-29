@@ -13,10 +13,10 @@ TEST(Traffic, TileDeserialisation) {
   valhalla::incidents::IncidentsTile tile;
   tile.ParseFromIstream(&fin);
 
-  ASSERT_EQ(tile.incident_locations_size(), 72);
-  ASSERT_EQ(tile.incidents_size(), 10);
+  ASSERT_EQ(tile.locations_size(), 72);
+  ASSERT_EQ(tile.metadata_size(), 10);
 
-  for (const auto& incident : tile.incidents()) {
+  for (const auto& incident : tile.metadata()) {
     fprintf(stderr, "Desc: %s\n", incident.description().c_str());
   }
   // ASSERT_EQ(1, 0);
