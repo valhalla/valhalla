@@ -4,46 +4,46 @@ using namespace valhalla;
 
 namespace valhalla {
 
-std::string incidentTypeToString(const valhalla_sideloaded::Incident::Type& incident_type) {
+std::string incidentTypeToString(const valhalla::incidents::Incident::Type& incident_type) {
   switch (incident_type) {
-    case valhalla_sideloaded::Incident::ACCIDENT:
+    case valhalla::incidents::Incident::ACCIDENT:
       return "accident";
       break;
-    case valhalla_sideloaded::Incident::CONGESTION:
+    case valhalla::incidents::Incident::CONGESTION:
       return "congestion";
       break;
-    case valhalla_sideloaded::Incident::CONSTRUCTION:
+    case valhalla::incidents::Incident::CONSTRUCTION:
       return "construction";
       break;
-    case valhalla_sideloaded::Incident::DISABLED_VEHICLE:
+    case valhalla::incidents::Incident::DISABLED_VEHICLE:
       return "disabled_vehicle";
       break;
-    case valhalla_sideloaded::Incident::LANE_RESTRICTION:
+    case valhalla::incidents::Incident::LANE_RESTRICTION:
       return "lane_restriction";
       break;
-    case valhalla_sideloaded::Incident::MASS_TRANSIT:
+    case valhalla::incidents::Incident::MASS_TRANSIT:
       return "mass_transit";
       break;
-    case valhalla_sideloaded::Incident::MISCELLANEOUS:
+    case valhalla::incidents::Incident::MISCELLANEOUS:
       return "miscellaneous";
       break;
-    case valhalla_sideloaded::Incident::OTHER_NEWS:
+    case valhalla::incidents::Incident::OTHER_NEWS:
       return "other_news";
       break;
-    case valhalla_sideloaded::Incident::PLANNED_EVENT:
+    case valhalla::incidents::Incident::PLANNED_EVENT:
       return "planned_event";
       break;
-    case valhalla_sideloaded::Incident::ROAD_CLOSURE:
+    case valhalla::incidents::Incident::ROAD_CLOSURE:
       return "road_closure";
       break;
-    case valhalla_sideloaded::Incident::ROAD_HAZARD:
+    case valhalla::incidents::Incident::ROAD_HAZARD:
       return "road_hazard";
       break;
-    case valhalla_sideloaded::Incident::WEATHER:
+    case valhalla::incidents::Incident::WEATHER:
       return "weather";
       break;
-    case valhalla_sideloaded::Incident_Type_Incident_Type_INT_MAX_SENTINEL_DO_NOT_USE_:
-    case valhalla_sideloaded::Incident_Type_Incident_Type_INT_MIN_SENTINEL_DO_NOT_USE_:
+    case valhalla::incidents::Incident_Type_Incident_Type_INT_MAX_SENTINEL_DO_NOT_USE_:
+    case valhalla::incidents::Incident_Type_Incident_Type_INT_MIN_SENTINEL_DO_NOT_USE_:
       // Like the name says, do not use. Simply for ensuring full coverage of switch statement
       break;
   };

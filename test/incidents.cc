@@ -3,14 +3,14 @@
 
 #include <gtest/gtest.h>
 
-#include <valhalla/proto/sideloaded.pb.h>
+#include <valhalla/proto/incidents.pb.h>
 
 TEST(Traffic, TileDeserialisation) {
 
   std::ifstream fin(VALHALLA_SOURCE_DIR "/test/data/incident_tiles/804.incidents");
   ASSERT_TRUE(fin.is_open());
 
-  valhalla_sideloaded::IncidentsTile tile;
+  valhalla::incidents::IncidentsTile tile;
   tile.ParseFromIstream(&fin);
 
   ASSERT_EQ(tile.edge_to_incidents_size(), 72);

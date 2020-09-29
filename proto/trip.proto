@@ -2,7 +2,7 @@ syntax = "proto2";
 option optimize_for = LITE_RUNTIME;
 package valhalla;
 import public "tripcommon.proto";
-import "sideloaded.proto";
+import "incidents.proto";
 
 message TripLeg {
 
@@ -306,7 +306,7 @@ message TripLeg {
   }
 
   message ValhallaIncident {
-    optional valhalla_sideloaded.Incident metadata = 1;
+    optional valhalla.incidents.Incident metadata = 1;
     // Valhalla additions to incident metadata goes here
     optional uint32 begin_shape_index = 3;
     optional uint32 end_shape_index = 4;

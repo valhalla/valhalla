@@ -20,7 +20,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/sequence.h>
 
-#include <valhalla/proto/sideloaded.pb.h>
+#include <valhalla/proto/incidents.pb.h>
 
 namespace valhalla {
 namespace baldr {
@@ -801,7 +801,7 @@ public:
    * @param tile_id  the tile id for which incidents should be returned
    * @return the incident tile for the tile id
    */
-  virtual std::shared_ptr<valhalla_sideloaded::IncidentsTile>
+  virtual std::shared_ptr<valhalla::incidents::IncidentsTile>
   GetIncidentTile(const GraphId& tile_id) const {
     // TODO: hook this up to the incident loading singleton from the pr:
     // https://github.com/valhalla/valhalla/pull/2573
@@ -815,10 +815,10 @@ public:
    * @param tile      which tile the edge lives in, is updated if not correct
    * @return vector of incidents
    */
-  std::vector<valhalla_sideloaded::EdgeToIncident> GetIncidents(const GraphId& edge_id,
+  std::vector<valhalla::incidents::EdgeToIncident> GetIncidents(const GraphId& edge_id,
                                                                 const GraphTile*& tile) {
     // if we are not doing this for any reason then bail
-    std::shared_ptr<valhalla_sideloaded::IncidentsTile> itile;
+    std::shared_ptr<valhalla::incidents::IncidentsTile> itile;
     if (!simulate_incidents_ || !GetGraphTile(edge_id, tile) ||
         !tile->trafficspeed(tile->directededge(edge_id)).has_incidents ||
         !(itile = GetIncidentTile(edge_id))) {
@@ -828,16 +828,16 @@ public:
     // get the range of incidents we care about and hand it back, equal_range has no lambda option
     auto begin =
         std::partition_point(itile->edge_to_incidents().begin(), itile->edge_to_incidents().end(),
-                             [&edge_id](const valhalla_sideloaded::EdgeToIncident& i) {
+                             [&edge_id](const valhalla::incidents::EdgeToIncident& i) {
                                return i.edge_index() <
                                       edge_id.id(); // first one that is >= the id we want
                              });
     auto end = std::partition_point(begin, itile->edge_to_incidents().end(),
-                                    [&edge_id](const valhalla_sideloaded::EdgeToIncident& i) {
+                                    [&edge_id](const valhalla::incidents::EdgeToIncident& i) {
                                       return i.edge_index() <=
                                              edge_id.id(); // first one that is > the id we want
                                     });
-    return std::vector<valhalla_sideloaded::EdgeToIncident>(begin, end);
+    return std::vector<valhalla::incidents::EdgeToIncident>(begin, end);
   }
 
 protected:

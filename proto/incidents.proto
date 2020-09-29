@@ -7,7 +7,7 @@
 
 syntax = "proto3";
 option optimize_for = LITE_RUNTIME;
-package valhalla_sideloaded;
+package valhalla.incidents;
 
 message IncidentsTile {
   // Sorted list of edge_ids describing what incidents are attached to an edge_id

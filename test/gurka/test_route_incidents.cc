@@ -5,7 +5,7 @@
 
 using namespace valhalla;
 
-class incidents : public ::testing::Test {
+class IncidentsTest : public ::testing::Test {
 protected:
   static gurka::map map;
 
@@ -54,7 +54,7 @@ protected:
 };
 
 // initialize static member
-gurka::map incidents::map = {};
+gurka::map IncidentsTest::map = {};
 
 // for asserting where the incident starts and ends on the route and how long it is
 struct incident_location {
@@ -150,25 +150,25 @@ struct test_reader : public baldr::GraphReader {
   test_reader(const boost::property_tree::ptree& pt) : baldr::GraphReader(pt) {
     tile_extract_.reset(new baldr::GraphReader::tile_extract_t(pt));
   }
-  virtual std::shared_ptr<valhalla_sideloaded::IncidentsTile>
+  virtual std::shared_ptr<valhalla::incidents::IncidentsTile>
   GetIncidentTile(const baldr::GraphId& tile_id) const {
     auto i = incidents.find(tile_id.Tile_Base());
     if (i == incidents.cend())
       return {};
     return std::shared_ptr<
-        valhalla_sideloaded::IncidentsTile>(&i->second, [](valhalla_sideloaded::IncidentsTile*) {});
+        valhalla::incidents::IncidentsTile>(&i->second, [](valhalla::incidents::IncidentsTile*) {});
   }
   void add(const baldr::GraphId& id,
-           valhalla_sideloaded::EdgeToIncident&& _edge_to_incident,
+           valhalla::incidents::EdgeToIncident&& _edge_to_incident,
            uint64_t incident_id,
            const std::string& incident_description = "") {
 
     // Grab the incidents-tile in which we should insert both metadata and the edge-to-metadata
     // relation
-    valhalla_sideloaded::IncidentsTile& incidents_tile = incidents[id.Tile_Base()];
+    valhalla::incidents::IncidentsTile& incidents_tile = incidents[id.Tile_Base()];
 
     uint32_t incident_index = 0;
-    valhalla_sideloaded::Incident* incident_metadata = nullptr;
+    valhalla::incidents::Incident* incident_metadata = nullptr;
     // Check if this incident is already tracked
     for (auto& meta : *incidents_tile.mutable_incidents()) {
       if (incident_id == meta.id()) {
@@ -186,7 +186,7 @@ struct test_reader : public baldr::GraphReader {
       incident_index = incidents_tile.incidents().size();
 
       // Add the incident metadata to the array
-      valhalla_sideloaded::Incident* incident_metadata = incidents_tile.mutable_incidents()->Add();
+      valhalla::incidents::Incident* incident_metadata = incidents_tile.mutable_incidents()->Add();
       incident_metadata->set_id(incident_id);
       incident_metadata->set_description(incident_description);
     }
@@ -200,8 +200,8 @@ struct test_reader : public baldr::GraphReader {
     for (auto& kv : incidents) {
       std::sort(kv.second.mutable_edge_to_incidents()->begin(),
                 kv.second.mutable_edge_to_incidents()->end(),
-                [](const valhalla_sideloaded::EdgeToIncident& a,
-                   const valhalla_sideloaded::EdgeToIncident& b) {
+                [](const valhalla::incidents::EdgeToIncident& a,
+                   const valhalla::incidents::EdgeToIncident& b) {
                   if (a.edge_index() == b.edge_index()) {
                     if (a.start_offset() == b.start_offset()) {
                       if (a.end_offset() == b.end_offset()) {
@@ -215,13 +215,13 @@ struct test_reader : public baldr::GraphReader {
                 });
     }
   }
-  mutable std::unordered_map<baldr::GraphId, valhalla_sideloaded::IncidentsTile> incidents;
+  mutable std::unordered_map<baldr::GraphId, valhalla::incidents::IncidentsTile> incidents;
 };
 
 // Helper factory function
-valhalla_sideloaded::EdgeToIncident
+valhalla::incidents::EdgeToIncident
 createEdgeToIncident(uint32_t edge_index, float start_offset, float end_offset) {
-  valhalla_sideloaded::EdgeToIncident edge;
+  valhalla::incidents::EdgeToIncident edge;
   edge.set_edge_index(edge_index);
   edge.set_start_offset(start_offset);
   edge.set_end_offset(end_offset);
@@ -255,7 +255,7 @@ std::shared_ptr<test_reader> setup_test(const gurka::map& map,
 }
 
 // via some macro magic we are inside the scope of the incidents class above
-TEST_F(incidents, simple_cut) {
+TEST_F(IncidentsTest, simple_cut) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB"}, edge_ids);
@@ -275,7 +275,7 @@ TEST_F(incidents, simple_cut) {
                                    });
 }
 
-TEST_F(incidents, whole_edge) {
+TEST_F(IncidentsTest, whole_edge) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB"}, edge_ids);
@@ -295,7 +295,7 @@ TEST_F(incidents, whole_edge) {
                                    });
 }
 
-TEST_F(incidents, left) {
+TEST_F(IncidentsTest, left) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB"}, edge_ids);
@@ -315,7 +315,7 @@ TEST_F(incidents, left) {
                                    });
 }
 
-TEST_F(incidents, right) {
+TEST_F(IncidentsTest, right) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB"}, edge_ids);
@@ -335,7 +335,7 @@ TEST_F(incidents, right) {
                                    });
 }
 
-TEST_F(incidents, multiedge) {
+TEST_F(IncidentsTest, multiedge) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
@@ -360,7 +360,7 @@ TEST_F(incidents, multiedge) {
                                    });
 }
 
-TEST_F(incidents, multiincident) {
+TEST_F(IncidentsTest, multiincident) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
@@ -387,7 +387,7 @@ TEST_F(incidents, multiincident) {
                                    });
 }
 
-TEST_F(incidents, interleaved) {
+TEST_F(IncidentsTest, interleaved) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
@@ -414,7 +414,7 @@ TEST_F(incidents, interleaved) {
                                    });
 }
 
-TEST_F(incidents, collisions) {
+TEST_F(IncidentsTest, collisions) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
@@ -441,7 +441,7 @@ TEST_F(incidents, collisions) {
                                    });
 }
 
-TEST_F(incidents, full_overlap) {
+TEST_F(IncidentsTest, full_overlap) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
@@ -464,7 +464,7 @@ TEST_F(incidents, full_overlap) {
                                    });
 }
 
-TEST_F(incidents, multileg) {
+TEST_F(IncidentsTest, multileg) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
@@ -497,7 +497,7 @@ TEST_F(incidents, multileg) {
                                    });
 }
 
-TEST_F(incidents, clipped) {
+TEST_F(IncidentsTest, clipped) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB", "BE", "EH", "HI"}, edge_ids);
@@ -520,7 +520,7 @@ TEST_F(incidents, clipped) {
                                    });
 }
 
-TEST_F(incidents, missed) {
+TEST_F(IncidentsTest, missed) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB", "BE", "EH", "HI"}, edge_ids);
@@ -540,7 +540,7 @@ TEST_F(incidents, missed) {
   check_incident_locations(result, {});
 }
 
-TEST_F(incidents, simple_point) {
+TEST_F(IncidentsTest, simple_point) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB"}, edge_ids);
@@ -561,7 +561,7 @@ TEST_F(incidents, simple_point) {
                                    });
 }
 
-TEST_F(incidents, left_point) {
+TEST_F(IncidentsTest, left_point) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB"}, edge_ids);
@@ -582,7 +582,7 @@ TEST_F(incidents, left_point) {
                                    });
 }
 
-TEST_F(incidents, right_point) {
+TEST_F(IncidentsTest, right_point) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB"}, edge_ids);
@@ -603,7 +603,7 @@ TEST_F(incidents, right_point) {
                                    });
 }
 
-TEST_F(incidents, multipoint) {
+TEST_F(IncidentsTest, multipoint) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
@@ -628,7 +628,7 @@ TEST_F(incidents, multipoint) {
                                    });
 }
 
-TEST_F(incidents, point_collisions) {
+TEST_F(IncidentsTest, point_collisions) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
@@ -659,7 +659,7 @@ TEST_F(incidents, point_collisions) {
                                    });
 }
 
-TEST_F(incidents, point_shared) {
+TEST_F(IncidentsTest, point_shared) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB", "BE", "EH"}, edge_ids);
@@ -684,7 +684,7 @@ TEST_F(incidents, point_shared) {
                                    });
 }
 
-TEST_F(incidents, armageddon) {
+TEST_F(IncidentsTest, armageddon) {
   // mark the edges with incidents
   std::vector<baldr::GraphId> edge_ids;
   auto reader = setup_test(map, {"CB", "BE", "EH", "HI"}, edge_ids);
