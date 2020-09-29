@@ -916,9 +916,9 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile
   }
 }
 
-const valhalla::incidents::IncidentMetadata valhalla::baldr::grabMetadataFromEdgeRelation(
-    const std::shared_ptr<valhalla::incidents::IncidentsTile>& tile,
-    const valhalla::incidents::IncidentLocation& incident_location) {
+const valhalla::incidents::IncidentMetadata
+grabMetadataFromEdgeRelation(const std::shared_ptr<valhalla::incidents::IncidentsTile>& tile,
+                             const valhalla::incidents::IncidentLocation& incident_location) {
   auto incident_index = incident_location.incident_index();
   if (incident_index >= tile->incidents_size()) {
     throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
