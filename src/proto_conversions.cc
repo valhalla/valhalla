@@ -42,8 +42,10 @@ std::string incidentTypeToString(const valhalla::incidents::IncidentMetadata::Ty
     case valhalla::incidents::IncidentMetadata::WEATHER:
       return "weather";
       break;
-    case valhalla::incidents::IncidentMetadata_Type_IncidentMetadata_Type_INT_MAX_SENTINEL_DO_NOT_USE_:
-    case valhalla::incidents::IncidentMetadata_Type_IncidentMetadata_Type_INT_MIN_SENTINEL_DO_NOT_USE_:
+    case valhalla::incidents::
+        IncidentMetadata_Type_IncidentMetadata_Type_INT_MAX_SENTINEL_DO_NOT_USE_:
+    case valhalla::incidents::
+        IncidentMetadata_Type_IncidentMetadata_Type_INT_MIN_SENTINEL_DO_NOT_USE_:
       // Like the name says, do not use. Simply for ensuring full coverage of switch statement
       break;
   };
