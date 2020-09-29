@@ -91,11 +91,11 @@ void AssignAdmins(const AttributesController& controller,
   }
 }
 
-// Given the EdgeToIncident relation, return the full metadata
+// Given the IncidentLocation relation, return the full metadata
 const valhalla::incidents::Incident&
 grabMetadataFromEdgeRelation(const std::shared_ptr<valhalla::incidents::IncidentsTile>& tile,
-                             const valhalla::incidents::EdgeToIncident& edge_to_incident) {
-  auto incident_index = edge_to_incident.incident_index();
+                             const valhalla::incidents::IncidentLocation& incident_location) {
+  auto incident_index = incident_location.incident_index();
   if (incident_index >= tile->incidents_size()) {
     throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
                              std::to_string(incident_index) + " but total incident metadata of " +
@@ -113,7 +113,7 @@ grabMetadataFromEdgeRelation(const std::shared_ptr<valhalla::incidents::Incident
  */
 void UpdateIncident(const std::shared_ptr<valhalla::incidents::IncidentsTile>& incidents_tile,
                     TripLeg& leg,
-                    const valhalla::incidents::EdgeToIncident* edge_to_incident,
+                    const valhalla::incidents::IncidentLocation* incident_location,
                     uint32_t index) {
   if (!incidents_tile) {
     // No incident tile
@@ -122,9 +122,9 @@ void UpdateIncident(const std::shared_ptr<valhalla::incidents::IncidentsTile>& i
   auto candidate_index = 0;
   auto found = std::find_if(leg.mutable_incidents()->begin(), leg.mutable_incidents()->end(),
                             [&candidate_index, &incidents_tile,
-                             edge_to_incident](const TripLeg::ValhallaIncident& candidate) {
+                             incident_location](const TripLeg::ValhallaIncident& candidate) {
                               const valhalla::incidents::Incident& meta =
-                                  grabMetadataFromEdgeRelation(incidents_tile, *edge_to_incident);
+                                  grabMetadataFromEdgeRelation(incidents_tile, *incident_location);
                               bool is_match = meta.id() == candidate.metadata().id();
                               return is_match;
                             });
@@ -136,7 +136,7 @@ void UpdateIncident(const std::shared_ptr<valhalla::incidents::IncidentsTile>& i
     auto* new_incident = leg.mutable_incidents()->Add();
 
     // Get the full incident metadata from the incident-tile
-    const auto& incident = grabMetadataFromEdgeRelation(incidents_tile, *edge_to_incident);
+    const auto& incident = grabMetadataFromEdgeRelation(incidents_tile, *incident_location);
     *new_incident->mutable_metadata() = incident;
 
     new_incident->set_begin_shape_index(index);
@@ -171,7 +171,7 @@ void SetShapeAttributes(const AttributesController& controller,
                         double tgt_pct,
                         double edge_seconds,
                         bool cut_for_traffic,
-                        const std::vector<valhalla::incidents::EdgeToIncident>& incidents) {
+                        const std::vector<valhalla::incidents::IncidentLocation>& incidents) {
   // TODO: if this is a transit edge then the costing will throw
 
   // bail if nothing to do
@@ -190,7 +190,7 @@ void SetShapeAttributes(const AttributesController& controller,
     double percent_along;
     double speed; // meters per second
     uint8_t congestion;
-    std::vector<const valhalla::incidents::EdgeToIncident*> incidents;
+    std::vector<const valhalla::incidents::IncidentLocation*> incidents;
   };
 
   // A list of percent along the edge, corresponding speed (meters per second), incident id
@@ -1300,7 +1300,7 @@ void TripLegBuilder::Build(
     // Set shape attributes, sending incidents enables them in the pbf
     auto incidents = controller.attributes.at(kIncidents)
                          ? graphreader.GetIncidents(edge_itr->edgeid, graphtile)
-                         : std::vector<valhalla::incidents::EdgeToIncident>{};
+                         : std::vector<valhalla::incidents::IncidentLocation>{};
     auto incidents_tile = graphreader.GetIncidentTile(edge);
     SetShapeAttributes(controller, graphtile, incidents_tile, directededge, trip_shape, begin_index,
                        trip_path, trim_start_pct, trim_end_pct, edge_seconds,

@@ -815,8 +815,8 @@ public:
    * @param tile      which tile the edge lives in, is updated if not correct
    * @return vector of incidents
    */
-  std::vector<valhalla::incidents::EdgeToIncident> GetIncidents(const GraphId& edge_id,
-                                                                const GraphTile*& tile) {
+  std::vector<valhalla::incidents::IncidentLocation> GetIncidents(const GraphId& edge_id,
+                                                                  const GraphTile*& tile) {
     // if we are not doing this for any reason then bail
     std::shared_ptr<valhalla::incidents::IncidentsTile> itile;
     if (!simulate_incidents_ || !GetGraphTile(edge_id, tile) ||
@@ -827,17 +827,17 @@ public:
 
     // get the range of incidents we care about and hand it back, equal_range has no lambda option
     auto begin =
-        std::partition_point(itile->edge_to_incidents().begin(), itile->edge_to_incidents().end(),
-                             [&edge_id](const valhalla::incidents::EdgeToIncident& i) {
+        std::partition_point(itile->incident_locations().begin(), itile->incident_locations().end(),
+                             [&edge_id](const valhalla::incidents::IncidentLocation& i) {
                                return i.edge_index() <
                                       edge_id.id(); // first one that is >= the id we want
                              });
-    auto end = std::partition_point(begin, itile->edge_to_incidents().end(),
-                                    [&edge_id](const valhalla::incidents::EdgeToIncident& i) {
+    auto end = std::partition_point(begin, itile->incident_locations().end(),
+                                    [&edge_id](const valhalla::incidents::IncidentLocation& i) {
                                       return i.edge_index() <=
                                              edge_id.id(); // first one that is > the id we want
                                     });
-    return std::vector<valhalla::incidents::EdgeToIncident>(begin, end);
+    return std::vector<valhalla::incidents::IncidentLocation>(begin, end);
   }
 
 protected:

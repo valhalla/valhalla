@@ -13,7 +13,7 @@ TEST(Traffic, TileDeserialisation) {
   valhalla::incidents::IncidentsTile tile;
   tile.ParseFromIstream(&fin);
 
-  ASSERT_EQ(tile.edge_to_incidents_size(), 72);
+  ASSERT_EQ(tile.incident_locations_size(), 72);
   ASSERT_EQ(tile.incidents_size(), 10);
 
   for (const auto& incident : tile.incidents()) {

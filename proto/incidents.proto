@@ -11,13 +11,13 @@ package valhalla.incidents;
 
 message IncidentsTile {
   // Sorted list of edge_ids describing what incidents are attached to an edge_id
-  repeated EdgeToIncident edge_to_incidents = 1;
-  // Look at `edge_to_incidents` to find how to index this array
+  repeated IncidentLocation incident_locations = 1;
+  // Look at `incident_locations` to find how to index this array
   repeated Incident incidents = 2;
 }
 
 // Links (part of an edge) to incidents
-message EdgeToIncident {
+message IncidentLocation {
   uint32 edge_index = 1;
   float start_offset = 2;
   float end_offset = 3;
