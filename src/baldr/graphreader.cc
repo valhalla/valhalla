@@ -895,7 +895,7 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile
       itile->incident_locations().begin(), itile->incident_locations().end(),
       [&edge_id, &begin_index](const valhalla::incidents::IncidentLocation& candidate) {
         // first one that is >= the id we want
-        bool is_found = candidate.edge_index() < edge_id.id();
+        bool is_found = candidate.edge_index() <= edge_id.id();
         if (!is_found) {
           begin_index += 1;
         }
@@ -907,7 +907,7 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile
   auto end = std::partition_point(
       begin, itile->incident_locations().end(),
       [&edge_id, &end_index](const valhalla::incidents::IncidentLocation& candidate) {
-        bool is_found = candidate.edge_index() <= edge_id.id(); // first one that is > the id we want
+        bool is_found = candidate.edge_index() < edge_id.id(); // first one that is > the id we want
         if (!is_found) {
           end_index += 1;
         }
@@ -916,13 +916,14 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile
         return is_found;
       });
 
+
   if (begin_index == itile->incident_locations_size()) {
     // No incidents
     fprintf(stderr, "no incidet+ found\n");
     return {nullptr, 0, 0};
   } else {
-    fprintf(stderr, "Returning begin_index %u end_index %u\n", begin_index, end_index);
-    return {itile, begin_index, end_index};
+    fprintf(stderr, "Returning begin_index %u end_index %u incident tile %u\n", begin_index, end_index, itile != nullptr);
+    return {itile, begin_index, end_index+1};
   }
 }
 
