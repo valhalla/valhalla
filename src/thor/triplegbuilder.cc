@@ -143,7 +143,6 @@ void UpdateIncident(const std::shared_ptr<valhalla::incidents::IncidentsTile>& i
  */
 void SetShapeAttributes(const AttributesController& controller,
                         const GraphTile* tile,
-                        const std::shared_ptr<valhalla::incidents::IncidentsTile>& incidents_tile,
                         const DirectedEdge* edge,
                         std::vector<PointLL>& shape,
                         size_t shape_begin,
@@ -223,7 +222,7 @@ void SetShapeAttributes(const AttributesController& controller,
         // if this is clipped at the beginning of the edge then its not a new cut but we still need to
         // attach the incidents information to the leg
         if (offset == src_pct) {
-          UpdateIncident(incidents_tile, leg, &incident, shape_begin);
+          UpdateIncident(incidents.tile, leg, &incident, shape_begin);
           continue;
         }
 
@@ -293,7 +292,7 @@ void SetShapeAttributes(const AttributesController& controller,
     // Set the incidents if we just cut or we are at the end
     if ((shift || i == shape.size() - 1) && !cut_itr->incidents.empty()) {
       for (const auto* incident : cut_itr->incidents) {
-        UpdateIncident(incidents_tile, leg, incident, i);
+        UpdateIncident(incidents.tile, leg, incident, i);
       }
     }
 
@@ -1294,8 +1293,7 @@ void TripLegBuilder::Build(
                          ? graphreader.GetIncidents(edge_itr->edgeid, graphtile)
                          : valhalla::baldr::IncidentResult{};
 
-    auto incidents_tile = graphreader.GetIncidentTile(edge);
-    SetShapeAttributes(controller, graphtile, incidents_tile, directededge, trip_shape, begin_index,
+    SetShapeAttributes(controller, graphtile, directededge, trip_shape, begin_index,
                        trip_path, trim_start_pct, trim_end_pct, edge_seconds,
                        costing->flow_mask() & kCurrentFlowMask, incidents);
 
