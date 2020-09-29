@@ -890,40 +890,39 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile
   }
 
   // get the range of incidents we care about and hand it back, equal_range has no lambda option
-  int begin_index = 0;
-  auto begin = std::partition_point(
-      itile->incident_locations().begin(), itile->incident_locations().end(),
-      [&edge_id, &begin_index](const valhalla::incidents::IncidentLocation& candidate) {
-        // first one that is >= the id we want
-        bool is_found = candidate.edge_index() <= edge_id.id();
-        if (!is_found) {
-          begin_index += 1;
-        }
-        fprintf(stderr, "begin_partition_point candidate %u edge_id %u begin_index %u is_found %i\n",
-                candidate.edge_index(), edge_id.id(), begin_index, is_found);
-        return is_found;
-      });
-  int end_index = 0;
-  auto end = std::partition_point(
-      begin, itile->incident_locations().end(),
-      [&edge_id, &end_index](const valhalla::incidents::IncidentLocation& candidate) {
-        bool is_found = candidate.edge_index() < edge_id.id(); // first one that is > the id we want
-        if (!is_found) {
-          end_index += 1;
-        }
-        fprintf(stderr, "end_partition_point candidate %u edge_id %u end_index %u is_found %i\n",
-                candidate.edge_index(), edge_id.id(), end_index, is_found);
-        return is_found;
-      });
+  auto begin =
+      std::partition_point(itile->incident_locations().begin(), itile->incident_locations().end(),
+                           [&edge_id](const valhalla::incidents::IncidentLocation& candidate) {
+                             // first one that is >= the id we want
+                             bool is_found = candidate.edge_index() < edge_id.id();
+                             // fprintf(stderr, "begin_partition_point candidate %u edge_id %u
+                             // begin_index %u is_found %i\n",
+                             //        candidate.edge_index(), edge_id.id(), begin_index, is_found);
+                             return is_found;
+                           });
+  auto end = std::partition_point(begin, itile->incident_locations().end(),
+                                  [&edge_id](const valhalla::incidents::IncidentLocation& candidate) {
+                                    bool is_found =
+                                        candidate.edge_index() <=
+                                        edge_id.id(); // first one that is > the id we want
+                                    // fprintf(stderr, "end_partition_point candidate %u edge_id %u
+                                    // end_index %u is_found %i\n",
+                                    //        candidate.edge_index(), edge_id.id(), end_index,
+                                    //        is_found);
+                                    return is_found;
+                                  });
 
+  int begin_index = begin - itile->incident_locations().begin();
+  int end_index = end - itile->incident_locations().begin();
 
-  if (begin_index == itile->incident_locations_size()) {
+  if (begin_index >= itile->incident_locations_size()) {
     // No incidents
     fprintf(stderr, "no incidet+ found\n");
     return {nullptr, 0, 0};
   } else {
-    fprintf(stderr, "Returning begin_index %u end_index %u incident tile %u\n", begin_index, end_index, itile != nullptr);
-    return {itile, begin_index, end_index+1};
+    fprintf(stderr, "Returning begin_index %u end_index %u incident_locations_size  %u\n",
+            begin_index, end_index, itile->incident_locations_size());
+    return {itile, begin_index, end_index};
   }
 }
 
