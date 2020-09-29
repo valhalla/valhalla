@@ -25,6 +25,14 @@
 namespace valhalla {
 namespace baldr {
 
+struct IncidentResult {
+  std::shared_ptr<incidents::IncidentsTile> tile;
+  // Index into the IncidentLocation array
+  int start_index;
+  // Index into the IncidentLocation array
+  int end_index;
+};
+
 /**
  * Tile cache interface.
  */
@@ -815,30 +823,7 @@ public:
    * @param tile      which tile the edge lives in, is updated if not correct
    * @return vector of incidents
    */
-  std::vector<valhalla::incidents::IncidentLocation> GetIncidents(const GraphId& edge_id,
-                                                                  const GraphTile*& tile) {
-    // if we are not doing this for any reason then bail
-    std::shared_ptr<valhalla::incidents::IncidentsTile> itile;
-    if (!simulate_incidents_ || !GetGraphTile(edge_id, tile) ||
-        !tile->trafficspeed(tile->directededge(edge_id)).has_incidents ||
-        !(itile = GetIncidentTile(edge_id))) {
-      return {};
-    }
-
-    // get the range of incidents we care about and hand it back, equal_range has no lambda option
-    auto begin =
-        std::partition_point(itile->incident_locations().begin(), itile->incident_locations().end(),
-                             [&edge_id](const valhalla::incidents::IncidentLocation& i) {
-                               return i.edge_index() <
-                                      edge_id.id(); // first one that is >= the id we want
-                             });
-    auto end = std::partition_point(begin, itile->incident_locations().end(),
-                                    [&edge_id](const valhalla::incidents::IncidentLocation& i) {
-                                      return i.edge_index() <=
-                                             edge_id.id(); // first one that is > the id we want
-                                    });
-    return std::vector<valhalla::incidents::IncidentLocation>(begin, end);
-  }
+  IncidentResult GetIncidents(const GraphId& edge_id, const GraphTile*& tile);
 
 protected:
   // (Tar) extract of tiles - the contents are empty if not being used
@@ -871,6 +856,10 @@ protected:
   bool simulate_incidents_;
 };
 
+// Given the IncidentLocation relation, return the full metadata
+const valhalla::incidents::IncidentMetadata
+grabMetadataFromEdgeRelation(const std::shared_ptr<valhalla::incidents::IncidentsTile>& tile,
+                             const valhalla::incidents::IncidentLocation& incident_location);
 } // namespace baldr
 } // namespace valhalla
 

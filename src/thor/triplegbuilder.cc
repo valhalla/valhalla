@@ -91,19 +91,6 @@ void AssignAdmins(const AttributesController& controller,
   }
 }
 
-// Given the IncidentLocation relation, return the full metadata
-const valhalla::incidents::IncidentMetadata&
-grabMetadataFromEdgeRelation(const std::shared_ptr<valhalla::incidents::IncidentsTile>& tile,
-                             const valhalla::incidents::IncidentLocation& incident_location) {
-  auto incident_index = incident_location.incident_index();
-  if (incident_index >= tile->incidents_size()) {
-    throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
-                             std::to_string(incident_index) + " but total incident metadata of " +
-                             std::to_string(tile->incidents_size()));
-  }
-  return tile->incidents(incident_index);
-}
-
 /**
  * Used to add or update incidents attached to the provided leg. We could do something more exotic to
  * avoid linear scan, like keeping a separate lookup outside of the pbf
@@ -124,7 +111,8 @@ void UpdateIncident(const std::shared_ptr<valhalla::incidents::IncidentsTile>& i
                             [&candidate_index, &incidents_tile,
                              incident_location](const TripLeg::ValhallaIncident& candidate) {
                               const valhalla::incidents::IncidentMetadata& meta =
-                                  grabMetadataFromEdgeRelation(incidents_tile, *incident_location);
+                                  valhalla::baldr::grabMetadataFromEdgeRelation(incidents_tile,
+                                                                                *incident_location);
                               bool is_match = meta.id() == candidate.metadata().id();
                               return is_match;
                             });
@@ -136,8 +124,9 @@ void UpdateIncident(const std::shared_ptr<valhalla::incidents::IncidentsTile>& i
     auto* new_incident = leg.mutable_incidents()->Add();
 
     // Get the full incident metadata from the incident-tile
-    const auto& incident = grabMetadataFromEdgeRelation(incidents_tile, *incident_location);
-    *new_incident->mutable_metadata() = incident;
+    const valhalla::incidents::IncidentMetadata& meta =
+        valhalla::baldr::grabMetadataFromEdgeRelation(incidents_tile, *incident_location);
+    *new_incident->mutable_metadata() = meta;
 
     new_incident->set_begin_shape_index(index);
     new_incident->set_end_shape_index(index);
@@ -171,11 +160,11 @@ void SetShapeAttributes(const AttributesController& controller,
                         double tgt_pct,
                         double edge_seconds,
                         bool cut_for_traffic,
-                        const std::vector<valhalla::incidents::IncidentLocation>& incidents) {
+                        const valhalla::baldr::IncidentResult& incidents) {
   // TODO: if this is a transit edge then the costing will throw
 
   // bail if nothing to do
-  if (!cut_for_traffic && incidents.empty() &&
+  if (!cut_for_traffic && !incidents.tile &&
       !controller.category_attribute_enabled(kShapeAttributesCategory))
     return;
 
@@ -220,35 +209,45 @@ void SetShapeAttributes(const AttributesController& controller,
     cuts.emplace_back(cut_t{tgt_pct, speed, UNKNOWN_CONGESTION_VAL, {}});
   }
 
-  // sort the start and ends of the incidents along this edge
-  for (const auto& incident : incidents) {
-    // if the incident is actually on the part of the edge we are using
-    if (incident.start_offset() > tgt_pct || incident.end_offset() < src_pct)
-      continue;
-    // insert the start point and end points
-    for (auto offset : {
-             std::max((double)incident.start_offset(), src_pct),
-             std::min((double)incident.end_offset(), tgt_pct),
-         }) {
-      // if this is clipped at the beginning of the edge then its not a new cut but we still need to
-      // attach the incidents information to the leg
-      if (offset == src_pct) {
-        UpdateIncident(incidents_tile, leg, &incident, shape_begin);
-        continue;
+  if (incidents.tile) {
+    // sort the start and ends of the incidents along this edge
+    for (auto incident_location_index = incidents.start_index;
+         incident_location_index != incidents.end_index; ++incident_location_index) {
+      if (incident_location_index >= incidents.tile->incident_locations_size()) {
+        throw std::logic_error(
+            "invalid incident_location_index: " + std::to_string(incident_location_index) + " vs " +
+            std::to_string(incidents.tile->incident_locations_size()));
       }
+      const auto& incident = incidents.tile->incident_locations(incident_location_index);
+      // if the incident is actually on the part of the edge we are using
+      if (incident.start_offset() > tgt_pct || incident.end_offset() < src_pct)
+        continue;
+      // insert the start point and end points
+      for (auto offset : {
+               std::max((double)incident.start_offset(), src_pct),
+               std::min((double)incident.end_offset(), tgt_pct),
+           }) {
+        // if this is clipped at the beginning of the edge then its not a new cut but we still need to
+        // attach the incidents information to the leg
+        if (offset == src_pct) {
+          UpdateIncident(incidents_tile, leg, &incident, shape_begin);
+          continue;
+        }
 
-      // where does it go in the sorted list
-      auto itr = std::partition_point(cuts.begin(), cuts.end(),
-                                      [offset](const cut_t& c) { return c.percent_along < offset; });
-      // there is already a cut here so we just add the incident
-      if (itr != cuts.end() && itr->percent_along == offset) {
-        itr->incidents.push_back(&incident);
-      } // there wasnt a cut here so we need to make one
-      else {
-        cuts.insert(itr, cut_t{offset,
-                               itr == cuts.end() ? speed : itr->speed,
-                               itr == cuts.end() ? UNKNOWN_CONGESTION_VAL : itr->congestion,
-                               {&incident}});
+        // where does it go in the sorted list
+        auto itr = std::partition_point(cuts.begin(), cuts.end(), [offset](const cut_t& c) {
+          return c.percent_along < offset;
+        });
+        // there is already a cut here so we just add the incident
+        if (itr != cuts.end() && itr->percent_along == offset) {
+          itr->incidents.push_back(&incident);
+        } // there wasnt a cut here so we need to make one
+        else {
+          cuts.insert(itr, cut_t{offset,
+                                 itr == cuts.end() ? speed : itr->speed,
+                                 itr == cuts.end() ? UNKNOWN_CONGESTION_VAL : itr->congestion,
+                                 {&incident}});
+        }
       }
     }
   }
@@ -1300,7 +1299,7 @@ void TripLegBuilder::Build(
     // Set shape attributes, sending incidents enables them in the pbf
     auto incidents = controller.attributes.at(kIncidents)
                          ? graphreader.GetIncidents(edge_itr->edgeid, graphtile)
-                         : std::vector<valhalla::incidents::IncidentLocation>{};
+                         : valhalla::baldr::IncidentResult{};
     auto incidents_tile = graphreader.GetIncidentTile(edge);
     SetShapeAttributes(controller, graphtile, incidents_tile, directededge, trip_shape, begin_index,
                        trip_path, trim_start_pct, trim_end_pct, edge_seconds,

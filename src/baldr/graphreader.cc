@@ -880,5 +880,63 @@ int GraphReader::GetTimezone(const baldr::GraphId& node, const GraphTile*& tile)
   return (tile == nullptr) ? 0 : tile->node(node)->timezone();
 }
 
+IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile*& tile) {
+  // if we are not doing this for any reason then bail
+  std::shared_ptr<valhalla::incidents::IncidentsTile> itile;
+  if (!simulate_incidents_ || !GetGraphTile(edge_id, tile) ||
+      !tile->trafficspeed(tile->directededge(edge_id)).has_incidents ||
+      !(itile = GetIncidentTile(edge_id))) {
+    return {};
+  }
+
+  // get the range of incidents we care about and hand it back, equal_range has no lambda option
+  int begin_index = 0;
+  auto begin = std::partition_point(
+      itile->incident_locations().begin(), itile->incident_locations().end(),
+      [&edge_id, &begin_index](const valhalla::incidents::IncidentLocation& candidate) {
+        // first one that is >= the id we want
+        bool is_found = candidate.edge_index() < edge_id.id();
+        if (!is_found) {
+          begin_index += 1;
+        }
+        fprintf(stderr, "begin_partition_point candidate %u edge_id %u begin_index %u is_found %i\n",
+                candidate.edge_index(), edge_id.id(), begin_index, is_found);
+        return is_found;
+      });
+  int end_index = 0;
+  auto end = std::partition_point(
+      begin, itile->incident_locations().end(),
+      [&edge_id, &end_index](const valhalla::incidents::IncidentLocation& candidate) {
+        bool is_found = candidate.edge_index() <= edge_id.id(); // first one that is > the id we want
+        if (!is_found) {
+          end_index += 1;
+        }
+        fprintf(stderr, "end_partition_point candidate %u edge_id %u end_index %u is_found %i\n",
+                candidate.edge_index(), edge_id.id(), end_index, is_found);
+        return is_found;
+      });
+
+  if (begin_index == itile->incident_locations_size()) {
+    // No incidents
+    fprintf(stderr, "no incidet+ found\n");
+    return {nullptr, 0, 0};
+  } else {
+    fprintf(stderr, "Returning begin_index %u end_index %u\n", begin_index, end_index);
+    return {itile, begin_index, end_index};
+  }
+}
+
+const valhalla::incidents::IncidentMetadata valhalla::baldr::grabMetadataFromEdgeRelation(
+    const std::shared_ptr<valhalla::incidents::IncidentsTile>& tile,
+    const valhalla::incidents::IncidentLocation& incident_location) {
+  auto incident_index = incident_location.incident_index();
+  if (incident_index >= tile->incidents_size()) {
+    throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
+                             std::to_string(incident_index) + " but total incident metadata of " +
+                             std::to_string(tile->incidents_size()));
+  }
+  return tile->incidents(incident_index);
+}
+
 } // namespace baldr
 } // namespace valhalla
