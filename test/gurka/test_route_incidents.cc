@@ -58,7 +58,6 @@ gurka::map IncidentsTest::map = {};
 
 // for asserting where the incident starts and ends on the route and how long it is
 struct incident_location {
-  uint64_t edge_index;
   uint64_t incident_id;
   uint32_t leg_index;
   uint32_t begin_edge_index;
@@ -103,22 +102,21 @@ void check_incident_locations(const valhalla::Api& api,
       }
     }
     ASSERT_TRUE(incident != nullptr)
-        << "Couldn't find incident " << location.edge_index << " on leg " << location.leg_index
+        << "Couldn't find incident " << location.incident_id << " on leg " << location.leg_index
         << " on edge " << location.begin_edge_index;
 
     // check that we are on the right edges of the path
     const auto& begin_edge = leg.node(location.begin_edge_index).edge();
     ASSERT_TRUE(begin_edge.begin_shape_index() <= incident->begin_shape_index() &&
                 incident->begin_shape_index() <= begin_edge.end_shape_index())
-        << "Metadata " << location.edge_index << " on leg " << location.leg_index << " on edge "
+        << "Metadata " << location.incident_id << " on leg " << location.leg_index << " on edge "
         << location.begin_edge_index << " begins on wrong edge";
     const auto& end_edge = leg.node(location.end_edge_index).edge();
 
     ASSERT_TRUE(end_edge.begin_shape_index() <= incident->end_shape_index() &&
                 incident->end_shape_index() <= end_edge.end_shape_index())
-        << "Metadata " << location.incident_id << " on edge_index " << location.edge_index
-        << " on leg " << location.leg_index << " on edge " << location.end_edge_index
-        << " ends on wrong edge";
+        << "Metadata " << location.incident_id << " on leg " << location.leg_index << " on edge "
+        << location.end_edge_index << " ends on wrong edge";
 
     // check that we are on the right shape points
     const auto& lengths = leg_lengths[location.leg_index];
@@ -128,7 +126,7 @@ void check_incident_locations(const valhalla::Api& api,
         (lengths[incident->begin_shape_index()] - lengths[begin_edge.begin_shape_index()]) /
         begin_edge_length;
     ASSERT_NEAR(begin_edge_pct, location.begin_pct, .01)
-        << "Metadata " << location.edge_index << " on leg " << location.leg_index << " on edge "
+        << "Metadata " << location.incident_id << " on leg " << location.leg_index << " on edge "
         << location.begin_edge_index << " begins at wrong location along the edge";
 
     auto end_edge_length =
@@ -269,7 +267,7 @@ TEST_F(IncidentsTest, simple_cut) {
 
   // check its right
   check_incident_locations(result, {
-                                       {edge_ids[0].id(), 1234, 0, 0, .25, 0, .75},
+                                       {1234, 0, 0, .25, 0, .75},
                                    });
 }
 
@@ -289,7 +287,7 @@ TEST_F(IncidentsTest, whole_edge) {
 
   // check its right
   check_incident_locations(result, {
-                                       {edge_ids[0].id(), 1234, 0, 0, 0., 0, 1.},
+                                       {1234, 0, 0, 0., 0, 1.},
                                    });
 }
 
@@ -309,7 +307,7 @@ TEST_F(IncidentsTest, left) {
 
   // check its right
   check_incident_locations(result, {
-                                       {edge_ids[0].id(), 1234, 0, 0, 0., 0, .5},
+                                       {1234, 0, 0, 0., 0, .5},
                                    });
 }
 
@@ -329,7 +327,7 @@ TEST_F(IncidentsTest, right) {
 
   // check its right
   check_incident_locations(result, {
-                                       {edge_ids[0].id(), 1234, 0, 0, .5, 0, 1.},
+                                       {1234, 0, 0, .5, 0, 1.},
                                    });
 }
 
@@ -352,9 +350,9 @@ TEST_F(IncidentsTest, multiedge) {
 
   // check its right
   check_incident_locations(result, {
-                                       {edge_ids[0].id(), 1234, 0, 0, .5, 0, 1.},
-                                       {edge_ids[1].id(), 8888, 0, 0, 1., 2, 0.},
-                                       {edge_ids[2].id(), 5555, 0, 2, 0., 2, 0.5},
+                                       {1234, 0, 0, .5, 0, 1.},
+                                       {8888, 0, 0, 1., 2, 0.},
+                                       {5555, 0, 2, 0., 2, 0.5},
                                    });
 }
 
@@ -379,9 +377,9 @@ TEST_F(IncidentsTest, multiincident) {
 
   // check its right
   check_incident_locations(result, {
-                                       {edge_ids[0].id(), 123, 0, 0, .25, 0, .4},
-                                       {edge_ids[2].id(), 456, 0, 0, .5, 2, .5},
-                                       {edge_ids[2].id(), 789, 0, 2, .75, 2, .9},
+                                       {123, 0, 0, .25, 0, .4},
+                                       {456, 0, 0, .5, 2, .5},
+                                       {789, 0, 2, .75, 2, .9},
                                    });
 }
 
@@ -406,9 +404,9 @@ TEST_F(IncidentsTest, interleaved) {
 
   // check its right
   check_incident_locations(result, {
-                                       {edge_ids[0].id(), 123, 0, 0, .25, 0, .75},
-                                       {edge_ids[2].id(), 456, 0, 0, .5, 2, .5},
-                                       {edge_ids[2].id(), 789, 0, 2, .25, 2, .9},
+                                       {123, 0, 0, .25, 0, .75},
+                                       {456, 0, 0, .5, 2, .5},
+                                       {789, 0, 2, .25, 2, .9},
                                    });
 }
 
@@ -433,9 +431,9 @@ TEST_F(IncidentsTest, collisions) {
 
   // check its right
   check_incident_locations(result, {
-                                       {edge_ids[0].id(), 123, 0, 0, .25, 0, .5},
-                                       {edge_ids[2].id(), 456, 0, 0, .5, 2, .5},
-                                       {edge_ids[2].id(), 789, 0, 2, .5, 2, .9},
+                                       {123, 0, 0, .25, 0, .5},
+                                       {456, 0, 0, .5, 2, .5},
+                                       {789, 0, 2, .5, 2, .9},
                                    });
 }
 
@@ -457,8 +455,8 @@ TEST_F(IncidentsTest, full_overlap) {
 
   // check its right
   check_incident_locations(result, {
-                                       {edge_ids[0].id(), 123, 0, 0, .5, 0, 1.},
-                                       {edge_ids[0].id(), 456, 0, 0, .5, 0, 1.},
+                                       {123, 0, 0, .5, 0, 1.},
+                                       {456, 0, 0, .5, 0, 1.},
                                    });
 }
 
@@ -486,12 +484,12 @@ TEST_F(IncidentsTest, multileg) {
 
   // check its right
   check_incident_locations(result, {
-                                       {edge_ids[0].id(), 123, 0, 0, .25, 0, .75},
-                                       {edge_ids[0].id(), 456, 0, 0, .5, 0, 1.},
-                                       {edge_ids[1].id(), 456, 1, 0, 0., 0, 1.},
-                                       {edge_ids[1].id(), 789, 1, 0, 0., 0, 1.},
-                                       {edge_ids[1].id(), 456, 2, 0, 0., 0, .5},
-                                       {edge_ids[2].id(), 789, 2, 0, 0., 0, .9},
+                                       {123, 0, 0, .25, 0, .75},
+                                       {456, 0, 0, .5, 0, 1.},
+                                       {456, 1, 0, 0., 0, 1.},
+                                       {789, 1, 0, 0., 0, 1.},
+                                       {456, 2, 0, 0., 0, .5},
+                                       {789, 2, 0, 0., 0, .9},
                                    });
 }
 
@@ -513,8 +511,8 @@ TEST_F(IncidentsTest, clipped) {
 
   // check its right
   check_incident_locations(result, {
-                                       {edge_ids[0].id(), 123, 0, 0, 0., 0, .5},
-                                       {0, 456, 0, 3, .5, 3, 1.},
+                                       {123, 0, 0, 0., 0, .5},
+                                       {456, 0, 3, .5, 3, 1.},
                                    });
 }
 
@@ -555,7 +553,7 @@ TEST_F(IncidentsTest, simple_point) {
 
   // check its right
   check_incident_locations(result, {
-                                       {0, 123, 0, 0, .25, 0, .25},
+                                       {123, 0, 0, .25, 0, .25},
                                    });
 }
 
@@ -576,7 +574,7 @@ TEST_F(IncidentsTest, left_point) {
 
   // check its right
   check_incident_locations(result, {
-                                       {0, 123, 0, 0, 0., 0, 0.},
+                                       {123, 0, 0, 0., 0, 0.},
                                    });
 }
 
@@ -597,7 +595,7 @@ TEST_F(IncidentsTest, right_point) {
 
   // check its right
   check_incident_locations(result, {
-                                       {0, 123, 0, 0, 1., 0, 1.},
+                                       {123, 0, 0, 1., 0, 1.},
                                    });
 }
 
@@ -620,9 +618,9 @@ TEST_F(IncidentsTest, multipoint) {
 
   // check its right
   check_incident_locations(result, {
-                                       {0, 123, 0, 0, .5, 0, .5},
-                                       {0, 456, 0, 1, 0., 1, 0.},
-                                       {0, 789, 0, 2, .2, 2, .2},
+                                       {123, 0, 0, .5, 0, .5},
+                                       {456, 0, 1, 0., 1, 0.},
+                                       {789, 0, 2, .2, 2, .2},
                                    });
 }
 
@@ -648,12 +646,12 @@ TEST_F(IncidentsTest, point_collisions) {
 
   // check its right
   check_incident_locations(result, {
-                                       {0, 123, 0, 0, .5, 0, .5},
-                                       {0, 456, 0, 0, .5, 0, .5},
-                                       {0, 789, 0, 1, 1., 1, 1.},
-                                       {0, 987, 0, 1, 1., 1, 1.},
-                                       {0, 654, 0, 2, .9, 2, .9},
-                                       {0, 321, 0, 2, .9, 2, .9},
+                                       {123, 0, 0, .5, 0, .5},
+                                       {456, 0, 0, .5, 0, .5},
+                                       {789, 0, 1, 1., 1, 1.},
+                                       {987, 0, 1, 1., 1, 1.},
+                                       {654, 0, 2, .9, 2, .9},
+                                       {321, 0, 2, .9, 2, .9},
                                    });
 }
 
@@ -677,8 +675,8 @@ TEST_F(IncidentsTest, point_shared) {
 
   // check its right
   check_incident_locations(result, {
-                                       {0, 123, 0, 0, 1., 0, 1.},
-                                       {0, 456, 0, 1, 1., 1, 1.},
+                                       {123, 0, 0, 1., 0, 1.},
+                                       {456, 0, 1, 1., 1, 1.},
                                    });
 }
 
@@ -727,19 +725,19 @@ TEST_F(IncidentsTest, armageddon) {
   check_incident_locations(result, {
                                        // first edge is only half the edge because we start in the
                                        // middle of it
-                                       {0, 123, 0, 0, .0, 0, .5},
-                                       {0, 456, 0, 0, .0, 0, 1.},
-                                       {0, 987, 0, 0, .0, 0, .0},
-                                       {0, 666, 0, 0, 1., 0, 1.},
-                                       {0, 666, 1, 0, 0., 0, 0.},
-                                       {0, 456, 1, 0, 0., 0, 1.},
-                                       {0, 789, 1, 0, 0., 0, 1.},
-                                       {0, 321, 1, 0, .6, 0, .6},
-                                       {0, 456, 2, 0, 0., 0, .5},
-                                       {0, 789, 2, 0, 0., 0, .6},
-                                       {0, 0, 2, 0, .65, 0, .65},
-                                       {0, 1, 2, 0, .69, 0, .69},
-                                       {0, 2, 2, 0, .7, 1, .2},
-                                       {0, 3, 2, 0, .8, 1, 1.},
+                                       {123, 0, 0, .0, 0, .5},
+                                       {456, 0, 0, .0, 0, 1.},
+                                       {987, 0, 0, .0, 0, .0},
+                                       {666, 0, 0, 1., 0, 1.},
+                                       {666, 1, 0, 0., 0, 0.},
+                                       {456, 1, 0, 0., 0, 1.},
+                                       {789, 1, 0, 0., 0, 1.},
+                                       {321, 1, 0, .6, 0, .6},
+                                       {456, 2, 0, 0., 0, .5},
+                                       {789, 2, 0, 0., 0, .6},
+                                       {0, 2, 0, .65, 0, .65},
+                                       {1, 2, 0, .69, 0, .69},
+                                       {2, 2, 0, .7, 1, .2},
+                                       {3, 2, 0, .8, 1, 1.},
                                    });
 }
