@@ -821,7 +821,7 @@ public:
    * Returns a vector of incidents for the given edge
    * @param edge_id   which edge you need incidents for
    * @param tile      which tile the edge lives in, is updated if not correct
-   * @return vector of incidents
+   * @return IncidentResult
    */
   IncidentResult GetIncidents(const GraphId& edge_id, const GraphTile*& tile);
 

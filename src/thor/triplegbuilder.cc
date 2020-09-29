@@ -155,7 +155,7 @@ void SetShapeAttributes(const AttributesController& controller,
   // TODO: if this is a transit edge then the costing will throw
 
   // bail if nothing to do
-  if (!cut_for_traffic && incidents.tile == nullptr &&
+  if (!cut_for_traffic && incidents.start_index == incidents.end_index &&
       !controller.category_attribute_enabled(kShapeAttributesCategory)) {
     return;
   }
@@ -201,45 +201,42 @@ void SetShapeAttributes(const AttributesController& controller,
     cuts.emplace_back(cut_t{tgt_pct, speed, UNKNOWN_CONGESTION_VAL, {}});
   }
 
-  if (incidents.tile) {
-    // sort the start and ends of the incidents along this edge
-    for (auto incident_location_index = incidents.start_index;
-         incident_location_index != incidents.end_index; ++incident_location_index) {
-      if (incident_location_index >= incidents.tile->locations_size()) {
-        throw std::logic_error(
-            "invalid incident_location_index: " + std::to_string(incident_location_index) + " vs " +
-            std::to_string(incidents.tile->locations_size()));
-      }
-      const auto& incident = incidents.tile->locations(incident_location_index);
-      // if the incident is actually on the part of the edge we are using
-      if (incident.start_offset() > tgt_pct || incident.end_offset() < src_pct)
+  // sort the start and ends of the incidents along this edge
+  for (auto incident_location_index = incidents.start_index;
+       incident_location_index != incidents.end_index; ++incident_location_index) {
+    if (incident_location_index >= incidents.tile->locations_size()) {
+      throw std::logic_error(
+          "invalid incident_location_index: " + std::to_string(incident_location_index) + " vs " +
+          std::to_string(incidents.tile->locations_size()));
+    }
+    const auto& incident = incidents.tile->locations(incident_location_index);
+    // if the incident is actually on the part of the edge we are using
+    if (incident.start_offset() > tgt_pct || incident.end_offset() < src_pct)
+      continue;
+    // insert the start point and end points
+    for (auto offset : {
+             std::max((double)incident.start_offset(), src_pct),
+             std::min((double)incident.end_offset(), tgt_pct),
+         }) {
+      // if this is clipped at the beginning of the edge then its not a new cut but we still need to
+      // attach the incidents information to the leg
+      if (offset == src_pct) {
+        UpdateIncident(incidents.tile, leg, &incident, shape_begin);
         continue;
-      // insert the start point and end points
-      for (auto offset : {
-               std::max((double)incident.start_offset(), src_pct),
-               std::min((double)incident.end_offset(), tgt_pct),
-           }) {
-        // if this is clipped at the beginning of the edge then its not a new cut but we still need to
-        // attach the incidents information to the leg
-        if (offset == src_pct) {
-          UpdateIncident(incidents.tile, leg, &incident, shape_begin);
-          continue;
-        }
+      }
 
-        // where does it go in the sorted list
-        auto itr = std::partition_point(cuts.begin(), cuts.end(), [offset](const cut_t& c) {
-          return c.percent_along < offset;
-        });
-        // there is already a cut here so we just add the incident
-        if (itr != cuts.end() && itr->percent_along == offset) {
-          itr->incidents.push_back(&incident);
-        } // there wasnt a cut here so we need to make one
-        else {
-          cuts.insert(itr, cut_t{offset,
-                                 itr == cuts.end() ? speed : itr->speed,
-                                 itr == cuts.end() ? UNKNOWN_CONGESTION_VAL : itr->congestion,
-                                 {&incident}});
-        }
+      // where does it go in the sorted list
+      auto itr = std::partition_point(cuts.begin(), cuts.end(),
+                                      [offset](const cut_t& c) { return c.percent_along < offset; });
+      // there is already a cut here so we just add the incident
+      if (itr != cuts.end() && itr->percent_along == offset) {
+        itr->incidents.push_back(&incident);
+      } // there wasnt a cut here so we need to make one
+      else {
+        cuts.insert(itr, cut_t{offset,
+                               itr == cuts.end() ? speed : itr->speed,
+                               itr == cuts.end() ? UNKNOWN_CONGESTION_VAL : itr->congestion,
+                               {&incident}});
       }
     }
   }
@@ -1293,8 +1290,8 @@ void TripLegBuilder::Build(
                          ? graphreader.GetIncidents(edge_itr->edgeid, graphtile)
                          : valhalla::baldr::IncidentResult{};
 
-    SetShapeAttributes(controller, graphtile, directededge, trip_shape, begin_index,
-                       trip_path, trim_start_pct, trim_end_pct, edge_seconds,
+    SetShapeAttributes(controller, graphtile, directededge, trip_shape, begin_index, trip_path,
+                       trim_start_pct, trim_end_pct, edge_seconds,
                        costing->flow_mask() & kCurrentFlowMask, incidents);
 
     // Set begin shape index if requested
