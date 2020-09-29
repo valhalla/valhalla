@@ -880,5 +880,47 @@ int GraphReader::GetTimezone(const baldr::GraphId& node, const GraphTile*& tile)
   return (tile == nullptr) ? 0 : tile->node(node)->timezone();
 }
 
+IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile*& tile) {
+  // if we are not doing this for any reason then bail
+  std::shared_ptr<valhalla::incidents::IncidentsTile> itile;
+  if (!simulate_incidents_ || !GetGraphTile(edge_id, tile) ||
+      !tile->trafficspeed(tile->directededge(edge_id)).has_incidents ||
+      !(itile = GetIncidentTile(edge_id))) {
+    return {};
+  }
+
+  // get the range of incidents we care about and hand it back, equal_range has no lambda option
+  auto begin = std::partition_point(itile->locations().begin(), itile->locations().end(),
+                                    [&edge_id](const valhalla::incidents::Location& candidate) {
+                                      // first one that is >= the id we want
+                                      bool is_found = candidate.edge_index() < edge_id.id();
+                                      return is_found;
+                                    });
+  auto end = std::partition_point(begin, itile->locations().end(),
+                                  [&edge_id](const valhalla::incidents::Location& candidate) {
+                                    bool is_found =
+                                        candidate.edge_index() <=
+                                        edge_id.id(); // first one that is > the id we want
+                                    return is_found;
+                                  });
+
+  int begin_index = begin - itile->locations().begin();
+  int end_index = end - itile->locations().begin();
+
+  return {itile, begin_index, end_index};
+}
+
+const valhalla::incidents::Metadata&
+grabMetadataFromEdgeRelation(const std::shared_ptr<valhalla::incidents::IncidentsTile>& tile,
+                             const valhalla::incidents::Location& incident_location) {
+  auto metadata_index = incident_location.metadata_index();
+  if (metadata_index >= tile->metadata_size()) {
+    throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
+                             std::to_string(metadata_index) + " but total incident metadata of " +
+                             std::to_string(tile->metadata_size()));
+  }
+  return tile->metadata(metadata_index);
+}
+
 } // namespace baldr
 } // namespace valhalla
