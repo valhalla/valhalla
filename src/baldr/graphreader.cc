@@ -908,12 +908,7 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile
   int begin_index = begin - itile->incident_locations().begin();
   int end_index = end - itile->incident_locations().begin();
 
-  if (begin_index >= itile->incident_locations_size()) {
-    // No incidents
-    return {nullptr, 0, 0};
-  } else {
-    return {itile, begin_index, end_index};
-  }
+  return {itile, begin_index, end_index};
 }
 
 const valhalla::incidents::IncidentMetadata
