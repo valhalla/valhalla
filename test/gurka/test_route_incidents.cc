@@ -45,7 +45,6 @@ protected:
     map = gurka::buildtiles(layout, ways, {}, {}, tile_dir,
                             {
                                 {"mjolnir.traffic_extract", tile_dir + "/traffic.tar"},
-                                {"mjolnir.simulate_incidents", "true"},
                             });
 
     // stage up some live traffic data
@@ -144,6 +143,7 @@ void check_incident_locations(const valhalla::Api& api,
 struct test_reader : public baldr::GraphReader {
   test_reader(const boost::property_tree::ptree& pt) : baldr::GraphReader(pt) {
     tile_extract_.reset(new baldr::GraphReader::tile_extract_t(pt));
+    enable_incidents_ = true;
   }
   virtual std::shared_ptr<baldr::GraphReader::incident_tile_t>
   GetIncidentTile(const baldr::GraphId& tile_id) const {
