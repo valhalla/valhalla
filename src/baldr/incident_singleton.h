@@ -243,10 +243,9 @@ protected:
       if (latency > max_loading_latency) {
         LOG_WARN("Incident watcher is not meeting max loading latency requirement");
         ++latent_count;
-      } // this round finished fast enough
+      } // this round finished fast enough, changelog mode is cheap so wait only a second
       else {
         latent_count = 0;
-        // changelog version is very cheap so we'll only wait a second
         wait = changelog ? 1 : max_loading_latency - latency;
       }
       state->healthy.store(latent_count < max_latent_count);
@@ -283,8 +282,9 @@ public:
     static incident_singleton_t singleton{config, tileset};
 
     // if its not healthy die violently
-    if (!singleton.state->healthy.load())
-      throw std::runtime_error("The incident watcher isn't running or is behind");
+    if (!singleton.state->healthy.load()) {
+      LOG_ERROR("Incident watcher is unhealthy");
+    }
 
     // return the tile from the cache or an empty one if its not there
     auto scoped_lock = singleton.state->lock_free.load()
