@@ -1,4 +1,5 @@
 #include "proto_conversions.h"
+#include "midgard/logging.h"
 
 using namespace valhalla;
 
@@ -49,6 +50,34 @@ std::string incidentTypeToString(const valhalla::incidents::Metadata::Type& inci
   };
   throw std::runtime_error("Unhandled case in incidentTypeToString: " +
                            std::to_string(incident_type));
+}
+
+// Get the string representing the incident-Impact
+const char* incidentImpactToString(const valhalla::incidents::Metadata_Impact& impact) {
+  switch (impact) {
+    case valhalla::incidents::Metadata_Impact::Metadata_Impact_UNKNOWN:
+      return "unknown";
+      break;
+    case valhalla::incidents::Metadata_Impact::Metadata_Impact_CRITICAL:
+      return "critical";
+      break;
+    case valhalla::incidents::Metadata_Impact::Metadata_Impact_MAJOR:
+      return "major";
+      break;
+    case valhalla::incidents::Metadata_Impact::Metadata_Impact_MINOR:
+      return "minor";
+      break;
+    case valhalla::incidents::Metadata_Impact::Metadata_Impact_LOW:
+      return "low";
+      break;
+    case valhalla::incidents::Metadata_Impact_Metadata_Impact_INT_MAX_SENTINEL_DO_NOT_USE_:
+    case valhalla::incidents::Metadata_Impact_Metadata_Impact_INT_MIN_SENTINEL_DO_NOT_USE_:
+      // Like the name says, do not use. Simply for ensuring full coverage of switch statement
+      break;
+  }
+  // TODO Throw or warn here? Assert maybe to only crash debug build
+  LOG_WARN("Unhandled case in incidentCriticalityToString: " + std::to_string(impact));
+  return "UNHANDLED_CASE";
 }
 
 bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {

@@ -69,4 +69,6 @@ message Metadata {
 
     // IncidentMetadata id
     uint64 id = 128;
+    // Country code
+    string iso_3166_1_alpha2 = 129;
 }

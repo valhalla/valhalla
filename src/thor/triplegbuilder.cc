@@ -105,7 +105,7 @@ void UpdateIncident(const std::shared_ptr<valhalla::incidents::IncidentsTile>& i
   const uint64_t current_incident_id =
       valhalla::baldr::grabMetadataFromEdgeRelation(incidents_tile, *incident_location).id();
   auto found = std::find_if(leg.mutable_incidents()->begin(), leg.mutable_incidents()->end(),
-                            [current_incident_id](const TripLeg::ValhallaIncident& candidate) {
+                            [current_incident_id](const TripLeg::Incident& candidate) {
                               return current_incident_id == candidate.metadata().id();
                             });
   // Are we continuing an incident (this could be a hash look up)

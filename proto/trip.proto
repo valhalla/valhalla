@@ -305,7 +305,9 @@ message TripLeg {
     repeated uint32 speed = 3 [packed=true]; // decimeters per sec
   }
 
-  message ValhallaIncident {
+  // we encapsulate the real incident object here so we can add information
+  // about where it is along the route, ie once its referenced to the route
+  message Incident {
     optional valhalla.incidents.Metadata metadata = 1;
     // Valhalla additions to incident metadata goes here
     optional uint32 begin_shape_index = 3;
@@ -322,7 +324,7 @@ message TripLeg {
   optional string shape = 8;
   optional BoundingBox bbox = 9;
   optional ShapeAttributes shape_attributes = 10;
-  repeated ValhallaIncident incidents = 11;
+  repeated Incident incidents = 11;
 }
 
 message TripRoute {
