@@ -362,7 +362,8 @@ std::string GetFormattedTime(uint32_t seconds) {
 valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
                                        valhalla::Location& orig,
                                        valhalla::Location& dest,
-                                       PathStatistics& data) {
+                                       PathStatistics& data,
+                                       bool verbose_lanes) {
   // TEMPORARY? Change to PathLocation...
   const PathLocation& origin = PathLocation::fromPBF(orig);
   const PathLocation& destination = PathLocation::fromPBF(dest);
@@ -460,6 +461,28 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
                                       " [NARRATIVE] ");
     }
 
+    // All turn lanes along maneuver
+    if (verbose_lanes) {
+      for (auto n = maneuver.begin_path_index() + 1; n < maneuver.end_path_index() - 1; ++n) {
+        auto prev_edge = etl.GetPrevEdge(n);
+        auto q = n - maneuver.begin_path_index();
+        if (prev_edge) {
+          std::string turn_lane_status = "ACTIVE_TURN_LANES";
+          if (prev_edge->HasNonDirectionalTurnLane()) {
+            turn_lane_status = "NON_DIRECTIONAL_TURN_LANES";
+          } else if (prev_edge->turn_lanes_size() == 0) {
+            turn_lane_status = "NO_TURN_LANES";
+          } else if (!prev_edge->HasActiveTurnLane()) {
+            turn_lane_status = "NO_ACTIVE_TURN_LANES";
+          }
+          valhalla::midgard::logging::Log((boost::format("   %d-%d: TURN_LANES: %s %s") % m % q %
+                                           prev_edge->TurnLanesToString() % turn_lane_status)
+                                              .str(),
+                                          " [NARRATIVE] ");
+        }
+      }
+    }
+
     if (i < trip_directions.maneuver_size() - 1) {
       valhalla::midgard::logging::Log("----------------------------------------------",
                                       " [NARRATIVE] ");
@@ -504,6 +527,7 @@ int main(int argc, char* argv[]) {
   std::string json, config;
   bool multi_run = false;
   bool match_test = false;
+  bool verbose_lanes = false;
   uint32_t iterations;
 
   poptions.add_options()("help,h", "Print this help message.")("version,v",
@@ -519,7 +543,9 @@ int main(int argc, char* argv[]) {
       "\"auto\",\"directions_options\":{\"units\":\"miles\"}}'")(
       "match-test", "Test RouteMatcher with resulting shape.")(
       "multi-run", bpo::value<uint32_t>(&iterations),
-      "Generate the route N additional times before exiting.")
+      "Generate the route N additional times before exiting.")(
+      "verbose-lanes", bpo::bool_switch(&verbose_lanes),
+      "Include verbose lanes output in DirectionsTest.")
       // positional arguments
       ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
 
@@ -694,7 +720,7 @@ int main(int argc, char* argv[]) {
 
       // Try the the directions
       auto t1 = std::chrono::high_resolution_clock::now();
-      const auto& trip_directions = DirectionsTest(request, origin, dest, data);
+      const auto& trip_directions = DirectionsTest(request, origin, dest, data, verbose_lanes);
       auto t2 = std::chrono::high_resolution_clock::now();
       auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
