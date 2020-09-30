@@ -379,37 +379,6 @@ struct IntersectionEdges {
   }
 };
 
-// Forward declaration
-valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::ValhallaIncident& incident,
-                                                 const std::string& iso_3166_1_alpha2);
-
-// Serializes incidents and adds to json-document
-void addsIncidents(const google::protobuf::RepeatedPtrField<TripLeg::ValhallaIncident>& incidents,
-                   json::Jmap& doc,
-                   const std::string& iso_3166_1_alpha2) {
-  if (incidents.size() == 0) {
-    // No incidents, nothing to do
-    return;
-  }
-  json::ArrayPtr serialized_incidents = std::shared_ptr<json::Jarray>(new json::Jarray());
-  {
-    // Bring up any already existing array
-    auto existing = doc.find("incidents");
-    if (existing != doc.end()) {
-      if (auto* ptr = boost::get<std::shared_ptr<valhalla::baldr::json::Jarray>>(&existing->second)) {
-        serialized_incidents = *ptr;
-      } else {
-        throw std::logic_error("Invalid state: stored ptr should not be null");
-      }
-    }
-  }
-  for (const auto& incident : incidents) {
-    auto json_incident = serializeIncident(incident, iso_3166_1_alpha2);
-    serialized_incidents->emplace_back(json_incident);
-  }
-  doc.emplace("incidents", serialized_incidents);
-}
-
 // Add intersections along a step/maneuver.
 json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
                              valhalla::odin::EnhancedTripLeg* etp,
@@ -671,6 +640,34 @@ valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::ValhallaIncident
   osrm::serializeIncidentProperties(writer, incident, iso_3166_1_alpha2, "", "");
   writer.EndObject();
   return {stringbuffer.GetString()};
+}
+
+// Serializes incidents and adds to json-document
+void serailizeIncidents(
+    const google::protobuf::RepeatedPtrField<TripLeg::ValhallaIncident>& incidents,
+    json::Jmap& doc,
+    const std::string& iso_3166_1_alpha2) {
+  if (incidents.size() == 0) {
+    // No incidents, nothing to do
+    return;
+  }
+  json::ArrayPtr serialized_incidents = std::shared_ptr<json::Jarray>(new json::Jarray());
+  {
+    // Bring up any already existing array
+    auto existing = doc.find("incidents");
+    if (existing != doc.end()) {
+      if (auto* ptr = boost::get<std::shared_ptr<valhalla::baldr::json::Jarray>>(&existing->second)) {
+        serialized_incidents = *ptr;
+      } else {
+        throw std::logic_error("Invalid state: stored ptr should not be null");
+      }
+    }
+  }
+  for (const auto& incident : incidents) {
+    auto json_incident = serializeIncident(incident, iso_3166_1_alpha2);
+    serialized_incidents->emplace_back(json_incident);
+  }
+  doc.emplace("incidents", serialized_incidents);
 }
 
 // Compile and return the refs of the specified list
