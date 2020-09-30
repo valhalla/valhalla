@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "baldr/json.h"
-#include "loki/serializer_common.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
@@ -669,7 +668,7 @@ valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::ValhallaIncident
   rapidjson::StringBuffer stringbuffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(stringbuffer);
   writer.StartObject();
-  loki::incidents::serializeIncidentProperties(writer, incident, iso_3166_1_alpha2, "", "");
+  osrm::serializeIncidentProperties(writer, incident, iso_3166_1_alpha2, "", "");
   writer.EndObject();
   return {stringbuffer.GetString()};
 }

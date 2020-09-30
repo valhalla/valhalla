@@ -82,15 +82,6 @@ const char* incidentImpactToString(const valhalla::incidents::Metadata_Impact& i
   return "UNHANDLED_CASE";
 }
 
-std::string time_to_string(std::uint64_t seconds_since_epoch) {
-  std::stringstream ss;
-  std::chrono::seconds secs(seconds_since_epoch);
-  date::sys_seconds timestamp(secs);
-  auto t = std::chrono::system_clock::to_time_t(timestamp);
-  ss << std::put_time(std::gmtime(&t), "%FT%TZ");
-  return ss.str();
-};
-
 bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
   static const std::unordered_map<std::string, Options::Action> actions{
       {"route", Options::route},

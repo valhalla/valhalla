@@ -7,7 +7,6 @@ set(sources
   locate_action.cc
   reach.cc
   route_action.cc
-  serializer_common.cc
   matrix_action.cc
   isochrone_action.cc
   trace_route_action.cc
