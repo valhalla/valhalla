@@ -20,8 +20,18 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/sequence.h>
 
+#include <valhalla/proto/incidents.pb.h>
+
 namespace valhalla {
 namespace baldr {
+
+struct IncidentResult {
+  std::shared_ptr<IncidentsTile> tile;
+  // Index into the Location array
+  int start_index;
+  // Index into the Location array
+  int end_index;
+};
 
 /**
  * Tile cache interface.
@@ -794,46 +804,20 @@ public:
    */
   int GetTimezone(const baldr::GraphId& node, const GraphTile*& tile);
 
-  // TODO: temporary until we have real incidents loaded from incident loading singleton
-  struct Incident {
-    uint32_t edge_index;
-    double start_offset;
-    double end_offset;
-    uint64_t id;
-  };
-  using incident_tile_t = std::vector<Incident>;
-
   /**
    * Returns an incident tile for the given tile id
    * @param tile_id  the tile id for which incidents should be returned
    * @return the incident tile for the tile id
    */
-  virtual std::shared_ptr<incident_tile_t> GetIncidentTile(const GraphId& tile_id) const;
+  virtual std::shared_ptr<IncidentsTile> GetIncidentTile(const GraphId& tile_id) const;
 
   /**
    * Returns a vector of incidents for the given edge
    * @param edge_id   which edge you need incidents for
    * @param tile      which tile the edge lives in, is updated if not correct
-   * @return vector of incidents
+   * @return IncidentResult
    */
-  std::vector<Incident> GetIncidents(const GraphId& edge_id, const GraphTile*& tile) {
-    // if we are not doing this for any reason then bail
-    std::shared_ptr<incident_tile_t> itile;
-    if (!enable_incidents_ || !GetGraphTile(edge_id, tile) ||
-        !tile->trafficspeed(tile->directededge(edge_id)).has_incidents ||
-        !(itile = GetIncidentTile(edge_id))) {
-      return {};
-    }
-
-    // get the range of incidents we care about and hand it back, equal_range has no lambda option
-    auto begin = std::partition_point(itile->begin(), itile->end(), [&edge_id](const Incident& i) {
-      return i.edge_index < edge_id.id(); // first one that is >= the id we want
-    });
-    auto end = std::partition_point(begin, itile->end(), [&edge_id](const Incident& i) {
-      return i.edge_index <= edge_id.id(); // first one that is > the id we want
-    });
-    return std::vector<Incident>(begin, end);
-  }
+  IncidentResult GetIncidents(const GraphId& edge_id, const GraphTile*& tile);
 
 protected:
   // (Tar) extract of tiles - the contents are empty if not being used
@@ -865,6 +849,10 @@ protected:
   bool enable_incidents_;
 };
 
+// Given the Location relation, return the full metadata
+const valhalla::IncidentsTile::Metadata&
+getIncidentMetadata(const std::shared_ptr<valhalla::IncidentsTile>& tile,
+                    const valhalla::IncidentsTile::Location& incident_location);
 } // namespace baldr
 } // namespace valhalla
 

@@ -2,12 +2,16 @@
 
 #include "baldr/graphreader.h"
 #include "midgard/sequence.h"
+
 #include <chrono>
 #include <condition_variable>
 #include <ctime>
 #include <memory>
 #include <mutex>
 #include <thread>
+
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
 namespace {
 
@@ -21,28 +25,34 @@ namespace {
 
 constexpr time_t DEFAULT_MAX_LOADING_LATENCY = 60;
 constexpr size_t DEFAULT_MAX_LATENT_COUNT = 5;
-using incident_tile_t = valhalla::baldr::GraphReader::incident_tile_t;
 
 /**
  * Read the contents of a file into an incident tile
  * @param filename   name of the file on the file system to read into memory
  * @return a shared pointer with the data of the tile or an empty pointer if it could not be read
  */
-std::shared_ptr<incident_tile_t> read_tile(const std::string& filename) {
+std::shared_ptr<valhalla::IncidentsTile> read_tile(const std::string& filename) {
   // crack the file open
-  std::ifstream file(filename, std::ios::in | std::ios::binary | std::ios::ate);
-  std::shared_ptr<incident_tile_t> tile;
-  if (file.is_open()) {
-    // get the size and allocate it
-    size_t filesize = file.tellg();
-    auto elements = sizeof(incident_tile_t::value_type) / filesize;
-    filesize = sizeof(incident_tile_t::value_type) * elements;
-    tile.reset(new incident_tile_t(elements));
-    // read the data in
-    file.seekg(0, std::ios::beg);
-    file.read(reinterpret_cast<char*>(tile->data()), filesize);
-    file.close();
+  std::ifstream file(filename, std::ios::in | std::ios::binary);
+  if (!file.is_open()) {
+    LOG_WARN("Incident Watcher failed to open " + filename);
+    return {};
   }
+
+  // prepare a stream for parsing
+  std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
+  google::protobuf::io::CodedInputStream cs(
+      static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
+
+  // try to parse the stream
+  std::shared_ptr<valhalla::IncidentsTile> tile(new valhalla::IncidentsTile);
+  if (!tile->ParseFromCodedStream(&cs)) {
+    LOG_WARN("Incident Watcher failed to parse " + filename);
+    return {};
+  }
+
+  // success
   return tile;
 }
 
@@ -54,7 +64,7 @@ protected:
     std::atomic<bool> lock_free;
     std::condition_variable signal;
     std::mutex mutex;
-    std::unordered_map<uint64_t, std::shared_ptr<incident_tile_t>> cache;
+    std::unordered_map<uint64_t, std::shared_ptr<valhalla::IncidentsTile>> cache;
   };
   // we use a shared_ptr to wrap the state between the watcher thread and the main threads singleton
   // instance. this gives the responsibility to the last living thread to deallocate the state object.
@@ -265,7 +275,7 @@ public:
    * @param tileset   only needed on first call, configures the incident loading
    * @return a shared_ptr to the incident tile or an empty shared_ptr when none exists
    */
-  static std::shared_ptr<incident_tile_t>
+  static std::shared_ptr<valhalla::IncidentsTile>
   get(const valhalla::baldr::GraphId& tile_id,
       const boost::property_tree::ptree& config = {},
       const std::unordered_set<valhalla::baldr::GraphId>& tileset = {}) {

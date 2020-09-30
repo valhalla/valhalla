@@ -479,7 +479,7 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
 }
 
 // Get a shared_ptr to an incident tile if it exists and we are properly configured
-std::shared_ptr<incident_tile_t> GraphReader::GetIncidentTile(const GraphId& tile_id) const {
+std::shared_ptr<valhalla::IncidentsTile> GraphReader::GetIncidentTile(const GraphId& tile_id) const {
   return incident_singleton_t::get(tile_id.Tile_Base());
 }
 
@@ -895,6 +895,47 @@ AABB2<PointLL> GraphReader::GetMinimumBoundingBox(const AABB2<PointLL>& bb) {
 int GraphReader::GetTimezone(const baldr::GraphId& node, const GraphTile*& tile) {
   GetGraphTile(node, tile);
   return (tile == nullptr) ? 0 : tile->node(node)->timezone();
+}
+
+IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile*& tile) {
+  // if we are not doing this for any reason then bail
+  std::shared_ptr<valhalla::IncidentsTile> itile;
+  if (!enable_incidents_ || !GetGraphTile(edge_id, tile) ||
+      !tile->trafficspeed(tile->directededge(edge_id)).has_incidents ||
+      !(itile = GetIncidentTile(edge_id))) {
+    return {};
+  }
+
+  // get the range of incidents we care about and hand it back, equal_range has no lambda option
+  auto begin = std::partition_point(itile->locations().begin(), itile->locations().end(),
+                                    [&edge_id](const valhalla::IncidentsTile::Location& candidate) {
+                                      // first one that is >= the id we want
+                                      bool is_found = candidate.edge_index() < edge_id.id();
+                                      return is_found;
+                                    });
+  auto end = std::partition_point(begin, itile->locations().end(),
+                                  [&edge_id](const valhalla::IncidentsTile::Location& candidate) {
+                                    // first one that is > the id we want
+                                    bool is_found = candidate.edge_index() <= edge_id.id();
+                                    return is_found;
+                                  });
+
+  int begin_index = begin - itile->locations().begin();
+  int end_index = end - itile->locations().begin();
+
+  return {itile, begin_index, end_index};
+}
+
+const valhalla::IncidentsTile::Metadata&
+getIncidentMetadata(const std::shared_ptr<valhalla::IncidentsTile>& tile,
+                    const valhalla::IncidentsTile::Location& incident_location) {
+  auto metadata_index = incident_location.metadata_index();
+  if (metadata_index >= tile->metadata_size()) {
+    throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
+                             std::to_string(metadata_index) + " but total incident metadata of " +
+                             std::to_string(tile->metadata_size()));
+  }
+  return tile->metadata(metadata_index);
 }
 
 } // namespace baldr
