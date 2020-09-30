@@ -87,8 +87,8 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
   }
 
   // TODO Add
-          //"geometry_index_start": 42,
-          //"geometry_index_end": 42
+  //"geometry_index_start": 42,
+  //"geometry_index_end": 42
 }
 
 } // namespace incidents

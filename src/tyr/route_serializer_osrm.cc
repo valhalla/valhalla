@@ -674,7 +674,6 @@ valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::ValhallaIncident
   return {stringbuffer.GetString()};
 }
 
-
 // Compile and return the refs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
 std::string get_sign_element_refs(const google::protobuf::RepeatedPtrField<
@@ -1555,7 +1554,7 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
 
   rapidjson::Document serialized_to_json;
   {
-    auto intersection_doc = json::map({});
+    auto intersection_doc = json::Jmap();
     auto leg = TripLeg();
     // Sets up the incident
     auto incidents = leg.mutable_incidents();
@@ -1570,21 +1569,21 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
     meta.set_start_time(creation_time + 100);
     meta.set_end_time(creation_time + 1800);
     meta.set_type(valhalla::incidents::Metadata::WEATHER);
-    meta->set_type(Incident_Type::Incident_Type_WEATHER);
-    meta->set_impact(Incident_Impact::Incident_Impact_MAJOR);
-    meta->set_sub_type("foo");
-    meta->set_sub_type_description("foobar");
-    meta->set_road_closed(true);
-    *incident->mutable_congestion().set_value(33);
-    meta->add_alertc_codes(11);
+    // TODO
+    // meta.set_impact(Incident_Impact::Incident_Impact_MAJOR);
+    meta.set_sub_type("foo");
+    meta.set_sub_type_description("foobar");
+    meta.set_road_closed(true);
+    meta.mutable_congestion()->set_value(33);
+    meta.add_alertc_codes(11);
     *incident->mutable_metadata() = meta;
 
     // Finally call the function under test to serialize to json
-    serializeIncidents(*incidents, intersection_doc, "AU");
+    addsIncidents(*incidents, intersection_doc, "AU");
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
-    ss << *intersection_doc;
+    ss << intersection_doc;
     serialized_to_json.Parse(ss.str().c_str());
   }
 
@@ -1629,7 +1628,7 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
 
   rapidjson::Document serialized_to_json;
   {
-    auto intersection_doc = json::map({});
+    auto intersection_doc = json::Jmap();
     auto leg = TripLeg();
     // Sets up the incident
     auto* incidents = leg.mutable_incidents();
@@ -1664,11 +1663,11 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
     }
 
     // Finally call the function under test to serialize to json
-    serializeIncidents(*incidents, intersection_doc);
+    addsIncidents(*incidents, intersection_doc, "SE");
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
-    ss << *intersection_doc;
+    ss << intersection_doc;
     serialized_to_json.Parse(ss.str().c_str());
   }
 
@@ -1706,15 +1705,15 @@ TEST(RouteSerializerOsrm, testAddsIncidentsNothingToAdd) {
 
   rapidjson::Document serialized_to_json;
   {
-    auto intersection_doc = json::map({});
+    auto intersection_doc = json::Jmap();
     auto leg = TripLeg();
 
     // Finally call the function under test to serialize to json
-    serializeIncidents(leg.incidents(), intersection_doc);
+    addsIncidents(leg.incidents(), intersection_doc, "DE");
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
-    ss << *intersection_doc;
+    ss << intersection_doc;
     serialized_to_json.Parse(ss.str().c_str());
   }
 
