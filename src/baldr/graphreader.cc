@@ -478,11 +478,6 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   }
 }
 
-// Get a shared_ptr to an incident tile if it exists and we are properly configured
-std::shared_ptr<valhalla::IncidentsTile> GraphReader::GetIncidentTile(const GraphId& tile_id) const {
-  return incident_singleton_t::get(tile_id.Tile_Base());
-}
-
 // Convenience method to get an opposing directed edge graph Id.
 GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& tile) {
   // If you cant get the tile you get an invalid id
@@ -895,6 +890,11 @@ AABB2<PointLL> GraphReader::GetMinimumBoundingBox(const AABB2<PointLL>& bb) {
 int GraphReader::GetTimezone(const baldr::GraphId& node, const GraphTile*& tile) {
   GetGraphTile(node, tile);
   return (tile == nullptr) ? 0 : tile->node(node)->timezone();
+}
+
+std::shared_ptr<valhalla::IncidentsTile> GraphReader::GetIncidentTile(const GraphId& tile_id) const {
+  return enable_incidents_ ? incident_singleton_t::get(tile_id.Tile_Base())
+                           : std::shared_ptr<valhalla::IncidentsTile>{};
 }
 
 IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile*& tile) {
