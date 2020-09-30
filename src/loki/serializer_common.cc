@@ -1,4 +1,5 @@
 #include "loki/serializer_common.h"
+#include "proto/incidents.pb.h"
 #include "proto/trip.pb.h"
 #include "proto_conversions.h"
 #include "rapidjson/stringbuffer.h"
@@ -14,10 +15,11 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
                                  const std::string& streets_v8_class,
                                  const std::string& key_prefix) {
 
-  const auto& meta = incident.metadata();
+  const valhalla::incidents::Metadata& meta = incident.metadata();
   writer.Key(key_prefix + "id");
   writer.Int64(meta.id());
-  if (meta.has_type() && meta.type()) {
+  {
+    // Type is mandatory
     writer.Key(key_prefix + "type");
     writer.String(std::string(valhalla::incidentTypeToString(meta.type())));
   }
@@ -25,31 +27,31 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
     writer.Key(key_prefix + "iso_3166_1_alpha2");
     writer.String(iso_3166_1_alpha2);
   }
-  if (meta.has_description() && !meta.description().empty()) {
+  if (!meta.description().empty()) {
     writer.Key(key_prefix + "description");
     writer.String(meta.description());
   }
-  if (meta.has_creation_time()) {
+  if (meta.creation_time()) {
     writer.Key(key_prefix + "creation_time");
-    writer.String(valhalla::time_to_string(meta.creation_time()));
+    writer.String(time_to_string(meta.creation_time()));
   }
-  if (meta.has_start_time()) {
+  if (meta.start_time() > 0) {
     writer.Key(key_prefix + "start_time");
     writer.String(time_to_string(meta.start_time()));
   }
-  if (meta.has_end_time()) {
+  if (meta.end_time()) {
     writer.Key(key_prefix + "end_time");
     writer.String(time_to_string(meta.end_time()));
   }
-  if (meta.has_impact()) {
+  if (meta.impact()) {
     writer.Key(key_prefix + "impact");
     writer.String(std::string(valhalla::incidentImpactToString(meta.impact())));
   }
-  if (meta.has_sub_type() && !meta.sub_type().empty()) {
+  if (!meta.sub_type().empty()) {
     writer.Key(key_prefix + "sub_type");
     writer.String(meta.sub_type());
   }
-  if (meta.has_sub_type_description() && !meta.sub_type_description().empty()) {
+  if (!meta.sub_type_description().empty()) {
     writer.Key(key_prefix + "sub_type_description");
     writer.String(meta.sub_type_description());
   }
@@ -69,7 +71,7 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
     }
     writer.EndArray();
   }
-  if (meta.has_road_closed()) {
+  if (meta.road_closed()) {
     writer.Key(key_prefix + "closed");
     writer.Bool(meta.road_closed());
   }
@@ -86,9 +88,15 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
     writer.EndObject();
   }
 
-  // TODO Add
-  //"geometry_index_start": 42,
-  //"geometry_index_end": 42
+  if (incident.has_begin_shape_index()) {
+    writer.Key(key_prefix + "geometry_index_start");
+    writer.Int(incident.begin_shape_index());
+  }
+  if (incident.has_end_shape_index()) {
+    writer.Key(key_prefix + "geometry_index_end");
+    writer.Int(incident.end_shape_index());
+  }
+  // TODO Add test of lanes blocked and add missing properties
 }
 
 } // namespace incidents

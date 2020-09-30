@@ -1569,8 +1569,7 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
     meta.set_start_time(creation_time + 100);
     meta.set_end_time(creation_time + 1800);
     meta.set_type(valhalla::incidents::Metadata::WEATHER);
-    // TODO
-    // meta.set_impact(Incident_Impact::Incident_Impact_MAJOR);
+    meta.set_impact(valhalla::incidents::Metadata_Impact_MAJOR);
     meta.set_sub_type("foo");
     meta.set_sub_type_description("foobar");
     meta.set_road_closed(true);
@@ -1593,9 +1592,6 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
       "incidents": [
         {
           "id": 1337,
-          "creation_time": 1597241829,
-          "start_time": 1597241929,
-          "end_time": 1597243629,
           "type": "weather",
           "iso_3166_1_alpha2": "AU",
           "creation_time": "2020-08-12T14:17:09Z",
@@ -1678,17 +1674,21 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
         {
           "id": 1337,
           "description": "Fooo",
-          "creation_time": 1597241829,
+          "creation_time": "2020-08-12T14:17:09Z",
           "type": "weather",
+          "iso_3166_1_alpha2": "SE",
+          "lanes_blocked": [],
           "geometry_index_start": 87,
           "geometry_index_end": 92
         },
         {
           "id": 2448,
-          "creation_time": 1597241800,
-          "start_time": 1597241900,
-          "end_time": 1597243600,
+          "creation_time": "2020-08-12T14:16:40Z",
+          "start_time": "2020-08-12T14:18:20Z",
+          "end_time": "2020-08-12T14:46:40Z",
           "type": "accident",
+          "iso_3166_1_alpha2": "SE",
+          "lanes_blocked": [],
           "geometry_index_start": 21,
           "geometry_index_end": 104
         }
