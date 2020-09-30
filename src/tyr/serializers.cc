@@ -140,7 +140,7 @@ json::ArrayPtr waypoints(const valhalla::Trip& trip) {
 }
 
 void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
-                                 const TripLeg::ValhallaIncident& incident,
+                                 const TripLeg::Incident& incident,
                                  const std::string& road_class,
                                  const std::string& key_prefix) {
   const valhalla::incidents::Metadata& meta = incident.metadata();

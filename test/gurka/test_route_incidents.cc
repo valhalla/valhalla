@@ -94,7 +94,7 @@ void check_incident_locations(const valhalla::Api& api,
   for (const auto& location : locations) {
     const auto& leg = api.trip().routes(0).legs(location.leg_index);
     // find the incident
-    const valhalla::TripLeg::ValhallaIncident* incident = nullptr;
+    const valhalla::TripLeg::Incident* incident = nullptr;
     for (int j = 0; j < leg.incidents_size(); ++j) {
       if (leg.incidents(j).metadata().id() == location.incident_id) {
         incident = &leg.incidents(j);

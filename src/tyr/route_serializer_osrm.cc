@@ -632,7 +632,7 @@ std::string exits(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
   return exits;
 }
 
-valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::ValhallaIncident& incident) {
+valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::Incident& incident) {
   rapidjson::StringBuffer stringbuffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(stringbuffer);
   writer.StartObject();
@@ -642,9 +642,8 @@ valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::ValhallaIncident
 }
 
 // Serializes incidents and adds to json-document
-void serializeIncidents(
-    const google::protobuf::RepeatedPtrField<TripLeg::ValhallaIncident>& incidents,
-    json::Jmap& doc) {
+void serializeIncidents(const google::protobuf::RepeatedPtrField<TripLeg::Incident>& incidents,
+                        json::Jmap& doc) {
   if (incidents.size() == 0) {
     // No incidents, nothing to do
     return;

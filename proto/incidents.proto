@@ -66,8 +66,9 @@ message Metadata {
     string long_description = 14;
     string clear_lanes = 15;
     uint64 num_lanes_blocked = 16;
-    string iso_3166_1_alpha2 = 17;
 
     // IncidentMetadata id
     uint64 id = 128;
+    // Country code
+    string iso_3166_1_alpha2 = 129;
 }

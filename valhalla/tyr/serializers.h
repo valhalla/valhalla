@@ -124,7 +124,7 @@ waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& location
 valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
 
 void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
-                                 const valhalla::TripLeg::ValhallaIncident& incident,
+                                 const valhalla::TripLeg::Incident& incident,
                                  const std::string& road_class,
                                  const std::string& key_prefix);
 
