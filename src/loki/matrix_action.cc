@@ -7,6 +7,7 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
+#include "proto_conversions.h"
 #include "tyr/actor.h"
 
 using namespace valhalla;
@@ -14,11 +15,7 @@ using namespace valhalla::tyr;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
 
-namespace {
-midgard::PointLL to_ll(const valhalla::Location& l) {
-  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
-}
-
+namespace matrix_action {
 void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
                     const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
                     float matrix_max_distance,
@@ -42,7 +39,7 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
     }
   }
 }
-} // namespace
+} // namespace matrix_action
 
 namespace valhalla {
 namespace loki {
@@ -103,8 +100,9 @@ void loki_worker_t::matrix(Api& request) {
 
   // check the distances
   auto max_location_distance = std::numeric_limits<float>::min();
-  check_distance(options.sources(), options.targets(), max_matrix_distance.find(costing_name)->second,
-                 max_location_distance);
+  matrix_action::check_distance(options.sources(), options.targets(),
+                                max_matrix_distance.find(costing_name)->second,
+                                max_location_distance);
 
   // correlate the various locations to the underlying graph
   auto sources_targets = PathLocation::fromPBF(options.sources());

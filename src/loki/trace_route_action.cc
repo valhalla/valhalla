@@ -5,6 +5,7 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "proto_conversions.h"
 #include "tyr/actor.h"
 
 #include <cmath>
@@ -15,11 +16,7 @@ using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 using namespace valhalla::loki;
 
-namespace {
-PointLL to_ll(const valhalla::Location& l) {
-  return PointLL{l.ll().lng(), l.ll().lat()};
-}
-
+namespace trace_route_action {
 void check_shape(const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
                  unsigned int max_shape,
                  float max_factor = 1.0f) {
@@ -124,7 +121,7 @@ void check_turn_penalty_factor(const float input_turn_penalty_factor) {
     throw valhalla_exception_t{158};
   }
 }
-} // namespace
+} // namespace trace_route_action
 
 namespace valhalla {
 namespace loki {
@@ -146,26 +143,28 @@ void loki_worker_t::init_trace(Api& request) {
   }
 
   // Validate shape count and distance (for now, just send max_factor for distance)
-  check_shape(options.shape(), max_trace_shape);
+  trace_route_action::check_shape(options.shape(), max_trace_shape);
   float breakage_distance =
       options.has_breakage_distance() ? options.breakage_distance() : default_breakage_distance;
-  check_distance(options.shape(), max_distance.find("trace")->second, breakage_distance, max_factor);
+  trace_route_action::check_distance(options.shape(), max_distance.find("trace")->second,
+                                     breakage_distance, max_factor);
 
   // Validate best paths and best paths shape for `map_snap` requests
   if (options.shape_match() == ShapeMatch::map_snap) {
-    check_best_paths(options.best_paths(), max_best_paths);
-    check_best_paths_shape(options.best_paths(), options.shape(), max_best_paths_shape);
+    trace_route_action::check_best_paths(options.best_paths(), max_best_paths);
+    trace_route_action::check_best_paths_shape(options.best_paths(), options.shape(),
+                                               max_best_paths_shape);
   }
 
   // Validate optional trace options
   if (options.has_gps_accuracy()) {
-    check_gps_accuracy(options.gps_accuracy(), max_gps_accuracy);
+    trace_route_action::check_gps_accuracy(options.gps_accuracy(), max_gps_accuracy);
   }
   if (options.has_search_radius()) {
-    check_search_radius(options.search_radius(), max_search_radius);
+    trace_route_action::check_search_radius(options.search_radius(), max_search_radius);
   }
   if (options.has_turn_penalty_factor()) {
-    check_turn_penalty_factor(options.turn_penalty_factor());
+    trace_route_action::check_turn_penalty_factor(options.turn_penalty_factor());
   }
 
   // Set locations after parsing the shape

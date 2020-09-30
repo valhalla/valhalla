@@ -12,11 +12,13 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
+namespace td_reverse {
 // TODO - compute initial label count based on estimated route length
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
 // Number of iterations to allow with no convergence to the destination
 constexpr uint32_t kMaxIterationsWithoutConvergence = 800000;
+} // namespace td_reverse
 
 // Default constructor
 TimeDepReverse::TimeDepReverse() : AStarPathAlgorithm() {
@@ -49,7 +51,7 @@ void TimeDepReverse::Init(const midgard::PointLL& origll, const midgard::PointLL
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects.
   // TODO - reserve based on estimate based on distance and route type.
-  edgelabels_rev_.reserve(kInitialEdgeLabelCount);
+  edgelabels_rev_.reserve(td_reverse::kInitialEdgeLabelCount);
 
   // Set up lambda to get sort costs
   const auto edgecost = [this](const uint32_t label) { return edgelabels_rev_[label].sortcost(); };
@@ -380,7 +382,7 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
     if (dist2dest < mindist) {
       mindist = dist2dest;
       nc = 0;
-    } else if (nc++ > kMaxIterationsWithoutConvergence) {
+    } else if (nc++ > td_reverse::kMaxIterationsWithoutConvergence) {
       if (best_path.first >= 0) {
         return {FormPath(graphreader, best_path.first)};
       } else {

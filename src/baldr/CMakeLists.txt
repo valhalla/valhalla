@@ -69,7 +69,8 @@ set(sources
     verbal_text_formatter_us.cc
     verbal_text_formatter_us_co.cc
     verbal_text_formatter_us_tx.cc
-    verbal_text_formatter_factory.cc)
+    verbal_text_formatter_factory.cc
+    util.cc)
 
 list(APPEND sources
     #basic timezone stuff

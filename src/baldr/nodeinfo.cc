@@ -4,13 +4,14 @@
 
 #include <baldr/datetime.h>
 #include <baldr/graphtile.h>
+#include <baldr/util.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace {
 
-json::MapPtr access_json(uint16_t access) {
+json::MapPtr access_jsonNI(uint16_t access) {
   return json::map({{"bicycle", static_cast<bool>(access & kBicycleAccess)},
                     {"bus", static_cast<bool>(access & kBusAccess)},
                     {"car", static_cast<bool>(access & kAutoAccess)},
@@ -44,21 +45,6 @@ json::MapPtr admin_json(const AdminInfo& admin, uint16_t tz_index) {
   }
 
   return m;
-}
-
-/**
- * Get the updated bit field.
- * @param dst  Data member to be updated.
- * @param src  Value to be updated.
- * @param pos  Position (pos element within the bit field).
- * @param len  Length of each element within the bit field.
- * @return  Returns an updated value for the bit field.
- */
-uint32_t
-OverwriteBits(const uint32_t dst, const uint32_t src, const uint32_t pos, const uint32_t len) {
-  uint32_t shift = (pos * len);
-  uint32_t mask = (((uint32_t)1 << len) - 1) << shift;
-  return (dst & ~mask) | (src << shift);
 }
 
 } // namespace
@@ -249,7 +235,7 @@ json::MapPtr NodeInfo::json(const GraphTile* tile) const {
       {"lon", json::fp_t{latlng(tile->header()->base_ll()).first, 6}},
       {"lat", json::fp_t{latlng(tile->header()->base_ll()).second, 6}},
       {"edge_count", static_cast<uint64_t>(edge_count_)},
-      {"access", access_json(access_)},
+      {"access", access_jsonNI(access_)},
       {"intersection_type", to_string(static_cast<IntersectionType>(intersection_))},
       {"administrative", admin_json(tile->admininfo(admin_index_), timezone_)},
       {"density", static_cast<uint64_t>(density_)},

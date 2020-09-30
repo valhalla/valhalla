@@ -11,10 +11,10 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
-constexpr uint64_t kInitialEdgeLabelCount = 500000;
-
+namespace td_forward {
 // Number of iterations to allow with no convergence to the destination
-constexpr uint32_t kMaxIterationsWithoutConvergence = 800000;
+constexpr uint32_t kMaxIterationsWithoutConvergenceTF = 800000;
+} // namespace td_forward
 
 // Default constructor
 TimeDepForward::TimeDepForward() : AStarPathAlgorithm() {
@@ -324,7 +324,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
     if (dist2dest < mindist) {
       mindist = dist2dest;
       nc = 0;
-    } else if (nc++ > kMaxIterationsWithoutConvergence) {
+    } else if (nc++ > td_forward::kMaxIterationsWithoutConvergenceTF) {
       if (best_path.first >= 0) {
         return {FormPath(best_path.first)};
       } else {

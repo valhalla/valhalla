@@ -17,6 +17,7 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "odin/util.h"
+#include "proto_conversions.h"
 #include "tyr/serializers.h"
 
 #include "proto/options.pb.h"

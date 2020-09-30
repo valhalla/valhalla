@@ -27,7 +27,7 @@ serializeIsochrones(const Api& request,
                     bool show_locations) {
   // for each contour interval
   int i = 0;
-  auto features = array({});
+  auto features = valhalla::baldr::json::array({});
   for (const auto& interval : grid_contours) {
     auto color_itr = colors.find(interval.first);
     // color was supplied
@@ -51,12 +51,13 @@ serializeIsochrones(const Api& request,
     // for each feature on that interval
     for (const auto& feature : interval.second) {
       // for each contour in that feature
-      auto geom = array({});
+      auto geom = valhalla::baldr::json::array({});
       for (const auto& contour : feature) {
         // make some geometry
-        auto coords = array({});
+        auto coords = valhalla::baldr::json::array({});
         for (const auto& coord : contour) {
-          coords->push_back(array({fp_t{coord.first, 6}, fp_t{coord.second, 6}}));
+          coords->push_back(
+              valhalla::baldr::json::array({fp_t{coord.first, 6}, fp_t{coord.second, 6}}));
         }
         // its either a ring
         if (polygons) {
@@ -67,13 +68,13 @@ serializeIsochrones(const Api& request,
         }
       }
       // add a feature
-      features->emplace_back(map({
+      features->emplace_back(valhalla::baldr::json::map({
           {"type", std::string("Feature")},
-          {"geometry", map({
+          {"geometry", valhalla::baldr::json::map({
                            {"type", std::string(polygons ? "Polygon" : "LineString")},
                            {"coordinates", geom},
                        })},
-          {"properties", map({
+          {"properties", valhalla::baldr::json::map({
                              {"contour", static_cast<uint64_t>(interval.first)},
                              {"color", hex.str()},            // lines
                              {"fill", hex.str()},             // geojson.io polys
@@ -90,38 +91,42 @@ serializeIsochrones(const Api& request,
     int idx = 0;
     for (const auto& location : request.options().locations()) {
       // first add all snapped points as MultiPoint feature per origin point
-      auto snapped_points_array = array({});
+      auto snapped_points_array = valhalla::baldr::json::array({});
       std::unordered_set<midgard::PointLL> snapped_points;
       for (const auto& path_edge : location.path_edges()) {
         const midgard::PointLL& snapped_current =
             midgard::PointLL(path_edge.ll().lng(), path_edge.ll().lat());
         // remove duplicates of path_edges in case the snapped object is a node
         if (snapped_points.insert(snapped_current).second) {
-          snapped_points_array->push_back(
-              array({fp_t{snapped_current.lng(), 6}, fp_t{snapped_current.lat(), 6}}));
+          snapped_points_array->push_back(valhalla::baldr::json::array(
+              {fp_t{snapped_current.lng(), 6}, fp_t{snapped_current.lat(), 6}}));
         }
       };
-      features->emplace_back(map(
+      features->emplace_back(valhalla::baldr::json::map(
           {{"type", std::string("Feature")},
            {"properties",
-            map({{"type", std::string("snapped")}, {"location_index", static_cast<uint64_t>(idx)}})},
-           {"geometry",
-            map({{"type", std::string("MultiPoint")}, {"coordinates", snapped_points_array}})}}));
+            valhalla::baldr::json::map(
+                {{"type", std::string("snapped")}, {"location_index", static_cast<uint64_t>(idx)}})},
+           {"geometry", valhalla::baldr::json::map({{"type", std::string("MultiPoint")},
+                                                    {"coordinates", snapped_points_array}})}}));
 
       // then each user input point as separate Point feature
       const valhalla::LatLng& input_latlng = location.ll();
-      const auto input_array = array({fp_t{input_latlng.lng(), 6}, fp_t{input_latlng.lat(), 6}});
-      features->emplace_back(map(
+      const auto input_array =
+          valhalla::baldr::json::array({fp_t{input_latlng.lng(), 6}, fp_t{input_latlng.lat(), 6}});
+      features->emplace_back(valhalla::baldr::json::map(
           {{"type", std::string("Feature")},
            {"properties",
-            map({{"type", std::string("input")}, {"location_index", static_cast<uint64_t>(idx)}})},
-           {"geometry", map({{"type", std::string("Point")}, {"coordinates", input_array}})}}));
+            valhalla::baldr::json::map(
+                {{"type", std::string("input")}, {"location_index", static_cast<uint64_t>(idx)}})},
+           {"geometry", valhalla::baldr::json::map(
+                            {{"type", std::string("Point")}, {"coordinates", input_array}})}}));
       idx++;
     }
   }
 
   // make the collection
-  auto feature_collection = map({
+  auto feature_collection = valhalla::baldr::json::map({
       {"type", std::string("FeatureCollection")},
       {"features", features},
   });

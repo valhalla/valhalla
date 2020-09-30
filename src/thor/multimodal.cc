@@ -8,37 +8,12 @@
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
-namespace {
-
-// Method to get an operator Id from a map of operator strings vs. Id.
-uint32_t GetOperatorId(const GraphTile* tile,
-                       uint32_t routeid,
-                       std::unordered_map<std::string, uint32_t>& operators) {
-  const TransitRoute* transit_route = tile->GetTransitRoute(routeid);
-
-  // Test if the transit operator changed
-  if (transit_route && transit_route->op_by_onestop_id_offset()) {
-    // Get the operator name and look up in the operators map
-    std::string operator_name = tile->GetName(transit_route->op_by_onestop_id_offset());
-    auto operator_itr = operators.find(operator_name);
-    if (operator_itr == operators.end()) {
-      // Operator not found - add to the map
-      uint32_t id = operators.size() + 1;
-      operators[operator_name] = id;
-      return id;
-    } else {
-      return operator_itr->second;
-    }
-  }
-  return 0;
-}
-
-} // namespace
-
 namespace valhalla {
 namespace thor {
 
+namespace multimodal {
 constexpr uint64_t kInitialEdgeLabelCount = 200000;
+} // namespace multimodal
 
 // Default constructor
 MultiModalPathAlgorithm::MultiModalPathAlgorithm()
@@ -60,7 +35,7 @@ void MultiModalPathAlgorithm::Init(const midgard::PointLL& origll,
 
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects
-  edgelabels_.reserve(kInitialEdgeLabelCount);
+  edgelabels_.reserve(multimodal::kInitialEdgeLabelCount);
 
   // Set up lambda to get sort costs
   const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
@@ -397,7 +372,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
           }
 
           // Get the operator Id
-          operator_id = GetOperatorId(tile, departure->routeid(), operators_);
+          operator_id = tile->GetOperatorId(departure->routeid(), operators_);
 
           // Add transfer penalty and operator change penalty
           if (pred.transit_operator() > 0 && pred.transit_operator() != operator_id) {

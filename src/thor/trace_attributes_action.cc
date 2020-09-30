@@ -25,14 +25,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::odin;
 using namespace valhalla::thor;
 
-namespace {
-// <Confidence score, raw score, match results, trip path> tuple indexes
-constexpr size_t kConfidenceScoreIndex = 0;
-constexpr size_t kRawScoreIndex = 1;
-constexpr size_t kMatchResultsIndex = 2;
-constexpr size_t kTripLegIndex = 3;
-} // namespace
-
 namespace valhalla {
 namespace thor {
 /*

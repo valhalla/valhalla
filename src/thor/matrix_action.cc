@@ -13,10 +13,10 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 
-namespace {
+namespace matrix_action {
 
 constexpr double kMilePerMeter = 0.000621371;
-}
+} // namespace matrix_action
 
 namespace valhalla {
 namespace thor {
@@ -36,7 +36,7 @@ std::string thor_worker_t::matrix(Api& request) {
   // Parse out units; if none specified, use kilometers
   double distance_scale = kKmPerMeter;
   if (options.units() == Options::miles) {
-    distance_scale = kMilePerMeter;
+    distance_scale = matrix_action::kMilePerMeter;
   }
 
   json::MapPtr json;

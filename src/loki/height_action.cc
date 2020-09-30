@@ -1,6 +1,7 @@
 #include "loki/worker.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
+#include "proto_conversions.h"
 #include "tyr/serializers.h"
 
 using namespace valhalla;
@@ -10,9 +11,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::skadi;
 
 namespace {
-PointLL to_ll(const valhalla::Location& l) {
-  return PointLL{l.ll().lng(), l.ll().lat()};
-}
 void from_ll(valhalla::Location* l, const PointLL& p) {
   l->mutable_ll()->set_lat(p.lat());
   l->mutable_ll()->set_lng(p.lng());

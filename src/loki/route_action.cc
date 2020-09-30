@@ -5,14 +5,12 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
+#include "proto_conversions.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
 
-namespace {
-midgard::PointLL to_ll(const valhalla::Location& l) {
-  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
-}
+namespace route_action {
 
 void check_locations(const size_t location_count, const size_t max_locations) {
   // check that location size does not exceed max.
@@ -40,7 +38,7 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
                                   " [ANALYTICS] ");
 }
 
-} // namespace
+} // namespace route_action
 
 namespace valhalla {
 namespace loki {
@@ -59,8 +57,8 @@ void loki_worker_t::route(Api& request) {
   init_route(request);
   auto& options = *request.mutable_options();
   const auto& costing_name = Costing_Enum_Name(options.costing());
-  check_locations(options.locations_size(), max_locations.find(costing_name)->second);
-  check_distance(options.locations(), max_distance.find(costing_name)->second);
+  route_action::check_locations(options.locations_size(), max_locations.find(costing_name)->second);
+  route_action::check_distance(options.locations(), max_distance.find(costing_name)->second);
 
   // Validate walking distances (make sure they are in the accepted range)
   if (costing_name == "multimodal" || costing_name == "transit") {
