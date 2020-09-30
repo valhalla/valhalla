@@ -808,12 +808,7 @@ public:
    * @param tile_id  the tile id for which incidents should be returned
    * @return the incident tile for the tile id
    */
-  virtual std::shared_ptr<incident_tile_t> GetIncidentTile(const GraphId& tile_id) const {
-    // TODO: hook this up to the incident loading singleton from the pr:
-    // https://github.com/valhalla/valhalla/pull/2573
-    // return incident_singleton_t::get(tile_id.Tile_Base());
-    return {};
-  }
+  virtual std::shared_ptr<incident_tile_t> GetIncidentTile(const GraphId& tile_id) const;
 
   /**
    * Returns a vector of incidents for the given edge
@@ -824,7 +819,7 @@ public:
   std::vector<Incident> GetIncidents(const GraphId& edge_id, const GraphTile*& tile) {
     // if we are not doing this for any reason then bail
     std::shared_ptr<incident_tile_t> itile;
-    if (!simulate_incidents_ || !GetGraphTile(edge_id, tile) ||
+    if (!enable_incidents_ || !GetGraphTile(edge_id, tile) ||
         !tile->trafficspeed(tile->directededge(edge_id)).has_incidents ||
         !(itile = GetIncidentTile(edge_id))) {
       return {};
@@ -867,8 +862,7 @@ protected:
 
   std::unique_ptr<TileCache> cache_;
 
-  // TODO: delete me when incident singleton is ready
-  bool simulate_incidents_;
+  bool enable_incidents_;
 };
 
 } // namespace baldr
