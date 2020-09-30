@@ -141,8 +141,7 @@ json::ArrayPtr waypoints(const valhalla::Trip& trip) {
 
 void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
                                  const TripLeg::ValhallaIncident& incident,
-                                 const std::string& iso_3166_1_alpha2,
-                                 const std::string& streets_v8_class,
+                                 const std::string& road_class,
                                  const std::string& key_prefix) {
   const valhalla::incidents::Metadata& meta = incident.metadata();
   writer.Key(key_prefix + "id");
@@ -152,9 +151,9 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
     writer.Key(key_prefix + "type");
     writer.String(std::string(valhalla::incidentTypeToString(meta.type())));
   }
-  if (!iso_3166_1_alpha2.empty()) {
+  if (!meta.iso_3166_1_alpha2().empty()) {
     writer.Key(key_prefix + "iso_3166_1_alpha2");
-    writer.String(iso_3166_1_alpha2);
+    writer.String(meta.iso_3166_1_alpha2());
   }
   if (!meta.description().empty()) {
     writer.Key(key_prefix + "description");
@@ -204,9 +203,9 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
     writer.Key(key_prefix + "closed");
     writer.Bool(meta.road_closed());
   }
-  if (!streets_v8_class.empty()) {
+  if (!road_class.empty()) {
     writer.Key(key_prefix + "class");
-    writer.String(streets_v8_class);
+    writer.String(road_class);
   }
 
   if (meta.has_congestion()) {

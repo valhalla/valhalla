@@ -125,8 +125,7 @@ valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
 
 void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
                                  const valhalla::TripLeg::ValhallaIncident& incident,
-                                 const std::string& iso_3166_1_alpha2,
-                                 const std::string& streets_v8_class,
+                                 const std::string& road_class,
                                  const std::string& key_prefix);
 
 } // namespace osrm

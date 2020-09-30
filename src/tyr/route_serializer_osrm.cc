@@ -632,21 +632,19 @@ std::string exits(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
   return exits;
 }
 
-valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::ValhallaIncident& incident,
-                                                 const std::string& iso_3166_1_alpha2) {
+valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::ValhallaIncident& incident) {
   rapidjson::StringBuffer stringbuffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(stringbuffer);
   writer.StartObject();
-  osrm::serializeIncidentProperties(writer, incident, iso_3166_1_alpha2, "", "");
+  osrm::serializeIncidentProperties(writer, incident, "", "");
   writer.EndObject();
   return {stringbuffer.GetString()};
 }
 
 // Serializes incidents and adds to json-document
-void serailizeIncidents(
+void serializeIncidents(
     const google::protobuf::RepeatedPtrField<TripLeg::ValhallaIncident>& incidents,
-    json::Jmap& doc,
-    const std::string& iso_3166_1_alpha2) {
+    json::Jmap& doc) {
   if (incidents.size() == 0) {
     // No incidents, nothing to do
     return;
@@ -664,7 +662,7 @@ void serailizeIncidents(
     }
   }
   for (const auto& incident : incidents) {
-    auto json_incident = serializeIncident(incident, iso_3166_1_alpha2);
+    auto json_incident = serializeIncident(incident);
     serialized_incidents->emplace_back(json_incident);
   }
   doc.emplace("incidents", serialized_incidents);
@@ -1458,6 +1456,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     // Add steps to the leg
     output_leg->emplace("steps", steps);
 
+    // Add incidents to the leg
+    serializeIncidents(path_leg.incidents(), *output_leg);
+
     // Keep the leg
     output_legs->emplace_back(output_leg);
     leg++;
@@ -1545,7 +1546,7 @@ void assert_json_equality(const rapidjson::Document& doc1, const rapidjson::Docu
   }
 }
 
-TEST(RouteSerializerOsrm, testAddsIncidents) {
+TEST(RouteSerializerOsrm, testserializeIncidents) {
   // Test that an incident is added correctly to the intersections-json
 
   rapidjson::Document serialized_to_json;
@@ -1571,10 +1572,11 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
     meta.set_road_closed(true);
     meta.mutable_congestion()->set_value(33);
     meta.add_alertc_codes(11);
+    meta.set_iso_3166_1_alpha2("AU");
     *incident->mutable_metadata() = meta;
 
     // Finally call the function under test to serialize to json
-    addsIncidents(*incidents, intersection_doc, "AU");
+    serializeIncidents(*incidents, intersection_doc);
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
@@ -1613,7 +1615,7 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
   assert_json_equality(serialized_to_json, expected_json);
 }
 
-TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
+TEST(RouteSerializerOsrm, testserializeIncidentsMultipleIncidentsSingleEdge) {
   // Test that multiple incidents on an edge are serialized correctly
   // that only the incident-id is stored in subsequent intersections
   // after the first
@@ -1636,6 +1638,7 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
       meta.set_description("Fooo");
       meta.set_creation_time(creation_time);
       meta.set_type(valhalla::incidents::Metadata::WEATHER);
+      meta.set_iso_3166_1_alpha2("SE");
       *incident->mutable_metadata() = meta;
     }
     {
@@ -1651,11 +1654,12 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
       meta.set_start_time(creation_time + 100);
       meta.set_end_time(creation_time + 1800);
       meta.set_type(valhalla::incidents::Metadata::ACCIDENT);
+      meta.set_iso_3166_1_alpha2("SE");
       *incident->mutable_metadata() = meta;
     }
 
     // Finally call the function under test to serialize to json
-    addsIncidents(*incidents, intersection_doc, "SE");
+    serializeIncidents(*incidents, intersection_doc);
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
@@ -1697,7 +1701,7 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
   assert_json_equality(serialized_to_json, expected_json);
 }
 
-TEST(RouteSerializerOsrm, testAddsIncidentsNothingToAdd) {
+TEST(RouteSerializerOsrm, testserializeIncidentsNothingToAdd) {
 
   rapidjson::Document serialized_to_json;
   {
@@ -1705,7 +1709,7 @@ TEST(RouteSerializerOsrm, testAddsIncidentsNothingToAdd) {
     auto leg = TripLeg();
 
     // Finally call the function under test to serialize to json
-    addsIncidents(leg.incidents(), intersection_doc, "DE");
+    serializeIncidents(leg.incidents(), intersection_doc);
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
