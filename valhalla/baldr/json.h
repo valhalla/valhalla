@@ -29,6 +29,10 @@ struct fp_t {
   friend std::ostream& operator<<(std::ostream& stream, const fp_t&);
 };
 
+struct RawJSON {
+  std::string data;
+};
+
 // a variant of all the possible values to go with keys in json
 using Value =
     boost::variant<std::string, uint64_t, int64_t, fp_t, bool, std::nullptr_t, MapPtr, ArrayPtr>;

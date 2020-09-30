@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "baldr/json.h"
+#include "loki/serializer_common.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
@@ -379,6 +380,37 @@ struct IntersectionEdges {
   }
 };
 
+// Forward declaration
+valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::ValhallaIncident& incident,
+                                                 const std::string& iso_3166_1_alpha2);
+
+// Serializes incidents and adds to json-document
+void addsIncidents(const google::protobuf::RepeatedPtrField<TripLeg::ValhallaIncident>& incidents,
+                   json::Jmap& doc,
+                   const std::string& iso_3166_1_alpha2) {
+  if (incidents.size() == 0) {
+    // No incidents, nothing to do
+    return;
+  }
+  json::ArrayPtr serialized_incidents = std::shared_ptr<json::Jarray>(new json::Jarray());
+  {
+    // Bring up any already existing array
+    auto existing = doc.find("incidents");
+    if (existing != doc.end()) {
+      if (auto* ptr = boost::get<std::shared_ptr<valhalla::baldr::json::Jarray>>(&existing->second)) {
+        serialized_incidents = *ptr;
+      } else {
+        throw std::logic_error("Invalid state: stored ptr should not be null");
+      }
+    }
+  }
+  for (const auto& incident : incidents) {
+    auto json_incident = serializeIncident(incident, iso_3166_1_alpha2);
+    serialized_incidents->emplace_back(json_incident);
+  }
+  doc.emplace("incidents", serialized_incidents);
+}
+
 // Add intersections along a step/maneuver.
 json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
                              valhalla::odin::EnhancedTripLeg* etp,
@@ -632,49 +664,16 @@ std::string exits(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
   return exits;
 }
 
-valhalla::baldr::json::MapPtr serializeIncident(const TripLeg::ValhallaIncident& incident) {
-  auto metadata_json = json::map({});
-  const auto& meta = incident.metadata();
-
-  metadata_json->emplace("id", meta.id());
-  if (meta.creation_time()) {
-    metadata_json->emplace("creation_time", static_cast<uint64_t>(meta.creation_time()));
-  }
-  if (meta.end_time()) {
-    metadata_json->emplace("end_time", static_cast<uint64_t>(meta.end_time()));
-  }
-  if (meta.start_time()) {
-    metadata_json->emplace("start_time", static_cast<uint64_t>(meta.start_time()));
-  }
-  metadata_json->emplace("type", valhalla::incidentTypeToString(meta.type()));
-  if (!meta.description().empty()) {
-    metadata_json->emplace("description", meta.description());
-  }
-  if (incident.has_begin_shape_index()) {
-    metadata_json->emplace("geometry_index_start",
-                           static_cast<uint64_t>(incident.begin_shape_index()));
-  }
-  if (incident.has_end_shape_index()) {
-    metadata_json->emplace("geometry_index_end", static_cast<uint64_t>(incident.end_shape_index()));
-  }
-
-  return metadata_json;
+valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::ValhallaIncident& incident,
+                                                 const std::string& iso_3166_1_alpha2) {
+  rapidjson::StringBuffer stringbuffer;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(stringbuffer);
+  writer.StartObject();
+  loki::incidents::serializeIncidentProperties(writer, incident, iso_3166_1_alpha2, "", "");
+  writer.EndObject();
+  return {stringbuffer.GetString()};
 }
 
-// Serializes incidents and adds to json-document
-void serializeIncidents(
-    const google::protobuf::RepeatedPtrField<TripLeg::ValhallaIncident>& incidents,
-    json::MapPtr& json_leg) {
-  if (incidents.empty()) {
-    return;
-  }
-  auto serialized_incidents = json::array({});
-  for (const auto& incident : incidents) {
-    auto json_incident = serializeIncident(incident);
-    serialized_incidents->emplace_back(json_incident);
-  }
-  json_leg->emplace("incidents", serialized_incidents);
-}
 
 // Compile and return the refs of the specified list
 // TODO we could enhance by limiting results by using consecutive count
@@ -1464,9 +1463,6 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     // Add steps to the leg
     output_leg->emplace("steps", steps);
 
-    // Add incidents to the leg
-    serializeIncidents(path_leg.incidents(), output_leg);
-
     // Keep the leg
     output_legs->emplace_back(output_leg);
     leg++;
@@ -1574,10 +1570,17 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
     meta.set_start_time(creation_time + 100);
     meta.set_end_time(creation_time + 1800);
     meta.set_type(valhalla::incidents::Metadata::WEATHER);
+    meta->set_type(Incident_Type::Incident_Type_WEATHER);
+    meta->set_impact(Incident_Impact::Incident_Impact_MAJOR);
+    meta->set_sub_type("foo");
+    meta->set_sub_type_description("foobar");
+    meta->set_road_closed(true);
+    *incident->mutable_congestion().set_value(33);
+    meta->add_alertc_codes(11);
     *incident->mutable_metadata() = meta;
 
     // Finally call the function under test to serialize to json
-    serializeIncidents(*incidents, intersection_doc);
+    serializeIncidents(*incidents, intersection_doc, "AU");
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
@@ -1595,6 +1598,19 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
           "start_time": 1597241929,
           "end_time": 1597243629,
           "type": "weather",
+          "iso_3166_1_alpha2": "AU",
+          "creation_time": "2020-08-12T14:17:09Z",
+          "start_time": "2020-08-12T14:18:49Z",
+          "end_time": "2020-08-12T14:47:09Z",
+          "impact": "major",
+          "sub_type": "foo",
+          "sub_type_description": "foobar",
+          "alertc_codes": [ 11 ],
+          "lanes_blocked": [],
+          "closed": true,
+          "congestion": {
+            "value": 33
+          },
           "geometry_index_start": 42,
           "geometry_index_end": 42
         }
