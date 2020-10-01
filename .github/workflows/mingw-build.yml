@@ -44,4 +44,4 @@ jobs:
             -DENABLE_BENCHMARKS=OFF \
             -DLOGGING_LEVEL=DEBUG \
             -DBoost_PROGRAM_OPTIONS_LIBRARY=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libboost_program_options-mt-x64.dll.a && \
-          mingw64-make -C$PWD -j2 VERBOSE=1
+          mingw64-make -j$(nproc)
