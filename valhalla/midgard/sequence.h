@@ -30,7 +30,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#endif // _MSC_VER
+#endif // _WIN32
 #include <fcntl.h>
 
 // if we are on android

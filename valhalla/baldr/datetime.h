@@ -122,6 +122,20 @@ void seconds_to_date(const uint64_t origin_seconds,
                      std::string& iso_dest);
 
 /**
+ * Get utc formatted timestamp, skip using zoned times since we have utc special case
+ * @param seconds since epoch in UTC zone
+ * @return formated string like: 2020-08-12T14:17:09Z
+ */
+inline std::string seconds_to_date_utc(const uint64_t seconds) {
+  std::stringstream ss;
+  std::chrono::seconds secs(seconds);
+  date::sys_seconds timestamp(secs);
+  auto t = std::chrono::system_clock::to_time_t(timestamp);
+  ss << std::put_time(std::gmtime(&t), "%FT%TZ");
+  return ss.str();
+}
+
+/**
  * Get the dow mask.
  * @param   date_time in the format of 20150516 or 2015-05-06T08:00
  * @return  Returns the dow mask.

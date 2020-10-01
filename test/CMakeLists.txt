@@ -35,7 +35,10 @@ endif()
 if (UNIX)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
-  set_source_files_properties(openlr.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
+  set_source_files_properties(
+    openlr.cc
+    incidents.cc
+    PROPERTIES COMPILE_FLAGS "-Wall -Werror")
 endif (UNIX)
 
 ## Add executable targets
