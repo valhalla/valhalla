@@ -8,8 +8,6 @@ jobs:
     container: fedora:rawhide
     steps:
       - uses: actions/checkout@v2
-      - name: Checkout submodules
-        run: git submodule update --init --recursive
       - name: Get dependencies
         run: |
           dnf install -y \
@@ -25,6 +23,8 @@ jobs:
             mingw64-geos \
             mingw64-python3 \
             protobuf-compiler
+      - name: Checkout submodules
+        run: git submodule update --init --recursive
       - name: Configure and run build
         run: |
           mkdir build && cd build && \
