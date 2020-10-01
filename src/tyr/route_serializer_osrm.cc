@@ -636,7 +636,11 @@ valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::Incident& incide
   rapidjson::StringBuffer stringbuffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(stringbuffer);
   writer.StartObject();
-  osrm::serializeIncidentProperties(writer, incident, "", "");
+  osrm::serializeIncidentProperties(writer, incident.metadata(),
+                                    incident.has_begin_shape_index() ? incident.begin_shape_index()
+                                                                     : -1,
+                                    incident.has_end_shape_index() ? incident.end_shape_index() : -1,
+                                    "", "");
   writer.EndObject();
   return {stringbuffer.GetString()};
 }
