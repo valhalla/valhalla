@@ -7,7 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     container: fedora:rawhide
     steps:
-      - uses: actions/checkout@v2
       - name: Get dependencies
         run: |
           dnf install -y \
@@ -23,8 +22,13 @@ jobs:
             mingw64-geos \
             mingw64-python3 \
             protobuf-compiler
+      - uses: actions/checkout@v2
       - name: Checkout submodules
-        run: git submodule update --init --recursive
+        shell: bash
+        run: |
+          auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+          git submodule sync --recursive
+          git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
       - name: Configure and run build
         run: |
           mkdir build && cd build && \
