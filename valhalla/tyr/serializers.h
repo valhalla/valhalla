@@ -11,6 +11,7 @@
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/meili/match_result.h>
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/proto/api.pb.h>
@@ -121,6 +122,11 @@ valhalla::baldr::json::ArrayPtr
 waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
           bool tracepoints = false);
 valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
+
+void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
+                                 const valhalla::TripLeg::Incident& incident,
+                                 const std::string& road_class,
+                                 const std::string& key_prefix);
 
 } // namespace osrm
 

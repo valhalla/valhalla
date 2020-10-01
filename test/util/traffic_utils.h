@@ -93,7 +93,7 @@ void build_live_traffic_data(const boost::property_tree::ptree& config,
       header.directed_edge_count = tile->header()->directededgecount();
       buffer.write(reinterpret_cast<char*>(&header), sizeof(header));
       baldr::TrafficSpeed dummy_speed = {}; // Initialize to all zeros
-      for (int i = 0; i < header.directed_edge_count; ++i) {
+      for (uint32_t i = 0; i < header.directed_edge_count; ++i) {
         buffer.write(reinterpret_cast<char*>(&dummy_speed), sizeof(dummy_speed));
       }
 
@@ -147,8 +147,8 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
       memcpy(reinterpret_cast<char*>(tar->stream) + tar->pos, data, size);
       return MTAR_ESUCCESS;
     };
-    tar.seek = [](mtar_t* tar, unsigned pos) -> int { return MTAR_ESUCCESS; };
-    tar.close = [](mtar_t* tar) -> int { return MTAR_ESUCCESS; };
+    tar.seek = [](mtar_t* /*tar*/, unsigned /*pos*/) -> int { return MTAR_ESUCCESS; };
+    tar.close = [](mtar_t * /*tar*/) -> int { return MTAR_ESUCCESS; };
 
     // Read every speed tile, and update it with fixed speed of `new_speed` km/h (original speeds are
     // 10km/h)
@@ -160,7 +160,7 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
 
       baldr::GraphId tile_id(tile.header->tile_id);
 
-      for (int index = 0; index < tile.header->directed_edge_count; index++) {
+      for (uint32_t index = 0; index < tile.header->directed_edge_count; index++) {
         valhalla::baldr::TrafficSpeed* current =
             const_cast<valhalla::baldr::TrafficSpeed*>(tile.speeds + index);
         setter_cb(reader, tile, index, current);
