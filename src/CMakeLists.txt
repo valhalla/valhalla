@@ -86,8 +86,8 @@ function(valhalla_module)
     PUBLIC
       # ERROR macro clashes with windows.h -> NOGDI necessary (e.g. https://github.com/ipkn/crow/issues/87)
       # However, NOGDI needs to be undefined in logging.h
-      $<$<BOOL:${WIN32}>:NOGDI;WIN32_LEAN_AND_MEAN>
-      $<$<BOOL:${MSVC}>:VC_EXTRALEAN;NOMINMAX;>
+      $<$<BOOL:${WIN32}>:WIN32_LEAN_AND_MEAN>
+      $<$<BOOL:${MSVC}>:NOMINMAX>
       RAPIDJSON_HAS_STDSTRING
       HAS_REMOTE_API=0
       AUTO_DOWNLOAD=0
@@ -192,7 +192,8 @@ create_source_groups("Source Files" ${valhalla_src})
 
 target_compile_definitions(valhalla
   PUBLIC
-    $<$<BOOL:${MSVC}>:VC_EXTRALEAN;WIN32_LEAN_AND_MEAN;NOMINMAX;NOGDI>
+    $<$<BOOL:${WIN32}>:WIN32_LEAN_AND_MEAN>
+    $<$<BOOL:${MSVC}>:NOMINMAX>
     RAPIDJSON_HAS_STDSTRING  # this is a part of the workaround for OBJECT libraries,
                              # because ${libvalhalla_compile_definitions} must be private.
                              # To be removed with ${libvalhalla_compile_definitions} below
