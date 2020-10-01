@@ -31,7 +31,7 @@ constexpr size_t DEFAULT_MAX_LATENT_COUNT = 5;
  * @param filename   name of the file on the file system to read into memory
  * @return a shared pointer with the data of the tile or an empty pointer if it could not be read
  */
-std::shared_ptr<valhalla::IncidentsTile> read_tile(const std::string& filename) {
+std::shared_ptr<const valhalla::IncidentsTile> read_tile(const std::string& filename) {
   // crack the file open
   std::ifstream file(filename, std::ios::in | std::ios::binary);
   if (!file.is_open()) {
@@ -52,8 +52,8 @@ std::shared_ptr<valhalla::IncidentsTile> read_tile(const std::string& filename) 
     return {};
   }
 
-  // success
-  return tile;
+  // hand back something that isnt modifyable
+  return std::const_pointer_cast<const valhalla::IncidentsTile>(tile);
 }
 
 struct incident_singleton_t {
@@ -64,7 +64,7 @@ protected:
     std::atomic<bool> lock_free;
     std::condition_variable signal;
     std::mutex mutex;
-    std::unordered_map<uint64_t, std::shared_ptr<valhalla::IncidentsTile>> cache;
+    std::unordered_map<uint64_t, std::shared_ptr<const valhalla::IncidentsTile>> cache;
   };
   // we use a shared_ptr to wrap the state between the watcher thread and the main threads singleton
   // instance. this gives the responsibility to the last living thread to deallocate the state object.
@@ -274,7 +274,7 @@ public:
    * @param tileset   only needed on first call, configures the incident loading
    * @return a shared_ptr to the incident tile or an empty shared_ptr when none exists
    */
-  static std::shared_ptr<valhalla::IncidentsTile>
+  static std::shared_ptr<const valhalla::IncidentsTile>
   get(const valhalla::baldr::GraphId& tile_id,
       const boost::property_tree::ptree& config = {},
       const std::unordered_set<valhalla::baldr::GraphId>& tileset = {}) {

@@ -148,8 +148,8 @@ struct test_reader : public baldr::GraphReader {
     tile_extract_.reset(new baldr::GraphReader::tile_extract_t(pt));
     enable_incidents_ = true;
   }
-  virtual std::shared_ptr<valhalla::IncidentsTile>
-  GetIncidentTile(const baldr::GraphId& tile_id) const {
+  virtual std::shared_ptr<const valhalla::IncidentsTile>
+  GetIncidentTile(const baldr::GraphId& tile_id) const override {
     auto i = incidents.find(tile_id.Tile_Base());
     if (i == incidents.cend())
       return {};

@@ -892,14 +892,15 @@ int GraphReader::GetTimezone(const baldr::GraphId& node, const GraphTile*& tile)
   return (tile == nullptr) ? 0 : tile->node(node)->timezone();
 }
 
-std::shared_ptr<valhalla::IncidentsTile> GraphReader::GetIncidentTile(const GraphId& tile_id) const {
+std::shared_ptr<const valhalla::IncidentsTile>
+GraphReader::GetIncidentTile(const GraphId& tile_id) const {
   return enable_incidents_ ? incident_singleton_t::get(tile_id.Tile_Base())
                            : std::shared_ptr<valhalla::IncidentsTile>{};
 }
 
 IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile*& tile) {
   // if we are not doing this for any reason then bail
-  std::shared_ptr<valhalla::IncidentsTile> itile;
+  std::shared_ptr<const valhalla::IncidentsTile> itile;
   if (!enable_incidents_ || !GetGraphTile(edge_id, tile) ||
       !tile->trafficspeed(tile->directededge(edge_id)).has_incidents ||
       !(itile = GetIncidentTile(edge_id))) {
@@ -927,7 +928,7 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile
 }
 
 const valhalla::IncidentsTile::Metadata&
-getIncidentMetadata(const std::shared_ptr<valhalla::IncidentsTile>& tile,
+getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
                     const valhalla::IncidentsTile::Location& incident_location) {
   auto metadata_index = incident_location.metadata_index();
   if (metadata_index >= tile->metadata_size()) {

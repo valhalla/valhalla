@@ -98,7 +98,7 @@ void AssignAdmins(const AttributesController& controller,
  * @param incident   the incident that applies
  * @param index      what shape index of the leg the index apples to
  */
-void UpdateIncident(const std::shared_ptr<valhalla::IncidentsTile>& incidents_tile,
+void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incidents_tile,
                     TripLeg& leg,
                     const valhalla::IncidentsTile::Location* incident_location,
                     uint32_t index) {

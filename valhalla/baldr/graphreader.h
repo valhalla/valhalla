@@ -26,7 +26,7 @@ namespace valhalla {
 namespace baldr {
 
 struct IncidentResult {
-  std::shared_ptr<IncidentsTile> tile;
+  std::shared_ptr<const IncidentsTile> tile;
   // Index into the Location array
   int start_index;
   // Index into the Location array
@@ -809,7 +809,7 @@ public:
    * @param tile_id  the tile id for which incidents should be returned
    * @return the incident tile for the tile id
    */
-  virtual std::shared_ptr<IncidentsTile> GetIncidentTile(const GraphId& tile_id) const;
+  virtual std::shared_ptr<const IncidentsTile> GetIncidentTile(const GraphId& tile_id) const;
 
   /**
    * Returns a vector of incidents for the given edge
@@ -851,7 +851,7 @@ protected:
 
 // Given the Location relation, return the full metadata
 const valhalla::IncidentsTile::Metadata&
-getIncidentMetadata(const std::shared_ptr<valhalla::IncidentsTile>& tile,
+getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
                     const valhalla::IncidentsTile::Location& incident_location);
 } // namespace baldr
 } // namespace valhalla
