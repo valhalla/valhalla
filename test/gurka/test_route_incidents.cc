@@ -160,30 +160,20 @@ struct test_reader : public baldr::GraphReader {
            uint64_t incident_id,
            const std::string& incident_description = "") {
 
-    // Grab the incidents-tile in which we should insert both metadata and the edge-to-metadata
-    // relation
+    // Grab the incidents-tile we need to add to
     valhalla::IncidentsTile& incidents_tile = incidents[id.Tile_Base()];
 
-    uint32_t metadata_index = 0;
-    valhalla::IncidentsTile::Metadata* metadata = nullptr;
-    // Check if this incident is already tracked
-    for (auto& meta : *incidents_tile.mutable_metadata()) {
-      if (incident_id == meta.id()) {
-        // We've already added the incident, use it instead of adding again
-        metadata = &meta;
-        break;
-      }
-      metadata_index += 1;
-    }
+    // See if we have this incident metadata already
+    int metadata_index =
+        std::find_if(incidents_tile.metadata().begin(), incidents_tile.metadata().end(),
+                     [incident_id](const valhalla::IncidentsTile::Metadata& m) {
+                       return incident_id == m.id();
+                     }) -
+        incidents_tile.metadata().begin();
 
-    if (metadata == nullptr) {
-      // We're not yet tracking this incident, so add it new
-
-      // Grab the index of where this new incident will live in the array
-      metadata_index = incidents_tile.metadata().size();
-
-      // Add the incident metadata to the array
-      valhalla::IncidentsTile::Metadata* metadata = incidents_tile.mutable_metadata()->Add();
+    // We're not yet tracking this incident, so add it new
+    if (metadata_index == incidents_tile.metadata_size()) {
+      auto* metadata = incidents_tile.mutable_metadata()->Add();
       metadata->set_id(incident_id);
       metadata->set_description(incident_description);
     }
