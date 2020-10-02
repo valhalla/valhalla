@@ -12,22 +12,32 @@
 #include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 
+#ifdef HAVE_HTTP
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
 using namespace prime_server;
+#endif
 
 #include "midgard/logging.h"
 
 #include "loki/worker.h"
 #include "odin/worker.h"
 #include "thor/worker.h"
+#include "tyr/actor.h"
 
 int main(int argc, char** argv) {
-
-  if (argc < 2) {
+#ifdef HAVE_HTTP
+  if (argc < 2 || argc > 4) {
     LOG_ERROR("Usage: " + std::string(argv[0]) + " config/file.json [concurrency]");
+    LOG_ERROR("Usage: " + std::string(argv[0]) + " config/file.json action json_request");
     return 1;
   }
+#else
+  if (argc < 4) {
+    LOG_ERROR("Usage: " + std::string(argv[0]) + " config/file.json action json_request");
+    return 1;
+  }
+#endif
 
   // config file
   // TODO: validate the config
@@ -35,6 +45,76 @@ int main(int argc, char** argv) {
   boost::property_tree::ptree config;
   rapidjson::read_json(config_file, config);
 
+  // one shot direct request mode
+  if (argc == 4) {
+    // setup an object that can answer the request
+    valhalla::tyr::actor_t actor(config);
+
+    // figure out which action
+    valhalla::Options::Action action;
+    if (!valhalla::Options_Action_Enum_Parse(argv[2], &action)) {
+      std::cerr << "Unknown action" << std::endl;
+      return 1;
+    }
+
+    // do the right action
+    valhalla::Api request;
+    try {
+      switch (action) {
+        case valhalla::Options::route:
+          std::cout << actor.route(argv[3], nullptr, &request) << std::endl;
+          break;
+        case valhalla::Options::locate:
+          std::cout << actor.locate(argv[3], nullptr, &request) << std::endl;
+          break;
+        case valhalla::Options::sources_to_targets:
+          std::cout << actor.matrix(argv[3], nullptr, &request) << std::endl;
+          break;
+        case valhalla::Options::optimized_route:
+          std::cout << actor.optimized_route(argv[3], nullptr, &request) << std::endl;
+          break;
+        case valhalla::Options::isochrone:
+          std::cout << actor.isochrone(argv[3], nullptr, &request) << std::endl;
+          break;
+        case valhalla::Options::trace_route:
+          std::cout << actor.trace_route(argv[3], nullptr, &request) << std::endl;
+          break;
+        case valhalla::Options::trace_attributes:
+          std::cout << actor.trace_attributes(argv[3], nullptr, &request) << std::endl;
+          break;
+        case valhalla::Options::height:
+          std::cout << actor.height(argv[3], nullptr, &request) << std::endl;
+          break;
+        case valhalla::Options::transit_available:
+          std::cout << actor.transit_available(argv[3], nullptr, &request) << std::endl;
+          break;
+        case valhalla::Options::expansion:
+          std::cout << actor.expansion(argv[3], nullptr, &request) << std::endl;
+          break;
+        default:
+          std::cerr << "Unknown action" << std::endl;
+          return 1;
+      }
+    } // request processing error specific error condition
+    catch (const valhalla::valhalla_exception_t& ve) {
+      std::cout << valhalla::jsonify_error(ve, request) << std::endl;
+      return 1;
+    } // it was a regular exception!?
+    catch (const std::exception& e) {
+      std::cout << jsonify_error({599, std::string(e.what())}, request) << std::endl;
+      return 1;
+    } // anything else
+    catch (...) {
+      std::cout << jsonify_error({599, std::string("Unknown exception thrown")}, request)
+                << std::endl;
+      return 1;
+    }
+
+    // we are done
+    return 0;
+  }
+
+#ifdef HAVE_HTTP
   // grab the endpoints
   std::string listen = config.get<std::string>("httpd.service.listen");
   std::string loopback = config.get<std::string>("httpd.service.loopback");
@@ -110,6 +190,7 @@ int main(int argc, char** argv) {
 
   // wait forever (or for interrupt)
   server_thread.join();
+#endif
 
   return 0;
 }
