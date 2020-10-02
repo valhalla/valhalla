@@ -52,6 +52,11 @@ std::shared_ptr<const valhalla::IncidentsTile> read_tile(const std::string& file
     return {};
   }
 
+  // dont store empty tiles no point
+  if (tile->locations_size() == 0) {
+    return {};
+  }
+
   // hand back something that isnt modifyable
   return std::const_pointer_cast<const valhalla::IncidentsTile>(tile);
 }
