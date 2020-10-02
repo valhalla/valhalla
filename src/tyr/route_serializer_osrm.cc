@@ -1570,9 +1570,13 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
     meta.set_end_time(creation_time + 1800);
     meta.set_type(valhalla::IncidentsTile::Metadata::WEATHER);
     meta.set_impact(valhalla::IncidentsTile::Metadata::MAJOR);
+    meta.set_description("fooing foo");
+    meta.set_long_description("long fooing foo");
     meta.set_sub_type("foo");
     meta.set_sub_type_description("foobar");
     meta.set_road_closed(true);
+    meta.set_num_lanes_blocked(2);
+    meta.set_clear_lanes("many lanes clear");
     meta.mutable_congestion()->set_value(33);
     meta.add_alertc_codes(11);
     meta.set_iso_3166_1_alpha2("AU");
@@ -1599,10 +1603,14 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
           "start_time": "2020-08-12T14:18:49Z",
           "end_time": "2020-08-12T14:47:09Z",
           "impact": "major",
+          "description": "fooing foo",
+          "long_description": "long fooing foo",
           "sub_type": "foo",
           "sub_type_description": "foobar",
           "alertc_codes": [ 11 ],
           "lanes_blocked": [],
+          "num_lanes_blocked": 2,
+          "clear_lanes": "many lanes clear",
           "closed": true,
           "congestion": {
             "value": 33

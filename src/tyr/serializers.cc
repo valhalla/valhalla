@@ -160,6 +160,10 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
     writer.Key(key_prefix + "description");
     writer.String(incident_metadata.description());
   }
+  if (!incident_metadata.long_description().empty()) {
+    writer.Key(key_prefix + "long_description");
+    writer.String(incident_metadata.long_description());
+  }
   if (incident_metadata.creation_time()) {
     writer.Key(key_prefix + "creation_time");
     writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.creation_time()));
@@ -200,6 +204,15 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
     }
     writer.EndArray();
   }
+  if (incident_metadata.num_lanes_blocked()) {
+    writer.Key(key_prefix + "num_lanes_blocked");
+    writer.Int(incident_metadata.num_lanes_blocked());
+  }
+  if (!incident_metadata.clear_lanes().empty()) {
+    writer.Key(key_prefix + "clear_lanes");
+    writer.String(incident_metadata.clear_lanes());
+  }
+
   if (incident_metadata.road_closed()) {
     writer.Key(key_prefix + "closed");
     writer.Bool(incident_metadata.road_closed());
