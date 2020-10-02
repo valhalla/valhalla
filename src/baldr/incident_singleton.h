@@ -65,7 +65,6 @@ struct incident_singleton_t {
 protected:
   // parameter pack to share state between daemon thread and singleton instance
   struct state_t {
-    std::atomic<bool> healthy;
     std::atomic<bool> lock_free;
     std::condition_variable signal;
     std::mutex mutex;
@@ -89,7 +88,7 @@ protected:
    */
   incident_singleton_t(const boost::property_tree::ptree& config,
                        const std::unordered_set<valhalla::baldr::GraphId>& tileset)
-      : state{new state_t}, watcher(watch, config, std::cref(tileset), state) {
+      : state{new state_t{}}, watcher(watch, config, std::cref(tileset), state) {
     auto max_loading_latency =
         config.get<time_t>("incident_max_loading_latency", DEFAULT_MAX_LOADING_LATENCY);
     // see if the thread can start up and do a pass to load all the incidents
@@ -124,7 +123,7 @@ protected:
                  " because it was not found in the configured tile extract");
         return false;
       }
-      // actually put the tile in the cache synchronously
+      // actually make a spot in the cache synchronously
       try {
         std::unique_lock<std::mutex>(state->mutex);
         found = state->cache.insert({tile_id, {}}).first;
@@ -154,9 +153,9 @@ protected:
    * @param tileset
    * @param state
    */
-  static void watch(boost::property_tree::ptree config,
-                    std::unordered_set<valhalla::baldr::GraphId> tileset,
-                    std::shared_ptr<state_t> state) {
+  [[noreturn]] static void watch(boost::property_tree::ptree config,
+                                 std::unordered_set<valhalla::baldr::GraphId> tileset,
+                                 std::shared_ptr<state_t> state) {
     LOG_INFO("Incident watcher started");
     // try to configure for changelog mode
     std::unique_ptr<valhalla::midgard::sequence<uint64_t>> changelog;
@@ -178,7 +177,6 @@ protected:
     // bail if there is nothing to do
     if (!changelog && inc_dir.string().empty()) {
       LOG_INFO("Incident watcher disabled");
-      state->healthy.store(false);
       state->signal.notify_one();
       return;
     }
@@ -197,8 +195,6 @@ protected:
     size_t latent_count = 0;
     time_t max_loading_latency =
         config.get<time_t>("incident_max_loading_latency", DEFAULT_MAX_LOADING_LATENCY);
-    size_t max_latent_count =
-        config.get<time_t>("incident_max_latent_count", DEFAULT_MAX_LATENT_COUNT);
 
     // wait for someone to tell us to stop
     do {
@@ -253,13 +249,10 @@ protected:
       auto wait = 0;
       if (latency > max_loading_latency) {
         LOG_WARN("Incident watcher is not meeting max loading latency requirement");
-        ++latent_count;
       } // this round finished fast enough, changelog mode is cheap so wait only a second
       else {
-        latent_count = 0;
         wait = changelog ? 1 : max_loading_latency - latency;
       }
-      state->healthy.store(latent_count < max_latent_count);
       LOG_INFO("Incident watcher loaded " + std::to_string(update_count) + " tiles in " +
                std::to_string(latency) + " seconds");
 
@@ -272,7 +265,7 @@ protected:
 
       // wait just a little before we check again
       std::this_thread::sleep_for(std::chrono::seconds(wait));
-    } while (state->healthy.load());
+    } while (true);
 
     LOG_INFO("Incident watcher died from latency breaches");
   }
@@ -291,11 +284,6 @@ public:
       const std::unordered_set<valhalla::baldr::GraphId>& tileset = {}) {
     // spawn a daemon to watch for incidents
     static incident_singleton_t singleton{config, tileset};
-
-    // if its not healthy die violently
-    if (!singleton.state->healthy.load()) {
-      LOG_ERROR("Incident watcher is unhealthy");
-    }
 
     // return the tile from the cache or an empty one if its not there
     auto scoped_lock = singleton.state->lock_free.load()
