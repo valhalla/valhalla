@@ -161,11 +161,14 @@ protected:
     filesystem::path inc_dir;
     try {
       changelog.reset(new decltype(changelog)::element_type(inc_log_path.string()));
+      LOG_INFO("Incident watcher configured for mmap changelog mode");
     } // check for a directory scan mode config
     catch (...) {
       inc_dir = filesystem::path(config.get<std::string>("incident_dir", ""));
       if (!filesystem::is_directory(inc_dir)) {
         inc_dir = {};
+      } else {
+        LOG_INFO("Incident watcher configured for directory scan mode");
       }
     }
 
