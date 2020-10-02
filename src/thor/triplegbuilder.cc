@@ -98,12 +98,12 @@ void AssignAdmins(const AttributesController& controller,
  * @param incident   the incident that applies
  * @param index      what shape index of the leg the index apples to
  */
-void UpdateIncident(const std::shared_ptr<valhalla::incidents::IncidentsTile>& incidents_tile,
+void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incidents_tile,
                     TripLeg& leg,
-                    const valhalla::incidents::Location* incident_location,
+                    const valhalla::IncidentsTile::Location* incident_location,
                     uint32_t index) {
   const uint64_t current_incident_id =
-      valhalla::baldr::grabMetadataFromEdgeRelation(incidents_tile, *incident_location).id();
+      valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location).id();
   auto found = std::find_if(leg.mutable_incidents()->begin(), leg.mutable_incidents()->end(),
                             [current_incident_id](const TripLeg::Incident& candidate) {
                               return current_incident_id == candidate.metadata().id();
@@ -116,8 +116,7 @@ void UpdateIncident(const std::shared_ptr<valhalla::incidents::IncidentsTile>& i
     auto* new_incident = leg.mutable_incidents()->Add();
 
     // Get the full incident metadata from the incident-tile
-    const valhalla::incidents::Metadata& meta =
-        valhalla::baldr::grabMetadataFromEdgeRelation(incidents_tile, *incident_location);
+    const auto& meta = valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location);
     *new_incident->mutable_metadata() = meta;
 
     new_incident->set_begin_shape_index(index);
@@ -171,7 +170,7 @@ void SetShapeAttributes(const AttributesController& controller,
     double percent_along;
     double speed; // meters per second
     uint8_t congestion;
-    std::vector<const valhalla::incidents::Location*> incidents;
+    std::vector<const valhalla::IncidentsTile::Location*> incidents;
   };
 
   // A list of percent along the edge, corresponding speed (meters per second), incident id

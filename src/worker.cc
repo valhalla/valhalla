@@ -961,6 +961,32 @@ void ParseApi(const std::string& request, Options::Action action, valhalla::Api&
   from_json(document, *api.mutable_options());
 }
 
+std::string jsonify_error(const valhalla_exception_t& exception, const Api& request) {
+  // get the http status
+  std::stringstream body;
+
+  // overwrite with osrm error response
+  if (request.options().format() == Options::osrm) {
+    auto found = OSRM_ERRORS_CODES.find(exception.code);
+    if (found == OSRM_ERRORS_CODES.cend()) {
+      found = OSRM_ERRORS_CODES.find(199);
+    }
+    body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "") << found->second
+         << (request.options().has_jsonp() ? ")" : "");
+  } // valhalla error response
+  else {
+    // build up the json map
+    auto json_error = baldr::json::map({});
+    json_error->emplace("status", exception.http_message);
+    json_error->emplace("status_code", static_cast<uint64_t>(exception.http_code));
+    json_error->emplace("error", std::string(exception.message));
+    json_error->emplace("error_code", static_cast<uint64_t>(exception.code));
+    body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "") << *json_error
+         << (request.options().has_jsonp() ? ")" : "");
+  }
+  return body.str();
+}
+
 #ifdef HAVE_HTTP
 void ParseApi(const http_request_t& request, valhalla::Api& api) {
   api.Clear();
@@ -1032,31 +1058,9 @@ const headers_t::value_type ATTACHMENT{"Content-Disposition", "attachment; filen
 worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
                                  http_request_info_t& request_info,
                                  const Api& request) {
-  // get the http status
-  std::stringstream body;
-
-  // overwrite with osrm error response
-  if (request.options().format() == Options::osrm) {
-    auto found = OSRM_ERRORS_CODES.find(exception.code);
-    if (found == OSRM_ERRORS_CODES.cend()) {
-      found = OSRM_ERRORS_CODES.find(199);
-    }
-    body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "") << found->second
-         << (request.options().has_jsonp() ? ")" : "");
-  } // valhalla error response
-  else {
-    // build up the json map
-    auto json_error = baldr::json::map({});
-    json_error->emplace("status", exception.http_message);
-    json_error->emplace("status_code", static_cast<uint64_t>(exception.http_code));
-    json_error->emplace("error", std::string(exception.message));
-    json_error->emplace("error_code", static_cast<uint64_t>(exception.code));
-    body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "") << *json_error
-         << (request.options().has_jsonp() ? ")" : "");
-  }
-
   worker_t::result_t result{false, std::list<std::string>(), ""};
-  http_response_t response(exception.http_code, exception.http_message, body.str(),
+  http_response_t response(exception.http_code, exception.http_message,
+                           jsonify_error(exception, request),
                            headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
                                                                          : worker::JSON_MIME});
   response.from_info(request_info);

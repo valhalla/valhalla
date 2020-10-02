@@ -170,6 +170,8 @@
    * ADDED: Costing option to ignore_closures when routing with current flow [#2615](https://github.com/valhalla/valhalla/pull/2615)
    * ADDED: Defines the incident tile schema and incident metadata [#2620](https://github.com/valhalla/valhalla/pull/2620)
    * ADDED: Moves incident serializer logic into a generic serializer [#2621](https://github.com/valhalla/valhalla/pull/2621)
+   * ADDED: Incident loading singleton for continually refreshing incident tiles[#2573](https://github.com/valhalla/valhalla/pull/2573)
+   * ADDED: One shot mode to valhalla_service so you can run a single request of any type without starting a server [#2624](https://github.com/valhalla/valhalla/pull/2624)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

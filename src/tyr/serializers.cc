@@ -140,53 +140,58 @@ json::ArrayPtr waypoints(const valhalla::Trip& trip) {
 }
 
 void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
-                                 const TripLeg::Incident& incident,
+                                 const valhalla::IncidentsTile::Metadata& incident_metadata,
+                                 const int begin_shape_index,
+                                 const int end_shape_index,
                                  const std::string& road_class,
                                  const std::string& key_prefix) {
-  const valhalla::incidents::Metadata& meta = incident.metadata();
   writer.Key(key_prefix + "id");
-  writer.Int64(meta.id());
+  writer.Uint64(incident_metadata.id());
   {
     // Type is mandatory
     writer.Key(key_prefix + "type");
-    writer.String(std::string(valhalla::incidentTypeToString(meta.type())));
+    writer.String(std::string(valhalla::incidentTypeToString(incident_metadata.type())));
   }
-  if (!meta.iso_3166_1_alpha2().empty()) {
+  if (!incident_metadata.iso_3166_1_alpha2().empty()) {
     writer.Key(key_prefix + "iso_3166_1_alpha2");
-    writer.String(meta.iso_3166_1_alpha2());
+    writer.String(incident_metadata.iso_3166_1_alpha2());
   }
-  if (!meta.description().empty()) {
+  if (!incident_metadata.description().empty()) {
     writer.Key(key_prefix + "description");
-    writer.String(meta.description());
+    writer.String(incident_metadata.description());
   }
-  if (meta.creation_time()) {
+  if (!incident_metadata.long_description().empty()) {
+    writer.Key(key_prefix + "long_description");
+    writer.String(incident_metadata.long_description());
+  }
+  if (incident_metadata.creation_time()) {
     writer.Key(key_prefix + "creation_time");
-    writer.String(baldr::DateTime::seconds_to_date_utc(meta.creation_time()));
+    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.creation_time()));
   }
-  if (meta.start_time() > 0) {
+  if (incident_metadata.start_time() > 0) {
     writer.Key(key_prefix + "start_time");
-    writer.String(baldr::DateTime::seconds_to_date_utc(meta.start_time()));
+    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.start_time()));
   }
-  if (meta.end_time()) {
+  if (incident_metadata.end_time()) {
     writer.Key(key_prefix + "end_time");
-    writer.String(baldr::DateTime::seconds_to_date_utc(meta.end_time()));
+    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.end_time()));
   }
-  if (meta.impact()) {
+  if (incident_metadata.impact()) {
     writer.Key(key_prefix + "impact");
-    writer.String(std::string(valhalla::incidentImpactToString(meta.impact())));
+    writer.String(std::string(valhalla::incidentImpactToString(incident_metadata.impact())));
   }
-  if (!meta.sub_type().empty()) {
+  if (!incident_metadata.sub_type().empty()) {
     writer.Key(key_prefix + "sub_type");
-    writer.String(meta.sub_type());
+    writer.String(incident_metadata.sub_type());
   }
-  if (!meta.sub_type_description().empty()) {
+  if (!incident_metadata.sub_type_description().empty()) {
     writer.Key(key_prefix + "sub_type_description");
-    writer.String(meta.sub_type_description());
+    writer.String(incident_metadata.sub_type_description());
   }
-  if (meta.alertc_codes_size() > 0) {
+  if (incident_metadata.alertc_codes_size() > 0) {
     writer.Key(key_prefix + "alertc_codes");
     writer.StartArray();
-    for (const auto& alertc_code : meta.alertc_codes()) {
+    for (const auto& alertc_code : incident_metadata.alertc_codes()) {
       writer.Int(static_cast<uint64_t>(alertc_code));
     }
     writer.EndArray();
@@ -194,35 +199,44 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
   {
     writer.Key(key_prefix + "lanes_blocked");
     writer.StartArray();
-    for (const auto& blocked_lane : meta.lanes_blocked()) {
+    for (const auto& blocked_lane : incident_metadata.lanes_blocked()) {
       writer.String(blocked_lane);
     }
     writer.EndArray();
   }
-  if (meta.road_closed()) {
+  if (incident_metadata.num_lanes_blocked()) {
+    writer.Key(key_prefix + "num_lanes_blocked");
+    writer.Int(incident_metadata.num_lanes_blocked());
+  }
+  if (!incident_metadata.clear_lanes().empty()) {
+    writer.Key(key_prefix + "clear_lanes");
+    writer.String(incident_metadata.clear_lanes());
+  }
+
+  if (incident_metadata.road_closed()) {
     writer.Key(key_prefix + "closed");
-    writer.Bool(meta.road_closed());
+    writer.Bool(incident_metadata.road_closed());
   }
   if (!road_class.empty()) {
     writer.Key(key_prefix + "class");
     writer.String(road_class);
   }
 
-  if (meta.has_congestion()) {
+  if (incident_metadata.has_congestion()) {
     writer.Key(key_prefix + "congestion");
     writer.StartObject();
     writer.Key("value");
-    writer.Int(meta.congestion().value());
+    writer.Int(incident_metadata.congestion().value());
     writer.EndObject();
   }
 
-  if (incident.has_begin_shape_index()) {
+  if (begin_shape_index >= 0) {
     writer.Key(key_prefix + "geometry_index_start");
-    writer.Int(incident.begin_shape_index());
+    writer.Int(begin_shape_index);
   }
-  if (incident.has_end_shape_index()) {
+  if (end_shape_index >= 0) {
     writer.Key(key_prefix + "geometry_index_end");
-    writer.Int(incident.end_shape_index());
+    writer.Int(end_shape_index);
   }
   // TODO Add test of lanes blocked and add missing properties
 }
