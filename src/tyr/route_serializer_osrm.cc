@@ -1563,7 +1563,9 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
     incident->set_end_shape_index(42);
 
     valhalla::IncidentsTile::Metadata meta;
-    meta.set_id(1337);
+    meta.set_id(
+        // Set a large id that excercises the uint64 serialization
+        18446744073709551615u);
     uint64_t creation_time = 1597241829;
     meta.set_creation_time(creation_time);
     meta.set_start_time(creation_time + 100);
@@ -1596,7 +1598,7 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
     expected_json.Parse(R"({
       "incidents": [
         {
-          "id": 1337,
+          "id": 18446744073709551615,
           "type": "weather",
           "iso_3166_1_alpha2": "AU",
           "creation_time": "2020-08-12T14:17:09Z",
