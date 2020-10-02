@@ -124,9 +124,14 @@ protected:
                  " because it was not found in the configured tile extract");
         return false;
       }
-      state->mutex.lock();
-      found = state->cache.insert({tile_id, {}}).first;
-      state->mutex.unlock();
+      // actually put the tile in the cache synchronously
+      try {
+        std::unique_lock<std::mutex>(state->mutex);
+        found = state->cache.insert({tile_id, {}}).first;
+      } // if anything went wrong we have to catch it so that the mutex is unlocked
+      catch (...) {
+        LOG_ERROR("Incident watcher failed to add incident tile to cache");
+      }
     }
     // atomically store the tile shared_ptr, could be actually nullptr when there are no incidents
     std::atomic_store_explicit(&found->second, tile, std::memory_order_release);

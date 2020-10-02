@@ -363,8 +363,9 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
   // mmap'd file
   cache_->Reserve(tile_extract_->tiles.empty() ? AVERAGE_TILE_SIZE : AVERAGE_MM_TILE_SIZE);
 
-  // Initialize the incident cache singleton if we have any kind of configuration to do so
-  // if the configuration is wrong or any kind of problem occurs this throws
+  // Initialize the incident cache singleton if we have any kind of configuration to do so. if the
+  // configuration is wrong or any kind of problem occurs this throws. the call below will spawn a
+  // single background thread which is responsible for loading incidents continually
   enable_incidents_ = !pt.get<std::string>("incident_log", "").empty() ||
                       !pt.get<std::string>("incident_dir", "").empty();
   if (enable_incidents_) {
