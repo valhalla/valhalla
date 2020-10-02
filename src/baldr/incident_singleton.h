@@ -81,8 +81,6 @@ protected:
   std::shared_ptr<state_t> state;
   // daemon thread to watch for new incident data
   std::thread watcher;
-  // the total amount of time we are allowed to make a full update to the incidents cache
-  time_t max_loading_latency;
 
   /**
    * Singleton private constructor that static function uses to instantiate the singleton
@@ -91,9 +89,9 @@ protected:
    */
   incident_singleton_t(const boost::property_tree::ptree& config,
                        const std::unordered_set<valhalla::baldr::GraphId>& tileset)
-      : state{new state_t}, watcher(watch, config, std::cref(tileset), state),
-        max_loading_latency(
-            config.get<time_t>("incident_max_loading_latency", DEFAULT_MAX_LOADING_LATENCY)) {
+      : state{new state_t}, watcher(watch, config, std::cref(tileset), state) {
+    auto max_loading_latency =
+        config.get<time_t>("incident_max_loading_latency", DEFAULT_MAX_LOADING_LATENCY);
     // see if the thread can start up and do a pass to load all the incidents
     std::unique_lock<std::mutex> lock(state->mutex);
     auto when = std::chrono::system_clock::now() + std::chrono::seconds(max_loading_latency);
