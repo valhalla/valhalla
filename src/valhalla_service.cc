@@ -47,6 +47,9 @@ int main(int argc, char** argv) {
 
   // one shot direct request mode
   if (argc == 4) {
+    // because we want the program output to go only to stdout we force any logging to be stderr
+    valhalla::midgard::logging::Configure({{"type", "std_err"}});
+
     // setup an object that can answer the request
     valhalla::tyr::actor_t actor(config);
 
