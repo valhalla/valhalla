@@ -1,0 +1,13 @@
+name: lint
+on: push
+
+jobs:
+  linter:
+    name: Lint code base
+    container: valhalla/valhalla:build-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: format
+        run: |
+          ./scripts/format.sh && ./scripts/error_on_dirty.sh
