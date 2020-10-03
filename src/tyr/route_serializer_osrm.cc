@@ -972,7 +972,8 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
                            const std::string& mode,
                            const std::string& prev_mode,
                            const bool rotary,
-                           const bool prev_rotary) {
+                           const bool prev_rotary,
+                           const valhalla::Options& options) {
   auto osrm_man = json::map({});
 
   // Set the location
@@ -995,6 +996,10 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
     modifier = turn_modifier(maneuver, etp, in_brg, out_brg, arrive_maneuver);
     if (!modifier.empty())
       osrm_man->emplace("modifier", modifier);
+  }
+
+  if (options.directions_type() == DirectionsType::instructions) {
+    osrm_man->emplace("instruction", maneuver.text_instruction());
   }
 
   // TODO - logic to convert maneuver types from Valhalla into OSRM maneuver types.
@@ -1351,7 +1356,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       step->emplace("maneuver",
                     osrm_maneuver(maneuver, &etp, shape[maneuver.begin_shape_index()],
                                   depart_maneuver, arrive_maneuver, prev_intersection_count, mode,
-                                  prev_mode, rotary, prev_rotary));
+                                  prev_mode, rotary, prev_rotary, options));
 
       // Add destinations
       const auto& sign = maneuver.sign();
