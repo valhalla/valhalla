@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: format
-        run: docker exec ${{ job.container.id }} bash -c "./scripts/format.sh && ./scripts/error_on_dirty.sh"
+        run: /usr/bin/docker exec ${{ job.container.id }} bash -c "./scripts/format.sh && ./scripts/error_on_dirty.sh"
 
 
   linux_debug_64:
