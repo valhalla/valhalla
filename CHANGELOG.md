@@ -172,6 +172,7 @@
    * ADDED: Moves incident serializer logic into a generic serializer [#2621](https://github.com/valhalla/valhalla/pull/2621)
    * ADDED: Incident loading singleton for continually refreshing incident tiles[#2573](https://github.com/valhalla/valhalla/pull/2573)
    * ADDED: One shot mode to valhalla_service so you can run a single request of any type without starting a server [#2624](https://github.com/valhalla/valhalla/pull/2624)
+   * ADDED: Adds text instructions to OSRM output [#2625](https://github.com/valhalla/valhalla/pull/2625)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
