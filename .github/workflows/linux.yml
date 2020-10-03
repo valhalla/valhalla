@@ -23,7 +23,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: dependencies
-      run: docker/install-shared-deps.sh && mkdir ${{runner.workspace}}/build
+      run: sudo docker/install-shared-deps.sh && mkdir ${{runner.workspace}}/build
 
     - name: cmake
       shell: bash
