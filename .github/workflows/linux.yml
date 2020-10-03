@@ -4,23 +4,31 @@ on: push
 jobs:
   
   lint:
-    name: Lint code base
-    runs-on: ubuntu-20.04
+    name: lint
+    runs-on: ubuntu-latest
     container: valhalla/valhalla:build-latest
     steps:
-      - name: Checkout code
+      - name: checkout
         uses: actions/checkout@v2
+
+      - name: info
+        run: uname -a
+
       - name: format
         run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
 
 
   linux_debug_64:
     needs: lint
-    name: Lint code base
-    runs-on: ubuntu-20.04
+    name: debug 64bit
+    runs-on: ubuntu-latest
     container: valhalla/valhalla:build-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: info
+        run: uname -a
 
       - name: cache
         uses: actions/cache@v2
