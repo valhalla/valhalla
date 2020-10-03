@@ -2,16 +2,25 @@ name: linux
 on: push
 
 jobs:
+  
+  lint:
+    name: Lint code base
+    runs-on: ubuntu-20.04
+    container: valhalla/valhalla:build-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: format
+        run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+
+
   linux_debug_64:
+    needs: lint
     name: Lint code base
     runs-on: ubuntu-20.04
     container: valhalla/valhalla:build-latest
     steps:
       - uses: actions/checkout@v2
-
-      - name: format
-        run: |
-          ./scripts/format.sh && ./scripts/error_on_dirty.sh
 
       - name: cache
         uses: actions/cache@v2
@@ -24,10 +33,10 @@ jobs:
 
       # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
       - name: cmake
-        run: mkdir build
-        run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
-                -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
-                -DENABLE_PYTHON_BINDINGS=On
+        run: mkdir build && cd build && \
+               cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
+               -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
+               -DENABLE_PYTHON_BINDINGS=On
 
       - name: build
         run: make -C build all -j$(nproc)
@@ -36,10 +45,9 @@ jobs:
         run: scripts/clang-tidy-only-diff.sh $(nproc)
 
       - name: package
-        run: make -C build install
-        run: make -C build package
+        run: make -C build install package
 
       # Note: run (compile) tests and make code coverage report.
       - name: coverage
-        run: make -C build coverage -j$(nproc)
-        run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+        run: make -C build coverage -j$(nproc) && \
+               /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
