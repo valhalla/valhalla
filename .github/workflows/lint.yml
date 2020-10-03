@@ -4,6 +4,7 @@ on: push
 jobs:
   linter:
     name: Lint code base
+    runs-on: ubuntu-20.04
     container: valhalla/valhalla:build-latest
     steps:
       - name: Checkout code
