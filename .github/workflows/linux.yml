@@ -6,53 +6,36 @@ jobs:
   lint:
     name: lint
     runs-on: ubuntu-latest
-    container: valhalla/valhalla:build-latest
     steps:
       - name: checkout
         uses: actions/checkout@v2
 
       - name: format
-        run: /usr/bin/docker exec ${{ job.container.id }} bash -c "./scripts/format.sh && ./scripts/error_on_dirty.sh"
+        run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
 
 
   linux_debug_64:
     needs: lint
     name: debug 64bit
-    runs-on: ubuntu-latest
-    container: valhalla/valhalla:build-latest
+    runs-on: ubuntu-20.04
+
     steps:
-      - name: checkout
-        uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
-      - name: info
-        run: uname -a
+    - name: dependencies
+      run: docker/install-shared-deps.sh && mkdir ${{runner.workspace}}/build
 
-      - name: cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.ccache
-          key: ccache-debug-linux-x86_64-${GITHUB_REF}
-          restore-keys: |
-            ccache-debug-linux-x86_64-${GITHUB_REF}
-            ccache-debug-linux-x86_64-
+    - name: cmake
+      shell: bash
+      working-directory: ${{runner.workspace}}/build
+      run: cmake .. -DCMAKE_BUILD_TYPE=Debug
 
-      # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
-      - name: cmake
-        run: mkdir build && cd build && \
-               cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
-               -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
-               -DENABLE_PYTHON_BINDINGS=On
+    - name: build
+      working-directory: ${{runner.workspace}}/build
+      shell: bash
+      run: make all -j $(nproc)
 
-      - name: build
-        run: make -C build all -j$(nproc)
-
-      - name: tidy
-        run: scripts/clang-tidy-only-diff.sh $(nproc)
-
-      - name: package
-        run: make -C build install package
-
-      # Note: run (compile) tests and make code coverage report.
-      - name: coverage
-        run: make -C build coverage -j$(nproc) && \
-               /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+    - name: test
+      working-directory: ${{runner.workspace}}/build
+      shell: bash
+      run: check -j$(nproc)
