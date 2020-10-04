@@ -1,0 +1,3 @@
+FROM valhalla/valhalla:build-latest
+COPY docker/linux-debug-ci.sh /linux-debug-ci.sh
+ENTRYPOINT ["/linux-debug-ci.sh"]
