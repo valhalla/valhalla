@@ -17,7 +17,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
 cd ..
 
 # build everything
-make -C build all -j$(nproc)
+VERBOSE=1 make -C build all -j$(nproc)
 
 # packaging
 make -C build install package

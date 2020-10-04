@@ -36,4 +36,4 @@ jobs:
       - name: build
         uses: docker://valhalla/valhalla:build-latest
         with:
-          args: docker/linux-ci.sh
+          args: .github/workflows/linux-ci.sh
