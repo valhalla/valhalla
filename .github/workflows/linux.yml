@@ -28,10 +28,10 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/.ccache
-        key: linux_debug_64-${{ github.ref }}-${{ github.run_number }}
-        restore-keys: |
-          linux_debug_64-${{ github.ref }}-
-          linux_debug_64-
+          key: linux_debug_64-${{ github.ref }}-${{ github.run_number }}
+          restore-keys: |
+            linux_debug_64-${{ github.ref }}-
+            linux_debug_64-
 
       - name: build
         uses: docker://valhalla/valhalla:build-latest
