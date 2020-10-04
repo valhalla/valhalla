@@ -17,6 +17,12 @@ jobs:
   linux_debug_64:
     needs: lint
     name: linux debug tidy
-    runs:
-      using: 'docker'
-      image: 'docker/Dockerfile-ci'
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: build
+        uses: docker://valhalla/valhalla:build-latest
+        with:
+          args: docker/linux-ci.sh
