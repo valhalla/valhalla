@@ -16,26 +16,7 @@ jobs:
 
   linux_debug_64:
     needs: lint
-    name: debug 64bit
-    runs-on: ubuntu-20.04
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: dependencies
-      run: sudo docker/install-shared-deps.sh && mkdir ${{runner.workspace}}/build
-
-    - name: cmake
-      shell: bash
-      working-directory: ${{runner.workspace}}/build
-      run: cmake .. -DCMAKE_BUILD_TYPE=Debug
-
-    - name: build
-      working-directory: ${{runner.workspace}}/build
-      shell: bash
-      run: make all -j $(nproc)
-
-    - name: test
-      working-directory: ${{runner.workspace}}/build
-      shell: bash
-      run: check -j$(nproc)
+    name: linux debug tidy
+    runs:
+      using: 'docker'
+      image: 'docker/Dockerfile-ci'
