@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 
 # configure
 # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
@@ -20,4 +21,3 @@ make install package
 # code coverage
 make -j2 coverage
 /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
-

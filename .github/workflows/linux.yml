@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - name: build
         uses: docker://valhalla/valhalla:build-latest
