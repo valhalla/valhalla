@@ -4,7 +4,7 @@ set -eo pipefail
 echo "Building with concurrency $(nproc)"
 
 # make a spot to cache the build
-mkdir .ccache
+mkdir -p .ccache
 export CCACHE_DIR=.ccache
 
 # configure
@@ -20,7 +20,7 @@ cd ..
 make -C build all -j$(nproc)
 
 # packaging
-make -C install package
+make -C build install package
 
 # extra lint
 scripts/clang-tidy-only-diff.sh $(nproc)
