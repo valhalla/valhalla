@@ -3,6 +3,10 @@ set -eo pipefail
 
 echo "Building with concurrency $(nproc)"
 
+# make a spot to cache the build
+mkdir .ccache
+export CCACHE_DIR=.ccache
+
 # configure
 # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
 mkdir build
