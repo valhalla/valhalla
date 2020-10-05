@@ -45,7 +45,6 @@ protected:
     map = gurka::buildtiles(layout, ways, {}, {}, tile_dir,
                             {
                                 {"mjolnir.traffic_extract", tile_dir + "/traffic.tar"},
-                                {"mjolnir.simulate_incidents", "true"},
                             });
 
     // stage up some live traffic data
@@ -147,44 +146,34 @@ void check_incident_locations(const valhalla::Api& api,
 struct test_reader : public baldr::GraphReader {
   test_reader(const boost::property_tree::ptree& pt) : baldr::GraphReader(pt) {
     tile_extract_.reset(new baldr::GraphReader::tile_extract_t(pt));
+    enable_incidents_ = true;
   }
-  virtual std::shared_ptr<valhalla::incidents::IncidentsTile>
-  GetIncidentTile(const baldr::GraphId& tile_id) const {
+  virtual std::shared_ptr<const valhalla::IncidentsTile>
+  GetIncidentTile(const baldr::GraphId& tile_id) const override {
     auto i = incidents.find(tile_id.Tile_Base());
     if (i == incidents.cend())
       return {};
-    return std::shared_ptr<
-        valhalla::incidents::IncidentsTile>(&i->second, [](valhalla::incidents::IncidentsTile*) {});
+    return std::shared_ptr<valhalla::IncidentsTile>(&i->second, [](valhalla::IncidentsTile*) {});
   }
   void add(const baldr::GraphId& id,
-           valhalla::incidents::Location&& _incident_location,
+           valhalla::IncidentsTile::Location&& _incident_location,
            uint64_t incident_id,
            const std::string& incident_description = "") {
 
-    // Grab the incidents-tile in which we should insert both metadata and the edge-to-metadata
-    // relation
-    valhalla::incidents::IncidentsTile& incidents_tile = incidents[id.Tile_Base()];
+    // Grab the incidents-tile we need to add to
+    valhalla::IncidentsTile& incidents_tile = incidents[id.Tile_Base()];
 
-    uint32_t metadata_index = 0;
-    valhalla::incidents::Metadata* metadata = nullptr;
-    // Check if this incident is already tracked
-    for (auto& meta : *incidents_tile.mutable_metadata()) {
-      if (incident_id == meta.id()) {
-        // We've already added the incident, use it instead of adding again
-        metadata = &meta;
-        break;
-      }
-      metadata_index += 1;
-    }
+    // See if we have this incident metadata already
+    int metadata_index =
+        std::find_if(incidents_tile.metadata().begin(), incidents_tile.metadata().end(),
+                     [incident_id](const valhalla::IncidentsTile::Metadata& m) {
+                       return incident_id == m.id();
+                     }) -
+        incidents_tile.metadata().begin();
 
-    if (metadata == nullptr) {
-      // We're not yet tracking this incident, so add it new
-
-      // Grab the index of where this new incident will live in the array
-      metadata_index = incidents_tile.metadata().size();
-
-      // Add the incident metadata to the array
-      valhalla::incidents::Metadata* metadata = incidents_tile.mutable_metadata()->Add();
+    // We're not yet tracking this incident, so add it new
+    if (metadata_index == incidents_tile.metadata_size()) {
+      auto* metadata = incidents_tile.mutable_metadata()->Add();
       metadata->set_id(incident_id);
       metadata->set_description(incident_description);
     }
@@ -197,7 +186,8 @@ struct test_reader : public baldr::GraphReader {
   void sort() {
     for (auto& kv : incidents) {
       std::sort(kv.second.mutable_locations()->begin(), kv.second.mutable_locations()->end(),
-                [](const valhalla::incidents::Location& a, const valhalla::incidents::Location& b) {
+                [](const valhalla::IncidentsTile::Location& a,
+                   const valhalla::IncidentsTile::Location& b) {
                   if (a.edge_index() == b.edge_index()) {
                     if (a.start_offset() == b.start_offset()) {
                       if (a.end_offset() == b.end_offset()) {
@@ -211,13 +201,13 @@ struct test_reader : public baldr::GraphReader {
                 });
     }
   }
-  mutable std::unordered_map<baldr::GraphId, valhalla::incidents::IncidentsTile> incidents;
+  mutable std::unordered_map<baldr::GraphId, valhalla::IncidentsTile> incidents;
 };
 
 // Helper factory function
-valhalla::incidents::Location
+valhalla::IncidentsTile::Location
 createIncidentLocation(uint32_t edge_index, float start_offset, float end_offset) {
-  valhalla::incidents::Location edge;
+  valhalla::IncidentsTile::Location edge;
   edge.set_edge_index(edge_index);
   edge.set_start_offset(start_offset);
   edge.set_end_offset(end_offset);

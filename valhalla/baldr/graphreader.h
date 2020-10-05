@@ -26,7 +26,7 @@ namespace valhalla {
 namespace baldr {
 
 struct IncidentResult {
-  std::shared_ptr<incidents::IncidentsTile> tile;
+  std::shared_ptr<const IncidentsTile> tile;
   // Index into the Location array
   int start_index;
   // Index into the Location array
@@ -809,12 +809,7 @@ public:
    * @param tile_id  the tile id for which incidents should be returned
    * @return the incident tile for the tile id
    */
-  virtual std::shared_ptr<valhalla::incidents::IncidentsTile> GetIncidentTile(const GraphId&) const {
-    // TODO: hook this up to the incident loading singleton from the pr:
-    // https://github.com/valhalla/valhalla/pull/2573
-    // return incident_singleton_t::get(tile_id.Tile_Base());
-    return {};
-  }
+  virtual std::shared_ptr<const IncidentsTile> GetIncidentTile(const GraphId& tile_id) const;
 
   /**
    * Returns a vector of incidents for the given edge
@@ -851,14 +846,13 @@ protected:
 
   std::unique_ptr<TileCache> cache_;
 
-  // TODO: delete me when incident singleton is ready
-  bool simulate_incidents_;
+  bool enable_incidents_;
 };
 
 // Given the Location relation, return the full metadata
-const valhalla::incidents::Metadata&
-grabMetadataFromEdgeRelation(const std::shared_ptr<valhalla::incidents::IncidentsTile>& tile,
-                             const valhalla::incidents::Location& incident_location);
+const valhalla::IncidentsTile::Metadata&
+getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
+                    const valhalla::IncidentsTile::Location& incident_location);
 } // namespace baldr
 } // namespace valhalla
 

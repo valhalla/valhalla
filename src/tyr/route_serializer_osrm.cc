@@ -972,7 +972,8 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
                            const std::string& mode,
                            const std::string& prev_mode,
                            const bool rotary,
-                           const bool prev_rotary) {
+                           const bool prev_rotary,
+                           const valhalla::Options& options) {
   auto osrm_man = json::map({});
 
   // Set the location
@@ -995,6 +996,10 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
     modifier = turn_modifier(maneuver, etp, in_brg, out_brg, arrive_maneuver);
     if (!modifier.empty())
       osrm_man->emplace("modifier", modifier);
+  }
+
+  if (options.directions_type() == DirectionsType::instructions) {
+    osrm_man->emplace("instruction", maneuver.text_instruction());
   }
 
   // TODO - logic to convert maneuver types from Valhalla into OSRM maneuver types.
@@ -1351,7 +1356,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       step->emplace("maneuver",
                     osrm_maneuver(maneuver, &etp, shape[maneuver.begin_shape_index()],
                                   depart_maneuver, arrive_maneuver, prev_intersection_count, mode,
-                                  prev_mode, rotary, prev_rotary));
+                                  prev_mode, rotary, prev_rotary, options));
 
       // Add destinations
       const auto& sign = maneuver.sign();
@@ -1562,17 +1567,23 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
     incident->set_begin_shape_index(42);
     incident->set_end_shape_index(42);
 
-    valhalla::incidents::Metadata meta;
-    meta.set_id(1337);
+    valhalla::IncidentsTile::Metadata meta;
+    meta.set_id(
+        // Set a large id that excercises the uint64 serialization
+        18446744073709551615u);
     uint64_t creation_time = 1597241829;
     meta.set_creation_time(creation_time);
     meta.set_start_time(creation_time + 100);
     meta.set_end_time(creation_time + 1800);
-    meta.set_type(valhalla::incidents::Metadata::WEATHER);
-    meta.set_impact(valhalla::incidents::Metadata_Impact_MAJOR);
+    meta.set_type(valhalla::IncidentsTile::Metadata::WEATHER);
+    meta.set_impact(valhalla::IncidentsTile::Metadata::MAJOR);
+    meta.set_description("fooing foo");
+    meta.set_long_description("long fooing foo");
     meta.set_sub_type("foo");
     meta.set_sub_type_description("foobar");
     meta.set_road_closed(true);
+    meta.set_num_lanes_blocked(2);
+    meta.set_clear_lanes("many lanes clear");
     meta.mutable_congestion()->set_value(33);
     meta.add_alertc_codes(11);
     meta.set_iso_3166_1_alpha2("AU");
@@ -1592,17 +1603,21 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
     expected_json.Parse(R"({
       "incidents": [
         {
-          "id": 1337,
+          "id": 18446744073709551615,
           "type": "weather",
           "iso_3166_1_alpha2": "AU",
           "creation_time": "2020-08-12T14:17:09Z",
           "start_time": "2020-08-12T14:18:49Z",
           "end_time": "2020-08-12T14:47:09Z",
           "impact": "major",
+          "description": "fooing foo",
+          "long_description": "long fooing foo",
           "sub_type": "foo",
           "sub_type_description": "foobar",
           "alertc_codes": [ 11 ],
           "lanes_blocked": [],
+          "num_lanes_blocked": 2,
+          "clear_lanes": "many lanes clear",
           "closed": true,
           "congestion": {
             "value": 33
@@ -1636,11 +1651,11 @@ TEST(RouteSerializerOsrm, testserializeIncidentsMultipleIncidentsSingleEdge) {
       incident->set_begin_shape_index(87);
       incident->set_end_shape_index(92);
 
-      valhalla::incidents::Metadata meta;
+      valhalla::IncidentsTile::Metadata meta;
       meta.set_id(1337);
       meta.set_description("Fooo");
       meta.set_creation_time(creation_time);
-      meta.set_type(valhalla::incidents::Metadata::WEATHER);
+      meta.set_type(valhalla::IncidentsTile::Metadata::WEATHER);
       meta.set_iso_3166_1_alpha2("SE");
       *incident->mutable_metadata() = meta;
     }
@@ -1651,12 +1666,12 @@ TEST(RouteSerializerOsrm, testserializeIncidentsMultipleIncidentsSingleEdge) {
       incident->set_begin_shape_index(21);
       incident->set_end_shape_index(104);
 
-      valhalla::incidents::Metadata meta;
+      valhalla::IncidentsTile::Metadata meta;
       meta.set_id(2448);
       meta.set_creation_time(creation_time);
       meta.set_start_time(creation_time + 100);
       meta.set_end_time(creation_time + 1800);
-      meta.set_type(valhalla::incidents::Metadata::ACCIDENT);
+      meta.set_type(valhalla::IncidentsTile::Metadata::ACCIDENT);
       meta.set_iso_3166_1_alpha2("SE");
       *incident->mutable_metadata() = meta;
     }

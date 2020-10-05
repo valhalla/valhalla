@@ -1,20 +1,20 @@
-#include "baldr/graphreader.h"
-
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <sys/stat.h>
 
-#include "midgard/encoded.h"
-#include "midgard/logging.h"
-
 #include "baldr/connectivity_map.h"
 #include "baldr/curl_tilegetter.h"
+#include "baldr/graphreader.h"
 #include "filesystem.h"
+#include "incident_singleton.h"
+#include "midgard/encoded.h"
+#include "midgard/logging.h"
 
 using namespace valhalla::midgard;
 
 namespace {
+
 constexpr size_t DEFAULT_MAX_CACHE_SIZE = 1073741824; // 1 gig
 constexpr size_t AVERAGE_TILE_SIZE = 2097152;         // 2 megs
 constexpr size_t AVERAGE_MM_TILE_SIZE = 1024;         // 1k
@@ -346,8 +346,9 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
     : tile_extract_(get_extract_instance(pt)), tile_dir_(pt.get<std::string>("tile_dir", "")),
       tile_getter_(std::move(tile_getter)),
       max_concurrent_users_(pt.get<size_t>("max_concurrent_reader_users", 1)),
-      tile_url_(pt.get<std::string>("tile_url", "")), cache_(TileCacheFactory::createTileCache(pt)),
-      simulate_incidents_(pt.get<bool>("simulate_incidents", 0)) {
+      tile_url_(pt.get<std::string>("tile_url", "")), cache_(TileCacheFactory::createTileCache(pt)) {
+
+  // Make a tile fetcher if we havent passed one in from somewhere else
   if (!tile_getter_ && !tile_url_.empty()) {
     tile_getter_ = std::make_unique<curl_tile_getter_t>(max_concurrent_users_,
                                                         pt.get<std::string>("user_agent", ""),
@@ -357,9 +358,21 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
   // validate tile url
   if (!tile_url_.empty() && tile_url_.find(GraphTile::kTilePathPattern) == std::string::npos)
     throw std::runtime_error("Not found tilePath pattern in tile url");
+
   // Reserve cache (based on whether using individual tile files or shared,
   // mmap'd file
   cache_->Reserve(tile_extract_->tiles.empty() ? AVERAGE_TILE_SIZE : AVERAGE_MM_TILE_SIZE);
+
+  // Initialize the incident cache singleton if we have any kind of configuration to do so. if the
+  // configuration is wrong or any kind of problem occurs this throws. the call below will spawn a
+  // single background thread which is responsible for loading incidents continually
+  enable_incidents_ = !pt.get<std::string>("incident_log", "").empty() ||
+                      !pt.get<std::string>("incident_dir", "").empty();
+  if (enable_incidents_) {
+    incident_singleton_t::get({}, pt,
+                              tile_extract_->tiles.empty() ? std::unordered_set<GraphId>{}
+                                                           : GetTileSet());
+  }
 }
 
 // Method to test if tile exists
@@ -689,8 +702,8 @@ std::vector<GraphId> GraphReader::RecoverShortcut(const GraphId& shortcut_id) {
     for (const DirectedEdge& edge : tile->GetDirectedEdges(node_index)) {
       // are they the same enough that its part of the shortcut
       // NOTE: this fails in about .05% of cases where there are two candidates and its not clear
-      // which edge is the right one. looking at shortcut builder its not obvious how this is possible
-      // as it seems to terminate a shortcut if more than one edge pair can be contracted...
+      // which edge is the right one. looking at shortcut builder its not obvious how this is
+      // possible as it seems to terminate a shortcut if more than one edge pair can be contracted...
       // NOTE: because we change the speed of the edge in graph enhancer we cant use speed as a
       // reliable determining factor
       if (begin_node != edge.endnode() && !edge.is_shortcut() &&
@@ -880,10 +893,16 @@ int GraphReader::GetTimezone(const baldr::GraphId& node, const GraphTile*& tile)
   return (tile == nullptr) ? 0 : tile->node(node)->timezone();
 }
 
+std::shared_ptr<const valhalla::IncidentsTile>
+GraphReader::GetIncidentTile(const GraphId& tile_id) const {
+  return enable_incidents_ ? incident_singleton_t::get(tile_id.Tile_Base())
+                           : std::shared_ptr<valhalla::IncidentsTile>{};
+}
+
 IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile*& tile) {
   // if we are not doing this for any reason then bail
-  std::shared_ptr<valhalla::incidents::IncidentsTile> itile;
-  if (!simulate_incidents_ || !GetGraphTile(edge_id, tile) ||
+  std::shared_ptr<const valhalla::IncidentsTile> itile;
+  if (!enable_incidents_ || !GetGraphTile(edge_id, tile) ||
       !tile->trafficspeed(tile->directededge(edge_id)).has_incidents ||
       !(itile = GetIncidentTile(edge_id))) {
     return {};
@@ -891,16 +910,15 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile
 
   // get the range of incidents we care about and hand it back, equal_range has no lambda option
   auto begin = std::partition_point(itile->locations().begin(), itile->locations().end(),
-                                    [&edge_id](const valhalla::incidents::Location& candidate) {
+                                    [&edge_id](const valhalla::IncidentsTile::Location& candidate) {
                                       // first one that is >= the id we want
                                       bool is_found = candidate.edge_index() < edge_id.id();
                                       return is_found;
                                     });
   auto end = std::partition_point(begin, itile->locations().end(),
-                                  [&edge_id](const valhalla::incidents::Location& candidate) {
-                                    bool is_found =
-                                        candidate.edge_index() <=
-                                        edge_id.id(); // first one that is > the id we want
+                                  [&edge_id](const valhalla::IncidentsTile::Location& candidate) {
+                                    // first one that is > the id we want
+                                    bool is_found = candidate.edge_index() <= edge_id.id();
                                     return is_found;
                                   });
 
@@ -910,9 +928,9 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile
   return {itile, begin_index, end_index};
 }
 
-const valhalla::incidents::Metadata&
-grabMetadataFromEdgeRelation(const std::shared_ptr<valhalla::incidents::IncidentsTile>& tile,
-                             const valhalla::incidents::Location& incident_location) {
+const valhalla::IncidentsTile::Metadata&
+getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
+                    const valhalla::IncidentsTile::Location& incident_location) {
   auto metadata_index = incident_location.metadata_index();
   if (metadata_index >= tile->metadata_size()) {
     throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
