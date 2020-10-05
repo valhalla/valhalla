@@ -26,41 +26,6 @@ namespace {
 constexpr time_t DEFAULT_MAX_LOADING_LATENCY = 60;
 constexpr size_t DEFAULT_MAX_LATENT_COUNT = 5;
 
-/**
- * Read the contents of a file into an incident tile
- * @param filename   name of the file on the file system to read into memory
- * @return a shared pointer with the data of the tile or an empty pointer if it could not be read
- */
-std::shared_ptr<const valhalla::IncidentsTile> read_tile(const std::string& filename) {
-  // crack the file open
-  std::ifstream file(filename, std::ios::in | std::ios::binary);
-  if (!file.is_open()) {
-    LOG_WARN("Incident Watcher failed to open " + filename);
-    return {};
-  }
-
-  // prepare a stream for parsing
-  std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-  google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
-  google::protobuf::io::CodedInputStream cs(
-      static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
-
-  // try to parse the stream
-  std::shared_ptr<valhalla::IncidentsTile> tile(new valhalla::IncidentsTile);
-  if (!tile->ParseFromCodedStream(&cs)) {
-    LOG_WARN("Incident Watcher failed to parse " + filename);
-    return {};
-  }
-
-  // dont store empty tiles no point
-  if (tile->locations_size() == 0) {
-    return {};
-  }
-
-  // hand back something that isnt modifyable
-  return std::const_pointer_cast<const valhalla::IncidentsTile>(tile);
-}
-
 struct incident_singleton_t {
 protected:
   // parameter pack to share state between daemon thread and singleton instance
@@ -103,6 +68,42 @@ protected:
   }
 
   /**
+   * Read the contents of a file into an incident tile
+   * @param filename   name of the file on the file system to read into memory
+   * @return a shared pointer with the data of the tile or an empty pointer if it could not be read
+   */
+  static std::shared_ptr<const valhalla::IncidentsTile> read_tile(const std::string& filename) {
+    // crack the file open
+    std::ifstream file(filename, std::ios::in | std::ios::binary);
+    if (!file.is_open()) {
+      LOG_WARN("Incident Watcher failed to open " + filename);
+      return {};
+    }
+
+    // prepare a stream for parsing
+    std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()),
+                                              buffer.size());
+    google::protobuf::io::CodedInputStream cs(
+        static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
+
+    // try to parse the stream
+    std::shared_ptr<valhalla::IncidentsTile> tile(new valhalla::IncidentsTile);
+    if (!tile->ParseFromCodedStream(&cs)) {
+      LOG_WARN("Incident Watcher failed to parse " + filename);
+      return {};
+    }
+
+    // dont store empty tiles no point
+    if (tile->locations_size() == 0) {
+      return {};
+    }
+
+    // hand back something that isnt modifyable
+    return std::const_pointer_cast<const valhalla::IncidentsTile>(tile);
+  }
+
+  /**
    * Updates the tile in the states cache
    * @param state     the state to update
    * @param tile_id   the tile id we are loading
@@ -111,9 +112,7 @@ protected:
    */
   static bool update_tile(const std::shared_ptr<state_t>& state,
                           const valhalla::baldr::GraphId& tile_id,
-                          const std::string& path) {
-    // load the tile
-    auto tile = read_tile(path);
+                          std::shared_ptr<const valhalla::IncidentsTile>&& tile) {
     // see if we have a slot
     auto found = state->cache.find(tile_id);
     // if we dont have a slot make one, this must be synchronized
@@ -224,7 +223,7 @@ protected:
             file_location.replace_filename(
                 valhalla::baldr::GraphTile::FileSuffix(tile_id, ".pbf", true));
             // update the tile
-            update_count += update_tile(state, tile_id, file_location.string());
+            update_count += update_tile(state, tile_id, read_tile(file_location.string()));
           }
         }
       } // we are in directory scan mode
@@ -239,7 +238,7 @@ protected:
                 (tile_id = valhalla::baldr::GraphTile::GetTileId(i->path().string())).Is_Valid() &&
                 stat(i->path().c_str(), &s) == 0 && last_scan <= MTIME(s)) {
               // update the tile
-              update_count += update_tile(state, tile_id, i->path().string());
+              update_count += update_tile(state, tile_id, read_tile(i->path().string()));
             }
           } catch (...) { LOG_WARN("Incident watcher ignoring " + i->path().string()); }
         }
