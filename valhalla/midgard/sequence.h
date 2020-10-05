@@ -23,14 +23,14 @@
 
 #include <valhalla/filesystem.h>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <io.h>
 #define stat _stat64
 #else
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#endif // _MSC_VER
+#endif // _WIN32
 #include <fcntl.h>
 
 // if we are on android
@@ -49,7 +49,7 @@
 #endif
 #endif
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
@@ -172,7 +172,7 @@ public:
     // has to be something to map
     if (new_count > 0) {
       auto fd =
-#if defined(_MSC_VER)
+#if defined(_WIN32)
           _open(new_file_name.c_str(), O_RDWR, 0);
 #else
           open(new_file_name.c_str(), O_RDWR, 0);
@@ -185,7 +185,7 @@ public:
         throw std::runtime_error(new_file_name + "(mmap): " + strerror(errno));
       }
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
       auto cl = _close(fd);
 #else
       auto cl = close(fd);
