@@ -76,6 +76,11 @@ actor_t::route(const std::string& request_str, const std::function<void()>* inte
   }
   return bytes;
 }
+/*
+std::string actor_t::route(const std::string& request_str) {
+  return actor_t::route(request_str, new std::function<void()>, new Api());
+}
+*/
 
 std::string
 actor_t::locate(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {

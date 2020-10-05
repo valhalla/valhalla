@@ -21,6 +21,7 @@ public:
   std::string route(const std::string& request_str,
                     const std::function<void()>* interrupt = nullptr,
                     Api* api = nullptr);
+  /*std::string route(const std::string& request_str);*/
   std::string locate(const std::string& request_str,
                      const std::function<void()>* interrupt = nullptr,
                      Api* api = nullptr);
