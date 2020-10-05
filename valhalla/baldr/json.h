@@ -29,9 +29,13 @@ struct fp_t {
   friend std::ostream& operator<<(std::ostream& stream, const fp_t&);
 };
 
+struct RawJSON {
+  std::string data;
+};
+
 // a variant of all the possible values to go with keys in json
-using Value =
-    boost::variant<std::string, uint64_t, int64_t, fp_t, bool, std::nullptr_t, MapPtr, ArrayPtr>;
+using Value = boost::
+    variant<std::string, uint64_t, int64_t, fp_t, bool, std::nullptr_t, MapPtr, ArrayPtr, RawJSON>;
 
 // the map value type in json
 class Jmap : public std::unordered_map<std::string, Value> {
@@ -122,6 +126,10 @@ public:
   }
   std::ostream& operator()(std::nullptr_t) const {
     return ostream_ << "null";
+  }
+
+  std::ostream& operator()(const RawJSON& value) const {
+    return ostream_ << value.data;
   }
 
   template <class Nullable> std::ostream& operator()(const Nullable& value) const {

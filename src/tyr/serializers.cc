@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "baldr/datetime.h"
 #include "baldr/json.h"
 #include "baldr/openlr.h"
 #include "baldr/rapidjson_utils.h"
@@ -17,8 +18,10 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "odin/util.h"
+#include "proto_conversions.h"
 #include "tyr/serializers.h"
 
+#include "proto/incidents.pb.h"
 #include "proto/options.pb.h"
 #include "proto/trip.pb.h"
 
@@ -134,6 +137,108 @@ json::ArrayPtr waypoints(const valhalla::Trip& trip) {
     }
   }
   return waypoints;
+}
+
+void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
+                                 const valhalla::IncidentsTile::Metadata& incident_metadata,
+                                 const int begin_shape_index,
+                                 const int end_shape_index,
+                                 const std::string& road_class,
+                                 const std::string& key_prefix) {
+  writer.Key(key_prefix + "id");
+  writer.Uint64(incident_metadata.id());
+  {
+    // Type is mandatory
+    writer.Key(key_prefix + "type");
+    writer.String(std::string(valhalla::incidentTypeToString(incident_metadata.type())));
+  }
+  if (!incident_metadata.iso_3166_1_alpha2().empty()) {
+    writer.Key(key_prefix + "iso_3166_1_alpha2");
+    writer.String(incident_metadata.iso_3166_1_alpha2());
+  }
+  if (!incident_metadata.description().empty()) {
+    writer.Key(key_prefix + "description");
+    writer.String(incident_metadata.description());
+  }
+  if (!incident_metadata.long_description().empty()) {
+    writer.Key(key_prefix + "long_description");
+    writer.String(incident_metadata.long_description());
+  }
+  if (incident_metadata.creation_time()) {
+    writer.Key(key_prefix + "creation_time");
+    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.creation_time()));
+  }
+  if (incident_metadata.start_time() > 0) {
+    writer.Key(key_prefix + "start_time");
+    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.start_time()));
+  }
+  if (incident_metadata.end_time()) {
+    writer.Key(key_prefix + "end_time");
+    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.end_time()));
+  }
+  if (incident_metadata.impact()) {
+    writer.Key(key_prefix + "impact");
+    writer.String(std::string(valhalla::incidentImpactToString(incident_metadata.impact())));
+  }
+  if (!incident_metadata.sub_type().empty()) {
+    writer.Key(key_prefix + "sub_type");
+    writer.String(incident_metadata.sub_type());
+  }
+  if (!incident_metadata.sub_type_description().empty()) {
+    writer.Key(key_prefix + "sub_type_description");
+    writer.String(incident_metadata.sub_type_description());
+  }
+  if (incident_metadata.alertc_codes_size() > 0) {
+    writer.Key(key_prefix + "alertc_codes");
+    writer.StartArray();
+    for (const auto& alertc_code : incident_metadata.alertc_codes()) {
+      writer.Int(static_cast<uint64_t>(alertc_code));
+    }
+    writer.EndArray();
+  }
+  {
+    writer.Key(key_prefix + "lanes_blocked");
+    writer.StartArray();
+    for (const auto& blocked_lane : incident_metadata.lanes_blocked()) {
+      writer.String(blocked_lane);
+    }
+    writer.EndArray();
+  }
+  if (incident_metadata.num_lanes_blocked()) {
+    writer.Key(key_prefix + "num_lanes_blocked");
+    writer.Int(incident_metadata.num_lanes_blocked());
+  }
+  if (!incident_metadata.clear_lanes().empty()) {
+    writer.Key(key_prefix + "clear_lanes");
+    writer.String(incident_metadata.clear_lanes());
+  }
+
+  if (incident_metadata.road_closed()) {
+    writer.Key(key_prefix + "closed");
+    writer.Bool(incident_metadata.road_closed());
+  }
+  if (!road_class.empty()) {
+    writer.Key(key_prefix + "class");
+    writer.String(road_class);
+  }
+
+  if (incident_metadata.has_congestion()) {
+    writer.Key(key_prefix + "congestion");
+    writer.StartObject();
+    writer.Key("value");
+    writer.Int(incident_metadata.congestion().value());
+    writer.EndObject();
+  }
+
+  if (begin_shape_index >= 0) {
+    writer.Key(key_prefix + "geometry_index_start");
+    writer.Int(begin_shape_index);
+  }
+  if (end_shape_index >= 0) {
+    writer.Key(key_prefix + "geometry_index_end");
+    writer.Int(end_shape_index);
+  }
+  // TODO Add test of lanes blocked and add missing properties
 }
 
 } // namespace osrm

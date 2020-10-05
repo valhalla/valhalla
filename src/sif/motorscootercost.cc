@@ -304,15 +304,13 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  float Filter(const baldr::DirectedEdge* edge,
-               const baldr::GraphId& edgeid,
-               const baldr::GraphTile* tile) const override {
+  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
 
     if (edge->is_shortcut() || !accessible || edge->surface() > kMinimumScooterSurface ||
-        edge->bss_connection() || IsClosedDueToTraffic(edgeid, tile)) {
+        edge->bss_connection() || IsClosed(edge, tile)) {
       return 0.0f;
     } else {
       // TODO - use classification/use to alter the factor
@@ -390,8 +388,7 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       (edge->surface() > kMinimumScooterSurface) || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      IsClosedDueToTraffic(edgeid, tile)) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) || IsClosed(edge, tile)) {
     return false;
   }
 
@@ -415,7 +412,7 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       (opp_edge->surface() > kMinimumScooterSurface) || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      IsClosedDueToTraffic(opp_edgeid, tile)) {
+      IsClosed(opp_edge, tile)) {
     return false;
   }
 

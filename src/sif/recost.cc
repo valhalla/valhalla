@@ -51,7 +51,7 @@ void recost_forward(baldr::GraphReader& reader,
   }
 
   // fail if the first edge is filtered
-  if (costing.Filter(edge, edge_id, tile) == 0.f) {
+  if (costing.Filter(edge, tile) == 0.f) {
     throw std::runtime_error("This path requires different edge access than this costing allows");
   }
 

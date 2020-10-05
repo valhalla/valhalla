@@ -274,14 +274,11 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  float Filter(const baldr::DirectedEdge* edge,
-               const baldr::GraphId& edgeid,
-               const baldr::GraphTile* tile) const override {
+  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-    if (edge->is_shortcut() || !accessible || edge->bss_connection() ||
-        IsClosedDueToTraffic(edgeid, tile)) {
+    if (edge->is_shortcut() || !accessible || edge->bss_connection() || IsClosed(edge, tile)) {
       return 0.0f;
     } else {
       // TODO - use classification/use to alter the factor
@@ -373,8 +370,7 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      IsClosedDueToTraffic(edgeid, tile)) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) || IsClosed(edge, tile)) {
     return false;
   }
 
@@ -398,7 +394,7 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      IsClosedDueToTraffic(opp_edgeid, tile)) {
+      IsClosed(opp_edge, tile)) {
     return false;
   }
 
@@ -794,13 +790,11 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by bus.
    */
-  float Filter(const baldr::DirectedEdge* edge,
-               const baldr::GraphId& edgeid,
-               const baldr::GraphTile* tile) const override {
+  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-    if (!accessible || IsClosedDueToTraffic(edgeid, tile)) {
+    if (!accessible || IsClosed(edge, tile)) {
       return 0.0f;
     } else {
       // TODO - use classification/use to alter the factor
@@ -822,8 +816,7 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      IsClosedDueToTraffic(edgeid, tile)) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) || IsClosed(edge, tile)) {
     return false;
   }
 
@@ -847,7 +840,7 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      IsClosedDueToTraffic(opp_edgeid, tile)) {
+      IsClosed(opp_edge, tile)) {
     return false;
   }
 
@@ -965,13 +958,11 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by hov.
    */
-  float Filter(const baldr::DirectedEdge* edge,
-               const baldr::GraphId& edgeid,
-               const baldr::GraphTile* tile) const override {
+  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-    if (!accessible || IsClosedDueToTraffic(edgeid, tile)) {
+    if (!accessible || IsClosed(edge, tile)) {
       return 0.0f;
     } else {
       // TODO - use classification/use to alter the factor
@@ -995,8 +986,7 @@ bool HOVCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      IsClosedDueToTraffic(edgeid, tile)) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) || IsClosed(edge, tile)) {
     return false;
   }
 
@@ -1020,7 +1010,7 @@ bool HOVCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      IsClosedDueToTraffic(opp_edgeid, tile)) {
+      IsClosed(opp_edge, tile)) {
     return false;
   }
 
@@ -1138,13 +1128,11 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by taxi.
    */
-  float Filter(const baldr::DirectedEdge* edge,
-               const baldr::GraphId& edgeid,
-               const baldr::GraphTile* tile) const override {
+  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-    if (!accessible || IsClosedDueToTraffic(edgeid, tile)) {
+    if (!accessible || IsClosed(edge, tile)) {
       return 0.0f;
     } else {
       // TODO - use classification/use to alter the factor
@@ -1168,8 +1156,7 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      IsClosedDueToTraffic(edgeid, tile)) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) || IsClosed(edge, tile)) {
     return false;
   }
 
@@ -1193,7 +1180,7 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      IsClosedDueToTraffic(opp_edgeid, tile)) {
+      IsClosed(opp_edge, tile)) {
     return false;
   }
   return DynamicCost::EvaluateRestrictions(access_mask_, edge, tile, opp_edgeid, current_time,
@@ -1288,16 +1275,14 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by auto in either direction.
    */
-  float Filter(const baldr::DirectedEdge* edge,
-               const baldr::GraphId& edgeid,
-               const baldr::GraphTile* tile) const override {
+  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     // Do not allow edges with no auto access in either direction
     bool allow_forward = edge->forwardaccess() & access_mask;
     bool allow_reverse = edge->reverseaccess() & access_mask;
     bool accessible = (allow_forward && allow_reverse) || (ignore_oneways_ && allow_reverse);
 
-    if (!accessible || IsClosedDueToTraffic(edgeid, tile)) {
+    if (!accessible || IsClosed(edge, tile)) {
       return 0.0f;
     } else {
       return 1.0f;

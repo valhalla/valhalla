@@ -98,10 +98,15 @@ void AssignAdmins(const AttributesController& controller,
  * @param incident   the incident that applies
  * @param index      what shape index of the leg the index apples to
  */
-void UpdateIncident(TripLeg& leg, const baldr::GraphReader::Incident* incident, uint32_t index) {
+void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incidents_tile,
+                    TripLeg& leg,
+                    const valhalla::IncidentsTile::Location* incident_location,
+                    uint32_t index) {
+  const uint64_t current_incident_id =
+      valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location).id();
   auto found = std::find_if(leg.mutable_incidents()->begin(), leg.mutable_incidents()->end(),
-                            [incident](const valhalla::TripLeg::Incident& i) {
-                              return i.id() == incident->id;
+                            [current_incident_id](const TripLeg::Incident& candidate) {
+                              return current_incident_id == candidate.metadata().id();
                             });
   // Are we continuing an incident (this could be a hash look up)
   if (found != leg.mutable_incidents()->end()) {
@@ -109,10 +114,13 @@ void UpdateIncident(TripLeg& leg, const baldr::GraphReader::Incident* incident, 
   } // We are starting a new incident
   else {
     auto* new_incident = leg.mutable_incidents()->Add();
-    new_incident->set_id(incident->id);
+
+    // Get the full incident metadata from the incident-tile
+    const auto& meta = valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location);
+    *new_incident->mutable_metadata() = meta;
+
     new_incident->set_begin_shape_index(index);
     new_incident->set_end_shape_index(index);
-    // TODO: copy the rest of the metadata
   }
 }
 
@@ -142,13 +150,14 @@ void SetShapeAttributes(const AttributesController& controller,
                         double tgt_pct,
                         double edge_seconds,
                         bool cut_for_traffic,
-                        const std::vector<baldr::GraphReader::Incident>& incidents) {
+                        const valhalla::baldr::IncidentResult& incidents) {
   // TODO: if this is a transit edge then the costing will throw
 
   // bail if nothing to do
-  if (!cut_for_traffic && incidents.empty() &&
-      !controller.category_attribute_enabled(kShapeAttributesCategory))
+  if (!cut_for_traffic && incidents.start_index == incidents.end_index &&
+      !controller.category_attribute_enabled(kShapeAttributesCategory)) {
     return;
+  }
 
   // initialize shape_attributes once
   if (!leg.has_shape_attributes() &&
@@ -161,7 +170,7 @@ void SetShapeAttributes(const AttributesController& controller,
     double percent_along;
     double speed; // meters per second
     uint8_t congestion;
-    std::vector<const baldr::GraphReader::Incident*> incidents;
+    std::vector<const valhalla::IncidentsTile::Location*> incidents;
   };
 
   // A list of percent along the edge, corresponding speed (meters per second), incident id
@@ -192,19 +201,26 @@ void SetShapeAttributes(const AttributesController& controller,
   }
 
   // sort the start and ends of the incidents along this edge
-  for (const auto& incident : incidents) {
+  for (auto incident_location_index = incidents.start_index;
+       incident_location_index != incidents.end_index; ++incident_location_index) {
+    if (incident_location_index >= incidents.tile->locations_size()) {
+      throw std::logic_error(
+          "invalid incident_location_index: " + std::to_string(incident_location_index) + " vs " +
+          std::to_string(incidents.tile->locations_size()));
+    }
+    const auto& incident = incidents.tile->locations(incident_location_index);
     // if the incident is actually on the part of the edge we are using
-    if (incident.start_offset > tgt_pct || incident.end_offset < src_pct)
+    if (incident.start_offset() > tgt_pct || incident.end_offset() < src_pct)
       continue;
     // insert the start point and end points
     for (auto offset : {
-             std::max(incident.start_offset, src_pct),
-             std::min(incident.end_offset, tgt_pct),
+             std::max((double)incident.start_offset(), src_pct),
+             std::min((double)incident.end_offset(), tgt_pct),
          }) {
       // if this is clipped at the beginning of the edge then its not a new cut but we still need to
       // attach the incidents information to the leg
       if (offset == src_pct) {
-        UpdateIncident(leg, &incident, shape_begin);
+        UpdateIncident(incidents.tile, leg, &incident, shape_begin);
         continue;
       }
 
@@ -272,7 +288,7 @@ void SetShapeAttributes(const AttributesController& controller,
     // Set the incidents if we just cut or we are at the end
     if ((shift || i == shape.size() - 1) && !cut_itr->incidents.empty()) {
       for (const auto* incident : cut_itr->incidents) {
-        UpdateIncident(leg, incident, i);
+        UpdateIncident(incidents.tile, leg, incident, i);
       }
     }
 
@@ -1271,7 +1287,8 @@ void TripLegBuilder::Build(
     // Set shape attributes, sending incidents enables them in the pbf
     auto incidents = controller.attributes.at(kIncidents)
                          ? graphreader.GetIncidents(edge_itr->edgeid, graphtile)
-                         : std::vector<GraphReader::Incident>{};
+                         : valhalla::baldr::IncidentResult{};
+
     SetShapeAttributes(controller, graphtile, directededge, trip_shape, begin_index, trip_path,
                        trim_start_pct, trim_end_pct, edge_seconds,
                        costing->flow_mask() & kCurrentFlowMask, incidents);

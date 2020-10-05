@@ -632,49 +632,43 @@ std::string exits(const valhalla::DirectionsLeg_Maneuver_Sign& sign) {
   return exits;
 }
 
-valhalla::baldr::json::MapPtr serializeIncident(const TripLeg::Incident& incident) {
-  auto metadata_json = json::map({});
-
-  metadata_json->emplace("id", incident.id());
-  if (incident.creation_time()) {
-    metadata_json->emplace("creation_time", static_cast<uint64_t>(incident.creation_time()));
-  }
-  if (incident.end_time()) {
-    metadata_json->emplace("end_time", static_cast<uint64_t>(incident.end_time()));
-  }
-  if (incident.start_time()) {
-    metadata_json->emplace("start_time", static_cast<uint64_t>(incident.start_time()));
-  }
-  if (incident.type()) {
-    metadata_json->emplace("type", valhalla::incidentTypeToString(incident.type()));
-  }
-  if (incident.has_description() && !incident.description().empty()) {
-    metadata_json->emplace("description", incident.description());
-  }
-  if (incident.has_begin_shape_index()) {
-    metadata_json->emplace("geometry_index_start",
-                           static_cast<uint64_t>(incident.begin_shape_index()));
-  }
-  if (incident.has_end_shape_index()) {
-    metadata_json->emplace("geometry_index_end", static_cast<uint64_t>(incident.end_shape_index()));
-  }
-
-  return metadata_json;
+valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::Incident& incident) {
+  rapidjson::StringBuffer stringbuffer;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(stringbuffer);
+  writer.StartObject();
+  osrm::serializeIncidentProperties(writer, incident.metadata(),
+                                    incident.has_begin_shape_index() ? incident.begin_shape_index()
+                                                                     : -1,
+                                    incident.has_end_shape_index() ? incident.end_shape_index() : -1,
+                                    "", "");
+  writer.EndObject();
+  return {stringbuffer.GetString()};
 }
 
 // Serializes incidents and adds to json-document
-void serializeIncidents(
-    const google::protobuf::RepeatedPtrField<valhalla::TripLeg::Incident>& incidents,
-    json::MapPtr& json_leg) {
-  if (incidents.empty()) {
+void serializeIncidents(const google::protobuf::RepeatedPtrField<TripLeg::Incident>& incidents,
+                        json::Jmap& doc) {
+  if (incidents.size() == 0) {
+    // No incidents, nothing to do
     return;
   }
-  auto serialized_incidents = json::array({});
+  json::ArrayPtr serialized_incidents = std::shared_ptr<json::Jarray>(new json::Jarray());
+  {
+    // Bring up any already existing array
+    auto existing = doc.find("incidents");
+    if (existing != doc.end()) {
+      if (auto* ptr = boost::get<std::shared_ptr<valhalla::baldr::json::Jarray>>(&existing->second)) {
+        serialized_incidents = *ptr;
+      } else {
+        throw std::logic_error("Invalid state: stored ptr should not be null");
+      }
+    }
+  }
   for (const auto& incident : incidents) {
     auto json_incident = serializeIncident(incident);
     serialized_incidents->emplace_back(json_incident);
   }
-  json_leg->emplace("incidents", serialized_incidents);
+  doc.emplace("incidents", serialized_incidents);
 }
 
 // Compile and return the refs of the specified list
@@ -978,7 +972,8 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
                            const std::string& mode,
                            const std::string& prev_mode,
                            const bool rotary,
-                           const bool prev_rotary) {
+                           const bool prev_rotary,
+                           const valhalla::Options& options) {
   auto osrm_man = json::map({});
 
   // Set the location
@@ -1001,6 +996,10 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
     modifier = turn_modifier(maneuver, etp, in_brg, out_brg, arrive_maneuver);
     if (!modifier.empty())
       osrm_man->emplace("modifier", modifier);
+  }
+
+  if (options.directions_type() == DirectionsType::instructions) {
+    osrm_man->emplace("instruction", maneuver.text_instruction());
   }
 
   // TODO - logic to convert maneuver types from Valhalla into OSRM maneuver types.
@@ -1357,7 +1356,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       step->emplace("maneuver",
                     osrm_maneuver(maneuver, &etp, shape[maneuver.begin_shape_index()],
                                   depart_maneuver, arrive_maneuver, prev_intersection_count, mode,
-                                  prev_mode, rotary, prev_rotary));
+                                  prev_mode, rotary, prev_rotary, options));
 
       // Add destinations
       const auto& sign = maneuver.sign();
@@ -1466,7 +1465,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     output_leg->emplace("steps", steps);
 
     // Add incidents to the leg
-    serializeIncidents(path_leg.incidents(), output_leg);
+    serializeIncidents(path_leg.incidents(), *output_leg);
 
     // Keep the leg
     output_legs->emplace_back(output_leg);
@@ -1555,31 +1554,47 @@ void assert_json_equality(const rapidjson::Document& doc1, const rapidjson::Docu
   }
 }
 
-TEST(RouteSerializerOsrm, testAddsIncidents) {
+TEST(RouteSerializerOsrm, testserializeIncidents) {
   // Test that an incident is added correctly to the intersections-json
 
   rapidjson::Document serialized_to_json;
   {
-    auto intersection_doc = json::map({});
+    auto intersection_doc = json::Jmap();
     auto leg = TripLeg();
     // Sets up the incident
     auto incidents = leg.mutable_incidents();
     auto* incident = incidents->Add();
-    uint64_t creation_time = 1597241829;
-    incident->set_id(1337);
-    incident->set_creation_time(creation_time);
-    incident->set_start_time(creation_time + 100);
-    incident->set_end_time(creation_time + 1800);
-    incident->set_type(TripLeg::Incident::WEATHER);
     incident->set_begin_shape_index(42);
     incident->set_end_shape_index(42);
+
+    valhalla::IncidentsTile::Metadata meta;
+    meta.set_id(
+        // Set a large id that excercises the uint64 serialization
+        18446744073709551615u);
+    uint64_t creation_time = 1597241829;
+    meta.set_creation_time(creation_time);
+    meta.set_start_time(creation_time + 100);
+    meta.set_end_time(creation_time + 1800);
+    meta.set_type(valhalla::IncidentsTile::Metadata::WEATHER);
+    meta.set_impact(valhalla::IncidentsTile::Metadata::MAJOR);
+    meta.set_description("fooing foo");
+    meta.set_long_description("long fooing foo");
+    meta.set_sub_type("foo");
+    meta.set_sub_type_description("foobar");
+    meta.set_road_closed(true);
+    meta.set_num_lanes_blocked(2);
+    meta.set_clear_lanes("many lanes clear");
+    meta.mutable_congestion()->set_value(33);
+    meta.add_alertc_codes(11);
+    meta.set_iso_3166_1_alpha2("AU");
+    *incident->mutable_metadata() = meta;
 
     // Finally call the function under test to serialize to json
     serializeIncidents(*incidents, intersection_doc);
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
-    ss << *intersection_doc;
+    ss << intersection_doc;
     serialized_to_json.Parse(ss.str().c_str());
   }
 
@@ -1588,11 +1603,25 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
     expected_json.Parse(R"({
       "incidents": [
         {
-          "id": 1337,
-          "creation_time": 1597241829,
-          "start_time": 1597241929,
-          "end_time": 1597243629,
+          "id": 18446744073709551615,
           "type": "weather",
+          "iso_3166_1_alpha2": "AU",
+          "creation_time": "2020-08-12T14:17:09Z",
+          "start_time": "2020-08-12T14:18:49Z",
+          "end_time": "2020-08-12T14:47:09Z",
+          "impact": "major",
+          "description": "fooing foo",
+          "long_description": "long fooing foo",
+          "sub_type": "foo",
+          "sub_type_description": "foobar",
+          "alertc_codes": [ 11 ],
+          "lanes_blocked": [],
+          "num_lanes_blocked": 2,
+          "clear_lanes": "many lanes clear",
+          "closed": true,
+          "congestion": {
+            "value": 33
+          },
           "geometry_index_start": 42,
           "geometry_index_end": 42
         }
@@ -1604,14 +1633,14 @@ TEST(RouteSerializerOsrm, testAddsIncidents) {
   assert_json_equality(serialized_to_json, expected_json);
 }
 
-TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
+TEST(RouteSerializerOsrm, testserializeIncidentsMultipleIncidentsSingleEdge) {
   // Test that multiple incidents on an edge are serialized correctly
   // that only the incident-id is stored in subsequent intersections
   // after the first
 
   rapidjson::Document serialized_to_json;
   {
-    auto intersection_doc = json::map({});
+    auto intersection_doc = json::Jmap();
     auto leg = TripLeg();
     // Sets up the incident
     auto* incidents = leg.mutable_incidents();
@@ -1619,24 +1648,32 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
       // First incident
       auto incident = incidents->Add();
       uint64_t creation_time = 1597241829;
-      incident->set_id(1337);
-      incident->set_description("Fooo");
-      incident->set_creation_time(creation_time);
-      incident->set_type(TripLeg::Incident::WEATHER);
       incident->set_begin_shape_index(87);
       incident->set_end_shape_index(92);
+
+      valhalla::IncidentsTile::Metadata meta;
+      meta.set_id(1337);
+      meta.set_description("Fooo");
+      meta.set_creation_time(creation_time);
+      meta.set_type(valhalla::IncidentsTile::Metadata::WEATHER);
+      meta.set_iso_3166_1_alpha2("SE");
+      *incident->mutable_metadata() = meta;
     }
     {
       // second incident
       auto incident = incidents->Add();
       uint64_t creation_time = 1597241800;
-      incident->set_id(2448);
-      incident->set_creation_time(creation_time);
-      incident->set_start_time(creation_time + 100);
-      incident->set_end_time(creation_time + 1800);
-      incident->set_type(TripLeg::Incident::ACCIDENT);
       incident->set_begin_shape_index(21);
       incident->set_end_shape_index(104);
+
+      valhalla::IncidentsTile::Metadata meta;
+      meta.set_id(2448);
+      meta.set_creation_time(creation_time);
+      meta.set_start_time(creation_time + 100);
+      meta.set_end_time(creation_time + 1800);
+      meta.set_type(valhalla::IncidentsTile::Metadata::ACCIDENT);
+      meta.set_iso_3166_1_alpha2("SE");
+      *incident->mutable_metadata() = meta;
     }
 
     // Finally call the function under test to serialize to json
@@ -1644,7 +1681,7 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
-    ss << *intersection_doc;
+    ss << intersection_doc;
     serialized_to_json.Parse(ss.str().c_str());
   }
 
@@ -1655,17 +1692,21 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
         {
           "id": 1337,
           "description": "Fooo",
-          "creation_time": 1597241829,
+          "creation_time": "2020-08-12T14:17:09Z",
           "type": "weather",
+          "iso_3166_1_alpha2": "SE",
+          "lanes_blocked": [],
           "geometry_index_start": 87,
           "geometry_index_end": 92
         },
         {
           "id": 2448,
-          "creation_time": 1597241800,
-          "start_time": 1597241900,
-          "end_time": 1597243600,
+          "creation_time": "2020-08-12T14:16:40Z",
+          "start_time": "2020-08-12T14:18:20Z",
+          "end_time": "2020-08-12T14:46:40Z",
           "type": "accident",
+          "iso_3166_1_alpha2": "SE",
+          "lanes_blocked": [],
           "geometry_index_start": 21,
           "geometry_index_end": 104
         }
@@ -1678,11 +1719,11 @@ TEST(RouteSerializerOsrm, testAddsIncidentsMultipleIncidentsSingleEdge) {
   assert_json_equality(serialized_to_json, expected_json);
 }
 
-TEST(RouteSerializerOsrm, testAddsIncidentsNothingToAdd) {
+TEST(RouteSerializerOsrm, testserializeIncidentsNothingToAdd) {
 
   rapidjson::Document serialized_to_json;
   {
-    auto intersection_doc = json::map({});
+    auto intersection_doc = json::Jmap();
     auto leg = TripLeg();
 
     // Finally call the function under test to serialize to json
@@ -1690,7 +1731,7 @@ TEST(RouteSerializerOsrm, testAddsIncidentsNothingToAdd) {
 
     // Lastly, convert to rapidjson
     std::stringstream ss;
-    ss << *intersection_doc;
+    ss << intersection_doc;
     serialized_to_json.Parse(ss.str().c_str());
   }
 
