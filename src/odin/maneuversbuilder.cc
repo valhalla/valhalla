@@ -2860,14 +2860,11 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
       }
 
       // Assign turn lanes within step, walking backwards from end to begin node
-      for (auto index = (prev_man->end_node_index() - 1); index > prev_man->begin_node_index();
+      for (uint32_t index = (prev_man->end_node_index() - 1); index > prev_man->begin_node_index();
            --index) {
         auto node = trip_path_->GetEnhancedNode(index);
         auto prev_edge = trip_path_->GetPrevEdge(index);
         if (prev_edge) {
-          // Update the remaining step distance
-          remaining_step_distance += prev_edge->length();
-
           // If we haven't found an intersecting edge yet, check if any exist
           if (!has_directional_intersecting_edge) {
             IntersectingEdgeCounts xedge_counts;
@@ -2899,6 +2896,9 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
                                            prev_man->type(), curr_man->type());
             }
           }
+
+          // Update the remaining step distance
+          remaining_step_distance += prev_edge->length();
         }
       }
     }
