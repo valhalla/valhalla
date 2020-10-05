@@ -463,7 +463,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
 
     // All turn lanes along maneuver
     if (verbose_lanes) {
-      for (auto n = maneuver.begin_path_index() + 1; n < maneuver.end_path_index() - 1; ++n) {
+      for (auto n = maneuver.begin_path_index() + 1; n < maneuver.end_path_index(); ++n) {
         auto prev_edge = etl.GetPrevEdge(n);
         auto q = n - maneuver.begin_path_index();
         if (prev_edge) {
