@@ -88,7 +88,8 @@ protected:
    */
   incident_singleton_t(const boost::property_tree::ptree& config,
                        const std::unordered_set<valhalla::baldr::GraphId>& tileset)
-      : state{new state_t{}}, watcher(watch, config, std::cref(tileset), state) {
+      : state{new state_t{}},
+        watcher(watch, config, std::cref(tileset), state, std::numeric_limits<size_t>::infinity()) {
     auto max_loading_latency =
         config.get<time_t>("incident_max_loading_latency", DEFAULT_MAX_LOADING_LATENCY);
     // see if the thread can start up and do a pass to load all the incidents
@@ -149,13 +150,15 @@ protected:
    * The thread begins by deciding whether its just scaning the directory (works for a small number of
    * incidents) or using a memory mapped changelog to communicate about which incidents chnaged last.
    * If the latter is used we preallocate
-   * @param config
-   * @param tileset
-   * @param state
+   * @param config    lets the function know where to look for incidents and desired update frequency
+   * @param tileset   if the tileset is static we can use lockfree mode
+   * @param state     used for interthread communication
+   * @param max_runs  controls the maximum number of updates that will occur, infinity runs forever
    */
-  [[noreturn]] static void watch(boost::property_tree::ptree config,
-                                 std::unordered_set<valhalla::baldr::GraphId> tileset,
-                                 std::shared_ptr<state_t> state) {
+  static void watch(boost::property_tree::ptree config,
+                    std::unordered_set<valhalla::baldr::GraphId> tileset,
+                    std::shared_ptr<state_t> state,
+                    size_t max_runs) {
     LOG_INFO("Incident watcher started");
     // try to configure for changelog mode
     std::unique_ptr<valhalla::midgard::sequence<uint64_t>> changelog;
@@ -190,9 +193,8 @@ protected:
     }
 
     // some setup for continuous operation
-    bool first_run = true;
+    size_t run_count = 0;
     time_t last_scan = 0;
-    size_t latent_count = 0;
     time_t max_loading_latency =
         config.get<time_t>("incident_max_loading_latency", DEFAULT_MAX_LOADING_LATENCY);
 
@@ -257,17 +259,16 @@ protected:
                std::to_string(latency) + " seconds");
 
       // signal to the constructor that we completed our first batch
-      if (first_run) {
+      if (run_count++ == 0) {
         LOG_INFO("Incident watcher initialized");
-        first_run = false;
         state->signal.notify_one();
       }
 
       // wait just a little before we check again
       std::this_thread::sleep_for(std::chrono::seconds(wait));
-    } while (true);
+    } while (max_runs == std::numeric_limits<size_t>::infinity() || run_count < max_runs);
 
-    LOG_INFO("Incident watcher died from latency breaches");
+    LOG_INFO("Incident watcher has stopped");
   }
 
 public:
