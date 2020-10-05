@@ -308,7 +308,7 @@ message TripLeg {
   // we encapsulate the real incident object here so we can add information
   // about where it is along the route, ie once its referenced to the route
   message Incident {
-    optional valhalla.incidents.Metadata metadata = 1;
+    optional valhalla.IncidentsTile.Metadata metadata = 1;
     // Valhalla additions to incident metadata goes here
     optional uint32 begin_shape_index = 3;
     optional uint32 end_shape_index = 4;

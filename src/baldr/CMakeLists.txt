@@ -47,6 +47,7 @@ set(sources
     graphreader.cc
     graphtile.cc
     graphtileheader.cc
+    incident_singleton.h
     edgetracker.cc
     merge.cc
     nodeinfo.cc
