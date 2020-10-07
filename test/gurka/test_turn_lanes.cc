@@ -163,9 +163,11 @@ TEST(Standalone, TurnLanesSharedTurnLane) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_3");
 
   // A -> G  - only through lanes should be active throughout
-  auto result = gurka::route(map, "A", "C", "auto");
+  auto result = gurka::route(map, "A", "G", "auto");
   validate_turn_lanes(result, {
-                                  {3, "[ through | through | right ACTIVE ]"},
+                                  {3, "[ through ACTIVE | through | right ]"},
+                                  {3, "[ through ACTIVE | through | right ]"},
+                                  {3, "[ through ACTIVE | through | right ]"},
                                   {0, ""},
                               });
 
