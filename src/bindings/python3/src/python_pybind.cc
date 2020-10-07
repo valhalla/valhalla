@@ -72,6 +72,7 @@ PYBIND11_MODULE(example, m)
         }))
         //.def("Route", (std::string (valhalla::tyr::actor_t::*)(std::string)) &valhalla::tyr::actor_t,  py::arg("request_str"))
         //.def("Route", py::overload_cast<std::string&>(&py::self::route));
+        .def("Route", py::overload_cast<std::string&>(new valhalla::tyr::actor_t(configure(), true)));
         //.def("Route", &valhalla::tyr::actor_t::route, "Doc", py::arg("request_str"), py::arg("interrupt"), py::arg("api"));
         //.def("Route", &valhalla::tyr::actor_t::route, "Doc", py::arg("request_str"));
         //.def("Route", (std::string (valhalla::tyr::actor_t&, std::string&)) &valhalla::tyr::actor_t::route);
