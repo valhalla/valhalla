@@ -5,6 +5,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include "osrm_cost.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
@@ -467,6 +468,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     c.cost += seconds;
     c.secs += seconds;
   }
+  c.secs = OSRMTurnCost(edge, node, pred.opp_local_idx());
   return c;
 }
 
@@ -511,6 +513,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     c.secs += seconds;
     c.cost += seconds;
   }
+  c.secs = OSRMTurnCost(edge, node, pred->opp_local_idx());
   return c;
 }
 
