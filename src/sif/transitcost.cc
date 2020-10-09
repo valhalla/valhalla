@@ -71,19 +71,19 @@ public:
    * Get the wheelchair required flag.
    * @return  Returns true if wheelchair is required.
    */
-  bool wheelchair() const;
+  bool wheelchair() const override;
 
   /**
    * Get the bicycle required flag.
    * @return  Returns true if bicycle is required.
    */
-  bool bicycle() const;
+  bool bicycle() const override;
 
   /**
    * This method overrides the factor for this mode.  The higher the value
    * the more the mode is favored.
    */
-  virtual float GetModeFactor();
+  virtual float GetModeFactor() override;
 
   /**
    * Get the access mode used by this costing method.
@@ -111,7 +111,7 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       int& restriction_idx) const;
+                       int& restriction_idx) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -137,7 +137,7 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              int& restriction_idx) const;
+                              int& restriction_idx) const override;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -145,7 +145,7 @@ public:
    * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::NodeInfo* node) const;
+  virtual bool Allowed(const baldr::NodeInfo* node) const override;
 
   /**
    * Get the cost to traverse the specified directed edge using a transit
@@ -158,7 +158,7 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::TransitDeparture* departure,
-                        const uint32_t curr_time) const;
+                        const uint32_t curr_time) const override;
 
   /**
    * Transit costing only works on transit edges, hence we throw
@@ -169,7 +169,7 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::GraphTile* tile,
-                        const uint32_t seconds) const {
+                        const uint32_t seconds) const override {
     throw std::runtime_error("TransitCost::EdgeCost only supports transit edges");
   }
 
@@ -188,19 +188,19 @@ public:
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const;
+                              const EdgeLabel& pred) const override;
 
   /**
    * Returns the transfer cost between 2 transit stops.
    * @return  Returns the transfer cost and time (seconds).
    */
-  virtual Cost TransferCost() const;
+  virtual Cost TransferCost() const override;
 
   /**
    * Returns the default transfer cost between 2 transit lines.
    * @return  Returns the transfer cost and time (seconds).
    */
-  virtual Cost DefaultTransferCost() const;
+  virtual Cost DefaultTransferCost() const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -210,12 +210,12 @@ public:
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
    */
-  virtual float AStarCostFactor() const;
+  virtual float AStarCostFactor() const override;
 
   /**
    * Override unit size since walking costs are higher range of vales
    */
-  virtual uint32_t UnitSize() const;
+  virtual uint32_t UnitSize() const override;
 
   /**
    * Function to be used in location searching which will
@@ -241,19 +241,19 @@ public:
   /**This method adds to the exclude list based on the
    * user inputed exclude and include lists.
    */
-  virtual void AddToExcludeList(const baldr::GraphTile*& tile);
+  virtual void AddToExcludeList(const baldr::GraphTile*& tile) override;
 
   /**
    * Checks if we should exclude or not.
    * @return  Returns true if we should exclude, false if not.
    */
-  virtual bool IsExcluded(const baldr::GraphTile*& tile, const baldr::DirectedEdge* edge);
+  virtual bool IsExcluded(const baldr::GraphTile*& tile, const baldr::DirectedEdge* edge) override;
 
   /**
    * Checks if we should exclude or not.
    * @return  Returns true if we should exclude, false if not.
    */
-  virtual bool IsExcluded(const baldr::GraphTile*& tile, const baldr::NodeInfo* node);
+  virtual bool IsExcluded(const baldr::GraphTile*& tile, const baldr::NodeInfo* node) override;
 
 public:
   // Are wheelchair or bicycle required

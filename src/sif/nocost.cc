@@ -59,7 +59,7 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       int& restriction_idx) const {
+                       int& restriction_idx) const override {
     return !edge->is_shortcut();
   }
 
@@ -88,7 +88,7 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              int& restriction_idx) const {
+                              int& restriction_idx) const override {
     return !opp_edge->is_shortcut();
   }
 
@@ -108,7 +108,7 @@ public:
    * @param   edge  Pointer to edge information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool IsAccessible(const baldr::DirectedEdge* edge) const {
+  virtual bool IsAccessible(const baldr::DirectedEdge* edge) const override {
     return true;
   }
 
@@ -125,7 +125,7 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::TransitDeparture* departure,
-                        const uint32_t curr_time) const {
+                        const uint32_t curr_time) const override {
     throw std::runtime_error("NoCost::EdgeCost does not support transit edges");
   }
 
@@ -139,7 +139,7 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::GraphTile* tile,
-                        const uint32_t seconds) const {
+                        const uint32_t seconds) const override {
     return {static_cast<float>(edge->length()), static_cast<float>(edge->length())};
   }
 
@@ -154,7 +154,7 @@ public:
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const {
+                              const EdgeLabel& pred) const override {
     return {};
   }
 
@@ -170,7 +170,7 @@ public:
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const {
+                                     const baldr::DirectedEdge* edge) const override {
     return {};
   }
 
@@ -182,7 +182,7 @@ public:
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
    */
-  virtual float AStarCostFactor() const {
+  virtual float AStarCostFactor() const override {
     return 1.f;
   }
 

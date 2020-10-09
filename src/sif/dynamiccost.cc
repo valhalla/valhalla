@@ -301,6 +301,10 @@ void ParseCostingOptions(const rapidjson::Document& doc,
       sif::ParsePedestrianCostOptions(doc, key, costing_options);
       break;
     }
+    case bikeshare: {
+      costing_options->set_costing(Costing::bikeshare); // Nothing to parse for this one
+      break;
+    }
     case transit: {
       sif::ParseTransitCostOptions(doc, key, costing_options);
       break;
