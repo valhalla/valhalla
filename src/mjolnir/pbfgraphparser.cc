@@ -379,6 +379,10 @@ public:
       if (!tag_.second.empty())
         way_.set_tunnel_name_index(osmdata_.name_offset_map.index(tag_.second));
     };
+    tag_handlers_["name:pronunciation"] = [this]() {
+      if (!tag_.second.empty())
+        way_.set_name_pronunciation_index(osmdata_.name_offset_map.index(tag_.second));
+    };
     tag_handlers_["max_speed"] = [this]() {
       try {
         if (tag_.second == "unlimited") {

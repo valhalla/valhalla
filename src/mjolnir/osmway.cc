@@ -182,6 +182,13 @@ std::vector<std::string> OSMWay::GetTaggedNames(const UniqueNames& name_offset_m
       names.emplace_back(std::to_string(static_cast<uint8_t>(TaggedName::kTunnel)) + t);
     }
   }
+  if (name_pronunciation_index_ != 0) {
+    // name:pronunciation names
+    tokens = GetTagTokens(name_offset_map.name(name_pronunciation_index_));
+    for (const auto& t : tokens) {
+      names.emplace_back(std::to_string(static_cast<uint8_t>(TaggedName::kPronunciation)) + t);
+    }
+  }
 
   return names;
 }

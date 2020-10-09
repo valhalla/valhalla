@@ -234,6 +234,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the index for name:pronunciation
+   * @param  idx  Index for name:pronunciation.
+   */
+  void set_name_pronunciation_index(const uint32_t idx) {
+    name_pronunciation_index_ = idx;
+  }
+
+  /**
+   * Get the name:pronunciation index.
+   * @return  Returns the index for name:pronunciation.
+   */
+  uint32_t name_pronunciation_index() const {
+    return name_pronunciation_index_;
+  }
+
+  /**
    * Sets the index for forward turn lanes string.
    * @param  idx  Index for the forward turn lanes string.
    */
@@ -1553,6 +1569,7 @@ struct OSMWay {
   uint32_t alt_name_index_;
   uint32_t official_name_index_;
   uint32_t tunnel_name_index_;
+  uint32_t name_pronunciation_index_;
 
   // Turn lanes
   uint32_t fwd_turn_lanes_index_;

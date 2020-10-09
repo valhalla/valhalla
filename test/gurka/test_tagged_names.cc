@@ -9,7 +9,7 @@
 using namespace valhalla;
 const std::unordered_map<std::string, std::string> build_config{{}};
 
-class TaggedNames : public ::testing::Test {
+class TaggedNamesTunnel : public ::testing::Test {
 protected:
   static gurka::map map;
 
@@ -39,16 +39,17 @@ protected:
          {"GH", {{"highway", "motorway"}}}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_tagged_names", build_config);
+    map =
+        gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_tagged_names_tunnel", build_config);
   }
 };
-gurka::map TaggedNames::map = {};
+gurka::map TaggedNamesTunnel::map = {};
 Api api;
 rapidjson::Document d;
 
 /*************************************************************/
 
-TEST_F(TaggedNames, Tunnel) {
+TEST_F(TaggedNamesTunnel, Tunnel) {
   auto result = gurka::route(map, "A", "F", "auto");
 
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
@@ -72,7 +73,7 @@ TEST_F(TaggedNames, Tunnel) {
   EXPECT_EQ(leg.node(5).edge().has_tunnel(), false);
 }
 
-TEST_F(TaggedNames, NoTunnel) {
+TEST_F(TaggedNamesTunnel, NoTunnel) {
   auto result = gurka::route(map, "A", "H", "auto");
 
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
@@ -82,7 +83,7 @@ TEST_F(TaggedNames, NoTunnel) {
   EXPECT_EQ(leg.node(2).edge().has_tunnel(), false);
 }
 
-TEST_F(TaggedNames, test_taking_tunnel) {
+TEST_F(TaggedNamesTunnel, test_taking_tunnel) {
   auto result = gurka::route(map, "A", "F", "auto");
   rapidjson::Document d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
@@ -137,7 +138,7 @@ TEST_F(TaggedNames, test_taking_tunnel) {
   }
 }
 
-TEST_F(TaggedNames, test_bypass_tunnel) {
+TEST_F(TaggedNamesTunnel, test_bypass_tunnel) {
   auto result = gurka::route(map, "A", "H", "auto");
   rapidjson::Document d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
@@ -150,4 +151,36 @@ TEST_F(TaggedNames, test_bypass_tunnel) {
       }
     }
   }
+}
+
+/*************************************************************/
+TEST(Standalone, TaggedNamesPronunciation) {
+
+  const std::string ascii_map = R"(
+    A----B----C
+         |
+         D)";
+
+  const gurka::ways ways = {{"ABC",
+                             {{"highway", "primary"},
+                              {"name", "Reading Road"},
+                              {"name:pronunciation", "ˈrɛdɪŋ ˈɹoʊd"}}},
+                            {"DB",
+                             {{"highway", "primary"},
+                              {"name", "Houston Street"},
+                              {"name:pronunciation", "ˈhaʊstən stɹiːt"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_tagged_names_pronunciation");
+
+  auto result = gurka::route(map, "A", "D", "auto");
+
+  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+  auto leg = result.trip().routes(0).legs(0);
+
+  EXPECT_TRUE(leg.node(0).edge().tagged_name().Get(0).type() == TaggedName_Type_kPronunciation);
+  EXPECT_TRUE(leg.node(0).edge().tagged_name().Get(0).value() == "ˈrɛdɪŋ ˈɹoʊd");
+
+  EXPECT_TRUE(leg.node(1).edge().tagged_name().Get(0).type() == TaggedName_Type_kPronunciation);
+  EXPECT_TRUE(leg.node(1).edge().tagged_name().Get(0).value() == "ˈhaʊstən stɹiːt");
 }
