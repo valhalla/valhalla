@@ -175,6 +175,7 @@
    * ADDED: One shot mode to valhalla_service so you can run a single request of any type without starting a server [#2624](https://github.com/valhalla/valhalla/pull/2624)
    * ADDED: Adds text instructions to OSRM output [#2625](https://github.com/valhalla/valhalla/pull/2625)
    * ADDED: Adds support for alternate routes [#2626](https://github.com/valhalla/valhalla/pull/2626)
+   * ADDED: Adds support for name:pronunciation tag [#2639](https://github.com/valhalla/valhalla/pull/2639)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
