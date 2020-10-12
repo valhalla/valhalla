@@ -264,13 +264,13 @@ public:
    * @param curr_time
    * @return
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::TransitDeparture* departure,
-                        const uint32_t curr_time) const override {
+  virtual Cost EdgeCost(const baldr::DirectedEdge*,
+                        const baldr::TransitDeparture*,
+                        const uint32_t) const override {
     throw std::runtime_error("PedestrianCost::EdgeCost does not support transit edges");
   }
 
-  bool IsClosed(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const override {
+  bool IsClosed(const baldr::DirectedEdge*, const baldr::GraphTile*) const override {
     return false;
   }
 
