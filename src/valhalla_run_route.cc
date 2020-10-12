@@ -592,7 +592,7 @@ int main(int argc, char* argv[]) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,
                                  std::unordered_map<std::string, std::string>>(logging_subtree.get());
-  
+
     valhalla::midgard::logging::Configure(logging_config);
   }
 
