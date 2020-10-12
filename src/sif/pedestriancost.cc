@@ -918,8 +918,9 @@ public:
   using PedestrianCost::maneuver_penalty_;
 };
 
-TestPedestrianCost*
-make_pedestriancost_from_json(const std::string& property, float testVal, const std::string& type) {
+TestPedestrianCost* make_pedestriancost_from_json(const std::string& property,
+                                                  float testVal,
+                                                  const std::string& /*type*/) {
   std::stringstream ss;
   ss << R"({"costing_options":{"pedestrian":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
