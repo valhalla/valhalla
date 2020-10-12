@@ -15,7 +15,7 @@
 
 namespace {
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define MTIME(st_stat) st_stat.st_mtime
 #elif __APPLE__
 #define MTIME(st_stat) st_stat.st_mtime
