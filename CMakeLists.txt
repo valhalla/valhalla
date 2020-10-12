@@ -125,6 +125,13 @@ endif()
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 
+# For some reason Win and Python messes with libcurl
+if(ENABLE_PYTHON_BINDINGS AND WIN32)
+  find_package(CURL REQUIRED)
+  link_libraries(${CURL_LIBRARIES})
+  include_directories(${CURL_INCLUDE_DIRS})
+endif()
+
 if(NOT TARGET CURL::CURL)
   add_library(CURL::CURL INTERFACE IMPORTED)
   if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
