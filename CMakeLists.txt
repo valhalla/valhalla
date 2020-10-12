@@ -16,8 +16,6 @@ include(GNUInstallDirs)
 set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
 
-set(CMAKE_CXX_FLAGS                " ${CMAKE_CXX_FLAGS_INIT} -std=c++11 -fPIC")
-
 set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ language version to use (default is 14)")
 option(ENABLE_TOOLS "Enable Valhalla tools" ON)
 option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
@@ -234,7 +232,7 @@ add_subdirectory(src)
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
   #TODO: need to make sure they actually have python
-  add_subdirectory(src/bindings/python3)
+  add_subdirectory(src/bindings/python)
   install(FILES COPYING CHANGELOG.md
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
     COMPONENT python)

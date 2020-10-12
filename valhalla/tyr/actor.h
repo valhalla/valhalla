@@ -21,34 +21,44 @@ public:
   std::string route(const std::string& request_str,
                     const std::function<void()>* interrupt = nullptr,
                     Api* api = nullptr);
+  std::string route(const std::string& request_str);
   /*std::string route(const std::string& request_str);*/
   std::string locate(const std::string& request_str,
                      const std::function<void()>* interrupt = nullptr,
                      Api* api = nullptr);
+  std::string locate(const std::string& request_str);
   std::string matrix(const std::string& request_str,
                      const std::function<void()>* interrupt = nullptr,
                      Api* api = nullptr);
+  std::string matrix(const std::string& request_str);
   std::string optimized_route(const std::string& request_str,
                               const std::function<void()>* interrupt = nullptr,
                               Api* api = nullptr);
+  std::string optimized_route(const std::string& request_str);
   std::string isochrone(const std::string& request_str,
                         const std::function<void()>* interrupt = nullptr,
                         Api* api = nullptr);
+  std::string isochrone(const std::string& request_str);
   std::string trace_route(const std::string& request_str,
                           const std::function<void()>* interrupt = nullptr,
                           Api* api = nullptr);
+  std::string trace_route(const std::string& request_str);
   std::string trace_attributes(const std::string& request_str,
                                const std::function<void()>* interrupt = nullptr,
                                Api* api = nullptr);
+  std::string trace_attributes(const std::string& request_str);
   std::string height(const std::string& request_str,
                      const std::function<void()>* interrupt = nullptr,
                      Api* api = nullptr);
+  std::string height(const std::string& request_str);
   std::string transit_available(const std::string& request_str,
                                 const std::function<void()>* interrupt = nullptr,
                                 Api* api = nullptr);
+  std::string transit_available(const std::string& request_str);
   std::string expansion(const std::string& request_str,
                         const std::function<void()>* interrupt = nullptr,
                         Api* api = nullptr);
+  std::string expansion(const std::string& request_str);
 
 protected:
   struct pimpl_t;

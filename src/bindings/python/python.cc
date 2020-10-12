@@ -1,6 +1,4 @@
-// Note: keep include boost/python.hpp first - fixes https://bugs.python.org/issue10910 on
-// FreeBSD/macOS
-#include <boost/python.hpp>
+#include <pybind11/pybind11.h>
 
 #include "baldr/rapidjson_utils.h"
 #include <boost/make_shared.hpp>
@@ -11,9 +9,11 @@
 #include <sstream>
 #include <string>
 
+#include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "tyr/actor.h"
+
 
 namespace {
 
@@ -52,39 +52,30 @@ configure(const boost::optional<std::string>& config = boost::none) {
 void py_configure(const std::string& config_file) {
   configure(config_file);
 }
-
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(route_overloads, route, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(locate_overloads, locate, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(optimized_route_overloads, optimized_route, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(matrix_overloads, matrix, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(isochrone_overloads, isochrone, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(trace_route_overloads, trace_route, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(trace_attributes_overloads, trace_attributes, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(height_overloads, height, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(transit_available_overloads, transit_available, 1, 1);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(expansion_overloads, expansion, 1, 1);
 } // namespace
 
-BOOST_PYTHON_MODULE(valhalla) {
 
-  // python interface for configuring the system, always call this first in your python program
-  boost::python::def("Configure", py_configure);
+namespace py = pybind11;
 
-  boost::python::class_<valhalla::tyr::actor_t, boost::noncopyable,
-                        boost::shared_ptr<valhalla::tyr::actor_t>>("Actor", boost::python::no_init)
-      .def("__init__", boost::python::make_constructor(+[]() {
-             return boost::make_shared<valhalla::tyr::actor_t>(configure(), true);
-           }))
-      .def("Route", &valhalla::tyr::actor_t::route, route_overloads())
-      .def("Locate", &valhalla::tyr::actor_t::route, locate_overloads())
-      .def("OptimizedRoute", &valhalla::tyr::actor_t::route, optimized_route_overloads())
-      .def("Matrix", &valhalla::tyr::actor_t::route, matrix_overloads())
-      .def("Isochrone", &valhalla::tyr::actor_t::route, isochrone_overloads())
-      .def("TraceRoute", &valhalla::tyr::actor_t::route, trace_route_overloads())
-      .def("TraceAttributes", &valhalla::tyr::actor_t::route, trace_attributes_overloads())
-      .def("Height", &valhalla::tyr::actor_t::route, height_overloads())
-      .def("TransitAvailable", &valhalla::tyr::actor_t::route, transit_available_overloads())
-      .def("Expansion", &valhalla::tyr::actor_t::route, expansion_overloads())
+template <typename... Args>
+using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
 
-      ;
+PYBIND11_MODULE(valhalla_python, m)
+{
+    m.def("Configure", py_configure);
+
+    py::class_<valhalla::tyr::actor_t, std::shared_ptr<valhalla::tyr::actor_t>>(m, "Actor")
+        .def(py::init<>([](){
+            return std::make_shared<valhalla::tyr::actor_t>(configure(), true);
+        }))
+        .def("Route", overload_cast_<const  std::string &>()(&valhalla::tyr::actor_t::route), "Calculates a route.")
+        .def("Locate", overload_cast_<const  std::string &>()(&valhalla::tyr::actor_t::locate), "Provides information about nodes and edges.")
+        .def("OptimizedRoute", overload_cast_<const  std::string &>()(&valhalla::tyr::actor_t::optimized_route), "Optimizes the order of a set of waypoints by time.")
+        .def("Matrix", overload_cast_<const  std::string &>()(&valhalla::tyr::actor_t::matrix), "Computes the time and distance between a set of locations and returns them as a matrix table.")
+        .def("Isochrone", overload_cast_<const  std::string &>()(&valhalla::tyr::actor_t::isochrone), "Calculates isochrones and isodistances.")
+        .def("TraceRoute", overload_cast_<const  std::string &>()(&valhalla::tyr::actor_t::trace_route), "Map-matching for a set of input locations, e.g. from a GPS.")
+        .def("TraceAttributes", overload_cast_<const  std::string &>()(&valhalla::tyr::actor_t::trace_attributes), "Returns detailed attribution along each portion of a route calculate from a set of input locations, e.g. from a GPS trace.")
+        .def("Height", overload_cast_<const  std::string &>()(&valhalla::tyr::actor_t::height), "Provides elevation data for a set of input geometries.")
+        .def("TransitAvailable", overload_cast_<const  std::string &>()(&valhalla::tyr::actor_t::transit_available), "Lookup if transit stops are available in a defined radius around a set of input locations.")
+        .def("Expansion", overload_cast_<const  std::string &>()(&valhalla::tyr::actor_t::expansion), "Returns all road segments which were touched by the routing algorithm during the search.");
 }
