@@ -38,7 +38,7 @@ jobs:
             -DENABLE_TOOLS=ON \
             -DENABLE_DATA_TOOLS=OFF \
             -DENABLE_SERVICES=OFF \
-            -DENABLE_PYTHON_BINDINGS=OFF \
+            -DENABLE_PYTHON_BINDINGS=ON \
             -DENABLE_CCACHE=OFF \
             -DENABLE_TESTS=OFF \
             -DENABLE_BENCHMARKS=OFF \
