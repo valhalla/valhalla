@@ -202,9 +202,9 @@ public:
    * @param curr_time
    * @return
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::TransitDeparture* departure,
-                        const uint32_t curr_time) const override {
+  virtual Cost EdgeCost(const baldr::DirectedEdge*,
+                        const baldr::TransitDeparture*,
+                        const uint32_t) const override {
     throw std::runtime_error("AutoCost::EdgeCost does not support transit edges");
   }
 
@@ -1228,11 +1228,11 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const GraphTile* tile,
+                       const GraphTile*,
                        const baldr::GraphId& edgeid,
-                       const uint64_t current_time,
-                       const uint32_t tz_index,
-                       int& restriction_idx) const override {
+                       const uint64_t,
+                       const uint32_t,
+                       int&) const override {
 
     // Note: this profile ignores closures in live traffic, so that check is not
     //       present, unlike other Allowed() implementations
