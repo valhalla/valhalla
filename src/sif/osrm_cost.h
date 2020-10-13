@@ -13,10 +13,10 @@ namespace sif {
 
 namespace {
 
-constexpr float kTurnPenalty = 7.5;
-constexpr float kUTurnPenalty = 20;
-constexpr float kTurnBias = 1.075;
-constexpr float kTrafficLightPenalty = 2;
+constexpr double kTurnPenalty = 7.5;
+constexpr double kUTurnPenalty = 20;
+constexpr double kTurnBias = 1.075;
+constexpr double kTrafficLightPenalty = 2;
 
 uint32_t CalculateTurnDegree(const baldr::DirectedEdge* edge,
                              const baldr::NodeInfo* node,
@@ -33,10 +33,10 @@ uint32_t CalculateTurnDegree(const baldr::DirectedEdge* edge,
 float OSRMTurnCost(const baldr::DirectedEdge* edge,
                    const baldr::NodeInfo* node,
                    const uint32_t idx_pred_opp) {
-  float turn_duration = 0;
+  double turn_duration = 0;
   auto turn_penalty = kTurnPenalty;
   // local turn_bias = turn.is_left_hand_driving and 1. / profile.turn_bias or profile.turn_bias
-  float turn_bias = !node->drive_on_right() ? 1. / kTurnBias : kTurnBias;
+  double turn_bias = !node->drive_on_right() ? 1. / kTurnBias : kTurnBias;
 
   if (node->traffic_signal())
     turn_duration = kTrafficLightPenalty;
