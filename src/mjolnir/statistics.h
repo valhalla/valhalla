@@ -10,7 +10,7 @@
 
 #include <sqlite3.h>
 
-#include "baldr/graphconstants.h"
+#include "valhalla/baldr/graphconstants.h"
 #include "midgard/aabb2.h"
 #include <boost/property_tree/ptree.hpp>
 
