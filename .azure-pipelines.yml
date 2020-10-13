@@ -37,6 +37,12 @@ jobs:
           path: "$(VCPKG_DIR)"
           cacheHitVar: CACHE_RESTORED
 
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.x' 
+          addToPath: true 
+          architecture: "$(TRIPLET)"
+
       - script: |
           git clone https://github.com/microsoft/vcpkg %VCPKG_DIR%
           git -C %VCPKG_DIR% checkout %VCPKG_REF%
