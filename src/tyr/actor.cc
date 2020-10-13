@@ -77,10 +77,6 @@ actor_t::route(const std::string& request_str, const std::function<void()>* inte
   return bytes;
 }
 
-std::string actor_t::route(const std::string& request_str) {
-  return actor_t::route(request_str, NULL, NULL);
-}
-
 std::string
 actor_t::locate(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
@@ -99,10 +95,6 @@ actor_t::locate(const std::string& request_str, const std::function<void()>* int
     api->Swap(&request);
   }
   return json;
-}
-
-std::string actor_t::locate(const std::string& request_str) {
-  return actor_t::locate(request_str, NULL, NULL);
 }
 
 std::string
@@ -125,10 +117,6 @@ actor_t::matrix(const std::string& request_str, const std::function<void()>* int
     api->Swap(&request);
   }
   return json;
-}
-
-std::string actor_t::matrix(const std::string& request_str) {
-  return actor_t::matrix(request_str, NULL, NULL);
 }
 
 std::string actor_t::optimized_route(const std::string& request_str,
@@ -158,10 +146,6 @@ std::string actor_t::optimized_route(const std::string& request_str,
   return bytes;
 }
 
-std::string actor_t::optimized_route(const std::string& request_str) {
-  return actor_t::optimized_route(request_str, NULL, NULL);
-}
-
 std::string
 actor_t::isochrone(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
@@ -182,10 +166,6 @@ actor_t::isochrone(const std::string& request_str, const std::function<void()>* 
     api->Swap(&request);
   }
   return json;
-}
-
-std::string actor_t::isochrone(const std::string& request_str) {
-  return actor_t::isochrone(request_str, NULL, NULL);
 }
 
 std::string actor_t::trace_route(const std::string& request_str,
@@ -215,10 +195,6 @@ std::string actor_t::trace_route(const std::string& request_str,
   return bytes;
 }
 
-std::string actor_t::trace_route(const std::string& request_str) {
-  return actor_t::trace_route(request_str, NULL, NULL);
-}
-
 std::string actor_t::trace_attributes(const std::string& request_str,
                                       const std::function<void()>* interrupt,
                                       Api* api) {
@@ -242,10 +218,6 @@ std::string actor_t::trace_attributes(const std::string& request_str,
   return json;
 }
 
-std::string actor_t::trace_attributes(const std::string& request_str) {
-  return actor_t::trace_attributes(request_str, NULL, NULL);
-}
-
 std::string
 actor_t::height(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
@@ -264,10 +236,6 @@ actor_t::height(const std::string& request_str, const std::function<void()>* int
     api->Swap(&request);
   }
   return json;
-}
-
-std::string actor_t::height(const std::string& request_str) {
-  return actor_t::height(request_str, NULL, NULL);
 }
 
 std::string actor_t::transit_available(const std::string& request_str,
@@ -291,10 +259,6 @@ std::string actor_t::transit_available(const std::string& request_str,
   return json;
 }
 
-std::string actor_t::transit_available(const std::string& request_str) {
-  return actor_t::transit_available(request_str, NULL, NULL);
-}
-
 std::string
 actor_t::expansion(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts
@@ -315,10 +279,6 @@ actor_t::expansion(const std::string& request_str, const std::function<void()>* 
     api->Swap(&request);
   }
   return json;
-}
-
-std::string actor_t::expansion(const std::string& request_str) {
-  return actor_t::expansion(request_str, NULL, NULL);
 }
 
 } // namespace tyr
