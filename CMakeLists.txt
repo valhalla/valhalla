@@ -125,18 +125,14 @@ endif()
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 
-# For some reason Win and Python messes with libcurl
-if(ENABLE_PYTHON_BINDINGS AND WIN32)
-  find_package(CURL REQUIRED)
-  link_libraries(${CURL_LIBRARIES})
-  include_directories(${CURL_INCLUDE_DIRS})
-endif()
-
 if(NOT TARGET CURL::CURL)
   add_library(CURL::CURL INTERFACE IMPORTED)
-  if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
+  if(ENABLE_HTTP OR ENABLE_DATA_TOOLS OR ENABLE_PYTHON_BINDINGS)
     if(NOT CURL_FOUND)
       find_package(CURL REQUIRED)
+      if (WIN32 AND ENABLE_PYTHON_BINDINGS)
+        link_libraries(${CURL_LIBRARIES})
+      endif()
     endif()
     set_target_properties(CURL::CURL PROPERTIES
       #INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
