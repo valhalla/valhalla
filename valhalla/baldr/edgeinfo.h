@@ -139,15 +139,25 @@ public:
 
   /**
    * Convenience method to get the names for an edge
+   * @param  only_tagged_names  Bool indicating whether or not to return only the tagged names
+   *
    * @return   Returns a list (vector) of names.
    */
-  std::vector<std::string> GetNames() const;
+  std::vector<std::string> GetNames(bool only_tagged_names = false) const;
 
   /**
    * Convenience method to get the names and route number flags for an edge.
+   * @param  include_tagged_names  Bool indicating whether or not to return the tagged names too
+   *
    * @return   Returns a list (vector) of name/route number pairs.
    */
-  std::vector<std::pair<std::string, bool>> GetNamesAndTypes() const;
+  std::vector<std::pair<std::string, bool>> GetNamesAndTypes(bool include_tagged_names = false) const;
+
+  /**
+   * Convenience method to get the names and the tagged type for an edge.
+   * @return   Returns a list (vector) of name/tagged type pairs.
+   */
+  std::vector<std::pair<std::string, uint8_t>> GetTaggedNamesAndTypes() const;
 
   /**
    * Convenience method to get the types for the names.

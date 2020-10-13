@@ -175,7 +175,7 @@ public:
    * limits).
    * @return  Returns true if the costing model allows multiple passes.
    */
-  virtual bool AllowMultiPass() const {
+  virtual bool AllowMultiPass() const override {
     return true;
   }
 
@@ -186,7 +186,7 @@ public:
    * meters per segment (e.g. from origin to a transit stop or from the last
    * transit stop to the destination).
    */
-  virtual void UseMaxMultiModalDistance() {
+  virtual void UseMaxMultiModalDistance() override {
     max_distance_ = transit_start_end_max_distance_;
   }
 
@@ -195,7 +195,7 @@ public:
    * to travel for this mode.  In this case, it is the max walking
    * distance you are willing to walk between transfers.
    */
-  virtual uint32_t GetMaxTransferDistanceMM() {
+  virtual uint32_t GetMaxTransferDistanceMM() override {
     return transit_transfer_max_distance_;
   }
 
@@ -203,7 +203,7 @@ public:
    * This method overrides the factor for this mode.  The higher the value
    * the more the mode is favored.
    */
-  virtual float GetModeFactor() {
+  virtual float GetModeFactor() override {
     return mode_factor_;
   }
 
@@ -228,7 +228,7 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       int& restriction_idx) const;
+                       int& restriction_idx) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -255,7 +255,7 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              int& restriction_idx) const;
+                              int& restriction_idx) const override;
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -264,14 +264,13 @@ public:
    * @param curr_time
    * @return
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::TransitDeparture* departure,
-                        const uint32_t curr_time) const {
+  virtual Cost EdgeCost(const baldr::DirectedEdge*,
+                        const baldr::TransitDeparture*,
+                        const uint32_t) const override {
     throw std::runtime_error("PedestrianCost::EdgeCost does not support transit edges");
   }
 
-  bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
-                            const baldr::GraphTile* tile) const override {
+  bool IsClosed(const baldr::DirectedEdge*, const baldr::GraphTile*) const override {
     return false;
   }
 
@@ -285,7 +284,7 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::GraphTile* tile,
-                        const uint32_t seconds) const;
+                        const uint32_t seconds) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -298,7 +297,7 @@ public:
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const;
+                              const EdgeLabel& pred) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -314,7 +313,7 @@ public:
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const;
+                                     const baldr::DirectedEdge* edge) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -324,7 +323,7 @@ public:
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
    */
-  virtual float AStarCostFactor() const {
+  virtual float AStarCostFactor() const override {
     // On first pass use the walking speed plus a small factor to account for
     // favoring walkways, on the second pass use the the maximum ferry speed.
     if (pass_ == 0) {
@@ -354,7 +353,7 @@ public:
    * Get the current travel type.
    * @return  Returns the current travel type.
    */
-  virtual uint8_t travel_type() const {
+  virtual uint8_t travel_type() const override {
     return static_cast<uint8_t>(type_);
   }
 
@@ -365,9 +364,7 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by pedestrians.
    */
-  float Filter(const baldr::DirectedEdge* edge,
-               const baldr::GraphId& /*edgeid*/,
-               const baldr::GraphTile* /*tile*/) const override {
+  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile*) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
@@ -435,7 +432,7 @@ public:
   sif::Cost base_transition_cost(const baldr::NodeInfo* node,
                                  const baldr::DirectedEdge* edge,
                                  const sif::EdgeLabel& pred,
-                                 const uint32_t idx) const {
+                                 const uint32_t idx) const override {
     // Cases with both time and penalty: country crossing, ferry, gate, toll booth
     sif::Cost c;
     if (node->type() == baldr::NodeType::kBorderControl) {
@@ -483,7 +480,7 @@ public:
   sif::Cost base_transition_cost(const baldr::NodeInfo* node,
                                  const baldr::DirectedEdge* edge,
                                  const baldr::DirectedEdge* pred,
-                                 const uint32_t idx) const {
+                                 const uint32_t idx) const override {
     // Cases with both time and penalty: country crossing, ferry, gate, toll booth
     sif::Cost c;
     if (node->type() == baldr::NodeType::kBorderControl) {
@@ -921,8 +918,9 @@ public:
   using PedestrianCost::maneuver_penalty_;
 };
 
-TestPedestrianCost*
-make_pedestriancost_from_json(const std::string& property, float testVal, const std::string& type) {
+TestPedestrianCost* make_pedestriancost_from_json(const std::string& property,
+                                                  float testVal,
+                                                  const std::string& /*type*/) {
   std::stringstream ss;
   ss << R"({"costing_options":{"pedestrian":{")" << property << R"(":)" << testVal << "}}}";
   Api request;

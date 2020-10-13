@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_GRAPHREADER_H_
 #define VALHALLA_BALDR_GRAPHREADER_H_
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -19,8 +20,18 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/sequence.h>
 
+#include <valhalla/proto/incidents.pb.h>
+
 namespace valhalla {
 namespace baldr {
+
+struct IncidentResult {
+  std::shared_ptr<const IncidentsTile> tile;
+  // Index into the Location array
+  int start_index;
+  // Index into the Location array
+  int end_index;
+};
 
 /**
  * Tile cache interface.
@@ -793,6 +804,21 @@ public:
    */
   int GetTimezone(const baldr::GraphId& node, const GraphTile*& tile);
 
+  /**
+   * Returns an incident tile for the given tile id
+   * @param tile_id  the tile id for which incidents should be returned
+   * @return the incident tile for the tile id
+   */
+  virtual std::shared_ptr<const IncidentsTile> GetIncidentTile(const GraphId& tile_id) const;
+
+  /**
+   * Returns a vector of incidents for the given edge
+   * @param edge_id   which edge you need incidents for
+   * @param tile      which tile the edge lives in, is updated if not correct
+   * @return IncidentResult
+   */
+  IncidentResult GetIncidents(const GraphId& edge_id, const GraphTile*& tile);
+
 protected:
   // (Tar) extract of tiles - the contents are empty if not being used
   struct tile_extract_t {
@@ -819,8 +845,14 @@ protected:
   std::unordered_set<GraphId> _404s;
 
   std::unique_ptr<TileCache> cache_;
+
+  bool enable_incidents_;
 };
 
+// Given the Location relation, return the full metadata
+const valhalla::IncidentsTile::Metadata&
+getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
+                    const valhalla::IncidentsTile::Location& incident_location);
 } // namespace baldr
 } // namespace valhalla
 

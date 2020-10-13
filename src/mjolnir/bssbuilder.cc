@@ -41,6 +41,7 @@ struct OSMConnectionEdge {
   uint64_t wayid = -1;
   uint32_t speed = 0;
   std::vector<std::string> names = {};
+  std::vector<std::string> tagged_names = {};
   std::vector<PointLL> startshape = {};
   std::vector<PointLL> endshape = {};
   Surface surface = Surface::kCompacted;
@@ -143,6 +144,7 @@ std::vector<OSMConnectionEdge> project(const GraphTile& local_tile,
       osm_conn.wayid = edgeinfo.wayid();
       osm_conn.speed = local_tile.GetSpeed(best_directededge);
       osm_conn.names = edgeinfo.GetNames();
+      osm_conn.tagged_names = edgeinfo.GetNames(true);
       osm_conn.surface = best_directededge->surface();
       osm_conn.cycle_lane = best_directededge->cyclelane();
       osm_conn.road_class = best_directededge->classification();
@@ -207,7 +209,7 @@ DirectedEdge make_directed_edge(const GraphId endnode,
   directededge.set_forwardaccess(accesses[static_cast<size_t>(!is_forward)]);
   directededge.set_reverseaccess(accesses[static_cast<size_t>(is_forward)]);
 
-  directededge.set_named(conn.names.size());
+  directededge.set_named(conn.names.size() > 0 || conn.tagged_names.size() > 0);
   directededge.set_forward(is_forward);
   directededge.set_opp_local_idx(oppo_local_idx);
   directededge.set_bss_connection(true);
@@ -367,7 +369,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
       bool added;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, conn.startnode, new_bss_node_graphid, conn.wayid, 0, 0, 0,
-                                        conn.startshape, conn.names, 0, added);
+                                        conn.startshape, conn.names, conn.tagged_names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
     }
 
@@ -378,7 +380,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
       bool added;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, conn.endnode, new_bss_node_graphid, conn.wayid, 0, 0, 0,
-                                        conn.endshape, conn.names, 0, added);
+                                        conn.endshape, conn.names, conn.tagged_names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
     }
 
@@ -392,7 +394,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
       bool added;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, new_bss_node_graphid, conn.startnode, conn.wayid, 0, 0, 0,
-                                        conn.startshape, conn.names, 0, added);
+                                        conn.startshape, conn.names, conn.tagged_names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
       ++added_edges;
@@ -407,7 +409,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
       bool added;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, new_bss_node_graphid, conn.endnode, conn.wayid, 0, 0, 0,
-                                        conn.endshape, conn.names, 0, added);
+                                        conn.endshape, conn.names, conn.tagged_names, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
       ++added_edges;

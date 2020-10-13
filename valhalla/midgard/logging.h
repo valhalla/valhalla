@@ -1,8 +1,12 @@
 #ifndef VALHALLA_MIDGARD_LOGGING_H_
 #define VALHALLA_MIDGARD_LOGGING_H_
 
-#if defined(_MSC_VER) && defined(ERROR)
+#if defined(_WIN32) && defined(ERROR)
 #undef ERROR
+#endif
+
+#if defined(__MINGW32__) && !defined(NOGDI)
+#define NOGDI
 #endif
 
 #include <mutex>

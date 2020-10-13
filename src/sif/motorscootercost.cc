@@ -172,7 +172,7 @@ public:
    * limits).
    * @return  Returns true if the costing model allows multiple passes.
    */
-  virtual bool AllowMultiPass() const {
+  virtual bool AllowMultiPass() const override {
     return true;
   }
 
@@ -197,7 +197,7 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       int& restriction_idx) const;
+                       int& restriction_idx) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -224,7 +224,7 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              int& restriction_idx) const;
+                              int& restriction_idx) const override;
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -233,9 +233,9 @@ public:
    * @param curr_time
    * @return
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::TransitDeparture* departure,
-                        const uint32_t curr_time) const {
+  virtual Cost EdgeCost(const baldr::DirectedEdge*,
+                        const baldr::TransitDeparture*,
+                        const uint32_t) const override {
     throw std::runtime_error("MotorScooterCost::EdgeCost does not support transit edges");
   }
 
@@ -249,7 +249,7 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::GraphTile* tile,
-                        const uint32_t seconds) const;
+                        const uint32_t seconds) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -262,7 +262,7 @@ public:
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const;
+                              const EdgeLabel& pred) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -276,7 +276,7 @@ public:
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const;
+                                     const baldr::DirectedEdge* edge) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -286,7 +286,7 @@ public:
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
    */
-  virtual float AStarCostFactor() const {
+  virtual float AStarCostFactor() const override {
     return speedfactor_[kMaxAssumedSpeed];
   }
 
@@ -294,7 +294,7 @@ public:
    * Get the current travel type.
    * @return  Returns the current travel type.
    */
-  virtual uint8_t travel_type() const {
+  virtual uint8_t travel_type() const override {
     return static_cast<uint8_t>(VehicleType::kMotorScooter);
   }
   /**
@@ -304,15 +304,13 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  float Filter(const baldr::DirectedEdge* edge,
-               const baldr::GraphId& edgeid,
-               const baldr::GraphTile* tile) const override {
+  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
 
     if (edge->is_shortcut() || !accessible || edge->surface() > kMinimumScooterSurface ||
-        edge->bss_connection() || IsClosedDueToTraffic(edgeid, tile)) {
+        edge->bss_connection() || IsClosed(edge, tile)) {
       return 0.0f;
     } else {
       // TODO - use classification/use to alter the factor
@@ -390,8 +388,7 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       (edge->surface() > kMinimumScooterSurface) || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      IsClosedDueToTraffic(edgeid, tile)) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) || IsClosed(edge, tile)) {
     return false;
   }
 
@@ -415,7 +412,7 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       (opp_edge->surface() > kMinimumScooterSurface) || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      IsClosedDueToTraffic(opp_edgeid, tile)) {
+      IsClosed(opp_edge, tile)) {
     return false;
   }
 

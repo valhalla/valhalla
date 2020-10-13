@@ -100,9 +100,7 @@ public:
     return 0.1f;
   }
 
-  float Filter(const baldr::DirectedEdge* edge,
-               const baldr::GraphId& /*edgeid*/,
-               const baldr::GraphTile* /*tile*/) const override {
+  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile*) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));

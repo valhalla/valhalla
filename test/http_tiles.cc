@@ -128,7 +128,9 @@ struct TestTileDownloadData {
                      // non-existent tile to exercise 404 errors
                      {200305, 2, 0}};
     for (const auto& id : test_tile_ids) {
-      test_tile_names.emplace_back(baldr::GraphTile::FileSuffix(id, is_gzipped_tile));
+      test_tile_names.emplace_back(
+          baldr::GraphTile::FileSuffix(id, is_gzipped_tile ? baldr::SUFFIX_COMPRESSED
+                                                           : baldr::SUFFIX_NON_COMPRESSED));
     }
   }
 

@@ -37,6 +37,9 @@ using namespace valhalla::odin;
 
 namespace {
 
+constexpr uint32_t kRelativeStraightTurnDegreeLowerBound = 330;
+constexpr uint32_t kRelativeStraightTurnDegreeUpperBound = 30;
+
 constexpr float kShortForkThreshold = 0.05f; // Kilometers
 
 // Kilometers - picked since the next rounded maneuver announcement will happen
@@ -44,6 +47,8 @@ constexpr float kShortForkThreshold = 0.05f; // Kilometers
 constexpr float kShortContinueThreshold = 0.6f;
 
 constexpr uint32_t kOverlayEdgeMax = 5; // Maximum number of edges to look for matching overlay
+
+constexpr float kUpcomingLanesThreshold = 3.f; // Kilometers
 
 std::vector<std::string> split(const std::string& source, char delimiter) {
   std::vector<std::string> tokens;
@@ -110,6 +115,9 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 
   // Process the guidance view junctions
   ProcessGuidanceViewJunctions(maneuvers);
+
+  // Update the maneuver placement for internal intersection turns
+  UpdateManeuverPlacementForInternalIntersectionTurns(maneuvers);
 
 #ifdef LOGGING_LEVEL_TRACE
   int final_man_id = 1;
@@ -2679,8 +2687,9 @@ void ManeuversBuilder::EnhanceSignlessInterchnages(std::list<Maneuver>& maneuver
   }
 }
 
-uint16_t ManeuversBuilder::GetExpectedTurnLaneDirection(Maneuver& maneuver) const {
-  auto turn_lane_edge = trip_path_->GetPrevEdge(maneuver.begin_node_index());
+uint16_t
+ManeuversBuilder::GetExpectedTurnLaneDirection(std::unique_ptr<EnhancedTripLeg_Edge>& turn_lane_edge,
+                                               Maneuver& maneuver) const {
   if (turn_lane_edge) {
     switch (maneuver.type()) {
       case valhalla::DirectionsLeg_Maneuver_Type_kUturnLeft:
@@ -2804,55 +2813,97 @@ uint16_t ManeuversBuilder::GetExpectedTurnLaneDirection(Maneuver& maneuver) cons
 }
 
 void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
+  auto prev_man = maneuvers.begin();
   auto curr_man = maneuvers.begin();
   auto next_man = maneuvers.begin();
 
+  // Set current maneuver
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+    curr_man = next_man;
+  }
+
+  // Set next maneuver
   if (next_man != maneuvers.end()) {
     ++next_man;
   }
 
   // Walk the maneuvers to activate turn lanes
-  while (next_man != maneuvers.end()) {
+  while (curr_man != maneuvers.end()) {
 
     // Only process driving maneuvers
     if (curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive) {
-
-      // Keep track of the remaining step distance in kilometers
-      float remaining_step_distance = curr_man->length();
 
       // Walk maneuvers by node (prev_edge of node has the turn lane info)
       // Assign turn lane at transition point
       auto prev_edge = trip_path_->GetPrevEdge(curr_man->begin_node_index());
       if (prev_edge && (prev_edge->turn_lanes_size() > 0)) {
         // If not a short fork then process for turn lanes
-        if (!((remaining_step_distance < kShortForkThreshold) &&
+        if (!((curr_man->length() < kShortForkThreshold) &&
               ((curr_man->type() == DirectionsLeg_Maneuver_Type_kStayLeft) ||
                (curr_man->type() == DirectionsLeg_Maneuver_Type_kStayRight) ||
                (curr_man->type() == DirectionsLeg_Maneuver_Type_kStayStraight)))) {
-          prev_edge->ActivateTurnLanes(GetExpectedTurnLaneDirection(*(curr_man)),
-                                       remaining_step_distance, curr_man->type(), next_man->type());
+          prev_edge->ActivateTurnLanes(GetExpectedTurnLaneDirection(prev_edge, *(curr_man)),
+                                       curr_man->length(), curr_man->type(), next_man->type());
         }
       }
 
-      // Assign turn lanes within step
-      for (auto index = (curr_man->begin_node_index() + 1); index < curr_man->end_node_index();
-           ++index) {
+      // Track whether there is an intermediate traversable intersecting edge in the same
+      // direction as the next maneuver
+      bool has_directional_intersecting_edge = false;
+
+      // Keep track of the remaining step distance in kilometers
+      float remaining_step_distance = 0.f;
+      // Add the prev_edge length as we skip it in the loop below
+      if (prev_edge) {
+        remaining_step_distance += prev_edge->length();
+      }
+
+      // Assign turn lanes within step, walking backwards from end to begin node
+      for (uint32_t index = (prev_man->end_node_index() - 1); index > prev_man->begin_node_index();
+           --index) {
+        auto node = trip_path_->GetEnhancedNode(index);
         auto prev_edge = trip_path_->GetPrevEdge(index);
         if (prev_edge) {
-          // Update the remaining step distance
-          remaining_step_distance -= prev_edge->length();
-
-          if (prev_edge->turn_lanes_size() > 0) {
-            // For now just assume 'through' - we can enhance if needed
-            prev_edge->ActivateTurnLanes(kTurnLaneThrough, remaining_step_distance, curr_man->type(),
-                                         next_man->type());
+          // If we haven't found an intersecting edge yet, check if any exist
+          if (!has_directional_intersecting_edge) {
+            IntersectingEdgeCounts xedge_counts;
+            node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                           prev_edge->travel_mode(), xedge_counts);
+            if (xedge_counts.right_traversable_outbound > 0 && curr_man->IsRightType()) {
+              has_directional_intersecting_edge = true;
+            } else if (xedge_counts.left_traversable_outbound > 0 && curr_man->IsLeftType()) {
+              has_directional_intersecting_edge = true;
+            }
           }
+
+          // Activate lanes on intermediate edges:
+          // - if remaining step distance is short
+          // - and there are no intermediate traversable intersecting edges
+          // - and there are lanes matching the next maneuver direction
+          // - then activate the lanes matching maneuver direction
+          // - else activate one or all through lanes
+          if (prev_edge->turn_lanes_size() > 0) {
+            auto turn_lane_direction = GetExpectedTurnLaneDirection(prev_edge, *(curr_man));
+            if (remaining_step_distance < kUpcomingLanesThreshold &&
+                !has_directional_intersecting_edge && turn_lane_direction != kTurnLaneNone) {
+              // Activate lanes matching upcoming turn direction
+              prev_edge->ActivateTurnLanes(turn_lane_direction, curr_man->length(), curr_man->type(),
+                                           next_man->type());
+            } else {
+              // Activate through lanes
+              prev_edge->ActivateTurnLanes(kTurnLaneThrough, remaining_step_distance,
+                                           prev_man->type(), curr_man->type());
+            }
+          }
+
+          // Update the remaining step distance
+          remaining_step_distance += prev_edge->length();
         }
       }
-
-      // Do we mark maneuver?
     }
     // on to the next maneuver...
+    prev_man = curr_man;
     curr_man = next_man;
     ++next_man;
   }
@@ -2969,6 +3020,133 @@ void ManeuversBuilder::SetTraversableOutboundIntersectingEdgeFlags(std::list<Man
       }
     }
   }
+}
+
+void ManeuversBuilder::UpdateManeuverPlacementForInternalIntersectionTurns(
+    std::list<Maneuver>& maneuvers) {
+
+  auto is_turn_maneuver = [](DirectionsLeg_Maneuver_Type maneuver_type) -> bool {
+    switch (maneuver_type) {
+      case DirectionsLeg_Maneuver_Type_kSlightRight:
+      case DirectionsLeg_Maneuver_Type_kRight:
+      case DirectionsLeg_Maneuver_Type_kSharpRight:
+      case DirectionsLeg_Maneuver_Type_kUturnRight:
+      case DirectionsLeg_Maneuver_Type_kUturnLeft:
+      case DirectionsLeg_Maneuver_Type_kSharpLeft:
+      case DirectionsLeg_Maneuver_Type_kLeft:
+      case DirectionsLeg_Maneuver_Type_kSlightLeft:
+      case DirectionsLeg_Maneuver_Type_kRampRight:
+      case DirectionsLeg_Maneuver_Type_kRampLeft:
+      case DirectionsLeg_Maneuver_Type_kStayRight:
+      case DirectionsLeg_Maneuver_Type_kStayLeft:
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  auto is_relative_straight = [](uint32_t turn_degree) -> bool {
+    return ((turn_degree >= kRelativeStraightTurnDegreeLowerBound) ||
+            (turn_degree <= kRelativeStraightTurnDegreeUpperBound));
+  };
+
+  Maneuver* prev_maneuver = nullptr;
+  for (auto& maneuver : maneuvers) {
+    // Verify that the previous maneuver is set
+    if (prev_maneuver) {
+      // Skip destination maneuver
+      if (maneuver.IsDestinationType()) {
+        break;
+      }
+
+      // Maneuver must be a turn
+      if (is_turn_maneuver(maneuver.type())) {
+        auto original_maneuver_end_node_index = maneuver.end_node_index();
+
+        // Iterate over edges
+        for (auto node_index = maneuver.begin_node_index();
+             node_index < original_maneuver_end_node_index; ++node_index) {
+          auto new_node_index = node_index + 1;
+          auto prev_edge = trip_path_->GetPrevEdge(node_index);
+          auto edge = trip_path_->GetCurrEdge(node_index);
+
+          // New node index must less than original maneuver end node index (cannot move all edges)
+          // maneuvers must be the same travel mode and
+          // edge must be internal and straight from previous maneuver
+          if ((new_node_index < original_maneuver_end_node_index) &&
+              (prev_maneuver->travel_mode() == maneuver.travel_mode()) &&
+              edge->internal_intersection() &&
+              is_relative_straight(GetTurnDegree(prev_edge->end_heading(), edge->begin_heading()))) {
+            // Add straight internal edge to previous maneuver
+            MoveInternalEdgeToPreviousManeuver(*prev_maneuver, maneuver, new_node_index,
+                                               prev_edge.get(), edge.get());
+          } else {
+            // Exit form the edge loop
+            break;
+          }
+        } // end edge loop
+      }
+    }
+
+    // Update previous maneuver
+    prev_maneuver = &maneuver;
+
+  } // end maneuver loop
+}
+
+void ManeuversBuilder::MoveInternalEdgeToPreviousManeuver(Maneuver& prev_maneuver,
+                                                          Maneuver& maneuver,
+                                                          uint32_t new_node_index,
+                                                          EnhancedTripLeg_Edge* prev_edge,
+                                                          EnhancedTripLeg_Edge* edge) {
+  /////////////////////////////////////////////////////////////////////////////
+  // Update the previous maneuver
+
+  // Increase distance in kilometers
+  prev_maneuver.set_length(prev_maneuver.length() + edge->length());
+
+  // Increase basic time (len/speed on each edge with no stop impact) in seconds
+  prev_maneuver.set_basic_time(
+      prev_maneuver.basic_time() +
+      GetTime(edge->length(), GetSpeed(prev_maneuver.travel_mode(), edge->default_speed())));
+
+  // Set the end node index
+  prev_maneuver.set_end_node_index(new_node_index);
+
+  // Set the end shape index
+  prev_maneuver.set_end_shape_index(edge->end_shape_index());
+
+  // Update the time based on the delta of the elapsed time between the begin
+  // and end nodes
+  prev_maneuver.set_time(
+      trip_path_->node(prev_maneuver.end_node_index()).cost().elapsed_cost().seconds() -
+      trip_path_->node(prev_maneuver.begin_node_index()).cost().elapsed_cost().seconds());
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Update the maneuver
+
+  // Decrease distance in kilometers
+  maneuver.set_length(maneuver.length() - edge->length());
+
+  // Decrease basic time (len/speed on each edge with no stop impact) in seconds
+  maneuver.set_basic_time(
+      maneuver.basic_time() -
+      GetTime(edge->length(), GetSpeed(maneuver.travel_mode(), edge->default_speed())));
+
+  // Set the begin node index
+  maneuver.set_begin_node_index(new_node_index);
+
+  // Set the begin shape index
+  maneuver.set_begin_shape_index(edge->end_shape_index());
+
+  // Update the time based on the delta of the elapsed time between the begin
+  // and end nodes
+  maneuver.set_time(trip_path_->node(maneuver.end_node_index()).cost().elapsed_cost().seconds() -
+                    trip_path_->node(maneuver.begin_node_index()).cost().elapsed_cost().seconds());
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Update the edge turn lanes with the previous edge turn lanes
+  edge->mutable_turn_lanes()->CopyFrom(prev_edge->turn_lanes());
 }
 
 } // namespace odin

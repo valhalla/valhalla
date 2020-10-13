@@ -13,11 +13,7 @@
          ░
 
 
-### NOTICE
-Valhalla 3.0 is now available!
-This release (current master) makes changes to the Valhalla graph tile format. These tile changes are designed to make the tile data more efficient and flexible. However, these changes make Valhalla 3.0 incompatible with data from Valhalla 2.x. Also, any data built using Valhalla 3.0 will not be usable with Valhalla 2.x. See the [CHANGELOG](CHANGELOG.md) to get a brief description of the updates.
 
-------------
 Valhalla is an open source routing engine and accompanying libraries for use with OpenStreetMap data. Valhalla also includes tools like time+distance matrix computation, isochrones, elevation sampling, map matching and tour optimization (Travelling Salesman).
 
 Build Status
@@ -25,7 +21,7 @@ Build Status
 
 | Linux/MacOs | Windows | Code Coverage |
 | ----------- | ------- | ------------- |
-| [![Circle CI](https://circleci.com/gh/valhalla/valhalla.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla) | [![Build Status](https://dev.azure.com/valhalla1/valhalla/_apis/build/status/valhalla.valhalla?branchName=master)](https://dev.azure.com/valhalla1/valhalla/_build/latest?definitionId=1&branchName=master) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) |
+| [![Circle CI](https://circleci.com/gh/valhalla/valhalla/tree/master.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla/tree/master) | [![Build Status](https://dev.azure.com/valhalla1/valhalla/_apis/build/status/valhalla.valhalla?branchName=master)](https://dev.azure.com/valhalla1/valhalla/_build/latest?definitionId=1&branchName=master) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) |
 
 
 

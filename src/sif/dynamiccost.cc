@@ -52,7 +52,7 @@ DynamicCost::DynamicCost(const CostingOptions& options, const TravelMode mode, u
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
       access_mask_(access_mask), flow_mask_(kDefaultFlowMask),
       ignore_restrictions_(options.ignore_restrictions()), ignore_oneways_(options.ignore_oneways()),
-      ignore_access_(options.ignore_access()) {
+      ignore_access_(options.ignore_access()), ignore_closures_(options.ignore_closures()) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
@@ -87,9 +87,7 @@ Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const baldr::GraphTi
 // Returns the cost to make the transition from the predecessor edge.
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.
-Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
-                                 const NodeInfo* node,
-                                 const EdgeLabel& pred) const {
+Cost DynamicCost::TransitionCost(const DirectedEdge*, const NodeInfo*, const EdgeLabel&) const {
   return {0.0f, 0.0f};
 }
 
@@ -97,10 +95,10 @@ Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
 // when using a reverse search (from destination towards the origin).
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.
-Cost DynamicCost::TransitionCostReverse(const uint32_t idx,
-                                        const baldr::NodeInfo* node,
-                                        const baldr::DirectedEdge* opp_edge,
-                                        const baldr::DirectedEdge* opp_pred_edge) const {
+Cost DynamicCost::TransitionCostReverse(const uint32_t,
+                                        const baldr::NodeInfo*,
+                                        const baldr::DirectedEdge*,
+                                        const baldr::DirectedEdge*) const {
   return {0.0f, 0.0f};
 }
 
@@ -189,16 +187,16 @@ bool DynamicCost::bicycle() const {
 }
 
 // Add to the exclude list.
-void DynamicCost::AddToExcludeList(const baldr::GraphTile*& tile) {
+void DynamicCost::AddToExcludeList(const baldr::GraphTile*&) {
 }
 
 // Checks if we should exclude or not.
-bool DynamicCost::IsExcluded(const baldr::GraphTile*& tile, const baldr::DirectedEdge* edge) {
+bool DynamicCost::IsExcluded(const baldr::GraphTile*&, const baldr::DirectedEdge*) {
   return false;
 }
 
 // Checks if we should exclude or not.
-bool DynamicCost::IsExcluded(const baldr::GraphTile*& tile, const baldr::NodeInfo* node) {
+bool DynamicCost::IsExcluded(const baldr::GraphTile*&, const baldr::NodeInfo*) {
   return false;
 }
 
@@ -220,6 +218,7 @@ void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_c
       rapidjson::get<bool>(value, "/ignore_restrictions", false));
   pbf_costing_options->set_ignore_oneways(rapidjson::get<bool>(value, "/ignore_oneways", false));
   pbf_costing_options->set_ignore_access(rapidjson::get<bool>(value, "/ignore_access", false));
+  pbf_costing_options->set_ignore_closures(rapidjson::get<bool>(value, "/ignore_closures", false));
   auto name = rapidjson::get_optional<std::string>(value, "/name");
   if (name) {
     pbf_costing_options->set_name(*name);
@@ -298,6 +297,10 @@ void ParseCostingOptions(const rapidjson::Document& doc,
     }
     case pedestrian: {
       sif::ParsePedestrianCostOptions(doc, key, costing_options);
+      break;
+    }
+    case bikeshare: {
+      costing_options->set_costing(Costing::bikeshare); // Nothing to parse for this one
       break;
     }
     case transit: {

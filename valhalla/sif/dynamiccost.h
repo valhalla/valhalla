@@ -65,6 +65,9 @@ public:
 
   virtual ~DynamicCost();
 
+  DynamicCost(const DynamicCost&) = delete;
+  DynamicCost& operator=(const DynamicCost&) = delete;
+
   /**
    * Does the costing method allow multiple passes (with relaxed
    * hierarchy limits).
@@ -578,9 +581,7 @@ public:
    * edges attribution and suitability for use as a location by the travel
    * mode used by the costing method.
    */
-  virtual float Filter(const baldr::DirectedEdge* edge,
-                       const baldr::GraphId& edgeid,
-                       const baldr::GraphTile* tile) const = 0;
+  virtual float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const = 0;
 
   /**
    * Gets the hierarchy limits.
@@ -713,6 +714,7 @@ protected:
   bool ignore_restrictions_{false};
   bool ignore_oneways_{false};
   bool ignore_access_{false};
+  bool ignore_closures_{false};
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
@@ -896,9 +898,8 @@ protected:
    * @param  edgeid         GraphId of the opposing edge.
    * @return  Returns true if the edge is closed due to live traffic constraints, false if not.
    */
-  inline virtual bool IsClosedDueToTraffic(const baldr::GraphId& edgeid,
-                                           const baldr::GraphTile* tile) const {
-    return (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosedDueToTraffic(edgeid);
+  inline virtual bool IsClosed(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const {
+    return !ignore_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
   }
 };
 

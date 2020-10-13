@@ -1,6 +1,7 @@
 #pragma once
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/proto/api.pb.h>
+#include <valhalla/proto/incidents.pb.h>
 #include <valhalla/sif/costconstants.h>
 
 namespace valhalla {
@@ -202,7 +203,9 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
 }
 
 // Get the string representing the incident-type
-std::string incidentTypeToString(const TripLeg_Node_Incident_Type& incident_type);
+std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& incident_type);
+// Get the string representing the incident-Impact
+const char* incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impact& impact);
 
 // to use protobuflite we cant use descriptors which means we cant translate enums to strings
 // and so we reimplement the ones we use here. newer versions of protobuf provide these even

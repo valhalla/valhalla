@@ -1,53 +1,87 @@
 #include "proto_conversions.h"
+#include "midgard/logging.h"
 
 using namespace valhalla;
 
 namespace valhalla {
 
-std::string incidentTypeToString(const TripLeg_Node_Incident_Type& incident_type) {
+std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& incident_type) {
   switch (incident_type) {
-    case TripLeg_Node_Incident_Type_NOT_SET:
-      return "not_set";
-      break;
-    case TripLeg_Node_Incident_Type_ACCIDENT:
+    case valhalla::IncidentsTile::Metadata::ACCIDENT:
       return "accident";
       break;
-    case TripLeg_Node_Incident_Type_CONGESTION:
+    case valhalla::IncidentsTile::Metadata::CONGESTION:
       return "congestion";
       break;
-    case TripLeg_Node_Incident_Type_CONSTRUCTION:
+    case valhalla::IncidentsTile::Metadata::CONSTRUCTION:
       return "construction";
       break;
-    case TripLeg_Node_Incident_Type_DISABLED_VEHICLE:
+    case valhalla::IncidentsTile::Metadata::DISABLED_VEHICLE:
       return "disabled_vehicle";
       break;
-    case TripLeg_Node_Incident_Type_LANE_RESTRICTION:
+    case valhalla::IncidentsTile::Metadata::LANE_RESTRICTION:
       return "lane_restriction";
       break;
-    case TripLeg_Node_Incident_Type_MASS_TRANSIT:
+    case valhalla::IncidentsTile::Metadata::MASS_TRANSIT:
       return "mass_transit";
       break;
-    case TripLeg_Node_Incident_Type_MISCELLANEOUS:
+    case valhalla::IncidentsTile::Metadata::MISCELLANEOUS:
       return "miscellaneous";
       break;
-    case TripLeg_Node_Incident_Type_OTHER_NEWS:
+    case valhalla::IncidentsTile::Metadata::OTHER_NEWS:
       return "other_news";
       break;
-    case TripLeg_Node_Incident_Type_PLANNED_EVENT:
+    case valhalla::IncidentsTile::Metadata::PLANNED_EVENT:
       return "planned_event";
       break;
-    case TripLeg_Node_Incident_Type_ROAD_CLOSURE:
+    case valhalla::IncidentsTile::Metadata::ROAD_CLOSURE:
       return "road_closure";
       break;
-    case TripLeg_Node_Incident_Type_ROAD_HAZARD:
+    case valhalla::IncidentsTile::Metadata::ROAD_HAZARD:
       return "road_hazard";
       break;
-    case TripLeg_Node_Incident_Type_WEATHER:
+    case valhalla::IncidentsTile::Metadata::WEATHER:
       return "weather";
+      break;
+    case valhalla::
+        IncidentsTile_Metadata_Type_IncidentsTile_Metadata_Type_INT_MAX_SENTINEL_DO_NOT_USE_:
+    case valhalla::
+        IncidentsTile_Metadata_Type_IncidentsTile_Metadata_Type_INT_MIN_SENTINEL_DO_NOT_USE_:
+      // Like the name says, do not use. Simply for ensuring full coverage of switch statement
       break;
   };
   throw std::runtime_error("Unhandled case in incidentTypeToString: " +
                            std::to_string(incident_type));
+}
+
+// Get the string representing the incident-Impact
+const char* incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impact& impact) {
+  switch (impact) {
+    case valhalla::IncidentsTile::Metadata::UNKNOWN:
+      return "unknown";
+      break;
+    case valhalla::IncidentsTile::Metadata::CRITICAL:
+      return "critical";
+      break;
+    case valhalla::IncidentsTile::Metadata::MAJOR:
+      return "major";
+      break;
+    case valhalla::IncidentsTile::Metadata::MINOR:
+      return "minor";
+      break;
+    case valhalla::IncidentsTile::Metadata::LOW:
+      return "low";
+      break;
+    case valhalla::
+        IncidentsTile_Metadata_Impact_IncidentsTile_Metadata_Impact_INT_MAX_SENTINEL_DO_NOT_USE_:
+    case valhalla::
+        IncidentsTile_Metadata_Impact_IncidentsTile_Metadata_Impact_INT_MIN_SENTINEL_DO_NOT_USE_:
+      // Like the name says, do not use. Simply for ensuring full coverage of switch statement
+      break;
+  }
+  // TODO Throw or warn here? Assert maybe to only crash debug build
+  LOG_WARN("Unhandled case in incidentCriticalityToString: " + std::to_string(impact));
+  return "UNHANDLED_CASE";
 }
 
 bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {

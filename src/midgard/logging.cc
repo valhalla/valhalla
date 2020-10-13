@@ -16,7 +16,7 @@
 namespace {
 
 inline std::tm* get_gmtime(const std::time_t* time, std::tm* tm) {
-#ifdef _MSC_VER
+#ifdef _WIN32
   // MSVC gmtime() already returns tm allocated in thread-local storage
   if (gmtime_s(tm, time) == 0)
     return tm;
