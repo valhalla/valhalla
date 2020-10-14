@@ -1,3 +1,4 @@
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <list>
@@ -5,11 +6,10 @@
 #include <set>
 #include <sstream>
 #include <stdexcept>
+#include <streambuf>
 #include <string>
 #include <thread>
 #include <unordered_set>
-#include <fstream>
-#include <streambuf>
 
 #include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
@@ -73,12 +73,10 @@ int main(int argc, char** argv) {
       } else {
         request_str = argv[3];
       }
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
       LOG_ERROR(std::string(e.what()));
       return 1;
-    }
-    catch (...) {
+    } catch (...) {
       LOG_ERROR(std::string("Unknown exception thrown while reading request string or file"));
       return 1;
     }
