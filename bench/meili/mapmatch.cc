@@ -111,7 +111,7 @@ static void BM_ManyCases(benchmark::State& state) {
   valhalla::tyr::actor_t actor(config, true);
   const std::string test_case(LoadFile(kBenchmarkCases[state.range(0)]));
   for (auto _ : state) {
-    benchmark::DoNotOptimize(actor.trace_route(test_case, nullptr, nullptr));
+    benchmark::DoNotOptimize(actor.trace_route(test_case));
   }
 }
 
