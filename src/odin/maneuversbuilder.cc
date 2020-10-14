@@ -2483,8 +2483,9 @@ bool ManeuversBuilder::IsNextManeuverObvious(const std::list<Maneuver>& maneuver
     }
 
     // Return true if not a non-backward traversable same name intersecting edge
-    if (node && !node->HasNonBackwardTraversableSameNameIntersectingEdge(curr_man->end_heading(),
-                                                                         next_man->travel_mode())) {
+    if (node &&
+        !node->HasNonBackwardTraversableSameNameRampIntersectingEdge(curr_man->end_heading(),
+                                                                     next_man->travel_mode())) {
       return true;
     }
   }
