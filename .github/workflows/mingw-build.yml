@@ -44,7 +44,4 @@ jobs:
             -DENABLE_BENCHMARKS=OFF \
             -DLOGGING_LEVEL=DEBUG \
             -DBoost_PROGRAM_OPTIONS_LIBRARY=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libboost_program_options-mt-x64.dll.a \ 
-            -DPYTHON_EXECUTABLE=/usr/x86_64-w64-mingw32/bin/python3 \
-            -DPYTHON_LIBRARIES=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libpython3.9.dll.a \
-            -DPYTHON_INCLUDE_DIRS=/usr/x86_64-w64-mingw32/sys-root/mingw/include/python3.9 \
           && mingw64-make -j$(nproc)
