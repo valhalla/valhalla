@@ -90,7 +90,7 @@ struct simplified_actor_t : public valhalla::tyr::actor_t {
   };
 };
 
-PYBIND11_MODULE(valhalla_python, m) {
+PYBIND11_MODULE(python_valhalla, m) {
   m.def("Configure", py_configure);
 
   py::class_<simplified_actor_t, std::shared_ptr<simplified_actor_t>>(m, "Actor")

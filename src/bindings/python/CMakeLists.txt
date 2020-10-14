@@ -1,7 +1,7 @@
 add_subdirectory(../../../third_party/pybind11 _pybind11)
 
-pybind11_add_module(valhalla_python python.cc)
-target_link_libraries(valhalla_python PUBLIC valhalla)
+pybind11_add_module(python_valhalla python.cc)
+target_link_libraries(python_valhalla PUBLIC valhalla)
 set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 configure_file(valhalla/__init__.py.in valhalla/__init__.py)
@@ -39,6 +39,6 @@ set(_packages_path "${_path}/Lib/site-packages")
 unset(_path)
 endif()
 message(STATUS "Installing python modules to ${CMAKE_INSTALL_PREFIX}/${_packages_path}")
-install(TARGETS valhalla_python
+install(TARGETS python_valhalla
 DESTINATION "${_packages_path}"
 COMPONENT python)
