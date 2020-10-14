@@ -56,8 +56,8 @@ void py_configure(const std::string& config_file) {
 namespace py = pybind11;
 
 struct simplified_actor_t : public valhalla::tyr::actor_t {
-  simplified_actor_t(const boost::property_tree::ptree& config, bool auto_cleanup = false)
-      : valhalla::tyr::actor_t::actor_t(config, auto_cleanup) {
+  simplified_actor_t(const boost::property_tree::ptree& config)
+      : valhalla::tyr::actor_t::actor_t(config, true) {
   }
 
   std::string route(const std::string& request_str) {
@@ -96,7 +96,7 @@ PYBIND11_MODULE(python_valhalla, m) {
   m.def("Configure", py_configure);
 
   py::class_<simplified_actor_t, std::shared_ptr<simplified_actor_t>>(m, "Actor")
-      .def(py::init<>([]() { return std::make_shared<simplified_actor_t>(configure(), true); }))
+      .def(py::init<>([]() { return std::make_shared<simplified_actor_t>(configure()); }))
       .def("Route", &simplified_actor_t::route, "Calculates a route.")
       .def("Locate", &simplified_actor_t::locate, "Provides information about nodes and edges.")
       .def("OptimizedRoute", &simplified_actor_t::optimized_route,
@@ -109,12 +109,13 @@ PYBIND11_MODULE(python_valhalla, m) {
            "Map-matching for a set of input locations, e.g. from a GPS.")
       .def(
           "TraceAttributes", &simplified_actor_t::trace_attributes,
-          "Returns detailed attribution along each portion of a route calculate from a set of input locations, e.g. from a GPS trace.")
+          "Returns detailed attribution along each portion of a route calculated from a set of input locations, e.g. from a GPS trace.")
       .def("Height", &simplified_actor_t::height,
            "Provides elevation data for a set of input geometries.")
       .def(
           "TransitAvailable", &simplified_actor_t::transit_available,
           "Lookup if transit stops are available in a defined radius around a set of input locations.")
-      .def("Expansion", &simplified_actor_t::expansion,
-           "Returns all road segments which were touched by the routing algorithm during the search.");
+      .def(
+          "Expansion", &simplified_actor_t::expansion,
+          "Returns all road segments which were touched by the routing algorithm during the graph traversal.");
 }
