@@ -10,8 +10,8 @@
 
 #include <sqlite3.h>
 
-#include "valhalla/baldr/graphconstants.h"
 #include "midgard/aabb2.h"
+#include "valhalla/baldr/graphconstants.h"
 #include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla::baldr;
