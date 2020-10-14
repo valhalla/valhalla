@@ -56,36 +56,38 @@ void py_configure(const std::string& config_file) {
 namespace py = pybind11;
 
 struct simplified_actor_t : public valhalla::tyr::actor_t {
-  simplified_actor_t(const boost::property_tree::ptree& config, bool auto_cleanup = false) : valhalla::tyr::actor_t::actor_t(config, auto_cleanup) {}
+  simplified_actor_t(const boost::property_tree::ptree& config, bool auto_cleanup = false)
+      : valhalla::tyr::actor_t::actor_t(config, auto_cleanup) {
+  }
 
-  std::string route (const std::string& request_str) {
-    return valhalla::tyr::actor_t::route(request_str, nullptr, nullptr);  
+  std::string route(const std::string& request_str) {
+    return valhalla::tyr::actor_t::route(request_str, nullptr, nullptr);
   };
-  std::string locate (const std::string& request_str) {
+  std::string locate(const std::string& request_str) {
     return valhalla::tyr::actor_t::locate(request_str, nullptr, nullptr);
   };
-  std::string optimized_route (const std::string& request_str) {
+  std::string optimized_route(const std::string& request_str) {
     return valhalla::tyr::actor_t::optimized_route(request_str, nullptr, nullptr);
   };
-  std::string matrix (const std::string& request_str) {
+  std::string matrix(const std::string& request_str) {
     return valhalla::tyr::actor_t::matrix(request_str, nullptr, nullptr);
   };
-  std::string isochrone (const std::string& request_str) {
+  std::string isochrone(const std::string& request_str) {
     return valhalla::tyr::actor_t::isochrone(request_str, nullptr, nullptr);
   };
-  std::string trace_route (const std::string& request_str) {
+  std::string trace_route(const std::string& request_str) {
     return valhalla::tyr::actor_t::trace_route(request_str, nullptr, nullptr);
   };
-  std::string trace_attributes (const std::string& request_str) {
+  std::string trace_attributes(const std::string& request_str) {
     return valhalla::tyr::actor_t::trace_attributes(request_str, nullptr, nullptr);
   };
-  std::string height (const std::string& request_str) {
+  std::string height(const std::string& request_str) {
     return valhalla::tyr::actor_t::height(request_str, nullptr, nullptr);
   };
-  std::string transit_available (const std::string& request_str) {
+  std::string transit_available(const std::string& request_str) {
     return valhalla::tyr::actor_t::transit_available(request_str, nullptr, nullptr);
   };
-  std::string expansion (const std::string& request_str) {
+  std::string expansion(const std::string& request_str) {
     return valhalla::tyr::actor_t::expansion(request_str, nullptr, nullptr);
   };
 };
@@ -97,12 +99,22 @@ PYBIND11_MODULE(python_valhalla, m) {
       .def(py::init<>([]() { return std::make_shared<simplified_actor_t>(configure(), true); }))
       .def("Route", &simplified_actor_t::route, "Calculates a route.")
       .def("Locate", &simplified_actor_t::locate, "Provides information about nodes and edges.")
-      .def("OptimizedRoute", &simplified_actor_t::optimized_route, "Optimizes the order of a set of waypoints by time.")
-      .def("Matrix", &simplified_actor_t::matrix, "Computes the time and distance between a set of locations and returns them as a matrix table.")
+      .def("OptimizedRoute", &simplified_actor_t::optimized_route,
+           "Optimizes the order of a set of waypoints by time.")
+      .def(
+          "Matrix", &simplified_actor_t::matrix,
+          "Computes the time and distance between a set of locations and returns them as a matrix table.")
       .def("Isochrone", &simplified_actor_t::isochrone, "Calculates isochrones and isodistances.")
-      .def("TraceRoute", &simplified_actor_t::trace_route, "Map-matching for a set of input locations, e.g. from a GPS.")
-      .def("TraceAttributes", &simplified_actor_t::trace_attributes, "Returns detailed attribution along each portion of a route calculate from a set of input locations, e.g. from a GPS trace.")
-      .def("Height", &simplified_actor_t::height, "Provides elevation data for a set of input geometries.")
-      .def("TransitAvailable", &simplified_actor_t::transit_available, "Lookup if transit stops are available in a defined radius around a set of input locations.")
-      .def("Expansion", &simplified_actor_t::expansion, "Returns all road segments which were touched by the routing algorithm during the search.");
+      .def("TraceRoute", &simplified_actor_t::trace_route,
+           "Map-matching for a set of input locations, e.g. from a GPS.")
+      .def(
+          "TraceAttributes", &simplified_actor_t::trace_attributes,
+          "Returns detailed attribution along each portion of a route calculate from a set of input locations, e.g. from a GPS trace.")
+      .def("Height", &simplified_actor_t::height,
+           "Provides elevation data for a set of input geometries.")
+      .def(
+          "TransitAvailable", &simplified_actor_t::transit_available,
+          "Lookup if transit stops are available in a defined radius around a set of input locations.")
+      .def("Expansion", &simplified_actor_t::expansion,
+           "Returns all road segments which were touched by the routing algorithm during the search.");
 }
