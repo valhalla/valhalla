@@ -5,46 +5,48 @@ using namespace valhalla;
 
 namespace valhalla {
 
-std::string incidentTypeToString(const valhalla::incidents::Metadata::Type& incident_type) {
+std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& incident_type) {
   switch (incident_type) {
-    case valhalla::incidents::Metadata::ACCIDENT:
+    case valhalla::IncidentsTile::Metadata::ACCIDENT:
       return "accident";
       break;
-    case valhalla::incidents::Metadata::CONGESTION:
+    case valhalla::IncidentsTile::Metadata::CONGESTION:
       return "congestion";
       break;
-    case valhalla::incidents::Metadata::CONSTRUCTION:
+    case valhalla::IncidentsTile::Metadata::CONSTRUCTION:
       return "construction";
       break;
-    case valhalla::incidents::Metadata::DISABLED_VEHICLE:
+    case valhalla::IncidentsTile::Metadata::DISABLED_VEHICLE:
       return "disabled_vehicle";
       break;
-    case valhalla::incidents::Metadata::LANE_RESTRICTION:
+    case valhalla::IncidentsTile::Metadata::LANE_RESTRICTION:
       return "lane_restriction";
       break;
-    case valhalla::incidents::Metadata::MASS_TRANSIT:
+    case valhalla::IncidentsTile::Metadata::MASS_TRANSIT:
       return "mass_transit";
       break;
-    case valhalla::incidents::Metadata::MISCELLANEOUS:
+    case valhalla::IncidentsTile::Metadata::MISCELLANEOUS:
       return "miscellaneous";
       break;
-    case valhalla::incidents::Metadata::OTHER_NEWS:
+    case valhalla::IncidentsTile::Metadata::OTHER_NEWS:
       return "other_news";
       break;
-    case valhalla::incidents::Metadata::PLANNED_EVENT:
+    case valhalla::IncidentsTile::Metadata::PLANNED_EVENT:
       return "planned_event";
       break;
-    case valhalla::incidents::Metadata::ROAD_CLOSURE:
+    case valhalla::IncidentsTile::Metadata::ROAD_CLOSURE:
       return "road_closure";
       break;
-    case valhalla::incidents::Metadata::ROAD_HAZARD:
+    case valhalla::IncidentsTile::Metadata::ROAD_HAZARD:
       return "road_hazard";
       break;
-    case valhalla::incidents::Metadata::WEATHER:
+    case valhalla::IncidentsTile::Metadata::WEATHER:
       return "weather";
       break;
-    case valhalla::incidents::Metadata_Type_Metadata_Type_INT_MAX_SENTINEL_DO_NOT_USE_:
-    case valhalla::incidents::Metadata_Type_Metadata_Type_INT_MIN_SENTINEL_DO_NOT_USE_:
+    case valhalla::
+        IncidentsTile_Metadata_Type_IncidentsTile_Metadata_Type_INT_MAX_SENTINEL_DO_NOT_USE_:
+    case valhalla::
+        IncidentsTile_Metadata_Type_IncidentsTile_Metadata_Type_INT_MIN_SENTINEL_DO_NOT_USE_:
       // Like the name says, do not use. Simply for ensuring full coverage of switch statement
       break;
   };
@@ -53,25 +55,27 @@ std::string incidentTypeToString(const valhalla::incidents::Metadata::Type& inci
 }
 
 // Get the string representing the incident-Impact
-const char* incidentImpactToString(const valhalla::incidents::Metadata_Impact& impact) {
+const char* incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impact& impact) {
   switch (impact) {
-    case valhalla::incidents::Metadata_Impact::Metadata_Impact_UNKNOWN:
+    case valhalla::IncidentsTile::Metadata::UNKNOWN:
       return "unknown";
       break;
-    case valhalla::incidents::Metadata_Impact::Metadata_Impact_CRITICAL:
+    case valhalla::IncidentsTile::Metadata::CRITICAL:
       return "critical";
       break;
-    case valhalla::incidents::Metadata_Impact::Metadata_Impact_MAJOR:
+    case valhalla::IncidentsTile::Metadata::MAJOR:
       return "major";
       break;
-    case valhalla::incidents::Metadata_Impact::Metadata_Impact_MINOR:
+    case valhalla::IncidentsTile::Metadata::MINOR:
       return "minor";
       break;
-    case valhalla::incidents::Metadata_Impact::Metadata_Impact_LOW:
+    case valhalla::IncidentsTile::Metadata::LOW:
       return "low";
       break;
-    case valhalla::incidents::Metadata_Impact_Metadata_Impact_INT_MAX_SENTINEL_DO_NOT_USE_:
-    case valhalla::incidents::Metadata_Impact_Metadata_Impact_INT_MIN_SENTINEL_DO_NOT_USE_:
+    case valhalla::
+        IncidentsTile_Metadata_Impact_IncidentsTile_Metadata_Impact_INT_MAX_SENTINEL_DO_NOT_USE_:
+    case valhalla::
+        IncidentsTile_Metadata_Impact_IncidentsTile_Metadata_Impact_INT_MIN_SENTINEL_DO_NOT_USE_:
       // Like the name says, do not use. Simply for ensuring full coverage of switch statement
       break;
   }

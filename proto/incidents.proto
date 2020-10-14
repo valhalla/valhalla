@@ -7,39 +7,38 @@
 
 syntax = "proto3";
 option optimize_for = LITE_RUNTIME;
-package valhalla.incidents;
+package valhalla;
 
 message IncidentsTile {
   // Sorted list of edge_ids describing what incidents are attached to an edge_id
   repeated Location locations = 1;
   // Look at `incident_locations` to find how to index this array
   repeated Metadata metadata = 2;
-}
 
-// Links (part of an edge) to incidents
-message Location {
-  uint32 edge_index = 1;
-  float start_offset = 2;
-  float end_offset = 3;
-  uint32 metadata_index = 4;
-}
+  // Links a portion of an edge to incident metadata
+  message Location {
+    uint32 edge_index = 1;
+    float start_offset = 2;
+    float end_offset = 3;
+    uint32 metadata_index = 4;
+  }
 
-// A single incident is described by this
-// TODO This is not yet finalized
-message Metadata {
+  // A single incident is described by this
+  // TODO This is not yet finalized
+  message Metadata {
     enum Type {
-        ACCIDENT = 0;
-        CONGESTION = 1;
-        CONSTRUCTION = 2;
-        DISABLED_VEHICLE = 3;
-        LANE_RESTRICTION = 4;
-        MASS_TRANSIT = 5;
-        MISCELLANEOUS = 6;
-        OTHER_NEWS = 7;
-        PLANNED_EVENT = 8;
-        ROAD_CLOSURE = 9;
-        ROAD_HAZARD = 10;
-        WEATHER = 11;
+      ACCIDENT = 0;
+      CONGESTION = 1;
+      CONSTRUCTION = 2;
+      DISABLED_VEHICLE = 3;
+      LANE_RESTRICTION = 4;
+      MASS_TRANSIT = 5;
+      MISCELLANEOUS = 6;
+      OTHER_NEWS = 7;
+      PLANNED_EVENT = 8;
+      ROAD_CLOSURE = 9;
+      ROAD_HAZARD = 10;
+      WEATHER = 11;
     }
     Type type = 1;
     repeated uint32 alertc_codes = 2;
@@ -49,16 +48,16 @@ message Metadata {
     uint64 start_time = 6;
     uint64 end_time = 7;
     enum Impact {
-        UNKNOWN = 0;
-        CRITICAL = 1;
-        MAJOR = 2;
-        MINOR = 3;
-        LOW = 4;
+      UNKNOWN = 0;
+      CRITICAL = 1;
+      MAJOR = 2;
+      MINOR = 3;
+      LOW = 4;
     }
     Impact impact = 9;
     bool road_closed = 10;
     message Congestion {
-        uint32 value = 1;
+      uint32 value = 1;
     }
     Congestion congestion = 11;
     repeated string lanes_blocked = 12;
@@ -71,4 +70,5 @@ message Metadata {
     uint64 id = 128;
     // Country code
     string iso_3166_1_alpha2 = 129;
+  }
 }

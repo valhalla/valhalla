@@ -135,7 +135,7 @@ if(NOT TARGET CURL::CURL)
       #INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
       INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
       INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
-    if(NOT WIN32)
+    if(NOT MSVC)
       set_property(TARGET CURL::CURL APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}")
     endif()
   endif()
@@ -254,16 +254,15 @@ endfunction()
 ## Valhalla programs
 set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_benchmark_skadi
   valhalla_run_isochrone valhalla_run_route valhalla_benchmark_adjacency_list valhalla_run_matrix
-  valhalla_path_comparison valhalla_export_edges valhalla_expand_bounding_box)
+  valhalla_path_comparison valhalla_export_edges valhalla_expand_bounding_box valhalla_service)
 
 ## Valhalla data tools
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
-  valhalla_benchmark_admins	valhalla_build_connectivity	valhalla_build_tiles
-  valhalla_build_admins valhalla_convert_transit valhalla_fetch_transit valhalla_query_transit
-  valhalla_add_predicted_traffic)
+  valhalla_benchmark_admins valhalla_build_connectivity	valhalla_build_tiles valhalla_build_admins
+  valhalla_convert_transit valhalla_fetch_transit valhalla_query_transit valhalla_add_predicted_traffic)
 
 ## Valhalla services
-set(valhalla_services	valhalla_service valhalla_loki_worker	valhalla_odin_worker valhalla_thor_worker)
+set(valhalla_services valhalla_loki_worker valhalla_odin_worker valhalla_thor_worker)
 
 if(ENABLE_TOOLS)
   foreach(program ${valhalla_programs})
@@ -272,7 +271,7 @@ if(ENABLE_TOOLS)
     set_target_properties(${program} PROPERTIES FOLDER "Tools")
     create_source_groups("Source Files" ${path})
     target_link_libraries(${program} Boost::program_options valhalla)
-    if(WIN32)
+    if(MSVC)
       target_link_libraries(${program} ${CURL_LIBRARIES})
     endif()
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
@@ -290,7 +289,7 @@ if(ENABLE_DATA_TOOLS)
       # Using LuaJIT on macOS requires a couple of extra linker flags
       target_link_options(${program} PUBLIC -pagezero_size 10000 -image_base 100000000)
     endif()
-    if(WIN32)
+    if(MSVC)
       target_link_libraries(${program} ${CURL_LIBRARIES})
     endif()
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
