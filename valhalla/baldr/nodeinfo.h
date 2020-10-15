@@ -334,7 +334,12 @@ public:
    * @param  localidx  Local edge index.
    * @return Returns heading relative to N (0-360 degrees).
    */
-  uint32_t heading(const uint32_t localidx) const;
+  inline uint32_t heading(const uint32_t localidx) const {
+    // Make sure everything is 64 bit!
+    uint64_t shift = localidx * 8; // 8 bits per index
+    return static_cast<uint32_t>(std::round(
+        ((headings_ & (static_cast<uint64_t>(255) << shift)) >> shift) * kHeadingExpandFactor));
+  }
 
   /**
    * Set the heading of the local edge given its local index. Supports

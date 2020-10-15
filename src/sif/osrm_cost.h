@@ -16,11 +16,12 @@ namespace {
 constexpr double kTurnPenalty = 7.5;
 constexpr double kUTurnPenalty = 20;
 constexpr double kTurnBias = 1.075;
+constexpr double kTurnBiasInv = 1.0 / kTurnBias;
 constexpr double kTrafficLightPenalty = 2;
 
-uint32_t CalculateTurnDegree(const baldr::DirectedEdge* edge,
-                             const baldr::NodeInfo* node,
-                             const uint32_t idx_pred_opp) {
+inline uint32_t CalculateTurnDegree(const baldr::DirectedEdge* edge,
+                                    const baldr::NodeInfo* node,
+                                    const uint32_t idx_pred_opp) {
   auto in_heading = node->heading(idx_pred_opp);
   in_heading = ((in_heading + 180) % 360);
   auto out_heading = node->heading(edge->localedgeidx());
@@ -33,14 +34,8 @@ uint32_t CalculateTurnDegree(const baldr::DirectedEdge* edge,
 float OSRMTurnCost(const baldr::DirectedEdge* edge,
                    const baldr::NodeInfo* node,
                    const uint32_t idx_pred_opp) {
-  double turn_duration = 0;
-  auto turn_penalty = kTurnPenalty;
-  // local turn_bias = turn.is_left_hand_driving and 1. / profile.turn_bias or profile.turn_bias
-  double turn_bias = !node->drive_on_right() ? 1. / kTurnBias : kTurnBias;
 
-  if (node->traffic_signal())
-    turn_duration = kTrafficLightPenalty;
-
+  double turn_duration = node->traffic_signal() ? kTrafficLightPenalty : 0;
   uint32_t turn_degree = CalculateTurnDegree(edge, node, idx_pred_opp);
 
   // const auto is_uturn = guidance::getTurnDirection(turn_angle) ==
@@ -51,6 +46,8 @@ float OSRMTurnCost(const baldr::DirectedEdge* edge,
   // if turn.number_of_roads > 2 or turn.source_mode ~= turn.target_mode or turn.is_u_turn then
   if (number_of_roads > 2 || is_u_turn) {
     int32_t osrm_angle = turn_degree > 180 ? static_cast<int32_t>(turn_degree) - 360 : turn_degree;
+    double turn_bias = !node->drive_on_right() ? kTurnBiasInv : kTurnBias;
+    double turn_bias_inv = !node->drive_on_right() ? kTurnBias : kTurnBiasInv;
 
     // if turn.angle >= 0 then
     //  turn.duration = turn.duration + turn_penalty / (1 + math.exp( -((13 / turn_bias) *
@@ -61,13 +58,12 @@ float OSRMTurnCost(const baldr::DirectedEdge* edge,
     // end
     if (osrm_angle >= 0)
       turn_duration +=
-          turn_penalty / (1 + std::exp(-((13 / turn_bias) * osrm_angle / 180 - 6.5 * turn_bias)));
+          kTurnPenalty / (1 + std::exp(-((13 * turn_bias_inv) * osrm_angle / 180 - 6.5 * turn_bias)));
     else
-      turn_duration +=
-          turn_penalty / (1 + std::exp(-((13 * turn_bias) * -osrm_angle / 180 - 6.5 / turn_bias)));
+      turn_duration += kTurnPenalty /
+                       (1 + std::exp(-((13 * turn_bias) * -osrm_angle / 180 - 6.5 * turn_bias_inv)));
 
-    if (is_u_turn)
-      turn_duration += kUTurnPenalty;
+    turn_duration += is_u_turn ? kUTurnPenalty : 0;
   }
   return turn_duration;
 }
