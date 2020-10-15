@@ -73,10 +73,9 @@ protected:
    * @return a shared pointer with the data of the tile or an empty pointer if it could not be read
    */
   static std::shared_ptr<const valhalla::IncidentsTile> read_tile(const std::string& filename) {
-    // crack the file open
+    // open the file for reading. its normal for this to fail when the file has been removed
     std::ifstream file(filename, std::ios::in | std::ios::binary);
     if (!file.is_open()) {
-      LOG_WARN("Incident Watcher failed to open " + filename);
       return {};
     }
 
@@ -108,13 +107,15 @@ protected:
    * @param state     the state to update
    * @param tile_id   the tile id we are loading
    * @param path      the path to the tile file
+   * @param hint      a pointer to an existing iterator into the cache
    * @return the shared_ptr that owns the tile memory
    */
   static bool update_tile(const std::shared_ptr<state_t>& state,
                           const valhalla::baldr::GraphId& tile_id,
-                          std::shared_ptr<const valhalla::IncidentsTile>&& tile) {
+                          std::shared_ptr<const valhalla::IncidentsTile>&& tile,
+                          decltype(state_t::cache)::iterator* hint = nullptr) {
     // see if we have a slot
-    auto found = state->cache.find(tile_id);
+    auto found = hint ? *hint : state->cache.find(tile_id);
     // if we dont have a slot make one, this must be synchronized
     if (found == state->cache.cend()) {
       // this shouldnt happen in lock free mode but can if you put unexpected tiles in the log/dir
@@ -164,7 +165,7 @@ protected:
     filesystem::path inc_log_path(config.get<std::string>("incident_log", ""));
     filesystem::path inc_dir;
     try {
-      changelog.reset(new decltype(changelog)::element_type(inc_log_path.string()));
+      changelog.reset(new decltype(changelog)::element_type(inc_log_path.string(), false, 0));
       LOG_INFO("Incident watcher configured for mmap changelog mode");
     } // check for a directory scan mode config
     catch (...) {
@@ -196,6 +197,8 @@ protected:
     time_t last_scan = 0;
     time_t max_loading_latency =
         config.get<time_t>("incident_max_loading_latency", DEFAULT_MAX_LOADING_LATENCY);
+    std::unordered_set<uint64_t> seen;
+    seen.reserve(tileset.size());
 
     // wait for someone to tell us to stop
     do {
@@ -204,20 +207,28 @@ protected:
       // the current iteration will load the tile and that it will again be loaded in the next
       auto current_scan = time(nullptr);
       size_t update_count = 0;
+      seen.clear();
 
       // we are in memory map mode
       if (changelog) {
         // reload the log if the tileset isnt static
-        if (!state->lock_free.load())
-          changelog.reset(new decltype(changelog)::element_type(inc_log_path.string()));
+        try {
+          if (!state->lock_free.load())
+            changelog.reset(new decltype(changelog)::element_type(inc_log_path.string(), false, 0));
+        } catch (...) {
+          LOG_ERROR("Incident watcher could not map incident_log: " + inc_log_path.string());
+          break;
+        }
+
         // check all of the timestamps/tile_ids
         for (auto entry : *changelog) {
-          // check the timestamp part of the tile id to see if its newer
+          // first 25 bits are the tile id
+          valhalla::baldr::GraphId tile_id(((uint64_t(1) << 25) - 1) & entry);
+          seen.insert(tile_id);
           // spare last 39 bits are the timestamp, leaves us with something like 17k years
           uint64_t timestamp = (entry >> 25) & ((uint64_t(1) << 39) - 1);
+          // check the timestamp part of the tile id to see if its newer
           if (last_scan <= timestamp) {
-            // first 25 bits are the tile id
-            valhalla::baldr::GraphId tile_id(((uint64_t(1) << 46) - 1) & entry);
             // concoct a file name from the tile_id
             auto file_location = inc_log_path;
             file_location.replace_filename(
@@ -231,16 +242,31 @@ protected:
         // check all of the files
         for (filesystem::recursive_directory_iterator i(inc_dir), end; i != end; ++i) {
           try {
-            // if the tile was updated since the last time we scanned we load it
-            struct stat s;
+            // if this looks like a tile
             valhalla::baldr::GraphId tile_id;
             if (i->is_regular_file() &&
-                (tile_id = valhalla::baldr::GraphTile::GetTileId(i->path().string())).Is_Valid() &&
-                stat(i->path().c_str(), &s) == 0 && last_scan <= MTIME(s)) {
-              // update the tile
-              update_count += update_tile(state, tile_id, read_tile(i->path().string()));
+                (tile_id = valhalla::baldr::GraphTile::GetTileId(i->path().string())).Is_Valid()) {
+              // and if the tile was updated since the last time we scanned we load it
+              seen.insert(tile_id);
+              struct stat s;
+              if (stat(i->path().c_str(), &s) == 0 && last_scan <= MTIME(s)) {
+                // update the tile
+                update_count += update_tile(state, tile_id, read_tile(i->path().string()));
+              }
             }
-          } catch (...) { LOG_WARN("Incident watcher ignoring " + i->path().string()); }
+          } // happens usually when there is a file in the directory that doesnt have a tile name
+          catch (...) {
+            LOG_WARN("Incident watcher ignoring " + i->path().string());
+          }
+        }
+      }
+
+      // for all the ones we didnt see, they have been removed from the filesystem or changelog
+      // no locking is needed because we don't realloc here we just null out some values
+      for (auto entry = state->cache.begin(); entry != state->cache.end(); ++entry) {
+        auto found = seen.find(entry->first);
+        if (found == seen.cend() && entry->second) {
+          update_count += update_tile(state, valhalla::baldr::GraphId(entry->first), nullptr, &entry);
         }
       }
 
@@ -250,11 +276,11 @@ protected:
       auto wait = 0;
       if (latency > max_loading_latency) {
         LOG_WARN("Incident watcher is not meeting max loading latency requirement");
-      } // this round finished fast enough, changelog mode is cheap so wait only a second
+      } // this round finished fast enough wait the remainder of the time specified
       else {
-        wait = changelog ? 1 : max_loading_latency - latency;
+        wait = max_loading_latency - latency;
       }
-      LOG_INFO("Incident watcher loaded " + std::to_string(update_count) + " tiles in " +
+      LOG_INFO("Incident watcher updated " + std::to_string(update_count) + " tiles in " +
                std::to_string(latency) + " seconds");
 
       // signal to the constructor that we completed our first batch
