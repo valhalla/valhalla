@@ -31,3 +31,6 @@
 [submodule "third_party/fastcov"]
 	path = third_party/fastcov
 	url = https://github.com/RPGillespie6/fastcov.git
+[submodule "third_party/fastapprox"]
+	path = third_party/fastapprox
+	url = https://github.com/romeric/fastapprox
