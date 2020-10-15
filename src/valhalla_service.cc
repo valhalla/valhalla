@@ -67,17 +67,16 @@ int main(int argc, char** argv) {
     try {
       std::ifstream request_file(argv[3]);
       if (request_file) {
-        std::ostringstream tmp_str;
-        tmp_str << request_file.rdbuf();
-        request_str = tmp_str.str();
+        request_str = std::string((std::istreambuf_iterator<char>(request_file)),
+                                  std::istreambuf_iterator<char>());
       } else {
         request_str = argv[3];
       }
     } catch (const std::exception& e) {
-      LOG_ERROR(std::string(e.what()));
+      LOG_ERROR(e.what());
       return 1;
     } catch (...) {
-      LOG_ERROR(std::string("Unknown exception thrown while reading request string or file"));
+      LOG_ERROR("Unknown exception thrown while reading request string or file");
       return 1;
     }
 
