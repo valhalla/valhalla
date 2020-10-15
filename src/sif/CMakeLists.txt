@@ -30,7 +30,6 @@ valhalla_module(NAME sif
       $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-      ${VALHALLA_SOURCE_DIR}/third_party/fastapprox/fastapprox/src
   DEPENDS
     valhalla::baldr
     valhalla::proto

@@ -3,7 +3,6 @@
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
-#include <fastexp.h>
 
 namespace {
 
@@ -23,35 +22,57 @@ inline uint32_t CalculateTurnDegree(const valhalla::baldr::DirectedEdge* edge,
   return turn_degree;
 }
 
+// we create a lookup tables since the range is well known and the computation is relatively expensive
+std::array<double, 360> lookup_table(bool right) {
+  std::array<double, 360> turn_durations;
+  for (int angle = 0; angle < 360; ++angle) {
+    // make the angle symmetric about 0
+    int symmetric = angle > 180 ? static_cast<int32_t>(angle) - 360 : angle;
+    // calculate a left turn, note the turnary cares what side of the road you drive on
+    if (symmetric >= 0)
+      turn_durations[angle] =
+          kTurnPenalty / (1 + std::exp(-((13 * (right ? kTurnBiasInv : kTurnBias)) * symmetric / 180 -
+                                         6.5 * (right ? kTurnBias : kTurnBiasInv))));
+    // calculate a right turn, note the turnary cares what side of the road you drive on
+    else
+      turn_durations[angle] =
+          kTurnPenalty /
+          (1 + std::exp(-((13 * (right ? kTurnBias : kTurnBiasInv)) * -symmetric / 180 -
+                          6.5 * (right ? kTurnBiasInv : kTurnBias))));
+  }
+
+  return turn_durations;
+}
+
 // This is a port of:
 // https://github.com/Project-OSRM/osrm-backend/blob/f5ebe8bc3b51831b7b19e73d4879ebbad0161a19/profiles/car.lua#L455
 inline float OSRMTurnCost(const valhalla::baldr::DirectedEdge* edge,
                           const valhalla::baldr::NodeInfo* node,
                           const uint32_t idx_pred_opp) {
 
+  // look up tables for turn penalties based on angle
+  static const auto left_hand_lookup(lookup_table(false));
+  static const auto right_hand_lookup(lookup_table(true));
+
+  // start with the traffic light
   double turn_duration = node->traffic_signal() ? kTrafficLightPenalty : 0;
-  uint32_t turn_degree = CalculateTurnDegree(edge, node, idx_pred_opp);
 
   // const auto is_uturn = guidance::getTurnDirection(turn_angle) ==
   // guidance::DirectionModifier::UTurn; BUT for OSRM uturn is 0 angle only, not a range
+  uint32_t turn_degree = CalculateTurnDegree(edge, node, idx_pred_opp);
   const bool is_u_turn =
       valhalla::baldr::Turn::GetType(turn_degree) == valhalla::baldr::Turn::Type::kReverse;
+
+  // if its not a "false node" or its a uturn
   const uint32_t number_of_roads = node->local_edge_count();
-
   if (number_of_roads > 2 || is_u_turn) {
-    int32_t osrm_angle = turn_degree > 180 ? static_cast<int32_t>(turn_degree) - 360 : turn_degree;
-    double turn_bias = !node->drive_on_right() ? kTurnBiasInv : kTurnBias;
-    double turn_bias_inv = !node->drive_on_right() ? kTurnBias : kTurnBiasInv;
-
-    if (osrm_angle >= 0)
-      turn_duration += kTurnPenalty /
-                       (1 + fasterexp(-((13 * turn_bias_inv) * osrm_angle / 180 - 6.5 * turn_bias)));
-    else
-      turn_duration += kTurnPenalty /
-                       (1 + fasterexp(-((13 * turn_bias) * -osrm_angle / 180 - 6.5 * turn_bias_inv)));
-
+    // get the duration due to the turn angle and whether it has the right of way
+    turn_duration +=
+        node->drive_on_right() ? right_hand_lookup[turn_degree] : left_hand_lookup[turn_degree];
+    // add a penalty for uturns
     turn_duration += is_u_turn ? kUTurnPenalty : 0;
   }
+
   return turn_duration;
 }
 
