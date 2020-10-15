@@ -12,9 +12,9 @@ protected:
     constexpr double gridsize = 100;
 
     const std::string ascii_map = R"(
-    A1234B-C----\
-                 D
-                    56789    E)";
+    A-1--B-C----\
+                 D------\
+                         --2--E)";
 
     const gurka::ways ways = {{"ABCDE", {{"highway", "primary"}}}};
 
@@ -31,10 +31,50 @@ TEST_F(Precision, WaypointsOnNodes) {
   auto result = gurka::route(map, "A", "E", "auto");
   auto shape =
       midgard::decode<std::vector<midgard::PointLL>>(result.trip().routes(0).legs(0).shape());
-  // TODO: Remove the duplicate 6 when we fix odin to handle uturn maneuver generation with only one
-  // turn around point
   auto expected_shape =
       decltype(shape){map.nodes["A"], map.nodes["B"], map.nodes["C"], map.nodes["D"], map.nodes["E"]};
+
+  EXPECT_EQ(shape.size(), expected_shape.size());
+  for (int i = 0; i < shape.size(); ++i) {
+    EXPECT_NEAR(shape[i].lat(), expected_shape[i].lat(), 0.000001);
+    EXPECT_NEAR(shape[i].lng(), expected_shape[i].lng(), 0.000001);
+  }
+}
+
+TEST_F(Precision, PartialOffsetCheckOne) {
+  auto result = gurka::route(map, "1", "2", "auto");
+  auto shape =
+      midgard::decode<std::vector<midgard::PointLL>>(result.trip().routes(0).legs(0).shape());
+  auto expected_shape =
+      decltype(shape){map.nodes["1"], map.nodes["B"], map.nodes["C"], map.nodes["D"], map.nodes["2"]};
+
+  EXPECT_EQ(shape.size(), expected_shape.size());
+  for (int i = 0; i < shape.size(); ++i) {
+    EXPECT_NEAR(shape[i].lat(), expected_shape[i].lat(), 0.000001);
+    EXPECT_NEAR(shape[i].lng(), expected_shape[i].lng(), 0.000001);
+  }
+}
+
+TEST_F(Precision, PartialOffsetCheckTwo) {
+  auto result = gurka::route(map, "A", "2", "auto");
+  auto shape =
+      midgard::decode<std::vector<midgard::PointLL>>(result.trip().routes(0).legs(0).shape());
+  auto expected_shape =
+      decltype(shape){map.nodes["A"], map.nodes["B"], map.nodes["C"], map.nodes["D"], map.nodes["2"]};
+
+  EXPECT_EQ(shape.size(), expected_shape.size());
+  for (int i = 0; i < shape.size(); ++i) {
+    EXPECT_NEAR(shape[i].lat(), expected_shape[i].lat(), 0.000001);
+    EXPECT_NEAR(shape[i].lng(), expected_shape[i].lng(), 0.000001);
+  }
+}
+
+TEST_F(Precision, PartialOffsetCheckThree) {
+  auto result = gurka::route(map, "1", "E", "auto");
+  auto shape =
+      midgard::decode<std::vector<midgard::PointLL>>(result.trip().routes(0).legs(0).shape());
+  auto expected_shape =
+      decltype(shape){map.nodes["1"], map.nodes["B"], map.nodes["C"], map.nodes["D"], map.nodes["E"]};
 
   EXPECT_EQ(shape.size(), expected_shape.size());
   for (int i = 0; i < shape.size(); ++i) {
