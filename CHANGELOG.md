@@ -90,6 +90,7 @@
    * FIXED: Internal maneuver placement [#2600](https://github.com/valhalla/valhalla/pull/2600)
    * FIXED: Complete fr-FR.json locale. [#2614](https://github.com/valhalla/valhalla/pull/2614)
    * FIXED: Fix all compiler warnings in sif and set to -Werror [#2642](https://github.com/valhalla/valhalla/pull/2642)
+   * FIXED: Remove unnecessary maneuvers to continue straight [#2647](https://github.com/valhalla/valhalla/pull/2647)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
