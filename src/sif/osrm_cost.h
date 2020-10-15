@@ -26,8 +26,8 @@ inline uint32_t CalculateTurnDegree(const valhalla::baldr::DirectedEdge* edge,
 // This is a port of:
 // https://github.com/Project-OSRM/osrm-backend/blob/f5ebe8bc3b51831b7b19e73d4879ebbad0161a19/profiles/car.lua#L455
 inline float OSRMTurnCost(const valhalla::baldr::DirectedEdge* edge,
-                   const valhalla::baldr::NodeInfo* node,
-                   const uint32_t idx_pred_opp) {
+                          const valhalla::baldr::NodeInfo* node,
+                          const uint32_t idx_pred_opp) {
 
   double turn_duration = node->traffic_signal() ? kTrafficLightPenalty : 0;
   uint32_t turn_degree = CalculateTurnDegree(edge, node, idx_pred_opp);
