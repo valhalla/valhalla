@@ -216,7 +216,8 @@ protected:
    *
    * @param maneuver The maneuver at the intersection.
    */
-  uint16_t GetExpectedTurnLaneDirection(Maneuver& maneuver) const;
+  uint16_t GetExpectedTurnLaneDirection(std::unique_ptr<EnhancedTripLeg_Edge>& turn_lane_edge,
+                                        Maneuver& maneuver) const;
 
   /**
    * Process the turn lanes at the maneuver point as well as within the maneuver.

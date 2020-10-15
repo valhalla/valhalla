@@ -28,7 +28,7 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/baldr/*.h)
 set(includes
     ${VALHALLA_SOURCE_DIR}
      ${VALHALLA_SOURCE_DIR}/valhalla
-     $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+     $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
      ${VALHALLA_SOURCE_DIR}/third_party/date/include
      ${CMAKE_CURRENT_BINARY_DIR}/src/baldr

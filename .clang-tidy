@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-*,performance*,-performance-move-const-arg'
+Checks:          'clang-*,performance*,-performance-move-const-arg,misc-unused-parameters'
 WarningsAsErrors: ''
 AnalyzeTemporaryDtors: false
 CheckOptions:

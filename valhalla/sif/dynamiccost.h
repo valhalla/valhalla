@@ -65,6 +65,9 @@ public:
 
   virtual ~DynamicCost();
 
+  DynamicCost(const DynamicCost&) = delete;
+  DynamicCost& operator=(const DynamicCost&) = delete;
+
   /**
    * Does the costing method allow multiple passes (with relaxed
    * hierarchy limits).
