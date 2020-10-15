@@ -11,27 +11,30 @@ const std::string scratch_dir = std::string("data") + filesystem::path::preferre
 class incident_loading : public testing::Test {
 protected:
   void SetUp() override {
-    if (!filesystem::exists(scratch_dir) && !filesystem::create_directories(scratch_dir))
-      throw std::runtime_error("Could not setup incident loading test dir");
+    ASSERT_TRUE(!filesystem::exists(scratch_dir) || filesystem::remove_all(scratch_dir));
+    ASSERT_TRUE(filesystem::create_directories(scratch_dir));
   }
   void TearDown() override {
-    if (filesystem::exists(scratch_dir) && !filesystem::remove_all(scratch_dir))
-      throw std::runtime_error("Could not teardown incident loading test dir");
+    ASSERT_TRUE(!filesystem::exists(scratch_dir) || filesystem::remove_all(scratch_dir));
   }
 };
 
 struct testable_singleton : public incident_singleton_t {
-public:
-  using incident_singleton_t::incident_singleton_t;
   using incident_singleton_t::read_tile;
   using incident_singleton_t::state_t;
   using incident_singleton_t::update_tile;
   using incident_singleton_t::watch;
 };
 
-TEST_F(incident_loading, constructor) {
-  // TODO
-}
+struct interrupting_singleton : public incident_singleton_t {
+  interrupting_singleton(const boost::property_tree::ptree& conf,
+                         const std::unordered_set<baldr::GraphId>& tileset)
+      : incident_singleton_t(conf, tileset) {
+  }
+  virtual std::function<bool(size_t)> interrupt() override {
+    return [](size_t) { return true; };
+  }
+};
 
 TEST_F(incident_loading, read_tile) {
   std::string filename = scratch_dir + "foobar";
@@ -112,10 +115,10 @@ TEST_F(incident_loading, watch) {
   auto log_path = scratch_dir + "log";
   for (const auto& conf :
        std::vector<std::tuple<std::string, std::string, std::unordered_set<baldr::GraphId>>>{
-           //{"incident_dir", scratch_dir, {}},
-           //{"incident_log", log_path, {}},
-           {"incident_dir", scratch_dir, {baldr::GraphId{666, 2, 0}}},
-           //{"incident_log", log_path, {baldr::GraphId{666, 2, 0}}},
+           {"incident_dir", scratch_dir, {}},
+           {"incident_log", log_path, {}},
+           {"incident_dir", scratch_dir, {baldr::GraphId{11, 1, 0}, baldr::GraphId{66, 2, 0}}},
+           {"incident_log", log_path, {baldr::GraphId{11, 1, 0}, baldr::GraphId{66, 2, 0}}},
        }) {
     // build config
     boost::property_tree::ptree config;
@@ -127,8 +130,8 @@ TEST_F(incident_loading, watch) {
     auto snake_eyes_name = scratch_dir + baldr::GraphTile::FileSuffix(snake_eyes, ".pbf");
     baldr::GraphId box_cars{66, 2, 0};
     auto box_cars_name = scratch_dir + baldr::GraphTile::FileSuffix(box_cars, ".pbf");
-    filesystem::create_directories(filesystem::path(snake_eyes_name).parent_path());
-    filesystem::create_directories(filesystem::path(box_cars_name).parent_path());
+    ASSERT_TRUE(filesystem::create_directories(filesystem::path(snake_eyes_name).parent_path()));
+    ASSERT_TRUE(filesystem::create_directories(filesystem::path(box_cars_name).parent_path()));
     midgard::sequence<uint64_t> log(log_path, true, 1);
 
     // if its a static tileset we must preload the changelog before the watch function maps the file
@@ -148,11 +151,6 @@ TEST_F(incident_loading, watch) {
     // actually test the watch function. the lambda here both checks its down the right things at the
     // right time and controls each iteration of the watch loop
     testable_singleton::watch(config, tileset, state, [&](size_t i) -> bool {
-      // the first time we get in here, if we are using changelog mode with a dynamic tileset
-      // then we need to make sure we have spots in our changelog to update our tiles
-      while (log.size() != tileset.size())
-        log.push_back(0);
-
       // what iteration is this
       switch (i) {
         case 1: {
@@ -172,12 +170,14 @@ TEST_F(incident_loading, watch) {
             f << snake_eyes_tile.SerializeAsString();
           }
           // update log
+          while (log.size() < 1)
+            log.push_back(0);
           log[0] = snake_eyes | (static_cast<uint64_t>(time(nullptr)) << 25);
           return false;
         }
         case 2: {
           // one is loaded
-          EXPECT_EQ(state->cache.size(), tileset.empty() ? 1 : 2) << " there should be only 1";
+          EXPECT_EQ(state->cache.size(), tileset.empty() ? 1 : 2) << " wrong number of cache entries";
           EXPECT_EQ(state->cache.count(snake_eyes), 1) << " there should be one tile in here now";
           EXPECT_TRUE(state->cache[snake_eyes]) << " the tile pointer should be non null";
           EXPECT_TRUE(test::pbf_equals(snake_eyes_tile, *state->cache[snake_eyes]))
@@ -206,7 +206,7 @@ TEST_F(incident_loading, watch) {
         }
         case 3: {
           // one is updated
-          EXPECT_EQ(state->cache.size(), tileset.empty() ? 1 : 2) << " there should be only 1";
+          EXPECT_EQ(state->cache.size(), tileset.empty() ? 1 : 2) << " wrong number of cache entries";
           EXPECT_EQ(state->cache.count(snake_eyes), 1) << " should still be in there";
           EXPECT_TRUE(state->cache[snake_eyes]) << " should still be not null";
           EXPECT_TRUE(test::pbf_equals(snake_eyes_tile, *state->cache[snake_eyes]))
@@ -219,7 +219,7 @@ TEST_F(incident_loading, watch) {
         }
         case 4: {
           // one is null
-          EXPECT_EQ(state->cache.size(), tileset.empty() ? 1 : 2) << " there should be only 1";
+          EXPECT_EQ(state->cache.size(), tileset.empty() ? 1 : 2) << " wrong number of cache entries";
           EXPECT_EQ(state->cache.count(snake_eyes), 1) << " should still be in there";
           EXPECT_FALSE(state->cache[snake_eyes]) << " should be null now";
           // add two back
@@ -246,12 +246,14 @@ TEST_F(incident_loading, watch) {
           }
           // update log
           log[0] = snake_eyes | (static_cast<uint64_t>(time(nullptr)) << 25);
+          while (log.size() < 2)
+            log.push_back(0);
           log[1] = box_cars | (static_cast<uint64_t>(time(nullptr)) << 25);
           return false;
         }
         case 5: {
           // two are updated
-          EXPECT_EQ(state->cache.size(), 2) << " there should be 2";
+          EXPECT_EQ(state->cache.size(), 2) << " wrong number of cache entries";
           EXPECT_EQ(state->cache.count(snake_eyes), 1) << " both should be there";
           EXPECT_TRUE(state->cache[snake_eyes]) << " should be not null";
           EXPECT_TRUE(test::pbf_equals(snake_eyes_tile, *state->cache[snake_eyes]))
@@ -268,7 +270,7 @@ TEST_F(incident_loading, watch) {
         }
         case 6: {
           // one is null
-          EXPECT_EQ(state->cache.size(), 2) << " there should still be 2";
+          EXPECT_EQ(state->cache.size(), 2) << " wrong number of cache entries";
           EXPECT_EQ(state->cache.count(snake_eyes), 1) << " should still be in there";
           EXPECT_FALSE(state->cache[snake_eyes]) << " should be null now";
           EXPECT_EQ(state->cache.count(box_cars), 1) << " should also be this one";
@@ -286,13 +288,62 @@ TEST_F(incident_loading, watch) {
     });
 
     // by the end of the dance above we should have 1 loaded and 1 null
-    EXPECT_EQ(state->cache.size(), 2) << " there should still be 2";
+    EXPECT_EQ(state->cache.size(), 2) << " wrong number of cache entries";
     EXPECT_EQ(state->cache.count(snake_eyes), 1) << " should still be in there";
     EXPECT_FALSE(state->cache[snake_eyes]) << " should be null now";
     EXPECT_EQ(state->cache.count(box_cars), 1) << " should also be this one";
     EXPECT_TRUE(state->cache[box_cars]) << " should be not null";
     EXPECT_TRUE(test::pbf_equals(box_cars_tile, *state->cache[box_cars])) << " should be equivalent";
   }
+}
+
+TEST_F(incident_loading, constructor) {
+  // this should not throw it should just exit due to (mis)configuration
+  boost::property_tree::ptree config;
+  config.put("incident_dir", "bibbity.bobbity.boo");
+  config.put("incident_max_loading_latency", 1);
+  ASSERT_NO_THROW(interrupting_singleton(config, {}));
+
+  // this should throw because the wait time is 0 and in practice it does but technically its racing
+  // the background threads call to cv.notify_one, because of this the test could randomly fail
+  /*config.put("incident_dir", scratch_dir);
+  config.put("incident_max_loading_latency", 0);
+  ASSERT_THROW(interrupting_singleton(config, {}), std::runtime_error);*/
+}
+
+TEST_F(incident_loading, get) {
+  // setup some data for it to get
+  baldr::GraphId box_cars{66, 2, 0};
+  auto box_cars_name = scratch_dir + baldr::GraphTile::FileSuffix(box_cars, ".pbf");
+  ASSERT_TRUE(filesystem::create_directories(filesystem::path(box_cars_name).parent_path()));
+  IncidentsTile box_cars_tile;
+  auto* loc = box_cars_tile.mutable_locations()->Add();
+  loc->set_edge_index(12);
+  loc->set_start_offset(0.31);
+  loc->set_end_offset(0.321);
+  loc->set_metadata_index(5);
+  auto* meta = box_cars_tile.mutable_metadata()->Add();
+  meta->set_id(1234);
+  meta->set_description("fafeasef");
+  meta->set_long_description("asefsaefsaefsaefasefsaef");
+  meta->set_start_time(73532);
+  meta->set_type(IncidentsTile::Metadata::WEATHER);
+  {
+    std::ofstream f(box_cars_name, std::ofstream::out | std::ofstream::binary);
+    EXPECT_TRUE(f.is_open());
+    f << box_cars_tile.SerializeAsString();
+  }
+
+  // get the one that is there
+  boost::property_tree::ptree config;
+  config.put("incident_dir", scratch_dir);
+  auto got = incident_singleton_t::get(box_cars, config, {});
+  ASSERT_TRUE(got);
+  ASSERT_TRUE(test::pbf_equals(box_cars_tile, *got));
+
+  // get the one that isnt there
+  got = incident_singleton_t::get({});
+  ASSERT_FALSE(got);
 }
 
 int main(int argc, char* argv[]) {

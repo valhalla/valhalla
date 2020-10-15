@@ -53,8 +53,10 @@ protected:
    */
   incident_singleton_t(const boost::property_tree::ptree& config,
                        const std::unordered_set<valhalla::baldr::GraphId>& tileset)
-      : state{new state_t{}},
-        watcher(watch, config, tileset, state, [](size_t) -> bool { return true; }) {
+      : state{new state_t{}}, watcher(watch, config, tileset, state, interrupt()) {
+    // let the thread control its own lifetime
+    watcher.detach();
+    // check how long we should wait to find out if its initialized
     auto max_loading_latency =
         config.get<time_t>("incident_max_loading_latency", DEFAULT_MAX_LOADING_LATENCY);
     // see if the thread can start up and do a pass to load all the incidents
@@ -63,8 +65,15 @@ protected:
     if (state->signal.wait_until(lock, when) == std::cv_status::timeout) {
       throw std::runtime_error("Unable to initialize incident watcher in the configured time period");
     }
-    // let this run forever
-    watcher.detach();
+  }
+
+  /**
+   * The default interrupt for the watcher threads main loop. Since its not set, the watcher loop
+   * will run forever. This method is provided so the unit tests can exercise the constructor
+   * @return
+   */
+  virtual std::function<bool(size_t)> interrupt() {
+    return {};
   }
 
   /**
@@ -153,7 +162,7 @@ protected:
    * @param config     lets the function know where to look for incidents and desired update frequency
    * @param tileset    if the tileset is static we can use lockfree mode
    * @param state      used for interthread communication
-   * @param interrupt  controls whether or not the function should continue running
+   * @param interrupt  functor that, if set and returns true, stops the main loop of this function
    */
   static void watch(boost::property_tree::ptree config,
                     std::unordered_set<valhalla::baldr::GraphId> tileset,
@@ -254,10 +263,8 @@ protected:
                 update_count += update_tile(state, tile_id, read_tile(i->path().string()));
               }
             }
-          } // happens usually when there is a file in the directory that doesnt have a tile name
-          catch (...) {
-            LOG_WARN("Incident watcher ignoring " + i->path().string());
-          }
+          } // happens when there is a file in the directory that doesnt have a tile-looking name
+          catch (...) {}
         }
       }
 
