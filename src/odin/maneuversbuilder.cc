@@ -48,6 +48,8 @@ constexpr float kShortContinueThreshold = 0.6f;
 
 constexpr uint32_t kOverlayEdgeMax = 5; // Maximum number of edges to look for matching overlay
 
+constexpr float kUpcomingLanesThreshold = 3.f; // Kilometers
+
 std::vector<std::string> split(const std::string& source, char delimiter) {
   std::vector<std::string> tokens;
   std::string token;
@@ -2685,8 +2687,9 @@ void ManeuversBuilder::EnhanceSignlessInterchnages(std::list<Maneuver>& maneuver
   }
 }
 
-uint16_t ManeuversBuilder::GetExpectedTurnLaneDirection(Maneuver& maneuver) const {
-  auto turn_lane_edge = trip_path_->GetPrevEdge(maneuver.begin_node_index());
+uint16_t
+ManeuversBuilder::GetExpectedTurnLaneDirection(std::unique_ptr<EnhancedTripLeg_Edge>& turn_lane_edge,
+                                               Maneuver& maneuver) const {
   if (turn_lane_edge) {
     switch (maneuver.type()) {
       case valhalla::DirectionsLeg_Maneuver_Type_kUturnLeft:
@@ -2810,55 +2813,97 @@ uint16_t ManeuversBuilder::GetExpectedTurnLaneDirection(Maneuver& maneuver) cons
 }
 
 void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
+  auto prev_man = maneuvers.begin();
   auto curr_man = maneuvers.begin();
   auto next_man = maneuvers.begin();
 
+  // Set current maneuver
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+    curr_man = next_man;
+  }
+
+  // Set next maneuver
   if (next_man != maneuvers.end()) {
     ++next_man;
   }
 
   // Walk the maneuvers to activate turn lanes
-  while (next_man != maneuvers.end()) {
+  while (curr_man != maneuvers.end()) {
 
     // Only process driving maneuvers
     if (curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive) {
-
-      // Keep track of the remaining step distance in kilometers
-      float remaining_step_distance = curr_man->length();
 
       // Walk maneuvers by node (prev_edge of node has the turn lane info)
       // Assign turn lane at transition point
       auto prev_edge = trip_path_->GetPrevEdge(curr_man->begin_node_index());
       if (prev_edge && (prev_edge->turn_lanes_size() > 0)) {
         // If not a short fork then process for turn lanes
-        if (!((remaining_step_distance < kShortForkThreshold) &&
+        if (!((curr_man->length() < kShortForkThreshold) &&
               ((curr_man->type() == DirectionsLeg_Maneuver_Type_kStayLeft) ||
                (curr_man->type() == DirectionsLeg_Maneuver_Type_kStayRight) ||
                (curr_man->type() == DirectionsLeg_Maneuver_Type_kStayStraight)))) {
-          prev_edge->ActivateTurnLanes(GetExpectedTurnLaneDirection(*(curr_man)),
-                                       remaining_step_distance, curr_man->type(), next_man->type());
+          prev_edge->ActivateTurnLanes(GetExpectedTurnLaneDirection(prev_edge, *(curr_man)),
+                                       curr_man->length(), curr_man->type(), next_man->type());
         }
       }
 
-      // Assign turn lanes within step
-      for (auto index = (curr_man->begin_node_index() + 1); index < curr_man->end_node_index();
-           ++index) {
+      // Track whether there is an intermediate traversable intersecting edge in the same
+      // direction as the next maneuver
+      bool has_directional_intersecting_edge = false;
+
+      // Keep track of the remaining step distance in kilometers
+      float remaining_step_distance = 0.f;
+      // Add the prev_edge length as we skip it in the loop below
+      if (prev_edge) {
+        remaining_step_distance += prev_edge->length();
+      }
+
+      // Assign turn lanes within step, walking backwards from end to begin node
+      for (uint32_t index = (prev_man->end_node_index() - 1); index > prev_man->begin_node_index();
+           --index) {
+        auto node = trip_path_->GetEnhancedNode(index);
         auto prev_edge = trip_path_->GetPrevEdge(index);
         if (prev_edge) {
-          // Update the remaining step distance
-          remaining_step_distance -= prev_edge->length();
-
-          if (prev_edge->turn_lanes_size() > 0) {
-            // For now just assume 'through' - we can enhance if needed
-            prev_edge->ActivateTurnLanes(kTurnLaneThrough, remaining_step_distance, curr_man->type(),
-                                         next_man->type());
+          // If we haven't found an intersecting edge yet, check if any exist
+          if (!has_directional_intersecting_edge) {
+            IntersectingEdgeCounts xedge_counts;
+            node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                           prev_edge->travel_mode(), xedge_counts);
+            if (xedge_counts.right_traversable_outbound > 0 && curr_man->IsRightType()) {
+              has_directional_intersecting_edge = true;
+            } else if (xedge_counts.left_traversable_outbound > 0 && curr_man->IsLeftType()) {
+              has_directional_intersecting_edge = true;
+            }
           }
+
+          // Activate lanes on intermediate edges:
+          // - if remaining step distance is short
+          // - and there are no intermediate traversable intersecting edges
+          // - and there are lanes matching the next maneuver direction
+          // - then activate the lanes matching maneuver direction
+          // - else activate one or all through lanes
+          if (prev_edge->turn_lanes_size() > 0) {
+            auto turn_lane_direction = GetExpectedTurnLaneDirection(prev_edge, *(curr_man));
+            if (remaining_step_distance < kUpcomingLanesThreshold &&
+                !has_directional_intersecting_edge && turn_lane_direction != kTurnLaneNone) {
+              // Activate lanes matching upcoming turn direction
+              prev_edge->ActivateTurnLanes(turn_lane_direction, curr_man->length(), curr_man->type(),
+                                           next_man->type());
+            } else {
+              // Activate through lanes
+              prev_edge->ActivateTurnLanes(kTurnLaneThrough, remaining_step_distance,
+                                           prev_man->type(), curr_man->type());
+            }
+          }
+
+          // Update the remaining step distance
+          remaining_step_distance += prev_edge->length();
         }
       }
-
-      // Do we mark maneuver?
     }
     // on to the next maneuver...
+    prev_man = curr_man;
     curr_man = next_man;
     ++next_man;
   }

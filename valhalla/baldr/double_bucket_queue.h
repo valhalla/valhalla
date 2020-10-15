@@ -2,9 +2,9 @@
 #define VALHALLA_BALDR_DOUBLE_BUCKET_QUEUE_H_
 
 #include <algorithm>
-#include <baldr/graphconstants.h>
 #include <cmath>
 #include <cstdint>
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/util.h>
 #include <vector>
 

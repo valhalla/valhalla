@@ -56,6 +56,8 @@ public:
   bool IsStartType() const;
   bool IsDestinationType() const;
   bool IsMergeType() const;
+  bool IsRightType() const;
+  bool IsLeftType() const;
 
   const StreetNames& street_names() const;
   void set_street_names(const std::vector<std::pair<std::string, bool>>& names);
