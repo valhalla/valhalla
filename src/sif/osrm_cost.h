@@ -66,9 +66,24 @@ inline float OSRMTurnCost(const valhalla::baldr::DirectedEdge* edge,
   // if its not a "false node" or its a uturn
   const uint32_t number_of_roads = node->local_edge_count();
   if (number_of_roads > 2 || is_u_turn) {
+
+    // DELETE ME
+    int32_t osrm_angle = turn_degree > 180 ? static_cast<int32_t>(turn_degree) - 360 : turn_degree;
+    double turn_bias = !node->drive_on_right() ? 1. / kTurnBias : kTurnBias;
+    auto a = osrm_angle >= 0
+                 ? (kTurnPenalty /
+                    (1 + std::exp(-((13 / turn_bias) * osrm_angle / 180 - 6.5 * turn_bias))))
+                 : (kTurnPenalty /
+                    (1 + std::exp(-((13 * turn_bias) * -osrm_angle / 180 - 6.5 / turn_bias))));
+    if (a !=
+        (node->drive_on_right() ? right_hand_lookup[turn_degree] : left_hand_lookup[turn_degree]))
+      throw std::logic_error("no");
+    // DELETE ME
+
     // get the duration due to the turn angle and whether it has the right of way
     turn_duration +=
         node->drive_on_right() ? right_hand_lookup[turn_degree] : left_hand_lookup[turn_degree];
+
     // add a penalty for uturns
     turn_duration += is_u_turn ? kUTurnPenalty : 0;
   }
