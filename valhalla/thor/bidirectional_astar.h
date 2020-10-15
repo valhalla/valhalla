@@ -111,7 +111,7 @@ protected:
 
   // Best candidate connection and threshold to extend search.
   float threshold_;
-  CandidateConnection best_connection_;
+  std::vector<CandidateConnection> best_connections_;
 
   /**
    * Initialize the A* heuristic and adjacency lists for both the forward
