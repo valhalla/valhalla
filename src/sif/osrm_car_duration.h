@@ -46,9 +46,9 @@ std::array<double, 360> lookup_table(bool right) {
 
 // This is a port of:
 // https://github.com/Project-OSRM/osrm-backend/blob/f5ebe8bc3b51831b7b19e73d4879ebbad0161a19/profiles/car.lua#L455
-inline float OSRMTurnCostA(const valhalla::baldr::DirectedEdge* edge,
-                           const valhalla::baldr::NodeInfo* node,
-                           const uint32_t idx_pred_opp) {
+inline float OSRMCarTurnDuration(const valhalla::baldr::DirectedEdge* edge,
+                                 const valhalla::baldr::NodeInfo* node,
+                                 const uint32_t idx_pred_opp) {
 
   // look up tables for turn penalties based on angle
   static const auto left_hand_lookup(lookup_table(false));
@@ -66,20 +66,6 @@ inline float OSRMTurnCostA(const valhalla::baldr::DirectedEdge* edge,
   // if its not a "false node" or its a uturn
   const uint32_t number_of_roads = node->local_edge_count();
   if (number_of_roads > 2 || is_u_turn) {
-
-    // DELETE ME
-    int32_t osrm_angle = turn_degree > 180 ? static_cast<int32_t>(turn_degree) - 360 : turn_degree;
-    double turn_bias = !node->drive_on_right() ? 1. / kTurnBias : kTurnBias;
-    auto a = osrm_angle >= 0
-                 ? (kTurnPenalty /
-                    (1 + std::exp(-((13 / turn_bias) * osrm_angle / 180 - 6.5 * turn_bias))))
-                 : (kTurnPenalty /
-                    (1 + std::exp(-((13 * turn_bias) * -osrm_angle / 180 - 6.5 / turn_bias))));
-    auto b = node->drive_on_right() ? right_hand_lookup[turn_degree] : left_hand_lookup[turn_degree];
-    if (a != b)
-      throw std::logic_error("no");
-    // DELETE ME
-
     // get the duration due to the turn angle and whether it has the right of way
     turn_duration +=
         node->drive_on_right() ? right_hand_lookup[turn_degree] : left_hand_lookup[turn_degree];
@@ -88,49 +74,6 @@ inline float OSRMTurnCostA(const valhalla::baldr::DirectedEdge* edge,
     turn_duration += is_u_turn ? kUTurnPenalty : 0;
   }
 
-  return turn_duration;
-}
-
-float OSRMTurnCost(const valhalla::baldr::DirectedEdge* edge,
-                   const valhalla::baldr::NodeInfo* node,
-                   const uint32_t idx_pred_opp) {
-  double turn_duration = 0;
-  auto turn_penalty = kTurnPenalty;
-  // local turn_bias = turn.is_left_hand_driving and 1. / profile.turn_bias or profile.turn_bias
-  double turn_bias = !node->drive_on_right() ? 1. / kTurnBias : kTurnBias;
-
-  if (node->traffic_signal())
-    turn_duration = kTrafficLightPenalty;
-
-  uint32_t turn_degree = CalculateTurnDegree(edge, node, idx_pred_opp);
-
-  // const auto is_uturn = guidance::getTurnDirection(turn_angle) ==
-  // guidance::DirectionModifier::UTurn; BUT for OSRM utorn is 0 angle only, not some range
-  const bool is_u_turn =
-      valhalla::baldr::Turn::GetType(turn_degree) == valhalla::baldr::Turn::Type::kReverse;
-  const uint32_t number_of_roads = node->local_edge_count();
-
-  // if turn.number_of_roads > 2 or turn.source_mode ~= turn.target_mode or turn.is_u_turn then
-  if (number_of_roads > 2 || is_u_turn) {
-    int32_t osrm_angle = turn_degree > 180 ? static_cast<int32_t>(turn_degree) - 360 : turn_degree;
-
-    // if turn.angle >= 0 then
-    //  turn.duration = turn.duration + turn_penalty / (1 + math.exp( -((13 / turn_bias) *
-    //  turn.angle/180 - 6.5*turn_bias)))
-    // else
-    //  turn.duration = turn.duration + turn_penalty / (1 + math.exp( -((13 * turn_bias) *
-    //  -turn.angle/180 - 6.5/turn_bias)))
-    // end
-    if (osrm_angle >= 0)
-      turn_duration +=
-          turn_penalty / (1 + std::exp(-((13 / turn_bias) * osrm_angle / 180 - 6.5 * turn_bias)));
-    else
-      turn_duration +=
-          turn_penalty / (1 + std::exp(-((13 * turn_bias) * -osrm_angle / 180 - 6.5 / turn_bias)));
-
-    if (is_u_turn)
-      turn_duration += kUTurnPenalty;
-  }
   return turn_duration;
 }
 
