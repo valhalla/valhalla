@@ -515,7 +515,6 @@ void BuildTileSet(const std::string& ways_file,
         // Build directed edges. Track the best classification/importance
         // of outbound edges from this node.
         uint32_t n = 0;
-        RoadClass bestclass = RoadClass::kServiceOther;
         for (const auto& edge_pair : bundle.node_edges) {
           // Get the edge and way
           const Edge& edge = edge_pair.first;
@@ -737,9 +736,6 @@ void BuildTileSet(const std::string& ways_file,
             directededge.set_internal(true);
           }
 
-          // Update the node's best class
-          bestclass = std::min(bestclass, directededge.classification());
-
           // TODO - update logic so we limit the CreateSignInfoList calls
           // Any exits for this directed edge? is auto and oneway?
           std::vector<SignInfo> signs;
@@ -957,7 +953,7 @@ void BuildTileSet(const std::string& ways_file,
         // Set the node lat,lng, index of the first outbound edge, and the
         // directed edge count from this edge and the best road class
         // from the node. Increment directed edge count.
-        graphtile.nodes().emplace_back(base_ll, node_ll, bestclass, node.access(), node.type(),
+        graphtile.nodes().emplace_back(base_ll, node_ll, node.access(), node.type(),
                                        node.traffic_signal());
         graphtile.nodes().back().set_edge_index(graphtile.directededges().size() -
                                                 bundle.node_edges.size());

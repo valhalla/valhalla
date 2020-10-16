@@ -44,14 +44,12 @@ public:
    * Constructor with arguments
    * @param  tile_corner    Lower left (SW) corner of the tile that contains the node.
    * @param  ll             Lat,lng position of the node.
-   * @param  rc             Best road class / importance of outbound edges.
    * @param  access         Access mask at this node.
    * @param  type           The type of node.
    * @param  traffic_signal Has a traffic signal at this node?
    */
   NodeInfo(const midgard::PointLL& tile_corner,
            const std::pair<float, float>& ll,
-           const baldr::RoadClass rc,
            const uint32_t access,
            const baldr::NodeType type,
            const bool traffic_signal);
