@@ -177,6 +177,7 @@
    * ADDED: One shot mode to valhalla_service so you can run a single request of any type without starting a server [#2624](https://github.com/valhalla/valhalla/pull/2624)
    * ADDED: Adds text instructions to OSRM output [#2625](https://github.com/valhalla/valhalla/pull/2625)
    * ADDED: Adds support for alternate routes [#2626](https://github.com/valhalla/valhalla/pull/2626)
+   * ADDED: Add support of input file for one-shot mode of valhalla_service [#2648](https://github.com/valhalla/valhalla/pull/2648)
    * ADDED: Linear reference support to locate api [#2645](https://github.com/valhalla/valhalla/pull/2645)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
