@@ -98,8 +98,7 @@ private:
  */
 class scoped_curler_t {
 public:
-  explicit scoped_curler_t(curler_pool_t& owner)
-      : owner_(owner), curler_(std::move(owner.acquire())) {
+  explicit scoped_curler_t(curler_pool_t& owner) : owner_(owner), curler_(owner.acquire()) {
   }
 
   ~scoped_curler_t() {
