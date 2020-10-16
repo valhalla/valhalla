@@ -45,7 +45,7 @@ TEST(Traffic, BasicUpdates) {
       auto result = gurka::route(map, "A", "C", "auto", {{"/date_time/type", "0"}}, clean_reader);
       gurka::assert::osrm::expect_steps(result, {"AB"});
       gurka::assert::raw::expect_path(result, {"AB", "BC"});
-      gurka::assert::raw::expect_eta(result, 361.5);
+      gurka::assert::raw::expect_eta(result, 360.0177);
     }
     printf("Make some updates to the traffic .tar file. "
            "Mostly just updates every edge in the file to 24km/h, except for one "
@@ -71,7 +71,7 @@ TEST(Traffic, BasicUpdates) {
       auto result = gurka::route(map, "A", "C", "auto", {{"/date_time/type", "0"}}, clean_reader);
       gurka::assert::osrm::expect_steps(result, {"AB"});
       gurka::assert::raw::expect_path(result, {"AB", "BC"});
-      gurka::assert::raw::expect_eta(result, 151.5);
+      gurka::assert::raw::expect_eta(result, 150.0177);
     }
     printf("Next, set the speed to the highest possible to ensure nothing breaks");
 
@@ -91,7 +91,7 @@ TEST(Traffic, BasicUpdates) {
       auto result = gurka::route(map, "A", "C", "auto", {{"/date_time/type", "0"}}, clean_reader);
       gurka::assert::osrm::expect_steps(result, {"AB"});
       gurka::assert::raw::expect_path(result, {"AB", "BC"});
-      gurka::assert::raw::expect_eta(result, 15.785715);
+      gurka::assert::raw::expect_eta(result, 14.303419);
     }
     printf("Back to previous speed");
     valhalla_tests::utils::customize_live_traffic_data(map.config, cb_setter_24kmh);
@@ -101,7 +101,7 @@ TEST(Traffic, BasicUpdates) {
       auto result = gurka::route(map, "A", "C", "auto", {}, clean_reader);
       gurka::assert::osrm::expect_steps(result, {"AB"});
       gurka::assert::raw::expect_path(result, {"AB", "BC"});
-      gurka::assert::raw::expect_eta(result, 361.5);
+      gurka::assert::raw::expect_eta(result, 360.0177);
     }
     printf("Now do another route with the same (not restarted) actor to see if "
            "it's noticed the changes in the live traffic file");
