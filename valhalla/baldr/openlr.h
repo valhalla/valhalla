@@ -323,10 +323,13 @@ struct OpenLr {
 
   OpenLr(const std::vector<LocationReferencePoint>& lrps,
          uint8_t positive_offset_bucket,
-         uint8_t negative_offset_bucket)
+         uint8_t negative_offset_bucket,
+         bool point_along_line = false,
+         const Orientation& orientation = Orientation::NoOrientation,
+         const SideOfTheRoad& side_of_the_road = SideOfTheRoad::DirectlyOnRoadOrNotApplicable)
       : lrps(lrps), poff(positive_offset_bucket), noff(negative_offset_bucket),
-        isPointAlongLine(false), orientation(Orientation::NoOrientation),
-        sideOfTheRoad(SideOfTheRoad::DirectlyOnRoadOrNotApplicable) {
+        isPointAlongLine(point_along_line), orientation(orientation),
+        sideOfTheRoad(side_of_the_road) {
     if (lrps.size() < 2) {
       throw std::invalid_argument(
           "Only descriptors with at least 2 LRPs are supported by this implementation");
