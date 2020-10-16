@@ -183,6 +183,7 @@
    * ADDED: Add support of input file for one-shot mode of valhalla_service [#2648](https://github.com/valhalla/valhalla/pull/2648)
    * ADDED: Linear reference support to locate api [#2645](https://github.com/valhalla/valhalla/pull/2645)
    * ADDED: Implemented OSRM-like turn duration calculation for car. Uses it now in auto costing. [#2651](https://github.com/valhalla/valhalla/pull/2651)
+   * ADDED: Enhanced turn lane information in guidance [#2653](https://github.com/valhalla/valhalla/pull/2653)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

@@ -127,52 +127,54 @@ TEST(Turnlanes, validate_turn_lanes) {
   // Test right active
   test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/right_active_pinpoint.pbf"},
                   expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ left | through | through;right ACTIVE ]");
+                  "[ left | through | through;right ACTIVE, ACTIVE_DIR right ]");
 
   // Test left active
   test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/left_active_pinpoint.pbf"},
                   expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ left ACTIVE | through | through;right ]");
+                  "[ left ACTIVE, ACTIVE_DIR left | through | through;right ]");
 
   // Test right most slight left active
-  test_turn_lanes({VALHALLA_SOURCE_DIR
-                   "test/pinpoints/turn_lanes/right_most_slight_left_active_pinpoint.pbf"},
-                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ slight_left | slight_left ACTIVE | slight_right | right ]");
+  test_turn_lanes(
+      {VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/right_most_slight_left_active_pinpoint.pbf"},
+      expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+      "[ slight_left VALID, ACTIVE_DIR slight_left | slight_left ACTIVE, ACTIVE_DIR slight_left | slight_right | right ]");
 
   // Test slight right active
-  test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/slight_right_active_pinpoint.pbf"},
-                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ slight_left | slight_left | slight_right ACTIVE | right ]");
+  test_turn_lanes(
+      {VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/slight_right_active_pinpoint.pbf"},
+      expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+      "[ slight_left | slight_left | slight_right ACTIVE, ACTIVE_DIR slight_right | right ]");
 
   // Test left most left u-turn active
-  test_turn_lanes({VALHALLA_SOURCE_DIR
-                   "test/pinpoints/turn_lanes/left_most_left_uturn_active_pinpoint.pbf"},
-                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ left ACTIVE | left | left | through | through;right ]");
+  test_turn_lanes(
+      {VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/left_most_left_uturn_active_pinpoint.pbf"},
+      expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+      "[ left ACTIVE, ACTIVE_DIR left | left VALID, ACTIVE_DIR left | left VALID, ACTIVE_DIR left | through | through;right ]");
 
   // Test left reverse active
   test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/left_reverse_active_pinpoint.pbf"},
                   expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ reverse ACTIVE | through | through | right ]");
+                  "[ reverse ACTIVE, ACTIVE_DIR reverse | through | through | right ]");
 
   expected_maneuvers_size = 4;
   // Test right most left active
-  test_turn_lanes({VALHALLA_SOURCE_DIR
-                   "test/pinpoints/turn_lanes/right_most_left_active_pinpoint.pbf"},
-                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ left | left;through ACTIVE | through;right ]");
+  test_turn_lanes(
+      {VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/right_most_left_active_pinpoint.pbf"},
+      expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+      "[ left VALID, ACTIVE_DIR left | left;through ACTIVE, ACTIVE_DIR left | through;right ]");
 
   // Test both left active
-  test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/both_left_active_pinpoint.pbf"},
-                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ left ACTIVE | left;through ACTIVE | through;right ]");
+  test_turn_lanes(
+      {VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/both_left_active_pinpoint.pbf"},
+      expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+      "[ left ACTIVE, ACTIVE_DIR left | left;through ACTIVE, ACTIVE_DIR left | through;right ]");
 
   // Test left most left active
-  test_turn_lanes({VALHALLA_SOURCE_DIR
-                   "test/pinpoints/turn_lanes/left_most_left_active_pinpoint.pbf"},
-                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ left ACTIVE | left;through | through;right ]");
+  test_turn_lanes(
+      {VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/left_most_left_active_pinpoint.pbf"},
+      expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
+      "[ left ACTIVE, ACTIVE_DIR left | left;through VALID, ACTIVE_DIR left | through;right ]");
 }
 
 } // namespace

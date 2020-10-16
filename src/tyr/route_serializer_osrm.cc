@@ -290,8 +290,7 @@ std::vector<PointLL> full_shape(const valhalla::DirectionsRoute& directions,
 }
 
 // Generate simplified shape of the route.
-std::vector<PointLL> simplified_shape(const valhalla::DirectionsRoute& directions,
-                                      const valhalla::Options& options) {
+std::vector<PointLL> simplified_shape(const valhalla::DirectionsRoute& directions) {
   Coordinate south_west(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
   Coordinate north_east(std::numeric_limits<int>::min(), std::numeric_limits<int>::min());
   std::vector<PointLL> simple_shape;
@@ -325,7 +324,7 @@ void route_geometry(json::MapPtr& route,
                     const valhalla::Options& options) {
   std::vector<PointLL> shape;
   if (options.has_generalize() && options.generalize() == 0.0f) {
-    shape = simplified_shape(directions, options);
+    shape = simplified_shape(directions);
   } else if (!options.has_generalize() || (options.has_generalize() && options.generalize() > 0.0f)) {
     shape = full_shape(directions, options);
   }
@@ -378,6 +377,30 @@ struct IntersectionEdges {
     return bearing < other.bearing;
   }
 };
+
+std::string turn_lane_direction(uint16_t turn_lane) {
+  switch (turn_lane) {
+    case kTurnLaneReverse:
+      return "uturn";
+    case kTurnLaneSharpLeft:
+      return "sharp left";
+    case kTurnLaneLeft:
+      return "left";
+    case kTurnLaneSlightLeft:
+      return "slight left";
+    case kTurnLaneThrough:
+      return "straight";
+    case kTurnLaneSlightRight:
+      return "slight right";
+    case kTurnLaneRight:
+      return "right";
+    case kTurnLaneSharpRight:
+      return "sharp right";
+    default:
+      return "";
+  }
+  return "";
+}
 
 // Add intersections along a step/maneuver.
 json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
@@ -560,8 +583,16 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       auto lanes = json::array({});
       for (const auto& turn_lane : prev_edge->turn_lanes()) {
         auto lane = json::map({});
-        // Process 'valid' flag
-        lane->emplace("valid", turn_lane.is_active());
+        // Process 'valid' & 'active' flags
+        bool is_active = turn_lane.state() == TurnLane::kActive;
+        // an active lane is also valid
+        bool is_valid = is_active || turn_lane.state() == TurnLane::kValid;
+        lane->emplace("active", is_active);
+        lane->emplace("valid", is_valid);
+        // Add active_indication for a valid lane
+        if (turn_lane.state() != ::valhalla::TurnLane::kInvalid) {
+          lane->emplace("active_indication", turn_lane_direction(turn_lane.active_direction()));
+        }
 
         // Process 'indications' array - add indications from left to right
         auto indications = json::array({});
@@ -885,7 +916,6 @@ std::string turn_modifier(const uint32_t in_brg, const uint32_t out_brg) {
 // Get the turn modifier based on the maneuver type
 // or if needed, the incoming edge bearing and outgoing edge bearing.
 std::string turn_modifier(const valhalla::DirectionsLeg::Maneuver& maneuver,
-                          valhalla::odin::EnhancedTripLeg* etp,
                           const uint32_t in_brg,
                           const uint32_t out_brg,
                           const bool arrive_maneuver) {
@@ -993,7 +1023,7 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
   std::string modifier;
   if (!depart_maneuver) {
-    modifier = turn_modifier(maneuver, etp, in_brg, out_brg, arrive_maneuver);
+    modifier = turn_modifier(maneuver, in_brg, out_brg, arrive_maneuver);
     if (!modifier.empty())
       osrm_man->emplace("modifier", modifier);
   }

@@ -477,7 +477,7 @@ float EnhancedTripLeg_Edge::GetLength(const Options::Units& units) {
 
 bool EnhancedTripLeg_Edge::HasActiveTurnLane() const {
   for (const auto& turn_lane : turn_lanes()) {
-    if (turn_lane.is_active()) {
+    if (turn_lane.state() == TurnLane::kActive) {
       return true;
     }
   }
@@ -508,20 +508,28 @@ bool EnhancedTripLeg_Edge::HasTurnLane(uint16_t turn_lane_direction) const {
 uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromLeft(uint16_t turn_lane_direction,
                                                          uint16_t activated_max) {
   uint16_t activated_count = 0;
-  // Make sure turn lane has a direction
-  if (!HasNonDirectionalTurnLane()) {
-    for (auto& turn_lane : *(mutable_turn_lanes())) {
-      // Stop processing the lanes if the activated maximum has been reached
-      if (activated_count >= activated_max) {
-        break;
-      }
 
-      // If the turn lane is in the specified direction then activate the lane
-      // and increment the activated count
-      if (turn_lane.directions_mask() & turn_lane_direction) {
-        turn_lane.set_is_active(true);
+  // Make sure turn lane has a direction
+  // TODO: Consider activating lanes even if some lanes are non-directional
+  // as long as there are directional lanes in the direction of the maneuver
+  if (HasNonDirectionalTurnLane()) {
+    return activated_count;
+  }
+
+  for (auto& turn_lane : *(mutable_turn_lanes())) {
+    // Process lanes matching the turn_lane_direction
+    if (turn_lane.directions_mask() & turn_lane_direction) {
+      // TODO: Use lane connectivity to skip impossible lanes
+      // activate upto activated_max lanes
+      if (activated_count < activated_max) {
+        turn_lane.set_state(TurnLane::kActive);
         ++activated_count;
+      } else {
+        // Mark non-active lane in the direction of maneuver as valid
+        turn_lane.set_state(TurnLane::kValid);
       }
+      // Set the active direction for active & valid lanes
+      turn_lane.set_active_direction(turn_lane_direction);
     }
   }
   return activated_count;
@@ -530,22 +538,28 @@ uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromLeft(uint16_t turn_lane_dire
 uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromRight(uint16_t turn_lane_direction,
                                                           uint16_t activated_max) {
   uint16_t activated_count = 0;
-  // Make sure turn lane has a direction
-  if (!HasNonDirectionalTurnLane()) {
-    for (auto turn_lane_iter = mutable_turn_lanes()->rbegin();
-         turn_lane_iter != mutable_turn_lanes()->rend(); ++turn_lane_iter) {
-      //    for (auto& turn_lane : *(mutable_turn_lanes())) {
-      // Stop processing the lanes if the activated maximum has been reached
-      if (activated_count >= activated_max) {
-        break;
-      }
 
-      // If the turn lane is in the specified direction then activate the lane
-      // and increment the activated count
-      if (turn_lane_iter->directions_mask() & turn_lane_direction) {
-        turn_lane_iter->set_is_active(true);
+  // Make sure turn lane has a direction
+  // TODO: Consider activating lanes even if some lanes are non-directional
+  // as long as there are directional lanes in the direction of the maneuver
+  if (HasNonDirectionalTurnLane()) {
+    return activated_count;
+  }
+
+  for (auto turn_lane_iter = mutable_turn_lanes()->rbegin();
+       turn_lane_iter != mutable_turn_lanes()->rend(); ++turn_lane_iter) {
+    if (turn_lane_iter->directions_mask() & turn_lane_direction) {
+      // TODO: Use lane connectivity to skip impossible lanes
+      // activate upto activated_max lanes
+      if (activated_count < activated_max) {
+        turn_lane_iter->set_state(TurnLane::kActive);
         ++activated_count;
+      } else {
+        // Mark non-active in the same direction as the maneuver, as valid
+        turn_lane_iter->set_state(TurnLane::kValid);
       }
+      // Set the active direction for active & valid lanes
+      turn_lane_iter->set_active_direction(turn_lane_direction);
     }
   }
   return activated_count;
@@ -915,8 +929,16 @@ std::string EnhancedTripLeg_Edge::TurnLanesToString() const {
     }
 
     // Output if marked as active
-    if (turn_lane.is_active()) {
+    if (turn_lane.state() == TurnLane::kActive) {
       str += " ACTIVE";
+    } else if (turn_lane.state() == TurnLane::kValid) {
+      str += " VALID";
+    }
+
+    // Append the active direction if the lane is active or valid
+    if (turn_lane.state() != TurnLane::kInvalid) {
+      str += ", ACTIVE_DIR ";
+      str += kTurnLaneNames.at(turn_lane.active_direction());
     }
   }
   str += " ]";

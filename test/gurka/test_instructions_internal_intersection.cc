@@ -102,7 +102,7 @@ TEST_F(InstructionsInternalIntersection, DriveNorth_BrokenLandParkway_TurnLeft_P
   auto prev_edge = etl.GetPrevEdge(maneuver.begin_path_index());
   ASSERT_TRUE(prev_edge);
   EXPECT_EQ(prev_edge->turn_lanes_size(), 3);
-  EXPECT_EQ(prev_edge->TurnLanesToString(), "[ left ACTIVE | through | through ]");
+  EXPECT_EQ(prev_edge->TurnLanesToString(), "[ left ACTIVE, ACTIVE_DIR left | through | through ]");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
