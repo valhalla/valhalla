@@ -73,7 +73,7 @@ NodeInfo::NodeInfo() {
 
 NodeInfo::NodeInfo(const PointLL& tile_corner,
                    const std::pair<float, float>& ll,
-                   const RoadClass rc,
+                   const RoadClass /*rc*/,
                    const uint32_t access,
                    const NodeType type,
                    const bool traffic_signal) {
