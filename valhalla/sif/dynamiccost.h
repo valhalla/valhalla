@@ -711,14 +711,15 @@ protected:
 
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
-  bool ignore_restrictions_{false};
-  bool ignore_oneways_{false};
-  bool ignore_access_{false};
-  bool ignore_closures_{false};
 
   // Whether or not to do shortest (by length) routes
   // Note: hierarchy pruning means some costings (auto, truck, etc) won't do absolute shortest
   bool shortest_;
+
+  bool ignore_restrictions_{false};
+  bool ignore_oneways_{false};
+  bool ignore_access_{false};
+  bool ignore_closures_{false};
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
