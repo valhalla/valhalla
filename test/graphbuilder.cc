@@ -53,7 +53,7 @@ TEST(GraphBuilder, TestConstructEdges) {
   OSMData osm_data{0};
   osm_data.read_from_temp_files(tile_dir);
   std::map<baldr::GraphId, size_t> tiles =
-      GraphBuilder::BuildEdges(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file);
+      GraphBuilder::BuildEdges(config, ways_file, way_nodes_file, nodes_file, edges_file);
   EXPECT_EQ(tiles.size(), 4);
   EXPECT_EQ(tiles[GraphId{5993698}], 0);
   EXPECT_EQ(tiles[GraphId{5993706}], 3084);
@@ -77,7 +77,7 @@ TEST(graphbuilder, TestConstructEdgesSubset) {
   OSMData osm_data{0};
   osm_data.read_from_temp_files(tile_dir);
   std::map<baldr::GraphId, size_t> tiles =
-      GraphBuilder::BuildEdges(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file);
+      GraphBuilder::BuildEdges(config, ways_file, way_nodes_file, nodes_file, edges_file);
   // Redefine tiles to that we only build a single tile.
   tiles = {{GraphId{5993698}, 0}};
   // This directory should be empty

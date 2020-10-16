@@ -62,7 +62,6 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
                  const Transit& transit,
                  std::unordered_map<GraphId, uint16_t>& stop_access,
                  const std::string& file,
-                 const GraphId& tile_id,
                  std::mutex& lock,
                  builder_stats& stats) {
   // Check if there are no schedule stop pairs in this tile
@@ -490,7 +489,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                 const std::unordered_map<uint32_t, Shape>& shape_data,
                 const std::vector<float>& distances,
                 const std::vector<uint32_t>& route_types,
-                std::vector<OneStopTest>& onestoptests,
                 bool tile_within_one_tz,
                 const std::unordered_multimap<uint32_t, multi_polygon_type>& tz_polys,
                 uint32_t& no_dir_edge_count) {
@@ -964,7 +962,6 @@ void build_tiles(const boost::property_tree::ptree& pt,
                  const std::unordered_set<GraphId>& all_tiles,
                  std::unordered_set<GraphId>::const_iterator tile_start,
                  std::unordered_set<GraphId>::const_iterator tile_end,
-                 std::vector<OneStopTest>& onestoptests,
                  std::promise<builder_stats>& results) {
 
   builder_stats stats;
@@ -1075,8 +1072,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
 
     // Process schedule stop pairs (departures)
     std::unordered_multimap<GraphId, Departure> departures =
-        ProcessStopPairs(tilebuilder_transit, tile_creation_date, transit, stop_access, file, tile_id,
-                         lock, stats);
+        ProcessStopPairs(tilebuilder_transit, tile_creation_date, transit, stop_access, file, lock,
+                         stats);
 
     // Form departures and egress/station/platform hierarchy
     for (uint32_t i = 0; i < transit.nodes_size(); i++) {
@@ -1155,8 +1152,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
 
     // Add nodes, directededges, and edgeinfo
     AddToGraph(tilebuilder_transit, tile_id, file, transit_dir, lock, all_tiles, stop_edge_map,
-               stop_access, shapes, distances, route_types, onestoptests, tile_within_one_tz,
-               tz_polys, stats.no_dir_edge_count);
+               stop_access, shapes, distances, route_types, tile_within_one_tz, tz_polys,
+               stats.no_dir_edge_count);
 
     LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
              std::to_string(transit.nodes_size()) + " stops, " +
@@ -1180,7 +1177,6 @@ void build_tiles(const boost::property_tree::ptree& pt,
 
 void build(const ptree& pt,
            const std::unordered_set<GraphId>& all_tiles,
-           std::vector<OneStopTest>& onestoptests,
            unsigned int thread_count = std::max(static_cast<unsigned int>(1),
                                                 std::thread::hardware_concurrency())) {
 
@@ -1225,7 +1221,7 @@ void build(const ptree& pt,
     results.emplace_back();
     threads[i].reset(new std::thread(build_tiles, std::cref(pt.get_child("mjolnir")), std::ref(lock),
                                      std::cref(all_tiles), tile_start, tile_end,
-                                     std::ref(onestoptests), std::ref(results.back())));
+                                     std::ref(results.back())));
   }
 
   // Wait for them to finish up their work
@@ -1318,7 +1314,7 @@ int main(int argc, char** argv) {
   }
 
   LOG_INFO("Building transit network.");
-  build(pt, all_tiles, onestoptests);
+  build(pt, all_tiles);
   ValidateTransit::Validate(pt, all_tiles, onestoptests);
   return 0;
 }
