@@ -22,29 +22,12 @@ protected:
     const gurka::ways ways = {
         // segments expected for shortest routes for all profiles
         {"AB",
-         {{"highway", "tertiary"},
-          {"sac_scale", "hiking"},
-          {"service", "alley"},
-          {"maxspeed", "20"},
-          {"surface", "dirt"}}},
-        {"BC",
-         {{"highway", "tertiary"},
-          {"sac_scale", "hiking"},
-          {"service", "alley"},
-          {"maxspeed", "20"},
-          {"surface", "dirt"}}},
-        {"CD",
-         {{"highway", "tertiary"},
-          {"sac_scale", "hiking"},
-          {"service", "alley"},
-          {"maxspeed", "20"},
-          {"surface", "dirt"}}},
-        {"DE",
-         {{"highway", "tertiary"},
-          {"sac_scale", "hiking"},
-          {"service", "alley"},
-          {"maxspeed", "20"},
-          {"surface", "dirt"}}},
+         {{"highway", "residential"},
+          {"maxspeed", "20"},    // slows down car/truck/motorbike/scooter
+          {"surface", "dirt"}}}, // slows down bike/scooter
+        {"BC", {{"highway", "residential"}, {"maxspeed", "20"}, {"surface", "dirt"}}},
+        {"CD", {{"highway", "residential"}, {"maxspeed", "20"}, {"surface", "dirt"}}},
+        {"DE", {{"highway", "residential"}, {"maxspeed", "20"}, {"surface", "dirt"}}},
         // segments expected for fastest routes for motor_vehicles
         {"BF", {{"highway", "tertiary"}, {"maxspeed", "100"}}},
         {"FG", {{"highway", "tertiary"}, {"maxspeed", "100"}}},
@@ -59,19 +42,20 @@ protected:
     shortest_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/shortest");
   }
 
-  inline float getSummary(const valhalla::Api& route) {
+  inline float getLength(const valhalla::Api& route) {
     return route.directions().routes(0).legs(0).summary().length();
   }
 
   void doTests(const std::string& profile,
                const std::vector<std::string>& fastest_path,
-               const std::unordered_map<std::string, std::string>& shortest_options) {
+               const std::unordered_map<std::string, std::string>& shortest_options,
+               const std::unordered_map<std::string, std::string>& fastest_options = {}) {
 
-    valhalla::Api fastest = gurka::route(shortest_map, "A", "E", profile);
-    float fastest_l = getSummary(fastest);
+    valhalla::Api fastest = gurka::route(shortest_map, "A", "E", profile, fastest_options);
+    float fastest_l = getLength(fastest);
 
     valhalla::Api shortest = gurka::route(shortest_map, "A", "E", profile, shortest_options);
-    float shortest_l = getSummary(shortest);
+    float shortest_l = getLength(shortest);
 
     std::cout << "Lenghts: " << fastest_l << ", " << shortest_l << EOF;
 
@@ -110,7 +94,8 @@ TEST_F(ShortestTest, BikeShortest) {
 TEST_F(ShortestTest, PedestrianShortest) {
   std::string profile = "pedestrian";
   doTests(profile, {"AB", "BH", "HI", "ID", "DE"},
-          {{"/costing_options/" + profile + "/shortest", "1"}});
+          {{"/costing_options/" + profile + "/shortest", "1"}},
+          {{"/costing_options/" + profile + "/sidewalk_factor", "0.1"}}); // speed up "fastest edges"
 }
 
 TEST_F(ShortestTest, ScooterShortest) {
