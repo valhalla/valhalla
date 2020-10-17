@@ -426,9 +426,9 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
   auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
 
   if (edge->use() == Use::kFerry) {
-    assert(speed < speedfactor_.size());
-    // Use the edge speed (should be the speed of the ferry)
-    float sec = (edge->length() * speedfactor_[edge->speed()]);
+    float ferry_speed = static_cast<float>(edge->speed());
+    assert(ferry_speed < speedfactor_.size());
+    float sec = (edge->length() * speedfactor_[ferry_speed]);
     return {sec * ferry_factor_, sec};
   }
 
