@@ -150,18 +150,36 @@ protected:
   }
 
   /**
-   * Thread work function that continually checks for updates to incident tiles. The updates come in
-   * the form of timestamps in a memory mapped file of 64bit integers (one per tile). The first 25
-   * bits are the tile id and level (as a normal graphid) the remaining 39 bits are the timestamp.
-   * When the timestamp for the last check is older than a timestamp for a given file that file is
-   * replaced with whatever its contents are on disk.
+   * Thread work function that continually checks for updates to incident tiles. The thread begins by
+   * deciding whether its just scanning the directory (works for a small number of incidents) or using
+   * a memory mapped changelog to communicate about which incidents changed when.
    *
-   * The thread begins by deciding whether its just scaning the directory (works for a small number of
-   * incidents) or using a memory mapped changelog to communicate about which incidents chnaged last.
-   * If the latter is used we preallocate
+   * Directory Scanning Mode:
+   *
+   * In this mode the thread will continually loop over the entire contents of the directory provided.
+   * Any file in the directory which has a timestamp later or equal to the timestamp of the last scan
+   * that was performed will be read into the incident cache. Tiles which are in the cache but were
+   * not found on the disk in the last scan will be purged as they have been removed from the disk. If
+   * a static tileset was provided any tiles which are found in the directory but are not part of the
+   * tileset will be ignored.
+   *
+   * Memory Mapped Log Mode:
+   *
+   * In this mode the thread will continually loop over uint64_t entries of a single binary log file.
+   * The file is used to communicate which incidents changed when. Each entry is a bitfield comprised
+   * of two parts. The first 25 bits are the tile id and level (the same format as a normal graphid)
+   * the remaining 39 bits are the timestamp. Any tile entry in the log which has a timestamp later or
+   * equal to the timestamp of the last scan that was performed will be read into the incident cache.
+   * Tiles which are in the cache but were not found on the disk in the last scan will b epurged as
+   * they have been removed from the log. If a static tileset was provided any tiles which are found
+   * in the log but are nto part of the tileset will be ignored. When the timestamp for the last check
+   * is older than a timestamp for a given file that file is replaced with whatever its contents are
+   * on disk.
+   *
    * @param config     lets the function know where to look for incidents and desired update frequency
-   * @param tileset    if the tileset is static we can use lockfree mode
-   * @param state      used for interthread communication
+   * @param tileset    if not empty, the static list of tiles to track (other tiles will be ignored).
+                       if the tileset is static (mem map tar file) we can use lockfree mode
+   * @param state      inter thread communication object (mainly tile cache)
    * @param interrupt  functor that, if set and returns true, stops the main loop of this function
    */
   static void watch(boost::property_tree::ptree config,
