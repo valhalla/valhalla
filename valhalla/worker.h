@@ -48,6 +48,8 @@ const std::unordered_map<unsigned, std::string>
                 {140, "Action does not support multimodal costing"},
                 {141, "Arrive by for multimodal not implemented yet"},
                 {142, "Arrive by not implemented for isochrones"},
+                // TODO: delete this when bidira* supports time dependence
+                {143, "Invariant date_time only implemented for route action"},
 
                 {150, "Exceeded max locations"},
                 {151, "Exceeded max time"},
@@ -66,6 +68,8 @@ const std::unordered_map<unsigned, std::string>
                 {162, "Date and time is invalid.  Format is YYYY-MM-DDTHH:MM"},
                 {163, "Invalid date_type"},
                 {164, "Invalid shape format"},
+                // TODO: delete this when bidira* supports time dependence
+                {165, "Date and time required for destination for date_type of invariant"},
 
                 {170, "Locations are in unconnected regions. Go check/edit the map at osm.org"},
                 {171, "No suitable edges near location"},

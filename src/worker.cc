@@ -293,7 +293,8 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
 
 void add_date_to_locations(Options& options,
                            google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
-  if (options.has_date_time() && locations.size()) {
+  // otherwise we do what the person was asking for
+  if (options.has_date_time() && !locations.empty()) {
     switch (options.date_time_type()) {
       case Options::current:
         locations.Mutable(0)->set_date_time("current");
@@ -304,6 +305,9 @@ void add_date_to_locations(Options& options,
       case Options::arrive_by:
         locations.Mutable(locations.size() - 1)->set_date_time(options.date_time());
         break;
+      case Options::invariant:
+        for (auto& loc : locations)
+          loc.set_date_time(options.date_time());
       default:
         break;
     }
@@ -616,7 +620,6 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   // date_time
   auto date_time_type = rapidjson::get_optional<unsigned int>(doc, "/date_time/type");
-  auto date_time_value = rapidjson::get_optional<std::string>(doc, "/date_time/value");
   if (date_time_type && Options::DateTimeType_IsValid(*date_time_type)) {
     // check the type is in bounds
     auto const v = static_cast<Options::DateTimeType>(*date_time_type);
@@ -624,19 +627,21 @@ void from_json(rapidjson::Document& doc, Options& options) {
       throw valhalla_exception_t{163};
     options.set_date_time_type(static_cast<Options::DateTimeType>(v));
     // check the value exists for depart at and arrive by
+    auto date_time_value = v != Options::current
+                               ? rapidjson::get_optional<std::string>(doc, "/date_time/value")
+                               : std::string("current");
     if (!date_time_value) {
       if (v == Options::depart_at)
         throw valhalla_exception_t{160};
       else if (v == Options::arrive_by)
         throw valhalla_exception_t{161};
+      else if (v == Options::invariant)
+        throw valhalla_exception_t{165};
     }
-    // check the value is sane for depart at and arrive by
-    if (v != Options::current && !baldr::DateTime::is_iso_valid(*date_time_value))
+    // check the value is sane
+    if (*date_time_value != "current" && !baldr::DateTime::is_iso_valid(*date_time_value))
       throw valhalla_exception_t{162};
-    if (v != Options::current)
-      options.set_date_time(*date_time_value);
-    else
-      options.set_date_time("current");
+    options.set_date_time(*date_time_value);
   } // not specified but you want transit, then we default to current
   else if (options.has_costing() &&
            (options.costing() == multimodal || options.costing() == transit)) {
@@ -644,9 +649,23 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_date_time("current");
   }
 
+  // failure scenarios with respect to time dependence
+  if (options.has_date_time_type()) {
+    switch (options.date_time_type()) {
+      case Options::arrive_by:
+        if (options.costing() == multimodal || options.costing() == transit)
+          throw valhalla_exception_t{141};
+        if (options.action() == Options::isochrone)
+          throw valhalla_exception_t{142};
+      case Options::invariant:
+        if (options.action() != Options::route)
+          throw valhalla_exception_t{143};
+    }
+  }
+
   // Set the output precision for shape/geometry (polyline encoding). Defaults to polyline6
   // This also controls the input precision for encoded_polyline in height action
-  // TODO - is this just for OSRM compatibility?
+  // TODO - this just for OSRM compatibility at the moment but could be supported
   options.set_shape_format(polyline6);
   auto shape_format = rapidjson::get_optional<std::string>(doc, "/shape_format");
   if (shape_format) {
@@ -662,6 +681,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
     }
   }
 
+  // whether or not to output b64 encoded openlr
   auto linear_references = rapidjson::get_optional<bool>(doc, "/linear_references");
   if (linear_references) {
     options.set_linear_references(*linear_references);
@@ -808,7 +828,6 @@ void from_json(rapidjson::Document& doc, Options& options) {
   parse_locations(doc, options, "avoid_locations", 133, track);
 
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
-  // TODO: this is because bidirectional a* defaults to middle of the day time for speed lookup
   if (!options.has_date_time_type() && (options.shape_size() == 0 || options.shape(0).time() == -1)) {
     for (auto& costing : *options.mutable_costing_options()) {
       costing.set_flow_mask(

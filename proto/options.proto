@@ -155,6 +155,8 @@ message Options {
     current = 0;
     depart_at = 1;
     arrive_by = 2;
+    // Note: temporary until bidirectional a* does time dependence, does not vary the time as the route progresses
+    invariant = 3;
   }
 
   optional Units units = 1;                                               // kilometers or miles
