@@ -98,13 +98,6 @@ TEST_F(IgnoreAccessTest, AutoDataFixIgnoreOneWay) {
       gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
 }
 
-TEST_F(IgnoreAccessTest, AutoShorterIgnoreOneWay) {
-  const std::string cost = "auto_shorter";
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
-}
-
 TEST_F(IgnoreAccessTest, BusIgnoreOneWay) {
   const std::string cost = "bus";
   EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
@@ -167,14 +160,6 @@ TEST_F(IgnoreAccessTest, AutoIgnoreAccess) {
 
 TEST_F(IgnoreAccessTest, AutoDataFixIgnoreAccess) {
   const std::string cost = "auto_data_fix";
-  // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "B", "D"}, cost, {{IgnoreAccessParam(cost), "1"}}));
-}
-
-TEST_F(IgnoreAccessTest, AutoShorterIgnoreAccess) {
-  const std::string cost = "auto_shorter";
   // ignore edges and nodes access restriction
   EXPECT_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost), std::runtime_error);
   EXPECT_NO_THROW(

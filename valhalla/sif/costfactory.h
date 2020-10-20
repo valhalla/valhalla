@@ -34,7 +34,6 @@ public:
   CostFactory() {
     Register(Costing::auto_, CreateAutoCost);
     Register(Costing::auto_data_fix, CreateAutoDataFixCost);
-    Register(Costing::auto_shorter, CreateAutoShorterCost);
     Register(Costing::bicycle, CreateBicycleCost);
     Register(Costing::bus, CreateBusCost);
     Register(Costing::hov, CreateHOVCost);
