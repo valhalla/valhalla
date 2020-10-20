@@ -5,6 +5,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include "osrm_car_duration.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
@@ -441,6 +442,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, pred, idx);
+  c.secs = OSRMCarTurnDuration(edge, node, pred.opp_local_idx());
 
   // Intersection transition time = factor * stopimpact * turncost. Factor depends
   // on density and whether traffic is available
@@ -469,9 +471,14 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
+<<<<<<< HEAD
     c.cost += shortest_ ? 0.f : seconds;
     c.secs += seconds;
+=======
+    c.cost += seconds;
+>>>>>>> master
   }
+
   return c;
 }
 
@@ -486,6 +493,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
+  c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -513,9 +521,14 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
+<<<<<<< HEAD
     c.cost += shortest_ ? 0 : seconds;
     c.secs += seconds;
+=======
+    c.cost += seconds;
+>>>>>>> master
   }
+
   return c;
 }
 
