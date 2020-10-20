@@ -21,6 +21,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "mjolnir/util.h"
+#include "sif/osrm_car_duration.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -319,10 +320,16 @@ uint32_t ConnectEdges(GraphReader& reader,
                       GraphId& endnode,
                       uint32_t& opp_local_idx,
                       uint32_t& restrictions,
-                      float& average_density) {
+                      float& average_density,
+                      float& total_turn_duration) {
   // Get the tile and directed edge.
   const GraphTile* tile = reader.GetGraphTile(startnode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
+
+  // turn duration
+  auto const nodeinfo = tile->node(startnode);
+  auto turn_duration = OSRMCarTurnDuration(directededge, nodeinfo, opp_local_idx);
+  total_turn_duration += turn_duration;
 
   // Copy the restrictions and opposing local index. Want to set the shortcut
   // edge's restrictions and opp_local_idx to the last directed edge in the chain
@@ -404,8 +411,9 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       DirectedEdge newedge = *directededge;
       uint32_t length = newedge.length();
 
-      // For computing weighted density along the shortcut
+      // For computing weighted density and total turn duration along the shortcut
       float average_density = length * newedge.density();
+      float total_turn_duration = 0;
 
       // Get the shape for this edge. If this initial directed edge is not
       // forward - reverse the shape so the edge info stored is forward for
@@ -466,7 +474,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         // on the connected shortcut - need to set that so turn restrictions
         // off of shortcuts work properly
         length += ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
-                               average_density);
+                               average_density, total_turn_duration);
       }
 
       // Do we need to force adding edgeinfo (opposing edge could have diff names)?
@@ -474,6 +482,14 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       // edge_info_offset).
       bool diff_names = directededge->endnode().tileid() == edge_id.tileid() &&
                         !OpposingEdgeInfoMatches(tile, directededge);
+
+      // Recalculate speed limit to include turn durations
+      uint32_t average_speed = 0;
+      if (edgeinfo.speed_limit() != 0) {
+        auto const speed_mps = edgeinfo.speed_limit() * 1000.0 / 3600;  // meters per second // TODO is there a converter? remove zeros
+        auto const actual_time = length / speed_mps + total_turn_duration;
+        average_speed = std::floor(length / actual_time * 3600 / 1000);
+      }
 
       // Add the edge info. Use length and number of shape points to match an
       // edge in case multiple shortcut edges exist between the 2 nodes.
