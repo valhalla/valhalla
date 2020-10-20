@@ -939,8 +939,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
   std::vector<std::unordered_set<GraphId>> shared_edgeids;
 
   // get maximum amount of sharing parameter based on origin->destination distance
-  float max_sharing =
-      allow_alternates ? get_max_sharing(options.locations(0), options.locations(1)) : 0.f;
+  float max_sharing = allow_alternates ? get_max_sharing(origin, dest) : 0.f;
 
   LOG_DEBUG("Connections after stretch filter: " + std::to_string(best_connections_.size()));
 
