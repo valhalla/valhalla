@@ -471,12 +471,8 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-<<<<<<< HEAD
     c.cost += shortest_ ? 0.f : seconds;
     c.secs += seconds;
-=======
-    c.cost += seconds;
->>>>>>> master
   }
 
   return c;
@@ -521,12 +517,8 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-<<<<<<< HEAD
     c.cost += shortest_ ? 0 : seconds;
     c.secs += seconds;
-=======
-    c.cost += seconds;
->>>>>>> master
   }
 
   return c;
