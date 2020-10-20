@@ -243,6 +243,27 @@ protected:
                                               const Options& options,
                                               const valhalla::Location& origin,
                                               const valhalla::Location& dest);
+
+  /*
+   * Form the path from the forward adjacency list.
+   * @param   graphreader     Graph tile reader (need to recover shortcut edges)
+   * @param   last_label_idx  Last edgelabel index in the forward path (index where
+   *                          forward path meets reverse path)
+   * @param   path            List of PathInfo objects where to store results
+   */
+  void FormPathForward(baldr::GraphReader& graphreader,
+                       uint32_t last_label_idx,
+                       std::vector<PathInfo>& path);
+  /*
+   * Form the path from the reverse adjacency list.
+   * @param   graphreader      Graph tile reader (need to get opposing edge and recover shortcuts)
+   * @param   start_label_idx  First edgelabel index in the reverse path (index where
+   *                           forward path meets reverse path)
+   * @param   path             List of PathInfo objects where to store results
+   */
+  void FormPathReverse(baldr::GraphReader& graphreader,
+                       uint32_t start_label_idx,
+                       std::vector<PathInfo>& path);
 };
 
 // This function checks if the path formed by the two expanding trees

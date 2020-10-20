@@ -5,9 +5,11 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "sif/edgelabel.h"
+#include "sif/recost.h"
 #include "thor/alternates.h"
 #include <algorithm>
 #include <map>
+#include <stack>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -942,6 +944,163 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
   }
 }
 
+/**
+ * Recover shortcut edge and recost it
+ * @param  graphreader  Graph tile reader.
+ * @param  shortcut_id  Edge id of the shortcut to be recosted
+ * @param  costing      Costing function
+ * @param  transition_cost  Transition cost for the shortcut edge
+ * @param  previous_cost    Total cost from the previous edge
+ * TODO: add time information
+ */
+std::vector<PathInfo> recost_shortcut_forward(GraphReader& graphreader,
+                                              const GraphId& shortcut_id,
+                                              const DynamicCost& costing,
+                                              Cost transition_cost,
+                                              Cost previous_cost) {
+  auto edges = graphreader.RecoverShortcut(shortcut_id);
+
+  std::vector<PathInfo> path;
+  // transition cost will not be included for the first edge;
+  // so, add it here
+  previous_cost += transition_cost;
+
+  const auto on_new_label = [&path, &previous_cost, &transition_cost](const EdgeLabel& label) {
+    Cost transition = path.empty() ? transition_cost : label.transition_cost();
+    path.emplace_back(label.mode(), previous_cost + label.cost(), label.edgeid(), 0,
+                      label.restriction_idx(), transition);
+  };
+
+  auto edge_iter = edges.begin();
+  const auto get_next_edge = [&edge_iter, &edges]() -> GraphId {
+    if (edge_iter == edges.end())
+      return {};
+
+    return *edge_iter++;
+  };
+
+  try {
+    sif::recost_forward(graphreader, costing, get_next_edge, on_new_label);
+  } catch (const std::exception& e) {
+    LOG_ERROR(std::string("Failed to recost shortcut edge: ") + e.what());
+    return {};
+  } catch (...) {
+    LOG_ERROR("Failed to recost shortcut edge: unknown exception");
+    return {};
+  }
+
+  return path;
+}
+
+void BidirectionalAStar::FormPathForward(baldr::GraphReader& graphreader,
+                                         uint32_t last_label_idx,
+                                         std::vector<PathInfo>& path) {
+  // we should go from the beginning to the end because of possible recostings;
+  // so, at first we should collect edge label indexes
+  std::stack<uint32_t> forward_idxs;
+  // Recover forward labels using predecessor indexes
+  for (auto edgelabel_index = last_label_idx; edgelabel_index != kInvalidLabel;
+       edgelabel_index = edgelabels_forward_[edgelabel_index].predecessor()) {
+    forward_idxs.push(edgelabel_index);
+  }
+
+  // keep previous edgelabel index to
+  uint32_t predidx = kInvalidLabel;
+  // form path from forward labels
+  while (!forward_idxs.empty()) {
+    uint32_t edgelabel_idx = forward_idxs.top();
+    forward_idxs.pop();
+    const BDEdgeLabel& edgelabel = edgelabels_forward_[edgelabel_idx];
+    // get current cost
+    Cost cost = path.empty() ? Cost() : path.back().elapsed_cost;
+
+    std::vector<PathInfo> recosted_segment;
+    // recost shortcut edge
+    if (edgelabel.shortcut()) {
+      recosted_segment = recost_shortcut_forward(graphreader, edgelabel.edgeid(), *costing_,
+                                                 edgelabel.transition_cost(), cost);
+    }
+    // add recosted edges to the path
+    if (!recosted_segment.empty()) {
+      path.insert(path.end(), recosted_segment.begin(), recosted_segment.end());
+    } // in case of recosting fails -> fallback to the current edgelabel
+    else {
+      // The first edge has no previous edge with elapsed cost so we can just use it directly
+      if (predidx == kInvalidLabel) {
+        cost += edgelabel.cost();
+      } else {
+        cost += edgelabel.cost() - edgelabels_forward_[predidx].cost();
+      }
+      path.emplace_back(edgelabel.mode(), cost, edgelabel.edgeid(), 0, edgelabel.restriction_idx(),
+                        edgelabel.transition_cost());
+    }
+
+    // Check if this is a ferry
+    if (edgelabel.use() == Use::kFerry) {
+      has_ferry_ = true;
+    }
+
+    // update edgelabel index to apply at next iteration
+    predidx = edgelabel_idx;
+  }
+}
+
+void BidirectionalAStar::FormPathReverse(baldr::GraphReader& graphreader,
+                                         uint32_t start_label_idx,
+                                         std::vector<PathInfo>& path) {
+  // Get the transition cost at the last edge of the reverse path
+  Cost previous_transition_cost = edgelabels_reverse_[start_label_idx].transition_cost();
+
+  // Append the reverse path from the destination - use opposing edges
+  // The first edge on the reverse path is the same as the last on the forward
+  // path, so get the predecessor.
+  uint32_t edgelabel_index = edgelabels_reverse_[start_label_idx].predecessor();
+  while (edgelabel_index != kInvalidLabel) {
+    const BDEdgeLabel& edgelabel = edgelabels_reverse_[edgelabel_index];
+    GraphId oppedge = graphreader.GetOpposingEdgeId(edgelabel.edgeid());
+
+    uint32_t predidx = edgelabel.predecessor();
+    // get current cost
+    Cost cost = path.empty() ? Cost() : path.back().elapsed_cost;
+
+    std::vector<PathInfo> recosted_segment;
+    if (edgelabel.shortcut()) {
+      recosted_segment =
+          recost_shortcut_forward(graphreader, oppedge, *costing_, previous_transition_cost, cost);
+    }
+    // add recosted edges to the path
+    if (!recosted_segment.empty()) {
+      path.insert(path.end(), recosted_segment.begin(), recosted_segment.end());
+    } // in case of recosting fails -> fallback to the current edgelabel
+    else {
+      // The first edge has no previous edge with elapsed cost so we can just use it directly
+      if (predidx == kInvalidLabel) {
+        cost += edgelabel.cost();
+      } // This edge needs the elapsed cost between it and the previous edge, since its the reverse
+        // path in flipping the path around we also need to switch out the transition costs (shifting
+        // right)
+      else {
+        cost += edgelabel.cost() - edgelabels_reverse_[predidx].cost() - edgelabel.transition_cost();
+      }
+      cost += previous_transition_cost;
+      path.emplace_back(edgelabel.mode(), cost, oppedge, 0, edgelabel.restriction_idx(),
+                        previous_transition_cost);
+    }
+
+    // Check if this is a ferry
+    if (edgelabel.use() == Use::kFerry) {
+      has_ferry_ = true;
+    }
+
+    // Update edgelabel_index and transition cost to apply at next iteration
+    edgelabel_index = predidx;
+    // We apply the turn cost at the beginning of the edge, as is done in the forward path
+    // Semantically this can be thought of is, how much time did it take to turn onto this edge
+    // To do this we need to carry the cost forward to the next edge in the path so we cache it here
+    previous_transition_cost = edgelabel.transition_cost();
+  }
+}
+
 // Form the path from the adjacency list.
 std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& graphreader,
                                                                 const Options& options,
@@ -1004,22 +1163,8 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     std::vector<PathInfo> path;
     path.reserve(static_cast<size_t>(paths.empty() ? 0.f : paths.back().size() * 1.2f));
 
-    // Work backwards on the forward path
-    for (auto edgelabel_index = idx1; edgelabel_index != kInvalidLabel;
-         edgelabel_index = edgelabels_forward_[edgelabel_index].predecessor()) {
-      const BDEdgeLabel& edgelabel = edgelabels_forward_[edgelabel_index];
-
-      path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), 0,
-                        edgelabel.restriction_idx(), edgelabel.transition_cost());
-
-      // Check if this is a ferry
-      if (edgelabel.use() == Use::kFerry) {
-        has_ferry_ = true;
-      }
-    }
-
-    // Reverse the list
-    std::reverse(path.begin(), path.end());
+    // recover path from forward labels
+    FormPathForward(graphreader, idx1, path);
 
     // Special case code if the last edge of the forward path is the destination edge
     // which means we need to worry about partial distance on the edge
@@ -1073,49 +1218,8 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
       }
     }
 
-    // Get the elapsed time at the end of the forward path. NOTE: PathInfo
-    // stores elapsed time as uint32_t but EdgeLabels uses float. Need to
-    // accumulate in float and cast to int so we do not accumulate roundoff
-    // error.
-    Cost cost = path.back().elapsed_cost;
-
-    // Get the transition cost at the last edge of the reverse path
-    Cost previous_transition_cost = edgelabels_reverse_[idx2].transition_cost();
-
-    // Append the reverse path from the destination - use opposing edges
-    // The first edge on the reverse path is the same as the last on the forward
-    // path, so get the predecessor.
-    uint32_t edgelabel_index = edgelabels_reverse_[idx2].predecessor();
-    while (edgelabel_index != kInvalidLabel) {
-      const BDEdgeLabel& edgelabel = edgelabels_reverse_[edgelabel_index];
-      GraphId oppedge = graphreader.GetOpposingEdgeId(edgelabel.edgeid());
-
-      // The first edge has no previous edge with elapsed cost so we can just use it directly
-      uint32_t predidx = edgelabel.predecessor();
-      if (predidx == kInvalidLabel) {
-        cost += edgelabel.cost();
-      } // This edge needs the elapsed cost between it and the previous edge, since its the reverse
-        // path in flipping the path around we also need to switch out the transition costs (shifting
-        // right)
-      else {
-        cost += edgelabel.cost() - edgelabels_reverse_[predidx].cost() - edgelabel.transition_cost();
-      }
-      cost += previous_transition_cost;
-      path.emplace_back(edgelabel.mode(), cost, oppedge, 0, edgelabel.restriction_idx(),
-                        previous_transition_cost);
-
-      // Check if this is a ferry
-      if (edgelabel.use() == Use::kFerry) {
-        has_ferry_ = true;
-      }
-
-      // Update edgelabel_index and transition cost to apply at next iteration
-      edgelabel_index = predidx;
-      // We apply the turn cost at the beginning of the edge, as is done in the forward path
-      // Semantically this can be thought of is, how much time did it take to turn onto this edge
-      // To do this we need to carry the cost forward to the next edge in the path so we cache it here
-      previous_transition_cost = edgelabel.transition_cost();
-    }
+    // recover path from reverse labels
+    FormPathReverse(graphreader, idx2, path);
 
     // For the first path just add it for subsequent paths only add if it passes viability tests
     if (paths.empty() ||
