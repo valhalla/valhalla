@@ -651,15 +651,13 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   // failure scenarios with respect to time dependence
   if (options.has_date_time_type()) {
-    switch (options.date_time_type()) {
-      case Options::arrive_by:
-        if (options.costing() == multimodal || options.costing() == transit)
-          throw valhalla_exception_t{141};
-        if (options.action() == Options::isochrone)
-          throw valhalla_exception_t{142};
-      case Options::invariant:
-        if (options.action() != Options::route)
-          throw valhalla_exception_t{143};
+    if (options.date_time_type() == Options::arrive_by) {
+      if (options.costing() == multimodal || options.costing() == transit)
+        throw valhalla_exception_t{141};
+      if (options.action() == Options::isochrone)
+        throw valhalla_exception_t{142};
+    } else if (options.date_time_type() == Options::invariant && options.action() != Options::route) {
+      throw valhalla_exception_t{143};
     }
   }
 

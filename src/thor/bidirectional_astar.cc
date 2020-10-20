@@ -126,10 +126,9 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     return false;
   }
 
-  // Update the time information
+  // Update the time information even if time is invariant to account for timezones
   auto offset_time =
-      from_transition ? time_info
-                      : time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
+      from_transition ? time_info : time_info.forward(0.f, static_cast<int>(nodeinfo->timezone()));
 
   uint32_t shortcuts = 0;
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_forward_);
@@ -237,20 +236,22 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
     return true; // This is an edge we _could_ have expanded, so return true
   }
 
-  // TODO: actually use time_info
-  const uint64_t localtime = 0;
-  const uint32_t tz_index = 0;
+  // Skip this edge if no access is allowed (based on costing method)
+  // or if a complex restriction prevents transition onto this edge.
+  // if its not time dependent set to 0 for Allowed and Restricted methods below
+  const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
   int restriction_idx = -1;
-  if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, tz_index, restriction_idx) ||
+  if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, time_info.timezone_index,
+                         restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
-                           &edgestatus_forward_, localtime, tz_index)) {
+                           &edgestatus_forward_, localtime, time_info.timezone_index)) {
     return false;
   }
 
   // Get cost. Separate out transition cost.
   Cost transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
-  // TODO: actually use time_info
-  Cost newcost = pred.cost() + transition_cost + costing_->EdgeCost(meta.edge, tile);
+  Cost newcost =
+      pred.cost() + transition_cost + costing_->EdgeCost(meta.edge, tile, time_info.second_of_week);
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -317,10 +318,9 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     return false;
   }
 
-  // Update the time information
+  // Update the time information even if time is invariant to account for timezones
   auto offset_time =
-      from_transition ? time_info
-                      : time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
+      from_transition ? time_info : time_info.reverse(0.f, static_cast<int>(nodeinfo->timezone()));
 
   uint32_t shortcuts = 0;
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_reverse_);
@@ -443,13 +443,13 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
 
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
-  const uint64_t localtime = 0; // Bidirectional is not yet time-aware
-  const uint32_t tz_index = 0;
+  // if its not time dependent set to 0 for Allowed and Restricted methods below
+  const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
   int restriction_idx = -1;
-  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime, tz_index,
-                                restriction_idx) ||
+  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime,
+                                time_info.timezone_index, restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false,
-                           &edgestatus_reverse_, localtime, tz_index)) {
+                           &edgestatus_reverse_, localtime, time_info.timezone_index)) {
     return false;
   }
 

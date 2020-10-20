@@ -122,7 +122,15 @@ protected:
   void Init(const midgard::PointLL& origll, const midgard::PointLL& destll);
 
   /**
-   * Expand from the node along the forward search path.
+   * Expand from the node along the forward search path
+   *
+   * @param graphreader        to access graph data
+   * @param node               the node from which to expand
+   * @param pred               the previous edge label in the forward expansion
+   * @param pred_idx           the index of the label in the label set
+   * @param from_transition    whether or not we are expanding at a graph node transition
+   * @param time_info          time tracking information about the start of the route
+   * @return returns true if the expansion continued from this node
    */
   bool ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
@@ -141,7 +149,15 @@ protected:
                           const baldr::TimeInfo& time_info);
 
   /**
-   * Expand from the node along the reverse search path.
+   * Expand from the node along the reverse search path
+   *
+   * @param graphreader        to access graph data
+   * @param node               the node from which to expand
+   * @param pred               the previous edge label in the reverse expansion
+   * @param pred_idx           the index of the label in the label set
+   * @param from_transition    whether or not we are expanding at a graph node transition
+   * @param time_info          time tracking information about the end of the route
+   * @return returns true if the expansion continued from this node in this direction
    */
   bool ExpandReverse(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
@@ -150,7 +166,6 @@ protected:
                      const baldr::DirectedEdge* opp_pred_edge,
                      const bool from_transition,
                      const baldr::TimeInfo& time_info);
-
   // Private helper function for `ExpandReverse`
   bool ExpandReverseInner(baldr::GraphReader& graphreader,
                           const sif::BDEdgeLabel& pred,

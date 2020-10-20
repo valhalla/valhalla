@@ -220,7 +220,7 @@ public:
    * the time (seconds) to traverse the edge.
    * @param   edge    Pointer to a directed edge.
    * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
-   * @param   seconds Seconds of week for predicted speed or free and constrained speed lookup
+   * @param   seconds Seconds of week for historical speed lookup
    * @return  Returns the cost and time (seconds).
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
