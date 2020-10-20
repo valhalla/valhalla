@@ -566,22 +566,12 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                            const baldr::GraphTile* tile,
                            const uint32_t seconds) const {
   auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
-  assert(speed < speedfactor_.size());
-  float sec = (edge->length() * speedfactor_[speed]);
-
-  if (shortest_) {
-    return Cost(edge->length(), sec);
-  }
-
-  // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
-  if (edge->use() == Use::kSteps) {
-    sec = (edge->length() * speedfactor_[1]);
-    return {sec * kBicycleStepsFactor, sec};
-  }
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
     // Compute elapsed time based on speed. Modulate cost with weighting factors.
+    assert(speed < speedfactor_.size());
+    float sec = (edge->length() * speedfactor_[speed]);
     return {sec * ferry_factor_, sec};
   }
 
@@ -595,6 +585,20 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                              (speed_ * surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
                               kGradeBasedSpeedFactor[edge->weighted_grade()]) +
                              0.5f);
+
+  if (shortest_) {
+    // Only give it the modulated bike speed if edge is no ferry route or has steps
+    speed = edge->use() == Use::kSteps ? 1 : (edge->use() == Use::kFerry ? speed : bike_speed);
+    assert(speed < speedfactor_.size());
+    float sec = (edge->length() * speedfactor_[speed]);
+    return Cost(edge->length(), sec);
+  }
+
+  // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
+  if (edge->use() == Use::kSteps) {
+    float sec = (edge->length() * speedfactor_[1]);
+    return {sec * kBicycleStepsFactor, sec};
+  }
 
   // Represents how stressful a roadway is without looking at grade or cycle accommodations
   float roadway_stress = 1.0f;
@@ -677,7 +681,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   // Compute elapsed time based on speed. Modulate cost with weighting factors.
   assert(bike_speed < speedfactor_.size());
-  sec = (edge->length() * speedfactor_[bike_speed]);
+  float sec = (edge->length() * speedfactor_[bike_speed]);
   return {sec * factor, sec};
 }
 

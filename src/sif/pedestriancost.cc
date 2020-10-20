@@ -435,6 +435,9 @@ public:
                                  const uint32_t idx) const override {
     // Cases with both time and penalty: country crossing, ferry, gate, toll booth
     sif::Cost c;
+    if (shortest_) {
+      return c; // shortest ignores any penalties in favor of path length
+    }
     if (node->type() == baldr::NodeType::kBorderControl) {
       c += country_crossing_cost_;
     }
@@ -632,15 +635,17 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
                               const uint32_t seconds) const {
   auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
 
-  if (shortest_) {
-    float sec = edge->length() * (kSecPerHour * 0.001f) / static_cast<float>(speed);
-    return Cost(edge->length(), sec);
-  }
-
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
-    float sec = edge->length() * (kSecPerHour * 0.001f) / static_cast<float>(edge->speed());
+    float sec = edge->length() * (kSecPerHour * 0.001f) / static_cast<float>(speed);
     return {sec * ferry_factor_, sec};
+  }
+
+  float sec =
+      edge->length() * speedfactor_ * kSacScaleSpeedFactor[static_cast<uint8_t>(edge->sac_scale())];
+
+  if (shortest_) {
+    return Cost(edge->length(), sec);
   }
 
   // TODO - consider using an array of "use factors" to avoid this conditional
@@ -658,8 +663,6 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   // Slightly favor walkways/paths and penalize alleys and driveways.
-  float sec =
-      edge->length() * speedfactor_ * kSacScaleSpeedFactor[static_cast<uint8_t>(edge->sac_scale())];
   return {sec * factor, sec};
 }
 
@@ -681,7 +684,7 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
     float seconds = kCrossingCosts[edge->stopimpact(idx)];
     c.secs += seconds;
-    c.cost += seconds;
+    c.cost += shortest_ ? 0.f : seconds;
   }
   return c;
 }
@@ -707,7 +710,7 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
     float seconds = kCrossingCosts[edge->stopimpact(idx)];
     c.secs += seconds;
-    c.cost += seconds;
+    c.cost += shortest_ ? 0.f : seconds;
   }
   return c;
 }

@@ -423,8 +423,6 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Special case for travel on a ferry
   if (edge->use() == Use::kFerry) {
     // Use the edge speed (should be the speed of the ferry)
-    assert(edge->speed() < speedfactor_.size());
-    sec = (edge->length() * speedfactor_[edge->speed()]);
     return {sec * ferry_factor_, sec};
   }
 
