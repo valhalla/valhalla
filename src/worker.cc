@@ -769,6 +769,17 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   // costing defaults to none which is only valid for locate
   auto costing_str = rapidjson::get<std::string>(doc, "/costing", "none");
+  // auto_shortest is deprecated and will be turned into
+  // shortest=true costing option. maybe remove auto_shortest in v4?
+  if (costing_str == "auto_shorter") {
+    costing_str = "auto";
+    auto autoshorter_options = rapidjson::GetValueByPointer(doc, "/costing_options/auto_shorter");
+    if (autoshorter_options) {
+      rapidjson::SetValueByPointer(doc, "/costing_options/auto", *autoshorter_options);
+    }
+    rapidjson::Pointer("/costing_options/auto/shortest").Set(doc, true);
+  }
+
   // try the string directly, some strings are keywords so add an underscore
   Costing costing;
   if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {
