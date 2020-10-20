@@ -1131,8 +1131,8 @@ TEST(Mapmatch, test_discontinuity_duration_trimming) {
   std::vector<int> test_ans_num_routes{2, 2, 2};
   std::vector<std::vector<int>> test_ans_num_legs{{1, 2}, {1, 2}, {1, 2}};
   std::vector<std::vector<float>> test_ans_leg_duration{{26.459, 0.97, 0.454},
-                                                        {48.6, 0.64, 0.961},
-                                                        {220.778, 2.431, 1.899}};
+                                                        {48.159, 0.64, 0.961},
+                                                        {93.388, 2.431, 1.899}};
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {

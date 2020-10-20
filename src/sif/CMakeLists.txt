@@ -7,6 +7,7 @@ set(sources
   motorcyclecost.cc
   motorscootercost.cc
   nocost.cc
+  osrm_car_duration.h
   pedestriancost.cc
   transitcost.cc
   truckcost.cc
