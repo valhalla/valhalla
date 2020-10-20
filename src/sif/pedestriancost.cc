@@ -633,10 +633,10 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
 Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
                               const baldr::GraphTile* tile,
                               const uint32_t seconds) const {
-  auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
+    auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
     float sec = edge->length() * (kSecPerHour * 0.001f) / static_cast<float>(speed);
     return {sec * ferry_factor_, sec};
   }
