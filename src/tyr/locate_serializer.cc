@@ -62,50 +62,16 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
       auto edge_info = tile->edgeinfo(directed_edge->edgeinfo_offset());
       // they want MOAR!
       if (verbose) {
-        auto live_speed = json::map({});
+        // live traffic information
         const volatile auto& traffic = tile->trafficspeed(directed_edge);
-        if (traffic.valid()) {
-          live_speed->emplace("overall_speed", static_cast<uint64_t>(traffic.get_overall_speed()));
-          auto speed = static_cast<uint64_t>(traffic.get_speed(0));
-          if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
-            live_speed->emplace("speed_0", nullptr);
-          else
-            live_speed->emplace("speed_0", speed);
-          auto congestion = (traffic.congestion2 - 1.0) / 62.0;
-          if (congestion < 0)
-            live_speed->emplace("congestion_0", nullptr);
-          else
-            live_speed->emplace("congestion_0", json::fp_t{congestion, 2});
-          live_speed->emplace("breakpoint_0", json::fp_t{traffic.breakpoint1 / 255.0, 2});
+        auto live_speed = traffic.json();
 
-          speed = static_cast<uint64_t>(traffic.get_speed(1));
-          if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
-            live_speed->emplace("speed_1", nullptr);
-          else
-            live_speed->emplace("speed_1", speed);
-          congestion = (traffic.congestion2 - 1.0) / 62.0;
-          if (congestion < 0)
-            live_speed->emplace("congestion_1", nullptr);
-          else
-            live_speed->emplace("congestion_1", json::fp_t{congestion, 2});
-          live_speed->emplace("breakpoint_1", json::fp_t{traffic.breakpoint2 / 255.0, 2});
-
-          speed = static_cast<uint64_t>(traffic.get_speed(2));
-          if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
-            live_speed->emplace("speed_2", nullptr);
-          else
-            live_speed->emplace("speed_2", speed);
-          congestion = (traffic.congestion3 - 1.0) / 62.0;
-          if (congestion < 0)
-            live_speed->emplace("congestion_2", nullptr);
-          else
-            live_speed->emplace("congestion_2", json::fp_t{congestion, 2});
-        }
-
+        // incident information
         if (traffic.has_incidents) {
-          live_speed->emplace("has_incidents", true);
           // TODO: incidents
         }
+
+        // historical traffic information
         auto predicted_speeds = json::array({});
         if (directed_edge->has_predicted_speed()) {
           for (auto sec = 0; sec < midgard::kSecondsPerWeek; sec += 5 * midgard::kSecPerMinute) {
@@ -113,6 +79,8 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
                 static_cast<uint64_t>(tile->GetSpeed(directed_edge, kPredictedFlowMask, sec)));
           }
         }
+
+        // basic rest of it plus edge metadata
         array->emplace_back(json::map({
             {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
             {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
