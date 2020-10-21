@@ -838,6 +838,15 @@ std::string EnhancedTripLeg_Edge::TurnLanesToString() const {
     }
 
     uint16_t mask = turn_lane.directions_mask();
+    auto indication_to_str = [&turn_lane](uint16_t ind) -> std::string {
+      if (turn_lane.state() == TurnLane::kInvalid || turn_lane.active_direction() != ind) {
+        return kTurnLaneNames.at(ind);
+      }
+      // Surround valid/active lanes with a '*'
+      std::stringstream ss;
+      ss << "*" << kTurnLaneNames.at(ind) << "*";
+      return ss.str();
+    };
 
     // Process the turn lanes - from left to right
     // empty
@@ -853,77 +862,77 @@ std::string EnhancedTripLeg_Edge::TurnLanesToString() const {
       if ((mask & kTurnLaneReverse) && drive_on_right()) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneReverse);
+        str += indication_to_str(kTurnLaneReverse);
         prior_item = true;
       }
       // sharp_left
       if (mask & kTurnLaneSharpLeft) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneSharpLeft);
+        str += indication_to_str(kTurnLaneSharpLeft);
         prior_item = true;
       }
       // left
       if (mask & kTurnLaneLeft) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneLeft);
+        str += indication_to_str(kTurnLaneLeft);
         prior_item = true;
       }
       // slight_left
       if (mask & kTurnLaneSlightLeft) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneSlightLeft);
+        str += indication_to_str(kTurnLaneSlightLeft);
         prior_item = true;
       }
       // merge_to_left
       if (mask & kTurnLaneMergeToLeft) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneMergeToLeft);
+        str += indication_to_str(kTurnLaneMergeToLeft);
         prior_item = true;
       }
       // through
       if (mask & kTurnLaneThrough) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneThrough);
+        str += indication_to_str(kTurnLaneThrough);
         prior_item = true;
       }
       // merge_to_right
       if (mask & kTurnLaneMergeToRight) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneMergeToRight);
+        str += indication_to_str(kTurnLaneMergeToRight);
         prior_item = true;
       }
       // slight_right
       if (mask & kTurnLaneSlightRight) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneSlightRight);
+        str += indication_to_str(kTurnLaneSlightRight);
         prior_item = true;
       }
       // right
       if (mask & kTurnLaneRight) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneRight);
+        str += indication_to_str(kTurnLaneRight);
         prior_item = true;
       }
       // sharp_right
       if (mask & kTurnLaneSharpRight) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneSharpRight);
+        str += indication_to_str(kTurnLaneSharpRight);
         prior_item = true;
       }
       // reverse (right u-turn)
       if ((mask & kTurnLaneReverse) && !drive_on_right()) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneReverse);
+        str += indication_to_str(kTurnLaneReverse);
         prior_item = true;
       }
     }
@@ -933,12 +942,6 @@ std::string EnhancedTripLeg_Edge::TurnLanesToString() const {
       str += " ACTIVE";
     } else if (turn_lane.state() == TurnLane::kValid) {
       str += " VALID";
-    }
-
-    // Append the active direction if the lane is active or valid
-    if (turn_lane.state() != TurnLane::kInvalid) {
-      str += ", ACTIVE_DIR ";
-      str += kTurnLaneNames.at(turn_lane.active_direction());
     }
   }
   str += " ]";

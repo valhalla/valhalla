@@ -57,8 +57,7 @@ TEST(Standalone, TurnLanes) {
 
   ASSERT_TRUE(prev_edge);
   EXPECT_EQ(prev_edge->turn_lanes_size(), 3);
-  EXPECT_EQ(prev_edge->TurnLanesToString(),
-            "[ left | through | through;right ACTIVE, ACTIVE_DIR right ]");
+  EXPECT_EQ(prev_edge->TurnLanesToString(), "[ left | through | through;*right* ACTIVE ]");
 }
 
 // Split lane example - 5-way intersection
@@ -101,23 +100,17 @@ TEST(Standalone, TurnLanesSplitLane) {
 
   // A -> C - takes the leftmost left lane
   result = gurka::route(map, "A", "C", "auto");
-  validate_turn_lanes(
-      result,
-      {
-          {3,
-           "[ left ACTIVE, ACTIVE_DIR left | left;through VALID, ACTIVE_DIR left | through;right ]"},
-          {0, ""},
-      });
+  validate_turn_lanes(result, {
+                                  {3, "[ *left* ACTIVE | *left*;through VALID | through;right ]"},
+                                  {0, ""},
+                              });
 
   // A -> E - takes the leftmost through lane
   result = gurka::route(map, "A", "E", "auto");
-  validate_turn_lanes(
-      result,
-      {
-          {3,
-           "[ left | left;through ACTIVE, ACTIVE_DIR through | through;right VALID, ACTIVE_DIR through ]"},
-          {0, ""}, // TODO lanes are tossed when all are through
-      });
+  validate_turn_lanes(result, {
+                                  {3, "[ left | left;*through* ACTIVE | *through*;right VALID ]"},
+                                  {0, ""}, // TODO lanes are tossed when all are through
+                              });
 
   // A -> G - takes the rightmost through lane
   result = gurka::route(map, "A", "G", "auto");
@@ -125,19 +118,17 @@ TEST(Standalone, TurnLanesSplitLane) {
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kSlightRight,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
-  validate_turn_lanes(result,
-                      {
-                          {3, "[ left | left;through | through;right ACTIVE, ACTIVE_DIR right ]"},
-                          {0, ""}, // TODO lanes are tossed when all are through
-                      });
+  validate_turn_lanes(result, {
+                                  {3, "[ left | left;through | through;*right* ACTIVE ]"},
+                                  {0, ""}, // TODO lanes are tossed when all are through
+                              });
 
   // A -> H - takes the right lane
   result = gurka::route(map, "A", "H", "auto");
-  validate_turn_lanes(result,
-                      {
-                          {3, "[ left | left;through | through;right ACTIVE, ACTIVE_DIR right ]"},
-                          {0, ""},
-                      });
+  validate_turn_lanes(result, {
+                                  {3, "[ left | left;through | through;*right* ACTIVE ]"},
+                                  {0, ""},
+                              });
 }
 
 // Shared turn lane example
@@ -173,33 +164,29 @@ TEST(Standalone, TurnLanesSharedTurnLane) {
 
   // A -> G  - only through lanes should be active throughout
   auto result = gurka::route(map, "A", "G", "auto");
-  validate_turn_lanes(
-      result,
-      {
-          {3, "[ through ACTIVE, ACTIVE_DIR through | through VALID, ACTIVE_DIR through | right ]"},
-          {3, "[ through ACTIVE, ACTIVE_DIR through | through VALID, ACTIVE_DIR through | right ]"},
-          {3, "[ through ACTIVE, ACTIVE_DIR through | through VALID, ACTIVE_DIR through | right ]"},
-          {0, ""},
-      });
+  validate_turn_lanes(result, {
+                                  {3, "[ *through* ACTIVE | *through* VALID | right ]"},
+                                  {3, "[ *through* ACTIVE | *through* VALID | right ]"},
+                                  {3, "[ *through* ACTIVE | *through* VALID | right ]"},
+                                  {0, ""},
+                              });
 
   // A -> C - right lane should always be active
   result = gurka::route(map, "A", "C", "auto");
   validate_turn_lanes(result, {
-                                  {3, "[ through | through | right ACTIVE, ACTIVE_DIR right ]"},
+                                  {3, "[ through | through | *right* ACTIVE ]"},
                                   {0, ""},
                               });
 
   // A -> F - only right lane after B should be active, before that rightmost right lane should be
   // active
   result = gurka::route(map, "A", "F", "auto");
-  validate_turn_lanes(
-      result,
-      {
-          {3, "[ through VALID, ACTIVE_DIR through | through ACTIVE, ACTIVE_DIR through | right ]"},
-          {3, "[ through | through | right ACTIVE, ACTIVE_DIR right ]"},
-          {3, "[ through | through | right ACTIVE, ACTIVE_DIR right ]"},
-          {0, ""},
-      });
+  validate_turn_lanes(result, {
+                                  {3, "[ *through* VALID | *through* ACTIVE | right ]"},
+                                  {3, "[ through | through | *right* ACTIVE ]"},
+                                  {3, "[ through | through | *right* ACTIVE ]"},
+                                  {0, ""},
+                              });
 }
 
 // Multiple turn lanes with short arrival
@@ -261,75 +248,55 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kLeft,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
-  validate_turn_lanes(
-      result,
-      {
-          {5,
-           "[ left ACTIVE, ACTIVE_DIR left | left VALID, ACTIVE_DIR left | through | right | right ]"},
-          {5,
-           "[ left ACTIVE, ACTIVE_DIR left | left VALID, ACTIVE_DIR left | through | right | right ]"},
-          {0, ""},
-      });
+  validate_turn_lanes(result, {
+                                  {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
+                                  {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
+                                  {0, ""},
+                              });
 
   // A -> 3 - takes rightmost right lane
   result = gurka::route(map, "A", "3", "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRight,
                                                 DirectionsLeg_Maneuver_Type_kDestinationRight});
-  validate_turn_lanes(
-      result,
-      {
-          {5,
-           "[ left | left | through | right VALID, ACTIVE_DIR right | right ACTIVE, ACTIVE_DIR right ]"},
-          {5,
-           "[ left | left | through | right VALID, ACTIVE_DIR right | right ACTIVE, ACTIVE_DIR right ]"},
-          {0, ""},
-      });
+  validate_turn_lanes(result, {
+                                  {5, "[ left | left | through | *right* VALID | *right* ACTIVE ]"},
+                                  {5, "[ left | left | through | *right* VALID | *right* ACTIVE ]"},
+                                  {0, ""},
+                              });
 
   // A -> 4 - takes leftmost right lane
   result = gurka::route(map, "A", "4", "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRight,
                                                 DirectionsLeg_Maneuver_Type_kDestinationLeft});
-  validate_turn_lanes(
-      result,
-      {
-          {5,
-           "[ left | left | through | right ACTIVE, ACTIVE_DIR right | right VALID, ACTIVE_DIR right ]"},
-          {5,
-           "[ left | left | through | right ACTIVE, ACTIVE_DIR right | right VALID, ACTIVE_DIR right ]"},
-          {0, ""},
-      });
+  validate_turn_lanes(result, {
+                                  {5, "[ left | left | through | *right* ACTIVE | *right* VALID ]"},
+                                  {5, "[ left | left | through | *right* ACTIVE | *right* VALID ]"},
+                                  {0, ""},
+                              });
 
   // A -> F - takes leftmost right lane (left side driving)
   result = gurka::route(map, "A", "F", "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRight,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
-  validate_turn_lanes(
-      result,
-      {
-          {5,
-           "[ left | left | through | right ACTIVE, ACTIVE_DIR right | right VALID, ACTIVE_DIR right ]"},
-          {5,
-           "[ left | left | through | right ACTIVE, ACTIVE_DIR right | right VALID, ACTIVE_DIR right ]"},
-          {0, ""},
-      });
+  validate_turn_lanes(result, {
+                                  {5, "[ left | left | through | *right* ACTIVE | *right* VALID ]"},
+                                  {5, "[ left | left | through | *right* ACTIVE | *right* VALID ]"},
+                                  {0, ""},
+                              });
 
   // A -> G - takes both right lanes as destination is far away from previous transition
   result = gurka::route(map, "A", "G", "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRight,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
-  validate_turn_lanes(
-      result,
-      {
-          {5,
-           "[ left | left | through | right ACTIVE, ACTIVE_DIR right | right ACTIVE, ACTIVE_DIR right ]"},
-          {5,
-           "[ left | left | through | right ACTIVE, ACTIVE_DIR right | right ACTIVE, ACTIVE_DIR right ]"},
-          {0, ""},
-      });
+  validate_turn_lanes(result, {
+                                  {5, "[ left | left | through | *right* ACTIVE | *right* ACTIVE ]"},
+                                  {5, "[ left | left | through | *right* ACTIVE | *right* ACTIVE ]"},
+                                  {0, ""},
+                              });
 }
 
 TEST(Standalone, TurnLanesSerializedResponse) {
