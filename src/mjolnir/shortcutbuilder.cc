@@ -208,31 +208,8 @@ bool CanContract(GraphReader& reader,
     return false;
   }
 
-  // Get pairs of matching edges. If more than 1 pair exists then
-  // we cannot contract this node.
-  uint32_t n = edges.size();
-  bool matchfound = false;
-  std::pair<uint32_t, uint32_t> match;
-  for (uint32_t i = 0; i < n - 1; i++) {
-    for (uint32_t j = i + 1; j < n; j++) {
-      const DirectedEdge* edge1 = tile->directededge(edges[i]);
-      const DirectedEdge* edge2 = tile->directededge(edges[j]);
-      if (EdgesMatch(tile, edge1, edge2)) {
-        if (matchfound) {
-          // More than 1 match exists - return false
-          return false;
-        }
-        // Save the match
-        match = std::make_pair(i, j);
-        matchfound = true;
-      }
-    }
-  }
-
-  // Return false if no matches exist
-  if (!matchfound) {
+  if (!EdgesMatch(tile, tile->directededge(edges[0]), tile->directededge(edges[1])))
     return false;
-  }
 
   // Exactly one pair of edges match. Check if any other remaining edges
   // are driveable outbound from the node. If so this cannot be contracted.
@@ -246,9 +223,9 @@ bool CanContract(GraphReader& reader,
 
   // Get the directed edges - these are the outbound edges from the node.
   // Get the opposing directed edges - these are the inbound edges to the node.
-  const DirectedEdge* edge1 = tile->directededge(edges[match.first]);
+  const DirectedEdge* edge1 = tile->directededge(edges[0]);
   uint64_t wayid1 = tile->edgeinfo(edge1->edgeinfo_offset()).wayid();
-  const DirectedEdge* edge2 = tile->directededge(edges[match.second]);
+  const DirectedEdge* edge2 = tile->directededge(edges[1]);
   uint64_t wayid2 = tile->edgeinfo(edge2->edgeinfo_offset()).wayid();
   GraphId oppedge1 = GetOpposingEdge(node, edge1, reader, wayid1);
   GraphId oppedge2 = GetOpposingEdge(node, edge2, reader, wayid2);
@@ -307,8 +284,8 @@ bool CanContract(GraphReader& reader,
   }
 
   // Store the pairs of base edges entering and exiting this node
-  edgepairs.edge1 = std::make_pair(oppedge1, edges[match.second]);
-  edgepairs.edge2 = std::make_pair(oppedge2, edges[match.first]);
+  edgepairs.edge1 = std::make_pair(oppedge1, edges[1]);
+  edgepairs.edge2 = std::make_pair(oppedge2, edges[0]);
   return true;
 }
 
@@ -444,7 +421,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       // Connect edges to the shortcut while the end node is marked as
       // contracted (contains edge pairs in the shortcut info).
       uint32_t rst = 0;
-      uint32_t opp_local_idx = 0;
+      // For turn duration calculation during contraction
+      uint32_t opp_local_idx = directededge->opp_local_idx();
       GraphId next_edge_id = edge_id;
       while (true) {
         EdgePairs edgepairs;
@@ -484,11 +462,12 @@ uint32_t AddShortcutEdges(GraphReader& reader,
                         !OpposingEdgeInfoMatches(tile, directededge);
 
       // Recalculate speed limit to include turn durations
-      uint32_t average_speed = 0;
-      if (edgeinfo.speed_limit() != 0) {
-        auto const speed_mps = edgeinfo.speed_limit() * 1000.0 / 3600;  // meters per second // TODO is there a converter? remove zeros
+      uint32_t average_speed = edgeinfo.speed_limit();
+      if (edgeinfo.speed_limit() != 0 && total_turn_duration > 0) {
+        // meters per second // TODO is there a converter? remove zeros
+        auto const speed_mps = edgeinfo.speed_limit() * 1000.0 / 3600;
         auto const actual_time = length / speed_mps + total_turn_duration;
-        average_speed = std::floor(length / actual_time * 3600 / 1000);
+        average_speed = static_cast<uint32_t>(std::round(length / actual_time * 3600 / 1000));
       }
 
       // Add the edge info. Use length and number of shape points to match an
@@ -500,7 +479,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
-                                  edgeinfo.speed_limit(), shape, names, tagged_names, types, forward,
+                                  average_speed, shape, names, tagged_names, types, forward,
                                   diff_names);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
@@ -546,6 +525,9 @@ uint32_t AddShortcutEdges(GraphReader& reader,
 
       // Compute the weighted edge density
       newedge.set_density(average_density / (static_cast<float>(length)));
+
+      // Update speed to the one that takes turn duretions into account
+      newedge.set_speed(average_speed);
 
       // Add shortcut edge. Add to the shortcut map (associates the base edge
       // index to the shortcut index). Remove superseded mask that may have
