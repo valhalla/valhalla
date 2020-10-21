@@ -132,11 +132,12 @@ if(NOT TARGET CURL::CURL)
       find_package(CURL REQUIRED)
     endif()
     set_target_properties(CURL::CURL PROPERTIES
-      #INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
       INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
       INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
     if(NOT MSVC)
       set_property(TARGET CURL::CURL APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}")
+    else()
+      link_libraries(${CURL_LIBRARIES})
     endif()
   endif()
 else()
