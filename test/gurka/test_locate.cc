@@ -91,8 +91,8 @@ TEST(locate, basic_properties) {
 
       // parse openlr
       ASSERT_NO_THROW(
-          midgard::OpenLR::OpenLr(rapidjson::Pointer("/linear_reference").Get(edge)->GetString(),
-                                  true));
+          baldr::OpenLR::OpenLr(rapidjson::Pointer("/linear_reference").Get(edge)->GetString(),
+                                true));
 
       // check out some traffic
       ASSERT_EQ(rapidjson::Pointer("/live_speed/speed_0").Get(edge)->GetInt(), 126);

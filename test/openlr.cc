@@ -16,7 +16,8 @@ namespace {
 
 using namespace valhalla;
 using namespace valhalla::midgard;
-using namespace valhalla::midgard::OpenLR;
+using namespace valhalla::baldr;
+using namespace valhalla::baldr::OpenLR;
 
 using FormOfWay = OpenLR::LocationReferencePoint::FormOfWay;
 
@@ -242,7 +243,7 @@ TripLeg CreateLeg(const std::vector<PointLL>& points) {
   edge->set_begin_shape_index(0);
   edge->set_end_shape_index(1);
   edge->set_use(TripLeg::kRoadUse);
-  edge->set_road_class(RoadClass::kPrimary);
+  edge->set_road_class(valhalla::RoadClass::kPrimary);
   return path;
 }
 
@@ -273,7 +274,7 @@ TEST(OpenLR, road_class_to_fow) {
   auto* edge = leg.mutable_node(0)->mutable_edge();
   edge->set_roundabout(true);
   edge->set_use(TripLeg::kRoadUse);
-  edge->set_road_class(RoadClass::kPrimary);
+  edge->set_road_class(valhalla::RoadClass::kPrimary);
   auto openlrs = LegToOpenLrs(std::move(leg));
 
   // parse them out and check whats in them

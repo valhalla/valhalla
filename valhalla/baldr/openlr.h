@@ -12,7 +12,7 @@
 #include <vector>
 
 namespace valhalla {
-namespace midgard {
+namespace baldr {
 namespace OpenLR {
 
 namespace {
@@ -240,7 +240,7 @@ struct Attribute6 {
 // Only line location with 2 location reference points are supported
 struct OpenLr {
   OpenLr(const std::string& reference, bool base64_encoded = false) {
-    const std::string& decoded = base64_encoded ? decode64(reference) : reference;
+    const std::string& decoded = base64_encoded ? midgard::decode64(reference) : reference;
     const size_t size = decoded.size();
 
     const auto raw = reinterpret_cast<const uint8_t*>(decoded.data());
@@ -341,11 +341,11 @@ struct OpenLr {
     }
   }
 
-  PointLL getFirstCoordinate() const {
+  midgard::PointLL getFirstCoordinate() const {
     return {lrps.front().longitude, lrps.front().latitude};
   }
 
-  PointLL getLastCoordinate() const {
+  midgard::PointLL getLastCoordinate() const {
     return {lrps.back().longitude, lrps.back().latitude};
   }
 
@@ -431,7 +431,7 @@ struct OpenLr {
   }
 
   std::string toBase64() const {
-    return encode64(toBinary());
+    return midgard::encode64(toBinary());
   }
 
   bool operator==(const OpenLr& lloc) const {
@@ -449,7 +449,7 @@ struct OpenLr {
 };
 
 } // namespace OpenLR
-} // namespace midgard
+} // namespace baldr
 } // namespace valhalla
 
 #endif

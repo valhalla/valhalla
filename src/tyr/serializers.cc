@@ -34,7 +34,7 @@ namespace {
 midgard::PointLL to_ll(const LatLng& ll) {
   return midgard::PointLL{ll.lng(), ll.lat()};
 }
-using FormOfWay = valhalla::midgard::OpenLR::LocationReferencePoint::FormOfWay;
+using FormOfWay = valhalla::baldr::OpenLR::LocationReferencePoint::FormOfWay;
 
 FormOfWay road_class_to_fow(const valhalla::TripLeg::Edge& edge) {
   if (edge.roundabout()) {
@@ -75,11 +75,11 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
     const auto& end = shape[edge.end_shape_index()];
     float reverse_heading = midgard::tangent_angle(edge.end_shape_index(), end, shape, 20.f, false);
 
-    std::vector<midgard::OpenLR::LocationReferencePoint> lrps;
+    std::vector<baldr::OpenLR::LocationReferencePoint> lrps;
     lrps.emplace_back(start.lng(), start.lat(), forward_heading, frc, fow, nullptr, edge.length(),
                       frc);
     lrps.emplace_back(end.lng(), end.lat(), reverse_heading, frc, fow, &lrps.back());
-    openlrs.emplace_back(midgard::OpenLR::OpenLr{lrps, 0, 0}.toBase64());
+    openlrs.emplace_back(baldr::OpenLR::OpenLr{lrps, 0, 0}.toBase64());
   }
   return openlrs;
 }
