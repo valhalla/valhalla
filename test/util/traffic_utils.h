@@ -1,7 +1,8 @@
 #include "microtar.h"
 
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/traffictile.h>
+#include "baldr/graphreader.h"
+#include "baldr/traffictile.h"
+#include "mjolnir/graphtilebuilder.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -169,6 +170,26 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
     }
     munmap(tar.stream, s.st_size);
     close(fd);
+  }
+}
+
+using HistoricalTrafficCustomize = std::function<std::vector<int16_t>(DirectedEdge&)>;
+void customize_historical_traffic(const boost::property_tree::ptree& config,
+                                  const HistoricalTrafficCustomize& cb) {
+  // loop over all tiles in the tileset
+  baldr::GraphReader reader(config.get_child("mjolnir"));
+  auto tile_dir = config.get<std::string>("mjolnir.tile_dir");
+  for (const auto& tile_id : reader.GetTileSet()) {
+    valhalla::mjolnir::GraphTileBuilder tile(tile_dir, tile_id, false);
+    std::vector<valhalla::baldr::DirectedEdge> edges;
+    edges.reserve(tile.header()->directededgecount());
+    for (const auto& edge : tile.GetDirectedEdges()) {
+      edges.push_back(edge);
+      auto historical = cb(edges.back());
+      if (!historical.empty())
+        tile.AddPredictedSpeed(edges.size() - 1, historical, tile.header()->directededgecount());
+    }
+    tile.UpdatePredictedSpeeds(edges);
   }
 }
 
