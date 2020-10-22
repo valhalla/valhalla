@@ -90,8 +90,9 @@ TEST(locate, basic_properties) {
       ASSERT_EQ(rapidjson::Pointer("/edge/classification/link").Get(edge)->GetBool(), link);
 
       // parse openlr
-      midgard::OpenLR::OpenLr
-          openlr(rapidjson::Pointer("/edge/linear_reference").Get(edge)->GetString(), true);
+      ASSERT_NO_THROW(
+          midgard::OpenLR::OpenLr(rapidjson::Pointer("/linear_reference").Get(edge)->GetString(),
+                                  true));
 
       // check out some traffic
       ASSERT_EQ(rapidjson::Pointer("/live_speed/speed_0").Get(edge)->GetInt(), 126);

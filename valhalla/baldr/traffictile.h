@@ -141,7 +141,7 @@ struct TrafficSpeed {
         live_speed->emplace("speed_0", nullptr);
       else
         live_speed->emplace("speed_0", speed);
-      auto congestion = (congestion2 - 1.0) / 62.0;
+      auto congestion = (congestion1 - 1.0) / 62.0;
       if (congestion < 0)
         live_speed->emplace("congestion_0", nullptr);
       else
@@ -171,6 +171,7 @@ struct TrafficSpeed {
       else
         live_speed->emplace("congestion_2", json::fp_t{congestion, 2});
     }
+    return live_speed;
   }
 #endif
 };
