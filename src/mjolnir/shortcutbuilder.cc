@@ -208,7 +208,11 @@ bool CanContract(GraphReader& reader,
     return false;
   }
 
-  if (!EdgesMatch(tile, tile->directededge(edges[0]), tile->directededge(edges[1])))
+  // Get the directed edges - these are the outbound edges from the node.
+  const DirectedEdge* edge1 = tile->directededge(edges[0]);
+  const DirectedEdge* edge2 = tile->directededge(edges[1]);
+
+  if (!EdgesMatch(tile, edge1, edge2))
     return false;
 
   // Exactly one pair of edges match. Check if any other remaining edges
@@ -221,11 +225,8 @@ bool CanContract(GraphReader& reader,
       }
     }*/
 
-  // Get the directed edges - these are the outbound edges from the node.
   // Get the opposing directed edges - these are the inbound edges to the node.
-  const DirectedEdge* edge1 = tile->directededge(edges[0]);
   uint64_t wayid1 = tile->edgeinfo(edge1->edgeinfo_offset()).wayid();
-  const DirectedEdge* edge2 = tile->directededge(edges[1]);
   uint64_t wayid2 = tile->edgeinfo(edge2->edgeinfo_offset()).wayid();
   GraphId oppedge1 = GetOpposingEdge(node, edge1, reader, wayid1);
   GraphId oppedge2 = GetOpposingEdge(node, edge2, reader, wayid2);
@@ -461,15 +462,6 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       bool diff_names = directededge->endnode().tileid() == edge_id.tileid() &&
                         !OpposingEdgeInfoMatches(tile, directededge);
 
-      // Recalculate speed limit to include turn durations
-      uint32_t average_speed = edgeinfo.speed_limit();
-      if (edgeinfo.speed_limit() != 0 && total_turn_duration > 0) {
-        // meters per second // TODO is there a converter? remove zeros
-        auto const speed_mps = edgeinfo.speed_limit() * 1000.0 / 3600;
-        auto const actual_time = length / speed_mps + total_turn_duration;
-        average_speed = static_cast<uint32_t>(std::round(length / actual_time * 3600 / 1000));
-      }
-
       // Add the edge info. Use length and number of shape points to match an
       // edge in case multiple shortcut edges exist between the 2 nodes.
       // Test whether this shape is forward or reverse (in case an existing
@@ -479,7 +471,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
-                                  average_speed, shape, names, tagged_names, types, forward,
+                                  edgeinfo.speed_limit(), shape, names, tagged_names, types, forward,
                                   diff_names);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
@@ -526,8 +518,17 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       // Compute the weighted edge density
       newedge.set_density(average_density / (static_cast<float>(length)));
 
-      // Update speed to the one that takes turn duretions into account
-      newedge.set_speed(average_speed);
+      // Update speed to the one that takes turn durations into account
+      uint32_t new_speed = directededge->speed();
+      if (directededge->speed() != 0 && total_turn_duration > 0) {
+        double const new_time =
+            length / (directededge->speed() * kKPHtoMetersPerSec) + total_turn_duration;
+        new_speed = static_cast<uint32_t>(std::round(length / new_time * kMetersPerSectoKPH));
+      }
+      newedge.set_speed(new_speed);
+
+      // TODO: update shortcut speed for trucs after fixing truck turn durations
+      // newedge.set_truck_speed(new_truck_speed);
 
       // Add shortcut edge. Add to the shortcut map (associates the base edge
       // index to the shortcut index). Remove superseded mask that may have
