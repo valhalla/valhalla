@@ -42,6 +42,10 @@ MATCHER_P2(IsBetween,
   return a <= arg && arg <= b;
 }
 
+template <typename pbf_message_t> bool pbf_equals(const pbf_message_t& a, const pbf_message_t& b) {
+  return a.SerializeAsString() == b.SerializeAsString();
+}
+
 } // namespace test
 
 #endif

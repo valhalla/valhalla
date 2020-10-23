@@ -223,8 +223,7 @@ void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_c
   if (name) {
     pbf_costing_options->set_name(*name);
   }
-  auto shortest = rapidjson::get<bool>(value, "/shortest", false);
-  pbf_costing_options->set_shortest(shortest);
+  pbf_costing_options->set_shortest(rapidjson::get<bool>(value, "/shortest", false));
 }
 
 void ParseCostingOptions(const rapidjson::Document& doc,
@@ -270,7 +269,9 @@ void ParseCostingOptions(const rapidjson::Document& doc,
       break;
     }
     case auto_shorter: {
-      sif::ParseAutoShorterCostOptions(doc, key, costing_options);
+      // deprecated this to an alias of autocost with shortest set
+      sif::ParseAutoCostOptions(doc, key, costing_options);
+      costing_options->set_shortest(true);
       break;
     }
     case bicycle: {

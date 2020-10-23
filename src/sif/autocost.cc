@@ -127,6 +127,10 @@ constexpr float kSurfaceFactor[] = {
  * roads.
  */
 class AutoCost : public DynamicCost {
+
+  // so we can get access to shortest setting directly
+  friend cost_ptr_t CreateAutoShorterCost(const CostingOptions&);
+
 public:
   /**
    * Construct auto costing. Pass in cost type and costing_options using protocol buffer(pbf).
@@ -472,7 +476,6 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
       seconds *= trans_density_factor_[node->density()];
 
     c.cost += shortest_ ? 0.f : seconds;
-    c.secs += seconds;
   }
 
   return c;
@@ -518,7 +521,6 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
       seconds *= trans_density_factor_[node->density()];
 
     c.cost += shortest_ ? 0 : seconds;
-    c.secs += seconds;
   }
 
   return c;
@@ -646,78 +648,11 @@ cost_ptr_t CreateAutoCost(const CostingOptions& costing_options) {
   return std::make_shared<AutoCost>(costing_options);
 }
 
-/**
- * //TODO: delete this in favor of just using the "shortest" costing option
- * Derived class providing an alternate costing for driving that is intended
- * to provide a short path.
- */
-class AutoShorterCost : public AutoCost {
-public:
-  /**
-   * Construct auto costing for shorter (not absolute shortest) path.
-   * Pass in costing_options with protocol buffer(pbf).
-   * @param  costing_options  pbf with costing_options.
-   */
-  AutoShorterCost(const CostingOptions& costing_options) : AutoCost(costing_options) {
-    // Create speed cost table that reduces the impact of speed
-    adjspeedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
-    for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
-      adjspeedfactor_[s] = (kSecPerHour * 0.001f) / sqrtf(static_cast<float>(s));
-    }
-  }
-
-  // virtual destructor
-  virtual ~AutoShorterCost() {
-  }
-
-  /**
-   * Returns the cost to traverse the edge and an estimate of the actual time
-   * (in seconds) to traverse the edge.
-   * @param  edge      Pointer to a directed edge.
-   * @param  tile      Current tile.
-   * @param  seconds   Time of week in seconds.
-   * @return  Returns the cost to traverse the edge.
-   */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::GraphTile* tile,
-                        const uint32_t seconds) const {
-    auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
-    float sec = edge->length() * speedfactor_[speed];
-
-    if (shortest_) {
-      return Cost(edge->length(), sec);
-    }
-
-    float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : 1.0f;
-    return Cost(edge->length() * adjspeedfactor_[speed] * factor, sec);
-  }
-
-  /**
-   * Get the cost factor for A* heuristics. This factor is multiplied
-   * with the distance to the destination to produce an estimate of the
-   * minimum cost to the destination. The A* heuristic must underestimate the
-   * cost to the destination. So a time based estimate based on speed should
-   * assume the maximum speed is used to the destination such that the time
-   * estimate is less than the least possible time along roads.
-   */
-  virtual float AStarCostFactor() const {
-    return adjspeedfactor_[kMaxSpeedKph];
-  }
-
-protected:
-  float adjspeedfactor_[kMaxSpeedKph + 1];
-};
-
-void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
-                                 const std::string& costing_options_key,
-                                 CostingOptions* pbf_costing_options) {
-  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
-  pbf_costing_options->set_costing(Costing::auto_shorter);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
-}
-
 cost_ptr_t CreateAutoShorterCost(const CostingOptions& costing_options) {
-  return std::make_shared<AutoShorterCost>(costing_options);
+  // deprecated to autocost with shortest set
+  auto costing = std::make_shared<AutoCost>(costing_options);
+  costing->shortest_ = true;
+  return costing;
 }
 
 /**
