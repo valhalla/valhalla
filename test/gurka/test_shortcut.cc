@@ -8,10 +8,9 @@
 
 using namespace valhalla;
 
-
 // Here 2 shortcuts should be created: from A to C all edges have speed 80 and from C to A all have
 // speed 90
-TEST(Shortcuts, test_create_valid) {
+TEST(Shortcuts, CreateValid) {
   constexpr double gridsize = 50;
 
   const std::string ascii_map = R"(
@@ -45,7 +44,7 @@ TEST(Shortcuts, test_create_valid) {
 
 // Here no shortcuts are created. There could be one from A to C with speed 80 but in the opposite
 // direction speeds differ which blocks CA creation.
-TEST(Shortcuts, test_create_invalid) {
+TEST(Shortcuts, CreateInvalid) {
   constexpr double gridsize = 50;
 
   const std::string ascii_map = R"(
@@ -75,7 +74,7 @@ TEST(Shortcuts, test_create_invalid) {
   EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "C", "A"));
 }
 
-TEST(shortcuts, test_shortcut_speed) {
+TEST(Shortcuts, ShortcutSpeed) {
   // At C node turn duration is present. As a result the speed for AE shortcut is decreased
   // from 100 kph to 93 kph and for EA shortcut - from 100 kph to 98 kph in the test case below.
   // Similarly truck speed is decreased form 90 kph to 85 kph for AE and from 90 to 89 for EA.
@@ -144,6 +143,54 @@ TEST(shortcuts, test_shortcut_speed) {
       const auto* de = tile->directededge(edgeid);
       EXPECT_GT(de->speed(), shortcut_speed);
       EXPECT_GT(de->truck_speed(), shortcut_truck_speed);
+    }
+  }
+}
+
+TEST(Shortcuts, TruckSpeedNotSet) {
+  // When truck speed is not set normal speed is used to calculate shortcut truck speed.
+  // As a result it should be equal to normal shortcut speed.
+  const std::string ascii_map = R"(A-----B\
+                                   |       \C
+                                   |        |\
+                                   G        | \
+                                            F  \
+                                                |
+                                                |
+                                                |
+                                                D
+                                                |
+                                                |
+                                                |
+                                                E
+                                                |
+                                                I)";
+  const gurka::ways ways = {
+      {"ABCDE", {{"highway", "motorway"}, {"maxspeed", "100"}}},
+      {"CF", {{"highway", "service"}}},
+      {"AG", {{"highway", "service"}}},
+      {"EI", {{"highway", "service"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_shortcut");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  std::vector<std::tuple<baldr::GraphId, int, int>> shortcut_infos;
+  auto tileset = reader.GetTileSet(0);
+  for (const auto tileid : tileset) {
+    if (reader.OverCommitted())
+      reader.Trim();
+
+    // for each edge in the tile
+    const auto* tile = reader.GetGraphTile(tileid);
+    for (size_t j = 0; j < tile->header()->directededgecount(); ++j) {
+      // skip it if its not a shortcut or the shortcut is one we will never traverse
+      const auto* edge = tile->directededge(j);
+      if (!edge->is_shortcut() || !(edge->forwardaccess() & baldr::kAutoAccess))
+        continue;
+
+      EXPECT_EQ(edge->speed(), edge->truck_speed());
+      std::cout << edge->truck_speed() << std::endl;
     }
   }
 }
