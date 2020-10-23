@@ -4,6 +4,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
 #include "midgard/pointll.h"
+#include "mjolnir/graphtilebuilder.h"
 
 using namespace valhalla;
 
@@ -75,9 +76,9 @@ TEST(Shortcuts, test_create_invalid) {
 }
 
 TEST(shortcuts, test_shortcut_speed) {
-  // At C node turn duration is present. As a result an average speed for AE shortcut
-  // is decreased from 100 kph to 93 kph and for EA shortcut - from 100 kph to 98 kph
-  // in the test case below
+  // At C node turn duration is present. As a result the speed for AE shortcut is decreased
+  // from 100 kph to 93 kph and for EA shortcut - from 100 kph to 98 kph in the test case below.
+  // Similarly truck speed is decreased form 90 kph to 85 kph for AE and from 90 to 89 for EA.
   const std::string ascii_map = R"(A-----B\
                                    |       \C
                                    |        |\
@@ -94,7 +95,7 @@ TEST(shortcuts, test_shortcut_speed) {
                                                 |
                                                 I)";
   const gurka::ways ways = {
-      {"ABCDE", {{"highway", "motorway"}, {"maxspeed", "100"}}},
+      {"ABCDE", {{"highway", "motorway"}, {"maxspeed", "100"}, {"maxspeed:hgv", "90"}}},
       {"CF", {{"highway", "service"}}},
       {"AG", {{"highway", "service"}}},
       {"EI", {{"highway", "service"}}},
@@ -103,10 +104,7 @@ TEST(shortcuts, test_shortcut_speed) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_shortcut");
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
 
-  auto route = gurka::route(map, "A", "E", "auto");
-  std::cout << route.trip().routes(0).legs(0).shape() << std::endl;
-
-  std::vector<std::pair<baldr::GraphId, int>> shortcut_infos;
+  std::vector<std::tuple<baldr::GraphId, int, int>> shortcut_infos;
   auto tileset = reader.GetTileSet(0);
   for (const auto tileid : tileset) {
     if (reader.OverCommitted())
@@ -123,15 +121,16 @@ TEST(shortcuts, test_shortcut_speed) {
       // make a graph id out of the shortcut to send to recover
       auto shortcutid = tileid;
       shortcutid.set_id(j);
-      shortcut_infos.push_back(std::make_pair(shortcutid, edge->speed()));
+      shortcut_infos.push_back(std::make_tuple(shortcutid, edge->speed(), edge->truck_speed()));
     }
   }
 
   ASSERT_EQ(shortcut_infos.size(), 2);
 
   for (auto const shortcut_info : shortcut_infos) {
-    auto shortcutid = shortcut_info.first;
-    auto const shortcut_speed = shortcut_info.second;
+    auto const shortcutid = std::get<0>(shortcut_info);
+    auto const shortcut_speed = std::get<1>(shortcut_info);
+    auto const shortcut_truck_speed = std::get<2>(shortcut_info);
     auto edgeids = reader.RecoverShortcut(shortcutid);
 
     // if it gave us back the shortcut we failed
@@ -144,6 +143,7 @@ TEST(shortcuts, test_shortcut_speed) {
       const auto* tile = reader.GetGraphTile(edgeid);
       const auto* de = tile->directededge(edgeid);
       EXPECT_GT(de->speed(), shortcut_speed);
+      EXPECT_GT(de->truck_speed(), shortcut_truck_speed);
     }
   }
 }

@@ -299,15 +299,28 @@ uint32_t ConnectEdges(GraphReader& reader,
                       uint32_t& opp_local_idx,
                       uint32_t& restrictions,
                       float& average_density,
-                      float& total_turn_duration) {
+                      float& total_duration,
+                      float& total_truck_duration) {
   // Get the tile and directed edge.
   const GraphTile* tile = reader.GetGraphTile(startnode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
 
-  // turn duration
+  // Add edge and turn duration for car
   auto const nodeinfo = tile->node(startnode);
-  auto turn_duration = OSRMCarTurnDuration(directededge, nodeinfo, opp_local_idx);
-  total_turn_duration += turn_duration;
+  auto const turn_duration = OSRMCarTurnDuration(directededge, nodeinfo, opp_local_idx);
+  total_duration += turn_duration;
+  auto const speed = directededge->speed();
+  // TODO: check speed for zero
+  auto const edge_duration = directededge->length() / (speed * kKPHtoMetersPerSec);
+  total_duration += edge_duration;
+
+  // Add edge and turn duration for truck
+  // Currently use the same as for cars. TODO: implement for trucks
+  total_truck_duration += turn_duration;
+  auto const truck_speed = (directededge->truck_speed() > 0) ? std::min(directededge->truck_speed(), speed) : speed;
+  // TODO: check speed for zero
+  auto const edge_duration_truck = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
+  total_truck_duration += edge_duration_truck;
 
   // Copy the restrictions and opposing local index. Want to set the shortcut
   // edge's restrictions and opp_local_idx to the last directed edge in the chain
@@ -391,7 +404,11 @@ uint32_t AddShortcutEdges(GraphReader& reader,
 
       // For computing weighted density and total turn duration along the shortcut
       float average_density = length * newedge.density();
-      float total_turn_duration = 0;
+      uint32_t const speed = directededge->speed();
+      float total_duration = length / (speed * kKPHtoMetersPerSec);
+      auto const truck_speed = (directededge->truck_speed() > 0) ? std::min(directededge->truck_speed(), speed) : speed;
+      // TODO: check speed for zero
+      float total_truck_duration = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
 
       // Get the shape for this edge. If this initial directed edge is not
       // forward - reverse the shape so the edge info stored is forward for
@@ -453,7 +470,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         // on the connected shortcut - need to set that so turn restrictions
         // off of shortcuts work properly
         length += ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
-                               average_density, total_turn_duration);
+                               average_density, total_duration, total_truck_duration);
       }
 
       // Do we need to force adding edgeinfo (opposing edge could have diff names)?
@@ -520,15 +537,16 @@ uint32_t AddShortcutEdges(GraphReader& reader,
 
       // Update speed to the one that takes turn durations into account
       uint32_t new_speed = directededge->speed();
-      if (directededge->speed() != 0 && total_turn_duration > 0) {
-        double const new_time =
-            length / (directededge->speed() * kKPHtoMetersPerSec) + total_turn_duration;
-        new_speed = static_cast<uint32_t>(std::round(length / new_time * kMetersPerSectoKPH));
+      if (total_duration > 0) {
+        new_speed = static_cast<uint32_t>(std::round(length / total_duration * kMetersPerSectoKPH));
       }
       newedge.set_speed(new_speed);
 
-      // TODO: update shortcut speed for trucs after fixing truck turn durations
-      // newedge.set_truck_speed(new_truck_speed);
+      uint32_t new_truck_speed = directededge->truck_speed();
+      if (total_truck_duration > 0) {
+        new_truck_speed = static_cast<uint32_t>(std::round(length / total_truck_duration * kMetersPerSectoKPH));
+      }
+      newedge.set_truck_speed(new_truck_speed);
 
       // Add shortcut edge. Add to the shortcut map (associates the base edge
       // index to the shortcut index). Remove superseded mask that may have
