@@ -589,9 +589,9 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         bool is_valid = is_active || turn_lane.state() == TurnLane::kValid;
         lane->emplace("active", is_active);
         lane->emplace("valid", is_valid);
-        // Add active_indication for a valid lane
+        // Add valid_indication for a valid & active lanes
         if (turn_lane.state() != TurnLane::kInvalid) {
-          lane->emplace("active_indication", turn_lane_direction(turn_lane.active_direction()));
+          lane->emplace("valid_indication", turn_lane_direction(turn_lane.active_direction()));
         }
 
         // Process 'indications' array - add indications from left to right

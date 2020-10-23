@@ -299,6 +299,86 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                               });
 }
 
+TEST(Standalone, TurnLanesUTurns) {
+  constexpr double gridsize_metres = 10;
+
+  const std::string ascii_map = R"(
+              E D
+              | |
+              | |
+              | |
+              | |
+         L----F-C----K
+              | |
+         I----G-B----J
+              | |
+              | |
+              | |
+              | |
+              H A
+    )";
+
+  const gurka::ways ways =
+      {{"AB",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"name", "Broken Land Parkway"},
+         {"lanes", "5"},
+         {"turn:lanes", "left|left|through|right|right"}}},
+       {"EF",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"name", "Broken Land Parkway"},
+         {"lanes", "4"},
+         {"turn:lanes", "reverse|left|through|right"}}},
+       {"BC", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Broken Land Parkway"}}},
+       {"CD", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Broken Land Parkway"}}},
+       {"FG", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Broken Land Parkway"}}},
+       {"GH", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Broken Land Parkway"}}},
+       {"IG", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Patuxent Woods Drive"}}},
+       {"GB", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Snowden River Parkway"}}},
+       {"BJ", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Snowden River Parkway"}}},
+       {"KC", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Snowden River Parkway"}}},
+       {"CF", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Snowden River Parkway"}}},
+       {"FL", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Patuxent Woods Drive"}}}};
+
+  const auto layout =
+      gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
+
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_6");
+
+  valhalla::Api result;
+
+  // Test U-turn using left-only lanes. The left-most left lane should be
+  // active & rest invalid
+  result = gurka::route(map, "A", "H", "auto");
+
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kUturnLeft,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+  validate_turn_lanes(result, {
+                                  {5, "[ *left* ACTIVE | left | through | right | right ]"},
+                                  {5, "[ *left* ACTIVE | left | through | right | right ]"},
+                                  {0, ""},
+                                  {0, ""},
+                                  {0, ""},
+                              });
+
+  // Test using reverse lanes. The reverse lane should be active & the rest
+  // invalid
+  result = gurka::route(map, "E", "D", "auto");
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kUturnLeft,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+  validate_turn_lanes(result, {
+                                  {4, "[ *reverse* ACTIVE | left | through | right ]"},
+                                  {4, "[ *reverse* ACTIVE | left | through | right ]"},
+                                  {0, ""},
+                                  {0, ""},
+                                  {0, ""},
+                              });
+}
+
 TEST(Standalone, TurnLanesSerializedResponse) {
   const std::string ascii_map = R"(
         C
@@ -359,21 +439,21 @@ TEST(Standalone, TurnLanesSerializedResponse) {
     EXPECT_FALSE(step1_int0["lanes"][0]["valid"].GetBool());
     ASSERT_EQ(step1_int0["lanes"][0]["indications"].Size(), 1);
     EXPECT_EQ(step1_int0["lanes"][0]["indications"][0].GetString(), std::string("left"));
-    EXPECT_FALSE(step1_int0["lanes"][0].HasMember("active_indication"));
+    EXPECT_FALSE(step1_int0["lanes"][0].HasMember("valid_indication"));
     // lane 1 - active: true, valid: true, active_ind: right
     EXPECT_TRUE(step1_int0["lanes"][1]["active"].GetBool());
     EXPECT_TRUE(step1_int0["lanes"][1]["valid"].GetBool());
     ASSERT_EQ(step1_int0["lanes"][1]["indications"].Size(), 1);
     EXPECT_EQ(step1_int0["lanes"][1]["indications"][0].GetString(), std::string("right"));
-    ASSERT_TRUE(step1_int0["lanes"][1].HasMember("active_indication"));
-    EXPECT_EQ(step1_int0["lanes"][1]["active_indication"].GetString(), std::string("right"));
+    ASSERT_TRUE(step1_int0["lanes"][1].HasMember("valid_indication"));
+    EXPECT_EQ(step1_int0["lanes"][1]["valid_indication"].GetString(), std::string("right"));
     // lane 2 - active: false, valid: true, active_ind: right
     EXPECT_FALSE(step1_int0["lanes"][2]["active"].GetBool());
     EXPECT_TRUE(step1_int0["lanes"][2]["valid"].GetBool());
     ASSERT_EQ(step1_int0["lanes"][2]["indications"].Size(), 1);
     EXPECT_EQ(step1_int0["lanes"][2]["indications"][0].GetString(), std::string("right"));
-    ASSERT_TRUE(step1_int0["lanes"][2].HasMember("active_indication"));
-    EXPECT_EQ(step1_int0["lanes"][2]["active_indication"].GetString(), std::string("right"));
+    ASSERT_TRUE(step1_int0["lanes"][2].HasMember("valid_indication"));
+    EXPECT_EQ(step1_int0["lanes"][2]["valid_indication"].GetString(), std::string("right"));
   }
 
   {
@@ -388,21 +468,21 @@ TEST(Standalone, TurnLanesSerializedResponse) {
     EXPECT_TRUE(step2_int0["lanes"][0]["valid"].GetBool());
     ASSERT_EQ(step2_int0["lanes"][0]["indications"].Size(), 1);
     EXPECT_EQ(step2_int0["lanes"][0]["indications"][0].GetString(), std::string("left"));
-    ASSERT_TRUE(step2_int0["lanes"][0].HasMember("active_indication"));
-    EXPECT_EQ(step2_int0["lanes"][0]["active_indication"].GetString(), std::string("left"));
+    ASSERT_TRUE(step2_int0["lanes"][0].HasMember("valid_indication"));
+    EXPECT_EQ(step2_int0["lanes"][0]["valid_indication"].GetString(), std::string("left"));
     // lane 1 - active: false, valid: true, active_ind: left
     EXPECT_FALSE(step2_int0["lanes"][1]["active"].GetBool());
     EXPECT_TRUE(step2_int0["lanes"][1]["valid"].GetBool());
     ASSERT_EQ(step2_int0["lanes"][1]["indications"].Size(), 2);
     EXPECT_EQ(step2_int0["lanes"][1]["indications"][0].GetString(), std::string("left"));
     EXPECT_EQ(step2_int0["lanes"][1]["indications"][1].GetString(), std::string("straight"));
-    ASSERT_TRUE(step2_int0["lanes"][1].HasMember("active_indication"));
-    EXPECT_EQ(step2_int0["lanes"][1]["active_indication"].GetString(), std::string("left"));
+    ASSERT_TRUE(step2_int0["lanes"][1].HasMember("valid_indication"));
+    EXPECT_EQ(step2_int0["lanes"][1]["valid_indication"].GetString(), std::string("left"));
     // lane 2 - active: false, valid: false
     EXPECT_FALSE(step2_int0["lanes"][2]["active"].GetBool());
     EXPECT_FALSE(step2_int0["lanes"][2]["valid"].GetBool());
     ASSERT_EQ(step2_int0["lanes"][2]["indications"].Size(), 1);
     EXPECT_EQ(step2_int0["lanes"][2]["indications"][0].GetString(), std::string("straight"));
-    ASSERT_FALSE(step2_int0["lanes"][2].HasMember("active_indication"));
+    ASSERT_FALSE(step2_int0["lanes"][2].HasMember("valid_indication"));
   }
 }

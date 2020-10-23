@@ -505,8 +505,10 @@ bool EnhancedTripLeg_Edge::HasTurnLane(uint16_t turn_lane_direction) const {
   return false;
 }
 
-uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromLeft(uint16_t turn_lane_direction,
-                                                         uint16_t activated_max) {
+uint16_t
+EnhancedTripLeg_Edge::ActivateTurnLanesFromLeft(uint16_t turn_lane_direction,
+                                                const DirectionsLeg_Maneuver_Type& curr_maneuver_type,
+                                                uint16_t activated_max) {
   uint16_t activated_count = 0;
 
   // Make sure turn lane has a direction
@@ -524,8 +526,11 @@ uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromLeft(uint16_t turn_lane_dire
       if (activated_count < activated_max) {
         turn_lane.set_state(TurnLane::kActive);
         ++activated_count;
-      } else {
-        // Mark non-active lane in the direction of maneuver as valid
+      } else if (curr_maneuver_type != DirectionsLeg_Maneuver_Type_kUturnLeft) {
+        // Mark non-active lane in the same direction as the maneuver, as valid
+        // except if we're taking a left uturn, in which case only the
+        // left-most left lane needs to be active (which would've been
+        // activated above)
         turn_lane.set_state(TurnLane::kValid);
       }
       // Set the active direction for active & valid lanes
@@ -535,8 +540,10 @@ uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromLeft(uint16_t turn_lane_dire
   return activated_count;
 }
 
-uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromRight(uint16_t turn_lane_direction,
-                                                          uint16_t activated_max) {
+uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromRight(
+    uint16_t turn_lane_direction,
+    const DirectionsLeg_Maneuver_Type& curr_maneuver_type,
+    uint16_t activated_max) {
   uint16_t activated_count = 0;
 
   // Make sure turn lane has a direction
@@ -554,8 +561,11 @@ uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromRight(uint16_t turn_lane_dir
       if (activated_count < activated_max) {
         turn_lane_iter->set_state(TurnLane::kActive);
         ++activated_count;
-      } else {
-        // Mark non-active in the same direction as the maneuver, as valid
+      } else if (curr_maneuver_type != DirectionsLeg_Maneuver_Type_kUturnRight) {
+        // Mark non-active lane in the same direction as the maneuver, as valid
+        // except if we're taking a right uturn, in which case only the
+        // right-most right lane needs to be active (which would've been
+        // activated above)
         turn_lane_iter->set_state(TurnLane::kValid);
       }
       // Set the active direction for active & valid lanes
@@ -573,11 +583,11 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
   if ((curr_maneuver_type == DirectionsLeg_Maneuver_Type_kUturnLeft) &&
       (turn_lane_direction != kTurnLaneReverse)) {
     // Activate the left most turn lane
-    return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+    return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type, 1);
   } else if ((curr_maneuver_type == DirectionsLeg_Maneuver_Type_kUturnRight) &&
              (turn_lane_direction != kTurnLaneReverse)) {
     // Activate the right most turn lane
-    return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+    return ActivateTurnLanesFromRight(turn_lane_direction, curr_maneuver_type, 1);
   } else if ((remaining_step_distance < kShortRemainingDistanceThreshold) &&
              !((next_maneuver_type == DirectionsLeg_Maneuver_Type_kBecomes) ||
                (next_maneuver_type == DirectionsLeg_Maneuver_Type_kContinue) ||
@@ -595,7 +605,7 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
       case DirectionsLeg_Maneuver_Type_kRampLeft:
       case DirectionsLeg_Maneuver_Type_kDestinationLeft:
       case DirectionsLeg_Maneuver_Type_kMergeLeft:
-        return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+        return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type, 1);
       case DirectionsLeg_Maneuver_Type_kSlightRight:
       case DirectionsLeg_Maneuver_Type_kExitRight:
       case DirectionsLeg_Maneuver_Type_kRampRight:
@@ -604,30 +614,30 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
       case DirectionsLeg_Maneuver_Type_kUturnRight:
       case DirectionsLeg_Maneuver_Type_kDestinationRight:
       case DirectionsLeg_Maneuver_Type_kMergeRight:
-        return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+        return ActivateTurnLanesFromRight(turn_lane_direction, curr_maneuver_type, 1);
       case DirectionsLeg_Maneuver_Type_kMerge:
         if (drive_on_right()) {
-          return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+          return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type, 1);
         } else {
-          return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+          return ActivateTurnLanesFromRight(turn_lane_direction, curr_maneuver_type, 1);
         }
       case DirectionsLeg_Maneuver_Type_kRoundaboutEnter:
       case DirectionsLeg_Maneuver_Type_kRoundaboutExit:
       case DirectionsLeg_Maneuver_Type_kFerryEnter:
       case DirectionsLeg_Maneuver_Type_kFerryExit:
-        return ActivateTurnLanesFromLeft(turn_lane_direction);
+        return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type);
       case DirectionsLeg_Maneuver_Type_kDestination:
         if (drive_on_right()) {
-          return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+          return ActivateTurnLanesFromRight(turn_lane_direction, curr_maneuver_type, 1);
         } else {
-          return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+          return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type, 1);
         }
       default:
-        return ActivateTurnLanesFromLeft(turn_lane_direction);
+        return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type);
     }
   } else {
     // Activate all matching turn lanes
-    return ActivateTurnLanesFromLeft(turn_lane_direction);
+    return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type);
   }
 }
 
