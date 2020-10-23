@@ -398,7 +398,8 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
     auto temp_paths = get_path(path_algorithm, *origin, *destination, costing, api.options());
     for (auto& temp_path : temp_paths) {
       // back propagate time information
-      if (destination->has_date_time()) {
+      if (destination->has_date_time() &&
+          api.options().date_time_type() != valhalla::Options::invariant) {
         auto origin_dt = offset_date(*reader, destination->date_time(), temp_path.back().edgeid,
                                      -temp_path.back().elapsed_cost.secs, temp_path.front().edgeid);
         origin->set_date_time(origin_dt);
@@ -453,9 +454,12 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
                               &vias);
         path.clear();
         vias.clear();
-        algorithms.clear();
       }
     }
+
+    // if we just made a leg that means we are done recording which algorithms were used
+    if (path.empty())
+      algorithms.clear();
   }
 
   // Reverse the legs because protobuf only has adding to the end
@@ -497,7 +501,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
     auto temp_paths = get_path(path_algorithm, *origin, *destination, costing, api.options());
     for (auto& temp_path : temp_paths) {
       // forward propagate time information
-      if (origin->has_date_time()) {
+      if (origin->has_date_time() && api.options().date_time_type() != valhalla::Options::invariant) {
         auto destination_dt =
             offset_date(*reader, origin->date_time(), temp_path.front().edgeid,
                         temp_path.back().elapsed_cost.secs, temp_path.back().edgeid);
@@ -547,9 +551,12 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
                                     interrupt, &vias);
         path.clear();
         vias.clear();
-        algorithms.clear();
       }
     }
+
+    // if we just made a leg that means we are done recording which algorithms were used
+    if (path.empty())
+      algorithms.clear();
   }
 }
 

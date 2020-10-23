@@ -1,7 +1,10 @@
 #include "gurka.h"
+#include "test/util/traffic_utils.h"
+
 #include <gtest/gtest.h>
 
 using namespace valhalla;
+namespace vu = valhalla_tests::utils;
 
 /*************************************************************/
 TEST(Standalone, TruckRegression) {
@@ -246,15 +249,15 @@ protected:
     constexpr double gridsize = 100;
 
     const std::string ascii_map = R"(
-      b--------c--------d
-      |        |        |
-      |        |        |
-      |        |        |
-      a--------f--------e
-      |        |        |
-      |        |        |
-      |        |        |
-      g--------h--------i
+      b----1----c----2----d
+      |         |         |
+      3         4         5
+      |         |         |
+      a----6----f----7----e
+      |         |         |
+      8         9         0
+      |         |         |
+      g----A----h----B----i
     )";
 
     const gurka::ways ways = {
@@ -264,6 +267,16 @@ protected:
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/ignore_access");
+
+    // add live traffic
+    vu::customize_live_traffic_data(map.config, [&](baldr::GraphReader& reader,
+                                                    baldr::TrafficTile& traffic_tile, int edge_index,
+                                                    valhalla::baldr::TrafficSpeed* traffic_speed) {
+      baldr::GraphId edge_id(traffic_tile.header->tile_id);
+      edge_id.set_id(edge_index);
+    });
+
+    // add historical traffic
   }
 };
 
