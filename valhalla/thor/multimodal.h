@@ -60,6 +60,14 @@ public:
               const Options& options = Options::default_instance());
 
   /**
+   * Returns the name of the algorithm
+   * @return the name of the algorithm
+   */
+  virtual std::string name() const {
+    return "Multimodal";
+  }
+
+  /**
    * Clear the temporary information generated during path construction.
    */
   void Clear();

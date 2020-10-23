@@ -1002,12 +1002,16 @@ void TripLegBuilder::Build(
     valhalla::Location& dest,
     const std::list<valhalla::Location>& through_loc,
     TripLeg& trip_path,
+    const std::vector<std::string>& algorithms,
     const std::function<void()>* interrupt_callback,
     std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>* edge_trimming) {
   // Test interrupt prior to building trip path
   if (interrupt_callback) {
     (*interrupt_callback)();
   }
+
+  // Remember what algorithms were used to create this leg
+  *trip_path.mutable_algorithms() = {algorithms.begin(), algorithms.end()};
 
   // Set origin, any through locations, and destination. Origin and
   // destination are assumed to be breaks.

@@ -63,6 +63,14 @@ public:
               const Options& options = Options::default_instance());
 
   /**
+   * Returns the name of the algorithm
+   * @return the name of the algorithm
+   */
+  virtual std::string name() const {
+    return "a*";
+  }
+
+  /**
    * Clear the temporary information generated during path construction.
    */
   virtual void Clear();

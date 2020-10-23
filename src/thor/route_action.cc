@@ -371,6 +371,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> vias;
   std::vector<thor::PathInfo> path;
   auto& correlated = *api.mutable_options()->mutable_locations();
+  std::vector<std::string> algorithms;
 
   // For each pair of locations
   for (auto origin = ++correlated.rbegin(); origin != correlated.rend(); ++origin) {
@@ -379,6 +380,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
     thor::PathAlgorithm* path_algorithm =
         get_path_algorithm(costing, *origin, *destination, api.options());
     path_algorithm->Clear();
+    algorithms.push_back(path_algorithm->name());
 
     // TODO: delete this and send all cases to the function above
     // If we are continuing through a location we need to make sure we
@@ -413,7 +415,8 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         // Connects via the same edge so we only need it once
         if (path.back().edgeid == temp_path.front().edgeid) {
           path.pop_back();
-        } else if (destination->type() == valhalla::Location::kVia) {
+        } // Connects on a different edge and is a via location
+        else if (destination->type() == valhalla::Location::kVia) {
           // Insert a route discontinuity if the paths meet at opposing edges and not
           // at a graph node. Use path size - 1 as the index where the discontinuity lies.
           via_discontinuity(*reader, *destination, path.back().edgeid, temp_path.front().edgeid, vias,
@@ -446,9 +449,11 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
           route = api.mutable_trip()->mutable_routes()->Add();
         auto& leg = *route->mutable_legs()->Add();
         TripLegBuilder::Build(api.options(), controller, *reader, mode_costing, path.begin(),
-                              path.end(), *origin, *destination, throughs, leg, interrupt, &vias);
+                              path.end(), *origin, *destination, throughs, leg, algorithms, interrupt,
+                              &vias);
         path.clear();
         vias.clear();
+        algorithms.clear();
       }
     }
   }
@@ -465,6 +470,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   std::vector<thor::PathInfo> path;
   std::list<valhalla::TripLeg> trip_paths;
   auto& correlated = *api.mutable_options()->mutable_locations();
+  std::vector<std::string> algorithms;
 
   // For each pair of locations
   for (auto destination = ++correlated.begin(); destination != correlated.end(); ++destination) {
@@ -473,6 +479,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
     thor::PathAlgorithm* path_algorithm =
         get_path_algorithm(costing, *origin, *destination, api.options());
     path_algorithm->Clear();
+    algorithms.push_back(path_algorithm->name());
 
     // TODO: delete this and send all cases to the function above
     // If we are continuing through a location we need to make sure we
@@ -536,10 +543,11 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
           route = api.mutable_trip()->mutable_routes()->Add();
         auto& leg = *route->mutable_legs()->Add();
         thor::TripLegBuilder::Build(api.options(), controller, *reader, mode_costing, path.begin(),
-                                    path.end(), *origin, *destination, throughs, leg, interrupt,
-                                    &vias);
+                                    path.end(), *origin, *destination, throughs, leg, algorithms,
+                                    interrupt, &vias);
         path.clear();
         vias.clear();
+        algorithms.clear();
       }
     }
   }

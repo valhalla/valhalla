@@ -44,6 +44,14 @@ public:
               const sif::TravelMode mode,
               const Options& options = Options::default_instance());
 
+  /**
+   * Returns the name of the algorithm
+   * @return the name of the algorithm
+   */
+  virtual std::string name() const {
+    return "time_dependent_forward";
+  }
+
 protected:
   /**
    * Expand from the node along the forward search path. Immediately expands
@@ -118,6 +126,14 @@ public:
               const sif::mode_costing_t& mode_costing,
               const sif::TravelMode mode,
               const Options& options = Options::default_instance());
+
+  /**
+   * Returns the name of the algorithm
+   * @return the name of the algorithm
+   */
+  virtual std::string name() const {
+    return "time_dependent_reverse";
+  }
 
   /**
    * Clear the temporary information generated during path construction.

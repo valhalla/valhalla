@@ -325,6 +325,7 @@ message TripLeg {
   optional BoundingBox bbox = 9;
   optional ShapeAttributes shape_attributes = 10;
   repeated Incident incidents = 11;
+  repeated string algorithms = 12;
 }
 
 message TripRoute {

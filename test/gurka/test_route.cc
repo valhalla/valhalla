@@ -236,3 +236,47 @@ TEST_F(IgnoreAccessTest, PedestrianIgnoreAccess) {
   EXPECT_NO_THROW(
       gurka::route(ignore_access_map, {"A", "F", "D", "B"}, cost, {{IgnoreAccessParam(cost), "1"}}));
 }
+
+/*************************************************************/
+class AlgorithmTest : public ::testing::Test {
+protected:
+  static gurka::map map;
+
+  static void SetUpTestSuite() {
+    constexpr double gridsize = 100;
+
+    const std::string ascii_map = R"(
+      b--------c--------d
+      |        |        |
+      |        |        |
+      |        |        |
+      a--------f--------e
+      |        |        |
+      |        |        |
+      |        |        |
+      g--------h--------i
+    )";
+
+    const gurka::ways ways = {
+        {"abcdefaghie", {{"highway", "residential"}}},
+        {"cfh", {{"highway", "tertiary"}}},
+    };
+
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/ignore_access");
+  }
+};
+
+gurka::map AlgorithmTest::map = {};
+
+TEST_F(AlgorithmTest, Astar) {
+}
+
+TEST_F(AlgorithmTest, TDForward) {
+}
+
+TEST_F(AlgorithmTest, TDReverse) {
+}
+
+TEST_F(AlgorithmTest, Bidir) {
+}

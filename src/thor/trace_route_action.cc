@@ -162,7 +162,7 @@ void thor_worker_t::route_match(Api& request) {
     thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
                                 *options.mutable_locations()->begin(),
                                 *options.mutable_locations()->rbegin(),
-                                std::list<valhalla::Location>{}, leg, interrupt);
+                                std::list<valhalla::Location>{}, leg, {"edge_walk"}, interrupt);
   } else {
     throw std::exception{};
   }
@@ -330,11 +330,11 @@ void thor_worker_t::build_trace(
   // TODO: do we actually need to supply the via/through type locations?
 
   // actually build the leg and add it to the route
-  auto* leg = request.mutable_trip()->add_routes()->add_legs();
+  auto& leg = *request.mutable_trip()->add_routes()->add_legs();
   thor::TripLegBuilder::Build(options, controller, matcher->graphreader(), mode_costing,
                               path_edges.begin(), path_edges.end(), *origin_location,
-                              *destination_location, std::list<valhalla::Location>{}, *leg, interrupt,
-                              &edge_trimming);
+                              *destination_location, std::list<valhalla::Location>{}, leg,
+                              {"map_snap"}, interrupt, &edge_trimming);
 }
 
 void thor_worker_t::build_route(
@@ -414,10 +414,11 @@ void thor_worker_t::build_route(
     // TODO: do we actually need to supply the via/through type locations?
 
     // actually build the leg and add it to the route
+    auto& leg = *route->mutable_legs()->Add();
     TripLegBuilder::Build(options, controller, matcher->graphreader(), mode_costing,
                           path.first.cbegin(), path.first.cend(), *origin_location,
-                          *destination_location, std::list<valhalla::Location>{},
-                          *route->mutable_legs()->Add(), interrupt, &edge_trimming);
+                          *destination_location, std::list<valhalla::Location>{}, leg, {"map_snap"},
+                          interrupt, &edge_trimming);
 
     if (path.second.back()->discontinuity) {
       ++route_index;
