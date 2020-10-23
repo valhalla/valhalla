@@ -434,10 +434,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
 Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
                          const baldr::GraphTile* tile,
                          const uint32_t seconds) const {
-  auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
-
-  // Use the lower or truck speed (ir present) and speed
-  uint32_t s = (edge->truck_speed() > 0) ? std::min(edge->truck_speed(), speed) : speed;
+  auto s = tile->GetSpeed(edge, flow_mask_, seconds, true);
   assert(s < speedfactor_.size());
   float sec = edge->length() * speedfactor_[s];
 

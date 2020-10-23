@@ -515,6 +515,7 @@ public:
   inline uint32_t GetSpeed(const DirectedEdge* de,
                            uint8_t flow_mask = kConstrainedFlowMask,
                            uint32_t seconds = kInvalidSecondsOfWeek,
+                           bool is_truck = false,
                            uint8_t* flow_sources = nullptr) const {
     // if they dont want source info we bind it to a temp and no one will miss it
     uint8_t temp_sources;
@@ -607,8 +608,9 @@ public:
 #endif
 
     // Fallback further to specified or derived speed
-    return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
+    auto speed = static_cast<uint32_t>(partial_live_speed * partial_live_pct +
                                  (1 - partial_live_pct) * de->speed());
+    return (de->truck_speed() > 0) ? std::min(de->truck_speed(), speed) : speed;
   }
 
   inline const volatile TrafficSpeed& trafficspeed(const DirectedEdge* de) const {

@@ -104,13 +104,13 @@ TEST(PredictiveTraffic, test_get_speed) {
 
   // Test flow_sources
   uint8_t flow_sources;
-  tile->GetSpeed(de, kPredictedFlowMask, kConstrainedFlowSecondOfDay, &flow_sources);
+  tile->GetSpeed(de, kPredictedFlowMask, kConstrainedFlowSecondOfDay, false, &flow_sources);
   EXPECT_TRUE(flow_sources & kPredictedFlowMask) << "Expected flow_sources to include predicted";
 
-  tile->GetSpeed(de, kConstrainedFlowMask, kConstrainedFlowSecondOfDay, &flow_sources);
+  tile->GetSpeed(de, kConstrainedFlowMask, kConstrainedFlowSecondOfDay, false, &flow_sources);
   EXPECT_FALSE(flow_sources & kPredictedFlowMask) << "Expected flow_sources not to include predicted";
 
-  tile->GetSpeed(de, kNoFlowMask, kConstrainedFlowSecondOfDay, &flow_sources);
+  tile->GetSpeed(de, kNoFlowMask, kConstrainedFlowSecondOfDay, false, &flow_sources);
 
   EXPECT_FALSE(flow_sources & kPredictedFlowMask) << "Expected flow_sources not to include predicted";
 }
