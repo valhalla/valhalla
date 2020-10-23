@@ -104,7 +104,7 @@ TEST(Shortcuts, ShortcutSpeed) {
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
 
   std::vector<std::tuple<baldr::GraphId, int, int>> shortcut_infos;
-  auto tileset = reader.GetTileSet(0);
+  auto const tileset = reader.GetTileSet(0);
   for (const auto tileid : tileset) {
     if (reader.OverCommitted())
       reader.Trim();
@@ -130,7 +130,7 @@ TEST(Shortcuts, ShortcutSpeed) {
     auto const shortcutid = std::get<0>(shortcut_info);
     auto const shortcut_speed = std::get<1>(shortcut_info);
     auto const shortcut_truck_speed = std::get<2>(shortcut_info);
-    auto edgeids = reader.RecoverShortcut(shortcutid);
+    auto const edgeids = reader.RecoverShortcut(shortcutid);
 
     // if it gave us back the shortcut we failed
     ASSERT_FALSE(edgeids.front() == shortcutid);
@@ -138,7 +138,7 @@ TEST(Shortcuts, ShortcutSpeed) {
     // Compare the speed on the recovered edges to the speed on the shortcut
     // Shortcut speed should be lower because it is calculated including turn duration
     std::vector<midgard::PointLL> recovered_shape;
-    for (auto edgeid : edgeids) {
+    for (auto const edgeid : edgeids) {
       const auto* tile = reader.GetGraphTile(edgeid);
       const auto* de = tile->directededge(edgeid);
       EXPECT_GT(de->speed(), shortcut_speed);
@@ -176,7 +176,7 @@ TEST(Shortcuts, TruckSpeedNotSet) {
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
 
   std::vector<std::tuple<baldr::GraphId, int, int>> shortcut_infos;
-  auto tileset = reader.GetTileSet(0);
+  auto const tileset = reader.GetTileSet(0);
   for (const auto tileid : tileset) {
     if (reader.OverCommitted())
       reader.Trim();

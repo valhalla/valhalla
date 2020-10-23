@@ -544,7 +544,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
 
       uint32_t new_truck_speed = directededge->truck_speed();
       if (total_truck_duration > 0) {
-        new_truck_speed = static_cast<uint32_t>(std::round(length / total_truck_duration * kMetersPerSectoKPH));
+        new_truck_speed =
+            static_cast<uint32_t>(std::round(length / total_truck_duration * kMetersPerSectoKPH));
       }
       newedge.set_truck_speed(new_truck_speed);
 

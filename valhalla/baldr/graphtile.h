@@ -608,8 +608,8 @@ public:
 #endif
 
     // Fallback further to specified or derived speed
-    auto speed = static_cast<uint32_t>(partial_live_speed * partial_live_pct +
-                                 (1 - partial_live_pct) * de->speed());
+    auto const speed = static_cast<uint32_t>(partial_live_speed * partial_live_pct +
+                                             (1 - partial_live_pct) * de->speed());
     return (de->truck_speed() > 0) ? std::min(de->truck_speed(), speed) : speed;
   }
 
