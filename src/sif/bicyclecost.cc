@@ -750,7 +750,7 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   penalty *= (bike_accom * avoid_roads) + use_roads_;
 
   // Return cost (time and penalty)
-  c.cost = shortest_ ? 0 : c.cost + (seconds * (turn_stress + 1.0f) + penalty);
+  c.cost += shortest_ ? 0 : seconds * (turn_stress + 1.0f) + penalty;
   c.secs += seconds;
   return c;
 }
@@ -830,7 +830,7 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
   penalty *= (bike_accom * avoid_roads) + use_roads_;
 
   // Return cost (time and penalty)
-  c.cost = shortest_ ? 0.f : c.cost + (seconds * (turn_stress + 1.0f) + penalty);
+  c.cost += shortest_ ? 0.f : seconds * (turn_stress + 1.0f) + penalty;
   c.secs += seconds;
   return c;
 }

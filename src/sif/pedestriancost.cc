@@ -435,9 +435,6 @@ public:
                                  const uint32_t idx) const override {
     // Cases with both time and penalty: country crossing, ferry, gate, toll booth
     sif::Cost c;
-    if (shortest_) {
-      return c; // shortest ignores any penalties in favor of path length
-    }
     if (node->type() == baldr::NodeType::kBorderControl) {
       c += country_crossing_cost_;
     }
@@ -465,6 +462,8 @@ public:
         edge->use() != Use::kPlatformConnection && !edge->name_consistency(idx)) {
       c.cost += maneuver_penalty_;
     }
+    // shortest ignores any penalties in favor of path length
+    c.cost *= !shortest_;
     return c;
   }
 
@@ -510,6 +509,8 @@ public:
         edge->use() != Use::kPlatformConnection && !edge->name_consistency(idx)) {
       c.cost += maneuver_penalty_;
     }
+    // shortest ignores any penalties in favor of path length
+    c.cost *= !shortest_;
     return c;
   }
 };

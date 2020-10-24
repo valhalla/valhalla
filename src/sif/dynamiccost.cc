@@ -234,6 +234,11 @@ void ParseCostingOptions(const rapidjson::Document& doc,
     Costing costing = static_cast<Costing>(i);
     // Create the costing string
     const auto& costing_str = valhalla::Costing_Enum_Name(costing);
+    // Deprecated costings still need their place in the array
+    if (costing_str.empty()) {
+      options.add_costing_options();
+      continue;
+    }
     // Create the costing options key
     const auto key = costing_options_key + "/" + costing_str;
     // Parse the costing options
@@ -266,12 +271,6 @@ void ParseCostingOptions(const rapidjson::Document& doc,
   switch (costing) {
     case auto_: {
       sif::ParseAutoCostOptions(doc, key, costing_options);
-      break;
-    }
-    case auto_shorter: {
-      // deprecated this to an alias of autocost with shortest set
-      sif::ParseAutoCostOptions(doc, key, costing_options);
-      costing_options->set_shortest(true);
       break;
     }
     case bicycle: {
@@ -316,10 +315,6 @@ void ParseCostingOptions(const rapidjson::Document& doc,
     }
     case motorcycle: {
       sif::ParseMotorcycleCostOptions(doc, key, costing_options);
-      break;
-    }
-    case auto_data_fix: {
-      sif::ParseAutoDataFixCostOptions(doc, key, costing_options);
       break;
     }
     case none_: {

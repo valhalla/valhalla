@@ -92,10 +92,8 @@ TEST_F(IgnoreAccessTest, AutoIgnoreOneWay) {
 }
 
 TEST_F(IgnoreAccessTest, AutoDataFixIgnoreOneWay) {
-  const std::string cost = "auto_data_fix";
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
+  const std::string cost = "auto_data_fix"; // turns on all ignores
+  EXPECT_NO_THROW(gurka::route(ignore_access_map, {"A", "D"}, "auto_data_fix"));
 }
 
 TEST_F(IgnoreAccessTest, BusIgnoreOneWay) {
@@ -159,11 +157,9 @@ TEST_F(IgnoreAccessTest, AutoIgnoreAccess) {
 }
 
 TEST_F(IgnoreAccessTest, AutoDataFixIgnoreAccess) {
-  const std::string cost = "auto_data_fix";
+  const std::string cost = "auto_data_fix"; // turns on all ignores
   // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "B", "D"}, cost, {{IgnoreAccessParam(cost), "1"}}));
+  EXPECT_NO_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost));
 }
 
 TEST_F(IgnoreAccessTest, BusIgnoreAccess) {

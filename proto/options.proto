@@ -33,7 +33,7 @@ enum ShapeFormat {
 
 enum Costing {
   auto_ = 0;
-  auto_shorter = 1;
+  // deprecated auto_shorter = 1;
   bicycle = 2;
   bus = 3;
   hov = 4;
@@ -43,7 +43,7 @@ enum Costing {
   transit = 8;
   truck = 9;
   motorcycle = 10;
-  auto_data_fix = 11;
+  // deprecated auto_data_fix = 11;
   taxi = 12;
   none_ = 13;
   bikeshare = 14;
