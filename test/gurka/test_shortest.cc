@@ -103,3 +103,17 @@ TEST_F(ShortestTest, ScooterShortest) {
   doTests(profile, {"AB", "BF", "FG", "GD", "DE"},
           {{"/costing_options/" + profile + "/shortest", "1"}});
 }
+
+TEST(AutoShorter, deprecation) {
+  // if both auto & auto_shorter costing options were provided, auto costing should be overridden
+  Api request;
+  std::string request_str =
+      R"({"locations":[{"lat":52.114622,"lon":5.131816},{"lat":52.048267,"lon":5.074825}],"costing":"auto_shorter",)"
+      R"("costing_options":{"auto":{"use_ferry":0.8}, "auto_shorter":{"use_ferry":0.1, "use_tolls": 0.77}}})";
+  ParseApi(request_str, Options::route, request);
+
+  ASSERT_EQ(request.options().costing(), valhalla::auto_);
+  ASSERT_EQ(request.options().costing_options(valhalla::auto_).shortest(), true);
+  ASSERT_EQ(request.options().costing_options(valhalla::auto_).use_ferry(), 0.1f);
+  ASSERT_EQ(request.options().costing_options(valhalla::auto_).use_tolls(), 0.77f);
+}
