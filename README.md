@@ -152,6 +152,7 @@ Support for Windows is not yet fully exploited. Building the Valhalla library wo
 
 - `TOOLS`: utilities to query and benchmark various components
 - `DATA_TOOLS`: utilities to build input data and handle transit
+- `PYTHON_BINDINGS`: use all actions (route, isochrones, matrix etc) via the Valhalla Python library (needs a full Python distribution in the `PATH`)
 
 It's recommended to work with the following toolset:
 - Visual Studio with C++ support
@@ -166,7 +167,7 @@ C:\path\to\vcpkg.exe --triplet x64-windows "@.vcpkg_deps.txt"
 ```
 2. Let CMake configure the build with the required modules enabled. **Note**, you have to manually link LuaJIT for some reason, e.g. the final command for `x64` could look like
 ```
-"C:\Program Files\CMake\bin\cmake.EXE" --no-warn-unused-cli -DENABLE_TOOLS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_SERVICES=OFF -DENABLE_PYTHON_BINDINGS=OFF -DLUA_LIBRARIES=path\to\vcpkg\installed\x64-windows\lib\lua51.lib -DLUA_INCLUDE_DIR=path\to\vcpkg\installed\x64-windows\include\luajit -DENABLE_BENCHMARKS=OFF -DENABLE_TESTS=OFF -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=path\to\vcpkg\scripts\buildsystems\vcpkg.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -Hpath/to/project -Bpath/to/project/build -G "Visual Studio 16 2019" -T host=x64 -A x64
+"C:\Program Files\CMake\bin\cmake.EXE" --no-warn-unused-cli -DENABLE_TOOLS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_HTTP=ON -DENABLE_CCACHE=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DENABLE_TESTS=OFF -DLUA_LIBRARIES=path\to\vcpkg\installed\x64-windows\lib\lua51.lib -DLUA_INCLUDE_DIR=path\to\vcpkg\installed\x64-windows\include\luajit -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=path\to\vcpkg\scripts\buildsystems\vcpkg.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -Hpath/to/project -Bpath/to/project/build -G "Visual Studio 16 2019" -T host=x64 -A x64
 ```
 3. Run the build for all targets.
 
@@ -200,21 +201,22 @@ curl http://localhost:8002/route --data '{"locations":[{"lat":47.365109,"lon":8.
 #HAVE FUN!
 ```
 
-### Contributing
+## Contributing
 
 We welcome contributions to valhalla. If you would like to report an issue, or even better fix an existing one, please use the [valhalla issue tracker](https://github.com/valhalla/valhalla/issues) on GitHub.
 
 If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11.  We use `clang-format` v7.0 to format the code. We welcome contributions as pull requests to the [repository](https://github.com/valhalla/valhalla) and highly recommend that your pull request include a test to validate the addition/change of functionality.
 
-Note that our CI system checks that code formatting is consistent, and the build will fail if formatting rules aren't followed.  Please run `./scripts/format.sh` over your code before committing, to auto-format it in the projects preferred style. To spare yourself pure `format` commits, you can register it as a pre-commit hook so it lints your changes in-place (remember to commit again):
+Note that our CI system checks that code formatting is consistent, and the build will fail if formatting rules aren't followed.  Please run `./scripts/format.sh` over your code before committing, to auto-format it in the projects preferred style. To spare yourself (and the CIs) pure `format` commits, you can register it as a pre-commit hook so it lints your changes in-place (and will fail if files were changed, so you'll need to stage and commit again):
 
 ```
-cp scripts/format.sh .git/hooks/pre-commit
+cat ./scripts/format.sh > .git/hooks/pre-commit && tail -n +7 scripts/error_on_dirty.sh >> .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
 ```
 
 Also note that we run some `clang-tidy` linting over the code as well (see `.clang-tidy` for the list of rules enforced).  You can run `./scripts/clang-tidy-only-diff.sh` over the code before committing to ensure you haven't added any of the common problems we check for (Note: `./scripts/clang-tidy-only-diff.sh` requires the exitence of a `compile_commands.json` database.  You can generate this file by running `cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=On ... && make`.
 
-`scripts/clang-tidy-only-diff.sh` is run in CI and will the build if it detects any issues.
+`scripts/clang-tidy-only-diff.sh` is run in CI and will fail the build if it detects any issues.
 
 Additionally, a check with [ASan](https://clang.llvm.org/docs/AddressSanitizer.html) is run in CI. We recommend testing with ASan  and debug symbols locally prior to commiting, with the `-DENABLE_ADDRESS_SANITIZER=ON -DCMAKE_BUILD_TYPE=Debug` flags during cmake configuration. As long as leak sanitizer (which is a part of address sanitizer) is not currently supported across different platforms it is disabled in the CI. You can disable it locally with the environment variable `ASAN_OPTIONS=detect_leaks=0`.
 
@@ -242,7 +244,7 @@ Linux and MacOS.
 
 ## Command Line Tools
 
-#### `valhalla_service` aka one-shot mode
+### `valhalla_service` aka one-shot mode
 
 If you can't (e.g. Windows Server) or don't want to have the full-fledged HTTP API running, you can have the (almost) exact same behavior with the 'valhalla_service' executable in so-called "one-shot" mode. It's simple, just pass the config file, the action (route, isochrone, matrix etc) and the stringified JSON request (or alternatively a file containing the request to circumvent shell command length issues):
 
@@ -255,6 +257,6 @@ valhalla_service valhalla.json isochrone isochrone_request.txt
 It's important to note that all Valhalla logs for one-shot mode are piped to `stderr` while the actual JSON response will be in `stdout`. To completely silence the logs, pass `type: ""` to `midgard.logging` in the config file. 
 
 
-Batch Script Tool
------------------
+### Batch Script Tool
+
 - [Batch Run_Route](./run_route_scripts/README.md)

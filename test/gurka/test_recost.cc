@@ -60,7 +60,7 @@ TEST(recosting, same_historical) {
     // check we have the same cost at all places
     for (const auto& n : api.trip().routes(0).legs(0).node()) {
       EXPECT_EQ(n.recosts_size(), 1);
-      EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
+      EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(), 0.0001);
       EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
@@ -102,7 +102,7 @@ TEST(recosting, same_historical) {
     // check we have the same cost at all places
     for (const auto& n : api.trip().routes(0).legs(0).node()) {
       EXPECT_EQ(n.recosts_size(), 1);
-      EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
+      EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(), 0.0001);
       EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
@@ -433,7 +433,10 @@ TEST(recosting, api) {
                           bool transition = true) {
     if (cost)
       EXPECT_GE(greater.elapsed_cost().cost(), lesser.elapsed_cost().cost());
-    EXPECT_GE(greater.elapsed_cost().seconds(), lesser.elapsed_cost().seconds());
+    bool const is_greater = greater.elapsed_cost().seconds() > lesser.elapsed_cost().seconds();
+    bool const is_equal =
+        std::abs(greater.elapsed_cost().seconds() - lesser.elapsed_cost().seconds()) < 0.0001;
+    EXPECT_TRUE(is_greater || is_equal);
     if (transition) {
       if (cost)
         EXPECT_GE(greater.transition_cost().cost(), lesser.transition_cost().cost());

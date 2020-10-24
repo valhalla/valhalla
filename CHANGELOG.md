@@ -90,6 +90,8 @@
    * FIXED: Internal maneuver placement [#2600](https://github.com/valhalla/valhalla/pull/2600)
    * FIXED: Complete fr-FR.json locale. [#2614](https://github.com/valhalla/valhalla/pull/2614)
    * FIXED: Fix all compiler warnings in sif and set to -Werror [#2642](https://github.com/valhalla/valhalla/pull/2642)
+   * FIXED: Remove unnecessary maneuvers to continue straight [#2647](https://github.com/valhalla/valhalla/pull/2647)
+   * FIXED: Linear reference support in route/mapmatch apis (FOW, FRC, bearing, and number of references) [#2645](https://github.com/valhalla/valhalla/pull/2645)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
@@ -176,6 +178,10 @@
    * ADDED: One shot mode to valhalla_service so you can run a single request of any type without starting a server [#2624](https://github.com/valhalla/valhalla/pull/2624)
    * ADDED: Adds text instructions to OSRM output [#2625](https://github.com/valhalla/valhalla/pull/2625)
    * ADDED: Adds support for alternate routes [#2626](https://github.com/valhalla/valhalla/pull/2626)
+   * CHANGED: Switch Python bindings generator from boost.python to header-only pybind11[#2644](https://github.com/valhalla/valhalla/pull/2644)
+   * ADDED: Add support of input file for one-shot mode of valhalla_service [#2648](https://github.com/valhalla/valhalla/pull/2648)
+   * ADDED: Linear reference support to locate api [#2645](https://github.com/valhalla/valhalla/pull/2645)
+   * ADDED: Implemented OSRM-like turn duration calculation for car. Uses it now in auto costing. [#2651](https://github.com/valhalla/valhalla/pull/2651)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

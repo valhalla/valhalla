@@ -346,9 +346,8 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
   for (const auto& conn : new_connections) {
 
     size_t edge_index = tilebuilder_local.directededges().size();
-    NodeInfo new_bss_node{tile.header()->base_ll(), conn.bss_ll,
-                          conn.road_class,          (kPedestrianAccess | kBicycleAccess),
-                          NodeType::kBikeShare,     false};
+    NodeInfo new_bss_node{tile.header()->base_ll(), conn.bss_ll, (kPedestrianAccess | kBicycleAccess),
+                          NodeType::kBikeShare, false};
     new_bss_node.set_mode_change(true);
     new_bss_node.set_edge_index(edge_index);
     // there should be two outbound edge for the bss node
