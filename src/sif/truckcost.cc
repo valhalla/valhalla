@@ -435,6 +435,16 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
                          const baldr::GraphTile* tile,
                          const uint32_t seconds) const {
   auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
+
+  // Use the lower or truck speed (ir present) and speed
+  uint32_t s = (edge->truck_speed() > 0) ? std::min(edge->truck_speed(), speed) : speed;
+  assert(s < speedfactor_.size());
+  float sec = edge->length() * speedfactor_[s];
+
+  if (shortest_) {
+    return Cost(edge->length(), sec);
+  }
+
   float factor = density_factor_[edge->density()];
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;
@@ -444,10 +454,6 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor += toll_factor_;
   }
 
-  // Use the lower or truck speed (ir present) and speed
-  uint32_t s = (edge->truck_speed() > 0) ? std::min(edge->truck_speed(), speed) : speed;
-  assert(s < speedfactor_.size());
-  float sec = edge->length() * speedfactor_[s];
   return {sec * factor, sec};
 }
 
@@ -492,7 +498,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-    c.cost += seconds;
+    c.cost += shortest_ ? 0.f : seconds;
     c.secs += seconds;
   }
   return c;
@@ -542,7 +548,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-    c.cost += seconds;
+    c.cost += shortest_ ? 0.f : seconds;
     c.secs += seconds;
   }
   return c;

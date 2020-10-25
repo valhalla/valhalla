@@ -125,7 +125,7 @@ const std::string& Options_Action_Enum_Name(const Options::Action action) {
 bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
   static const std::unordered_map<std::string, Costing> costings{
       {"auto", Costing::auto_},
-      {"auto_shorter", Costing::auto_shorter},
+      // auto_shorter is deprecated
       {"bicycle", Costing::bicycle},
       {"bus", Costing::bus},
       {"hov", Costing::hov},
@@ -136,7 +136,7 @@ bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
       {"transit", Costing::transit},
       {"truck", Costing::truck},
       {"motorcycle", Costing::motorcycle},
-      {"auto_data_fix", Costing::auto_data_fix},
+      // auto_data_fix is deprecated
       {"none", Costing::none_},
       {"", Costing::none_},
       {"bikeshare", Costing::bikeshare},
@@ -152,7 +152,7 @@ const std::string& Costing_Enum_Name(const Costing costing) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> costings{
       {Costing::auto_, "auto"},
-      {Costing::auto_shorter, "auto_shorter"},
+      // auto_shorter is deprecated
       {Costing::bicycle, "bicycle"},
       {Costing::bus, "bus"},
       {Costing::hov, "hov"},
@@ -163,7 +163,7 @@ const std::string& Costing_Enum_Name(const Costing costing) {
       {Costing::transit, "transit"},
       {Costing::truck, "truck"},
       {Costing::motorcycle, "motorcycle"},
-      {Costing::auto_data_fix, "auto_data_fix"},
+      // auto_data_fix is deprecated
       {Costing::none_, "none"},
       {Costing::bikeshare, "bikeshare"},
   };
