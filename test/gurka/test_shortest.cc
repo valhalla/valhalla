@@ -20,7 +20,7 @@ protected:
     )";
 
     const gurka::ways ways = {
-        // segments expected for shortest routes for all profiles
+        // segments expected for shortest routes for all costings
         {"AB",
          {{"highway", "residential"},
           {"maxspeed", "20"},    // slows down car/truck/motorbike/scooter
@@ -46,15 +46,15 @@ protected:
     return route.directions().routes(0).legs(0).summary().length();
   }
 
-  void doTests(const std::string& profile,
+  void doTests(const std::string& costing,
                const std::vector<std::string>& fastest_path,
                const std::unordered_map<std::string, std::string>& shortest_options,
                const std::unordered_map<std::string, std::string>& fastest_options = {}) {
 
-    valhalla::Api fastest = gurka::route(shortest_map, "A", "E", profile, fastest_options);
+    valhalla::Api fastest = gurka::route(shortest_map, "A", "E", costing, fastest_options);
     float fastest_l = getLength(fastest);
 
-    valhalla::Api shortest = gurka::route(shortest_map, "A", "E", profile, shortest_options);
+    valhalla::Api shortest = gurka::route(shortest_map, "A", "E", costing, shortest_options);
     float shortest_l = getLength(shortest);
 
     std::cout << "Lenghts: " << fastest_l << ", " << shortest_l << EOF;
@@ -68,40 +68,40 @@ protected:
 gurka::map ShortestTest::shortest_map = {};
 
 TEST_F(ShortestTest, AutoShortest) {
-  std::string profile = "auto";
-  doTests(profile, {"AB", "BF", "FG", "GD", "DE"},
-          {{"/costing_options/" + profile + "/shortest", "1"}});
+  std::string costing = "auto";
+  doTests(costing, {"AB", "BF", "FG", "GD", "DE"},
+          {{"/costing_options/" + costing + "/shortest", "1"}});
 }
 
 TEST_F(ShortestTest, TruckShortest) {
-  std::string profile = "truck";
-  doTests(profile, {"AB", "BF", "FG", "GD", "DE"},
-          {{"/costing_options/" + profile + "/shortest", "1"}});
+  std::string costing = "truck";
+  doTests(costing, {"AB", "BF", "FG", "GD", "DE"},
+          {{"/costing_options/" + costing + "/shortest", "1"}});
 }
 
 TEST_F(ShortestTest, MotorbikeShortest) {
-  std::string profile = "motorcycle";
-  doTests(profile, {"AB", "BF", "FG", "GD", "DE"},
-          {{"/costing_options/" + profile + "/shortest", "1"}});
+  std::string costing = "motorcycle";
+  doTests(costing, {"AB", "BF", "FG", "GD", "DE"},
+          {{"/costing_options/" + costing + "/shortest", "1"}});
 }
 
 TEST_F(ShortestTest, BikeShortest) {
-  std::string profile = "bicycle";
-  doTests(profile, {"AB", "BH", "HI", "ID", "DE"},
-          {{"/costing_options/" + profile + "/shortest", "1"}});
+  std::string costing = "bicycle";
+  doTests(costing, {"AB", "BH", "HI", "ID", "DE"},
+          {{"/costing_options/" + costing + "/shortest", "1"}});
 }
 
 TEST_F(ShortestTest, PedestrianShortest) {
-  std::string profile = "pedestrian";
-  doTests(profile, {"AB", "BH", "HI", "ID", "DE"},
-          {{"/costing_options/" + profile + "/shortest", "1"}},
-          {{"/costing_options/" + profile + "/sidewalk_factor", "0.1"}}); // speed up "fastest edges"
+  std::string costing = "pedestrian";
+  doTests(costing, {"AB", "BH", "HI", "ID", "DE"},
+          {{"/costing_options/" + costing + "/shortest", "1"}},
+          {{"/costing_options/" + costing + "/sidewalk_factor", "0.1"}}); // speed up "fastest edges"
 }
 
 TEST_F(ShortestTest, ScooterShortest) {
-  std::string profile = "motor_scooter";
-  doTests(profile, {"AB", "BF", "FG", "GD", "DE"},
-          {{"/costing_options/" + profile + "/shortest", "1"}});
+  std::string costing = "motor_scooter";
+  doTests(costing, {"AB", "BF", "FG", "GD", "DE"},
+          {{"/costing_options/" + costing + "/shortest", "1"}});
 }
 
 TEST(AutoShorter, deprecation) {
