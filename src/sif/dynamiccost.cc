@@ -50,7 +50,7 @@ namespace sif {
 
 DynamicCost::DynamicCost(const CostingOptions& options, const TravelMode mode, uint32_t access_mask)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
-      access_mask_(access_mask), flow_mask_(kDefaultFlowMask),
+      access_mask_(access_mask), flow_mask_(kDefaultFlowMask), shortest_(options.shortest()),
       ignore_restrictions_(options.ignore_restrictions()), ignore_oneways_(options.ignore_oneways()),
       ignore_access_(options.ignore_access()), ignore_closures_(options.ignore_closures()) {
   // Parse property tree to get hierarchy limits
@@ -223,6 +223,7 @@ void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_c
   if (name) {
     pbf_costing_options->set_name(*name);
   }
+  pbf_costing_options->set_shortest(rapidjson::get<bool>(value, "/shortest", false));
 }
 
 void ParseCostingOptions(const rapidjson::Document& doc,
@@ -233,6 +234,11 @@ void ParseCostingOptions(const rapidjson::Document& doc,
     Costing costing = static_cast<Costing>(i);
     // Create the costing string
     const auto& costing_str = valhalla::Costing_Enum_Name(costing);
+    // Deprecated costings still need their place in the array
+    if (costing_str.empty()) {
+      options.add_costing_options();
+      continue;
+    }
     // Create the costing options key
     const auto key = costing_options_key + "/" + costing_str;
     // Parse the costing options
@@ -265,10 +271,6 @@ void ParseCostingOptions(const rapidjson::Document& doc,
   switch (costing) {
     case auto_: {
       sif::ParseAutoCostOptions(doc, key, costing_options);
-      break;
-    }
-    case auto_shorter: {
-      sif::ParseAutoShorterCostOptions(doc, key, costing_options);
       break;
     }
     case bicycle: {
@@ -313,10 +315,6 @@ void ParseCostingOptions(const rapidjson::Document& doc,
     }
     case motorcycle: {
       sif::ParseMotorcycleCostOptions(doc, key, costing_options);
-      break;
-    }
-    case auto_data_fix: {
-      sif::ParseAutoDataFixCostOptions(doc, key, costing_options);
       break;
     }
     case none_: {
