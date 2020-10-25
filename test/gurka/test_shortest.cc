@@ -9,33 +9,30 @@ protected:
   static gurka::map shortest_map;
 
   static void SetUpTestSuite() {
-    constexpr double gridsize = 2000;
+    constexpr double gridsize = 10;
 
     const std::string ascii_map = R"(
-          H-----I
-          |     | 
-       A--B--C--D--E
-          |     |
-          F-----G
+          H-------------I
+          |             |
+          |             |
+          |             |
+       A--B-------------D--E
+          |             |
+          |             |
+          |             |
+          F-------------G
     )";
 
     const gurka::ways ways = {
         // segments expected for shortest routes for all costings
-        {"AB",
+        {"ABDE",
          {{"highway", "residential"},
           {"maxspeed", "20"},    // slows down car/truck/motorbike/scooter
           {"surface", "dirt"}}}, // slows down bike/scooter
-        {"BC", {{"highway", "residential"}, {"maxspeed", "20"}, {"surface", "dirt"}}},
-        {"CD", {{"highway", "residential"}, {"maxspeed", "20"}, {"surface", "dirt"}}},
-        {"DE", {{"highway", "residential"}, {"maxspeed", "20"}, {"surface", "dirt"}}},
         // segments expected for fastest routes for motor_vehicles
-        {"BF", {{"highway", "tertiary"}, {"maxspeed", "100"}}},
-        {"FG", {{"highway", "tertiary"}, {"maxspeed", "100"}}},
-        {"GD", {{"highway", "tertiary"}, {"maxspeed", "100"}}},
+        {"BFGD", {{"highway", "tertiary"}, {"maxspeed", "100"}}},
         // segments expected for fastest routes for ped/bikes
-        {"BH", {{"highway", "path"}, {"foot", "yes"}, {"sidewalk", "right"}, {"surface", "paved"}}},
-        {"HI", {{"highway", "path"}, {"foot", "yes"}, {"sidewalk", "right"}, {"surface", "paved"}}},
-        {"ID", {{"highway", "path"}, {"foot", "yes"}, {"sidewalk", "right"}, {"surface", "paved"}}},
+        {"BHID", {{"highway", "path"}, {"foot", "yes"}, {"sidewalk", "right"}, {"surface", "paved"}}},
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
@@ -60,7 +57,7 @@ protected:
     std::cout << "Lenghts: " << fastest_l << ", " << shortest_l << EOF;
 
     gurka::assert::raw::expect_path(fastest, fastest_path);
-    gurka::assert::raw::expect_path(shortest, {"AB", "BC", "CD", "DE"});
+    gurka::assert::raw::expect_path(shortest, {"ABDE", "ABDE", "ABDE"});
     ASSERT_GT(fastest_l, shortest_l);
   }
 };
@@ -69,39 +66,33 @@ gurka::map ShortestTest::shortest_map = {};
 
 TEST_F(ShortestTest, AutoShortest) {
   std::string costing = "auto";
-  doTests(costing, {"AB", "BF", "FG", "GD", "DE"},
-          {{"/costing_options/" + costing + "/shortest", "1"}});
+  doTests(costing, {"ABDE", "BFGD", "ABDE"}, {{"/costing_options/" + costing + "/shortest", "1"}});
 }
 
 TEST_F(ShortestTest, TruckShortest) {
   std::string costing = "truck";
-  doTests(costing, {"AB", "BF", "FG", "GD", "DE"},
-          {{"/costing_options/" + costing + "/shortest", "1"}});
+  doTests(costing, {"ABDE", "BFGD", "ABDE"}, {{"/costing_options/" + costing + "/shortest", "1"}});
 }
 
 TEST_F(ShortestTest, MotorbikeShortest) {
   std::string costing = "motorcycle";
-  doTests(costing, {"AB", "BF", "FG", "GD", "DE"},
-          {{"/costing_options/" + costing + "/shortest", "1"}});
+  doTests(costing, {"ABDE", "BFGD", "ABDE"}, {{"/costing_options/" + costing + "/shortest", "1"}});
 }
 
 TEST_F(ShortestTest, BikeShortest) {
   std::string costing = "bicycle";
-  doTests(costing, {"AB", "BH", "HI", "ID", "DE"},
-          {{"/costing_options/" + costing + "/shortest", "1"}});
+  doTests(costing, {"ABDE", "BHID", "ABDE"}, {{"/costing_options/" + costing + "/shortest", "1"}});
 }
 
 TEST_F(ShortestTest, PedestrianShortest) {
   std::string costing = "pedestrian";
-  doTests(costing, {"AB", "BH", "HI", "ID", "DE"},
-          {{"/costing_options/" + costing + "/shortest", "1"}},
+  doTests(costing, {"ABDE", "BHID", "ABDE"}, {{"/costing_options/" + costing + "/shortest", "1"}},
           {{"/costing_options/" + costing + "/sidewalk_factor", "0.1"}}); // speed up "fastest edges"
 }
 
 TEST_F(ShortestTest, ScooterShortest) {
   std::string costing = "motor_scooter";
-  doTests(costing, {"AB", "BF", "FG", "GD", "DE"},
-          {{"/costing_options/" + costing + "/shortest", "1"}});
+  doTests(costing, {"ABDE", "BFGD", "ABDE"}, {{"/costing_options/" + costing + "/shortest", "1"}});
 }
 
 TEST(AutoShorter, deprecation) {
