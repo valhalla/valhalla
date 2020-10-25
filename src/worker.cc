@@ -774,27 +774,27 @@ void from_json(rapidjson::Document& doc, Options& options) {
   // shortest=true costing option. maybe remove in v4?
   if (costing_str == "auto_shorter") {
     costing_str = "auto";
-    rapidjson::Pointer("/costing").Set(doc, "auto");
+    rapidjson::SetValueByPointer(doc, "/costing", "auto");
     auto json_options = rapidjson::GetValueByPointer(doc, "/costing_options/auto_shorter");
     if (json_options) {
       rapidjson::SetValueByPointer(doc, "/costing_options/auto", *json_options);
     }
-    rapidjson::Pointer("/costing_options/auto/shortest").Set(doc, true);
+    rapidjson::SetValueByPointer(doc, "/costing_options/auto/shortest", true);
   }
 
   // auto_data_fix is deprecated and will be turned into
   // ignore all the things costing option. maybe remove in v4?
   if (costing_str == "auto_data_fix") {
     costing_str = "auto";
-    rapidjson::Pointer("/costing").Set(doc, "auto");
+    rapidjson::SetValueByPointer(doc, "/costing", "auto");
     auto json_options = rapidjson::GetValueByPointer(doc, "/costing_options/auto_data_fix");
     if (json_options) {
       rapidjson::SetValueByPointer(doc, "/costing_options/auto", *json_options);
     }
-    rapidjson::Pointer("/costing_options/auto/ignore_restrictions").Set(doc, true);
-    rapidjson::Pointer("/costing_options/auto/ignore_oneways").Set(doc, true);
-    rapidjson::Pointer("/costing_options/auto/ignore_access").Set(doc, true);
-    rapidjson::Pointer("/costing_options/auto/ignore_closures").Set(doc, true);
+    rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_restrictions", true);
+    rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_oneways", true);
+    rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_access", true);
+    rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_closures", true);
   }
 
   // try the string directly, some strings are keywords so add an underscore
