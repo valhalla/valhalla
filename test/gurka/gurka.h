@@ -177,8 +177,17 @@ std::vector<midgard::PointLL> to_lls(const nodelayout& nodes,
   return lls;
 }
 
+/**
+ * build a valhalla json request body
+ *
+ * @param location_type  locations or shape
+ * @param waypoints      sequence of pointlls representing the locations
+ * @param costing        which costing name to use, defaults to auto
+ * @param options        overrides parts of the request, supports rapidjson pointer semantics
+ * @param stop_type      break, through, via, break_through
+ * @return json string
+ */
 std::string build_valhalla_request(const std::string& location_type,
-                                   const map&,
                                    const std::vector<midgard::PointLL>& waypoints,
                                    const std::string& costing = "auto",
                                    const std::unordered_map<std::string, std::string>& options = {},
@@ -218,6 +227,7 @@ std::string build_valhalla_request(const std::string& location_type,
   co.AddMember("speed_types", speed_types, allocator);
   costing_options.AddMember(rapidjson::Value(costing, allocator), co, allocator);
   doc.AddMember("costing_options", costing_options, allocator);
+  doc.AddMember("verbose", true, allocator);
 
   // we do this last so that options are additive/overwrite
   for (const auto& kv : options) {
@@ -322,7 +332,12 @@ nodelayout map_to_coordinates(const std::string& map,
         // Always project west, then south, for consistency
         double lon = topleft.lng() + x2lon_m(x * gridsize_metres);
         double lat = topleft.lat() - y2lat_m(y * gridsize_metres);
-        result.insert({std::string(1, ch), {lon, lat}});
+        auto inserted = result.insert({std::string(1, ch), {lon, lat}});
+        // TODO: Change the type to char instead of std::string so that its obvious
+        if (!inserted.second) {
+          throw std::logic_error(
+              "Duplicate node name in ascii map, only single char names are supported");
+        }
       }
     }
   }
@@ -512,8 +527,8 @@ inline void build_pbf(const nodelayout& node_locations,
  * @param relations OSM relations that related nodes and ways together
  * @param workdir where to build the PBF and the tiles
  * @param config_options optional key value pairs where the key is ptree style dom traversal and
- *        the value is the value to put into the config. You can do things like
- *        add timezones database path
+ *        the value is the value to put into the config. You can do things like add timezones database
+ *        path
  * @return a map object that contains the Valhalla config (to pass to GraphReader) and node layout
  *         (for converting node names to coordinates)
  */
@@ -522,7 +537,8 @@ map buildtiles(const nodelayout layout,
                const nodes& nodes,
                const relations& relations,
                const std::string& workdir,
-               const std::unordered_map<std::string, std::string>& config_options = {}) {
+               const std::unordered_map<std::string, std::string>& config_options = {
+                   {"mjolnir.concurrency", "1"}}) {
 
   map result;
   result.config = detail::build_config(workdir, config_options);
@@ -683,7 +699,7 @@ valhalla::Api route(const map& map,
   };
   std::cerr << " with costing " << costing << std::endl;
   auto lls = detail::to_lls(map.nodes, waypoints);
-  auto request_json = detail::build_valhalla_request("locations", map, lls, costing, options);
+  auto request_json = detail::build_valhalla_request("locations", lls, costing, options);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   return route(map, request_json, reader);
@@ -720,12 +736,46 @@ valhalla::Api match(const map& map,
   };
   std::cerr << " with costing " << costing << std::endl;
   auto lls = detail::to_lls(map.nodes, waypoints);
-  auto request_json = detail::build_valhalla_request("shape", map, lls, costing, options, stop_type);
+  auto request_json = detail::build_valhalla_request("shape", lls, costing, options, stop_type);
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   valhalla::tyr::actor_t actor(map.config, *reader, true);
   valhalla::Api api;
   actor.trace_route(request_json, nullptr, &api);
+  return api;
+}
+
+valhalla::Api locate(const map& map,
+                     const std::vector<std::string>& waypoints,
+                     const std::string& costing,
+                     const std::unordered_map<std::string, std::string>& options = {},
+                     std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
+                     std::string* json = nullptr) {
+  if (!reader)
+    reader.reset(new valhalla::baldr::GraphReader(map.config.get_child("mjolnir")));
+  else
+    std::cerr << "[          ] Using pre-allocated baldr::GraphReader" << std::endl;
+
+  std::cerr << "[          ] Locate with mjolnir.tile_dir = "
+            << map.config.get<std::string>("mjolnir.tile_dir") << " with locations ";
+  bool first = true;
+  for (const auto& waypoint : waypoints) {
+    if (!first)
+      std::cerr << ",";
+    std::cerr << waypoint;
+    first = false;
+  };
+  std::cerr << " with costing " << costing << std::endl;
+  auto lls = detail::to_lls(map.nodes, waypoints);
+  auto request_json = detail::build_valhalla_request("locations", lls, costing, options);
+  std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
+
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+  valhalla::Api api;
+  auto json_str = actor.locate(request_json, nullptr, &api);
+  if (json) {
+    *json = json_str;
+  }
   return api;
 }
 
