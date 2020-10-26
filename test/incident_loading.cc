@@ -297,18 +297,19 @@ TEST_F(incident_loading, watch) {
   }
 }
 
-TEST_F(incident_loading, constructor) {
+// both of the tests in there are racing between main and background threads.
+// to really test the constructor we need to separate out its tiny functionality
+TEST_F(incident_loading, DISABLED_ constructor) {
   // this should not throw it should just exit due to (mis)configuration
   boost::property_tree::ptree config;
   config.put("incident_dir", "bibbity.bobbity.boo");
   config.put("incident_max_loading_latency", 1);
   ASSERT_NO_THROW(interrupting_singleton(config, {}));
 
-  // this should throw because the wait time is 0 and in practice it does but technically its racing
-  // the background threads call to cv.notify_one, because of this the test could randomly fail
-  /*config.put("incident_dir", scratch_dir);
+  // this should throw because the wait time is 0
+  config.put("incident_dir", scratch_dir);
   config.put("incident_max_loading_latency", 0);
-  ASSERT_THROW(interrupting_singleton(config, {}), std::runtime_error);*/
+  ASSERT_THROW(interrupting_singleton(config, {}), std::runtime_error);
 }
 
 TEST_F(incident_loading, get) {
