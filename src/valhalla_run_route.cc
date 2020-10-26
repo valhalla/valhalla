@@ -524,7 +524,7 @@ int main(int argc, char* argv[]) {
       "\n"
       "\n");
 
-  std::string json, config;
+  std::string json, json_file, config;
   bool multi_run = false;
   bool match_test = false;
   bool verbose_lanes = false;
@@ -541,7 +541,8 @@ int main(int argc, char* argv[]) {
       "Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New "
       "York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":"
       "\"auto\",\"directions_options\":{\"units\":\"miles\"}}'")(
-      "match-test", "Test RouteMatcher with resulting shape.")(
+      "json-file", boost::program_options::value<std::string>(&json_file),
+      "file containing the json query")("match-test", "Test RouteMatcher with resulting shape.")(
       "multi-run", bpo::value<uint32_t>(&iterations),
       "Generate the route N additional times before exiting.")(
       "verbose-lanes", bpo::bool_switch(&verbose_lanes),
@@ -579,6 +580,14 @@ int main(int argc, char* argv[]) {
 
   if (vm.count("multi-run")) {
     multi_run = true;
+  }
+
+  if (vm.count("json-file")) {
+    if (vm.count("json")) {
+      LOG_WARN("json and json-file option are set, using json-file content");
+    }
+    std::ifstream ifs(json_file);
+    json.assign((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
   }
 
   // Grab the directions options, if they exist
