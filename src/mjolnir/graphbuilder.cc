@@ -38,8 +38,7 @@ namespace {
  * we also need to then update the edges that pointed to them
  *
  */
-std::map<GraphId, size_t>
-SortGraph(const std::string& nodes_file, const std::string& edges_file, const uint8_t level) {
+std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::string& edges_file) {
   LOG_INFO("Sorting graph...");
 
   // Sort nodes by graphid then by osmid, so its basically a set of tiles
@@ -104,12 +103,10 @@ SortGraph(const std::string& nodes_file, const std::string& edges_file, const ui
 }
 
 // Construct edges in the graph and assign nodes to tiles.
-void ConstructEdges(const OSMData& osmdata,
-                    const std::string& ways_file,
+void ConstructEdges(const std::string& ways_file,
                     const std::string& way_nodes_file,
                     const std::string& nodes_file,
                     const std::string& edges_file,
-                    const float tilesize,
                     const std::function<GraphId(const OSMNode&)>& graph_id_predicate,
                     bool infer_turn_channels) {
   LOG_INFO("Creating graph edges from ways...");
@@ -251,8 +248,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
                                      sequence<Node>& nodes,
                                      sequence<Edge>& edges,
                                      const OSMData& osmdata,
-                                     sequence<OSMWay>& ways,
-                                     DataQuality& stats) {
+                                     sequence<OSMWay>& ways) {
 
   auto res = osmdata.restrictions.equal_range(wayid);
   if (res.first == osmdata.restrictions.end()) {
@@ -515,7 +511,6 @@ void BuildTileSet(const std::string& ways_file,
         // Build directed edges. Track the best classification/importance
         // of outbound edges from this node.
         uint32_t n = 0;
-        RoadClass bestclass = RoadClass::kServiceOther;
         for (const auto& edge_pair : bundle.node_edges) {
           // Get the edge and way
           const Edge& edge = edge_pair.first;
@@ -566,7 +561,7 @@ void BuildTileSet(const std::string& ways_file,
           // Handle simple turn restrictions that originate from this
           // directed edge
           uint32_t restrictions =
-              CreateSimpleTurnRestriction(w.way_id(), target, nodes, edges, osmdata, ways, stats);
+              CreateSimpleTurnRestriction(w.way_id(), target, nodes, edges, osmdata, ways);
           if (restrictions != 0) {
             stats.simplerestrictions++;
           }
@@ -736,9 +731,6 @@ void BuildTileSet(const std::string& ways_file,
           if (!infer_internal_intersections && w.internal()) {
             directededge.set_internal(true);
           }
-
-          // Update the node's best class
-          bestclass = std::min(bestclass, directededge.classification());
 
           // TODO - update logic so we limit the CreateSignInfoList calls
           // Any exits for this directed edge? is auto and oneway?
@@ -957,7 +949,7 @@ void BuildTileSet(const std::string& ways_file,
         // Set the node lat,lng, index of the first outbound edge, and the
         // directed edge count from this edge and the best road class
         // from the node. Increment directed edge count.
-        graphtile.nodes().emplace_back(base_ll, node_ll, bestclass, node.access(), node.type(),
+        graphtile.nodes().emplace_back(base_ll, node_ll, node.access(), node.type(),
                                        node.traffic_signal());
         graphtile.nodes().back().set_edge_index(graphtile.directededges().size() -
                                                 bundle.node_edges.size());
@@ -1109,7 +1101,6 @@ namespace valhalla {
 namespace mjolnir {
 
 std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::ptree& pt,
-                                                   const OSMData& osmdata,
                                                    const std::string& ways_file,
                                                    const std::string& way_nodes_file,
                                                    const std::string& nodes_file,
@@ -1117,13 +1108,12 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
   const auto& tl = TileHierarchy::levels().rbegin();
   uint8_t level = tl->second.level;
   // Make the edges and nodes in the graph
-  ConstructEdges(osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                 tl->second.tiles.TileSize(),
+  ConstructEdges(ways_file, way_nodes_file, nodes_file, edges_file,
                  [&level](const OSMNode& node) {
                    return TileHierarchy::GetGraphId({node.lng_, node.lat_}, level);
                  },
                  pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
-  return SortGraph(nodes_file, edges_file, level);
+  return SortGraph(nodes_file, edges_file);
 }
 
 // Build the graph from the input

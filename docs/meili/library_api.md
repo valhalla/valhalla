@@ -53,7 +53,7 @@ To create a `MapMatcher` object of a specific transport mode:
 ```C++
 // Possibly throw std::invalid_argument if invalid parameters are
 // found in this mode's configuration
-meili::MapMather*
+meili::MapMatcher*
 meili::MapMatcherFactory::Create(const std::string& mode_name);
 ```
 

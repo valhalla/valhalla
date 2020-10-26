@@ -132,7 +132,7 @@ public:
    * limits).
    * @return  Returns true if the costing model allows multiple passes.
    */
-  virtual bool AllowMultiPass() const {
+  virtual bool AllowMultiPass() const override {
     return true;
   }
 
@@ -157,7 +157,7 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       int& restriction_idx) const;
+                       int& restriction_idx) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -184,7 +184,7 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              int& restriction_idx) const;
+                              int& restriction_idx) const override;
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -193,9 +193,9 @@ public:
    * @param curr_time
    * @return
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::TransitDeparture* departure,
-                        const uint32_t curr_time) const {
+  virtual Cost EdgeCost(const baldr::DirectedEdge*,
+                        const baldr::TransitDeparture*,
+                        const uint32_t) const override {
     throw std::runtime_error("MotorcycleCost::EdgeCost does not support transit edges");
   }
 
@@ -209,7 +209,7 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::GraphTile* tile,
-                        const uint32_t seconds) const;
+                        const uint32_t seconds) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -250,7 +250,7 @@ public:
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
    */
-  virtual float AStarCostFactor() const {
+  virtual float AStarCostFactor() const override {
     return speedfactor_[kMaxAssumedSpeed];
   }
 
@@ -258,7 +258,7 @@ public:
    * Get the current travel type.
    * @return  Returns the current travel type.
    */
-  virtual uint8_t travel_type() const {
+  virtual uint8_t travel_type() const override {
     return static_cast<uint8_t>(VehicleType::kMotorcycle);
   }
 
@@ -413,12 +413,16 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                               const baldr::GraphTile* tile,
                               const uint32_t seconds) const {
   auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
+  assert(speed < speedfactor_.size());
+  float sec = (edge->length() * speedfactor_[speed]);
+
+  if (shortest_) {
+    return Cost(edge->length(), sec);
+  }
 
   // Special case for travel on a ferry
   if (edge->use() == Use::kFerry) {
     // Use the edge speed (should be the speed of the ferry)
-    assert(edge->speed() < speedfactor_.size());
-    float sec = (edge->length() * speedfactor_[edge->speed()]);
     return {sec * ferry_factor_, sec};
   }
 
@@ -429,8 +433,6 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor += toll_factor_;
   }
 
-  assert(speed < speedfactor_.size());
-  float sec = (edge->length() * speedfactor_[speed]);
   return {sec * factor, sec};
 }
 
@@ -438,7 +440,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
                                     const baldr::NodeInfo* node,
                                     const EdgeLabel& pred,
-                                    const bool has_traffic) const {
+                                    const bool) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
@@ -470,7 +472,7 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-    c.cost += seconds;
+    c.cost += shortest_ ? 0.f : seconds;
     c.secs += seconds;
   }
   return c;
@@ -484,7 +486,7 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
                                            const baldr::NodeInfo* node,
                                            const baldr::DirectedEdge* pred,
                                            const baldr::DirectedEdge* edge,
-                                           const bool has_traffic) const {
+                                           const bool) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
@@ -515,7 +517,7 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-    c.cost += seconds;
+    c.cost += shortest_ ? 0.f : seconds;
     c.secs += seconds;
   }
   return c;

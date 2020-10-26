@@ -812,6 +812,10 @@ std::string EnhancedTripLeg_Edge::ToString() const {
 std::string EnhancedTripLeg_Edge::TurnLanesToString() const {
   std::string str;
 
+  if (turn_lanes_size() == 0) {
+    return str;
+  }
+
   for (const auto& turn_lane : turn_lanes()) {
     if (str.empty()) {
       str = "[ ";
@@ -1311,7 +1315,7 @@ bool EnhancedTripLeg_Node::HasIntersectingEdgeCurrNameConsistency() const {
   return false;
 }
 
-bool EnhancedTripLeg_Node::HasNonBackwardTraversableSameNameIntersectingEdge(
+bool EnhancedTripLeg_Node::HasNonBackwardTraversableSameNameRampIntersectingEdge(
     uint32_t from_heading,
     const TripLeg_TravelMode travel_mode) {
   // Loop over the route path intersecting edges
@@ -1320,7 +1324,7 @@ bool EnhancedTripLeg_Node::HasNonBackwardTraversableSameNameIntersectingEdge(
     // Check if the intersecting edges have the same names as the path edges
     // and if the intersecting edge is traversable based on the route path travel mode
     if ((xedge->prev_name_consistency() || xedge->curr_name_consistency()) &&
-        xedge->IsTraversable(travel_mode)) {
+        xedge->IsTraversable(travel_mode) && (xedge->use() == TripLeg_Use_kRampUse)) {
       // Calculate the intersecting edge turn degree to make sure it is not in the opposing direction
       uint32_t intersecting_turn_degree = GetTurnDegree(from_heading, xedge->begin_heading());
       bool non_backward = !((intersecting_turn_degree > kBackwardTurnDegreeLowerBound) &&
