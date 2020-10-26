@@ -309,8 +309,8 @@ uint32_t ConnectEdges(GraphReader& reader,
   auto const nodeinfo = tile->node(startnode);
   auto const turn_duration = OSRMCarTurnDuration(directededge, nodeinfo, opp_local_idx);
   total_duration += turn_duration;
-  auto const speed = directededge->speed();
-  // TODO: check speed for zero
+  auto const speed = tile->GetSpeed(directededge, kNoFlowMask);
+  assert(speed != 0);
   auto const edge_duration = directededge->length() / (speed * kKPHtoMetersPerSec);
   total_duration += edge_duration;
 
@@ -318,7 +318,7 @@ uint32_t ConnectEdges(GraphReader& reader,
   // Currently use the same as for cars. TODO: implement for trucks
   total_truck_duration += turn_duration;
   auto const truck_speed = tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true);
-  // TODO: check speed for zero
+  assert(truck_speed != 0);
   auto const edge_duration_truck = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
   total_truck_duration += edge_duration_truck;
 
@@ -404,10 +404,12 @@ uint32_t AddShortcutEdges(GraphReader& reader,
 
       // For computing weighted density and total turn duration along the shortcut
       float average_density = length * newedge.density();
-      uint32_t const speed = directededge->speed();
+      uint32_t const speed = tile->GetSpeed(directededge, kNoFlowMask);
+      assert(speed != 0);
       float total_duration = length / (speed * kKPHtoMetersPerSec);
-      auto const truck_speed = tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true);
-      // TODO: check speed for zero
+      uint32_t const truck_speed =
+          tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true);
+      assert(truck_speed != 0);
       float total_truck_duration = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
 
       // Get the shape for this edge. If this initial directed edge is not
@@ -536,17 +538,14 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       newedge.set_density(average_density / (static_cast<float>(length)));
 
       // Update speed to the one that takes turn durations into account
-      uint32_t new_speed = directededge->speed();
-      if (total_duration > 0) {
-        new_speed = static_cast<uint32_t>(std::round(length / total_duration * kMetersPerSectoKPH));
-      }
+      assert(total_duration > 0);
+      uint32_t new_speed =
+          static_cast<uint32_t>(std::round(length / total_duration * kMetersPerSectoKPH));
       newedge.set_speed(new_speed);
 
-      uint32_t new_truck_speed = directededge->truck_speed();
-      if (total_truck_duration > 0) {
-        new_truck_speed =
-            static_cast<uint32_t>(std::round(length / total_truck_duration * kMetersPerSectoKPH));
-      }
+      assert(total_truck_duration > 0);
+      uint32_t new_truck_speed =
+          static_cast<uint32_t>(std::round(length / total_truck_duration * kMetersPerSectoKPH));
       newedge.set_truck_speed(new_truck_speed);
 
       // Add shortcut edge. Add to the shortcut map (associates the base edge
