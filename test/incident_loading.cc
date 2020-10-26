@@ -299,7 +299,7 @@ TEST_F(incident_loading, watch) {
 
 // both of the tests in there are racing between main and background threads.
 // to really test the constructor we need to separate out its tiny functionality
-TEST_F(incident_loading, DISABLED_ constructor) {
+TEST_F(incident_loading, DISABLED_constructor) {
   // this should not throw it should just exit due to (mis)configuration
   boost::property_tree::ptree config;
   config.put("incident_dir", "bibbity.bobbity.boo");
