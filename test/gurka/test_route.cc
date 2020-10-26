@@ -94,20 +94,6 @@ TEST_F(IgnoreAccessTest, AutoIgnoreOneWay) {
       gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
 }
 
-TEST_F(IgnoreAccessTest, AutoDataFixIgnoreOneWay) {
-  const std::string cost = "auto_data_fix";
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
-}
-
-TEST_F(IgnoreAccessTest, AutoShorterIgnoreOneWay) {
-  const std::string cost = "auto_shorter";
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
-}
-
 TEST_F(IgnoreAccessTest, BusIgnoreOneWay) {
   const std::string cost = "bus";
   EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
@@ -162,22 +148,6 @@ TEST_F(IgnoreAccessTest, BicycleIgnoreAccess) {
 
 TEST_F(IgnoreAccessTest, AutoIgnoreAccess) {
   const std::string cost = "auto";
-  // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "B", "D"}, cost, {{IgnoreAccessParam(cost), "1"}}));
-}
-
-TEST_F(IgnoreAccessTest, AutoDataFixIgnoreAccess) {
-  const std::string cost = "auto_data_fix";
-  // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "B", "D"}, cost, {{IgnoreAccessParam(cost), "1"}}));
-}
-
-TEST_F(IgnoreAccessTest, AutoShorterIgnoreAccess) {
-  const std::string cost = "auto_shorter";
   // ignore edges and nodes access restriction
   EXPECT_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost), std::runtime_error);
   EXPECT_NO_THROW(
@@ -240,6 +210,23 @@ TEST_F(IgnoreAccessTest, PedestrianIgnoreAccess) {
       gurka::route(ignore_access_map, {"A", "F", "D", "B"}, cost, {{IgnoreAccessParam(cost), "1"}}));
 }
 
+TEST(AutoDataFix, deprecation) {
+  // if both auto & auto_shorter costing options were provided, auto costing should be overridden
+  Api request;
+  std::string request_str =
+      R"({"locations":[{"lat":52.114622,"lon":5.131816},{"lat":52.048267,"lon":5.074825}],"costing":"auto_data_fix",)"
+      R"("costing_options":{"auto":{"use_ferry":0.8}, "auto_data_fix":{"use_ferry":0.1, "use_tolls": 0.77}}})";
+  ParseApi(request_str, Options::route, request);
+
+  ASSERT_EQ(request.options().costing(), valhalla::auto_);
+  ASSERT_EQ(request.options().costing_options(valhalla::auto_).ignore_access(), true);
+  ASSERT_EQ(request.options().costing_options(valhalla::auto_).ignore_closures(), true);
+  ASSERT_EQ(request.options().costing_options(valhalla::auto_).ignore_oneways(), true);
+  ASSERT_EQ(request.options().costing_options(valhalla::auto_).ignore_restrictions(), true);
+  ASSERT_EQ(request.options().costing_options(valhalla::auto_).use_ferry(), 0.1f);
+  ASSERT_EQ(request.options().costing_options(valhalla::auto_).use_tolls(), 0.77f);
+}
+
 /*************************************************************/
 class AlgorithmTest : public ::testing::Test {
 protected:
@@ -283,6 +270,7 @@ protected:
 gurka::map AlgorithmTest::map = {};
 
 TEST_F(AlgorithmTest, Astar) {
+
 }
 
 TEST_F(AlgorithmTest, TDForward) {
@@ -292,4 +280,5 @@ TEST_F(AlgorithmTest, TDReverse) {
 }
 
 TEST_F(AlgorithmTest, Bidir) {
+
 }
