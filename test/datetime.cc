@@ -350,20 +350,6 @@ TEST(DateTime, TestDST) {
   TryTestDST(1478417468, 1478419500, "2016-11-06T02:31-05:00", "2016-11-06T03:05-05:00");
 }
 
-TEST(DateTime, TestAmbiguousDST) {
-  // BST and GMT ambiguity near day light savings time
-  size_t tz_idx = DateTime::get_tz_db().to_index("Europe/London");
-  const date::time_zone* tz = DateTime::get_tz_db().from_index(tz_idx);
-
-  // parse this into local epoch seconds
-  date::local_seconds parsed_date;
-  EXPECT_NO_THROW(parsed_date = DateTime::get_formatted_date("2020-10-25T01:57", true));
-
-  // account for the timezone where we have the local time in epoch seconds
-  EXPECT_NO_THROW(date::make_zoned(tz, parsed_date, date::choose::latest))
-      << " could not apply timezone to local time";
-}
-
 TEST(DateTime, TestIsRestricted) {
 
   TimeDomain td = TimeDomain(23622321788); // Mo-Fr 06:00-11:00
