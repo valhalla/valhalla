@@ -357,10 +357,11 @@ TEST(DateTime, TestAmbiguousDST) {
 
   // parse this into local epoch seconds
   date::local_seconds parsed_date;
-  ASSERT_NO_THROW(parsed_date = DateTime::get_formatted_date("2020-10-25T01:57", true));
+  EXPECT_NO_THROW(parsed_date = DateTime::get_formatted_date("2020-10-25T01:57", true));
 
   // account for the timezone where we have the local time in epoch seconds
-  ASSERT_NO_THROW(date::make_zoned(tz, parsed_date));
+  EXPECT_NO_THROW(date::make_zoned(tz, parsed_date, date::choose::latest))
+      << " could not apply timezone to local time";
 }
 
 TEST(DateTime, TestIsRestricted) {
