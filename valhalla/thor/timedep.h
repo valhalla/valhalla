@@ -49,7 +49,7 @@ public:
    * @return the name of the algorithm
    */
   virtual std::string name() const {
-    return "time_dependent_forward";
+    return "time_dependent_forward_a*";
   }
 
 protected:
@@ -132,7 +132,7 @@ public:
    * @return the name of the algorithm
    */
   virtual std::string name() const {
-    return "time_dependent_reverse";
+    return "time_dependent_reverse_a*";
   }
 
   /**

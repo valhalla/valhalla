@@ -238,11 +238,23 @@ protected:
     const std::string ascii_map = R"(
       b----1----c----2----d
       |         |         |
+      |         |         |
+      |         |         |
+      |         |         |
       3         4         5
+      |         |         |
+      |         |         |
+      |         |         |
       |         |         |
       a----6----f----7----e
       |         |         |
+      |         |         |
+      |         |         |
+      |         |         |
       8         9         0
+      |         |         |
+      |         |         |
+      |         |         |
       |         |         |
       g----A----h----B----i
     )";
@@ -269,16 +281,60 @@ protected:
 
 gurka::map AlgorithmTest::map = {};
 
+// this only happens if with trivial routes that have no date_time
 TEST_F(AlgorithmTest, Astar) {
-
+  {
+    auto api = gurka::route(map, {"3", "1"}, "auto");
+    ASSERT_EQ(api.trip().routes(0).legs(0).algorithms(0), "a*");
+  }
 }
 
+// this happens with depart_at routes trivial or not and trivial invariant routes
 TEST_F(AlgorithmTest, TDForward) {
+  {
+    auto api = gurka::route(map, {"0", "3"}, "auto",
+                            {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-29T09:00"}});
+    ASSERT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
+  }
+
+  {
+    auto api = gurka::route(map, {"8", "A"}, "auto",
+                            {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-29T09:00"}});
+    ASSERT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
+  }
+
+  {
+    auto api = gurka::route(map, {"2", "5"}, "auto",
+                            {{"/date_time/type", "3"}, {"/date_time/value", "2020-10-29T09:00"}});
+    ASSERT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
+  }
 }
 
+// this happens with arrive_by routes trivial or not
 TEST_F(AlgorithmTest, TDReverse) {
+  {
+    auto api = gurka::route(map, {"6", "B"}, "auto",
+                            {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-29T09:00"}});
+    ASSERT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_reverse_a*");
+  }
+
+  {
+    auto api = gurka::route(map, {"9", "7"}, "auto",
+                            {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-29T09:00"}});
+    ASSERT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_reverse_a*");
+  }
 }
 
+// this happens only with non-trivial routes with no date_time or invariant date_time
 TEST_F(AlgorithmTest, Bidir) {
+  {
+    auto api = gurka::route(map, {"4", "0"}, "auto");
+    ASSERT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+  }
 
+  {
+    auto api = gurka::route(map, {"A", "2"}, "auto",
+                            {{"/date_time/type", "4"}, {"/date_time/value", "2020-10-29T09:00"}});
+    ASSERT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+  }
 }
