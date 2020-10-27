@@ -134,7 +134,7 @@ struct TimeInfo {
       LOG_ERROR("Could not parse provided date_time: " + date_time);
       return {false, 0, 0, kConstrainedFlowSecondOfDay, 0, false, nullptr};
     }
-    const auto then_date = date::make_zoned(tz, parsed_date);
+    const auto then_date = date::make_zoned(tz, parsed_date, date::choose::latest);
     uint64_t local_time = date::to_utc_time(then_date.get_sys_time()).time_since_epoch().count();
 
     // What second of the week is this (for historical traffic lookup)
