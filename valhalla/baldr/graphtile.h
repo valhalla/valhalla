@@ -610,7 +610,7 @@ public:
     // Fallback further to specified or derived speed
     auto const speed = static_cast<uint32_t>(partial_live_speed * partial_live_pct +
                                              (1 - partial_live_pct) * de->speed());
-    return (de->truck_speed() > 0) ? std::min(de->truck_speed(), speed) : speed;
+    return (is_truck && (de->truck_speed() > 0)) ? std::min(de->truck_speed(), speed) : speed;
   }
 
   inline const volatile TrafficSpeed& trafficspeed(const DirectedEdge* de) const {

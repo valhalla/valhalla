@@ -121,6 +121,8 @@ TEST(Shortcuts, ShortcutSpeed) {
       auto shortcutid = tileid;
       shortcutid.set_id(j);
       shortcut_infos.push_back(std::make_tuple(shortcutid, edge->speed(), edge->truck_speed()));
+      // For current test case the values should be different
+      EXPECT_NE(edge->speed(), edge->truck_speed());
     }
   }
 
