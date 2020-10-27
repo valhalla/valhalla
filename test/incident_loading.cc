@@ -20,20 +20,24 @@ protected:
 };
 
 struct testable_singleton : public incident_singleton_t {
+  // make an incident singleton and inject a watch function that either passes or fails initialization
+  testable_singleton(const boost::property_tree::ptree& config, bool intialize)
+      : incident_singleton_t(config,
+                             {},
+                             [intialize](boost::property_tree::ptree,
+                                         std::unordered_set<valhalla::baldr::GraphId>,
+                                         std::shared_ptr<state_t> state,
+                                         std::function<bool(size_t)>) {
+                               state->initialized.store(intialize);
+                               state->signal.notify_one();
+                             }) {
+  }
+
+  // this stuff is all static and protected here we make it public so we can test it
   using incident_singleton_t::read_tile;
   using incident_singleton_t::state_t;
   using incident_singleton_t::update_tile;
   using incident_singleton_t::watch;
-};
-
-struct interrupting_singleton : public incident_singleton_t {
-  interrupting_singleton(const boost::property_tree::ptree& conf,
-                         const std::unordered_set<baldr::GraphId>& tileset)
-      : incident_singleton_t(conf, tileset) {
-  }
-  virtual std::function<bool(size_t)> interrupt() override {
-    return [](size_t) { return true; };
-  }
 };
 
 TEST_F(incident_loading, read_tile) {
@@ -297,19 +301,15 @@ TEST_F(incident_loading, watch) {
   }
 }
 
-// both of the tests in there are racing between main and background threads.
-// to really test the constructor we need to separate out its tiny functionality
-TEST_F(incident_loading, DISABLED_constructor) {
-  // this should not throw it should just exit due to (mis)configuration
+TEST_F(incident_loading, constructor) {
   boost::property_tree::ptree config;
-  config.put("incident_dir", "bibbity.bobbity.boo");
   config.put("incident_max_loading_latency", 1);
-  ASSERT_NO_THROW(interrupting_singleton(config, {}));
 
-  // this should throw because the wait time is 0
-  config.put("incident_dir", scratch_dir);
-  config.put("incident_max_loading_latency", 0);
-  ASSERT_THROW(interrupting_singleton(config, {}), std::runtime_error);
+  // this should not throw because the watcher function will say its initialized
+  ASSERT_NO_THROW(testable_singleton(config, true));
+
+  // this will throw because the watcher function will not initialize
+  ASSERT_THROW(testable_singleton(config, false), std::runtime_error);
 }
 
 TEST_F(incident_loading, get) {

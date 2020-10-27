@@ -422,8 +422,10 @@ public:
                              const DirectionsLeg_Maneuver_Type& curr_maneuver_type,
                              const DirectionsLeg_Maneuver_Type& next_maneuver_type);
   uint16_t ActivateTurnLanesFromLeft(uint16_t turn_lane_direction,
+                                     const DirectionsLeg_Maneuver_Type& curr_maneuver_type,
                                      uint16_t activated_max = std::numeric_limits<uint16_t>::max());
   uint16_t ActivateTurnLanesFromRight(uint16_t turn_lane_direction,
+                                      const DirectionsLeg_Maneuver_Type& curr_maneuver_type,
                                       uint16_t activated_max = std::numeric_limits<uint16_t>::max());
 
   std::string ToString() const;
