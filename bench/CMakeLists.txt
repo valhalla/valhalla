@@ -35,10 +35,6 @@ macro (add_valhalla_benchmark target_file)
   set_target_properties(run-${target_name} PROPERTIES FOLDER "Benchmarks")
   add_dependencies(run-${target_name} utrecht_tiles)
   add_dependencies(run-benchmarks run-${target_name})
-  target_include_directories(benchmark-${target_file} SYSTEM PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/microtar/src
-      ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
-      ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
 endmacro()
 
 add_subdirectory(meili)
