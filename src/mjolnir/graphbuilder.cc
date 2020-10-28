@@ -746,7 +746,7 @@ void BuildTileSet(const std::string& ways_file,
 
           // Add turn lanes if they exist.
           std::string turnlane_tags;
-          if (forward && w.fwd_turn_lanes_index() > 0) {
+          if (forward && w.fwd_turn_lanes_index() > 0 && edge.attributes.way_end) {
             turnlane_tags = osmdata.name_offset_map.name(w.fwd_turn_lanes_index());
             if (!turnlane_tags.empty()) {
               std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
@@ -755,7 +755,7 @@ void BuildTileSet(const std::string& ways_file,
                 graphtile.AddTurnLanes(idx, w.fwd_turn_lanes_index());
               }
             }
-          } else if (!forward && w.bwd_turn_lanes_index() > 0) {
+          } else if (!forward && w.bwd_turn_lanes_index() > 0 && edge.attributes.way_begin) {
             turnlane_tags = osmdata.name_offset_map.name(w.bwd_turn_lanes_index());
             if (!turnlane_tags.empty()) {
               std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
