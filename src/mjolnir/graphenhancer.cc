@@ -504,8 +504,6 @@ void UpdateTurnLanes(const OSMData& osmdata,
     if (bUpdated)
       str = TurnLanes::GetTurnLaneString(TurnLanes::turnlane_string(enhanced_tls));
 
-    std::cout << str << std::endl;
-
     uint32_t offset = tilebuilder.AddName(str);
     turn_lanes.emplace_back(idx, offset);
   }
