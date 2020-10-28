@@ -247,13 +247,11 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
 
   // Have to use multimodal for transit based routing
   if (routetype == "multimodal" || routetype == "transit") {
-    valhalla::midgard::logging::Log("algorithm::multimodal ", " [ANALYTICS] ");
     return &multi_modal_astar;
   }
 
   // Have to use bike share station algorithm
   if (routetype == "bikeshare") {
-    valhalla::midgard::logging::Log("algorithm::astar_bss ", " [ANALYTICS] ");
     return &bss_astar;
   }
 
@@ -263,7 +261,6 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
-      valhalla::midgard::logging::Log("algorithm::timedep_forward ", " [ANALYTICS] ");
       return &timedep_forward;
     }
   }
@@ -274,7 +271,6 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
-      valhalla::midgard::logging::Log("algorithm::timedep_reverse ", " [ANALYTICS] ");
       return &timedep_reverse;
     }
   }
@@ -291,19 +287,16 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
         // We need time dependence so we use timedep_foward when its trivial (should be short so not a
         // real issue that its not invariant)
         if (options.has_date_time_type() && options.date_time_type() == Options::invariant) {
-          valhalla::midgard::logging::Log("algorithm::timedep_forward ", " [ANALYTICS] ");
           return &timedep_forward;
         }
 
         // Otherwise we can use regular astar
-        valhalla::midgard::logging::Log("algorithm::astar ", " [ANALYTICS] ");
         return &astar;
       }
     }
   }
 
   // No other special cases we land on bidirectional a*
-  valhalla::midgard::logging::Log("algorithm::bidirastar ", " [ANALYTICS] ");
   return &bidir_astar;
 }
 
@@ -381,6 +374,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         get_path_algorithm(costing, *origin, *destination, api.options());
     path_algorithm->Clear();
     algorithms.push_back(path_algorithm->name());
+    valhalla::midgard::logging::Log(path_algorithm->name(), " [ANALYTICS] algorithm::");
 
     // TODO: delete this and send all cases to the function above
     // If we are continuing through a location we need to make sure we
@@ -484,6 +478,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         get_path_algorithm(costing, *origin, *destination, api.options());
     path_algorithm->Clear();
     algorithms.push_back(path_algorithm->name());
+    valhalla::midgard::logging::Log(path_algorithm->name(), " [ANALYTICS] algorithm::");
 
     // TODO: delete this and send all cases to the function above
     // If we are continuing through a location we need to make sure we

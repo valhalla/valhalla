@@ -161,28 +161,28 @@ void PopulateManeuver(Maneuver& maneuver,
   maneuver.set_drive_on_right(drive_on_right);
 
   // exit_numbers
-  std::vector<Sign>* exit_number_list = maneuver.mutable_signs()->mutable_exit_number_list();
+  auto* exit_number_list = maneuver.mutable_signs()->mutable_exit_number_list();
   for (auto& sign_items : exit_numbers) {
     exit_number_list->emplace_back(std::get<TEXT>(sign_items), std::get<IS_ROUTE_NUMBER>(sign_items));
     exit_number_list->back().set_consecutive_count(std::get<CONSECUTIVE_COUNT>(sign_items));
   }
 
   // exit_branches
-  std::vector<Sign>* exit_branch_list = maneuver.mutable_signs()->mutable_exit_branch_list();
+  auto* exit_branch_list = maneuver.mutable_signs()->mutable_exit_branch_list();
   for (auto& sign_items : exit_branches) {
     exit_branch_list->emplace_back(std::get<TEXT>(sign_items), std::get<IS_ROUTE_NUMBER>(sign_items));
     exit_branch_list->back().set_consecutive_count(std::get<CONSECUTIVE_COUNT>(sign_items));
   }
 
   //  exit_towards
-  std::vector<Sign>* exit_toward_list = maneuver.mutable_signs()->mutable_exit_toward_list();
+  auto* exit_toward_list = maneuver.mutable_signs()->mutable_exit_toward_list();
   for (auto& sign_items : exit_towards) {
     exit_toward_list->emplace_back(std::get<TEXT>(sign_items), std::get<IS_ROUTE_NUMBER>(sign_items));
     exit_toward_list->back().set_consecutive_count(std::get<CONSECUTIVE_COUNT>(sign_items));
   }
 
   //  exit_names
-  std::vector<Sign>* exit_name_list = maneuver.mutable_signs()->mutable_exit_name_list();
+  auto* exit_name_list = maneuver.mutable_signs()->mutable_exit_name_list();
   for (auto& sign_items : exit_names) {
     exit_name_list->emplace_back(std::get<TEXT>(sign_items), std::get<IS_ROUTE_NUMBER>(sign_items));
     exit_name_list->back().set_consecutive_count(std::get<CONSECUTIVE_COUNT>(sign_items));

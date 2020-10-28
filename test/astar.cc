@@ -34,7 +34,7 @@
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
-#include "gurka/gurka.h"
+#include "gurka.h"
 
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
