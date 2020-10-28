@@ -504,6 +504,8 @@ void UpdateTurnLanes(const OSMData& osmdata,
     if (bUpdated)
       str = TurnLanes::GetTurnLaneString(TurnLanes::turnlane_string(enhanced_tls));
 
+    std::cout << str << std::endl;
+
     uint32_t offset = tilebuilder.AddName(str);
     turn_lanes.emplace_back(idx, offset);
   }
@@ -887,8 +889,7 @@ bool IsNextEdgeInternalImpl(const DirectedEdge directededge,
       if (!infer_internal_intersections)
         return diredge->internal();
       else
-        return IsIntersectionInternal(&end_node_tile, reader, lock, directededge.endnode(),
-                                      end_node_info, *diredge, i);
+        return IsIntersectionInternal(&end_node_tile, reader, lock, directededge.endnode(), end_node_info, *diredge, i);
     }
   }
   return false;
@@ -1750,8 +1751,7 @@ void enhance(const boost::property_tree::ptree& pt,
         // Test if an internal intersection edge. Must do this after setting
         // opposing edge index
         if (infer_internal_intersections &&
-            IsIntersectionInternal(&tilebuilder, reader, lock, startnode, nodeinfo, directededge,
-                                   j)) {
+            IsIntersectionInternal(&tilebuilder, reader, lock, startnode, nodeinfo, directededge, j)) {
           directededge.set_internal(true);
         }
 
