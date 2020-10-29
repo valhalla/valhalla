@@ -189,7 +189,8 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt) {
   for (const auto& id : tileset) {
     tilequeue.emplace_back(id);
   }
-  std::random_shuffle(tilequeue.begin(), tilequeue.end());
+  std::random_device rd;
+  std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(rd()));
 
   // An mutex we can use to do the synchronization
   std::mutex lock;

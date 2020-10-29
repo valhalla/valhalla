@@ -536,7 +536,8 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
       }
     }
   }
-  std::random_shuffle(tilequeue.begin(), tilequeue.end());
+  std::random_device rd;
+  std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(rd()));
 
   // A mutex we can use to do the synchronization
   std::mutex lock;
