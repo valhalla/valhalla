@@ -184,6 +184,9 @@ std::unordered_map<std::string, std::string> iso2_to_iso3 =
      {"VI", "VIR"}, {"VN", "VNM"}, {"VU", "VUT"}, {"WF", "WLF"}, {"WS", "WSM"}, {"YE", "YEM"},
      {"YT", "MYT"}, {"ZA", "ZAF"}, {"ZM", "ZMB"}, {"ZW", "ZWE"}, {"CS", "SCG"}, {"AN", "ANT"}};
 
+// Sign style and unit conventions for speed limit signs by country.
+// Most countries use Vienna style and km/h, but the countries below
+// use MUTCD and/or mph conventions.
 std::unordered_map<std::string, std::pair<std::string, std::string>> speed_limit_info = {
     {"AG", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
     {"AS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
@@ -1471,8 +1474,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
           step->emplace("speedLimitUnit", country->second.second);
         } else {
           // Otherwise use the defaults (vienna convention style and km/h)
-          step->emplace("speedLimitSign", std::string(kSpeedLimitSignVienna));
-          step->emplace("speedLimitUnit", std::string(kSpeedLimitUnitsKph));
+          step->emplace("speedLimitSign", kSpeedLimitSignVienna);
+          step->emplace("speedLimitUnit", kSpeedLimitUnitsKph);
         }
       }
 
