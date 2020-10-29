@@ -464,7 +464,7 @@ void UpdateTurnLanes(const OSMData& osmdata,
           }
         }
 
-        if (bUpdated && directededge.start_restriction()) {
+        if (bUpdated && !directededge.start_restriction()) {
           // check for a right.
           EnhanceRightLane(directededge, tilebuilder, reader, lock, enhanced_tls);
           // check for a left
