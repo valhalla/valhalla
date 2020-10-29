@@ -29,12 +29,13 @@ TEST(Standalone, TurnLanes) {
          |
          D)";
 
-  const gurka::ways ways = {{"ABC", {{"highway", "primary"}, {"lanes", "4"}}},
-                            {"DB",
-                             {{"highway", "primary"},
-                              {"lanes:forward", "3"},
-                              {"lanes:backward", "0"},
-                              {"turn:lanes", "left|none|none"}}}};
+  const gurka::ways ways =
+      {{"ABC", {{"highway", "primary"}, {"lanes", "4"}, {"turn:lanes", "left|||right"}}},
+       {"DB",
+        {{"highway", "primary"},
+         {"lanes:forward", "3"},
+         {"lanes:backward", "0"},
+         {"turn:lanes", "left|none|none"}}}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_1");
@@ -49,15 +50,22 @@ TEST(Standalone, TurnLanes) {
                                                 DirectionsLeg_Maneuver_Type_kDestination});
   gurka::assert::raw::expect_path_length(result, 0.7, 0.001);
 
-  auto maneuver = result.directions().routes(0).legs(0).maneuver(1);
-  EXPECT_EQ(maneuver.type(), DirectionsLeg_Maneuver_Type_kRight);
+  validate_turn_lanes(result, {
+                                  {3, "[ left | through | through;right ACTIVE ]"},
+                                  {4, "[ left | through | through | right ]"},
+                              });
 
-  odin::EnhancedTripLeg etl(*result.mutable_trip()->mutable_routes(0)->mutable_legs(0));
-  auto prev_edge = etl.GetPrevEdge(maneuver.begin_path_index());
+  result = gurka::route(map, "A", "D", "auto");
+  validate_turn_lanes(result, {
+                                  {4, "[ left | through | through | right ACTIVE ]"},
+                                  {0, ""},
+                              });
 
-  ASSERT_TRUE(prev_edge);
-  EXPECT_EQ(prev_edge->turn_lanes_size(), 3);
-  EXPECT_EQ(prev_edge->TurnLanesToString(), "[ left | through | through;right ACTIVE ]");
+  result = gurka::route(map, "C", "D", "auto");
+  validate_turn_lanes(result, {
+                                  {4, "[ left ACTIVE | through | through | right ]"},
+                                  {0, ""},
+                              });
 }
 
 // Split lane example - 5-way intersection

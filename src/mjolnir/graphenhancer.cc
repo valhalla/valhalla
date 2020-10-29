@@ -413,7 +413,8 @@ void UpdateTurnLanes(const OSMData& osmdata,
         // Should have a left.
         if (has_turn_left(outgoing_turn_type)) {
           // check for a right.
-          //EnhanceRightLane(directededge, tilebuilder, reader, lock, enhanced_tls);
+          if (!directededge.start_restriction())
+            EnhanceRightLane(directededge, tilebuilder, reader, lock, enhanced_tls);
         }
       }
     }
@@ -438,7 +439,8 @@ void UpdateTurnLanes(const OSMData& osmdata,
           // Should have a right.  check for a left.
           if (has_turn_right(outgoing_turn_type)) {
             // check for a left
-            //EnhanceLeftLane(directededge, tilebuilder, reader, lock, enhanced_tls);
+            if (!directededge.start_restriction())
+              EnhanceLeftLane(directededge, tilebuilder, reader, lock, enhanced_tls);
           }
         }
       }
@@ -462,11 +464,11 @@ void UpdateTurnLanes(const OSMData& osmdata,
           }
         }
 
-        if (bUpdated) {
+        if (bUpdated && !directededge.start_restriction()) {
           // check for a right.
-          //EnhanceRightLane(directededge, tilebuilder, reader, lock, enhanced_tls);
+          EnhanceRightLane(directededge, tilebuilder, reader, lock, enhanced_tls);
           // check for a left
-          //EnhanceLeftLane(directededge, tilebuilder, reader, lock, enhanced_tls);
+          EnhanceLeftLane(directededge, tilebuilder, reader, lock, enhanced_tls);
         }
       }
     }
@@ -490,11 +492,11 @@ void UpdateTurnLanes(const OSMData& osmdata,
           }
         }
 
-        if (bUpdated) {
+        if (bUpdated && !directededge.start_restriction()) {
           // check for a right.
-          //EnhanceRightLane(directededge, tilebuilder, reader, lock, enhanced_tls);
+          EnhanceRightLane(directededge, tilebuilder, reader, lock, enhanced_tls);
           // check for a left
-          //EnhanceLeftLane(directededge, tilebuilder, reader, lock, enhanced_tls);
+          EnhanceLeftLane(directededge, tilebuilder, reader, lock, enhanced_tls);
         }
       }
     }
