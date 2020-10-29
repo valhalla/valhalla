@@ -193,11 +193,11 @@ directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
 }
 
 // callback fired when a node is expanded from, the node will be the end node of the previous label
-void Reach::ExpandingNode(baldr::GraphReader& graphreader,
+void Reach::ExpandingNode(baldr::GraphReader&,
                           const baldr::GraphTile* tile,
                           const baldr::NodeInfo* node,
-                          const sif::EdgeLabel& current,
-                          const sif::EdgeLabel* previous) {
+                          const sif::EdgeLabel&,
+                          const sif::EdgeLabel*) {
   // compute the nodes id
   GraphId node_id = tile->header()->graphid();
   node_id.set_id(node - tile->node(0));
@@ -211,9 +211,8 @@ void Reach::ExpandingNode(baldr::GraphReader& graphreader,
 }
 
 // when the main loop is looking to continue expanding we tell it to terminate here
-thor::ExpansionRecommendation Reach::ShouldExpand(baldr::GraphReader& graphreader,
-                                                  const sif::EdgeLabel& pred,
-                                                  const thor::InfoRoutingType route_type) {
+thor::ExpansionRecommendation
+Reach::ShouldExpand(baldr::GraphReader&, const sif::EdgeLabel&, const thor::InfoRoutingType) {
   if ((done_.size() - transitions_) < max_reach_)
     return thor::ExpansionRecommendation::continue_expansion;
   return thor::ExpansionRecommendation::prune_expansion;
