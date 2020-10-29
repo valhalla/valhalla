@@ -29,10 +29,15 @@ void Reach::enqueue(const baldr::GraphId& node_id,
   // otherwise we enqueue it
   queue_.insert(node_id);
   // and we enqueue it on the other levels
-  for (const auto& transition : tile->GetNodeTransitions(node))
+  for (const auto& transition : tile->GetNodeTransitions(node)) {
+    // skip nodes which are done already
+    if (done_.find(transition.endnode()) != done_.cend())
+      continue;
+    // otherwise we enqueue it
     queue_.insert(transition.endnode());
-  // and we remember how many duplicates we enqueued
-  transitions_ += node->transition_count();
+    // and we remember how many duplicates we enqueued
+    ++transitions_;
+  }
 }
 
 directed_reach Reach::operator()(const DirectedEdge* edge,

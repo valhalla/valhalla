@@ -202,6 +202,15 @@ valhalla::Api locate(const map& map,
  */
 rapidjson::Document convert_to_json(valhalla::Api& raw_result, valhalla::Options_Format format);
 
+// TODO: bidirectional edges overlap shapes so its hard to visualize them
+/**
+ * Dumps the gurka map to geojson including edges and nodes. Properties will be street names and node
+ * names. Edge ids are also included
+ * @param graph    the gurka map
+ * @return geojson string
+ */
+std::string dump_geojson_graph(const map& graph);
+
 namespace assert {
 namespace osrm {
 

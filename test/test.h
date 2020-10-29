@@ -81,8 +81,4 @@ using HistoricalTrafficCustomize = std::function<std::vector<int16_t>(DirectedEd
 void customize_historical_traffic(const boost::property_tree::ptree& config,
                                   const HistoricalTrafficCustomize& cb);
 
-// TODO: bidirectional edges overlap shapes so its hard to visualize them
-// just draw one shape for both edges and add both edges properties
-std::string dump_geojson_graph(const boost::property_tree::ptree& config);
-
 } // namespace test

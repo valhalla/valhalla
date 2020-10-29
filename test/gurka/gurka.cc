@@ -537,7 +537,7 @@ map buildtiles(const nodelayout layout,
   detail::build_pbf(result.nodes, ways, nodes, relations, pbf_filename);
   std::cerr << "[          ] building tiles in " << result.config.get<std::string>("mjolnir.tile_dir")
             << std::endl;
-  // midgard::logging::Configure({{"type", ""}});
+  midgard::logging::Configure({{"type", ""}});
 
   mjolnir::build_tile_set(result.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
                           mjolnir::BuildStage::kValidate, false);
@@ -557,14 +557,14 @@ map buildtiles(const nodelayout layout,
  * @return the directed edge that matches, or nullptr if there was no match
  */
 std::tuple<const baldr::GraphId,
-    const baldr::DirectedEdge*,
-    const baldr::GraphId,
-    const baldr::DirectedEdge*>
+           const baldr::DirectedEdge*,
+           const baldr::GraphId,
+           const baldr::DirectedEdge*>
 findEdge(valhalla::baldr::GraphReader& reader,
          const nodelayout& nodes,
          const std::string& way_name,
          const std::string& end_node,
-         const baldr::GraphId& tile_id ) {
+         const baldr::GraphId& tile_id) {
   // if the tile was specified use it otherwise scan everything
   auto tileset =
       tile_id.Is_Valid() ? std::unordered_set<baldr::GraphId>{tile_id} : reader.GetTileSet();
@@ -728,7 +728,7 @@ valhalla::Api locate(const map& map,
                      const std::vector<std::string>& waypoints,
                      const std::string& costing,
                      const std::unordered_map<std::string, std::string>& options,
-                     std::shared_ptr<valhalla::baldr::GraphReader> reader ,
+                     std::shared_ptr<valhalla::baldr::GraphReader> reader,
                      std::string* json) {
   if (!reader)
     reader.reset(new valhalla::baldr::GraphReader(map.config.get_child("mjolnir")));
@@ -774,6 +774,86 @@ rapidjson::Document convert_to_json(valhalla::Api& raw_result, valhalla::Options
   return result;
 }
 
+// just draw one shape for both edges and add both edges properties
+std::string dump_geojson_graph(const map& graph) {
+  // flesh out the geojson to start
+  rapidjson::Document doc(rapidjson::kObjectType);
+  doc.AddMember("type", "FeatureCollection", doc.GetAllocator());
+  rapidjson::Value features(rapidjson::kArrayType);
+
+  // for all tiles for all edges
+  valhalla::baldr::GraphReader reader(graph.config.get_child("mjolnir"));
+  for (auto tile_id : reader.GetTileSet()) {
+    if (reader.OverCommitted())
+      reader.Trim();
+    const auto* tile = reader.GetGraphTile(tile_id);
+    for (const auto& edge : tile->GetDirectedEdges()) {
+      valhalla::baldr::GraphId edge_id(tile_id.tileid(), tile_id.level(),
+                                       &edge - tile->directededge(0));
+      auto info = tile->edgeinfo(edge.edgeinfo_offset());
+
+      // add some properties
+      rapidjson::Value properties(rapidjson::kObjectType);
+      rapidjson::Value names(rapidjson::kArrayType);
+      for (const std::string& name : info.GetNames()) {
+        names.PushBack(rapidjson::Value(name, doc.GetAllocator()).Move(), doc.GetAllocator());
+      }
+      properties.AddMember("edge_id", std::to_string(edge_id), doc.GetAllocator());
+      properties.AddMember("opp_edge_id", std::to_string(reader.GetOpposingEdgeId(edge_id)),
+                           doc.GetAllocator());
+      properties.AddMember("names", names, doc.GetAllocator());
+
+      // add the geom
+      rapidjson::Value geometry(rapidjson::kObjectType);
+      geometry.AddMember("type", "LineString", doc.GetAllocator());
+      rapidjson::Value coordinates(rapidjson::kArrayType);
+      for (const auto& point : info.shape()) {
+        rapidjson::Value coordinate(rapidjson::kArrayType);
+        coordinate.PushBack(point.lng(), doc.GetAllocator());
+        coordinate.PushBack(point.lat(), doc.GetAllocator());
+        coordinates.PushBack(coordinate, doc.GetAllocator());
+      }
+      geometry.AddMember("coordinates", coordinates, doc.GetAllocator());
+
+      // keep all the stuff we made
+      rapidjson::Value feature(rapidjson::kObjectType);
+      feature.AddMember("type", "Feature", doc.GetAllocator());
+      feature.AddMember("properties", properties, doc.GetAllocator());
+      feature.AddMember("geometry", geometry, doc.GetAllocator());
+      features.PushBack(feature, doc.GetAllocator());
+    }
+  }
+
+  // add any named points
+  for (const auto& point : graph.nodes) {
+    // add some properties
+    rapidjson::Value properties(rapidjson::kObjectType);
+    properties.AddMember("name", point.first, doc.GetAllocator());
+
+    // add the geom
+    rapidjson::Value geometry(rapidjson::kObjectType);
+    geometry.AddMember("type", "Point", doc.GetAllocator());
+    rapidjson::Value coordinate(rapidjson::kArrayType);
+    coordinate.PushBack(point.second.lng(), doc.GetAllocator());
+    coordinate.PushBack(point.second.lat(), doc.GetAllocator());
+    geometry.AddMember("coordinates", coordinate, doc.GetAllocator());
+
+    // keep all the stuff we made
+    rapidjson::Value feature(rapidjson::kObjectType);
+    feature.AddMember("type", "Feature", doc.GetAllocator());
+    feature.AddMember("properties", properties, doc.GetAllocator());
+    feature.AddMember("geometry", geometry, doc.GetAllocator());
+    features.PushBack(feature, doc.GetAllocator());
+  }
+
+  // serialize
+  doc.AddMember("features", features, doc.GetAllocator());
+  rapidjson::StringBuffer sb;
+  rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
+  doc.Accept(writer);
+  return sb.GetString();
+}
+
 namespace assert {
 namespace osrm {
 
@@ -787,7 +867,7 @@ namespace osrm {
 void expect_steps(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
                   bool dedupe,
-                  const std::string& route_name ) {
+                  const std::string& route_name) {
 
   rapidjson::Document result = convert_to_json(raw_result, valhalla::Options_Format_osrm);
   if (result.HasParseError()) {
@@ -840,7 +920,7 @@ void expect_steps(valhalla::Api& raw_result,
  */
 void expect_match(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
-                  bool dedupe ) {
+                  bool dedupe) {
 
   rapidjson::Document result = convert_to_json(raw_result, valhalla::Options_Format_osrm);
   if (result.HasParseError()) {
@@ -907,7 +987,7 @@ void expect_maneuvers(const valhalla::Api& result,
   }
 
   EXPECT_EQ(actual_maneuvers, expected_maneuvers)
-            << "Actual maneuvers didn't match expected maneuvers";
+      << "Actual maneuvers didn't match expected maneuvers";
 }
 
 /**
@@ -931,7 +1011,7 @@ void expect_maneuver_begin_path_indexes(const valhalla::Api& result,
   }
 
   EXPECT_EQ(actual_indexes, expected_indexes)
-            << "Actual maneuver begin path indexes didn't match expected indexes";
+      << "Actual maneuver begin path indexes didn't match expected indexes";
 }
 
 /**

@@ -1,3 +1,4 @@
+#include "gurka.h"
 #include "test.h"
 
 #include "baldr/graphreader.h"
@@ -116,6 +117,47 @@ TEST(Reach, check_all_reach) {
                  std::to_string(edge_id.value) + " " + shape_str;
     }
   }
+}
+
+TEST(Reach, regression) {
+  const std::string ascii_map = R"(
+      b--c--d
+      |  |  |
+      |  |  |
+      a--f--e
+      |  |  |
+      |  |  |
+      g--h--i
+    )";
+
+  const gurka::ways ways = {
+      {"abcdefaghie", {{"highway", "residential"}}},
+      {"cfh", {{"highway", "tertiary"}}},
+  };
+
+  // build the graph
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/wrong_reach");
+
+  // get an auto costing
+  sif::CostFactory factory;
+  auto costing = factory.Create(valhalla::auto_);
+
+  // find the problem edge
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  auto edge = gurka::findEdgeByNodes(reader, map.nodes, "a", "f");
+
+  // check its reach
+  loki::Reach reach_checker;
+  auto reach = reach_checker(std::get<1>(edge), std::get<0>(edge), 50, reader, costing);
+
+  // all edges should have the same in/outbound reach
+  EXPECT_EQ(reach.inbound, reach.outbound);
+
+  // they all should be 7. there are only 5 obvious graph nodes above but we insert 2 more
+  // at d and g because the path the way makes loops back on itself
+  EXPECT_EQ(reach.inbound, 7);
+  EXPECT_EQ(reach.outbound, 7);
 }
 
 } // namespace
