@@ -189,6 +189,7 @@ std::unordered_map<std::string, std::string> iso2_to_iso3 =
 // use MUTCD and/or mph conventions.
 std::unordered_map<std::string, std::pair<std::string, std::string>> speed_limit_info = {
     {"AG", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"AI", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
     {"AS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
     {"BS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
     {"BZ", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
@@ -198,6 +199,7 @@ std::unordered_map<std::string, std::pair<std::string, std::string>> speed_limit
     {"GB", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
     {"GD", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
     {"GG", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"GS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
     {"GU", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
     {"IM", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
     {"JE", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
@@ -206,6 +208,7 @@ std::unordered_map<std::string, std::pair<std::string, std::string>> speed_limit
     {"LC", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
     {"LR", {kSpeedLimitSignMutcd, kSpeedLimitUnitsKph}},
     {"MP", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"MS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
     {"PR", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
     {"SH", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
     {"TC", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
