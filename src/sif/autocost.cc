@@ -628,6 +628,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
         kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
                            .get_value_or(kDefaultUseTolls)));
 
+    // top_speed
     pbf_costing_options->set_top_speed(
         kTopSpeedRange(rapidjson::get_optional<float>(*json_costing_options, "/top_speed")
                            .get_value_or(kMaxSpeedKph)));
@@ -881,14 +882,20 @@ public:
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::GraphTile* tile,
                         const uint32_t seconds) const override {
-    auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
-    float sec = edge->length() * speedfactor_[speed];
+    auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
+    auto final_speed = std::min(edge_speed, top_speed_);
+
+    assert(final_speed < speedfactor_.size());
+    float sec = (edge->length() * speedfactor_[final_speed]);
 
     if (shortest_) {
       return Cost(edge->length(), sec);
     }
 
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
+    float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
+    factor += speed_penalty;
+
     if ((edge->forwardaccess() & kHOVAccess) && !(edge->forwardaccess() & kAutoAccess)) {
       factor *= kHOVFactor;
     }
@@ -1051,14 +1058,19 @@ public:
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::GraphTile* tile,
                         const uint32_t seconds) const override {
-    auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
-    float sec = edge->length() * speedfactor_[speed];
+    auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
+    auto final_speed = std::min(edge_speed, top_speed_);
+
+    assert(final_speed < speedfactor_.size());
+    float sec = (edge->length() * speedfactor_[final_speed]);
 
     if (shortest_) {
       return Cost(edge->length(), sec);
     }
 
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
+    float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
+    factor += speed_penalty;
     if ((edge->forwardaccess() & kTaxiAccess) && !(edge->forwardaccess() & kAutoAccess)) {
       factor *= kTaxiFactor;
     }

@@ -676,6 +676,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
         kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
                            .get_value_or(kDefaultUseTolls)));
 
+    // top_speed
     pbf_costing_options->set_top_speed(
         kTopSpeedRange(rapidjson::get_optional<float>(*json_costing_options, "/top_speed")
                            .get_value_or(kMaxSpeedKph)));

@@ -81,6 +81,8 @@ constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseTrailsRange{0, kDefaultUseTrails, 1.0f};
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
                                                                kMaxPenalty};
+constexpr ranged_default_t<float> kTopSpeedRange{5, kMaxSpeedKph,
+                                                 kMaxSpeedKph}; // default to kMaxSpeedKph
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
@@ -251,7 +253,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const override {
-    return speedfactor_[kMaxAssumedSpeed];
+    return speedfactor_[top_speed_];
   }
 
   /**
@@ -291,6 +293,7 @@ public:
   float toll_factor_;        // Factor applied when road has a toll
   float surface_factor_;     // How much the surface factors are applied when using trails
   float highway_factor_;     // Factor applied when road is a motorway or trunk
+  uint32_t top_speed_;       // maximum speed
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -346,6 +349,8 @@ MotorcycleCost::MotorcycleCost(const CostingOptions& costing_options)
     float f = 1.0f - use_trails * 2.0f;
     surface_factor_ = static_cast<uint32_t>(kMaxTrailBiasFactor * (f * f));
   }
+
+  top_speed_ = costing_options.top_speed();
 
   // Create speed cost table
   speedfactor_.resize(kMaxSpeedKph + 1, 0);
@@ -412,9 +417,11 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                               const baldr::GraphTile* tile,
                               const uint32_t seconds) const {
-  auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
-  assert(speed < speedfactor_.size());
-  float sec = (edge->length() * speedfactor_[speed]);
+  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
+  auto final_speed = std::min(edge_speed, top_speed_);
+
+  assert(final_speed < speedfactor_.size());
+  float sec = (edge->length() * speedfactor_[final_speed]);
 
   if (shortest_) {
     return Cost(edge->length(), sec);
@@ -429,6 +436,8 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   float factor = density_factor_[edge->density()] +
                  highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
                  surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
+  float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
+  factor += speed_penalty;
   if (edge->toll()) {
     factor += toll_factor_;
   }
@@ -605,6 +614,10 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_trails(
         kUseTrailsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_trails")
                             .get_value_or(kDefaultUseTrails)));
+    // top_speed
+    pbf_costing_options->set_top_speed(
+        kTopSpeedRange(rapidjson::get_optional<float>(*json_costing_options, "/top_speed")
+                           .get_value_or(kMaxSpeedKph)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -622,6 +635,7 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_use_trails(kDefaultUseTrails);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
+    pbf_costing_options->set_top_speed(kMaxSpeedKph);
   }
 }
 
