@@ -585,6 +585,7 @@ struct bin_handler_t {
               opp_reach.inbound >= p_itr->location.min_inbound_reach_) {
             tile = opp_tile;
             edge = opp_edge;
+            edge_id = opp_edgeid;
             reach = opp_reach;
             reachable = true;
           }
