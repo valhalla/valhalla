@@ -721,6 +721,8 @@ protected:
   bool ignore_access_{false};
   bool ignore_closures_{false};
 
+  uint32_t top_speed_;
+
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
@@ -786,6 +788,8 @@ protected:
 
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();
+    // Set the top speed a vehicle wants to go
+    top_speed_ = costing_options.top_speed();
   }
 
   /**

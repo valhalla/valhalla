@@ -96,8 +96,6 @@ constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseRailFerryRange{0, kDefaultUseRailFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
-constexpr ranged_default_t<float> kTopSpeedRange{5, kMaxSpeedKph,
-                                                 kMaxSpeedKph}; // default to kMaxSpeedKph
 
 constexpr float kHighwayFactor[] = {
     10.0f, // Motorway
@@ -298,7 +296,6 @@ public:
   float alley_factor_;       // Avoid alleys factor.
   float toll_factor_;        // Factor applied when road has a toll
   float surface_factor_;     // How much the surface factors are applied.
-  uint32_t top_speed_;       // maximum speed
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -330,9 +327,6 @@ AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
 
   // Get the base transition costs
   get_base_costs(costing_options);
-
-  // Get the maximum speed
-  top_speed_ = costing_options.top_speed();
 
   // Get alley factor from costing options.
   alley_factor_ = costing_options.alley_factor();
@@ -627,11 +621,6 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(
         kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
                            .get_value_or(kDefaultUseTolls)));
-
-    // top_speed
-    pbf_costing_options->set_top_speed(
-        kTopSpeedRange(rapidjson::get_optional<float>(*json_costing_options, "/top_speed")
-                           .get_value_or(kMaxSpeedKph)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_transport_type("car");
@@ -652,7 +641,6 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_highways(kDefaultUseHighways);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
-    pbf_costing_options->set_top_speed(kMaxSpeedKph);
   }
 }
 

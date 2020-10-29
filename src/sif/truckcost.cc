@@ -100,8 +100,6 @@ constexpr ranged_default_t<float> kTruckHeightRange{0, kDefaultTruckHeight, 10.0
 constexpr ranged_default_t<float> kTruckWidthRange{0, kDefaultTruckWidth, 10.0f};
 constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 50.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
-constexpr ranged_default_t<float> kTopSpeedRange{5, kMaxSpeedKph,
-                                                 kMaxSpeedKph}; // default to kMaxSpeedKph
 
 } // namespace
 
@@ -282,7 +280,6 @@ public:
   float density_factor_[16]; // Density factor
   float toll_factor_;        // Factor applied when road has a toll
   float low_class_penalty_;  // Penalty (seconds) to go to residential or service road
-  uint32_t top_speed_;       // maximum speed
 
   // Vehicle attributes (used for special restrictions and costing)
   bool hazmat_;     // Carrying hazardous materials
@@ -323,9 +320,6 @@ TruckCost::TruckCost(const CostingOptions& costing_options)
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
   }
-
-  // Get the maximum speed
-  top_speed_ = costing_options.top_speed();
 
   // Preference to use toll roads (separate from toll booth penalty). Sets a toll
   // factor. A toll factor of 0 would indicate no adjustment to weighting for toll roads.
@@ -440,10 +434,11 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
 Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
                          const baldr::GraphTile* tile,
                          const uint32_t seconds) const {
-  // either the computed edge speed or optional top_speed
   auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
 
-  // Use the lower or truck speed (ir present) and speed
+  std::cout << top_speed_;
+
+  // Use the lower of truck speed, top_speed (if present) and speed
   uint32_t s = (edge->truck_speed() > 0) ? std::min({edge->truck_speed(), edge_speed, top_speed_})
                                          : std::min(edge_speed, top_speed_);
   assert(s < speedfactor_.size());
@@ -675,11 +670,6 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(
         kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
                            .get_value_or(kDefaultUseTolls)));
-
-    // top_speed
-    pbf_costing_options->set_top_speed(
-        kTopSpeedRange(rapidjson::get_optional<float>(*json_costing_options, "/top_speed")
-                           .get_value_or(kMaxSpeedKph)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -700,7 +690,6 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_length(kDefaultTruckLength);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
-    pbf_costing_options->set_top_speed(kMaxSpeedKph);
   }
 }
 

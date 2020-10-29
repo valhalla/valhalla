@@ -293,7 +293,6 @@ public:
   float toll_factor_;        // Factor applied when road has a toll
   float surface_factor_;     // How much the surface factors are applied when using trails
   float highway_factor_;     // Factor applied when road is a motorway or trunk
-  uint32_t top_speed_;       // maximum speed
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -349,8 +348,6 @@ MotorcycleCost::MotorcycleCost(const CostingOptions& costing_options)
     float f = 1.0f - use_trails * 2.0f;
     surface_factor_ = static_cast<uint32_t>(kMaxTrailBiasFactor * (f * f));
   }
-
-  top_speed_ = costing_options.top_speed();
 
   // Create speed cost table
   speedfactor_.resize(kMaxSpeedKph + 1, 0);
@@ -614,10 +611,6 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_trails(
         kUseTrailsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_trails")
                             .get_value_or(kDefaultUseTrails)));
-    // top_speed
-    pbf_costing_options->set_top_speed(
-        kTopSpeedRange(rapidjson::get_optional<float>(*json_costing_options, "/top_speed")
-                           .get_value_or(kMaxSpeedKph)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -635,7 +628,6 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_use_trails(kDefaultUseTrails);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
-    pbf_costing_options->set_top_speed(kMaxSpeedKph);
   }
 }
 
