@@ -91,7 +91,7 @@ A special costing option is `shortest`, which, when `true`, will solely use dist
 
 ##### Automobile and bus costing options
 
-These options are available for `auto`, `auto_shorter`, `bus`, and `truck` costing methods.
+These options are available for `auto`, `bus`, and `truck` costing methods.
 
 | Automobile options | Description |
 | :-------------------------- | :----------- |
@@ -106,6 +106,7 @@ These options are available for `auto`, `auto_shorter`, `bus`, and `truck` costi
 | `country_crossing_cost` | A cost applied when encountering an international border. This cost is added to the estimated and elapsed times. The default cost is 600 seconds. |
 | `country_crossing_penalty` | A penalty applied for a country crossing. This penalty can be used to create paths that avoid spanning country boundaries. The default penalty is 0. |
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
+| `top_speed` | Top speed the car can go. Used to avoid roads with higher speeds than this value.  This value must be between 5 and 252 KPH. The default value is 252 KPH. |
 
 ###### Truck-specific costing options
 
