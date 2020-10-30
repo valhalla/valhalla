@@ -435,6 +435,13 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
       (std::min(top_speed_, speed) * kSurfaceSpeedFactors[static_cast<uint32_t>(edge->surface())] *
        kGradeBasedSpeedFactor[static_cast<uint32_t>(edge->weighted_grade())]);
 
+  assert(scooter_speed < speedfactor_.size());
+  float sec = (edge->length() * speedfactor_[scooter_speed]);
+
+  if (shortest_) {
+    return Cost(edge->length(), sec);
+  }
+
   float speed_penalty = (speed > top_speed_) ? (speed - top_speed_) * 0.05f : 0.0f;
   float factor = 1.0f + (density_factor_[edge->density()] - 0.85f) +
                  (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]) +
@@ -444,8 +451,6 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor += kDestinationOnlyFactor;
   }
 
-  assert(scooter_speed < speedfactor_.size());
-  float sec = (edge->length() * speedfactor_[scooter_speed]);
   return {sec * factor, sec};
 }
 
@@ -484,7 +489,7 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-    c.cost += seconds;
+    c.cost += shortest_ ? 0.f : seconds;
     c.secs += seconds;
   }
   return c;
@@ -528,7 +533,7 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-    c.cost += seconds;
+    c.cost += shortest_ ? 0.f : seconds;
     c.secs += seconds;
   }
   return c;

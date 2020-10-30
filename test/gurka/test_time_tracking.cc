@@ -266,3 +266,11 @@ TEST(TimeTracking, routes) {
   ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
                          [](double a, double b) { return std::abs(a - b) < .0001; }));
 }
+
+TEST(TimeTracking, dst) {
+  // BST and GMT ambiguity where we gain an hour due to DST
+  std::string date_time = "2020-10-25T01:57";
+  int tz_idx = dt::get_tz_db().to_index("Europe/London");
+  EXPECT_NO_THROW(baldr::TimeInfo::make(date_time, tz_idx))
+      << " could not apply timezone to local time";
+}

@@ -2690,7 +2690,7 @@ void ManeuversBuilder::EnhanceSignlessInterchnages(std::list<Maneuver>& maneuver
 
 uint16_t
 ManeuversBuilder::GetExpectedTurnLaneDirection(std::unique_ptr<EnhancedTripLeg_Edge>& turn_lane_edge,
-                                               Maneuver& maneuver) const {
+                                               const Maneuver& maneuver) const {
   if (turn_lane_edge) {
     switch (maneuver.type()) {
       case valhalla::DirectionsLeg_Maneuver_Type_kUturnLeft:

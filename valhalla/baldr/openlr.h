@@ -12,7 +12,7 @@
 #include <vector>
 
 namespace valhalla {
-namespace midgard {
+namespace baldr {
 namespace OpenLR {
 
 namespace {
@@ -240,7 +240,7 @@ struct Attribute6 {
 // Only line location with 2 location reference points are supported
 struct OpenLr {
   OpenLr(const std::string& reference, bool base64_encoded = false) {
-    const std::string& decoded = base64_encoded ? decode64(reference) : reference;
+    const std::string& decoded = base64_encoded ? midgard::decode64(reference) : reference;
     const size_t size = decoded.size();
 
     const auto raw = reinterpret_cast<const uint8_t*>(decoded.data());
@@ -323,10 +323,13 @@ struct OpenLr {
 
   OpenLr(const std::vector<LocationReferencePoint>& lrps,
          uint8_t positive_offset_bucket,
-         uint8_t negative_offset_bucket)
+         uint8_t negative_offset_bucket,
+         bool point_along_line = false,
+         const Orientation& orientation = Orientation::NoOrientation,
+         const SideOfTheRoad& side_of_the_road = SideOfTheRoad::DirectlyOnRoadOrNotApplicable)
       : lrps(lrps), poff(positive_offset_bucket), noff(negative_offset_bucket),
-        isPointAlongLine(false), orientation(Orientation::NoOrientation),
-        sideOfTheRoad(SideOfTheRoad::DirectlyOnRoadOrNotApplicable) {
+        isPointAlongLine(point_along_line), orientation(orientation),
+        sideOfTheRoad(side_of_the_road) {
     if (lrps.size() < 2) {
       throw std::invalid_argument(
           "Only descriptors with at least 2 LRPs are supported by this implementation");
@@ -338,11 +341,11 @@ struct OpenLr {
     }
   }
 
-  PointLL getFirstCoordinate() const {
+  midgard::PointLL getFirstCoordinate() const {
     return {lrps.front().longitude, lrps.front().latitude};
   }
 
-  PointLL getLastCoordinate() const {
+  midgard::PointLL getLastCoordinate() const {
     return {lrps.back().longitude, lrps.back().latitude};
   }
 
@@ -428,7 +431,7 @@ struct OpenLr {
   }
 
   std::string toBase64() const {
-    return encode64(toBinary());
+    return midgard::encode64(toBinary());
   }
 
   bool operator==(const OpenLr& lloc) const {
@@ -446,33 +449,7 @@ struct OpenLr {
 };
 
 } // namespace OpenLR
-
-/**
- * Maps Valhalla edge and road class to an OpenLR form-of-way.
- *
- * @param node   Node of single trip leg
- * @return       OpenLR form-of-way classification. If this can't be determined
- *               from the edge's road class or use information, will return FormOfWay::OTHER.
- */
-OpenLR::LocationReferencePoint::FormOfWay road_class_to_fow(const TripLeg::Node& node);
-
-/**
- * Compute base64-encoded OpenLR descriptor per-edge of a trip leg.
- *
- * @param   leg   TripPath leg
- * @return        OpenLR descriptors for all edges in a path
- */
-std::vector<std::string> openlr_edges(const TripLeg& leg);
-
-/**
- * Compute base64-encoded OpenLR descriptor for an entire trip leg.
- *
- * @param   leg   TripPath leg
- * @return        OpenLR descriptor for a single trip leg.
- */
-std::vector<std::string> openlr_legs(const TripLeg& leg);
-
-} // namespace midgard
+} // namespace baldr
 } // namespace valhalla
 
 #endif

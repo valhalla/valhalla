@@ -570,7 +570,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
   if (edge->use() == Use::kSteps) {
     float sec = (edge->length() * speedfactor_[1]);
-    return {sec * kBicycleStepsFactor, sec};
+    return {shortest_ ? edge->length() : sec * kBicycleStepsFactor, sec};
   }
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
@@ -578,7 +578,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     // Compute elapsed time based on speed. Modulate cost with weighting factors.
     assert(speed < speedfactor_.size());
     float sec = (edge->length() * speedfactor_[speed]);
-    return {sec * ferry_factor_, sec};
+    return {shortest_ ? edge->length() : sec * ferry_factor_, sec};
   }
 
   // If you have to dismount on the edge then we set speed to an average walking speed
@@ -674,7 +674,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Compute elapsed time based on speed. Modulate cost with weighting factors.
   assert(bike_speed < speedfactor_.size());
   float sec = (edge->length() * speedfactor_[bike_speed]);
-  return {sec * factor, sec};
+  return {shortest_ ? edge->length() : sec * factor, sec};
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
@@ -750,7 +750,7 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   penalty *= (bike_accom * avoid_roads) + use_roads_;
 
   // Return cost (time and penalty)
-  c.cost += (seconds * (turn_stress + 1.0f)) + penalty;
+  c.cost += shortest_ ? 0 : seconds * (turn_stress + 1.0f) + penalty;
   c.secs += seconds;
   return c;
 }
@@ -830,7 +830,7 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
   penalty *= (bike_accom * avoid_roads) + use_roads_;
 
   // Return cost (time and penalty)
-  c.cost += (seconds * (turn_stress + 1.0f)) + penalty;
+  c.cost += shortest_ ? 0.f : seconds * (turn_stress + 1.0f) + penalty;
   c.secs += seconds;
   return c;
 }
