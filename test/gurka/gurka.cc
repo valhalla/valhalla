@@ -678,9 +678,6 @@ valhalla::Api route(const map& map,
                     const std::string& costing,
                     const std::unordered_map<std::string, std::string>& options,
                     const std::shared_ptr<valhalla::baldr::GraphReader>& reader) {
-  if (reader)
-    std::cerr << "[          ] Using pre-allocated baldr::GraphReader" << std::endl;
-
   std::cerr << "[          ] Routing with mjolnir.tile_dir = "
             << map.config.get<std::string>("mjolnir.tile_dir") << " with waypoints ";
   bool first = true;
@@ -715,8 +712,6 @@ valhalla::Api match(const map& map,
                     std::shared_ptr<valhalla::baldr::GraphReader> reader) {
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
-  else
-    std::cerr << "[          ] Using pre-allocated baldr::GraphReader" << std::endl;
 
   std::cerr << "[          ] Matching with mjolnir.tile_dir = "
             << map.config.get<std::string>("mjolnir.tile_dir") << " with waypoints ";
@@ -746,8 +741,6 @@ valhalla::Api locate(const map& map,
                      std::string* json) {
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
-  else
-    std::cerr << "[          ] Using pre-allocated baldr::GraphReader" << std::endl;
 
   std::cerr << "[          ] Locate with mjolnir.tile_dir = "
             << map.config.get<std::string>("mjolnir.tile_dir") << " with locations ";

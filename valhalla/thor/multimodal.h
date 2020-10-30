@@ -63,7 +63,7 @@ public:
    * Returns the name of the algorithm
    * @return the name of the algorithm
    */
-  virtual std::string name() const {
+  virtual std::string name() const override {
     return "Multimodal";
   }
 
