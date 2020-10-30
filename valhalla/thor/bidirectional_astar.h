@@ -68,7 +68,7 @@ public:
               baldr::GraphReader& graphreader,
               const sif::mode_costing_t& mode_costing,
               const sif::TravelMode mode,
-              const Options& options = Options::default_instance());
+              const Options& options = Options::default_instance()) override;
 
   /**
    * Returns the name of the algorithm
@@ -81,7 +81,7 @@ public:
   /**
    * Clear the temporary information generated during path construction.
    */
-  void Clear();
+  void Clear() override;
 
 protected:
   // Access mode used by the costing method

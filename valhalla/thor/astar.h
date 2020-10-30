@@ -60,20 +60,20 @@ public:
               baldr::GraphReader& graphreader,
               const sif::mode_costing_t& mode_costing,
               const sif::TravelMode mode,
-              const Options& options = Options::default_instance());
+              const Options& options = Options::default_instance()) override;
 
   /**
    * Returns the name of the algorithm
    * @return the name of the algorithm
    */
-  virtual std::string name() const {
+  virtual std::string name() const override {
     return "a*";
   }
 
   /**
    * Clear the temporary information generated during path construction.
    */
-  virtual void Clear();
+  virtual void Clear() override;
 
   /**
    * Set a maximum label count. The path algorithm terminates if this
