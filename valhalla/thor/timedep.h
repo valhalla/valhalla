@@ -153,7 +153,7 @@ protected:
    * @param  origll  Lat,lng of the origin.
    * @param  destll  Lat,lng of the destination.
    */
-  void Init(const midgard::PointLL& origll, const midgard::PointLL& destll);
+  void Init(const midgard::PointLL& origll, const midgard::PointLL& destll) override;
 
   /**
    * Expand from the node along the reverse search path. Immediately expands
