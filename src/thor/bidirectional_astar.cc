@@ -531,8 +531,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   // PathLocation using edges.front here means we are only setting the
   // heuristics to one of them alternate paths using the other correlated
   // points to may be harder to find
-  SetOrigin(graphreader, origin);
-  SetDestination(graphreader, destination);
+  SetOrigin(graphreader, origin, forward_time_info);
+  SetDestination(graphreader, destination, reverse_time_info);
 
   // Find shortest path. Switch between a forward direction and a reverse
   // direction search based on the current costs. Alternating like this
@@ -776,7 +776,9 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
 }
 
 // Add edges at the origin to the forward adjacency list.
-void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location& origin) {
+void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
+                                   valhalla::Location& origin,
+                                   const TimeInfo& time_info) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
@@ -813,7 +815,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
     // Get cost and sort cost (based on distance from endnode of this edge
     // to the destination
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
+    Cost cost = costing_->EdgeCost(directededge, tile, time_info.second_of_week) *
+                (1.0f - edge.percent_along());
 
     // Store a node-info for later timezone retrieval (approximate for closest)
     if (closest_ni == nullptr) {
@@ -853,7 +856,9 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
 }
 
 // Add destination edges to the reverse path adjacency list.
-void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
+void BidirectionalAStar::SetDestination(GraphReader& graphreader,
+                                        const valhalla::Location& dest,
+                                        const TimeInfo& time_info) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
@@ -893,7 +898,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     // directed edge for costing, as this is the forward direction along the
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
-    Cost cost = costing_->EdgeCost(directededge, tile) * edge.percent_along();
+    Cost cost =
+        costing_->EdgeCost(directededge, tile, time_info.second_of_week) * edge.percent_along();
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route

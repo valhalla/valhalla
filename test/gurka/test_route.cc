@@ -231,8 +231,6 @@ protected:
   static uint32_t current, historical, constrained;
 
   static void SetUpTestSuite() {
-    constexpr double gridsize = 100;
-
     const std::string ascii_map = R"(
       b----1----c----2----d
       |         |         |
@@ -262,7 +260,7 @@ protected:
         {"cfh", {{"highway", "tertiary"}}},
     };
 
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/algorithm_selection",
                             {{"mjolnir.shortcuts", "false"}});
     map.config.put("mjolnir.traffic_extract", "test/data/algorithm_selection/traffic.tar");
@@ -287,22 +285,31 @@ protected:
       return historical;
     });
 
+    // tests below use saturday at 9am
+    size_t second_of_week = 5 * 24 * 60 * 60 + 9 * 60 * 60 + 27;
     auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
-    auto edge = gurka::findEdgeByNodes(*reader, map.nodes, "a", "f");
-    size_t second_of_week = 5 * 24 * 60 * 60 + 9 * 60 * 60; // tests below use friday at 9am
-    const auto* tile = reader->GetGraphTile(std::get<0>(edge));
-    current = tile->GetSpeed(std::get<1>(edge), baldr::kCurrentFlowMask, second_of_week);
-    historical = tile->GetSpeed(std::get<1>(edge), baldr::kPredictedFlowMask, second_of_week);
-    constrained = tile->GetSpeed(std::get<1>(edge), baldr::kConstrainedFlowMask, second_of_week);
-
-    EXPECT_EQ(current, 50);
-    EXPECT_EQ(historical, 7);
-    EXPECT_EQ(constrained, 25);
+    for (auto tile_id : reader->GetTileSet()) {
+      const auto* tile = reader->GetGraphTile(tile_id);
+      for (const auto& e : tile->GetDirectedEdges()) {
+        current = tile->GetSpeed(&e, baldr::kCurrentFlowMask, second_of_week);
+        EXPECT_EQ(current, 50);
+        historical = tile->GetSpeed(&e, baldr::kPredictedFlowMask, second_of_week);
+        EXPECT_EQ(historical, 7);
+        constrained = tile->GetSpeed(&e, baldr::kConstrainedFlowMask, second_of_week);
+        EXPECT_EQ(constrained, 25);
+      }
+    }
   }
 };
 
 gurka::map AlgorithmTest::map = {};
 uint32_t AlgorithmTest::current = 0, AlgorithmTest::historical = 0, AlgorithmTest::constrained = 0;
+
+uint32_t speed_from_edge(const valhalla::Api& api) {
+  auto km = api.trip().routes(0).legs(0).node(0).edge().length();
+  auto h = api.trip().routes(0).legs(0).node(1).cost().elapsed_cost().seconds() / 3600.0;
+  return static_cast<uint32_t>(km / h + .5);
+}
 
 // this only happens if with trivial routes that have no date_time
 TEST_F(AlgorithmTest, Astar) {
@@ -316,19 +323,19 @@ TEST_F(AlgorithmTest, Astar) {
 TEST_F(AlgorithmTest, TDForward) {
   {
     auto api = gurka::route(map, {"0", "3"}, "auto",
-                            {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-29T09:00"}});
+                            {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
   }
 
   {
     auto api = gurka::route(map, {"8", "A"}, "auto",
-                            {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-29T09:00"}});
+                            {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
   }
 
   {
     auto api = gurka::route(map, {"2", "5"}, "auto",
-                            {{"/date_time/type", "3"}, {"/date_time/value", "2020-10-29T09:00"}});
+                            {{"/date_time/type", "3"}, {"/date_time/value", "2020-10-30T09:00"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
   }
 }
@@ -337,13 +344,13 @@ TEST_F(AlgorithmTest, TDForward) {
 TEST_F(AlgorithmTest, TDReverse) {
   {
     auto api = gurka::route(map, {"6", "B"}, "auto",
-                            {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-29T09:00"}});
+                            {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_reverse_a*");
   }
 
   {
     auto api = gurka::route(map, {"9", "7"}, "auto",
-                            {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-29T09:00"}});
+                            {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_reverse_a*");
   }
 }
@@ -353,11 +360,31 @@ TEST_F(AlgorithmTest, Bidir) {
   {
     auto api = gurka::route(map, {"4", "0"}, "auto");
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+    EXPECT_EQ(speed_from_edge(api), constrained);
   }
 
   {
     auto api = gurka::route(map, {"A", "2"}, "auto",
-                            {{"/date_time/type", "4"}, {"/date_time/value", "2020-10-29T09:00"}});
+                            {{"/date_time/type", "3"}, {"/date_time/value", "2020-10-30T09:00"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+    EXPECT_EQ(speed_from_edge(api), constrained);
+  }
+
+  {
+    auto api = gurka::route(map, {"A", "2"}, "auto",
+                            {{"/date_time/type", "3"},
+                             {"/date_time/value", "2020-10-30T09:00"},
+                             {"/costing_options/auto/speed_types/0", "predicted"}});
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+    EXPECT_EQ(speed_from_edge(api), historical);
+  }
+
+  {
+    auto api = gurka::route(map, {"A", "2"}, "auto",
+                            {{"/date_time/type", "3"},
+                             {"/date_time/value", "2020-10-30T09:00"},
+                             {"/costing_options/auto/speed_types/0", "current"}});
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+    EXPECT_EQ(speed_from_edge(api), current);
   }
 }

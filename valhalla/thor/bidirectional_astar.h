@@ -190,17 +190,23 @@ protected:
                           const baldr::TimeInfo& time_info);
   /**
    * Add edges at the origin to the forward adjacency list.
-   * @param  graphreader  Graph tile reader.
-   * @param  origin       Location information of the destination
+   * @param graphreader  Graph tile reader.
+   * @param origin       Location information of the destination
+   * @param time_info    What time is it when we start the route
    */
-  void SetOrigin(baldr::GraphReader& graphreader, valhalla::Location& origin);
+  void SetOrigin(baldr::GraphReader& graphreader,
+                 valhalla::Location& origin,
+                 const baldr::TimeInfo& time_info);
 
   /**
    * Add destination edges to the reverse path adjacency list.
    * @param   graphreader  Graph tile reader.
    * @param   dest         Location information of the destination
+   * @param time_info    What time is it when we end the route
    */
-  void SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
+  void SetDestination(baldr::GraphReader& graphreader,
+                      const valhalla::Location& dest,
+                      const baldr::TimeInfo& time_info);
 
   /**
    * The edge on the forward search connects to a reached edge on the reverse

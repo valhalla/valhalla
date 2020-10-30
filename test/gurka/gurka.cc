@@ -176,23 +176,34 @@ std::string build_valhalla_request(const std::string& location_type,
     locations.PushBack(p, allocator);
   }
 
-  rapidjson::Value dt(rapidjson::kObjectType);
-  rapidjson::Value speed_types(rapidjson::kArrayType);
-  speed_types.PushBack("freeflow", allocator);
-  speed_types.PushBack("constrained", allocator);
-  speed_types.PushBack("predicted", allocator);
-
-  auto found = options.find("/date_time/type");
-  if (found != options.cend() && found->second == "0") {
-    speed_types.PushBack("current", allocator);
-  }
-
   doc.AddMember(rapidjson::Value(location_type, allocator), locations, allocator);
   doc.AddMember("costing", costing, allocator);
 
-  rapidjson::Value costing_options(rapidjson::kObjectType);
+  // check if we are overriding speed types etc
+  bool custom_speed_types = false;
+  for (const auto& option : options) {
+    if (option.first.find(costing + "/speed_types") != std::string::npos) {
+      custom_speed_types = true;
+      break;
+    }
+  }
+
   rapidjson::Value co(rapidjson::kObjectType);
-  co.AddMember("speed_types", speed_types, allocator);
+  if (!custom_speed_types) {
+    rapidjson::Value dt(rapidjson::kObjectType);
+    rapidjson::Value speed_types(rapidjson::kArrayType);
+    speed_types.PushBack("freeflow", allocator);
+    speed_types.PushBack("constrained", allocator);
+    speed_types.PushBack("predicted", allocator);
+
+    auto found = options.find("/date_time/type");
+    if (found != options.cend() && found->second == "0") {
+      speed_types.PushBack("current", allocator);
+    }
+    co.AddMember("speed_types", speed_types, allocator);
+  }
+
+  rapidjson::Value costing_options(rapidjson::kObjectType);
   costing_options.AddMember(rapidjson::Value(costing, allocator), co, allocator);
   doc.AddMember("costing_options", costing_options, allocator);
   doc.AddMember("verbose", true, allocator);
