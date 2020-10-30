@@ -417,7 +417,6 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const bool drive_on_right,
                           TripLeg_Node* trip_node,
                           const GraphTile* graphtile,
-                          GraphReader& graphreader,
                           const uint32_t second_of_week,
                           const uint32_t start_node_idx,
                           const bool has_junction_name,
@@ -1177,8 +1176,8 @@ void TripLegBuilder::Build(
     TripLeg_Edge* trip_edge =
         AddTripEdge(controller, edge, edge_itr->trip_id, multimodal_builder.block_id, mode,
                     travel_type, costing, directededge, node->drive_on_right(), trip_node, graphtile,
-                    graphreader, time_info.second_of_week, startnode.id(), node->named_intersection(),
-                    start_tile, edge_itr->restriction_index);
+                    time_info.second_of_week, startnode.id(), node->named_intersection(), start_tile,
+                    edge_itr->restriction_index);
 
     // some information regarding shape/length trimming
     auto is_first_edge = edge_itr == path_begin;

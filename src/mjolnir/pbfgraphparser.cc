@@ -37,7 +37,7 @@ constexpr uint32_t kAbsurdRoadClass = 777777;
 
 // Convenience method to get a number from a string. Uses try/catch in case
 // stoi throws an exception
-int get_number(const std::string& tag, const std::string& value) {
+int get_number(const std::string& tag, const std::string& value) { // NOLINT
   int num = -1;
   try {
     num = stoi(value);

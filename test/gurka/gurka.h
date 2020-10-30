@@ -110,7 +110,7 @@ void build_pbf(const nodelayout& node_locations,
  * @return a map object that contains the Valhalla config (to pass to GraphReader) and node layout
  *         (for converting node names to coordinates)
  */
-map buildtiles(const nodelayout layout,
+map buildtiles(const nodelayout& layout,
                const ways& ways,
                const nodes& nodes,
                const relations& relations,
@@ -169,7 +169,7 @@ valhalla::Api route(const map& map,
                     const std::vector<std::string>& waypoints,
                     const std::string& costing,
                     const std::unordered_map<std::string, std::string>& options = {},
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader = {});
+                    const std::shared_ptr<valhalla::baldr::GraphReader>& reader = {});
 
 // TODO: delete this
 valhalla::Api route(const map& map,

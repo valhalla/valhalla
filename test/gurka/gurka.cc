@@ -32,6 +32,7 @@
 #include <regex>
 #include <string>
 #include <tuple>
+#include <utility>
 
 #include <gtest/gtest.h>
 
@@ -140,6 +141,7 @@ midgard::PointLL to_ll(const nodelayout& nodes, const std::string& node_name) {
 std::vector<midgard::PointLL> to_lls(const nodelayout& nodes,
                                      const std::vector<std::string>& node_names) {
   std::vector<midgard::PointLL> lls;
+  lls.reserve(node_names.size());
   for (const auto& node_name : node_names)
     lls.emplace_back(to_ll(nodes, node_name));
   return lls;
@@ -223,7 +225,7 @@ std::string build_valhalla_request(const std::string& location_type,
   return sb.GetString();
 }
 
-std::vector<std::string> splitter(const std::string in_pattern, const std::string& content) {
+std::vector<std::string> splitter(const std::string& in_pattern, const std::string& content) {
   std::vector<std::string> split_content;
   std::regex pattern(in_pattern);
   std::copy(std::sregex_token_iterator(content.begin(), content.end(), pattern, -1),
@@ -524,7 +526,7 @@ to_string(const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& st
  * @return a map object that contains the Valhalla config (to pass to GraphReader) and node layout
  *         (for converting node names to coordinates)
  */
-map buildtiles(const nodelayout layout,
+map buildtiles(const nodelayout& layout,
                const ways& ways,
                const nodes& nodes,
                const relations& relations,
@@ -582,7 +584,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
       tile_id.Is_Valid() ? std::unordered_set<baldr::GraphId>{tile_id} : reader.GetTileSet();
 
   // Iterate over all the tiles, there wont be many in unit tests..
-  auto end_node_coordinates = nodes.at(end_node);
+  const auto& end_node_coordinates = nodes.at(end_node);
   for (auto tile_id : tileset) {
     auto* tile = reader.GetGraphTile(tile_id);
     // Iterate over all directed edges to find one with the name we want
@@ -675,7 +677,7 @@ valhalla::Api route(const map& map,
                     const std::vector<std::string>& waypoints,
                     const std::string& costing,
                     const std::unordered_map<std::string, std::string>& options,
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader) {
+                    const std::shared_ptr<valhalla::baldr::GraphReader>& reader) {
   if (reader)
     std::cerr << "[          ] Using pre-allocated baldr::GraphReader" << std::endl;
 
@@ -702,7 +704,7 @@ valhalla::Api route(const map& map,
                     const std::string& costing,
                     const std::unordered_map<std::string, std::string>& options,
                     std::shared_ptr<valhalla::baldr::GraphReader> reader) {
-  return route(map, {origin, destination}, costing, options, reader);
+  return route(map, {origin, destination}, costing, options, std::move(reader));
 }
 
 valhalla::Api match(const map& map,

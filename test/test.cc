@@ -52,7 +52,7 @@ make_clean_graphreader(const boost::property_tree::ptree& mjolnir_conf) {
   // Wrapper sub-class to allow replacing the statically initialized
   // tile_extract member variable
   struct ResettingGraphReader : valhalla::baldr::GraphReader {
-    ResettingGraphReader(boost::property_tree::ptree pt) : GraphReader(pt) {
+    ResettingGraphReader(const boost::property_tree::ptree& pt) : GraphReader(pt) {
       // Reset the statically initialized tile_extract_ member variable
       tile_extract_.reset(new valhalla::baldr::GraphReader::tile_extract_t(pt));
     }
