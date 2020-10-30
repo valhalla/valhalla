@@ -682,18 +682,18 @@ public:
     tag_handlers_["bridge"] = [this]() { way_.set_bridge(tag_.second == "true" ? true : false); };
     tag_handlers_["seasonal"] = [this]() { way_.set_seasonal(tag_.second == "true" ? true : false); };
     tag_handlers_["bike_network_mask"] = [this]() { way_.set_bike_network(std::stoi(tag_.second)); };
-    tag_handlers_["bike_national_ref"] = [this]() {
-      if (!tag_.second.empty())
-        way_.set_bike_national_ref_index(osmdata_.name_offset_map.index(tag_.second));
-    };
-    tag_handlers_["bike_regional_ref"] = [this]() {
-      if (!tag_.second.empty())
-        way_.set_bike_regional_ref_index(osmdata_.name_offset_map.index(tag_.second));
-    };
-    tag_handlers_["bike_local_ref"] = [this]() {
-      if (!tag_.second.empty())
-        way_.set_bike_local_ref_index(osmdata_.name_offset_map.index(tag_.second));
-    };
+    //    tag_handlers_["bike_national_ref"] = [this]() {
+    //      if (!tag_.second.empty())
+    //        way_.set_bike_national_ref_index(osmdata_.name_offset_map.index(tag_.second));
+    //    };
+    //    tag_handlers_["bike_regional_ref"] = [this]() {
+    //      if (!tag_.second.empty())
+    //        way_.set_bike_regional_ref_index(osmdata_.name_offset_map.index(tag_.second));
+    //    };
+    //    tag_handlers_["bike_local_ref"] = [this]() {
+    //      if (!tag_.second.empty())
+    //        way_.set_bike_local_ref_index(osmdata_.name_offset_map.index(tag_.second));
+    //    };
     tag_handlers_["destination"] = [this]() {
       if (!tag_.second.empty()) {
         way_.set_destination_index(osmdata_.name_offset_map.index(tag_.second));

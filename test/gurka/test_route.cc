@@ -365,7 +365,9 @@ TEST_F(AlgorithmTest, Bidir) {
 
   {
     auto api = gurka::route(map, {"A", "2"}, "auto",
-                            {{"/date_time/type", "3"}, {"/date_time/value", "2020-10-30T09:00"}});
+                            {{"/date_time/type", "3"},
+                             {"/date_time/value", "2020-10-30T09:00"},
+                             {"/costing_options/auto/speed_types/0", "constrained"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
     EXPECT_EQ(speed_from_edge(api), constrained);
   }
