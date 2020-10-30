@@ -1,4 +1,4 @@
-#include "gurka.h"
+#include "gurka/gurka.h"
 #include "test.h"
 
 #include "baldr/graphreader.h"
@@ -119,7 +119,7 @@ TEST(Reach, check_all_reach) {
   }
 }
 
-TEST(Reach, regression) {
+TEST(Reach, transition_misscount) {
   const std::string ascii_map = R"(
       b--c--d
       |  |  |
