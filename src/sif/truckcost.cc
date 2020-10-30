@@ -436,8 +436,6 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
                          const uint32_t seconds) const {
   auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
 
-  std::cout << top_speed_;
-
   // Use the lower of truck speed, top_speed (if present) and speed
   uint32_t s = (edge->truck_speed() > 0) ? std::min({edge->truck_speed(), edge_speed, top_speed_})
                                          : std::min(edge_speed, top_speed_);
