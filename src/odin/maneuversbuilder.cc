@@ -3146,8 +3146,11 @@ void ManeuversBuilder::MoveInternalEdgeToPreviousManeuver(Maneuver& prev_maneuve
                     trip_path_->node(maneuver.begin_node_index()).cost().elapsed_cost().seconds());
 
   /////////////////////////////////////////////////////////////////////////////
-  // Update the edge turn lanes with the previous edge turn lanes
-  edge->mutable_turn_lanes()->CopyFrom(prev_edge->turn_lanes());
+  // If the internal edge does not have turn lanes
+  // then copy the turn lanes from the previous edge
+  if (edge->turn_lanes_size() == 0) {
+    edge->mutable_turn_lanes()->CopyFrom(prev_edge->turn_lanes());
+  }
 }
 
 } // namespace odin
