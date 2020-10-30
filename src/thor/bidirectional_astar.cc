@@ -114,7 +114,8 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
                                        BDEdgeLabel& pred,
                                        const uint32_t pred_idx,
                                        const bool from_transition,
-                                       const TimeInfo& time_info) {
+                                       const TimeInfo& time_info,
+                                       const bool invariant) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
@@ -127,8 +128,10 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
   }
 
   // Update the time information even if time is invariant to account for timezones
-  auto offset_time =
-      from_transition ? time_info : time_info.forward(0.f, static_cast<int>(nodeinfo->timezone()));
+  auto seconds_offset = invariant ? 0.f : pred.cost().secs;
+  auto offset_time = from_transition
+                         ? time_info
+                         : time_info.forward(seconds_offset, static_cast<int>(nodeinfo->timezone()));
 
   uint32_t shortcuts = 0;
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_forward_);
@@ -161,13 +164,13 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       if (trans->up()) {
         hierarchy_limits_forward_[node.level()].up_transition_count++;
-        found_valid_edge =
-            ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, offset_time) ||
-            found_valid_edge;
+        found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true,
+                                         offset_time, invariant) ||
+                           found_valid_edge;
       } else if (!hierarchy_limits_forward_[trans->endnode().level()].StopExpanding()) {
-        found_valid_edge =
-            ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, offset_time) ||
-            found_valid_edge;
+        found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true,
+                                         offset_time, invariant) ||
+                           found_valid_edge;
       }
     }
   }
@@ -306,7 +309,8 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
                                        const uint32_t pred_idx,
                                        const DirectedEdge* opp_pred_edge,
                                        const bool from_transition,
-                                       const TimeInfo& time_info) {
+                                       const TimeInfo& time_info,
+                                       const bool invariant) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
@@ -319,8 +323,10 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
   }
 
   // Update the time information even if time is invariant to account for timezones
-  auto offset_time =
-      from_transition ? time_info : time_info.reverse(0.f, static_cast<int>(nodeinfo->timezone()));
+  auto seconds_offset = invariant ? 0.f : pred.cost().secs;
+  auto offset_time = from_transition
+                         ? time_info
+                         : time_info.reverse(seconds_offset, static_cast<int>(nodeinfo->timezone()));
 
   uint32_t shortcuts = 0;
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_reverse_);
@@ -354,11 +360,11 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
       if (trans->up()) {
         hierarchy_limits_reverse_[node.level()].up_transition_count++;
         edge_was_added = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
-                                       true, offset_time) ||
+                                       true, offset_time, invariant) ||
                          edge_was_added;
       } else if (!hierarchy_limits_reverse_[trans->endnode().level()].StopExpanding()) {
         edge_was_added = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
-                                       true, offset_time) ||
+                                       true, offset_time, invariant) ||
                          edge_was_added;
       }
     }
@@ -516,6 +522,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   Init(origin_new, destination_new);
 
   // Get time information for forward and backward searches
+  bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
   auto forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
   auto reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
 
@@ -628,7 +635,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
       // Expand from the end node in forward direction.
       ExpandForward(graphreader, fwd_pred.endnode(), fwd_pred, forward_pred_idx, false,
-                    forward_time_info);
+                    forward_time_info, invariant);
     } else {
       // Expand reverse - set to get next edge from reverse adj. list on the next pass
       expand_forward = false;
@@ -655,7 +662,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
       // Expand from the end node in reverse direction.
       ExpandReverse(graphreader, rev_pred.endnode(), rev_pred, reverse_pred_idx, opp_pred_edge, false,
-                    reverse_time_info);
+                    reverse_time_info, invariant);
     }
   }
   return {}; // If we are here the route failed

@@ -138,6 +138,7 @@ protected:
    * @param pred_idx           the index of the label in the label set
    * @param from_transition    whether or not we are expanding at a graph node transition
    * @param time_info          time tracking information about the start of the route
+   * @param invariant          static date_time, dont offset the time as the path lengthens
    * @return returns true if the expansion continued from this node
    */
   bool ExpandForward(baldr::GraphReader& graphreader,
@@ -145,7 +146,8 @@ protected:
                      sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition,
-                     const baldr::TimeInfo& time_info);
+                     const baldr::TimeInfo& time_info,
+                     const bool invariant);
   // Private helper function for `ExpandForward`
   bool ExpandForwardInner(baldr::GraphReader& graphreader,
                           const sif::BDEdgeLabel& pred,
@@ -165,6 +167,7 @@ protected:
    * @param pred_idx           the index of the label in the label set
    * @param from_transition    whether or not we are expanding at a graph node transition
    * @param time_info          time tracking information about the end of the route
+   * * @param invariant          static date_time, dont offset the time as the path lengthens
    * @return returns true if the expansion continued from this node in this direction
    */
   bool ExpandReverse(baldr::GraphReader& graphreader,
@@ -173,7 +176,8 @@ protected:
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
                      const bool from_transition,
-                     const baldr::TimeInfo& time_info);
+                     const baldr::TimeInfo& time_info,
+                     const bool invariant);
   // Private helper function for `ExpandReverse`
   bool ExpandReverseInner(baldr::GraphReader& graphreader,
                           const sif::BDEdgeLabel& pred,

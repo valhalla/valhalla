@@ -215,19 +215,20 @@ TEST(AutoDataFix, deprecation) {
       R"("costing_options":{"auto":{"use_ferry":0.8}, "auto_data_fix":{"use_ferry":0.1, "use_tolls": 0.77}}})";
   ParseApi(request_str, Options::route, request);
 
-  ASSERT_EQ(request.options().costing(), valhalla::auto_);
-  ASSERT_EQ(request.options().costing_options(valhalla::auto_).ignore_access(), true);
-  ASSERT_EQ(request.options().costing_options(valhalla::auto_).ignore_closures(), true);
-  ASSERT_EQ(request.options().costing_options(valhalla::auto_).ignore_oneways(), true);
-  ASSERT_EQ(request.options().costing_options(valhalla::auto_).ignore_restrictions(), true);
-  ASSERT_EQ(request.options().costing_options(valhalla::auto_).use_ferry(), 0.1f);
-  ASSERT_EQ(request.options().costing_options(valhalla::auto_).use_tolls(), 0.77f);
+  EXPECT_EQ(request.options().costing(), valhalla::auto_);
+  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_access(), true);
+  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_closures(), true);
+  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_oneways(), true);
+  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_restrictions(), true);
+  EXPECT_EQ(request.options().costing_options(valhalla::auto_).use_ferry(), 0.1f);
+  EXPECT_EQ(request.options().costing_options(valhalla::auto_).use_tolls(), 0.77f);
 }
 
 /*************************************************************/
 class AlgorithmTest : public ::testing::Test {
 protected:
   static gurka::map map;
+  static uint32_t current, historical, constrained;
 
   static void SetUpTestSuite() {
     constexpr double gridsize = 100;
@@ -272,21 +273,42 @@ protected:
                                       [&](baldr::GraphReader& reader,
                                           baldr::TrafficTile& traffic_tile, int edge_index,
                                           valhalla::baldr::TrafficSpeed* traffic_speed) {
-                                        baldr::GraphId edge_id(traffic_tile.header->tile_id);
-                                        edge_id.set_id(edge_index);
+                                        traffic_speed->overall_speed = 50 >> 1;
+                                        traffic_speed->speed1 = 50 >> 1;
+                                        traffic_speed->breakpoint1 = 255;
                                       });
 
-    // TODO: add historical traffic
+    test::customize_historical_traffic(map.config, [](DirectedEdge& e) {
+      e.set_constrained_flow_speed(25);
+      e.set_free_flow_speed(75);
+
+      // 200 dct coeficients
+      std::vector<int16_t> historical(200, -1337);
+      return historical;
+    });
+
+    auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+    auto edge = gurka::findEdgeByNodes(*reader, map.nodes, "a", "f");
+    size_t second_of_week = 5 * 24 * 60 * 60 + 9 * 60 * 60; // tests below use friday at 9am
+    const auto* tile = reader->GetGraphTile(std::get<0>(edge));
+    current = tile->GetSpeed(std::get<1>(edge), baldr::kCurrentFlowMask, second_of_week);
+    historical = tile->GetSpeed(std::get<1>(edge), baldr::kPredictedFlowMask, second_of_week);
+    constrained = tile->GetSpeed(std::get<1>(edge), baldr::kConstrainedFlowMask, second_of_week);
+
+    EXPECT_EQ(current, 50);
+    EXPECT_EQ(historical, 7);
+    EXPECT_EQ(constrained, 25);
   }
 };
 
 gurka::map AlgorithmTest::map = {};
+uint32_t AlgorithmTest::current = 0, AlgorithmTest::historical = 0, AlgorithmTest::constrained = 0;
 
 // this only happens if with trivial routes that have no date_time
 TEST_F(AlgorithmTest, Astar) {
   {
     auto api = gurka::route(map, {"3", "1"}, "auto");
-    ASSERT_EQ(api.trip().routes(0).legs(0).algorithms(0), "a*");
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "a*");
   }
 }
 
@@ -295,19 +317,19 @@ TEST_F(AlgorithmTest, TDForward) {
   {
     auto api = gurka::route(map, {"0", "3"}, "auto",
                             {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-29T09:00"}});
-    ASSERT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
   }
 
   {
     auto api = gurka::route(map, {"8", "A"}, "auto",
                             {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-29T09:00"}});
-    ASSERT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
   }
 
   {
     auto api = gurka::route(map, {"2", "5"}, "auto",
                             {{"/date_time/type", "3"}, {"/date_time/value", "2020-10-29T09:00"}});
-    ASSERT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
   }
 }
 
@@ -316,27 +338,26 @@ TEST_F(AlgorithmTest, TDReverse) {
   {
     auto api = gurka::route(map, {"6", "B"}, "auto",
                             {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-29T09:00"}});
-    ASSERT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_reverse_a*");
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_reverse_a*");
   }
 
   {
     auto api = gurka::route(map, {"9", "7"}, "auto",
                             {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-29T09:00"}});
-    ASSERT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_reverse_a*");
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_reverse_a*");
   }
 }
 
 // this happens only with non-trivial routes with no date_time or invariant date_time
 TEST_F(AlgorithmTest, Bidir) {
-  // std::cout << gurka::dump_geojson_graph(map) << std::endl;
   {
     auto api = gurka::route(map, {"4", "0"}, "auto");
-    ASSERT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
   }
 
   {
     auto api = gurka::route(map, {"A", "2"}, "auto",
                             {{"/date_time/type", "4"}, {"/date_time/value", "2020-10-29T09:00"}});
-    ASSERT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
   }
 }

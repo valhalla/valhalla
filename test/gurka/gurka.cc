@@ -17,6 +17,7 @@
 #include "tyr/serializers.h"
 
 #include "gurka.h"
+#include "test.h"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -644,7 +645,7 @@ valhalla::Api route(const map& map,
                     const std::string& request_json,
                     std::shared_ptr<valhalla::baldr::GraphReader> reader) {
   if (!reader)
-    reader.reset(new valhalla::baldr::GraphReader(map.config.get_child("mjolnir")));
+    reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
   valhalla::Api api;
   actor.route(request_json, nullptr, &api);
@@ -700,7 +701,7 @@ valhalla::Api match(const map& map,
                     const std::unordered_map<std::string, std::string>& options,
                     std::shared_ptr<valhalla::baldr::GraphReader> reader) {
   if (!reader)
-    reader.reset(new valhalla::baldr::GraphReader(map.config.get_child("mjolnir")));
+    reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   else
     std::cerr << "[          ] Using pre-allocated baldr::GraphReader" << std::endl;
 
@@ -731,7 +732,7 @@ valhalla::Api locate(const map& map,
                      std::shared_ptr<valhalla::baldr::GraphReader> reader,
                      std::string* json) {
   if (!reader)
-    reader.reset(new valhalla::baldr::GraphReader(map.config.get_child("mjolnir")));
+    reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   else
     std::cerr << "[          ] Using pre-allocated baldr::GraphReader" << std::endl;
 

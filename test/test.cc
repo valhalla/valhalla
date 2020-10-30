@@ -207,6 +207,7 @@ void customize_historical_traffic(const boost::property_tree::ptree& config,
       auto historical = cb(edges.back());
       if (!historical.empty())
         tile.AddPredictedSpeed(edges.size() - 1, historical, tile.header()->directededgecount());
+      edges.back().set_has_predicted_speed(!historical.empty());
     }
     tile.UpdatePredictedSpeeds(edges);
   }
