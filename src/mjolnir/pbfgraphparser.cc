@@ -2156,7 +2156,6 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
 
 void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
                                 const std::vector<std::string>& input_files,
-                                const std::string& ways_file,
                                 const std::string& way_nodes_file,
                                 const std::string& bss_nodes_file,
                                 OSMData& osmdata) {
