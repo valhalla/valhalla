@@ -410,9 +410,9 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
 // The origin of the reverse path is the destination location.
 // TODO - how do we set the
 void TimeDepReverse::SetOrigin(GraphReader& graphreader,
-                               valhalla::Location& origin,
-                               valhalla::Location& destination,
-                               uint32_t seconds_of_week) {
+                               const valhalla::Location& origin,
+                               const valhalla::Location& destination,
+                               const uint32_t seconds_of_week) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),

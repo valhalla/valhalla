@@ -348,7 +348,7 @@ AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
 
 // Add an edge at the origin to the adjacency list
 void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
-                                   valhalla::Location& origin,
+                                   const valhalla::Location& origin,
                                    const valhalla::Location& destination,
                                    const uint32_t seconds_of_week) {
   // Only skip inbound edges if we have other options

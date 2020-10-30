@@ -202,9 +202,9 @@ protected:
    * @param  dest         Location information of the destination.
    */
   void SetOrigin(baldr::GraphReader& graphreader,
-                 valhalla::Location& origin,
-                 valhalla::Location& destination,
-                 uint32_t seconds_of_week);
+                 const valhalla::Location& origin,
+                 const valhalla::Location& destination,
+                 const uint32_t seconds_of_week) override;
 
   /**
    * The destination of the reverse path is the origin location. Set the
@@ -213,7 +213,8 @@ protected:
    * @param   dest         Location information of the destination.
    * @return  Returns the relative density near the destination (0-15)
    */
-  uint32_t SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
+  virtual uint32_t SetDestination(baldr::GraphReader& graphreader,
+                                  const valhalla::Location& dest) override;
 
   /**
    * Form the path from the adjacency list. Recovers the path from the

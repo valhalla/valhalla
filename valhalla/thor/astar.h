@@ -156,8 +156,8 @@ protected:
    * @param  dest         Location information of the destination.
    */
   virtual void SetOrigin(baldr::GraphReader& graphreader,
-                         valhalla::Location& origin,
-                         const valhalla::Location& dest,
+                         const valhalla::Location& origin,
+                         const valhalla::Location& destination,
                          const uint32_t seconds_of_week);
 
   /**
