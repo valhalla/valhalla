@@ -769,6 +769,34 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   // costing defaults to none which is only valid for locate
   auto costing_str = rapidjson::get<std::string>(doc, "/costing", "none");
+
+  // auto_shorter is deprecated and will be turned into
+  // shortest=true costing option. maybe remove in v4?
+  if (costing_str == "auto_shorter") {
+    costing_str = "auto";
+    rapidjson::SetValueByPointer(doc, "/costing", "auto");
+    auto json_options = rapidjson::GetValueByPointer(doc, "/costing_options/auto_shorter");
+    if (json_options) {
+      rapidjson::SetValueByPointer(doc, "/costing_options/auto", *json_options);
+    }
+    rapidjson::SetValueByPointer(doc, "/costing_options/auto/shortest", true);
+  }
+
+  // auto_data_fix is deprecated and will be turned into
+  // ignore all the things costing option. maybe remove in v4?
+  if (costing_str == "auto_data_fix") {
+    costing_str = "auto";
+    rapidjson::SetValueByPointer(doc, "/costing", "auto");
+    auto json_options = rapidjson::GetValueByPointer(doc, "/costing_options/auto_data_fix");
+    if (json_options) {
+      rapidjson::SetValueByPointer(doc, "/costing_options/auto", *json_options);
+    }
+    rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_restrictions", true);
+    rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_oneways", true);
+    rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_access", true);
+    rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_closures", true);
+  }
+
   // try the string directly, some strings are keywords so add an underscore
   Costing costing;
   if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {

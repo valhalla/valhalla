@@ -720,8 +720,8 @@ TEST(GraphParser, TestImportBssNode) {
   GraphReader reader(conf.get_child("mjolnir"));
 
   std::map<valhalla::baldr::GraphId, size_t> tiles =
-      GraphBuilder::BuildEdges(conf.get_child("mjolnir"), osmdata, ways_file, way_nodes_file,
-                               nodes_file, edges_file);
+      GraphBuilder::BuildEdges(conf.get_child("mjolnir"), ways_file, way_nodes_file, nodes_file,
+                               edges_file);
 
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                       from_restriction_file, to_restriction_file, tiles);

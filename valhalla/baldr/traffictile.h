@@ -13,11 +13,12 @@
 #include <string>
 #include <type_traits>
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/json.h>
 #include <vector>
 #else
 #include <stdint.h>
 #endif
-#include <valhalla.h>
+#include <valhalla/valhalla.h>
 
 #ifndef C_ONLY_INTERFACE
 namespace valhalla {
@@ -129,6 +130,48 @@ struct TrafficSpeed {
       : overall_speed{overall_speed}, speed1{s1}, speed2{s2}, speed3{s3}, breakpoint1{b1},
         breakpoint2{b2}, congestion1{c1}, congestion2{c2}, congestion3{c3},
         has_incidents{incidents}, spare{0} {
+  }
+
+  json::MapPtr json() const volatile {
+    auto live_speed = json::map({});
+    if (valid()) {
+      live_speed->emplace("overall_speed", static_cast<uint64_t>(get_overall_speed()));
+      auto speed = static_cast<uint64_t>(get_speed(0));
+      if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
+        live_speed->emplace("speed_0", nullptr);
+      else
+        live_speed->emplace("speed_0", speed);
+      auto congestion = (congestion1 - 1.0) / 62.0;
+      if (congestion < 0)
+        live_speed->emplace("congestion_0", nullptr);
+      else
+        live_speed->emplace("congestion_0", json::fp_t{congestion, 2});
+      live_speed->emplace("breakpoint_0", json::fp_t{breakpoint1 / 255.0, 2});
+
+      speed = static_cast<uint64_t>(get_speed(1));
+      if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
+        live_speed->emplace("speed_1", nullptr);
+      else
+        live_speed->emplace("speed_1", speed);
+      congestion = (congestion2 - 1.0) / 62.0;
+      if (congestion < 0)
+        live_speed->emplace("congestion_1", nullptr);
+      else
+        live_speed->emplace("congestion_1", json::fp_t{congestion, 2});
+      live_speed->emplace("breakpoint_1", json::fp_t{breakpoint2 / 255.0, 2});
+
+      speed = static_cast<uint64_t>(get_speed(2));
+      if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
+        live_speed->emplace("speed_2", nullptr);
+      else
+        live_speed->emplace("speed_2", speed);
+      congestion = (congestion3 - 1.0) / 62.0;
+      if (congestion < 0)
+        live_speed->emplace("congestion_2", nullptr);
+      else
+        live_speed->emplace("congestion_2", json::fp_t{congestion, 2});
+    }
+    return live_speed;
   }
 #endif
 };

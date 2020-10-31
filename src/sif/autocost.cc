@@ -5,6 +5,7 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include "osrm_car_duration.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
@@ -141,7 +142,7 @@ public:
    * limits).
    * @return  Returns true if the costing model allows multiple passes.
    */
-  virtual bool AllowMultiPass() const {
+  virtual bool AllowMultiPass() const override {
     return true;
   }
 
@@ -166,7 +167,7 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       int& restriction_idx) const;
+                       int& restriction_idx) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -193,7 +194,7 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              int& restriction_idx) const;
+                              int& restriction_idx) const override;
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -202,9 +203,9 @@ public:
    * @param curr_time
    * @return
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::TransitDeparture* departure,
-                        const uint32_t curr_time) const {
+  virtual Cost EdgeCost(const baldr::DirectedEdge*,
+                        const baldr::TransitDeparture*,
+                        const uint32_t) const override {
     throw std::runtime_error("AutoCost::EdgeCost does not support transit edges");
   }
 
@@ -218,7 +219,7 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::GraphTile* tile,
-                        const uint32_t seconds) const;
+                        const uint32_t seconds) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -231,7 +232,7 @@ public:
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const;
+                              const EdgeLabel& pred) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -245,7 +246,7 @@ public:
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const;
+                                     const baldr::DirectedEdge* edge) const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -255,7 +256,7 @@ public:
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
    */
-  virtual float AStarCostFactor() const {
+  virtual float AStarCostFactor() const override {
     return speedfactor_[kMaxAssumedSpeed];
   }
 
@@ -263,7 +264,7 @@ public:
    * Get the current travel type.
    * @return  Returns the current travel type.
    */
-  virtual uint8_t travel_type() const {
+  virtual uint8_t travel_type() const override {
     return static_cast<uint8_t>(type_);
   }
 
@@ -407,6 +408,12 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::GraphTile* tile,
                         const uint32_t seconds) const {
   auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
+  assert(speed < speedfactor_.size());
+  float sec = (edge->length() * speedfactor_[speed]);
+
+  if (shortest_) {
+    return Cost(edge->length(), sec);
+  }
 
   float factor =
       (edge->use() == Use::kFerry)
@@ -415,6 +422,7 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
+
   if (edge->toll()) {
     factor += toll_factor_;
   }
@@ -423,8 +431,6 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= alley_factor_;
   }
 
-  assert(speed < speedfactor_.size());
-  float sec = (edge->length() * speedfactor_[speed]);
   return Cost(sec * factor, sec);
 }
 
@@ -436,6 +442,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, pred, idx);
+  c.secs = OSRMCarTurnDuration(edge, node, pred.opp_local_idx());
 
   // Intersection transition time = factor * stopimpact * turncost. Factor depends
   // on density and whether traffic is available
@@ -464,9 +471,9 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-    c.cost += seconds;
-    c.secs += seconds;
+    c.cost += shortest_ ? 0.f : seconds;
   }
+
   return c;
 }
 
@@ -481,6 +488,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
+  c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -508,9 +516,9 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-    c.secs += seconds;
-    c.cost += seconds;
+    c.cost += shortest_ ? 0 : seconds;
   }
+
   return c;
 }
 
@@ -637,74 +645,6 @@ cost_ptr_t CreateAutoCost(const CostingOptions& costing_options) {
 }
 
 /**
- * Derived class providing an alternate costing for driving that is intended
- * to provide a short path.
- */
-class AutoShorterCost : public AutoCost {
-public:
-  /**
-   * Construct auto costing for shorter (not absolute shortest) path.
-   * Pass in costing_options with protocol buffer(pbf).
-   * @param  costing_options  pbf with costing_options.
-   */
-  AutoShorterCost(const CostingOptions& costing_options) : AutoCost(costing_options) {
-    // Create speed cost table that reduces the impact of speed
-    adjspeedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
-    for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
-      adjspeedfactor_[s] = (kSecPerHour * 0.001f) / sqrtf(static_cast<float>(s));
-    }
-  }
-
-  // virtual destructor
-  virtual ~AutoShorterCost() {
-  }
-
-  /**
-   * Returns the cost to traverse the edge and an estimate of the actual time
-   * (in seconds) to traverse the edge.
-   * @param  edge      Pointer to a directed edge.
-   * @param  tile      Current tile.
-   * @param  seconds   Time of week in seconds.
-   * @return  Returns the cost to traverse the edge.
-   */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::GraphTile* tile,
-                        const uint32_t seconds) const {
-    auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
-    float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : 1.0f;
-    return Cost(edge->length() * adjspeedfactor_[speed] * factor,
-                edge->length() * speedfactor_[speed]);
-  }
-
-  /**
-   * Get the cost factor for A* heuristics. This factor is multiplied
-   * with the distance to the destination to produce an estimate of the
-   * minimum cost to the destination. The A* heuristic must underestimate the
-   * cost to the destination. So a time based estimate based on speed should
-   * assume the maximum speed is used to the destination such that the time
-   * estimate is less than the least possible time along roads.
-   */
-  virtual float AStarCostFactor() const {
-    return adjspeedfactor_[kMaxSpeedKph];
-  }
-
-protected:
-  float adjspeedfactor_[kMaxSpeedKph + 1];
-};
-
-void ParseAutoShorterCostOptions(const rapidjson::Document& doc,
-                                 const std::string& costing_options_key,
-                                 CostingOptions* pbf_costing_options) {
-  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
-  pbf_costing_options->set_costing(Costing::auto_shorter);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
-}
-
-cost_ptr_t CreateAutoShorterCost(const CostingOptions& costing_options) {
-  return std::make_shared<AutoShorterCost>(costing_options);
-}
-
-/**
  * Derived class providing bus costing for driving.
  */
 class BusCost : public AutoCost {
@@ -743,7 +683,7 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       int& restriction_idx) const;
+                       int& restriction_idx) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -770,7 +710,7 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              int& restriction_idx) const;
+                              int& restriction_idx) const override;
 
   /**
    * Function to be used in location searching which will
@@ -887,7 +827,7 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       int& restriction_idx) const;
+                       int& restriction_idx) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -913,7 +853,7 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              int& restriction_idx) const;
+                              int& restriction_idx) const override;
 
   /**
    * Returns the cost to traverse the edge and an estimate of the actual time
@@ -925,13 +865,18 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::GraphTile* tile,
-                        const uint32_t seconds) const {
+                        const uint32_t seconds) const override {
     auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
+    float sec = edge->length() * speedfactor_[speed];
+
+    if (shortest_) {
+      return Cost(edge->length(), sec);
+    }
+
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
     if ((edge->forwardaccess() & kHOVAccess) && !(edge->forwardaccess() & kAutoAccess)) {
       factor *= kHOVFactor;
     }
-    float sec = (edge->length() * speedfactor_[speed]);
     return Cost(sec * factor, sec);
   }
 
@@ -1052,7 +997,7 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       int& restriction_idx) const;
+                       int& restriction_idx) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -1078,7 +1023,7 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              int& restriction_idx) const;
+                              int& restriction_idx) const override;
 
   /**
    * Returns the cost to traverse the edge and an estimate of the actual time
@@ -1090,13 +1035,18 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::GraphTile* tile,
-                        const uint32_t seconds) const {
+                        const uint32_t seconds) const override {
     auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
+    float sec = edge->length() * speedfactor_[speed];
+
+    if (shortest_) {
+      return Cost(edge->length(), sec);
+    }
+
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
     if ((edge->forwardaccess() & kTaxiAccess) && !(edge->forwardaccess() & kAutoAccess)) {
       factor *= kTaxiFactor;
     }
-    float sec = (edge->length() * speedfactor_[speed]);
     return Cost(sec * factor, sec);
   }
 
@@ -1176,109 +1126,6 @@ void ParseTaxiCostOptions(const rapidjson::Document& doc,
 
 cost_ptr_t CreateTaxiCost(const CostingOptions& costing_options) {
   return std::make_shared<TaxiCost>(costing_options);
-}
-
-/**
- * Derived class providing an alternate costing for driving that is ignores
- * oneways and turn restrictions. This can be useful for map-matching traces
- * when trying data that may have incorrect restrictions or oneway information.
- */
-class AutoDataFix : public AutoCost {
-public:
-  /**
-   * Construct auto data fix costing.
-   * Pass in configuration using property tree.
-   * @param  pt  Property tree with configuration/options.
-   */
-  AutoDataFix(const CostingOptions& costing_options) : AutoCost(costing_options) {
-  }
-
-  virtual ~AutoDataFix() {
-  }
-
-  /**
-   * Checks if access is allowed for the provided edge. The access check based on mode
-   * of travel and the access modes allowed on the edge.
-   * @param   edge  Pointer to edge information.
-   * @return  Returns true if access is allowed, false if not.
-   */
-  bool IsAccessible(const baldr::DirectedEdge* edge) const override {
-    bool allow_forward = (edge->forwardaccess() & access_mask_) ||
-                         (ignore_access_ && (edge->forwardaccess() & kAllAccess));
-    bool allow_reverse = (edge->reverseaccess() & access_mask_) ||
-                         (ignore_access_ && (edge->reverseaccess() & kAllAccess));
-    // Do not allow edges with no auto access in either direction
-    return (allow_forward && allow_reverse) || (ignore_oneways_ && allow_reverse);
-  }
-
-  /**
-   * Checks if access is allowed for the provided directed edge.
-   * This is generally based on mode of travel and the access modes
-   * allowed on the edge. However, it can be extended to exclude access
-   * based on other parameters such as conditional restrictions and
-   * conditional access that can depend on time and travel mode.
-   * @param  edge           Pointer to a directed edge.
-   * @param  pred           Predecessor edge information.
-   * @param  tile           Current tile.
-   * @param  edgeid         GraphId of the directed edge.
-   * @param  current_time   Current time (seconds since epoch). A value of 0
-   *                        indicates the route is not time dependent.
-   * @param  tz_index       timezone index for the node
-   * @return Returns true if access is allowed, false if not.
-   */
-  virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred,
-                       const GraphTile* tile,
-                       const baldr::GraphId& edgeid,
-                       const uint64_t current_time,
-                       const uint32_t tz_index,
-                       int& restriction_idx) const {
-
-    // Note: this profile ignores closures in live traffic, so that check is not
-    //       present, unlike other Allowed() implementations
-
-    // Check access and return false (not allowed if no auto access is allowed in either
-    // direction. Also disallow simple U-turns except at dead-end nodes.
-    if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-        edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-        (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Function to be used in location searching which will
-   * exclude and allow ranking results from the search by looking at each
-   * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. It's also used to filter
-   * edges not usable / inaccessible by auto in either direction.
-   */
-  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const override {
-    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    // Do not allow edges with no auto access in either direction
-    bool allow_forward = edge->forwardaccess() & access_mask;
-    bool allow_reverse = edge->reverseaccess() & access_mask;
-    bool accessible = (allow_forward && allow_reverse) || (ignore_oneways_ && allow_reverse);
-
-    if (!accessible || IsClosed(edge, tile)) {
-      return 0.0f;
-    } else {
-      return 1.0f;
-    }
-  }
-};
-
-void ParseAutoDataFixCostOptions(const rapidjson::Document& doc,
-                                 const std::string& costing_options_key,
-                                 CostingOptions* pbf_costing_options) {
-  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
-  pbf_costing_options->set_costing(Costing::auto_data_fix);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
-}
-
-cost_ptr_t CreateAutoDataFixCost(const CostingOptions& costing_options) {
-  return std::make_shared<AutoDataFix>(costing_options);
 }
 
 } // namespace sif

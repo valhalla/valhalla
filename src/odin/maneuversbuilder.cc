@@ -2485,8 +2485,9 @@ bool ManeuversBuilder::IsNextManeuverObvious(const std::list<Maneuver>& maneuver
     }
 
     // Return true if not a non-backward traversable same name intersecting edge
-    if (node && !node->HasNonBackwardTraversableSameNameIntersectingEdge(curr_man->end_heading(),
-                                                                         next_man->travel_mode())) {
+    if (node &&
+        !node->HasNonBackwardTraversableSameNameRampIntersectingEdge(curr_man->end_heading(),
+                                                                     next_man->travel_mode())) {
       return true;
     }
   }
@@ -2689,7 +2690,7 @@ void ManeuversBuilder::EnhanceSignlessInterchnages(std::list<Maneuver>& maneuver
 
 uint16_t
 ManeuversBuilder::GetExpectedTurnLaneDirection(std::unique_ptr<EnhancedTripLeg_Edge>& turn_lane_edge,
-                                               Maneuver& maneuver) const {
+                                               const Maneuver& maneuver) const {
   if (turn_lane_edge) {
     switch (maneuver.type()) {
       case valhalla::DirectionsLeg_Maneuver_Type_kUturnLeft:

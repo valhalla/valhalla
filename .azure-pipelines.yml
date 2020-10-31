@@ -37,6 +37,12 @@ jobs:
           path: "$(VCPKG_DIR)"
           cacheHitVar: CACHE_RESTORED
 
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.x' 
+          addToPath: true 
+          architecture: "$(TRIPLET)"
+
       - script: |
           git clone https://github.com/microsoft/vcpkg %VCPKG_DIR%
           git -C %VCPKG_DIR% checkout %VCPKG_REF%
@@ -67,7 +73,7 @@ jobs:
 
       - script: |
           cmake --version
-          cmake -H$(Build.SourcesDirectory) -B%BUILD_DIR% -G "Visual Studio 16 2019" -A %PLATFORM% -T host=%TRIPLET% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_CCACHE=OFF -DENABLE_DATA_TOOLS=ON -DENABLE_HTTP=OFF -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_SERVICES=OFF -DENABLE_TOOLS=ON -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR=%VCPKG_DIR%\installed\%TRIPLET%-windows\include\luajit -DLUA_LIBRARIES=%VCPKG_DIR%\installed\%TRIPLET%-windows\lib\lua51.lib
+          cmake -H$(Build.SourcesDirectory) -B%BUILD_DIR% -G "Visual Studio 16 2019" -A %PLATFORM% -T host=%TRIPLET% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR=%VCPKG_DIR%\installed\%TRIPLET%-windows\include\luajit -DLUA_LIBRARIES=%VCPKG_DIR%\installed\%TRIPLET%-windows\lib\lua51.lib
         displayName: 'Run CMake to configure build'
 
       - script: |

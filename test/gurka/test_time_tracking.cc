@@ -218,7 +218,7 @@ TEST(TimeTracking, routes) {
       }
     }
   }
-  std::vector<double> expected = {0, 17.1429, 34.2857, 176.789, 220.289, 244.289, 268.289};
+  std::vector<double> expected = {0, 17.1429, 34.2857, 176.789, 228.2844, 252.2844, 276.2844};
   ASSERT_EQ(times.size(), expected.size());
   ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
                          [](double a, double b) { return std::abs(a - b) < .0001; }));
@@ -239,7 +239,7 @@ TEST(TimeTracking, routes) {
       }
     }
   }
-  expected = {0, 17.1429, 34.2857, 176.789, 220.289, 244.289, 268.289};
+  expected = {0, 17.1429, 34.2857, 176.789, 228.2844, 252.2844, 276.2844};
   ASSERT_EQ(times.size(), expected.size());
   ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
                          [](double a, double b) { return std::abs(a - b) < .0001; }));
@@ -261,8 +261,16 @@ TEST(TimeTracking, routes) {
     }
   }
   // TODO: why does arrive by have an extra node in here...
-  expected = {0, 0, 17.1429, 34.2857, 176.789, 220.289, 244.289, 268.289};
+  expected = {0, 0, 17.1429, 34.2857, 176.789, 228.2844, 252.2844, 276.2844};
   ASSERT_EQ(times.size(), expected.size());
   ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
                          [](double a, double b) { return std::abs(a - b) < .0001; }));
+}
+
+TEST(TimeTracking, dst) {
+  // BST and GMT ambiguity where we gain an hour due to DST
+  std::string date_time = "2020-10-25T01:57";
+  int tz_idx = dt::get_tz_db().to_index("Europe/London");
+  EXPECT_NO_THROW(baldr::TimeInfo::make(date_time, tz_idx))
+      << " could not apply timezone to local time";
 }
