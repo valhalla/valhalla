@@ -48,7 +48,7 @@ public:
    * Returns the name of the algorithm
    * @return the name of the algorithm
    */
-  virtual std::string name() const override {
+  virtual const char* name() const override {
     return "time_dependent_forward_a*";
   }
 
@@ -131,7 +131,7 @@ public:
    * Returns the name of the algorithm
    * @return the name of the algorithm
    */
-  virtual std::string name() const override {
+  virtual const char* name() const override {
     return "time_dependent_reverse_a*";
   }
 

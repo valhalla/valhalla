@@ -62,7 +62,7 @@ public:
    * Returns the name of the algorithm
    * @return the name of the algorithm
    */
-  virtual std::string name() const = 0;
+  virtual const char* name() const = 0;
 
   /**
    * Clear the temporary information generated during path construction.

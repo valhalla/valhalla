@@ -100,7 +100,7 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
     {150, 400}, {151, 400}, {152, 400}, {153, 400}, {154, 400}, {155, 400}, {156, 400}, {157, 400},
     {158, 400}, {159, 400},
 
-    {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400},
+    {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400}, {165, 400}
 
     {170, 400}, {171, 400}, {172, 400},
 
@@ -207,6 +207,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {164,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {165, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
 
     {170, R"({"code":"NoRoute","message":"Impossible route between points"})"},
     {171,
@@ -651,13 +652,11 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   // failure scenarios with respect to time dependence
   if (options.has_date_time_type()) {
-    if (options.date_time_type() == Options::arrive_by) {
+    if (options.date_time_type() == Options::arrive_by || options.date_time_type == Options::invariant) {
       if (options.costing() == multimodal || options.costing() == transit)
         throw valhalla_exception_t{141};
       if (options.action() == Options::isochrone)
         throw valhalla_exception_t{142};
-    } else if (options.date_time_type() == Options::invariant && options.action() != Options::route) {
-      throw valhalla_exception_t{143};
     }
   }
 

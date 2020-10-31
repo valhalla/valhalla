@@ -61,7 +61,7 @@ public:
    * Returns the name of the algorithm
    * @return the name of the algorithm
    */
-  virtual std::string name() const override {
+  virtual const char* name() const override {
     return "a*_bike_share_station";
   }
 
