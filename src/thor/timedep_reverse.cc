@@ -289,7 +289,7 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
                             GraphReader& graphreader,
                             const sif::mode_costing_t& mode_costing,
                             const TravelMode mode,
-                            const Options& options) {
+                            const Options& /*options*/) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -566,7 +566,7 @@ uint32_t TimeDepReverse::SetDestination(GraphReader& graphreader, const valhalla
 }
 
 // Form the path from the adjacency list.
-std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const uint32_t dest) {
+std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& /*graphreader*/, const uint32_t dest) {
   // Metrics to track
   LOG_DEBUG("path_cost::" + std::to_string(edgelabels_rev_[dest].cost().cost));
   LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_rev_.size()));
