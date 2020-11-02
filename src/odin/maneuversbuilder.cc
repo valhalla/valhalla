@@ -366,6 +366,36 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         curr_man = next_man;
         ++next_man;
       }
+      // Combine double turns (left or right) in short non-internal intersections as u-turns
+      else if ((!curr_man->internal_intersection()) && ((curr_man->type() == DirectionsLeg_Maneuver_Type_kLeft && next_man->type() == DirectionsLeg_Maneuver_Type_kLeft ) || (curr_man->type() == DirectionsLeg_Maneuver_Type_kRight && next_man->type() == DirectionsLeg_Maneuver_Type_kRight)) && curr_man->length(Options::miles) < 0.02f && curr_man != next_man &&
+          !next_man->IsDestinationType()) {
+        // If drive on right then left u-turn
+        if (prev_man->drive_on_right()) {
+          curr_man->set_type(DirectionsLeg_Maneuver_Type_kUturnLeft);
+          LOG_TRACE("+++ Combine: double L turns in short non-internal intersection as ManeuverType=SIMPLE_UTURN_LEFT +++");
+        } else {
+          curr_man->set_type(DirectionsLeg_Maneuver_Type_kUturnRight);
+          LOG_TRACE("+++ Combine: double R turns in short non-internal intersection as ManeuverType=SIMPLE_UTURN_RIGHT +++");
+        }
+        curr_man = CombineInternalManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
+        if (is_first_man) {
+          prev_man = curr_man;
+        }
+        maneuvers_have_been_combined = true;
+        ++next_man;
+      }
+      // Combine current short length turn (left or right) with next maneuver that is a ramp
+      // NOTE: This should already be marked internal for OSM data so shouldn't happen for OSM
+      else if (!curr_man->internal_intersection() && (curr_man->type() == DirectionsLeg_Maneuver_Type_kLeft || curr_man->type() == DirectionsLeg_Maneuver_Type_kRight) && next_man->type() == DirectionsLeg_Maneuver_Type_kRampStraight && curr_man->length(Options::miles) < 0.02f && curr_man != next_man &&
+               !next_man->IsDestinationType()) {
+        LOG_TRACE("+++ Combine: current non-internal turn that is short in length with the next ramp maneuver +++");
+        curr_man = CombineInternalManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
+        if (is_first_man) {
+          prev_man = curr_man;
+        }
+        maneuvers_have_been_combined = true;
+        ++next_man;
+      }
       // Do not combine
       // if next maneuver is a fork or a tee
       else if (next_man->fork() || next_man->tee()) {
