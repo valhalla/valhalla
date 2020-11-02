@@ -41,7 +41,7 @@ void add_elevation(const boost::property_tree::ptree& pt,
                    std::deque<GraphId>& tilequeue,
                    std::mutex& lock,
                    const std::unique_ptr<const valhalla::skadi::sample>& sample,
-                   std::promise<uint32_t>& result) {
+                   std::promise<uint32_t>& /*result*/) {
   // Local Graphreader
   GraphReader graphreader(pt.get_child("mjolnir"));
 

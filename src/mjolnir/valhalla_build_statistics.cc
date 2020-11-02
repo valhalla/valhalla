@@ -49,8 +49,6 @@ struct HGVRestrictionTypes {
 
 bool IsLoopTerminal(const GraphTile& tile,
                     GraphReader& reader,
-                    const GraphId& startnode,
-                    const NodeInfo& startnodeinfo,
                     const DirectedEdge& directededge,
                     statistics::RouletteData& rd) {
   // Get correct tile to work with
@@ -202,10 +200,7 @@ bool IsLoop(GraphReader& reader,
 }
 
 bool IsUnroutableNode(const GraphTile& tile,
-                      GraphReader& reader,
-                      const GraphId& startnode,
                       const NodeInfo& startnodeinfo,
-                      const DirectedEdge& directededge,
                       statistics::RouletteData& rd) {
 
   const DirectedEdge* diredge = tile.directededge(startnodeinfo.edge_index());
@@ -235,8 +230,7 @@ bool IsUnroutableNode(const GraphTile& tile,
   return false;
 }
 
-void checkExitInfo(const GraphTile& tile,
-                   GraphReader& reader,
+void checkExitInfo(GraphReader& reader,
                    const GraphId& startnode,
                    const NodeInfo& startnodeinfo,
                    const DirectedEdge& directededge,
@@ -292,8 +286,7 @@ void AddStatistics(statistics& stats,
                    const GraphTile& tile,
                    GraphReader& graph_reader,
                    GraphId& node,
-                   const NodeInfo& nodeinfo,
-                   uint32_t idx) {
+                   const NodeInfo& nodeinfo) {
 
   auto rclass = directededge.classification();
   float edge_length = (tileid == directededge.endnode().tileid()) ? directededge.length() * 0.5f
@@ -331,15 +324,14 @@ void AddStatistics(statistics& stats,
 
   // Check for exit signage if it is a highway link
   if (directededge.link() && (rclass == RoadClass::kMotorway || rclass == RoadClass::kTrunk)) {
-    checkExitInfo(tile, graph_reader, node, nodeinfo, directededge, stats);
+    checkExitInfo(graph_reader, node, nodeinfo, directededge, stats);
   }
 
   // Add all other statistics
   // Only consider edge if edge is good and it's not a link
   if (!directededge.link()) {
     edge_length *= 0.5f;
-    bool found =
-        IsUnroutableNode(tile, graph_reader, node, nodeinfo, directededge, stats.roulette_data);
+    bool found = IsUnroutableNode(tile, nodeinfo, stats.roulette_data);
     if (!found) {
       // IsLoop(graph_reader,directededge,node,stats.roulette_data);
     }
@@ -478,7 +470,7 @@ void build(const boost::property_tree::ptree& pt,
         // Statistics
         if (valid_length) {
           AddStatistics(stats, *directededge, tileid, begin_node_iso, hgv, *tile, graph_reader, node,
-                        *nodeinfo, j);
+                        *nodeinfo);
         }
       }
     }
