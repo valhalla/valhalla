@@ -94,6 +94,7 @@
    * FIXED: Linear reference support in route/mapmatch apis (FOW, FRC, bearing, and number of references) [#2645](https://github.com/valhalla/valhalla/pull/2645)
    * FIXED: Ambiguous local to global (with timezone information) date time conversions now all choose to use the later time instead of throwing unhandled exceptions [#2665](https://github.com/valhalla/valhalla/pull/2665)
    * FIXED: Overestimated reach caused be reenquing transition nodes without checking that they had been already expanded [#2670](https://github.com/valhalla/valhalla/pull/2670)
+   * FIXED: Build with C++17 standard. Deprecated function calls are substituted with new ones. [#2669](https://github.com/valhalla/valhalla/pull/2669)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
