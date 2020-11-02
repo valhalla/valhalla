@@ -329,7 +329,8 @@ int main(int argc, char** argv) {
   }
   std::vector<std::pair<GraphId, std::vector<std::string>>> traffic_tiles(files_per_tile.begin(),
                                                                           files_per_tile.end());
-  std::random_shuffle(traffic_tiles.begin(), traffic_tiles.end());
+  std::random_device rd;
+  std::shuffle(traffic_tiles.begin(), traffic_tiles.end(), std::mt19937(rd()));
 
   // Read the config file
   boost::property_tree::ptree pt;
