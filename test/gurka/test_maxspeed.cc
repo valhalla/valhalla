@@ -46,6 +46,7 @@ TEST(Standalone, Maxspeed) {
   // ]
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
   EXPECT_EQ(d["routes"][0]["legs"][0]["annotation"]["maxspeed"].Size(), 6);
+  EXPECT_EQ(d["routes"][0]["legs"][0]["steps"].Size(), 3);
 
   EXPECT_EQ(d["routes"][0]["legs"][0]["annotation"]["maxspeed"][0]["speed"].GetInt(), 50);
   EXPECT_STREQ(d["routes"][0]["legs"][0]["annotation"]["maxspeed"][0]["unit"].GetString(), "km/h");
@@ -56,4 +57,11 @@ TEST(Standalone, Maxspeed) {
   EXPECT_EQ(d["routes"][0]["legs"][0]["annotation"]["maxspeed"][4]["none"].GetBool(), true);
   EXPECT_EQ(d["routes"][0]["legs"][0]["annotation"]["maxspeed"][5]["speed"].GetInt(), 40);
   EXPECT_STREQ(d["routes"][0]["legs"][0]["annotation"]["maxspeed"][5]["unit"].GetString(), "km/h");
+
+  EXPECT_STREQ(d["routes"][0]["legs"][0]["steps"][0]["speedLimitSign"].GetString(), "vienna");
+  EXPECT_STREQ(d["routes"][0]["legs"][0]["steps"][0]["speedLimitUnit"].GetString(), "km/h");
+  EXPECT_STREQ(d["routes"][0]["legs"][0]["steps"][1]["speedLimitSign"].GetString(), "vienna");
+  EXPECT_STREQ(d["routes"][0]["legs"][0]["steps"][1]["speedLimitUnit"].GetString(), "km/h");
+  EXPECT_STREQ(d["routes"][0]["legs"][0]["steps"][2]["speedLimitSign"].GetString(), "vienna");
+  EXPECT_STREQ(d["routes"][0]["legs"][0]["steps"][2]["speedLimitUnit"].GetString(), "km/h");
 }
