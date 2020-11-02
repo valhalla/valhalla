@@ -463,7 +463,8 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // can properly recover elapsed time on the reverse path.
   Cost transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
-  Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2) + transition_cost;
+  Cost newcost =
+      pred.cost() + costing_->EdgeCost(opp_edge, t2, time_info.second_of_week) + transition_cost;
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
