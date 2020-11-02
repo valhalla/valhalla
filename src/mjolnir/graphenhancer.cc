@@ -668,7 +668,6 @@ bool IsNotThruEdge(GraphReader& reader,
 bool IsIntersectionInternal(const GraphTile* start_tile,
                             GraphReader& reader,
                             std::mutex& lock,
-                            const GraphId& startnode,
                             const NodeInfo& startnodeinfo,
                             const DirectedEdge& directededge,
                             const uint32_t idx) {
@@ -887,8 +886,7 @@ bool IsNextEdgeInternalImpl(const DirectedEdge directededge,
       if (!infer_internal_intersections)
         return diredge->internal();
       else
-        return IsIntersectionInternal(&end_node_tile, reader, lock, directededge.endnode(),
-                                      end_node_info, *diredge, i);
+        return IsIntersectionInternal(&end_node_tile, reader, lock, end_node_info, *diredge, i);
     }
   }
   return false;
@@ -1750,8 +1748,7 @@ void enhance(const boost::property_tree::ptree& pt,
         // Test if an internal intersection edge. Must do this after setting
         // opposing edge index
         if (infer_internal_intersections &&
-            IsIntersectionInternal(&tilebuilder, reader, lock, startnode, nodeinfo, directededge,
-                                   j)) {
+            IsIntersectionInternal(&tilebuilder, reader, lock, nodeinfo, directededge, j)) {
           directededge.set_internal(true);
         }
 
