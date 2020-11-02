@@ -10,6 +10,7 @@
 #include <date/date.h>
 #include <date/tz.h>
 
+#include "baldr/turnlanes.h"
 #include "locales.h"
 #include "midgard/logging.h"
 #include "odin/util.h"
@@ -132,6 +133,30 @@ const locales_singleton_t& get_locales() {
 
 const std::unordered_map<std::string, std::string>& get_locales_json() {
   return locales_json;
+}
+
+std::string turn_lane_direction(uint16_t turn_lane) {
+  switch (turn_lane) {
+    case baldr::kTurnLaneReverse:
+      return "uturn";
+    case baldr::kTurnLaneSharpLeft:
+      return "sharp left";
+    case baldr::kTurnLaneLeft:
+      return "left";
+    case baldr::kTurnLaneSlightLeft:
+      return "slight left";
+    case baldr::kTurnLaneThrough:
+      return "straight";
+    case baldr::kTurnLaneSlightRight:
+      return "slight right";
+    case baldr::kTurnLaneRight:
+      return "right";
+    case baldr::kTurnLaneSharpRight:
+      return "sharp right";
+    default:
+      return "";
+  }
+  return "";
 }
 
 } // namespace odin

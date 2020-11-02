@@ -378,30 +378,6 @@ struct IntersectionEdges {
   }
 };
 
-std::string turn_lane_direction(uint16_t turn_lane) {
-  switch (turn_lane) {
-    case kTurnLaneReverse:
-      return "uturn";
-    case kTurnLaneSharpLeft:
-      return "sharp left";
-    case kTurnLaneLeft:
-      return "left";
-    case kTurnLaneSlightLeft:
-      return "slight left";
-    case kTurnLaneThrough:
-      return "straight";
-    case kTurnLaneSlightRight:
-      return "slight right";
-    case kTurnLaneRight:
-      return "right";
-    case kTurnLaneSharpRight:
-      return "sharp right";
-    default:
-      return "";
-  }
-  return "";
-}
-
 // Add intersections along a step/maneuver.
 json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
                              valhalla::odin::EnhancedTripLeg* etp,
