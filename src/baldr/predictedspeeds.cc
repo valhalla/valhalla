@@ -86,12 +86,11 @@ float decompress_speed_bucket(const int16_t* coefficients, uint32_t bucket_idx) 
 
 std::string encode_compressed_speeds(const int16_t* coefficients) {
   std::string result;
-  result.reserve(2 * kCoefficientCount);
-  for (size_t i = 0; i < kCoefficientCount; ++i) {
-    const int8_t* bytes = reinterpret_cast<const int8_t*>(&coefficients[i]);
+  result.reserve(kCoefficientCount * sizeof(uint16_t) / sizeof(char));
+  for (uint32_t i = 0; i < kCoefficientCount; ++i) {
     // change byte order: little endian -> big endian
-    result.push_back(bytes[1]);
-    result.push_back(bytes[0]);
+    const uint16_t bytes = midgard::to_big_endian(static_cast<uint16_t>(coefficients[i]));
+    result.append(reinterpret_cast<const char*>(&bytes), sizeof(uint16_t) / sizeof(char));
   }
   return midgard::encode64(result);
 }
