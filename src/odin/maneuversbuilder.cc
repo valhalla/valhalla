@@ -367,7 +367,8 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         ++next_man;
       }
       // Combine double turns (left or right) in short non-internal intersections as u-turns
-      else if ((!curr_man->internal_intersection()) &&
+      else if ((curr_man->travel_mode() != TripLeg_TravelMode::TripLeg_TravelMode_kPedestrian) &&
+               !curr_man->internal_intersection() &&
                ((curr_man->type() == DirectionsLeg_Maneuver_Type_kLeft &&
                  next_man->type() == DirectionsLeg_Maneuver_Type_kLeft) ||
                 (curr_man->type() == DirectionsLeg_Maneuver_Type_kRight &&
