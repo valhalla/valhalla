@@ -187,6 +187,7 @@
    * ADDED: Linear reference support to locate api [#2645](https://github.com/valhalla/valhalla/pull/2645)
    * ADDED: Implemented OSRM-like turn duration calculation for car. Uses it now in auto costing. [#2651](https://github.com/valhalla/valhalla/pull/2651)
    * ADDED: Enhanced turn lane information in guidance [#2653](https://github.com/valhalla/valhalla/pull/2653)
+   * ADDED: Added functions for predicted speeds encoding-decoding [#2674](https://github.com/valhalla/valhalla/pull/2674)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
