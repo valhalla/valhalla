@@ -621,7 +621,8 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
     for (const auto& tile_id : level_tiles) {
       tempqueue.emplace_back(tile_id);
     }
-    std::random_shuffle(tempqueue.begin(), tempqueue.end());
+    std::random_device rd;
+    std::shuffle(tempqueue.begin(), tempqueue.end(), std::mt19937(rd()));
     std::queue<GraphId> tilequeue(tempqueue);
 
     // An atomic object we can use to do the synchronization

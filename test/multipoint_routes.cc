@@ -384,7 +384,7 @@ TEST(MultiPointRoutesBreakThrough, test_mid_break_through_elapsed) {
   EXPECT_LT(previous_node->cost().elapsed_cost().seconds(),
             last_node->cost().elapsed_cost().seconds() -
                 previous_node->cost().transition_cost().seconds());
-  EXPECT_NEAR(legs.rbegin()->node().rbegin()->cost().elapsed_cost().seconds(), 18.2, .2);
+  EXPECT_NEAR(legs.rbegin()->node().rbegin()->cost().elapsed_cost().seconds(), 11.2, .2);
 }
 
 } // namespace

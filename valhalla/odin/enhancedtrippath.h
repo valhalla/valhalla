@@ -422,8 +422,10 @@ public:
                              const DirectionsLeg_Maneuver_Type& curr_maneuver_type,
                              const DirectionsLeg_Maneuver_Type& next_maneuver_type);
   uint16_t ActivateTurnLanesFromLeft(uint16_t turn_lane_direction,
+                                     const DirectionsLeg_Maneuver_Type& curr_maneuver_type,
                                      uint16_t activated_max = std::numeric_limits<uint16_t>::max());
   uint16_t ActivateTurnLanesFromRight(uint16_t turn_lane_direction,
+                                      const DirectionsLeg_Maneuver_Type& curr_maneuver_type,
                                       uint16_t activated_max = std::numeric_limits<uint16_t>::max());
 
   std::string ToString() const;
@@ -622,7 +624,7 @@ public:
   bool HasIntersectingEdgeCurrNameConsistency() const;
 
   /**
-   * Returns true if there is an non-backward traversable intersecting edge with the same name
+   * Returns true if there is an non-backward traversable intersecting edge ramp with the same name
    * as the previous and/or current edges at this node along the route path.
    * Non-backward is so we do not consider edges in the reverse direction of the route path.
    *
@@ -630,11 +632,11 @@ public:
    * @param travel_mode the travel mode at the node in the route path - examples:
    *                       kDrive, kPedestrian, kBicycle, kTransit
    *
-   * @return true if there is an non-backward traversable intersecting edge with the same name
+   * @return true if there is an non-backward traversable intersecting edge ramp with the same name
    * as the previous and/or current edges at this node along the route path.
    */
-  bool HasNonBackwardTraversableSameNameIntersectingEdge(uint32_t from_heading,
-                                                         const TripLeg_TravelMode travel_mode);
+  bool HasNonBackwardTraversableSameNameRampIntersectingEdge(uint32_t from_heading,
+                                                             const TripLeg_TravelMode travel_mode);
 
   std::unique_ptr<EnhancedTripLeg_IntersectingEdge> GetIntersectingEdge(size_t index);
 
