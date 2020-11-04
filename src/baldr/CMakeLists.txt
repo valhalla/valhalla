@@ -53,6 +53,7 @@ set(sources
     nodeinfo.cc
     location.cc
     pathlocation.cc
+    predictedspeeds.cc
     tilehierarchy.cc
     turn.cc
     streetname.cc

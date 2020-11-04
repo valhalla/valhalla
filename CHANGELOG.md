@@ -189,7 +189,8 @@
    * ADDED: Enhanced turn lane information in guidance [#2653](https://github.com/valhalla/valhalla/pull/2653)
    * CHANGED: Move turn_lane_direction helper to odin/util [#2675](https://github.com/valhalla/valhalla/pull/2675)
    * ADDED: Add annotations to osrm response including speed limits, unit and sign conventions [#2668](https://github.com/valhalla/valhalla/pull/2668)
-
+   * ADDED: Added functions for predicted speeds encoding-decoding [#2674](https://github.com/valhalla/valhalla/pull/2674)
+   
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
    * FIXED: Changed reachability computation to consider both directions of travel wrt candidate edges [#1965](https://github.com/valhalla/valhalla/pull/1965)
