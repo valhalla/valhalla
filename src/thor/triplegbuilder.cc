@@ -241,6 +241,7 @@ void SetShapeAttributes(const AttributesController& controller,
   }
 
   // Find the first cut to the right of where we start on this edge
+  auto edgeinfo = tile->edgeinfo(edge->edgeinfo_offset());
   double distance_total_pct = src_pct;
   auto cut_itr = std::find_if(cuts.cbegin(), cuts.cend(),
                               [distance_total_pct](const decltype(cuts)::value_type& s) {
@@ -283,6 +284,11 @@ void SetShapeAttributes(const AttributesController& controller,
     if (controller.attributes.at(kShapeAttributesSpeed)) {
       // convert speed to decimeters per sec and then round to an integer
       leg.mutable_shape_attributes()->add_speed((distance * kDecimeterPerMeter / time) + 0.5);
+    }
+
+    // Set the maxspeed if requested
+    if (controller.attributes.at(kShapeAttributesSpeedLimit)) {
+      leg.mutable_shape_attributes()->add_speed_limit(edgeinfo.speed_limit());
     }
 
     // Set the incidents if we just cut or we are at the end
