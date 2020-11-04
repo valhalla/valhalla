@@ -34,6 +34,10 @@ using namespace std;
 namespace {
 const std::string kSignElementDelimiter = ", ";
 const std::string kDestinationsDelimiter = ": ";
+const std::string kSpeedLimitSignVienna = "vienna";
+const std::string kSpeedLimitSignMutcd = "mutcd";
+const std::string kSpeedLimitUnitsKph = "km/h";
+const std::string kSpeedLimitUnitsMph = "mph";
 
 constexpr std::size_t MAX_USED_SEGMENTS = 2;
 struct NamedSegment {
@@ -180,6 +184,41 @@ std::unordered_map<std::string, std::string> iso2_to_iso3 =
      {"UY", "URY"}, {"UZ", "UZB"}, {"VA", "VAT"}, {"VC", "VCT"}, {"VE", "VEN"}, {"VG", "VGB"},
      {"VI", "VIR"}, {"VN", "VNM"}, {"VU", "VUT"}, {"WF", "WLF"}, {"WS", "WSM"}, {"YE", "YEM"},
      {"YT", "MYT"}, {"ZA", "ZAF"}, {"ZM", "ZMB"}, {"ZW", "ZWE"}, {"CS", "SCG"}, {"AN", "ANT"}};
+
+// Sign style and unit conventions for speed limit signs by country.
+// Most countries use Vienna style and km/h, but the countries below
+// use MUTCD and/or mph conventions.
+std::unordered_map<std::string, std::pair<std::string, std::string>> speed_limit_info = {
+    {"AG", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"AI", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"AS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"BS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"BZ", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"CA", {kSpeedLimitSignMutcd, kSpeedLimitUnitsKph}},
+    {"DM", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"FK", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"GB", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"GD", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"GG", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"GS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"GU", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
+    {"IM", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"JE", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"KN", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"KY", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"LC", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"LR", {kSpeedLimitSignMutcd, kSpeedLimitUnitsKph}},
+    {"MP", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"MS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"PR", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
+    {"SH", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"TC", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"US", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
+    {"VC", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"VG", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+    {"VI", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
+    {"WS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
+};
 
 namespace osrm_serializers {
 /*
@@ -335,6 +374,57 @@ void route_geometry(json::MapPtr& route,
     int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
     route->emplace("geometry", midgard::encode(shape, precision));
   }
+}
+
+json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
+  auto attributes_map = json::map({});
+
+  if (trip_leg.shape_attributes().time_size() > 0) {
+    auto duration_array = json::array({});
+    for (const auto& time : trip_leg.shape_attributes().time()) {
+      // milliseconds (ms) to seconds (sec)
+      duration_array->push_back(json::fp_t{time * kSecPerMillisecond, 3});
+    }
+    attributes_map->emplace("duration", duration_array);
+  }
+
+  if (trip_leg.shape_attributes().length_size() > 0) {
+    auto distance_array = json::array({});
+    for (const auto& length : trip_leg.shape_attributes().length()) {
+      // decimeters (dm) to meters (m)
+      distance_array->push_back(json::fp_t{length * kMeterPerDecimeter, 1});
+    }
+    attributes_map->emplace("distance", distance_array);
+  }
+
+  if (trip_leg.shape_attributes().speed_size() > 0) {
+    auto speeds_array = json::array({});
+    for (const auto& speed : trip_leg.shape_attributes().speed()) {
+      // dm/s to m/s
+      speeds_array->push_back(json::fp_t{speed * kMeterPerDecimeter, 1});
+    }
+    attributes_map->emplace("speed", speeds_array);
+  }
+
+  if (trip_leg.shape_attributes().speed_limit_size() > 0) {
+    auto speed_limits_array = json::array({});
+    for (const auto& speed_limit : trip_leg.shape_attributes().speed_limit()) {
+      auto speed_limit_annotation = json::map({});
+      if (speed_limit == kUnlimitedSpeedLimit) {
+        speed_limit_annotation->emplace("none", true);
+      } else if (speed_limit > 0) {
+        // TODO support mph?
+        speed_limit_annotation->emplace("unit", kSpeedLimitUnitsKph);
+        speed_limit_annotation->emplace("speed", static_cast<uint64_t>(speed_limit));
+      } else {
+        speed_limit_annotation->emplace("unknown", true);
+      }
+      speed_limits_array->push_back(speed_limit_annotation);
+    }
+    attributes_map->emplace("maxspeed", speed_limits_array);
+  }
+
+  return attributes_map;
 }
 
 // Serialize waypoints for optimized route. Note that OSRM retains the
@@ -1353,6 +1443,22 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         step->emplace("ref", ref);
       }
 
+      // Check if speed limits were requested
+      if (path_leg.shape_attributes().speed_limit_size() > 0) {
+        // Lookup speed limit info for this country
+        auto country_code = etp.GetCountryCode(maneuver.begin_path_index());
+        auto country = speed_limit_info.find(country_code);
+        if (country != speed_limit_info.end()) {
+          // Some countries have different speed limit sign types and speed units
+          step->emplace("speedLimitSign", country->second.first);
+          step->emplace("speedLimitUnit", country->second.second);
+        } else {
+          // Otherwise use the defaults (vienna convention style and km/h)
+          step->emplace("speedLimitSign", kSpeedLimitSignVienna);
+          step->emplace("speedLimitUnit", kSpeedLimitUnitsKph);
+        }
+      }
+
       rotary = ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) &&
                 (maneuver.street_name_size() > 0));
       if (rotary) {
@@ -1470,6 +1576,11 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
     // Add steps to the leg
     output_leg->emplace("steps", steps);
+
+    // Add shape_attributes, if requested
+    if (path_leg.has_shape_attributes()) {
+      output_leg->emplace("annotation", serialize_annotations(path_leg));
+    }
 
     // Add incidents to the leg
     serializeIncidents(path_leg.incidents(), *output_leg);
@@ -1745,6 +1856,77 @@ TEST(RouteSerializerOsrm, testserializeIncidentsNothingToAdd) {
   rapidjson::Document expected_json;
   {
     expected_json.Parse("{}");
+    ASSERT_TRUE(expected_json.IsObject());
+  }
+
+  assert_json_equality(serialized_to_json, expected_json);
+}
+
+TEST(RouteSerializerOsrm, testserializeAnnotationsEmpty) {
+  rapidjson::Document serialized_to_json;
+  {
+    auto leg = TripLeg();
+    json::MapPtr annotations = serialize_annotations(leg);
+
+    std::stringstream ss;
+    ss << *annotations;
+    serialized_to_json.Parse(ss.str().c_str());
+    std::cout << *annotations << std::endl;
+  }
+  rapidjson::Document expected_json;
+  { expected_json.Parse(R"({})"); }
+
+  assert_json_equality(serialized_to_json, expected_json);
+}
+
+TEST(RouteSerializerOsrm, testserializeAnnotations) {
+  rapidjson::Document serialized_to_json;
+  {
+    auto leg = TripLeg();
+    leg.mutable_shape_attributes()->add_time(1);
+    leg.mutable_shape_attributes()->add_length(2);
+    leg.mutable_shape_attributes()->add_speed(3);
+    auto annotations = serialize_annotations(leg);
+
+    std::stringstream ss;
+    ss << *annotations;
+    serialized_to_json.Parse(ss.str().c_str());
+  }
+  rapidjson::Document expected_json;
+  {
+    expected_json.Parse(R"({
+      "duration": [0.001],
+      "distance": [0.2],
+      "speed": [0.3]
+    })");
+    ASSERT_TRUE(expected_json.IsObject());
+  }
+
+  assert_json_equality(serialized_to_json, expected_json);
+}
+
+TEST(RouteSerializerOsrm, testserializeAnnotationsSpeedLimits) {
+  rapidjson::Document serialized_to_json;
+  {
+    auto leg = TripLeg();
+    leg.mutable_shape_attributes()->add_speed_limit(30);
+    leg.mutable_shape_attributes()->add_speed_limit(255);
+    leg.mutable_shape_attributes()->add_speed_limit(0);
+    auto annotations = serialize_annotations(leg);
+
+    std::stringstream ss;
+    ss << *annotations;
+    serialized_to_json.Parse(ss.str().c_str());
+  }
+  rapidjson::Document expected_json;
+  {
+    expected_json.Parse(R"({
+      "maxspeed": [
+        { "speed": 30, "unit": "km/h" },
+        { "none": true },
+        { "unknown": true }
+      ]
+    })");
     ASSERT_TRUE(expected_json.IsObject());
   }
 
