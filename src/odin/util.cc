@@ -14,6 +14,9 @@
 #include "locales.h"
 #include "midgard/logging.h"
 #include "odin/util.h"
+#include "tyr/serializer_constants.h"
+
+using namespace valhalla::tyr;
 
 namespace {
 
@@ -138,21 +141,21 @@ const std::unordered_map<std::string, std::string>& get_locales_json() {
 std::string turn_lane_direction(uint16_t turn_lane) {
   switch (turn_lane) {
     case baldr::kTurnLaneReverse:
-      return "uturn";
+      return osrmconstants::kModifierUturn;
     case baldr::kTurnLaneSharpLeft:
-      return "sharp left";
+      return osrmconstants::kModifierSharpLeft;
     case baldr::kTurnLaneLeft:
-      return "left";
+      return osrmconstants::kModifierLeft;
     case baldr::kTurnLaneSlightLeft:
-      return "slight left";
+      return osrmconstants::kModifierSlightLeft;
     case baldr::kTurnLaneThrough:
-      return "straight";
+      return osrmconstants::kModifierStraight;
     case baldr::kTurnLaneSlightRight:
-      return "slight right";
+      return osrmconstants::kModifierSlightRight;
     case baldr::kTurnLaneRight:
-      return "right";
+      return osrmconstants::kModifierRight;
     case baldr::kTurnLaneSharpRight:
-      return "sharp right";
+      return osrmconstants::kModifierSharpRight;
     default:
       return "";
   }

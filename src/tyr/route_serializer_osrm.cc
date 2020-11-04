@@ -11,6 +11,7 @@
 #include "midgard/util.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
+#include "tyr/serializer_constants.h"
 #include "tyr/serializers.h"
 #include "worker.h"
 
@@ -578,40 +579,40 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         // reverse (left u-turn)
         if ((mask & kTurnLaneReverse) &&
             (maneuver.type() == DirectionsLeg_Maneuver_Type_kUturnLeft)) {
-          indications->emplace_back(std::string("uturn"));
+          indications->emplace_back(osrmconstants::kModifierUturn);
         }
         // sharp_left
         if (mask & kTurnLaneSharpLeft) {
-          indications->emplace_back(std::string("sharp left"));
+          indications->emplace_back(osrmconstants::kModifierSharpLeft);
         }
         // left
         if (mask & kTurnLaneLeft) {
-          indications->emplace_back(std::string("left"));
+          indications->emplace_back(osrmconstants::kModifierLeft);
         }
         // slight_left
         if (mask & kTurnLaneSlightLeft) {
-          indications->emplace_back(std::string("slight left"));
+          indications->emplace_back(osrmconstants::kModifierSlightLeft);
         }
         // through
         if (mask & kTurnLaneThrough) {
-          indications->emplace_back(std::string("straight"));
+          indications->emplace_back(osrmconstants::kModifierStraight);
         }
         // slight_right
         if (mask & kTurnLaneSlightRight) {
-          indications->emplace_back(std::string("slight right"));
+          indications->emplace_back(osrmconstants::kModifierSlightRight);
         }
         // right
         if (mask & kTurnLaneRight) {
-          indications->emplace_back(std::string("right"));
+          indications->emplace_back(osrmconstants::kModifierRight);
         }
         // sharp_right
         if (mask & kTurnLaneSharpRight) {
-          indications->emplace_back(std::string("sharp right"));
+          indications->emplace_back(osrmconstants::kModifierSharpRight);
         }
         // reverse (right u-turn)
         if ((mask & kTurnLaneReverse) &&
             (maneuver.type() == DirectionsLeg_Maneuver_Type_kUturnRight)) {
-          indications->emplace_back(std::string("uturn"));
+          indications->emplace_back(osrmconstants::kModifierUturn);
         }
         lane->emplace("indications", std::move(indications));
         lanes->emplace_back(std::move(lane));
@@ -868,21 +869,21 @@ std::string turn_modifier(const uint32_t in_brg, const uint32_t out_brg) {
   auto turn_type = Turn::GetType(turn_degree);
   switch (turn_type) {
     case baldr::Turn::Type::kStraight:
-      return "straight";
+      return osrmconstants::kModifierStraight;
     case baldr::Turn::Type::kSlightRight:
-      return "slight right";
+      return osrmconstants::kModifierSlightRight;
     case baldr::Turn::Type::kRight:
-      return "right";
+      return osrmconstants::kModifierRight;
     case baldr::Turn::Type::kSharpRight:
-      return "sharp right";
+      return osrmconstants::kModifierSharpRight;
     case baldr::Turn::Type::kReverse:
-      return "uturn";
+      return osrmconstants::kModifierUturn;
     case baldr::Turn::Type::kSharpLeft:
-      return "sharp left";
+      return osrmconstants::kModifierSharpLeft;
     case baldr::Turn::Type::kLeft:
-      return "left";
+      return osrmconstants::kModifierLeft;
     case baldr::Turn::Type::kSlightLeft:
-      return "slight left";
+      return osrmconstants::kModifierSlightLeft;
   }
   auto num = static_cast<uint32_t>(turn_type);
   throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
@@ -903,47 +904,47 @@ std::string turn_modifier(const valhalla::DirectionsLeg::Maneuver& maneuver,
     case valhalla::DirectionsLeg_Maneuver_Type_kStayRight:
     case valhalla::DirectionsLeg_Maneuver_Type_kExitRight:
     case valhalla::DirectionsLeg_Maneuver_Type_kMergeRight:
-      return "slight right";
+      return osrmconstants::kModifierSlightRight;
     case valhalla::DirectionsLeg_Maneuver_Type_kRight:
     case valhalla::DirectionsLeg_Maneuver_Type_kStartRight:
     case valhalla::DirectionsLeg_Maneuver_Type_kDestinationRight:
-      return "right";
+      return osrmconstants::kModifierRight;
     case valhalla::DirectionsLeg_Maneuver_Type_kSharpRight:
-      return "sharp right";
+      return osrmconstants::kModifierSharpRight;
     case valhalla::DirectionsLeg_Maneuver_Type_kUturnRight:
     case valhalla::DirectionsLeg_Maneuver_Type_kUturnLeft:
       // [TODO #1789] route ending in uturn should not set modifier=uturn
       if (arrive_maneuver)
         return "";
-      return "uturn";
+      return osrmconstants::kModifierUturn;
     case valhalla::DirectionsLeg_Maneuver_Type_kSharpLeft:
-      return "sharp left";
+      return osrmconstants::kModifierSharpLeft;
     case valhalla::DirectionsLeg_Maneuver_Type_kLeft:
     case valhalla::DirectionsLeg_Maneuver_Type_kStartLeft:
     case valhalla::DirectionsLeg_Maneuver_Type_kDestinationLeft:
-      return "left";
+      return osrmconstants::kModifierLeft;
     case valhalla::DirectionsLeg_Maneuver_Type_kSlightLeft:
     case valhalla::DirectionsLeg_Maneuver_Type_kStayLeft:
     case valhalla::DirectionsLeg_Maneuver_Type_kExitLeft:
     case valhalla::DirectionsLeg_Maneuver_Type_kMergeLeft:
-      return "slight left";
+      return osrmconstants::kModifierSlightLeft;
     case valhalla::DirectionsLeg_Maneuver_Type_kRampRight:
       if (Turn::GetType(GetTurnDegree(in_brg, out_brg)) == baldr::Turn::Type::kRight)
-        return "right";
+        return osrmconstants::kModifierRight;
       else
-        return "slight right";
+        return osrmconstants::kModifierSlightRight;
     case valhalla::DirectionsLeg_Maneuver_Type_kRampLeft:
       if (Turn::GetType(GetTurnDegree(in_brg, out_brg)) == baldr::Turn::Type::kLeft)
-        return "left";
+        return osrmconstants::kModifierLeft;
       else
-        return "slight left";
+        return osrmconstants::kModifierSlightLeft;
     case valhalla::DirectionsLeg_Maneuver_Type_kRoundaboutEnter:
     case valhalla::DirectionsLeg_Maneuver_Type_kRoundaboutExit:
     case valhalla::DirectionsLeg_Maneuver_Type_kFerryEnter:
     case valhalla::DirectionsLeg_Maneuver_Type_kFerryExit:
       return turn_modifier(in_brg, out_brg);
     default:
-      return "straight";
+      return osrmconstants::kModifierStraight;
   }
 }
 
@@ -1105,7 +1106,7 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
       } else if (false_node && new_name) {
         maneuver_type = "new name";
       } else {
-        if ((modifier != "uturn") && (!maneuver.to_stay_on())) {
+        if ((modifier != osrmconstants::kModifierUturn) && (!maneuver.to_stay_on())) {
           maneuver_type = "turn";
         } else {
           maneuver_type = "continue";
