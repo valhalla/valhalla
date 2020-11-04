@@ -1979,6 +1979,11 @@ bool ManeuversBuilder::IsFork(int node_index,
 
   auto node = trip_path_->GetEnhancedNode(node_index);
 
+  // Must have 1 or 2 intersecting edges
+  if ((node->intersecting_edge_size() < 1) || (node->intersecting_edge_size() > 2)) {
+    return false;
+  }
+
   // If node is fork
   // and prev to curr edge is relative straight
   // and the intersecting edge count is less than 3
@@ -1986,7 +1991,6 @@ bool ManeuversBuilder::IsFork(int node_index,
   if (node->fork() &&
       curr_edge->IsWiderForward(
           GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
-      (node->intersecting_edge_size() < 3) &&
       node->HasWiderForwardTraversableIntersectingEdge(prev_edge->end_heading(),
                                                        curr_edge->travel_mode())) {
     // If the above criteria is met then check the following criteria...
@@ -2026,9 +2030,20 @@ bool ManeuversBuilder::IsFork(int node_index,
   else if (prev_edge->IsHighway() && curr_edge->IsHighway() &&
            curr_edge->IsWiderForward(
                GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
-           (node->intersecting_edge_size() < 3) &&
            node->HasWiderForwardTraversableHighwayXEdge(prev_edge->end_heading(),
-                                                        curr_edge->travel_mode())) {
+                                                        prev_edge->travel_mode())) {
+    return true;
+  }
+  // TODO new code
+  else if (!prev_edge->IsRampUse() && !prev_edge->IsTurnChannelUse() && !prev_edge->IsFerryUse() &&
+           !prev_edge->IsRailFerryUse() && !curr_edge->IsRampUse() &&
+           !curr_edge->IsTurnChannelUse() && !curr_edge->IsFerryUse() &&
+           !curr_edge->IsRailFerryUse() &&
+           curr_edge->IsForkForward(
+               GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
+           node->HasOnlyForwardTraversableSimilarRoadClassXEdges(prev_edge->end_heading(),
+                                                                 prev_edge->travel_mode(),
+                                                                 prev_edge->road_class())) {
     return true;
   }
 

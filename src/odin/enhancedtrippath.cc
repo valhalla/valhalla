@@ -20,6 +20,7 @@ using namespace valhalla::baldr;
 namespace {
 constexpr float kShortRemainingDistanceThreshold = 0.402f; // Kilometers (~quarter mile)
 constexpr int kSignificantRoadClassThreshold = 2;          // Max lower road class delta
+constexpr int kSimilarRoadClassDelta = 2;                  // Max road class delta
 
 constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
 constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
@@ -173,6 +174,11 @@ const std::string& TripLeg_Sidewalk_Name(int v) {
 
 bool is_forward(uint32_t turn_degree) {
   return ((turn_degree > 314) || (turn_degree < 46));
+}
+
+// TODO: in the future might have to have dynamic angle based on road class and lane count
+bool is_fork_forward(uint32_t turn_degree) {
+  return ((turn_degree > 339) || (turn_degree < 21));
 }
 
 bool is_wider_forward(uint32_t turn_degree) {
@@ -434,6 +440,10 @@ bool EnhancedTripLeg_Edge::IsOneway() const {
 
 bool EnhancedTripLeg_Edge::IsForward(uint32_t prev2curr_turn_degree) const {
   return is_forward(prev2curr_turn_degree);
+}
+
+bool EnhancedTripLeg_Edge::IsForkForward(uint32_t prev2curr_turn_degree) const {
+  return is_fork_forward(prev2curr_turn_degree);
 }
 
 bool EnhancedTripLeg_Edge::IsWiderForward(uint32_t prev2curr_turn_degree) const {
@@ -1216,18 +1226,9 @@ EnhancedTripLeg_IntersectingEdge::EnhancedTripLeg_IntersectingEdge(
 }
 
 bool EnhancedTripLeg_IntersectingEdge::IsTraversable(const TripLeg_TravelMode travel_mode) const {
-  TripLeg_Traversability t;
+  TripLeg_Traversability traversability = GetTravelModeTraversability(travel_mode);
 
-  // Set traversability based on travel mode
-  if (travel_mode == TripLeg_TravelMode_kDrive) {
-    t = driveability();
-  } else if (travel_mode == TripLeg_TravelMode_kBicycle) {
-    t = cyclability();
-  } else {
-    t = walkability();
-  }
-
-  if (t != TripLeg_Traversability_kNone) {
+  if (traversability != TripLeg_Traversability_kNone) {
     return true;
   }
   return false;
@@ -1235,18 +1236,10 @@ bool EnhancedTripLeg_IntersectingEdge::IsTraversable(const TripLeg_TravelMode tr
 
 bool EnhancedTripLeg_IntersectingEdge::IsTraversableOutbound(
     const TripLeg_TravelMode travel_mode) const {
-  TripLeg_Traversability t;
+  TripLeg_Traversability traversability = GetTravelModeTraversability(travel_mode);
 
-  // Set traversability based on travel mode
-  if (travel_mode == TripLeg_TravelMode_kDrive) {
-    t = driveability();
-  } else if (travel_mode == TripLeg_TravelMode_kBicycle) {
-    t = cyclability();
-  } else {
-    t = walkability();
-  }
-
-  if ((t == TripLeg_Traversability_kForward) || (t == TripLeg_Traversability_kBoth)) {
+  if ((traversability == TripLeg_Traversability_kForward) ||
+      (traversability == TripLeg_Traversability_kBoth)) {
     return true;
   }
   return false;
@@ -1285,6 +1278,22 @@ std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
   str += std::to_string(road_class());
 
   return str;
+}
+
+::valhalla::TripLeg_Traversability EnhancedTripLeg_IntersectingEdge::GetTravelModeTraversability(
+    const TripLeg_TravelMode travel_mode) const {
+  TripLeg_Traversability traversability;
+
+  // Set traversability based on travel mode
+  if (travel_mode == TripLeg_TravelMode_kDrive) {
+    traversability = driveability();
+  } else if (travel_mode == TripLeg_TravelMode_kBicycle) {
+    traversability = cyclability();
+  } else {
+    traversability = walkability();
+  }
+
+  return traversability;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1451,6 +1460,36 @@ bool EnhancedTripLeg_Node::HasForwardTraversableSignificantRoadClassXEdge(
     }
   }
   return false;
+}
+
+bool EnhancedTripLeg_Node::HasOnlyForwardTraversableSimilarRoadClassXEdges(
+    uint32_t from_heading,
+    const TripLeg_TravelMode travel_mode,
+    const RoadClass path_road_class) {
+
+  // Must have intersecting edges
+  if (intersecting_edge_size() == 0) {
+    return false;
+  }
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    // Can not be a ramp or turn channel
+    if ((xedge->use() == TripLeg_Use_kRampUse) || (xedge->use() == TripLeg_Use_kTurnChannelUse) ||
+        (xedge->use() == TripLeg_Use_kFerryUse) || (xedge->use() == TripLeg_Use_kRailFerryUse)) {
+      return false;
+    }
+
+    int road_class_delta =
+        std::abs(static_cast<int>(path_road_class) - static_cast<int>(xedge->road_class()));
+    if (is_fork_forward(GetTurnDegree(from_heading, xedge->begin_heading())) &&
+        xedge->IsTraversableOutbound(travel_mode) && (road_class_delta <= kSimilarRoadClassDelta)) {
+      continue;
+    } else {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool EnhancedTripLeg_Node::HasWiderForwardTraversableIntersectingEdge(

@@ -405,6 +405,8 @@ public:
 
   bool IsForward(uint32_t prev2curr_turn_degree) const;
 
+  bool IsForkForward(uint32_t prev2curr_turn_degree) const;
+
   bool IsWiderForward(uint32_t prev2curr_turn_degree) const;
 
   bool IsStraightest(uint32_t prev2curr_turn_degree, uint32_t straightest_xedge_turn_degree) const;
@@ -503,6 +505,9 @@ public:
   std::string ToString() const;
 
 protected:
+  ::valhalla::TripLeg_Traversability
+  GetTravelModeTraversability(const TripLeg_TravelMode travel_mode) const;
+
   TripLeg_IntersectingEdge* mutable_intersecting_edge_;
 };
 
@@ -650,6 +655,10 @@ public:
   bool HasForwardTraversableSignificantRoadClassXEdge(uint32_t from_heading,
                                                       const TripLeg_TravelMode travel_mode,
                                                       RoadClass path_road_class);
+
+  bool HasOnlyForwardTraversableSimilarRoadClassXEdges(uint32_t from_heading,
+                                                       const TripLeg_TravelMode travel_mode,
+                                                       RoadClass path_road_class);
 
   bool HasWiderForwardTraversableIntersectingEdge(uint32_t from_heading,
                                                   const TripLeg_TravelMode travel_mode);
