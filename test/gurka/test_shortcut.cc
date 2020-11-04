@@ -79,9 +79,9 @@ TEST(Shortcuts, ShortcutSpeed) {
   // from 100 kph to 93 kph and for EA shortcut - from 100 kph to 98 kph in the test case below.
   // Similarly truck speed is decreased form 90 kph to 85 kph for AE and from 90 to 89 for EA.
   const std::string ascii_map = R"(A-----B\
-                                   |       \C
-                                   |        |\
-                                   G        | \
+                                           \C
+                                            |\
+                                            | \
                                             F  \
                                                 |
                                                 |
@@ -90,14 +90,29 @@ TEST(Shortcuts, ShortcutSpeed) {
                                                 |
                                                 |
                                                 |
-                                                E
-                                                |
-                                                I)";
+                                                E)";
   const gurka::ways ways = {
-      {"ABCDE", {{"highway", "motorway"}, {"maxspeed", "100"}, {"maxspeed:hgv", "90"}}},
+      {"AB",
+       {{"highway", "motorway"},
+        {"maxspeed", "100"},
+        {"maxspeed:hgv", "90"},
+        {"name", "High street"}}},
+      {"BC",
+       {{"highway", "motorway"},
+        {"maxspeed", "100"},
+        {"maxspeed:hgv", "90"},
+        {"name", "High street"}}},
+      {"CD",
+       {{"highway", "motorway"},
+        {"maxspeed", "100"},
+        {"maxspeed:hgv", "90"},
+        {"name", "High street"}}},
+      {"DE",
+       {{"highway", "motorway"},
+        {"maxspeed", "100"},
+        {"maxspeed:hgv", "90"},
+        {"name", "High street"}}},
       {"CF", {{"highway", "service"}}},
-      {"AG", {{"highway", "service"}}},
-      {"EI", {{"highway", "service"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_shortcut");
@@ -153,9 +168,9 @@ TEST(Shortcuts, TruckSpeedNotSet) {
   // When truck speed is not set normal speed is used to calculate shortcut truck speed.
   // As a result it should be equal to normal shortcut speed.
   const std::string ascii_map = R"(A-----B\
-                                   |       \C
-                                   |        |\
-                                   G        | \
+                                           \C
+                                            |\
+                                            | \
                                             F  \
                                                 |
                                                 |
@@ -164,20 +179,19 @@ TEST(Shortcuts, TruckSpeedNotSet) {
                                                 |
                                                 |
                                                 |
-                                                E
-                                                |
-                                                I)";
+                                                E)";
   const gurka::ways ways = {
-      {"ABCDE", {{"highway", "motorway"}, {"maxspeed", "100"}}},
+      {"AB", {{"highway", "motorway"}, {"maxspeed", "100"}, {"name", "High street"}}},
+      {"BC", {{"highway", "motorway"}, {"maxspeed", "100"}, {"name", "High street"}}},
+      {"CD", {{"highway", "motorway"}, {"maxspeed", "100"}, {"name", "High street"}}},
+      {"DE", {{"highway", "motorway"}, {"maxspeed", "100"}, {"name", "High street"}}},
       {"CF", {{"highway", "service"}}},
-      {"AG", {{"highway", "service"}}},
-      {"EI", {{"highway", "service"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_shortcut");
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
 
-  std::vector<std::tuple<baldr::GraphId, int, int>> shortcut_infos;
+  bool found_shortcut = false;
   auto const tileset = reader.GetTileSet(0);
   for (const auto tileid : tileset) {
     if (reader.OverCommitted())
@@ -192,7 +206,53 @@ TEST(Shortcuts, TruckSpeedNotSet) {
         continue;
 
       EXPECT_EQ(edge->speed(), edge->truck_speed());
-      std::cout << edge->truck_speed() << std::endl;
+      found_shortcut = true;
     }
   }
+  EXPECT_TRUE(found_shortcut) << "No shortcuts found. Check the map.";
+}
+
+TEST(Shortcuts, TruckSpeedPartiallySet) {
+  // When truck speed is not set normal speed is used to calculate shortcut truck speed.
+  // As a result, when truck speed is set only for some of constituent edges, resulting speed is
+  // range from truck speed to normal speed
+  const std::string ascii_map = R"(A---B---C---D---E)";
+  const gurka::ways ways = {
+      {"AB",
+       {{"highway", "motorway"},
+        {"maxspeed", "100"},
+        {"maxspeed:hgv", "90"},
+        {"name", "High street"}}},
+      {"BC",
+       {{"highway", "motorway"},
+        {"maxspeed", "100"},
+        {"maxspeed:hgv", "90"},
+        {"name", "High street"}}},
+      {"CD", {{"highway", "motorway"}, {"maxspeed", "100"}, {"name", "High street"}}},
+      {"DE", {{"highway", "motorway"}, {"maxspeed", "100"}, {"name", "High street"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_shortcut");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  bool found_shortcut = false;
+  auto const tileset = reader.GetTileSet(0);
+  for (const auto tileid : tileset) {
+    if (reader.OverCommitted())
+      reader.Trim();
+
+    // for each edge in the tile
+    const auto* tile = reader.GetGraphTile(tileid);
+    for (size_t j = 0; j < tile->header()->directededgecount(); ++j) {
+      // skip it if its not a shortcut or the shortcut is one we will never traverse
+      const auto* edge = tile->directededge(j);
+      if (!edge->is_shortcut() || !(edge->forwardaccess() & baldr::kAutoAccess))
+        continue;
+
+      EXPECT_GT(100, edge->truck_speed());
+      EXPECT_LT(90, edge->truck_speed());
+      found_shortcut = true;
+    }
+  }
+  EXPECT_TRUE(found_shortcut) << "No shortcuts found. Check the map.";
 }

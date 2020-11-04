@@ -114,7 +114,7 @@ TEST(PredictiveTraffic, test_get_speed) {
 
   EXPECT_FALSE(flow_sources & kPredictedFlowMask) << "Expected flow_sources not to include predicted";
 
-  // Test case for turck speed
+  // Test case for truck speed
   auto new_de = *de;
   // Truck speed is not set for the edge initaially. In such case normal speed is used.
   EXPECT_EQ(new_de.truck_speed(), 0);
