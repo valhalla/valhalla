@@ -527,6 +527,18 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   auto forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
   auto reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
 
+  // When a timedependent route is too long in distance it gets sent to this algorithm. It used to be
+  // the case that this algorithm called EdgeCost without a time component. This would result in
+  // timedependent routes falling back to time independent routing. Now that this algorithm is time
+  // aware we will be tracking time in one direction of the search. To revert to previous behavior
+  // you can uncomment the code below and get a time independent route in the fallback scenario.
+  //  if (!invariant) {
+  //    auto o = origin; o.mutable_date_time()->clear();
+  //    forward_time_info = TimeInfo::make(o, graphreader, &tz_cache_);
+  //    auto d = destination; d.mutable_date_time()->clear();
+  //    reverse_time_info = TimeInfo::make(d, graphreader, &tz_cache_);
+  //  }
+
   // Set origin and destination locations - seeds the adj. lists
   // Note: because we can correlate to more than one place for a given
   // PathLocation using edges.front here means we are only setting the
