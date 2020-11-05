@@ -656,9 +656,9 @@ public:
                                                       const TripLeg_TravelMode travel_mode,
                                                       RoadClass path_road_class);
 
-  bool HasOnlyForwardTraversableSimilarRoadClassXEdges(uint32_t from_heading,
-                                                       const TripLeg_TravelMode travel_mode,
-                                                       RoadClass path_road_class);
+  bool HasOnlyForwardTraversableRoadClassXEdges(uint32_t from_heading,
+                                                const TripLeg_TravelMode travel_mode,
+                                                RoadClass path_road_class);
 
   bool HasWiderForwardTraversableIntersectingEdge(uint32_t from_heading,
                                                   const TripLeg_TravelMode travel_mode);

@@ -20,7 +20,6 @@ using namespace valhalla::baldr;
 namespace {
 constexpr float kShortRemainingDistanceThreshold = 0.402f; // Kilometers (~quarter mile)
 constexpr int kSignificantRoadClassThreshold = 2;          // Max lower road class delta
-constexpr int kSimilarRoadClassDelta = 2;                  // Max road class delta
 
 constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
 constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
@@ -1462,7 +1461,7 @@ bool EnhancedTripLeg_Node::HasForwardTraversableSignificantRoadClassXEdge(
   return false;
 }
 
-bool EnhancedTripLeg_Node::HasOnlyForwardTraversableSimilarRoadClassXEdges(
+bool EnhancedTripLeg_Node::HasOnlyForwardTraversableRoadClassXEdges(
     uint32_t from_heading,
     const TripLeg_TravelMode travel_mode,
     const RoadClass path_road_class) {
@@ -1480,10 +1479,9 @@ bool EnhancedTripLeg_Node::HasOnlyForwardTraversableSimilarRoadClassXEdges(
       return false;
     }
 
-    int road_class_delta =
-        std::abs(static_cast<int>(path_road_class) - static_cast<int>(xedge->road_class()));
-    if (is_fork_forward(GetTurnDegree(from_heading, xedge->begin_heading())) &&
-        xedge->IsTraversableOutbound(travel_mode) && (road_class_delta <= kSimilarRoadClassDelta)) {
+    if ((path_road_class >= xedge->road_class()) &&
+        is_fork_forward(GetTurnDegree(from_heading, xedge->begin_heading())) &&
+        xedge->IsTraversableOutbound(travel_mode)) {
       continue;
     } else {
       return false;

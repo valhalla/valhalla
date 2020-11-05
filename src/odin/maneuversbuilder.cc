@@ -2035,15 +2035,16 @@ bool ManeuversBuilder::IsFork(int node_index,
     return true;
   }
   // TODO new code
-  else if (!prev_edge->IsRampUse() && !prev_edge->IsTurnChannelUse() && !prev_edge->IsFerryUse() &&
+  else if ((prev_edge->road_class() >= curr_edge->road_class()) && !prev_edge->IsRampUse() &&
+           !prev_edge->IsTurnChannelUse() && !prev_edge->IsFerryUse() &&
            !prev_edge->IsRailFerryUse() && !curr_edge->IsRampUse() &&
            !curr_edge->IsTurnChannelUse() && !curr_edge->IsFerryUse() &&
            !curr_edge->IsRailFerryUse() &&
            curr_edge->IsForkForward(
                GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
-           node->HasOnlyForwardTraversableSimilarRoadClassXEdges(prev_edge->end_heading(),
-                                                                 prev_edge->travel_mode(),
-                                                                 prev_edge->road_class())) {
+           node->HasOnlyForwardTraversableRoadClassXEdges(prev_edge->end_heading(),
+                                                          prev_edge->travel_mode(),
+                                                          prev_edge->road_class())) {
     return true;
   }
 
