@@ -51,21 +51,28 @@ TEST(Standalone, TurnLanes) {
   gurka::assert::raw::expect_path_length(result, 0.7, 0.001);
 
   validate_turn_lanes(result, {
-                                  {3, "[ left | through | through;right ACTIVE ]"},
+                                  {3, "[ left | through | through;*right* ACTIVE ]"},
                                   {4, "[ left | through | through | right ]"},
                               });
 
   result = gurka::route(map, "A", "D", "auto");
   validate_turn_lanes(result, {
-                                  {4, "[ left | through | through | right ACTIVE ]"},
+                                  {4, "[ left | through | through | *right* ACTIVE ]"},
                                   {0, ""},
                               });
 
   result = gurka::route(map, "C", "D", "auto");
   validate_turn_lanes(result, {
-                                  {4, "[ left ACTIVE | through | through | right ]"},
+                                  {0, ""},
                                   {0, ""},
                               });
+
+  result = gurka::route(map, "D", "C", "auto");
+  validate_turn_lanes(result, {
+                                  {3, "[ left | through | through;*right* ACTIVE ]"},
+                                  {4, "[ left | through | through | right ]"},
+                              });
+
 }
 
 // Split lane example - 5-way intersection
@@ -109,14 +116,14 @@ TEST(Standalone, TurnLanesSplitLane) {
   // A -> C - takes the leftmost left lane
   result = gurka::route(map, "A", "C", "auto");
   validate_turn_lanes(result, {
-                                  {3, "[ left ACTIVE | left;through | through;right ]"},
+                                  {3, "[ *left* ACTIVE | *left*;through VALID | through;right ]"},
                                   {0, ""},
                               });
 
   // A -> E - takes the leftmost through lane
   result = gurka::route(map, "A", "E", "auto");
   validate_turn_lanes(result, {
-                                  {3, "[ left | left;through ACTIVE | through;right ]"},
+                                  {3, "[ left | left;*through* ACTIVE | *through*;right VALID ]"},
                                   {0, ""}, // TODO lanes are tossed when all are through
                               });
 
@@ -127,14 +134,14 @@ TEST(Standalone, TurnLanesSplitLane) {
                                                 DirectionsLeg_Maneuver_Type_kSlightRight,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
   validate_turn_lanes(result, {
-                                  {3, "[ left | left;through | through;right ACTIVE ]"},
+                                  {3, "[ left | left;through | through;*right* ACTIVE ]"},
                                   {0, ""}, // TODO lanes are tossed when all are through
                               });
 
   // A -> H - takes the right lane
   result = gurka::route(map, "A", "H", "auto");
   validate_turn_lanes(result, {
-                                  {3, "[ left | left;through | through;right ACTIVE ]"},
+                                  {3, "[ left | left;through | through;*right* ACTIVE ]"},
                                   {0, ""},
                               });
 }
@@ -173,16 +180,16 @@ TEST(Standalone, TurnLanesSharedTurnLane) {
   // A -> G  - only through lanes should be active throughout
   auto result = gurka::route(map, "A", "G", "auto");
   validate_turn_lanes(result, {
-                                  {3, "[ through ACTIVE | through | right ]"},
-                                  {3, "[ through ACTIVE | through | right ]"},
-                                  {3, "[ through ACTIVE | through | right ]"},
+                                  {3, "[ *through* ACTIVE | *through* VALID | right ]"},
+                                  {3, "[ *through* ACTIVE | *through* VALID | right ]"},
+                                  {3, "[ *through* ACTIVE | *through* VALID | right ]"},
                                   {0, ""},
                               });
 
   // A -> C - right lane should always be active
   result = gurka::route(map, "A", "C", "auto");
   validate_turn_lanes(result, {
-                                  {3, "[ through | through | right ACTIVE ]"},
+                                  {3, "[ through | through | *right* ACTIVE ]"},
                                   {0, ""},
                               });
 
@@ -190,9 +197,9 @@ TEST(Standalone, TurnLanesSharedTurnLane) {
   // active
   result = gurka::route(map, "A", "F", "auto");
   validate_turn_lanes(result, {
-                                  {3, "[ through | through ACTIVE | right ]"},
-                                  {3, "[ through | through | right ACTIVE ]"},
-                                  {3, "[ through | through | right ACTIVE ]"},
+                                  {3, "[ *through* VALID | *through* ACTIVE | right ]"},
+                                  {3, "[ through | through | *right* ACTIVE ]"},
+                                  {3, "[ through | through | *right* ACTIVE ]"},
                                   {0, ""},
                               });
 }
@@ -235,8 +242,8 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
   //                                               DirectionsLeg_Maneuver_Type_kLeft,
   //                                               DirectionsLeg_Maneuver_Type_kDestinationLeft});
   // validate_turn_lanes(result, {
-  //                                 {5, "[ left ACTIVE | left | through | right | right ]"},
-  //                                 {5, "[ left ACTIVE | left | through | right | right ]"},
+  //                                 {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
+  //                                 {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
   //                                 {0, ""},
   //                             });
 
@@ -246,8 +253,8 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
   //                                               DirectionsLeg_Maneuver_Type_kLeft,
   //                                               DirectionsLeg_Maneuver_Type_kDestinationRight});
   // validate_turn_lanes(result, {
-  //                                 {5, "[ left | left ACTIVE | through | right | right ]"},
-  //                                 {5, "[ left | left ACTIVE | through | right | right ]"},
+  //                                 {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
+  //                                 {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
   //                                 {0, ""},
   //                             });
 
@@ -257,8 +264,8 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                                                 DirectionsLeg_Maneuver_Type_kLeft,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
   validate_turn_lanes(result, {
-                                  {5, "[ left ACTIVE | left | through | right | right ]"},
-                                  {5, "[ left ACTIVE | left | through | right | right ]"},
+                                  {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
+                                  {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
                                   {0, ""},
                               });
 
@@ -268,8 +275,8 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                                                 DirectionsLeg_Maneuver_Type_kRight,
                                                 DirectionsLeg_Maneuver_Type_kDestinationRight});
   validate_turn_lanes(result, {
-                                  {5, "[ left | left | through | right | right ACTIVE ]"},
-                                  {5, "[ left | left | through | right | right ACTIVE ]"},
+                                  {5, "[ left | left | through | *right* VALID | *right* ACTIVE ]"},
+                                  {5, "[ left | left | through | *right* VALID | *right* ACTIVE ]"},
                                   {0, ""},
                               });
 
@@ -279,8 +286,8 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                                                 DirectionsLeg_Maneuver_Type_kRight,
                                                 DirectionsLeg_Maneuver_Type_kDestinationLeft});
   validate_turn_lanes(result, {
-                                  {5, "[ left | left | through | right ACTIVE | right ]"},
-                                  {5, "[ left | left | through | right ACTIVE | right ]"},
+                                  {5, "[ left | left | through | *right* ACTIVE | *right* VALID ]"},
+                                  {5, "[ left | left | through | *right* ACTIVE | *right* VALID ]"},
                                   {0, ""},
                               });
 
@@ -290,8 +297,8 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                                                 DirectionsLeg_Maneuver_Type_kRight,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
   validate_turn_lanes(result, {
-                                  {5, "[ left | left | through | right ACTIVE | right ]"},
-                                  {5, "[ left | left | through | right ACTIVE | right ]"},
+                                  {5, "[ left | left | through | *right* ACTIVE | *right* VALID ]"},
+                                  {5, "[ left | left | through | *right* ACTIVE | *right* VALID ]"},
                                   {0, ""},
                               });
 
@@ -301,8 +308,8 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                                                 DirectionsLeg_Maneuver_Type_kRight,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
   validate_turn_lanes(result, {
-                                  {5, "[ left | left | through | right ACTIVE | right ACTIVE ]"},
-                                  {5, "[ left | left | through | right ACTIVE | right ACTIVE ]"},
+                                  {5, "[ left | left | through | *right* ACTIVE | *right* ACTIVE ]"},
+                                  {5, "[ left | left | through | *right* ACTIVE | *right* ACTIVE ]"},
                                   {0, ""},
                               });
 }
