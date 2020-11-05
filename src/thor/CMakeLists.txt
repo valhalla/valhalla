@@ -15,6 +15,7 @@ set(sources
   multimodal.cc
   optimized_route_action.cc
   optimizer.cc
+  recost_shortcut.h
   route_action.cc
   route_matcher.cc
   timedep_forward.cc

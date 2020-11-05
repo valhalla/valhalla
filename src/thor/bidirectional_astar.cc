@@ -4,8 +4,8 @@
 #include "baldr/graphid.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
+#include "recost_shortcut.h"
 #include "sif/edgelabel.h"
-#include "sif/recost.h"
 #include "thor/alternates.h"
 #include <algorithm>
 #include <map>
@@ -944,54 +944,6 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
   }
 }
 
-/**
- * Recover shortcut edge and recost it
- * @param  graphreader  Graph tile reader.
- * @param  shortcut_id  Edge id of the shortcut to be recosted
- * @param  costing      Costing function
- * @param  transition_cost  Transition cost for the shortcut edge
- * @param  previous_cost    Total cost from the previous edge
- * TODO: add time information
- */
-std::vector<PathInfo> recost_shortcut_forward(GraphReader& graphreader,
-                                              const GraphId& shortcut_id,
-                                              const DynamicCost& costing,
-                                              Cost transition_cost,
-                                              Cost previous_cost) {
-  auto edges = graphreader.RecoverShortcut(shortcut_id);
-
-  std::vector<PathInfo> path;
-  // transition cost will not be included for the first edge;
-  // so, add it here
-  previous_cost += transition_cost;
-
-  const auto on_new_label = [&path, &previous_cost, &transition_cost](const EdgeLabel& label) {
-    Cost transition = path.empty() ? transition_cost : label.transition_cost();
-    path.emplace_back(label.mode(), previous_cost + label.cost(), label.edgeid(), 0,
-                      label.restriction_idx(), transition);
-  };
-
-  auto edge_iter = edges.begin();
-  const auto get_next_edge = [&edge_iter, &edges]() -> GraphId {
-    if (edge_iter == edges.end())
-      return {};
-
-    return *edge_iter++;
-  };
-
-  try {
-    sif::recost_forward(graphreader, costing, get_next_edge, on_new_label);
-  } catch (const std::exception& e) {
-    LOG_ERROR(std::string("Failed to recost shortcut edge: ") + e.what());
-    return {};
-  } catch (...) {
-    LOG_ERROR("Failed to recost shortcut edge: unknown exception");
-    return {};
-  }
-
-  return path;
-}
-
 void BidirectionalAStar::FormPathForward(baldr::GraphReader& graphreader,
                                          uint32_t last_label_idx,
                                          std::vector<PathInfo>& path) {
@@ -1153,9 +1105,6 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     uint32_t idx1 = edgestatus_forward_.Get(best_connection->edgeid).index();
     uint32_t idx2 = edgestatus_reverse_.Get(best_connection->opp_edgeid).index();
 
-    // Metrics (TODO - more accurate cost)
-    uint32_t pathcost = edgelabels_forward_[idx1].cost().cost + edgelabels_reverse_[idx2].cost().cost;
-    LOG_DEBUG("path_cost::" + std::to_string(pathcost));
     LOG_DEBUG("FormPath path_iterations::" + std::to_string(edgelabels_forward_.size()) + "," +
               std::to_string(edgelabels_reverse_.size()));
 
@@ -1220,6 +1169,9 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
 
     // recover path from reverse labels
     FormPathReverse(graphreader, idx2, path);
+
+    if (!path.empty())
+      LOG_DEBUG("path_cost::" + std::to_string(path.back().elapsed_cost.cost));
 
     // For the first path just add it for subsequent paths only add if it passes viability tests
     if (paths.empty() ||
