@@ -192,6 +192,7 @@
    * ADDED: Add annotations to osrm response including speed limits, unit and sign conventions [#2668](https://github.com/valhalla/valhalla/pull/2668)
    * ADDED: Added functions for predicted speeds encoding-decoding [#2674](https://github.com/valhalla/valhalla/pull/2674)
    * ADDED: Time invariant routing via the bidirectional algorithm. This has the effect that when time dependent routes (arrive_by and depart_at) fall back to bidirectional due to length restrictions they will actually use the correct time of day for one of the search directions [#2660](https://github.com/valhalla/valhalla/pull/2660)
+   * ADDED: If the length of the edge is greater than kMaxEdgeLength, then consider this a catastrophic error. Need to do the check in the builder as transit edges could be large; however, they should not be for the graph. [2678](https://github.com/valhalla/valhalla/pull/2678)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
