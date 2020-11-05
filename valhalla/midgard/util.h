@@ -647,6 +647,16 @@ std::string encode64(const std::string& val);
  */
 std::string decode64(const std::string& val);
 
+// Convert big endian bytes to little endian
+inline int16_t to_little_endian(uint16_t val) {
+  return (val << 8) | ((val >> 8) & 0x00ff);
+}
+
+// Convert little endian bytes to big endian
+inline uint16_t to_big_endian(uint16_t val) {
+  return (val << 8) | (val >> 8);
+}
+
 } // namespace midgard
 } // namespace valhalla
   //

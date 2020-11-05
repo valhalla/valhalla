@@ -303,6 +303,8 @@ message TripLeg {
     repeated uint32 time = 1 [packed=true]; // milliseconds
     repeated uint32 length = 2 [packed=true]; // decimeters
     repeated uint32 speed = 3 [packed=true]; // decimeters per sec
+    // 4 is reserved
+    repeated uint32 speed_limit = 5 [packed=true]; // speed limit in kph
   }
 
   // we encapsulate the real incident object here so we can add information
@@ -325,6 +327,7 @@ message TripLeg {
   optional BoundingBox bbox = 9;
   optional ShapeAttributes shape_attributes = 10;
   repeated Incident incidents = 11;
+  repeated string algorithms = 12;
 }
 
 message TripRoute {

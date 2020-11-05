@@ -6,7 +6,6 @@
 #include "tyr/actor.h"
 
 #include "test.h"
-#include "utils.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

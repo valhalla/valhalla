@@ -1,5 +1,4 @@
 #include "test.h"
-#include "utils.h"
 
 #include <iostream>
 #include <stdexcept>
