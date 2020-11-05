@@ -4232,7 +4232,8 @@ TEST(NarrativeBuilder, TestBuildTurnInstructions_1_miles_de_DE) {
   PopulateTurnManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(expected_maneuvers, "Links auf Middletown Road abbiegen.",
                                   "Links auf Middletown Road abbiegen.",
-                                  "Links auf Middletown Road abbiegen.", "eine Meile weiter.");
+                                  "Links auf Middletown Road abbiegen.",
+                                  "eine Meile weiter der Route folgen.");
 
   TryBuild(options, maneuvers, expected_maneuvers);
 }
