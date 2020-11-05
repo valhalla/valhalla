@@ -29,13 +29,12 @@ TEST(Standalone, TurnLanes) {
          |
          D)";
 
-  const gurka::ways ways =
-      {{"ABC", {{"highway", "primary"}, {"lanes", "4"}, {"turn:lanes", "left|||right"}}},
-       {"DB",
-        {{"highway", "primary"},
-         {"lanes:forward", "3"},
-         {"lanes:backward", "0"},
-         {"turn:lanes", "left|none|none"}}}};
+  const gurka::ways ways = {{"ABC", {{"highway", "primary"}, {"lanes", "4"}}},
+                            {"DB",
+                             {{"highway", "primary"},
+                              {"lanes:forward", "3"},
+                              {"lanes:backward", "0"},
+                              {"turn:lanes", "left|none|none"}}}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_1");
@@ -50,29 +49,15 @@ TEST(Standalone, TurnLanes) {
                                                 DirectionsLeg_Maneuver_Type_kDestination});
   gurka::assert::raw::expect_path_length(result, 0.7, 0.001);
 
-  validate_turn_lanes(result, {
-                                  {3, "[ left | through | through;*right* ACTIVE ]"},
-                                  {4, "[ left | through | through | right ]"},
-                              });
+  auto maneuver = result.directions().routes(0).legs(0).maneuver(1);
+  EXPECT_EQ(maneuver.type(), DirectionsLeg_Maneuver_Type_kRight);
 
-  result = gurka::route(map, "A", "D", "auto");
-  validate_turn_lanes(result, {
-                                  {4, "[ left | through | through | *right* ACTIVE ]"},
-                                  {0, ""},
-                              });
+  odin::EnhancedTripLeg etl(*result.mutable_trip()->mutable_routes(0)->mutable_legs(0));
+  auto prev_edge = etl.GetPrevEdge(maneuver.begin_path_index());
 
-  result = gurka::route(map, "C", "D", "auto");
-  validate_turn_lanes(result, {
-                                  {0, ""},
-                                  {0, ""},
-                              });
-
-  result = gurka::route(map, "D", "C", "auto");
-  validate_turn_lanes(result, {
-                                  {3, "[ left | through | through;*right* ACTIVE ]"},
-                                  {4, "[ left | through | through | right ]"},
-                              });
-
+  ASSERT_TRUE(prev_edge);
+  EXPECT_EQ(prev_edge->turn_lanes_size(), 3);
+  EXPECT_EQ(prev_edge->TurnLanesToString(), "[ left | through | through;*right* ACTIVE ]");
 }
 
 // Split lane example - 5-way intersection
@@ -242,8 +227,8 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
   //                                               DirectionsLeg_Maneuver_Type_kLeft,
   //                                               DirectionsLeg_Maneuver_Type_kDestinationLeft});
   // validate_turn_lanes(result, {
-  //                                 {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
-  //                                 {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
+  //                                 {5, "[ left ACTIVE | left | through | right | right ]"},
+  //                                 {5, "[ left ACTIVE | left | through | right | right ]"},
   //                                 {0, ""},
   //                             });
 
@@ -253,8 +238,8 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
   //                                               DirectionsLeg_Maneuver_Type_kLeft,
   //                                               DirectionsLeg_Maneuver_Type_kDestinationRight});
   // validate_turn_lanes(result, {
-  //                                 {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
-  //                                 {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
+  //                                 {5, "[ left | left ACTIVE | through | right | right ]"},
+  //                                 {5, "[ left | left ACTIVE | through | right | right ]"},
   //                                 {0, ""},
   //                             });
 
@@ -312,4 +297,299 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                                   {5, "[ left | left | through | *right* ACTIVE | *right* ACTIVE ]"},
                                   {0, ""},
                               });
+}
+
+TEST(Standalone, TurnLanesUTurns) {
+  constexpr double gridsize_metres = 10;
+
+  const std::string ascii_map = R"(
+              E D
+              | |
+              | |
+              | |
+              | |
+         L----F-C----K
+              | |
+         I----G-B----J
+              | |
+              | |
+              | |
+              | |
+              H A
+    )";
+
+  const gurka::ways ways =
+      {{"AB",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"name", "Broken Land Parkway"},
+         {"lanes", "5"},
+         {"turn:lanes", "left|left|through|right|right"}}},
+       {"EF",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"name", "Broken Land Parkway"},
+         {"lanes", "4"},
+         {"turn:lanes", "reverse|left|through|right"}}},
+       {"BC", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Broken Land Parkway"}}},
+       {"CD", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Broken Land Parkway"}}},
+       {"FG", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Broken Land Parkway"}}},
+       {"GH", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Broken Land Parkway"}}},
+       {"IG", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Patuxent Woods Drive"}}},
+       {"GB", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Snowden River Parkway"}}},
+       {"BJ", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Snowden River Parkway"}}},
+       {"KC", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Snowden River Parkway"}}},
+       {"CF", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Snowden River Parkway"}}},
+       {"FL", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Patuxent Woods Drive"}}}};
+
+  const auto layout =
+      gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
+
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_6");
+
+  valhalla::Api result;
+
+  // Test U-turn using left-only lanes. The left-most left lane should be
+  // active & rest invalid
+  result = gurka::route(map, "A", "H", "auto");
+
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kUturnLeft,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+  validate_turn_lanes(result, {
+                                  {5, "[ *left* ACTIVE | left | through | right | right ]"},
+                                  {5, "[ *left* ACTIVE | left | through | right | right ]"},
+                                  {0, ""},
+                                  {0, ""},
+                                  {0, ""},
+                              });
+
+  // Test using reverse lanes. The reverse lane should be active & the rest
+  // invalid
+  result = gurka::route(map, "E", "D", "auto");
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kUturnLeft,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+  validate_turn_lanes(result, {
+                                  {4, "[ *reverse* ACTIVE | left | through | right ]"},
+                                  {4, "[ *reverse* ACTIVE | left | through | right ]"},
+                                  {0, ""},
+                                  {0, ""},
+                                  {0, ""},
+                              });
+}
+
+TEST(Standalone, TurnLanesSerializedResponse) {
+  const std::string ascii_map = R"(
+        C
+        |
+    A---B
+        |
+        D--E
+        |
+        F
+  )";
+
+  const gurka::ways ways =
+      {{"AB", {{"highway", "trunk"}, {"lanes", "3"}, {"turn:lanes", "left|right|right"}}},
+       {"BC", {{"highway", "primary"}}},
+       {"BD", {{"highway", "primary"}, {"lanes", "3"}, {"turn:lanes", "left|left;through|through"}}},
+       {"DE", {{"highway", "primary"}}},
+       {"DF", {{"highway", "primary"}, {"lanes", "2"}, {"turn:lanes", "through|through"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_5");
+
+  auto verify_lane_schema = [](const rapidjson::Value& lanes) -> void {
+    // Verify common lane attributes:
+    // - has valid & active booleans
+    // - has a non-empty indications array
+    for (const auto& lane : lanes.GetArray()) {
+      ASSERT_TRUE(lane.HasMember("valid"));
+      EXPECT_TRUE(lane["valid"].IsBool());
+      ASSERT_TRUE(lane.HasMember("active"));
+      EXPECT_TRUE(lane["active"].IsBool());
+      ASSERT_TRUE(lane.HasMember("indications"));
+      ASSERT_TRUE(lane["indications"].IsArray());
+      ASSERT_GT(lane["indications"].Size(), 0);
+    }
+  };
+
+  // A->E : Both right lanes should be valid and left-most right lane should
+  // be active. For following step, both left lanes should be valid and the
+  // left-most left lane should be active.
+  auto result = gurka::route(map, "A", "E", "auto");
+  rapidjson::Document directions = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
+
+  // Assert expected number of routes, legs, steps
+  ASSERT_EQ(directions["routes"].Size(), 1);
+  ASSERT_EQ(directions["routes"][0]["legs"].Size(), 1);
+  ASSERT_EQ(directions["routes"][0]["legs"][0]["steps"].Size(), 4);
+  const rapidjson::Value& steps = directions["routes"][0]["legs"][0]["steps"];
+
+  {
+    // Validate lane object of second step
+    const rapidjson::Value& step1_int0 = steps[1]["intersections"][0];
+    ASSERT_TRUE(step1_int0.HasMember("lanes"));
+    ASSERT_EQ(step1_int0["lanes"].Size(), 3);
+
+    verify_lane_schema(step1_int0["lanes"]);
+    // lane 0 - active: false, valid: false
+    EXPECT_FALSE(step1_int0["lanes"][0]["active"].GetBool());
+    EXPECT_FALSE(step1_int0["lanes"][0]["valid"].GetBool());
+    ASSERT_EQ(step1_int0["lanes"][0]["indications"].Size(), 1);
+    EXPECT_EQ(step1_int0["lanes"][0]["indications"][0].GetString(), std::string("left"));
+    EXPECT_FALSE(step1_int0["lanes"][0].HasMember("valid_indication"));
+    // lane 1 - active: true, valid: true, active_ind: right
+    EXPECT_TRUE(step1_int0["lanes"][1]["active"].GetBool());
+    EXPECT_TRUE(step1_int0["lanes"][1]["valid"].GetBool());
+    ASSERT_EQ(step1_int0["lanes"][1]["indications"].Size(), 1);
+    EXPECT_EQ(step1_int0["lanes"][1]["indications"][0].GetString(), std::string("right"));
+    ASSERT_TRUE(step1_int0["lanes"][1].HasMember("valid_indication"));
+    EXPECT_EQ(step1_int0["lanes"][1]["valid_indication"].GetString(), std::string("right"));
+    // lane 2 - active: false, valid: true, active_ind: right
+    EXPECT_FALSE(step1_int0["lanes"][2]["active"].GetBool());
+    EXPECT_TRUE(step1_int0["lanes"][2]["valid"].GetBool());
+    ASSERT_EQ(step1_int0["lanes"][2]["indications"].Size(), 1);
+    EXPECT_EQ(step1_int0["lanes"][2]["indications"][0].GetString(), std::string("right"));
+    ASSERT_TRUE(step1_int0["lanes"][2].HasMember("valid_indication"));
+    EXPECT_EQ(step1_int0["lanes"][2]["valid_indication"].GetString(), std::string("right"));
+  }
+
+  {
+    // Validate lane object of third step
+    const rapidjson::Value& step2_int0 = steps[2]["intersections"][0];
+    ASSERT_TRUE(step2_int0.HasMember("lanes"));
+    ASSERT_EQ(step2_int0["lanes"].Size(), 3);
+
+    verify_lane_schema(step2_int0["lanes"]);
+    // lane 0 - active: true, valid: true, active_ind: left
+    EXPECT_TRUE(step2_int0["lanes"][0]["active"].GetBool());
+    EXPECT_TRUE(step2_int0["lanes"][0]["valid"].GetBool());
+    ASSERT_EQ(step2_int0["lanes"][0]["indications"].Size(), 1);
+    EXPECT_EQ(step2_int0["lanes"][0]["indications"][0].GetString(), std::string("left"));
+    ASSERT_TRUE(step2_int0["lanes"][0].HasMember("valid_indication"));
+    EXPECT_EQ(step2_int0["lanes"][0]["valid_indication"].GetString(), std::string("left"));
+    // lane 1 - active: false, valid: true, active_ind: left
+    EXPECT_FALSE(step2_int0["lanes"][1]["active"].GetBool());
+    EXPECT_TRUE(step2_int0["lanes"][1]["valid"].GetBool());
+    ASSERT_EQ(step2_int0["lanes"][1]["indications"].Size(), 2);
+    EXPECT_EQ(step2_int0["lanes"][1]["indications"][0].GetString(), std::string("left"));
+    EXPECT_EQ(step2_int0["lanes"][1]["indications"][1].GetString(), std::string("straight"));
+    ASSERT_TRUE(step2_int0["lanes"][1].HasMember("valid_indication"));
+    EXPECT_EQ(step2_int0["lanes"][1]["valid_indication"].GetString(), std::string("left"));
+    // lane 2 - active: false, valid: false
+    EXPECT_FALSE(step2_int0["lanes"][2]["active"].GetBool());
+    EXPECT_FALSE(step2_int0["lanes"][2]["valid"].GetBool());
+    ASSERT_EQ(step2_int0["lanes"][2]["indications"].Size(), 1);
+    EXPECT_EQ(step2_int0["lanes"][2]["indications"][0].GetString(), std::string("straight"));
+    ASSERT_FALSE(step2_int0["lanes"][2].HasMember("valid_indication"));
+  }
+}
+TEST(Standalone, TurnLanesSerializedResponse) {
+  const std::string ascii_map = R"(
+        C
+        |
+    A---B
+        |
+        D--E
+        |
+        F
+  )";
+
+  const gurka::ways ways =
+      {{"AB", {{"highway", "trunk"}, {"lanes", "3"}, {"turn:lanes", "left|right|right"}}},
+       {"BC", {{"highway", "primary"}}},
+       {"BD", {{"highway", "primary"}, {"lanes", "3"}, {"turn:lanes", "left|left;through|through"}}},
+       {"DE", {{"highway", "primary"}}},
+       {"DF", {{"highway", "primary"}, {"lanes", "2"}, {"turn:lanes", "through|through"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_5");
+
+  auto verify_lane_schema = [](const rapidjson::Value& lanes) -> void {
+    // Verify common lane attributes:
+    // - has valid & active booleans
+    // - has a non-empty indications array
+    for (const auto& lane : lanes.GetArray()) {
+      ASSERT_TRUE(lane.HasMember("valid"));
+      EXPECT_TRUE(lane["valid"].IsBool());
+      ASSERT_TRUE(lane.HasMember("active"));
+      EXPECT_TRUE(lane["active"].IsBool());
+      ASSERT_TRUE(lane.HasMember("indications"));
+      ASSERT_TRUE(lane["indications"].IsArray());
+      ASSERT_GT(lane["indications"].Size(), 0);
+    }
+  };
+
+  // A->E : Both right lanes should be valid and left-most right lane should
+  // be active. For following step, both left lanes should be valid and the
+  // left-most left lane should be active.
+  auto result = gurka::route(map, "A", "E", "auto");
+  rapidjson::Document directions = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
+
+  // Assert expected number of routes, legs, steps
+  ASSERT_EQ(directions["routes"].Size(), 1);
+  ASSERT_EQ(directions["routes"][0]["legs"].Size(), 1);
+  ASSERT_EQ(directions["routes"][0]["legs"][0]["steps"].Size(), 4);
+  const rapidjson::Value& steps = directions["routes"][0]["legs"][0]["steps"];
+
+  {
+    // Validate lane object of second step
+    const rapidjson::Value& step1_int0 = steps[1]["intersections"][0];
+    ASSERT_TRUE(step1_int0.HasMember("lanes"));
+    ASSERT_EQ(step1_int0["lanes"].Size(), 3);
+
+    verify_lane_schema(step1_int0["lanes"]);
+    // lane 0 - active: false, valid: false
+    EXPECT_FALSE(step1_int0["lanes"][0]["active"].GetBool());
+    EXPECT_FALSE(step1_int0["lanes"][0]["valid"].GetBool());
+    ASSERT_EQ(step1_int0["lanes"][0]["indications"].Size(), 1);
+    EXPECT_EQ(step1_int0["lanes"][0]["indications"][0].GetString(), std::string("left"));
+    EXPECT_FALSE(step1_int0["lanes"][0].HasMember("valid_indication"));
+    // lane 1 - active: true, valid: true, active_ind: right
+    EXPECT_TRUE(step1_int0["lanes"][1]["active"].GetBool());
+    EXPECT_TRUE(step1_int0["lanes"][1]["valid"].GetBool());
+    ASSERT_EQ(step1_int0["lanes"][1]["indications"].Size(), 1);
+    EXPECT_EQ(step1_int0["lanes"][1]["indications"][0].GetString(), std::string("right"));
+    ASSERT_TRUE(step1_int0["lanes"][1].HasMember("valid_indication"));
+    EXPECT_EQ(step1_int0["lanes"][1]["valid_indication"].GetString(), std::string("right"));
+    // lane 2 - active: false, valid: true, active_ind: right
+    EXPECT_FALSE(step1_int0["lanes"][2]["active"].GetBool());
+    EXPECT_TRUE(step1_int0["lanes"][2]["valid"].GetBool());
+    ASSERT_EQ(step1_int0["lanes"][2]["indications"].Size(), 1);
+    EXPECT_EQ(step1_int0["lanes"][2]["indications"][0].GetString(), std::string("right"));
+    ASSERT_TRUE(step1_int0["lanes"][2].HasMember("valid_indication"));
+    EXPECT_EQ(step1_int0["lanes"][2]["valid_indication"].GetString(), std::string("right"));
+  }
+
+  {
+    // Validate lane object of third step
+    const rapidjson::Value& step2_int0 = steps[2]["intersections"][0];
+    ASSERT_TRUE(step2_int0.HasMember("lanes"));
+    ASSERT_EQ(step2_int0["lanes"].Size(), 3);
+
+    verify_lane_schema(step2_int0["lanes"]);
+    // lane 0 - active: true, valid: true, active_ind: left
+    EXPECT_TRUE(step2_int0["lanes"][0]["active"].GetBool());
+    EXPECT_TRUE(step2_int0["lanes"][0]["valid"].GetBool());
+    ASSERT_EQ(step2_int0["lanes"][0]["indications"].Size(), 1);
+    EXPECT_EQ(step2_int0["lanes"][0]["indications"][0].GetString(), std::string("left"));
+    ASSERT_TRUE(step2_int0["lanes"][0].HasMember("valid_indication"));
+    EXPECT_EQ(step2_int0["lanes"][0]["valid_indication"].GetString(), std::string("left"));
+    // lane 1 - active: false, valid: true, active_ind: left
+    EXPECT_FALSE(step2_int0["lanes"][1]["active"].GetBool());
+    EXPECT_TRUE(step2_int0["lanes"][1]["valid"].GetBool());
+    ASSERT_EQ(step2_int0["lanes"][1]["indications"].Size(), 2);
+    EXPECT_EQ(step2_int0["lanes"][1]["indications"][0].GetString(), std::string("left"));
+    EXPECT_EQ(step2_int0["lanes"][1]["indications"][1].GetString(), std::string("straight"));
+    ASSERT_TRUE(step2_int0["lanes"][1].HasMember("valid_indication"));
+    EXPECT_EQ(step2_int0["lanes"][1]["valid_indication"].GetString(), std::string("left"));
+    // lane 2 - active: false, valid: false
+    EXPECT_FALSE(step2_int0["lanes"][2]["active"].GetBool());
+    EXPECT_FALSE(step2_int0["lanes"][2]["valid"].GetBool());
+    ASSERT_EQ(step2_int0["lanes"][2]["indications"].Size(), 1);
+    EXPECT_EQ(step2_int0["lanes"][2]["indications"][0].GetString(), std::string("straight"));
+    ASSERT_FALSE(step2_int0["lanes"][2].HasMember("valid_indication"));
+  }
 }
