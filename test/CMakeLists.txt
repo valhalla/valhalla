@@ -4,6 +4,19 @@ set_target_properties(gtest_main PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock_main PROPERTIES FOLDER "Dependencies")
 
+# common things that the tests need
+add_library(valhalla_test
+  test.h test.cc gurka/gurka.h gurka/gurka.cc
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c)
+target_include_directories(valhalla_test PUBLIC
+  ${VALHALLA_SOURCE_DIR}/test
+  ${VALHALLA_SOURCE_DIR}/test/gurka
+  ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
+  ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
+target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
+
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
@@ -49,16 +62,12 @@ foreach(test ${tests})
     FOLDER "Tests"
     COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
   create_source_groups("Source Files" ${test}.cc)
-  target_link_libraries(${test} valhalla gtest gmock pthread)
+  target_link_libraries(${test} valhalla_test)
   if (LUAJIT_FOUND AND APPLE)
     # Using LuaJIT on macOS requires a couple of extra linker flags
     # Any tool that needs interact with Lua will need these flags on macOS
     target_link_options(${test} PUBLIC -pagezero_size 10000 -image_base 100000000)
   endif()
-  target_include_directories(${test} SYSTEM PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
-      ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
-      ${VALHALLA_SOURCE_DIR}/test)
 endforeach()
 
 set(cost_tests autocost bicyclecost motorcyclecost motorscootercost pedestriancost transitcost truckcost)
@@ -68,7 +77,7 @@ foreach(test ${cost_tests})
     FOLDER "Tests"
     COMPILE_DEFINITIONS INLINE_TEST)
   create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc)
-  target_link_libraries(${test} valhalla gtest gmock pthread)
+  target_link_libraries(${test} valhalla_test)
 endforeach()
 
 set(tyr_tests route_serializer_osrm)
@@ -78,7 +87,7 @@ foreach(test ${tyr_tests})
     FOLDER "Tests"
     COMPILE_DEFINITIONS INLINE_TEST)
   create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/tyr/${test}.cc)
-  target_link_libraries(${test} valhalla gtest gmock pthread)
+  target_link_libraries(${test} valhalla_test)
 endforeach()
 
 ## Test-specific data, properties and dependencies

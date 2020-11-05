@@ -20,8 +20,7 @@
 #include "proto/trip.pb.h"
 #include "proto_conversions.h"
 #ifdef INLINE_TEST
-#include "baldr/rapidjson_utils.h"
-#include "test/test.h"
+#include "test.h"
 #endif
 
 using namespace valhalla;

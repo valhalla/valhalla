@@ -3,7 +3,6 @@
 
 #include <array>
 #include <valhalla/midgard/util.h>
-#include <vector>
 
 namespace valhalla {
 namespace baldr {

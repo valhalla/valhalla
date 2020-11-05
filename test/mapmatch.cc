@@ -16,7 +16,6 @@
 #include "worker.h"
 
 #include "test.h"
-#include "utils.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
