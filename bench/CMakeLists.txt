@@ -25,6 +25,10 @@ macro (add_valhalla_benchmark target_file)
     COMPILE_DEFINITIONS
     VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
   target_link_libraries(${target_name} valhalla benchmark::benchmark)
+  if (LUAJIT_FOUND AND APPLE)
+    # Using LuaJIT on macOS requires a couple of extra linker flags
+    target_link_options(${target_name} PUBLIC -pagezero_size 10000 -image_base 100000000)
+  endif()
   add_dependencies(benchmarks ${target_name})
   add_dependencies(${target_name} utrecht_tiles)
   # Add a custom target running the benchmark
@@ -43,4 +47,5 @@ macro (add_valhalla_benchmark target_file)
 endmacro()
 
 add_subdirectory(meili)
+add_subdirectory(mjolnir)
 add_subdirectory(thor)
