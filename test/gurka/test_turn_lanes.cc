@@ -72,7 +72,6 @@ TEST(Standalone, TurnLanes) {
                                   {3, "[ left | through | through;*right* ACTIVE ]"},
                                   {4, "[ left | through | through | right ]"},
                               });
-
 }
 
 // Split lane example - 5-way intersection
@@ -242,9 +241,9 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
   //                                               DirectionsLeg_Maneuver_Type_kLeft,
   //                                               DirectionsLeg_Maneuver_Type_kDestinationLeft});
   // validate_turn_lanes(result, {
-  //                                 {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
-  //                                 {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
-  //                                 {0, ""},
+  //                                 {5, "[ *left* ACTIVE | *left* VALID | through | right | right
+  //                                 ]"}, {5, "[ *left* ACTIVE | *left* VALID | through | right |
+  //                                 right ]"}, {0, ""},
   //                             });
 
   // // A -> 2 - takes rightmost left lane
@@ -253,9 +252,9 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
   //                                               DirectionsLeg_Maneuver_Type_kLeft,
   //                                               DirectionsLeg_Maneuver_Type_kDestinationRight});
   // validate_turn_lanes(result, {
-  //                                 {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
-  //                                 {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
-  //                                 {0, ""},
+  //                                 {5, "[ *left* ACTIVE | *left* VALID | through | right | right
+  //                                 ]"}, {5, "[ *left* ACTIVE | *left* VALID | through | right |
+  //                                 right ]"}, {0, ""},
   //                             });
 
   // A -> E - takes leftmost left lane (left side driving)
