@@ -156,6 +156,7 @@ message Options {
     current = 0;
     depart_at = 1;
     arrive_by = 2;
+    invariant = 3;
   }
 
   optional Units units = 1;                                               // kilometers or miles

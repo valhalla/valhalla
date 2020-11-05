@@ -185,8 +185,8 @@ TEST(PredicteSpeeds, test_decoding) {
 
 /**
  * Test to check for negative speeds in an encoded predicted speed string. If we find cases
- * where we see a negative speed we should trace it back to a particular entry in the
- * csv input file and change the encoded speed string here to see if the issue is valid.
+ * where we see a negative speed we should trace it back to the input speeds and change the
+ * encoded speed string here to see if the issue is valid.
  */
 TEST(PredicteSpeeds, test_negative_speeds) {
   // base64 encoded string

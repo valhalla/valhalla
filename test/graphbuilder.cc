@@ -136,8 +136,7 @@ public:
                                                 way_nodes_file, access_file);
     PBFGraphParser::ParseRelations(mjolnir_config, input_files, from_restriction_file,
                                    to_restriction_file, osmdata);
-    PBFGraphParser::ParseNodes(mjolnir_config, input_files, ways_file, way_nodes_file, bss_file,
-                               osmdata);
+    PBFGraphParser::ParseNodes(mjolnir_config, input_files, way_nodes_file, bss_file, osmdata);
   }
 
   void TearDown() override {

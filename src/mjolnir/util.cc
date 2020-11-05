@@ -267,8 +267,8 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   if (start_stage <= BuildStage::kParseNodes && BuildStage::kParseNodes <= end_stage) {
     // Read the OSM protocol buffer file. Callbacks for nodes
     // are defined within the PBFParser class
-    PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
-                               bss_nodes_bin, osm_data);
+    PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, way_nodes_bin, bss_nodes_bin,
+                               osm_data);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
     if (release_osmpbf_memory) {

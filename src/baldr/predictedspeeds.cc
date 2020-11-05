@@ -2,6 +2,7 @@
 
 namespace valhalla {
 namespace baldr {
+
 // DCT-III constants for speed decoding and normalization
 constexpr float k1OverSqrt2 = 0.707106781f; // 1 / sqrt(2)
 constexpr float kPiBucketConstant = 3.14159265f / 2016.0f;
@@ -51,18 +52,19 @@ private:
 };
 
 std::array<int16_t, kCoefficientCount> compress_speed_buckets(const float* speeds) {
-  const auto& cost_table = BucketCosTable::GetInstance();
   std::array<float, kCoefficientCount> coefficients;
   coefficients.fill(0.f);
+
   // DCT-II with speed normalization
   for (uint32_t bucket = 0; bucket < kBucketsPerWeek; ++bucket) {
     // Get a pointer to the precomputed cos values for this bucket
-    const float* cos_values = cost_table.get(bucket);
+    const float* cos_values = BucketCosTable::GetInstance().get(bucket);
     for (uint32_t c = 0; c < kCoefficientCount; ++c) {
       coefficients[c] += cos_values[c] * speeds[bucket];
     }
   }
   coefficients[0] *= k1OverSqrt2;
+
   std::array<int16_t, kCoefficientCount> result;
   for (size_t i = 0; i < coefficients.size(); ++i) {
     result[i] = static_cast<int16_t>(roundf(kSpeedNormalization * coefficients[i]));
@@ -76,9 +78,8 @@ float decompress_speed_bucket(const int16_t* coefficients, uint32_t bucket_idx) 
 
   // DCT-III with speed normalization
   float speed = *coefficients * k1OverSqrt2;
-  ++coefficients;
-  ++b;
-  for (uint32_t k = 1; k < kCoefficientCount; ++k, ++coefficients, ++b) {
+  const auto* coef_end = coefficients + kCoefficientCount;
+  for (++b, ++coefficients; coefficients < coef_end; ++coefficients, ++b) {
     speed += *coefficients * *b;
   }
   return speed * kSpeedNormalization;
