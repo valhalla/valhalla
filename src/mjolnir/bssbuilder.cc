@@ -197,7 +197,16 @@ DirectedEdge make_directed_edge(const GraphId endnode,
                                 const uint32_t oppo_local_idx) {
   DirectedEdge directededge;
   directededge.set_endnode(endnode);
-  directededge.set_length(std::max(1.0f, valhalla::midgard::length(shape)));
+  float length = valhalla::midgard::length(shape);
+
+  if (length > kMaxEdgeLength) {
+    // Consider this a catastrophic error.  Need to do the check here as
+    // transit edges could be large; however, they should not be for the graph.
+    LOG_ERROR("Exceeding max. edge length: " + std::to_string(length));
+    throw std::runtime_error("DirectedEdgeBuilder: exceeded maximum edge length");
+  }
+
+  directededge.set_length(std::max(1.0f, length));
   directededge.set_use(conn.use);
   directededge.set_speed(conn.speed);
   directededge.set_surface(conn.surface);

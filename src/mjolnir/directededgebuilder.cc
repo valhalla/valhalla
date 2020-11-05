@@ -30,6 +30,13 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_speed(speed);             // KPH
   set_truck_speed(truck_speed); // KPH
 
+  if (length > kMaxEdgeLength) {
+    // Consider this a catastrophic error.  Need to do the check here as
+    // transit edges could be large; however, they should not be for the graph.
+    LOG_ERROR("Exceeding max. edge length: " + std::to_string(length));
+    throw std::runtime_error("DirectedEdgeBuilder: exceeded maximum edge length");
+  }
+
   // Protect against 0 length edges
   set_length(std::max(length, kMinimumEdgeLength));
 
