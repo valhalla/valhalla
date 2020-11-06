@@ -273,6 +273,11 @@ bool CanContract(GraphReader& reader,
     return false;
   }
 
+  // Can not have different speeds in the same direction
+  if ((oppdiredge1->speed() != edge2->speed()) || (oppdiredge2->speed() != edge1->speed())) {
+    return false;
+  }
+
   // ISO country codes at the end nodes must equal this node
   std::string iso = tile->admininfo(nodeinfo->admin_index()).country_iso();
   std::string e1_iso = EndNodeIso(edge1, reader);
