@@ -729,7 +729,9 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           if (!infer_internal_intersections && w.internal()) {
-            directededge.set_internal(true);
+
+            if (directededge.use() != Use::kRamp && directededge.use() != Use::kTurnChannel)
+              directededge.set_internal(true);
           }
 
           // TODO - update logic so we limit the CreateSignInfoList calls
