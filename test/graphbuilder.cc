@@ -95,17 +95,19 @@ TEST(Graphbuilder, TestDEBuilderLength) {
   std::vector<PointLL> shape1{{-160.096619f, 21.997619f},
                               {-90.037697f, 41.004531},
                               {-160.096619f, 21.997619f}};
-  ASSERT_NO_THROW(DirectedEdgeBuilder edge_builder({}, GraphId(123, 2, 8), true, valhalla::midgard::length(shape1),
-                                     1, 1, Use::kRoad, baldr::RoadClass::kMotorway, 0, false, 0, 0,
-                                     false));
+  ASSERT_NO_THROW(DirectedEdgeBuilder edge_builder({}, GraphId(123, 2, 8), true,
+                                                   valhalla::midgard::length(shape1), 1, 1,
+                                                   Use::kRoad, baldr::RoadClass::kMotorway, 0, false,
+                                                   0, 0, false));
 
   std::vector<PointLL> shape2{{-160.096619f, 21.997619f},
                               {-90.037697f, 41.004531},
                               {-160.096619f, 21.997619f},
                               {-90.037697f, 41.004531}};
-  ASSERT_THROW(DirectedEdgeBuilder edge_builder({}, GraphId(123, 2, 8), true, valhalla::midgard::length(shape2),
-                                     1, 1, Use::kRoad, baldr::RoadClass::kMotorway, 0, false, 0, 0,
-                                     false), std::runtime_error);
+  ASSERT_THROW(DirectedEdgeBuilder edge_builder({}, GraphId(123, 2, 8), true,
+                                                valhalla::midgard::length(shape2), 1, 1, Use::kRoad,
+                                                baldr::RoadClass::kMotorway, 0, false, 0, 0, false),
+               std::runtime_error);
 }
 
 class HarrisburgTestSuiteEnv : public ::testing::Environment {
