@@ -89,8 +89,7 @@ PathLocation::SideOfStreet flip_side(const PathLocation::SideOfStreet side) {
   return side;
 }
 
-std::function<std::tuple<int32_t, unsigned short, float>()> make_binner(const PointLL& p,
-                                                                        const GraphReader& reader) {
+std::function<std::tuple<int32_t, unsigned short, float>()> make_binner(const PointLL& p) {
   const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
   return tiles.ClosestFirst(p);
 }
@@ -164,7 +163,7 @@ struct candidate_t {
 // is found.
 struct projector_wrapper {
   projector_wrapper(const Location& location, GraphReader& reader)
-      : binner(make_binner(location.latlng_, reader)), location(location),
+      : binner(make_binner(location.latlng_)), location(location),
         sq_radius(square(double(location.radius_))), project(location.latlng_) {
     // TODO: something more empirical based on radius
     unreachable.reserve(64);
@@ -585,6 +584,7 @@ struct bin_handler_t {
               opp_reach.inbound >= p_itr->location.min_inbound_reach_) {
             tile = opp_tile;
             edge = opp_edge;
+            edge_id = opp_edgeid;
             reach = opp_reach;
             reachable = true;
           }

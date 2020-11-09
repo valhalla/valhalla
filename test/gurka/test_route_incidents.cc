@@ -1,7 +1,5 @@
-#include <gtest/gtest.h>
-
 #include "gurka.h"
-#include "test/util/traffic_utils.h"
+#include "test.h"
 
 using namespace valhalla;
 
@@ -48,7 +46,7 @@ protected:
                             });
 
     // stage up some live traffic data
-    valhalla_tests::utils::build_live_traffic_data(map.config);
+    test::build_live_traffic_data(map.config);
   }
 };
 
@@ -231,7 +229,7 @@ std::shared_ptr<test_reader> setup_test(const gurka::map& map,
       if (edge_id.Tile_Base() == tile.header->tile_id && edge_id.id() == (uint32_t)edge_index)
         current->has_incidents = true;
     };
-    valhalla_tests::utils::customize_live_traffic_data(map.config, has_incident_cb);
+    test::customize_live_traffic_data(map.config, has_incident_cb);
     edge_ids.push_back(edge_id);
   }
 

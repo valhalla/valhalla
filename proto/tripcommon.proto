@@ -131,8 +131,14 @@ message StreetName {
 }
 
 message TurnLane {
+  enum State {
+    kInvalid = 0;
+    kValid = 1;
+    kActive = 2;
+  }
   optional uint32 directions_mask = 1;
-  optional bool is_active = 2;
+  optional State state = 2 [default = kInvalid];
+  optional uint32 active_direction = 3;
 }
 
 enum RoadClass {

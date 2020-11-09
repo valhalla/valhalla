@@ -37,7 +37,7 @@ constexpr uint32_t kAbsurdRoadClass = 777777;
 
 // Convenience method to get a number from a string. Uses try/catch in case
 // stoi throws an exception
-int get_number(const std::string& tag, const std::string& value) {
+int get_number(const std::string& tag, const std::string& value) { // NOLINT
   int num = -1;
   try {
     num = stoi(value);
@@ -682,18 +682,18 @@ public:
     tag_handlers_["bridge"] = [this]() { way_.set_bridge(tag_.second == "true" ? true : false); };
     tag_handlers_["seasonal"] = [this]() { way_.set_seasonal(tag_.second == "true" ? true : false); };
     tag_handlers_["bike_network_mask"] = [this]() { way_.set_bike_network(std::stoi(tag_.second)); };
-    tag_handlers_["bike_national_ref"] = [this]() {
-      if (!tag_.second.empty())
-        way_.set_bike_national_ref_index(osmdata_.name_offset_map.index(tag_.second));
-    };
-    tag_handlers_["bike_regional_ref"] = [this]() {
-      if (!tag_.second.empty())
-        way_.set_bike_regional_ref_index(osmdata_.name_offset_map.index(tag_.second));
-    };
-    tag_handlers_["bike_local_ref"] = [this]() {
-      if (!tag_.second.empty())
-        way_.set_bike_local_ref_index(osmdata_.name_offset_map.index(tag_.second));
-    };
+    //    tag_handlers_["bike_national_ref"] = [this]() {
+    //      if (!tag_.second.empty())
+    //        way_.set_bike_national_ref_index(osmdata_.name_offset_map.index(tag_.second));
+    //    };
+    //    tag_handlers_["bike_regional_ref"] = [this]() {
+    //      if (!tag_.second.empty())
+    //        way_.set_bike_regional_ref_index(osmdata_.name_offset_map.index(tag_.second));
+    //    };
+    //    tag_handlers_["bike_local_ref"] = [this]() {
+    //      if (!tag_.second.empty())
+    //        way_.set_bike_local_ref_index(osmdata_.name_offset_map.index(tag_.second));
+    //    };
     tag_handlers_["destination"] = [this]() {
       if (!tag_.second.empty()) {
         way_.set_destination_index(osmdata_.name_offset_map.index(tag_.second));
@@ -2156,7 +2156,6 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
 
 void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
                                 const std::vector<std::string>& input_files,
-                                const std::string& ways_file,
                                 const std::string& way_nodes_file,
                                 const std::string& bss_nodes_file,
                                 OSMData& osmdata) {
