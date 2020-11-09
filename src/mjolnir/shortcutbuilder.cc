@@ -63,10 +63,9 @@ bool EdgesMatch(const GraphTile* tile, const DirectedEdge* edge1, const Directed
   // get marked as a bridge and lead to less shortcuts - so we don't consider
   // bridge and tunnel here
   if (edge1->classification() != edge2->classification() || edge1->link() != edge2->link() ||
-      edge1->use() != edge2->use() || edge1->speed() != edge2->speed() ||
-      edge1->toll() != edge2->toll() || edge1->destonly() != edge2->destonly() ||
-      edge1->unpaved() != edge2->unpaved() || edge1->surface() != edge2->surface() ||
-      edge1->roundabout() != edge2->roundabout()) {
+      edge1->use() != edge2->use() || edge1->toll() != edge2->toll() ||
+      edge1->destonly() != edge2->destonly() || edge1->unpaved() != edge2->unpaved() ||
+      edge1->surface() != edge2->surface() || edge1->roundabout() != edge2->roundabout()) {
     return false;
   }
 
