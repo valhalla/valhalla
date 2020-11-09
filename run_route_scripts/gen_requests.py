@@ -4,6 +4,9 @@ import json
 import math
 import random
 
+# example usage, each arg is a comma separated quadruplet of lon,lat,radius_meters,count
+#./gen_requests.py 40.2690,-76.8713,10000,10 39.9561,-76.7313,10000,10 40.0507,-76.3083,10000,10 40.3319,-75.9402,10000,10 40.5910,-75.4788,10000,10 40.0108,-75.2316,10000,10 > a.txt
+
 # TODO: use argparse to parse other request options and validate quadruplets
 
 # generate a certain number of random lls around a center ll with a certain radius
