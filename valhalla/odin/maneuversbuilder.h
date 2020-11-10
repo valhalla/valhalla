@@ -236,6 +236,13 @@ protected:
   void ProcessGuidanceViewJunctions(std::list<Maneuver>& maneuvers);
 
   /**
+   * Process the guidance view signboards at the maneuver point.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void ProcessGuidanceViewSignboards(std::list<Maneuver>& maneuvers);
+
+  /**
    * Match the guidance view junctions for the specified base prefix and suffix.
    *
    * @param maneuver The maneuver to process.

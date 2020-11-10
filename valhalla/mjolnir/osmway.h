@@ -329,6 +329,38 @@ struct OSMWay {
   }
 
   /**
+   * Sets the index for forward signboard base string.
+   * @param  idx  Index for the forward signboard base string.
+   */
+  void set_fwd_signboard_base_index(const uint32_t idx) {
+    fwd_signboard_base_index_ = idx;
+  }
+
+  /**
+   * Get the forward signboard base string index.
+   * @return  Returns the index for the forward signboard base string.
+   */
+  uint32_t fwd_signboard_base_index() const {
+    return fwd_signboard_base_index_;
+  }
+
+  /**
+   * Sets the index for backward signboard base string.
+   * @param  idx  Index for the backward signboard base string.
+   */
+  void set_bwd_signboard_base_index(const uint32_t idx) {
+    bwd_signboard_base_index_ = idx;
+  }
+
+  /**
+   * Get the backward signboard base string index.
+   * @return  Returns the index for the backward signboard base string.
+   */
+  uint32_t bwd_signboard_base_index() const {
+    return bwd_signboard_base_index_;
+  }
+
+  /**
    * Sets the index for destination.
    * @param  idx  Index for the destination.
    */
@@ -1564,6 +1596,9 @@ struct OSMWay {
 
   uint32_t fwd_jct_overlay_index_;
   uint32_t bwd_jct_overlay_index_;
+
+  uint32_t fwd_signboard_base_index_;
+  uint32_t bwd_signboard_base_index_;
 
   // Sign Destination information
   uint32_t destination_index_;

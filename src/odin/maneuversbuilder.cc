@@ -113,8 +113,9 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Process the turn lanes
   ProcessTurnLanes(maneuvers);
 
-  // Process the guidance view junctions
+  // Process the guidance view junctions and signboards
   ProcessGuidanceViewJunctions(maneuvers);
+  ProcessGuidanceViewSignboards(maneuvers);
 
   // Update the maneuver placement for internal intersection turns
   UpdateManeuverPlacementForInternalIntersectionTurns(maneuvers);
@@ -2926,6 +2927,36 @@ void ManeuversBuilder::ProcessGuidanceViewJunctions(std::list<Maneuver>& maneuve
             MatchGuidanceViewJunctions(maneuver, base_tokens.at(0), base_tokens.at(1));
           }
         } // end for loop over base guidance view junction
+      }
+    }
+  }
+}
+
+void ManeuversBuilder::ProcessGuidanceViewSignboards(std::list<Maneuver>& maneuvers) {
+  std::cout << "**************ProcessGuidanceViewSignboards***************" << std::endl;
+  // Walk the maneuvers to match find guidance view junctions
+  for (Maneuver& maneuver : maneuvers) {
+    // Only process driving maneuvers
+    if (maneuver.travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive) {
+      auto prev_edge = trip_path_->GetPrevEdge(maneuver.begin_node_index());
+      if (prev_edge && (prev_edge->has_sign())) {
+        // Process base guidance view junctions
+        for (const auto& base_guidance_view_signboard :
+             prev_edge->sign().guidance_view_signboards()) {
+          std::cout << "**************ProcessGuidanceViewSignboards :: "
+                    << base_guidance_view_signboard.SerializeAsString() << std::endl;
+          auto base_tokens = split(base_guidance_view_signboard.text(), ';');
+          // If base(is_route_number) guidance view board and a pair...
+          if (base_guidance_view_signboard.is_route_number() && is_pair(base_tokens)) {
+            DirectionsLeg_GuidanceView guidance_view;
+            guidance_view.set_data_id(std::to_string(trip_path_->osm_changeset()));
+            guidance_view.set_type(
+                "signboard"); // TODO implement for real in the future based on sign type
+            guidance_view.set_base_id(base_tokens.at(0) + base_tokens.at(1));
+            maneuver.mutable_guidance_views()->emplace_back(guidance_view);
+            return;
+          }
+        } // end for loop over base guidance view junction      }
       }
     }
   }

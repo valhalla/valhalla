@@ -1423,8 +1423,31 @@ bool GraphBuilder::CreateSignInfoList(const OSMNode& node,
       has_guidance_view = true;
     }
   }
+  bool has_guidance_view_signboard = false;
+  if (forward && way.fwd_signboard_base_index() > 0) {
+    std::vector<std::string> names =
+        GetTagTokens(osmdata.name_offset_map.name(way.fwd_signboard_base_index()));
+    // route number set to true for kGuidanceViewSignboard type means base type
+    for (auto& name : names) {
+      exit_list.emplace_back(Sign::Type::kGuidanceViewSignboard, true, name);
+      has_guidance_view_signboard = true;
+    }
+    std::cout << "********forward && way.fwd_signboard_base_index() > 0 :: "
+              << has_guidance_view_signboard << std::endl;
 
-  return (has_guide || has_guidance_view);
+  } else if (!forward && way.bwd_signboard_base_index() > 0) {
+    std::vector<std::string> names =
+        GetTagTokens(osmdata.name_offset_map.name(way.bwd_signboard_base_index()));
+    // route number set to true for kGuidanceViewSignboard type means base type
+    for (auto& name : names) {
+      exit_list.emplace_back(Sign::Type::kGuidanceViewSignboard, true, name);
+      has_guidance_view_signboard = true;
+    }
+    std::cout << "********!forward && way.bwd_signboard_base_index() > 0 :: "
+              << has_guidance_view_signboard << std::endl;
+  }
+
+  return (has_guide || has_guidance_view || has_guidance_view_signboard);
 }
 
 } // namespace mjolnir
