@@ -26,16 +26,26 @@ struct bb_tester {
   GraphReader reader;
   AABB2<PointLL> bb;
   bb_tester(const std::string& tile_dir) : reader(get_conf(tile_dir).get_child("mjolnir")) {
-    // to get the bb of the whole data set we can just look at nodes of all tiles
+    // to get the bb of the whole data set
     bb = AABB2<PointLL>{PointLL{}, PointLL{}};
     for (const auto& id : reader.GetTileSet()) {
       const auto* t = reader.GetGraphTile(id);
       for (const auto& node : t->GetNodes()) {
         auto node_ll = node.latlng(t->header()->base_ll());
-        if (!bb.minpt().IsValid())
+        if (!bb.minpt().IsValid()) {
           bb = AABB2<PointLL>{node_ll, node_ll};
-        else
-          bb.Expand(node_ll);
+        }
+
+        // when we see a node that pushes the envelop out we check its edge shape
+        if (bb.Expand(node_ll)) {
+          const auto* edge = t->directededge(node.edge_index());
+          auto shape = t->edgeinfo(edge->edgeinfo_offset()).shape();
+          auto enc = t->edgeinfo(edge->edgeinfo_offset()).encoded_shape();
+          if (edge->forward())
+            bb.Expand(shape.front());
+          else
+            bb.Expand(shape.back());
+        }
       }
     }
   }

@@ -203,9 +203,10 @@ public:
 
   /**
    * Test whether this point is to the left of a segment from p1 to p2.
+   * The determinant of the vectors p1->p2 p1->this
    * @param  p1  First point of the segment.
    * @param  p2  End point of the segment.
-   * @return  Returns true if this point is left of the segment.
+   * @return  Returns a positive value if this point is left of the segment.
    */
   virtual value_type IsLeft(const GeoPoint& p1, const GeoPoint& p2) const {
     return (p2.lng() - p1.lng()) * (lat() - p1.lat()) - (lng() - p1.lng()) * (p2.lat() - p1.lat());
