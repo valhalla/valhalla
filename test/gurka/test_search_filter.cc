@@ -17,6 +17,7 @@ protected:
     |   2     |
     |         ↑
     |1    4  3|
+    |         |
     A---------D
      \        |
       \ 5     |
@@ -46,6 +47,7 @@ TEST_F(SearchFilter, Unfiltered) {
        std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
           .str();
+
   auto result = gurka::route(map, request);
 
   // should take the shortest path
@@ -132,8 +134,8 @@ TEST_F(SearchFilter, ExcludeTunnel) {
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
           .str();
   auto result_filtered = gurka::route(map, request_filtered);
-  gurka::assert::osrm::expect_steps(result_filtered, {"AD", "AB"});
-  gurka::assert::raw::expect_path(result_filtered, {"AD", "AB"});
+  gurka::assert::osrm::expect_steps(result_filtered, {"AB"});
+  gurka::assert::raw::expect_path(result_filtered, {"AB"});
 }
 TEST_F(SearchFilter, ExcludeBridge) {
   auto from = "6";

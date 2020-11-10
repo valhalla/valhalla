@@ -1,8 +1,8 @@
 #ifndef VALHALLA_BALDR_PREDICTEDSPEEDS_H_
 #define VALHALLA_BALDR_PREDICTEDSPEEDS_H_
 
+#include <array>
 #include <valhalla/midgard/util.h>
-#include <vector>
 
 namespace valhalla {
 namespace baldr {
@@ -11,58 +11,41 @@ constexpr uint32_t kSpeedBucketSizeMinutes = 5;
 constexpr uint32_t kSpeedBucketSizeSeconds = kSpeedBucketSizeMinutes * 60;
 constexpr uint32_t kBucketsPerWeek = (7 * 24 * 60) / kSpeedBucketSizeMinutes;
 
-// DCT-III constants for speed decoding and normalization
+// Length of transformed speed buckets array.
 constexpr uint32_t kCoefficientCount = 200;
-constexpr float k1OverSqrt2 = 0.707106781f; // 1 / sqrt(2)
-constexpr float kPiBucketConstant = 3.14159265f / 2016.0f;
-constexpr float kSpeedNormalization = 0.031497039f; // sqrt(2.0f / 2016.0f);
 
-// Expected size of base64-encoded predicated speeds coefficients. Each int16_t coefficient is
+// Expected size of base64-encoded predicted speeds coefficients. Each int16_t coefficient is
 // encoded by two bytes in an array of uint8_t's.
 constexpr uint32_t kDecodedSpeedSize = 2 * kCoefficientCount;
 
-// Size of the cos table for the buckets
-constexpr uint32_t kCosBucketTableSize = kCoefficientCount * kBucketsPerWeek;
+/**
+ * Compress speed buckets by truncating its DCT-II transform.
+ * @param speeds    Array of speed values for each bucket (must be 2016 values).
+ * @return  Transformed values.
+ */
+std::array<int16_t, kCoefficientCount> compress_speed_buckets(const float* speeds);
 
-// Precompute a cos table for each bucket of the week as a singleton.
-class BucketCosTable final {
-public:
-  static BucketCosTable& GetInstance() {
-    static BucketCosTable instance;
-    return instance;
-  }
+/**
+ * Recover speed value in the bucket (apply DCT-III transform)
+ * @param coefficients  Transformed speed buckets (must be 200 values).
+ * @param bucket_idx    Index of the bucket we want to recover.
+ * @return  Speed value (in KPH) in the bucket.
+ */
+float decompress_speed_bucket(const int16_t* coefficients, uint32_t bucket_idx);
 
-  /**
-   * Get a const pointer to the start of the stored cos values for the specified
-   * bucket.
-   * @param bucket  Bucket of the week.
-   * @return Returns a pointer to the first cos value for the bucket.
-   */
-  const float* get(const uint32_t bucket) const {
-    return &table_[bucket * kCoefficientCount];
-  }
+/**
+ * Pack transformed speed values into base64-encoded string.
+ * @param coefficients  Array of transformed speed buckets (must be 200 values).
+ * @return  Encoded string.
+ */
+std::string encode_compressed_speeds(const int16_t* coefficients);
 
-private:
-  // Construct the cos table
-  BucketCosTable() {
-    // Fill out the table in bucket order.
-    float* t = &table_[0];
-    for (uint32_t bucket = 0; bucket < kBucketsPerWeek; ++bucket) {
-      for (uint32_t c = 0; c < kCoefficientCount; ++c) {
-        *t++ = cosf(kPiBucketConstant * (bucket + 0.5f) * c);
-      }
-    }
-  }
-
-  ~BucketCosTable() = default;
-  BucketCosTable(const BucketCosTable&) = delete;
-  BucketCosTable& operator=(const BucketCosTable&) = delete;
-  BucketCosTable(BucketCosTable&&) = delete;
-  BucketCosTable& operator=(BucketCosTable&&) = delete;
-
-  // cos table (this uses about 1.6MB of memory)
-  float table_[kCosBucketTableSize];
-};
+/**
+ * Decode base64-encoded string and recover transformed speed buckets. Throw an exception on fail.
+ * @param encoded   base64-encoded string (length must be equal to 400).
+ * @return  Transformed speed buckets.
+ */
+std::array<int16_t, kCoefficientCount> decode_compressed_speeds(const std::string& encoded);
 
 /**
  * Class to access predicted speed information within a tile.
@@ -104,17 +87,7 @@ public:
     // to DirectedEdge::has_predicted_speed being false.
     const int16_t* coefficients = profiles_ + offset_[idx];
 
-    // Get a pointer to the precomputed cos values for this bucket
-    const float* b = BucketCosTable::GetInstance().get(seconds_of_week / kSpeedBucketSizeSeconds);
-
-    // DCT-III with speed normalization
-    float speed = *coefficients * k1OverSqrt2;
-    ++coefficients;
-    ++b;
-    for (uint32_t k = 1; k < kCoefficientCount; ++k, ++coefficients, ++b) {
-      speed += *coefficients * *b;
-    }
-    return speed * kSpeedNormalization;
+    return decompress_speed_bucket(coefficients, seconds_of_week / kSpeedBucketSizeSeconds);
   }
 
 protected:

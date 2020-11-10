@@ -9,7 +9,7 @@
 #include "midgard/pointll.h"
 #include "sif/autocost.h"
 #include "sif/costfactory.h"
-#include "test/util/traffic_utils.h"
+#include "test.h"
 #include "thor/bidirectional_astar.h"
 #include <valhalla/proto/options.pb.h>
 
@@ -83,7 +83,7 @@ constexpr float kMaxRange = 256;
 
 static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
   const auto config = build_config("generated-live-data.tar");
-  valhalla_tests::utils::build_live_traffic_data(config);
+  test::build_live_traffic_data(config);
 
   std::mt19937 gen(0); // Seed with the same value for consistent benchmarking
   {
@@ -105,10 +105,10 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
       } else {
       }
     };
-    valhalla_tests::utils::customize_live_traffic_data(config, generate_traffic);
+    test::customize_live_traffic_data(config, generate_traffic);
   }
 
-  auto clean_reader = valhalla_tests::utils::make_clean_graphreader(config.get_child("mjolnir"));
+  auto clean_reader = test::make_clean_graphreader(config.get_child("mjolnir"));
 
   // Generate N random route queries within the Utrect bounding box;
   const int N = 2;
@@ -191,7 +191,7 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
 void customize_traffic(const boost::property_tree::ptree& config,
                        baldr::GraphId& target_edge_id,
                        const int target_speed) {
-  valhalla_tests::utils::build_live_traffic_data(config);
+  test::build_live_traffic_data(config);
   // Make some updates to the traffic .tar file.
   // Generate traffic data
   std::function<void(baldr::GraphReader&, baldr::TrafficTile&, int, baldr::TrafficSpeed*)>
@@ -206,7 +206,7 @@ void customize_traffic(const boost::property_tree::ptree& config,
       current->speed1 = target_speed >> 1;
     }
   };
-  valhalla_tests::utils::customize_live_traffic_data(config, generate_traffic);
+  test::customize_live_traffic_data(config, generate_traffic);
 }
 
 BENCHMARK(BM_UtrechtBidirectionalAstar)->Unit(benchmark::kMillisecond);
@@ -219,7 +219,7 @@ static void BM_GetSpeed(benchmark::State& state) {
   const auto tgt_speed = 50;
   customize_traffic(config, tgt_edge_id, tgt_speed);
 
-  auto clean_reader = valhalla_tests::utils::make_clean_graphreader(config.get_child("mjolnir"));
+  auto clean_reader = test::make_clean_graphreader(config.get_child("mjolnir"));
 
   auto tile = clean_reader->GetGraphTile(baldr::GraphId(tgt_edge_id));
   if (tile == nullptr) {
@@ -251,7 +251,7 @@ static void BM_Sif_Allowed(benchmark::State& state) {
   auto tgt_speed = 100;
   customize_traffic(config, tgt_edge_id, tgt_speed);
 
-  auto clean_reader = valhalla_tests::utils::make_clean_graphreader(config.get_child("mjolnir"));
+  auto clean_reader = test::make_clean_graphreader(config.get_child("mjolnir"));
 
   Options options;
   create_costing_options(options);

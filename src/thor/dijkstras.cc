@@ -159,10 +159,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
 
     // Compute the cost to the end of this edge
     Cost transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
-    Cost newcost = pred.cost() +
-                   costing_->EdgeCost(directededge, tile,
-                                      offset_time.valid ? offset_time.second_of_week
-                                                        : kConstrainedFlowSecondOfDay) +
+    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile, offset_time.second_of_week) +
                    transition_cost;
 
     // Check if edge is temporarily labeled and this path has less cost. If
@@ -318,9 +315,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     // Compute the cost to the end of this edge with separate transition cost
     Cost transition_cost = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo,
                                                            opp_edge, opp_pred_edge);
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2,
-                                                    offset_time.valid ? offset_time.second_of_week
-                                                                      : kConstrainedFlowSecondOfDay);
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, offset_time.second_of_week);
     newcost.cost += transition_cost.cost;
 
     // Check if edge is temporarily labeled and this path has less cost. If

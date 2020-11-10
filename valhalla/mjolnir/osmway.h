@@ -460,9 +460,9 @@ struct OSMWay {
    * Sets the index for bike national ref.
    * @param  idx  Index for the name of the national bike network.
    */
-  void set_bike_national_ref_index(const uint32_t idx) {
-    ; // bike_national_ref_index_ = idx; UNUSED - future
-  }
+  //  void set_bike_national_ref_index(const uint32_t idx) {
+  //    ; // bike_national_ref_index_ = idx; UNUSED - future
+  //  }
 
   /**
    * Get the bike national ref index.
@@ -476,9 +476,9 @@ struct OSMWay {
    * Sets the index for bike regional ref.
    * @param  idx  Index for the name of the regional bike network.
    */
-  void set_bike_regional_ref_index(const uint32_t idx) {
-    ; // bike_regional_ref_index_ = idx; UNUSED - future
-  }
+  //  void set_bike_regional_ref_index(const uint32_t idx) {
+  //    ; // bike_regional_ref_index_ = idx; UNUSED - future
+  //  }
 
   /**
    * Get the bike regional ref index.
@@ -492,9 +492,9 @@ struct OSMWay {
    * Sets the index for bike local ref.
    * @param  idx  Index for the name of the local bike network.
    */
-  void set_bike_local_ref_index(const uint32_t idx) {
-    ; // bike_local_ref_index_ = idx; UNUSED - future
-  }
+  //  void set_bike_local_ref_index(const uint32_t idx) {
+  //    ; // bike_local_ref_index_ = idx; UNUSED - future
+  //  }
 
   /**
    * Get the bike local ref index.
