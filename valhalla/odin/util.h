@@ -61,6 +61,13 @@ const locales_singleton_t& get_locales();
  */
 const std::unordered_map<std::string, std::string>& get_locales_json();
 
+/**
+ * Returns the string representation for a turn lane direction.
+ *
+ * @return lane direction string.
+ */
+std::string turn_lane_direction(uint16_t turn_lane);
+
 } // namespace odin
 } // namespace valhalla
 #endif // VALHALLA_ODIN_UTIL_H_

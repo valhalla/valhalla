@@ -217,7 +217,7 @@ public:
 
     PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
                                {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                               ways_file, way_nodes_file, bss_file, osmdata);
+                               way_nodes_file, bss_file, osmdata);
   }
 
   void TearDown() override {

@@ -42,7 +42,15 @@ public:
               baldr::GraphReader& graphreader,
               const sif::mode_costing_t& mode_costing,
               const sif::TravelMode mode,
-              const Options& options = Options::default_instance());
+              const Options& options = Options::default_instance()) override;
+
+  /**
+   * Returns the name of the algorithm
+   * @return the name of the algorithm
+   */
+  virtual const char* name() const override {
+    return "time_dependent_forward_a*";
+  }
 
 protected:
   /**
@@ -117,12 +125,20 @@ public:
               baldr::GraphReader& graphreader,
               const sif::mode_costing_t& mode_costing,
               const sif::TravelMode mode,
-              const Options& options = Options::default_instance());
+              const Options& options = Options::default_instance()) override;
+
+  /**
+   * Returns the name of the algorithm
+   * @return the name of the algorithm
+   */
+  virtual const char* name() const override {
+    return "time_dependent_reverse_a*";
+  }
 
   /**
    * Clear the temporary information generated during path construction.
    */
-  virtual void Clear();
+  virtual void Clear() override;
 
 protected:
   // Access mode used by the costing method
@@ -137,7 +153,7 @@ protected:
    * @param  origll  Lat,lng of the origin.
    * @param  destll  Lat,lng of the destination.
    */
-  void Init(const midgard::PointLL& origll, const midgard::PointLL& destll);
+  void Init(const midgard::PointLL& origll, const midgard::PointLL& destll) override;
 
   /**
    * Expand from the node along the reverse search path. Immediately expands
@@ -186,9 +202,9 @@ protected:
    * @param  dest         Location information of the destination.
    */
   void SetOrigin(baldr::GraphReader& graphreader,
-                 valhalla::Location& origin,
-                 valhalla::Location& destination,
-                 uint32_t seconds_of_week);
+                 const valhalla::Location& origin,
+                 const valhalla::Location& destination,
+                 const uint32_t seconds_of_week) override;
 
   /**
    * The destination of the reverse path is the origin location. Set the
@@ -197,7 +213,8 @@ protected:
    * @param   dest         Location information of the destination.
    * @return  Returns the relative density near the destination (0-15)
    */
-  uint32_t SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
+  virtual uint32_t SetDestination(baldr::GraphReader& graphreader,
+                                  const valhalla::Location& dest) override;
 
   /**
    * Form the path from the adjacency list. Recovers the path from the

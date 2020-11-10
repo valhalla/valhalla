@@ -1139,7 +1139,7 @@
     },
     "post_transition_verbal": {
       "phrases": {
-        "0": "<LENGTH> weiter.",
+        "0": "<LENGTH> weiter der Route folgen.",
         "1": "<LENGTH> weiter auf <STREET_NAMES>."
       },
       "empty_street_name_labels": [
