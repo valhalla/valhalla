@@ -61,6 +61,10 @@ Vector2 operator*(float s, const Vector2& v) {
   return Vector2(v.x() * s, v.y() * s);
 }
 
+Vector2d operator*(double s, const Vector2d& v) {
+  return Vector2d(v.x() * s, v.y() * s);
+}
+
 // Trim the front of a polyline (represented as a list or vector of Point2).
 // Returns the trimmed portion of the polyline. The supplied polyline is
 // altered (the trimmed part is removed).

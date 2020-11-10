@@ -43,11 +43,10 @@ TEST(Polyline2, TestGeneralizeAndLength) {
 }
 
 TEST(Polyline2, TestGeneralizeAndLengthWithDoubles) {
-  using Point2d = PointXY<double>;
-  std::vector<Point2d> pts = {Point2d(25.0f, 25.0f), Point2d(50.0f, 50.0f), Point2d(25.0f, 75.0f),
-                              Point2d(50.0f, 100.0f)};
+  std::vector<Point2d> pts = {Point2d(25.0, 25.0), Point2d(50.0, 50.0), Point2d(25.0, 75.0),
+                              Point2d(50.0, 100.0)};
   Polyline2<Point2d> pl(pts);
-  TryGeneralizeAndLength(pl, 100.0f, 79.0569f);
+  TryGeneralizeAndLength(pl, 100.0, 79.0569);
 }
 
 TEST(Polyline2, TestGeneralizeSimplification) {
