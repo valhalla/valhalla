@@ -7,6 +7,7 @@
 jobs:
   - job: VS2019
     displayName: 'Windows 2019 | VS2019'
+    timeoutInMinutes: 120
 
     pool:
       vmImage: 'windows-2019'
