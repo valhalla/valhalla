@@ -156,7 +156,7 @@ GeoPoint<PrecisionT>::ClosestPoint(const std::vector<GeoPoint>& pts,
     int indices = reverse ? pivot_index : (pts.size() - 1) - pivot_index;
 
     GeoPoint point;
-    for (int index = pivot_index - reverse; indices > 0 && dist_cutoff > 0.f;
+    for (int index = pivot_index - reverse; indices > 0 && dist_cutoff > 0.;
          index += increment, --indices) {
       // Get the current segment
       const GeoPoint& u = pts[index];
@@ -173,14 +173,14 @@ GeoPoint<PrecisionT>::ClosestPoint(const std::vector<GeoPoint>& pts,
       auto sq = bx2 * bx2 + by * by;
       auto scale =
           sq > 0 ? (((lng() - u.lng()) * approx.GetLngScale() * bx2 + (lat() - u.lat()) * by) / sq)
-                 : 0.f;
+                 : 0.;
 
       // Projects along the ray before u
       bool right_most = false;
-      if (scale <= 0.f) {
+      if (scale <= 0.) {
         point = {u.lng(), u.lat()};
       } // Projects along the ray after v
-      else if (scale >= 1.f) {
+      else if (scale >= 1.) {
         point = {v.lng(), v.lat()};
         right_most = true;
       } // Projects along the ray between u and v
@@ -197,7 +197,7 @@ GeoPoint<PrecisionT>::ClosestPoint(const std::vector<GeoPoint>& pts,
       }
 
       // Check if we should bail early because of looking at too much shape
-      if (dist_cutoff != std::numeric_limits<float>::infinity())
+      if (dist_cutoff != std::numeric_limits<PrecisionT>::infinity())
         dist_cutoff -= u.Distance(v);
     }
   }
@@ -223,18 +223,17 @@ PrecisionT GeoPoint<PrecisionT>::HeadingAlongPolyline(const std::vector<GeoPoint
   int n = static_cast<int>(idx1) - static_cast<int>(idx0);
   if (n < 1) {
     LOG_ERROR("PointLL::HeadingAlongPolyline has < 2 vertices");
-    return 0.0f;
+    return 0.0;
   }
 
   // If more than 2 points, walk edges of the polyline until the length
   // is exceeded.
   if (n > 1) {
     double d = 0.0;
-    double seglength = 0.0;
     auto pt0 = pts.begin() + idx0;
     auto pt1 = pt0 + 1;
     while (d < dist && pt1 <= pts.begin() + idx1) {
-      seglength = pt0->Distance(*pt1);
+      auto seglength = pt0->Distance(*pt1);
       if (d + seglength > dist) {
         // Set the extrapolated point along the line.
         float pct = static_cast<float>((dist - d) / seglength);
@@ -272,18 +271,17 @@ PrecisionT GeoPoint<PrecisionT>::HeadingAtEndOfPolyline(const std::vector<GeoPoi
   int n = static_cast<int>(idx1) - static_cast<int>(idx0);
   if (n < 1) {
     LOG_ERROR("PointLL::HeadingAtEndOfPolyline has < 2 vertices");
-    return 0.0f;
+    return 0.0;
   }
 
   // If more than 2 points, walk edges of the polyline until the length
   // is exceeded.
   if (n > 1) {
     double d = 0.0;
-    double seglength;
     auto pt1 = pts.begin() + idx1;
     auto pt0 = pt1 - 1;
     while (d < dist && pt0 >= pts.begin() + idx0) {
-      seglength = pt0->Distance(*pt1);
+      auto seglength = pt0->Distance(*pt1);
       if (d + seglength > dist) {
         // Set the extrapolated point along the line.
         float pct = static_cast<float>((dist - d) / seglength);
@@ -361,7 +359,7 @@ GeoPoint<PrecisionT>::Project(const GeoPoint& u, const GeoPoint& v, PrecisionT l
                (second - u.second) * by; // only need the numerator at first
 
   // projects along the ray before u
-  if (scale <= 0.f) {
+  if (scale <= 0.) {
     return u;
     // projects along the ray after v
   } else if (scale >= sq) {
@@ -387,7 +385,7 @@ GeoPoint<PrecisionT>::Project(const std::vector<GeoPoint>& pts) const {
   auto v = pts.begin();
   std::advance(v, 1);
 
-  auto min_distance = std::numeric_limits<float>::max();
+  auto min_distance = std::numeric_limits<PrecisionT>::max();
   auto best = GeoPoint{};
   int best_index = 0;
   while (v != pts.end()) {

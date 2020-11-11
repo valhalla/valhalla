@@ -197,7 +197,7 @@ DirectedEdge make_directed_edge(const GraphId endnode,
                                 const uint32_t oppo_local_idx) {
   DirectedEdge directededge;
   directededge.set_endnode(endnode);
-  directededge.set_length(std::max(1.0f, valhalla::midgard::length(shape)), true);
+  directededge.set_length(std::max(1.0, valhalla::midgard::length(shape)), true);
   directededge.set_use(conn.use);
   directededge.set_speed(conn.speed);
   directededge.set_surface(conn.surface);

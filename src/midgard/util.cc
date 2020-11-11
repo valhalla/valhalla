@@ -255,7 +255,7 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
   container_t resampled = {polyline.front()};
   resolution *= RAD_PER_METER;
   double remaining = resolution;
-  PointLL last = resampled.back();
+  auto last = resampled.back();
   for (auto p = std::next(polyline.cbegin()); p != polyline.cend(); ++p) {
     // radians
     auto lon2 = p->first * -RAD_PER_DEG;
@@ -541,9 +541,10 @@ x_intercept<GeoPoint<double>>(const GeoPoint<double>&,
                               const GeoPoint<double>&,
                               const GeoPoint<double>::first_type);
 
-template <class container_t> float polygon_area(const container_t& polygon) {
+template <class container_t>
+typename container_t::value_type::first_type polygon_area(const container_t& polygon) {
   typename container_t::value_type::first_type area =
-      polygon.back() == polygon.front() ? 0.f
+      polygon.back() == polygon.front() ? 0.
                                         : (polygon.back().first + polygon.front().first) *
                                               (polygon.back().second + polygon.front().second);
   for (auto p1 = polygon.cbegin(), p2 = std::next(polygon.cbegin()); p2 != polygon.cend();

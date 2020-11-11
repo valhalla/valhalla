@@ -3,8 +3,8 @@ option optimize_for = LITE_RUNTIME;
 package valhalla;
 
 message LatLng {
-  optional float lat = 1;
-  optional float lng = 2;
+  optional double lat = 1;
+  optional double lng = 2;
 }
 
 message BoundingBox {

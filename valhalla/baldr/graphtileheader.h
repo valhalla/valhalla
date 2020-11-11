@@ -162,8 +162,8 @@ public:
    * Get the base (SW corner) of the tile.
    * @return Returns the base lat,lon of the tile (degrees).
    */
-  const midgard::PointLL& base_ll() const {
-    return static_cast<const midgard::PointLL&>(base_ll_);
+  midgard::PointLL base_ll() const {
+    return midgard::PointLL(base_ll_.first, base_ll_.second);
   }
 
   /**
@@ -171,6 +171,7 @@ public:
    * @param ll  Base lat,lon of the tile.
    */
   void set_base_ll(const midgard::PointLL& ll) {
+    // TODO: get rid of possible precision loss (double to float conversion)
     base_ll_.first = ll.lng();
     base_ll_.second = ll.lat();
   }

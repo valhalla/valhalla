@@ -133,9 +133,9 @@ inline float normalize(const float num, const float den) {
 template <class container_t>
 typename container_t::value_type::first_type length(const container_t& pts) {
   if (pts.size() < 2) {
-    return 0.0f;
+    return 0.0;
   }
-  typename container_t::value_type::first_type length = 0.0f;
+  typename container_t::value_type::first_type length = 0.0;
   for (auto p = std::next(pts.cbegin()); p != pts.end(); ++p) {
     length += p->Distance(*std::prev(p));
   }
@@ -154,7 +154,7 @@ typename iterator_t::value_type::first_type length(const iterator_t& begin, cons
     return 0.0;
   }
 
-  typename iterator_t::value_type::first_type length = 0.0f;
+  typename iterator_t::value_type::first_type length = 0.0;
   for (auto vertex = std::next(begin); vertex != end; vertex++) {
     length += std::prev(vertex)->Distance(*vertex);
   }
@@ -483,7 +483,8 @@ x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_t
  * @param polygon   the list of points comprising the polygon
  * @return the area of the polygon
  */
-template <class container_t> float polygon_area(const container_t& polygon);
+template <class container_t>
+typename container_t::value_type::first_type polygon_area(const container_t& polygon);
 
 template <typename T> struct ring_queue_t {
   ring_queue_t(size_t limit) : limit(limit), i(0) {

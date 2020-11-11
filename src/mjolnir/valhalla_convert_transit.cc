@@ -634,7 +634,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // add the egress connection
         // Make sure length is non-zero
-        float length = std::max(1.0f, egress_ll.Distance(station_ll));
+        double length = std::max(1.0, egress_ll.Distance(station_ll));
         directededge.set_length(length);
         directededge.set_use(Use::kEgressConnection);
         directededge.set_speed(5);
@@ -683,7 +683,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // add the platform connection
         // Make sure length is non-zero
-        float length = std::max(1.0f, station_ll.Distance(egress_ll));
+        double length = std::max(1.0, station_ll.Distance(egress_ll));
         directededge.set_length(length);
         directededge.set_use(Use::kEgressConnection);
         directededge.set_speed(5);
@@ -739,7 +739,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // add the egress connection
         // Make sure length is non-zero
-        float length = std::max(1.0f, station_ll.Distance(platform_ll));
+        double length = std::max(1.0, station_ll.Distance(platform_ll));
         directededge.set_length(length);
         directededge.set_use(Use::kPlatformConnection);
         directededge.set_speed(5);
@@ -817,7 +817,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
     // add the platform connection
     // Make sure length is non-zero
-    float length = std::max(1.0f, platform_ll.Distance(station_ll));
+    double length = std::max(1.0, platform_ll.Distance(station_ll));
     directededge.set_length(length);
     directededge.set_use(Use::kPlatformConnection);
     directededge.set_speed(5);

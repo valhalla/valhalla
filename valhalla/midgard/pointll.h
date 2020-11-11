@@ -14,7 +14,7 @@ namespace {
 constexpr double RAD_PER_DEG = valhalla::midgard::kPiDouble / 180.0;
 constexpr double DEG_PER_RAD = 180.0 / valhalla::midgard::kPiDouble;
 } // namespace
-constexpr float INVALID_LL = (float)0xBADBADBAD;
+constexpr double INVALID_LL = (double)0xBADBADBAD;
 /**
  * Longitude, Latitude  point. Derives from Point2 and allows access methods
  * using lng,lat naming. Extends functionality to add heading, curvature,
@@ -264,7 +264,7 @@ public:
   std::tuple<GeoPoint, PrecisionT, int> Project(const std::vector<GeoPoint>& pts) const;
 };
 
-using PointLL = GeoPoint<float>;
+using PointLL = GeoPoint<double>;
 } // namespace midgard
 } // namespace valhalla
 
@@ -273,8 +273,8 @@ template <> struct hash<valhalla::midgard::PointLL> {
   size_t operator()(const valhalla::midgard::PointLL& p) const {
     uint64_t h;
     char* b = static_cast<char*>(static_cast<void*>(&h));
-    std::memcpy(b, &p.first, 4);
-    std::memcpy(b + 4, &p.second, 4);
+    std::memcpy(b, &p.first, 8);
+    std::memcpy(b + 8, &p.second, 8);
     return std::hash<uint64_t>()(h);
   }
 };

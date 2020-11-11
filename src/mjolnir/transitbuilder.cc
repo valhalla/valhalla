@@ -375,22 +375,22 @@ void FindOSMConnection(const PointLL& stop_ll,
                        GraphId& startnode,
                        GraphId& endnode,
                        std::vector<PointLL>& closest_shape,
-                       std::tuple<PointLL, float, int>& closest) {
+                       std::tuple<PointLL, PointLL::first_type, int>& closest) {
   // Let's try a fallback.  Use approximator to find the closest edge.
   // We do this because the associated way could have been deleted from the
   // OSM data, but we may have not updated the stops yet in TransitLand.
-  float mindist = 10000000.0f;
+  double mindist = 10000000.0;
   uint32_t edgelength = 0;
-  float rm = kMetersPerKm; // one km
-  float mr2 = rm * rm;
+  double rm = kMetersPerKm; // one km
+  double mr2 = rm * rm;
 
   const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
-  const float kTransitLatDeg = kMetersPerKm / kMetersPerDegreeLat; // one km radius
+  const auto kTransitLatDeg = kMetersPerKm / kMetersPerDegreeLat; // one km radius
 
   // Get a list of tiles required for a node search within this radius
-  float lngdeg = (rm / DistanceApproximator<PointLL>::MetersPerLngDegree(stop_ll.lat()));
-  AABB2<PointLL> bbox(Point2(stop_ll.lng() - lngdeg, stop_ll.lat() - kTransitLatDeg),
-                      Point2(stop_ll.lng() + lngdeg, stop_ll.lat() + kTransitLatDeg));
+  double lngdeg = (rm / DistanceApproximator<PointLL>::MetersPerLngDegree(stop_ll.lat()));
+  AABB2<PointLL> bbox(Point2d(stop_ll.lng() - lngdeg, stop_ll.lat() - kTransitLatDeg),
+                      Point2d(stop_ll.lng() + lngdeg, stop_ll.lat() + kTransitLatDeg));
   std::vector<int32_t> tilelist = tiles.TileList(bbox);
 
   const auto& local_level = TileHierarchy::levels().rbegin()->second.level;
@@ -457,11 +457,11 @@ void AddOSMConnection(const GraphId& transit_stop_node,
   const PointLL& stop_ll = transit_node->latlng(tile->header()->base_ll());
   uint64_t wayid = transit_node->connecting_wayid();
 
-  float mindist = 10000000.0f;
+  double mindist = 10000000.0;
   uint32_t edgelength = 0;
   GraphId startnode, endnode;
   std::vector<PointLL> closest_shape;
-  std::tuple<PointLL, float, int> closest;
+  std::tuple<PointLL, PointLL::first_type, int> closest;
   std::vector<std::string> names;
   for (uint32_t i = 0; i < tile->header()->nodecount(); i++) {
     const NodeInfo* node = tile->node(i);
@@ -525,7 +525,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
     }
     shape.push_back(std::get<0>(closest));
     shape.push_back(stop_ll);
-    length = std::max(1.0f, valhalla::midgard::length(shape));
+    length = std::max<float>(1.0f, valhalla::midgard::length(shape));
 
     // Add connection to start node
     connection_edges.push_back({startnode, transit_stop_node, length, wayid, names, shape});
@@ -544,7 +544,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
       }
       shape2.push_back(std::get<0>(closest));
       shape2.push_back(stop_ll);
-      length2 = std::max(1.0f, valhalla::midgard::length(shape2));
+      length2 = std::max<float>(1.0f, valhalla::midgard::length(shape2));
 
       // Add connection to the end node
       connection_edges.push_back({endnode, transit_stop_node, length2, wayid, names, shape2});
