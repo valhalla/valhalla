@@ -100,7 +100,7 @@ struct Edge {
     e.attributes.has_names =
         (way.name_index_ != 0 || way.name_en_index_ != 0 || way.alt_name_index_ != 0 ||
          way.official_name_index_ != 0 || way.ref_index_ != 0 || way.int_ref_index_ != 0);
-    e.attributes.turn_channel = way.turn_channel();
+    e.attributes.turn_channel = (!way.link() && way.turn_channel()) ? true : false;
     return e;
   }
 
