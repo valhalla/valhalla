@@ -393,6 +393,145 @@ TEST(Standalone, TurnLanesUTurns) {
                               });
 }
 
+TEST(Standalone, TurnLanesInternalsAndRestrictions) {
+  constexpr double gridsize_metres = 10;
+
+  const std::string ascii_map = R"(
+                   E D
+                   | |
+                   | |
+         N    P    | |
+         |    |    | |
+    Q----M----L----F-C----K
+         |    |    | |
+    R----O----I----G-B----J
+                   | |
+                   | |
+                   | |
+                   | |
+                   H A
+    )";
+
+  const gurka::ways ways =
+      {{"ABC",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"name", "Broken Land Parkway"},
+         {"lanes", "5"},
+         {"turn:lanes", "left|left|through|right|right"}}},
+       {"EF",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"name", "Broken Land Parkway"},
+         {"lanes", "4"},
+         {"turn:lanes", "reverse|left|through|right"}}},
+       {"CD", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Broken Land Parkway"}}},
+       {"FG", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Broken Land Parkway"}}},
+       {"GH", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Broken Land Parkway"}}},
+       {"FL",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"name", "Patuxent Woods Drive"},
+         {"lanes", "3"},
+         {"turn:lanes", "||right"}}},
+       {"LM",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"name", "Patuxent Woods Drive"},
+         {"lanes", "3"},
+         {"turn:lanes", "||right"}}},
+       {"MQ", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Patuxent Woods Drive"}}},
+       {"RO", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Patuxent Woods Drive"}}},
+       {"OI", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Patuxent Woods Drive"}}},
+       {"IG", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Patuxent Woods Drive"}}},
+       {"LI", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Small Internal Street"}}},
+       {"MO", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Small Internal Street"}}},
+       {"LP", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "First Street"}}},
+       {"MN", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Second Street"}}},
+       {"GB", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Snowden River Parkway"}}},
+       {"BJ", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Snowden River Parkway"}}},
+       {"KC", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Snowden River Parkway"}}},
+       {"CF", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Snowden River Parkway"}}}};
+
+  const gurka::relations relations = {
+      {{
+           {gurka::way_member, "CF", "from"},
+           {gurka::way_member, "GB", "to"},
+           {gurka::way_member, "FG", "via"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_u_turn"},
+       }},
+      {{
+           {gurka::way_member, "FL", "from"},
+           {gurka::way_member, "IG", "to"},
+           {gurka::way_member, "LI", "via"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_u_turn"},
+       }},
+  };
+
+  const auto layout =
+      gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
+
+  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/gurka_turn_lanes_7");
+
+  valhalla::Api result;
+
+  // Test U-turn using left-only lanes. The left-most left lane should be
+  // active & rest invalid
+  result = gurka::route(map, "A", "H", "auto");
+
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kUturnLeft,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+  validate_turn_lanes(result, {
+                                  {5, "[ *left* ACTIVE | left | through | right | right ]"},
+                                  {5, "[ left | left | *through* ACTIVE | right | right ]"},
+                                  {0, ""},
+                                  {0, ""},
+                                  {0, ""},
+                              });
+
+  // Test using reverse lanes. The reverse lane should be active & the rest
+  // invalid
+  result = gurka::route(map, "E", "D", "auto");
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kUturnLeft,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+  validate_turn_lanes(result, {
+                                  {4, "[ *reverse* ACTIVE | left | through | right ]"},
+                                  {4, "[ *reverse* ACTIVE | left | through | right ]"},
+                                  {0, ""},
+                                  {5, "[ left | left | *through* ACTIVE | right | right ]"},
+                                  {0, ""},
+                              });
+
+  result = gurka::route(map, "K", "J", "auto");
+
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kUturnLeft,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+  validate_turn_lanes(result,
+                      {
+                          {0, ""},
+                          {0, ""},
+                          {3, "[ *through* ACTIVE | *through* VALID | right ]"}, // restriction does
+                                                                                 // not allow a left
+                                                                                 // to be added.
+                          {3, "[ *left*;through ACTIVE | through | right ]"}, // no restriction allows
+                                                                              // a left to be added.
+                          {0, ""},
+                          {0, ""},
+                          {0, ""},
+                          {0, ""},
+                          {0, ""},
+                      });
+}
+
 TEST(Standalone, TurnLanesSerializedResponse) {
   const std::string ascii_map = R"(
         C
