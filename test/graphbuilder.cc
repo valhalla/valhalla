@@ -1,6 +1,7 @@
 #include "mjolnir/graphbuilder.h"
 #include "baldr/graphreader.h"
 #include "midgard/sequence.h"
+#include "mjolnir/directededgebuilder.h"
 #include "mjolnir/osmdata.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/util.h"
@@ -70,7 +71,7 @@ TEST(GraphBuilder, TestConstructEdges) {
 }
 
 // Test that only a subset of tiles are built when explicitly asked for.
-TEST(graphbuilder, TestConstructEdgesSubset) {
+TEST(Graphbuilder, TestConstructEdgesSubset) {
   ptree config;
   config.put<std::string>("mjolnir.tile_dir", tile_dir);
   config.put("mjolnir.concurrency", 1);
@@ -87,6 +88,26 @@ TEST(graphbuilder, TestConstructEdgesSubset) {
   GraphReader reader(config.get_child("mjolnir"));
   EXPECT_EQ(reader.GetTileSet(2).size(), 1);
   EXPECT_TRUE(reader.DoesTileExist(GraphId{5993698}));
+}
+
+TEST(Graphbuilder, TestDEBuilderLength) {
+
+  std::vector<PointLL> shape1{{-160.096619f, 21.997619f},
+                              {-90.037697f, 41.004531},
+                              {-160.096619f, 21.997619f}};
+  ASSERT_NO_THROW(DirectedEdgeBuilder edge_builder({}, GraphId(123, 2, 8), true,
+                                                   valhalla::midgard::length(shape1), 1, 1,
+                                                   Use::kRoad, baldr::RoadClass::kMotorway, 0, false,
+                                                   0, 0, false));
+
+  std::vector<PointLL> shape2{{-160.096619f, 21.997619f},
+                              {-90.037697f, 41.004531},
+                              {-160.096619f, 21.997619f},
+                              {-90.037697f, 41.004531}};
+  ASSERT_THROW(DirectedEdgeBuilder edge_builder({}, GraphId(123, 2, 8), true,
+                                                valhalla::midgard::length(shape2), 1, 1, Use::kRoad,
+                                                baldr::RoadClass::kMotorway, 0, false, 0, 0, false),
+               std::runtime_error);
 }
 
 class HarrisburgTestSuiteEnv : public ::testing::Environment {
