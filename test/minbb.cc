@@ -55,8 +55,8 @@ struct bb_tester {
 };
 
 bool ApproxEqual(const AABB2<PointLL>& a, const AABB2<PointLL>& b) {
-  return a.minpt().ApproximatelyEqual(b.minpt(), 0.000001f) &&
-         a.maxpt().ApproximatelyEqual(b.maxpt(), 0.000001f);
+  return a.minpt().ApproximatelyEqual(b.minpt(), 0.000001) &&
+         a.maxpt().ApproximatelyEqual(b.maxpt(), 0.000001);
 }
 
 TEST(MinBB, utrecht_bb) {
@@ -68,14 +68,14 @@ TEST(MinBB, utrecht_bb) {
   EXPECT_PRED2(ApproxEqual, t(t.bb), t.bb)
       << "Expanding the bbox from the largest bbox shouldn't change the bbox";
 
-  AABB2<PointLL> sbb(t.bb.minpt() + Vector2(0.0001f, 0.0001f),
-                     t.bb.maxpt() - Vector2(0.0001f, 0.0001f));
+  AABB2<PointLL> sbb(t.bb.minpt() + Vector2d(0.0001, 0.0001),
+                     t.bb.maxpt() - Vector2d(0.0001, 0.0001));
 
   EXPECT_PRED2(ApproxEqual, t(sbb), t.bb)
       << "Expanding a slightly smaller bbox shouldn't change the bbox";
 
-  AABB2<PointLL> lbb(t.bb.minpt() - Vector2(0.0001f, 0.0001f),
-                     t.bb.maxpt() + Vector2(0.0001f, 0.0001f));
+  AABB2<PointLL> lbb(t.bb.minpt() - Vector2d(0.0001, 0.0001),
+                     t.bb.maxpt() + Vector2d(0.0001, 0.0001));
 
   EXPECT_PRED2(ApproxEqual, t(lbb), t.bb)
       << "Expanding a slightly larger bbox shouldn't change the bbox";
