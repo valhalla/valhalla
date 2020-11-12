@@ -58,12 +58,12 @@ TEST(Trimming, routes) {
   // margin of length rounding error to the end of the edge
   auto start = start_shape.back();
   auto end = end_shape.back();
-  start.first -= .000005f;
-  EXPECT_LT(start.Distance(start_shape.back()), 0.5f);
+  start.first -= .0000005;
+  EXPECT_LT(start.Distance(start_shape.back()), 0.5);
   // we expect that the percentage along the edge with respect to the actual length is less than 1
   // meaning its not all the way at the end of the edge
   auto offset = start_shape.front().Distance(start) / start_length;
-  EXPECT_LT(offset, 1.f);
+  EXPECT_LT(offset, 1.);
   // we expect that multiplying the percent along by the rounded length will result in a number that
   // is larger than the actual length
   EXPECT_GT(offset * start_edge->length(), start_length);

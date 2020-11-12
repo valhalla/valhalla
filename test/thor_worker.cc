@@ -133,7 +133,7 @@ TEST(ThorWorker, test_linear_references) {
   };
   const std::vector<std::string>& expected = {
       "CwOgEyUK5SKXAP/H//wiBw==",
-      "CwOf+CUK4iKXAP/k//8iBw==",
+      "CwOf+CUK4yKXAP/k//0iBw==",
       "CwOf6yUK4SKXAP/Y//0iBw==",
   };
   tyr::actor_t actor(conf, true);

@@ -77,7 +77,7 @@ template <typename PrecisionT> PrecisionT GeoPoint<PrecisionT>::Distance(const G
  * computing the radius of the circle that circumscribes the 3 positions.
  * @param   ll1   Second lng,lat position
  * @param   ll2   Third lng,lat position
- * @return  Returns the curvature in meters. Returns max float if the points
+ * @return  Returns the curvature in meters. Returns max PrecisionT if the points
  *          are collinear.
  */
 template <typename PrecisionT>
@@ -236,7 +236,7 @@ PrecisionT GeoPoint<PrecisionT>::HeadingAlongPolyline(const std::vector<GeoPoint
       auto seglength = pt0->Distance(*pt1);
       if (d + seglength > dist) {
         // Set the extrapolated point along the line.
-        float pct = static_cast<float>((dist - d) / seglength);
+        double pct = static_cast<double>((dist - d) / seglength);
         GeoPoint ll(pt0->lng() + ((pt1->lng() - pt0->lng()) * pct),
                     pt0->lat() + ((pt1->lat() - pt0->lat()) * pct));
         return pts[idx0].Heading(ll);
@@ -284,7 +284,7 @@ PrecisionT GeoPoint<PrecisionT>::HeadingAtEndOfPolyline(const std::vector<GeoPoi
       auto seglength = pt0->Distance(*pt1);
       if (d + seglength > dist) {
         // Set the extrapolated point along the line.
-        float pct = static_cast<float>((dist - d) / seglength);
+        double pct = static_cast<double>((dist - d) / seglength);
         GeoPoint ll(pt1->lng() + ((pt0->lng() - pt1->lng()) * pct),
                     pt1->lat() + ((pt0->lat() - pt1->lat()) * pct));
         return ll.Heading(pts[idx1]);

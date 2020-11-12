@@ -273,8 +273,8 @@ template <> struct hash<valhalla::midgard::PointLL> {
   size_t operator()(const valhalla::midgard::PointLL& p) const {
     uint64_t h;
     char* b = static_cast<char*>(static_cast<void*>(&h));
-    std::memcpy(b, &p.first, 8);
-    std::memcpy(b + 8, &p.second, 8);
+    std::memcpy(b, &p.first, 4);
+    std::memcpy(b + 4, &p.second, 4);
     return std::hash<uint64_t>()(h);
   }
 };

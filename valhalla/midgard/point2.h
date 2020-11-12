@@ -208,8 +208,8 @@ template <typename PrecisionT> struct hash<valhalla::midgard::PointXY<PrecisionT
   size_t operator()(const valhalla::midgard::PointXY<PrecisionT>& p) const {
     uint64_t h;
     char* b = static_cast<char*>(static_cast<void*>(&h));
-    std::memcpy(b, &p.first, sizeof(PrecisionT));
-    std::memcpy(b + sizeof(PrecisionT), &p.second, sizeof(PrecisionT));
+    std::memcpy(b, &p.first, 4);
+    std::memcpy(b + 4, &p.second, 4);
     return std::hash<uint64_t>()(h);
   }
 };

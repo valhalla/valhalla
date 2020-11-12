@@ -161,6 +161,7 @@ public:
    *          extent, an error (-1) is returned.
    */
   int32_t TileId(const coord_t& c) const {
+    // TODO: do not loose precision here
     return TileId(static_cast<float>(c.y()), static_cast<float>(c.x()));
   }
 
