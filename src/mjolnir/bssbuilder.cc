@@ -197,7 +197,7 @@ DirectedEdge make_directed_edge(const GraphId endnode,
                                 const uint32_t oppo_local_idx) {
   DirectedEdge directededge;
   directededge.set_endnode(endnode);
-  directededge.set_length(std::max(1.0f, valhalla::midgard::length(shape)));
+  directededge.set_length(std::max(1.0f, valhalla::midgard::length(shape)), true);
   directededge.set_use(conn.use);
   directededge.set_speed(conn.speed);
   directededge.set_surface(conn.surface);
@@ -346,9 +346,8 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
   for (const auto& conn : new_connections) {
 
     size_t edge_index = tilebuilder_local.directededges().size();
-    NodeInfo new_bss_node{tile.header()->base_ll(), conn.bss_ll,
-                          conn.road_class,          (kPedestrianAccess | kBicycleAccess),
-                          NodeType::kBikeShare,     false};
+    NodeInfo new_bss_node{tile.header()->base_ll(), conn.bss_ll, (kPedestrianAccess | kBicycleAccess),
+                          NodeType::kBikeShare, false};
     new_bss_node.set_mode_change(true);
     new_bss_node.set_edge_index(edge_index);
     // there should be two outbound edge for the bss node

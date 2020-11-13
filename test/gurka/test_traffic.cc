@@ -1,10 +1,8 @@
 #include "gurka.h"
-#include "microtar.h"
-#include <gtest/gtest.h>
+#include "test.h"
 
 #include "baldr/graphreader.h"
 #include "baldr/traffictile.h"
-#include "test/util/traffic_utils.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -14,7 +12,7 @@
 #include <sys/stat.h>
 
 using namespace valhalla;
-using LiveTrafficCustomize = valhalla_tests::utils::LiveTrafficCustomize;
+using LiveTrafficCustomize = test::LiveTrafficCustomize;
 
 TEST(Traffic, BasicUpdates) {
 
@@ -35,97 +33,97 @@ TEST(Traffic, BasicUpdates) {
 
   map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
 
-  valhalla_tests::utils::build_live_traffic_data(map.config);
+  test::build_live_traffic_data(map.config);
 
+  auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  printf("Do a route with initial traffic");
   {
-    auto clean_reader =
-        valhalla_tests::utils::make_clean_graphreader(map.config.get_child("mjolnir"));
-    printf("Do a route with initial traffic");
-    {
-      auto result = gurka::route(map, "A", "C", "auto", {{"/date_time/type", "0"}}, clean_reader);
-      gurka::assert::osrm::expect_steps(result, {"AB"});
-      gurka::assert::raw::expect_path(result, {"AB", "BC"});
-      gurka::assert::raw::expect_eta(result, 361.5);
+    auto result = gurka::route(map, "A", "C", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    gurka::assert::osrm::expect_steps(result, {"AB"});
+    gurka::assert::raw::expect_path(result, {"AB", "BC"});
+    gurka::assert::raw::expect_eta(result, 360.0177);
+  }
+  printf("Make some updates to the traffic .tar file. "
+         "Mostly just updates every edge in the file to 24km/h, except for one "
+         "specific edge (B->D) where we simulate a closure (speed=0, congestion high)");
+  auto cb_setter_24kmh = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
+                                valhalla::baldr::TrafficSpeed* current) -> void {
+    baldr::GraphId tile_id(tile.header->tile_id);
+    auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
+    current->breakpoint1 = 255;
+    if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
+      current->overall_speed = 0;
+      current->speed1 = 0;
+    } else {
+      current->overall_speed = 24 >> 1;
+      current->speed1 = 24 >> 1;
     }
-    printf("Make some updates to the traffic .tar file. "
-           "Mostly just updates every edge in the file to 24km/h, except for one "
-           "specific edge (B->D) where we simulate a closure (speed=0, congestion high)");
-    auto cb_setter_24kmh = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
-                                  valhalla::baldr::TrafficSpeed* current) -> void {
-      baldr::GraphId tile_id(tile.header->tile_id);
-      auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
-      current->breakpoint1 = 255;
-      if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
-        current->overall_speed = 0;
-        current->speed1 = 0;
-      } else {
-        current->overall_speed = 24 >> 1;
-        current->speed1 = 24 >> 1;
-      }
-    };
-    valhalla_tests::utils::customize_live_traffic_data(map.config, cb_setter_24kmh);
+  };
+  test::customize_live_traffic_data(map.config, cb_setter_24kmh);
 
-    printf(" Now do another route with the same (not restarted) actor to see if"
-           " it's noticed the changes in the live traffic file");
-    {
-      auto result = gurka::route(map, "A", "C", "auto", {{"/date_time/type", "0"}}, clean_reader);
-      gurka::assert::osrm::expect_steps(result, {"AB"});
-      gurka::assert::raw::expect_path(result, {"AB", "BC"});
-      gurka::assert::raw::expect_eta(result, 151.5);
-    }
-    printf("Next, set the speed to the highest possible to ensure nothing breaks");
+  printf(" Now do another route with the same (not restarted) actor to see if"
+         " it's noticed the changes in the live traffic file");
+  {
+    auto result = gurka::route(map, "A", "C", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    gurka::assert::osrm::expect_steps(result, {"AB"});
+    gurka::assert::raw::expect_path(result, {"AB", "BC"});
+    gurka::assert::raw::expect_eta(result, 150.0177);
+  }
 
-    auto cb_setter_max = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
-                                baldr::TrafficSpeed* current) -> void {
-      baldr::GraphId tile_id(tile.header->tile_id);
-      auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
-      current->breakpoint1 = 255;
-      if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
-        current->overall_speed = 0;
-      } else {
-        current->overall_speed = valhalla::baldr::MAX_TRAFFIC_SPEED_KPH >> 1;
-      }
-    };
-    valhalla_tests::utils::customize_live_traffic_data(map.config, cb_setter_max);
-    {
-      auto result = gurka::route(map, "A", "C", "auto", {{"/date_time/type", "0"}}, clean_reader);
-      gurka::assert::osrm::expect_steps(result, {"AB"});
-      gurka::assert::raw::expect_path(result, {"AB", "BC"});
-      gurka::assert::raw::expect_eta(result, 15.785715);
+  printf("Next, set the speed to the highest possible to ensure nothing breaks");
+  auto cb_setter_max = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
+                              baldr::TrafficSpeed* current) -> void {
+    baldr::GraphId tile_id(tile.header->tile_id);
+    auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
+    current->breakpoint1 = 255;
+    if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
+      current->overall_speed = 0;
+    } else {
+      current->overall_speed = valhalla::baldr::MAX_TRAFFIC_SPEED_KPH >> 1;
     }
-    printf("Back to previous speed");
-    valhalla_tests::utils::customize_live_traffic_data(map.config, cb_setter_24kmh);
-    // And verify that without the "current" timestamp, the live traffic
-    // results aren't used
-    {
-      auto result = gurka::route(map, "A", "C", "auto", {}, clean_reader);
-      gurka::assert::osrm::expect_steps(result, {"AB"});
-      gurka::assert::raw::expect_path(result, {"AB", "BC"});
-      gurka::assert::raw::expect_eta(result, 361.5);
-    }
-    printf("Now do another route with the same (not restarted) actor to see if "
-           "it's noticed the changes in the live traffic file");
-    {
+  };
+  test::customize_live_traffic_data(map.config, cb_setter_max);
+  {
+    auto result = gurka::route(map, "A", "C", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    gurka::assert::osrm::expect_steps(result, {"AB"});
+    gurka::assert::raw::expect_path(result, {"AB", "BC"});
+    gurka::assert::raw::expect_eta(result, 14.303419);
+  }
 
-      auto result = gurka::route(map, "B", "D", "auto", {{"/date_time/type", "0"}}, clean_reader);
-      gurka::assert::osrm::expect_steps(result, {"BC", "CE", "DE"});
-      gurka::assert::raw::expect_path(result, {"BC", "CE", "DE"});
-      gurka::assert::raw::expect_eta(result, 180., 0.01);
-    }
-    {
-      auto result = gurka::route(map, "D", "B", "auto", {{"/date_time/type", "0"}}, clean_reader);
-      gurka::assert::osrm::expect_steps(result, {"BD"});
-      gurka::assert::raw::expect_path(result, {"BD"});
-      gurka::assert::raw::expect_eta(result, 30., 0.01);
-    }
-    printf(" Repeat the B->D route, but this time with no timestamp - this should disable "
-           "using live traffc and the road should be open again");
-    {
-      auto result = gurka::route(map, "B", "D", "auto", {}, clean_reader);
-      gurka::assert::osrm::expect_steps(result, {"BD"});
-      gurka::assert::raw::expect_path(result, {"BD"});
-      gurka::assert::raw::expect_eta(result, 72);
-    }
+  printf("Back to previous speed");
+  test::customize_live_traffic_data(map.config, cb_setter_24kmh);
+  // And verify that without the "current" timestamp, the live traffic
+  // results aren't used
+  {
+    auto result = gurka::route(map, "A", "C", "auto", {}, clean_reader);
+    gurka::assert::osrm::expect_steps(result, {"AB"});
+    gurka::assert::raw::expect_path(result, {"AB", "BC"});
+    gurka::assert::raw::expect_eta(result, 360.0177);
+  }
+
+  printf("Now do another route with the same (not restarted) actor to see if "
+         "it's noticed the changes in the live traffic file");
+  {
+
+    auto result = gurka::route(map, "B", "D", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    gurka::assert::osrm::expect_steps(result, {"BC", "CE", "DE"});
+    gurka::assert::raw::expect_path(result, {"BC", "CE", "DE"});
+    gurka::assert::raw::expect_eta(result, 180., 0.01);
+  }
+  {
+    auto result = gurka::route(map, "D", "B", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    gurka::assert::osrm::expect_steps(result, {"BD"});
+    gurka::assert::raw::expect_path(result, {"BD"});
+    gurka::assert::raw::expect_eta(result, 30., 0.01);
+  }
+
+  printf(" Repeat the B->D route, but this time with no timestamp - this should disable "
+         "using live traffc and the road should be open again");
+  {
+    auto result = gurka::route(map, "B", "D", "auto", {}, clean_reader);
+    gurka::assert::osrm::expect_steps(result, {"BD"});
+    gurka::assert::raw::expect_path(result, {"BD"});
+    gurka::assert::raw::expect_eta(result, 72);
   }
 }
 
@@ -151,12 +149,11 @@ TEST(Traffic, CutGeoms) {
                                {{"mjolnir.traffic_extract", tile_dir + "/traffic.tar"}});
 
   // empty traffic for now
-  valhalla_tests::utils::build_live_traffic_data(map.config);
+  test::build_live_traffic_data(map.config);
 
   // first we get the edge without traffic on it
   {
-    auto clean_reader =
-        valhalla_tests::utils::make_clean_graphreader(map.config.get_child("mjolnir"));
+    auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
     tyr::actor_t actor(map.config, *clean_reader);
     valhalla::Api api;
     actor.route(
@@ -218,10 +215,9 @@ TEST(Traffic, CutGeoms) {
       }
     };
 
-    valhalla_tests::utils::customize_live_traffic_data(map.config, cb_setter_speed);
+    test::customize_live_traffic_data(map.config, cb_setter_speed);
 
-    auto clean_reader =
-        valhalla_tests::utils::make_clean_graphreader(map.config.get_child("mjolnir"));
+    auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
     tyr::actor_t actor(map.config, *clean_reader);
     valhalla::Api api;
     actor.route(
@@ -294,11 +290,10 @@ TEST(Traffic, CutGeoms) {
         }
       };
 
-      valhalla_tests::utils::customize_live_traffic_data(map.config, cb_setter_speed);
+      test::customize_live_traffic_data(map.config, cb_setter_speed);
     }
 
-    auto clean_reader =
-        valhalla_tests::utils::make_clean_graphreader(map.config.get_child("mjolnir"));
+    auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
     tyr::actor_t actor(map.config, *clean_reader);
     valhalla::Api api;
     actor.route(
@@ -377,11 +372,10 @@ TEST(Traffic, CutGeoms) {
         }
       };
 
-      valhalla_tests::utils::customize_live_traffic_data(map.config, cb_setter_speed);
+      test::customize_live_traffic_data(map.config, cb_setter_speed);
     }
 
-    auto clean_reader =
-        valhalla_tests::utils::make_clean_graphreader(map.config.get_child("mjolnir"));
+    auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
     tyr::actor_t actor(map.config, *clean_reader);
     valhalla::Api api;
     {
@@ -497,11 +491,10 @@ TEST(Traffic, CutGeoms) {
           }
         };
 
-        valhalla_tests::utils::customize_live_traffic_data(map.config, cb_setter_speed);
+        test::customize_live_traffic_data(map.config, cb_setter_speed);
       }
 
-      auto clean_reader =
-          valhalla_tests::utils::make_clean_graphreader(map.config.get_child("mjolnir"));
+      auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
       tyr::actor_t actor(map.config, *clean_reader);
       valhalla::Api api;
       {
@@ -726,10 +719,9 @@ protected:
     closure_map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
 
     closure_map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
-    valhalla_tests::utils::build_live_traffic_data(closure_map.config);
+    test::build_live_traffic_data(closure_map.config);
 
-    clean_reader =
-        valhalla_tests::utils::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
+    clean_reader = test::make_clean_graphreader(closure_map.config.get_child("mjolnir"));
   }
 };
 
@@ -760,7 +752,7 @@ TEST_F(WaypointsOnClosuresTest, DepartPointAtClosure) {
 
       SetLiveSpeed(current, (is_bc ? 0 : default_speed));
     };
-    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
+    test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
         gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
@@ -779,7 +771,7 @@ TEST_F(WaypointsOnClosuresTest, DepartPointAtClosure) {
 
       SetLiveSpeed(current, (is_cb ? 0 : default_speed));
     };
-    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
+    test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
         gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
@@ -803,7 +795,7 @@ TEST_F(WaypointsOnClosuresTest, DepartPointAtClosure) {
 
       SetLiveSpeed(current, ((is_cb || is_bc) ? 0 : default_speed));
     };
-    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
+    test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
         gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
@@ -826,7 +818,7 @@ TEST_F(WaypointsOnClosuresTest, ArrivePointAtClosure) {
 
       SetLiveSpeed(current, (is_da ? 0 : default_speed));
     };
-    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
+    test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
         gurka::route(closure_map, "B", "2", "auto", {{"/date_time/type", "0"}}, clean_reader);
@@ -845,7 +837,7 @@ TEST_F(WaypointsOnClosuresTest, ArrivePointAtClosure) {
 
       SetLiveSpeed(current, (is_ad ? 0 : default_speed));
     };
-    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
+    test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
         gurka::route(closure_map, "B", "2", "auto", {{"/date_time/type", "0"}}, clean_reader);
@@ -869,7 +861,7 @@ TEST_F(WaypointsOnClosuresTest, ArrivePointAtClosure) {
 
       SetLiveSpeed(current, ((is_da || is_ad) ? 0 : default_speed));
     };
-    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
+    test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
         gurka::route(closure_map, "B", "2", "auto", {{"/date_time/type", "0"}}, clean_reader);
@@ -897,7 +889,7 @@ TEST_F(WaypointsOnClosuresTest, IgnoreDepartPointAtClosure) {
                           (CB.Tile_Base() == tile_id && CB.id() == index);
       SetLiveSpeed(current, should_close ? 0 : default_speed);
     };
-    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
+    test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
         gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
@@ -915,7 +907,7 @@ TEST_F(WaypointsOnClosuresTest, IgnoreDepartPointAtClosure) {
                           (CB.Tile_Base() == tile_id && CB.id() == index);
       SetLiveSpeed(current, should_close ? 0 : default_speed);
     };
-    valhalla_tests::utils::customize_live_traffic_data(closure_map.config, close_edge);
+    test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
         gurka::route(closure_map, "1", "A", "auto",

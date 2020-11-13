@@ -16,7 +16,6 @@
 #include "worker.h"
 
 #include "test.h"
-#include "utils.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -1131,8 +1130,8 @@ TEST(Mapmatch, test_discontinuity_duration_trimming) {
   std::vector<int> test_ans_num_routes{2, 2, 2};
   std::vector<std::vector<int>> test_ans_num_legs{{1, 2}, {1, 2}, {1, 2}};
   std::vector<std::vector<float>> test_ans_leg_duration{{26.459, 0.97, 0.454},
-                                                        {48.6, 0.64, 0.961},
-                                                        {220.778, 2.431, 1.899}};
+                                                        {48.159, 0.64, 0.961},
+                                                        {93.388, 2.431, 1.899}};
 
   tyr::actor_t actor(conf, true);
   for (size_t i = 0; i < test_cases.size(); ++i) {
@@ -1426,16 +1425,17 @@ TEST(Mapmatch, openlr_parameter_true_osrm_api) {
   const auto& matches = response.get_child("matchings");
   EXPECT_EQ(matches.size(), 1);
   const std::vector<std::string>& expected = {
-      "CwOduyULYhtpAAAV//0bGQ==", "CwOdxCULYBtqAAAM//4bGg==", "CwOdySULXxtrAAAf//EbGw==",
-      "CwOd1yULVxtrAQBV/9AbGw==", "CwOduyULYj/gAAACAAA/EA==",
+      "CwOduyULYiKJAAAV//0iGw==",
+      "CwOdxCULYCKJAAAN//4iGw==",
+      "CwOdySULXyKJAAAf//EiGw==",
+      "CwOd1yULVyKLAABV/9AiGw==",
   };
   for (const auto& match : matches) {
-    const auto& references = match.second.get_child("linear_references");
-    EXPECT_EQ(references.size(), 5);
-    for (const auto& reference : references) {
-      const std::string& actual = reference.second.get_value<std::string>();
-      EXPECT_TRUE(std::find(expected.begin(), expected.end(), actual) != expected.end());
-    }
+    std::vector<std::string> references;
+    for (const auto& reference : match.second.get_child("linear_references"))
+      references.push_back(reference.second.get_value<std::string>());
+    EXPECT_EQ(references.size(), 4);
+    EXPECT_EQ(expected, references);
   }
 }
 
@@ -1447,15 +1447,16 @@ TEST(Mapmatch, openlr_parameter_true_native_api) {
   tyr::actor_t actor(conf, true);
   const auto& response = test::json_to_pt(actor.trace_route(request));
   const std::vector<std::string>& expected = {
-      "CwOduyULYhtpAAAV//0bGQ==", "CwOdxCULYBtqAAAM//4bGg==", "CwOdySULXxtrAAAf//EbGw==",
-      "CwOd1yULVxtrAQBV/9AbGw==", "CwOduyULYj/gAAACAAA/EA==",
+      "CwOduyULYiKJAAAV//0iGw==",
+      "CwOdxCULYCKJAAAN//4iGw==",
+      "CwOdySULXyKJAAAf//EiGw==",
+      "CwOd1yULVyKLAABV/9AiGw==",
   };
-  const auto& references = response.get_child("trip.linear_references");
-  EXPECT_EQ(references.size(), 5);
-  for (const auto& reference : references) {
-    const std::string& actual = reference.second.get_value<std::string>();
-    EXPECT_TRUE(std::find(expected.begin(), expected.end(), actual) != expected.end());
-  }
+  std::vector<std::string> references;
+  for (const auto& reference : response.get_child("trip.linear_references"))
+    references.push_back(reference.second.get_value<std::string>());
+  EXPECT_EQ(references.size(), 4);
+  EXPECT_EQ(expected, references);
 }
 
 // Verify that OpenLR references are not present in API response when not asked for

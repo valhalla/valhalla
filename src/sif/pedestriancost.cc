@@ -8,7 +8,7 @@
 #include "sif/costconstants.h"
 
 #ifdef INLINE_TEST
-#include "test/test.h"
+#include "test.h"
 #include "worker.h"
 #include <random>
 #endif
@@ -462,6 +462,8 @@ public:
         edge->use() != Use::kPlatformConnection && !edge->name_consistency(idx)) {
       c.cost += maneuver_penalty_;
     }
+    // shortest ignores any penalties in favor of path length
+    c.cost *= !shortest_;
     return c;
   }
 
@@ -507,6 +509,8 @@ public:
         edge->use() != Use::kPlatformConnection && !edge->name_consistency(idx)) {
       c.cost += maneuver_penalty_;
     }
+    // shortest ignores any penalties in favor of path length
+    c.cost *= !shortest_;
     return c;
   }
 };
@@ -638,6 +642,13 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
     return {sec * ferry_factor_, sec};
   }
 
+  float sec =
+      edge->length() * speedfactor_ * kSacScaleSpeedFactor[static_cast<uint8_t>(edge->sac_scale())];
+
+  if (shortest_) {
+    return Cost(edge->length(), sec);
+  }
+
   // TODO - consider using an array of "use factors" to avoid this conditional
   float factor = 1.0f + kSacScaleCostFactor[static_cast<uint8_t>(edge->sac_scale())];
   if (edge->use() == Use::kFootway || edge->use() == Use::kSidewalk) {
@@ -653,8 +664,6 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   // Slightly favor walkways/paths and penalize alleys and driveways.
-  float sec =
-      edge->length() * speedfactor_ * kSacScaleSpeedFactor[static_cast<uint8_t>(edge->sac_scale())];
   return {sec * factor, sec};
 }
 
@@ -676,7 +685,7 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
     float seconds = kCrossingCosts[edge->stopimpact(idx)];
     c.secs += seconds;
-    c.cost += seconds;
+    c.cost += shortest_ ? 0.f : seconds;
   }
   return c;
 }
@@ -702,7 +711,7 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
     float seconds = kCrossingCosts[edge->stopimpact(idx)];
     c.secs += seconds;
-    c.cost += seconds;
+    c.cost += shortest_ ? 0.f : seconds;
   }
   return c;
 }

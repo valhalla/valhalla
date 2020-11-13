@@ -51,9 +51,9 @@ set(sources
     edgetracker.cc
     merge.cc
     nodeinfo.cc
-    openlr.cc
     location.cc
     pathlocation.cc
+    predictedspeeds.cc
     tilehierarchy.cc
     turn.cc
     streetname.cc

@@ -1,5 +1,5 @@
 #include "gurka.h"
-#include <gtest/gtest.h>
+#include "test.h"
 
 using namespace valhalla;
 
@@ -91,20 +91,6 @@ TEST_F(IgnoreAccessTest, AutoIgnoreOneWay) {
       gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
 }
 
-TEST_F(IgnoreAccessTest, AutoDataFixIgnoreOneWay) {
-  const std::string cost = "auto_data_fix";
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
-}
-
-TEST_F(IgnoreAccessTest, AutoShorterIgnoreOneWay) {
-  const std::string cost = "auto_shorter";
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
-}
-
 TEST_F(IgnoreAccessTest, BusIgnoreOneWay) {
   const std::string cost = "bus";
   EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
@@ -165,22 +151,6 @@ TEST_F(IgnoreAccessTest, AutoIgnoreAccess) {
       gurka::route(ignore_access_map, {"A", "B", "D"}, cost, {{IgnoreAccessParam(cost), "1"}}));
 }
 
-TEST_F(IgnoreAccessTest, AutoDataFixIgnoreAccess) {
-  const std::string cost = "auto_data_fix";
-  // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "B", "D"}, cost, {{IgnoreAccessParam(cost), "1"}}));
-}
-
-TEST_F(IgnoreAccessTest, AutoShorterIgnoreAccess) {
-  const std::string cost = "auto_shorter";
-  // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "B", "D"}, cost, {{IgnoreAccessParam(cost), "1"}}));
-}
-
 TEST_F(IgnoreAccessTest, BusIgnoreAccess) {
   const std::string cost = "bus";
   // ignore edges and nodes access restriction
@@ -235,4 +205,201 @@ TEST_F(IgnoreAccessTest, PedestrianIgnoreAccess) {
   EXPECT_THROW(gurka::route(ignore_access_map, {"A", "F", "D", "B"}, cost), std::runtime_error);
   EXPECT_NO_THROW(
       gurka::route(ignore_access_map, {"A", "F", "D", "B"}, cost, {{IgnoreAccessParam(cost), "1"}}));
+}
+
+TEST(AutoDataFix, deprecation) {
+  // if both auto & auto_shorter costing options were provided, auto costing should be overridden
+  Api request;
+  std::string request_str =
+      R"({"locations":[{"lat":52.114622,"lon":5.131816},{"lat":52.048267,"lon":5.074825}],"costing":"auto_data_fix",)"
+      R"("costing_options":{"auto":{"use_ferry":0.8}, "auto_data_fix":{"use_ferry":0.1, "use_tolls": 0.77}}})";
+  ParseApi(request_str, Options::route, request);
+
+  EXPECT_EQ(request.options().costing(), valhalla::auto_);
+  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_access(), true);
+  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_closures(), true);
+  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_oneways(), true);
+  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_restrictions(), true);
+  EXPECT_EQ(request.options().costing_options(valhalla::auto_).use_ferry(), 0.1f);
+  EXPECT_EQ(request.options().costing_options(valhalla::auto_).use_tolls(), 0.77f);
+}
+
+/*************************************************************/
+class AlgorithmTest : public ::testing::Test {
+protected:
+  static gurka::map map;
+  static uint32_t current, historical, constrained;
+
+  static void SetUpTestSuite() {
+    const std::string ascii_map = R"(
+      b----1----c----2----d
+      |         |         |
+      |         |         |
+      |         |         |
+      |         |         |
+      3         4         5
+      |         |         |
+      |         |         |
+      |         |         |
+      |         |         |
+      a----6----f----7----e
+      |         |         |
+      |         |         |
+      |         |         |
+      |         |         |
+      8         9         0
+      |         |         |
+      |         |         |
+      |         |         |
+      |         |         |
+      g----A----h----B----i
+    )";
+
+    const gurka::ways ways = {
+        {"abcdefaghie", {{"highway", "residential"}}},
+        {"cfh", {{"highway", "tertiary"}}},
+    };
+
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/algorithm_selection",
+                            {{"mjolnir.shortcuts", "false"}});
+    map.config.put("mjolnir.traffic_extract", "test/data/algorithm_selection/traffic.tar");
+
+    // add live traffic
+    test::build_live_traffic_data(map.config);
+    test::customize_live_traffic_data(map.config,
+                                      [&](baldr::GraphReader& reader,
+                                          baldr::TrafficTile& traffic_tile, int edge_index,
+                                          valhalla::baldr::TrafficSpeed* traffic_speed) {
+                                        traffic_speed->overall_speed = 50 >> 1;
+                                        traffic_speed->speed1 = 50 >> 1;
+                                        traffic_speed->breakpoint1 = 255;
+                                      });
+
+    test::customize_historical_traffic(map.config, [](DirectedEdge& e) {
+      e.set_constrained_flow_speed(25);
+      e.set_free_flow_speed(75);
+
+      // 200 dct coeficients
+      std::vector<int16_t> historical(200, -1337);
+      return historical;
+    });
+
+    // tests below use saturday at 9am
+    size_t second_of_week = 5 * 24 * 60 * 60 + 9 * 60 * 60 + 27;
+    auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+    for (auto tile_id : reader->GetTileSet()) {
+      const auto* tile = reader->GetGraphTile(tile_id);
+      for (const auto& e : tile->GetDirectedEdges()) {
+        current = tile->GetSpeed(&e, baldr::kCurrentFlowMask, second_of_week);
+        EXPECT_EQ(current, 50);
+        historical = tile->GetSpeed(&e, baldr::kPredictedFlowMask, second_of_week);
+        EXPECT_EQ(historical, 7);
+        constrained = tile->GetSpeed(&e, baldr::kConstrainedFlowMask, second_of_week);
+        EXPECT_EQ(constrained, 25);
+      }
+    }
+  }
+};
+
+gurka::map AlgorithmTest::map = {};
+uint32_t AlgorithmTest::current = 0, AlgorithmTest::historical = 0, AlgorithmTest::constrained = 0;
+
+uint32_t speed_from_edge(const valhalla::Api& api) {
+  uint32_t kmh = -1;
+  const auto& nodes = api.trip().routes(0).legs(0).node();
+  for (int i = 0; i < nodes.size() - 1; ++i) {
+    const auto& node = nodes.Get(i);
+    if (!node.has_edge())
+      break;
+    auto km = node.edge().length();
+    auto h = (nodes.Get(i + 1).cost().elapsed_cost().seconds() -
+              node.cost().elapsed_cost().seconds() - node.cost().transition_cost().seconds()) /
+             3600.0;
+    auto new_kmh = static_cast<uint32_t>(km / h + .5);
+    if (kmh != -1)
+      EXPECT_EQ(kmh, new_kmh);
+    kmh = new_kmh;
+  }
+  return kmh;
+}
+
+// this only happens if with trivial routes that have no date_time
+TEST_F(AlgorithmTest, Astar) {
+  {
+    auto api = gurka::route(map, {"3", "1"}, "auto");
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "a*");
+  }
+}
+
+// this happens with depart_at routes trivial or not and trivial invariant routes
+TEST_F(AlgorithmTest, TDForward) {
+  {
+    auto api = gurka::route(map, {"0", "3"}, "auto",
+                            {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
+  }
+
+  {
+    auto api = gurka::route(map, {"8", "A"}, "auto",
+                            {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
+  }
+
+  {
+    auto api = gurka::route(map, {"2", "5"}, "auto",
+                            {{"/date_time/type", "3"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
+  }
+}
+
+// this happens with arrive_by routes trivial or not
+TEST_F(AlgorithmTest, TDReverse) {
+  {
+    auto api = gurka::route(map, {"6", "B"}, "auto",
+                            {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_reverse_a*");
+  }
+
+  {
+    auto api = gurka::route(map, {"9", "7"}, "auto",
+                            {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_reverse_a*");
+  }
+}
+
+// this happens only with non-trivial routes with no date_time or invariant date_time
+TEST_F(AlgorithmTest, Bidir) {
+  {
+    auto api = gurka::route(map, {"4", "0"}, "auto");
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+    EXPECT_EQ(speed_from_edge(api), constrained);
+  }
+
+  {
+    auto api = gurka::route(map, {"A", "2"}, "auto",
+                            {{"/date_time/type", "3"},
+                             {"/date_time/value", "2020-10-30T09:00"},
+                             {"/costing_options/auto/speed_types/0", "constrained"}});
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+    EXPECT_EQ(speed_from_edge(api), constrained);
+  }
+
+  {
+    auto api = gurka::route(map, {"A", "2"}, "auto",
+                            {{"/date_time/type", "3"},
+                             {"/date_time/value", "2020-10-30T09:00"},
+                             {"/costing_options/auto/speed_types/0", "predicted"}});
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+    EXPECT_EQ(speed_from_edge(api), historical);
+  }
+
+  {
+    auto api = gurka::route(map, {"A", "2"}, "auto",
+                            {{"/date_time/type", "3"},
+                             {"/date_time/value", "2020-10-30T09:00"},
+                             {"/costing_options/auto/speed_types/0", "current"}});
+    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+    EXPECT_EQ(speed_from_edge(api), current);
+  }
 }

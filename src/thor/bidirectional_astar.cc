@@ -114,7 +114,8 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
                                        BDEdgeLabel& pred,
                                        const uint32_t pred_idx,
                                        const bool from_transition,
-                                       const TimeInfo& time_info) {
+                                       const TimeInfo& time_info,
+                                       const bool invariant) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
@@ -126,10 +127,11 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     return false;
   }
 
-  // Update the time information
-  auto offset_time =
-      from_transition ? time_info
-                      : time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
+  // Update the time information even if time is invariant to account for timezones
+  auto seconds_offset = invariant ? 0.f : pred.cost().secs;
+  auto offset_time = from_transition
+                         ? time_info
+                         : time_info.forward(seconds_offset, static_cast<int>(nodeinfo->timezone()));
 
   uint32_t shortcuts = 0;
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_forward_);
@@ -162,13 +164,13 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       if (trans->up()) {
         hierarchy_limits_forward_[node.level()].up_transition_count++;
-        found_valid_edge =
-            ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, offset_time) ||
-            found_valid_edge;
+        found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true,
+                                         offset_time, invariant) ||
+                           found_valid_edge;
       } else if (!hierarchy_limits_forward_[trans->endnode().level()].StopExpanding()) {
-        found_valid_edge =
-            ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, offset_time) ||
-            found_valid_edge;
+        found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true,
+                                         offset_time, invariant) ||
+                           found_valid_edge;
       }
     }
   }
@@ -237,20 +239,22 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
     return true; // This is an edge we _could_ have expanded, so return true
   }
 
-  // TODO: actually use time_info
-  const uint64_t localtime = 0;
-  const uint32_t tz_index = 0;
+  // Skip this edge if no access is allowed (based on costing method)
+  // or if a complex restriction prevents transition onto this edge.
+  // if its not time dependent set to 0 for Allowed and Restricted methods below
+  const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
   int restriction_idx = -1;
-  if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, tz_index, restriction_idx) ||
+  if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, time_info.timezone_index,
+                         restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
-                           &edgestatus_forward_, localtime, tz_index)) {
+                           &edgestatus_forward_, localtime, time_info.timezone_index)) {
     return false;
   }
 
   // Get cost. Separate out transition cost.
   Cost transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
-  // TODO: actually use time_info
-  Cost newcost = pred.cost() + transition_cost + costing_->EdgeCost(meta.edge, tile);
+  Cost newcost =
+      pred.cost() + transition_cost + costing_->EdgeCost(meta.edge, tile, time_info.second_of_week);
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -305,7 +309,8 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
                                        const uint32_t pred_idx,
                                        const DirectedEdge* opp_pred_edge,
                                        const bool from_transition,
-                                       const TimeInfo& time_info) {
+                                       const TimeInfo& time_info,
+                                       const bool invariant) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   const GraphTile* tile = graphreader.GetGraphTile(node);
@@ -317,10 +322,11 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     return false;
   }
 
-  // Update the time information
-  auto offset_time =
-      from_transition ? time_info
-                      : time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
+  // Update the time information even if time is invariant to account for timezones
+  auto seconds_offset = invariant ? 0.f : pred.cost().secs;
+  auto offset_time = from_transition
+                         ? time_info
+                         : time_info.reverse(seconds_offset, static_cast<int>(nodeinfo->timezone()));
 
   uint32_t shortcuts = 0;
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_reverse_);
@@ -354,11 +360,11 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
       if (trans->up()) {
         hierarchy_limits_reverse_[node.level()].up_transition_count++;
         edge_was_added = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
-                                       true, offset_time) ||
+                                       true, offset_time, invariant) ||
                          edge_was_added;
       } else if (!hierarchy_limits_reverse_[trans->endnode().level()].StopExpanding()) {
         edge_was_added = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
-                                       true, offset_time) ||
+                                       true, offset_time, invariant) ||
                          edge_was_added;
       }
     }
@@ -443,13 +449,13 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
 
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
-  const uint64_t localtime = 0; // Bidirectional is not yet time-aware
-  const uint32_t tz_index = 0;
+  // if its not time dependent set to 0 for Allowed and Restricted methods below
+  const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
   int restriction_idx = -1;
-  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime, tz_index,
-                                restriction_idx) ||
+  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime,
+                                time_info.timezone_index, restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false,
-                           &edgestatus_reverse_, localtime, tz_index)) {
+                           &edgestatus_reverse_, localtime, time_info.timezone_index)) {
     return false;
   }
 
@@ -457,7 +463,8 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // can properly recover elapsed time on the reverse path.
   Cost transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
-  Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2) + transition_cost;
+  Cost newcost =
+      pred.cost() + costing_->EdgeCost(opp_edge, t2, time_info.second_of_week) + transition_cost;
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -516,16 +523,29 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   Init(origin_new, destination_new);
 
   // Get time information for forward and backward searches
+  bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
   auto forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
   auto reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
+
+  // When a timedependent route is too long in distance it gets sent to this algorithm. It used to be
+  // the case that this algorithm called EdgeCost without a time component. This would result in
+  // timedependent routes falling back to time independent routing. Now that this algorithm is time
+  // aware we will be tracking time in one direction of the search. To revert to previous behavior
+  // you can uncomment the code below and get a time independent route in the fallback scenario.
+  //  if (!invariant) {
+  //    auto o = origin; o.mutable_date_time()->clear();
+  //    forward_time_info = TimeInfo::make(o, graphreader, &tz_cache_);
+  //    auto d = destination; d.mutable_date_time()->clear();
+  //    reverse_time_info = TimeInfo::make(d, graphreader, &tz_cache_);
+  //  }
 
   // Set origin and destination locations - seeds the adj. lists
   // Note: because we can correlate to more than one place for a given
   // PathLocation using edges.front here means we are only setting the
   // heuristics to one of them alternate paths using the other correlated
   // points to may be harder to find
-  SetOrigin(graphreader, origin);
-  SetDestination(graphreader, destination);
+  SetOrigin(graphreader, origin, forward_time_info);
+  SetDestination(graphreader, destination, reverse_time_info);
 
   // Find shortest path. Switch between a forward direction and a reverse
   // direction search based on the current costs. Alternating like this
@@ -628,7 +648,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
       // Expand from the end node in forward direction.
       ExpandForward(graphreader, fwd_pred.endnode(), fwd_pred, forward_pred_idx, false,
-                    forward_time_info);
+                    forward_time_info, invariant);
     } else {
       // Expand reverse - set to get next edge from reverse adj. list on the next pass
       expand_forward = false;
@@ -655,7 +675,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
       // Expand from the end node in reverse direction.
       ExpandReverse(graphreader, rev_pred.endnode(), rev_pred, reverse_pred_idx, opp_pred_edge, false,
-                    reverse_time_info);
+                    reverse_time_info, invariant);
     }
   }
   return {}; // If we are here the route failed
@@ -769,7 +789,9 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
 }
 
 // Add edges at the origin to the forward adjacency list.
-void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location& origin) {
+void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
+                                   valhalla::Location& origin,
+                                   const TimeInfo& time_info) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
@@ -806,7 +828,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
     // Get cost and sort cost (based on distance from endnode of this edge
     // to the destination
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
+    Cost cost = costing_->EdgeCost(directededge, tile, time_info.second_of_week) *
+                (1.0f - edge.percent_along());
 
     // Store a node-info for later timezone retrieval (approximate for closest)
     if (closest_ni == nullptr) {
@@ -846,7 +869,9 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
 }
 
 // Add destination edges to the reverse path adjacency list.
-void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
+void BidirectionalAStar::SetDestination(GraphReader& graphreader,
+                                        const valhalla::Location& dest,
+                                        const TimeInfo& time_info) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
@@ -886,7 +911,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     // directed edge for costing, as this is the forward direction along the
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
-    Cost cost = costing_->EdgeCost(directededge, tile) * edge.percent_along();
+    Cost cost =
+        costing_->EdgeCost(directededge, tile, time_info.second_of_week) * edge.percent_along();
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -939,8 +965,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
   std::vector<std::unordered_set<GraphId>> shared_edgeids;
 
   // get maximum amount of sharing parameter based on origin->destination distance
-  float max_sharing =
-      allow_alternates ? get_max_sharing(options.locations(0), options.locations(1)) : 0.f;
+  float max_sharing = allow_alternates ? get_max_sharing(origin, dest) : 0.f;
 
   LOG_DEBUG("Connections after stretch filter: " + std::to_string(best_connections_.size()));
 

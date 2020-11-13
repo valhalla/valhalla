@@ -89,7 +89,14 @@
    * FIXED: Removed superfluous const qualifier from odin/signs [#2609](https://github.com/valhalla/valhalla/pull/2609)
    * FIXED: Internal maneuver placement [#2600](https://github.com/valhalla/valhalla/pull/2600)
    * FIXED: Complete fr-FR.json locale. [#2614](https://github.com/valhalla/valhalla/pull/2614)
+   * FIXED: Don't truncate precision in polyline encoding [#2632](https://github.com/valhalla/valhalla/pull/2632)
    * FIXED: Fix all compiler warnings in sif and set to -Werror [#2642](https://github.com/valhalla/valhalla/pull/2642)
+   * FIXED: Remove unnecessary maneuvers to continue straight [#2647](https://github.com/valhalla/valhalla/pull/2647)
+   * FIXED: Linear reference support in route/mapmatch apis (FOW, FRC, bearing, and number of references) [#2645](https://github.com/valhalla/valhalla/pull/2645)
+   * FIXED: Ambiguous local to global (with timezone information) date time conversions now all choose to use the later time instead of throwing unhandled exceptions [#2665](https://github.com/valhalla/valhalla/pull/2665)
+   * FIXED: Overestimated reach caused be reenquing transition nodes without checking that they had been already expanded [#2670](https://github.com/valhalla/valhalla/pull/2670)
+   * FIXED: Build with C++17 standard. Deprecated function calls are substituted with new ones. [#2669](https://github.com/valhalla/valhalla/pull/2669)
+   * FIXED: Improve German post_transition_verbal instruction [#2677](https://github.com/valhalla/valhalla/pull/2677)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
@@ -152,6 +159,7 @@
    * ADDED: Migrated to Ubuntu 20.04 base-image [#2508](https://github.com/valhalla/valhalla/pull/2508)
    * CHANGED: Speed up parseways stage by avoiding multiple string comparisons [#2518](https://github.com/valhalla/valhalla/pull/2518)
    * CHANGED: Speed up enhance stage by avoiding GraphTileBuilder copying [#2468](https://github.com/valhalla/valhalla/pull/2468)
+   * ADDED: Costing options now includes shortest flag which favors shortest path routes [#2555](https://github.com/valhalla/valhalla/pull/2555)
    * ADDED: Incidents in intersections [#2547](https://github.com/valhalla/valhalla/pull/2547)
    * CHANGED: Refactor mapmatching configuration to use a struct (instead of `boost::property_tree::ptree`). [#2485](https://github.com/valhalla/valhalla/pull/2485)
    * ADDED: Save exit maneuver's begin heading when combining enter & exit roundabout maneuvers. [#2554](https://github.com/valhalla/valhalla/pull/2554)
@@ -176,7 +184,16 @@
    * ADDED: One shot mode to valhalla_service so you can run a single request of any type without starting a server [#2624](https://github.com/valhalla/valhalla/pull/2624)
    * ADDED: Adds text instructions to OSRM output [#2625](https://github.com/valhalla/valhalla/pull/2625)
    * ADDED: Adds support for alternate routes [#2626](https://github.com/valhalla/valhalla/pull/2626)
-   * ADDED: add support of input file for one-shot mode of valhalla_service [#2648](https://github.com/valhalla/valhalla/pull/2648)
+   * CHANGED: Switch Python bindings generator from boost.python to header-only pybind11[#2644](https://github.com/valhalla/valhalla/pull/2644)
+   * ADDED: Add support of input file for one-shot mode of valhalla_service [#2648](https://github.com/valhalla/valhalla/pull/2648)
+   * ADDED: Linear reference support to locate api [#2645](https://github.com/valhalla/valhalla/pull/2645)
+   * ADDED: Implemented OSRM-like turn duration calculation for car. Uses it now in auto costing. [#2651](https://github.com/valhalla/valhalla/pull/2651)
+   * ADDED: Enhanced turn lane information in guidance [#2653](https://github.com/valhalla/valhalla/pull/2653)
+   * CHANGED: Move turn_lane_direction helper to odin/util [#2675](https://github.com/valhalla/valhalla/pull/2675)
+   * ADDED: Add annotations to osrm response including speed limits, unit and sign conventions [#2668](https://github.com/valhalla/valhalla/pull/2668)
+   * ADDED: Added functions for predicted speeds encoding-decoding [#2674](https://github.com/valhalla/valhalla/pull/2674)
+   * ADDED: Time invariant routing via the bidirectional algorithm. This has the effect that when time dependent routes (arrive_by and depart_at) fall back to bidirectional due to length restrictions they will actually use the correct time of day for one of the search directions [#2660](https://github.com/valhalla/valhalla/pull/2660)
+   * ADDED: If the length of the edge is greater than kMaxEdgeLength, then consider this a catastrophic error if the should_error bool is true in the set_length function. [2678](https://github.com/valhalla/valhalla/pull/2678)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

@@ -1,7 +1,7 @@
 #include "gurka.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "sif/recost.h"
-#include <gtest/gtest.h>
+#include "test.h"
 
 using namespace valhalla;
 
@@ -27,21 +27,13 @@ TEST(recosting, same_historical) {
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
 
   // add historical traffic so that we can get different costs at different times
-  // TODO: move this into test utils with a callback per edge to get speed from the test
-  for (const auto& tile_id : reader->GetTileSet()) {
-    valhalla::mjolnir::GraphTileBuilder tile(tile_dir, tile_id, false);
-    std::vector<valhalla::baldr::DirectedEdge> edges;
-    edges.reserve(tile.header()->directededgecount());
-    for (const auto& edge : tile.GetDirectedEdges()) {
-      edges.push_back(edge);
-      edges.back().set_free_flow_speed(80);
-      edges.back().set_speed(55);
-      edges.back().set_constrained_flow_speed(10);
-      // TODO: add historical 5 minutely buckets
-      // tile.AddPredictedSpeed();
-    }
-    tile.UpdatePredictedSpeeds(edges);
-  }
+  test::customize_historical_traffic(map.config, [](baldr::DirectedEdge& e) {
+    e.set_free_flow_speed(80);
+    e.set_speed(55);
+    e.set_constrained_flow_speed(10);
+    // TODO: add historical 5 minutely buckets
+    return std::vector<int16_t>{};
+  });
 
   // run a route and check that the costs are the same for the same options
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -60,7 +52,7 @@ TEST(recosting, same_historical) {
     // check we have the same cost at all places
     for (const auto& n : api.trip().routes(0).legs(0).node()) {
       EXPECT_EQ(n.recosts_size(), 1);
-      EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
+      EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(), 0.0001);
       EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
@@ -102,7 +94,7 @@ TEST(recosting, same_historical) {
     // check we have the same cost at all places
     for (const auto& n : api.trip().routes(0).legs(0).node()) {
       EXPECT_EQ(n.recosts_size(), 1);
-      EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
+      EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(), 0.0001);
       EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
@@ -433,7 +425,10 @@ TEST(recosting, api) {
                           bool transition = true) {
     if (cost)
       EXPECT_GE(greater.elapsed_cost().cost(), lesser.elapsed_cost().cost());
-    EXPECT_GE(greater.elapsed_cost().seconds(), lesser.elapsed_cost().seconds());
+    bool const is_greater = greater.elapsed_cost().seconds() > lesser.elapsed_cost().seconds();
+    bool const is_equal =
+        std::abs(greater.elapsed_cost().seconds() - lesser.elapsed_cost().seconds()) < 0.0001;
+    EXPECT_TRUE(is_greater || is_equal);
     if (transition) {
       if (cost)
         EXPECT_GE(greater.transition_cost().cost(), lesser.transition_cost().cost());

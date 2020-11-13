@@ -477,7 +477,7 @@ float EnhancedTripLeg_Edge::GetLength(const Options::Units& units) {
 
 bool EnhancedTripLeg_Edge::HasActiveTurnLane() const {
   for (const auto& turn_lane : turn_lanes()) {
-    if (turn_lane.is_active()) {
+    if (turn_lane.state() == TurnLane::kActive) {
       return true;
     }
   }
@@ -505,47 +505,71 @@ bool EnhancedTripLeg_Edge::HasTurnLane(uint16_t turn_lane_direction) const {
   return false;
 }
 
-uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromLeft(uint16_t turn_lane_direction,
-                                                         uint16_t activated_max) {
+uint16_t
+EnhancedTripLeg_Edge::ActivateTurnLanesFromLeft(uint16_t turn_lane_direction,
+                                                const DirectionsLeg_Maneuver_Type& curr_maneuver_type,
+                                                uint16_t activated_max) {
   uint16_t activated_count = 0;
-  // Make sure turn lane has a direction
-  if (!HasNonDirectionalTurnLane()) {
-    for (auto& turn_lane : *(mutable_turn_lanes())) {
-      // Stop processing the lanes if the activated maximum has been reached
-      if (activated_count >= activated_max) {
-        break;
-      }
 
-      // If the turn lane is in the specified direction then activate the lane
-      // and increment the activated count
-      if (turn_lane.directions_mask() & turn_lane_direction) {
-        turn_lane.set_is_active(true);
+  // Make sure turn lane has a direction
+  // TODO: Consider activating lanes even if some lanes are non-directional
+  // as long as there are directional lanes in the direction of the maneuver
+  if (HasNonDirectionalTurnLane()) {
+    return activated_count;
+  }
+
+  for (auto& turn_lane : *(mutable_turn_lanes())) {
+    // Process lanes matching the turn_lane_direction
+    if (turn_lane.directions_mask() & turn_lane_direction) {
+      // TODO: Use lane connectivity to skip impossible lanes
+      // activate upto activated_max lanes
+      if (activated_count < activated_max) {
+        turn_lane.set_state(TurnLane::kActive);
         ++activated_count;
+      } else if (curr_maneuver_type != DirectionsLeg_Maneuver_Type_kUturnLeft) {
+        // Mark non-active lane in the same direction as the maneuver, as valid
+        // except if we're taking a left uturn, in which case only the
+        // left-most left lane needs to be active (which would've been
+        // activated above)
+        turn_lane.set_state(TurnLane::kValid);
       }
+      // Set the active direction for active & valid lanes
+      turn_lane.set_active_direction(turn_lane_direction);
     }
   }
   return activated_count;
 }
 
-uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromRight(uint16_t turn_lane_direction,
-                                                          uint16_t activated_max) {
+uint16_t EnhancedTripLeg_Edge::ActivateTurnLanesFromRight(
+    uint16_t turn_lane_direction,
+    const DirectionsLeg_Maneuver_Type& curr_maneuver_type,
+    uint16_t activated_max) {
   uint16_t activated_count = 0;
-  // Make sure turn lane has a direction
-  if (!HasNonDirectionalTurnLane()) {
-    for (auto turn_lane_iter = mutable_turn_lanes()->rbegin();
-         turn_lane_iter != mutable_turn_lanes()->rend(); ++turn_lane_iter) {
-      //    for (auto& turn_lane : *(mutable_turn_lanes())) {
-      // Stop processing the lanes if the activated maximum has been reached
-      if (activated_count >= activated_max) {
-        break;
-      }
 
-      // If the turn lane is in the specified direction then activate the lane
-      // and increment the activated count
-      if (turn_lane_iter->directions_mask() & turn_lane_direction) {
-        turn_lane_iter->set_is_active(true);
+  // Make sure turn lane has a direction
+  // TODO: Consider activating lanes even if some lanes are non-directional
+  // as long as there are directional lanes in the direction of the maneuver
+  if (HasNonDirectionalTurnLane()) {
+    return activated_count;
+  }
+
+  for (auto turn_lane_iter = mutable_turn_lanes()->rbegin();
+       turn_lane_iter != mutable_turn_lanes()->rend(); ++turn_lane_iter) {
+    if (turn_lane_iter->directions_mask() & turn_lane_direction) {
+      // TODO: Use lane connectivity to skip impossible lanes
+      // activate upto activated_max lanes
+      if (activated_count < activated_max) {
+        turn_lane_iter->set_state(TurnLane::kActive);
         ++activated_count;
+      } else if (curr_maneuver_type != DirectionsLeg_Maneuver_Type_kUturnRight) {
+        // Mark non-active lane in the same direction as the maneuver, as valid
+        // except if we're taking a right uturn, in which case only the
+        // right-most right lane needs to be active (which would've been
+        // activated above)
+        turn_lane_iter->set_state(TurnLane::kValid);
       }
+      // Set the active direction for active & valid lanes
+      turn_lane_iter->set_active_direction(turn_lane_direction);
     }
   }
   return activated_count;
@@ -559,11 +583,11 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
   if ((curr_maneuver_type == DirectionsLeg_Maneuver_Type_kUturnLeft) &&
       (turn_lane_direction != kTurnLaneReverse)) {
     // Activate the left most turn lane
-    return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+    return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type, 1);
   } else if ((curr_maneuver_type == DirectionsLeg_Maneuver_Type_kUturnRight) &&
              (turn_lane_direction != kTurnLaneReverse)) {
     // Activate the right most turn lane
-    return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+    return ActivateTurnLanesFromRight(turn_lane_direction, curr_maneuver_type, 1);
   } else if ((remaining_step_distance < kShortRemainingDistanceThreshold) &&
              !((next_maneuver_type == DirectionsLeg_Maneuver_Type_kBecomes) ||
                (next_maneuver_type == DirectionsLeg_Maneuver_Type_kContinue) ||
@@ -581,7 +605,7 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
       case DirectionsLeg_Maneuver_Type_kRampLeft:
       case DirectionsLeg_Maneuver_Type_kDestinationLeft:
       case DirectionsLeg_Maneuver_Type_kMergeLeft:
-        return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+        return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type, 1);
       case DirectionsLeg_Maneuver_Type_kSlightRight:
       case DirectionsLeg_Maneuver_Type_kExitRight:
       case DirectionsLeg_Maneuver_Type_kRampRight:
@@ -590,30 +614,30 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
       case DirectionsLeg_Maneuver_Type_kUturnRight:
       case DirectionsLeg_Maneuver_Type_kDestinationRight:
       case DirectionsLeg_Maneuver_Type_kMergeRight:
-        return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+        return ActivateTurnLanesFromRight(turn_lane_direction, curr_maneuver_type, 1);
       case DirectionsLeg_Maneuver_Type_kMerge:
         if (drive_on_right()) {
-          return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+          return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type, 1);
         } else {
-          return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+          return ActivateTurnLanesFromRight(turn_lane_direction, curr_maneuver_type, 1);
         }
       case DirectionsLeg_Maneuver_Type_kRoundaboutEnter:
       case DirectionsLeg_Maneuver_Type_kRoundaboutExit:
       case DirectionsLeg_Maneuver_Type_kFerryEnter:
       case DirectionsLeg_Maneuver_Type_kFerryExit:
-        return ActivateTurnLanesFromLeft(turn_lane_direction);
+        return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type);
       case DirectionsLeg_Maneuver_Type_kDestination:
         if (drive_on_right()) {
-          return ActivateTurnLanesFromRight(turn_lane_direction, 1);
+          return ActivateTurnLanesFromRight(turn_lane_direction, curr_maneuver_type, 1);
         } else {
-          return ActivateTurnLanesFromLeft(turn_lane_direction, 1);
+          return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type, 1);
         }
       default:
-        return ActivateTurnLanesFromLeft(turn_lane_direction);
+        return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type);
     }
   } else {
     // Activate all matching turn lanes
-    return ActivateTurnLanesFromLeft(turn_lane_direction);
+    return ActivateTurnLanesFromLeft(turn_lane_direction, curr_maneuver_type);
   }
 }
 
@@ -824,6 +848,15 @@ std::string EnhancedTripLeg_Edge::TurnLanesToString() const {
     }
 
     uint16_t mask = turn_lane.directions_mask();
+    auto indication_to_str = [&turn_lane](uint16_t ind) -> std::string {
+      if (turn_lane.state() == TurnLane::kInvalid || turn_lane.active_direction() != ind) {
+        return kTurnLaneNames.at(ind);
+      }
+      // Surround valid/active lanes with a '*'
+      std::stringstream ss;
+      ss << "*" << kTurnLaneNames.at(ind) << "*";
+      return ss.str();
+    };
 
     // Process the turn lanes - from left to right
     // empty
@@ -839,84 +872,86 @@ std::string EnhancedTripLeg_Edge::TurnLanesToString() const {
       if ((mask & kTurnLaneReverse) && drive_on_right()) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneReverse);
+        str += indication_to_str(kTurnLaneReverse);
         prior_item = true;
       }
       // sharp_left
       if (mask & kTurnLaneSharpLeft) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneSharpLeft);
+        str += indication_to_str(kTurnLaneSharpLeft);
         prior_item = true;
       }
       // left
       if (mask & kTurnLaneLeft) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneLeft);
+        str += indication_to_str(kTurnLaneLeft);
         prior_item = true;
       }
       // slight_left
       if (mask & kTurnLaneSlightLeft) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneSlightLeft);
+        str += indication_to_str(kTurnLaneSlightLeft);
         prior_item = true;
       }
       // merge_to_left
       if (mask & kTurnLaneMergeToLeft) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneMergeToLeft);
+        str += indication_to_str(kTurnLaneMergeToLeft);
         prior_item = true;
       }
       // through
       if (mask & kTurnLaneThrough) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneThrough);
+        str += indication_to_str(kTurnLaneThrough);
         prior_item = true;
       }
       // merge_to_right
       if (mask & kTurnLaneMergeToRight) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneMergeToRight);
+        str += indication_to_str(kTurnLaneMergeToRight);
         prior_item = true;
       }
       // slight_right
       if (mask & kTurnLaneSlightRight) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneSlightRight);
+        str += indication_to_str(kTurnLaneSlightRight);
         prior_item = true;
       }
       // right
       if (mask & kTurnLaneRight) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneRight);
+        str += indication_to_str(kTurnLaneRight);
         prior_item = true;
       }
       // sharp_right
       if (mask & kTurnLaneSharpRight) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneSharpRight);
+        str += indication_to_str(kTurnLaneSharpRight);
         prior_item = true;
       }
       // reverse (right u-turn)
       if ((mask & kTurnLaneReverse) && !drive_on_right()) {
         if (prior_item)
           str += ";";
-        str += kTurnLaneNames.at(kTurnLaneReverse);
+        str += indication_to_str(kTurnLaneReverse);
         prior_item = true;
       }
     }
 
     // Output if marked as active
-    if (turn_lane.is_active()) {
+    if (turn_lane.state() == TurnLane::kActive) {
       str += " ACTIVE";
+    } else if (turn_lane.state() == TurnLane::kValid) {
+      str += " VALID";
     }
   }
   str += " ]";
@@ -1315,7 +1350,7 @@ bool EnhancedTripLeg_Node::HasIntersectingEdgeCurrNameConsistency() const {
   return false;
 }
 
-bool EnhancedTripLeg_Node::HasNonBackwardTraversableSameNameIntersectingEdge(
+bool EnhancedTripLeg_Node::HasNonBackwardTraversableSameNameRampIntersectingEdge(
     uint32_t from_heading,
     const TripLeg_TravelMode travel_mode) {
   // Loop over the route path intersecting edges
@@ -1324,7 +1359,7 @@ bool EnhancedTripLeg_Node::HasNonBackwardTraversableSameNameIntersectingEdge(
     // Check if the intersecting edges have the same names as the path edges
     // and if the intersecting edge is traversable based on the route path travel mode
     if ((xedge->prev_name_consistency() || xedge->curr_name_consistency()) &&
-        xedge->IsTraversable(travel_mode)) {
+        xedge->IsTraversable(travel_mode) && (xedge->use() == TripLeg_Use_kRampUse)) {
       // Calculate the intersecting edge turn degree to make sure it is not in the opposing direction
       uint32_t intersecting_turn_degree = GetTurnDegree(from_heading, xedge->begin_heading());
       bool non_backward = !((intersecting_turn_degree > kBackwardTurnDegreeLowerBound) &&

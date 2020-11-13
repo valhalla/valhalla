@@ -34,7 +34,7 @@
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
-#include "gurka/gurka.h"
+#include "gurka.h"
 
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
@@ -1018,19 +1018,17 @@ void test_backtrack_complex_restriction(int date_time_type) {
     case 0:
     case 1:
       correct_shape =
-          "iggmAa{abeEyD~HaBvCn@^`e@tYdGhCr]nRnCzArDjB{CbFsDyBwC{AsYsP_LcGqA{@wJsGeU{Km@]qFgDz@{A";
+          R"(kggmAc{abeEyD`IaBvCp@\|d@tYfGhCp]pRnCzArDhB{CbFoDyByCyAsYuP}KaGsA}@wJqGcU{Ko@]qFgDz@{A)";
       break;
     case 2:
       correct_shape =
-          R"(qrgmA_habeE}@xBqFgDkB{@_WiNiB{@mXwNqJcFcIeFeViL}Z_JoVeE\cFw@kBb@NxQdEzb@zKfIvDb`@|Sh\rQ`YdOdB|@tCeF)";
+          R"(srgmA_habeE}@xBqFgDkB}@_WgNkB}@iXuNuJeFcIcFcVkL}Z}IoVeE^eFy@iBb@LvQdE|b@zKdIvDd`@~Sh\pQ~XfOfBz@rCcF)";
       break;
     default:
       throw std::runtime_error("unhandled case");
   }
-  if (leg.shape() != correct_shape) {
-    throw std::runtime_error("Did not find expected shape. Found \n" + leg.shape() +
-                             "\nbut expected \n" + correct_shape);
-  }
+  EXPECT_EQ(leg.shape(), correct_shape)
+      << "Did not find expected shape. Found \n" + leg.shape() + "\nbut expected \n" + correct_shape;
 
   std::vector<std::string> names;
   const auto& directions = response.directions().routes(0).legs();
@@ -1412,7 +1410,7 @@ TEST(Astar, test_complex_restriction_short_path_melborne) {
         R"({"locations":[{"lat":-37.627860699397075,"lon":145.365825588286},{"lat":-37.62842169939707,"lon":145.36587158828598}],"costing":"auto"})";
     auto response = tester.test(request);
     const auto& leg = response.trip().routes(0).legs(0);
-    EXPECT_EQ(leg.shape(), "b|rwfAislgtGtN{UvDtDxLhM");
+    EXPECT_EQ(leg.shape(), "`|rwfAislgtGvN}UvDvDxLhM");
   }
   {
     // Tests "X-crossing",
@@ -1421,7 +1419,7 @@ TEST(Astar, test_complex_restriction_short_path_melborne) {
         R"({"locations":[{"lat":-37.62403769939707,"lon":145.360320588286},{"lat":-37.624804699397075,"lon":145.36041758828597}],"costing":"auto"})";
     auto response = tester.test(request);
     const auto& leg = response.trip().routes(0).legs(0);
-    EXPECT_EQ(leg.shape(), "tmkwfAa{agtGjAyBpBwC`HkK`M]bR`R");
+    EXPECT_EQ(leg.shape(), "tmkwfAa{agtGjAyBpBwC`HmK`M]`R`R");
   }
 }
 
