@@ -8,13 +8,13 @@ namespace midgard {
 
 template <typename Point> class Shape7Decoder {
 public:
-  Shape7Decoder(const char* begin, const size_t size, const int = 7)
-      : begin(begin), end(begin + size) {
+  Shape7Decoder(const char* begin, const size_t size, const double precision = 1e-6)
+      : begin(begin), end(begin + size), prec(precision) {
   }
   Point pop() noexcept(false) {
     lat = next(lat);
     lon = next(lon);
-    return Point(double(lon) * 1e-6, double(lat) * 1e-6);
+    return Point(double(lon) * prec, double(lat) * prec);
   }
   bool empty() const {
     return begin == end;
@@ -25,6 +25,7 @@ private:
   const char* end;
   int32_t lat = 0;
   int32_t lon = 0;
+  double prec;
 
   int32_t next(const int32_t previous) noexcept(false) {
     int32_t byte, shift = 0, result = 0;

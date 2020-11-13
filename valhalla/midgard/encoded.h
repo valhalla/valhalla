@@ -53,7 +53,7 @@ container_t decode(const std::string& encoded, const double precision = 1e-6) {
 }
 
 template <class container_t>
-container_t decode7(const char* encoded, size_t length, const double precision = 1e-7) {
+container_t decode7(const char* encoded, size_t length, const double precision = 1e-6) {
   return decode<container_t, Shape7Decoder<typename container_t::value_type>>(encoded, length,
                                                                               precision);
 }
