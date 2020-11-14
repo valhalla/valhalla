@@ -210,8 +210,14 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
           // Set verbal pre transition instruction
           maneuver.set_verbal_pre_transition_instruction(FormVerbalKeepToStayOnInstruction(maneuver));
 
-          // Only set verbal post if > min ramp length
-          if (maneuver.length() > kVerbalPostMinimumRampLength) {
+          // For a ramp - only set verbal post if > min ramp length
+          if (maneuver.ramp()) {
+            if (maneuver.length() > kVerbalPostMinimumRampLength) {
+              // Set verbal post transition instruction
+              maneuver.set_verbal_post_transition_instruction(
+                  FormVerbalPostTransitionInstruction(maneuver));
+            }
+          } else {
             // Set verbal post transition instruction
             maneuver.set_verbal_post_transition_instruction(
                 FormVerbalPostTransitionInstruction(maneuver));
@@ -226,8 +232,14 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
           // Set verbal pre transition instruction
           maneuver.set_verbal_pre_transition_instruction(FormVerbalKeepInstruction(maneuver));
 
-          // Only set verbal post if > min ramp length
-          if (maneuver.length() > kVerbalPostMinimumRampLength) {
+          // For a ramp - only set verbal post if > min ramp length
+          if (maneuver.ramp()) {
+            if (maneuver.length() > kVerbalPostMinimumRampLength) {
+              // Set verbal post transition instruction
+              maneuver.set_verbal_post_transition_instruction(
+                  FormVerbalPostTransitionInstruction(maneuver));
+            }
+          } else {
             // Set verbal post transition instruction
             maneuver.set_verbal_post_transition_instruction(
                 FormVerbalPostTransitionInstruction(maneuver));
