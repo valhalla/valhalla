@@ -2067,7 +2067,10 @@ bool ManeuversBuilder::IsFork(int node_index,
                                                         prev_edge->travel_mode())) {
     return true;
   }
-  // TODO new code
+  // Verify road class
+  // and not turn channel, not ramp, not ferry, not rail ferry
+  // and path is in forward direction
+  // and only intersecting forward traversable edge
   else if ((prev_edge->road_class() >= curr_edge->road_class()) && !prev_edge->IsRampUse() &&
            !prev_edge->IsTurnChannelUse() && !prev_edge->IsFerryUse() &&
            !prev_edge->IsRailFerryUse() && !curr_edge->IsRampUse() &&
