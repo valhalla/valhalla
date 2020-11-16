@@ -432,22 +432,43 @@ TEST(Standalone, TurnLanesInternalsTurnChannels) {
          {"name", "Broken Land Parkway"},
          {"lanes", "4"},
          {"turn:lanes", "reverse|left|through|right"}}},
-       {"BC", {{"highway", "primary"}, {"oneway", "yes"}, {"internal_intersection", "true"}, {"name", "Broken Land Parkway"}}},
+       {"BC",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"internal_intersection", "true"},
+         {"name", "Broken Land Parkway"}}},
        {"CD", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Broken Land Parkway"}}},
-       {"FG", {{"highway", "primary"}, {"oneway", "yes"}, {"internal_intersection", "true"}, {"name", "Broken Land Parkway"}}},
+       {"FG",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"internal_intersection", "true"},
+         {"name", "Broken Land Parkway"}}},
        {"GH", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Broken Land Parkway"}}},
        {"IG", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Patuxent Woods Drive"}}},
-       {"GB", {{"highway", "primary"}, {"oneway", "yes"}, {"internal_intersection", "true"}, {"name", "Snowden River Parkway"}}},
-       {"BN", {{"highway", "primary"}, {"oneway", "yes"}, {"internal_intersection", "true"}, {"name", "Snowden River Parkway"}}},
+       {"GB",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"internal_intersection", "true"},
+         {"name", "Snowden River Parkway"}}},
+       {"BN",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"internal_intersection", "true"},
+         {"name", "Snowden River Parkway"}}},
        {"NJ", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Snowden River Parkway"}}},
        {"KC", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Snowden River Parkway"}}},
-       {"CF", {{"highway", "primary"}, {"oneway", "yes"}, {"internal_intersection", "true"}, {"name", "Snowden River Parkway"}}},
+       {"CF",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"internal_intersection", "true"},
+         {"name", "Snowden River Parkway"}}},
        {"FL", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Patuxent Woods Drive"}}}};
 
   const auto layout =
       gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
 
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_7", {{"mjolnir.data_processing.infer_internal_intersections", "false"}});
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_7",
+                               {{"mjolnir.data_processing.infer_internal_intersections", "false"}});
 
   valhalla::Api result;
   result = gurka::route(map, "A", "L", "auto");
@@ -463,7 +484,8 @@ TEST(Standalone, TurnLanesInternalsTurnChannels) {
                                   {0, ""},
                               });
 
-  map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_8", {{"mjolnir.data_processing.infer_internal_intersections", "true"}});
+  map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_8",
+                          {{"mjolnir.data_processing.infer_internal_intersections", "true"}});
 
   result = gurka::route(map, "A", "L", "auto");
 
@@ -477,7 +499,6 @@ TEST(Standalone, TurnLanesInternalsTurnChannels) {
                                   {0, ""},
                                   {0, ""},
                               });
-
 }
 
 TEST(Standalone, TurnLanesInternalsAndRestrictions) {
