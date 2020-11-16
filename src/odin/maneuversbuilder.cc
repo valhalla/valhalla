@@ -544,6 +544,7 @@ std::list<Maneuver>::iterator ManeuversBuilder::CollapseTransitConnectionDestina
   return maneuvers.erase(next_man);
 }
 
+// Collapses maneuvers for short distanced double turns that are on non-internal edges
 std::list<Maneuver>::iterator
 ManeuversBuilder::CombineDoubleTurnToUturnManeuver(std::list<Maneuver>& maneuvers,
                                                    std::list<Maneuver>::iterator prev_man,

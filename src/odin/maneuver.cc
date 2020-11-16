@@ -481,7 +481,7 @@ void Maneuver::set_internal_intersection(bool internal_intersection) {
 
 bool Maneuver::HasUsableInternalIntersectionName() const {
   uint32_t link_count = (end_node_index_ - begin_node_index_);
-  if (!street_names_->empty() && ((link_count == 1) || (link_count == 3))) {
+  if (internal_intersection_ && !street_names_->empty() && ((link_count == 1) || (link_count == 3))) {
     return true;
   }
   return false;
