@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/container_hash/hash.hpp>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -206,11 +207,10 @@ using Point2d = PointXY<double>;
 namespace std {
 template <typename PrecisionT> struct hash<valhalla::midgard::PointXY<PrecisionT>> {
   size_t operator()(const valhalla::midgard::PointXY<PrecisionT>& p) const {
-    uint64_t h;
-    char* b = static_cast<char*>(static_cast<void*>(&h));
-    std::memcpy(b, &p.first, 4);
-    std::memcpy(b + 4, &p.second, 4);
-    return std::hash<uint64_t>()(h);
+    size_t seed = 0;
+    boost::hash_combine(seed, p.first);
+    boost::hash_combine(seed, p.second);
+    return seed;
   }
 };
 } // namespace std
