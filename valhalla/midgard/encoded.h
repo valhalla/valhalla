@@ -64,8 +64,9 @@ container_t decode7(const char* encoded, size_t length, const double precision =
  * @param encoded    the encoded points
  * @return points   the container of points
  */
-template <class container_t> container_t decode7(const std::string& encoded) {
-  return decode7<container_t>(encoded.c_str(), encoded.length());
+template <class container_t>
+container_t decode7(const std::string& encoded, const double precision = 1e-6) {
+  return decode7<container_t>(encoded.c_str(), encoded.length(), precision);
 }
 
 /**
@@ -123,7 +124,8 @@ std::string encode(const container_t& points, const int precision = 1e6) {
  * @param points    the list of points to encode
  * @return string   the encoded container of points
  */
-template <class container_t> std::string encode7(const container_t& points) {
+template <class container_t>
+std::string encode7(const container_t& points, const int precision = 1e6) {
   // a place to keep the output
   std::string output;
   // unless the shape is very course you should probably only need about 3 bytes
@@ -151,8 +153,8 @@ template <class container_t> std::string encode7(const container_t& points) {
   // for each point
   for (const auto& p : points) {
     // shift the decimal point x places to the right and truncate
-    int lon = static_cast<int>(round(static_cast<double>(p.first) * 1e6));
-    int lat = static_cast<int>(round(static_cast<double>(p.second) * 1e6));
+    int lon = static_cast<int>(round(static_cast<double>(p.first) * precision));
+    int lat = static_cast<int>(round(static_cast<double>(p.second) * precision));
     // encode each coordinate, lat first for some reason
     serialize(lat - last_lat);
     serialize(lon - last_lon);
