@@ -367,6 +367,26 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         curr_man = next_man;
         ++next_man;
       }
+
+      // Do not combine
+      // if next maneuver is a fork or a tee
+      else if (next_man->fork() || next_man->tee()) {
+        LOG_TRACE("+++ Do Not Combine: if next maneuver is a fork or a tee +++");
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      }
+
+      // Do not combine
+      // if current or next maneuver is a ferry
+      else if (curr_man->ferry() || next_man->ferry()) {
+        LOG_TRACE("+++ Do Not Combine: if current or next maneuver is a ferry +++");
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      }
       // Combine double L turns or double R turns in short non-internal intersections as u-turns
       else if ((curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive) &&
                !curr_man->internal_intersection() &&
@@ -391,15 +411,6 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
           prev_man = curr_man;
         }
         maneuvers_have_been_combined = true;
-        ++next_man;
-      }
-      // Do not combine
-      // if current or next maneuver is a ferry
-      else if (curr_man->ferry() || next_man->ferry()) {
-        LOG_TRACE("+++ Do Not Combine: if current or next maneuver is a ferry +++");
-        // Update with no combine
-        prev_man = curr_man;
-        curr_man = next_man;
         ++next_man;
       }
       // Combine current internal maneuver with next maneuver
@@ -503,6 +514,24 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         LOG_TRACE("+++ Combine: obvious maneuver +++");
         next_man = CombineManeuvers(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
+      }
+      // Combine current short length turn (left or right) with next maneuver that is a kRampStraight
+      // NOTE: This should already be marked internal for OSM data so shouldn't happen for OSM
+      else if (!curr_man->internal_intersection() &&
+               (curr_man->type() == DirectionsLeg_Maneuver_Type_kLeft ||
+                curr_man->type() == DirectionsLeg_Maneuver_Type_kRight) &&
+               next_man->type() == DirectionsLeg_Maneuver_Type_kRampStraight &&
+               curr_man->length(Options::kilometers) <= (kMaxInternalLength * .001f) &&
+               curr_man != next_man && !next_man->IsDestinationType()) {
+        LOG_TRACE(
+            "+++ Combine: current non-internal turn that is very short in length with the next straight ramp maneuver +++");
+        curr_man =
+            CombineDoubleTurnToUturnManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
+        if (is_first_man) {
+          prev_man = curr_man;
+        }
+        maneuvers_have_been_combined = true;
+        ++next_man;
       } else {
         LOG_TRACE("+++ Do Not Combine +++");
         // Update with no combine
