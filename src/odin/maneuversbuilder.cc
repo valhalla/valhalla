@@ -116,7 +116,8 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Update the maneuver placement for internal intersection turns
   UpdateManeuverPlacementForInternalIntersectionTurns(maneuvers);
 
-  // Process the turn lanes. Must happen after updating maneuver placement for internal edges so we activate the correct lanes.
+  // Process the turn lanes. Must happen after updating maneuver placement for internal edges so we
+  // activate the correct lanes.
   ProcessTurnLanes(maneuvers);
 
 #ifdef LOGGING_LEVEL_TRACE
