@@ -173,7 +173,7 @@ public:
   const std::vector<midgard::PointLL>& shape() const;
 
   midgard::Shape7Decoder<midgard::PointLL> lazy_shape() const {
-    return midgard::Shape7Decoder<midgard::PointLL>(encoded_shape_, ei_.encoded_shape_size_);
+    return midgard::Shape7Decoder<midgard::PointLL>(encoded_shape_, ei_.encoded_shape_size_, 1e-7);
   }
 
   /**

@@ -38,7 +38,7 @@ std::string pathToGPX(const google::protobuf::RepeatedPtrField<TripLeg>& legs) {
   // for each leg
   for (const auto& leg : legs) {
     // decode the shape for this leg
-    auto wpts = midgard::decode<std::vector<PointLL>>(leg.shape());
+    auto wpts = midgard::decode<std::vector<PointLL>>(leg.shape(), 1e-7);
 
     // throw the shape points in as way points
     // TODO: add time to each, need transition time at nodes

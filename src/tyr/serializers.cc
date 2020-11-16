@@ -56,7 +56,7 @@ FormOfWay road_class_to_fow(const valhalla::TripLeg::Edge& edge) {
 std::vector<std::string> openlr_edges(const TripLeg& leg) {
   // TODO: can we get the uncompressed shape when we have it in other serialization steps
   const std::vector<midgard::PointLL>& shape =
-      midgard::decode<std::vector<midgard::PointLL>>(leg.shape());
+      midgard::decode<std::vector<midgard::PointLL>>(leg.shape(), 1e-7);
   std::vector<std::string> openlrs;
   openlrs.reserve(leg.node_size());
   for (const TripLeg::Node& node : leg.node()) {

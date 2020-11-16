@@ -1368,7 +1368,7 @@ void TripLegBuilder::Build(
 
   // Set shape if requested
   if (controller.attributes.at(kShape)) {
-    trip_path.set_shape(encode<std::vector<PointLL>>(trip_shape));
+    trip_path.set_shape(encode<std::vector<PointLL>>(trip_shape, 1e7));
   }
 
   if (osmchangeset != 0 && controller.attributes.at(kOsmChangeset)) {

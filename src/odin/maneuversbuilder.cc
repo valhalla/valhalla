@@ -132,7 +132,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 #endif
 
 #ifdef LOGGING_LEVEL_DEBUG
-  std::vector<PointLL> shape = midgard::decode<std::vector<PointLL>>(trip_path_->shape());
+  std::vector<PointLL> shape = midgard::decode<std::vector<PointLL>>(trip_path_->shape(), 1e-7);
   // Shape by index
   //  int i = 0;
   //  for (PointLL ll : shape) {
