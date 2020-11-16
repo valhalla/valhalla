@@ -393,6 +393,93 @@ TEST(Standalone, TurnLanesUTurns) {
                               });
 }
 
+TEST(Standalone, TurnLanesInternalsTurnChannels) {
+  constexpr double gridsize_metres = 10;
+
+  const std::string ascii_map = R"(
+              E D
+              | |
+              | |
+              | |
+              | |
+         L----F-C-----K
+              | |
+         I----G-B--N--J
+              | | /
+              | |/
+              | M
+              | |
+              H A
+    )";
+
+  const gurka::ways ways =
+      {{"AM",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"name", "Broken Land Parkway"},
+         {"lanes", "5"},
+         {"turn:lanes", "through|through|right"}}},
+       {"MB",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"name", "Broken Land Parkway"},
+         {"lanes", "5"},
+         {"internal_intersection", "true"},
+         {"turn:lanes", "left|through|through"}}},
+       {"EF",
+        {{"highway", "primary"},
+         {"oneway", "yes"},
+         {"name", "Broken Land Parkway"},
+         {"lanes", "4"},
+         {"turn:lanes", "reverse|left|through|right"}}},
+       {"BC", {{"highway", "primary"}, {"oneway", "yes"}, {"internal_intersection", "true"}, {"name", "Broken Land Parkway"}}},
+       {"CD", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Broken Land Parkway"}}},
+       {"FG", {{"highway", "primary"}, {"oneway", "yes"}, {"internal_intersection", "true"}, {"name", "Broken Land Parkway"}}},
+       {"GH", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Broken Land Parkway"}}},
+       {"IG", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Patuxent Woods Drive"}}},
+       {"GB", {{"highway", "primary"}, {"oneway", "yes"}, {"internal_intersection", "true"}, {"name", "Snowden River Parkway"}}},
+       {"BN", {{"highway", "primary"}, {"oneway", "yes"}, {"internal_intersection", "true"}, {"name", "Snowden River Parkway"}}},
+       {"NJ", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Snowden River Parkway"}}},
+       {"KC", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Snowden River Parkway"}}},
+       {"CF", {{"highway", "primary"}, {"oneway", "yes"}, {"internal_intersection", "true"}, {"name", "Snowden River Parkway"}}},
+       {"FL", {{"highway", "primary"}, {"oneway", "yes"}, {"name", "Patuxent Woods Drive"}}}};
+
+  const auto layout =
+      gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
+
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_7", {{"mjolnir.data_processing.infer_internal_intersections", "false"}});
+
+  valhalla::Api result;
+  result = gurka::route(map, "A", "L", "auto");
+
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kLeft,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+  validate_turn_lanes(result, {
+                                  {3, "[ *through* ACTIVE | *through* VALID | right ]"},
+                                  {3, "[ *left* ACTIVE | through | through ]"},
+                                  {3, "[ *left* ACTIVE | through | through ]"},
+                                  {0, ""},
+                                  {0, ""},
+                              });
+
+  map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_8", {{"mjolnir.data_processing.infer_internal_intersections", "true"}});
+
+  result = gurka::route(map, "A", "L", "auto");
+
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kLeft,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+  validate_turn_lanes(result, {
+                                  {3, "[ *through* ACTIVE | *through* VALID | right ]"},
+                                  {3, "[ *left* ACTIVE | through | through ]"},
+                                  {3, "[ *left* ACTIVE | through | through ]"},
+                                  {0, ""},
+                                  {0, ""},
+                              });
+
+}
+
 TEST(Standalone, TurnLanesInternalsAndRestrictions) {
   constexpr double gridsize_metres = 10;
 
@@ -477,7 +564,7 @@ TEST(Standalone, TurnLanesInternalsAndRestrictions) {
   const auto layout =
       gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
 
-  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/gurka_turn_lanes_7");
+  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/gurka_turn_lanes_9");
 
   valhalla::Api result;
 
@@ -490,7 +577,7 @@ TEST(Standalone, TurnLanesInternalsAndRestrictions) {
                                                 DirectionsLeg_Maneuver_Type_kDestination});
   validate_turn_lanes(result, {
                                   {5, "[ *left* ACTIVE | left | through | right | right ]"},
-                                  {5, "[ left | left | *through* ACTIVE | right | right ]"},
+                                  {5, "[ *left* ACTIVE | left | through | right | right ]"},
                                   {0, ""},
                                   {0, ""},
                                   {0, ""},
