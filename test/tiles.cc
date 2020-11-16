@@ -342,7 +342,7 @@ template <class coord_t> void test_point(const Tiles<coord_t>& t, const coord_t&
   auto a = t.ClosestFirst(p);
   size_t size = 0;
   size_t zeros = 0;
-  std::tuple<int32_t, unsigned short, float> last{-1, -1, 0};
+  std::tuple<int32_t, unsigned short, double> last{-1, -1, 0};
   while (true) {
     try {
       // keep track of zero distsance subdivisions
@@ -375,10 +375,6 @@ template <class coord_t> void test_point(const Tiles<coord_t>& t, const coord_t&
 }
 
 TEST(Tiles, test_closest_first) {
-
-  auto m = PointLL(8.99546623, -78.2651062).Distance({-91.2, 90});
-  auto n = PointLL(8.99546623, -78.2651062).Distance({-92, 90});
-
   // test a simple 8x4 grid for polar and meridian wrapping
   Tiles<PointLL> t(AABB2<PointLL>{-180, -90, 180, 90}, 90, 2);
   auto y = t.ClosestFirst({179.99, -16.825});
@@ -434,7 +430,7 @@ TEST(Tiles, test_closest_first) {
   std::mt19937 generator;
   std::uniform_real_distribution<> distribution(0, 360);
   for (size_t i = 0; i < 25; ++i) {
-    PointLL p{distribution(generator) - 180.f, distribution(generator) / 2 - 90.f};
+    PointLL p{distribution(generator) - 180.0, distribution(generator) / 2 - 90.0};
     test_point(t, p);
   }
 }

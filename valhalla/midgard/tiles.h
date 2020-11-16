@@ -390,7 +390,7 @@ public:
    * @param seed   the point at for which we measure 'closeness'
    * @return       the functor to be called
    */
-  std::function<std::tuple<int32_t, unsigned short, float>()> ClosestFirst(const coord_t& seed) const;
+  std::function<std::tuple<int32_t, unsigned short, double>()> ClosestFirst(const coord_t& seed) const;
 
 protected:
   // Does the tile bounds wrap in the x direction (e.g. at longitude = 180)
