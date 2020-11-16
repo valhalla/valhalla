@@ -15,7 +15,7 @@ protected:
 
   static void SetUpTestSuite() {
     const std::string ascii_map = R"(
-      		                E
+                            E
                             |
                        A    D  
                        |    |
@@ -46,7 +46,7 @@ gurka::map InstructionsCollapseDoubleTurn::map = {};
 
 // Drive north and turn left
 
-/*TEST_F(InstructionsCollapseDoubleTurn, CollapseToOneLeft) {
+TEST_F(InstructionsCollapseDoubleTurn, CollapseToOneLeft) {
   auto result = gurka::route(map, "A", "E", "auto");
   // Verify steps
   gurka::assert::osrm::expect_steps(result, {"AG", "South River Road", "CD", "US 322"});
@@ -73,6 +73,6 @@ gurka::map InstructionsCollapseDoubleTurn::map = {};
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Turn left to take the ramp.", "Turn left to take the ramp.",
       "Turn left to take the ramp. Then, in 50 meters, Bear left onto US 3 22.", "");
-}*/
+}
 
 ///////////////////////////////////////////////////////////////////////////////
