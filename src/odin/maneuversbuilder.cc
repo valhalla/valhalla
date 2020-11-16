@@ -110,14 +110,14 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Enhance signless interchanges
   EnhanceSignlessInterchnages(maneuvers);
 
-  // Process the turn lanes
-  ProcessTurnLanes(maneuvers);
-
   // Process the guidance view junctions
   ProcessGuidanceViewJunctions(maneuvers);
 
   // Update the maneuver placement for internal intersection turns
   UpdateManeuverPlacementForInternalIntersectionTurns(maneuvers);
+
+  // Process the turn lanes
+  ProcessTurnLanes(maneuvers);
 
 #ifdef LOGGING_LEVEL_TRACE
   int final_man_id = 1;
