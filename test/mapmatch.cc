@@ -1426,7 +1426,7 @@ TEST(Mapmatch, openlr_parameter_true_osrm_api) {
   EXPECT_EQ(matches.size(), 1);
   const std::vector<std::string>& expected = {
       "CwOduyULYiKJAAAV//0iGw==",
-      "CwOdxCULYCKJAAAM//4iGw==",
+      "CwOdxCULYCKJAAAN//4iGw==",
       "CwOdySULXyKJAAAf//EiGw==",
       "CwOd1yULVyKLAABV/9AiGw==",
   };
@@ -1448,7 +1448,7 @@ TEST(Mapmatch, openlr_parameter_true_native_api) {
   const auto& response = test::json_to_pt(actor.trace_route(request));
   const std::vector<std::string>& expected = {
       "CwOduyULYiKJAAAV//0iGw==",
-      "CwOdxCULYCKJAAAM//4iGw==",
+      "CwOdxCULYCKJAAAN//4iGw==",
       "CwOdySULXyKJAAAf//EiGw==",
       "CwOd1yULVyKLAABV/9AiGw==",
   };
