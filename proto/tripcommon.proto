@@ -54,6 +54,7 @@ message Location {
     optional bool exclude_tunnel  = 3;  // whether to exclude tunnels from loki results (default false)
     optional bool exclude_bridge  = 4;  // whether to exclude bridges from loki results (default false)
     optional bool exclude_ramp  = 5;    // whether to exclude roads with ramp use from loki results (default false)
+    optional bool exclude_closures  = 6 [default = true]; // whether to exclude roads marked as closed due to traffic
   }
 
   //inputs

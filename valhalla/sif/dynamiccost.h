@@ -723,6 +723,7 @@ protected:
   bool ignore_oneways_{false};
   bool ignore_access_{false};
   bool ignore_closures_{false};
+  bool filter_closures_{true};
 
   uint32_t top_speed_;
 
