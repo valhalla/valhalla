@@ -406,7 +406,7 @@ void BuildTileSet(const std::string& ways_file,
 
   // Lots of times in a given tile we may end up accessing the same
   // shape/attributes twice we avoid doing this by caching it here
-  std::unordered_map<uint32_t, std::pair<float, uint32_t>> geo_attribute_cache;
+  std::unordered_map<uint32_t, std::pair<double, uint32_t>> geo_attribute_cache;
 
   ////////////////////////////////////////////////////////////////////////////
   // Iterate over tiles
@@ -680,7 +680,6 @@ void BuildTileSet(const std::string& ways_file,
             // Add the curvature to the cache
             auto inserted = geo_attribute_cache.insert({edge_info_offset, {length, curvature}});
             found = inserted.first;
-
           } // now we have the edge info offset
           else {
             found = geo_attribute_cache.find(edge_info_offset);
@@ -694,7 +693,7 @@ void BuildTileSet(const std::string& ways_file,
           // ferry speed override.  duration is set on the way
           if (w.ferry() && w.duration()) {
             // convert to kph
-            uint32_t spd = static_cast<uint32_t>((std::get<0>(found->second) * 3.6f) / w.duration());
+            uint32_t spd = static_cast<uint32_t>((std::get<0>(found->second) * 3.6) / w.duration());
             speed = (spd == 0) ? 1 : spd;
           }
 
