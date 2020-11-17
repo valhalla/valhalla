@@ -16,20 +16,20 @@ protected:
   static void SetUpTestSuite() {
 
     const std::string ascii_map = R"(
-                                        M N
-                                        | |
-	  	               D C              | |
-	  	               | |              | |
-	  	               | |              | | 
-	  	               | |         R----L-O----S 
-	  	               | |              | |
-	  	          G----E-B----H----I----K-P----T
-	  	               | |              | |
-	  	               | |              | |
-	  	               | |              | | 
-	  	               | |              | |
-	  	               F A              J Q 
-	  	    )";
+                            M N
+                            | |
+           D C              | |
+           | |              | |
+           | |              | |
+           | |         R----L-O----S
+           | |              | |
+      G----E-B----H----I----K-P----T
+           | |              | |
+           | |              | |
+           | |              | |
+           | |              | |
+           F A              J Q
+	)";
     const gurka::ways ways =
         {{"AB", {{"highway", "primary"}}},
          {"BC", {{"highway", "primary"}}},
