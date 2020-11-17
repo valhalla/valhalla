@@ -16,8 +16,8 @@ protected:
   static void SetUpTestSuite() {
 
     const std::string ascii_map = R"(
-										M N
-										| |
+                                        M N
+                                        | |
 	  	               D C              | |
 	  	               | |              | |
 	  	               | |              | | 
