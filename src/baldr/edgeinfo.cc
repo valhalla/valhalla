@@ -169,15 +169,14 @@ uint16_t EdgeInfo::GetTypes() const {
 const std::vector<midgard::PointLL>& EdgeInfo::shape() const {
   // if we haven't yet decoded the shape, do so
   if (encoded_shape_ != nullptr && shape_.empty()) {
-    shape_ = midgard::decode7<std::vector<midgard::PointLL>>(encoded_shape_, ei_.encoded_shape_size_,
-                                                             1e-7);
+    shape_ = midgard::decode7<std::vector<midgard::PointLL>>(encoded_shape_, ei_.encoded_shape_size_);
   }
   return shape_;
 }
 
 // Returns the encoded shape string
 std::string EdgeInfo::encoded_shape() const {
-  return encoded_shape_ == nullptr ? midgard::encode7(shape_, 1e7)
+  return encoded_shape_ == nullptr ? midgard::encode7(shape_)
                                    : std::string(encoded_shape_, ei_.encoded_shape_size_);
 }
 

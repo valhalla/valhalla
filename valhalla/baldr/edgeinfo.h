@@ -9,8 +9,8 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/json.h>
+#include <valhalla/midgard/encoded.h>
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/shape_decoder.h>
 #include <valhalla/midgard/util.h>
 
 namespace valhalla {
@@ -173,7 +173,7 @@ public:
   const std::vector<midgard::PointLL>& shape() const;
 
   midgard::Shape7Decoder<midgard::PointLL> lazy_shape() const {
-    return midgard::Shape7Decoder<midgard::PointLL>(encoded_shape_, ei_.encoded_shape_size_, 1e-7);
+    return midgard::Shape7Decoder<midgard::PointLL>(encoded_shape_, ei_.encoded_shape_size_);
   }
 
   /**

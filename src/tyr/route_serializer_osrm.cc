@@ -45,7 +45,6 @@ struct NamedSegment {
   float distance;
 };
 
-constexpr const double COORDINATE_PRECISION = 1e6;
 struct Coordinate {
   std::int32_t lng;
   std::int32_t lat;
@@ -56,13 +55,13 @@ struct Coordinate {
 
 inline std::int32_t toFixed(const float floating) {
   const auto d = static_cast<double>(floating);
-  const auto fixed = static_cast<std::int32_t>(std::round(d * COORDINATE_PRECISION));
+  const auto fixed = static_cast<std::int32_t>(std::round(d * ENCODE_PRECISION));
   return fixed;
 }
 
 inline double toFloating(const std::int32_t fixed) {
   const auto i = static_cast<std::int32_t>(fixed);
-  const auto floating = static_cast<double>(i) / COORDINATE_PRECISION;
+  const auto floating = static_cast<double>(i) * DECODE_PRECISION;
   return floating;
 }
 
@@ -299,7 +298,8 @@ json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
   auto geojson = json::map({});
   auto coords = json::array({});
   for (const auto& p : shape) {
-    coords->emplace_back(json::array({json::fp_t{p.lng(), 7}, json::fp_t{p.lat(), 7}}));
+    coords->emplace_back(
+        json::array({json::fp_t{p.lng(), DIGITS_PRECISION}, json::fp_t{p.lat(), DIGITS_PRECISION}}));
   }
   geojson->emplace("type", std::string("LineString"));
   geojson->emplace("coordinates", coords);
@@ -311,7 +311,7 @@ std::vector<PointLL> full_shape(const valhalla::DirectionsRoute& directions,
                                 const valhalla::Options& options) {
   // If just one leg and it we want polyline6 then we just return the encoded leg shape
   if (directions.legs().size() == 1 && options.shape_format() == polyline6) {
-    return midgard::decode<std::vector<PointLL>>(directions.legs().begin()->shape(), 1e-7);
+    return midgard::decode<std::vector<PointLL>>(directions.legs().begin()->shape());
   }
   // TODO: there is a tricky way to do this... since the end of each leg is the same as the
   // beginning we essentially could just peel off the first encoded shape point of all the legs (but
@@ -321,7 +321,7 @@ std::vector<PointLL> full_shape(const valhalla::DirectionsRoute& directions,
   // in the same place
   std::vector<PointLL> decoded;
   for (const auto& leg : directions.legs()) {
-    auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape(), 1e-7);
+    auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
     decoded.insert(decoded.end(), decoded.size() ? decoded_leg.begin() + 1 : decoded_leg.begin(),
                    decoded_leg.end());
   }
@@ -335,7 +335,7 @@ std::vector<PointLL> simplified_shape(const valhalla::DirectionsRoute& direction
   std::vector<PointLL> simple_shape;
   std::unordered_set<size_t> indices;
   for (const auto& leg : directions.legs()) {
-    auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape(), 1e-7);
+    auto decoded_leg = midgard::decode<std::vector<PointLL>>(leg.shape());
     for (const auto& coord : decoded_leg) {
       south_west.lng = std::min(south_west.lng, toFixed(coord.lng()));
       south_west.lat = std::min(south_west.lat, toFixed(coord.lat()));
@@ -1364,7 +1364,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
     // Get the full shape for the leg. We want to use this for serializing
     // encoded shape for each step (maneuver) in OSRM output.
-    auto shape = midgard::decode<std::vector<PointLL>>(leg->shape(), 1e-7);
+    auto shape = midgard::decode<std::vector<PointLL>>(leg->shape());
 
     //#########################################################################
     // Iterate through maneuvers - convert to OSRM steps

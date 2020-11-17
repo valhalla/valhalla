@@ -32,13 +32,13 @@ namespace {
 std::string pathToGPX(const google::protobuf::RepeatedPtrField<TripLeg>& legs) {
   // start the gpx, we'll use 6 digits of precision
   std::stringstream gpx;
-  gpx << std::setprecision(6) << std::fixed;
+  gpx << std::setprecision(DIGITS_PRECISION) << std::fixed;
   gpx << R"(<?xml version="1.0" encoding="UTF-8" standalone="no"?><gpx version="1.1" creator="libvalhalla"><metadata/>)";
 
   // for each leg
   for (const auto& leg : legs) {
     // decode the shape for this leg
-    auto wpts = midgard::decode<std::vector<PointLL>>(leg.shape(), 1e-7);
+    auto wpts = midgard::decode<std::vector<PointLL>>(leg.shape());
 
     // throw the shape points in as way points
     // TODO: add time to each, need transition time at nodes
