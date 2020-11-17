@@ -402,8 +402,8 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosureAtDestination) {
          std::to_string(closure_map.nodes.at("E").lng()) % costing % costing)
             .str();
     result = gurka::route(closure_map, req_disable_exclude_closures, reader);
-    //gurka::assert::osrm::expect_steps(result, {"AB", "CD"});
-    //gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
+    // gurka::assert::osrm::expect_steps(result, {"AB", "CD"});
+    // gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
     gurka::assert::osrm::expect_steps(result, {"AB", "CH", "HI", "IE"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CH", "HI", "IE"});
   }
@@ -412,4 +412,4 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosureAtDestination) {
 INSTANTIATE_TEST_SUITE_P(
     TrafficTests,
     ExcludeClosuresOnWaypoints,
-    ::testing::Values("auto" , "motorcycle", "motor_scooter", "bus", "truck", "hov", "taxi"));
+    ::testing::Values("auto", "motorcycle", "motor_scooter", "bus", "truck", "hov", "taxi"));
