@@ -730,7 +730,7 @@ public:
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-    if (!accessible || (filter_closures_ && IsClosed(edge, tile))) {
+    if (!accessible || FilterClosed(edge, tile)) {
       return 0.0f;
     } else {
       // TODO - use classification/use to alter the factor
