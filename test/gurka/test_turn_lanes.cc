@@ -206,7 +206,11 @@ TEST(Standalone, TurnLanesSharedTurnLane) {
 // Multiple turn lanes with short arrival
 TEST(Standalone, TurnLanesMultiLaneShort) {
   const std::string ascii_map = R"(
-          1 E 2
+            E
+            |
+       1    |    2
+            |
+            |
             |
             |
     A---B---C---D
@@ -221,41 +225,44 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
   const gurka::ways ways = {{"AB",
                              {{"highway", "primary"},
                               {"lanes:forward", "5"},
+                              {"driving_side", "right"},
                               {"turn:lanes:forward", "left|left|through|right|right"}}},
                             {"BC",
                              {{"highway", "primary"},
                               {"lanes:forward", "5"},
+                              {"driving_side", "right"},
                               {"turn:lanes:forward", "left|left|through|right|right"}}},
-                            {"CD", {{"highway", "trunk"}}},
-                            {"ECFG", {{"highway", "trunk"}}}};
+                            {"CD", {{"highway", "trunk"}, {"driving_side", "right"}}},
+                            {"ECFG", {{"highway", "trunk"}, {"driving_side", "right"}}}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_4");
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_4",
+                               {{"mjolnir.data_processing.use_admin_db", "false"}});
 
   valhalla::Api result;
 
   // TODO - side of street not being set correctly
   // // A -> 1 - takes leftmost left lane
-  // result = gurka::route(map, "A", "1", "auto");
-  // gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
-  //                                               DirectionsLeg_Maneuver_Type_kLeft,
-  //                                               DirectionsLeg_Maneuver_Type_kDestinationLeft});
-  // validate_turn_lanes(result, {
-  //                                 {5, "[ *left* ACTIVE | *left* VALID | through | right | right
-  //                                 ]"}, {5, "[ *left* ACTIVE | *left* VALID | through | right |
-  //                                 right ]"}, {0, ""},
-  //                             });
+  result = gurka::route(map, "A", "1", "auto");
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kLeft,
+                                                DirectionsLeg_Maneuver_Type_kDestinationLeft});
+  validate_turn_lanes(result, {
+                                  {5, "[ *left* ACTIVE | *left* ACTIVE | through | right | right ]"},
+                                  {5, "[ *left* ACTIVE | *left* ACTIVE | through | right | right ]"},
+                                  {0, ""},
+                              });
 
   // // A -> 2 - takes rightmost left lane
-  // result = gurka::route(map, "A", "2", "auto");
-  // gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
-  //                                               DirectionsLeg_Maneuver_Type_kLeft,
-  //                                               DirectionsLeg_Maneuver_Type_kDestinationRight});
-  // validate_turn_lanes(result, {
-  //                                 {5, "[ *left* ACTIVE | *left* VALID | through | right | right
-  //                                 ]"}, {5, "[ *left* ACTIVE | *left* VALID | through | right |
-  //                                 right ]"}, {0, ""},
-  //                             });
+  result = gurka::route(map, "A", "2", "auto");
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kLeft,
+                                                DirectionsLeg_Maneuver_Type_kDestinationRight});
+  validate_turn_lanes(result, {
+                                  {5, "[ *left* ACTIVE | *left* ACTIVE | through | right | right ]"},
+                                  {5, "[ *left* ACTIVE | *left* ACTIVE | through | right | right ]"},
+                                  {0, ""},
+                              });
 
   // A -> E - takes leftmost left lane (left side driving)
   result = gurka::route(map, "A", "E", "auto");
@@ -263,8 +270,8 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                                                 DirectionsLeg_Maneuver_Type_kLeft,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
   validate_turn_lanes(result, {
-                                  {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
-                                  {5, "[ *left* ACTIVE | *left* VALID | through | right | right ]"},
+                                  {5, "[ *left* ACTIVE | *left* ACTIVE | through | right | right ]"},
+                                  {5, "[ *left* ACTIVE | *left* ACTIVE | through | right | right ]"},
                                   {0, ""},
                               });
 
@@ -289,6 +296,10 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                                   {5, "[ left | left | through | *right* ACTIVE | *right* VALID ]"},
                                   {0, ""},
                               });
+
+  // makes the data left side driving.
+  map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_4",
+                          {{"mjolnir.data_processing.use_admin_db", "true"}});
 
   // A -> F - takes leftmost right lane (left side driving)
   result = gurka::route(map, "A", "F", "auto");
