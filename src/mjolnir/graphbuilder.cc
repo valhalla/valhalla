@@ -729,7 +729,6 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           if (!infer_internal_intersections && w.internal()) {
-
             if (directededge.use() != Use::kRamp && directededge.use() != Use::kTurnChannel)
               directededge.set_internal(true);
           }
