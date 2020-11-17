@@ -49,12 +49,12 @@ gurka::map InstructionsCollapseDoubleTurn::map = {};
 TEST_F(InstructionsCollapseDoubleTurn, CollapseToOneLeft) {
   auto result = gurka::route(map, "A", "E", "auto");
   // Verify steps
-  gurka::assert::osrm::expect_steps(result, {"AG", "South River Road", "CD", "US 322"});
+  gurka::assert::osrm::expect_steps(result, {"AG", "South River Road", "CD"});
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kLeft,
-                                                DirectionsLeg_Maneuver_Type_kRampStraight,
+                                                DirectionsLeg_Maneuver_Type_kRampLeft,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
 
   // Verify maneuver begin path indexes
@@ -72,7 +72,8 @@ TEST_F(InstructionsCollapseDoubleTurn, CollapseToOneLeft) {
   // Verify the L U-turn instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Turn left to take the ramp.", "Turn left to take the ramp.",
-      "Turn left to take the ramp. Then, in 50 meters, Bear left onto US 3 22.", "");
+      "Turn left to take the ramp. Then, in 70 meters, You will arrive at your destination.",
+      "Continue for 70 meters.");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
