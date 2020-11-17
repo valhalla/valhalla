@@ -186,7 +186,7 @@ message TripLeg {
 
   message Edge {
     repeated StreetName name = 1;           // street names
-    optional float length = 2;              // km
+    optional float length_km = 2;           // km
     optional float speed = 3;               // km/h
     optional RoadClass road_class = 4;
     optional uint32 begin_heading = 5;      // 0-359
