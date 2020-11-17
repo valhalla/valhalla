@@ -49,7 +49,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     std::list<PointLL> shape;
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
-      shape.emplace_back(node.lng_, node.lat_);
+      shape.emplace_back(node.latlng());
     }
     return shape;
   };
@@ -218,7 +218,7 @@ bool ShortFerry(const uint32_t node_index,
     std::list<PointLL> shape;
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
-      shape.emplace_back(node.lng_, node.lat_);
+      shape.emplace_back(node.latlng());
     }
     return shape;
   };

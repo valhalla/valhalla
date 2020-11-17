@@ -21,10 +21,6 @@ constexpr uint32_t kMaxGraphId = 2097151;
 // Invalid edge label
 constexpr uint32_t kInvalidLabel = std::numeric_limits<uint32_t>::max();
 
-// A value to use for invalid latitude/longitudes (i.e. uninitialized)
-constexpr float kInvalidLatitude = std::numeric_limits<float>::max();
-constexpr float kInvalidLongitude = std::numeric_limits<float>::max();
-
 // Access bit field constants. Access in directed edge allows 12 bits.
 constexpr uint16_t kAutoAccess = 1;
 constexpr uint16_t kPedestrianAccess = 2;

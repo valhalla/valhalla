@@ -120,9 +120,7 @@ void ConstructEdges(const std::string& ways_file,
   // Method to get length of an edge (used to find short link edges)
   const auto Length = [&way_nodes](const size_t idx1, const OSMNode& node2) {
     auto node1 = (*way_nodes[idx1]).node;
-    PointLL a(node1.lng_, node1.lat_);
-    PointLL b(node2.lng_, node2.lat_);
-    return a.Distance(b);
+    return node1.latlng().Distance(node2.latlng());
   };
 
   // For each way traversed via the nodes
@@ -141,7 +139,7 @@ void ConstructEdges(const std::string& ways_file,
     bool valid = true;
     for (auto ni = current_way_node_index; ni <= last_way_node_index; ni++) {
       const auto wn = (*way_nodes[ni]).node;
-      if (wn.lat_ == kInvalidLatitude && wn.lng_ == kInvalidLongitude) {
+      if (!wn.latlng().IsValid()) {
         LOG_WARN("Node " + std::to_string(wn.osmid_) + " in way " + std::to_string(way.way_id()) +
                  " has not had coordinates initialized");
         valid = false;
@@ -397,7 +395,7 @@ void BuildTileSet(const std::string& ways_file,
     std::list<PointLL> shape;
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
-      shape.emplace_back(node.lng_, node.lat_);
+      shape.emplace_back(node.latlng());
     }
     return shape;
   };
@@ -476,7 +474,7 @@ void BuildTileSet(const std::string& ways_file,
         }
 
         const auto& node = bundle.node;
-        PointLL node_ll{node.lng_, node.lat_};
+        PointLL node_ll{node.latlng()};
 
         // Get the admin index
         uint32_t admin_index = 0;
@@ -1110,7 +1108,7 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
   // Make the edges and nodes in the graph
   ConstructEdges(ways_file, way_nodes_file, nodes_file, edges_file,
                  [&level](const OSMNode& node) {
-                   return TileHierarchy::GetGraphId({node.lng_, node.lat_}, level);
+                   return TileHierarchy::GetGraphId(node.latlng(), level);
                  },
                  pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
   return SortGraph(nodes_file, edges_file);
