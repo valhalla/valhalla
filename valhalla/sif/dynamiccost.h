@@ -723,6 +723,7 @@ protected:
   bool ignore_oneways_{false};
   bool ignore_access_{false};
   bool ignore_closures_{false};
+  // if ignore_closures_ is set to true by the user request, filter_closures_ is forced to false
   bool filter_closures_{true};
 
   uint32_t top_speed_;
@@ -918,6 +919,16 @@ protected:
    */
   inline virtual bool IsClosed(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
     return !ignore_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
+  }
+
+  /*
+   * Determine whether an edge is filtered due to traffic closure.
+   * @param  edgeid         GraphId of the opposing edge.
+   * @return  Returns true if the edge is filtered due to live traffic closure, false if not.
+   */
+  inline virtual bool FilterClosed(const baldr::DirectedEdge* edge,
+                                   const baldr::GraphTile* tile) const {
+    return filter_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
   }
 };
 
