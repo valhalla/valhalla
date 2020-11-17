@@ -811,7 +811,7 @@ public:
         if (key_value.first == "amenity" && key_value.second == "bicycle_rental") {
           // Create a new node and set its attributes
           OSMNode n{osmid};
-          n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
+          n.set_latlng(lng, lat);
           n.set_type(NodeType::kBikeShare);
           bss_nodes_->push_back(n);
           return; // we are done.
@@ -864,7 +864,7 @@ public:
     // Create a new node and set its attributes
     OSMNode n;
     n.set_id(osmid);
-    n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
+    n.set_latlng(lng, lat);
     bool intersection = false;
     if (is_highway_junction) {
       n.set_type(NodeType::kMotorWayJunction);
