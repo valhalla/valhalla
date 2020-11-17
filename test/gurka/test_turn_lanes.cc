@@ -653,21 +653,47 @@ TEST(Standalone, TurnLanesInternalsAndRestrictions) {
 
 TEST(Standalone, TurnLanesSerializedResponse) {
   const std::string ascii_map = R"(
-        C
-        |
-    A---B
-        |
-        D--E
+        C   J
+        |   |
+    A---B G I
+        | | |
+        D-E-H
         |
         F
   )";
 
-  const gurka::ways ways =
-      {{"AB", {{"highway", "trunk"}, {"lanes", "3"}, {"turn:lanes", "left|right|right"}}},
-       {"BC", {{"highway", "primary"}}},
-       {"BD", {{"highway", "primary"}, {"lanes", "3"}, {"turn:lanes", "left|left;through|through"}}},
-       {"DE", {{"highway", "primary"}}},
-       {"DF", {{"highway", "primary"}, {"lanes", "2"}, {"turn:lanes", "through|through"}}}};
+  const gurka::ways ways = {
+      {"AB", {{"highway", "trunk"}, {"lanes", "3"}, {"turn:lanes", "left|right|right"}}},
+      {"BC",
+       {{"highway", "primary"},
+        {"oneway", "-1"},
+        {"lanes", "3"},
+        {"turn:lanes:backward", "reverse;left|left;through|through"}}},
+      {"BD",
+       {{"highway", "primary"},
+        {"oneway", "yes"},
+        {"lanes", "3"},
+        // TODO add reverse;left and show its not handled
+        {"turn:lanes:forward", "reverse;left|left;through|through"}}},
+      {"DE", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"EG", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"DF",
+       {{"highway", "primary"},
+        {"oneway", "yes"},
+        {"lanes", "2"},
+        {"turn:lanes", "through|through"}}},
+      {"JI",
+       {{"highway", "trunk"},
+        {"oneway", "yes"},
+        {"lanes", "2"},
+        {"turn:lanes:forward", "|reverse;right"}}},
+      {"IH",
+       {{"highway", "trunk"},
+        {"oneway", "yes"},
+        {"lanes", "2"},
+        {"turn:lanes:forward", "|reverse;right"}}},
+      {"EH", {{"highway", "primary"}, {"oneway", "-1"}}},
+  };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_5");
@@ -687,74 +713,218 @@ TEST(Standalone, TurnLanesSerializedResponse) {
     }
   };
 
-  // A->E : Both right lanes should be valid and left-most right lane should
-  // be active. For following step, both left lanes should be valid and the
-  // left-most left lane should be active.
-  auto result = gurka::route(map, "A", "E", "auto");
-  rapidjson::Document directions = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
-
-  // Assert expected number of routes, legs, steps
-  ASSERT_EQ(directions["routes"].Size(), 1);
-  ASSERT_EQ(directions["routes"][0]["legs"].Size(), 1);
-  ASSERT_EQ(directions["routes"][0]["legs"][0]["steps"].Size(), 4);
-  const rapidjson::Value& steps = directions["routes"][0]["legs"][0]["steps"];
-
   {
-    // Validate lane object of second step
-    const rapidjson::Value& step1_int0 = steps[1]["intersections"][0];
-    ASSERT_TRUE(step1_int0.HasMember("lanes"));
-    ASSERT_EQ(step1_int0["lanes"].Size(), 3);
+    // A->E : Both right lanes should be valid and left-most right lane should
+    // be active. For following step, both left lanes should be valid and the
+    // left-most left lane should be active.
+    auto result = gurka::route(map, "A", "E", "auto");
+    rapidjson::Document directions = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
-    verify_lane_schema(step1_int0["lanes"]);
-    // lane 0 - active: false, valid: false
-    EXPECT_FALSE(step1_int0["lanes"][0]["active"].GetBool());
-    EXPECT_FALSE(step1_int0["lanes"][0]["valid"].GetBool());
-    ASSERT_EQ(step1_int0["lanes"][0]["indications"].Size(), 1);
-    EXPECT_EQ(step1_int0["lanes"][0]["indications"][0].GetString(), std::string("left"));
-    EXPECT_FALSE(step1_int0["lanes"][0].HasMember("valid_indication"));
-    // lane 1 - active: true, valid: true, active_ind: right
-    EXPECT_TRUE(step1_int0["lanes"][1]["active"].GetBool());
-    EXPECT_TRUE(step1_int0["lanes"][1]["valid"].GetBool());
-    ASSERT_EQ(step1_int0["lanes"][1]["indications"].Size(), 1);
-    EXPECT_EQ(step1_int0["lanes"][1]["indications"][0].GetString(), std::string("right"));
-    ASSERT_TRUE(step1_int0["lanes"][1].HasMember("valid_indication"));
-    EXPECT_EQ(step1_int0["lanes"][1]["valid_indication"].GetString(), std::string("right"));
-    // lane 2 - active: false, valid: true, active_ind: right
-    EXPECT_FALSE(step1_int0["lanes"][2]["active"].GetBool());
-    EXPECT_TRUE(step1_int0["lanes"][2]["valid"].GetBool());
-    ASSERT_EQ(step1_int0["lanes"][2]["indications"].Size(), 1);
-    EXPECT_EQ(step1_int0["lanes"][2]["indications"][0].GetString(), std::string("right"));
-    ASSERT_TRUE(step1_int0["lanes"][2].HasMember("valid_indication"));
-    EXPECT_EQ(step1_int0["lanes"][2]["valid_indication"].GetString(), std::string("right"));
+    // Assert expected number of routes, legs, steps
+    ASSERT_EQ(directions["routes"].Size(), 1);
+    ASSERT_EQ(directions["routes"][0]["legs"].Size(), 1);
+    ASSERT_EQ(directions["routes"][0]["legs"][0]["steps"].Size(), 4);
+    const rapidjson::Value& steps = directions["routes"][0]["legs"][0]["steps"];
+
+    {
+      // Validate lane object of second step
+      const rapidjson::Value& step1_int0 = steps[1]["intersections"][0];
+      ASSERT_TRUE(step1_int0.HasMember("lanes"));
+      ASSERT_EQ(step1_int0["lanes"].Size(), 3);
+
+      verify_lane_schema(step1_int0["lanes"]);
+      // lane 0 - active: false, valid: false
+      EXPECT_FALSE(step1_int0["lanes"][0]["active"].GetBool());
+      EXPECT_FALSE(step1_int0["lanes"][0]["valid"].GetBool());
+      ASSERT_EQ(step1_int0["lanes"][0]["indications"].Size(), 1);
+      EXPECT_EQ(step1_int0["lanes"][0]["indications"][0].GetString(), std::string("left"));
+      EXPECT_FALSE(step1_int0["lanes"][0].HasMember("valid_indication"));
+      // lane 1 - active: true, valid: true, active_ind: right
+      EXPECT_TRUE(step1_int0["lanes"][1]["active"].GetBool());
+      EXPECT_TRUE(step1_int0["lanes"][1]["valid"].GetBool());
+      ASSERT_EQ(step1_int0["lanes"][1]["indications"].Size(), 1);
+      EXPECT_EQ(step1_int0["lanes"][1]["indications"][0].GetString(), std::string("right"));
+      ASSERT_TRUE(step1_int0["lanes"][1].HasMember("valid_indication"));
+      EXPECT_EQ(step1_int0["lanes"][1]["valid_indication"].GetString(), std::string("right"));
+      // lane 2 - active: false, valid: true, active_ind: right
+      EXPECT_FALSE(step1_int0["lanes"][2]["active"].GetBool());
+      EXPECT_TRUE(step1_int0["lanes"][2]["valid"].GetBool());
+      ASSERT_EQ(step1_int0["lanes"][2]["indications"].Size(), 1);
+      EXPECT_EQ(step1_int0["lanes"][2]["indications"][0].GetString(), std::string("right"));
+      ASSERT_TRUE(step1_int0["lanes"][2].HasMember("valid_indication"));
+      EXPECT_EQ(step1_int0["lanes"][2]["valid_indication"].GetString(), std::string("right"));
+    }
+
+    {
+      // Validate lane object of third step
+      const rapidjson::Value& step2_int0 = steps[2]["intersections"][0];
+      ASSERT_TRUE(step2_int0.HasMember("lanes"));
+      ASSERT_EQ(step2_int0["lanes"].Size(), 3);
+
+      verify_lane_schema(step2_int0["lanes"]);
+      // lane 0 - active: true, valid: true
+      EXPECT_TRUE(step2_int0["lanes"][0]["active"].GetBool());
+      EXPECT_TRUE(step2_int0["lanes"][0]["valid"].GetBool());
+      ASSERT_EQ(step2_int0["lanes"][0]["indications"].Size(), 2);
+      // TODO: Note that the order of the indications array is reverse, ["left", "uturn"]
+      // when it should be ["uturn", "left"]. This is due to not knowing whether a uturn
+      // is a left or right uturn in serialization.
+      EXPECT_EQ(step2_int0["lanes"][0]["indications"][0].GetString(), std::string("left"));
+      EXPECT_EQ(step2_int0["lanes"][0]["indications"][1].GetString(), std::string("uturn"));
+      EXPECT_TRUE(step2_int0["lanes"][0].HasMember("valid_indication"));
+      EXPECT_EQ(step2_int0["lanes"][0]["valid_indication"].GetString(), std::string("left"));
+      // lane 1 - active: true, valid: true, active_ind: left
+      EXPECT_FALSE(step2_int0["lanes"][1]["active"].GetBool());
+      EXPECT_TRUE(step2_int0["lanes"][1]["valid"].GetBool());
+      ASSERT_EQ(step2_int0["lanes"][1]["indications"].Size(), 2);
+      EXPECT_EQ(step2_int0["lanes"][1]["indications"][0].GetString(), std::string("left"));
+      EXPECT_EQ(step2_int0["lanes"][1]["indications"][1].GetString(), std::string("straight"));
+      ASSERT_TRUE(step2_int0["lanes"][1].HasMember("valid_indication"));
+      EXPECT_EQ(step2_int0["lanes"][1]["valid_indication"].GetString(), std::string("left"));
+      // lane 2 - active: false, valid: false
+      EXPECT_FALSE(step2_int0["lanes"][2]["active"].GetBool());
+      EXPECT_FALSE(step2_int0["lanes"][2]["valid"].GetBool());
+      ASSERT_EQ(step2_int0["lanes"][2]["indications"].Size(), 1);
+      EXPECT_EQ(step2_int0["lanes"][2]["indications"][0].GetString(), std::string("straight"));
+      ASSERT_FALSE(step2_int0["lanes"][2].HasMember("valid_indication"));
+    }
   }
 
   {
-    // Validate lane object of third step
-    const rapidjson::Value& step2_int0 = steps[2]["intersections"][0];
-    ASSERT_TRUE(step2_int0.HasMember("lanes"));
-    ASSERT_EQ(step2_int0["lanes"].Size(), 3);
+    // C->G: test that left uturn gets activated
+    auto result = gurka::route(map, "C", "G", "auto");
+    rapidjson::Document directions = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
-    verify_lane_schema(step2_int0["lanes"]);
-    // lane 0 - active: true, valid: true, active_ind: left
-    EXPECT_TRUE(step2_int0["lanes"][0]["active"].GetBool());
-    EXPECT_TRUE(step2_int0["lanes"][0]["valid"].GetBool());
-    ASSERT_EQ(step2_int0["lanes"][0]["indications"].Size(), 1);
-    EXPECT_EQ(step2_int0["lanes"][0]["indications"][0].GetString(), std::string("left"));
-    ASSERT_TRUE(step2_int0["lanes"][0].HasMember("valid_indication"));
-    EXPECT_EQ(step2_int0["lanes"][0]["valid_indication"].GetString(), std::string("left"));
-    // lane 1 - active: false, valid: true, active_ind: left
-    EXPECT_FALSE(step2_int0["lanes"][1]["active"].GetBool());
-    EXPECT_TRUE(step2_int0["lanes"][1]["valid"].GetBool());
-    ASSERT_EQ(step2_int0["lanes"][1]["indications"].Size(), 2);
-    EXPECT_EQ(step2_int0["lanes"][1]["indications"][0].GetString(), std::string("left"));
-    EXPECT_EQ(step2_int0["lanes"][1]["indications"][1].GetString(), std::string("straight"));
-    ASSERT_TRUE(step2_int0["lanes"][1].HasMember("valid_indication"));
-    EXPECT_EQ(step2_int0["lanes"][1]["valid_indication"].GetString(), std::string("left"));
-    // lane 2 - active: false, valid: false
-    EXPECT_FALSE(step2_int0["lanes"][2]["active"].GetBool());
-    EXPECT_FALSE(step2_int0["lanes"][2]["valid"].GetBool());
-    ASSERT_EQ(step2_int0["lanes"][2]["indications"].Size(), 1);
-    EXPECT_EQ(step2_int0["lanes"][2]["indications"][0].GetString(), std::string("straight"));
-    ASSERT_FALSE(step2_int0["lanes"][2].HasMember("valid_indication"));
+    // Assert expected number of routes, legs, steps
+    ASSERT_EQ(directions["routes"].Size(), 1);
+    ASSERT_EQ(directions["routes"][0]["legs"].Size(), 1);
+    ASSERT_EQ(directions["routes"][0]["legs"][0]["steps"].Size(), 3);
+    const rapidjson::Value& steps = directions["routes"][0]["legs"][0]["steps"];
+
+    {
+      // Validate second lane object of first step
+      const rapidjson::Value& step0_int1 = steps[0]["intersections"][1];
+      ASSERT_TRUE(step0_int1.HasMember("lanes"));
+      ASSERT_EQ(step0_int1["lanes"].Size(), 3);
+
+      verify_lane_schema(step0_int1["lanes"]);
+      // lane 0 - active: true, valid: true, active_ind: uturn
+      EXPECT_TRUE(step0_int1["lanes"][0]["active"].GetBool());
+      EXPECT_TRUE(step0_int1["lanes"][0]["valid"].GetBool());
+      ASSERT_EQ(step0_int1["lanes"][0]["indications"].Size(), 2);
+      // TODO: Note that the order of the indications array is reverse, ["left", "uturn"]
+      // when it should be ["uturn", "left"]. This is due to not knowing whether a uturn
+      // is a left or right uturn in serialization.
+      EXPECT_EQ(step0_int1["lanes"][0]["indications"][0].GetString(), std::string("left"));
+      EXPECT_EQ(step0_int1["lanes"][0]["indications"][1].GetString(), std::string("uturn"));
+      ASSERT_TRUE(step0_int1["lanes"][0].HasMember("valid_indication"));
+      EXPECT_EQ(step0_int1["lanes"][0]["valid_indication"].GetString(), std::string("uturn"));
+      // lane 1 - active: false, valid: false
+      EXPECT_FALSE(step0_int1["lanes"][1]["active"].GetBool());
+      EXPECT_FALSE(step0_int1["lanes"][1]["valid"].GetBool());
+      ASSERT_EQ(step0_int1["lanes"][1]["indications"].Size(), 2);
+      EXPECT_EQ(step0_int1["lanes"][1]["indications"][0].GetString(), std::string("left"));
+      EXPECT_EQ(step0_int1["lanes"][1]["indications"][1].GetString(), std::string("straight"));
+      EXPECT_FALSE(step0_int1["lanes"][1].HasMember("valid_indication"));
+      // lane 2 - active: false, valid: false
+      EXPECT_FALSE(step0_int1["lanes"][2]["active"].GetBool());
+      EXPECT_FALSE(step0_int1["lanes"][2]["valid"].GetBool());
+      ASSERT_EQ(step0_int1["lanes"][2]["indications"].Size(), 1);
+      EXPECT_EQ(step0_int1["lanes"][2]["indications"][0].GetString(), std::string("straight"));
+      EXPECT_FALSE(step0_int1["lanes"][2].HasMember("valid_indication"));
+    }
+
+    {
+      // Validate first lane object of second step
+      const rapidjson::Value& step1_int0 = steps[1]["intersections"][0];
+      ASSERT_TRUE(step1_int0.HasMember("lanes"));
+      ASSERT_EQ(step1_int0["lanes"].Size(), 3);
+
+      verify_lane_schema(step1_int0["lanes"]);
+      // lane 0 - active: true, valid: true, active_ind: uturn
+      EXPECT_TRUE(step1_int0["lanes"][0]["active"].GetBool());
+      EXPECT_TRUE(step1_int0["lanes"][0]["valid"].GetBool());
+      ASSERT_EQ(step1_int0["lanes"][0]["indications"].Size(), 2);
+      // TODO: Note that the order of the indications array is reverse, ["left", "uturn"]
+      // when it should be ["uturn", "left"]. This is due to not knowing whether a uturn
+      // is a left or right uturn in serialization.
+      EXPECT_EQ(step1_int0["lanes"][0]["indications"][0].GetString(), std::string("left"));
+      EXPECT_EQ(step1_int0["lanes"][0]["indications"][1].GetString(), std::string("uturn"));
+      ASSERT_TRUE(step1_int0["lanes"][0].HasMember("valid_indication"));
+      EXPECT_EQ(step1_int0["lanes"][0]["valid_indication"].GetString(), std::string("uturn"));
+      // lane 1 - active: false, valid: false
+      EXPECT_FALSE(step1_int0["lanes"][1]["active"].GetBool());
+      EXPECT_FALSE(step1_int0["lanes"][1]["valid"].GetBool());
+      ASSERT_EQ(step1_int0["lanes"][1]["indications"].Size(), 2);
+      EXPECT_EQ(step1_int0["lanes"][1]["indications"][0].GetString(), std::string("left"));
+      EXPECT_EQ(step1_int0["lanes"][1]["indications"][1].GetString(), std::string("straight"));
+      EXPECT_FALSE(step1_int0["lanes"][1].HasMember("valid_indication"));
+      // lane 2 - active: false, valid: false
+      EXPECT_FALSE(step1_int0["lanes"][2]["active"].GetBool());
+      EXPECT_FALSE(step1_int0["lanes"][2]["valid"].GetBool());
+      ASSERT_EQ(step1_int0["lanes"][2]["indications"].Size(), 1);
+      EXPECT_EQ(step1_int0["lanes"][2]["indications"][0].GetString(), std::string("straight"));
+      EXPECT_FALSE(step1_int0["lanes"][2].HasMember("valid_indication"));
+    }
+  }
+
+  {
+    // J->G: test that right uturn gets activated
+    auto result = gurka::route(map, "J", "G", "auto");
+    rapidjson::Document directions = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
+
+    // Assert expected number of routes, legs, steps
+    ASSERT_EQ(directions["routes"].Size(), 1);
+    ASSERT_EQ(directions["routes"][0]["legs"].Size(), 1);
+    ASSERT_EQ(directions["routes"][0]["legs"][0]["steps"].Size(), 3);
+    const rapidjson::Value& steps = directions["routes"][0]["legs"][0]["steps"];
+
+    {
+      // Validate second intersection of first step
+      const rapidjson::Value& step0_int1 = steps[0]["intersections"][1];
+      ASSERT_TRUE(step0_int1.HasMember("lanes"));
+      ASSERT_EQ(step0_int1["lanes"].Size(), 2);
+
+      verify_lane_schema(step0_int1["lanes"]);
+      // lane 0 - active: false, valid: false
+      EXPECT_FALSE(step0_int1["lanes"][0]["active"].GetBool());
+      EXPECT_FALSE(step0_int1["lanes"][0]["valid"].GetBool());
+      ASSERT_EQ(step0_int1["lanes"][0]["indications"].Size(), 1);
+      EXPECT_EQ(step0_int1["lanes"][0]["indications"][0].GetString(), std::string("straight"));
+      ASSERT_FALSE(step0_int1["lanes"][0].HasMember("valid_indication"));
+
+      // lane 1 - active: true, valid: true, active_ind: uturn
+      EXPECT_TRUE(step0_int1["lanes"][1]["active"].GetBool());
+      EXPECT_TRUE(step0_int1["lanes"][1]["valid"].GetBool());
+      ASSERT_EQ(step0_int1["lanes"][1]["indications"].Size(), 2);
+      EXPECT_EQ(step0_int1["lanes"][1]["indications"][0].GetString(), std::string("right"));
+      EXPECT_EQ(step0_int1["lanes"][1]["indications"][1].GetString(), std::string("uturn"));
+      EXPECT_TRUE(step0_int1["lanes"][1].HasMember("valid_indication"));
+      EXPECT_EQ(step0_int1["lanes"][1]["valid_indication"].GetString(), std::string("uturn"));
+    }
+
+    {
+      // Validate first intersection of second step
+      const rapidjson::Value& step1_int0 = steps[1]["intersections"][0];
+      ASSERT_TRUE(step1_int0.HasMember("lanes"));
+      ASSERT_EQ(step1_int0["lanes"].Size(), 2);
+
+      verify_lane_schema(step1_int0["lanes"]);
+      // lane 0 - active: false, valid: false
+      EXPECT_FALSE(step1_int0["lanes"][0]["active"].GetBool());
+      EXPECT_FALSE(step1_int0["lanes"][0]["valid"].GetBool());
+      ASSERT_EQ(step1_int0["lanes"][0]["indications"].Size(), 1);
+      EXPECT_EQ(step1_int0["lanes"][0]["indications"][0].GetString(), std::string("straight"));
+      ASSERT_FALSE(step1_int0["lanes"][0].HasMember("valid_indication"));
+
+      // lane 1 - active: true, valid: true, active_ind: uturn
+      EXPECT_TRUE(step1_int0["lanes"][1]["active"].GetBool());
+      EXPECT_TRUE(step1_int0["lanes"][1]["valid"].GetBool());
+      ASSERT_EQ(step1_int0["lanes"][1]["indications"].Size(), 2);
+      EXPECT_EQ(step1_int0["lanes"][1]["indications"][0].GetString(), std::string("right"));
+      EXPECT_EQ(step1_int0["lanes"][1]["indications"][1].GetString(), std::string("uturn"));
+      EXPECT_TRUE(step1_int0["lanes"][1].HasMember("valid_indication"));
+      EXPECT_EQ(step1_int0["lanes"][1]["valid_indication"].GetString(), std::string("uturn"));
+    }
   }
 }
