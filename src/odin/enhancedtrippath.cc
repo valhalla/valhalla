@@ -171,17 +171,30 @@ const std::string& TripLeg_Sidewalk_Name(int v) {
   return f->second;
 }
 
-bool is_forward(uint32_t turn_degree) {
-  return ((turn_degree > 314) || (turn_degree < 46));
-}
-
 // TODO: in the future might have to have dynamic angle based on road class and lane count
 bool is_fork_forward(uint32_t turn_degree) {
   return ((turn_degree > 339) || (turn_degree < 21));
 }
 
+bool is_relative_straight(uint32_t turn_degree) {
+  return ((turn_degree > 329) || (turn_degree < 31));
+}
+
+bool is_forward(uint32_t turn_degree) {
+  return ((turn_degree > 314) || (turn_degree < 46));
+}
+
 bool is_wider_forward(uint32_t turn_degree) {
   return ((turn_degree > 304) || (turn_degree < 56));
+}
+
+int get_turn_degree_delta(uint32_t path_turn_degree, uint32_t xedge_turn_degree) {
+  int path_xedge_turn_degree_delta =
+      std::abs(static_cast<int>(path_turn_degree) - static_cast<int>(xedge_turn_degree));
+  if (path_xedge_turn_degree_delta > 180) {
+    path_xedge_turn_degree_delta = (360 - path_xedge_turn_degree_delta);
+  }
+  return path_xedge_turn_degree_delta;
 }
 
 } // namespace
@@ -452,11 +465,8 @@ bool EnhancedTripLeg_Edge::IsWiderForward(uint32_t prev2curr_turn_degree) const 
 bool EnhancedTripLeg_Edge::IsStraightest(uint32_t prev2curr_turn_degree,
                                          uint32_t straightest_xedge_turn_degree) const {
   if (IsWiderForward(prev2curr_turn_degree)) {
-    int path_xedge_turn_degree_delta = std::abs(static_cast<int>(prev2curr_turn_degree) -
-                                                static_cast<int>(straightest_xedge_turn_degree));
-    if (path_xedge_turn_degree_delta > 180) {
-      path_xedge_turn_degree_delta = (360 - path_xedge_turn_degree_delta);
-    }
+    int path_xedge_turn_degree_delta =
+        get_turn_degree_delta(prev2curr_turn_degree, straightest_xedge_turn_degree);
     uint32_t path_straight_delta =
         (prev2curr_turn_degree > 180) ? (360 - prev2curr_turn_degree) : prev2curr_turn_degree;
     uint32_t xedge_straight_delta = (straightest_xedge_turn_degree > 180)
@@ -1454,6 +1464,28 @@ bool EnhancedTripLeg_Node::HasForwardTraversableSignificantRoadClassXEdge(
     // and is a significant road class as compared to the path road class
     if (is_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading())) &&
         xedge->IsTraversableOutbound(travel_mode) &&
+        ((xedge->road_class() - path_road_class) <= kSignificantRoadClassThreshold)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasSimilarStraightSignificantRoadClassXEdge(
+    uint32_t path_turn_degree,
+    uint32_t from_heading,
+    const TripLeg_TravelMode travel_mode,
+    RoadClass path_road_class) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    uint32_t xedge_turn_degree = GetTurnDegree(from_heading, xedge->begin_heading());
+    int path_xedge_turn_degree_delta = get_turn_degree_delta(path_turn_degree, xedge_turn_degree);
+    // if the intersecting edge is
+    // and is traversable based on mode
+    // and is a significant road class as compared to the path road class
+    if (is_relative_straight(path_turn_degree) && is_relative_straight(xedge_turn_degree) &&
+        xedge->IsTraversableOutbound(travel_mode) && (path_xedge_turn_degree_delta <= 30) &&
         ((xedge->road_class() - path_road_class) <= kSignificantRoadClassThreshold)) {
       return true;
     }

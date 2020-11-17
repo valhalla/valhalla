@@ -1489,25 +1489,29 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
                    (maneuver.length(Options_Units_kilometers) < kShortContinueThreshold)) {
           // Keep as short continue - no adjustment needed
           break;
-        } else if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) {
+        } else if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) &&
+                   node &&
+                   node->HasSimilarStraightSignificantRoadClassXEdge(maneuver.turn_degree(),
+                                                                     prev_edge->end_heading(),
+                                                                     prev_edge->travel_mode(),
+                                                                     prev_edge->road_class())) {
           if (curr_edge->IsHighway()) {
             maneuver.set_type(DirectionsLeg_Maneuver_Type_kStayRight);
             LOG_TRACE("ManeuverType=STAY_RIGHT");
-          } else if (node &&
-                     node->HasForwardTraversableSignificantRoadClassXEdge(prev_edge->end_heading(),
-                                                                          prev_edge->travel_mode(),
-                                                                          prev_edge->road_class())) {
+          } else {
             maneuver.set_type(DirectionsLeg_Maneuver_Type_kSlightRight);
             LOG_TRACE("ManeuverType=SLIGHT_RIGHT");
           }
-        } else if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) {
+        } else if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) &&
+                   node &&
+                   node->HasSimilarStraightSignificantRoadClassXEdge(maneuver.turn_degree(),
+                                                                     prev_edge->end_heading(),
+                                                                     prev_edge->travel_mode(),
+                                                                     prev_edge->road_class())) {
           if (curr_edge->IsHighway()) {
             maneuver.set_type(DirectionsLeg_Maneuver_Type_kStayLeft);
             LOG_TRACE("ManeuverType=STAY_LEFT");
-          } else if (node &&
-                     node->HasForwardTraversableSignificantRoadClassXEdge(prev_edge->end_heading(),
-                                                                          prev_edge->travel_mode(),
-                                                                          prev_edge->road_class())) {
+          } else {
             maneuver.set_type(DirectionsLeg_Maneuver_Type_kSlightLeft);
             LOG_TRACE("ManeuverType=SLIGHT_LEFT");
           }

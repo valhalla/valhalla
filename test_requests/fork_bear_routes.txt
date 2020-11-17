@@ -47,3 +47,4 @@
 -j '{"locations":[{"lat":36.591019,"lon":-121.880051,"street":"Aguajito Road"},{"lat":36.589951,"lon":-121.879326,"street":"Aguajito Road"}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":51.559738,"lon":0.687478,"street":"A127"},{"lat":51.559696,"lon":0.684044,"street":"A127"}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":51.559738,"lon":0.687478,"street":"A127"},{"lat":51.559605,"lon":0.684028,"street":"Prince Avenue"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.639145,"lon":22.931602,"street":"Πολυτεχνείου"},{"lat":40.640106,"lon":22.930386,"street":"Παλαιού Σταθμού"}],"costing":"auto","units":"kilometers"}'
