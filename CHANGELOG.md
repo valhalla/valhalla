@@ -98,6 +98,7 @@
    * FIXED: Build with C++17 standard. Deprecated function calls are substituted with new ones. [#2669](https://github.com/valhalla/valhalla/pull/2669)
    * FIXED: Improve German post_transition_verbal instruction [#2677](https://github.com/valhalla/valhalla/pull/2677)
    * FIXED: Lane updates.  Add the turn lanes to all edges of the way.  Do not "enhance" turn lanes if they are part of a complex restriction.  Moved ProcessTurnLanes after UpdateManeuverPlacementForInternalIntersectionTurns.  Fix for a missing "uturn" indication for intersections on the previous maneuver, we were serializing an empty list. [#2679](https://github.com/valhalla/valhalla/pull/2679)
+   * FIXED: Fixes OpenLr serialization [#2688](https://github.com/valhalla/valhalla/pull/2688)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)

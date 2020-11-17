@@ -187,8 +187,8 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
       if (edge.has_speed()) {
         edge_map->emplace("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
       }
-      if (edge.has_length()) {
-        edge_map->emplace("length", json::fp_t{edge.length() * scale, 3});
+      if (edge.has_length_km()) {
+        edge_map->emplace("length", json::fp_t{edge.length_km() * scale, 3});
       }
       // TODO: do we want to output 'is_route_number'?
       if (edge.name_size() > 0) {

@@ -1428,7 +1428,7 @@ TEST(Mapmatch, openlr_parameter_true_osrm_api) {
       "CwOduyULYiKJAAAV//0iGw==",
       "CwOdxCULYCKJAAAN//4iGw==",
       "CwOdySULXyKJAAAf//EiGw==",
-      "CwOd1yULVyKLAABV/9AiGw==",
+      "CwOd1yULVyKLAQBV/9AiGw==",
   };
   for (const auto& match : matches) {
     std::vector<std::string> references;
@@ -1450,7 +1450,7 @@ TEST(Mapmatch, openlr_parameter_true_native_api) {
       "CwOduyULYiKJAAAV//0iGw==",
       "CwOdxCULYCKJAAAN//4iGw==",
       "CwOdySULXyKJAAAf//EiGw==",
-      "CwOd1yULVyKLAABV/9AiGw==",
+      "CwOd1yULVyKLAQBV/9AiGw==",
   };
   std::vector<std::string> references;
   for (const auto& reference : response.get_child("trip.linear_references"))
