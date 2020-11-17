@@ -311,7 +311,7 @@ public:
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
 
     if (edge->is_shortcut() || !accessible || edge->surface() > kMinimumScooterSurface ||
-        edge->bss_connection() || IsClosed(edge, tile)) {
+        edge->bss_connection() || (filter_closures_ && IsClosed(edge, tile))) {
       return 0.0f;
     } else {
       // TODO - use classification/use to alter the factor

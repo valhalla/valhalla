@@ -338,6 +338,7 @@ void parse_locations(const rapidjson::Document& doc,
   }
 
   bool had_date_time = false;
+  bool exclude_closures_disabled = false;
   auto request_locations =
       rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" + node).c_str());
   if (request_locations) {
@@ -507,6 +508,16 @@ void parse_locations(const rapidjson::Document& doc,
           // search_filter.exclude_ramp
           location->mutable_search_filter()->set_exclude_ramp(
               rapidjson::get_optional<bool>(*search_filter, "/exclude_ramp").get_value_or(false));
+          // search_filter.exclude_closures
+          bool exclude_closures =
+              rapidjson::get_optional<bool>(*search_filter, "/exclude_closures").get_value_or(true);
+          // set exclude_closures_disabled if any of the locations has the
+          // search_filter.exclude_closures set as false
+          if (!exclude_closures) {
+            // std::cout << "\n\n\nsearch_filter.exclude_closures DISABLED\n\n\n";
+            exclude_closures_disabled = true;
+          }
+          location->mutable_search_filter()->set_exclude_closures(exclude_closures);
         }
       } catch (...) { throw valhalla_exception_t{location_parse_error_code}; }
     }
@@ -520,6 +531,16 @@ void parse_locations(const rapidjson::Document& doc,
     // push the date time information down into the locations
     if (!had_date_time) {
       add_date_to_locations(options, *locations);
+    }
+
+    // If any of the locations had search_filter.exclude_closures set to false,
+    // set the corresponding internal costing attribute, so that loki search
+    // does not drop a start/end candidate when an edge is marked as closed due
+    // to live traffic
+    if (exclude_closures_disabled) {
+      for (auto& costing : *options.mutable_costing_options()) {
+        costing.set_filter_closures(false);
+      }
     }
   }
 }
@@ -818,6 +839,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   // Parse all of the costing options in their specified order
   sif::ParseCostingOptions(doc, "/costing_options", options);
+  // TODO: Why do we set costing again here?
   options.set_costing(costing);
 
   // parse any named costings for re-costing a given path
