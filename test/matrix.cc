@@ -223,14 +223,13 @@ const auto test_request_osrm = R"({
     "costing":"auto"
   }&format=osrm)";
 
-std::vector<TimeDistance> matrix_answers = {{28, 28},     {2027, 1837}, {2389, 2208}, {4164, 3839},
-                                            {1518, 1397}, {1809, 1639}, {2043, 1938}, {3946, 3641},
-                                            {2299, 2109}, {687, 637},   {0, 0},       {2809, 2623},
-                                            {5554, 5178}, {3942, 3706}, {4344, 4104}, {1815, 1679}};
+std::vector<TimeDistance> matrix_answers = {{28, 28},     {2027, 1837}, {2390, 2209}, {4163, 3838},
+                                            {1519, 1398}, {1808, 1638}, {2042, 1937}, {3944, 3639},
+                                            {2298, 2107}, {687, 637},   {0, 0},       {2808, 2623},
+                                            {5552, 5177}, {3942, 3707}, {4344, 4104}, {1815, 1680}};
 } // namespace
 
-// TODO: change back to 1
-const uint32_t kThreshold = 2;
+const uint32_t kThreshold = 1;
 bool within_tolerance(const uint32_t v1, const uint32_t v2) {
   return (v1 > v2) ? v1 - v2 <= kThreshold : v2 - v1 <= kThreshold;
 }
