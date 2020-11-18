@@ -5,10 +5,10 @@
 #include "baldr/nodeinfo.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
-#include "osrm_car_duration.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
+#include "sif/osrm_car_duration.h"
 #include <cassert>
 
 #ifdef INLINE_TEST
