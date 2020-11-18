@@ -312,7 +312,7 @@ uint32_t speed_from_edge(const valhalla::Api& api) {
     const auto& node = nodes.Get(i);
     if (!node.has_edge())
       break;
-    auto km = node.edge().length();
+    auto km = node.edge().length_km();
     auto h = (nodes.Get(i + 1).cost().elapsed_cost().seconds() -
               node.cost().elapsed_cost().seconds() - node.cost().transition_cost().seconds()) /
              3600.0;

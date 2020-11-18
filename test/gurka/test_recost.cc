@@ -240,7 +240,7 @@ TEST(recosting, all_algorithms) {
         uint32_t pred = baldr::kInvalidLabel;
         sif::LabelCallback label_cb = [&elapsed_itr, &length, &pred,
                                        reverse](const sif::EdgeLabel& label) -> void {
-          length += elapsed_itr->edge().length() * 1000.0;
+          length += elapsed_itr->edge().length_km() * 1000.0;
           EXPECT_EQ(elapsed_itr->edge().id(), label.edgeid());
           EXPECT_EQ(pred++, label.predecessor());
           EXPECT_EQ(static_cast<uint8_t>(elapsed_itr->edge().travel_mode()),
