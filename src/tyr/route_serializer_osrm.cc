@@ -665,9 +665,9 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         uint16_t mask = turn_lane.directions_mask();
 
         // TODO make map for lane mask to osrm indication string
+
         // reverse (left u-turn)
-        if ((mask & kTurnLaneReverse) &&
-            (maneuver.type() == DirectionsLeg_Maneuver_Type_kUturnLeft)) {
+        if (mask & kTurnLaneReverse && prev_edge->drive_on_right()) {
           indications->emplace_back(osrmconstants::kModifierUturn);
         }
         // sharp_left
@@ -699,8 +699,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
           indications->emplace_back(osrmconstants::kModifierSharpRight);
         }
         // reverse (right u-turn)
-        if ((mask & kTurnLaneReverse) &&
-            (maneuver.type() == DirectionsLeg_Maneuver_Type_kUturnRight)) {
+        if (mask & kTurnLaneReverse && !prev_edge->drive_on_right()) {
           indications->emplace_back(osrmconstants::kModifierUturn);
         }
         lane->emplace("indications", std::move(indications));
