@@ -146,7 +146,7 @@ message DirectionsLeg {
     }
 
     enum BssManeuverType{
-      kNoneAction = 1;	
+      kNoneAction = 1;
       kRentBikeAtBikeShare = 2;
       kReturnBikeAtBikeShare = 3;
     }
@@ -186,7 +186,7 @@ message DirectionsLeg {
     optional uint32 turn_degree = 33;                        // Turn degree of maneuver
     optional bool has_time_restrictions = 34;                // Whether edge has any time restrictions or not
     repeated GuidanceView guidance_views = 35;               // List of guidance views
-    optional BssManeuverType bss_maneuver_type = 36;  
+    optional BssManeuverType bss_maneuver_type = 36;
   }
 
   optional uint64 trip_id = 1;

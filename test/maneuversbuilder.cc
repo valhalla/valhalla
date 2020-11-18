@@ -381,7 +381,7 @@ void PopulateEdge(TripLeg_Edge* edge,
     edge_name->set_value(name.first);
     edge_name->set_is_route_number(name.second);
   }
-  edge->set_length(length);
+  edge->set_length_km(length);
   edge->set_speed(speed);
   edge->set_road_class(road_class);
   edge->set_begin_heading(begin_heading);

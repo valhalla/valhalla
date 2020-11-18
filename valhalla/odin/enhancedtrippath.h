@@ -138,8 +138,8 @@ public:
     return mutable_edge_->tagged_name();
   }
 
-  float length() const {
-    return mutable_edge_->length();
+  float length_km() const {
+    return mutable_edge_->length_km();
   }
 
   float speed() const {
