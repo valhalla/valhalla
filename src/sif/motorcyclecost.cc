@@ -275,7 +275,7 @@ public:
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
     if (edge->is_shortcut() || !accessible || edge->surface() > kMinimumMotorcycleSurface ||
-        edge->bss_connection() || (filter_closures_ && IsClosed(edge, tile)))
+        edge->bss_connection() || FilterClosed(edge, tile))
       return 0.0f;
     else {
       // TODO - use classification/use to alter the factor
