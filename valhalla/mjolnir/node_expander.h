@@ -53,8 +53,6 @@ struct Edge {
     uint64_t turn_channel : 1;  // Link edge should be a turn channel
     uint64_t way_begin : 1;     // True if first edge of way
     uint64_t way_end : 1;       // True if last edge of way
-    uint64_t way_next : 1;      // True if next edge after the first edge of the way
-    uint64_t way_prior : 1;     // True if prior edge after the last edge of the way
     uint64_t spare : 30;
   };
   EdgeAttributes attributes;

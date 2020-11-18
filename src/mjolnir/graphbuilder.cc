@@ -192,18 +192,9 @@ void ConstructEdges(const std::string& ways_file,
         // Mark the edge as ending a way if this is the last node in the way
         edge.attributes.way_end = current_way_node_index == last_way_node_index;
 
-        // Mark the previous edge as the prior one since we are processing the last edge
-        if (edge.attributes.way_end) {
-          prev_edge.attributes.way_prior = true;
-        }
-
         // We should add the previous edge now that we know its done
         if (prev_edge.is_valid())
           edges.push_back(prev_edge);
-
-        // Mark the current edge as the next edge one since we processed the first edge
-        if (prev_edge.attributes.way_begin)
-          edge.attributes.way_next = true;
 
         // Finish this edge
         prev_edge = edge;
@@ -754,44 +745,24 @@ void BuildTileSet(const std::string& ways_file,
             directededge.set_sign(true);
           }
 
-          // Add turn lanes if they exist. Store forward index on the last edge for a way
-          // and the backward index on the first edge in a way.  The turn lanes are populated
-          // later in the enhancer phase.
+          // Add turn lanes if they exist.
           std::string turnlane_tags;
-          if (forward && w.fwd_turn_lanes_index() > 0 &&
-              (edge.attributes.way_end || edge.attributes.way_prior)) {
+          if (forward && w.fwd_turn_lanes_index() > 0) {
             turnlane_tags = osmdata.name_offset_map.name(w.fwd_turn_lanes_index());
             if (!turnlane_tags.empty()) {
               std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
               if (!str.empty()) { // don't add if invalid.
                 directededge.set_turnlanes(true);
                 graphtile.AddTurnLanes(idx, w.fwd_turn_lanes_index());
-
-                // Temporarily use the not thru flag so that in the enhancer we can properly check to
-                // see if we have an internal edge
-                // Basically, we are setting turn lanes on the prior and last edge because we need
-                // to check if the last edge is internal or not.  If it is internal, we remove the
-                // turn lanes from the last edge and leave them on the prior.
-                if (edge.attributes.way_prior)
-                  directededge.set_not_thru(true);
               }
             }
-          } else if (!forward && w.bwd_turn_lanes_index() > 0 &&
-                     (edge.attributes.way_begin || edge.attributes.way_next)) {
+          } else if (!forward && w.bwd_turn_lanes_index() > 0) {
             turnlane_tags = osmdata.name_offset_map.name(w.bwd_turn_lanes_index());
             if (!turnlane_tags.empty()) {
               std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
               if (!str.empty()) { // don't add if invalid.
                 directededge.set_turnlanes(true);
                 graphtile.AddTurnLanes(idx, w.bwd_turn_lanes_index());
-
-                // Temporarily use the not thru flag so that in the enhancer we can properly check to
-                // see if we have an internal edge
-                // Basically, we are setting turn lanes on the next and first edge because we need
-                // to check if the fist edge is internal or not.  If it is internal, we remove the
-                // turn lanes from the first edge and leave them on the next.
-                if (edge.attributes.way_next)
-                  directededge.set_not_thru(true);
               }
             }
           }

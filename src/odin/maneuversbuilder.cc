@@ -110,14 +110,15 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Enhance signless interchanges
   EnhanceSignlessInterchnages(maneuvers);
 
-  // Process the turn lanes
-  ProcessTurnLanes(maneuvers);
-
   // Process the guidance view junctions
   ProcessGuidanceViewJunctions(maneuvers);
 
   // Update the maneuver placement for internal intersection turns
   UpdateManeuverPlacementForInternalIntersectionTurns(maneuvers);
+
+  // Process the turn lanes. Must happen after updating maneuver placement for internal edges so we
+  // activate the correct lanes.
+  ProcessTurnLanes(maneuvers);
 
 #ifdef LOGGING_LEVEL_TRACE
   int final_man_id = 1;
@@ -3146,8 +3147,11 @@ void ManeuversBuilder::MoveInternalEdgeToPreviousManeuver(Maneuver& prev_maneuve
                     trip_path_->node(maneuver.begin_node_index()).cost().elapsed_cost().seconds());
 
   /////////////////////////////////////////////////////////////////////////////
-  // Update the edge turn lanes with the previous edge turn lanes
-  edge->mutable_turn_lanes()->CopyFrom(prev_edge->turn_lanes());
+  // If the internal edge does not have turn lanes
+  // then copy the turn lanes from the previous edge
+  if (edge->turn_lanes_size() == 0) {
+    edge->mutable_turn_lanes()->CopyFrom(prev_edge->turn_lanes());
+  }
 }
 
 } // namespace odin
