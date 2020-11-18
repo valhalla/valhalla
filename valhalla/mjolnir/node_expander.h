@@ -78,7 +78,7 @@ struct Edge {
    * @param wayindex     Index into list of OSM ways
    * @param ll           Lat,lng at the start of the edge.
    */
-  static Edge make_edge(const uint32_t wayindex, const uint32_t llindex, const OSMWay& way) {
+  static Edge make_edge(const uint32_t wayindex, const uint32_t llindex, const OSMWay& way, const bool infer_turn_channels) {
     Edge e{wayindex, llindex};
     e.attributes.llcount = 1;
     e.attributes.importance = static_cast<uint32_t>(way.road_class());
@@ -98,7 +98,11 @@ struct Edge {
     e.attributes.has_names =
         (way.name_index_ != 0 || way.name_en_index_ != 0 || way.alt_name_index_ != 0 ||
          way.official_name_index_ != 0 || way.ref_index_ != 0 || way.int_ref_index_ != 0);
-    e.attributes.turn_channel = (!way.link() && way.turn_channel()) ? true : false;
+
+    // if this is data has turn_channels set then we need to use the flag.
+    if (!infer_turn_channels && way.turn_channel() && !way.link())
+      e.attributes.turn_channel = true;
+    else e.attributes.turn_channel = false;
     return e;
   }
 
