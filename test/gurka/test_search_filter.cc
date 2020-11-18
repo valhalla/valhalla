@@ -214,16 +214,10 @@ protected:
   )";
 
     const std::string speed_str = std::to_string(default_speed);
-    const gurka::ways ways = {{"AB", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"BC", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"CD", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"DE", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"AF", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"FG", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"GC", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"CH", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"HI", {{"highway", "primary"}, {"maxspeed", speed_str}}},
-                              {"IE", {{"highway", "primary"}, {"maxspeed", speed_str}}}};
+    const gurka::ways ways = {{"ABC", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"CDE", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"AFGC", {{"highway", "primary"}, {"maxspeed", speed_str}}},
+                              {"CHIE", {{"highway", "primary"}, {"maxspeed", speed_str}}}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10, {.05f, .2f});
     closure_map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
@@ -260,25 +254,25 @@ std::shared_ptr<baldr::GraphReader> ExcludeClosuresOnWaypoints::reader;
 /*
  *  Tests search_filter.exclude_closures at departure location
  */
-TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosureAtDeparture) {
+TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDeparture) {
   std::string costing = GetParam();
 
   // None of the edges are closed. Route has multiple waypoints
   {
     auto result =
         gurka::route(closure_map, {"A", "C", "E"}, costing, {{"/date_time/type", "0"}}, reader);
-    gurka::assert::osrm::expect_steps(result, {"AB", "CD"});
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
+    gurka::assert::osrm::expect_steps(result, {"ABC", "CDE"});
+    gurka::assert::raw::expect_path(result, {"ABC", "CDE"});
   }
 
-  // AB edge is closed in both directions. Route should avoid AB with
+  // ABC edge is closed in both directions. Route should avoid ABC with
   // exclude_closures set to true (default) & and use it otherwise
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          int index, baldr::TrafficSpeed* current) -> void {
       baldr::GraphId tile_id(tile.header->tile_id);
-      auto fwd = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "AB", "A"));
-      auto back = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "AB", "B"));
+      auto fwd = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "ABC", "A"));
+      auto back = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "ABC", "C"));
       bool should_close = (fwd.Tile_Base() == tile_id && fwd.id() == index) ||
                           (back.Tile_Base() == tile_id && back.id() == index);
       SetLiveSpeed(current, should_close ? 0 : default_speed);
@@ -287,8 +281,8 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosureAtDeparture) {
 
     auto result =
         gurka::route(closure_map, {"A", "C", "E"}, costing, {{"/date_time/type", "0"}}, reader);
-    gurka::assert::osrm::expect_steps(result, {"AF", "FG", "GC", "CD"});
-    gurka::assert::raw::expect_path(result, {"AF", "FG", "GC", "CD", "DE"});
+    gurka::assert::osrm::expect_steps(result, {"AFGC", "CDE"});
+    gurka::assert::raw::expect_path(result, {"AFGC", "CDE"});
 
     // Specify search filter to disable exclude_closures at departure
     const std::string& req_disable_exclude_closures =
@@ -302,33 +296,33 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosureAtDeparture) {
          std::to_string(closure_map.nodes.at("E").lng()) % costing % costing)
             .str();
     auto result2 = gurka::route(closure_map, req_disable_exclude_closures, reader);
-    gurka::assert::osrm::expect_steps(result2, {"AB", "CD"});
-    gurka::assert::raw::expect_path(result2, {"AB", "BC", "CD", "DE"});
+    gurka::assert::osrm::expect_steps(result2, {"ABC", "CDE"});
+    gurka::assert::raw::expect_path(result2, {"ABC", "CDE"});
   }
 }
 
 /*
  *  Tests search_filter.exclude_closures at midway location
  */
-TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosureAtMidway) {
+TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtMidway) {
   std::string costing = GetParam();
 
   // None of the edges are closed. Route has multiple waypoints
   {
     auto result =
         gurka::route(closure_map, {"A", "C", "E"}, costing, {{"/date_time/type", "0"}}, reader);
-    gurka::assert::osrm::expect_steps(result, {"AB", "CD"});
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
+    gurka::assert::osrm::expect_steps(result, {"ABC", "CDE"});
+    gurka::assert::raw::expect_path(result, {"ABC", "CDE"});
   }
 
-  // CD edge is closed in both directions. Route should avoid CD with
+  // CDE edge is closed in both directions. Route should avoid CDE with
   // exclude_closures set to true (default) & and use it otherwise
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          int index, baldr::TrafficSpeed* current) -> void {
       baldr::GraphId tile_id(tile.header->tile_id);
-      auto fwd = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "CD", "C"));
-      auto back = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "CD", "D"));
+      auto fwd = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "CDE", "C"));
+      auto back = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "CDE", "E"));
       bool should_close = (fwd.Tile_Base() == tile_id && fwd.id() == index) ||
                           (back.Tile_Base() == tile_id && back.id() == index);
       SetLiveSpeed(current, should_close ? 0 : default_speed);
@@ -337,8 +331,8 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosureAtMidway) {
 
     auto result =
         gurka::route(closure_map, {"A", "C", "E"}, costing, {{"/date_time/type", "0"}}, reader);
-    gurka::assert::osrm::expect_steps(result, {"AB", "CH", "HI", "IE"});
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CH", "HI", "IE"});
+    gurka::assert::osrm::expect_steps(result, {"ABC", "CHIE"});
+    gurka::assert::raw::expect_path(result, {"ABC", "CHIE"});
 
     // Specify search filter to disable exclude_closures at midway waypoint
     const std::string& req_disable_exclude_closures =
@@ -352,33 +346,33 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosureAtMidway) {
          std::to_string(closure_map.nodes.at("E").lng()) % costing % costing)
             .str();
     result = gurka::route(closure_map, req_disable_exclude_closures, reader);
-    gurka::assert::osrm::expect_steps(result, {"AB", "CD"});
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
+    gurka::assert::osrm::expect_steps(result, {"ABC", "CDE"});
+    gurka::assert::raw::expect_path(result, {"ABC", "CDE"});
   }
 }
 
 /*
  *  Tests search_filter.exclude_closures at destination
  */
-TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosureAtDestination) {
+TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDestination) {
   std::string costing = GetParam();
 
   // None of the edges are closed. Route has multiple waypoints
   {
     auto result =
-        gurka::route(closure_map, {"A", "C", "E"}, costing, {{"/date_time/type", "0"}}, reader);
-    gurka::assert::osrm::expect_steps(result, {"AB", "CD"});
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
+        gurka::route(closure_map, {"A", "C", "D"}, costing, {{"/date_time/type", "0"}}, reader);
+    gurka::assert::osrm::expect_steps(result, {"ABC", "CDE"});
+    gurka::assert::raw::expect_path(result, {"ABC", "CDE"});
   }
 
-  // DE edge is closed in both directions. Route shoukd avoid DE with
+  // CDE edge is closed in both directions. Route should avoid DE with
   // exclude_closures set to true (default) & and use it otherwise
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          int index, baldr::TrafficSpeed* current) -> void {
       baldr::GraphId tile_id(tile.header->tile_id);
-      auto fwd = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "DE", "D"));
-      auto back = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "DE", "E"));
+      auto fwd = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "CDE", "C"));
+      auto back = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "CDE", "E"));
       bool should_close = (fwd.Tile_Base() == tile_id && fwd.id() == index) ||
                           (back.Tile_Base() == tile_id && back.id() == index);
       SetLiveSpeed(current, should_close ? 0 : default_speed);
@@ -386,9 +380,9 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosureAtDestination) {
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
-        gurka::route(closure_map, {"A", "C", "E"}, costing, {{"/date_time/type", "0"}}, reader);
-    gurka::assert::osrm::expect_steps(result, {"AB", "CH", "HI", "IE"});
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CH", "HI", "IE"});
+        gurka::route(closure_map, {"A", "C", "D"}, costing, {{"/date_time/type", "0"}}, reader);
+    gurka::assert::osrm::expect_steps(result, {"ABC", "CHIE"});
+    gurka::assert::raw::expect_path(result, {"ABC", "CHIE"});
 
     // Specify search filter to disable exclude_closures at destination
     const std::string& req_disable_exclude_closures =
@@ -398,18 +392,68 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosureAtDestination) {
          std::to_string(closure_map.nodes.at("A").lng()) %
          std::to_string(closure_map.nodes.at("C").lat()) %
          std::to_string(closure_map.nodes.at("C").lng()) %
+         std::to_string(closure_map.nodes.at("D").lat()) %
+         std::to_string(closure_map.nodes.at("D").lng()) % costing % costing)
+            .str();
+    result = gurka::route(closure_map, req_disable_exclude_closures, reader);
+    gurka::assert::osrm::expect_steps(result, {"ABC", "CDE"});
+    gurka::assert::raw::expect_path(result, {"ABC", "CDE"});
+  }
+}
+
+/*
+ *  Tests costing_options.ignore_closures:true overrides
+ *  search_filter.exclude_closures:false
+ */
+TEST_P(ExcludeClosuresOnWaypoints, IgnoreClosuresOverridesExcludeClosures) {
+  std::string costing = GetParam();
+
+  // None of the edges are closed. Route has multiple waypoints
+  {
+    auto result =
+        gurka::route(closure_map, {"A", "C", "E"}, costing, {{"/date_time/type", "0"}}, reader);
+    gurka::assert::osrm::expect_steps(result, {"ABC", "CDE"});
+    gurka::assert::raw::expect_path(result, {"ABC", "CDE"});
+  }
+
+  // CDE edge is closed in both directions. Route should avoid CDE with
+  // exclude_closures set to true (default)
+  {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         int index, baldr::TrafficSpeed* current) -> void {
+      baldr::GraphId tile_id(tile.header->tile_id);
+      auto fwd = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "CDE", "C"));
+      auto back = std::get<0>(gurka::findEdge(reader, closure_map.nodes, "CDE", "E"));
+      bool should_close = (fwd.Tile_Base() == tile_id && fwd.id() == index) ||
+                          (back.Tile_Base() == tile_id && back.id() == index);
+      SetLiveSpeed(current, should_close ? 0 : default_speed);
+    };
+    test::customize_live_traffic_data(closure_map.config, close_edge);
+
+    auto result =
+        gurka::route(closure_map, {"A", "C", "D"}, costing, {{"/date_time/type", "0"}}, reader);
+    gurka::assert::osrm::expect_steps(result, {"ABC", "CHIE"});
+    gurka::assert::raw::expect_path(result, {"ABC", "CHIE"});
+
+    // Specify search filter to disable exclude_closures at waypoints but also
+    // set ignore_closures in costing. ignore_closures should override
+    // exclude_closures
+    const std::string& req_disable_exclude_closures =
+        (boost::format(
+             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":true}},{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":true}},{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":true}}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"], "ignore_closures": true}}, "date_time":{"type":"0"}})") %
+         std::to_string(closure_map.nodes.at("A").lat()) %
+         std::to_string(closure_map.nodes.at("A").lng()) %
+         std::to_string(closure_map.nodes.at("C").lat()) %
+         std::to_string(closure_map.nodes.at("C").lng()) %
          std::to_string(closure_map.nodes.at("E").lat()) %
          std::to_string(closure_map.nodes.at("E").lng()) % costing % costing)
             .str();
     result = gurka::route(closure_map, req_disable_exclude_closures, reader);
-    // gurka::assert::osrm::expect_steps(result, {"AB", "CD"});
-    // gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
-    gurka::assert::osrm::expect_steps(result, {"AB", "CH", "HI", "IE"});
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CH", "HI", "IE"});
+    gurka::assert::osrm::expect_steps(result, {"ABC", "CDE"});
+    gurka::assert::raw::expect_path(result, {"ABC", "CDE"});
   }
 }
-
 INSTANTIATE_TEST_SUITE_P(
-    TrafficTests,
+    SearchFilter,
     ExcludeClosuresOnWaypoints,
     ::testing::Values("auto", "motorcycle", "motor_scooter", "bus", "truck", "hov", "taxi"));
