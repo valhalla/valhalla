@@ -2945,11 +2945,13 @@ void ManeuversBuilder::ProcessGuidanceViewSignboards(std::list<Maneuver>& maneuv
              prev_edge->sign().guidance_view_signboards()) {
           std::cout << "**************ProcessGuidanceViewSignboards :: "
                     << base_guidance_view_signboard.SerializeAsString() << std::endl;
-          auto base_tokens = split(base_guidance_view_signboard.text(), ';');
+          auto base_tokens = split(base_guidance_view_signboard.text(), ':');
           // If base(is_route_number) guidance view board and a pair...
           if (base_guidance_view_signboard.is_route_number() && is_pair(base_tokens)) {
             DirectionsLeg_GuidanceView guidance_view;
             guidance_view.set_data_id(std::to_string(trip_path_->osm_changeset()));
+            std::cout << "********Changeset *** :: " << std::to_string(trip_path_->osm_changeset())
+                      << std::endl;
             guidance_view.set_type(
                 "signboard"); // TODO implement for real in the future based on sign type
             guidance_view.set_base_id(base_tokens.at(0) + base_tokens.at(1));

@@ -1,0 +1,55 @@
+#include "gurka.h"
+#include <gtest/gtest.h>
+
+#if !defined(VALHALLA_SOURCE_DIR)
+#define VALHALLA_SOURCE_DIR
+#endif
+
+using namespace valhalla;
+
+class GuidanceViews_Signboards : public ::testing::Test {
+protected:
+  static gurka::map map;
+
+  static void SetUpTestSuite() {
+    constexpr double gridsize = 100;
+
+    // A--B-BASE-C--D-OVERLAY-E--F
+    const std::string ascii_map = R"(
+      A----B----C----X
+                 \
+                  D
+                   \
+               E----F----G
+    )";
+    const gurka::ways ways =
+        {{"AB", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "National Route 1"}}},
+         {"BC",
+          {{"highway", "motorway"},
+           {"oneway", "yes"},
+           {"name", "National Route 1"},
+           {"guidance_view:signboard:base", "SI_53271604:A1"}}},
+         {"CX", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "National Route 1"}}},
+         {"CD", {{"highway", "motorway_link"}, {"oneway", "yes"}, {"name", "xyz ramp"}}},
+         {"DF", {{"highway", "motorway_link"}, {"oneway", "yes"}, {"name", "xyz ramp"}}},
+         {"EFG", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "National Route 2"}}}};
+
+    const gurka::nodes nodes = {{"C", {{"highway", "motorway_junction"}, {"ref", "A1"}}}};
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+    map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/guidance_views_signboards", {});
+  }
+};
+
+gurka::map GuidanceViews_Signboards::map = {};
+
+/*************************************************************/
+
+TEST_F(GuidanceViews_Signboards, CheckGuidanceViews) {
+  auto result = gurka::route(map, "A", "G", "auto");
+
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views_size(), 1);
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views(0).type(), "signboard");
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views(0).base_id(),
+            "SI_53271604");
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views(0).data_id(), "");
+}
