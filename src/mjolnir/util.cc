@@ -191,7 +191,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   if (start_stage == BuildStage::kInitialize) {
     // set up the directories and purge old tiles if starting at the parsing stage
     for (const auto& level : valhalla::baldr::TileHierarchy::levels()) {
-      auto level_dir = tile_dir + std::to_string(level.first);
+      auto level_dir = tile_dir + std::to_string(level.level);
       if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
         LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
         filesystem::remove_all(level_dir);
@@ -200,8 +200,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
 
     // check for transit level.
     auto level_dir =
-        tile_dir +
-        std::to_string(valhalla::baldr::TileHierarchy::levels().rbegin()->second.level + 1);
+        tile_dir + std::to_string(valhalla::baldr::TileHierarchy::GetTransitLevel().level);
     if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
       LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
       filesystem::remove_all(level_dir);

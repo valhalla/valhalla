@@ -386,8 +386,7 @@ void BuildTileSet(const std::string& ways_file,
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information.");
   }
 
-  const auto& tl = TileHierarchy::levels().rbegin();
-  Tiles<PointLL> tiling = tl->second.tiles;
+  const auto& tiling = TileHierarchy::levels().back().tiles;
 
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
@@ -474,7 +473,7 @@ void BuildTileSet(const std::string& ways_file,
         }
 
         const auto& node = bundle.node;
-        PointLL node_ll{node.latlng()};
+        PointLL node_ll = node.latlng();
 
         // Get the admin index
         uint32_t admin_index = 0;
@@ -1102,8 +1101,7 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
                                                    const std::string& way_nodes_file,
                                                    const std::string& nodes_file,
                                                    const std::string& edges_file) {
-  const auto& tl = TileHierarchy::levels().rbegin();
-  uint8_t level = tl->second.level;
+  uint8_t level = TileHierarchy::levels().back().level;
   // Make the edges and nodes in the graph
   ConstructEdges(ways_file, way_nodes_file, nodes_file, edges_file,
                  [&level](const OSMNode& node) {
@@ -1136,8 +1134,8 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   // Reclassify ferry connection edges - use the highway classification cutoff
   baldr::RoadClass rc = baldr::RoadClass::kPrimary;
   for (auto& level : TileHierarchy::levels()) {
-    if (level.second.name == "highway") {
-      rc = level.second.importance;
+    if (level.name == "highway") {
+      rc = level.importance;
     }
   }
   ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file,

@@ -18,7 +18,7 @@ TEST(Standalone, Maxspeed) {
       {"EF", {{"highway", "motorway"}, {"maxspeed", "none"}}},
       {"FG", {{"highway", "motorway"}, {"maxspeed", "40"}}},
   };
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {.1, -.1});
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_maxspeed");
   auto result = gurka::route(map, "A", "G", "auto",
                              {{"/filters/action", "include"},

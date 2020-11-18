@@ -598,8 +598,8 @@ struct projector_t {
 
     // project a onto b where b is the origin vector representing this segment
     // and a is the origin vector to the point we are projecting, (a.b/b.b)*b
-    auto bx = double(v.first) - u.first;
-    auto by = double(v.second) - u.second;
+    auto bx = v.first - u.first;
+    auto by = v.second - u.second;
 
     // Scale longitude when finding the projection
     auto bx2 = bx * lon_scale;

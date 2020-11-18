@@ -410,8 +410,7 @@ GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, b
   */
 
   // figure the largest id for this level
-  auto found = TileHierarchy::levels().find(graphid.level());
-  if (found == TileHierarchy::levels().cend() &&
+  if (graphid.level() >= TileHierarchy::levels().size() &&
       graphid.level() != TileHierarchy::GetTransitLevel().level) {
     throw std::runtime_error("Could not compute FileSuffix for non-existent level: " +
                              std::to_string(graphid.level()));
@@ -420,7 +419,7 @@ GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, b
   // get the level info
   const auto& level = graphid.level() == TileHierarchy::GetTransitLevel().level
                           ? TileHierarchy::GetTransitLevel()
-                          : found->second;
+                          : TileHierarchy::levels()[graphid.level()];
 
   // figure out how many digits
   auto max_id = level.tiles.ncolumns() * level.tiles.nrows() - 1;
@@ -513,8 +512,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
   }
 
   // if the first thing isnt a valid level bail
-  auto found = TileHierarchy::levels().find(digits.back());
-  if (found == TileHierarchy::levels().cend() &&
+  if (digits.back() >= TileHierarchy::levels().size() &&
       digits.back() != TileHierarchy::GetTransitLevel().level) {
     throw std::runtime_error("Invalid tile path: " + fname);
   }
@@ -524,7 +522,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
   digits.pop_back();
   const auto& tile_level = level == TileHierarchy::GetTransitLevel().level
                                ? TileHierarchy::GetTransitLevel()
-                               : found->second;
+                               : TileHierarchy::levels()[level];
 
   // get the number of sub directories that we should have
   auto max_id = tile_level.tiles.ncolumns() * tile_level.tiles.nrows() - 1;
@@ -558,15 +556,9 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
 
 // Get the bounding box of this graph tile.
 AABB2<PointLL> GraphTile::BoundingBox() const {
-
-  // figure the largest id for this level
-  auto level = TileHierarchy::levels().find(header_->graphid().level());
-  if (level == TileHierarchy::levels().end() &&
-      header_->graphid().level() == ((TileHierarchy::levels().rbegin())->second.level + 1)) {
-    level = TileHierarchy::levels().begin();
-  }
-
-  auto tiles = level->second.tiles;
+  const auto& tiles = header_->graphid().level() == TileHierarchy::GetTransitLevel().level
+                          ? TileHierarchy::GetTransitLevel().tiles
+                          : TileHierarchy::levels()[header_->graphid().level()].tiles;
   return tiles.TileBounds(header_->graphid().tileid());
 }
 

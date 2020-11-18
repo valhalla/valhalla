@@ -249,8 +249,8 @@ public:
   fake_tile(const std::string& plyenc_shape) {
     auto s = valhalla::midgard::decode<std::vector<PointLL>>(plyenc_shape);
     auto e = valhalla::midgard::encode7(s);
-    auto l = TileHierarchy::levels().rbegin()->first;
-    auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
+    auto l = TileHierarchy::levels().back().level;
+    auto tiles = TileHierarchy::levels().back().tiles;
     auto id = GraphId(tiles.TileId(s.front()), l, 0);
     auto o_id = GraphId(tiles.TileId(s.front()), l, tiles.TileId(s.back()));
     o_id.set_id(o_id == id);

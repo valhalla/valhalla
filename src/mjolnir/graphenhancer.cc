@@ -1465,8 +1465,8 @@ void enhance(const boost::property_tree::ptree& pt,
 
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0};
-  const auto& local_level = TileHierarchy::levels().rbegin()->second.level;
-  const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
+  const auto& local_level = TileHierarchy::levels().back().level;
+  const auto& tiles = TileHierarchy::levels().back().tiles;
 
   // Iterate through the tiles in the queue and perform enhancements
   while (true) {
@@ -1882,7 +1882,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   // Create a randomized queue of tiles to work from
   std::deque<GraphId> tempqueue;
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
-  auto local_level = TileHierarchy::levels().rbegin()->second.level;
+  auto local_level = TileHierarchy::levels().back().level;
   GraphReader reader(hierarchy_properties);
   auto local_tiles = reader.GetTileSet(local_level);
   for (const auto& tile_id : local_tiles) {

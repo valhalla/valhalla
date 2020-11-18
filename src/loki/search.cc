@@ -90,7 +90,7 @@ PathLocation::SideOfStreet flip_side(const PathLocation::SideOfStreet side) {
 }
 
 std::function<std::tuple<int32_t, unsigned short, float>()> make_binner(const PointLL& p) {
-  const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
+  const auto& tiles = TileHierarchy::levels().back().tiles;
   return tiles.ClosestFirst(p);
 }
 
@@ -214,7 +214,7 @@ struct projector_wrapper {
       }
 
       // grab the tile the lat, lon is in
-      auto tile_id = GraphId(tile_index, TileHierarchy::levels().rbegin()->first, 0);
+      auto tile_id = GraphId(tile_index, TileHierarchy::levels().back().level, 0);
       reader.GetGraphTile(tile_id, cur_tile);
     } while (!cur_tile);
   }

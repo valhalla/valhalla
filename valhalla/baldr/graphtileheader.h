@@ -6,6 +6,7 @@
 #include <string>
 
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
 
@@ -163,7 +164,9 @@ public:
    * @return Returns the base lat,lon of the tile (degrees).
    */
   midgard::PointLL base_ll() const {
-    return midgard::PointLL(base_ll_.first, base_ll_.second);
+    GraphId id(graphid_);
+    return TileHierarchy::levels()[id.level()].tiles.Base(id.tileid());
+    // return midgard::PointLL(base_ll_.first, base_ll_.second);
   }
 
   /**
@@ -594,6 +597,7 @@ protected:
   uint64_t has_ext_directededge_ : 1; // Does this tile have extended directed edge data
 
   // Base lon, lat of the tile
+  // TODO: don't store this, or store it as an integer
   std::pair<float, float> base_ll_;
 
   // baldr version.

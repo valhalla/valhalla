@@ -63,8 +63,8 @@ public:
 
     highway_cutoff_rc_ = RoadClass::kPrimary;
     for (auto& level : TileHierarchy::levels()) {
-      if (level.second.name == "highway") {
-        highway_cutoff_rc_ = level.second.importance;
+      if (level.name == "highway") {
+        highway_cutoff_rc_ = level.importance;
       }
     }
 

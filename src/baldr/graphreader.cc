@@ -606,7 +606,7 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
   };
 
   // No shortcuts on the local level or transit level.
-  if (id.level() >= TileHierarchy::levels().rbegin()->second.level) {
+  if (id.level() >= TileHierarchy::levels().back().level) {
     return {};
   }
 
@@ -799,7 +799,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
   } // or individually on disk
   else if (!tile_dir_.empty()) {
     // for each level
-    for (uint8_t level = 0; level <= TileHierarchy::levels().rbegin()->first + 1; ++level) {
+    for (uint8_t level = 0; level <= TileHierarchy::GetTransitLevel().level; ++level) {
       // crack open this level of tiles directory
       filesystem::path root_dir(tile_dir_ + filesystem::path::preferred_separator +
                                 std::to_string(level) + filesystem::path::preferred_separator);

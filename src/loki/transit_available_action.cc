@@ -23,14 +23,14 @@ std::string loki_worker_t::transit_available(Api& request) {
   auto locations = PathLocation::fromPBF(request.options().locations());
   std::unordered_set<baldr::Location> found;
   try {
-    const auto& tiles =
-        TileHierarchy::levels().find(TileHierarchy::levels().rbegin()->first)->second.tiles;
+    const auto& tiles = TileHierarchy::levels().back().tiles;
     for (const auto& location : locations) {
       // Get a list of tiles required within the radius of the projected point
       const auto& ll = location.latlng_;
       DistanceApproximator<PointLL> approximator(ll);
       double latdeg = double(location.radius_) / kMetersPerDegreeLat;
-      double lngdeg = double(location.radius_) / DistanceApproximator<PointLL>::MetersPerLngDegree(ll.lat());
+      double lngdeg =
+          double(location.radius_) / DistanceApproximator<PointLL>::MetersPerLngDegree(ll.lat());
       AABB2<PointLL> bbox(Point2d(ll.lng() - lngdeg, ll.lat() - latdeg),
                           Point2d(ll.lng() + lngdeg, ll.lat() + latdeg));
       std::vector<int32_t> tilelist = tiles.TileList(bbox);

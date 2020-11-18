@@ -479,11 +479,11 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
     // Also bail if nothing inside
     transit_dir->push_back(filesystem::path::preferred_separator);
     GraphReader reader(hierarchy_properties);
-    auto local_level = TileHierarchy::levels().rbegin()->first;
-    if (filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) +
+    auto transit_level = TileHierarchy::GetTransitLevel().level;
+    if (filesystem::is_directory(*transit_dir + std::to_string(transit_level) +
                                  filesystem::path::preferred_separator)) {
       filesystem::recursive_directory_iterator transit_file_itr(
-          *transit_dir + std::to_string(local_level + 1) + filesystem::path::preferred_separator),
+          *transit_dir + std::to_string(transit_level) + filesystem::path::preferred_separator),
           end_file_itr;
       for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
         if (filesystem::is_regular_file(transit_file_itr->path()) &&

@@ -86,7 +86,7 @@ std::vector<OSMConnectionEdge> project(const GraphTile& local_tile,
                                        const std::vector<OSMNode>& osm_bss) {
 
   std::vector<OSMConnectionEdge> res;
-  auto local_level = TileHierarchy::levels().rbegin()->first;
+  auto local_level = TileHierarchy::levels().back().level;
   // In this loop, we try to find the way on which to project the bss node by iterating all nodes in
   // its corresponding tile... Not a good idea in term of performance... any better idea???
   for (const auto& bss : osm_bss) {
@@ -221,7 +221,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
                                std::mutex& lock,
                                std::vector<OSMConnectionEdge> new_connections) {
   // GraphTileBuilder tilebuilder_local(reader.tile_dir(), tile.header()->graphid(), true);
-  auto local_level = TileHierarchy::levels().rbegin()->first;
+  auto local_level = TileHierarchy::levels().back().level;
 
   auto scoped_finally = make_finally([&tilebuilder_local, &tile, &lock]() {
     LOG_INFO("Storing local tile data with bss nodes, tile id: " +
@@ -473,7 +473,7 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt, const std::string&
   bss_by_tile_t bss_by_tile;
 
   GraphReader reader(pt.get_child("mjolnir"));
-  auto local_level = TileHierarchy::levels().rbegin()->first;
+  auto local_level = TileHierarchy::levels().back().level;
   // Group the nodes by their tiles. In the next step, we will work on each tile only once
   for (const auto& node : osm_nodes) {
     auto latlng = node.latlng();
