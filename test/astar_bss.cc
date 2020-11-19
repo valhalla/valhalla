@@ -104,7 +104,7 @@ using BssManeuverType = valhalla::DirectionsLeg_Maneuver_BssManeuverType;
 void test(const std::string& request,
           const std::vector<TravelMode>& expected_travel_modes,
           const std::vector<std::string>& expected_route,
-          // We mark only the maneuvers that are RentBikbe and ReturnBike
+          // We mark only the maneuvers that are RentBike and ReturnBike
           const std::map<size_t, BssManeuverType>& expected_bss_maneuver) {
 
   auto conf = get_conf("paris_bss_tiles");
@@ -113,30 +113,27 @@ void test(const std::string& request,
   const auto& legs = response.trip().routes(0).legs();
   const auto& directions = response.directions().routes(0).legs();
 
-  if (legs.size() != 1) {
-    throw std::logic_error("Should have 1 leg");
-  }
+  EXPECT_EQ(legs.size(), 1) << "Should have 1 leg";
+
   // We going to count how many times the travel_mode has been changed
   std::vector<valhalla::DirectionsLeg_TravelMode> travel_modes;
 
   std::vector<std::string> route;
 
   for (const auto& d : directions) {
+    std::cout << d.shape() << std::endl;
 
     size_t idx = -1;
     for (const auto& m : d.maneuver()) {
       auto it = expected_bss_maneuver.find(++idx);
       if (it == expected_bss_maneuver.end()) {
-        if (m.bss_maneuver_type() !=
-            BssManeuverType::DirectionsLeg_Maneuver_BssManeuverType_kNoneAction) {
-          throw std::logic_error(std::string("BSS maneuver type at ") + std::to_string(idx) +
-                                 " is incorrect");
-        }
+        EXPECT_EQ(m.bss_maneuver_type(),
+                  BssManeuverType::DirectionsLeg_Maneuver_BssManeuverType_kNoneAction)
+            << "BSS maneuver type at " + std::to_string(idx) + " is incorrect";
+
       } else {
-        if (m.bss_maneuver_type() != it->second) {
-          throw std::logic_error(std::string("BSS maneuver type at ") + std::to_string(idx) +
-                                 " is incorrect");
-        }
+        EXPECT_EQ(m.bss_maneuver_type(), it->second)
+            << "BSS maneuver type at " + std::to_string(idx) + " is incorrect";
       }
       travel_modes.push_back(m.travel_mode());
       std::string name;
@@ -153,16 +150,13 @@ void test(const std::string& request,
   }
 
   travel_modes.erase(std::unique(travel_modes.begin(), travel_modes.end()), travel_modes.end());
-  if (!std::equal(travel_modes.begin(), travel_modes.end(), expected_travel_modes.begin())) {
-    std::copy(travel_modes.begin(), travel_modes.end(), std::ostream_iterator<int>(std::cout, ", "));
-    throw std::logic_error(std::string("Should have ") +
-                           std::to_string(expected_travel_modes.size()) + " travel_modes");
-  }
+  std::copy(travel_modes.begin(), travel_modes.end(), std::ostream_iterator<int>(std::cout, ", "));
+  EXPECT_TRUE(std::equal(travel_modes.begin(), travel_modes.end(), expected_travel_modes.begin()))
+      << "Should have " + std::to_string(expected_travel_modes.size()) + " travel_modes";
 
-  if (!std::equal(route.begin(), route.end(), expected_route.begin())) {
-    std::copy(route.begin(), route.end(), std::ostream_iterator<std::string>(std::cout, ", "));
-    throw std::logic_error("The route is incorrect");
-  }
+  std::copy(route.begin(), route.end(), std::ostream_iterator<std::string>(std::cout, ", "));
+  EXPECT_TRUE(std::equal(route.begin(), route.end(), expected_route.begin()))
+      << "The route is incorrect";
 }
 
 /*

@@ -13,7 +13,7 @@ namespace {
 
 #define ASSERT_POINTLL_EQUAL(a, b)                                                                   \
   do {                                                                                               \
-    constexpr double kPrecision = 1e-7;                                                             \
+    constexpr double kPrecision = 1e-7;                                                              \
     EXPECT_NEAR(a.first, b.first, kPrecision);                                                       \
     EXPECT_NEAR(a.second, b.second, kPrecision);                                                     \
   } while (0)
@@ -38,13 +38,13 @@ TEST(PointLL, test_constructor) {
 void test_along(const std::vector<PointLL>& l, double d, double a) {
   auto r = PointLL::HeadingAlongPolyline(l, d);
   EXPECT_NEAR(r, a, 1.) << "Invalid polyline begin heading was " + std::to_string(r) +
-                                " but should be " + std::to_string(a);
+                               " but should be " + std::to_string(a);
 }
 
 void test_end(const std::vector<PointLL>& l, double d, double a) {
   auto r = PointLL::HeadingAtEndOfPolyline(l, d);
   EXPECT_NEAR(r, a, 1.) << "Invalid polyline end heading was " + std::to_string(r) +
-                                " but should be " + std::to_string(a);
+                               " but should be " + std::to_string(a);
 }
 
 TEST(PointLL, TestHeadingAlongPolyline) {
@@ -223,13 +223,12 @@ void TryClosestPointNoDistance(const std::vector<PointLL>& pts,
 TEST(PointLL, TestClosestPoint) {
   // Test no points
   std::vector<PointLL> pts0;
-  TryClosestPoint(pts0, PointLL(-76.299179, 40.042572), PointLL(),
-                  std::numeric_limits<double>::max(), -1, -1);
+  TryClosestPoint(pts0, PointLL(-76.299179, 40.042572), PointLL(), std::numeric_limits<double>::max(),
+                  -1, -1);
 
   // Test one point - should fail then update code to do sqrt
   std::vector<PointLL> pts1 = {{-76.299171, 40.042519}};
-  TryClosestPoint(pts1, PointLL(-76.299179, 40.042572), PointLL(-76.299171, 40.042519), 5.933, 0,
-                  0);
+  TryClosestPoint(pts1, PointLL(-76.299179, 40.042572), PointLL(-76.299171, 40.042519), 5.933, 0, 0);
 
   // Construct a simple polyline
   std::vector<PointLL> pts = {{-76.299171, 40.042519},
@@ -239,35 +238,30 @@ TEST(PointLL, TestClosestPoint) {
                               {-76.296837, 40.042099}};
 
   // Closest to the 1st point
-  TryClosestPoint(pts, PointLL(-76.299189, 40.042572), PointLL(-76.299171, 40.042519), 5.933, 0,
-                  4);
+  TryClosestPoint(pts, PointLL(-76.299189, 40.042572), PointLL(-76.299171, 40.042519), 5.933, 0, 4);
 
   // Closest along the 2nd segment
-  TryClosestPoint(pts, PointLL(-76.298477, 40.042645), PointLL(-76.298470, 40.042595), 5.592, 1,
-                  2);
+  TryClosestPoint(pts, PointLL(-76.298477, 40.042645), PointLL(-76.298470, 40.042595), 5.592, 1, 2);
 
   // Closest to third shape point
   TryClosestPoint(pts, PointLL(-76.297806, 40.042671), PointLL(-76.297806, 40.042671), 0., 2, 2);
 
   // Closest along the 3rd segment
-  TryClosestPoint(pts, PointLL(-76.297752, 40.042183), PointLL(-76.297722, 40.042187), 2.592, 2,
-                  1);
+  TryClosestPoint(pts, PointLL(-76.297752, 40.042183), PointLL(-76.297722, 40.042187), 2.592, 2, 1);
 
   // Closest along the 3rd segment with begin_index = 2
-  TryClosestPoint(pts, PointLL(-76.297752, 40.042183), PointLL(-76.297722, 40.042187), 2.592, 2,
-                  1, 2);
+  TryClosestPoint(pts, PointLL(-76.297752, 40.042183), PointLL(-76.297722, 40.042187), 2.592, 2, 1,
+                  2);
 
   // Closest along the 4th segment
-  TryClosestPoint(pts, PointLL(-76.297020, 40.042133), PointLL(-76.297012, 40.042084), 5.491, 3,
-                  0);
+  TryClosestPoint(pts, PointLL(-76.297020, 40.042133), PointLL(-76.297012, 40.042084), 5.491, 3, 0);
 
   // Closest to the last point
-  TryClosestPoint(pts, PointLL(-76.296700, 40.042114), PointLL(-76.296837, 40.042099), 11.78, 4,
-                  0);
+  TryClosestPoint(pts, PointLL(-76.296700, 40.042114), PointLL(-76.296837, 40.042099), 11.78, 4, 0);
 
   // Closest to the last point with begin_index = 4 - therefore, special case of one point
-  TryClosestPoint(pts, PointLL(-76.296700, 40.042114), PointLL(-76.296837, 40.042099), 11.78, 4,
-                  0, 4);
+  TryClosestPoint(pts, PointLL(-76.296700, 40.042114), PointLL(-76.296837, 40.042099), 11.78, 4, 0,
+                  4);
 
   // Invalid begin_index of 5
   TryClosestPoint(pts, PointLL(-76.299179, 40.042572), PointLL(), std::numeric_limits<double>::max(),
@@ -284,11 +278,7 @@ void TryWithinConvexPolygon(const std::vector<PointLL>& pts, const PointLL& p, c
 
 TEST(PointLL, TestWithinConvexPolygon) {
   // Construct a convex polygon
-  std::vector<PointLL> pts = {{2.0, 2.0},
-                              {0.0, 4.0},
-                              {-10.0, 0.0},
-                              {0.0, -4.0},
-                              {2.0, -2.0}};
+  std::vector<PointLL> pts = {{2.0, 2.0}, {0.0, 4.0}, {-10.0, 0.0}, {0.0, -4.0}, {2.0, -2.0}};
 
   // Inside
   TryWithinConvexPolygon(pts, PointLL(0.0, 0.0), true);
@@ -357,7 +347,7 @@ TEST(PointLL, TestDistance) {
 
   d = PointLL(45.0, 45.0).Distance({45.0, 40.0});
   EXPECT_NEAR(d, 556599.5, 1.0) << "Distance d = " + std::to_string(d) +
-                                         " between points should be approx 556599.5 meters";
+                                       " between points should be approx 556599.5 meters";
 }
 
 } // namespace

@@ -372,7 +372,8 @@ Tiles<coord_t>::Intersect(const container_t& linestring) const {
   // small interval so as to approximate the arc with piecewise linear segments
   container_t resampled;
   auto max_meters =
-      std::max(1., subdivision_size_ * .25 * DistanceApproximator<coord_t>::MetersPerLngDegree(linestring.front().second));
+      std::max(1., subdivision_size_ * .25 *
+                       DistanceApproximator<coord_t>::MetersPerLngDegree(linestring.front().second));
   if (coord_t::IsSpherical() && Polyline2<coord_t>::Length(linestring) > max_meters) {
     resampled = resample_spherical_polyline(linestring, max_meters, true);
   }
