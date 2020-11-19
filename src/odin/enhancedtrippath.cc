@@ -1472,6 +1472,23 @@ bool EnhancedTripLeg_Node::HasForwardTraversableSignificantRoadClassXEdge(
   return false;
 }
 
+bool EnhancedTripLeg_Node::HasForwardTraversableUseXEdge(uint32_t from_heading,
+                                                         const TripLeg_TravelMode travel_mode,
+                                                         const TripLeg_Use use) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    // if the intersecting edge is forward
+    // and is traversable based on mode
+    // and use matches specified use
+    if (is_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading())) &&
+        xedge->IsTraversableOutbound(travel_mode) && (xedge->use() == use)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool EnhancedTripLeg_Node::HasSimilarStraightSignificantRoadClassXEdge(
     uint32_t path_turn_degree,
     uint32_t from_heading,

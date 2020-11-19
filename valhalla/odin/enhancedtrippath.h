@@ -656,6 +656,10 @@ public:
                                                       const TripLeg_TravelMode travel_mode,
                                                       RoadClass path_road_class);
 
+  bool HasForwardTraversableUseXEdge(uint32_t from_heading,
+                                     const TripLeg_TravelMode travel_mode,
+                                     const TripLeg_Use use);
+
   bool HasSimilarStraightSignificantRoadClassXEdge(uint32_t path_turn_degree,
                                                    uint32_t from_heading,
                                                    const TripLeg_TravelMode travel_mode,

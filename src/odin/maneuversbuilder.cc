@@ -1496,7 +1496,9 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
                                                                      prev_edge->travel_mode(),
                                                                      prev_edge->road_class())) {
           // Handle highways
-          if (curr_edge->IsHighway()) {
+          if (curr_edge->IsHighway() ||
+              node->HasForwardTraversableUseXEdge(prev_edge->end_heading(), prev_edge->travel_mode(),
+                                                  TripLeg_Use_kRampUse)) {
             // Only certain highways should change from continue
             if (node->HasSimilarStraightNonRampOrSameNameRampXEdge(maneuver.turn_degree(),
                                                                    prev_edge->end_heading(),
@@ -1515,7 +1517,9 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
                                                                      prev_edge->travel_mode(),
                                                                      prev_edge->road_class())) {
           // Handle highways
-          if (curr_edge->IsHighway()) {
+          if (curr_edge->IsHighway() ||
+              node->HasForwardTraversableUseXEdge(prev_edge->end_heading(), prev_edge->travel_mode(),
+                                                  TripLeg_Use_kRampUse)) {
             // Only certain highways should change from continue
             if (node->HasSimilarStraightNonRampOrSameNameRampXEdge(maneuver.turn_degree(),
                                                                    prev_edge->end_heading(),
