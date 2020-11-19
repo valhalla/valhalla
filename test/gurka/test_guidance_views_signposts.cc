@@ -28,7 +28,7 @@ protected:
           {{"highway", "motorway"},
            {"oneway", "yes"},
            {"name", "National Route 1"},
-           {"guidance_view:signboard:base", "SI_53271604:A1"}}},
+           {"guidance_view:signboard:base", "SI_53271604;A1"}}},
          {"CX", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "National Route 1"}}},
          {"CD", {{"highway", "motorway_link"}, {"oneway", "yes"}, {"name", "xyz ramp"}}},
          {"DF", {{"highway", "motorway_link"}, {"oneway", "yes"}, {"name", "xyz ramp"}}},
@@ -50,6 +50,6 @@ TEST_F(GuidanceViews_Signboards, CheckGuidanceViews) {
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views_size(), 1);
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views(0).type(), "signboard");
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views(0).base_id(),
-            "SI_53271604");
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views(0).data_id(), "");
+            "SI_53271604A1");
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views(0).data_id(), "1001");
 }
