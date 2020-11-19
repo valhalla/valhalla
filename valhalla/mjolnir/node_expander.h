@@ -102,7 +102,9 @@ struct Edge {
         (way.name_index_ != 0 || way.name_en_index_ != 0 || way.alt_name_index_ != 0 ||
          way.official_name_index_ != 0 || way.ref_index_ != 0 || way.int_ref_index_ != 0);
 
-    // if this is data has turn_channels set then we need to use the flag.
+    // If this data has turn_channels set and we are not inferring turn channels then we need to
+    // use the flag. Otherwise the turn_channel is set in the reclassify links.  Also, an edge can't
+    // be a ramp and a turn channel.
     if (!infer_turn_channels && way.turn_channel() && !way.link())
       e.attributes.turn_channel = true;
     else
