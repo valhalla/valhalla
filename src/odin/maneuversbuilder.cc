@@ -1495,9 +1495,15 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
                                                                      prev_edge->end_heading(),
                                                                      prev_edge->travel_mode(),
                                                                      prev_edge->road_class())) {
+          // Handle highways
           if (curr_edge->IsHighway()) {
-            maneuver.set_type(DirectionsLeg_Maneuver_Type_kStayRight);
-            LOG_TRACE("ManeuverType=STAY_RIGHT");
+            // Only certain highways should change from continue
+            if (node->HasSimilarStraightNonRampOrSameNameRampXEdge(maneuver.turn_degree(),
+                                                                   prev_edge->end_heading(),
+                                                                   prev_edge->travel_mode())) {
+              maneuver.set_type(DirectionsLeg_Maneuver_Type_kStayRight);
+              LOG_TRACE("ManeuverType=STAY_RIGHT");
+            }
           } else {
             maneuver.set_type(DirectionsLeg_Maneuver_Type_kSlightRight);
             LOG_TRACE("ManeuverType=SLIGHT_RIGHT");
@@ -1508,9 +1514,15 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
                                                                      prev_edge->end_heading(),
                                                                      prev_edge->travel_mode(),
                                                                      prev_edge->road_class())) {
+          // Handle highways
           if (curr_edge->IsHighway()) {
-            maneuver.set_type(DirectionsLeg_Maneuver_Type_kStayLeft);
-            LOG_TRACE("ManeuverType=STAY_LEFT");
+            // Only certain highways should change from continue
+            if (node->HasSimilarStraightNonRampOrSameNameRampXEdge(maneuver.turn_degree(),
+                                                                   prev_edge->end_heading(),
+                                                                   prev_edge->travel_mode())) {
+              maneuver.set_type(DirectionsLeg_Maneuver_Type_kStayLeft);
+              LOG_TRACE("ManeuverType=STAY_LEFT");
+            }
           } else {
             maneuver.set_type(DirectionsLeg_Maneuver_Type_kSlightLeft);
             LOG_TRACE("ManeuverType=SLIGHT_LEFT");

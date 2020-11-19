@@ -20,6 +20,7 @@ using namespace valhalla::baldr;
 namespace {
 constexpr float kShortRemainingDistanceThreshold = 0.402f; // Kilometers (~quarter mile)
 constexpr int kSignificantRoadClassThreshold = 2;          // Max lower road class delta
+constexpr int kSimilarStraightThreshold = 30;              // Max similar straight turn degree delta
 
 constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
 constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
@@ -1481,12 +1482,36 @@ bool EnhancedTripLeg_Node::HasSimilarStraightSignificantRoadClassXEdge(
     auto xedge = GetIntersectingEdge(i);
     uint32_t xedge_turn_degree = GetTurnDegree(from_heading, xedge->begin_heading());
     int path_xedge_turn_degree_delta = get_turn_degree_delta(path_turn_degree, xedge_turn_degree);
-    // if the intersecting edge is
+    // if the intersecting edge is straight
     // and is traversable based on mode
     // and is a significant road class as compared to the path road class
     if (is_relative_straight(path_turn_degree) && is_relative_straight(xedge_turn_degree) &&
-        xedge->IsTraversableOutbound(travel_mode) && (path_xedge_turn_degree_delta <= 30) &&
+        xedge->IsTraversableOutbound(travel_mode) &&
+        (path_xedge_turn_degree_delta <= kSimilarStraightThreshold) &&
         ((xedge->road_class() - path_road_class) <= kSignificantRoadClassThreshold)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EnhancedTripLeg_Node::HasSimilarStraightNonRampOrSameNameRampXEdge(
+    uint32_t path_turn_degree,
+    uint32_t from_heading,
+    const TripLeg_TravelMode travel_mode) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    auto xedge = GetIntersectingEdge(i);
+    uint32_t xedge_turn_degree = GetTurnDegree(from_heading, xedge->begin_heading());
+    int path_xedge_turn_degree_delta = get_turn_degree_delta(path_turn_degree, xedge_turn_degree);
+    // if the intersecting edge is straight
+    // and is traversable based on mode
+    // and is not a ramp OR ramp with same previous edge name
+    if (is_relative_straight(path_turn_degree) && is_relative_straight(xedge_turn_degree) &&
+        xedge->IsTraversableOutbound(travel_mode) &&
+        (path_xedge_turn_degree_delta <= kSimilarStraightThreshold) &&
+        ((xedge->use() != TripLeg_Use_kRampUse) ||
+         ((xedge->use() == TripLeg_Use_kRampUse) && xedge->prev_name_consistency()))) {
       return true;
     }
   }
