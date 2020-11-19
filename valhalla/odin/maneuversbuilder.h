@@ -228,19 +228,12 @@ protected:
   void ProcessTurnLanes(std::list<Maneuver>& maneuvers);
 
   /**
-   * Process the guidance view junctions at the maneuver point.
+   * Process the guidance views at the maneuver point.
    * Match the base to the overlay to form the "<prefix>_<base_suffix>_<overlay_suffix>".
    *
    * @param maneuvers The list of maneuvers to process.
    */
-  void ProcessGuidanceViewJunctions(std::list<Maneuver>& maneuvers);
-
-  /**
-   * Process the guidance view signboards at the maneuver point.
-   *
-   * @param maneuvers The list of maneuvers to process.
-   */
-  void ProcessGuidanceViewSignboards(std::list<Maneuver>& maneuvers);
+  void ProcessGuidanceViews(std::list<Maneuver>& maneuvers);
 
   /**
    * Match the guidance view junctions for the specified base prefix and suffix.
