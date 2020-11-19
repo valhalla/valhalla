@@ -80,8 +80,7 @@ protected:
 gurka::map InstructionsKeepToward::map = {};
 
 ///////////////////////////////////////////////////////////////////////////////
-// Keep right toward
-// "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+// Keep right
 TEST_F(InstructionsKeepToward, KeepRightToward) {
   auto result = gurka::route(map, "A", "F", "auto");
 
@@ -94,15 +93,14 @@ TEST_F(InstructionsKeepToward, KeepRightToward) {
   // Verify the keep right toward instructions
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, maneuver_index,
-                                            "Keep right toward B2/Baltimore/Washington.",
-                                            "Keep right toward B2.",
-                                            "Keep right toward B2, Baltimore.",
+                                            "Keep right to take B2 toward Baltimore/Washington.",
+                                            "Keep right to take B2.",
+                                            "Keep right to take B2 toward Baltimore, Washington.",
                                             "Continue for 4 kilometers.");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Keep left toward
-// "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+// Keep left
 TEST_F(InstructionsKeepToward, KeepLeftToward) {
   auto result = gurka::route(map, "A", "D", "auto");
 
@@ -115,15 +113,14 @@ TEST_F(InstructionsKeepToward, KeepLeftToward) {
   // Verify the keep left toward instructions
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, maneuver_index,
-                                            "Keep left toward B1/Harrisburg/Lancaster.",
-                                            "Keep left toward B1.",
-                                            "Keep left toward B1, Harrisburg.",
+                                            "Keep left to take B1 toward Harrisburg/Lancaster.",
+                                            "Keep left to take B1.",
+                                            "Keep left to take B1 toward Harrisburg, Lancaster.",
                                             "Continue for 4 kilometers.");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Keep straight toward
-// "4": "Keep <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+// Keep straight
 TEST_F(InstructionsKeepToward, KeepStraightToward) {
   auto result = gurka::route(map, "A", "H", "auto");
 
@@ -136,14 +133,14 @@ TEST_F(InstructionsKeepToward, KeepStraightToward) {
   // Verify the keep straight toward instructions
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, maneuver_index,
-                                            "Keep straight toward B3/New York/Philadelphia.",
-                                            "Keep straight toward B3.",
-                                            "Keep straight toward B3, New York.",
+                                            "Keep straight to take B3 toward New York/Philadelphia.",
+                                            "Keep straight to take B3.",
+                                            "Keep straight to take B3 toward New York, Philadelphia.",
                                             "Continue for 4 kilometers.");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Keep right to take exit number toward
+// Keep right to take exit number
 // "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
 TEST_F(InstructionsKeepToward, KeepRightExitNumberToward) {
   auto result = gurka::route(map, "H", "M", "auto");
@@ -156,14 +153,14 @@ TEST_F(InstructionsKeepToward, KeepRightExitNumberToward) {
 
   // Verify the keep right to take exit number toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Keep right to take exit 22C toward C2/Baltimore/Washington.",
-      "Keep right to take exit 22C.", "Keep right to take exit 22C toward C2, Baltimore.",
+      result, maneuver_index, "Keep right to take exit 22C onto C2 toward Baltimore/Washington.",
+      "Keep right to take exit 22C.",
+      "Keep right to take exit 22C onto C2 toward Baltimore, Washington.",
       "Continue for 4 kilometers.");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Keep left to take exit number toward
-// "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+// Keep left to take exit number
 TEST_F(InstructionsKeepToward, KeepLeftExitNumberToward) {
   auto result = gurka::route(map, "H", "K", "auto");
 
@@ -175,14 +172,14 @@ TEST_F(InstructionsKeepToward, KeepLeftExitNumberToward) {
 
   // Verify the keep left to take exit number toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Keep left to take exit 22A toward C1/Harrisburg/Lancaster.",
-      "Keep left to take exit 22A.", "Keep left to take exit 22A toward C1, Harrisburg.",
+      result, maneuver_index, "Keep left to take exit 22A onto C1 toward Harrisburg/Lancaster.",
+      "Keep left to take exit 22A.",
+      "Keep left to take exit 22A onto C1 toward Harrisburg, Lancaster.",
       "Continue for 4 kilometers.");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Keep straight to take exit number toward
-// "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
+// Keep straight to take exit number
 TEST_F(InstructionsKeepToward, KeepStraightExitNumberToward) {
   auto result = gurka::route(map, "H", "O", "auto");
 
@@ -194,7 +191,8 @@ TEST_F(InstructionsKeepToward, KeepStraightExitNumberToward) {
 
   // Verify the keep straight to take exit number toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Keep straight to take exit 22B toward C3/New York/Philadelphia.",
-      "Keep straight to take exit 22B.", "Keep straight to take exit 22B toward C3, New York.",
+      result, maneuver_index, "Keep straight to take exit 22B onto C3 toward New York/Philadelphia.",
+      "Keep straight to take exit 22B.",
+      "Keep straight to take exit 22B onto C3 toward New York, Philadelphia.",
       "Continue for 4 kilometers.");
 }
