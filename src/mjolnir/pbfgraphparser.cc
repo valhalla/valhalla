@@ -756,8 +756,6 @@ public:
     };
     tag_handlers_["guidance_view:jct:base"] = [this]() {
       way_.set_fwd_jct_base_index(osmdata_.name_offset_map.index(tag_.second));
-      // std::cout << "********pbfgraphparser :: guidance_view:jct:base :: " << tag_.second <<
-      // std::endl;
     };
     tag_handlers_["guidance_view:jct:base:forward"] = [this]() {
       way_.set_fwd_jct_base_index(osmdata_.name_offset_map.index(tag_.second));
@@ -776,8 +774,6 @@ public:
     };
     tag_handlers_["guidance_view:signboard:base"] = [this]() {
       way_.set_fwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
-      /*std::cout << "********pbfgraphparser :: guidance_view:signboard:base :: " << tag_.second
-                << std::endl;*/
     };
     tag_handlers_["guidance_view:signboard:base:forward"] = [this]() {
       way_.set_fwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
