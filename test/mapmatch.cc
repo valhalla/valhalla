@@ -170,6 +170,8 @@ void compare_results(const valhalla::Api& expected, const valhalla::Api& result)
     for (int l = 0; l < route.legs_size(); ++l) {
       const auto& leg = route.legs(l);
 
+      std::cout << leg_answer->shape() << std::endl << leg.shape() << std::endl << std::endl;
+
       auto expected_seconds = leg.node().rbegin()->cost().elapsed_cost().seconds();
       auto answer_seconds = leg_answer->node().rbegin()->cost().elapsed_cost().seconds();
       ASSERT_NEAR(expected_seconds, answer_seconds, .1)
@@ -1230,7 +1232,7 @@ TEST(Mapmatch, test_loop_matching) {
 TEST(Mapmatch, test_intersection_matching) {
   std::vector<std::string> test_cases = {
       R"({"shape":[
-          {"lat": 52.098126, "lon": 5.129618, "type": "break", "node_snap_tolerance": 0},
+          {"lat": 52.098127, "lon": 5.129618, "type": "break", "node_snap_tolerance": 0},
           {"lat": 52.098128, "lon": 5.129725, "type": "break", "node_snap_tolerance": 0}],
           "costing":"auto","shape_match":"map_snap"})",
       R"({"shape":[
@@ -1241,7 +1243,7 @@ TEST(Mapmatch, test_intersection_matching) {
           "costing":"auto","shape_match":"map_snap"})",
       R"({"shape":[
           {"lat": 52.095164, "lon": 5.128560, "type": "break", "node_snap_tolerance": 5},
-          {"lat": 52.095294, "lon": 5.130906, "type": "break", "node_snap_tolerance": 5},
+          {"lat": 52.095295, "lon": 5.130906, "type": "break", "node_snap_tolerance": 5},
           {"lat": 52.094478, "lon": 5.130406, "type": "break", "node_snap_tolerance": 5}],
           "costing":"auto","shape_match":"map_snap"})"};
 
@@ -1426,9 +1428,9 @@ TEST(Mapmatch, openlr_parameter_true_osrm_api) {
   EXPECT_EQ(matches.size(), 1);
   const std::vector<std::string>& expected = {
       "CwOduyULYiKJAAAV//0iGw==",
-      "CwOdxCULYCKJAAAN//4iGw==",
+      "CwOdxCULYCKJAAAN//8iGw==",
       "CwOdySULXyKJAAAf//EiGw==",
-      "CwOd1yULVyKLAABV/9AiGw==",
+      "CwOd1yULWCKLAABV/84iGw==",
   };
   for (const auto& match : matches) {
     std::vector<std::string> references;
@@ -1448,9 +1450,9 @@ TEST(Mapmatch, openlr_parameter_true_native_api) {
   const auto& response = test::json_to_pt(actor.trace_route(request));
   const std::vector<std::string>& expected = {
       "CwOduyULYiKJAAAV//0iGw==",
-      "CwOdxCULYCKJAAAN//4iGw==",
+      "CwOdxCULYCKJAAAN//8iGw==",
       "CwOdySULXyKJAAAf//EiGw==",
-      "CwOd1yULVyKLAABV/9AiGw==",
+      "CwOd1yULWCKLAABV/84iGw==",
   };
   std::vector<std::string> references;
   for (const auto& reference : response.get_child("trip.linear_references"))
