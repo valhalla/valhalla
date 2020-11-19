@@ -52,7 +52,8 @@ namespace mjolnir {
  */
 std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) {
   std::vector<std::string> tokens;
-  boost::algorithm::split(tokens, tag_value, std::bind1st(std::equal_to<char>(), delim),
+  boost::algorithm::split(tokens, tag_value,
+                          std::bind(std::equal_to<char>(), delim, std::placeholders::_1),
                           boost::algorithm::token_compress_off);
   return tokens;
 }
@@ -266,8 +267,8 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   if (start_stage <= BuildStage::kParseNodes && BuildStage::kParseNodes <= end_stage) {
     // Read the OSM protocol buffer file. Callbacks for nodes
     // are defined within the PBFParser class
-    PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
-                               bss_nodes_bin, osm_data);
+    PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, way_nodes_bin, bss_nodes_bin,
+                               osm_data);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
     if (release_osmpbf_memory) {

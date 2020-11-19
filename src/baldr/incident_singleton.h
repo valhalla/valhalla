@@ -30,9 +30,11 @@ struct incident_singleton_t {
 protected:
   // parameter pack to share state between daemon thread and singleton instance
   struct state_t {
-    std::atomic<bool> lock_free;
-    std::condition_variable signal;
-    std::mutex mutex;
+    std::atomic<bool> initialized;  // whether or not the watcher thread has done 1 load of incidents
+    std::atomic<bool> lock_free;    // whether or not we can skip locking around cache operations
+    std::condition_variable signal; // how the watcher tells the main thread its done its first load
+    std::mutex mutex;               // for locking on cache operations
+    // the actual cache where tiles are stored
     std::unordered_map<uint64_t, std::shared_ptr<const valhalla::IncidentsTile>> cache;
   };
   // we use a shared_ptr to wrap the state between the watcher thread and the main threads singleton
@@ -46,23 +48,32 @@ protected:
   // daemon thread to watch for new incident data
   std::thread watcher;
 
+  // prototype for the watch function. we need this so unit tests can safely test all functionality
+  using watch_function_t = std::function<void(boost::property_tree::ptree,
+                                              std::unordered_set<valhalla::baldr::GraphId>,
+                                              std::shared_ptr<state_t>,
+                                              std::function<bool(size_t)>)>;
+
   /**
    * Singleton private constructor that static function uses to instantiate the singleton
-   * @param config   lets the daemon thread know where/how to look for incidents
-   * @param tileset  an mmapped graph tileset (ie static) allows incident loading to be lock-free
+   * @param config      lets the daemon thread know where/how to look for incidents
+   * @param tileset     an mmapped graph tileset (ie static) allows incident loading to be lock-free
+   * @param watch_func  the function the background thread will run to keep incident caches up to date
    */
   incident_singleton_t(const boost::property_tree::ptree& config,
-                       const std::unordered_set<valhalla::baldr::GraphId>& tileset)
-      : state{new state_t{}}, watcher(watch, config, tileset, state, interrupt()) {
+                       const std::unordered_set<valhalla::baldr::GraphId>& tileset,
+                       const watch_function_t& watch_func = incident_singleton_t::watch)
+      : state{new state_t{}}, watcher(watch_func, config, tileset, state, interrupt()) {
     // let the thread control its own lifetime
     watcher.detach();
     // check how long we should wait to find out if its initialized
     auto max_loading_latency =
         config.get<time_t>("incident_max_loading_latency", DEFAULT_MAX_LOADING_LATENCY);
+
     // see if the thread can start up and do a pass to load all the incidents
     std::unique_lock<std::mutex> lock(state->mutex);
     auto when = std::chrono::system_clock::now() + std::chrono::seconds(max_loading_latency);
-    if (state->signal.wait_until(lock, when) == std::cv_status::timeout) {
+    if (!state->signal.wait_until(lock, when, [&]() -> bool { return state->initialized.load(); })) {
       throw std::runtime_error("Unable to initialize incident watcher in the configured time period");
     }
   }
@@ -207,6 +218,7 @@ protected:
     // bail if there is nothing to do
     if (!changelog && inc_dir.string().empty()) {
       LOG_INFO("Incident watcher disabled");
+      state->initialized.store(true);
       state->signal.notify_one();
       return;
     }
@@ -311,6 +323,7 @@ protected:
       // signal to the constructor that we completed our first batch
       if (run_count++ == 0) {
         LOG_INFO("Incident watcher initialized");
+        state->initialized.store(true);
         state->signal.notify_one();
       }
 

@@ -105,8 +105,8 @@ std::string encode(const container_t& points, const int precision = 1e6) {
   // for each point
   for (const auto& p : points) {
     // shift the decimal point 5 places to the right and truncate
-    int lon = static_cast<int>(floor(static_cast<double>(p.first) * precision));
-    int lat = static_cast<int>(floor(static_cast<double>(p.second) * precision));
+    int lon = static_cast<int>(round(static_cast<double>(p.first) * precision));
+    int lat = static_cast<int>(round(static_cast<double>(p.second) * precision));
     // encode each coordinate, lat first for some reason
     serialize(lat - last_lat);
     serialize(lon - last_lon);
@@ -151,8 +151,8 @@ template <class container_t> std::string encode7(const container_t& points) {
   // for each point
   for (const auto& p : points) {
     // shift the decimal point x places to the right and truncate
-    int lon = static_cast<int>(floor(static_cast<double>(p.first) * 1e6));
-    int lat = static_cast<int>(floor(static_cast<double>(p.second) * 1e6));
+    int lon = static_cast<int>(round(static_cast<double>(p.first) * 1e6));
+    int lat = static_cast<int>(round(static_cast<double>(p.second) * 1e6));
     // encode each coordinate, lat first for some reason
     serialize(lat - last_lat);
     serialize(lon - last_lon);

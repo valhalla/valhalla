@@ -107,8 +107,8 @@ void CountryAccess(const std::string& config_file) {
                                  cr_to_file, osmdata);
 
   PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
-                             {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
-                             way_nodes_file, bss_nodes_file, osmdata);
+                             {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, way_nodes_file,
+                             bss_nodes_file, osmdata);
 
   std::map<valhalla::baldr::GraphId, size_t> tiles =
       GraphBuilder::BuildEdges(conf.get_child("mjolnir"), ways_file, way_nodes_file, nodes_file,

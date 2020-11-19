@@ -31,7 +31,7 @@ std::string get_testing_date_time() {
   }
 
   std::ostringstream iso_date_time;
-  const auto d = date::make_zoned(tz, tp);
+  const auto d = date::make_zoned(tz, tp, date::choose::latest);
   iso_date_time << date::format("%FT%R", d);
   return iso_date_time.str();
 }

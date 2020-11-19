@@ -10,7 +10,6 @@
 #include "meili/map_matcher_factory.h"
 
 #include "test.h"
-#include "utils.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

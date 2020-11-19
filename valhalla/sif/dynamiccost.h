@@ -220,7 +220,7 @@ public:
    * the time (seconds) to traverse the edge.
    * @param   edge    Pointer to a directed edge.
    * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
-   * @param   seconds Seconds of week for predicted speed or free and constrained speed lookup
+   * @param   seconds Seconds of week for historical speed lookup
    * @return  Returns the cost and time (seconds).
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
@@ -711,6 +711,11 @@ protected:
 
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
+
+  // Whether or not to do shortest (by length) routes
+  // Note: hierarchy pruning means some costings (auto, truck, etc) won't do absolute shortest
+  bool shortest_;
+
   bool ignore_restrictions_{false};
   bool ignore_oneways_{false};
   bool ignore_access_{false};
@@ -829,6 +834,9 @@ protected:
     if (!edge->link() && !edge->name_consistency(idx)) {
       c.cost += maneuver_penalty_;
     }
+
+    // shortest ignores any penalties in favor of path length
+    c.cost *= !shortest_;
     return c;
   }
 
@@ -879,6 +887,8 @@ protected:
     if (!edge->link() && !edge->name_consistency(idx)) {
       c.cost += maneuver_penalty_;
     }
+    // shortest ignores any penalties in favor of path length
+    c.cost *= !shortest_;
     return c;
   }
 

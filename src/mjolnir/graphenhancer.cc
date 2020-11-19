@@ -413,7 +413,8 @@ void UpdateTurnLanes(const OSMData& osmdata,
         // Should have a left.
         if (has_turn_left(outgoing_turn_type)) {
           // check for a right.
-          EnhanceRightLane(directededge, tilebuilder, reader, lock, enhanced_tls);
+          if (!directededge.start_restriction())
+            EnhanceRightLane(directededge, tilebuilder, reader, lock, enhanced_tls);
         }
       }
     }
@@ -438,7 +439,8 @@ void UpdateTurnLanes(const OSMData& osmdata,
           // Should have a right.  check for a left.
           if (has_turn_right(outgoing_turn_type)) {
             // check for a left
-            EnhanceLeftLane(directededge, tilebuilder, reader, lock, enhanced_tls);
+            if (!directededge.start_restriction())
+              EnhanceLeftLane(directededge, tilebuilder, reader, lock, enhanced_tls);
           }
         }
       }
@@ -462,7 +464,7 @@ void UpdateTurnLanes(const OSMData& osmdata,
           }
         }
 
-        if (bUpdated) {
+        if (bUpdated && !directededge.start_restriction()) {
           // check for a right.
           EnhanceRightLane(directededge, tilebuilder, reader, lock, enhanced_tls);
           // check for a left
@@ -490,7 +492,7 @@ void UpdateTurnLanes(const OSMData& osmdata,
           }
         }
 
-        if (bUpdated) {
+        if (bUpdated && !directededge.start_restriction()) {
           // check for a right.
           EnhanceRightLane(directededge, tilebuilder, reader, lock, enhanced_tls);
           // check for a left
@@ -666,7 +668,6 @@ bool IsNotThruEdge(GraphReader& reader,
 bool IsIntersectionInternal(const GraphTile* start_tile,
                             GraphReader& reader,
                             std::mutex& lock,
-                            const GraphId& startnode,
                             const NodeInfo& startnodeinfo,
                             const DirectedEdge& directededge,
                             const uint32_t idx) {
@@ -885,8 +886,7 @@ bool IsNextEdgeInternalImpl(const DirectedEdge directededge,
       if (!infer_internal_intersections)
         return diredge->internal();
       else
-        return IsIntersectionInternal(&end_node_tile, reader, lock, directededge.endnode(),
-                                      end_node_info, *diredge, i);
+        return IsIntersectionInternal(&end_node_tile, reader, lock, end_node_info, *diredge, i);
     }
   }
   return false;
@@ -1745,39 +1745,19 @@ void enhance(const boost::property_tree::ptree& pt,
           ProcessEdgeTransitions(j, directededge, edges, ntrans, nodeinfo, stats);
         }
 
-        // since the not thru flag is set, we are at either the prior or the next edge and we need to
-        // see if we have an internal edge.
-        if (directededge.not_thru() && directededge.turnlanes()) {
-
-          // get the outbound edges to the node
-          // find the edge that has the same wayid as the current DE
-          // if it is internal, then add turn lanes for this edge and not the internal one
-          // if not internal, then do not add turn lanes for this DE and leave them on the next one.
-          if (!IsNextEdgeInternal(directededge, tilebuilder, reader, lock,
-                                  infer_internal_intersections)) {
-            directededge.set_turnlanes(false);
-          }
-        }
-
-        // may have been temporarily set in the builder.
-        directededge.set_not_thru(false);
-
         // Test if an internal intersection edge. Must do this after setting
         // opposing edge index
         if (infer_internal_intersections &&
-            IsIntersectionInternal(&tilebuilder, reader, lock, startnode, nodeinfo, directededge,
-                                   j)) {
+            IsIntersectionInternal(&tilebuilder, reader, lock, nodeinfo, directededge, j)) {
           directededge.set_internal(true);
         }
 
         if (directededge.internal()) {
-          // never set turnlanes on an internal edge.
-          directededge.set_turnlanes(false);
           stats.internalcount++;
         }
 
         // Enhance and add turn lanes if not an internal edge.
-        if (!directededge.internal() && directededge.turnlanes()) {
+        if (directededge.turnlanes()) {
           // Update turn lanes.
           UpdateTurnLanes(osmdata, nodeinfo.edge_index() + j, directededge, tilebuilder, reader, lock,
                           turn_lanes);
@@ -1891,7 +1871,8 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   for (const auto& tile_id : local_tiles) {
     tempqueue.emplace_back(tile_id);
   }
-  std::random_shuffle(tempqueue.begin(), tempqueue.end());
+  std::random_device rd;
+  std::shuffle(tempqueue.begin(), tempqueue.end(), std::mt19937(rd()));
   std::queue<GraphId> tilequeue(tempqueue);
 
   // An atomic object we can use to do the synchronization
