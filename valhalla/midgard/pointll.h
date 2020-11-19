@@ -1,6 +1,5 @@
 #pragma once
 
-#include <boost/container_hash/hash.hpp>
 #include <cmath>
 #include <limits>
 #include <tuple>
@@ -272,11 +271,6 @@ using PointLL = GeoPoint<double>;
 
 namespace std {
 template <> struct hash<valhalla::midgard::PointLL> {
-  size_t operator()(const valhalla::midgard::PointLL& p) const {
-    size_t seed = 0;
-    boost::hash_combine(seed, p.first);
-    boost::hash_combine(seed, p.second);
-    return seed;
-  }
+  size_t operator()(const valhalla::midgard::PointLL& p) const;
 };
 } // namespace std

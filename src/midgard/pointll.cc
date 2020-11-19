@@ -1,4 +1,5 @@
 #include "midgard/pointll.h"
+#include "midgard/util.h"
 
 #include <list>
 
@@ -411,3 +412,12 @@ template bool GeoPoint<double>::WithinPolygon(const std::vector<GeoPoint<double>
 template bool GeoPoint<double>::WithinPolygon(const std::list<GeoPoint<double>>&) const;
 } // namespace midgard
 } // namespace valhalla
+
+namespace std {
+size_t hash<valhalla::midgard::PointLL>::operator()(const valhalla::midgard::PointLL& p) const {
+  size_t seed = 0;
+  valhalla::midgard::hash_combine(seed, p.first);
+  valhalla::midgard::hash_combine(seed, p.second);
+  return seed;
+}
+} // namespace std

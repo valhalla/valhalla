@@ -1,7 +1,7 @@
-#ifndef VALHALLA_MIDGARD_UTIL_H_
-#define VALHALLA_MIDGARD_UTIL_H_
+#pragma once
 
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <ostream>
@@ -658,7 +658,10 @@ inline uint16_t to_big_endian(uint16_t val) {
   return (val << 8) | (val >> 8);
 }
 
+template <class T> inline void hash_combine(std::size_t& seed, const T& v) {
+  std::hash<T> hasher;
+  seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
 } // namespace midgard
 } // namespace valhalla
-  //
-#endif // VALHALLA_MIDGARD_UTIL_H_
