@@ -1449,10 +1449,13 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
     case Turn::Type::kStraight: {
       maneuver.set_type(DirectionsLeg_Maneuver_Type_kContinue);
       LOG_TRACE("ManeuverType=CONTINUE");
+
       if (trip_path_) {
         auto man_begin_edge = trip_path_->GetCurrEdge(maneuver.begin_node_index());
         auto node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
-        //        bool prev_edge_has_names = (prev_edge ? !prev_edge->IsUnnamed() : false);
+        if (!node || !prev_edge || !curr_edge) {
+          break;
+        }
 
         ////////////////////////////////////////////////////////////////////
         // If the maneuver begin edge is a turn channel
@@ -1471,7 +1474,7 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
         }
         ////////////////////////////////////////////////////////////////////
         // If internal intersection at beginning of maneuver
-        else if (curr_edge && curr_edge->internal_intersection()) {
+        else if (curr_edge->internal_intersection()) {
           ////////////////////////////////////////////////////////////////////
           // Straight turn type but left relative direction
           if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft) ||
@@ -1491,7 +1494,6 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
           // Keep as short continue - no adjustment needed
           break;
         } else if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepRight) &&
-                   node &&
                    node->HasSimilarStraightSignificantRoadClassXEdge(maneuver.turn_degree(),
                                                                      prev_edge->end_heading(),
                                                                      prev_edge->travel_mode(),
@@ -1512,7 +1514,6 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
             LOG_TRACE("ManeuverType=SLIGHT_RIGHT");
           }
         } else if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepLeft) &&
-                   node &&
                    node->HasSimilarStraightSignificantRoadClassXEdge(maneuver.turn_degree(),
                                                                      prev_edge->end_heading(),
                                                                      prev_edge->travel_mode(),
@@ -1533,33 +1534,6 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
             LOG_TRACE("ManeuverType=SLIGHT_LEFT");
           }
         }
-
-        ////////////////////////////////////////////////////////////////////
-        // turn type is straight and the following...
-        // If maneuver is named
-        // and previous edge is named
-        // and no intersecting edge name consistency
-        // and node is not a motorway_junction
-        // and maneuver is not a highway with intersecting edges
-        // then it is a "becomes" maneuver
-        //        else if (maneuver.HasStreetNames() && prev_edge_has_names && node
-        //            && !node->HasIntersectingEdgeNameConsistency()
-        //            && !node->motorway_junction()
-        //            && !(man_begin_edge && man_begin_edge->IsHighway()
-        //                && node->HasIntersectingEdges())) {
-        //          // Verify that there are no common names with previous edge and
-        //          // current maneuver
-        //          std::unique_ptr<StreetNames> prev_edge_names =
-        //              StreetNamesFactory::Create(
-        //                  trip_path_->GetCountryCode(maneuver.begin_node_index()),
-        //                  prev_edge->GetNameList());
-        //          std::unique_ptr<StreetNames> common_base_names = prev_edge_names
-        //              ->FindCommonBaseNames(maneuver.street_names());
-        //          if (common_base_names->empty()) {
-        //            maneuver.set_type(DirectionsLeg_Maneuver_Type_kBecomes);
-        //            LOG_TRACE("ManeuverType=BECOMES");
-        //          }
-        //        }
       }
       break;
     }
@@ -1570,24 +1544,31 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       // TODO refactor with enhanced trip path clean up
       IntersectingEdgeCounts xedge_counts;
       auto node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
-      if (node && prev_edge) {
-        node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
-                                                       prev_edge->travel_mode(), xedge_counts);
-        if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) &&
-            !node->HasForwardTraversableSignificantRoadClassXEdge(prev_edge->end_heading(),
-                                                                  prev_edge->travel_mode(),
-                                                                  prev_edge->road_class()) &&
-            ((xedge_counts.right > 0) || ((xedge_counts.right == 0) && (xedge_counts.left == 0)))) {
-          // Even though there is a slight right along the path - a continue maneuver is appropriate
-          maneuver.set_type(DirectionsLeg_Maneuver_Type_kContinue);
-          LOG_TRACE("ManeuverType=CONTINUE (Turn::Type::kSlightRight)");
-        }
+      if (!node || !prev_edge || !curr_edge) {
+        break;
+      }
+      node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                     prev_edge->travel_mode(), xedge_counts);
+      if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) &&
+          !node->HasForwardTraversableSignificantRoadClassXEdge(prev_edge->end_heading(),
+                                                                prev_edge->travel_mode(),
+                                                                prev_edge->road_class()) &&
+          ((xedge_counts.right > 0) || ((xedge_counts.right == 0) && (xedge_counts.left == 0)))) {
+        // Even though there is a slight right along the path - a continue maneuver is appropriate
+        maneuver.set_type(DirectionsLeg_Maneuver_Type_kContinue);
+        LOG_TRACE("ManeuverType=CONTINUE (Turn::Type::kSlightRight)");
       }
       break;
     }
     case Turn::Type::kRight: {
+      maneuver.set_type(DirectionsLeg_Maneuver_Type_kRight);
+      LOG_TRACE("ManeuverType=RIGHT");
+
       auto node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
-      if (node && node->HasTraversableOutboundIntersectingEdge(maneuver.travel_mode())) {
+      if (!node || !prev_edge || !curr_edge) {
+        break;
+      }
+      if (node->HasTraversableOutboundIntersectingEdge(maneuver.travel_mode())) {
         auto right_most_turn_degree =
             node->GetRightMostTurnDegree(maneuver.turn_degree(), prev_edge->end_heading(),
                                          maneuver.travel_mode());
@@ -1609,8 +1590,6 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
           break;
         }
       }
-      maneuver.set_type(DirectionsLeg_Maneuver_Type_kRight);
-      LOG_TRACE("ManeuverType=RIGHT");
       break;
     }
     case Turn::Type::kSharpRight: {
@@ -1656,8 +1635,15 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       break;
     }
     case Turn::Type::kLeft: {
+      maneuver.set_type(DirectionsLeg_Maneuver_Type_kLeft);
+      LOG_TRACE("ManeuverType=LEFT");
+
       auto node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
-      if (node && node->HasTraversableOutboundIntersectingEdge(maneuver.travel_mode())) {
+      if (!node || !prev_edge || !curr_edge) {
+        break;
+      }
+
+      if (node->HasTraversableOutboundIntersectingEdge(maneuver.travel_mode())) {
         auto left_most_turn_degree =
             node->GetLeftMostTurnDegree(maneuver.turn_degree(), prev_edge->end_heading(),
                                         maneuver.travel_mode());
@@ -1679,8 +1665,6 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
           break;
         }
       }
-      maneuver.set_type(DirectionsLeg_Maneuver_Type_kLeft);
-      LOG_TRACE("ManeuverType=LEFT");
       break;
     }
     case Turn::Type::kSlightLeft: {
@@ -1690,18 +1674,20 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver,
       // TODO refactor with enhanced trip path clean up
       IntersectingEdgeCounts xedge_counts;
       auto node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
-      if (node && prev_edge) {
-        node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
-                                                       prev_edge->travel_mode(), xedge_counts);
-        if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) &&
-            !node->HasForwardTraversableSignificantRoadClassXEdge(prev_edge->end_heading(),
-                                                                  prev_edge->travel_mode(),
-                                                                  prev_edge->road_class()) &&
-            ((xedge_counts.left > 0) || ((xedge_counts.right == 0) && (xedge_counts.left == 0)))) {
-          // Even though there is a slight left along the path - a continue maneuver is appropriate
-          maneuver.set_type(DirectionsLeg_Maneuver_Type_kContinue);
-          LOG_TRACE("ManeuverType=CONTINUE (Turn::Type::kSlightLeft)");
-        }
+      if (!node || !prev_edge || !curr_edge) {
+        break;
+      }
+
+      node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                     prev_edge->travel_mode(), xedge_counts);
+      if ((maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kKeepStraight) &&
+          !node->HasForwardTraversableSignificantRoadClassXEdge(prev_edge->end_heading(),
+                                                                prev_edge->travel_mode(),
+                                                                prev_edge->road_class()) &&
+          ((xedge_counts.left > 0) || ((xedge_counts.right == 0) && (xedge_counts.left == 0)))) {
+        // Even though there is a slight left along the path - a continue maneuver is appropriate
+        maneuver.set_type(DirectionsLeg_Maneuver_Type_kContinue);
+        LOG_TRACE("ManeuverType=CONTINUE (Turn::Type::kSlightLeft)");
       }
       break;
     }
