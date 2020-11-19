@@ -1078,7 +1078,7 @@ void expect_path_length(const valhalla::Api& result,
   for (const auto& leg : result.trip().routes(0).legs()) {
     for (const auto& node : leg.node()) {
       if (node.has_edge())
-        length_km += node.edge().length();
+        length_km += node.edge().length_km();
     }
   }
 

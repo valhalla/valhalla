@@ -76,8 +76,8 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
     float reverse_heading = midgard::tangent_angle(edge.end_shape_index(), end, shape, 20.f, false);
 
     std::vector<baldr::OpenLR::LocationReferencePoint> lrps;
-    lrps.emplace_back(start.lng(), start.lat(), forward_heading, frc, fow, nullptr, edge.length(),
-                      frc);
+    lrps.emplace_back(start.lng(), start.lat(), forward_heading, frc, fow, nullptr,
+                      edge.length_km() * valhalla::midgard::kMetersPerKm, frc);
     lrps.emplace_back(end.lng(), end.lat(), reverse_heading, frc, fow, &lrps.back());
     openlrs.emplace_back(baldr::OpenLR::OpenLr{lrps, 0, 0}.toBase64());
   }
