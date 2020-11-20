@@ -7,7 +7,7 @@
 
 using namespace valhalla;
 
-class InstructionsKeepToward : public ::testing::Test {
+class InstructionsKeepNonHighwaySigns : public ::testing::Test {
 protected:
   static gurka::map map;
 
@@ -15,73 +15,74 @@ protected:
     constexpr double gridsize_metres = 1000;
 
     const std::string ascii_map = R"(
-                C--D      J--K
+                  C--D      J--K
           A--B<--G--H--I<--N--O
-                E--F      L--M
+                  E--F      L--M
     )";
 
-    const gurka::ways ways = {{"AB", {{"highway", "motorway"}, {"name", ""}, {"ref", "A1"}}},
+    const gurka::ways ways = {{"AB", {{"highway", "primary"}, {"name", ""}, {"ref", "A1"}}},
                               {"BC",
-                               {{"highway", "motorway"},
+                               {{"highway", "primary"},
                                 {"name", ""},
                                 {"ref", "B1"},
                                 {"destination", "Harrisburg;Lancaster"},
                                 {"destination:ref", "B1"}}},
-                              {"CD", {{"highway", "motorway"}, {"name", ""}, {"ref", "B1"}}},
+                              {"CD", {{"highway", "primary"}, {"name", ""}, {"ref", "B1"}}},
                               {"BE",
-                               {{"highway", "motorway"},
+                               {{"highway", "primary"},
                                 {"name", ""},
                                 {"ref", "B2"},
                                 {"destination", "Baltimore;Washington"},
                                 {"destination:ref", "B2"}}},
-                              {"EF", {{"highway", "motorway"}, {"name", ""}, {"ref", "B2"}}},
+                              {"EF", {{"highway", "primary"}, {"name", ""}, {"ref", "B2"}}},
                               {"BG",
-                               {{"highway", "motorway"},
+                               {{"highway", "primary"},
                                 {"name", ""},
                                 {"ref", "B3"},
                                 {"destination", "New York;Philadelphia"},
                                 {"destination:ref", "B3"}}},
-                              {"GH", {{"highway", "motorway"}, {"name", ""}, {"ref", "B3"}}},
-                              {"HI", {{"highway", "motorway"}, {"name", ""}, {"ref", "B3"}}},
+                              {"GH", {{"highway", "primary"}, {"name", ""}, {"ref", "B3"}}},
+                              {"HI", {{"highway", "primary"}, {"name", ""}, {"ref", "B3"}}},
                               {"IJ",
-                               {{"highway", "motorway"},
+                               {{"highway", "primary"},
                                 {"name", ""},
                                 {"ref", "C1"},
                                 {"junction:ref", "22A"},
                                 {"destination", "Harrisburg;Lancaster"},
                                 {"destination:ref", "C1"}}},
-                              {"JK", {{"highway", "motorway"}, {"name", ""}, {"ref", "C1"}}},
+                              {"JK", {{"highway", "primary"}, {"name", ""}, {"ref", "C1"}}},
                               {"IL",
-                               {{"highway", "motorway"},
+                               {{"highway", "primary"},
                                 {"name", ""},
                                 {"ref", "C2"},
                                 {"junction:ref", "22C"},
                                 {"destination", "Baltimore;Washington"},
                                 {"destination:ref", "C2"}}},
-                              {"LM", {{"highway", "motorway"}, {"name", ""}, {"ref", "C2"}}},
+                              {"LM", {{"highway", "primary"}, {"name", ""}, {"ref", "C2"}}},
                               {"IN",
-                               {{"highway", "motorway"},
+                               {{"highway", "primary"},
                                 {"name", ""},
                                 {"ref", "C3"},
                                 {"junction:ref", "22B"},
                                 {"destination", "New York;Philadelphia"},
                                 {"destination:ref", "C3"}}},
-                              {"NO", {{"highway", "motorway"}, {"name", ""}, {"ref", "C3"}}}};
+                              {"NO", {{"highway", "primary"}, {"name", ""}, {"ref", "C3"}}}};
 
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
 
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_instructions_keep_toward",
-                            {{"mjolnir.admin",
-                              {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}}});
+    map =
+        gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_instructions_keep_nonhighway_signs",
+                          {{"mjolnir.admin",
+                            {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}}});
   }
 };
 
-gurka::map InstructionsKeepToward::map = {};
+gurka::map InstructionsKeepNonHighwaySigns::map = {};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Keep right
-TEST_F(InstructionsKeepToward, KeepRightToward) {
+TEST_F(InstructionsKeepNonHighwaySigns, KeepRightBranchToward) {
   auto result = gurka::route(map, "A", "F", "auto");
 
   // Verify maneuver types
@@ -96,12 +97,12 @@ TEST_F(InstructionsKeepToward, KeepRightToward) {
                                             "Keep right to take B2 toward Baltimore/Washington.",
                                             "Keep right to take B2.",
                                             "Keep right to take B2 toward Baltimore, Washington.",
-                                            "Continue for 4 kilometers.");
+                                            "Continue for 5 kilometers.");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Keep left
-TEST_F(InstructionsKeepToward, KeepLeftToward) {
+TEST_F(InstructionsKeepNonHighwaySigns, KeepLeftBranchToward) {
   auto result = gurka::route(map, "A", "D", "auto");
 
   // Verify maneuver types
@@ -116,12 +117,12 @@ TEST_F(InstructionsKeepToward, KeepLeftToward) {
                                             "Keep left to take B1 toward Harrisburg/Lancaster.",
                                             "Keep left to take B1.",
                                             "Keep left to take B1 toward Harrisburg, Lancaster.",
-                                            "Continue for 4 kilometers.");
+                                            "Continue for 5 kilometers.");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Keep straight
-TEST_F(InstructionsKeepToward, KeepStraightToward) {
+TEST_F(InstructionsKeepNonHighwaySigns, KeepStraightBranchToward) {
   auto result = gurka::route(map, "A", "H", "auto");
 
   // Verify maneuver types
@@ -142,7 +143,7 @@ TEST_F(InstructionsKeepToward, KeepStraightToward) {
 ///////////////////////////////////////////////////////////////////////////////
 // Keep right to take exit number
 // "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
-TEST_F(InstructionsKeepToward, KeepRightExitNumberToward) {
+TEST_F(InstructionsKeepNonHighwaySigns, KeepRightExitNumberBranchToward) {
   auto result = gurka::route(map, "H", "M", "auto");
 
   // Verify maneuver types
@@ -156,12 +157,12 @@ TEST_F(InstructionsKeepToward, KeepRightExitNumberToward) {
       result, maneuver_index, "Keep right to take exit 22C onto C2 toward Baltimore/Washington.",
       "Keep right to take exit 22C.",
       "Keep right to take exit 22C onto C2 toward Baltimore, Washington.",
-      "Continue for 4 kilometers.");
+      "Continue for 5 kilometers.");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Keep left to take exit number
-TEST_F(InstructionsKeepToward, KeepLeftExitNumberToward) {
+TEST_F(InstructionsKeepNonHighwaySigns, KeepLeftExitNumberBranchToward) {
   auto result = gurka::route(map, "H", "K", "auto");
 
   // Verify maneuver types
@@ -175,12 +176,12 @@ TEST_F(InstructionsKeepToward, KeepLeftExitNumberToward) {
       result, maneuver_index, "Keep left to take exit 22A onto C1 toward Harrisburg/Lancaster.",
       "Keep left to take exit 22A.",
       "Keep left to take exit 22A onto C1 toward Harrisburg, Lancaster.",
-      "Continue for 4 kilometers.");
+      "Continue for 5 kilometers.");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Keep straight to take exit number
-TEST_F(InstructionsKeepToward, KeepStraightExitNumberToward) {
+TEST_F(InstructionsKeepNonHighwaySigns, KeepStraightExitNumberBranchToward) {
   auto result = gurka::route(map, "H", "O", "auto");
 
   // Verify maneuver types
