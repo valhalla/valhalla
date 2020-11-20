@@ -2437,7 +2437,6 @@ std::string NarrativeBuilder::FormKeepToStayOnInstruction(Maneuver& maneuver,
 }
 
 std::string NarrativeBuilder::FormVerbalAlertKeepToStayOnInstruction(Maneuver& maneuver,
-                                                                     bool limit_by_consecutive_count,
                                                                      uint32_t element_max_count,
                                                                      const std::string& delim) {
 
@@ -4266,7 +4265,7 @@ std::string NarrativeBuilder_csCZ::GetPluralCategory(size_t count) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-std::string NarrativeBuilder_hiIN::GetPluralCategory(size_t count) {
+std::string NarrativeBuilder_hiIN::GetPluralCategory(size_t /*count*/) {
   return kPluralCategoryOtherKey;
 }
 

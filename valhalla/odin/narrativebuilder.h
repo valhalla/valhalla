@@ -232,7 +232,6 @@ protected:
 
   std::string
   FormVerbalAlertKeepToStayOnInstruction(Maneuver& maneuver,
-                                         bool limit_by_consecutive_count = kLimitByConseuctiveCount,
                                          uint32_t element_max_count = kVerbalAlertElementMaxCount,
                                          const std::string& delim = kVerbalDelim);
 
