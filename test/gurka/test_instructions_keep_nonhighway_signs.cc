@@ -142,7 +142,6 @@ TEST_F(InstructionsKeepNonHighwaySigns, KeepStraightBranchToward) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Keep right to take exit number
-// "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
 TEST_F(InstructionsKeepNonHighwaySigns, KeepRightExitNumberBranchToward) {
   auto result = gurka::route(map, "H", "M", "auto");
 
