@@ -99,6 +99,7 @@
    * FIXED: Improve German post_transition_verbal instruction [#2677](https://github.com/valhalla/valhalla/pull/2677)
    * FIXED: Lane updates.  Add the turn lanes to all edges of the way.  Do not "enhance" turn lanes if they are part of a complex restriction.  Moved ProcessTurnLanes after UpdateManeuverPlacementForInternalIntersectionTurns.  Fix for a missing "uturn" indication for intersections on the previous maneuver, we were serializing an empty list. [#2679](https://github.com/valhalla/valhalla/pull/2679)
    * FIXED: Fixes OpenLr serialization [#2688](https://github.com/valhalla/valhalla/pull/2688)
+   * FIXED: Internal edges can't be also a ramp or a turn channel.  Also, if an edge is marked as ramp and turn channel mark it as a ramp.  [2689](https://github.com/valhalla/valhalla/pull/2689)
    * FIXED: Check that speeds are equal for the edges going in the same direction while buildig shortcuts [#2691](https://github.com/valhalla/valhalla/pull/2691)
 
 * **Enhancement**
