@@ -1,6 +1,5 @@
 #pragma once
 
-#include <boost/container_hash/hash.hpp>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
