@@ -108,7 +108,7 @@ void ConstructEdges(const std::string& ways_file,
                     const std::string& nodes_file,
                     const std::string& edges_file,
                     const std::function<GraphId(const OSMNode&)>& graph_id_predicate,
-                    bool infer_turn_channels) {
+                    const bool infer_turn_channels) {
   LOG_INFO("Creating graph edges from ways...");
 
   // so we can read ways and nodes and write edges
@@ -155,7 +155,7 @@ void ConstructEdges(const std::string& ways_file,
 
     // Remember this edge starts here
     Edge prev_edge = Edge{0};
-    Edge edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
+    Edge edge = Edge::make_edge(way_node.way_index, current_way_node_index, way, infer_turn_channels);
     edge.attributes.way_begin = way_node.way_shape_node_index == 0;
 
     // Remember this node as starting this edge
@@ -178,10 +178,6 @@ void ConstructEdges(const std::string& ways_file,
             (way.link() && Length(edge.llindex_, way_node.node) < kMaxInternalLength);
         way_node.node.link_edge_ = way.link();
         way_node.node.non_link_edge_ = !way.link() && (way.auto_forward() || way.auto_backward());
-
-        // if this is data has turn_channels set then we need to use the flag.
-        if (!infer_turn_channels && way.turn_channel())
-          edge.attributes.turn_channel = true;
 
         // remember what edge this node will end, its complicated by the fact that we delay adding the
         // edge until the next iteration of the loop, ie once the edge becomes prev_edge
@@ -217,7 +213,8 @@ void ConstructEdges(const std::string& ways_file,
           break;
         } // Start a new edge if this is not the last node in the way
         else {
-          edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
+          edge =
+              Edge::make_edge(way_node.way_index, current_way_node_index, way, infer_turn_channels);
           sequence<Node>::iterator element = --nodes.end();
           auto node = *element;
           node.start_of = edges.size() + 1; // + 1 because the edge has not been added yet
@@ -720,7 +717,8 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           if (!infer_internal_intersections && w.internal()) {
-            directededge.set_internal(true);
+            if (directededge.use() != Use::kRamp && directededge.use() != Use::kTurnChannel)
+              directededge.set_internal(true);
           }
 
           // TODO - update logic so we limit the CreateSignInfoList calls
