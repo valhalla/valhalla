@@ -46,7 +46,7 @@ boost::property_tree::ptree get_conf(const char* tiles) {
       "loki":{
         "actions":["route"],
         "logging":{"long_request": 100},
-        "service_defaults":{"minimum_reachability": 2,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60, "street_side_max_distance": 1000}
+        "service_defaults":{"minimum_reachability": 2,"radius": 10,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60, "street_side_max_distance": 1000}
       },
       "thor":{"logging":{"long_request": 100}},
       "odin":{"logging":{"long_request": 100}},
@@ -114,6 +114,7 @@ void test(const std::string& request,
   const auto& directions = response.directions().routes(0).legs();
 
   // TODO: DELETE ME
+  std::cout << legs.begin()->shape() << std::endl;
   auto shape = midgard::decode<std::vector<midgard::PointLL>>(legs.begin()->shape());
   for (const auto& node : legs.begin()->node()) {
     if (node.has_edge()) {
@@ -176,7 +177,7 @@ void test(const std::string& request,
  */
 TEST(AstarBss, test_With_Mode_Changes) {
   std::string request =
-      R"({"locations":[{"lat":48.86481,"lon":2.361015},{"lat":48.85984,"lon":2.36090}],"costing":"bikeshare",
+      R"({"locations":[{"lat":48.86481,"lon":2.361015},{"lat":48.859782,"lon":2.36101}],"costing":"bikeshare",
 	       "costing_options":{"pedestrian":{"bss_rent_cost":0,"bss_rent_penalty":0},
 	                          "bicycle"   :{"bss_return_cost":0,"bss_return_penalty":0}}})";
   std::vector<valhalla::DirectionsLeg_TravelMode>

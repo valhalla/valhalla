@@ -255,7 +255,7 @@ void create_bss_node_and_edges(GraphTileBuilder& tilebuilder_local,
   uint32_t rescount = tilebuilder_local.header()->access_restriction_count();
 
   // Iterate through the nodes - add back any stored edges and insert any
-  // connections from a node to a transit stop. Update each nodes edge index.
+  // connections from a node to a bike share station. Update each nodes edge index.
   uint32_t added_edges = 0;
   uint32_t added_nodes = 0;
 
