@@ -108,7 +108,7 @@ void ConstructEdges(const std::string& ways_file,
                     const std::string& nodes_file,
                     const std::string& edges_file,
                     const std::function<GraphId(const OSMNode&)>& graph_id_predicate,
-                    bool infer_turn_channels) {
+                    const bool infer_turn_channels) {
   LOG_INFO("Creating graph edges from ways...");
 
   // so we can read ways and nodes and write edges
@@ -155,7 +155,7 @@ void ConstructEdges(const std::string& ways_file,
 
     // Remember this edge starts here
     Edge prev_edge = Edge{0};
-    Edge edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
+    Edge edge = Edge::make_edge(way_node.way_index, current_way_node_index, way, infer_turn_channels);
     edge.attributes.way_begin = way_node.way_shape_node_index == 0;
 
     // Remember this node as starting this edge
@@ -179,10 +179,6 @@ void ConstructEdges(const std::string& ways_file,
         way_node.node.link_edge_ = way.link();
         way_node.node.non_link_edge_ = !way.link() && (way.auto_forward() || way.auto_backward());
 
-        // if this is data has turn_channels set then we need to use the flag.
-        if (!infer_turn_channels && way.turn_channel())
-          edge.attributes.turn_channel = true;
-
         // remember what edge this node will end, its complicated by the fact that we delay adding the
         // edge until the next iteration of the loop, ie once the edge becomes prev_edge
         uint32_t end_of = static_cast<uint32_t>(edges.size() + prev_edge.is_valid());
@@ -192,18 +188,9 @@ void ConstructEdges(const std::string& ways_file,
         // Mark the edge as ending a way if this is the last node in the way
         edge.attributes.way_end = current_way_node_index == last_way_node_index;
 
-        // Mark the previous edge as the prior one since we are processing the last edge
-        if (edge.attributes.way_end) {
-          prev_edge.attributes.way_prior = true;
-        }
-
         // We should add the previous edge now that we know its done
         if (prev_edge.is_valid())
           edges.push_back(prev_edge);
-
-        // Mark the current edge as the next edge one since we processed the first edge
-        if (prev_edge.attributes.way_begin)
-          edge.attributes.way_next = true;
 
         // Finish this edge
         prev_edge = edge;
@@ -226,7 +213,8 @@ void ConstructEdges(const std::string& ways_file,
           break;
         } // Start a new edge if this is not the last node in the way
         else {
-          edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
+          edge =
+              Edge::make_edge(way_node.way_index, current_way_node_index, way, infer_turn_channels);
           sequence<Node>::iterator element = --nodes.end();
           auto node = *element;
           node.start_of = edges.size() + 1; // + 1 because the edge has not been added yet
@@ -729,7 +717,8 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           if (!infer_internal_intersections && w.internal()) {
-            directededge.set_internal(true);
+            if (directededge.use() != Use::kRamp && directededge.use() != Use::kTurnChannel)
+              directededge.set_internal(true);
           }
 
           // TODO - update logic so we limit the CreateSignInfoList calls
@@ -753,44 +742,24 @@ void BuildTileSet(const std::string& ways_file,
             directededge.set_sign(true);
           }
 
-          // Add turn lanes if they exist. Store forward index on the last edge for a way
-          // and the backward index on the first edge in a way.  The turn lanes are populated
-          // later in the enhancer phase.
+          // Add turn lanes if they exist.
           std::string turnlane_tags;
-          if (forward && w.fwd_turn_lanes_index() > 0 &&
-              (edge.attributes.way_end || edge.attributes.way_prior)) {
+          if (forward && w.fwd_turn_lanes_index() > 0) {
             turnlane_tags = osmdata.name_offset_map.name(w.fwd_turn_lanes_index());
             if (!turnlane_tags.empty()) {
               std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
               if (!str.empty()) { // don't add if invalid.
                 directededge.set_turnlanes(true);
                 graphtile.AddTurnLanes(idx, w.fwd_turn_lanes_index());
-
-                // Temporarily use the not thru flag so that in the enhancer we can properly check to
-                // see if we have an internal edge
-                // Basically, we are setting turn lanes on the prior and last edge because we need
-                // to check if the last edge is internal or not.  If it is internal, we remove the
-                // turn lanes from the last edge and leave them on the prior.
-                if (edge.attributes.way_prior)
-                  directededge.set_not_thru(true);
               }
             }
-          } else if (!forward && w.bwd_turn_lanes_index() > 0 &&
-                     (edge.attributes.way_begin || edge.attributes.way_next)) {
+          } else if (!forward && w.bwd_turn_lanes_index() > 0) {
             turnlane_tags = osmdata.name_offset_map.name(w.bwd_turn_lanes_index());
             if (!turnlane_tags.empty()) {
               std::string str = TurnLanes::GetTurnLaneString(turnlane_tags);
               if (!str.empty()) { // don't add if invalid.
                 directededge.set_turnlanes(true);
                 graphtile.AddTurnLanes(idx, w.bwd_turn_lanes_index());
-
-                // Temporarily use the not thru flag so that in the enhancer we can properly check to
-                // see if we have an internal edge
-                // Basically, we are setting turn lanes on the next and first edge because we need
-                // to check if the fist edge is internal or not.  If it is internal, we remove the
-                // turn lanes from the first edge and leave them on the next.
-                if (edge.attributes.way_next)
-                  directededge.set_not_thru(true);
               }
             }
           }

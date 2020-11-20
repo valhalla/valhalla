@@ -276,7 +276,7 @@ float EnhancedTripLeg::GetLength(const Options::Units& units) {
   float length = 0.0f;
   for (const auto& n : node()) {
     if (n.has_edge()) {
-      length += n.edge().length();
+      length += n.edge().length_km();
     }
   }
   if (units == Options::miles) {
@@ -470,9 +470,9 @@ std::vector<std::pair<std::string, bool>> EnhancedTripLeg_Edge::GetNameList() co
 
 float EnhancedTripLeg_Edge::GetLength(const Options::Units& units) {
   if (units == Options::miles) {
-    return (length() * kMilePerKm);
+    return (length_km() * kMilePerKm);
   }
-  return length();
+  return length_km();
 }
 
 bool EnhancedTripLeg_Edge::HasActiveTurnLane() const {
@@ -653,7 +653,7 @@ std::string EnhancedTripLeg_Edge::ToString() const {
   }
 
   str += " | length=";
-  str += std::to_string(length());
+  str += std::to_string(length_km());
 
   str += " | speed=";
   str += std::to_string(speed());
@@ -997,7 +997,7 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
   str += StreetNamesToParameterString(this->name());
 
   str += delim;
-  str += std::to_string(length());
+  str += std::to_string(length_km());
 
   str += delim;
   str += std::to_string(speed());

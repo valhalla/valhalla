@@ -110,14 +110,15 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Enhance signless interchanges
   EnhanceSignlessInterchnages(maneuvers);
 
-  // Process the turn lanes
-  ProcessTurnLanes(maneuvers);
-
   // Process the guidance view junctions and signboards
   ProcessGuidanceViews(maneuvers);
 
   // Update the maneuver placement for internal intersection turns
   UpdateManeuverPlacementForInternalIntersectionTurns(maneuvers);
+
+  // Process the turn lanes. Must happen after updating maneuver placement for internal edges so we
+  // activate the correct lanes.
+  ProcessTurnLanes(maneuvers);
 
 #ifdef LOGGING_LEVEL_TRACE
   int final_man_id = 1;
@@ -1031,13 +1032,13 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   UpdateInternalTurnCount(maneuver, node_index);
 
   // Distance in kilometers
-  maneuver.set_length(maneuver.length() + prev_edge->length());
+  maneuver.set_length(maneuver.length() + prev_edge->length_km());
 
   // Basic time (len/speed on each edge with no stop impact) in seconds
   // TODO: update GetTime and GetSpeed to double precision
   maneuver.set_basic_time(
       maneuver.basic_time() +
-      GetTime(prev_edge->length(), GetSpeed(maneuver.travel_mode(), prev_edge->default_speed())));
+      GetTime(prev_edge->length_km(), GetSpeed(maneuver.travel_mode(), prev_edge->default_speed())));
 
   // Portions Toll
   if (prev_edge->toll()) {
@@ -2119,7 +2120,7 @@ bool ManeuversBuilder::IsLeftPencilPointUturn(int node_index,
   // and oneway edges
   if (curr_edge->drive_on_right() &&
       (((turn_degree > 179) && (turn_degree < 211)) ||
-       (((prev_edge->length() < 50) || (curr_edge->length() < 50)) && (turn_degree > 179) &&
+       (((prev_edge->length_km() < 50) || (curr_edge->length_km() < 50)) && (turn_degree > 179) &&
         (turn_degree < 226))) &&
       prev_edge->IsOneway() && curr_edge->IsOneway()) {
     // If the above criteria is met then check the following criteria...
@@ -2162,7 +2163,7 @@ bool ManeuversBuilder::IsRightPencilPointUturn(int node_index,
   // and oneway edges
   if (curr_edge->drive_on_right() &&
       (((turn_degree > 149) && (turn_degree < 181)) ||
-       (((prev_edge->length() < 50) || (curr_edge->length() < 50)) && (turn_degree > 134) &&
+       (((prev_edge->length_km() < 50) || (curr_edge->length_km() < 50)) && (turn_degree > 134) &&
         (turn_degree < 181))) &&
       prev_edge->IsOneway() && curr_edge->IsOneway()) {
     // If the above criteria is met then check the following criteria...
@@ -2857,7 +2858,7 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
       float remaining_step_distance = 0.f;
       // Add the prev_edge length as we skip it in the loop below
       if (prev_edge) {
-        remaining_step_distance += prev_edge->length();
+        remaining_step_distance += prev_edge->length_km();
       }
 
       // Assign turn lanes within step, walking backwards from end to begin node
@@ -2899,7 +2900,7 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
           }
 
           // Update the remaining step distance
-          remaining_step_distance += prev_edge->length();
+          remaining_step_distance += prev_edge->length_km();
         }
       }
     }
@@ -3122,12 +3123,12 @@ void ManeuversBuilder::MoveInternalEdgeToPreviousManeuver(Maneuver& prev_maneuve
   // Update the previous maneuver
 
   // Increase distance in kilometers
-  prev_maneuver.set_length(prev_maneuver.length() + edge->length());
+  prev_maneuver.set_length(prev_maneuver.length() + edge->length_km());
 
   // Increase basic time (len/speed on each edge with no stop impact) in seconds
   prev_maneuver.set_basic_time(
       prev_maneuver.basic_time() +
-      GetTime(edge->length(), GetSpeed(prev_maneuver.travel_mode(), edge->default_speed())));
+      GetTime(edge->length_km(), GetSpeed(prev_maneuver.travel_mode(), edge->default_speed())));
 
   // Set the end node index
   prev_maneuver.set_end_node_index(new_node_index);
@@ -3145,12 +3146,12 @@ void ManeuversBuilder::MoveInternalEdgeToPreviousManeuver(Maneuver& prev_maneuve
   // Update the maneuver
 
   // Decrease distance in kilometers
-  maneuver.set_length(maneuver.length() - edge->length());
+  maneuver.set_length(maneuver.length() - edge->length_km());
 
   // Decrease basic time (len/speed on each edge with no stop impact) in seconds
   maneuver.set_basic_time(
       maneuver.basic_time() -
-      GetTime(edge->length(), GetSpeed(maneuver.travel_mode(), edge->default_speed())));
+      GetTime(edge->length_km(), GetSpeed(maneuver.travel_mode(), edge->default_speed())));
 
   // Set the begin node index
   maneuver.set_begin_node_index(new_node_index);
@@ -3164,8 +3165,11 @@ void ManeuversBuilder::MoveInternalEdgeToPreviousManeuver(Maneuver& prev_maneuve
                     trip_path_->node(maneuver.begin_node_index()).cost().elapsed_cost().seconds());
 
   /////////////////////////////////////////////////////////////////////////////
-  // Update the edge turn lanes with the previous edge turn lanes
-  edge->mutable_turn_lanes()->CopyFrom(prev_edge->turn_lanes());
+  // If the internal edge does not have turn lanes
+  // then copy the turn lanes from the previous edge
+  if (edge->turn_lanes_size() == 0) {
+    edge->mutable_turn_lanes()->CopyFrom(prev_edge->turn_lanes());
+  }
 }
 
 } // namespace odin
