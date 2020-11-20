@@ -226,7 +226,7 @@ TEST(Polyline2, TestClip) {
   TryClipOutside(pl6, AABB2<Point2>(Point2(25.0f, 100.0f), Point2(50.0f, 200.0f)));
 }
 
-void TryClippedPolyline(Polyline2<Point2>& pl, const AABB2<Point2>& a, const uint32_t exp) {
+void TryClippedPolyline(Polyline2<Point2>& pl, const AABB2<Point2>& a) {
   Polyline2<Point2> pl2 = pl.ClippedPolyline(a);
   uint32_t x = pl2.pts().size();
   EXPECT_EQ(x, 2) << "count not correct";
@@ -239,7 +239,7 @@ TEST(Polyline2, TestClippedPolyline) {
   std::vector<Point2> pts = {Point2(25.0f, 25.0f), Point2(50.0f, 50.0f), Point2(25.0f, 75.0f),
                              Point2(50.0f, 100.0f)};
   Polyline2<Point2> pl(pts);
-  TryClippedPolyline(pl, AABB2<Point2>(Point2(0.0f, 0.0f), Point2(75.0f, 50.0f)), 2);
+  TryClippedPolyline(pl, AABB2<Point2>(Point2(0.0f, 0.0f), Point2(75.0f, 50.0f)));
 }
 
 } // namespace

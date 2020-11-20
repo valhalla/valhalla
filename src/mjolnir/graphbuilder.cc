@@ -1108,7 +1108,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
     }
   }
   ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file,
-                             static_cast<uint32_t>(rc), stats);
+                             static_cast<uint32_t>(rc));
   unsigned int threads =
       std::max(static_cast<unsigned int>(1),
                pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));

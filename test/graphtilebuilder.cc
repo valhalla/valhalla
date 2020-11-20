@@ -30,8 +30,7 @@ public:
 void assert_tile_equalish(const GraphTile& a,
                           const GraphTile& b,
                           size_t difference,
-                          const std::array<std::vector<GraphId>, kBinCount>& bins,
-                          const std::string& msg) {
+                          const std::array<std::vector<GraphId>, kBinCount>& bins) {
   // expected size
   ASSERT_EQ(a.header()->end_offset() + difference, b.header()->end_offset());
 
@@ -219,8 +218,7 @@ TEST(GraphTileBuilder, TestAddBins) {
     auto increase = bins.size() * sizeof(GraphId);
 
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins,
-                         "New tiles edgeinfo or names arent matching up: 1");
+    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins);
 
     // append some more
     for (auto& bin : bins)
@@ -229,8 +227,7 @@ TEST(GraphTileBuilder, TestAddBins) {
     increase = bins.size() * sizeof(GraphId) * 2;
 
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins,
-                         "New tiles edgeinfo or names arent matching up: 2");
+    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins);
 
     // check that appending works
     t = GraphTile(bin_dir, id);
@@ -239,8 +236,7 @@ TEST(GraphTileBuilder, TestAddBins) {
       bin.insert(bin.end(), bin.begin(), bin.end());
 
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins,
-                         "New tiles edgeinfo or names arent matching up: 3");
+    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins);
   }
 }
 

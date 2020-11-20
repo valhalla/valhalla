@@ -285,9 +285,9 @@ void get_stop_stations(Transit& tile,
                        std::unordered_map<std::string, uint64_t>& platforms,
                        const GraphId& tile_id,
                        const ptree& response,
-                       const AABB2<PointLL>& filter,
+                       const AABB2<PointLL>& filter/*,
                        bool tile_within_one_tz,
-                       const std::unordered_multimap<uint32_t, multi_polygon_type>& tz_polys) {
+                       const std::unordered_multimap<uint32_t, multi_polygon_type>& tz_polys*/) {
 
   for (const auto& station_pt : response.get_child("stop_stations")) {
 
@@ -797,8 +797,8 @@ void fetch_tiles(const ptree& pt,
       // grab some stuff
       response = curler(*request, "stop_stations");
       // copy stops in, keeping map of stopid to graphid
-      get_stop_stations(tile, nodes, platforms, current, response, filter, tile_within_one_tz,
-                        tz_polys);
+      get_stop_stations(tile, nodes, platforms, current, response, filter/*, tile_within_one_tz,
+                        tz_polys*/);
       // please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
 

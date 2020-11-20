@@ -256,8 +256,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
                                 const std::string& way_nodes_file,
                                 const std::string& nodes_file,
                                 const std::string& edges_file,
-                                const uint32_t rc,
-                                DataQuality& stats) {
+                                const uint32_t rc) {
   LOG_INFO("Reclassifying ferry connection graph edges...");
 
   sequence<OSMWay> ways(ways_file, false);
