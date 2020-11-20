@@ -206,11 +206,6 @@ using Point2d = PointXY<double>;
 
 namespace std {
 template <typename PrecisionT> struct hash<valhalla::midgard::PointXY<PrecisionT>> {
-  size_t operator()(const valhalla::midgard::PointXY<PrecisionT>& p) const {
-    size_t seed = 0;
-    boost::hash_combine(seed, p.first);
-    boost::hash_combine(seed, p.second);
-    return seed;
-  }
+  size_t operator()(const valhalla::midgard::PointXY<PrecisionT>& p) const;
 };
 } // namespace std
