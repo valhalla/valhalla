@@ -101,6 +101,7 @@
    * FIXED: Fixes OpenLr serialization [#2688](https://github.com/valhalla/valhalla/pull/2688)
    * FIXED: Internal edges can't be also a ramp or a turn channel.  Also, if an edge is marked as ramp and turn channel mark it as a ramp.  [2689](https://github.com/valhalla/valhalla/pull/2689)
    * FIXED: Check that speeds are equal for the edges going in the same direction while buildig shortcuts [#2691](https://github.com/valhalla/valhalla/pull/2691)
+   * FIXED: Missing fork or bear instruction [#2683](https://github.com/valhalla/valhalla/pull/2683)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
