@@ -170,8 +170,6 @@ void compare_results(const valhalla::Api& expected, const valhalla::Api& result)
     for (int l = 0; l < route.legs_size(); ++l) {
       const auto& leg = route.legs(l);
 
-      std::cout << leg_answer->shape() << std::endl << leg.shape() << std::endl << std::endl;
-
       auto expected_seconds = leg.node().rbegin()->cost().elapsed_cost().seconds();
       auto answer_seconds = leg_answer->node().rbegin()->cost().elapsed_cost().seconds();
       ASSERT_NEAR(expected_seconds, answer_seconds, .1)

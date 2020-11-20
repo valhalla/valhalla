@@ -174,7 +174,6 @@ public:
    * @param ll  Base lat,lon of the tile.
    */
   void set_base_ll(const midgard::PointLL& ll) {
-    // TODO: get rid of possible precision loss (double to float conversion)
     base_ll_.first = ll.lng();
     base_ll_.second = ll.lat();
   }
@@ -596,8 +595,8 @@ protected:
   uint64_t has_elevation_ : 1;        // Does this tile have elevation data
   uint64_t has_ext_directededge_ : 1; // Does this tile have extended directed edge data
 
+  // TODO: in v4, don't store this its superfluous information, the graphid has all we need
   // Base lon, lat of the tile
-  // TODO: don't store this, or store it as an integer
   std::pair<float, float> base_ll_;
 
   // baldr version.

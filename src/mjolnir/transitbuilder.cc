@@ -34,7 +34,7 @@ namespace {
 struct OSMConnectionEdge {
   GraphId osm_node;
   GraphId stop_node;
-  float length;
+  double length;
   uint64_t wayid;
   std::vector<std::string> names;
   std::vector<std::string> tagged_names;
@@ -42,7 +42,7 @@ struct OSMConnectionEdge {
 
   OSMConnectionEdge(const GraphId& f,
                     const GraphId& t,
-                    const float l,
+                    const double l,
                     const uint64_t w,
                     const std::vector<std::string>& n,
                     const std::list<PointLL>& s)
@@ -515,7 +515,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
 
   // Check if stop is in same tile as the start node
   uint32_t conn_count = 0;
-  float length = 0.0f;
+  double length = 0.0;
   if (transit_stop_node.Tile_Base() == startnode.Tile_Base()) {
     // Add shape from node along the edge until the closest point, then add
     // the closest point and a straight line to the stop lat,lng
@@ -525,7 +525,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
     }
     shape.push_back(std::get<0>(closest));
     shape.push_back(stop_ll);
-    length = std::max<float>(1.0f, valhalla::midgard::length(shape));
+    length = std::max(1.0, valhalla::midgard::length(shape));
 
     // Add connection to start node
     connection_edges.push_back({startnode, transit_stop_node, length, wayid, names, shape});
@@ -533,7 +533,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
   }
 
   // Check if stop is in same tile as end node
-  float length2 = 0.0f;
+  double length2 = 0.0;
   if (transit_stop_node.Tile_Base() == endnode.Tile_Base()) {
     // Add connection to end node
     if (startnode.tileid() == endnode.tileid()) {
@@ -544,7 +544,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
       }
       shape2.push_back(std::get<0>(closest));
       shape2.push_back(stop_ll);
-      length2 = std::max<float>(1.0f, valhalla::midgard::length(shape2));
+      length2 = std::max(1.0, valhalla::midgard::length(shape2));
 
       // Add connection to the end node
       connection_edges.push_back({endnode, transit_stop_node, length2, wayid, names, shape2});

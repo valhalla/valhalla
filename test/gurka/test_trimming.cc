@@ -66,6 +66,10 @@ TEST(Trimming, routes) {
   // meaning its not all the way at the end of the edge
   auto offset = start_shape.front().Distance(start) / start_length;
   EXPECT_LT(offset, 1.);
+  // we expect that multiplying the percent along by the rounded length will result in a number that
+  // is larger than the actual length
+  // TODO: with the fixes in precision to PointLL this test no longer exposes the issue, needs new
+  // test EXPECT_GT(offset * start_edge->length(), start_length);
 
   // fake a costing
   const rapidjson::Document doc;

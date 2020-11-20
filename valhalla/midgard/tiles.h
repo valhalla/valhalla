@@ -161,8 +161,7 @@ public:
    *          extent, an error (-1) is returned.
    */
   int32_t TileId(const coord_t& c) const {
-    // TODO: do not loose precision here
-    return TileId(static_cast<float>(c.y()), static_cast<float>(c.x()));
+    return TileId(c.y(), c.x());
   }
 
   /**
@@ -172,7 +171,7 @@ public:
    * @return  Returns the tile Id. -1 (error is returned if the x,y is
    *          outside the bounding box of the tiling sytem).
    */
-  int32_t TileId(const float y, const float x) const {
+  int32_t TileId(const typename coord_t::first_type y, const typename coord_t::first_type x) const {
     // Return -1 if totally outside the extent.
     if (y < tilebounds_.miny() || x < tilebounds_.minx() || y > tilebounds_.maxy() ||
         x > tilebounds_.maxx()) {
