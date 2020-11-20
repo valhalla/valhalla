@@ -164,7 +164,7 @@ CandidateGridQuery::CandidateGridQuery(baldr::GraphReader& reader,
                                        float cell_width,
                                        float cell_height)
     : reader_(reader), cell_width_(cell_width), cell_height_(cell_height), grid_cache_() {
-  bin_level_ = baldr::TileHierarchy::levels().rbegin()->second.level;
+  bin_level_ = baldr::TileHierarchy::levels().back().level;
 }
 
 CandidateGridQuery::~CandidateGridQuery() = default;
@@ -205,7 +205,7 @@ std::unordered_set<baldr::GraphId>
 CandidateGridQuery::RangeQuery(const AABB2<midgard::PointLL>& range) const {
   // Get the tiles object from the tile hierarchy and create the bin tiles
   // (subdivisions within the tile)
-  Tiles<PointLL> tiles = baldr::TileHierarchy::levels().rbegin()->second.tiles;
+  const Tiles<PointLL>& tiles = baldr::TileHierarchy::levels().back().tiles;
   Tiles<PointLL> bins(tiles.TileBounds(), tiles.SubdivisionSize());
 
   // Get a list of bins within the range. These are "tile Ids" that must

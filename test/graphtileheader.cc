@@ -27,9 +27,9 @@ TEST(GraphtileHeader, TestWriteRead) {
   hdr.set_date_created(12345);
   EXPECT_EQ(hdr.date_created(), 12345);
 
-  hdr.set_base_ll({-76.5f, 39.5f});
-  EXPECT_EQ(hdr.base_ll().lng(), -76.5f);
-  EXPECT_EQ(hdr.base_ll().lat(), 39.5f);
+  PointLL base{(tile_id.tileid() % 1440) * .25 - 180, (tile_id.tileid() / 1440) * .25 - 90};
+  hdr.set_base_ll(base);
+  EXPECT_EQ(hdr.base_ll(), base);
 
   std::string ver = "v1.5";
   hdr.set_version(ver);

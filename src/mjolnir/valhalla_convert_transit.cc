@@ -634,7 +634,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // add the egress connection
         // Make sure length is non-zero
-        float length = std::max(1.0f, egress_ll.Distance(station_ll));
+        double length = std::max(1.0, egress_ll.Distance(station_ll));
         directededge.set_length(length);
         directededge.set_use(Use::kEgressConnection);
         directededge.set_speed(5);
@@ -683,7 +683,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // add the platform connection
         // Make sure length is non-zero
-        float length = std::max(1.0f, station_ll.Distance(egress_ll));
+        double length = std::max(1.0, station_ll.Distance(egress_ll));
         directededge.set_length(length);
         directededge.set_use(Use::kEgressConnection);
         directededge.set_speed(5);
@@ -739,7 +739,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // add the egress connection
         // Make sure length is non-zero
-        float length = std::max(1.0f, station_ll.Distance(platform_ll));
+        double length = std::max(1.0, station_ll.Distance(platform_ll));
         directededge.set_length(length);
         directededge.set_use(Use::kPlatformConnection);
         directededge.set_speed(5);
@@ -817,7 +817,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
     // add the platform connection
     // Make sure length is non-zero
-    float length = std::max(1.0f, platform_ll.Distance(station_ll));
+    double length = std::max(1.0, platform_ll.Distance(station_ll));
     directededge.set_length(length);
     directededge.set_use(Use::kPlatformConnection);
     directededge.set_speed(5);
@@ -977,7 +977,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
   }
 
-  const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
+  const auto& tiles = TileHierarchy::levels().back().tiles;
   // Iterate through the tiles in the queue and find any that include stops
   for (; tile_start != tile_end; ++tile_start) {
     // Get the next tile Id from the queue and get a tile builder
@@ -1295,7 +1295,7 @@ int main(int argc, char** argv) {
   // figure out which transit tiles even exist
   filesystem::recursive_directory_iterator transit_file_itr(
       pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
-      std::to_string(TileHierarchy::levels().rbegin()->first));
+      std::to_string(TileHierarchy::levels().back().level));
   filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {

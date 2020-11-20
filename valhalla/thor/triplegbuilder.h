@@ -24,7 +24,7 @@ namespace thor {
 struct EdgeTrimmingInfo {
   bool trim;
   midgard::PointLL vertex;
-  float distance_along;
+  double distance_along;
 };
 
 /**

@@ -728,7 +728,7 @@ TEST(GraphParser, TestImportBssNode) {
 
   BssBuilder::Build(conf, bss_nodes_file);
 
-  auto local_level = TileHierarchy::levels().rbegin()->first;
+  auto local_level = TileHierarchy::levels().back().level;
 
   const GraphTile* local_tile = reader.GetGraphTile({759649, local_level, 0});
   auto count = local_tile->header()->nodecount();
