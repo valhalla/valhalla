@@ -17,6 +17,8 @@ using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 using namespace valhalla::tyr;
 
+using rp = rapidjson::Pointer;
+
 namespace {
 
 const auto config = test::json_to_pt(R"({
@@ -51,6 +53,11 @@ const auto config = test::json_to_pt(R"({
     }
   })");
 
+void check_coords(const rapidjson::Value& a, const rapidjson::Value& b) {
+  EXPECT_NEAR(a.GetArray()[0].GetDouble(), b.GetArray()[0].GetDouble(), 0.00002);
+  EXPECT_NEAR(a.GetArray()[1].GetDouble(), b.GetArray()[1].GetDouble(), 0.00002);
+}
+
 void try_isochrone(loki_worker_t& loki_worker,
                    thor_worker_t& thor_worker,
                    const std::string& test_request,
@@ -66,13 +73,55 @@ void try_isochrone(loki_worker_t& loki_worker,
   response.Parse(response_json);
   expected_response.Parse(expected_json);
 
+  // Same number of features
+  auto feature_count = rp("/features").Get(expected_response)->GetArray().Size();
+  ASSERT_EQ(rp("/features").Get(response)->GetArray().Size(), feature_count);
+
+  // Check features are in the right order and look roughly the same
+  for (size_t i = 0; i < feature_count; ++i) {
+    // same metadata
+    auto resp_prop = rp("/features/" + std::to_string(i) + "/properties").Get(response);
+    auto expt_prop = rp("/features/" + std::to_string(i) + "/properties").Get(expected_response);
+    EXPECT_TRUE((resp_prop && expt_prop) || (!resp_prop && !expt_prop));
+    if (expt_prop) {
+      ASSERT_EQ(resp_prop->GetObject(), expt_prop->GetObject());
+    }
+
+    // same geom type
+    std::string resp_type =
+        rp("/features/" + std::to_string(i) + "/geometry/type").Get(response)->GetString();
+    std::string expt_type =
+        rp("/features/" + std::to_string(i) + "/geometry/type").Get(expected_response)->GetString();
+    ASSERT_EQ(resp_type, expt_type);
+
+    // point is special
+    if (expt_type == "Point") {
+      check_coords(*rp("/features/" + std::to_string(i) + "/geometry/coordinates").Get(response),
+                   *rp("/features/" + std::to_string(i) + "/geometry/coordinates")
+                        .Get(expected_response));
+    } // iteration required
+    else {
+      // same geom appx
+      auto resp_geom = rp("/features/" + std::to_string(i) + "/geometry/coordinates" +
+                          (resp_type == "Polygon" ? "/0" : ""))
+                           .Get(response)
+                           ->GetArray();
+      auto expt_geom = rp("/features/" + std::to_string(i) + "/geometry/coordinates" +
+                          (expt_type == "Polygon" ? "/0" : ""))
+                           .Get(expected_response)
+                           ->GetArray();
+      ASSERT_EQ(resp_geom.Size(), expt_geom.Size());
+      for (size_t j = 0; j < expt_geom.Size(); ++j) {
+        auto rcoord = resp_geom[j].GetArray();
+        auto ecoord = expt_geom[j].GetArray();
+        check_coords(rcoord, ecoord);
+      }
+    }
+  }
+
   loki_worker.cleanup();
   thor_worker.cleanup();
-
-  ASSERT_EQ(response, expected_response) << "Actual:   " << response_json << std::endl
-                                         << "Expected: " << expected_json;
-
-} // namespace
+}
 
 TEST(Isochronies, Basic) {
   // Test setup
