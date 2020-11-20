@@ -157,4 +157,9 @@ operator()(const valhalla::midgard::PointXY<PrecisionT>& p) const {
   valhalla::midgard::hash_combine(seed, p.second);
   return seed;
 }
+
+template size_t hash<valhalla::midgard::PointXY<float>>::
+operator()(const valhalla::midgard::PointXY<float>&) const;
+template size_t hash<valhalla::midgard::PointXY<double>>::
+operator()(const valhalla::midgard::PointXY<double>&) const;
 } // namespace std
