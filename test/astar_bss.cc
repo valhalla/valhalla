@@ -113,6 +113,16 @@ void test(const std::string& request,
   const auto& legs = response.trip().routes(0).legs();
   const auto& directions = response.directions().routes(0).legs();
 
+  // TODO: DELETE ME
+  auto shape = midgard::decode<std::vector<midgard::PointLL>>(legs.begin()->shape());
+  for (const auto& node : legs.begin()->node()) {
+    if (node.has_edge()) {
+      std::vector<midgard::PointLL> subshape(shape.begin() + node.edge().begin_shape_index(),
+                                             shape.begin() + node.edge().end_shape_index() + 1);
+      std::cout << midgard::encode(subshape) << std::endl;
+    }
+  }
+
   EXPECT_EQ(legs.size(), 1) << "Should have 1 leg";
 
   // We going to count how many times the travel_mode has been changed
@@ -121,10 +131,9 @@ void test(const std::string& request,
   std::vector<std::string> route;
 
   for (const auto& d : directions) {
-    std::cout << d.shape() << std::endl;
-
     size_t idx = -1;
     for (const auto& m : d.maneuver()) {
+      std::cout << m.bss_maneuver_type() << std::endl;
       auto it = expected_bss_maneuver.find(++idx);
       if (it == expected_bss_maneuver.end()) {
         EXPECT_EQ(m.bss_maneuver_type(),
@@ -151,20 +160,25 @@ void test(const std::string& request,
 
   travel_modes.erase(std::unique(travel_modes.begin(), travel_modes.end()), travel_modes.end());
   std::copy(travel_modes.begin(), travel_modes.end(), std::ostream_iterator<int>(std::cout, ", "));
-  EXPECT_TRUE(std::equal(travel_modes.begin(), travel_modes.end(), expected_travel_modes.begin()))
+  std::cout << std::endl;
+  EXPECT_TRUE(std::equal(travel_modes.begin(), travel_modes.end(), expected_travel_modes.begin(),
+                         expected_travel_modes.end()))
       << "Should have " + std::to_string(expected_travel_modes.size()) + " travel_modes";
 
   std::copy(route.begin(), route.end(), std::ostream_iterator<std::string>(std::cout, ", "));
-  EXPECT_TRUE(std::equal(route.begin(), route.end(), expected_route.begin()))
+  std::cout << std::endl;
+  EXPECT_TRUE(std::equal(route.begin(), route.end(), expected_route.begin(), expected_route.end()))
       << "The route is incorrect";
 }
 
 /*
- * A general case
+ * In this test, we make it free to rent/return, so the algorithm will prefer bike share routes
  */
 TEST(AstarBss, test_With_Mode_Changes) {
   std::string request =
-      R"({"locations":[{"lat":48.86481,"lon":2.361015},{"lat":48.859782,"lon":2.36101}],"costing":"bikeshare"})";
+      R"({"locations":[{"lat":48.86481,"lon":2.361015},{"lat":48.85984,"lon":2.36090}],"costing":"bikeshare",
+	       "costing_options":{"pedestrian":{"bss_rent_cost":0,"bss_rent_penalty":0},
+	                          "bicycle"   :{"bss_return_cost":0,"bss_return_penalty":0}}})";
   std::vector<valhalla::DirectionsLeg_TravelMode>
       expected_travel_modes{valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian,
                             valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kBicycle,
