@@ -255,7 +255,7 @@ TEST(InstructionsRoundaboutRegression, TurnChannelRoundaboutExitRegression) {
           .str();
 
   auto result = gurka::route(map, request);
-  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStartRight,
                                                 DirectionsLeg_Maneuver_Type_kExitRight,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutExit,

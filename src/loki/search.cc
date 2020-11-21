@@ -276,6 +276,8 @@ struct bin_handler_t {
       return;
     // we need this because we might need to go to different levels
     double distance = std::numeric_limits<double>::lowest();
+    auto sq_tolerance = square(double(location.street_side_tolerance_));
+    auto sq_max_distance = square(double(location.street_side_max_distance_));
     std::function<void(const GraphId& node_id, bool transition)> crawl;
     crawl = [&](const GraphId& node_id, bool follow_transitions) {
       // now that we have a node we can pass back all the edges leaving and entering it
@@ -301,11 +303,19 @@ struct bin_handler_t {
         float angle =
             tangent_angle(index, candidate.point, info.shape(),
                           GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
+        auto side =
+            candidate.get_side(location.display_latlng_ ? *location.display_latlng_
+                                                        : location.latlng_,
+                               angle,
+                               location.display_latlng_
+                                   ? location.display_latlng_->DistanceSquared(candidate.point)
+                                   : candidate.sq_distance,
+                               sq_tolerance, sq_max_distance);
         // do we want this edge
         if (costing->Filter(edge, tile) != 0.0f) {
           auto reach = get_reach(id, edge);
-          PathLocation::PathEdge
-              path_edge{id, 0, node_ll, distance, PathLocation::NONE, reach.outbound, reach.inbound};
+          PathLocation::PathEdge path_edge{id,           0, node_ll, distance, side, reach.outbound,
+                                           reach.inbound};
           if (heading_filter(location, angle)) {
             filtered.emplace_back(std::move(path_edge));
           } else if (correlated_edges.insert(path_edge.id).second) {
@@ -322,12 +332,9 @@ struct bin_handler_t {
 
         if (costing->Filter(other_edge, other_tile) != 0.0f) {
           auto reach = get_reach(other_id, other_edge);
-          PathLocation::PathEdge path_edge{other_id,
-                                           1,
-                                           node_ll,
-                                           distance,
-                                           PathLocation::NONE,
-                                           reach.outbound,
+          PathLocation::PathEdge path_edge{other_id,        1,
+                                           node_ll,         distance,
+                                           flip_side(side), reach.outbound,
                                            reach.inbound};
           // angle is 180 degrees opposite direction of the one above
           if (heading_filter(location, std::fmod(angle + 180.f, 360.f))) {
