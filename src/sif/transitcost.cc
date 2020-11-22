@@ -7,7 +7,7 @@
 #include "worker.h"
 
 #ifdef INLINE_TEST
-#include "test/test.h"
+#include "test.h"
 #include <random>
 #endif
 

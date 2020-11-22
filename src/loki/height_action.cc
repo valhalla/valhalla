@@ -87,7 +87,7 @@ std::string loki_worker_t::height(Api& request) {
   }
 
   // get the distances between the postings if desired
-  std::vector<float> ranges;
+  std::vector<double> ranges;
   if (request.options().range()) {
     ranges.reserve(shape.size());
     ranges.emplace_back(0);

@@ -1,5 +1,4 @@
 #include "test.h"
-#include "utils.h"
 
 #include "midgard/logging.h"
 #include "thor/attributes_controller.h"

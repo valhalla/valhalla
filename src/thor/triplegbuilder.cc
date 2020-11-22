@@ -241,6 +241,7 @@ void SetShapeAttributes(const AttributesController& controller,
   }
 
   // Find the first cut to the right of where we start on this edge
+  auto edgeinfo = tile->edgeinfo(edge->edgeinfo_offset());
   double distance_total_pct = src_pct;
   auto cut_itr = std::find_if(cuts.cbegin(), cuts.cend(),
                               [distance_total_pct](const decltype(cuts)::value_type& s) {
@@ -283,6 +284,11 @@ void SetShapeAttributes(const AttributesController& controller,
     if (controller.attributes.at(kShapeAttributesSpeed)) {
       // convert speed to decimeters per sec and then round to an integer
       leg.mutable_shape_attributes()->add_speed((distance * kDecimeterPerMeter / time) + 0.5);
+    }
+
+    // Set the maxspeed if requested
+    if (controller.attributes.at(kShapeAttributesSpeedLimit)) {
+      leg.mutable_shape_attributes()->add_speed_limit(edgeinfo.speed_limit());
     }
 
     // Set the incidents if we just cut or we are at the end
@@ -417,7 +423,6 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const bool drive_on_right,
                           TripLeg_Node* trip_node,
                           const GraphTile* graphtile,
-                          GraphReader& graphreader,
                           const uint32_t second_of_week,
                           const uint32_t start_node_idx,
                           const bool has_junction_name,
@@ -1002,12 +1007,16 @@ void TripLegBuilder::Build(
     valhalla::Location& dest,
     const std::list<valhalla::Location>& through_loc,
     TripLeg& trip_path,
+    const std::vector<std::string>& algorithms,
     const std::function<void()>* interrupt_callback,
     std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>* edge_trimming) {
   // Test interrupt prior to building trip path
   if (interrupt_callback) {
     (*interrupt_callback)();
   }
+
+  // Remember what algorithms were used to create this leg
+  *trip_path.mutable_algorithms() = {algorithms.begin(), algorithms.end()};
 
   // Set origin, any through locations, and destination. Origin and
   // destination are assumed to be breaks.
@@ -1173,8 +1182,8 @@ void TripLegBuilder::Build(
     TripLeg_Edge* trip_edge =
         AddTripEdge(controller, edge, edge_itr->trip_id, multimodal_builder.block_id, mode,
                     travel_type, costing, directededge, node->drive_on_right(), trip_node, graphtile,
-                    graphreader, time_info.second_of_week, startnode.id(), node->named_intersection(),
-                    start_tile, edge_itr->restriction_index);
+                    time_info.second_of_week, startnode.id(), node->named_intersection(), start_tile,
+                    edge_itr->restriction_index);
 
     // some information regarding shape/length trimming
     auto is_first_edge = edge_itr == path_begin;
@@ -1276,7 +1285,7 @@ void TripLegBuilder::Build(
     if (controller.attributes.at(kEdgeLength)) {
       float km =
           std::max(directededge->length() * kKmPerMeter * (trim_end_pct - trim_start_pct), 0.001f);
-      trip_edge->set_length(km);
+      trip_edge->set_length_km(km);
     }
 
     // How long on this edge?

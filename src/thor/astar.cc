@@ -79,7 +79,7 @@ void AStarPathAlgorithm::Init(const midgard::PointLL& origll, const midgard::Poi
 // the destination (increase distance for lower densities and decrease
 // for higher densities) and the distance between origin and destination
 // (increase for shorter distances).
-void AStarPathAlgorithm::ModifyHierarchyLimits(const float dist, const uint32_t density) {
+void AStarPathAlgorithm::ModifyHierarchyLimits(const float dist, const uint32_t /*density*/) {
   // TODO - default distance below which we increase expansion within
   // distance. This is somewhat temporary to address route quality on shorter
   // routes - hopefully we will mark the data somehow to indicate how to
@@ -247,7 +247,7 @@ AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
                                 GraphReader& graphreader,
                                 const sif::mode_costing_t& mode_costing,
                                 const TravelMode mode,
-                                const Options& options) {
+                                const Options& /*options*/) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -348,7 +348,7 @@ AStarPathAlgorithm::GetBestPath(valhalla::Location& origin,
 
 // Add an edge at the origin to the adjacency list
 void AStarPathAlgorithm::SetOrigin(GraphReader& graphreader,
-                                   valhalla::Location& origin,
+                                   const valhalla::Location& origin,
                                    const valhalla::Location& destination,
                                    const uint32_t seconds_of_week) {
   // Only skip inbound edges if we have other options

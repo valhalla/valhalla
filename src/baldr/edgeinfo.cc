@@ -165,6 +165,7 @@ uint16_t EdgeInfo::GetTypes() const {
 }
 
 // Returns shape as a vector of PointLL
+// TODO: use shared ptr here so that we dont have to worry about lifetime
 const std::vector<midgard::PointLL>& EdgeInfo::shape() const {
   // if we haven't yet decoded the shape, do so
   if (encoded_shape_ != nullptr && shape_.empty()) {

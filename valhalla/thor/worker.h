@@ -74,7 +74,8 @@ protected:
   void log_admin(const TripLeg&);
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
                                           const Location& origin,
-                                          const Location& destination);
+                                          const Location& destination,
+                                          const Options& options);
   void route_match(Api& request);
   /**
    * Returns the results of the map match where the first float is the normalized

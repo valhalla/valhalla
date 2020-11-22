@@ -68,12 +68,20 @@ public:
               baldr::GraphReader& graphreader,
               const sif::mode_costing_t& mode_costing,
               const sif::TravelMode mode,
-              const Options& options = Options::default_instance());
+              const Options& options = Options::default_instance()) override;
+
+  /**
+   * Returns the name of the algorithm
+   * @return the name of the algorithm
+   */
+  virtual const char* name() const override {
+    return "bidirectional_a*";
+  }
 
   /**
    * Clear the temporary information generated during path construction.
    */
-  void Clear();
+  void Clear() override;
 
 protected:
   // Access mode used by the costing method
@@ -122,14 +130,24 @@ protected:
   void Init(const midgard::PointLL& origll, const midgard::PointLL& destll);
 
   /**
-   * Expand from the node along the forward search path.
+   * Expand from the node along the forward search path
+   *
+   * @param graphreader        to access graph data
+   * @param node               the node from which to expand
+   * @param pred               the previous edge label in the forward expansion
+   * @param pred_idx           the index of the label in the label set
+   * @param from_transition    whether or not we are expanding at a graph node transition
+   * @param time_info          time tracking information about the start of the route
+   * @param invariant          static date_time, dont offset the time as the path lengthens
+   * @return returns true if the expansion continued from this node
    */
   bool ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
                      sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition,
-                     const baldr::TimeInfo& time_info);
+                     const baldr::TimeInfo& time_info,
+                     const bool invariant);
   // Private helper function for `ExpandForward`
   bool ExpandForwardInner(baldr::GraphReader& graphreader,
                           const sif::BDEdgeLabel& pred,
@@ -141,7 +159,16 @@ protected:
                           const baldr::TimeInfo& time_info);
 
   /**
-   * Expand from the node along the reverse search path.
+   * Expand from the node along the reverse search path
+   *
+   * @param graphreader        to access graph data
+   * @param node               the node from which to expand
+   * @param pred               the previous edge label in the reverse expansion
+   * @param pred_idx           the index of the label in the label set
+   * @param from_transition    whether or not we are expanding at a graph node transition
+   * @param time_info          time tracking information about the end of the route
+   * * @param invariant          static date_time, dont offset the time as the path lengthens
+   * @return returns true if the expansion continued from this node in this direction
    */
   bool ExpandReverse(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
@@ -149,8 +176,8 @@ protected:
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
                      const bool from_transition,
-                     const baldr::TimeInfo& time_info);
-
+                     const baldr::TimeInfo& time_info,
+                     const bool invariant);
   // Private helper function for `ExpandReverse`
   bool ExpandReverseInner(baldr::GraphReader& graphreader,
                           const sif::BDEdgeLabel& pred,
@@ -163,17 +190,23 @@ protected:
                           const baldr::TimeInfo& time_info);
   /**
    * Add edges at the origin to the forward adjacency list.
-   * @param  graphreader  Graph tile reader.
-   * @param  origin       Location information of the destination
+   * @param graphreader  Graph tile reader.
+   * @param origin       Location information of the destination
+   * @param time_info    What time is it when we start the route
    */
-  void SetOrigin(baldr::GraphReader& graphreader, valhalla::Location& origin);
+  void SetOrigin(baldr::GraphReader& graphreader,
+                 valhalla::Location& origin,
+                 const baldr::TimeInfo& time_info);
 
   /**
    * Add destination edges to the reverse path adjacency list.
    * @param   graphreader  Graph tile reader.
    * @param   dest         Location information of the destination
+   * @param time_info    What time is it when we end the route
    */
-  void SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
+  void SetDestination(baldr::GraphReader& graphreader,
+                      const valhalla::Location& dest,
+                      const baldr::TimeInfo& time_info);
 
   /**
    * The edge on the forward search connects to a reached edge on the reverse

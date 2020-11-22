@@ -1,5 +1,4 @@
 #include "test.h"
-#include "utils.h"
 
 #include "baldr/curl_tilegetter.h"
 #include "baldr/graphtile.h"

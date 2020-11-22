@@ -612,16 +612,15 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
 
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
   GraphReader reader(hierarchy_properties);
-  auto level = TileHierarchy::levels().rbegin();
-  for (; level != TileHierarchy::levels().rend(); ++level) {
+  for (auto tl = TileHierarchy::levels().rbegin(); tl != TileHierarchy::levels().rend(); ++tl) {
     // Create a randomized queue of tiles to work from
-    auto tile_level = level->second;
     std::deque<GraphId> tempqueue;
-    auto level_tiles = reader.GetTileSet(tile_level.level);
+    auto level_tiles = reader.GetTileSet(tl->level);
     for (const auto& tile_id : level_tiles) {
       tempqueue.emplace_back(tile_id);
     }
-    std::random_shuffle(tempqueue.begin(), tempqueue.end());
+    std::random_device rd;
+    std::shuffle(tempqueue.begin(), tempqueue.end(), std::mt19937(rd()));
     std::queue<GraphId> tilequeue(tempqueue);
 
     // An atomic object we can use to do the synchronization
@@ -635,7 +634,7 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
     std::vector<std::promise<DataQuality>> results(threads.size());
 
     // Start the threads
-    LOG_INFO("Adding Restrictions at level " + std::to_string(tile_level.level));
+    LOG_INFO("Adding Restrictions at level " + std::to_string(tl->level));
     for (size_t i = 0; i < threads.size(); ++i) {
       threads[i].reset(new std::thread(build, std::cref(complex_from_restrictions_file),
                                        std::cref(complex_to_restrictions_file),

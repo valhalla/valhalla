@@ -1,7 +1,7 @@
 #include "gurka.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "sif/recost.h"
-#include <gtest/gtest.h>
+#include "test.h"
 
 using namespace valhalla;
 
@@ -27,21 +27,13 @@ TEST(recosting, same_historical) {
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
 
   // add historical traffic so that we can get different costs at different times
-  // TODO: move this into test utils with a callback per edge to get speed from the test
-  for (const auto& tile_id : reader->GetTileSet()) {
-    valhalla::mjolnir::GraphTileBuilder tile(tile_dir, tile_id, false);
-    std::vector<valhalla::baldr::DirectedEdge> edges;
-    edges.reserve(tile.header()->directededgecount());
-    for (const auto& edge : tile.GetDirectedEdges()) {
-      edges.push_back(edge);
-      edges.back().set_free_flow_speed(80);
-      edges.back().set_speed(55);
-      edges.back().set_constrained_flow_speed(10);
-      // TODO: add historical 5 minutely buckets
-      // tile.AddPredictedSpeed();
-    }
-    tile.UpdatePredictedSpeeds(edges);
-  }
+  test::customize_historical_traffic(map.config, [](baldr::DirectedEdge& e) {
+    e.set_free_flow_speed(80);
+    e.set_speed(55);
+    e.set_constrained_flow_speed(10);
+    // TODO: add historical 5 minutely buckets
+    return std::vector<int16_t>{};
+  });
 
   // run a route and check that the costs are the same for the same options
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -248,7 +240,7 @@ TEST(recosting, all_algorithms) {
         uint32_t pred = baldr::kInvalidLabel;
         sif::LabelCallback label_cb = [&elapsed_itr, &length, &pred,
                                        reverse](const sif::EdgeLabel& label) -> void {
-          length += elapsed_itr->edge().length() * 1000.0;
+          length += elapsed_itr->edge().length_km() * 1000.0;
           EXPECT_EQ(elapsed_itr->edge().id(), label.edgeid());
           EXPECT_EQ(pred++, label.predecessor());
           EXPECT_EQ(static_cast<uint8_t>(elapsed_itr->edge().travel_mode()),

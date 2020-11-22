@@ -1,5 +1,4 @@
 #include "test.h"
-#include "utils.h"
 
 #include <iostream>
 #include <string>
@@ -39,11 +38,11 @@ public:
 
   bool Allowed(const DirectedEdge* edge,
                const EdgeLabel& pred,
-               const GraphTile* tile,
+               const GraphTile* /*tile*/,
                const GraphId& edgeid,
-               const uint64_t current_time,
-               const uint32_t tz_index,
-               int& restriction_idx) const override {
+               const uint64_t /*current_time*/,
+               const uint32_t /*tz_index*/,
+               int& /*restriction_idx*/) const override {
     if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (pred.restrictions() & (1 << edge->localedgeidx())) ||
         edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
@@ -56,11 +55,11 @@ public:
   bool AllowedReverse(const DirectedEdge* edge,
                       const EdgeLabel& pred,
                       const DirectedEdge* opp_edge,
-                      const GraphTile* tile,
+                      const GraphTile* /*tile*/,
                       const GraphId& opp_edgeid,
-                      const uint64_t current_time,
-                      const uint32_t tz_index,
-                      int& restriction_idx) const override {
+                      const uint64_t /*current_time*/,
+                      const uint32_t /*tz_index*/,
+                      int& /*restriction_idx*/) const override {
     if (!IsAccessible(opp_edge) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
@@ -71,28 +70,29 @@ public:
     return true;
   }
 
-  Cost EdgeCost(const baldr::DirectedEdge* edge,
-                const baldr::TransitDeparture* departure,
-                const uint32_t curr_time) const override {
+  Cost EdgeCost(const baldr::DirectedEdge* /*edge*/,
+                const baldr::TransitDeparture* /*departure*/,
+                const uint32_t /*curr_time*/) const override {
     throw std::runtime_error("We shouldnt be testing transit edges");
   }
 
-  Cost
-  EdgeCost(const DirectedEdge* edge, const GraphTile* tile, const uint32_t seconds) const override {
+  Cost EdgeCost(const DirectedEdge* edge,
+                const GraphTile* /*tile*/,
+                const uint32_t /*seconds*/) const override {
     float sec = static_cast<float>(edge->length());
     return {sec / 10.0f, sec};
   }
 
-  Cost TransitionCost(const DirectedEdge* edge,
-                      const NodeInfo* node,
-                      const EdgeLabel& pred) const override {
+  Cost TransitionCost(const DirectedEdge* /*edge*/,
+                      const NodeInfo* /*node*/,
+                      const EdgeLabel& /*pred*/) const override {
     return {5.0f, 5.0f};
   }
 
-  Cost TransitionCostReverse(const uint32_t idx,
-                             const NodeInfo* node,
-                             const DirectedEdge* opp_edge,
-                             const DirectedEdge* opp_pred_edge) const override {
+  Cost TransitionCostReverse(const uint32_t /*idx*/,
+                             const NodeInfo* /*node*/,
+                             const DirectedEdge* /*opp_edge*/,
+                             const DirectedEdge* /*opp_pred_edge*/) const override {
     return {5.0f, 5.0f};
   }
 
@@ -223,10 +223,10 @@ const auto test_request_osrm = R"({
     "costing":"auto"
   }&format=osrm)";
 
-std::vector<TimeDistance> matrix_answers = {{28, 28},     {2027, 1837}, {2389, 2208}, {4164, 3839},
-                                            {1518, 1397}, {1809, 1639}, {2043, 1938}, {3946, 3641},
-                                            {2299, 2109}, {687, 637},   {0, 0},       {2809, 2623},
-                                            {5554, 5178}, {3942, 3706}, {4344, 4104}, {1815, 1679}};
+std::vector<TimeDistance> matrix_answers = {{28, 28},     {2027, 1837}, {2390, 2209}, {4163, 3838},
+                                            {1519, 1398}, {1808, 1638}, {2042, 1937}, {3944, 3639},
+                                            {2298, 2107}, {687, 637},   {0, 0},       {2808, 2623},
+                                            {5552, 5177}, {3942, 3707}, {4344, 4104}, {1815, 1680}};
 } // namespace
 
 const uint32_t kThreshold = 1;

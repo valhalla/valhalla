@@ -30,16 +30,16 @@ public:
   enum SideOfStreet { NONE = 0, LEFT, RIGHT };
   struct PathEdge {
     PathEdge(const GraphId& id,
-             const float percent_along,
+             const double percent_along,
              const midgard::PointLL& projected,
-             const float score,
+             const double score,
              const SideOfStreet sos = NONE,
              const unsigned int outbound_reach = 0,
              const unsigned int inbound_reach = 0);
     // the directed edge it appears on
     GraphId id;
     // how far along the edge it is (as a percentage  from 0 - 1)
-    float percent_along;
+    double percent_along;
     // the projected point along the edge where the original location correlates
     midgard::PointLL projected;
     // what side of the edge is it on
@@ -51,7 +51,7 @@ public:
 
     // a measure of how close the result is to the original input where the
     // lower the score the better the match, maybe there's a better word for this?
-    float distance;
+    double distance;
     // minimum number of nodes reachable from this edge
     unsigned int outbound_reach;
     // minimum number of nodes that can reach this edge

@@ -37,7 +37,7 @@ public:
    * Get the set of levels in this hierarchy.
    * @return set of TileLevel objects.
    */
-  static const std::map<uint8_t, TileLevel>& levels();
+  static const std::vector<TileLevel>& levels();
 
   /**
    * Get the transit level in this hierarchy.

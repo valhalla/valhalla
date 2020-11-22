@@ -70,11 +70,11 @@ TEST(RecoverShortcut, test_recover_shortcut_edges) {
   // for each tile set per level
   for (const auto& level : TileHierarchy::levels()) {
     // we dont get shortcuts on level 2 and up
-    if (level.first > 1)
+    if (level.level > 1)
       continue;
 
     // for each tile in the tile set
-    auto tileset = graphreader.GetTileSet(level.first);
+    auto tileset = graphreader.GetTileSet(level.level);
     for (const auto tileid : tileset) {
       printf("bad: %zu, total: %zu\n", bad, total);
       if (graphreader.OverCommitted())
