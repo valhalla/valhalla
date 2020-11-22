@@ -649,6 +649,7 @@ public:
   using MotorScooterCost::ferry_transition_cost_;
   using MotorScooterCost::gate_cost_;
   using MotorScooterCost::maneuver_penalty_;
+  using MotorScooterCost::top_speed_;
 };
 
 TestMotorScooterCost* make_motorscootercost_from_json(const std::string& property, float testVal) {
