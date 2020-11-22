@@ -75,6 +75,8 @@ constexpr ranged_default_t<float> kCountryCrossingPenaltyRange{0, kDefaultCountr
 constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHillsRange{0, kDefaultUseHills, 1.0f};
 constexpr ranged_default_t<float> kUsePrimaryRange{0, kDefaultUsePrimary, 1.0f};
+constexpr ranged_default_t<uint32_t> kTopSpeedRange{kMinimumTopSpeed, kDefaultTopSpeed,
+                                                    kMaximumTopSpeed};
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
                                                                kMaxPenalty};
 
@@ -589,6 +591,11 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
         kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
                            .get_value_or(kDefaultUseFerry)));
 
+    // top_speed; override defaults
+    pbf_costing_options->set_top_speed(
+        kTopSpeedRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/top_speed")
+                           .get_value_or(kDefaultTopSpeed)));
+
     // use_hills
     pbf_costing_options->set_use_hills(
         kUseHillsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_hills")
@@ -608,6 +615,7 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_country_crossing_cost(kDefaultCountryCrossingCost);
     pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
     pbf_costing_options->set_ferry_cost(kDefaultFerryCost);
+    pbf_costing_options->set_top_speed(kDefaultTopSpeed);
     pbf_costing_options->set_use_ferry(kDefaultUseFerry);
     pbf_costing_options->set_use_hills(kDefaultUseHills);
     pbf_costing_options->set_use_primary(kDefaultUsePrimary);
