@@ -1018,11 +1018,11 @@ void test_backtrack_complex_restriction(int date_time_type) {
     case 0:
     case 1:
       correct_shape =
-          R"(kggmAc{abeEyD`IaBvCp@\|d@tYfGhCp]pRnCzArDhB{CbFoDyByCyAsYuP}KaGsA}@wJqGcU{Ko@]qFgDz@{A)";
+          R"(kggmA_{abeEyDbIaBtCp@Z|d@pYfGdCp]xRnCzArDlB{C`FqDyBwC_BsYmP}KoGsAw@wJmGcUcLo@[qFaDz@aB)";
       break;
     case 2:
       correct_shape =
-          R"(srgmA_habeE}@xBqFgDkB}@_WgNkB}@iXuNuJeFcIcFcVkL}Z}IoVeE^eFy@iBb@LvQdE|b@zKdIvDd`@~Sh\pQ~XfOfBz@rCcF)";
+          R"(wrgmAsgabeEy@hBqFaDkBcA_WcNkBw@iX_OuJ}EcIgFcVgL}ZgJoVeE^yEy@uBb@PvQfE|b@bLdIpDd`@|Sh\vQ~XxNfB~@pC}E)";
       break;
     default:
       throw std::runtime_error("unhandled case");
@@ -1410,7 +1410,7 @@ TEST(Astar, test_complex_restriction_short_path_melborne) {
         R"({"locations":[{"lat":-37.627860699397075,"lon":145.365825588286},{"lat":-37.62842169939707,"lon":145.36587158828598}],"costing":"auto"})";
     auto response = tester.test(request);
     const auto& leg = response.trip().routes(0).legs(0);
-    EXPECT_EQ(leg.shape(), "`|rwfAislgtGvN}UvDvDxLhM");
+    EXPECT_EQ(leg.shape(), "~{rwfAmslgtGxNkUvDtDtLjM");
   }
   {
     // Tests "X-crossing",
@@ -1419,7 +1419,7 @@ TEST(Astar, test_complex_restriction_short_path_melborne) {
         R"({"locations":[{"lat":-37.62403769939707,"lon":145.360320588286},{"lat":-37.624804699397075,"lon":145.36041758828597}],"costing":"auto"})";
     auto response = tester.test(request);
     const auto& leg = response.trip().routes(0).legs(0);
-    EXPECT_EQ(leg.shape(), "tmkwfAa{agtGjAyBpBwC`HmK`M]`R`R");
+    EXPECT_EQ(leg.shape(), "rmkwfAwzagtGlAgCnB}CfHcKzLk@lPbQ");
   }
 }
 

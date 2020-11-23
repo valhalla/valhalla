@@ -526,8 +526,14 @@ bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) 
 
   // Get both directed edges
   const GraphTile* t1 = GetGraphTile(edge1);
+  if (!t1) {
+    return false;
+  }
   const DirectedEdge* de1 = t1->directededge(edge1);
   const GraphTile* t2 = (edge2.Tile_Base() == edge1.Tile_Base()) ? t1 : GetGraphTile(edge2);
+  if (!t2) {
+    return false;
+  }
   const DirectedEdge* de2 = t2->directededge(edge2);
   if (de1->endnode() == de2->endnode() || is_transition(de1->endnode(), de2->endnode())) {
     return true;
@@ -606,7 +612,7 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
   };
 
   // No shortcuts on the local level or transit level.
-  if (id.level() >= TileHierarchy::levels().rbegin()->second.level) {
+  if (id.level() >= TileHierarchy::levels().back().level) {
     return {};
   }
 
@@ -799,7 +805,7 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
   } // or individually on disk
   else if (!tile_dir_.empty()) {
     // for each level
-    for (uint8_t level = 0; level <= TileHierarchy::levels().rbegin()->first + 1; ++level) {
+    for (uint8_t level = 0; level <= TileHierarchy::GetTransitLevel().level; ++level) {
       // crack open this level of tiles directory
       filesystem::path root_dir(tile_dir_ + filesystem::path::preferred_separator +
                                 std::to_string(level) + filesystem::path::preferred_separator);

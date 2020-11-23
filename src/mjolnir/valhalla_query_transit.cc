@@ -427,8 +427,8 @@ int main(int argc, char* argv[]) {
 
   // Get the tile
   PointLL stopll(o_lng, o_lat);
-  auto local_level = TileHierarchy::levels().rbegin()->second.level;
-  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
+  auto local_level = TileHierarchy::levels().back().level;
+  auto tiles = TileHierarchy::levels().back().tiles;
   uint32_t tileid = tiles.TileId(stopll);
   LOG_INFO("Origin Tile " + std::to_string(tileid));
 

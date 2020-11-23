@@ -32,7 +32,7 @@ namespace {
 std::string pathToGPX(const google::protobuf::RepeatedPtrField<TripLeg>& legs) {
   // start the gpx, we'll use 6 digits of precision
   std::stringstream gpx;
-  gpx << std::setprecision(6) << std::fixed;
+  gpx << std::setprecision(DIGITS_PRECISION) << std::fixed;
   gpx << R"(<?xml version="1.0" encoding="UTF-8" standalone="no"?><gpx version="1.1" creator="libvalhalla"><metadata/>)";
 
   // for each leg

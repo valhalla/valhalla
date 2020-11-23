@@ -408,7 +408,7 @@ public:
    * @return GraphTile* a pointer to the graph tile
    */
   const GraphTile* GetGraphTile(const midgard::PointLL& pointll) {
-    return GetGraphTile(pointll, TileHierarchy::levels().rbegin()->second.level);
+    return GetGraphTile(pointll, TileHierarchy::levels().back().level);
   }
 
   /**
