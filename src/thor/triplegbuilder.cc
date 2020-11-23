@@ -1296,7 +1296,7 @@ void TripLegBuilder::Build(
     if (controller.attributes.at(kEdgeLength)) {
       float km =
           std::max(directededge->length() * kKmPerMeter * (trim_end_pct - trim_start_pct), 0.001f);
-      trip_edge->set_length(km);
+      trip_edge->set_length_km(km);
     }
 
     // How long on this edge?
