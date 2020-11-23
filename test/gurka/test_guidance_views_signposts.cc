@@ -24,13 +24,13 @@ protected:
     )";
     const gurka::ways ways =
         {{"AB", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "National Route 1"}}},
-         {"BC",
-          {{"highway", "motorway"},
-           {"oneway", "yes"},
-           {"name", "National Route 1"},
-           {"guidance_view:signboard:base", "SI_53271604;A1"}}},
+         {"BC", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "National Route 1"}}},
          {"CX", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "National Route 1"}}},
-         {"CD", {{"highway", "motorway_link"}, {"oneway", "yes"}, {"name", "xyz ramp"}}},
+         {"CD",
+          {{"highway", "motorway_link"},
+           {"oneway", "yes"},
+           {"name", "xyz ramp"},
+           {"guidance_view:signboard:base", "SI_53271604;A1"}}},
          {"DF", {{"highway", "motorway_link"}, {"oneway", "yes"}, {"name", "xyz ramp"}}},
          {"EFG", {{"highway", "motorway"}, {"oneway", "yes"}, {"name", "National Route 2"}}}};
 
