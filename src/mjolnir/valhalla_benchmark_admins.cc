@@ -183,8 +183,8 @@ void Benchmark(const boost::property_tree::ptree& pt) {
   // Graphreader
   auto hierarchy_properties = pt.get_child("mjolnir");
   GraphReader reader(hierarchy_properties);
-  auto local_level = TileHierarchy::levels().rbegin()->second.level;
-  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
+  auto local_level = TileHierarchy::levels().back().level;
+  auto tiles = TileHierarchy::levels().back().tiles;
 
   // Iterate through the tiles and perform enhancements
   std::unordered_map<uint32_t, multi_polygon_type> polys;

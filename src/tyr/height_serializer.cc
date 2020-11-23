@@ -10,7 +10,7 @@ using namespace valhalla::baldr;
 
 namespace {
 
-json::ArrayPtr serialize_range_height(const std::vector<float>& ranges,
+json::ArrayPtr serialize_range_height(const std::vector<double>& ranges,
                                       const std::vector<double>& heights,
                                       const uint32_t precision,
                                       const double no_data_value) {
@@ -70,7 +70,7 @@ namespace tyr {
 */
 std::string serializeHeight(const Api& request,
                             const std::vector<double>& heights,
-                            const std::vector<float>& ranges) {
+                            const std::vector<double>& ranges) {
   auto json = json::map({});
 
   // get the precision to use for returned heights

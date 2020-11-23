@@ -347,21 +347,21 @@ void parse_locations(const rapidjson::Document& doc,
         auto* location = locations->Add();
         location->set_original_index(locations->size() - 1);
 
-        auto lat = rapidjson::get_optional<float>(r_loc, "/lat");
+        auto lat = rapidjson::get_optional<double>(r_loc, "/lat");
         if (!lat) {
           throw std::runtime_error{"lat is missing"};
         };
 
-        if (*lat < -90.0f || *lat > 90.0f) {
+        if (*lat < -90.0 || *lat > 90.0) {
           throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
         }
 
-        auto lon = rapidjson::get_optional<float>(r_loc, "/lon");
+        auto lon = rapidjson::get_optional<double>(r_loc, "/lon");
         if (!lon) {
           throw std::runtime_error{"lon is missing"};
         };
 
-        lon = midgard::circular_range_clamp<float>(*lon, -180, 180);
+        lon = midgard::circular_range_clamp<double>(*lon, -180, 180);
         location->mutable_ll()->set_lat(*lat);
         location->mutable_ll()->set_lng(*lon);
 
@@ -462,10 +462,10 @@ void parse_locations(const rapidjson::Document& doc,
         if (preferred_side && PreferredSide_Enum_Parse(*preferred_side, &side)) {
           location->set_preferred_side(side);
         }
-        lat = rapidjson::get_optional<float>(r_loc, "/display_lat");
-        lon = rapidjson::get_optional<float>(r_loc, "/display_lon");
-        if (lat && lon && *lat >= -90.0f && *lat <= 90.0f) {
-          lon = midgard::circular_range_clamp<float>(*lon, -180, 180);
+        lat = rapidjson::get_optional<double>(r_loc, "/display_lat");
+        lon = rapidjson::get_optional<double>(r_loc, "/display_lon");
+        if (lat && lon && *lat >= -90.0 && *lat <= 90.0) {
+          lon = midgard::circular_range_clamp<double>(*lon, -180, 180);
           location->mutable_display_ll()->set_lat(*lat);
           location->mutable_display_ll()->set_lng(*lon);
         }

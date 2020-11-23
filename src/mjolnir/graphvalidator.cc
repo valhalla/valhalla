@@ -258,7 +258,7 @@ void validate(
   GraphReader graph_reader(pt.get_child("mjolnir"));
   // Get some things we need throughout
   auto numLevels = TileHierarchy::levels().size() + 1; // To account for transit
-  auto transit_level = TileHierarchy::levels().rbegin()->second.level + 1;
+  auto transit_level = TileHierarchy::GetTransitLevel().level;
 
   // vector to hold densities for each level
   std::vector<std::vector<float>> densities(numLevels);
@@ -282,13 +282,10 @@ void validate(
     lock.unlock();
 
     // Point tiles to the set we need for current level
+    const auto& tiles = tile_id.level() == TileHierarchy::GetTransitLevel().level
+                            ? TileHierarchy::levels().back().tiles
+                            : TileHierarchy::levels()[tile_id.level()].tiles;
     auto level = tile_id.level();
-    if (TileHierarchy::levels().rbegin()->second.level + 1 == level) {
-      level = TileHierarchy::levels().rbegin()->second.level;
-    }
-
-    const auto& tiles = TileHierarchy::levels().find(level)->second.tiles;
-    level = tile_id.level();
     auto tileid = tile_id.tileid();
 
     // Get the tile
@@ -467,7 +464,7 @@ void validate(
     tilebuilder.Update(nodes, directededges);
 
     // Write the bins to it
-    if (tile->header()->graphid().level() == TileHierarchy::levels().rbegin()->first) {
+    if (tile->header()->graphid().level() == TileHierarchy::levels().back().level) {
       auto reloaded = GraphTile(graph_reader.tile_dir(), tile_id);
       GraphTileBuilder::AddBins(graph_reader.tile_dir(), &reloaded, bins);
     }

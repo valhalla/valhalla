@@ -101,6 +101,8 @@
    * FIXED: Fixes OpenLr serialization [#2688](https://github.com/valhalla/valhalla/pull/2688)
    * FIXED: Internal edges can't be also a ramp or a turn channel.  Also, if an edge is marked as ramp and turn channel mark it as a ramp.  [2689](https://github.com/valhalla/valhalla/pull/2689)
    * FIXED: Check that speeds are equal for the edges going in the same direction while buildig shortcuts [#2691](https://github.com/valhalla/valhalla/pull/2691)
+   * FIXED: Missing fork or bear instruction [#2683](https://github.com/valhalla/valhalla/pull/2683)
+   * FIXED: Eliminate null pointer dereference in GraphReader::AreEdgesConnected [#2695](https://github.com/valhalla/valhalla/issues/2695)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
@@ -198,6 +200,7 @@
    * ADDED: Added functions for predicted speeds encoding-decoding [#2674](https://github.com/valhalla/valhalla/pull/2674)
    * ADDED: Time invariant routing via the bidirectional algorithm. This has the effect that when time dependent routes (arrive_by and depart_at) fall back to bidirectional due to length restrictions they will actually use the correct time of day for one of the search directions [#2660](https://github.com/valhalla/valhalla/pull/2660)
    * ADDED: If the length of the edge is greater than kMaxEdgeLength, then consider this a catastrophic error if the should_error bool is true in the set_length function. [2678](https://github.com/valhalla/valhalla/pull/2678)
+   * ADDED: Moved lat,lon coordinates structures from single to double precision. Improves geometry accuracy noticibly at zooms above 17 as well as coordinate snapping and any other geometric operations. Addes about a 2% performance pentalty for standard routes. Graph nodes now have 7 digits of precision.  [#2693](https://github.com/valhalla/valhalla/pull/2693)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

@@ -79,7 +79,7 @@ TEST(ConnectivityMap, Basic) {
   boost::property_tree::ptree pt;
   pt.put("tile_dir", "test/gphrdr_test");
   std::string tile_dir = pt.get<std::string>("tile_dir");
-  const auto& level = TileHierarchy::levels().find(2)->second;
+  const auto& level = TileHierarchy::levels()[2];
   filesystem::remove_all(tile_dir);
 
   // looks like this (XX) means no tile there:
