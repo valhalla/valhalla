@@ -2976,8 +2976,7 @@ void ManeuversBuilder::ProcessGuidanceViewSignBoards(Maneuver& maneuver) {
     auto curr_edge = trip_path_->GetCurrEdge(node_index);
     if (curr_edge && (curr_edge->has_sign())) {
       // Process overlay guidance view signboards
-      for (const auto& base_guidance_view_signboard :
-          curr_edge->sign().guidance_view_signboards()) {
+      for (const auto& base_guidance_view_signboard : curr_edge->sign().guidance_view_signboards()) {
 
         std::cout << "**************ProcessGuidanceViewSignboards :: "
                   << base_guidance_view_signboard.SerializeAsString() << std::endl;
@@ -2988,8 +2987,7 @@ void ManeuversBuilder::ProcessGuidanceViewSignBoards(Maneuver& maneuver) {
           guidance_view.set_data_id(std::to_string(trip_path_->osm_changeset()));
           std::cout << "********Changeset *** :: " << std::to_string(trip_path_->osm_changeset())
                     << std::endl;
-          guidance_view.set_type(
-              "signboard");
+          guidance_view.set_type("signboard");
           guidance_view.set_base_id(base_tokens.at(0) + base_tokens.at(1));
           maneuver.mutable_guidance_views()->emplace_back(guidance_view);
         }
