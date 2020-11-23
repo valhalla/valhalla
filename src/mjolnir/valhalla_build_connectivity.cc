@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
   // Get something we can use to fetch tiles
   valhalla::baldr::connectivity_map_t connectivity_map(pt.get_child("mjolnir"));
 
-  uint32_t transit_level = TileHierarchy::levels().rbegin()->second.level + 1;
+  uint32_t transit_level = TileHierarchy::levels().back().level + 1;
   for (uint32_t level = 0; level <= transit_level; level++) {
     if (!connectivity_map.has_data(level)) {
       continue;
@@ -145,11 +145,11 @@ int main(int argc, char** argv) {
 
     uint32_t width, height;
     if (level == transit_level) {
-      auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
+      auto tiles = TileHierarchy::levels().back().tiles;
       width = tiles.ncolumns();
       height = tiles.nrows();
     } else {
-      auto tiles = TileHierarchy::levels().find(level)->second.tiles;
+      const auto& tiles = TileHierarchy::levels()[level].tiles;
       width = tiles.ncolumns();
       height = tiles.nrows();
     }

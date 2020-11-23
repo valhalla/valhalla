@@ -41,7 +41,6 @@ struct validate_stats {
 // onestop_id provided in the tests.
 bool WalkTransitLines(const GraphId& n_graphId,
                       GraphReader& reader,
-                      const GraphId& tileid,
                       std::mutex& lock,
                       std::unordered_multimap<GraphId, uint64_t>& visited_map,
                       const std::string& date_time,
@@ -241,14 +240,14 @@ void validate(const boost::property_tree::ptree& pt,
           GraphId tileid = transit_tile->id();
           std::unordered_multimap<GraphId, uint64_t> visited_map;
 
-          if (!WalkTransitLines(currentNode, reader_transit_level, tileid, lock, visited_map,
-                                t->date_time, t->destination, t->route_id)) {
+          if (!WalkTransitLines(currentNode, reader_transit_level, lock, visited_map, t->date_time,
+                                t->destination, t->route_id)) {
 
             // Try again avoiding the departures found in the previous "walk"
             // We do this because we could of walked in the incorrect direction and
             // the route line could have the same name and id.
-            if (!WalkTransitLines(currentNode, reader_transit_level, tileid, lock, visited_map,
-                                  t->date_time, t->destination, t->route_id)) {
+            if (!WalkTransitLines(currentNode, reader_transit_level, lock, visited_map, t->date_time,
+                                  t->destination, t->route_id)) {
 
               LOG_DEBUG("Test from " + t->origin + " to " + t->destination + " @ " + t->date_time +
                         " route id " + t->route_id + " failed.");
@@ -479,11 +478,11 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
     // Also bail if nothing inside
     transit_dir->push_back(filesystem::path::preferred_separator);
     GraphReader reader(hierarchy_properties);
-    auto local_level = TileHierarchy::levels().rbegin()->first;
-    if (filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) +
+    auto transit_level = TileHierarchy::GetTransitLevel().level;
+    if (filesystem::is_directory(*transit_dir + std::to_string(transit_level) +
                                  filesystem::path::preferred_separator)) {
       filesystem::recursive_directory_iterator transit_file_itr(
-          *transit_dir + std::to_string(local_level + 1) + filesystem::path::preferred_separator),
+          *transit_dir + std::to_string(transit_level) + filesystem::path::preferred_separator),
           end_file_itr;
       for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
         if (filesystem::is_regular_file(transit_file_itr->path()) &&

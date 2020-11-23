@@ -216,8 +216,8 @@ int main(int argc, char* argv[]) {
   std::unordered_map<GraphId, uint64_t> tile_set(kMaxGraphTileId * TileHierarchy::levels().size());
   uint64_t edge_count = 0;
   for (const auto& level : TileHierarchy::levels()) {
-    for (uint32_t i = 0; i < level.second.tiles.TileCount(); ++i) {
-      GraphId tile_id{i, level.first, 0};
+    for (uint32_t i = 0; i < level.tiles.TileCount(); ++i) {
+      GraphId tile_id{i, level.level, 0};
       if (reader.DoesTileExist(tile_id)) {
         // TODO: just read the header, parsing the whole thing isnt worth it at this point
         tile_set.emplace(tile_id, edge_count);

@@ -54,7 +54,7 @@ template <class coord_t> struct closest_first_generator_t {
   valhalla::midgard::Tiles<coord_t> tiles;
   int32_t subcols, subrows;
   std::unordered_set<int32_t> queued;
-  using best_t = std::pair<float, int32_t>;
+  using best_t = std::pair<double, int32_t>;
   std::set<best_t, std::function<bool(const best_t&, const best_t&)>> queue;
 
   closest_first_generator_t(const valhalla::midgard::Tiles<coord_t>& tiles, const coord_t& seed)
@@ -74,14 +74,14 @@ template <class coord_t> struct closest_first_generator_t {
   }
 
   // something to measure the closest possible point of a subdivision from the given seed point
-  float dist(int32_t sub) {
+  double dist(int32_t sub) {
     auto x = sub % subcols;
     auto x0 = tiles.TileBounds().minx() + x * tiles.SubdivisionSize();
     auto x1 = tiles.TileBounds().minx() + (x + 1) * tiles.SubdivisionSize();
     auto y = sub / subcols;
     auto y0 = tiles.TileBounds().miny() + y * tiles.SubdivisionSize();
     auto y1 = tiles.TileBounds().miny() + (y + 1) * tiles.SubdivisionSize();
-    auto distance = std::numeric_limits<float>::max();
+    auto distance = std::numeric_limits<double>::max();
     std::list<coord_t> corners{{x0, y0}, {x1, y0}, {x0, y1}, {x1, y1}};
     if (x0 < seed.first && x1 > seed.first) {
       corners.emplace_back(seed.first, y0);
@@ -130,7 +130,7 @@ template <class coord_t> struct closest_first_generator_t {
   }
 
   // get the next closest subdivision
-  std::tuple<int32_t, unsigned short, float> next() {
+  std::tuple<int32_t, unsigned short, double> next() {
     // get the next closest one or bail
     if (!queue.size()) {
       throw std::runtime_error("Subdivisions were exhausted");
@@ -372,8 +372,8 @@ Tiles<coord_t>::Intersect(const container_t& linestring) const {
   // small interval so as to approximate the arc with piecewise linear segments
   container_t resampled;
   auto max_meters =
-      std::max(1.f, subdivision_size_ * .25f *
-                        DistanceApproximator<coord_t>::MetersPerLngDegree(linestring.front().second));
+      std::max(1., subdivision_size_ * .25 *
+                       DistanceApproximator<coord_t>::MetersPerLngDegree(linestring.front().second));
   if (coord_t::IsSpherical() && Polyline2<coord_t>::Length(linestring) > max_meters) {
     resampled = resample_spherical_polyline(linestring, max_meters, true);
   }
@@ -465,7 +465,7 @@ Tiles<coord_t>::Intersect(const AABB2<coord_t>& box) const {
 }
 
 template <class coord_t>
-std::function<std::tuple<int32_t, unsigned short, float>()>
+std::function<std::tuple<int32_t, unsigned short, double>()>
 Tiles<coord_t>::ClosestFirst(const coord_t& seed) const {
   return std::bind(&closest_first_generator_t<coord_t>::next,
                    closest_first_generator_t<coord_t>(*this, seed));

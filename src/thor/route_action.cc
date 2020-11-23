@@ -65,17 +65,17 @@ void via_discontinuity(
   GraphId opp_edge_id = reader.GetOpposingEdgeId(in_edge_id);
   if (opp_edge_id == out_edge_id) {
     PointLL snap_ll(in_pe->ll().lng(), in_pe->ll().lat());
-    float dist_along = in_pe->percent_along();
+    double dist_along = in_pe->percent_along();
 
     // Insert a discontinuity so the last edge of the first segment is trimmed at the beginning
     // from 0 to dist_along. Set the first
     vias.insert(
-        {path_index + (flip_index ? 1 : 0), {{false, PointLL(), 0.0f}, {true, snap_ll, dist_along}}});
+        {path_index + (flip_index ? 1 : 0), {{false, PointLL(), 0.0}, {true, snap_ll, dist_along}}});
 
     // Insert a second discontinuity so the next (opposing) edge is trimmed at the end from
     // 1-dist along to 1
     vias.insert({path_index + (flip_index ? 0 : 1),
-                 {{true, snap_ll, 1.0f - dist_along}, {false, PointLL(), 1.0f}}});
+                 {{true, snap_ll, 1.0 - dist_along}, {false, PointLL(), 1.0}}});
   }
 }
 
