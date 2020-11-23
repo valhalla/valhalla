@@ -46,7 +46,7 @@ constexpr float kShortForkThreshold = 0.05f; // Kilometers
 // in a quarter mile or 400 meters
 constexpr float kShortContinueThreshold = 0.6f;
 
-constexpr uint32_t kOverlayEdgeMax = 5; // Maximum number of edges to look for matching overlay
+constexpr uint32_t kOverlaySignBoardEdgeMax = 5; // Maximum number of edges to look for matching overlay
 
 constexpr float kUpcomingLanesThreshold = 3.f; // Kilometers
 
@@ -2942,7 +2942,7 @@ void ManeuversBuilder::MatchGuidanceViewJunctions(Maneuver& maneuver,
   // Loop over edges
   uint32_t edge_count = 0;
   for (uint32_t node_index = maneuver.begin_node_index();
-       ((node_index < maneuver.end_node_index()) && (edge_count < kOverlayEdgeMax));
+       ((node_index < maneuver.end_node_index()) && (edge_count < kOverlaySignBoardEdgeMax));
        ++node_index, edge_count++) {
     // Loop over guidance view junctions
     auto curr_edge = trip_path_->GetCurrEdge(node_index);
@@ -2970,23 +2970,18 @@ void ManeuversBuilder::ProcessGuidanceViewSignBoards(Maneuver& maneuver) {
   // Loop over edges
   uint32_t edge_count = 0;
   for (uint32_t node_index = maneuver.begin_node_index();
-       ((node_index < maneuver.end_node_index()) && (edge_count < kOverlayEdgeMax));
+       ((node_index < maneuver.end_node_index()) && (edge_count < kOverlaySignBoardEdgeMax));
        ++node_index, edge_count++) {
     // Loop over guidance view signboards
     auto curr_edge = trip_path_->GetCurrEdge(node_index);
     if (curr_edge && (curr_edge->has_sign())) {
       // Process overlay guidance view signboards
       for (const auto& base_guidance_view_signboard : curr_edge->sign().guidance_view_signboards()) {
-
-        std::cout << "**************ProcessGuidanceViewSignboards :: "
-                  << base_guidance_view_signboard.SerializeAsString() << std::endl;
         auto base_tokens = split(base_guidance_view_signboard.text(), ';');
         // If base(is_route_number) guidance view board and a pair...
         if (base_guidance_view_signboard.is_route_number() && is_pair(base_tokens)) {
           DirectionsLeg_GuidanceView guidance_view;
           guidance_view.set_data_id(std::to_string(trip_path_->osm_changeset()));
-          std::cout << "********Changeset *** :: " << std::to_string(trip_path_->osm_changeset())
-                    << std::endl;
           guidance_view.set_type("signboard");
           guidance_view.set_base_id(base_tokens.at(0) + base_tokens.at(1));
           maneuver.mutable_guidance_views()->emplace_back(guidance_view);

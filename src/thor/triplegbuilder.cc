@@ -534,8 +534,6 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                   trip_sign->mutable_guidance_view_signboards()->Add();
               trip_sign_guidance_view_signboard->set_text(sign.text());
               trip_sign_guidance_view_signboard->set_is_route_number(sign.is_route_num());
-              std::cout << "********triplegbuilder :: kGuidanceViewSignboard :: " << sign.text()
-                        << std::endl;
             }
             break;
           }
