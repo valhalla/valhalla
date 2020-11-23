@@ -46,7 +46,8 @@ constexpr float kShortForkThreshold = 0.05f; // Kilometers
 // in a quarter mile or 400 meters
 constexpr float kShortContinueThreshold = 0.6f;
 
-constexpr uint32_t kOverlaySignBoardEdgeMax = 5; // Maximum number of edges to look for matching overlay
+constexpr uint32_t kOverlaySignBoardEdgeMax =
+    5; // Maximum number of edges to look for matching overlay
 
 constexpr float kUpcomingLanesThreshold = 3.f; // Kilometers
 
