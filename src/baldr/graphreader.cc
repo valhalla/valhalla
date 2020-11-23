@@ -526,8 +526,14 @@ bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) 
 
   // Get both directed edges
   const GraphTile* t1 = GetGraphTile(edge1);
+  if (!t1) {
+    return false;
+  }
   const DirectedEdge* de1 = t1->directededge(edge1);
   const GraphTile* t2 = (edge2.Tile_Base() == edge1.Tile_Base()) ? t1 : GetGraphTile(edge2);
+  if (!t2) {
+    return false;
+  }
   const DirectedEdge* de2 = t2->directededge(edge2);
   if (de1->endnode() == de2->endnode() || is_transition(de1->endnode(), de2->endnode())) {
     return true;
