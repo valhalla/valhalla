@@ -247,6 +247,13 @@ protected:
                                   const std::string& base_suffix);
 
   /**
+   * Process the guidance view signboards.
+   *
+   * @param maneuver The maneuver to process.
+   */
+  void ProcessGuidanceViewSignBoards(Maneuver& maneuver);
+
+  /**
    * Returns true if the specified maneuver is a ramp and leads to a highway.
    *
    * @return true if the specified maneuver is a ramp and leads to a highway.
