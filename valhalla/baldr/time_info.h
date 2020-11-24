@@ -42,6 +42,14 @@ struct TimeInfo {
   baldr::DateTime::tz_sys_info_cache_t* tz_cache;
 
   /**
+   * Create TimeInfo object with default parameters.
+   * @return    TimeInfo structure
+   */
+  static TimeInfo empty() {
+    return {false, 0, 0, kConstrainedFlowSecondOfDay, 0, false, nullptr};
+  }
+
+  /**
    * Helper function to initialize the object from a location. Uses the graph to
    * find timezone information about the edge candidates at the location. If the
    * graph has no timezone information or the location has no edge candidates the
@@ -61,9 +69,8 @@ struct TimeInfo {
        baldr::DateTime::tz_sys_info_cache_t* tz_cache = nullptr,
        int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC")) {
     // No time to to track
-    if (!location.has_date_time()) {
-      return {false, 0, 0, kConstrainedFlowSecondOfDay, 0, false, nullptr};
-    }
+    if (!location.has_date_time())
+      return TimeInfo::empty();
 
     // Find the first edge whose end node has a valid timezone index and keep it
     int timezone_index = 0;
@@ -100,9 +107,8 @@ struct TimeInfo {
        baldr::DateTime::tz_sys_info_cache_t* tz_cache = nullptr,
        int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC")) {
     // No time to to track
-    if (date_time.empty()) {
-      return {false, 0, 0, kConstrainedFlowSecondOfDay, 0, false, nullptr};
-    }
+    if (date_time.empty())
+      return TimeInfo::empty();
 
     // Set the origin timezone to be the timezone at the end node use this for timezone changes
     if (timezone_index == 0) {
