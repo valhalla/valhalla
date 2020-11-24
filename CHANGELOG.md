@@ -201,6 +201,7 @@
    * ADDED: Time invariant routing via the bidirectional algorithm. This has the effect that when time dependent routes (arrive_by and depart_at) fall back to bidirectional due to length restrictions they will actually use the correct time of day for one of the search directions [#2660](https://github.com/valhalla/valhalla/pull/2660)
    * ADDED: If the length of the edge is greater than kMaxEdgeLength, then consider this a catastrophic error if the should_error bool is true in the set_length function. [2678](https://github.com/valhalla/valhalla/pull/2678)
    * ADDED: Moved lat,lon coordinates structures from single to double precision. Improves geometry accuracy noticibly at zooms above 17 as well as coordinate snapping and any other geometric operations. Addes about a 2% performance pentalty for standard routes. Graph nodes now have 7 digits of precision.  [#2693](https://github.com/valhalla/valhalla/pull/2693)
+   * ADDED: Added signboards to guidance views.  [#2687](https://github.com/valhalla/valhalla/pull/2687)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
