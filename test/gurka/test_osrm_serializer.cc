@@ -25,7 +25,7 @@ TEST(Standalone, OsrmSerializerShape) {
   auto route_geometry = json["routes"][0]["geometry"]["coordinates"].GetArray();
   EXPECT_EQ(route_geometry.Size(), 4);
 
-  // Test that shape is simplified (B-C-D should simplify out C)
+  // Test that shape is simplified (should simplify out C but not B)
   result =
       gurka::route(map, {"A", "D"}, "auto", {{"/generalize", "0"}, {"/shape_format", "geojson"}});
   json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
