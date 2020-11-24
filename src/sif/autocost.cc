@@ -257,7 +257,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const override {
-    return speedfactor_[kMaxAssumedSpeed];
+    return speedfactor_[top_speed_];
   }
 
   /**
@@ -641,6 +641,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_highways(kDefaultUseHighways);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
+    pbf_costing_options->set_top_speed(kMaxSpeedKph);
   }
 }
 

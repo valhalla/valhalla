@@ -564,7 +564,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
 // assume the maximum speed is used to the destination such that the time
 // estimate is less than the least possible time along roads.
 float TruckCost::AStarCostFactor() const {
-  return speedfactor_[kMaxSpeedKph];
+  return speedfactor_[top_speed_];
 }
 
 // Returns the current travel type.
@@ -688,6 +688,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_length(kDefaultTruckLength);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
+    pbf_costing_options->set_top_speed(kMaxSpeedKph);
   }
 }
 

@@ -287,7 +287,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const override {
-    return speedfactor_[kMaxAssumedSpeed];
+    return speedfactor_[top_speed_];
   }
 
   /**
@@ -615,8 +615,8 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_country_crossing_cost(kDefaultCountryCrossingCost);
     pbf_costing_options->set_country_crossing_penalty(kDefaultCountryCrossingPenalty);
     pbf_costing_options->set_ferry_cost(kDefaultFerryCost);
-    pbf_costing_options->set_top_speed(kDefaultTopSpeed);
     pbf_costing_options->set_use_ferry(kDefaultUseFerry);
+    pbf_costing_options->set_top_speed(kDefaultTopSpeed);
     pbf_costing_options->set_use_hills(kDefaultUseHills);
     pbf_costing_options->set_use_primary(kDefaultUsePrimary);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
