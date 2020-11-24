@@ -251,7 +251,7 @@ protected:
    *
    * @param maneuver The maneuver to process.
    */
-  void ProcessGuidanceViewSignBoards(Maneuver& maneuver);
+  void ProcessGuidanceViewSignboards(Maneuver& maneuver);
 
   /**
    * Returns true if the specified maneuver is a ramp and leads to a highway.

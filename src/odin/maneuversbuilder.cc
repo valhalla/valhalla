@@ -64,11 +64,26 @@ std::vector<std::string> split(const std::string& source, char delimiter) {
 bool is_pair(const std::vector<std::string>& tokens) {
   return (tokens.size() == 2);
 }
-
 } // namespace
 
 namespace valhalla {
 namespace odin {
+
+const std::unordered_map<int, std::string>
+    guidanceview_type_string{{static_cast<int>(DirectionsLeg_GuidanceView_Type_kJunction), "jct"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kSapa), "sapa"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kTollbranch),
+                              "tollbranch"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kAftertoll),
+                              "aftertoll"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kEnt), "ent"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kExit), "exit"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kCityreal),
+                              "cityreal"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kDirectionboard),
+                              "directionboard"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kSignboard),
+                              "signboard"}};
 
 ManeuversBuilder::ManeuversBuilder(const Options& options, EnhancedTripLeg* etp)
     : options_(options), trip_path_(etp) {
@@ -2989,7 +3004,7 @@ void ManeuversBuilder::ProcessGuidanceViews(std::list<Maneuver>& maneuvers) {
       }
 
       // Signboards only have base images so we need to check the current edge and not the previous
-      ProcessGuidanceViewSignBoards(maneuver);
+      ProcessGuidanceViewSignboards(maneuver);
     }
   }
 }
@@ -3013,7 +3028,10 @@ void ManeuversBuilder::MatchGuidanceViewJunctions(Maneuver& maneuver,
             (base_prefix == overlay_tokens.at(0))) {
           DirectionsLeg_GuidanceView guidance_view;
           guidance_view.set_data_id(std::to_string(trip_path_->osm_changeset()));
-          guidance_view.set_type("jct");
+          guidance_view.set_type(
+              guidanceview_type_string
+                  .find(static_cast<int>(DirectionsLeg_GuidanceView_Type_kJunction))
+                  ->second);
           guidance_view.set_base_id(base_prefix + base_suffix);
           guidance_view.add_overlay_ids(overlay_tokens.at(0) + overlay_tokens.at(1));
           maneuver.mutable_guidance_views()->emplace_back(guidance_view);
@@ -3024,7 +3042,7 @@ void ManeuversBuilder::MatchGuidanceViewJunctions(Maneuver& maneuver,
   }
 }
 
-void ManeuversBuilder::ProcessGuidanceViewSignBoards(Maneuver& maneuver) {
+void ManeuversBuilder::ProcessGuidanceViewSignboards(Maneuver& maneuver) {
   // Loop over edges
   uint32_t edge_count = 0;
   for (uint32_t node_index = maneuver.begin_node_index();
@@ -3040,7 +3058,10 @@ void ManeuversBuilder::ProcessGuidanceViewSignBoards(Maneuver& maneuver) {
         if (base_guidance_view_signboard.is_route_number() && is_pair(base_tokens)) {
           DirectionsLeg_GuidanceView guidance_view;
           guidance_view.set_data_id(std::to_string(trip_path_->osm_changeset()));
-          guidance_view.set_type("signboard");
+          guidance_view.set_type(
+              guidanceview_type_string
+                  .find(static_cast<int>(DirectionsLeg_GuidanceView_Type_kSignboard))
+                  ->second);
           guidance_view.set_base_id(base_tokens.at(0) + base_tokens.at(1));
           maneuver.mutable_guidance_views()->emplace_back(guidance_view);
         }
