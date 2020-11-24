@@ -19,6 +19,7 @@
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_factory.h"
 #include "baldr/verbal_text_formatter_us.h"
+#include "midgard/constants.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -294,7 +295,6 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
 
 void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
   bool maneuvers_have_been_combined = true;
-
   // Continue trying to combine maneuvers until no maneuvers have been combined
   while (maneuvers_have_been_combined) {
     maneuvers_have_been_combined = false;
@@ -368,7 +368,39 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         curr_man = next_man;
         ++next_man;
       }
-
+      // Combine double L turns or double R turns in short non-internal intersections as u-turns
+      else if ((curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive) &&
+               !curr_man->internal_intersection() &&
+               curr_man->length(Options::kilometers) <= (kMaxInternalLength * kKmPerMeter) &&
+               prev_man->HasSimilarNames(&(*next_man), true) && curr_man != next_man &&
+               !next_man->IsDestinationType()) {
+        if (((curr_man->type() == DirectionsLeg_Maneuver_Type_kLeft ||
+              curr_man->type() == DirectionsLeg_Maneuver_Type_kSlightLeft ||
+              curr_man->type() == DirectionsLeg_Maneuver_Type_kSharpLeft) &&
+             (next_man->type() == DirectionsLeg_Maneuver_Type_kLeft ||
+              next_man->type() == DirectionsLeg_Maneuver_Type_kSlightLeft ||
+              next_man->type() == DirectionsLeg_Maneuver_Type_kSharpLeft))) {
+          curr_man->set_type(DirectionsLeg_Maneuver_Type_kUturnLeft);
+          LOG_TRACE(
+              "+++ Combine: double L turns in short non-internal intersection as ManeuverType=SIMPLE_UTURN_LEFT +++");
+        } else if ((curr_man->type() == DirectionsLeg_Maneuver_Type_kRight ||
+                    curr_man->type() == DirectionsLeg_Maneuver_Type_kSlightRight ||
+                    curr_man->type() == DirectionsLeg_Maneuver_Type_kSharpRight) &&
+                   (next_man->type() == DirectionsLeg_Maneuver_Type_kRight ||
+                    next_man->type() == DirectionsLeg_Maneuver_Type_kSlightRight ||
+                    next_man->type() == DirectionsLeg_Maneuver_Type_kSharpRight)) {
+          curr_man->set_type(DirectionsLeg_Maneuver_Type_kUturnRight);
+          LOG_TRACE(
+              "+++ Combine: double R turns in short non-internal intersection as ManeuverType=SIMPLE_UTURN_RIGHT +++");
+        }
+        curr_man =
+            CombineDoubleTurnToUturnManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
+        if (is_first_man) {
+          prev_man = curr_man;
+        }
+        maneuvers_have_been_combined = true;
+        ++next_man;
+      }
       // Do not combine
       // if next maneuver is a fork or a tee
       else if (next_man->fork() || next_man->tee()) {
@@ -386,32 +418,6 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         // Update with no combine
         prev_man = curr_man;
         curr_man = next_man;
-        ++next_man;
-      }
-      // Combine double L turns or double R turns in short non-internal intersections as u-turns
-      else if ((curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive) &&
-               !curr_man->internal_intersection() &&
-               ((curr_man->type() == DirectionsLeg_Maneuver_Type_kLeft &&
-                 next_man->type() == DirectionsLeg_Maneuver_Type_kLeft) ||
-                (curr_man->type() == DirectionsLeg_Maneuver_Type_kRight &&
-                 next_man->type() == DirectionsLeg_Maneuver_Type_kRight)) &&
-               curr_man->length(Options::kilometers) <= (kMaxInternalLength * .001f) &&
-               curr_man != next_man && !next_man->IsDestinationType()) {
-        if (curr_man->type() == DirectionsLeg_Maneuver_Type_kLeft) {
-          curr_man->set_type(DirectionsLeg_Maneuver_Type_kUturnLeft);
-          LOG_TRACE(
-              "+++ Combine: double L turns in short non-internal intersection as ManeuverType=SIMPLE_UTURN_LEFT +++");
-        } else if (curr_man->type() == DirectionsLeg_Maneuver_Type_kRight) {
-          curr_man->set_type(DirectionsLeg_Maneuver_Type_kUturnRight);
-          LOG_TRACE(
-              "+++ Combine: double R turns in short non-internal intersection as ManeuverType=SIMPLE_UTURN_RIGHT +++");
-        }
-        curr_man =
-            CombineDoubleTurnToUturnManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
-        if (is_first_man) {
-          prev_man = curr_man;
-        }
-        maneuvers_have_been_combined = true;
         ++next_man;
       }
       // Combine current internal maneuver with next maneuver
@@ -522,7 +528,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
                (curr_man->type() == DirectionsLeg_Maneuver_Type_kLeft ||
                 curr_man->type() == DirectionsLeg_Maneuver_Type_kRight) &&
                next_man->type() == DirectionsLeg_Maneuver_Type_kRampStraight &&
-               curr_man->length(Options::kilometers) <= (kMaxInternalLength * .001f) &&
+               curr_man->length(Options::kilometers) <= (kMaxInternalLength * kKmPerMeter) &&
                curr_man != next_man && !next_man->IsDestinationType()) {
         LOG_TRACE(
             "+++ Combine: current non-internal turn that is very short in length with the next straight ramp maneuver +++");
