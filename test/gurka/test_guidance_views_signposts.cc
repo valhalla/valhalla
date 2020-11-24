@@ -14,7 +14,7 @@ protected:
   static void SetUpTestSuite() {
     constexpr double gridsize = 100;
 
-    // A--B-BASE-C--D-OVERLAY-E--F
+    // A--B-C-SIGNBOARD-D-E--F
     const std::string ascii_map = R"(
       A----B----C----X
                  \
@@ -52,4 +52,11 @@ TEST_F(GuidanceViews_Signboards, CheckGuidanceViews) {
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views(0).base_id(),
             "SI_53271604A1");
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views(0).data_id(), "1001");
+
+  result = gurka::route(map, "A", "X", "auto");
+  //should be no guidance views
+  for (int i = 0; i < result.directions().routes(0).legs(0).maneuver_size(); ++i) {
+    EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(i).guidance_views_size(), 0);
+  }
+
 }
