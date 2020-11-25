@@ -103,6 +103,7 @@
    * FIXED: Check that speeds are equal for the edges going in the same direction while buildig shortcuts [#2691](https://github.com/valhalla/valhalla/pull/2691)
    * FIXED: Missing fork or bear instruction [#2683](https://github.com/valhalla/valhalla/pull/2683)
    * FIXED: Eliminate null pointer dereference in GraphReader::AreEdgesConnected [#2695](https://github.com/valhalla/valhalla/issues/2695)
+   * FIXED: Fix polyline simplification float/double comparison [#2698](https://github.com/valhalla/valhalla/issues/2698)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)

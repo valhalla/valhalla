@@ -76,7 +76,7 @@ const constexpr double DEGREE_TO_RAD = 0.017453292519943295769236907684886;
 const constexpr double RAD_TO_DEGREE = 1. / DEGREE_TO_RAD;
 const constexpr double EPSG3857_MAX_LATITUDE = 85.051128779806592378; // 90(4*atan(exp(pi))/pi-1)
 
-const constexpr float DOUGLAS_PEUCKER_THRESHOLDS[19] = {
+const constexpr PointLL::first_type DOUGLAS_PEUCKER_THRESHOLDS[19] = {
     703125.0, // z0
     351562.5, // z1
     175781.2, // z2
