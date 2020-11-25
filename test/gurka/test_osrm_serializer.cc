@@ -22,13 +22,11 @@ TEST(Standalone, OsrmSerializerShape) {
   // Test that full shape is returned by default
   auto result = gurka::route(map, {"A", "D"}, "auto", {{"/shape_format", "geojson"}});
   auto json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
-  auto route_geometry = json["routes"][0]["geometry"]["coordinates"].GetArray();
-  EXPECT_EQ(route_geometry.Size(), 4);
+  EXPECT_EQ(json["routes"][0]["geometry"]["coordinates"].GetArray().Size(), 4);
 
   // Test that shape is simplified (should simplify out C but not B)
   result =
       gurka::route(map, {"A", "D"}, "auto", {{"/generalize", "0"}, {"/shape_format", "geojson"}});
   json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
-  route_geometry = json["routes"][0]["geometry"]["coordinates"].GetArray();
-  EXPECT_EQ(route_geometry.Size(), 3);
+  EXPECT_EQ(json["routes"][0]["geometry"]["coordinates"].GetArray().Size(), 3);
 }
