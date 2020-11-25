@@ -373,19 +373,24 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
                curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive &&
                curr_man->length(Options::kilometers) <= (kMaxInternalLength * kKmPerMeter) &&
                prev_man->HasSimilarNames(&(*next_man), true) && curr_man != next_man &&
-               !next_man->IsDestinationType()) {
-        if ((curr_man->type() == DirectionsLeg_Maneuver_Type_kLeft ||
-             curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kLeft) &&
-            (next_man->type() == DirectionsLeg_Maneuver_Type_kLeft ||
-             next_man->begin_relative_direction() == Maneuver::RelativeDirection::kLeft)) {
+               !is_first_man && !next_man->IsDestinationType()) {
+        Maneuver::RelativeDirection prev2next_relative_dir =
+            ManeuversBuilder::DetermineRelativeDirection(
+                GetTurnDegree(prev_man->end_heading(), next_man->begin_heading()));
+        if ((prev2next_relative_dir == Maneuver::RelativeDirection::KReverse) &&
+            (ManeuversBuilder::DetermineRelativeDirection(curr_man->turn_degree()) ==
+             Maneuver::RelativeDirection::kLeft) &&
+            (ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()) ==
+             Maneuver::RelativeDirection::kLeft)) {
           curr_man->set_type(DirectionsLeg_Maneuver_Type_kUturnLeft);
           maneuvers_have_been_combined = true;
           LOG_TRACE(
               "+++ Combine: double L turns in short non-internal intersection as ManeuverType=SIMPLE_UTURN_LEFT +++");
-        } else if ((curr_man->type() == DirectionsLeg_Maneuver_Type_kRight ||
-                    curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kRight) &&
-                   (next_man->type() == DirectionsLeg_Maneuver_Type_kRight ||
-                    next_man->begin_relative_direction() == Maneuver::RelativeDirection::kRight)) {
+        } else if ((prev2next_relative_dir == Maneuver::RelativeDirection::KReverse) &&
+                   (ManeuversBuilder::DetermineRelativeDirection(curr_man->turn_degree()) ==
+                    Maneuver::RelativeDirection::kRight) &&
+                   (ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()) ==
+                    Maneuver::RelativeDirection::kRight)) {
           curr_man->set_type(DirectionsLeg_Maneuver_Type_kUturnRight);
           maneuvers_have_been_combined = true;
           LOG_TRACE(
