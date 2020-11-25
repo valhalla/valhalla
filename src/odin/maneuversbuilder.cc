@@ -369,36 +369,34 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         ++next_man;
       }
       // Combine double L turns or double R turns in short non-internal intersections as u-turns
-      else if ((curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive) &&
-               !curr_man->internal_intersection() &&
+      else if (!curr_man->internal_intersection() &&
+               curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive &&
                curr_man->length(Options::kilometers) <= (kMaxInternalLength * kKmPerMeter) &&
                prev_man->HasSimilarNames(&(*next_man), true) && curr_man != next_man &&
                !next_man->IsDestinationType()) {
-        if (((curr_man->type() == DirectionsLeg_Maneuver_Type_kLeft ||
-              curr_man->type() == DirectionsLeg_Maneuver_Type_kSlightLeft ||
-              curr_man->type() == DirectionsLeg_Maneuver_Type_kSharpLeft) &&
-             (next_man->type() == DirectionsLeg_Maneuver_Type_kLeft ||
-              next_man->type() == DirectionsLeg_Maneuver_Type_kSlightLeft ||
-              next_man->type() == DirectionsLeg_Maneuver_Type_kSharpLeft))) {
+        if ((curr_man->type() == DirectionsLeg_Maneuver_Type_kLeft ||
+             curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kLeft) &&
+            (next_man->type() == DirectionsLeg_Maneuver_Type_kLeft ||
+             next_man->begin_relative_direction() == Maneuver::RelativeDirection::kLeft)) {
           curr_man->set_type(DirectionsLeg_Maneuver_Type_kUturnLeft);
+          maneuvers_have_been_combined = true;
           LOG_TRACE(
               "+++ Combine: double L turns in short non-internal intersection as ManeuverType=SIMPLE_UTURN_LEFT +++");
         } else if ((curr_man->type() == DirectionsLeg_Maneuver_Type_kRight ||
-                    curr_man->type() == DirectionsLeg_Maneuver_Type_kSlightRight ||
-                    curr_man->type() == DirectionsLeg_Maneuver_Type_kSharpRight) &&
+                    curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kRight) &&
                    (next_man->type() == DirectionsLeg_Maneuver_Type_kRight ||
-                    next_man->type() == DirectionsLeg_Maneuver_Type_kSlightRight ||
-                    next_man->type() == DirectionsLeg_Maneuver_Type_kSharpRight)) {
+                    next_man->begin_relative_direction() == Maneuver::RelativeDirection::kRight)) {
           curr_man->set_type(DirectionsLeg_Maneuver_Type_kUturnRight);
+          maneuvers_have_been_combined = true;
           LOG_TRACE(
               "+++ Combine: double R turns in short non-internal intersection as ManeuverType=SIMPLE_UTURN_RIGHT +++");
         }
-        curr_man =
-            CombineDoubleTurnToUturnManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
+        if (maneuvers_have_been_combined)
+          curr_man =
+              CombineDoubleTurnToUturnManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
         if (is_first_man) {
           prev_man = curr_man;
         }
-        maneuvers_have_been_combined = true;
         ++next_man;
       }
       // Do not combine
@@ -525,8 +523,10 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // Combine current short length turn (left or right) with next maneuver that is a kRampStraight
       // NOTE: This should already be marked internal for OSM data so shouldn't happen for OSM
       else if (!curr_man->internal_intersection() &&
-               (curr_man->type() == DirectionsLeg_Maneuver_Type_kLeft ||
-                curr_man->type() == DirectionsLeg_Maneuver_Type_kRight) &&
+               ((curr_man->type() == DirectionsLeg_Maneuver_Type_kLeft ||
+                 curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kLeft) ||
+                (curr_man->type() == DirectionsLeg_Maneuver_Type_kRight ||
+                 curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kRight)) &&
                next_man->type() == DirectionsLeg_Maneuver_Type_kRampStraight &&
                curr_man->length(Options::kilometers) <= (kMaxInternalLength * kKmPerMeter) &&
                curr_man != next_man && !next_man->IsDestinationType()) {
