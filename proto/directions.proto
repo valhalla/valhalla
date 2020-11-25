@@ -80,7 +80,7 @@ message DirectionsLeg {
       kSignboard = 8;
     }
     optional string data_id = 1;        // TODO future enum as data id?
-    optional string type = 2;           // The type of guidance view
+    optional Type type = 2;             // The type of guidance view
     optional string base_id = 3;        // Image base id
     repeated string overlay_ids = 4;    // List of overlay ids
   }

@@ -48,7 +48,8 @@ TEST_F(GuidanceViews_Signboards, CheckGuidanceViews) {
   auto result = gurka::route(map, "A", "G", "auto");
 
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views_size(), 1);
-  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views(0).type(), "signboard");
+  EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views(0).type(),
+            DirectionsLeg_GuidanceView_Type_kSignboard);
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views(0).base_id(),
             "SI_53271604A1");
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views(0).data_id(), "1001");
