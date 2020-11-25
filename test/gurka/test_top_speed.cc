@@ -1,3 +1,4 @@
+#include "baldr/graphconstants.h"
 #include "gurka.h"
 #include <boost/format.hpp>
 #include <gtest/gtest.h>
@@ -73,4 +74,15 @@ TEST_F(TopSpeedTest, HovTopSpeed) {
 
 TEST_F(TopSpeedTest, TaxiTopSpeed) {
   doTests("taxi", {{"/costing_options/taxi/top_speed", "20"}});
+}
+
+TEST_F(TopSpeedTest, ClampMaxSpeed) {
+  Options options;
+  rapidjson::Document dom;
+  rapidjson::SetValueByPointer(dom, "/top_speed", 500);
+
+  options.set_costing(Costing::auto_);
+  sif::ParseSharedCostOptions(*rapidjson::GetValueByPointer(dom, ""), options.add_costing_options());
+
+  ASSERT_EQ(options.costing_options().at(0).top_speed(), baldr::kMaxSpeedKph);
 }
