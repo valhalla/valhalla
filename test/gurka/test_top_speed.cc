@@ -15,6 +15,7 @@ protected:
     const std::string ascii_map = R"(
       B------C
       |      |
+      |      |
       A      D
       |      |
       E------F
@@ -40,8 +41,9 @@ protected:
     valhalla::Api capped_route = gurka::route(speed_map, "A", "D", costing, options);
     float capped_time = getDuration(capped_route);
 
-    gurka::assert::raw::expect_eta(capped_route, 19.8f, 0.001f);
+    gurka::assert::raw::expect_path(default_route, {"ABCD"});
     gurka::assert::raw::expect_path(capped_route, {"AEFD"});
+    gurka::assert::raw::expect_eta(capped_route, 19.8f, 0.001f);
     ASSERT_GT(capped_time, default_time);
   }
 };
@@ -84,5 +86,5 @@ TEST_F(TopSpeedTest, ClampMaxSpeed) {
   options.set_costing(Costing::auto_);
   sif::ParseSharedCostOptions(*rapidjson::GetValueByPointer(dom, ""), options.add_costing_options());
 
-  ASSERT_EQ(options.costing_options().Get(0).top_speed(), baldr::kMaxSpeedKph);
+  ASSERT_EQ(options.costing_options().Get(0).top_speed(), baldr::kMaxAssumedSpeed);
 }

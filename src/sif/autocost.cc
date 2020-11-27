@@ -257,8 +257,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const override {
-    uint32_t s = top_speed_ < kMaxAssumedSpeed ? top_speed_ : kMaxAssumedSpeed;
-    return speedfactor_[s];
+    return speedfactor_[top_speed_];
   }
 
   /**
@@ -412,7 +411,6 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
   auto final_speed = std::min(edge_speed, top_speed_);
 
-  assert(final_speed < speedfactor_.size());
   float sec = (edge->length() * speedfactor_[final_speed]);
 
   if (shortest_) {
@@ -424,6 +422,7 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
           ? ferry_factor_
           : (edge->use() == Use::kRailFerry) ? rail_ferry_factor_ : density_factor_[edge->density()];
 
+  // TODO: factor hasn't been extensively tested, might alter this in future
   float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] + speed_penalty;
@@ -642,7 +641,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_highways(kDefaultUseHighways);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
-    pbf_costing_options->set_top_speed(kMaxSpeedKph);
+    pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
   }
 }
 

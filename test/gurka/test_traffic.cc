@@ -87,7 +87,7 @@ TEST(Traffic, BasicUpdates) {
     auto result = gurka::route(map, "A", "C", "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC"});
-    gurka::assert::raw::expect_eta(result, 14.303419);
+    gurka::assert::raw::expect_eta(result, 25.731991);
   }
 
   printf("Back to previous speed");

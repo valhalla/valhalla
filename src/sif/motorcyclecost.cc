@@ -81,8 +81,6 @@ constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseTrailsRange{0, kDefaultUseTrails, 1.0f};
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
                                                                kMaxPenalty};
-constexpr ranged_default_t<float> kTopSpeedRange{5, kMaxSpeedKph,
-                                                 kMaxSpeedKph}; // default to kMaxSpeedKph
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
@@ -253,8 +251,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const override {
-    uint32_t s = top_speed_ < kMaxAssumedSpeed ? top_speed_ : kMaxAssumedSpeed;
-    return speedfactor_[s];
+    return speedfactor_[top_speed_];
   }
 
   /**
@@ -418,7 +415,6 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
   auto final_speed = std::min(edge_speed, top_speed_);
 
-  assert(final_speed < speedfactor_.size());
   float sec = (edge->length() * speedfactor_[final_speed]);
 
   if (shortest_) {
@@ -434,6 +430,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   float factor = density_factor_[edge->density()] +
                  highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
                  surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
+  // TODO: factor hasn't been extensively tested, might alter this in future
   float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
   factor += speed_penalty;
   if (edge->toll()) {
@@ -629,7 +626,7 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_use_trails(kDefaultUseTrails);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
-    pbf_costing_options->set_top_speed(kMaxSpeedKph);
+    pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
   }
 }
 

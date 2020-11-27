@@ -439,14 +439,13 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Use the lower of truck speed, top_speed (if present) and speed
   uint32_t s = (edge->truck_speed() > 0) ? std::min({edge->truck_speed(), edge_speed, top_speed_})
                                          : std::min(edge_speed, top_speed_);
-  assert(s < speedfactor_.size());
   float sec = edge->length() * speedfactor_[s];
 
   if (shortest_) {
     return Cost(edge->length(), sec);
   }
 
-  // Penalize roads with higher speed values than top_speed_
+  // TODO: factor hasn't been extensively tested, might alter this in future
   float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
   float factor = density_factor_[edge->density()] + speed_penalty;
   if (edge->truck_route() > 0) {
@@ -564,8 +563,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
 // assume the maximum speed is used to the destination such that the time
 // estimate is less than the least possible time along roads.
 float TruckCost::AStarCostFactor() const {
-  uint32_t s = top_speed_ < kMaxSpeedKph ? top_speed_ : kMaxSpeedKph;
-  return speedfactor_[s];
+  return speedfactor_[top_speed_];
 }
 
 // Returns the current travel type.
@@ -689,7 +687,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_length(kDefaultTruckLength);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
-    pbf_costing_options->set_top_speed(kMaxSpeedKph);
+    pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
   }
 }
 

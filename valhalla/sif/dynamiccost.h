@@ -40,7 +40,7 @@ constexpr float kMaxPenalty = 12.0f * midgard::kSecPerHour; // 12 hours
 // since a ferry is sometimes required to complete a route.
 constexpr float kMaxFerryPenalty = 6.0f * midgard::kSecPerHour; // 6 hours
 
-constexpr midgard::ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxSpeedKph,
+constexpr midgard::ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                                  baldr::kMaxSpeedKph};
 
 /**

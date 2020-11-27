@@ -106,7 +106,7 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `country_crossing_cost` | A cost applied when encountering an international border. This cost is added to the estimated and elapsed times. The default cost is 600 seconds. |
 | `country_crossing_penalty` | A penalty applied for a country crossing. This penalty can be used to create paths that avoid spanning country boundaries. The default penalty is 0. |
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
-| `top_speed` | Top speed the car can go. Used to avoid roads with higher speeds than this value.  This value must be between 5 and 252 KPH. The default value is 252 KPH. |
+| `top_speed` | Top speed the vehicle can go. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 140 KPH. |
 
 ###### Truck-specific costing options
 
@@ -152,7 +152,7 @@ All of the options described above for autos also apply to motor_scooter costing
 
 | Motor_scooter options | Description |
 | :-------------------------- | :----------- |
-| `top_speed` | Top speed the motorized scooter can go. Used to avoid roads with higher speeds than this value.  This value must be between 20 and 120 KPH. The default value is 45 KPH (~28 MPH) |
+| `top_speed` | Top speed the motorized scooter can go. Used to avoid roads with higher speeds than this value. For `motor_scooter` this value must be between 20 and 120 KPH. The default value is 45 KPH (~28 MPH) |
 | `use_primary` | A riders's propensity to use primary roads. This is a range of values from 0 to 1, where 0 attempts to avoid primary roads, and 1 indicates the rider is more comfortable riding on primary roads. Based on the `use_primary` factor, roads with certain classifications and higher speeds are penalized in an attempt to avoid them when finding the best path. The default value is 0.5. |
 | `use_hills` | A riders's desire to tackle hills in their routes. This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it means a longer (time and distance) path, while 1 indicates the rider does not fear hills and steeper grades. Based on the `use_hills` factor, penalties are applied to roads based on elevation change and grade. These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is not always possible to find alternate paths to avoid hills (for example when route locations are in mountainous areas). The default value is 0.5. |
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
