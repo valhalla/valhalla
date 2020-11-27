@@ -874,7 +874,6 @@ public:
     auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
     auto final_speed = std::min(edge_speed, top_speed_);
 
-    assert(final_speed < speedfactor_.size());
     float sec = (edge->length() * speedfactor_[final_speed]);
 
     if (shortest_) {
@@ -1050,7 +1049,6 @@ public:
     auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
     auto final_speed = std::min(edge_speed, top_speed_);
 
-    assert(final_speed < speedfactor_.size());
     float sec = (edge->length() * speedfactor_[final_speed]);
 
     if (shortest_) {
