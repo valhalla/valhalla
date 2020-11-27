@@ -11,7 +11,7 @@ namespace {
 
 TEST(GriddedData, Basic) {
   // fill this as distance from center
-  GriddedData<PointLL, float> g({-5, -5, 5, 5}, 1, std::numeric_limits<float>::max());
+  GriddedData<float> g({-5, -5, 5, 5}, 1, std::numeric_limits<float>::max());
   for (int i = 0; i < 10; ++i) {
     for (int j = 0; j < 10; ++j) {
       Tiles<PointLL> t({-5, -5, 5, 5}, 1);
@@ -23,7 +23,7 @@ TEST(GriddedData, Basic) {
 
   // make the contours
   std::vector<float> iso_markers{100000, 200000, 300000, 400000, 500000, 600000};
-  auto contours = g.GenerateContours(iso_markers, true);
+  auto contours = g.GenerateContours(iso_markers, [](const float& sec) { return sec; }, true);
 
   // need to be the same size and all of them have to have a single ring
   ASSERT_EQ(contours.size(), iso_markers.size()) << "There should be 7 iso lines";

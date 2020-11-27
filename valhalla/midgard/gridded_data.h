@@ -5,8 +5,10 @@
 #include <limits>
 #include <list>
 #include <map>
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
 #include <valhalla/midgard/tiles.h>
+#include <valhalla/midgard/util.h>
 #include <vector>
 
 namespace valhalla {
@@ -16,11 +18,24 @@ namespace midgard {
 // compute an optimal generalization factor when creating contours.
 constexpr float kOptimalGeneralization = std::numeric_limits<float>::max();
 
+// TODO: this should really be sif::Cost and not even use this, but sif::Cost
+// doesnt yet track distance, only the predicessor does
+struct time_distance_t {
+  float sec;
+  float dist;
+  // the less than operator as only caring about seconds for now
+  bool operator<(const time_distance_t& other) {
+    return sec < other.sec;
+  }
+
+  // TODO: operator+= so that the isochrone resampling can add the delta per resampled point
+};
+
 /**
  * Class to store data in a gridded/tiled data structure. Contains methods
  * to mark each tile with data using a compare operator.
  */
-template <class coord_t, class value_t> class GriddedData : public Tiles<coord_t> {
+template <class value_t> class GriddedData : public Tiles<PointLL> {
 public:
   /**
    * Constructor.
@@ -28,8 +43,8 @@ public:
    * @param   tilesize  Tile size
    * @param   value     Value to initialize data with.
    */
-  GriddedData(const AABB2<coord_t>& bounds, const float tilesize, const value_t& value)
-      : Tiles<coord_t>(bounds, tilesize), max_value_(value) {
+  GriddedData(const AABB2<PointLL>& bounds, const float tilesize, const value_t& value)
+      : Tiles<PointLL>(bounds, tilesize), max_value_(value) {
     // Resize the data vector and fill with the value
     data_.resize(this->nrows_ * this->ncolumns_);
     std::fill(data_.begin(), data_.end(), value);
@@ -42,7 +57,7 @@ public:
    * @param  value  Value to set at the tile/grid location.
    * @return whether or not the value was set
    */
-  bool Set(const coord_t& pt, const value_t& value) {
+  bool Set(const PointLL& pt, const value_t& value) {
     auto cell_id = this->TileId(pt);
     if (cell_id >= 0 && cell_id < data_.size()) {
       data_[cell_id] = value;
@@ -70,7 +85,7 @@ public:
    * @param  pt     Coordinate to set within the tiles.
    * @param  value  Value to set at the tile/grid location.
    */
-  void SetIfLessThan(const coord_t& pt, const value_t& value) {
+  void SetIfLessThan(const PointLL& pt, const value_t& value) {
     int32_t cell_id = this->TileId(pt);
     if (cell_id >= 0 && cell_id < data_.size() && value < data_[cell_id]) {
       data_[cell_id] = value;
@@ -85,7 +100,7 @@ public:
     return data_;
   }
 
-  using contour_t = std::list<coord_t>;
+  using contour_t = std::list<PointLL>;
   using feature_t = std::list<contour_t>;
   using contours_t =
       std::map<float, std::list<feature_t>, std::function<bool(const float, const float)>>;
@@ -99,6 +114,7 @@ public:
    *
    * @param contour_intervals    the values at which the contour lines should occur
    *                             basically the lines on the measuring stick
+   * @param get                  functor for getting value out of particular cell
    * @param rings_only           only include geometry of contours that are polygonal
    * @param denoise              remove any contours whose size ratio is less than
    *                             this parameter with respect to the largest contour
@@ -110,6 +126,7 @@ public:
    * @return contour line geometries with the larger intervals first (for rendering purposes)
    */
   contours_t GenerateContours(const std::vector<float>& contour_intervals,
+                              const std::function<float(const value_t&)>& get,
                               const bool rings_only = false,
                               const float denoise = 1.f,
                               const float generalize = 200.f) const {
@@ -117,13 +134,13 @@ public:
 
     // Values at tile corners and center (0 element is center)
     int sh[5];
-    typename coord_t::first_type s[5]; // Values at the tile corners and center
-    coord_t tile_corners[5];           // coord_t at tile corners and center
+    typename PointLL::first_type s[5]; // Values at the tile corners and center
+    PointLL tile_corners[5];           // PointLL at tile corners and center
 
     // Find the intersection along a tile edge
     auto intersect = [&tile_corners, &s](int p1, int p2) {
       auto ds = s[p2] - s[p1];
-      return coord_t((s[p2] * tile_corners[p1].x() - s[p1] * tile_corners[p2].x()) / ds,
+      return PointLL((s[p2] * tile_corners[p1].x() - s[p1] * tile_corners[p2].x()) / ds,
                      (s[p2] * tile_corners[p1].y() - s[p1] * tile_corners[p2].y()) / ds);
     };
 
@@ -133,7 +150,7 @@ public:
       contours[v].emplace_back();
     }
     // and something to find them quickly
-    using contour_lookup_t = std::unordered_map<coord_t, typename feature_t::iterator>;
+    using contour_lookup_t = std::unordered_map<PointLL, typename feature_t::iterator>;
     std::unordered_map<float, contour_lookup_t> lookup(contour_intervals.size());
     // TODO: preallocate the lookups for each interval
 
@@ -147,10 +164,10 @@ public:
     for (int row = 1; row < this->nrows_ - 1; ++row) {
       for (int col = 1; col < this->ncolumns_ - 1; ++col) {
         int tileid = this->TileId(col, row);
-        auto cell1 = data_[tileid];
-        auto cell2 = data_[tileid + this->ncolumns_];     // TileId(col,   row+1)];
-        auto cell3 = data_[tileid + 1];                   // TileId(col+1, row)];
-        auto cell4 = data_[tileid + this->ncolumns_ + 1]; // TileId(col+1, row+1)];
+        auto cell1 = get(data_[tileid]);
+        auto cell2 = get(data_[tileid + this->ncolumns_]);     // TileId(col,   row+1)];
+        auto cell3 = get(data_[tileid + 1]);                   // TileId(col+1, row)];
+        auto cell4 = get(data_[tileid + this->ncolumns_ + 1]); // TileId(col+1, row+1)];
         auto dmin = std::min(std::min(cell1, cell2), std::min(cell3, cell4));
         auto dmax = std::max(std::max(cell1, cell2), std::max(cell3, cell4));
 
@@ -210,7 +227,7 @@ public:
           */
 
           // Scan each triangle in the box
-          coord_t pt1, pt2;
+          PointLL pt1, pt2;
           for (int m = 1; m <= 4; m++) {
             int m1 = m;
             int m2 = 0;
@@ -361,7 +378,7 @@ public:
         contour.remove_if([](const contour_t& line) { return line.front() != line.back(); });
       }
       // sort them by area (maybe length would be sufficient?) biggest first
-      std::unordered_map<const contour_t*, typename coord_t::first_type> cache(contour.size());
+      std::unordered_map<const contour_t*, typename PointLL::first_type> cache(contour.size());
       std::for_each(contour.cbegin(), contour.cend(),
                     [&cache](const contour_t& c) { cache[&c] = polygon_area(c); });
       contour.sort([&cache](const contour_t& a, const contour_t& b) {
@@ -377,7 +394,7 @@ public:
       for (auto& line : contour) {
         // TODO: generalizing makes self intersections which makes other libraries unhappy
         if (gen_factor > 0.f) {
-          Polyline2<coord_t>::Generalize(line, gen_factor, {});
+          Polyline2<PointLL>::Generalize(line, gen_factor, {});
         }
         // if this ends up as an inner we'll undo this later
         if (cache[&line] > 0) {

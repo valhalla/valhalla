@@ -13,7 +13,6 @@
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/meili/match_result.h>
-#include <valhalla/midgard/gridded_data.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/costmatrix.h>
@@ -40,13 +39,15 @@ std::string serializeMatrix(const Api& request,
  * @param grid_contours    the contours generated from the grid
  * @param colors           the #ABC123 hex string color used in geojson fill color
  */
-template <class coord_t>
-std::string
-serializeIsochrones(const Api& request,
-                    const typename midgard::GriddedData<coord_t, float>::contours_t& grid_contours,
-                    bool polygons = true,
-                    const std::unordered_map<float, std::string>& colors = {},
-                    bool show_locations = false);
+using contour_t = std::list<midgard::PointLL>;
+using feature_t = std::list<contour_t>;
+using contours_t =
+    std::map<float, std::list<feature_t>, std::function<bool(const float, const float)>>;
+std::string serializeIsochrones(const Api& request,
+                                const contours_t& grid_contours,
+                                bool polygons = true,
+                                const std::unordered_map<float, std::string>& colors = {},
+                                bool show_locations = false);
 
 /**
  * Turn heights and ranges into a height response

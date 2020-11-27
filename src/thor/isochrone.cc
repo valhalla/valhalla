@@ -114,7 +114,7 @@ void Isochrone::ConstructIsoTile(
                         loc_bounds.maxy() + dlat);
 
   // Create isotile (gridded data)
-  isotile_.reset(new GriddedData<PointLL, float>(bounds, grid_size, max_minutes));
+  isotile_.reset(new GriddedData<float>(bounds, grid_size, max_minutes));
 
   // Find the center of the grid that the location lies within. Shift the
   // tilebounds so the location lies in the center of a tile.
@@ -139,7 +139,7 @@ void Isochrone::ConstructIsoTile(
 }
 
 // Compute iso-tile that we can use to generate isochrones.
-std::shared_ptr<const GriddedData<PointLL, float>>
+std::shared_ptr<const GriddedData<float>>
 Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
                    const unsigned int max_minutes,
                    GraphReader& graphreader,
@@ -153,7 +153,7 @@ Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origi
 }
 
 // Compute iso-tile that we can use to generate isochrones.
-std::shared_ptr<const GriddedData<PointLL, float>>
+std::shared_ptr<const GriddedData<float>>
 Isochrone::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
                           const unsigned int max_minutes,
                           GraphReader& graphreader,
@@ -168,7 +168,7 @@ Isochrone::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>
 }
 
 // Compute isochrone for mulit-modal route.
-std::shared_ptr<const GriddedData<PointLL, float>>
+std::shared_ptr<const GriddedData<float>>
 Isochrone::ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
                              const unsigned int max_minutes,
                              GraphReader& graphreader,
@@ -252,6 +252,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   auto itr1 = resampled.begin();
   for (auto itr2 = itr1 + 1; itr2 < resampled.end(); itr1++, itr2++) {
     minutes += delta;
+    // TODO: increment the distance by the delta distance
 
     // Mark tiles that intersect the segment. Optimize this to avoid calling the Intersect
     // method unless more than 2 tiles are crossed by the segment.

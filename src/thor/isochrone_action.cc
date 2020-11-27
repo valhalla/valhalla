@@ -13,10 +13,15 @@ std::string thor_worker_t::isochrones(Api& request) {
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
 
-  std::vector<float> contours;
+  // TODO: we have to check what type of contour it was time or distance and push to different vectors
+  // of each
+  std::vector<float> contours, dist_contours;
   std::unordered_map<float, std::string> colors;
   for (const auto& contour : options.contours()) {
+    // if(contour.has_time())
     contours.push_back(contour.time());
+    /*else
+      dist_contours.push_back(contour.dist());*/
     colors[contours.back()] = contour.color();
   }
 
@@ -38,11 +43,15 @@ std::string thor_worker_t::isochrones(Api& request) {
                                           mode_costing, mode);
 
   // turn it into geojson
-  auto isolines =
-      grid->GenerateContours(contours, options.polygons(), options.denoise(), options.generalize());
+  auto isolines = grid->GenerateContours(contours, [](const float& secs) { return secs; },
+                                         options.polygons(), options.denoise(), options.generalize());
 
-  return tyr::serializeIsochrones<PointLL>(request, isolines, options.polygons(), colors,
-                                           options.show_locations());
+  // TODO: if they had any distance contours call GenerateContours again but with the distance
+  // contours
+  /*auto dist_isolines = grid->GenerateContours(dist_contours, [](const time_distance_t& v) { return
+     v.dist; }, options.polygons(), options.denoise(), options.generalize());*/
+  return tyr::serializeIsochrones(request, isolines, options.polygons(), colors,
+                                  options.show_locations());
 }
 
 } // namespace thor
