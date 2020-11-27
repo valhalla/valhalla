@@ -43,7 +43,7 @@ std::string serializeMatrix(const Api& request,
 template <class coord_t>
 std::string
 serializeIsochrones(const Api& request,
-                    const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
+                    const typename midgard::GriddedData<coord_t, float>::contours_t& grid_contours,
                     bool polygons = true,
                     const std::unordered_map<float, std::string>& colors = {},
                     bool show_locations = false);

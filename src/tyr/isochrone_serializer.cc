@@ -21,7 +21,7 @@ namespace tyr {
 template <class coord_t>
 std::string
 serializeIsochrones(const Api& request,
-                    const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
+                    const typename midgard::GriddedData<coord_t, float>::contours_t& grid_contours,
                     bool polygons,
                     const std::unordered_map<float, std::string>& colors,
                     bool show_locations) {
@@ -137,16 +137,16 @@ serializeIsochrones(const Api& request,
 
 template std::string
 serializeIsochrones<midgard::Point2>(const Api&,
-                                     const midgard::GriddedData<midgard::Point2>::contours_t&,
+                                     const midgard::GriddedData<midgard::Point2, float>::contours_t&,
                                      bool,
                                      const std::unordered_map<float, std::string>&,
                                      bool);
-template std::string
-serializeIsochrones<midgard::PointLL>(const Api&,
-                                      const midgard::GriddedData<midgard::PointLL>::contours_t&,
-                                      bool,
-                                      const std::unordered_map<float, std::string>&,
-                                      bool);
+template std::string serializeIsochrones<midgard::PointLL>(
+    const Api&,
+    const midgard::GriddedData<midgard::PointLL, float>::contours_t&,
+    bool,
+    const std::unordered_map<float, std::string>&,
+    bool);
 
 } // namespace tyr
 } // namespace valhalla

@@ -11,7 +11,7 @@ namespace {
 
 TEST(GriddedData, Basic) {
   // fill this as distance from center
-  GriddedData<PointLL> g({-5, -5, 5, 5}, 1, std::numeric_limits<float>::max());
+  GriddedData<PointLL, float> g({-5, -5, 5, 5}, 1, std::numeric_limits<float>::max());
   for (int i = 0; i < 10; ++i) {
     for (int j = 0; j < 10; ++j) {
       Tiles<PointLL> t({-5, -5, 5, 5}, 1);
