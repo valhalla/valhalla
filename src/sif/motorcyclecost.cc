@@ -253,7 +253,8 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const override {
-    return speedfactor_[top_speed_];
+    uint32_t s = top_speed_ < kMaxAssumedSpeed ? top_speed_ : kMaxAssumedSpeed;
+    return speedfactor_[s];
   }
 
   /**
