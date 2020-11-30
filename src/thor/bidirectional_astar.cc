@@ -573,7 +573,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Terminate if the cost threshold has been exceeded.
         if (fwd_pred.sortcost() + cost_diff_ > threshold_) {
-          return FormPath(graphreader, options, origin, destination);
+          return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
         }
 
         // Check if the edge on the forward search connects to a settled edge on the
@@ -593,7 +593,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
                     std::to_string(edgelabels_reverse_.size()));
           return {};
         }
-        return FormPath(graphreader, options, origin, destination);
+        return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
       }
     }
     if (expand_reverse) {
@@ -603,7 +603,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Terminate if the cost threshold has been exceeded.
         if (rev_pred.sortcost() > threshold_) {
-          return FormPath(graphreader, options, origin, destination);
+          return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
         }
 
         // Check if the edge on the reverse search connects to a settled edge on the
@@ -623,7 +623,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
                     std::to_string(edgelabels_forward_.size()));
           return {};
         }
-        return FormPath(graphreader, options, origin, destination);
+        return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
       }
     }
 
@@ -946,7 +946,9 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
 
 void BidirectionalAStar::FormPathForward(baldr::GraphReader& graphreader,
                                          uint32_t last_label_idx,
-                                         std::vector<PathInfo>& path) {
+                                         std::vector<PathInfo>& path,
+                                         const baldr::TimeInfo& time_info,
+                                         const bool invariant) {
   // we should go from the beginning to the end because of possible recostings;
   // so, at first we should collect edge label indexes
   std::stack<uint32_t> forward_idxs;
@@ -969,8 +971,9 @@ void BidirectionalAStar::FormPathForward(baldr::GraphReader& graphreader,
     std::vector<PathInfo> recosted_segment;
     // recost shortcut edge
     if (edgelabel.shortcut()) {
-      recosted_segment = recost_shortcut_forward(graphreader, edgelabel.edgeid(), *costing_,
-                                                 edgelabel.transition_cost(), cost);
+      recosted_segment =
+          recost_shortcut_forward(graphreader, edgelabel.edgeid(), *costing_,
+                                  edgelabel.transition_cost(), cost, time_info, invariant);
     }
     // add recosted edges to the path
     if (!recosted_segment.empty()) {
@@ -999,7 +1002,9 @@ void BidirectionalAStar::FormPathForward(baldr::GraphReader& graphreader,
 
 void BidirectionalAStar::FormPathReverse(baldr::GraphReader& graphreader,
                                          uint32_t start_label_idx,
-                                         std::vector<PathInfo>& path) {
+                                         std::vector<PathInfo>& path,
+                                         const baldr::TimeInfo& time_info,
+                                         const bool invariant) {
   // Get the transition cost at the last edge of the reverse path
   Cost previous_transition_cost = edgelabels_reverse_[start_label_idx].transition_cost();
 
@@ -1018,7 +1023,8 @@ void BidirectionalAStar::FormPathReverse(baldr::GraphReader& graphreader,
     std::vector<PathInfo> recosted_segment;
     if (edgelabel.shortcut()) {
       recosted_segment =
-          recost_shortcut_forward(graphreader, oppedge, *costing_, previous_transition_cost, cost);
+          recost_shortcut_forward(graphreader, oppedge, *costing_, previous_transition_cost, cost,
+                                  time_info, invariant);
     }
     // add recosted edges to the path
     if (!recosted_segment.empty()) {
@@ -1057,7 +1063,9 @@ void BidirectionalAStar::FormPathReverse(baldr::GraphReader& graphreader,
 std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& graphreader,
                                                                 const Options& options,
                                                                 const valhalla::Location& origin,
-                                                                const valhalla::Location& dest) {
+                                                                const valhalla::Location& dest,
+                                                                const baldr::TimeInfo& time_info,
+                                                                const bool invariant) {
 
   // we need to figure out the maximum number of paths we could form here and
   // if its more than 1 we need to sort them so we do the best first
@@ -1113,7 +1121,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     path.reserve(static_cast<size_t>(paths.empty() ? 0.f : paths.back().size() * 1.2f));
 
     // recover path from forward labels
-    FormPathForward(graphreader, idx1, path);
+    FormPathForward(graphreader, idx1, path, time_info, invariant);
 
     // Special case code if the last edge of the forward path is the destination edge
     // which means we need to worry about partial distance on the edge
@@ -1168,7 +1176,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     }
 
     // recover path from reverse labels
-    FormPathReverse(graphreader, idx2, path);
+    FormPathReverse(graphreader, idx2, path, time_info, invariant);
 
     if (!path.empty())
       LOG_DEBUG("path_cost::" + std::to_string(path.back().elapsed_cost.cost));

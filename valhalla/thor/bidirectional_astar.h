@@ -167,7 +167,7 @@ protected:
    * @param pred_idx           the index of the label in the label set
    * @param from_transition    whether or not we are expanding at a graph node transition
    * @param time_info          time tracking information about the end of the route
-   * * @param invariant          static date_time, dont offset the time as the path lengthens
+   * @param invariant          static date_time, dont offset the time as the path lengthens
    * @return returns true if the expansion continued from this node in this direction
    */
   bool ExpandReverse(baldr::GraphReader& graphreader,
@@ -234,7 +234,9 @@ protected:
    * @param   graphreader  Graph tile reader (for getting opposing edges).
    * @param   options      Controls whether or not we get alternatives
    * @param   origin       The origin location
-   * @param   destination  The destination location
+   * @param   dest         The destination location
+   * @param   time_info    Time tracking information about the start of the route
+   * @param   invariant    Static date_time, dont offset the time as the path lengthens
    * @return  Returns the path infos, a list of GraphIds representing the
    *          directed edges along the path - ordered from origin to
    *          destination - along with travel modes and elapsed time.
@@ -242,28 +244,38 @@ protected:
   std::vector<std::vector<PathInfo>> FormPath(baldr::GraphReader& graphreader,
                                               const Options& options,
                                               const valhalla::Location& origin,
-                                              const valhalla::Location& dest);
+                                              const valhalla::Location& dest,
+                                              const baldr::TimeInfo& time_info,
+                                              const bool invariant);
 
-  /*
+  /**
    * Form the path from the forward adjacency list.
-   * @param   graphreader     Graph tile reader (need to recover shortcut edges)
-   * @param   last_label_idx  Last edgelabel index in the forward path (index where
+   * @param graphreader     Graph tile reader (need to recover shortcut edges)
+   * @param last_label_idx  Last edgelabel index in the forward path (index where
    *                          forward path meets reverse path)
-   * @param   path            List of PathInfo objects where to store results
+   * @param time_info       Time tracking information about the start of the route
+   * @param invariant       Static date_time, dont offset the time as the path lengthens
+   * @param path            List of PathInfo objects where to store results
    */
   void FormPathForward(baldr::GraphReader& graphreader,
                        uint32_t last_label_idx,
-                       std::vector<PathInfo>& path);
-  /*
+                       std::vector<PathInfo>& path,
+                       const baldr::TimeInfo& time_info,
+                       const bool invariant);
+  /**
    * Form the path from the reverse adjacency list.
-   * @param   graphreader      Graph tile reader (need to get opposing edge and recover shortcuts)
-   * @param   start_label_idx  First edgelabel index in the reverse path (index where
+   * @param graphreader      Graph tile reader (need to get opposing edge and recover shortcuts)
+   * @param start_label_idx  First edgelabel index in the reverse path (index where
    *                           forward path meets reverse path)
-   * @param   path             List of PathInfo objects where to store results
+   * @param time_info        Time tracking information about the start of the route
+   * @param invariant        Static date_time, dont offset the time as the path lengthens
+   * @param path             List of PathInfo objects where to store results
    */
   void FormPathReverse(baldr::GraphReader& graphreader,
                        uint32_t start_label_idx,
-                       std::vector<PathInfo>& path);
+                       std::vector<PathInfo>& path,
+                       const baldr::TimeInfo& time_info,
+                       const bool invariant);
 };
 
 // This function checks if the path formed by the two expanding trees

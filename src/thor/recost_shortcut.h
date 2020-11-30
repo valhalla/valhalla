@@ -18,7 +18,8 @@ namespace {
  * @param  costing      Costing function
  * @param  start_transition_cost  Transition cost for the shortcut edge
  * @param  previous_cost    Total cost from the previous edge
- * TODO: add time information
+ * @param time_info         Time tracking information about the start of the route
+ * @param invariant         Static date_time, dont offset the time as the path lengthens
  * @return  Returns array of PathInfo objects for each supersede edges
  *          respectively. Just append these object to your current path.
  *          In case of fail (shortcut recovering/recosting fail) returns empty array.
@@ -27,7 +28,9 @@ inline std::vector<PathInfo> recost_shortcut_forward(GraphReader& graphreader,
                                                      const GraphId& shortcut_id,
                                                      const DynamicCost& costing,
                                                      Cost start_transition_cost,
-                                                     Cost previous_cost) {
+                                                     Cost previous_cost,
+                                                     const TimeInfo& time_info,
+                                                     const bool invariant) {
   auto edges = graphreader.RecoverShortcut(shortcut_id);
   if (edges.size() == 1) {
     // failed to recover shortcut edge: it's not necessary to continue
@@ -55,9 +58,21 @@ inline std::vector<PathInfo> recost_shortcut_forward(GraphReader& graphreader,
     return *edge_iter++;
   };
 
+  const GraphTile* tile = nullptr;
+  const GraphId node_id = graphreader.edge_endnode(shortcut_id, tile);
+  if (!node_id)
+    return {};
+  const auto* node = tile->node(node_id);
+
+  // calculate time when we enter shortcut edge considering 'invariant' option;
+  // this time is a start time for recost function
+  const auto seconds_offset = invariant ? 0.f : start_cost.secs;
+  const auto offset_time = time_info.forward(seconds_offset, static_cast<int>(node->timezone()));
+
   try {
     // recost all superseded edges
-    recost_forward(graphreader, costing, get_next_edge, on_new_label);
+    recost_forward(graphreader, costing, get_next_edge, on_new_label, 0.f, 1.f, offset_time,
+                   invariant);
   } catch (const std::exception& e) {
     LOG_ERROR(std::string("Failed to recost shortcut edge: ") + e.what());
     return {};
