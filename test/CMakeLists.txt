@@ -30,8 +30,10 @@ set(tests aabb2 access_restriction actor admin attributes_controller datetime di
   incident_loading)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar astar_bss complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
-    idtable mapmatch matrix minbb multipoint_routes names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
+  list(APPEND tests astar astar_bss complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
+    graphtilebuilder graphreader isochrone predictive_traffic idtable mapmatch matrix minbb multipoint_routes
+    names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban
+    thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
   if(ENABLE_HTTP)
     list(APPEND tests http_tiles)
   endif()

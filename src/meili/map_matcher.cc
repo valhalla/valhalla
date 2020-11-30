@@ -45,10 +45,10 @@ std::string print_result(const StateContainer& container,
 struct Interpolation {
   midgard::PointLL projected;
   baldr::GraphId edgeid;
-  float sq_distance;
-  float route_distance;
-  float route_time;
-  float edge_distance;
+  double sq_distance;
+  double route_distance;
+  double route_time;
+  double edge_distance;
   std::vector<EdgeSegment>::const_iterator segment;
 
   float sortcost(const EmissionCostModel& emission_model,

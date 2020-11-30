@@ -57,7 +57,7 @@ serializeIsochrones(const Api& request,
  */
 std::string serializeHeight(const Api& request,
                             const std::vector<double>& heights,
-                            const std::vector<float>& ranges = {});
+                            const std::vector<double>& ranges = {});
 
 /**
  * Turn some correlated points on the graph into info about those locations

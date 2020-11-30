@@ -13,8 +13,8 @@ using namespace valhalla::sif;
 namespace {
 struct interpolation_t {
   valhalla::baldr::GraphId edge; // edge id
-  float total_distance;          // distance along the path
-  float edge_distance;           // ratio of the distance along the edge
+  double total_distance;         // distance along the path
+  double edge_distance;          // ratio of the distance along the edge
   size_t original_index;         // index into the original measurements
   double epoch_time;             // seconds from epoch
 };

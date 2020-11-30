@@ -7,7 +7,7 @@
 
 using namespace valhalla;
 
-class InstructionsKeepBranchTowardRamp : public ::testing::Test {
+class InstructionsKeepRampSigns : public ::testing::Test {
 protected:
   static gurka::map map;
 
@@ -46,20 +46,17 @@ protected:
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
 
-    map = gurka::buildtiles(layout, ways, {}, {},
-                            "test/data/gurka_instructions_keep_branch_toward_ramp",
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_instructions_keep_ramp_signs",
                             {{"mjolnir.admin",
                               {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}}});
   }
 };
 
-gurka::map InstructionsKeepBranchTowardRamp::map = {};
+gurka::map InstructionsKeepRampSigns::map = {};
 
 ///////////////////////////////////////////////////////////////////////////////
-// Keep right toward
-// ALERT: "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
-// PRE:   "6": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>.",
-TEST_F(InstructionsKeepBranchTowardRamp, KeepRightToward) {
+// Keep right branch toward
+TEST_F(InstructionsKeepRampSigns, KeepRightBranchToward) {
   auto result = gurka::route(map, "A", "F", "auto");
 
   // Verify maneuver types
@@ -77,10 +74,8 @@ TEST_F(InstructionsKeepBranchTowardRamp, KeepRightToward) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Keep left toward
-// ALERT: "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
-// PRE:   "6": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>.",
-TEST_F(InstructionsKeepBranchTowardRamp, KeepLeftToward) {
+// Keep left branch toward
+TEST_F(InstructionsKeepRampSigns, KeepLeftBranchToward) {
   auto result = gurka::route(map, "A", "D", "auto");
 
   // Verify maneuver types
@@ -98,10 +93,8 @@ TEST_F(InstructionsKeepBranchTowardRamp, KeepLeftToward) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Keep straight toward
-// ALERT: "2": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES>.",
-// PRE:   "6": "Keep <RELATIVE_DIRECTION> to take <STREET_NAMES> toward <TOWARD_SIGN>.",
-TEST_F(InstructionsKeepBranchTowardRamp, KeepStraightToward) {
+// Keep straight branch toward
+TEST_F(InstructionsKeepRampSigns, KeepStraightBranchToward) {
   auto result = gurka::route(map, "A", "H", "auto");
 
   // Verify maneuver types

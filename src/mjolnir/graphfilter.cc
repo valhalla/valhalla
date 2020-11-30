@@ -60,7 +60,7 @@ void FilterTiles(GraphReader& reader,
   };
 
   // Iterate through all tiles in the local level
-  auto local_tiles = reader.GetTileSet(TileHierarchy::levels().rbegin()->second.level);
+  auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
   for (const auto& tile_id : local_tiles) {
     // Create a new tilebuilder - should copy header information
     GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
@@ -228,7 +228,7 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
   int not_found = 0;
 
   // Iterate through all tiles in the local level
-  auto local_tiles = reader.GetTileSet(TileHierarchy::levels().rbegin()->second.level);
+  auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
   for (const auto& tile_id : local_tiles) {
     // Get the graph tile. Skip if no tile exists or no nodes exist in the tile
     // (should not happen!?)

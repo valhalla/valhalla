@@ -108,7 +108,7 @@ void ConstructEdges(const std::string& ways_file,
                     const std::string& nodes_file,
                     const std::string& edges_file,
                     const std::function<GraphId(const OSMNode&)>& graph_id_predicate,
-                    bool infer_turn_channels) {
+                    const bool infer_turn_channels) {
   LOG_INFO("Creating graph edges from ways...");
 
   // so we can read ways and nodes and write edges
@@ -120,9 +120,7 @@ void ConstructEdges(const std::string& ways_file,
   // Method to get length of an edge (used to find short link edges)
   const auto Length = [&way_nodes](const size_t idx1, const OSMNode& node2) {
     auto node1 = (*way_nodes[idx1]).node;
-    PointLL a(node1.lng_, node1.lat_);
-    PointLL b(node2.lng_, node2.lat_);
-    return a.Distance(b);
+    return node1.latlng().Distance(node2.latlng());
   };
 
   // For each way traversed via the nodes
@@ -141,7 +139,7 @@ void ConstructEdges(const std::string& ways_file,
     bool valid = true;
     for (auto ni = current_way_node_index; ni <= last_way_node_index; ni++) {
       const auto wn = (*way_nodes[ni]).node;
-      if (wn.lat_ == kInvalidLatitude && wn.lng_ == kInvalidLongitude) {
+      if (!wn.latlng().IsValid()) {
         LOG_WARN("Node " + std::to_string(wn.osmid_) + " in way " + std::to_string(way.way_id()) +
                  " has not had coordinates initialized");
         valid = false;
@@ -155,7 +153,7 @@ void ConstructEdges(const std::string& ways_file,
 
     // Remember this edge starts here
     Edge prev_edge = Edge{0};
-    Edge edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
+    Edge edge = Edge::make_edge(way_node.way_index, current_way_node_index, way, infer_turn_channels);
     edge.attributes.way_begin = way_node.way_shape_node_index == 0;
 
     // Remember this node as starting this edge
@@ -178,10 +176,6 @@ void ConstructEdges(const std::string& ways_file,
             (way.link() && Length(edge.llindex_, way_node.node) < kMaxInternalLength);
         way_node.node.link_edge_ = way.link();
         way_node.node.non_link_edge_ = !way.link() && (way.auto_forward() || way.auto_backward());
-
-        // if this is data has turn_channels set then we need to use the flag.
-        if (!infer_turn_channels && way.turn_channel())
-          edge.attributes.turn_channel = true;
 
         // remember what edge this node will end, its complicated by the fact that we delay adding the
         // edge until the next iteration of the loop, ie once the edge becomes prev_edge
@@ -217,7 +211,8 @@ void ConstructEdges(const std::string& ways_file,
           break;
         } // Start a new edge if this is not the last node in the way
         else {
-          edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
+          edge =
+              Edge::make_edge(way_node.way_index, current_way_node_index, way, infer_turn_channels);
           sequence<Node>::iterator element = --nodes.end();
           auto node = *element;
           node.start_of = edges.size() + 1; // + 1 because the edge has not been added yet
@@ -379,8 +374,7 @@ void BuildTileSet(const std::string& ways_file,
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information.");
   }
 
-  const auto& tl = TileHierarchy::levels().rbegin();
-  Tiles<PointLL> tiling = tl->second.tiles;
+  const auto& tiling = TileHierarchy::levels().back().tiles;
 
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
@@ -388,7 +382,7 @@ void BuildTileSet(const std::string& ways_file,
     std::list<PointLL> shape;
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
-      shape.emplace_back(node.lng_, node.lat_);
+      shape.emplace_back(node.latlng());
     }
     return shape;
   };
@@ -399,7 +393,7 @@ void BuildTileSet(const std::string& ways_file,
 
   // Lots of times in a given tile we may end up accessing the same
   // shape/attributes twice we avoid doing this by caching it here
-  std::unordered_map<uint32_t, std::pair<float, uint32_t>> geo_attribute_cache;
+  std::unordered_map<uint32_t, std::pair<double, uint32_t>> geo_attribute_cache;
 
   ////////////////////////////////////////////////////////////////////////////
   // Iterate over tiles
@@ -467,7 +461,7 @@ void BuildTileSet(const std::string& ways_file,
         }
 
         const auto& node = bundle.node;
-        PointLL node_ll{node.lng_, node.lat_};
+        PointLL node_ll = node.latlng();
 
         // Get the admin index
         uint32_t admin_index = 0;
@@ -673,7 +667,6 @@ void BuildTileSet(const std::string& ways_file,
             // Add the curvature to the cache
             auto inserted = geo_attribute_cache.insert({edge_info_offset, {length, curvature}});
             found = inserted.first;
-
           } // now we have the edge info offset
           else {
             found = geo_attribute_cache.find(edge_info_offset);
@@ -687,7 +680,7 @@ void BuildTileSet(const std::string& ways_file,
           // ferry speed override.  duration is set on the way
           if (w.ferry() && w.duration()) {
             // convert to kph
-            uint32_t spd = static_cast<uint32_t>((std::get<0>(found->second) * 3.6f) / w.duration());
+            uint32_t spd = static_cast<uint32_t>((std::get<0>(found->second) * 3.6) / w.duration());
             speed = (spd == 0) ? 1 : spd;
           }
 
@@ -720,7 +713,8 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           if (!infer_internal_intersections && w.internal()) {
-            directededge.set_internal(true);
+            if (directededge.use() != Use::kRamp && directededge.use() != Use::kTurnChannel)
+              directededge.set_internal(true);
           }
 
           // TODO - update logic so we limit the CreateSignInfoList calls
@@ -1076,12 +1070,11 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
                                                    const std::string& way_nodes_file,
                                                    const std::string& nodes_file,
                                                    const std::string& edges_file) {
-  const auto& tl = TileHierarchy::levels().rbegin();
-  uint8_t level = tl->second.level;
+  uint8_t level = TileHierarchy::levels().back().level;
   // Make the edges and nodes in the graph
   ConstructEdges(ways_file, way_nodes_file, nodes_file, edges_file,
                  [&level](const OSMNode& node) {
-                   return TileHierarchy::GetGraphId({node.lng_, node.lat_}, level);
+                   return TileHierarchy::GetGraphId(node.latlng(), level);
                  },
                  pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
   return SortGraph(nodes_file, edges_file);
@@ -1110,12 +1103,12 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   // Reclassify ferry connection edges - use the highway classification cutoff
   baldr::RoadClass rc = baldr::RoadClass::kPrimary;
   for (auto& level : TileHierarchy::levels()) {
-    if (level.second.name == "highway") {
-      rc = level.second.importance;
+    if (level.name == "highway") {
+      rc = level.importance;
     }
   }
   ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file,
-                             static_cast<uint32_t>(rc), stats);
+                             static_cast<uint32_t>(rc));
   unsigned int threads =
       std::max(static_cast<unsigned int>(1),
                pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));

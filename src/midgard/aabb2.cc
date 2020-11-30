@@ -76,10 +76,10 @@ template <class coord_t> bool AABB2<coord_t>::Intersects(const coord_t& a, const
   // IsLeft == 0 and we count as an intersection (trivial rejection cases
   // above mean the segment reaches the corner point)
   LineSegment2<coord_t> s(a, b);
-  float s1 = s.IsLeft(coord_t(minx_, miny_));
-  return ((s1 * s.IsLeft(coord_t(minx_, maxy_)) <= 0.0f) ||
-          (s1 * s.IsLeft(coord_t(maxx_, maxy_)) <= 0.0f) ||
-          (s1 * s.IsLeft(coord_t(maxx_, miny_)) <= 0.0f));
+  auto s1 = s.IsLeft(coord_t(minx_, miny_));
+  return ((s1 * s.IsLeft(coord_t(minx_, maxy_)) <= 0.0) ||
+          (s1 * s.IsLeft(coord_t(maxx_, maxy_)) <= 0.0) ||
+          (s1 * s.IsLeft(coord_t(maxx_, miny_)) <= 0.0));
 }
 
 template <class coord_t> bool AABB2<coord_t>::Intersects(const coord_t& c, float r) const {
@@ -137,8 +137,10 @@ template <class coord_t> bool AABB2<coord_t>::Intersect(coord_t& u, coord_t& v) 
     intersections.emplace_back(minx_, y);
   }
   // pick the best one for each that needs it
-  float u_dist = std::numeric_limits<float>::infinity(),
-        v_dist = std::numeric_limits<float>::infinity(), d;
+  auto u_dist = std::numeric_limits<typename coord_t::value_type>::infinity();
+  auto v_dist = std::numeric_limits<typename coord_t::value_type>::infinity();
+  typename coord_t::value_type d;
+
   for (const auto& intersection : intersections) {
     if (need_u && (d = u.DistanceSquared(intersection)) < u_dist) {
       u = intersection;
@@ -225,11 +227,11 @@ template <class coord_t>
 coord_t AABB2<coord_t>::ClipIntersection(const ClipEdge bdry,
                                          const coord_t& insidept,
                                          const coord_t& outsidept) const {
-  float t = 0.0f;
-  float inx = insidept.x();
-  float iny = insidept.y();
-  float dx = outsidept.x() - inx;
-  float dy = outsidept.y() - iny;
+  typename coord_t::value_type t = 0.0;
+  auto inx = insidept.x();
+  auto iny = insidept.y();
+  auto dx = outsidept.x() - inx;
+  auto dy = outsidept.y() - iny;
   switch (bdry) {
     case kLeft:
       t = (minx_ - inx) / dx;

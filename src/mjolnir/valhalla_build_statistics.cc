@@ -383,11 +383,11 @@ void build(const boost::property_tree::ptree& pt,
 
     // Point tiles to the set we need for current level
     auto level = tile_id.level();
-    if (TileHierarchy::levels().rbegin()->second.level + 1 == level) {
-      level = TileHierarchy::levels().rbegin()->second.level;
+    if (TileHierarchy::levels().back().level + 1 == level) {
+      level = TileHierarchy::levels().back().level;
     }
 
-    const auto& tiles = TileHierarchy::levels().find(level)->second.tiles;
+    const auto& tiles = TileHierarchy::levels()[level].tiles;
     level = tile_id.level();
     auto tileid = tile_id.tileid();
 
@@ -506,8 +506,8 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   // Create a randomized queue of tiles to work from
   std::deque<GraphId> tilequeue;
   for (const auto& tier : TileHierarchy::levels()) {
-    auto level = tier.second.level;
-    auto tiles = tier.second.tiles;
+    auto level = tier.level;
+    const auto& tiles = tier.tiles;
     for (uint32_t id = 0; id < tiles.TileCount(); id++) {
       // If tile exists add it to the queue
       GraphId tile_id(id, level, 0);
@@ -517,7 +517,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
     }
 
     // transit level
-    if (level == TileHierarchy::levels().rbegin()->second.level) {
+    if (level == TileHierarchy::levels().back().level) {
       level += 1;
       for (uint32_t id = 0; id < tiles.TileCount(); id++) {
         // If tile exists add it to the queue

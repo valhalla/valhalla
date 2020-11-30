@@ -894,14 +894,14 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
                                                                        tweeners_t& tweeners) {
   std::array<std::vector<GraphId>, kBinCount> bins;
   // we store these at the highest level
-  auto max_level = TileHierarchy::levels().rbegin()->first;
+  auto max_level = TileHierarchy::levels().back().level;
   // skip transit or other special levels and empty tiles
   if (tile->header()->graphid().level() > max_level || tile->header()->directededgecount() == 0) {
     return bins;
   }
   // is this the highest level
   auto max = tile->header()->graphid().level() == max_level;
-  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
+  const auto& tiles = TileHierarchy::levels().back().tiles;
 
   // each edge please
   std::unordered_set<uint64_t> ids(tile->header()->directededgecount() / 2);

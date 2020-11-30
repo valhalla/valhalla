@@ -45,7 +45,6 @@ struct NamedSegment {
   float distance;
 };
 
-constexpr const double COORDINATE_PRECISION = 1e6;
 struct Coordinate {
   std::int32_t lng;
   std::int32_t lat;
@@ -56,13 +55,13 @@ struct Coordinate {
 
 inline std::int32_t toFixed(const float floating) {
   const auto d = static_cast<double>(floating);
-  const auto fixed = static_cast<std::int32_t>(std::round(d * COORDINATE_PRECISION));
+  const auto fixed = static_cast<std::int32_t>(std::round(d * ENCODE_PRECISION));
   return fixed;
 }
 
 inline double toFloating(const std::int32_t fixed) {
   const auto i = static_cast<std::int32_t>(fixed);
-  const auto floating = static_cast<double>(i) / COORDINATE_PRECISION;
+  const auto floating = static_cast<double>(i) * DECODE_PRECISION;
   return floating;
 }
 
@@ -77,7 +76,7 @@ const constexpr double DEGREE_TO_RAD = 0.017453292519943295769236907684886;
 const constexpr double RAD_TO_DEGREE = 1. / DEGREE_TO_RAD;
 const constexpr double EPSG3857_MAX_LATITUDE = 85.051128779806592378; // 90(4*atan(exp(pi))/pi-1)
 
-const constexpr float DOUGLAS_PEUCKER_THRESHOLDS[19] = {
+const constexpr PointLL::first_type DOUGLAS_PEUCKER_THRESHOLDS[19] = {
     703125.0, // z0
     351562.5, // z1
     175781.2, // z2
@@ -299,7 +298,8 @@ json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
   auto geojson = json::map({});
   auto coords = json::array({});
   for (const auto& p : shape) {
-    coords->emplace_back(json::array({json::fp_t{p.lng(), 6}, json::fp_t{p.lat(), 6}}));
+    coords->emplace_back(
+        json::array({json::fp_t{p.lng(), DIGITS_PRECISION}, json::fp_t{p.lat(), DIGITS_PRECISION}}));
   }
   geojson->emplace("type", std::string("LineString"));
   geojson->emplace("coordinates", coords);
