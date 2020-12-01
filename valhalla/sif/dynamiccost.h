@@ -672,6 +672,15 @@ public:
 
   virtual Cost BSSCost() const;
 
+  /*
+   * Determine whether an edge is currently closed due to traffic.
+   * @param  edgeid         GraphId of the opposing edge.
+   * @return  Returns true if the edge is closed due to live traffic constraints, false if not.
+   */
+  inline virtual bool IsClosed(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const {
+    return !ignore_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
+  }
+
 protected:
   // Algorithm pass
   uint32_t pass_;
@@ -910,15 +919,6 @@ protected:
    */
   float TransitionFactor(const bool has_traffic, const float density) const {
     return has_traffic ? kTrafficTransitionFactor : density;
-  }
-
-  /*
-   * Determine whether an edge is currently closed due to traffic.
-   * @param  edgeid         GraphId of the opposing edge.
-   * @return  Returns true if the edge is closed due to live traffic constraints, false if not.
-   */
-  inline virtual bool IsClosed(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
-    return !ignore_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
   }
 
   /*
