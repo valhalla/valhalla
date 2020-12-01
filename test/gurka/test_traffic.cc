@@ -79,7 +79,7 @@ TEST(Traffic, BasicUpdates) {
     if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
       current->overall_speed = 0;
     } else {
-      current->overall_speed = valhalla::baldr::MAX_TRAFFIC_SPEED_KPH >> 1;
+      current->overall_speed = valhalla::baldr::kMaxAssumedSpeed >> 1;
     }
   };
   test::customize_live_traffic_data(map.config, cb_setter_max);
