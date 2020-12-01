@@ -404,9 +404,9 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
 
       // Merge through legs by updating the time and splicing the lists
       if (!temp_path.empty()) {
-        auto offset = path.back().elapsed_cost.secs;
+        auto offset = path.back().elapsed_cost;
         std::for_each(temp_path.begin(), temp_path.end(),
-                      [offset](PathInfo& i) { i.elapsed_cost.secs += offset; });
+                      [offset](PathInfo& i) { i.elapsed_cost += offset; });
         // Connects via the same edge so we only need it once
         if (path.back().edgeid == temp_path.front().edgeid) {
           path.pop_back();
@@ -507,9 +507,9 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
 
       // Merge through legs by updating the time and splicing the lists
       if (!path.empty()) {
-        auto offset = path.back().elapsed_cost.secs;
+        auto offset = path.back().elapsed_cost;
         std::for_each(temp_path.begin(), temp_path.end(),
-                      [offset](PathInfo& i) { i.elapsed_cost.secs += offset; });
+                      [offset](PathInfo& i) { i.elapsed_cost += offset; });
         // Connects via the same edge so we only need it once
         if (path.back().edgeid == temp_path.front().edgeid) {
           path.pop_back();
