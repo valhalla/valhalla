@@ -13,16 +13,26 @@ std::string thor_worker_t::isochrones(Api& request) {
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
 
-  // TODO: we have to check what type of contour it was time or distance and push to different vectors
-  // of each
-  std::vector<float> contours, dist_contours;
+  // std::vector<time_distance_t> time_distances;
+  std::vector<float> contours_time, contours_distance;
   std::unordered_map<float, std::string> colors;
+
   for (const auto& contour : options.contours()) {
-    // if(contour.has_time())
-    contours.push_back(contour.time());
-    /*else
-      dist_contours.push_back(contour.dist());*/
-    colors[contours.back()] = contour.color();
+    // time_distances.push_back({contour.time() * 60, contour.distance()});
+    contours_time.push_back(contour.time());
+    contours_distance.push_back(contour.distance());
+    colors[contour.time()] = contour.color();
+    // colors[contour.distance()] = contour.color();
+  }
+
+  // sort the contour vectors
+  std::sort(contours_time.begin(), contours_time.end());
+  std::sort(contours_distance.begin(), contours_distance.end());
+  for (float c : contours_time) {
+    printf("Contour time: %f\n", c);
+  }
+  for (float c : contours_distance) {
+    printf("Contour distance %f\n", c);
   }
 
   // If generalize is not provided then an optimal factor is computed
@@ -36,21 +46,24 @@ std::string thor_worker_t::isochrones(Api& request) {
   // Cost (including penalties) is used when adding to the adjacency list but the elapsed
   // time in seconds is used when terminating the search. The + 10 minutes adds a buffer for edges
   // where there has been a higher cost that might still be marked in the isochrone
-  auto grid = (costing == "multimodal" || costing == "transit")
-                  ? isochrone_gen.ComputeMultiModal(*options.mutable_locations(),
-                                                    contours.back() + 10, *reader, mode_costing, mode)
-                  : isochrone_gen.Compute(*options.mutable_locations(), contours.back() + 10, *reader,
-                                          mode_costing, mode);
+  auto grid =
+      (costing == "multimodal" || costing == "transit")
+          ? isochrone_gen.ComputeMultiModal(*options.mutable_locations(),
+                                            contours_time.back() + 10.0f,
+                                            contours_distance.back() + 10.0f, *reader, mode_costing,
+                                            mode)
+          : isochrone_gen.Compute(*options.mutable_locations(), contours_time.back() + 10.0f,
+                                  contours_distance.back() + 10.0f, *reader, mode_costing, mode);
 
   // turn it into geojson
-  auto isolines = grid->GenerateContours(contours, [](const float& secs) { return secs; },
-                                         options.polygons(), options.denoise(), options.generalize());
+  auto isolines =
+      grid->GenerateContours(contours_time, [](const time_distance_t& td) { return td.sec; },
+                             options.polygons(), options.denoise(), options.generalize());
+  auto isolines_dist =
+      grid->GenerateContours(contours_distance, [](const time_distance_t& td) { return td.dist; },
+                             options.polygons(), options.denoise(), options.generalize());
 
-  // TODO: if they had any distance contours call GenerateContours again but with the distance
-  // contours
-  /*auto dist_isolines = grid->GenerateContours(dist_contours, [](const time_distance_t& v) { return
-     v.dist; }, options.polygons(), options.denoise(), options.generalize());*/
-  return tyr::serializeIsochrones(request, isolines, options.polygons(), colors,
+  return tyr::serializeIsochrones(request, isolines_dist, options.polygons(), colors,
                                   options.show_locations());
 }
 

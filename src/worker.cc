@@ -535,26 +535,27 @@ void parse_contours(const rapidjson::Document& doc,
   // make sure the isoline definitions are valid
   auto json_contours = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/contours");
   if (json_contours) {
-    float prev = 0.f;
-    const float NO_TIME = -1.f;
     for (const auto& json_contour : *json_contours) {
-      // Grab contour time and validate that it is increasing
-      const float c = rapidjson::get_optional<float>(json_contour, "/time").get_value_or(NO_TIME);
-      if (c < prev || c == NO_TIME) {
+      // Grab contour time and distance
+      const float t =
+          rapidjson::get_optional<float>(json_contour, "/time").get_value_or(midgard::kNoIsoMetric);
+      const float d = rapidjson::get_optional<float>(json_contour, "/distance")
+                          .get_value_or(midgard::kNoIsoMetric);
+      if ((t == midgard::kNoIsoMetric && d == midgard::kNoIsoMetric)) {
         throw valhalla_exception_t{111};
       }
 
       // Add new contour object to list
       auto* contour = contours->Add();
-      // Set contour time
-      contour->set_time(c);
+      // Set contour time & distance
+      contour->set_time(t);
+      contour->set_distance(d);
 
       // If specified, grab and set contour color
       auto color = rapidjson::get_optional<std::string>(json_contour, "/color");
       if (color) {
         contour->set_color(*color);
       }
-      prev = c;
     }
   }
 }

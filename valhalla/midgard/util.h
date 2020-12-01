@@ -36,6 +36,9 @@ template <class T> struct ranged_default_t {
   }
 };
 
+// Applied if time or distance were omitted in the request
+constexpr float kNoIsoMetric = 0.0f;
+
 /**
  * Compute time (seconds) given a length (km) and speed (km per hour)
  * @param  length  distance in km.

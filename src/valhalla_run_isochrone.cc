@@ -244,14 +244,15 @@ int main(int argc, char* argv[]) {
 
   // Generate contours
   t2 = std::chrono::high_resolution_clock::now();
-  auto contours = isotile->GenerateContours(contour_times, polygons, denoise, generalize);
+  auto contours = isotile->GenerateContours(contour_times, [](const float& secs) { return secs; },
+                                            polygons, denoise, generalize);
   auto t3 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count();
   LOG_INFO("Contour Generation took " + std::to_string(msecs) + " ms");
 
   // Serialize to GeoJSON
-  std::string geojson = valhalla::tyr::serializeIsochrones<PointLL>(request, contours, polygons,
-                                                                    colors, show_locations);
+  std::string geojson =
+      valhalla::tyr::serializeIsochrones(request, contours, polygons, colors, show_locations);
 
   auto t4 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count();

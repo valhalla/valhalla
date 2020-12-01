@@ -51,22 +51,10 @@ Isochrone::Isochrone() : Dijkstras(), shape_interval_(50.0f) {
 // the travel mode.
 void Isochrone::ConstructIsoTile(
     const bool multimodal,
-    const unsigned int max_minutes,
+    const float max_minutes,
+    const float max_km,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     const sif::TravelMode mode) {
-  float max_distance;
-  max_seconds_ = max_minutes * 60;
-  if (multimodal) {
-    max_distance = max_seconds_ * 70.0f * kMPHtoMetersPerSec;
-  } else if (mode == TravelMode::kPedestrian) {
-    max_distance = max_seconds_ * 5.0f * kMPHtoMetersPerSec;
-  } else if (mode == TravelMode::kBicycle) {
-    max_distance = max_seconds_ * 20.0f * kMPHtoMetersPerSec;
-  } else {
-    // A driving mode
-    max_distance = max_seconds_ * 70.0f * kMPHtoMetersPerSec;
-  }
-
   // Form bounding box that's just big enough to surround all of the locations.
   // Convert to PointLL
   PointLL center_ll(locations.Get(0).ll().lng(), locations.Get(0).ll().lat());
@@ -87,6 +75,28 @@ void Isochrone::ConstructIsoTile(
       center_ll = ll;
     }
   }
+
+  max_seconds_ = max_minutes * 60.0f;
+  float max_distance = max_km * 1000.0f;
+  float max_time_est, max_distance_est;
+
+  if (multimodal) {
+    max_time_est = max_distance / (70.0f * kMPHtoMetersPerSec);
+    max_distance_est = max_seconds_ * 70.0f * kMPHtoMetersPerSec;
+  } else if (mode == TravelMode::kPedestrian) {
+    max_time_est = max_distance / (5.0f * kMPHtoMetersPerSec);
+    max_distance_est = max_seconds_ * 5.0f * kMPHtoMetersPerSec;
+  } else if (mode == TravelMode::kBicycle) {
+    max_time_est = max_distance / (5.0f * kMPHtoMetersPerSec);
+    max_distance_est = max_seconds_ * 5.0f * kMPHtoMetersPerSec;
+  } else {
+    // A driving mode
+    max_time_est = max_distance / (5.0f * kMPHtoMetersPerSec);
+    max_distance_est = max_seconds_ * 70.0f * kMPHtoMetersPerSec;
+  }
+
+  max_distance = std::max(max_distance_est, max_distance);
+  max_seconds_ = std::max(max_seconds_, max_time_est);
 
   // Range of grids in latitude space
   float dlat = max_distance / kMetersPerDegreeLat;
@@ -114,7 +124,7 @@ void Isochrone::ConstructIsoTile(
                         loc_bounds.maxy() + dlat);
 
   // Create isotile (gridded data)
-  isotile_.reset(new GriddedData<float>(bounds, grid_size, max_minutes));
+  isotile_.reset(new GriddedData<time_distance_t>(bounds, grid_size, {max_minutes, max_distance}));
 
   // Find the center of the grid that the location lies within. Shift the
   // tilebounds so the location lies in the center of a tile.
@@ -134,48 +144,51 @@ void Isochrone::ConstructIsoTile(
   // initialize the time at these locations
   for (const auto& location : locations) {
     PointLL ll(location.ll().lng(), location.ll().lat());
-    isotile_->Set(ll, 0);
+    isotile_->Set(ll, {0.0f, 0.0f});
   }
 }
 
 // Compute iso-tile that we can use to generate isochrones.
-std::shared_ptr<const GriddedData<float>>
+std::shared_ptr<const GriddedData<time_distance_t>>
 Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-                   const unsigned int max_minutes,
+                   const float max_minutes,
+                   const float max_km,
                    GraphReader& graphreader,
                    const sif::mode_costing_t& mode_costing,
                    const TravelMode mode) {
   // Initialize and create the isotile
-  ConstructIsoTile(false, max_minutes, origin_locations, mode);
+  ConstructIsoTile(false, max_minutes, max_km, origin_locations, mode);
   // Compute the expansion
   Dijkstras::Compute(origin_locations, graphreader, mode_costing, mode);
   return isotile_;
 }
 
 // Compute iso-tile that we can use to generate isochrones.
-std::shared_ptr<const GriddedData<float>>
+std::shared_ptr<const GriddedData<time_distance_t>>
 Isochrone::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
-                          const unsigned int max_minutes,
+                          const float max_minutes,
+                          const float max_km,
                           GraphReader& graphreader,
                           const sif::mode_costing_t& mode_costing,
                           const TravelMode mode) {
 
   // Initialize and create the isotile
-  ConstructIsoTile(false, max_minutes, dest_locations, mode);
+  ConstructIsoTile(false, max_minutes, max_km, dest_locations, mode);
   // Compute the expansion
   Dijkstras::ComputeReverse(dest_locations, graphreader, mode_costing, mode);
   return isotile_;
 }
 
 // Compute isochrone for mulit-modal route.
-std::shared_ptr<const GriddedData<float>>
+std::shared_ptr<const GriddedData<time_distance_t>>
 Isochrone::ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-                             const unsigned int max_minutes,
+                             const float max_minutes,
+                             const float max_km,
                              GraphReader& graphreader,
                              const sif::mode_costing_t& mode_costing,
                              const TravelMode mode) {
   // Initialize and create the isotile
-  ConstructIsoTile(true, max_minutes, origin_locations, mode);
+  ConstructIsoTile(true, max_minutes, max_km, origin_locations, mode);
   // Compute the expansion
   Dijkstras::ComputeMultiModal(origin_locations, graphreader, mode_costing, mode);
   return isotile_;
@@ -217,17 +230,17 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
     auto tile1 = isotile_->TileId(ll0);
     auto tile2 = isotile_->TileId(ll);
     if (tile1 == tile2) {
-      isotile_->SetIfLessThan(tile1, secs1 * kMinPerSec);
+      isotile_->SetIfLessThan(tile1, {secs1 * kMinPerSec, 0.0f});
     } else if (isotile_->AreNeighbors(tile1, tile2)) {
       // If tile 2 is directly east, west, north, or south of tile 1 then the
       // segment will not intersect any other tiles other than tile1 and tile2.
-      isotile_->SetIfLessThan(tile1, secs1 * kMinPerSec);
-      isotile_->SetIfLessThan(tile2, secs1 * kMinPerSec);
+      isotile_->SetIfLessThan(tile1, {secs1 * kMinPerSec, 0.0f});
+      isotile_->SetIfLessThan(tile2, {secs1 * kMinPerSec, 0.0f});
     } else {
       // Find intersecting tiles (using a Bresenham method)
       auto tiles = isotile_->Intersect(std::list<PointLL>{ll0, ll});
       for (const auto& t : tiles) {
-        isotile_->SetIfLessThan(t.first, secs1 * kMinPerSec);
+        isotile_->SetIfLessThan(t.first, {secs1 * kMinPerSec, 0.0f});
       }
     }
     return;
@@ -259,17 +272,17 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
     auto tile1 = isotile_->TileId(*itr1);
     auto tile2 = isotile_->TileId(*itr2);
     if (tile1 == tile2) {
-      isotile_->SetIfLessThan(tile1, minutes);
+      isotile_->SetIfLessThan(tile1, {minutes, 0.0f});
     } else if (isotile_->AreNeighbors(tile1, tile2)) {
       // If tile 2 is directly east, west, north, or south of tile 1 then the
       // segment will not intersect any other tiles other than tile1 and tile2.
-      isotile_->SetIfLessThan(tile1, minutes);
-      isotile_->SetIfLessThan(tile2, minutes);
+      isotile_->SetIfLessThan(tile1, {minutes, 0.0f});
+      isotile_->SetIfLessThan(tile2, {minutes, 0.0f});
     } else {
       // Find intersecting tiles (using a Bresenham method)
       auto tiles = isotile_->Intersect(std::list<PointLL>{*itr1, *itr2});
       for (const auto& t : tiles) {
-        isotile_->SetIfLessThan(t.first, minutes);
+        isotile_->SetIfLessThan(t.first, {minutes, 0.0f});
       }
     }
   }
@@ -299,6 +312,10 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& graphreader,
   // Continue if the time interval has been met. This bus or rail line goes beyond the max
   // but need to consider others so we just continue here. Tells MMExpand function to skip
   // updating or pushing the label back
+
+  // TODO: cost should really also track distance for isodistances to work properly;
+  // right now they'll have an estimated time stop criteria for dijkstra..
+  // that's not the same as shortest
   if (pred.cost().secs > max_seconds_ || pred.cost().cost > max_seconds_ * 4) {
     return ExpansionRecommendation::stop_expansion;
   }

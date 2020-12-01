@@ -18,18 +18,18 @@ namespace midgard {
 // compute an optimal generalization factor when creating contours.
 constexpr float kOptimalGeneralization = std::numeric_limits<float>::max();
 
-// TODO: this should really be sif::Cost and not even use this, but sif::Cost
-// doesnt yet track distance, only the predicessor does
+// TODO: this should really be sif::Cost, but it
+// doesnt yet track distance, only the predecessor does
 struct time_distance_t {
   float sec;
   float dist;
-  // the less than operator as only caring about seconds for now
-  bool operator<(const time_distance_t& other) {
+
+  bool operator<(const time_distance_t& other) const {
     return sec < other.sec;
   }
-
-  // TODO: operator+= so that the isochrone resampling can add the delta per resampled point
 };
+
+// const std::initializer_list<IsoMetric> IsoMetricsAll = {IsoMetric::kTime, IsoMetric::kDistance};
 
 /**
  * Class to store data in a gridded/tiled data structure. Contains methods
@@ -102,8 +102,7 @@ public:
 
   using contour_t = std::list<PointLL>;
   using feature_t = std::list<contour_t>;
-  using contours_t =
-      std::map<float, std::list<feature_t>, std::function<bool(const float, const float)>>;
+  using contours_t = std::map<float, std::list<feature_t>>;
   /**
    * TODO: implement two versions of this, leave this one for linestring contours
    * and make another for polygons
@@ -114,7 +113,6 @@ public:
    *
    * @param contour_intervals    the values at which the contour lines should occur
    *                             basically the lines on the measuring stick
-   * @param get                  functor for getting value out of particular cell
    * @param rings_only           only include geometry of contours that are polygonal
    * @param denoise              remove any contours whose size ratio is less than
    *                             this parameter with respect to the largest contour
@@ -126,7 +124,7 @@ public:
    * @return contour line geometries with the larger intervals first (for rendering purposes)
    */
   contours_t GenerateContours(const std::vector<float>& contour_intervals,
-                              const std::function<float(const value_t&)>& get,
+                              const std::function<float(const value_t&)>& get_data,
                               const bool rings_only = false,
                               const float denoise = 1.f,
                               const float generalize = 200.f) const {
@@ -145,7 +143,7 @@ public:
     };
 
     // we need something to hold each iso-line, bigger ones first
-    contours_t contours([](float a, float b) { return a > b; });
+    contours_t contours;
     for (auto v : contour_intervals) {
       contours[v].emplace_back();
     }
@@ -164,10 +162,10 @@ public:
     for (int row = 1; row < this->nrows_ - 1; ++row) {
       for (int col = 1; col < this->ncolumns_ - 1; ++col) {
         int tileid = this->TileId(col, row);
-        auto cell1 = get(data_[tileid]);
-        auto cell2 = get(data_[tileid + this->ncolumns_]);     // TileId(col,   row+1)];
-        auto cell3 = get(data_[tileid + 1]);                   // TileId(col+1, row)];
-        auto cell4 = get(data_[tileid + this->ncolumns_ + 1]); // TileId(col+1, row+1)];
+        auto cell1 = get_data(data_[tileid]);
+        auto cell2 = get_data(data_[tileid + this->ncolumns_]);     // TileId(col,   row+1)];
+        auto cell3 = get_data(data_[tileid + 1]);                   // TileId(col+1, row)];
+        auto cell4 = get_data(data_[tileid + this->ncolumns_ + 1]); // TileId(col+1, row+1)];
         auto dmin = std::min(std::min(cell1, cell2), std::min(cell3, cell4));
         auto dmax = std::max(std::max(cell1, cell2), std::max(cell3, cell4));
 
@@ -187,7 +185,8 @@ public:
               // (messes up the intersect method). Set a value slightly above
               // the contour (e.g. 1 minute higher).
               // TODO - the value 1 is a bit of a hack.
-              s[m] = (data_[newtileid] < max_value_) ? data_[newtileid] - contour : 1.0f;
+              float nd = get_data(data_[newtileid]);
+              s[m] = (nd < get_data(max_value_)) ? nd - contour : 1.0f;
               tile_corners[m] = this->Base(newtileid);
             } else {
               s[0] = 0.25 * (s[1] + s[2] + s[3] + s[4]);
@@ -419,7 +418,7 @@ public:
   }
 
 protected:
-  float max_value_;           // Maximum value stored in the tile
+  value_t max_value_;         // Maximum value stored in the tile
   std::vector<value_t> data_; // Data value within each tile
 };
 

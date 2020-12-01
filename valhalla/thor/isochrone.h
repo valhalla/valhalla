@@ -51,9 +51,10 @@ public:
    * @param  mode_costing List of costing objects
    * @param  mode         Travel mode
    */
-  std::shared_ptr<const midgard::GriddedData<float>>
+  std::shared_ptr<const midgard::GriddedData<midgard::time_distance_t>>
   Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locs,
-          const unsigned int max_minutes,
+          const float max_minutes,
+          const float max_km,
           baldr::GraphReader& graphreader,
           const sif::mode_costing_t& mode_costing,
           const sif::TravelMode mode);
@@ -61,9 +62,10 @@ public:
   // Compute iso-tile that we can use to generate isochrones. This is used for
   // the reverse direction - construct times for gridded data indicating how
   // long it takes to reach the destination location.
-  std::shared_ptr<const midgard::GriddedData<float>>
+  std::shared_ptr<const midgard::GriddedData<midgard::time_distance_t>>
   ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
-                 const unsigned int max_minutes,
+                 const float max_minutes,
+                 const float max_km,
                  baldr::GraphReader& graphreader,
                  const sif::mode_costing_t& mode_costing,
                  const sif::TravelMode mode);
@@ -80,9 +82,10 @@ public:
    * @param  mode_costing List of costing objects
    * @param  mode         Travel mode
    */
-  std::shared_ptr<const midgard::GriddedData<float>>
+  std::shared_ptr<const midgard::GriddedData<midgard::time_distance_t>>
   ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-                    const unsigned int max_minutes,
+                    const float max_minutes,
+                    const float max_km,
                     baldr::GraphReader& graphreader,
                     const sif::mode_costing_t& mode_costing,
                     const sif::TravelMode mode);
@@ -106,8 +109,8 @@ protected:
                                  uint32_t& edge_label_reservation) const override;
 
   float shape_interval_; // Interval along shape to mark time
-  uint32_t max_seconds_;
-  std::shared_ptr<midgard::GriddedData<float>> isotile_;
+  float max_seconds_;
+  std::shared_ptr<midgard::GriddedData<midgard::time_distance_t>> isotile_;
 
   /**
    * Constructs the isotile - 2-D gridded data containing the time
@@ -118,7 +121,8 @@ protected:
    * @param  mode        Travel mode
    */
   void ConstructIsoTile(const bool multimodal,
-                        const unsigned int max_minutes,
+                        const float max_minutes,
+                        const float max_km,
                         const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                         const sif::TravelMode mode);
 
