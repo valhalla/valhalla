@@ -94,18 +94,21 @@ using namespace std;
 
 json::MapPtr summary(const valhalla::Api& api) {
 
-  double time = 0;
-  double length = 0;
+  double route_time = 0;
+  double route_length = 0;
+  double route_cost = 0;
   bool has_time_restrictions = false;
   AABB2<PointLL> bbox(10000.0f, 10000.0f, -10000.0f, -10000.0f);
   std::vector<double> recost_times(api.options().recostings_size(), 0);
   for (int leg_index = 0; leg_index < api.directions().routes(0).legs_size(); ++leg_index) {
     const auto& leg = api.directions().routes(0).legs(leg_index);
-    time += leg.summary().time();
-    length += leg.summary().length();
+    const auto& trip_leg = api.trip().routes(0).legs(leg_index);
+    route_time += leg.summary().time();
+    route_length += leg.summary().length();
+    route_cost += trip_leg.node().rbegin()->cost().elapsed_cost().cost();
 
     // recostings
-    const auto& recosts = api.trip().routes(0).legs(leg_index).node().rbegin()->recosts();
+    const auto& recosts = trip_leg.node().rbegin()->recosts();
     auto recost_time_itr = recost_times.begin();
     for (const auto& recost : recosts) {
       if (!recost.has_elapsed_cost() || (*recost_time_itr) < 0)
@@ -122,8 +125,9 @@ json::MapPtr summary(const valhalla::Api& api) {
   }
 
   auto route_summary = json::map({});
-  route_summary->emplace("time", json::fp_t{time, 3});
-  route_summary->emplace("length", json::fp_t{length, 3});
+  route_summary->emplace("time", json::fp_t{route_time, 3});
+  route_summary->emplace("length", json::fp_t{route_length, 3});
+  route_summary->emplace("cost", json::fp_t{route_cost, 3});
   route_summary->emplace("min_lat", json::fp_t{bbox.miny(), 6});
   route_summary->emplace("min_lon", json::fp_t{bbox.minx(), 6});
   route_summary->emplace("max_lat", json::fp_t{bbox.maxy(), 6});
