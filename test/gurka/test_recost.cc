@@ -282,8 +282,12 @@ TEST(recosting, all_algorithms) {
         // build up the costing object
         auto costing = sif::CostFactory().Create(api.options());
 
+        const GraphId start_edge_id(leg.node().begin()->edge().id());
+        const auto* node = reader->nodeinfo(reader->edge_endnode(start_edge_id));
+        const auto time_info = baldr::TimeInfo::make(date_time, node->timezone());
+
         // recost the path
-        sif::recost_forward(*reader, *costing, edge_cb, label_cb, src_pct, tgt_pct, date_time);
+        sif::recost_forward(*reader, *costing, edge_cb, label_cb, src_pct, tgt_pct, time_info);
       }
     }
   }
