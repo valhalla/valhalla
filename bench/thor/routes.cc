@@ -11,6 +11,8 @@
 #include "sif/costfactory.h"
 #include "test.h"
 #include "thor/bidirectional_astar.h"
+#include "thor/astar.h"
+#include "thor/timedep.h"
 #include <valhalla/proto/options.pb.h>
 
 using namespace valhalla;
@@ -81,7 +83,8 @@ boost::property_tree::ptree build_config(const char* live_traffic_tar) {
 
 constexpr float kMaxRange = 256;
 
-static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
+template <class ALGO>
+void BM_UtrechtPathSearch(benchmark::State& state) {
   const auto config = build_config("generated-live-data.tar");
   test::build_live_traffic_data(config);
 
@@ -147,6 +150,8 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
 
   std::vector<valhalla::Location> origins;
   std::vector<valhalla::Location> destinations;
+  // for time-dep searches
+  const std::string date_time{"2016-07-03T08:06"};
 
   {
     auto it = projections.cbegin();
@@ -156,13 +161,18 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
     while (true) {
       auto origin = valhalla::Location{};
       baldr::PathLocation::toPBF(it->second, &origin, *clean_reader);
+      // to make time-dep-fwd happy
+      origin.set_date_time(date_time);
       ++it;
       if (it == projections.cend()) {
         break;
       }
       origins.push_back(origin);
-      destinations.push_back(valhalla::Location{});
-      baldr::PathLocation::toPBF(it->second, &destinations.back(), *clean_reader);
+      auto destination = valhalla::Location{};
+      baldr::PathLocation::toPBF(it->second, &destination, *clean_reader);
+      // to make time-dep-rev happy
+      destination.set_date_time(date_time);
+      destinations.push_back(destination);
     }
   }
 
@@ -173,7 +183,8 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
   std::size_t route_size = 0;
 
   for (auto _ : state) {
-    thor::BidirectionalAStar astar;
+    using namespace thor;
+    ALGO astar;
     for (int i = 0; i < origins.size(); ++i) {
       // LOG_WARN("Running index "+std::to_string(i));
       auto result = astar.GetBestPath(origins[i], destinations[i], *clean_reader, costs,
@@ -187,6 +198,11 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
   state.counters["Routes"] =
       benchmark::Counter(route_size, benchmark::Counter::kIsIterationInvariantRate);
 }
+
+BENCHMARK_TEMPLATE(BM_UtrechtPathSearch, thor::AStarPathAlgorithm)->Unit(benchmark::kMillisecond);
+BENCHMARK_TEMPLATE(BM_UtrechtPathSearch, thor::TimeDepForward)->Unit(benchmark::kMillisecond);
+BENCHMARK_TEMPLATE(BM_UtrechtPathSearch, thor::TimeDepReverse)->Unit(benchmark::kMillisecond);
+BENCHMARK_TEMPLATE(BM_UtrechtPathSearch, thor::BidirectionalAStar)->Unit(benchmark::kMillisecond);
 
 void customize_traffic(const boost::property_tree::ptree& config,
                        baldr::GraphId& target_edge_id,
@@ -208,8 +224,6 @@ void customize_traffic(const boost::property_tree::ptree& config,
   };
   test::customize_live_traffic_data(config, generate_traffic);
 }
-
-BENCHMARK(BM_UtrechtBidirectionalAstar)->Unit(benchmark::kMillisecond);
 
 /** Benchmarks the GetSpeed function */
 static void BM_GetSpeed(benchmark::State& state) {
