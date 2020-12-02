@@ -142,13 +142,24 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
+    // Keep track of if this is a destination edge
+    auto p = destinations_percent_along_.find(edgeid);
+
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge), if no access is allowed to this edge (based on costing method),
     // or if a complex restriction exists.
+<<<<<<< HEAD:src/thor/astar_bss.cc
     int has_time_restrictions = -1;
     if (current_es->set() == EdgeSet::kPermanent ||
         !current_costing->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
         current_costing->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
+=======
+    int restriction_idx = -1;
+    if ((es->set() == EdgeSet::kPermanent ||
+        !costing_->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx) ||
+        costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, &edgestatus_)) &&
+       p == destinations_percent_along_.end()) {
+>>>>>>> Fixed astar algos to include destination closures. Broke prefferred side test:src/thor/astar.cc
       continue;
     }
 
@@ -161,8 +172,12 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge).
+<<<<<<< HEAD:src/thor/astar_bss.cc
     auto p = mode != TravelMode::kPedestrian ? destinations_.end() : destinations_.find(edgeid);
     if (p != destinations_.end()) {
+=======
+    if (p != destinations_percent_along_.end()) {
+>>>>>>> Fixed astar algos to include destination closures. Broke prefferred side test:src/thor/astar.cc
       // Subtract partial cost and time
       newcost -= p->second;
 

@@ -166,14 +166,19 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   if (meta.edge_status->set() == EdgeSet::kPermanent) {
     return true; // This is an edge we _could_ have expanded, so return true
   }
+
+  // Keep track of if this is a destination edge
+  auto dest_edge = destinations_percent_along_.find(meta.edge_id);
+
   // Skip shortcut edges for time dependent routes, if no access is allowed to this edge
   // (based on costing method)
   int restriction_idx = -1;
-  if (meta.edge->is_shortcut() ||
+  if ((meta.edge->is_shortcut() ||
       !costing_->Allowed(meta.edge, pred, tile, meta.edge_id, time_info.local_time,
                          nodeinfo->timezone(), restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
-                           time_info.local_time, nodeinfo->timezone())) {
+                           time_info.local_time, nodeinfo->timezone())) &&
+     dest_edge == destinations_percent_along_.end()) {
     return false;
   }
 
@@ -184,7 +189,6 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
 
   // If this edge is a destination, subtract the partial/remainder cost
   // (cost from the dest. location to the end of the edge).
-  auto dest_edge = destinations_percent_along_.find(meta.edge_id);
   if (dest_edge != destinations_percent_along_.end()) {
     // Adapt cost to potentially not using the entire destination edge
     newcost -= edge_cost * (1.0f - dest_edge->second);
