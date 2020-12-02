@@ -246,7 +246,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
                             GraphReader& graphreader,
                             const sif::mode_costing_t& mode_costing,
                             const TravelMode mode,
-                            const Options& options) {
+                            const Options&) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
