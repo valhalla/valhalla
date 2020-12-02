@@ -181,7 +181,6 @@ std::string thor_worker_t::expansion(Api& request) {
            &multi_modal_astar,
            &timedep_forward,
            &timedep_reverse,
-           &astar,
            &bidir_astar,
            &bss_astar,
        }) {
@@ -196,7 +195,6 @@ std::string thor_worker_t::expansion(Api& request) {
            &multi_modal_astar,
            &timedep_forward,
            &timedep_reverse,
-           &astar,
            &bidir_astar,
            &bss_astar,
        }) {
@@ -238,7 +236,6 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
            &multi_modal_astar,
            &timedep_forward,
            &timedep_reverse,
-           &astar,
            &bidir_astar,
            &bss_astar,
        }) {
@@ -328,7 +325,8 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
 
     path_algorithm->Clear();
     cost->set_pass(1);
-    bool using_astar = (path_algorithm == &astar);
+    // TODO: is this a proxy for trivial route?
+    bool using_astar = (path_algorithm == &timedep_forward || path_algorithm == &timedep_reverse);
     float relax_factor = using_astar ? 16.0f : 8.0f;
     float expansion_within_factor = using_astar ? 4.0f : 2.0f;
     cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
