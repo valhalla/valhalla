@@ -14,10 +14,10 @@ protected:
 
     const std::string ascii_map = R"(
     B---------C
-    |   2     |
+    |   2   8 |
     |         ↑
     |1    4  3|
-    |         |
+    |7        |
     A---------D
      \        |
       \ 5     |
@@ -26,7 +26,7 @@ protected:
          )";
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
     const gurka::ways ways = {{"AB", {{"highway", "motorway"}}},
-                              {"BC", {{"highway", "primary"}, {"tunnel", "yes"}}},
+                              {"BC", {{"highway", "residential"}, {"tunnel", "yes"}}},
                               {"CD", {{"highway", "primary"}, {"oneway", "-1"}}},
                               {"AD", {{"highway", "primary"}}},
                               {"DE", {{"highway", "primary"}}},
@@ -71,8 +71,8 @@ TEST_F(SearchFilter, Heading) {
   gurka::assert::raw::expect_path(result, {"AB", "AD", "CD", "BC"});
 }
 TEST_F(SearchFilter, PreferredSide) {
-  auto from = "1";
-  auto to = "2";
+  auto from = "7";
+  auto to = "8";
 
   const std::string& request =
       (boost::format(

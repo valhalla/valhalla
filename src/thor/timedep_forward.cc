@@ -56,7 +56,6 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
   auto offset_time =
       from_transition ? time_info
                       : time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
-  // std::cout << pred.edgeid() << " " << offset_time << std::endl;
 
   // Expand from start node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
@@ -237,12 +236,6 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   travel_type_ = costing_->travel_type();
-
-  // date_time must be set on the origin. Log an error but allow routes for now.
-  if (!origin.has_date_time()) {
-    LOG_ERROR("TimeDepForward called without time set on the origin location");
-    // return {};
-  }
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   // Note: because we can correlate to more than one place for a given PathLocation

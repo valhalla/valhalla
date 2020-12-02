@@ -283,15 +283,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     for (auto& edge2 : destination.path_edges()) {
       if (edge1.graph_id() == edge2.graph_id() ||
           reader->AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()))) {
-
-        // We need time dependence so we use timedep_foward when its trivial (should be short so not a
-        // real issue that its not invariant)
-        if (options.has_date_time_type() && options.date_time_type() == Options::invariant) {
-          return &timedep_forward;
-        }
-
-        // Otherwise we can use regular astar
-        return &astar;
+        return &timedep_forward;
       }
     }
   }
