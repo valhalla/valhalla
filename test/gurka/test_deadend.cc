@@ -22,9 +22,11 @@ TEST(Standalone, BirectionalDeadend) {
       {"FG", {{"highway", "footway"}}},
   };
 
+  const gurka::nodes nodes = {{"E", {{"barrier", "block"}}}};
+
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
 
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/deadend");
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/deadend");
 
   // NOTE: Origin and destination edges should not be connected, otherwise it will be considered a
   // trivial route and handled by a* instead of bidirectional.
@@ -104,6 +106,29 @@ TEST(Standalone, BirectionalDeadend) {
     // Verify maneuver types
     gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStartRight,
                                                   DirectionsLeg_Maneuver_Type_kRight,
+                                                  DirectionsLeg_Maneuver_Type_kDestination});
+  }
+
+  // U-turn at a barrier on E
+  {
+    auto result =
+        gurka::route(map, {"H", "D", "H"}, "auto",
+                     {{"/locations/1/type", "break_through"}, {"/locations/1/radius", "0"}});
+
+    // Ensure bidirectional a* was used
+    ASSERT_EQ(result.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
+    ASSERT_EQ(result.trip().routes(0).legs(1).algorithms(0), "bidirectional_a*");
+
+    // Verify path
+    gurka::assert::raw::expect_path(result, {"FH", "CF", "CD", "CD", "DE", "DE", "CD", "CF", "FH"});
+
+    // Verify maneuver types
+    gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                  DirectionsLeg_Maneuver_Type_kRight,
+                                                  DirectionsLeg_Maneuver_Type_kDestination,
+                                                  DirectionsLeg_Maneuver_Type_kStart,
+                                                  DirectionsLeg_Maneuver_Type_kUturnRight,
+                                                  DirectionsLeg_Maneuver_Type_kLeft,
                                                   DirectionsLeg_Maneuver_Type_kDestination});
   }
 }

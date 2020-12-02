@@ -187,7 +187,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
                               const PointLL& ll,
                               float secs0) {
   // Skip if the opposing edge has already been settled.
-  const GraphTile* t2;
+  const GraphTile* t2 = nullptr;
   GraphId opp = graphreader.GetOpposingEdgeId(pred.edgeid(), t2);
   EdgeStatusInfo es = edgestatus_.Get(opp);
   if (es.set() == EdgeSet::kPermanent) {
