@@ -248,14 +248,14 @@ std::unique_ptr<vb::GraphReader> get_graph_reader(const std::string& tile_dir) {
   rapidjson::read_json(json, conf);
 
   std::unique_ptr<vb::GraphReader> reader(new vb::GraphReader(conf));
-  auto* tile = reader->GetGraphTile(tile_id);
+  auto tile = reader->GetGraphTile(tile_id);
 
   EXPECT_NE(tile, nullptr) << "Unable to load test tile! Did `make_tile` run succesfully?";
   if (tile->header()->directededgecount() != 28) {
     throw std::logic_error("test-tiles does not contain expected number of edges");
   }
 
-  const GraphTile* endtile = reader->GetGraphTile(node_locations["b"]);
+  auto endtile = reader->GetGraphTile(node_locations["b"]);
   EXPECT_NE(endtile, nullptr) << "bad tile, node 'b' wasn't found in it";
 
   return reader;
@@ -289,7 +289,7 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
     break;
   }
 
-  auto* tile = reader->GetGraphTile(tile_id);
+  auto tile = reader->GetGraphTile(tile_id);
   uint32_t expected_time = 979797;
   switch (assert_type) {
     case TrivialPathTest::DurationEqualTo:
@@ -1504,7 +1504,7 @@ TEST(ComplexRestriction, WalkVias) {
   auto costing = costs[int(mode)];
 
   bool is_forward = true;
-  auto* tile = reader->GetGraphTile(tile_id);
+  auto tile = reader->GetGraphTile(tile_id);
 
   std::vector<valhalla::baldr::Location> locations;
   locations.push_back({node_locations["7"]});

@@ -8,6 +8,8 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 
+#include <boost/intrusive_ptr.hpp>
+
 namespace valhalla {
 namespace baldr {
 
@@ -380,7 +382,7 @@ public:
    * @param tile the tile required to get admin information
    * @return  json object
    */
-  json::MapPtr json(const GraphTile* tile) const;
+  json::MapPtr json(const boost::intrusive_ptr<const GraphTile>& tile) const;
 
 protected:
   // Organized into 8-byte words so structure will align to 8 byte boundaries.

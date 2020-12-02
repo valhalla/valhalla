@@ -564,15 +564,17 @@ struct tar {
       return !memcmp(this, &BLANK, sizeof(header_t));
     }
     bool verify() const {
-      // make a copy and blank the checksum
-      header_t temp = *this;
-      memset(temp.chksum, ' ', 8);
-      int64_t sum = 0;
-      uint64_t usum = 0;
-      // compute the checksum
-      for (int i = 0; static_cast<size_t>(i) < sizeof(header_t); i++) {
-        usum += ((unsigned char*)&temp)[i];
-        sum += ((char*)&temp)[i];
+      // check sums of all header bites, assuming chksum is filled with spaces
+      int64_t sum = sizeof(chksum) * (char)' ';
+      uint64_t usum = sizeof(chksum) * (unsigned char)' ';
+      // compute the checksum, excluding chksum field
+      for (size_t i = 0; i < offsetof(header_t, chksum); ++i) {
+        usum += reinterpret_cast<const unsigned char*>(this)[i];
+        sum += reinterpret_cast<const char*>(this)[i];
+      }
+      for (size_t i = offsetof(header_t, chksum) + sizeof(chksum); i < sizeof(header_t); ++i) {
+        usum += reinterpret_cast<const unsigned char*>(this)[i];
+        sum += reinterpret_cast<const char*>(this)[i];
       }
       // check if its right
       uint64_t rsum = octal_to_int(chksum);
