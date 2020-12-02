@@ -430,7 +430,7 @@ void build(const boost::property_tree::ptree& pt,
   GraphReader reader_local_level(pt);
   for (; tile_start != tile_end; ++tile_start) {
 
-    const GraphTile* local_tile = nullptr;
+    std::shared_ptr<const GraphTile> local_tile = nullptr;
     std::unique_ptr<GraphTileBuilder> tilebuilder_local = nullptr;
     {
       std::lock_guard<std::mutex> l(lock);
@@ -478,7 +478,7 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt, const std::string&
   for (const auto& node : osm_nodes) {
     auto latlng = node.latlng();
     auto tile_id = TileHierarchy::GetGraphId({latlng.first, latlng.second}, local_level);
-    const GraphTile* local_tile = reader.GetGraphTile(tile_id);
+    std::shared_ptr<const GraphTile> local_tile = reader.GetGraphTile(tile_id);
     if (!local_tile) {
       LOG_INFO("Cannot find node in tiles");
       continue;

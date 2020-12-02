@@ -1,4 +1,5 @@
 #include "sif/dynamiccost.h"
+
 #include "baldr/graphconstants.h"
 #include "proto_conversions.h"
 #include "sif/autocost.h"
@@ -10,6 +11,7 @@
 #include "sif/transitcost.h"
 #include "sif/truckcost.h"
 #include "worker.h"
+#include <utility>
 
 using namespace valhalla::baldr;
 
@@ -81,8 +83,9 @@ bool DynamicCost::AllowMultiPass() const {
 // using them for the current route. Here we just call out to the derived classes costing function
 // with a time that tells the function that we aren't using time. This avoids having to worry about
 // default parameters and inheritance (which are a bad mix)
-Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const {
-  return EdgeCost(edge, tile, kConstrainedFlowSecondOfDay);
+Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge,
+                           const std::shared_ptr<const baldr::GraphTile>& tile) const {
+  return EdgeCost(edge, std::move(tile), kConstrainedFlowSecondOfDay);
 }
 
 // Returns the cost to make the transition from the predecessor edge.
@@ -188,16 +191,17 @@ bool DynamicCost::bicycle() const {
 }
 
 // Add to the exclude list.
-void DynamicCost::AddToExcludeList(const baldr::GraphTile*&) {
+void DynamicCost::AddToExcludeList(const std::shared_ptr<const baldr::GraphTile>&) {
 }
 
 // Checks if we should exclude or not.
-bool DynamicCost::IsExcluded(const baldr::GraphTile*&, const baldr::DirectedEdge*) {
+bool DynamicCost::IsExcluded(const std::shared_ptr<const baldr::GraphTile>&,
+                             const baldr::DirectedEdge*) {
   return false;
 }
 
 // Checks if we should exclude or not.
-bool DynamicCost::IsExcluded(const baldr::GraphTile*&, const baldr::NodeInfo*) {
+bool DynamicCost::IsExcluded(const std::shared_ptr<const baldr::GraphTile>&, const baldr::NodeInfo*) {
   return false;
 }
 

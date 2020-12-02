@@ -155,7 +155,7 @@ protected:
                           const uint32_t pred_idx,
                           const EdgeMetadata& meta,
                           uint32_t& shortcuts,
-                          const baldr::GraphTile* tile,
+                          const std::shared_ptr<const baldr::GraphTile>& tile,
                           const baldr::TimeInfo& time_info);
 
   /**
@@ -186,7 +186,7 @@ protected:
                           const uint32_t pred_idx,
                           const EdgeMetadata& meta,
                           uint32_t& shortcuts,
-                          const baldr::GraphTile* tile,
+                          const std::shared_ptr<const baldr::GraphTile>& tile,
                           const baldr::TimeInfo& time_info);
   /**
    * Add edges at the origin to the forward adjacency list.
@@ -277,7 +277,7 @@ bool IsBridgingEdgeRestricted(valhalla::baldr::GraphReader& graphreader,
                               std::vector<sif::BDEdgeLabel>& edge_labels_rev,
                               const sif::BDEdgeLabel& fwd_pred,
                               const sif::BDEdgeLabel& rev_pred,
-                              std::shared_ptr<sif::DynamicCost>& costing);
+                              const std::shared_ptr<sif::DynamicCost>& costing);
 
 } // namespace thor
 } // namespace valhalla

@@ -890,8 +890,8 @@ void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
 
 // return this tiles' edges' bins and its edges' tweeners' bins
 using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount>>;
-std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const GraphTile* tile,
-                                                                       tweeners_t& tweeners) {
+std::array<std::vector<GraphId>, kBinCount>
+GraphTileBuilder::BinEdges(const std::shared_ptr<const GraphTile>& tile, tweeners_t& tweeners) {
   std::array<std::vector<GraphId>, kBinCount> bins;
   // we store these at the highest level
   auto max_level = TileHierarchy::levels().back().level;
@@ -961,7 +961,7 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
 }
 
 void GraphTileBuilder::AddBins(const std::string& tile_dir,
-                               const GraphTile* tile,
+                               const std::shared_ptr<const GraphTile>& tile,
                                const std::array<std::vector<GraphId>, kBinCount>& more_bins) {
   // read bins and append and keep track of how much is appended
   std::vector<GraphId> bins[kBinCount];

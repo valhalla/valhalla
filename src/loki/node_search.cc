@@ -23,7 +23,7 @@ struct tile_cache {
     return *this;
   }
 
-  inline const vb::GraphTile* tile() {
+  inline std::shared_ptr<const vb::GraphTile> tile() {
     return m_tile;
   }
 
@@ -72,7 +72,7 @@ private:
 
   vb::GraphReader& m_reader;
   vb::GraphId m_last_tile_id;
-  const vb::GraphTile* m_tile;
+  std::shared_ptr<const vb::GraphTile> m_tile;
   const vb::NodeInfo* m_nodes;
   const vb::DirectedEdge* m_edges;
 };

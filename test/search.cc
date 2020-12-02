@@ -158,9 +158,9 @@ void make_tile() {
 
   // write the bin data
   GraphTileBuilder::tweeners_t tweeners;
-  GraphTile reloaded(tile_dir, tile_id);
-  auto bins = GraphTileBuilder::BinEdges(&reloaded, tweeners);
-  GraphTileBuilder::AddBins(tile_dir, &reloaded, bins);
+  auto reloaded = std::make_shared<GraphTile>(tile_dir, tile_id);
+  auto bins = GraphTileBuilder::BinEdges(reloaded, tweeners);
+  GraphTileBuilder::AddBins(tile_dir, reloaded, bins);
 
   {
     // Verify tiles

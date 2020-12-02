@@ -38,7 +38,7 @@ protected:
         if (reader->OverCommitted())
           reader->Trim();
         // for each edge in the tile
-        const auto* tile = reader->GetGraphTile(tile_id);
+        auto tile = reader->GetGraphTile(tile_id);
         for (const auto& edge : tile->GetDirectedEdges()) {
           // skip non-shortcuts or the shortcut is one we wont use
           if (!edge.shortcut())
@@ -60,7 +60,7 @@ protected:
           shortcuts.emplace(shortcut_id, std::move(recovered));
 
           // its cheaper to get the opposing without crawling the graph
-          const auto* opp_tile = tile;
+          auto opp_tile = tile;
           auto opp_id = reader->GetOpposingEdgeId(shortcut_id, opp_tile);
           if (!opp_id.Is_Valid())
             continue; // dont store edges which arent in our tileset
@@ -98,7 +98,7 @@ protected:
                    const valhalla::baldr::GraphId& shortcut_id) const {
     using namespace valhalla::baldr;
     // grab the shortcut edge
-    const GraphTile* tile = reader.GetGraphTile(shortcut_id);
+    auto tile = reader.GetGraphTile(shortcut_id);
     const DirectedEdge* shortcut = tile->directededge(shortcut_id);
 
     // bail if this isnt a shortcut

@@ -88,7 +88,7 @@ public:
 protected:
   // A child-class must implement this to learn about what nodes were expanded
   virtual void ExpandingNode(baldr::GraphReader&,
-                             const baldr::GraphTile*,
+                             std::shared_ptr<const baldr::GraphTile>,
                              const baldr::NodeInfo*,
                              const sif::EdgeLabel&,
                              const sif::EdgeLabel*) = 0;
@@ -246,7 +246,7 @@ protected:
    * @return Returns the timezone index. A value of 0 indicates an invalid timezone.
    */
   int GetTimezone(baldr::GraphReader& graphreader, const baldr::GraphId& node) {
-    const baldr::GraphTile* tile = graphreader.GetGraphTile(node);
+    std::shared_ptr<const baldr::GraphTile> tile = graphreader.GetGraphTile(node);
     return (tile == nullptr) ? 0 : tile->node(node)->timezone();
   }
 };

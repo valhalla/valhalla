@@ -730,7 +730,7 @@ TEST(GraphParser, TestImportBssNode) {
 
   auto local_level = TileHierarchy::levels().back().level;
 
-  const GraphTile* local_tile = reader.GetGraphTile({759649, local_level, 0});
+  std::shared_ptr<const GraphTile> local_tile = reader.GetGraphTile({759649, local_level, 0});
   auto count = local_tile->header()->nodecount();
 
   EXPECT_EQ(local_tile->node(count - 1)->type(), NodeType::kBikeShare)

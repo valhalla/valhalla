@@ -100,7 +100,7 @@ public:
     if (buckets_.size() < bucketcount) {
       buckets_.resize(bucketcount);
     }
-    // Empty the overflow bucket and each bucket
+
     overflowbucket_.clear();
 
     // Set the current bucket to the lowest cost low level bucket

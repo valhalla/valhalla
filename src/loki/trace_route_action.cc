@@ -219,7 +219,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
       orig->mutable_ll()->set_lat(orig_ll.lat());
       for (auto& e : *orig->mutable_path_edges()) {
         GraphId edgeid(e.graph_id());
-        const GraphTile* tile = reader->GetGraphTile(edgeid);
+        std::shared_ptr<const GraphTile> tile = reader->GetGraphTile(edgeid);
         const DirectedEdge* de = tile->directededge(edgeid);
         auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
         auto closest = orig_ll.ClosestPoint(shape);
@@ -246,7 +246,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
       dest->mutable_ll()->set_lat(dest_ll.lat());
       for (auto& e : *dest->mutable_path_edges()) {
         GraphId edgeid(e.graph_id());
-        const GraphTile* tile = reader->GetGraphTile(edgeid);
+        std::shared_ptr<const GraphTile> tile = reader->GetGraphTile(edgeid);
         const DirectedEdge* de = tile->directededge(edgeid);
         auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
         auto closest = dest_ll.ClosestPoint(shape);

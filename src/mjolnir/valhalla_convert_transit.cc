@@ -1005,7 +1005,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
     lock.lock();
 
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level() + 1, tile_id.id());
-    const GraphTile* transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
+    std::shared_ptr<const GraphTile> transit_tile =
+        reader_transit_level.GetGraphTile(transit_tile_id);
     GraphTileBuilder tilebuilder_transit(reader_transit_level.tile_dir(), transit_tile_id, false);
 
     auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));

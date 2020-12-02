@@ -47,8 +47,8 @@ struct HGVRestrictionTypes {
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
                               DirectedEdge& edge,
                               uint64_t wayid,
-                              const GraphTile* tile,
-                              const GraphTile* end_tile,
+                              const std::shared_ptr<const GraphTile>& tile,
+                              const std::shared_ptr<const GraphTile>& end_tile,
                               std::set<uint32_t>& problem_ways,
                               uint32_t& dupcount,
                               std::string& endnodeiso,
@@ -297,7 +297,7 @@ void validate(
 
     // Get this tile
     lock.lock();
-    const GraphTile* tile = graph_reader.GetGraphTile(tile_id);
+    std::shared_ptr<const GraphTile> tile = graph_reader.GetGraphTile(tile_id);
     lock.unlock();
 
     // Iterate through the nodes and the directed edges
@@ -363,16 +363,12 @@ void validate(
         DirectedEdge& directededge = tilebuilder.directededge(nodeinfo.edge_index() + j);
 
         // Road Length and some variables for statistics
-        float edge_length;
-        bool valid_length = false;
         if (!directededge.shortcut()) {
-          edge_length = directededge.length();
-          roadlength += edge_length;
-          valid_length = true;
+          roadlength += directededge.length();
         }
 
         // Check if end node is in a different tile
-        const GraphTile* endnode_tile = tile;
+        std::shared_ptr<const GraphTile> endnode_tile = tile;
         if (tile_id != directededge.endnode().Tile_Base()) {
           directededge.set_leaves_tile(true);
 
@@ -465,8 +461,8 @@ void validate(
 
     // Write the bins to it
     if (tile->header()->graphid().level() == TileHierarchy::levels().back().level) {
-      auto reloaded = GraphTile(graph_reader.tile_dir(), tile_id);
-      GraphTileBuilder::AddBins(graph_reader.tile_dir(), &reloaded, bins);
+      auto reloaded = std::make_shared<GraphTile>(graph_reader.tile_dir(), tile_id);
+      GraphTileBuilder::AddBins(graph_reader.tile_dir(), reloaded, bins);
     }
 
     // Check if we need to clear the tile cache
@@ -524,16 +520,16 @@ void bin_tweeners(const std::string& tile_dir,
     lock.unlock();
 
     // if there is nothing there we need to make something
-    GraphTile tile(tile_dir, tile_bin.first);
+    auto tile = std::make_shared<GraphTile>(tile_dir, tile_bin.first);
 
-    if (!tile.header()) {
+    if (!tile->header()) {
       GraphTileBuilder empty(tile_dir, tile_bin.first, false);
       empty.header_builder().set_dataset_id(dataset_id);
       empty.StoreTileData();
-      tile = GraphTile(tile_dir, tile_bin.first);
+      tile = std::make_shared<GraphTile>(tile_dir, tile_bin.first);
     }
     // keep the extra binned edges
-    GraphTileBuilder::AddBins(tile_dir, &tile, tile_bin.second);
+    GraphTileBuilder::AddBins(tile_dir, tile, tile_bin.second);
   }
 }
 } // namespace

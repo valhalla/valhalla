@@ -47,13 +47,13 @@ struct HGVRestrictionTypes {
   bool width;
 };
 
-bool IsLoopTerminal(const GraphTile& tile,
+bool IsLoopTerminal(const std::shared_ptr<const GraphTile>& tile,
                     GraphReader& reader,
                     const DirectedEdge& directededge,
                     statistics::RouletteData& rd) {
   // Get correct tile to work with
-  auto end_tile = (tile.id() == directededge.endnode().tileid())
-                      ? &tile
+  auto end_tile = (tile->id() == directededge.endnode().tileid())
+                      ? tile
                       : reader.GetGraphTile(directededge.endnode());
   auto endnodeinfo = end_tile->node(directededge.endnode());
   // If there aren't 3 edges we don't want it
@@ -131,12 +131,12 @@ bool IsLoopTerminal(const GraphTile& tile,
       if (loop_node_info->edge_count() == 2 ||
           (loop_node_info->edge_count() == 3 && !outboundIsRestrictive())) {
         // Victory
-        auto shape = tile.edgeinfo(first_edge->edgeinfo_offset()).shape();
-        auto second_shape = tile.edgeinfo(last_edge->edgeinfo_offset()).shape();
+        auto shape = tile->edgeinfo(first_edge->edgeinfo_offset()).shape();
+        auto second_shape = tile->edgeinfo(last_edge->edgeinfo_offset()).shape();
         for (auto& point : second_shape) {
           shape.push_back(point);
         }
-        rd.AddTask(AABB2<PointLL>(shape), tile.edgeinfo(first_edge->edgeinfo_offset()).wayid(),
+        rd.AddTask(AABB2<PointLL>(shape), tile->edgeinfo(first_edge->edgeinfo_offset()).wayid(),
                    shape);
         return true;
       }
@@ -160,13 +160,13 @@ bool IsLoop(GraphReader& reader,
   };
 
   const auto* current_edge = &directededge;
-  const auto* starttile = reader.GetGraphTile(startnode);
+  auto starttile = reader.GetGraphTile(startnode);
   const auto* opp_edge = starttile->directededge(startnode);
   // keep looking while we are stuck on a oneway and we don't look too far
   for (size_t i = 0; i < 3; ++i) {
     // where can we go from here
     const DirectedEdge* next = nullptr;
-    const auto* tile = reader.GetGraphTile(current_edge->endnode());
+    auto tile = reader.GetGraphTile(current_edge->endnode());
     const auto* end_node = tile->node(current_edge->endnode());
     const auto* edge = tile->directededge(end_node->edge_index());
     for (size_t j = 0; j < end_node->edge_count(); ++j, ++edge) {
@@ -240,7 +240,7 @@ void checkExitInfo(GraphReader& reader,
   if (startnodeinfo.type() == NodeType::kMotorWayJunction) {
     // Check to see if the motorway continues, if it does, this is an exit ramp,
     // otherwise if all forward edges are links, it is a fork
-    const GraphTile* tile = reader.GetGraphTile(startnode);
+    std::shared_ptr<const GraphTile> tile = reader.GetGraphTile(startnode);
     const DirectedEdge* otheredge = tile->directededge(startnodeinfo.edge_index());
     std::vector<std::pair<uint64_t, bool>> tile_fork_signs;
     std::vector<std::pair<std::string, bool>> ctry_fork_signs;
@@ -395,7 +395,7 @@ void build(const boost::property_tree::ptree& pt,
     std::vector<DirectedEdge> directededges;
 
     // Get this tile
-    const GraphTile* tile = graph_reader.GetGraphTile(tile_id);
+    std::shared_ptr<const GraphTile> tile = graph_reader.GetGraphTile(tile_id);
 
     // Iterate through the nodes and the directed edges
     float roadlength = 0.0f;

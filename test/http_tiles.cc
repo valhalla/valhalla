@@ -219,9 +219,9 @@ void test_graphreader_tile_download(size_t tile_count, size_t curler_count, size
             GraphTile::CacheTileURL(params.full_tile_url_pattern, expected_tile_id, &tile_getter, "");
 
         if (expected_tile_id != non_existent_tile_id) {
-          EXPECT_EQ(tile.id(), expected_tile_id);
+          EXPECT_EQ(tile->id(), expected_tile_id);
         } else {
-          EXPECT_EQ(tile.header(), nullptr) << "Expected empty header";
+          EXPECT_EQ(tile->header(), nullptr) << "Expected empty header";
         }
       }
     });

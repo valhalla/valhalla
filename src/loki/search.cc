@@ -50,7 +50,7 @@ bool side_filter(const PathLocation::PathEdge& edge, const Location& location, G
     return false;
 
   // need the driving side for this edge
-  const GraphTile* tile = nullptr;
+  std::shared_ptr<const GraphTile> tile;
   auto* opp = reader.GetOpposingEdge(edge.id, tile);
   if (!opp)
     return false;
@@ -105,7 +105,7 @@ struct candidate_t {
   const DirectedEdge* edge;
   std::shared_ptr<const EdgeInfo> edge_info;
 
-  const GraphTile* tile;
+  std::shared_ptr<const GraphTile> tile;
 
   bool operator<(const candidate_t& c) const {
     return sq_distance < c.sq_distance;
@@ -220,7 +220,7 @@ struct projector_wrapper {
   }
 
   std::function<std::tuple<int32_t, unsigned short, double>()> binner;
-  const GraphTile* cur_tile = nullptr;
+  std::shared_ptr<const GraphTile> cur_tile = nullptr;
   Location location;
   unsigned short bin_index = 0;
   double sq_radius;
@@ -279,7 +279,7 @@ struct bin_handler_t {
     std::function<void(const GraphId& node_id, bool transition)> crawl;
     crawl = [&](const GraphId& node_id, bool follow_transitions) {
       // now that we have a node we can pass back all the edges leaving and entering it
-      const auto* tile = reader.GetGraphTile(node_id);
+      auto tile = reader.GetGraphTile(node_id);
       if (!tile) {
         return;
       }
@@ -315,7 +315,7 @@ struct bin_handler_t {
 
         // do we want the evil twin
         const DirectedEdge* other_edge = nullptr;
-        const GraphTile* other_tile = nullptr;
+        std::shared_ptr<const GraphTile> other_tile;
         const auto other_id = reader.GetOpposingEdgeId(id, other_edge, other_tile);
         if (!other_edge)
           continue;
@@ -403,7 +403,7 @@ struct bin_handler_t {
       }
       // correlate its evil twin
       const DirectedEdge* other_edge = nullptr;
-      const GraphTile* other_tile = nullptr;
+      std::shared_ptr<const GraphTile> other_tile;
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_edge, other_tile);
 
       if (other_edge && costing->Filter(other_edge, other_tile) != 0.0f) {
@@ -437,7 +437,7 @@ struct bin_handler_t {
   // do a mini network expansion or maybe not
   directed_reach check_reachability(std::vector<projector_wrapper>::iterator begin,
                                     std::vector<projector_wrapper>::iterator end,
-                                    const GraphTile* tile,
+                                    std::shared_ptr<const GraphTile> tile,
                                     const DirectedEdge* edge,
                                     const GraphId edge_id) {
     // no need when set to 0
@@ -570,7 +570,7 @@ struct bin_handler_t {
         bool reachable = reach.outbound >= p_itr->location.min_outbound_reach_ &&
                          reach.inbound >= p_itr->location.min_inbound_reach_;
         const DirectedEdge* opp_edge = nullptr;
-        const GraphTile* opp_tile = tile;
+        std::shared_ptr<const GraphTile> opp_tile = tile;
         GraphId opp_edgeid;
         // it's possible that it isnt reachable but the opposing is, switch to that if so
         if (!reachable && (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
@@ -706,7 +706,7 @@ struct bin_handler_t {
                         pp.location.node_snap_tolerance_;
         // it was the begin node
         if ((front && candidate.edge->forward()) || (back && !candidate.edge->forward())) {
-          const GraphTile* other_tile = nullptr;
+          std::shared_ptr<const GraphTile> other_tile;
           auto opposing_edge = reader.GetOpposingEdge(candidate.edge_id, other_tile);
           if (!other_tile) {
             continue; // TODO: do an edge snap instead, but you'll only get one direction

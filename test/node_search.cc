@@ -85,15 +85,14 @@ void graph_writer::write_tiles() {
 
     // write the bin data
     GraphTileBuilder::tweeners_t tweeners;
-    GraphTile reloaded(test_tile_dir, tile_id);
-    auto bins = GraphTileBuilder::BinEdges(&reloaded, tweeners);
-    GraphTileBuilder::AddBins(test_tile_dir, &reloaded, bins);
+    auto reloaded = std::make_shared<GraphTile>(test_tile_dir, tile_id);
+    auto bins = GraphTileBuilder::BinEdges(reloaded, tweeners);
+    GraphTileBuilder::AddBins(test_tile_dir, reloaded, bins);
 
     // merge tweeners into global
     for (const auto& entry : tweeners) {
       auto status = all_tweeners.insert(entry);
       if (!status.second) {
-        auto tile_id = entry.first;
         const auto& bins = entry.second;
         auto itr = status.first;
 
@@ -107,8 +106,8 @@ void graph_writer::write_tiles() {
 
   for (const auto& entry : all_tweeners) {
     // re-open tiles to add tweeners back in.
-    vb::GraphTile tile(test_tile_dir, entry.first);
-    vj::GraphTileBuilder::AddBins(test_tile_dir, &tile, entry.second);
+    auto tile = std::make_shared<vb::GraphTile>(test_tile_dir, entry.first);
+    vj::GraphTileBuilder::AddBins(test_tile_dir, tile, entry.second);
   }
 }
 

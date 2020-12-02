@@ -187,15 +187,15 @@ TEST(GraphTileBuilder, TestAddBins) {
     // load a tile
     GraphId id(test_tile.second, 2, 0);
     std::string no_bin_dir = VALHALLA_SOURCE_DIR "test/data/bin_tiles/no_bin";
-    GraphTile t(no_bin_dir, id);
-    EXPECT_TRUE(t.header()) << "Couldn't load test tile";
+    auto t = std::make_shared<GraphTile>(no_bin_dir, id);
+    EXPECT_TRUE(t->header()) << "Couldn't load test tile";
 
     // alter the config to point to another dir
     std::string bin_dir = "test/data/bin_tiles/bin";
 
     // send blank bins
     std::array<std::vector<GraphId>, kBinCount> bins;
-    GraphTileBuilder::AddBins(bin_dir, &t, bins);
+    GraphTileBuilder::AddBins(bin_dir, t, bins);
 
     // check the new tile is the same as the old one
     {
@@ -214,29 +214,29 @@ TEST(GraphTileBuilder, TestAddBins) {
     // send fake bins, we'll throw one in each bin
     for (auto& bin : bins)
       bin.emplace_back(test_tile.second, 2, 0);
-    GraphTileBuilder::AddBins(bin_dir, &t, bins);
+    GraphTileBuilder::AddBins(bin_dir, t, bins);
     auto increase = bins.size() * sizeof(GraphId);
 
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins);
+    assert_tile_equalish(*t, GraphTile(bin_dir, id), increase, bins);
 
     // append some more
     for (auto& bin : bins)
       bin.emplace_back(test_tile.second, 2, 1);
-    GraphTileBuilder::AddBins(bin_dir, &t, bins);
+    GraphTileBuilder::AddBins(bin_dir, t, bins);
     increase = bins.size() * sizeof(GraphId) * 2;
 
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins);
+    assert_tile_equalish(*t, GraphTile(bin_dir, id), increase, bins);
 
     // check that appending works
-    t = GraphTile(bin_dir, id);
-    GraphTileBuilder::AddBins(bin_dir, &t, bins);
+    t = std::make_shared<GraphTile>(bin_dir, id);
+    GraphTileBuilder::AddBins(bin_dir, t, bins);
     for (auto& bin : bins)
       bin.insert(bin.end(), bin.begin(), bin.end());
 
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins);
+    assert_tile_equalish(*t, GraphTile(bin_dir, id), increase, bins);
   }
 }
 
@@ -289,11 +289,11 @@ TEST(GraphTileBuilder, TestBinEdges) {
       "JiGlJqAfDbAtE~A~GgBdFyKlJy[xWqMvMqTlKoPfCeKiBkHeF}E{KoD{JaLsGwSeEg~BqR";
   auto decoded_shape = valhalla::midgard::decode<std::vector<PointLL>>(encoded_shape5);
   auto encoded_shape7 = valhalla::midgard::encode7(decoded_shape);
-  fake_tile fake(encoded_shape5);
-  auto info = fake.edgeinfo(fake.directededge(0)->edgeinfo_offset());
+  auto fake = std::static_pointer_cast<const GraphTile>(std::make_shared<fake_tile>(encoded_shape5));
+  auto info = fake->edgeinfo(fake->directededge(0)->edgeinfo_offset());
   EXPECT_EQ(info.encoded_shape(), encoded_shape7);
   GraphTileBuilder::tweeners_t tweeners;
-  auto bins = GraphTileBuilder::BinEdges(&fake, tweeners);
+  auto bins = GraphTileBuilder::BinEdges(fake, tweeners);
   EXPECT_EQ(tweeners.size(), 1) << "This edge leaves a tile for 1 other tile and comes back.";
 }
 

@@ -132,7 +132,7 @@ json::ArrayPtr serialize_nodes(const PathLocation& location, GraphReader& reader
   auto array = json::array({});
   for (auto node_id : nodes) {
     GraphId n(node_id);
-    const GraphTile* tile = reader.GetGraphTile(n);
+    std::shared_ptr<const GraphTile> tile = reader.GetGraphTile(n);
     auto* node_info = tile->node(n);
     json::MapPtr node;
     if (verbose) {

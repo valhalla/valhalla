@@ -11,7 +11,7 @@ using namespace valhalla::sif;
 namespace {
 
 // Method to get an operator Id from a map of operator strings vs. Id.
-uint32_t GetOperatorId(const GraphTile* tile,
+uint32_t GetOperatorId(const std::shared_ptr<const GraphTile>& tile,
                        uint32_t routeid,
                        std::unordered_map<std::string, uint32_t>& operators) {
   const TransitRoute* transit_route = tile->GetTransitRoute(routeid);
@@ -100,7 +100,7 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
                                      GraphReader& graphreader,
                                      const sif::mode_costing_t& mode_costing,
                                      const TravelMode mode,
-                                     const Options&) {
+                                     const Options& /*options*/) {
   // For pedestrian costing - set flag allowing use of transit connections
   // Set pedestrian costing to use max distance. TODO - need for other modes
   const auto& pc = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
@@ -237,7 +237,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return false;
   }
@@ -505,7 +505,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     float sortcost = newcost.cost;
     if (p == destinations_.end()) {
       // Get the end node, skip if the end node tile is not found
-      const GraphTile* endtile =
+      std::shared_ptr<const GraphTile> endtile =
           (directededge->leaves_tile()) ? graphreader.GetGraphTile(directededge->endnode()) : tile;
       if (endtile == nullptr) {
         continue;
@@ -563,12 +563,12 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    std::shared_ptr<const GraphTile> endtile = graphreader.GetGraphTile(directededge->endnode());
     if (endtile == nullptr) {
       continue;
     }
@@ -669,7 +669,7 @@ uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
 
     // Keep the cost to traverse the partial distance for the remainder of the edge. This cost
     // is subtracted from the total cost up to the end of the destination edge.
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* dest_diredge = tile->directededge(edgeid);
     destinations_[edge.graph_id()] =
         costing->EdgeCost(dest_diredge, tile) * (1.0f - edge.percent_along());
@@ -700,7 +700,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
                                              const bool from_transition) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return false;
   }
@@ -800,7 +800,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const valhalla::Location& dest
       continue;
     }
 
-    const GraphTile* tile = graphreader.GetGraphTile(oppedge);
+    std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(oppedge);
     const DirectedEdge* diredge = tile->directededge(oppedge);
     uint32_t length = static_cast<uint32_t>(diredge->length()) * ratio;
     Cost cost = costing->EdgeCost(diredge, tile) * ratio;

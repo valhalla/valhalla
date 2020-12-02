@@ -261,10 +261,10 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
   }
 
   // lambda to expand search forward from the end node
-  std::function<void(const GraphTile*, const GraphId&, const NodeInfo*, BDEdgeLabel&, const uint32_t,
-                     const bool)>
+  std::function<void(std::shared_ptr<const GraphTile>, const GraphId&, const NodeInfo*, BDEdgeLabel&,
+                     const uint32_t, const bool)>
       expand;
-  expand = [&](const GraphTile* tile, const GraphId& node, const NodeInfo* nodeinfo,
+  expand = [&](std::shared_ptr<const GraphTile> tile, const GraphId& node, const NodeInfo* nodeinfo,
                BDEdgeLabel& pred, const uint32_t pred_idx, const bool from_transition) {
     uint32_t shortcuts = 0;
     GraphId edgeid = {node.tileid(), node.level(), nodeinfo->edge_index()};
@@ -316,7 +316,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       }
 
       // Get end node tile (skip if tile is not found) and opposing edge Id
-      const GraphTile* t2 =
+      std::shared_ptr<const GraphTile> t2 =
           directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
       if (t2 == nullptr) {
         continue;
@@ -345,9 +345,10 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
 
         // Expand from end node of this transition.
         GraphId node = trans->endnode();
-        const GraphTile* endtile = graphreader.GetGraphTile(node);
+        std::shared_ptr<const GraphTile> endtile = graphreader.GetGraphTile(node);
         if (endtile != nullptr) {
-          expand(endtile, node, endtile->node(node), pred, pred_idx, true);
+          const NodeInfo* tilenode = endtile->node(node);
+          expand(std::move(endtile), node, tilenode, pred, pred_idx, true);
         }
       }
     }
@@ -356,11 +357,11 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
   // Expand from node in forward search path. Get the tile and the node info.
   // Skip if tile is null (can happen with regional data sets) or if no access
   // at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(node);
   if (tile != nullptr) {
     const NodeInfo* nodeinfo = tile->node(node);
     if (costing_->Allowed(nodeinfo)) {
-      expand(tile, node, nodeinfo, pred, pred_idx, false);
+      expand(std::move(tile), node, nodeinfo, pred, pred_idx, false);
     }
   }
 }
@@ -523,10 +524,10 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
   }
 
   // Expand from node in reverse direction.
-  std::function<void(const GraphTile*, const GraphId&, const NodeInfo*, const uint32_t, BDEdgeLabel&,
-                     const uint32_t, const DirectedEdge*, const bool)>
+  std::function<void(std::shared_ptr<const GraphTile>, const GraphId&, const NodeInfo*,
+                     const uint32_t, BDEdgeLabel&, const uint32_t, const DirectedEdge*, const bool)>
       expand;
-  expand = [&](const GraphTile* tile, const GraphId& node, const NodeInfo* nodeinfo,
+  expand = [&](std::shared_ptr<const GraphTile> tile, const GraphId& node, const NodeInfo* nodeinfo,
                const uint32_t index, BDEdgeLabel& pred, const uint32_t pred_idx,
                const DirectedEdge* opp_pred_edge, const bool from_transition) {
     uint32_t shortcuts = 0;
@@ -556,7 +557,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       }
 
       // Get opposing edge Id and end node tile
-      const GraphTile* t2 =
+      std::shared_ptr<const GraphTile> t2 =
           directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
       if (t2 == nullptr) {
         continue;
@@ -616,9 +617,10 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
 
         // Expand from end node of this transition edge.
         GraphId node = trans->endnode();
-        const GraphTile* endtile = graphreader.GetGraphTile(node);
+        std::shared_ptr<const GraphTile> endtile = graphreader.GetGraphTile(node);
         if (endtile != nullptr) {
-          expand(endtile, node, endtile->node(node), index, pred, pred_idx, opp_pred_edge, true);
+          const NodeInfo* const tilenode = endtile->node(node);
+          expand(std::move(endtile), node, tilenode, index, pred, pred_idx, opp_pred_edge, true);
         }
         continue;
       }
@@ -627,7 +629,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
 
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(node);
   if (tile != nullptr) {
     const NodeInfo* nodeinfo = tile->node(node);
     if (costing_->Allowed(nodeinfo)) {
@@ -640,7 +642,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
         opp_pred_edge =
             graphreader.GetGraphTile(pred.opp_edgeid().Tile_Base())->directededge(pred.opp_edgeid());
       }
-      expand(tile, node, nodeinfo, index, pred, pred_idx, opp_pred_edge, false);
+      expand(std::move(tile), node, nodeinfo, index, pred, pred_idx, opp_pred_edge, false);
     }
   }
 }
@@ -685,7 +687,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       }
 
       // Get the directed edge and the opposing edge Id
-      const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+      std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
       GraphId oppedge = graphreader.GetOpposingEdgeId(edgeid);
 
@@ -764,7 +766,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       }
 
       // Get the directed edge
-      const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+      std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
       // Get the opposing directed edge, continue if we cannot get it

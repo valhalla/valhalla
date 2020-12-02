@@ -68,7 +68,7 @@ void FilterTiles(GraphReader& reader,
     n_original_edges += tilebuilder.header()->directededgecount();
 
     // Get the graph tile. Read from this tile to create the new tile.
-    const GraphTile* tile = reader.GetGraphTile(tile_id);
+    std::shared_ptr<const GraphTile> tile = reader.GetGraphTile(tile_id);
 
     std::hash<std::string> hasher;
     GraphId nodeid(tile_id.tileid(), tile_id.level(), 0);
@@ -156,7 +156,7 @@ void FilterTiles(GraphReader& reader,
 
         // Add directed edge
         tilebuilder.directededges().emplace_back(std::move(newedge));
-        edge_count++;
+        ++edge_count;
       }
 
       // Add the node to the tilebuilder unless no edges remain
@@ -232,7 +232,7 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
   for (const auto& tile_id : local_tiles) {
     // Get the graph tile. Skip if no tile exists or no nodes exist in the tile
     // (should not happen!?)
-    const GraphTile* tile = reader.GetGraphTile(tile_id);
+    std::shared_ptr<const GraphTile> tile = reader.GetGraphTile(tile_id);
     if (tile == nullptr || tile->header()->nodecount() == 0) {
       continue;
     }

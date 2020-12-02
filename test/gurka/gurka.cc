@@ -586,7 +586,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
   // Iterate over all the tiles, there wont be many in unit tests..
   const auto& end_node_coordinates = nodes.at(end_node);
   for (auto tile_id : tileset) {
-    auto* tile = reader.GetGraphTile(tile_id);
+    auto tile = reader.GetGraphTile(tile_id);
     // Iterate over all directed edges to find one with the name we want
     for (uint32_t i = 0; i < tile->header()->directededgecount(); i++) {
       const auto* forward_directed_edge = tile->directededge(i);
@@ -629,7 +629,7 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                 const std::string& end_node_name) {
   // Iterate over all the tiles, there wont be many in unit tests..
   for (auto tile_id : reader.GetTileSet()) {
-    auto* tile = reader.GetGraphTile(tile_id);
+    auto tile = reader.GetGraphTile(tile_id);
     // Iterate over all directed edges to find one with the name we want
     for (const auto& e : tile->GetDirectedEdges()) {
       // Bail if wrong end node
@@ -793,7 +793,7 @@ std::string dump_geojson_graph(const map& graph) {
   for (auto tile_id : reader.GetTileSet()) {
     if (reader.OverCommitted())
       reader.Trim();
-    const auto* tile = reader.GetGraphTile(tile_id);
+    auto tile = reader.GetGraphTile(tile_id);
     for (const auto& edge : tile->GetDirectedEdges()) {
       valhalla::baldr::GraphId edge_id(tile_id.tileid(), tile_id.level(),
                                        &edge - tile->directededge(0));

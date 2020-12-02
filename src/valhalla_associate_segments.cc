@@ -716,7 +716,7 @@ std::vector<EdgeMatch> edge_association::match_edges(const pbf::Segment& segment
     // Add edges to the matched path.
     // TODO - remove duplicate instances of the edge ID in the path info.
     for (const auto& info : path) {
-      const GraphTile* tile = m_reader.GetGraphTile(info.edgeid);
+      std::shared_ptr<const GraphTile> tile = m_reader.GetGraphTile(info.edgeid);
       const DirectedEdge* edge = tile->directededge(info.edgeid);
       edges.emplace_back(EdgeMatch{info.edgeid, edge->length(), 0.0f,
                                    1.0f}); // TODO - set first and last edge full_edge flag

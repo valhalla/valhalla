@@ -103,7 +103,7 @@ void remove_edges(const GraphId& edge_id, valhalla::Location& loc, GraphReader& 
   }
 
   // if its at the begin node lets center our sights on that
-  const GraphTile* tile = reader.GetGraphTile(edge_id);
+  std::shared_ptr<const GraphTile> tile = reader.GetGraphTile(edge_id);
   const auto* edge = tile->directededge(edge_id);
   const auto* node = reader.GetEndNode(edge, tile);
   if (pe->begin_node()) {
@@ -144,7 +144,7 @@ std::string thor_worker_t::expansion(Api& request) {
   auto track_expansion = [&dom](baldr::GraphReader& reader, const char* algorithm,
                                 baldr::GraphId edgeid, const char* status, bool full_shape = false) {
     // full shape might be overkill but meh, its trace
-    const auto* tile = reader.GetGraphTile(edgeid);
+    auto tile = reader.GetGraphTile(edgeid);
     const auto* edge = tile->directededge(edgeid);
     auto shape = tile->edgeinfo(edge->edgeinfo_offset()).shape();
     if (!edge->forward())
@@ -560,7 +560,7 @@ std::string thor_worker_t::offset_date(GraphReader& reader,
                                        float offset,
                                        const GraphId& out_edge) {
   // get the timezone of the input location
-  const GraphTile* tile = nullptr;
+  std::shared_ptr<const GraphTile> tile = nullptr;
   auto in_nodes = reader.GetDirectedEdgeNodes(in_edge, tile);
   uint32_t in_tz = 0;
   if (const auto* node = reader.nodeinfo(in_nodes.first, tile))

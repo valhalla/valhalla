@@ -75,11 +75,11 @@ protected:
   void enqueue(const baldr::GraphId& node_id,
                baldr::GraphReader& reader,
                const std::shared_ptr<sif::DynamicCost>& costing,
-               const baldr::GraphTile* tile);
+               std::shared_ptr<const baldr::GraphTile> tile);
 
   // callback fired when a node is expanded from, the node will be the end node of the previous label
   virtual void ExpandingNode(baldr::GraphReader& graphreader,
-                             const baldr::GraphTile* tile,
+                             std::shared_ptr<const baldr::GraphTile> tile,
                              const baldr::NodeInfo* node,
                              const sif::EdgeLabel& current,
                              const sif::EdgeLabel* previous) override;

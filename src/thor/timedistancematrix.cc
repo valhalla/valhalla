@@ -71,7 +71,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
                                        const bool from_transition) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return;
   }
@@ -165,7 +165,7 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
   SetDestinations(graphreader, locations);
 
   // Find shortest path
-  const GraphTile* tile;
+  std::shared_ptr<const GraphTile> tile;
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
@@ -216,7 +216,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
                                        const bool from_transition) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return;
   }
@@ -245,7 +245,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     }
 
     // Get opposing edge Id and end node tile
-    const GraphTile* t2 =
+    std::shared_ptr<const GraphTile> t2 =
         directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
     if (t2 == nullptr) {
       continue;
@@ -325,7 +325,7 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
   SetDestinationsManyToOne(graphreader, locations);
 
   // Find shortest path
-  const GraphTile* tile;
+  std::shared_ptr<const GraphTile> tile;
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
@@ -430,12 +430,12 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    std::shared_ptr<const GraphTile> endtile = graphreader.GetGraphTile(directededge->endnode());
     if (endtile == nullptr) {
       continue;
     }
@@ -472,7 +472,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the opposing directed edge, continue if we cannot get it
@@ -484,7 +484,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    std::shared_ptr<const GraphTile> endtile = graphreader.GetGraphTile(directededge->endnode());
     if (endtile == nullptr) {
       continue;
     }
@@ -540,7 +540,7 @@ void TimeDistanceMatrix::SetDestinations(
 
       // Form a threshold cost (the total cost to traverse the edge)
       GraphId id(static_cast<GraphId>(edge.graph_id()));
-      const GraphTile* tile = graphreader.GetGraphTile(id);
+      std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(id);
       const DirectedEdge* directededge = tile->directededge(id);
       float c = costing_->EdgeCost(directededge, tile).cost;
 
@@ -586,7 +586,7 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(
 
       // Form a threshold cost (the total cost to traverse the edge)
       GraphId id(static_cast<GraphId>(edge.graph_id()));
-      const GraphTile* tile = graphreader.GetGraphTile(id);
+      std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(id);
       const DirectedEdge* directededge = tile->directededge(id);
       float c = costing_->EdgeCost(directededge, tile).cost;
 
@@ -613,7 +613,7 @@ bool TimeDistanceMatrix::UpdateDestinations(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     std::vector<uint32_t>& destinations,
     const DirectedEdge* edge,
-    const GraphTile* tile,
+    const std::shared_ptr<const GraphTile>& tile,
     const EdgeLabel& pred,
     const uint32_t /*predindex*/) {
   // For each destination along this edge

@@ -380,7 +380,7 @@ public:
    * @param tile the tile required to get admin information
    * @return  json object
    */
-  json::MapPtr json(const GraphTile* tile) const;
+  json::MapPtr json(const std::shared_ptr<const GraphTile>& tile) const;
 
 protected:
   // Organized into 8-byte words so structure will align to 8 byte boundaries.

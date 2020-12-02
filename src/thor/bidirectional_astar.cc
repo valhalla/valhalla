@@ -116,7 +116,7 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
                                        const bool invariant) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return false;
   }
@@ -226,7 +226,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
                                                    const uint32_t pred_idx,
                                                    const EdgeMetadata& meta,
                                                    uint32_t& shortcuts,
-                                                   const GraphTile* tile,
+                                                   const std::shared_ptr<const GraphTile>& tile,
                                                    const TimeInfo& time_info) {
   // Skip shortcut edges until we have stopped expanding on the next level. Use regular
   // edges while still expanding on the next level since we can still transition down to
@@ -282,7 +282,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   }
 
   // Get end node tile (skip if tile is not found) and opposing edge Id
-  const GraphTile* t2 =
+  std::shared_ptr<const GraphTile> t2 =
       meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
   if (t2 == nullptr) {
     return false;
@@ -328,7 +328,7 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
                                        const bool invariant) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return false;
   }
@@ -439,7 +439,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
                                                    const uint32_t pred_idx,
                                                    const EdgeMetadata& meta,
                                                    uint32_t& shortcuts,
-                                                   const GraphTile* tile,
+                                                   const std::shared_ptr<const GraphTile>& tile,
                                                    const TimeInfo& time_info) {
   // Skip shortcut edges until we have stopped expanding on the next level. Use regular
   // edges while still expanding on the next level since we can still transition down to
@@ -466,7 +466,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   }
 
   // Get end node tile, opposing edge Id, and opposing directed edge.
-  const GraphTile* t2 =
+  std::shared_ptr<const GraphTile> t2 =
       meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
   if (t2 == nullptr) {
     return false;
@@ -489,9 +489,9 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
 
   // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so we
   // can properly recover elapsed time on the reverse path.
-  Cost transition_cost =
+  const Cost transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
-  Cost newcost =
+  const Cost newcost =
       pred.cost() + costing_->EdgeCost(opp_edge, t2, time_info.second_of_week) + transition_cost;
 
   // Check if edge is temporarily labeled and this path has less cost. If
@@ -847,12 +847,12 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    std::shared_ptr<const GraphTile> endtile = graphreader.GetGraphTile(directededge->endnode());
     if (endtile == nullptr) {
       continue;
     }
@@ -927,7 +927,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
       continue;
     }
     // Get the directed edge
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    std::shared_ptr<const GraphTile> tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the opposing directed edge, continue if we cannot get it
@@ -1004,7 +1004,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
 #ifdef LOGGING_LEVEL_TRACE
   LOG_TRACE("CONNECTIONS FOUND " + std::to_string(best_connections_.size()));
   for (const auto& b : best_connections_) {
-    const auto* tile = graphreader.GetGraphTile(b.edgeid);
+    auto tile = graphreader.GetGraphTile(b.edgeid);
     auto nodes = graphreader.GetDirectedEdgeNodes(b.edgeid, tile);
     auto sll = graphreader.GetGraphTile(nodes.first)
                    ->node(nodes.first)
@@ -1165,7 +1165,7 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
                               std::vector<sif::BDEdgeLabel>& edge_labels_rev,
                               const BDEdgeLabel& fwd_pred,
                               const BDEdgeLabel& rev_pred,
-                              std::shared_ptr<sif::DynamicCost>& costing) {
+                              const std::shared_ptr<sif::DynamicCost>& costing) {
 
   const uint8_t M = 10;                 // TODO Look at data to figure this out
   const uint8_t PATCH_PATH_SIZE = M * 2 // Expand M in both directions
@@ -1197,7 +1197,7 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
   // at the end before pushing the right-hand edges (opposite direction) onto the back
   std::reverse(patch_path.begin(), patch_path.end());
 
-  const GraphTile* tile = nullptr; // Used for later hinting
+  std::shared_ptr<const GraphTile> tile = nullptr; // Used for later hinting
 
   auto next_rev_pred = rev_pred;
   // Now push_back the edges from opposite direction onto our patch_path

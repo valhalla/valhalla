@@ -193,7 +193,7 @@ TEST(TimeTracking, routes) {
   // pick out a start and end ll by finding the appropriate edges in the graph
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
   auto opp_start_edge = gurka::findEdge(reader, map.nodes, "AB", "B");
-  const baldr::GraphTile* tile = nullptr;
+  std::shared_ptr<const baldr::GraphTile> tile;
   const auto* node = reader.nodeinfo(std::get<3>(opp_start_edge)->endnode(), tile);
   auto start = node->latlng(tile->header()->base_ll());
   auto end_edge = gurka::findEdge(reader, map.nodes, "GH", "H");

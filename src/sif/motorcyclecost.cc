@@ -154,7 +154,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const GraphTile* tile,
+                       const std::shared_ptr<const GraphTile>& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -181,7 +181,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const GraphTile* tile,
+                              const std::shared_ptr<const GraphTile>& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -209,7 +209,7 @@ public:
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::GraphTile* tile,
+                        const std::shared_ptr<const baldr::GraphTile>& tile,
                         const uint32_t seconds) const override;
 
   /**
@@ -270,7 +270,8 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const override {
+  float Filter(const baldr::DirectedEdge* edge,
+               const std::shared_ptr<const baldr::GraphTile>& tile) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
@@ -368,7 +369,7 @@ MotorcycleCost::~MotorcycleCost() {
 // Check if access is allowed on the specified edge.
 bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred,
-                             const GraphTile* tile,
+                             const std::shared_ptr<const GraphTile>& tile,
                              const baldr::GraphId& edgeid,
                              const uint64_t current_time,
                              const uint32_t tz_index,
@@ -391,7 +392,7 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
 bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const EdgeLabel& pred,
                                     const baldr::DirectedEdge* opp_edge,
-                                    const GraphTile* tile,
+                                    const std::shared_ptr<const GraphTile>& tile,
                                     const baldr::GraphId& opp_edgeid,
                                     const uint64_t current_time,
                                     const uint32_t tz_index,
@@ -411,7 +412,7 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 }
 
 Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
-                              const baldr::GraphTile* tile,
+                              const std::shared_ptr<const baldr::GraphTile>& tile,
                               const uint32_t seconds) const {
   auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
   auto final_speed = std::min(edge_speed, top_speed_);

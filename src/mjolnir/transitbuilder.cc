@@ -81,7 +81,7 @@ GraphId GetGraphId(const GraphId& nodeid, const std::unordered_set<GraphId>& til
 
 void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
                     GraphTileBuilder& tilebuilder_transit,
-                    const GraphTile* tile,
+                    const std::shared_ptr<const GraphTile>& tile,
                     GraphReader& reader_transit_level,
                     std::mutex& lock,
                     const std::unordered_set<GraphId>& tiles,
@@ -156,7 +156,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
     // Add directed edges for any connections from the OSM node
     // to an egress
     // level 2
-    const GraphTile* end_tile = nullptr;
+    std::shared_ptr<const GraphTile> end_tile = nullptr;
     while (added_edges < connection_edges.size() &&
            connection_edges[added_edges].osm_node.id() == nodeid) {
       const OSMConnectionEdge& conn = connection_edges[added_edges];
@@ -397,7 +397,8 @@ void FindOSMConnection(const PointLL& stop_ll,
   for (auto t : tilelist) {
     // Check all the nodes within the tile. Skip if tile has no nodes
     lock.lock();
-    const GraphTile* newtile = reader_local_level.GetGraphTile(GraphId(t, local_level, 0));
+    std::shared_ptr<const GraphTile> newtile =
+        reader_local_level.GetGraphTile(GraphId(t, local_level, 0));
     lock.unlock();
     if (!newtile || newtile->header()->nodecount() == 0) {
       continue;
@@ -449,7 +450,7 @@ void FindOSMConnection(const PointLL& stop_ll,
 void AddOSMConnection(const GraphId& transit_stop_node,
                       const NodeInfo* transit_node,
                       const std::string& stop_name,
-                      const GraphTile* tile,
+                      const std::shared_ptr<const GraphTile>& tile,
                       GraphReader& reader_local_level,
                       std::mutex& lock,
                       std::vector<OSMConnectionEdge>& connection_edges) {
@@ -593,11 +594,12 @@ void build(const boost::property_tree::ptree& pt,
     // Get Valhalla tile - get a read only instance for reference and
     // a writeable instance (deserialize it so we can add to it)
     lock.lock();
-    const GraphTile* local_tile = reader_local_level.GetGraphTile(tile_id);
+    std::shared_ptr<const GraphTile> local_tile = reader_local_level.GetGraphTile(tile_id);
     GraphTileBuilder tilebuilder_local(reader_local_level.tile_dir(), tile_id, true);
 
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level() + 1, tile_id.id());
-    const GraphTile* transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
+    std::shared_ptr<const GraphTile> transit_tile =
+        reader_transit_level.GetGraphTile(transit_tile_id);
     GraphTileBuilder tilebuilder_transit(reader_transit_level.tile_dir(), transit_tile_id, true);
 
     lock.unlock();
@@ -686,7 +688,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
         auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
         GraphId local_graph_id(graph_id.tileid(), graph_id.level() - 1, graph_id.id());
         if (reader.DoesTileExist(local_graph_id)) {
-          const GraphTile* tile = reader.GetGraphTile(local_graph_id);
+          std::shared_ptr<const GraphTile> tile = reader.GetGraphTile(local_graph_id);
           tiles.emplace(local_graph_id);
           const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") +
                                                filesystem::path::preferred_separator +

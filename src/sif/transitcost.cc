@@ -107,7 +107,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const GraphTile* tile,
+                       const std::shared_ptr<const GraphTile>& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -133,7 +133,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const GraphTile* tile,
+                              const std::shared_ptr<const GraphTile>& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -167,12 +167,14 @@ public:
    * @param seconds
    * @return
    */
-  virtual Cost
-  EdgeCost(const baldr::DirectedEdge*, const baldr::GraphTile*, const uint32_t) const override {
+  virtual Cost EdgeCost(const baldr::DirectedEdge*,
+                        const std::shared_ptr<const baldr::GraphTile>&,
+                        const uint32_t) const override {
     throw std::runtime_error("TransitCost::EdgeCost only supports transit edges");
   }
 
-  bool IsClosed(const baldr::DirectedEdge*, const baldr::GraphTile*) const override {
+  bool IsClosed(const baldr::DirectedEdge*,
+                const std::shared_ptr<const baldr::GraphTile>&) const override {
     return false;
   }
 
@@ -225,7 +227,8 @@ public:
    * This is used to conflate the stops to OSM way ids and we don't want to
    * include ferries.
    */
-  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile*) const override {
+  float Filter(const baldr::DirectedEdge* edge,
+               const std::shared_ptr<const baldr::GraphTile>&) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
@@ -240,19 +243,21 @@ public:
   /**This method adds to the exclude list based on the
    * user inputed exclude and include lists.
    */
-  virtual void AddToExcludeList(const baldr::GraphTile*& tile) override;
+  virtual void AddToExcludeList(const std::shared_ptr<const baldr::GraphTile>& tile) override;
 
   /**
    * Checks if we should exclude or not.
    * @return  Returns true if we should exclude, false if not.
    */
-  virtual bool IsExcluded(const baldr::GraphTile*& tile, const baldr::DirectedEdge* edge) override;
+  virtual bool IsExcluded(const std::shared_ptr<const baldr::GraphTile>& tile,
+                          const baldr::DirectedEdge* edge) override;
 
   /**
    * Checks if we should exclude or not.
    * @return  Returns true if we should exclude, false if not.
    */
-  virtual bool IsExcluded(const baldr::GraphTile*& tile, const baldr::NodeInfo* node) override;
+  virtual bool IsExcluded(const std::shared_ptr<const baldr::GraphTile>& tile,
+                          const baldr::NodeInfo* node) override;
 
 public:
   // Are wheelchair or bicycle required
@@ -413,7 +418,7 @@ float TransitCost::GetModeFactor() {
 // This method adds GraphIds to the exclude list based on the
 // operator, stop, and route exclude_onestops and include_onestops lists.
 // The exclude_onestops and include_onestops lists are set by the user.
-void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
+void TransitCost::AddToExcludeList(const std::shared_ptr<const baldr::GraphTile>& tile) {
 
   // do we have stop work to do?
   if (stop_exclude_onestops_.size() || stop_include_onestops_.size()) {
@@ -501,14 +506,16 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
 
 // This method acts like an allowed function; however, it uses the exclude list to
 // determine if we should not route on a line.
-bool TransitCost::IsExcluded(const baldr::GraphTile*& tile, const baldr::DirectedEdge* edge) {
+bool TransitCost::IsExcluded(const std::shared_ptr<const baldr::GraphTile>& tile,
+                             const baldr::DirectedEdge* edge) {
   return (exclude_routes_.find(GraphId(tile->id().tileid(), transit_tile_level, edge->lineid())) !=
           exclude_routes_.end());
 }
 
 // This method acts like an allowed function; however, it uses the exclude list to
 // determine if we should not route through this node.
-bool TransitCost::IsExcluded(const baldr::GraphTile*& tile, const baldr::NodeInfo* node) {
+bool TransitCost::IsExcluded(const std::shared_ptr<const baldr::GraphTile>& tile,
+                             const baldr::NodeInfo* node) {
   return (exclude_stops_.find(GraphId(tile->id().tileid(), transit_tile_level, node->stop_index())) !=
           exclude_stops_.end());
 }
@@ -521,7 +528,7 @@ uint32_t TransitCost::access_mode() const {
 // Check if access is allowed on the specified edge.
 bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
                           const EdgeLabel&,
-                          const GraphTile* tile,
+                          const std::shared_ptr<const GraphTile>& tile,
                           const baldr::GraphId&,
                           const uint64_t,
                           const uint32_t,
@@ -552,7 +559,7 @@ bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
 bool TransitCost::AllowedReverse(const baldr::DirectedEdge*,
                                  const EdgeLabel&,
                                  const baldr::DirectedEdge*,
-                                 const GraphTile*,
+                                 const std::shared_ptr<const GraphTile>&,
                                  const baldr::GraphId&,
                                  const uint64_t,
                                  const uint32_t,

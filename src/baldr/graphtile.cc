@@ -29,21 +29,21 @@ using namespace valhalla::midgard;
 namespace {
 struct dir_facet : public std::numpunct<char> {
 protected:
-  virtual char do_thousands_sep() const {
+  virtual char do_thousands_sep() const override {
     return filesystem::path::preferred_separator;
   }
 
-  virtual std::string do_grouping() const {
+  virtual std::string do_grouping() const override {
     return "\03";
   }
 };
 struct url_facet : public std::numpunct<char> {
 protected:
-  virtual char do_thousands_sep() const {
+  virtual char do_thousands_sep() const override {
     return '/';
   }
 
-  virtual std::string do_grouping() const {
+  virtual std::string do_grouping() const override {
     return "\03";
   }
 };
@@ -196,19 +196,19 @@ void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::st
     filesystem::remove(tmp_location);
 }
 
-GraphTile GraphTile::CacheTileURL(const std::string& tile_url,
-                                  const GraphId& graphid,
-                                  tile_getter_t* tile_getter,
-                                  const std::string& cache_location) {
+std::unique_ptr<GraphTile> GraphTile::CacheTileURL(const std::string& tile_url,
+                                                   const GraphId& graphid,
+                                                   tile_getter_t* tile_getter,
+                                                   const std::string& cache_location) {
   // Don't bother with invalid ids
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
-    return {};
+    return std::make_unique<GraphTile>();
   }
 
   auto uri = MakeSingleTileUrl(tile_url, graphid);
   auto result = tile_getter->get(uri);
   if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
-    return {};
+    return std::make_unique<GraphTile>();
   }
   // try to cache it on disk so we dont have to keep fetching it from url
   if (!cache_location.empty()) {
@@ -220,14 +220,14 @@ GraphTile GraphTile::CacheTileURL(const std::string& tile_url,
   }
 
   // turn the memory into a tile
-  auto tile = GraphTile();
+  auto tile = std::make_unique<GraphTile>();
   if (tile_getter->gzipped()) {
-    tile.DecompressTile(graphid, result.bytes_);
+    tile->DecompressTile(graphid, result.bytes_);
   } // we dont need to decompress so just take ownership of the data
   else {
-    tile.graphtile_.reset(new std::vector<char>(0, 0));
-    *tile.graphtile_ = std::move(result.bytes_);
-    tile.Initialize(graphid, tile.graphtile_->data(), tile.graphtile_->size());
+    tile->graphtile_.reset(new std::vector<char>(0, 0));
+    *tile->graphtile_ = std::move(result.bytes_);
+    tile->Initialize(graphid, tile->graphtile_->data(), tile->graphtile_->size());
   }
 
   return tile;

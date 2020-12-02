@@ -87,7 +87,7 @@ void recover(bool cache) {
         graphreader.Trim();
 
       // for each edge in the tile
-      const auto* tile = graphreader.GetGraphTile(tileid);
+      auto tile = graphreader.GetGraphTile(tileid);
       for (size_t j = 0; j < tile->header()->directededgecount(); ++j) {
         // skip it if its not a shortcut or the shortcut is one we will never traverse
         const auto* edge = tile->directededge(j);
@@ -117,7 +117,7 @@ void recover(bool cache) {
         // accumulate the shape along the edges that we recovered
         std::vector<PointLL> recovered_shape;
         for (auto edgeid : edgeids) {
-          const auto* tile = graphreader.GetGraphTile(edgeid);
+          auto tile = graphreader.GetGraphTile(edgeid);
           const auto* de = tile->directededge(edgeid);
           auto de_shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
           if (!de->forward()) {

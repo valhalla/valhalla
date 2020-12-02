@@ -203,7 +203,7 @@ thor_worker_t::map_match(Api& request) {
     // OSRM map matching format has both the match points and the route, fill out the match points
     // here Note that we only support trace_route as OSRM format so best_paths == 1
     if (options.action() == Options::trace_route && options.format() == Options::osrm) {
-      const GraphTile* tile = nullptr;
+      std::shared_ptr<const GraphTile> tile = nullptr;
       for (int i = 0; i < result.results.size(); ++i) {
         // Get the match
         const auto& match = result.results[i];
