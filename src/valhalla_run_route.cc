@@ -26,7 +26,6 @@
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "sif/costfactory.h"
-#include "thor/astar.h"
 #include "thor/attributes_controller.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/multimodal.h"
@@ -658,7 +657,7 @@ int main(int argc, char* argv[]) {
   LOG_INFO("Location Processing took " + std::to_string(ms) + " ms");
 
   // Get the route
-  AStarPathAlgorithm astar;
+  TimeDepForward astar;
   BidirectionalAStar bd;
   MultiModalPathAlgorithm mm;
   TimeDepForward timedep_forward;
