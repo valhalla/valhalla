@@ -60,16 +60,6 @@ template <class T> T deep_merge_counts(T& a, T const& b) {
 namespace valhalla {
 namespace mjolnir {
 
-statistics::statistics()
-    : tile_lengths(), country_lengths(), tile_int_edges(), country_int_edges(), tile_one_way(),
-      country_one_way(), tile_speed_info(), country_speed_info(), tile_named(), country_named(),
-      tile_truck_route(), country_truck_route(), tile_hazmat(), country_hazmat(), tile_height(),
-      country_height(), tile_width(), country_width(), tile_length(), country_length(), tile_weight(),
-      country_weight(), tile_axle_load(), country_axle_load(), tile_exit_signs(), tile_fork_signs(),
-      ctry_exit_signs(), ctry_fork_signs(), tile_exit_count(), tile_fork_count(), ctry_exit_count(),
-      ctry_fork_count(), tile_areas(), tile_geometries(), iso_codes(), tile_ids() {
-}
-
 void statistics::add_tile_road(const uint64_t& tile_id, const RoadClass& rclass, const float length) {
   tile_ids.insert(tile_id);
   tile_lengths[tile_id][rclass] += length;
@@ -479,7 +469,7 @@ void statistics::RouletteData::Add(const RouletteData& rd) {
   unroutable_nodes = merge(unroutable_nodes, rd.unroutable_nodes);
 }
 
-void statistics::RouletteData::GenerateTasks(const boost::property_tree::ptree& pt) const {
+void statistics::RouletteData::GenerateTasks(const boost::property_tree::ptree& /*pt*/) const {
   // build a task list for each collected wayid
   json::ArrayPtr tasks = json::array({});
   for (auto& id : way_IDs) {
