@@ -141,7 +141,7 @@ json::MapPtr summary(const valhalla::Api& api) {
       route_summary->emplace("time_" + recost_itr->name(), json::fp_t{recost, 3});
     ++recost_itr;
   }
-  LOG_DEBUG("trip_time::" + std::to_string(time) + "s");
+  LOG_DEBUG("trip_time::" + std::to_string(route_time) + "s");
   return route_summary;
 }
 
