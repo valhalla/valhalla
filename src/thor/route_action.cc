@@ -325,10 +325,9 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
 
     path_algorithm->Clear();
     cost->set_pass(1);
-    // TODO: is this a proxy for trivial route?
-    bool using_astar = (path_algorithm == &timedep_forward || path_algorithm == &timedep_reverse);
-    float relax_factor = using_astar ? 16.0f : 8.0f;
-    float expansion_within_factor = using_astar ? 4.0f : 2.0f;
+    // since bidir does about half the expansion we can do half the relaxation here
+    float relax_factor = path_algorithm == &bidir_astar ? 8.f : 16.f;
+    float expansion_within_factor = path_algorithm == &bidir_astar ? 2.f : 4.f;
     cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
     cost->set_allow_destination_only(true);
 
