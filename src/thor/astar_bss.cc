@@ -94,7 +94,6 @@ void AStarBSSAlgorithm::Init(const midgard::PointLL& origll, const midgard::Poin
 // from the end node of any transition edge (so no transition edges are added
 // to the adjacency list or EdgeLabel list). Does not expand transition
 // edges if from_transition is false.
-<<<<<<< HEAD:src/thor/astar_bss.cc
 void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
                                       const GraphId& node,
                                       const EdgeLabel& pred,
@@ -108,15 +107,6 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
       (mode == TravelMode::kPedestrian ? pedestrian_costing_ : bicycle_costing_);
   const auto& current_heuristic =
       (mode == TravelMode::kPedestrian ? pedestrian_astarheuristic_ : bicycle_astarheuristic_);
-=======
-void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
-                                       const GraphId& node,
-                                       const EdgeLabel& pred,
-                                       const uint32_t pred_idx,
-                                       const bool from_transition,
-                                       const valhalla::Location& destination,
-                                       std::pair<int32_t, float>& best_path) {
->>>>>>> add expansion tracking for debugging purposes:src/thor/astar.cc
 
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -193,11 +183,6 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
         best_path.first =
             (current_es->set() == EdgeSet::kTemporary) ? current_es->index() : edgelabels_.size();
         best_path.second = newcost.cost;
-
-        // setting this edge as connected
-        if (expansion_callback_) {
-          expansion_callback_(graphreader, "bidirectional_astar", edgeid, "c", false);
-        }
       }
     }
 
@@ -235,11 +220,6 @@ void AStarPathAlgorithm::ExpandForward(GraphReader& graphreader,
                              transition_cost);
     *current_es = {EdgeSet::kTemporary, idx};
     adjacencylist_->add(idx);
-
-    // setting this edge as reached
-    if (expansion_callback_) {
-      expansion_callback_(graphreader, "bidirectional_astar", edgeid, "r", false);
-    }
   }
 
   if (!from_bss && nodeinfo->type() == NodeType::kBikeShare) {
@@ -317,21 +297,12 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
     // Copy the EdgeLabel for use in costing. Check if this is a destination
     // edge and potentially complete the path.
     EdgeLabel pred = edgelabels_[predindex];
-<<<<<<< HEAD:src/thor/astar_bss.cc
 
     graph_tile_ptr tile = graphreader.GetGraphTile(pred.endnode());
     auto ll = tile->get_node_ll(pred.endnode());
 
     if (destinations_.find(pred.edgeid()) != destinations_.end() &&
         pred.mode() == TravelMode::kPedestrian) {
-=======
-    if (destinations_percent_along_.find(pred.edgeid()) != destinations_percent_along_.end()) {
-      // setting this edge as connected
-      if (expansion_callback_) {
-        expansion_callback_(graphreader, "bidirectional_astar", pred.edgeid(), "c", false);
-      }
-
->>>>>>> add expansion tracking for debugging purposes:src/thor/astar.cc
       // Check if a trivial path. Skip if no predecessor and not
       // trivial (cannot reach destination along this one edge).
       if (pred.predecessor() == kInvalidLabel) {
@@ -343,7 +314,6 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
       }
     }
 
-<<<<<<< HEAD:src/thor/astar_bss.cc
     // Mark the edge as permanently labeled. Do not do this for an origin
     // edge (this will allow loops/around the block cases)
     if (!pred.origin() && pred.mode() == TravelMode::kPedestrian) {
@@ -354,8 +324,6 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
       bicycle_edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
-=======
->>>>>>> add expansion tracking for debugging purposes:src/thor/astar.cc
     // Check that distance is converging towards the destination. Return route
     // failure if no convergence for TODO iterations
     float dist2dest = pred.distance();
@@ -372,22 +340,8 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
     }
 
     // Expand forward from the end node of the predecessor edge.
-<<<<<<< HEAD:src/thor/astar_bss.cc
     ExpandForward(graphreader, pred.endnode(), pred, predindex, false, false, pred.mode(),
                   destination, best_path);
-=======
-    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, destination, best_path);
-
-    // Mark the edge as permanently labeled. Do not do this for an origin
-    // edge (this will allow loops/around the block cases)
-    if (!pred.origin()) {
-      edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
-      // setting this edge as settled
-      if (expansion_callback_) {
-        expansion_callback_(graphreader, "bidirectional_astar", pred.edgeid(), "s", false);
-      }
-    }
->>>>>>> add expansion tracking for debugging purposes:src/thor/astar.cc
   }
   return {}; // Should never get here
 }
@@ -505,11 +459,6 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
     uint32_t idx = edgelabels_.size();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_->add(idx);
-
-    // setting this edge as reached
-    if (expansion_callback_) {
-      expansion_callback_(graphreader, "bidirectional_astar", edgeid, "r", false);
-    }
 
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
   }

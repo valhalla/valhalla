@@ -11,7 +11,6 @@
 #include "sif/costfactory.h"
 #include "test.h"
 #include "thor/bidirectional_astar.h"
-#include "thor/astar.h"
 #include "thor/timedep.h"
 #include <valhalla/proto/options.pb.h>
 
@@ -199,7 +198,6 @@ void BM_UtrechtPathSearch(benchmark::State& state) {
       benchmark::Counter(route_size, benchmark::Counter::kIsIterationInvariantRate);
 }
 
-BENCHMARK_TEMPLATE(BM_UtrechtPathSearch, thor::AStarPathAlgorithm)->Unit(benchmark::kMillisecond);
 BENCHMARK_TEMPLATE(BM_UtrechtPathSearch, thor::TimeDepForward)->Unit(benchmark::kMillisecond);
 BENCHMARK_TEMPLATE(BM_UtrechtPathSearch, thor::TimeDepReverse)->Unit(benchmark::kMillisecond);
 BENCHMARK_TEMPLATE(BM_UtrechtPathSearch, thor::BidirectionalAStar)->Unit(benchmark::kMillisecond);

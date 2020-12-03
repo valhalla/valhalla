@@ -203,17 +203,13 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   GraphId oppedge = t2->GetOpposingEdgeId(meta.edge);
   const DirectedEdge* opp_edge = t2->directededge(oppedge);
 
-  // Keep track of if this is a destination edge
-  auto p = destinations_percent_along_.find(meta.edge_id);
-
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
   int restriction_idx = -1;
-  if ((!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, oppedge, time_info.local_time,
+  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, oppedge, time_info.local_time,
                                 nodeinfo->timezone(), restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_rev_, tile, meta.edge_id, false, &edgestatus_,
-                           time_info.local_time, nodeinfo->timezone())) &&
-     p == destinations_percent_along_.end()) {
+                           time_info.local_time, nodeinfo->timezone())) {
     return false;
   }
 
@@ -227,6 +223,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
 
   // If this edge is a destination, subtract the partial/remainder cost
   // (cost from the dest. location to the end of the edge).
+  auto p = destinations_percent_along_.find(meta.edge_id);
   if (p != destinations_percent_along_.end()) {
     // Adapt cost to potentially not using the entire destination edge
     newcost -= edge_cost * p->second;
