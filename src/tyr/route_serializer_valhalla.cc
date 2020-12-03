@@ -39,7 +39,8 @@ valhalla output looks like this:
     "summary":
 {
     "distance": 4973,
-    "time": 325
+    "time": 325,
+    "cost": 304
 },
 "legs":
 [
@@ -47,7 +48,8 @@ valhalla output looks like this:
       "summary":
   {
       "distance": 4973,
-      "time": 325
+      "time": 325,
+      "cost": 304
   },
   "maneuvers":
   [
@@ -60,7 +62,8 @@ valhalla output looks like this:
             "West Market Street"
         ],
         "type": 1,
-        "time": 41
+        "time": 41,
+        "cost": 23
     },
     {
         "beginShapeIndex": 7,
@@ -71,14 +74,16 @@ valhalla output looks like this:
             "Jonestown Road"
         ],
         "type": 8,
-        "time": 284
+        "time": 284,
+        "cost": 281
     },
     {
         "beginShapeIndex": 40,
         "distance": 0,
         "writtenInstruction": "You have arrived at your destination.",
         "type": 4,
-        "time": 0
+        "time": 0,
+        "cost": 0
     }
 ],
 "shape":
@@ -273,7 +278,6 @@ travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver) {
 }
 
 json::ArrayPtr legs(const valhalla::Api& api) {
-
   auto legs = json::array({});
   const auto& directions_legs = api.directions().routes(0).legs();
   auto trip_leg_itr = api.trip().routes(0).legs().begin();
@@ -323,14 +327,20 @@ json::ArrayPtr legs(const valhalla::Api& api) {
         man->emplace("begin_street_names", std::move(begin_street_names));
       }
 
-      // Time, length, and shape indexes
+      // Time, length, cost, and shape indexes
+
+      const auto& end_node = trip_leg_itr->node(maneuver.end_path_index());
+      const auto& begin_node = trip_leg_itr->node(maneuver.begin_path_index());
+      auto cost = end_node.cost().elapsed_cost().cost() - begin_node.cost().elapsed_cost().cost();
+
       man->emplace("time", json::fp_t{maneuver.time(), 3});
       man->emplace("length", json::fp_t{maneuver.length(), 3});
+      man->emplace("cost", json::fp_t{cost, 3});
       man->emplace("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
       man->emplace("end_shape_index", static_cast<uint64_t>(maneuver.end_shape_index()));
       auto recost_itr = api.options().recostings().begin();
-      auto begin_recost_itr = trip_leg_itr->node(maneuver.begin_path_index()).recosts().begin();
-      for (const auto& end_recost : trip_leg_itr->node(maneuver.end_path_index()).recosts()) {
+      auto begin_recost_itr = begin_node.recosts().begin();
+      for (const auto& end_recost : end_node.recosts()) {
         if (end_recost.has_elapsed_cost())
           man->emplace("time_" + recost_itr->name(),
                        json::fp_t{end_recost.elapsed_cost().seconds() -
@@ -584,6 +594,8 @@ json::ArrayPtr legs(const valhalla::Api& api) {
     }
     summary->emplace("time", json::fp_t{directions_leg.summary().time(), 3});
     summary->emplace("length", json::fp_t{directions_leg.summary().length(), 3});
+    summary->emplace("cost",
+                     json::fp_t{trip_leg_itr->node().rbegin()->cost().elapsed_cost().cost(), 3});
     summary->emplace("min_lat", json::fp_t{directions_leg.summary().bbox().min_ll().lat(), 6});
     summary->emplace("min_lon", json::fp_t{directions_leg.summary().bbox().min_ll().lng(), 6});
     summary->emplace("max_lat", json::fp_t{directions_leg.summary().bbox().max_ll().lat(), 6});
