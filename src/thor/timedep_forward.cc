@@ -63,14 +63,20 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
     return false;
   }
   const NodeInfo* nodeinfo = tile->node(node);
-  if (!costing_->Allowed(nodeinfo)) {
-    return false;
-  }
 
   // Update the time information
   auto offset_time =
       from_transition ? time_info
                       : time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
+
+  if (!costing_->Allowed(nodeinfo)) {
+    const DirectedEdge* opp_edge;
+    const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
+    EdgeStatusInfo* opp_status = edgestatus_.GetPtr(opp_edge_id, tile);
+    return ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx,
+                              {opp_edge, opp_edge_id, opp_status}, tile, offset_time, destination,
+                              best_path);
+  }
 
   // Expand from start node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
@@ -246,7 +252,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
                             GraphReader& graphreader,
                             const sif::mode_costing_t& mode_costing,
                             const TravelMode mode,
-                            const Options&) {
+                            const Options& /*options*/) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];

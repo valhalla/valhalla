@@ -85,14 +85,20 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
     return false;
   }
   const NodeInfo* nodeinfo = tile->node(node);
-  if (!costing_->Allowed(nodeinfo)) {
-    return false;
-  }
 
   // Update the time information
   auto offset_time =
       from_transition ? time_info
                       : time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
+
+  if (!costing_->Allowed(nodeinfo)) {
+    const DirectedEdge* opp_edge;
+    const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
+    EdgeStatusInfo* opp_status = edgestatus_.GetPtr(opp_edge_id, tile);
+    return ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
+                              {opp_edge, opp_edge_id, opp_status}, tile, offset_time, destination,
+                              best_path);
+  }
 
   // Expand from end node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);

@@ -105,6 +105,7 @@
    * FIXED: Eliminate null pointer dereference in GraphReader::AreEdgesConnected [#2695](https://github.com/valhalla/valhalla/issues/2695)
    * FIXED: Fix polyline simplification float/double comparison [#2698](https://github.com/valhalla/valhalla/issues/2698)
    * FIXED: Weights were sometimes negative due to incorrect updates to elapsed_cost [#2702](https://github.com/valhalla/valhalla/pull/2702)
+   * FIXED: Fix bidirectional route failures at deadends [#2705](https://github.com/valhalla/valhalla/pull/2705)
    * FIXED: Updated logic to call out a non-obvious turn [#2708](https://github.com/valhalla/valhalla/pull/2708)
 
 * **Enhancement**
