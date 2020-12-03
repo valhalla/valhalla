@@ -2,7 +2,6 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/thor/*.h)
 
 set(sources
   alternates.cc
-  astar.cc
   astar_bss.cc
   attributes_controller.cc
   bidirectional_astar.cc

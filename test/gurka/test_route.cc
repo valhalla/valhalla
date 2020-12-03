@@ -324,14 +324,6 @@ uint32_t speed_from_edge(const valhalla::Api& api) {
   return kmh;
 }
 
-// this only happens if with trivial routes that have no date_time
-TEST_F(AlgorithmTest, Astar) {
-  {
-    auto api = gurka::route(map, {"3", "1"}, "auto");
-    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "a*");
-  }
-}
-
 // this happens with depart_at routes trivial or not and trivial invariant routes
 TEST_F(AlgorithmTest, TDForward) {
   {
