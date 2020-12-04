@@ -21,6 +21,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "mjolnir/util.h"
+#include "sif/osrm_car_duration.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -207,31 +208,12 @@ bool CanContract(GraphReader& reader,
     return false;
   }
 
-  // Get pairs of matching edges. If more than 1 pair exists then
-  // we cannot contract this node.
-  uint32_t n = edges.size();
-  bool matchfound = false;
-  std::pair<uint32_t, uint32_t> match;
-  for (uint32_t i = 0; i < n - 1; i++) {
-    for (uint32_t j = i + 1; j < n; j++) {
-      const DirectedEdge* edge1 = tile->directededge(edges[i]);
-      const DirectedEdge* edge2 = tile->directededge(edges[j]);
-      if (EdgesMatch(tile, edge1, edge2)) {
-        if (matchfound) {
-          // More than 1 match exists - return false
-          return false;
-        }
-        // Save the match
-        match = std::make_pair(i, j);
-        matchfound = true;
-      }
-    }
-  }
+  // Get the directed edges - these are the outbound edges from the node.
+  const DirectedEdge* edge1 = tile->directededge(edges[0]);
+  const DirectedEdge* edge2 = tile->directededge(edges[1]);
 
-  // Return false if no matches exist
-  if (!matchfound) {
+  if (!EdgesMatch(tile, edge1, edge2))
     return false;
-  }
 
   // Exactly one pair of edges match. Check if any other remaining edges
   // are driveable outbound from the node. If so this cannot be contracted.
@@ -243,11 +225,8 @@ bool CanContract(GraphReader& reader,
       }
     }*/
 
-  // Get the directed edges - these are the outbound edges from the node.
   // Get the opposing directed edges - these are the inbound edges to the node.
-  const DirectedEdge* edge1 = tile->directededge(edges[match.first]);
   uint64_t wayid1 = tile->edgeinfo(edge1->edgeinfo_offset()).wayid();
-  const DirectedEdge* edge2 = tile->directededge(edges[match.second]);
   uint64_t wayid2 = tile->edgeinfo(edge2->edgeinfo_offset()).wayid();
   GraphId oppedge1 = GetOpposingEdge(node, edge1, reader, wayid1);
   GraphId oppedge2 = GetOpposingEdge(node, edge2, reader, wayid2);
@@ -306,8 +285,8 @@ bool CanContract(GraphReader& reader,
   }
 
   // Store the pairs of base edges entering and exiting this node
-  edgepairs.edge1 = std::make_pair(oppedge1, edges[match.second]);
-  edgepairs.edge2 = std::make_pair(oppedge2, edges[match.first]);
+  edgepairs.edge1 = std::make_pair(oppedge1, edges[1]);
+  edgepairs.edge2 = std::make_pair(oppedge2, edges[0]);
   return true;
 }
 
@@ -319,10 +298,29 @@ uint32_t ConnectEdges(GraphReader& reader,
                       GraphId& endnode,
                       uint32_t& opp_local_idx,
                       uint32_t& restrictions,
-                      float& average_density) {
+                      float& average_density,
+                      float& total_duration,
+                      float& total_truck_duration) {
   // Get the tile and directed edge.
   const GraphTile* tile = reader.GetGraphTile(startnode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
+
+  // Add edge and turn duration for car
+  auto const nodeinfo = tile->node(startnode);
+  auto const turn_duration = OSRMCarTurnDuration(directededge, nodeinfo, opp_local_idx);
+  total_duration += turn_duration;
+  auto const speed = tile->GetSpeed(directededge, kNoFlowMask);
+  assert(speed != 0);
+  auto const edge_duration = directededge->length() / (speed * kKPHtoMetersPerSec);
+  total_duration += edge_duration;
+
+  // Add edge and turn duration for truck
+  // Currently use the same as for cars. TODO: implement for trucks
+  total_truck_duration += turn_duration;
+  auto const truck_speed = tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true);
+  assert(truck_speed != 0);
+  auto const edge_duration_truck = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
+  total_truck_duration += edge_duration_truck;
 
   // Copy the restrictions and opposing local index. Want to set the shortcut
   // edge's restrictions and opp_local_idx to the last directed edge in the chain
@@ -404,8 +402,15 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       DirectedEdge newedge = *directededge;
       uint32_t length = newedge.length();
 
-      // For computing weighted density along the shortcut
+      // For computing weighted density and total turn duration along the shortcut
       float average_density = length * newedge.density();
+      uint32_t const speed = tile->GetSpeed(directededge, kNoFlowMask);
+      assert(speed != 0);
+      float total_duration = length / (speed * kKPHtoMetersPerSec);
+      uint32_t const truck_speed =
+          tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true);
+      assert(truck_speed != 0);
+      float total_truck_duration = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
 
       // Get the shape for this edge. If this initial directed edge is not
       // forward - reverse the shape so the edge info stored is forward for
@@ -436,7 +441,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       // Connect edges to the shortcut while the end node is marked as
       // contracted (contains edge pairs in the shortcut info).
       uint32_t rst = 0;
-      uint32_t opp_local_idx = 0;
+      // For turn duration calculation during contraction
+      uint32_t opp_local_idx = directededge->opp_local_idx();
       GraphId next_edge_id = edge_id;
       while (true) {
         EdgePairs edgepairs;
@@ -466,7 +472,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         // on the connected shortcut - need to set that so turn restrictions
         // off of shortcuts work properly
         length += ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
-                               average_density);
+                               average_density, total_duration, total_truck_duration);
       }
 
       // Do we need to force adding edgeinfo (opposing edge could have diff names)?
@@ -530,6 +536,17 @@ uint32_t AddShortcutEdges(GraphReader& reader,
 
       // Compute the weighted edge density
       newedge.set_density(average_density / (static_cast<float>(length)));
+
+      // Update speed to the one that takes turn durations into account
+      assert(total_duration > 0);
+      uint32_t new_speed =
+          static_cast<uint32_t>(std::round(length / total_duration * kMetersPerSectoKPH));
+      newedge.set_speed(new_speed);
+
+      assert(total_truck_duration > 0);
+      uint32_t new_truck_speed =
+          static_cast<uint32_t>(std::round(length / total_truck_duration * kMetersPerSectoKPH));
+      newedge.set_truck_speed(new_truck_speed);
 
       // Add shortcut edge. Add to the shortcut map (associates the base edge
       // index to the shortcut index). Remove superseded mask that may have

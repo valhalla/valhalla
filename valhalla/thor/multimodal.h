@@ -16,9 +16,9 @@
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/hierarchylimits.h>
-#include <valhalla/thor/astar.h>
 #include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
+#include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/thor/pathinfo.h>
 
 namespace valhalla {

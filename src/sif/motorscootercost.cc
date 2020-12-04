@@ -7,6 +7,7 @@
 #include "midgard/util.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
+#include "sif/osrm_car_duration.h"
 #include <cassert>
 
 #ifdef INLINE_TEST
@@ -462,6 +463,7 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, pred, idx);
+  c.secs = OSRMCarTurnDuration(edge, node, idx);
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -490,7 +492,6 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
       seconds *= trans_density_factor_[node->density()];
 
     c.cost += shortest_ ? 0.f : seconds;
-    c.secs += seconds;
   }
   return c;
 }
@@ -506,6 +507,7 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
+  c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -534,7 +536,6 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
       seconds *= trans_density_factor_[node->density()];
 
     c.cost += shortest_ ? 0.f : seconds;
-    c.secs += seconds;
   }
   return c;
 }
