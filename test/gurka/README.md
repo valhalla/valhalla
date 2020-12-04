@@ -84,7 +84,7 @@ const gurka::ways ways = {
         {"access","none"},
         {"name","Test Road"} }
     },
-    { "BE",  
+    { "BE",
       { {"highway","motorway"},
         {"access","none"},
         {"name","Test Connector"} }
@@ -100,7 +100,7 @@ const gurka::ways ways = {
 ```cpp
 const gurka::nodes nodes = {
     { "A",   // String referencing nodes to be connected in order
-      { {"barrier","true"} } // key/value tags to put on the node
+      { {"barrier", "block"} } // key/value tags to put on the node
     },
     ...
 }
@@ -221,4 +221,3 @@ low-level helper functions available in case you want to do something a little m
   - `gurka::detail::build_config(workdir);` - builds a `boost::property_tree` for tile generation in `workdir`
   - `gurka::detail::map_to_coordinates(ascii_map, gridsize);` - calculates coordinates for all the A-Za-z0-9 nodes in the `ascii_map` given the `gridsize`
   - `gurka::detail::build_pbf(node_locations, ways, nodes, relations, pbf_filename);` - generates an OSM PBF for the nodes, ways, and relations you've defined.  The `nodemap` is the result of `gurka::detail::map_to_coordinates`
-
