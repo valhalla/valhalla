@@ -437,13 +437,13 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
                          const uint32_t seconds) const {
   auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, true);
   auto s = std::min(edge_speed, top_speed_);
-  float sec = edge->length() * speedfactor_[edge_speed];
+  float sec = edge->length() * speedfactor_[s];
 
   if (shortest_) {
     return Cost(edge->length(), sec);
   }
 
-  // TODO: factor hasn't been extensively tested, might alter this in future
+  // TODO: factor hasn't been extensively tested, might alter the speed penaltys in future
   float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
   float factor = density_factor_[edge->density()] + speed_penalty;
   if (edge->truck_route() > 0) {
