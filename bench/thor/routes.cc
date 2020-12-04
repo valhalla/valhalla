@@ -82,8 +82,7 @@ boost::property_tree::ptree build_config(const char* live_traffic_tar) {
 
 constexpr float kMaxRange = 256;
 
-template <class ALGO>
-void BM_UtrechtPathSearch(benchmark::State& state) {
+template <class ALGO> void BM_UtrechtPathSearch(benchmark::State& state) {
   const auto config = build_config("generated-live-data.tar");
   test::build_live_traffic_data(config);
 

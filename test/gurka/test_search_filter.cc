@@ -420,8 +420,7 @@ TEST_P(ExcludeClosuresOnWaypoints, IgnoreClosuresOverridesExcludeClosures) {
 
   // None of the edges are closed. Route has multiple waypoints
   {
-    auto result =
-        gurka::route(closure_map, {"1", "2"}, costing, {{"/date_time/type", "0"}}, reader);
+    auto result = gurka::route(closure_map, {"1", "2"}, costing, {{"/date_time/type", "0"}}, reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
   }
@@ -435,8 +434,7 @@ TEST_P(ExcludeClosuresOnWaypoints, IgnoreClosuresOverridesExcludeClosures) {
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
-    auto result =
-        gurka::route(closure_map, {"1", "2"}, costing, {{"/date_time/type", "0"}}, reader);
+    auto result = gurka::route(closure_map, {"1", "2"}, costing, {{"/date_time/type", "0"}}, reader);
     gurka::assert::osrm::expect_steps(result, {"AB", "CFGD", "DE"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CFGD", "DE"});
 
@@ -462,8 +460,7 @@ TEST_P(ExcludeClosuresOnWaypoints, ConsecutiveClosuresAtDeparture) {
 
   // None of the edges are closed. Route has multiple waypoints
   {
-    auto result =
-        gurka::route(closure_map, {"1", "2"}, costing, {{"/date_time/type", "0"}}, reader);
+    auto result = gurka::route(closure_map, {"1", "2"}, costing, {{"/date_time/type", "0"}}, reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
   }
@@ -478,8 +475,7 @@ TEST_P(ExcludeClosuresOnWaypoints, ConsecutiveClosuresAtDeparture) {
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
-    auto result =
-        gurka::route(closure_map, {"1", "2"}, costing, {{"/date_time/type", "0"}}, reader);
+    auto result = gurka::route(closure_map, {"1", "2"}, costing, {{"/date_time/type", "0"}}, reader);
     gurka::assert::osrm::expect_steps(result, {"HIC", "CFGD"});
     gurka::assert::raw::expect_path(result, {"HIC", "CFGD"});
 
@@ -493,7 +489,8 @@ TEST_P(ExcludeClosuresOnWaypoints, ConsecutiveClosuresAtDeparture) {
          std::to_string(closure_map.nodes.at("2").lat()) %
          std::to_string(closure_map.nodes.at("2").lng()) % costing % costing)
             .str();
-    EXPECT_THROW(gurka::route(closure_map, req_disable_exclude_closures, reader), valhalla_exception_t);
+    EXPECT_THROW(gurka::route(closure_map, req_disable_exclude_closures, reader),
+                 valhalla_exception_t);
   }
 }
 
