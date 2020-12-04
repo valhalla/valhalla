@@ -209,6 +209,7 @@
    * ADDED: Added signboards to guidance views.  [#2687](https://github.com/valhalla/valhalla/pull/2687)
    * ADDED: Regular speed on shortcut edges is calculated with turn durations taken into account. Truck, motorcycle and motorscooter profiles use OSRM-like turn duration. [#2662](https://github.com/valhalla/valhalla/pull/2662)
    * CHANGED: Remove astar algorithm and replace its use with timedep_forward as its redundant [#2706](https://github.com/valhalla/valhalla/pull/2706)
+   * ADDED: New signboard guidance-views subType to data processing, triplegbuilder and route osrm response [#2687]https://github.com/valhalla/valhalla/pull/2687
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
