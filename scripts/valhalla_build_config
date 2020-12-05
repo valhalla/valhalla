@@ -236,7 +236,8 @@ config = {
       'max_contours': 4,
       'max_time': 120,
       'max_distance': 25000.0,
-      'max_locations': 1
+      'max_locations': 1,
+      'max_distance_contours': 120
     },
     'trace': {
       'max_distance': 200000.0,
@@ -487,7 +488,8 @@ help_text = {
       'max_contours': 'Maximum number of input contours to allow',
       'max_time': 'Maximum time value for any one contour',
       'max_distance':'Maximum b-line distance between all locations in meters',
-      'max_locations': 'Maximum number of input locations'
+      'max_locations': 'Maximum number of input locations',
+      'max_distance_contours': 'Maximum distance value in kilometers'
     },
     'trace': {
       'max_distance': 'Maximum input shape distance in meters',

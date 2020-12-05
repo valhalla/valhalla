@@ -110,6 +110,7 @@ protected:
 
   float shape_interval_; // Interval along shape to mark time
   float max_seconds_;
+  float max_meters_;
   std::shared_ptr<midgard::GriddedData<midgard::time_distance_t>> isotile_;
 
   /**
@@ -137,7 +138,26 @@ protected:
   void UpdateIsoTile(const sif::EdgeLabel& pred,
                      baldr::GraphReader& graphreader,
                      const midgard::PointLL& ll,
-                     const float secs0);
+                     const float secs0,
+                     const float dist0);
+
+  /**
+   * Updates data grid values for time and distance if present.
+   * @param tile_id Tile Id to set value for.
+   * @param value   Value to set at the tile/grid location.
+   */
+  inline void SetData(const int tile_id, const midgard::time_distance_t& value) {
+    if (max_seconds_ > midgard::kNoIsoMetric) {
+      isotile_->SetIfLessThan(tile_id, value,
+                              [](const midgard::time_distance_t& td) { return td.sec; },
+                              [](midgard::time_distance_t& td, const float v) { td.sec = v; });
+    }
+    if (max_meters_ > midgard::kNoIsoMetric) {
+      isotile_->SetIfLessThan(tile_id, value,
+                              [](const midgard::time_distance_t& td) { return td.dist; },
+                              [](midgard::time_distance_t& td, const float v) { td.dist = v; });
+    }
+  }
 };
 
 } // namespace thor

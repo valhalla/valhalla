@@ -69,12 +69,19 @@ public:
   /**
    * Set the value at a specified tile Id if the value is less than the current
    * value set at the grid location. Verifies that the tile is valid.
-   * @param  tile_id     Tile Id to set value for.
-   * @param  value  Value to set at the tile/grid location.
+   * @param  tile_id  Tile Id to set value for.
+   * @param  value    Value to set at the tile/grid location.
+   * @param  get_data Functor to get the desired data value
+   * @param  set_data Functor to set the desired data value
    */
-  void SetIfLessThan(const int tile_id, const value_t& value) {
-    if (tile_id >= 0 && tile_id < data_.size() && value < data_[tile_id]) {
-      data_[tile_id] = value;
+  void SetIfLessThan(const int tile_id,
+                     const value_t& value,
+                     const std::function<float(const value_t&)>& get_data,
+                     const std::function<void(value_t&, const float)> set_data) {
+    auto data_value = get_data(data_[tile_id]);
+    auto test_value = get_data(value);
+    if (tile_id >= 0 && tile_id < data_.size() && test_value < data_value) {
+      set_data(data_[tile_id], test_value);
     }
   }
 
@@ -82,14 +89,17 @@ public:
    * Set the value at a specified point if the value is less than the current
    * value set at the grid location. Verifies that the point is within the
    * tiles.
-   * @param  pt     Coordinate to set within the tiles.
-   * @param  value  Value to set at the tile/grid location.
+   * @param  pt       Coordinate to set within the tiles.
+   * @param  value    Value to set at the tile/grid location.
+   * @param  get_data Functor to get the desired data value
+   * @param  set_data Functor to set the desired data value
    */
-  void SetIfLessThan(const PointLL& pt, const value_t& value) {
+  void SetIfLessThan(const PointLL& pt,
+                     const value_t& value,
+                     const std::function<float(const value_t&)>& get_data,
+                     const std::function<void(value_t&, const float)> set_data) {
     int32_t cell_id = this->TileId(pt);
-    if (cell_id >= 0 && cell_id < data_.size() && value < data_[cell_id]) {
-      data_[cell_id] = value;
-    }
+    SetIfLessThan(cell_id, value, get_data, set_data);
   }
 
   /**
@@ -142,7 +152,7 @@ public:
                      (s[p2] * tile_corners[p1].y() - s[p1] * tile_corners[p2].y()) / ds);
     };
 
-    // we need something to hold each iso-line, bigger ones first
+    // we need something to hold each iso-line, they're already sorted
     contours_t contours;
     for (auto v : contour_intervals) {
       contours[v].emplace_back();

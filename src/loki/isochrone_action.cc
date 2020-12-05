@@ -31,6 +31,16 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
     }
   }
 }
+
+const std::tuple<float, float>
+get_max_metrics(const google::protobuf::RepeatedPtrField<valhalla::Contour>& contours) {
+  float max_dist, max_time = 0.0f;
+  for (auto& contour : contours) {
+    max_time = std::max(max_time, contour.time());
+    max_dist = std::max(max_dist, contour.distance());
+  }
+  return std::make_tuple(max_time, max_dist);
+}
 } // namespace
 
 namespace valhalla {
@@ -55,10 +65,14 @@ void loki_worker_t::init_isochrones(Api& request) {
     throw valhalla_exception_t{152, std::to_string(max_contours)};
   }
 
-  // validate the contour time by checking the last one
-  const auto contour = options.contours().rbegin();
-  if (contour->time() > max_time) {
+  // check the contour metrics
+  float max_time_c, max_dist_c;
+  std::tie(max_time_c, max_dist_c) = get_max_metrics(options.contours());
+  if (max_time_c > max_time) {
     throw valhalla_exception_t{151, std::to_string(max_time)};
+  }
+  if (max_dist_c > max_kilometers) {
+    throw valhalla_exception_t{166, std::to_string(max_kilometers)};
   }
 
   parse_costing(request);
@@ -71,7 +85,7 @@ void loki_worker_t::isochrones(Api& request) {
     throw valhalla_exception_t{150, std::to_string(max_locations.find("isochrone")->second)};
   };
 
-  // check the distances
+  // check the distances between the locations
   auto max_location_distance = std::numeric_limits<float>::min();
   check_distance(options.locations(), max_distance.find("isochrone")->second, max_location_distance);
   if (!options.do_not_track()) {
