@@ -90,6 +90,7 @@ protected:
   size_t max_transit_walking_dis;
   size_t max_contours;
   size_t max_time;
+  size_t max_kilometers;
   size_t max_trace_shape;
   float max_gps_accuracy;
   float max_search_radius;

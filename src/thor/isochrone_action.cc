@@ -13,27 +13,18 @@ std::string thor_worker_t::isochrones(Api& request) {
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
 
-  // std::vector<time_distance_t> time_distances;
   std::vector<float> contours_time, contours_distance;
-  std::unordered_map<float, std::string> colors;
+  std::unordered_map<const IsoMetrics, std::unordered_map<float, std::string>> colors;
 
   for (const auto& contour : options.contours()) {
-    // time_distances.push_back({contour.time() * 60, contour.distance()});
     contours_time.push_back(contour.time());
+    colors[IsoMetrics::kTime][contour.time()] = contour.color();
     contours_distance.push_back(contour.distance());
-    colors[contour.time()] = contour.color();
-    // colors[contour.distance()] = contour.color();
+    colors[IsoMetrics::kDistance][contour.distance()] = contour.color();
   }
-
-  // sort the contour vectors
-  std::sort(contours_time.begin(), contours_time.end());
-  std::sort(contours_distance.begin(), contours_distance.end());
-  for (float c : contours_time) {
-    printf("Contour time: %f\n", c);
-  }
-  for (float c : contours_distance) {
-    printf("Contour distance %f\n", c);
-  }
+  // sort the contour vectors in descending order
+  std::sort(contours_time.begin(), contours_time.end(), std::greater<float>());
+  std::sort(contours_distance.begin(), contours_distance.end(), std::greater<float>());
 
   // If generalize is not provided then an optimal factor is computed
   // (based on the isotile grid size).
@@ -49,21 +40,31 @@ std::string thor_worker_t::isochrones(Api& request) {
   auto grid =
       (costing == "multimodal" || costing == "transit")
           ? isochrone_gen.ComputeMultiModal(*options.mutable_locations(),
-                                            contours_time.back() + 10.0f,
-                                            contours_distance.back() + 10.0f, *reader, mode_costing,
+                                            contours_time.front() + 10.0f,
+                                            contours_distance.front() + 10.0f, *reader, mode_costing,
                                             mode)
-          : isochrone_gen.Compute(*options.mutable_locations(), contours_time.back() + 10.0f,
-                                  contours_distance.back() + 10.0f, *reader, mode_costing, mode);
+          : isochrone_gen.Compute(*options.mutable_locations(), contours_time.front() + 10.0f,
+                                  contours_distance.front() + 10.0f, *reader, mode_costing, mode);
 
-  // turn it into geojson
-  auto isolines =
-      grid->GenerateContours(contours_time, [](const time_distance_t& td) { return td.sec; },
-                             options.polygons(), options.denoise(), options.generalize());
-  auto isolines_dist =
-      grid->GenerateContours(contours_distance, [](const time_distance_t& td) { return td.dist; },
-                             options.polygons(), options.denoise(), options.generalize());
+  // hold isochrones and isodistances in one map if available
+  std::map<const IsoMetrics, const tyr::contours_t> isolines;
+  if (contours_time.front() != kNoIsoMetric) {
+    // turn it into geojson
+    isolines.emplace(IsoMetrics::kTime,
+                     grid->GenerateContours(contours_time,
+                                            [](const time_distance_t& td) { return td.sec; },
+                                            options.polygons(), options.denoise(),
+                                            options.generalize()));
+  }
+  if (contours_distance.front() != kNoIsoMetric) {
+    isolines.emplace(IsoMetrics::kDistance,
+                     grid->GenerateContours(contours_distance,
+                                            [](const time_distance_t& td) { return td.dist; },
+                                            options.polygons(), options.denoise(),
+                                            options.generalize()));
+  }
 
-  return tyr::serializeIsochrones(request, isolines_dist, options.polygons(), colors,
+  return tyr::serializeIsochrones(request, isolines, options.polygons(), colors,
                                   options.show_locations());
 }
 

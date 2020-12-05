@@ -42,11 +42,13 @@ std::string serializeMatrix(const Api& request,
 using contour_t = std::list<midgard::PointLL>;
 using feature_t = std::list<contour_t>;
 using contours_t = std::map<float, std::list<feature_t>>;
-std::string serializeIsochrones(const Api& request,
-                                const contours_t& grid_contours,
-                                bool polygons = true,
-                                const std::unordered_map<float, std::string>& colors = {},
-                                bool show_locations = false);
+std::string
+serializeIsochrones(const Api& request,
+                    const std::map<const midgard::IsoMetrics, const contours_t>& grid_contours,
+                    bool polygons = true,
+                    const std::unordered_map<const midgard::IsoMetrics,
+                                             std::unordered_map<float, std::string>>& colors = {},
+                    bool show_locations = false);
 
 /**
  * Turn heights and ranges into a height response

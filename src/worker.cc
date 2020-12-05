@@ -100,7 +100,7 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
     {150, 400}, {151, 400}, {152, 400}, {153, 400}, {154, 400}, {155, 400}, {156, 400}, {157, 400},
     {158, 400}, {159, 400},
 
-    {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400}, {165, 400},
+    {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400}, {165, 400}, {166, 400},
 
     {170, 400}, {171, 400}, {172, 400},
 
@@ -541,8 +541,10 @@ void parse_contours(const rapidjson::Document& doc,
           rapidjson::get_optional<float>(json_contour, "/time").get_value_or(midgard::kNoIsoMetric);
       const float d = rapidjson::get_optional<float>(json_contour, "/distance")
                           .get_value_or(midgard::kNoIsoMetric);
-      if ((t == midgard::kNoIsoMetric && d == midgard::kNoIsoMetric)) {
+      if (t == midgard::kNoIsoMetric && d == midgard::kNoIsoMetric) {
         throw valhalla_exception_t{111};
+      } else if (t != midgard::kNoIsoMetric && d != midgard::kNoIsoMetric) {
+        throw valhalla_exception_t{167};
       }
 
       // Add new contour object to list

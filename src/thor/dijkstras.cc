@@ -157,10 +157,11 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
       }
     }
 
-    // Compute the cost to the end of this edge
+    // Compute the cost and path distance to the end of this edge
     Cost transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
     Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile, offset_time.second_of_week) +
                    transition_cost;
+    uint32_t path_dist = pred.path_distance() + directededge->length();
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
@@ -170,7 +171,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
+        lab.Update(pred_idx, newcost, newsortcost, path_dist, transition_cost, restriction_idx);
       }
       continue;
     }
@@ -183,7 +184,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, newcost.cost, 0.0f,
-                               mode_, transition_cost, false, restriction_idx);
+                               mode_, path_dist, transition_cost, false, restriction_idx);
     adjacencylist_->add(idx);
   }
 
@@ -317,6 +318,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
                                                            opp_edge, opp_pred_edge);
     Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, offset_time.second_of_week);
     newcost.cost += transition_cost.cost;
+    uint32_t path_dist = pred.path_distance() + directededge->length();
 
     // Check if edge is temporarily labeled and this path has less cost. If
     // less cost the predecessor is updated and the sort cost is decremented
@@ -326,7 +328,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
+        lab.Update(pred_idx, newcost, newsortcost, transition_cost, path_dist, restriction_idx);
       }
       continue;
     }
@@ -335,7 +337,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, opp_edge_id, directededge, newcost, newcost.cost,
-                               0.0f, mode_, transition_cost, false, restriction_idx);
+                               0.0f, mode_, path_dist, transition_cost, false, restriction_idx);
     adjacencylist_->add(idx);
   }
 
