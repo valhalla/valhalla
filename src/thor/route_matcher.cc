@@ -2,6 +2,7 @@
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
+#include "proto_conversions.h"
 #include <algorithm>
 #include <exception>
 #include <vector>
@@ -101,7 +102,7 @@ end_node_t GetEndEdges(GraphReader& reader,
 bool expand_from_node(const sif::mode_costing_t& mode_costing,
                       const TravelMode& mode,
                       GraphReader& reader,
-                      const std::vector<meili::Measurement>& shape,
+                      const google::protobuf::RepeatedPtrField<Location>& shape,
                       std::vector<std::pair<float, float>>& distances,
                       uint32_t origin_epoch,
                       const bool use_timestamps,
@@ -170,7 +171,7 @@ bool expand_from_node(const sif::mode_costing_t& mode_costing,
       }
 
       // Found a match if shape equals directed edge LL within tolerance
-      if (shape.at(index).lnglat().ApproximatelyEqual(de_end_ll) &&
+      if (to_ll(shape.Get(index).ll()).ApproximatelyEqual(de_end_ll) &&
           de->length() < length_comparison(length, true)) {
 
         // Get seconds from beginning of the week accounting for any changes to timezone on the path
@@ -188,7 +189,7 @@ bool expand_from_node(const sif::mode_costing_t& mode_costing,
         elapsed += cost;
         // overwrite time with timestamps
         if (use_timestamps)
-          elapsed.secs = shape[index].epoch_time() - shape[0].epoch_time();
+          elapsed.secs = shape[index].time() - shape[0].time();
 
         // Add edge and update correlated index
         path_infos.emplace_back(mode, elapsed, edge_id, 0, -1, transition_cost);
@@ -240,12 +241,15 @@ bool expand_from_node(const sif::mode_costing_t& mode_costing,
 // For the route path using an edge walking method.
 bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
                             const sif::TravelMode& mode,
-                            GraphReader& reader,
-                            const std::vector<meili::Measurement>& shape,
+                            baldr::GraphReader& reader,
                             valhalla::Options& options,
-                            std::vector<PathInfo>& path_infos) {
+                            std::vector<std::vector<PathInfo>>& legs) {
+  // TODO: build more than one leg based on location types
+  legs.clear();
+  legs.emplace_back();
+  auto& path_infos = legs.back();
 
-  if (shape.size() < 2) {
+  if (options.shape_size() < 2) {
     throw std::runtime_error("Invalid shape - less than 2 points");
   }
 
@@ -253,8 +257,8 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
   float total_distance = 0.0f;
   std::vector<std::pair<float, float>> distances;
   distances.push_back(std::make_pair(0.0f, 0.0f));
-  for (size_t i = 1; i < shape.size(); i++) {
-    float d = shape[i].lnglat().Distance(shape[i - 1].lnglat());
+  for (size_t i = 1; i < options.shape_size(); i++) {
+    float d = to_ll(options.shape(i).ll()).Distance(to_ll(options.shape(i - 1).ll()));
     total_distance += d;
     distances.push_back(std::make_pair(d, total_distance));
   }
@@ -262,7 +266,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
   // Keep a record of followed edges and transition from each shape index (for each hierarchy level) -
   // this prevents doubling back and causing an infinite loop (could be due to transitions)
   followed_edges_t followed_edges;
-  followed_edges.resize(shape.size());
+  followed_edges.resize(options.shape_size());
   for (auto& f : followed_edges) {
     f.resize(TileHierarchy::get_max_level());
   }
@@ -338,14 +342,14 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
     Cost elapsed;
 
     // Loop over shape to form path from matching edges
-    while (index < shape.size()) {
+    while (index < options.shape_size()) {
       length += distances.at(index).first;
       if (length > de_length) {
         break;
       }
 
       // Check if shape is within tolerance at the end node
-      if (shape.at(index).lnglat().ApproximatelyEqual(de_end_ll) &&
+      if (to_ll(options.shape(index).ll()).ApproximatelyEqual(de_end_ll) &&
           de_remaining_length < length_comparison(length, true)) {
 
         // Get seconds from beginning of the week accounting for any changes to timezone on the path
@@ -361,7 +365,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
                    (1 - edge.percent_along());
         // overwrite time with timestamps
         if (options.use_timestamps())
-          elapsed.secs = shape[index].epoch_time() - shape[0].epoch_time();
+          elapsed.secs = options.shape(index).time() - options.shape(0).time();
 
         // Add begin edge
         path_infos.emplace_back(mode, elapsed, graphid, 0, -1);
@@ -371,7 +375,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
 
         // Continue walking shape to find the end node
         GraphId end_node;
-        if (expand_from_node(mode_costing, mode, reader, shape, distances, origin_epoch,
+        if (expand_from_node(mode_costing, mode, reader, options.shape(), distances, origin_epoch,
                              options.use_timestamps(), index, end_node_tile, de->endnode(), end_nodes,
                              prev_edge_label, elapsed, path_infos, false, end_node, followed_edges)) {
           // If node equals stop node then when are done expanding - get the matching end edge
@@ -412,7 +416,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
                                            end_edge.percent_along();
           // overwrite time with timestamps
           if (options.use_timestamps())
-            elapsed.secs = shape.back().epoch_time() - shape[0].epoch_time();
+            elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
 
           // Add end edge
           path_infos.emplace_back(mode, elapsed, end_edge_graphid, 0, -1, transition_cost);
@@ -433,7 +437,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
         elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile) *
                    (end.second.first.percent_along() - edge.percent_along());
         if (options.use_timestamps())
-          elapsed.secs = shape.back().epoch_time() - shape[0].epoch_time();
+          elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
 
         // Add end edge
         path_infos.emplace_back(mode, elapsed, GraphId(edge.graph_id()), 0, -1);
