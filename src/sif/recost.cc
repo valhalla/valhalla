@@ -123,6 +123,12 @@ void recost_forward(baldr::GraphReader& reader,
     // construct the label
     label = EdgeLabel(predecessor++, edge_id, edge, cost, cost.cost, 0, costing.travel_mode(), length,
                       transition_cost, time_restrictions_TODO);
+    // Set 'deadend' flag true only to allow to allow u-turns in DynamicCosting::Allowed method.
+    // In bidiastar algorithm 'deadend' flag can be set dynamically based on current costing and
+    // time restrictions, but we don't want to add additional logic here in order not to drop
+    // performance. So just use simple hack: set this flag true and thus allow u-turns.
+    // TODO: think about more explicit solution.
+    label.set_deadend(true);
     // hand back the label
     label_cb(label);
     // next edge
