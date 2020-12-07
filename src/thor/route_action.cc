@@ -181,7 +181,6 @@ std::string thor_worker_t::expansion(Api& request) {
            &multi_modal_astar,
            &timedep_forward,
            &timedep_reverse,
-           &astar,
            &bidir_astar,
            &bss_astar,
        }) {
@@ -196,7 +195,6 @@ std::string thor_worker_t::expansion(Api& request) {
            &multi_modal_astar,
            &timedep_forward,
            &timedep_reverse,
-           &astar,
            &bidir_astar,
            &bss_astar,
        }) {
@@ -238,7 +236,6 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
            &multi_modal_astar,
            &timedep_forward,
            &timedep_reverse,
-           &astar,
            &bidir_astar,
            &bss_astar,
        }) {
@@ -283,15 +280,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     for (auto& edge2 : destination.path_edges()) {
       if (edge1.graph_id() == edge2.graph_id() ||
           reader->AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()))) {
-
-        // We need time dependence so we use timedep_foward when its trivial (should be short so not a
-        // real issue that its not invariant)
-        if (options.has_date_time_type() && options.date_time_type() == Options::invariant) {
-          return &timedep_forward;
-        }
-
-        // Otherwise we can use regular astar
-        return &astar;
+        return &timedep_forward;
       }
     }
   }
@@ -336,9 +325,9 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
 
     path_algorithm->Clear();
     cost->set_pass(1);
-    bool using_astar = (path_algorithm == &astar);
-    float relax_factor = using_astar ? 16.0f : 8.0f;
-    float expansion_within_factor = using_astar ? 4.0f : 2.0f;
+    // since bidir does about half the expansion we can do half the relaxation here
+    float relax_factor = path_algorithm == &bidir_astar ? 8.f : 16.f;
+    float expansion_within_factor = path_algorithm == &bidir_astar ? 2.f : 4.f;
     cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
     cost->set_allow_destination_only(true);
 

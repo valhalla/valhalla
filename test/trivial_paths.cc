@@ -7,7 +7,6 @@
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "sif/autocost.h"
-#include "thor/astar.h"
 #include "thor/worker.h"
 
 using namespace valhalla;
@@ -111,7 +110,7 @@ void try_path(GraphReader& reader,
   auto mode_costing = sif::CostFactory{}.CreateModeCosting(*request.mutable_options(), mode);
   cost_ptr_t costing = mode_costing[static_cast<size_t>(mode)];
 
-  AStarPathAlgorithm astar;
+  TimeDepForward astar;
   valhalla::Location origin = request.options().locations(0);
   valhalla::Location dest = request.options().locations(1);
   auto pathedges = astar.GetBestPath(origin, dest, reader, mode_costing, mode).front();
