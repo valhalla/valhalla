@@ -79,8 +79,7 @@ void recost_forward(baldr::GraphReader& reader,
     }
 
     // re-derive uturns, would have been nice to return this but we dont know the next edge yet
-    if (label.opp_local_idx() == edge->localedgeidx())
-      label.set_deadend(true);
+    label.set_deadend(label.opp_local_idx() == edge->localedgeidx());
 
     // this node is not allowed, unless we made a uturn at it
     if (node && !label.deadend() && !costing.Allowed(node)) {

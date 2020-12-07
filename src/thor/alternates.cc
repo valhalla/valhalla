@@ -59,8 +59,7 @@ void filter_alternates_by_stretch(std::vector<CandidateConnection>& connections)
 // Limited Sharing. Compare duration of edge segments shared between optimal path and
 // candidate path. If they share more than kAtMostShared throw out this alternate.
 // Note that you should recover all shortcuts before call this function.
-bool validate_alternate_by_sharing(GraphReader& /*graphreader*/,
-                                   std::vector<std::unordered_set<GraphId>>& shared_edgeids,
+bool validate_alternate_by_sharing(std::vector<std::unordered_set<GraphId>>& shared_edgeids,
                                    const std::vector<std::vector<PathInfo>>& paths,
                                    const std::vector<PathInfo>& candidate_path,
                                    float at_most_shared) {
