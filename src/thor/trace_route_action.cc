@@ -159,15 +159,14 @@ void thor_worker_t::route_match(Api& request) {
                                         l.type() == Location::kBreakThrough ||
                                         &l == &*options.shape().rbegin();
                                });
-      // we had more legs and were destinations, this should never happen
-      if (dest == options.mutable_shape()->end()) {
-        throw std::exception{};
-      }
+      assert(dest != options.mutable_shape()->end());
       // Form the trip path based on mode costing, origin, destination, and path edges
       auto& leg = *request.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
       thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, pleg.begin(),
                                   pleg.end(), *origin, *dest, std::list<valhalla::Location>{}, leg,
                                   {"edge_walk"}, interrupt);
+      // Next leg
+      origin = dest;
     }
   } // the shape walking failed
   else {

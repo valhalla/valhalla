@@ -24,7 +24,9 @@ namespace thor {
 class RouteMatcher {
 public:
   /**
-   * Form a path by matching shape with graph edges (edge walking).
+   * Form a path by matching shape with graph edges (edge walking). Also sets the path_edges
+   * on the appropriate locations in the shape so that trip leg builder will have that info
+   *
    * @param mode_costing   Dynamic costing methods used to determine allowed edges and costs.
    * @param mode           Travel mode (indexes the costing methods).
    * @param reader         Access to the tiled graph data

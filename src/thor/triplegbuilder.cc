@@ -247,6 +247,10 @@ void SetShapeAttributes(const AttributesController& controller,
                               [distance_total_pct](const decltype(cuts)::value_type& s) {
                                 return distance_total_pct <= s.percent_along;
                               });
+  if (cut_itr == cuts.cend()) {
+    throw std::runtime_error("fack");
+  }
+
   assert(cut_itr != cuts.cend());
 
   // Set the shape attributes
