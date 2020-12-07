@@ -276,7 +276,7 @@ help_text = {
     'traffic_extract': 'Location to read traffic from tar',
     'incident_dir': 'Location to read incident tiles from',
     'incident_log': 'Location to read change events of incident tiles',
-    'shortcut_caching': 'Precaches the superceded edges of all shortcuts in the graph. Defaults to true in tile_extract mode, false otherwise',
+    'shortcut_caching': 'Precaches the superceded edges of all shortcuts in the graph. Defaults to false',
     'admin': 'Location of sqlite file holding admin polygons created with valhalla_build_admins',
     'timezone': 'Location of sqlite file holding timezone information created with valhalla_build_timezones',
     'transit_dir': 'Location of intermediate transit tiles created with valhalla_build_transit',

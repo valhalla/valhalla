@@ -377,7 +377,7 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
   }
 
   // Fill shortcut recovery cache if requested or by default in memmap mode
-  if (pt.get<bool>("shortcut_caching", !tile_extract_->tiles.empty())) {
+  if (pt.get<bool>("shortcut_caching", false)) {
     shortcut_recovery_t::get_instance(this);
   }
 }
