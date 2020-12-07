@@ -1093,7 +1093,9 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
       }
     }
 
-    // don't care about trivial paths here, it will be handled correctly in recost function below
+    // bidirectional a* has a bug where it fails trivial routes in which you are on a one way edge and
+    // the origin is near the end of the edge and the destination is near the beginning, in other
+    // words a route that looks trivial but actually needs to go around the block to complete
     if (path_edges.size() == 1)
       LOG_WARN("Trivial route with bidirectional A* should not be allowed");
 

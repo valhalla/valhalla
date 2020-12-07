@@ -78,8 +78,12 @@ void recost_forward(baldr::GraphReader& reader,
       throw std::runtime_error("Edge cannot be found");
     }
 
-    // allow u-turns even if the node has access restriction
-    if (node && !costing.Allowed(node) && !(label.opp_local_idx() == edge->localedgeidx())) {
+    // re-derive uturns, would have been nice to return this but we dont know the next edge yet
+    if (label.opp_local_idx() == edge->localedgeidx())
+      label.set_deadend(true);
+
+    // this node is not allowed, unless we made a uturn at it
+    if (node && !label.deadend() && !costing.Allowed(node)) {
       throw std::runtime_error("This path requires different node access than this costing allows");
     }
 
@@ -123,12 +127,6 @@ void recost_forward(baldr::GraphReader& reader,
     // construct the label
     label = EdgeLabel(predecessor++, edge_id, edge, cost, cost.cost, 0, costing.travel_mode(), length,
                       transition_cost, time_restrictions_TODO);
-    // Set 'deadend' flag true only to allow u-turns in DynamicCosting::Allowed method.
-    // In bidiastar algorithm 'deadend' flag can be set dynamically based on current costing and
-    // time restrictions, but we don't want to add additional logic here in order not to drop
-    // performance. So just use simple hack: set this flag true and thus allow u-turns.
-    // TODO: think about more explicit solution.
-    label.set_deadend(true);
     // hand back the label
     label_cb(label);
     // next edge
