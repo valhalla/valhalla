@@ -1600,7 +1600,7 @@ function filter_tags_generic(kv)
 
   if (kv["maxwidth"]) then
     local width = tonumber(kv["maxwidth"])
-    if (width and width < 1.9) then
+    if (width and width <= 1.9) then
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
       kv["bus_forward"] = "false"
