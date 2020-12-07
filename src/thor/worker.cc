@@ -353,7 +353,6 @@ void thor_worker_t::parse_filter_attributes(const Api& request, bool is_strict_f
 }
 
 void thor_worker_t::cleanup() {
-  astar.Clear();
   bidir_astar.Clear();
   timedep_forward.Clear();
   timedep_reverse.Clear();

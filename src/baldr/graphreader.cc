@@ -480,12 +480,13 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
 }
 
 // Convenience method to get an opposing directed edge graph Id.
-GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& tile) {
+GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& opp_tile) {
   // If you cant get the tile you get an invalid id
-  tile = GetGraphTile(edgeid);
-  if (!tile) {
+  const GraphTile* tile = opp_tile;
+  if (!GetGraphTile(edgeid, tile)) {
     return {};
   };
+
   // For now return an invalid Id if this is a transit edge
   const auto* directededge = tile->directededge(edgeid);
   if (directededge->IsTransitLine()) {
@@ -494,12 +495,12 @@ GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& 
 
   // If edge leaves the tile get the end node's tile
   GraphId id = directededge->endnode();
-  if (!GetGraphTile(id, tile)) {
+  if (!GetGraphTile(id, opp_tile)) {
     return {};
   };
 
   // Get the opposing edge
-  id.set_id(tile->node(id)->edge_index() + directededge->opp_index());
+  id.set_id(opp_tile->node(id)->edge_index() + directededge->opp_index());
   return id;
 }
 

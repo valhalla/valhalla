@@ -1720,6 +1720,7 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   auto prev_edge = trip_path_->GetPrevEdge(node_index);
   auto curr_edge = trip_path_->GetCurrEdge(node_index);
   auto node = trip_path_->GetEnhancedNode(node_index);
+  auto turn_degree = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
 
   if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare) {
     return false;
@@ -1861,7 +1862,7 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   }
   if (maneuver.ramp() && prev_edge->IsRampUse()) {
     // Do not combine if ramp to ramp is not forward
-    if (!curr_edge->IsForward(GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading()))) {
+    if (!curr_edge->IsForward(turn_degree)) {
       return false;
     }
     return true;
@@ -1893,7 +1894,7 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
 
   /////////////////////////////////////////////////////////////////////////////
   // Process simple u-turns
-  if (GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading()) == 180) {
+  if (turn_degree == 180) {
     // If drive on right then left u-turn
     if (prev_edge->drive_on_right()) {
       maneuver.set_type(DirectionsLeg_Maneuver_Type_kUturnLeft);
@@ -1929,6 +1930,17 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   // Process 'T' intersection
   if (IsTee(node_index, prev_edge.get(), curr_edge.get())) {
     maneuver.set_tee(true);
+    return false;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process non-forward transition with intersecting traversable edge
+  if (!curr_edge->IsStraightest(turn_degree,
+                                node->GetStraightestTraversableIntersectingEdgeTurnDegree(
+                                    prev_edge->end_heading(), prev_edge->travel_mode())) &&
+      !node->HasForwardTraversableIntersectingEdge(prev_edge->end_heading(),
+                                                   prev_edge->travel_mode()) &&
+      node->HasTraversableIntersectingEdge(prev_edge->travel_mode())) {
     return false;
   }
 
