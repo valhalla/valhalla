@@ -110,6 +110,8 @@ void recost_forward(baldr::GraphReader& reader,
     auto next_id = edge_cb();
     if (!next_id.Is_Valid()) {
       edge_pct -= 1.f - target_pct;
+      // just to keep compatibility with the logic that handled trivial path in bidiastar
+      edge_pct = std::max(0.f, edge_pct);
     }
 
     // the cost for traversing this intersection
