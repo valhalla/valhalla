@@ -942,10 +942,6 @@ void AccumulateRecostingInfoForward(const valhalla::Options& options,
     return;
   }
 
-  // check if we should use static time or offset time as the path lengthens
-  const bool invariant =
-      options.has_date_time_type() && options.date_time_type() == Options::invariant;
-
   // setup a callback for the recosting to get each edge
   auto in_itr = leg.node().begin();
   sif::EdgeCallback edge_cb = [&in_itr]() -> baldr::GraphId {
@@ -1199,8 +1195,8 @@ void TripLegBuilder::Build(
     TripLeg_Edge* trip_edge =
         AddTripEdge(controller, edge, edge_itr->trip_id, multimodal_builder.block_id, mode,
                     travel_type, costing, directededge, node->drive_on_right(), trip_node, graphtile,
-                    offset_time.second_of_week, startnode.id(), node->named_intersection(),
-                    start_tile, edge_itr->restriction_index);
+                    time_info.second_of_week, startnode.id(), node->named_intersection(), start_tile,
+                    edge_itr->restriction_index);
 
     // some information regarding shape/length trimming
     float trim_start_pct = is_first_edge ? start_pct : 0;
