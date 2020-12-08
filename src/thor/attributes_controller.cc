@@ -38,6 +38,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeSignGuideToward, true},
     {kEdgeSignJunctionName, true},
     {kEdgeSignGuidanceViewJunction, true},
+    {kEdgeSignGuidanceViewSignboard, true},
     {kEdgeTravelMode, true},
     {kEdgeVehicleType, true},
     {kEdgePedestrianType, true},
