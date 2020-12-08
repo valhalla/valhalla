@@ -68,8 +68,19 @@ message DirectionsLeg {
   }
 
   message GuidanceView {
+    enum Type{
+      kJunction = 0;
+      kSapa = 1;
+      kTollbranch = 2;
+      kAftertoll = 3;
+      kEnt = 4;
+      kExit = 5;
+      kCityreal = 6;
+      kDirectionboard = 7;
+      kSignboard = 8;
+    }
     optional string data_id = 1;        // TODO future enum as data id?
-    optional string type = 2;           // The type of guidance view TODO future enum
+    optional Type type = 2;             // The type of guidance view
     optional string base_id = 3;        // Image base id
     repeated string overlay_ids = 4;    // List of overlay ids
   }

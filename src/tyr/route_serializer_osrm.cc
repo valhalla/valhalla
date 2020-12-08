@@ -218,6 +218,22 @@ std::unordered_map<std::string, std::pair<std::string, std::string>> speed_limit
     {"WS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
 };
 
+const std::unordered_map<int, std::string>
+    guidanceview_type_string{{static_cast<int>(DirectionsLeg_GuidanceView_Type_kJunction), "jct"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kSapa), "sapa"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kTollbranch),
+                              "tollbranch"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kAftertoll),
+                              "aftertoll"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kEnt), "ent"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kExit), "exit"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kCityreal),
+                              "cityreal"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kDirectionboard),
+                              "directionboard"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kSignboard),
+                              "signboard"}};
+
 namespace osrm_serializers {
 /*
 OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
@@ -1503,7 +1519,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
           for (const auto& gv : maneuver.guidance_views()) {
             auto guidance_view = json::map({});
             guidance_view->emplace("data_id", gv.data_id());
-            guidance_view->emplace("type", gv.type());
+            guidance_view
+                ->emplace("type", guidanceview_type_string.find(static_cast<int>(gv.type()))->second);
             guidance_view->emplace("base_id", gv.base_id());
             auto overlay_ids = json::array({});
             for (const auto& overlay : gv.overlay_ids()) {
