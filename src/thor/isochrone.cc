@@ -195,7 +195,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
                               float secs0,
                               float dist0) {
   // Skip if the opposing edge has already been settled.
-  const GraphTile* t2;
+  const GraphTile* t2 = nullptr;
   GraphId opp = graphreader.GetOpposingEdgeId(pred.edgeid(), t2);
   EdgeStatusInfo es = edgestatus_.Get(opp);
   if (es.set() == EdgeSet::kPermanent) {
@@ -298,7 +298,7 @@ void Isochrone::ExpandingNode(baldr::GraphReader& graphreader,
   UpdateIsoTile(current, graphreader, node->latlng(tile->header()->base_ll()), secs0, dist0);
 }
 
-ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& graphreader,
+ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreader*/,
                                                 const sif::EdgeLabel& pred,
                                                 const InfoRoutingType route_type) {
   if (route_type == InfoRoutingType::multi_modal) {

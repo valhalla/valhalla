@@ -324,14 +324,6 @@ uint32_t speed_from_edge(const valhalla::Api& api) {
   return kmh;
 }
 
-// this only happens if with trivial routes that have no date_time
-TEST_F(AlgorithmTest, Astar) {
-  {
-    auto api = gurka::route(map, {"3", "1"}, "auto");
-    EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "a*");
-  }
-}
-
 // this happens with depart_at routes trivial or not and trivial invariant routes
 TEST_F(AlgorithmTest, TDForward) {
   {
@@ -402,4 +394,27 @@ TEST_F(AlgorithmTest, Bidir) {
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
     EXPECT_EQ(speed_from_edge(api), current);
   }
+}
+
+/*************************************************************/
+TEST(Standalone, LegWeightRegression) {
+
+  const std::string ascii_map = R"(A-1---B----------C-3-----D
+                                          \        /
+                                           E----2-F)";
+
+  const gurka::ways ways = {{"ABCD", {{"highway", "motorway"}}},
+                            {"BE", {{"highway", "motorway_link"}}},
+                            {"FC", {{"highway", "motorway_link"}}},
+                            {"EF", {{"highway", "service"}}}};
+
+  const double gridsize = 30;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/leg_weights");
+  auto result = gurka::route(map, {"1", "E", "3"}, "auto", {{"/locations/1/type", "via"}});
+
+  auto doc = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
+
+  // "weight" was negative due to failing to properly update elapsed_cost.cost
+  EXPECT_GT(doc["routes"][0]["legs"][0]["steps"][2]["weight"].GetDouble(), 0);
 }

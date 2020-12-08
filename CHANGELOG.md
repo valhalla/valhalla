@@ -104,6 +104,10 @@
    * FIXED: Missing fork or bear instruction [#2683](https://github.com/valhalla/valhalla/pull/2683)
    * FIXED: Eliminate null pointer dereference in GraphReader::AreEdgesConnected [#2695](https://github.com/valhalla/valhalla/issues/2695)
    * FIXED: Fix polyline simplification float/double comparison [#2698](https://github.com/valhalla/valhalla/issues/2698)
+   * FIXED: Weights were sometimes negative due to incorrect updates to elapsed_cost [#2702](https://github.com/valhalla/valhalla/pull/2702)
+   * FIXED: Fix bidirectional route failures at deadends [#2705](https://github.com/valhalla/valhalla/pull/2705)
+   * FIXED: Updated logic to call out a non-obvious turn [#2708](https://github.com/valhalla/valhalla/pull/2708)
+   * FIXED: valhalla_build_statistics multithreaded mode fixed [#2707](https://github.com/valhalla/valhalla/pull/2707)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
@@ -196,12 +200,15 @@
    * ADDED: Linear reference support to locate api [#2645](https://github.com/valhalla/valhalla/pull/2645)
    * ADDED: Implemented OSRM-like turn duration calculation for car. Uses it now in auto costing. [#2651](https://github.com/valhalla/valhalla/pull/2651)
    * ADDED: Enhanced turn lane information in guidance [#2653](https://github.com/valhalla/valhalla/pull/2653)
+   * ADDED: `top_speed` option for all motorized vehicles [#2667](https://github.com/valhalla/valhalla/issues/2667)
    * CHANGED: Move turn_lane_direction helper to odin/util [#2675](https://github.com/valhalla/valhalla/pull/2675)
    * ADDED: Add annotations to osrm response including speed limits, unit and sign conventions [#2668](https://github.com/valhalla/valhalla/pull/2668)
    * ADDED: Added functions for predicted speeds encoding-decoding [#2674](https://github.com/valhalla/valhalla/pull/2674)
    * ADDED: Time invariant routing via the bidirectional algorithm. This has the effect that when time dependent routes (arrive_by and depart_at) fall back to bidirectional due to length restrictions they will actually use the correct time of day for one of the search directions [#2660](https://github.com/valhalla/valhalla/pull/2660)
    * ADDED: If the length of the edge is greater than kMaxEdgeLength, then consider this a catastrophic error if the should_error bool is true in the set_length function. [2678](https://github.com/valhalla/valhalla/pull/2678)
    * ADDED: Moved lat,lon coordinates structures from single to double precision. Improves geometry accuracy noticibly at zooms above 17 as well as coordinate snapping and any other geometric operations. Addes about a 2% performance pentalty for standard routes. Graph nodes now have 7 digits of precision.  [#2693](https://github.com/valhalla/valhalla/pull/2693)
+   * ADDED: Regular speed on shortcut edges is calculated with turn durations taken into account. Truck, motorcycle and motorscooter profiles use OSRM-like turn duration. [#2662](https://github.com/valhalla/valhalla/pull/2662)
+   * CHANGED: Remove astar algorithm and replace its use with timedep_forward as its redundant [#2706](https://github.com/valhalla/valhalla/pull/2706)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

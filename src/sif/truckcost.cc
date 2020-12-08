@@ -6,6 +6,7 @@
 #include "midgard/constants.h"
 #include "midgard/util.h"
 #include "proto_conversions.h"
+#include "sif/osrm_car_duration.h"
 #include <cassert>
 
 #ifdef INLINE_TEST
@@ -434,18 +435,17 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
 Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
                          const baldr::GraphTile* tile,
                          const uint32_t seconds) const {
-  auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
-
-  // Use the lower or truck speed (ir present) and speed
-  uint32_t s = (edge->truck_speed() > 0) ? std::min(edge->truck_speed(), speed) : speed;
-  assert(s < speedfactor_.size());
+  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, true);
+  auto s = std::min(edge_speed, top_speed_);
   float sec = edge->length() * speedfactor_[s];
 
   if (shortest_) {
     return Cost(edge->length(), sec);
   }
 
-  float factor = density_factor_[edge->density()];
+  // TODO: factor hasn't been extensively tested, might alter the speed penaltys in future
+  float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
+  float factor = density_factor_[edge->density()] + speed_penalty;
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;
   }
@@ -465,6 +465,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, pred, idx);
+  c.secs = OSRMCarTurnDuration(edge, node, idx);
 
   // Penalty to transition onto low class roads.
   if (edge->classification() == baldr::RoadClass::kResidential ||
@@ -499,7 +500,6 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
       seconds *= trans_density_factor_[node->density()];
 
     c.cost += shortest_ ? 0.f : seconds;
-    c.secs += seconds;
   }
   return c;
 }
@@ -515,6 +515,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
+  c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Penalty to transition onto low class roads.
   if (edge->classification() == baldr::RoadClass::kResidential ||
@@ -549,7 +550,6 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
       seconds *= trans_density_factor_[node->density()];
 
     c.cost += shortest_ ? 0.f : seconds;
-    c.secs += seconds;
   }
   return c;
 }
@@ -561,7 +561,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
 // assume the maximum speed is used to the destination such that the time
 // estimate is less than the least possible time along roads.
 float TruckCost::AStarCostFactor() const {
-  return speedfactor_[kMaxSpeedKph];
+  return speedfactor_[top_speed_];
 }
 
 // Returns the current travel type.
@@ -685,6 +685,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_length(kDefaultTruckLength);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
+    pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
   }
 }
 
