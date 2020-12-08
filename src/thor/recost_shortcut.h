@@ -59,10 +59,16 @@ inline std::vector<PathInfo> recost_shortcut_forward(GraphReader& graphreader,
   };
 
   const GraphTile* tile = nullptr;
-  const GraphId node_id = graphreader.edge_endnode(shortcut_id, tile);
-  if (!node_id)
+  const GraphId node_id = graphreader.edge_startnode(edges.front(), tile);
+  if (!node_id.Is_Valid()) {
+    LOG_ERROR("Failed to recost shortcut edge: node cannot be found");
     return {};
-  const auto* node = tile->node(node_id);
+  }
+  const auto* node = graphreader.nodeinfo(node_id, tile);
+  if (!node) {
+    LOG_ERROR("Failed to recost shortcut edge: node cannot be found");
+    return {};
+  }
 
   // calculate time when we enter shortcut edge considering 'invariant' option;
   // this time is a start time for recost function
