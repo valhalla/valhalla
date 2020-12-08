@@ -528,6 +528,15 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
+          case Sign::Type::kGuidanceViewSignboard: {
+            if (controller.attributes.at(kEdgeSignGuidanceViewSignboard)) {
+              auto* trip_sign_guidance_view_signboard =
+                  trip_sign->mutable_guidance_view_signboards()->Add();
+              trip_sign_guidance_view_signboard->set_text(sign.text());
+              trip_sign_guidance_view_signboard->set_is_route_number(sign.is_route_num());
+            }
+            break;
+          }
           default: { break; }
         }
       }
