@@ -68,6 +68,7 @@ const std::unordered_map<unsigned, std::string>
                 {164, "Invalid shape format"},
                 {165, "Date and time required for destination for date_type of invariant"},
                 {166, "Exceeded max distance"},
+                {167, "Too many metrics in one contour"},
 
                 {170, "Locations are in unconnected regions. Go check/edit the map at osm.org"},
                 {171, "No suitable edges near location"},

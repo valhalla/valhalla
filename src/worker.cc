@@ -541,8 +541,10 @@ void parse_contours(const rapidjson::Document& doc,
           rapidjson::get_optional<float>(json_contour, "/time").get_value_or(midgard::kNoIsoMetric);
       const float d = rapidjson::get_optional<float>(json_contour, "/distance")
                           .get_value_or(midgard::kNoIsoMetric);
-      if ((t == midgard::kNoIsoMetric && d == midgard::kNoIsoMetric)) {
+      if (t == midgard::kNoIsoMetric && d == midgard::kNoIsoMetric) {
         throw valhalla_exception_t{111};
+      } else if (t != midgard::kNoIsoMetric && d != midgard::kNoIsoMetric) {
+        throw valhalla_exception_t{167};
       }
 
       // Add new contour object to list

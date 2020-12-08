@@ -180,7 +180,7 @@ public:
         auto dmax = std::max(std::max(cell1, cell2), std::max(cell3, cell4));
 
         // Continue if outside the range of contour values
-        if (dmax < contour_intervals.front() || dmin > contour_intervals.back()) {
+        if (dmax < contour_intervals.back() || dmin > contour_intervals.front()) {
           continue;
         }
 

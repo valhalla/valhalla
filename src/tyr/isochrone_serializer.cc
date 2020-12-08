@@ -32,7 +32,12 @@ serializeIsochrones(const Api& request,
     auto& current_metric = metric_contours.first;
     auto& current_contours = metric_contours.second;
     auto current_colors = colors.at(metric_contours.first);
+    auto metric_json = current_metric == midgard::IsoMetrics::kDistance ? "distance" : "time";
     for (const auto& interval : current_contours) {
+      // Skip empty contours
+      if (interval.first == midgard::kNoIsoMetric) {
+        continue;
+      }
       auto color_itr = current_colors.find(interval.first);
       // color was supplied
       std::stringstream hex;
@@ -77,16 +82,14 @@ serializeIsochrones(const Api& request,
                              {"type", std::string(polygons ? "Polygon" : "LineString")},
                              {"coordinates", geom},
                          })},
-            {"properties",
-             map({{"contour", static_cast<uint64_t>(interval.first)},
-                  {"color", hex.str()},            // lines
-                  {"fill", hex.str()},             // geojson.io polys
-                  {"fillColor", hex.str()},        // leaflet polys
-                  {"opacity", fp_t{.33f, 2}},      // lines
-                  {"fill-opacity", fp_t{.33f, 2}}, // geojson.io polys
-                  {"fillOpacity", fp_t{.33f, 2}},  // leaflet polys
-                  {"metric",
-                   current_metric == midgard::IsoMetrics::kDistance ? "distance" : "time"}})},
+            {"properties", map({{"contour", static_cast<uint64_t>(interval.first)},
+                                {"color", hex.str()},            // lines
+                                {"fill", hex.str()},             // geojson.io polys
+                                {"fillColor", hex.str()},        // leaflet polys
+                                {"opacity", fp_t{.33f, 2}},      // lines
+                                {"fill-opacity", fp_t{.33f, 2}}, // geojson.io polys
+                                {"fillOpacity", fp_t{.33f, 2}},  // leaflet polys
+                                {"metric", std::string(metric_json)}})},
         }));
       }
     }

@@ -14,7 +14,6 @@ std::string thor_worker_t::isochrones(Api& request) {
   auto& options = *request.mutable_options();
 
   std::vector<float> contours_time, contours_distance;
-  // Colors will be duplicated, but times and distances might have the same value
   std::unordered_map<const IsoMetrics, std::unordered_map<float, std::string>> colors;
 
   for (const auto& contour : options.contours()) {
@@ -26,14 +25,7 @@ std::string thor_worker_t::isochrones(Api& request) {
   // sort the contour vectors in descending order
   std::sort(contours_time.begin(), contours_time.end(), std::greater<float>());
   std::sort(contours_distance.begin(), contours_distance.end(), std::greater<float>());
-  /*
-  for (float c : contours_time) {
-    printf("Contour time: %f\n", c);
-  }
-  for (float c : contours_distance) {
-    printf("Contour distance %f\n", c);
-  }
-  */
+
   // If generalize is not provided then an optimal factor is computed
   // (based on the isotile grid size).
   if (!options.has_generalize()) {
@@ -48,26 +40,29 @@ std::string thor_worker_t::isochrones(Api& request) {
   auto grid =
       (costing == "multimodal" || costing == "transit")
           ? isochrone_gen.ComputeMultiModal(*options.mutable_locations(),
-                                            contours_time.back() + 10.0f,
-                                            contours_distance.back() + 10.0f, *reader, mode_costing,
+                                            contours_time.front() + 10.0f,
+                                            contours_distance.front() + 10.0f, *reader, mode_costing,
                                             mode)
-          : isochrone_gen.Compute(*options.mutable_locations(), contours_time.back() + 10.0f,
-                                  contours_distance.back() + 10.0f, *reader, mode_costing, mode);
+          : isochrone_gen.Compute(*options.mutable_locations(), contours_time.front() + 10.0f,
+                                  contours_distance.front() + 10.0f, *reader, mode_costing, mode);
 
-  // hold isochrones and isodistances in one map
+  // hold isochrones and isodistances in one map if available
   std::map<const IsoMetrics, const tyr::contours_t> isolines;
-
-  // turn it into geojson
-  isolines.emplace(IsoMetrics::kTime,
-                   grid->GenerateContours(contours_time,
-                                          [](const time_distance_t& td) { return td.sec; },
-                                          options.polygons(), options.denoise(),
-                                          options.generalize()));
-  isolines.emplace(IsoMetrics::kDistance,
-                   grid->GenerateContours(contours_distance,
-                                          [](const time_distance_t& td) { return td.sec; },
-                                          options.polygons(), options.denoise(),
-                                          options.generalize()));
+  if (contours_time.front() != kNoIsoMetric) {
+    // turn it into geojson
+    isolines.emplace(IsoMetrics::kTime,
+                     grid->GenerateContours(contours_time,
+                                            [](const time_distance_t& td) { return td.sec; },
+                                            options.polygons(), options.denoise(),
+                                            options.generalize()));
+  }
+  if (contours_distance.front() != kNoIsoMetric) {
+    isolines.emplace(IsoMetrics::kDistance,
+                     grid->GenerateContours(contours_distance,
+                                            [](const time_distance_t& td) { return td.dist; },
+                                            options.polygons(), options.denoise(),
+                                            options.generalize()));
+  }
 
   return tyr::serializeIsochrones(request, isolines, options.polygons(), colors,
                                   options.show_locations());
