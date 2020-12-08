@@ -32,12 +32,8 @@ protected:
       // we dont get shortcuts on level 2 and up
       if (level.level > 1)
         continue;
-
       // for each tile
       for (auto tile_id : reader->GetTileSet(level.level)) {
-        // level 2 and up have no shortcuts
-        if (tile_id.level() > 1)
-          continue;
         // cull cache if we are over allocated
         if (reader->OverCommitted())
           reader->Trim();
@@ -72,7 +68,7 @@ protected:
           for (auto& id : opp_recovered) {
             id = reader->GetOpposingEdgeId(id, opp_tile);
             if (!id.Is_Valid()) {
-              opp_recovered = {id};
+              opp_recovered = {opp_id};
               break;
             }
           }
