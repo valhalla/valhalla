@@ -34,8 +34,6 @@ void check_shape(const google::protobuf::RepeatedPtrField<valhalla::Location>& s
     throw valhalla_exception_t{153, "(" + std::to_string(shape.size()) + "). The limit is " +
                                         std::to_string(max_shape)};
   };
-
-  valhalla::midgard::logging::Log("trace_size::" + std::to_string(shape.size()), " [ANALYTICS] ");
 }
 
 void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
@@ -67,10 +65,6 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
   if (!can_be_matched) {
     throw valhalla_exception_t{172, " " + std::to_string(max_breakage_distance) + " meters"};
   }
-
-  valhalla::midgard::logging::Log("location_distance::" +
-                                      std::to_string(crow_distance * kKmPerMeter) + "km",
-                                  " [ANALYTICS] ");
 }
 
 void check_best_paths(unsigned int best_paths, unsigned int max_best_paths) {
@@ -105,18 +99,12 @@ void check_gps_accuracy(const float input_gps_accuracy, const float max_gps_accu
   if (input_gps_accuracy > max_gps_accuracy || input_gps_accuracy < 0.f) {
     throw valhalla_exception_t{158};
   }
-
-  valhalla::midgard::logging::Log("gps_accuracy::" + std::to_string(input_gps_accuracy) + "meters",
-                                  " [ANALYTICS] ");
 }
 
 void check_search_radius(const float input_search_radius, const float max_search_radius) {
   if (input_search_radius > max_search_radius || input_search_radius < 0.f) {
     throw valhalla_exception_t{158};
   }
-
-  valhalla::midgard::logging::Log("search_radius::" + std::to_string(input_search_radius) + "meters",
-                                  " [ANALYTICS] ");
 }
 
 void check_turn_penalty_factor(const float input_turn_penalty_factor) {
@@ -173,6 +161,14 @@ void loki_worker_t::init_trace(Api& request) {
 }
 
 void loki_worker_t::trace(Api& request) {
+  // time this whole method and save that statistic
+  midgard::scoped_timer<> t([&request](const midgard::scoped_timer<>::duration_t& elapsed) {
+    auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
+    auto* stat = request.mutable_info()->mutable_statistics()->Add();
+    stat->set_name("loki_worker_t::trace");
+    stat->set_value(e);
+  });
+
   init_trace(request);
   if (request.options().costing() == Costing::multimodal) {
     throw valhalla_exception_t{140, Options_Action_Enum_Name(request.options().action())};

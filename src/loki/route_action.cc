@@ -5,6 +5,7 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -34,10 +35,6 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
     }
     total_path_distance += path_distance;
   }
-  valhalla::midgard::logging::Log("total_location_distance::" +
-                                      std::to_string(total_path_distance * midgard::kKmPerMeter) +
-                                      "km",
-                                  " [ANALYTICS] ");
 }
 
 } // namespace
@@ -56,6 +53,14 @@ void loki_worker_t::init_route(Api& request) {
 }
 
 void loki_worker_t::route(Api& request) {
+  // time this whole method and save that statistic
+  midgard::scoped_timer<> t([&request](const midgard::scoped_timer<>::duration_t& elapsed) {
+    auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
+    auto* stat = request.mutable_info()->mutable_statistics()->Add();
+    stat->set_name("loki_worker_t::route");
+    stat->set_value(e);
+  });
+
   init_route(request);
   auto& options = *request.mutable_options();
   const auto& costing_name = Costing_Enum_Name(options.costing());

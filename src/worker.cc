@@ -517,10 +517,6 @@ void parse_locations(const rapidjson::Document& doc,
       locations->Mutable(0)->set_type(valhalla::Location::kBreak);
       locations->Mutable(locations->size() - 1)->set_type(valhalla::Location::kBreak);
     }
-    if (track) {
-      midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()),
-                            " [ANALYTICS] ");
-    }
 
     // push the date time information down into the locations
     if (!had_date_time) {
@@ -1087,11 +1083,6 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
   if (!request.path.empty() && Options_Action_Enum_Parse(request.path.substr(1), &action)) {
     options.set_action(action);
   }
-
-  // disable analytics
-  auto do_not_track = request.headers.find("DNT");
-  options.set_do_not_track(options.do_not_track() ||
-                           (do_not_track != request.headers.cend() && do_not_track->second == "1"));
 
   // parse out the options
   from_json(document, options);

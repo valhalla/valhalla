@@ -11,6 +11,7 @@
 #include "baldr/json.h"
 #include "midgard/logging.h"
 
+#include "midgard/util.h"
 #include "odin/directionsbuilder.h"
 #include "odin/util.h"
 #include "odin/worker.h"
@@ -36,6 +37,14 @@ void odin_worker_t::cleanup() {
 }
 
 void odin_worker_t::narrate(Api& request) const {
+  // time this whole method and save that statistic
+  midgard::scoped_timer<> t([&request](const midgard::scoped_timer<>::duration_t& elapsed) {
+    auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
+    auto* stat = request.mutable_info()->mutable_statistics()->Add();
+    stat->set_name("odin_worker_t::narrate");
+    stat->set_value(e);
+  });
+
   // get some annotated directions
   try {
     odin::DirectionsBuilder().Build(request);

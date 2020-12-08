@@ -1,5 +1,5 @@
+#include "midgard/util.h"
 #include "thor/worker.h"
-
 #include "tyr/serializers.h"
 
 using namespace valhalla::baldr;
@@ -9,6 +9,14 @@ namespace valhalla {
 namespace thor {
 
 std::string thor_worker_t::isochrones(Api& request) {
+  // time this whole method and save that statistic
+  midgard::scoped_timer<> t([&request](const midgard::scoped_timer<>::duration_t& elapsed) {
+    auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
+    auto* stat = request.mutable_info()->mutable_statistics()->Add();
+    stat->set_name("thor_worker_t::isochrones");
+    stat->set_value(e);
+  });
+
   parse_locations(request);
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();

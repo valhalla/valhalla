@@ -1,12 +1,12 @@
-#include "thor/worker.h"
-
 #include "midgard/constants.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
 #include "thor/costmatrix.h"
 #include "thor/optimizer.h"
+#include "thor/worker.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -18,14 +18,18 @@ namespace valhalla {
 namespace thor {
 
 void thor_worker_t::optimized_route(Api& request) {
+  // time this whole method and save that statistic
+  midgard::scoped_timer<> t([&request](const midgard::scoped_timer<>::duration_t& elapsed) {
+    auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
+    auto* stat = request.mutable_info()->mutable_statistics()->Add();
+    stat->set_name("thor_worker_t::optimized_route");
+    stat->set_value(e);
+  });
+
   parse_locations(request);
   parse_filter_attributes(request);
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
-
-  if (!options.do_not_track()) {
-    valhalla::midgard::logging::Log("matrix_type::optimized_route", " [ANALYTICS] ");
-  }
 
   // Use CostMatrix to find costs from each location to every other location
   CostMatrix costmatrix;

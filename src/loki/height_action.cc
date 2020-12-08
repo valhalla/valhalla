@@ -79,12 +79,17 @@ std::vector<PointLL> loki_worker_t::init_height(Api& request) {
 }
 */
 std::string loki_worker_t::height(Api& request) {
+  // time this whole method and save that statistic
+  midgard::scoped_timer<> t([&request](const midgard::scoped_timer<>::duration_t& elapsed) {
+    auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
+    auto* stat = request.mutable_info()->mutable_statistics()->Add();
+    stat->set_name("loki_worker_t::height");
+    stat->set_value(e);
+  });
+
   auto shape = init_height(request);
   // get the elevation of each posting
   std::vector<double> heights = sample.get_all(shape);
-  if (!request.options().do_not_track()) {
-    valhalla::midgard::logging::Log("sample_count::" + std::to_string(shape.size()), " [ANALYTICS] ");
-  }
 
   // get the distances between the postings if desired
   std::vector<double> ranges;
