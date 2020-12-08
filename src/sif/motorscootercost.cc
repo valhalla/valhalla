@@ -7,6 +7,7 @@
 #include "midgard/util.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
+#include "sif/osrm_car_duration.h"
 #include <cassert>
 
 #ifdef INLINE_TEST
@@ -287,7 +288,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const override {
-    return speedfactor_[kMaxAssumedSpeed];
+    return speedfactor_[top_speed_];
   }
 
   /**
@@ -326,10 +327,7 @@ public:
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
-
-  uint32_t top_speed_; // Top speed the motorized scooter can go. Used to avoid roads
-                       // with higher speeds than it
-  float road_factor_;  // Road factor based on use_primary
+  float road_factor_; // Road factor based on use_primary
 
   // Elevation/grade penalty (weighting applied based on the edge's weighted
   // grade (relative value from 0-15)
@@ -355,9 +353,6 @@ MotorScooterCost::MotorScooterCost(const CostingOptions& costing_options)
   for (uint32_t d = 0; d < 16; d++) {
     density_factor_[d] = 0.85f + (d * 0.018f);
   }
-
-  // Set top speed for motor scooter
-  top_speed_ = costing_options.top_speed();
 
   // Set grade penalties based on use_hills option.
   // Scale from 0 (avoid hills) to 1 (don't avoid hills)
@@ -462,6 +457,7 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, pred, idx);
+  c.secs = OSRMCarTurnDuration(edge, node, idx);
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -490,7 +486,6 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
       seconds *= trans_density_factor_[node->density()];
 
     c.cost += shortest_ ? 0.f : seconds;
-    c.secs += seconds;
   }
   return c;
 }
@@ -506,6 +501,7 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
+  c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -534,7 +530,6 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
       seconds *= trans_density_factor_[node->density()];
 
     c.cost += shortest_ ? 0.f : seconds;
-    c.secs += seconds;
   }
   return c;
 }
@@ -597,7 +592,7 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
         kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
                            .get_value_or(kDefaultUseFerry)));
 
-    // top_speed
+    // top_speed; override defaults
     pbf_costing_options->set_top_speed(
         kTopSpeedRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/top_speed")
                            .get_value_or(kDefaultTopSpeed)));
@@ -655,6 +650,7 @@ public:
   using MotorScooterCost::ferry_transition_cost_;
   using MotorScooterCost::gate_cost_;
   using MotorScooterCost::maneuver_penalty_;
+  using MotorScooterCost::top_speed_;
 };
 
 TestMotorScooterCost* make_motorscootercost_from_json(const std::string& property, float testVal) {

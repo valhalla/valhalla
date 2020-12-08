@@ -923,7 +923,9 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
  * @param options     the api request options
  * @param src_pct     percent along the first edge of the path the start location snapped
  * @param tgt_pct     percent along the last edge of the path the end location snapped
- * @param date_time   date_time at the start of the leg or empty string if none
+ * @param time_info   the time tracking information representing the local time before
+ *                    traversing the first edge
+ * @param invariant   static date_time, dont offset the time as the path lengthens
  * @param reader      graph reader for tile access
  * @param leg         the already constructed trip leg to which extra cost information is added
  */
@@ -932,6 +934,7 @@ void AccumulateRecostingInfoForward(const valhalla::Options& options,
                                     float src_pct,
                                     float tgt_pct,
                                     const baldr::TimeInfo& time_info,
+                                    const bool invariant,
                                     valhalla::baldr::GraphReader& reader,
                                     valhalla::TripLeg& leg) {
   // bail if this is empty for some reason
@@ -1032,7 +1035,11 @@ void TripLegBuilder::Build(
   // Keep track of the time
   auto date_time = origin.has_date_time() ? origin.date_time() : "";
   baldr::DateTime::tz_sys_info_cache_t tz_cache;
-  const auto time_info = baldr::TimeInfo::make(origin, graphreader, &tz_cache);
+  const auto forward_time_info = baldr::TimeInfo::make(origin, graphreader, &tz_cache);
+
+  // check if we should use static time or offset time as the path lengthens
+  const bool invariant =
+      options.has_date_time_type() && options.date_time_type() == Options::invariant;
 
   // Create an array of travel types per mode
   uint8_t travel_types[4];
@@ -1108,6 +1115,9 @@ void TripLegBuilder::Build(
   size_t edge_index = 0;
   const DirectedEdge* prev_de = nullptr;
   const GraphTile* graphtile = nullptr;
+  TimeInfo time_info = forward_time_info;
+  // remember that MultimodalBuilder keeps 'time_info' as reference,
+  // so we should care about 'time_info' updates during iterations
   MultimodalBuilder multimodal_builder(origin, time_info);
 
   for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {
@@ -1127,13 +1137,14 @@ void TripLegBuilder::Build(
       osmchangeset = start_tile->header()->dataset_id();
     }
 
+    const bool is_first_edge = edge_itr == path_begin;
+    const bool is_last_edge = edge_itr == (path_end - 1);
+
     // have to always compute the offset in case the timezone changes along the path
     // we could cache the timezone and just add seconds when the timezone doesnt change
-    const auto offset_time =
-        time_info.forward(trip_path.node_size() == 0
-                              ? 0.0
-                              : trip_path.node().rbegin()->cost().elapsed_cost().seconds(),
-                          static_cast<int>(node->timezone()));
+    const float seconds_offset =
+        (is_first_edge || invariant) ? 0.f : std::prev(edge_itr)->elapsed_cost.secs;
+    time_info = forward_time_info.forward(seconds_offset, static_cast<int>(node->timezone()));
 
     // Add a node to the trip path and set its attributes.
     TripLeg_Node* trip_node = trip_path.add_node();
@@ -1192,8 +1203,6 @@ void TripLegBuilder::Build(
                     start_tile, edge_itr->restriction_index);
 
     // some information regarding shape/length trimming
-    auto is_first_edge = edge_itr == path_begin;
-    auto is_last_edge = edge_itr == (path_end - 1);
     float trim_start_pct = is_first_edge ? start_pct : 0;
     float trim_end_pct = is_last_edge ? end_pct : 1;
 
@@ -1382,7 +1391,8 @@ void TripLegBuilder::Build(
   }
 
   // Add that extra costing information if requested
-  AccumulateRecostingInfoForward(options, start_pct, end_pct, time_info, graphreader, trip_path);
+  AccumulateRecostingInfoForward(options, start_pct, end_pct, forward_time_info, invariant,
+                                 graphreader, trip_path);
 }
 
 } // namespace thor

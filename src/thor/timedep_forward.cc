@@ -1,9 +1,9 @@
 #include "baldr/datetime.h"
+#include "baldr/graphconstants.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "thor/timedep.h"
 #include <algorithm>
-#include <map>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -17,7 +17,9 @@ constexpr uint64_t kInitialEdgeLabelCount = 500000;
 constexpr uint32_t kMaxIterationsWithoutConvergence = 800000;
 
 // Default constructor
-TimeDepForward::TimeDepForward() : AStarPathAlgorithm() {
+TimeDepForward::TimeDepForward()
+    : PathAlgorithm(), mode_(TravelMode::kDrive), travel_type_(0), adjacencylist_(nullptr),
+      max_label_count_(std::numeric_limits<uint32_t>::max()) {
   mode_ = TravelMode::kDrive;
   travel_type_ = 0;
   adjacencylist_ = nullptr;
@@ -27,6 +29,19 @@ TimeDepForward::TimeDepForward() : AStarPathAlgorithm() {
 // Destructor
 TimeDepForward::~TimeDepForward() {
   Clear();
+}
+
+// Clear the temporary information generated during path construction.
+void TimeDepForward::Clear() {
+  // Clear the edge labels and destination list. Reset the adjacency list
+  // and clear edge status.
+  edgelabels_.clear();
+  destinations_percent_along_.clear();
+  adjacencylist_.reset();
+  edgestatus_.clear();
+
+  // Set the ferry flag to false
+  has_ferry_ = false;
 }
 
 // Expand from the node along the forward search path. Immediately expands
@@ -48,15 +63,20 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
     return false;
   }
   const NodeInfo* nodeinfo = tile->node(node);
-  if (!costing_->Allowed(nodeinfo)) {
-    return false;
-  }
 
   // Update the time information
   auto offset_time =
       from_transition ? time_info
                       : time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
-  // std::cout << pred.edgeid() << " " << offset_time << std::endl;
+
+  if (!costing_->Allowed(nodeinfo)) {
+    const DirectedEdge* opp_edge;
+    const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
+    EdgeStatusInfo* opp_status = edgestatus_.GetPtr(opp_edge_id, tile);
+    return ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx,
+                              {opp_edge, opp_edge_id, opp_status}, tile, offset_time, destination,
+                              best_path);
+  }
 
   // Expand from start node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
@@ -232,17 +252,11 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
                             GraphReader& graphreader,
                             const sif::mode_costing_t& mode_costing,
                             const TravelMode mode,
-                            const Options& options) {
+                            const Options& /*options*/) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   travel_type_ = costing_->travel_type();
-
-  // date_time must be set on the origin. Log an error but allow routes for now.
-  if (!origin.has_date_time()) {
-    LOG_ERROR("TimeDepForward called without time set on the origin location");
-    // return {};
-  }
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   // Note: because we can correlate to more than one place for a given PathLocation
@@ -344,6 +358,238 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
                   best_path);
   }
   return {}; // Should never get here
+}
+
+// Initialize prior to finding best path
+void TimeDepForward::Init(const midgard::PointLL& origll, const midgard::PointLL& destll) {
+  LOG_TRACE("Orig LL = " + std::to_string(origll.lat()) + "," + std::to_string(origll.lng()));
+  LOG_TRACE("Dest LL = " + std::to_string(destll.lat()) + "," + std::to_string(destll.lng()));
+
+  // Set the destination and cost factor in the A* heuristic
+  astarheuristic_.Init(destll, costing_->AStarCostFactor());
+
+  // Get the initial cost based on A* heuristic from origin
+  float mincost = astarheuristic_.Get(origll);
+
+  // Reserve size for edge labels - do this here rather than in constructor so
+  // to limit how much extra memory is used for persistent objects.
+  // TODO - reserve based on estimate based on distance and route type.
+  edgelabels_.reserve(kInitialEdgeLabelCount);
+
+  // Set up lambda to get sort costs
+  const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
+
+  // Construct adjacency list, clear edge status.
+  // Set bucket size and cost range based on DynamicCost.
+  uint32_t bucketsize = costing_->UnitSize();
+  float range = kBucketCount * bucketsize;
+  adjacencylist_.reset(new DoubleBucketQueue(mincost, range, bucketsize, edgecost));
+  edgestatus_.clear();
+
+  // Get hierarchy limits from the costing. Get a copy since we increment
+  // transition counts (i.e., this is not a const reference).
+  hierarchy_limits_ = costing_->GetHierarchyLimits();
+}
+
+// Modulate the hierarchy expansion within distance based on density at
+// the destination (increase distance for lower densities and decrease
+// for higher densities) and the distance between origin and destination
+// (increase for shorter distances).
+void TimeDepForward::ModifyHierarchyLimits(const float dist, const uint32_t /*density*/) {
+  // TODO - default distance below which we increase expansion within
+  // distance. This is somewhat temporary to address route quality on shorter
+  // routes - hopefully we will mark the data somehow to indicate how to
+  // use the hierarchy when approaching the destination (or use a
+  // bi-directional search without hierarchies for shorter routes).
+  float factor = 1.0f;
+  if (25000.0f < dist && dist < 100000.0f) {
+    factor = std::min(3.0f, 100000.0f / dist);
+  }
+  /* TODO - need a reliable density factor near the destination (e.g. tile level?)
+  // Low density - increase expansion within distance.
+  // High density - decrease expansion within distance.
+  if (density < 8) {
+    float f = 1.0f + (8.0f - density) * 0.125f;
+    factor *= f;
+  } else if (density > 8) {
+    float f = 0.5f + (15.0f - density) * 0.0625;
+    factor *= f;
+  }*/
+  // TODO - just arterial for now...investigate whether to alter local as well
+  hierarchy_limits_[1].expansion_within_dist *= factor;
+}
+
+// Add an edge at the origin to the adjacency list
+void TimeDepForward::SetOrigin(GraphReader& graphreader,
+                               const valhalla::Location& origin,
+                               const valhalla::Location& destination,
+                               const uint32_t seconds_of_week) {
+  // Only skip inbound edges if we have other options
+  bool has_other_edges = false;
+  std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
+                [&has_other_edges](const valhalla::Location::PathEdge& e) {
+                  has_other_edges = has_other_edges || !e.end_node();
+                });
+
+  // Check if the origin edge matches a destination edge at the node.
+  auto trivial_at_node = [this, &destination](const valhalla::Location::PathEdge& edge) {
+    auto p = destinations_percent_along_.find(edge.graph_id());
+    if (p != destinations_percent_along_.end()) {
+      for (const auto& destination_edge : destination.path_edges()) {
+        if (destination_edge.graph_id() == edge.graph_id()) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  // Iterate through edges and add to adjacency list
+  for (const auto& edge : origin.path_edges()) {
+    // If origin is at a node - skip any inbound edge (dist = 1) unless the
+    // destination is also at the same end node (trivial path).
+    if (has_other_edges && edge.end_node() && !trivial_at_node(edge)) {
+      continue;
+    }
+
+    // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
+    GraphId edgeid(edge.graph_id());
+    if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
+      continue;
+    }
+
+    // Get the directed edge
+    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    const DirectedEdge* directededge = tile->directededge(edgeid);
+
+    // Get the tile at the end node. Skip if tile not found as we won't be
+    // able to expand from this origin edge.
+    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    if (endtile == nullptr) {
+      continue;
+    }
+
+    // Get cost
+    Cost cost =
+        costing_->EdgeCost(directededge, tile, seconds_of_week) * (1.0f - edge.percent_along());
+    float dist = astarheuristic_.GetDistance(endtile->get_node_ll(directededge->endnode()));
+
+    // We need to penalize this location based on its score (distance in meters from input)
+    // We assume the slowest speed you could travel to cover that distance to start/end the route
+    // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
+    // Perhaps need to adjust score?
+    cost.cost += edge.distance();
+
+    // If this edge is a destination, subtract the partial/remainder cost
+    // (cost from the dest. location to the end of the edge) if the
+    // destination is in a forward direction along the edge. Add back in
+    // the edge score/penalty to account for destination edges farther from
+    // the input location lat,lon.
+    auto settled_dest_edge = destinations_percent_along_.find(edgeid);
+    if (settled_dest_edge != destinations_percent_along_.end()) {
+      if (IsTrivial(edgeid, origin, destination)) {
+        // Find the destination edge and update cost.
+        for (const auto& dest_path_edge : destination.path_edges()) {
+          if (dest_path_edge.graph_id() == edgeid) {
+            // a trivial route passes along a single edge, meaning that the
+            // destination point must be on this edge, and so the distance
+            // remaining must be zero.
+            GraphId id(dest_path_edge.graph_id());
+            const DirectedEdge* dest_edge = tile->directededge(id);
+            Cost remainder_cost = costing_->EdgeCost(dest_edge, tile, seconds_of_week) *
+                                  (1.0f - dest_path_edge.percent_along());
+            // Remove the cost of the final "unused" part of the destination edge
+            cost -= remainder_cost;
+            // Add back in the edge score/penalty to account for destination edges
+            // farther from the input location lat,lon.
+            cost.cost += dest_path_edge.distance();
+            cost.cost = std::max(0.0f, cost.cost);
+            dist = 0.0;
+            break;
+          }
+        }
+      }
+    }
+
+    // Compute sortcost
+    float sortcost = cost.cost + astarheuristic_.Get(dist);
+
+    // Add EdgeLabel to the adjacency list (but do not set its status).
+    // Set the predecessor edge index to invalid to indicate the origin
+    // of the path.
+    uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
+    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, Cost{});
+    // Set the origin flag
+    edge_label.set_origin();
+
+    // Add EdgeLabel to the adjacency list
+    uint32_t idx = edgelabels_.size();
+    edgelabels_.push_back(edge_label);
+    adjacencylist_->add(idx);
+
+    // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
+  }
+}
+
+// Add a destination edge
+uint32_t TimeDepForward::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
+  // Only skip outbound edges if we have other options
+  bool has_other_edges = false;
+  std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
+                [&has_other_edges](const valhalla::Location::PathEdge& e) {
+                  has_other_edges = has_other_edges || !e.begin_node();
+                });
+
+  // For each edge
+  uint32_t density = 0;
+  for (const auto& edge : dest.path_edges()) {
+    // If destination is at a node skip any outbound edges
+    if (has_other_edges && edge.begin_node()) {
+      continue;
+    }
+
+    // Disallow any user avoided edges if the avoid location is behind the destination along the edge
+    GraphId edgeid(edge.graph_id());
+    if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
+      continue;
+    }
+
+    // Keep the cost to traverse the partial distance for the remainder of the edge. This cost
+    // is subtracted from the total cost up to the end of the destination edge.
+    destinations_percent_along_[edge.graph_id()] = edge.percent_along();
+
+    // Edge score (penalty) is handled within GetPath. Do not add score here.
+
+    // Get the tile relative density
+    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    density = tile->header()->density();
+  }
+  return density;
+}
+
+// Form the path from the adjacency list.
+std::vector<PathInfo> TimeDepForward::FormPath(const uint32_t dest) {
+  // Metrics to track
+  LOG_DEBUG("path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
+  LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_.size()));
+
+  // Work backwards from the destination
+  std::vector<PathInfo> path;
+  for (auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
+       edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
+    const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
+    path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), 0,
+                      edgelabel.restriction_idx(), edgelabel.transition_cost());
+
+    // Check if this is a ferry
+    if (edgelabel.use() == Use::kFerry) {
+      has_ferry_ = true;
+    }
+  }
+
+  // Reverse the list and return
+  std::reverse(path.begin(), path.end());
+  return path;
 }
 
 } // namespace thor

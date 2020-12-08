@@ -34,7 +34,7 @@ void recost_forward(baldr::GraphReader& reader,
                     const LabelCallback& label_cb,
                     float source_pct = 0.f,
                     float target_pct = 1.f,
-                    const baldr::TimeInfo& time_info = baldr::TimeInfo::empty(),
+                    const baldr::TimeInfo& time_info = baldr::TimeInfo::invalid(),
                     const bool invariant = false);
 } // namespace sif
 } // namespace valhalla

@@ -458,13 +458,14 @@ public:
   /**
    * Convenience method to get an opposing directed edge.
    * @param  edgeid  Graph Id of the directed edge.
-   * @param  tile    Reference to a pointer to a const tile.
+   * @param  opp_tile  Reference to a pointer to a const tile where the opposing edge should be. If
+   * not we modify it to be the right tile.
    * @return  Returns the graph Id of the opposing directed edge. An
    *          invalid graph Id is returned if the opposing edge does not
    *          exist (can occur with a regional extract where adjacent tile
    *          is missing).
    */
-  GraphId GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& tile);
+  GraphId GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& opp_tile);
 
   /**
    * Helper method to get an opposing directed edge with it's id.

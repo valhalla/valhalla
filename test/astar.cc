@@ -24,7 +24,6 @@
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 #include "sif/pedestriancost.h"
-#include "thor/astar.h"
 #include "thor/attributes_controller.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/pathalgorithm.h"
@@ -396,7 +395,7 @@ TEST(Astar, TestTrivialPathTriangle) {
   // TODO This fails with graphindex out of bounds for Reverse direction, is this
   // related to why we short-circuit trivial routes to AStarPathAlgorithm in route_action.cc?
   //
-  vt::AStarPathAlgorithm astar;
+  vt::TimeDepForward astar;
   // this should go along the path from E to F
   assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 4231,
                          vs::TravelMode::kPedestrian);

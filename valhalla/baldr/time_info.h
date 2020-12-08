@@ -45,7 +45,7 @@ struct TimeInfo {
    * Create TimeInfo object with default parameters.
    * @return    TimeInfo structure
    */
-  static TimeInfo empty() {
+  static TimeInfo invalid() {
     return {false, 0, 0, kConstrainedFlowSecondOfDay, 0, false, nullptr};
   }
 
@@ -70,7 +70,7 @@ struct TimeInfo {
        int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC")) {
     // No time to to track
     if (!location.has_date_time())
-      return TimeInfo::empty();
+      return TimeInfo::invalid();
 
     // Find the first edge whose end node has a valid timezone index and keep it
     int timezone_index = 0;
@@ -108,7 +108,7 @@ struct TimeInfo {
        int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC")) {
     // No time to to track
     if (date_time.empty())
-      return TimeInfo::empty();
+      return TimeInfo::invalid();
 
     // Set the origin timezone to be the timezone at the end node use this for timezone changes
     if (timezone_index == 0) {

@@ -50,7 +50,7 @@ bool side_filter(const PathLocation::PathEdge& edge, const Location& location, G
     return false;
 
   // need the driving side for this edge
-  const GraphTile* tile;
+  const GraphTile* tile = nullptr;
   auto* opp = reader.GetOpposingEdge(edge.id, tile);
   if (!opp)
     return false;
@@ -315,7 +315,7 @@ struct bin_handler_t {
 
         // do we want the evil twin
         const DirectedEdge* other_edge = nullptr;
-        const GraphTile* other_tile;
+        const GraphTile* other_tile = nullptr;
         const auto other_id = reader.GetOpposingEdgeId(id, other_edge, other_tile);
         if (!other_edge)
           continue;
@@ -403,7 +403,7 @@ struct bin_handler_t {
       }
       // correlate its evil twin
       const DirectedEdge* other_edge = nullptr;
-      const GraphTile* other_tile;
+      const GraphTile* other_tile = nullptr;
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_edge, other_tile);
 
       if (other_edge && costing->Filter(other_edge, other_tile) != 0.0f) {
@@ -706,7 +706,7 @@ struct bin_handler_t {
                         pp.location.node_snap_tolerance_;
         // it was the begin node
         if ((front && candidate.edge->forward()) || (back && !candidate.edge->forward())) {
-          const GraphTile* other_tile;
+          const GraphTile* other_tile = nullptr;
           auto opposing_edge = reader.GetOpposingEdge(candidate.edge_id, other_tile);
           if (!other_tile) {
             continue; // TODO: do an edge snap instead, but you'll only get one direction
