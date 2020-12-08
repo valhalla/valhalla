@@ -226,4 +226,20 @@ bool DirectionsType_Enum_Parse(const std::string& dtype, DirectionsType* t);
 bool PreferredSide_Enum_Parse(const std::string& pside, valhalla::Location::PreferredSide* p);
 bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc);
 
+const std::unordered_map<int, std::string>
+    guidanceview_type_string{{static_cast<int>(DirectionsLeg_GuidanceView_Type_kJunction), "jct"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kSapa), "sapa"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kTollbranch),
+                              "tollbranch"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kAftertoll),
+                              "aftertoll"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kEnt), "ent"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kExit), "exit"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kCityreal),
+                              "cityreal"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kDirectionboard),
+                              "directionboard"},
+                             {static_cast<int>(DirectionsLeg_GuidanceView_Type_kSignboard),
+                              "signboard"}};
+
 } // namespace valhalla
