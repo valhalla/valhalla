@@ -1749,8 +1749,7 @@ void enhance(const boost::property_tree::ptree& pt,
         // opposing edge index
         if (infer_internal_intersections &&
             IsIntersectionInternal(&tilebuilder, reader, lock, nodeinfo, directededge, j)) {
-          if (directededge.use() != Use::kRamp && directededge.use() != Use::kTurnChannel)
-            directededge.set_internal(true);
+          directededge.set_internal(true);
         }
 
         if (directededge.internal()) {
