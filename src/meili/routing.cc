@@ -13,12 +13,12 @@
 #include "meili/routing.h"
 
 namespace valhalla {
-
 namespace meili {
 
-LabelSet::LabelSet(const float max_cost, const float bucket_size) {
-  const auto edgecost = [this](const uint32_t label) { return labels_[label].sortcost(); };
-  queue_.reset(new baldr::DoubleBucketQueue(0.0f, max_cost, bucket_size, edgecost));
+LabelSet::LabelSet(const float max_cost, const float bucket_size)
+    : queue_(0.0f, max_cost, bucket_size, [this](const uint32_t label) {
+        return labels_[label].sortcost();
+      }) {
 }
 
 void LabelSet::put(const baldr::GraphId& nodeid,
@@ -43,7 +43,7 @@ void LabelSet::put(const baldr::GraphId& nodeid,
     const uint32_t idx = labels_.size();
     labels_.emplace_back(nodeid, kInvalidDestination, edgeid, source, target, cost, turn_cost,
                          sortcost, predecessor, edge, mode, restriction_idx);
-    queue_->add(idx);
+    queue_.add(idx);
     node_status_.emplace(nodeid, idx);
   } else {
     // Node has been found. Check if there is a lower sortcost than the
@@ -52,7 +52,7 @@ void LabelSet::put(const baldr::GraphId& nodeid,
     if (!status.permanent && sortcost < labels_[status.label_idx].sortcost()) {
       // Update queue first since it uses the label cost within the decrease
       // method to determine the current bucket.
-      queue_->decrease(status.label_idx, sortcost);
+      queue_.decrease(status.label_idx, sortcost);
       labels_[status.label_idx] = {nodeid, kInvalidDestination, edgeid,   source,      target,
                                    cost,   turn_cost,           sortcost, predecessor, edge,
                                    mode,   restriction_idx};
@@ -83,7 +83,7 @@ void LabelSet::put(const uint16_t dest,
     const uint32_t idx = labels_.size();
     labels_.emplace_back(inv, dest, edgeid, source, target, cost, turn_cost, sortcost, predecessor,
                          edge, travelmode, restriction_idx);
-    queue_->add(idx);
+    queue_.add(idx);
     dest_status_.emplace(dest, idx);
   } else {
     // Decrease cost of the existing label
@@ -91,7 +91,7 @@ void LabelSet::put(const uint16_t dest,
     if (!status.permanent && sortcost < labels_[status.label_idx].sortcost()) {
       // Update queue first since it uses the label cost within the decrease
       // method to determine the current bucket.
-      queue_->decrease(status.label_idx, sortcost);
+      queue_.decrease(status.label_idx, sortcost);
       labels_[status.label_idx] = {inv,         dest, edgeid,     source,
                                    target,      cost, turn_cost,  sortcost,
                                    predecessor, edge, travelmode, restriction_idx};
@@ -102,7 +102,7 @@ void LabelSet::put(const uint16_t dest,
 // Get the next label from the priority queue. Marks the popped label
 // as permanent (best path found).
 uint32_t LabelSet::pop() {
-  const auto idx = queue_->pop();
+  const auto idx = queue_.pop();
 
   // Mark the popped label as permanent (optimal)
   if (idx != baldr::kInvalidLabel) {

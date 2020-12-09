@@ -69,35 +69,13 @@ void CostMatrix::Clear() {
   targets_->clear();
 
   // Clear all source adjacency lists, edge labels, and edge status
-  for (auto& adj : source_adjacency_) {
-    adj.reset();
-  }
   source_adjacency_.clear();
-
-  for (auto& el : source_edgelabel_) {
-    el.clear();
-  }
   source_edgelabel_.clear();
-
-  for (auto& es : source_edgestatus_) {
-    es.clear();
-  }
   source_edgestatus_.clear();
 
   // Clear all target adjacency lists, edge labels, and edge status
-  for (auto& adj : target_adjacency_) {
-    adj.reset();
-  }
   target_adjacency_.clear();
-
-  for (auto& el : target_edgelabel_) {
-    el.clear();
-  }
   target_edgelabel_.clear();
-
-  for (auto& es : target_edgestatus_) {
-    es.clear();
-  }
   target_edgestatus_.clear();
 
   source_hierarchy_limits_.clear();

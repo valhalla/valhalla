@@ -27,9 +27,8 @@ struct EdgeStatusInfo {
   EdgeStatusInfo() : index_(0), set_(0) {
   }
 
-  EdgeStatusInfo(const EdgeSet set, const uint32_t index) {
-    set_ = static_cast<uint32_t>(set);
-    index_ = index;
+  EdgeStatusInfo(const EdgeSet set, const uint32_t index)
+      : index_(index), set_(static_cast<uint32_t>(set)) {
   }
 
   uint32_t index() const {

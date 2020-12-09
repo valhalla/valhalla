@@ -26,7 +26,7 @@ void TryAddRemove(const std::vector<uint32_t>& costs, const std::vector<uint32_t
   for (auto cost : costs) {
     edgelabels.emplace_back(cost);
     adjlist.add(i);
-    i++;
+    ++i;
   }
   for (auto expected : expectedorder) {
     // Do the same transform that's done in `edgecost()`

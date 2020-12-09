@@ -57,7 +57,7 @@ void TimeDistanceMatrix::Clear() {
   dest_edges_.clear();
 
   // Clear elements from the adjacency list
-  adjacencylist_.reset();
+  adjacencylist_.clear();
 
   // Clear the edge status flags
   edgestatus_.clear();
@@ -112,7 +112,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
       EdgeLabel& lab = edgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(es->index(), newsortcost);
+        adjacencylist_.decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, restriction_idx);
       }
       continue;
@@ -123,7 +123,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                              distance, transition_cost, restriction_idx);
     *es = {EdgeSet::kTemporary, idx};
-    adjacencylist_->add(idx);
+    adjacencylist_.add(idx);
   }
 
   // Handle transitions - expand from the end node each transition
@@ -156,7 +156,7 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
   uint32_t bucketsize = costing_->UnitSize();
   // Set up lambda to get sort costs
   const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
-  adjacencylist_.reset(new DoubleBucketQueue(0.0f, current_cost_threshold_, bucketsize, edgecost));
+  adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, edgecost);
   edgestatus_.clear();
 
   // Initialize the origin and destination locations
@@ -169,7 +169,7 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->pop();
+    uint32_t predindex = adjacencylist_.pop();
     if (predindex == kInvalidLabel) {
       // Can not expand any further...
       return FormTimeDistanceMatrix();
@@ -273,7 +273,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
       EdgeLabel& lab = edgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(es->index(), newsortcost);
+        adjacencylist_.decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, restriction_idx);
       }
       continue;
@@ -284,7 +284,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                              distance, transition_cost, restriction_idx);
     *es = {EdgeSet::kTemporary, idx};
-    adjacencylist_->add(idx);
+    adjacencylist_.add(idx);
   }
 
   // Handle transitions - expand from the end node each transition
@@ -316,7 +316,7 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
   astarheuristic_.Init({dest.ll().lng(), dest.ll().lat()}, 0.0f);
   uint32_t bucketsize = costing_->UnitSize();
   const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
-  adjacencylist_.reset(new DoubleBucketQueue(0.0f, current_cost_threshold_, bucketsize, edgecost));
+  adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, edgecost);
   edgestatus_.clear();
 
   // Initialize the origin and destination locations
@@ -329,7 +329,7 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->pop();
+    uint32_t predindex = adjacencylist_.pop();
     if (predindex == kInvalidLabel) {
       // Can not expand any further...
       return FormTimeDistanceMatrix();
@@ -456,7 +456,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, {});
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
-    adjacencylist_->add(edgelabels_.size() - 1);
+    adjacencylist_.add(edgelabels_.size() - 1);
   }
 }
 
@@ -507,7 +507,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
                          {});
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
-    adjacencylist_->add(edgelabels_.size() - 1);
+    adjacencylist_.add(edgelabels_.size() - 1);
   }
 }
 
@@ -615,7 +615,7 @@ bool TimeDistanceMatrix::UpdateDestinations(
     const DirectedEdge* edge,
     const GraphTile* tile,
     const EdgeLabel& pred,
-    const uint32_t predindex) {
+    const uint32_t /*predindex*/) {
   // For each destination along this edge
   for (auto dest_idx : destinations) {
     Destination& dest = destinations_[dest_idx];
