@@ -15,7 +15,6 @@ max_x=$(python -c "import math; print(int(math.ceil($2) - 1))")
 min_y=$(python -c "import math; print(int(math.floor($3)))")
 max_y=$(python -c "import math; print(int(math.ceil($4) - 1))")
 
-echo "$min_x $max_x $min_y $max_y"
 if [ $min_x -gt $max_x ] || [ $min_x -lt -180 ] || [ $max_x -gt 180 ]; then
 	usage
 fi
