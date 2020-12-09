@@ -294,4 +294,20 @@ bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc) {
   *rc = i->second;
   return true;
 }
+
+const std::string& GuidanceViewType_Enum_Name(const valhalla::DirectionsLeg_GuidanceView_Type type) {
+  static const std::string empty;
+  static const std::unordered_map<int, std::string>
+      types{{DirectionsLeg_GuidanceView_Type_kJunction, "jct"},
+            {DirectionsLeg_GuidanceView_Type_kSapa, "sapa"},
+            {DirectionsLeg_GuidanceView_Type_kTollbranch, "tollbranch"},
+            {DirectionsLeg_GuidanceView_Type_kAftertoll, "aftertoll"},
+            {DirectionsLeg_GuidanceView_Type_kEnt, "ent"},
+            {DirectionsLeg_GuidanceView_Type_kExit, "exit"},
+            {DirectionsLeg_GuidanceView_Type_kCityreal, "cityreal"},
+            {DirectionsLeg_GuidanceView_Type_kDirectionboard, "directionboard"},
+            {DirectionsLeg_GuidanceView_Type_kSignboard, "signboard"}};
+  auto i = types.find(type);
+  return i == types.cend() ? empty : i->second;
+}
 } // namespace valhalla
