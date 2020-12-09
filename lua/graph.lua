@@ -97,6 +97,8 @@ access = {
 
 private = {
 ["private"] = "true",
+["destination"] = "true",
+["customers"] = "true",
 ["delivery"] = "true"
 }
 
