@@ -222,13 +222,9 @@ TEST(recosting, all_algorithms) {
         auto leg = api.trip().routes(0).legs(0);
 
         // setup a callback for the recosting to get each edge
-        auto edge_itr = leg.node().begin();
-        sif::EdgeCallback edge_cb = [&edge_itr]() -> baldr::GraphId {
-          auto edge_id =
-              edge_itr->has_edge() ? baldr::GraphId(edge_itr->edge().id()) : baldr::GraphId{};
-          ++edge_itr;
-          return edge_id;
-        };
+        std::vector<GraphId> edge_ids;
+        for (auto edge_itr = leg.node().begin(); edge_itr->has_edge(); ++edge_itr)
+          edge_ids.emplace_back(edge_itr->edge().id());
 
         // TODO: remove this when costing works the same in the reverse direction (see comment above)
         bool reverse =
@@ -287,7 +283,7 @@ TEST(recosting, all_algorithms) {
         const auto time_info = baldr::TimeInfo::make(date_time, node->timezone());
 
         // recost the path
-        sif::recost_forward(*reader, *costing, edge_cb, label_cb, src_pct, tgt_pct, time_info);
+        sif::recost_forward(*reader, *costing, edge_ids, label_cb, src_pct, tgt_pct, time_info);
       }
     }
   }
@@ -319,12 +315,10 @@ TEST(recosting, throwing) {
 
   // setup a callback for the recosting to get each edge
   const auto& leg = api.trip().routes(0).legs(0);
-  auto edge_itr = leg.node().begin();
-  sif::EdgeCallback edge_cb = [&edge_itr]() -> baldr::GraphId {
-    auto edge_id = edge_itr->has_edge() ? baldr::GraphId(edge_itr->edge().id()) : baldr::GraphId{};
-    ++edge_itr;
-    return edge_id;
-  };
+
+  std::vector<GraphId> edge_ids;
+  for (auto edge_itr = leg.node().begin(); edge_itr->has_edge(); ++edge_itr)
+    edge_ids.emplace_back(edge_itr->edge().id());
 
   // setup a callback for the recosting to tell us about the new label each made
   bool called = false;
@@ -334,38 +328,42 @@ TEST(recosting, throwing) {
   auto costing = sif::CostFactory().Create(Costing::auto_);
 
   // those percentages are bonkers
-  EXPECT_THROW(sif::recost_forward(*reader, *costing, edge_cb, label_cb, -90, 476), std::logic_error);
+  EXPECT_THROW(sif::recost_forward(*reader, *costing, edge_ids, label_cb, -90, 476),
+               std::logic_error);
 
   // this edge id is valid but doesnt exist
-  EXPECT_THROW(sif::recost_forward(*reader, *costing, []() { return baldr::GraphId{123456789}; },
-                                   label_cb),
+  EXPECT_THROW(sif::recost_forward(*reader, *costing, {baldr::GraphId{123456789}}, label_cb),
                std::runtime_error);
 
   // this edge id is not valid
-  sif::recost_forward(*reader, *costing, []() { return baldr::GraphId{}; }, label_cb);
+  sif::recost_forward(*reader, *costing, {baldr::GraphId()}, label_cb);
   EXPECT_EQ(called, false);
 
   // this path isnt possible with a car because the second edge doesnt have auto access
   called = false;
-  EXPECT_THROW(sif::recost_forward(*reader, *costing, edge_cb, label_cb), std::runtime_error);
+  EXPECT_THROW(sif::recost_forward(*reader, *costing, edge_ids, label_cb), std::runtime_error);
   EXPECT_EQ(called, true);
 
   // go in the reverse direction
   api = gurka::route(map, "F", "A", "pedestrian", {}, reader);
-  edge_itr = api.trip().routes(0).legs(0).node().begin();
+  edge_ids.clear();
+  for (auto edge_itr = api.trip().routes(0).legs(0).node().begin(); edge_itr->has_edge(); ++edge_itr)
+    edge_ids.emplace_back(edge_itr->edge().id());
 
   // this path isnt possible with a car because the first node is a gate
   called = false;
-  EXPECT_THROW(sif::recost_forward(*reader, *costing, edge_cb, label_cb), std::runtime_error);
+  EXPECT_THROW(sif::recost_forward(*reader, *costing, edge_ids, label_cb), std::runtime_error);
   EXPECT_EQ(called, true);
 
   // travel only on pedestrian edges
   api = gurka::route(map, "B", "D", "pedestrian", {}, reader);
-  edge_itr = api.trip().routes(0).legs(0).node().begin();
+  edge_ids.clear();
+  for (auto edge_itr = api.trip().routes(0).legs(0).node().begin(); edge_itr->has_edge(); ++edge_itr)
+    edge_ids.emplace_back(edge_itr->edge().id());
 
   // it wont be able to evaluate any edges because they are all pedestrian only
   called = false;
-  EXPECT_THROW(sif::recost_forward(*reader, *costing, edge_cb, label_cb), std::runtime_error);
+  EXPECT_THROW(sif::recost_forward(*reader, *costing, edge_ids, label_cb), std::runtime_error);
   EXPECT_EQ(called, false);
 }
 

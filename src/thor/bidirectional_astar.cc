@@ -1108,11 +1108,6 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
                         label.transition_cost());
     };
 
-    auto edge_itr = path_edges.begin();
-    const auto edge_cb = [&edge_itr, &path_edges]() {
-      return (edge_itr == path_edges.end()) ? GraphId{} : (*edge_itr++);
-    };
-
     float source_pct;
     try {
       source_pct = find_percent_along(origin, path_edges.front());
@@ -1127,7 +1122,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
 
     // recost edges in final path
     try {
-      sif::recost_forward(graphreader, *costing_, edge_cb, label_cb, source_pct, target_pct,
+      sif::recost_forward(graphreader, *costing_, path_edges, label_cb, source_pct, target_pct,
                           time_info, invariant);
     } catch (const std::exception& e) {
       LOG_ERROR(std::string("Bi-directional astar failed to recost final path: ") + e.what());
