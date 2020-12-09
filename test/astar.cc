@@ -342,12 +342,12 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
 }
 
 TEST(Astar, TestTrivialPathForward) {
-  auto astar = vt::TimeDepForward();
+  vt::TimeDepForward astar;
   TestTrivialPath(astar);
 }
 
 TEST(Astar, TestTrivialPathReverse) {
-  auto astar = vt::TimeDepReverse();
+  vt::TimeDepReverse astar;
   TestTrivialPath(astar);
 }
 

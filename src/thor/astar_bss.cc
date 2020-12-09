@@ -30,8 +30,8 @@ constexpr uint32_t kMaxIterationsWithoutConvergence = 200000;
 
 // Default constructor
 AStarBSSAlgorithm::AStarBSSAlgorithm()
-    : PathAlgorithm(), mode_(TravelMode::kDrive), travel_type_(0), adjacencylist_(nullptr),
-      max_label_count_(std::numeric_limits<uint32_t>::max()) {
+    : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
+      mode_(TravelMode::kDrive), travel_type_(0) {
 }
 
 // Destructor
@@ -45,7 +45,7 @@ void AStarBSSAlgorithm::Clear() {
   // and clear edge status.
   edgelabels_.clear();
   destinations_.clear();
-  adjacencylist_.reset();
+  adjacencylist_.clear();
   pedestrian_edgestatus_.clear();
   bicycle_edgestatus_.clear();
 
@@ -85,7 +85,7 @@ void AStarBSSAlgorithm::Init(const midgard::PointLL& origll, const midgard::Poin
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = std::max(pedestrian_costing_->UnitSize(), bicycle_costing_->UnitSize());
   float range = kBucketCount * bucketsize;
-  adjacencylist_ = std::make_shared<DoubleBucketQueue>(mincost, range, bucketsize, edgecost);
+  adjacencylist_.reuse(mincost, range, bucketsize, edgecost);
   pedestrian_edgestatus_.clear();
   bicycle_edgestatus_.clear();
 }
@@ -193,7 +193,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
       EdgeLabel& lab = edgelabels_[current_es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(current_es->index(), newsortcost);
+        adjacencylist_.decrease(current_es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
       }
       continue;
@@ -219,7 +219,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode, 0,
                              transition_cost);
     *current_es = {EdgeSet::kTemporary, idx};
-    adjacencylist_->add(idx);
+    adjacencylist_.add(idx);
   }
 
   if (!from_bss && nodeinfo->type() == NodeType::kBikeShare) {
@@ -245,7 +245,7 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
                                GraphReader& graphreader,
                                const sif::mode_costing_t& mode_costing,
                                const TravelMode mode,
-                               const Options& options) {
+                               const Options&) {
   // Set the mode and costing
   mode_ = mode;
   pedestrian_costing_ = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
@@ -288,7 +288,7 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->pop();
+    const uint32_t predindex = adjacencylist_.pop();
     if (predindex == kInvalidLabel) {
       LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabels_.size()));
       return {};
@@ -458,7 +458,7 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list
     uint32_t idx = edgelabels_.size();
     edgelabels_.push_back(std::move(edge_label));
-    adjacencylist_->add(idx);
+    adjacencylist_.add(idx);
 
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
   }

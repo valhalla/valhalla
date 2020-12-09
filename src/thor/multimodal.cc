@@ -42,8 +42,8 @@ constexpr uint64_t kInitialEdgeLabelCount = 200000;
 
 // Default constructor
 MultiModalPathAlgorithm::MultiModalPathAlgorithm()
-    : PathAlgorithm(), walking_distance_(0), mode_(TravelMode::kPedestrian), travel_type_(0),
-      adjacencylist_(nullptr), max_label_count_(std::numeric_limits<uint32_t>::max()) {
+    : PathAlgorithm(), walking_distance_(0), max_label_count_(std::numeric_limits<uint32_t>::max()),
+      mode_(TravelMode::kPedestrian), travel_type_(0) {
 }
 
 // Destructor
@@ -52,7 +52,7 @@ MultiModalPathAlgorithm::~MultiModalPathAlgorithm() {
 }
 
 // Initialize prior to finding best path
-void MultiModalPathAlgorithm::Init(const midgard::PointLL& origll,
+void MultiModalPathAlgorithm::Init(const midgard::PointLL& /*origll*/,
                                    const midgard::PointLL& destll,
                                    const std::shared_ptr<DynamicCost>& costing) {
   // Disable A* for multimodal
@@ -69,7 +69,7 @@ void MultiModalPathAlgorithm::Init(const midgard::PointLL& origll,
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing->UnitSize();
   float range = kBucketCount * bucketsize;
-  adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucketsize, edgecost));
+  adjacencylist_.reuse(0.0f, range, bucketsize, edgecost);
   edgestatus_.clear();
 
   // Get hierarchy limits from the costing. Get a copy since we increment
@@ -84,7 +84,7 @@ void MultiModalPathAlgorithm::Clear() {
   destinations_.clear();
 
   // Clear elements from the adjacency list
-  adjacencylist_.reset();
+  adjacencylist_.clear();
 
   // Clear the edge status flags
   edgestatus_.clear();
@@ -100,7 +100,7 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
                                      GraphReader& graphreader,
                                      const sif::mode_costing_t& mode_costing,
                                      const TravelMode mode,
-                                     const Options& options) {
+                                     const Options&) {
   // For pedestrian costing - set flag allowing use of transit connections
   // Set pedestrian costing to use max distance. TODO - need for other modes
   const auto& pc = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
@@ -180,7 +180,7 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->pop();
+    const uint32_t predindex = adjacencylist_.pop();
     if (predindex == kInvalidLabel) {
       LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabels_.size()));
       return {};
@@ -491,7 +491,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
       MMEdgeLabel& lab = edgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(es->index(), newsortcost);
+        adjacencylist_.decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, walking_distance_, tripid, blockid,
                    transition_cost, restriction_idx);
       }
@@ -521,7 +521,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_,
                              walking_distance_, tripid, prior_stop, blockid, operator_id, has_transit,
                              transition_cost);
-    adjacencylist_->add(idx);
+    adjacencylist_.add(idx);
   }
 
   // Handle transitions - expand from the end node each transition
@@ -632,7 +632,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list
     uint32_t idx = edgelabels_.size();
     edgelabels_.push_back(std::move(edge_label));
-    adjacencylist_->add(idx);
+    adjacencylist_.add(idx);
 
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
   }
@@ -649,11 +649,9 @@ uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
                                                  const valhalla::Location& dest,
                                                  const std::shared_ptr<DynamicCost>& costing) {
   // Only skip outbound edges if we have other options
-  bool has_other_edges = false;
-  std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
-                [&has_other_edges](const valhalla::Location::PathEdge& e) {
-                  has_other_edges = has_other_edges || !e.begin_node();
-                });
+  bool has_other_edges =
+      std::any_of(dest.path_edges().begin(), dest.path_edges().end(),
+                  [](const valhalla::Location::PathEdge& e) { return !e.begin_node(); });
 
   // For each edge
   uint32_t density = 0;
