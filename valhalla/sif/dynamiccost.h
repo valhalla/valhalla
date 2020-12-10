@@ -732,10 +732,9 @@ protected:
   bool ignore_oneways_{false};
   bool ignore_access_{false};
   bool ignore_closures_{false};
+  uint32_t top_speed_;
   // if ignore_closures_ is set to true by the user request, filter_closures_ is forced to false
   bool filter_closures_{true};
-
-  uint32_t top_speed_;
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
