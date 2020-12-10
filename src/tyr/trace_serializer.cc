@@ -381,6 +381,7 @@ json::ArrayPtr serialize_matched_points(const AttributesController& controller,
     // Process matched point edge index
     if (controller.attributes.at(kMatchedEdgeIndex) && match_result.edgeid.Is_Valid()) {
       match_points_map->emplace("edge_index", static_cast<uint64_t>(match_result.edge_index));
+      match_points_map->emplace("edge_id", static_cast<uint64_t>(match_result.edgeid.value));
     }
 
     // Process matched point begin route discontinuity
