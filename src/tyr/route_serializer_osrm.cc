@@ -1503,8 +1503,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
           for (const auto& gv : maneuver.guidance_views()) {
             auto guidance_view = json::map({});
             guidance_view->emplace("data_id", gv.data_id());
-            guidance_view
-                ->emplace("type", guidanceview_type_string.find(static_cast<int>(gv.type()))->second);
+            guidance_view->emplace("type", GuidanceViewTypeToString(gv.type()));
             guidance_view->emplace("base_id", gv.base_id());
             auto overlay_ids = json::array({});
             for (const auto& overlay : gv.overlay_ids()) {
