@@ -109,6 +109,7 @@
    * FIXED: Updated logic to call out a non-obvious turn [#2708](https://github.com/valhalla/valhalla/pull/2708)
    * FIXED: valhalla_build_statistics multithreaded mode fixed [#2707](https://github.com/valhalla/valhalla/pull/2707)
    * FIXED: If infer_internal_intersections is true then allow internals that are also ramps or TCs. Without this we produce an extra continue manuever.  [#2710](https://github.com/valhalla/valhalla/pull/2710)
+   * FIXED: We were routing down roads that should be destination only. Now we mark roads with motor_vehicle=destination and motor_vehicle=customers or access=destination and access=customers as destination only. [#2722](https://github.com/valhalla/valhalla/pull/2722)
    * FIXED: Replace all Python2 print statements with Python3 syntax [#2716](https://github.com/valhalla/valhalla/issues/2716)
 
 * **Enhancement**
