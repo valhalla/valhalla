@@ -111,14 +111,19 @@ public:
   }
 
   /**
-   * Clear all labels from the low-level buckets and the overflow buckets and deallocates buckets
-   * memory.
+   * Clear all labels from the low-level buckets and the overflow buckets
    */
   void clear() {
     overflowbucket_.clear();
-    overflowbucket_.shrink_to_fit();
-    buckets_.clear();
-    buckets_.shrink_to_fit();
+
+    // Assume all buckets below currentbucket_ are empty according to algorithm
+    std::for_each(currentbucket_, buckets_.end(), [](auto& b) { b.clear(); });
+
+    // for deep clean it should be:
+    // overflowbucket_.shrink_to_fit();
+    // buckets_.clear();
+    // buckets_.shrink_to_fit();
+
     // Reset current bucket and cost
     currentcost_ = mincost_;
     currentbucket_ = buckets_.begin();
