@@ -45,6 +45,7 @@ public:
    */
   static double get_no_data_value();
 
+protected:
   /**
    * @return A tile index value from a coordinate
    */
@@ -55,7 +56,6 @@ public:
    */
   static std::string get_hgt_file_name(uint16_t index);
 
-protected:
   /**
    * @param  index  the index of the data tile being requested
    * @return the array of data or nullptr if there was none
