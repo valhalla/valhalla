@@ -215,7 +215,7 @@ thor::ExpansionRecommendation
 Reach::ShouldExpand(baldr::GraphReader&, const sif::EdgeLabel&, const thor::InfoRoutingType) {
   if ((done_.size() - transitions_) < max_reach_)
     return thor::ExpansionRecommendation::continue_expansion;
-  return thor::ExpansionRecommendation::prune_expansion;
+  return thor::ExpansionRecommendation::stop_expansion;
 }
 
 // tell the expansion how many labels to expect and how many buckets to use
