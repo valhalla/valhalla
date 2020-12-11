@@ -49,7 +49,7 @@ std::list<std::string> get_files(const std::string& root_dir) {
   return files;
 }
 
-std::string name_hgt(int16_t index) {
+std::string name_hgt(uint16_t index) {
   auto x = (index % 360) - 180;
   auto y = (index / 360) - 90;
 
@@ -273,6 +273,16 @@ double sample::get_no_data_value() {
   return NO_DATA_VALUE;
 }
 
+template <class coord_t> uint16_t sample::get_tile_index(const coord_t& coord) {
+  auto lon = std::floor(coord.first);
+  auto lat = std::floor(coord.second);
+  return static_cast<uint16_t>(lat + 90) * 360 + static_cast<uint16_t>(lon + 180);
+}
+
+std::string sample::get_hgt_file_name(uint16_t index) {
+  return name_hgt(index);
+}
+
 // explicit instantiations for templated get
 template double sample::get<std::pair<double, double>>(const std::pair<double, double>&) const;
 template double sample::get<std::pair<float, float>>(const std::pair<float, float>&) const;
@@ -294,6 +304,12 @@ template std::vector<double>
 sample::get_all<std::list<midgard::Point2>>(const std::list<midgard::Point2>&) const;
 template std::vector<double>
 sample::get_all<std::vector<midgard::Point2>>(const std::vector<midgard::Point2>&) const;
+template uint16_t
+sample::get_tile_index<std::pair<double, double>>(const std::pair<double, double>& coord);
+template uint16_t
+sample::get_tile_index<std::pair<float, float>>(const std::pair<float, float>& coord);
+template uint16_t sample::get_tile_index<midgard::PointLL>(const midgard::PointLL& coord);
+template uint16_t sample::get_tile_index<midgard::Point2>(const midgard::Point2& coord);
 
 } // namespace skadi
 } // namespace valhalla

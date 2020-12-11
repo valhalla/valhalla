@@ -103,6 +103,38 @@ TEST(Sample, getgz) {
   _get("test/data/samplegz");
 };
 
+TEST(Sample, hgt_file_name) {
+  // A mix of coordinates in each hemisphere and indices above and below 32768
+  // (There was a bug where the 16-bit index was converted to a signed value and be invalid)
+  const auto long_island_index = skadi::sample::get_tile_index(std::make_pair(-73.512143, 40.646556));
+  ASSERT_EQ(skadi::sample::get_hgt_file_name(long_island_index), "/N40/N40W074.hgt");
+
+  const auto equador_index = skadi::sample::get_tile_index(std::make_pair(-78.504476, -0.212297));
+  ASSERT_EQ(skadi::sample::get_hgt_file_name(equador_index), "/S01/S01W079.hgt");
+
+  const auto brisbane_index = skadi::sample::get_tile_index(std::make_pair(152.967888, -27.533658));
+  ASSERT_EQ(skadi::sample::get_hgt_file_name(brisbane_index), "/S28/S28E152.hgt");
+
+  const auto tokyo_index = skadi::sample::get_tile_index(std::make_pair(139.737345, 35.628096));
+  ASSERT_EQ(skadi::sample::get_hgt_file_name(tokyo_index), "/N35/N35E139.hgt");
+
+  const auto amsterdam_index = skadi::sample::get_tile_index(std::make_pair(4.898484, 52.380697));
+  ASSERT_EQ(skadi::sample::get_hgt_file_name(amsterdam_index), "/N52/N52E004.hgt");
+
+  // Test with different types
+  const auto greenwich_park_west =
+      skadi::sample::get_tile_index(std::make_pair(-0.003002f, 51.478488f));
+  ASSERT_EQ(skadi::sample::get_hgt_file_name(greenwich_park_west), "/N51/N51W001.hgt");
+
+  const auto greenwich_park_east =
+      skadi::sample::get_tile_index(midgard::PointLL{0.002835, 51.478668});
+  ASSERT_EQ(skadi::sample::get_hgt_file_name(greenwich_park_east), "/N51/N51E000.hgt");
+
+  const auto greenwich_park_east2 =
+      skadi::sample::get_tile_index(midgard::Point2{0.002835, 51.478668});
+  ASSERT_EQ(skadi::sample::get_hgt_file_name(greenwich_park_east2), "/N51/N51E000.hgt");
+}
+
 struct testable_sample_t : public skadi::sample {
   testable_sample_t(const std::string& dir) : sample(dir) {
     {

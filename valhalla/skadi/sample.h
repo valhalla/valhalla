@@ -45,6 +45,16 @@ public:
    */
   static double get_no_data_value();
 
+  /**
+   * @return A tile index value from a coordinate
+   */
+  template <class coord_t> static uint16_t get_tile_index(const coord_t& coord);
+
+  /**
+   * @return The file name of a tile for a given index
+   */
+  static std::string get_hgt_file_name(uint16_t index);
+
 protected:
   /**
    * @param  index  the index of the data tile being requested
