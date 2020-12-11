@@ -1821,6 +1821,7 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   if (IsFork(node_index, prev_edge.get(), curr_edge.get()) ||
       IsPedestrianFork(node_index, prev_edge.get(), curr_edge.get())) {
     maneuver.set_fork(true);
+
     return false;
   }
 
@@ -2063,14 +2064,20 @@ bool ManeuversBuilder::IsFork(int node_index,
 
     // if there is a similar traversable intersecting edge
     //   or there is a traversable intersecting edge and curr edge is link(ramp)
-    //   and the straightest intersecting edge is not in the reversed direction
+    //      and the straightest intersecting edge is not in the reversed direction
+    //   or curr_edge is fork forward and xedge only has forward edge
     if (((xedge_counts.left_similar_traversable_outbound > 0) ||
          (xedge_counts.right_similar_traversable_outbound > 0)) ||
         (((xedge_counts.left_traversable_outbound > 0) ||
           (xedge_counts.right_traversable_outbound > 0)) &&
          curr_edge->IsRampUse() &&
          !node->IsStraightestTraversableIntersectingEdgeReversed(prev_edge->end_heading(),
-                                                                 prev_edge->travel_mode()))) {
+                                                                 prev_edge->travel_mode())) ||
+        (curr_edge->IsForkForward(
+             GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
+         node->HasOnlyForwardTraversableRoadClassXEdges(prev_edge->end_heading(),
+                                                        prev_edge->travel_mode(),
+                                                        prev_edge->road_class()))) {
       return true;
     }
   }
