@@ -1,9 +1,11 @@
-#ifndef VALHALLA_THOR_EDGESTATUS_H_
-#define VALHALLA_THOR_EDGESTATUS_H_
+#pragma once
 
 #include <unordered_map>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
+
+// handy macro for shifting the 7bit path index value so that it can be or'd with the tile/level id
+#define SHIFT_PATH_INDEX(x) (static_cast<uint32_t>(x) << 25u)
 
 namespace valhalla {
 namespace thor {
@@ -70,22 +72,26 @@ public:
 
   /**
    * Set the status of a directed edge given its GraphId.
-   * @param  edgeid   GraphId of the directed edge to set.
-   * @param  set      Label set for this directed edge.
-   * @param  index    Index of the edge label.
-   * @param  tile     Graph tile of the directed edge.
+   * @param  edgeid      GraphId of the directed edge to set.
+   * @param  set         Label set for this directed edge.
+   * @param  index       Index of the edge label.
+   * @param  tile        Graph tile of the directed edge.
+   * @param  path_index  An index that identifies the path for whose edge statuses we are refering to
+   *                     valid indices are from 0 to 127 (since we only have 7 bits free)
    */
   void Set(const baldr::GraphId& edgeid,
            const EdgeSet set,
            const uint32_t index,
-           const baldr::GraphTile* tile) {
-    auto p = edgestatus_.find(edgeid.tile_value());
+           const baldr::GraphTile* tile,
+           const uint8_t path_index = 0) {
+    assert(path_index < 128);
+    auto p = edgestatus_.find(edgeid.tile_value() | SHIFT_PATH_INDEX(path_index));
     if (p != edgestatus_.end()) {
       p->second[edgeid.id()] = {set, index};
     } else {
       // Tile is not in the map. Add an array of EdgeStatusInfo, sized to
       // the number of directed edges in the specified tile.
-      auto inserted = edgestatus_.emplace(edgeid.tile_value(),
+      auto inserted = edgestatus_.emplace(edgeid.tile_value() | SHIFT_PATH_INDEX(path_index),
                                           new EdgeStatusInfo[tile->header()->directededgecount()]);
       inserted.first->second[edgeid.id()] = {set, index};
     }
@@ -94,11 +100,14 @@ public:
   /**
    * Update the status (set) of a directed edge given its GraphId.
    * This method assumes that the edge id has already been encountered.
-   * @param  edgeid   GraphId of the directed edge to set.
-   * @param  set      Label set for this directed edge.
+   * @param  edgeid      GraphId of the directed edge to set.
+   * @param  set         Label set for this directed edge.
+   * @param  path_index  An index that identifies the path for whose edge statuses we are refering to
+   *                     valid indices are from 0 to 127 (since we only have 7 bits free)
    */
-  void Update(const baldr::GraphId& edgeid, const EdgeSet set) {
-    const auto p = edgestatus_.find(edgeid.tile_value());
+  void Update(const baldr::GraphId& edgeid, const EdgeSet set, const uint8_t path_index = 0) {
+    assert(path_index < 128);
+    const auto p = edgestatus_.find(edgeid.tile_value() | SHIFT_PATH_INDEX(path_index));
     if (p != edgestatus_.end()) {
       p->second[edgeid.id()].set_ = static_cast<uint32_t>(set);
     } else {
@@ -108,11 +117,14 @@ public:
 
   /**
    * Get the status info of a directed edge given its GraphId.
-   * @param   edgeid  GraphId of the directed edge.
+   * @param   edgeid     GraphId of the directed edge.
+   * @param  path_index  An index that identifies the path for whose edge statuses we are refering to
+   *                     valid indices are from 0 to 127 (since we only have 7 bits free)
    * @return  Returns edge status info.
    */
-  EdgeStatusInfo Get(const baldr::GraphId& edgeid) const {
-    const auto p = edgestatus_.find(edgeid.tile_value());
+  EdgeStatusInfo Get(const baldr::GraphId& edgeid, const uint8_t path_index = 0) const {
+    assert(path_index < 128);
+    const auto p = edgestatus_.find(edgeid.tile_value() | SHIFT_PATH_INDEX(path_index));
     return (p == edgestatus_.end()) ? EdgeStatusInfo() : p->second[edgeid.id()];
   }
 
@@ -120,18 +132,22 @@ public:
    * Get a pointer to the edge status info of a directed edge. Since directed
    * edges are stored sequentially from a node this reduces the number of
    * lookups by edgeid.
-   * @param   edgeid  GraphId of the directed edge.
-   * @param   tile    Graph tile of the directed edge.
+   * @param   edgeid     GraphId of the directed edge.
+   * @param   tile       Graph tile of the directed edge.
+   * @param  path_index  An index that identifies the path for whose edge statuses we are refering to
+   *                     valid indices are from 0 to 127 (since we only have 7 bits free)
    * @return  Returns a pointer to edge status info for this edge.
    */
-  EdgeStatusInfo* GetPtr(const baldr::GraphId& edgeid, const baldr::GraphTile* tile) {
-    const auto p = edgestatus_.find(edgeid.tile_value());
+  EdgeStatusInfo*
+  GetPtr(const baldr::GraphId& edgeid, const baldr::GraphTile* tile, const uint8_t path_index = 0) {
+    assert(path_index < 128);
+    const auto p = edgestatus_.find(edgeid.tile_value() | SHIFT_PATH_INDEX(path_index));
     if (p != edgestatus_.end()) {
       return &p->second[edgeid.id()];
     } else {
       // Tile is not in the map. Add an array of EdgeStatusInfo, sized to
       // the number of directed edges in the specified tile.
-      auto inserted = edgestatus_.emplace(edgeid.tile_value(),
+      auto inserted = edgestatus_.emplace(edgeid.tile_value() | SHIFT_PATH_INDEX(path_index),
                                           new EdgeStatusInfo[tile->header()->directededgecount()]);
       return &(inserted.first->second)[edgeid.id()];
     }
@@ -146,5 +162,3 @@ private:
 
 } // namespace thor
 } // namespace valhalla
-
-#endif // VALHALLA_THOR_EDGESTATUS_H_
