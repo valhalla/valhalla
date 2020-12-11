@@ -4,7 +4,7 @@
 
 namespace {
 
-const auto fake_config = test::json_to_pt(R"({
+const auto fake_config = valhalla::test::json_to_pt(R"({
     "customizable": [
       "search_radius",
       "gps_accuracy"

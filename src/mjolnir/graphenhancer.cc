@@ -867,8 +867,6 @@ bool IsNextEdgeInternalImpl(const DirectedEdge directededge,
                             GraphReader& reader,
                             std::mutex& lock,
                             bool infer_internal_intersections) {
-        std::make_unique<GraphTileBuilder>(reader.tile_dir(), directededge.endnode(), true, false);
-  GraphTileBuilder& tile = external_tilebuilder ? *external_tilebuilder : tilebuilder;
   // Iterate through outbound edges to find the next edge
   for (uint32_t i = 0; i < end_node_info.edge_count(); i++) {
     const DirectedEdge* diredge = end_node_tile.directededges(end_node_info.edge_index() + i);

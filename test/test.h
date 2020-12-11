@@ -20,6 +20,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+namespace valhalla {
 namespace test {
 
 // Return a random number inside [0, 1)
@@ -82,3 +83,4 @@ void customize_historical_traffic(const boost::property_tree::ptree& config,
                                   const HistoricalTrafficCustomize& cb);
 
 } // namespace test
+} // namespace valhalla

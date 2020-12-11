@@ -1,5 +1,6 @@
 #include "test.h"
 
+#include "baldr/graphmemory.h"
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/traffictile.h"
@@ -21,7 +22,38 @@
 
 #include "microtar.h"
 
+namespace valhalla {
 namespace test {
+
+struct MMap {
+  MMap(const char* filename) {
+    fd = open(filename, O_RDWR);
+    struct stat s;
+    fstat(fd, &s);
+    data = mmap(0, s.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    length = s.st_size;
+  }
+
+  ~MMap() {
+    munmap(data, length);
+    close(fd);
+  }
+
+  int fd;
+  void* data;
+  size_t length;
+};
+
+class MMapGraphMemory final : public baldr::GraphMemory {
+public:
+  MMapGraphMemory(std::shared_ptr<MMap> mmap, char* data_, size_t size_) : mmap_(std::move(mmap)) {
+    data = data_;
+    size = size_;
+  }
+
+private:
+  const std::shared_ptr<MMap> mmap_;
+};
 
 std::string load_binary_file(const std::string& filename) {
   std::string bytes;
@@ -153,13 +185,12 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
                                  const LiveTrafficCustomize& setter_cb) {
   // Now we have the tar-file and can go ahead with per edge customizations
   {
-    int fd = open(config.get<std::string>("mjolnir.traffic_extract").c_str(), O_RDWR);
-    struct stat s;
-    fstat(fd, &s);
+    const auto memory =
+        std::make_shared<MMap>(config.get<std::string>("mjolnir.traffic_extract").c_str());
 
     mtar_t tar;
     tar.pos = 0;
-    tar.stream = mmap(0, s.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    tar.stream = memory->data;
     tar.read = [](mtar_t* tar, void* data, unsigned size) -> int {
       memcpy(data, reinterpret_cast<char*>(tar->stream) + tar->pos, size);
       return MTAR_ESUCCESS;
@@ -176,8 +207,11 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
     valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
     mtar_header_t tar_header;
     while ((mtar_read_header(&tar, &tar_header)) != MTAR_ENULLRECORD) {
-      valhalla::baldr::TrafficTile tile(reinterpret_cast<char*>(tar.stream) + tar.pos +
-                                        sizeof(mtar_raw_header_t_));
+      valhalla::baldr::TrafficTile tile(
+          std::make_unique<MMapGraphMemory>(memory,
+                                            reinterpret_cast<char*>(tar.stream) + tar.pos +
+                                                sizeof(mtar_raw_header_t_),
+                                            tar_header.size));
 
       valhalla::baldr::GraphId tile_id(tile.header->tile_id);
 
@@ -188,8 +222,6 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
       }
       mtar_next(&tar);
     }
-    munmap(tar.stream, s.st_size);
-    close(fd);
   }
 }
 
@@ -214,3 +246,4 @@ void customize_historical_traffic(const boost::property_tree::ptree& config,
 }
 
 } // namespace test
+} // namespace valhalla

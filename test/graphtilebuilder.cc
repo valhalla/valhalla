@@ -31,7 +31,7 @@ void assert_tile_equalish(const GraphTile& a,
                           const GraphTile& b,
                           size_t difference,
                           const std::array<std::vector<GraphId>, kBinCount>& bins,
-                          const std::string& msg) {
+                          const std::string& /*msg*/) {
   // expected size
   ASSERT_EQ(a.header()->end_offset() + difference, b.header()->end_offset());
 

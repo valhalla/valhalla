@@ -20,7 +20,6 @@
 #define VALHALLA_SOURCE_DIR
 #endif
 
-using namespace std;
 using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;

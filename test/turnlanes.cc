@@ -23,6 +23,7 @@
 
 using namespace std;
 using namespace valhalla::baldr;
+using namespace valhalla::test;
 
 // Expected size is 8 bytes. We want to alert if somehow any change grows
 // this structure size as that indicates incompatible tiles.
@@ -86,7 +87,7 @@ void test_turn_lanes(const std::string& filename,
                      int maneuver_index,
                      const std::string& expected_turn_lanes) {
   // Load pinpoint test
-  std::string path_bytes = test::load_binary_file(filename);
+  std::string path_bytes = load_binary_file(filename);
 
   ASSERT_NE(path_bytes.size(), 0);
 
