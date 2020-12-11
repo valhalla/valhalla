@@ -165,7 +165,7 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
                           const sif::cost_ptr_t& costing,
                           const Label& pred_edgelabel,
                           const baldr::GraphTile* tile,
-                          int& restriction_idx) {
+                          uint8_t& restriction_idx) {
   bool valid_pred = (!pred_edgelabel.edgeid().Is_Valid() && costing->Filter(edge, tile) != 0.f) ||
                     edgeid == pred_edgelabel.edgeid();
   bool restricted = !costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0, restriction_idx);
@@ -403,7 +403,7 @@ find_shortest_path(baldr::GraphReader& reader,
       }
 
       // Skip it if its not allowed
-      int restriction_idx = -1;
+      uint8_t restriction_idx = -1;
       if (!IsEdgeAllowed(directededge, edgeid, costing, label, tile, restriction_idx)) {
         continue;
       }
@@ -544,7 +544,7 @@ find_shortest_path(baldr::GraphReader& reader,
         const auto* directed_edge = reader.directededge(origin_edge.id, start_tile);
 
         // Skip if edge is not allowed
-        int restriction_idx = -1;
+        uint8_t restriction_idx = -1;
         if (!directed_edge || !IsEdgeAllowed(directed_edge, origin_edge.id, costing, label,
                                              start_tile, restriction_idx)) {
           continue;

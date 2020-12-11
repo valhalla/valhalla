@@ -349,7 +349,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     // walked to the transit stop
     uint32_t tripid = 0;
     uint32_t blockid = 0;
-    int restriction_idx = -1;
+    uint8_t restriction_idx = -1;
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
       if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx)) {
@@ -520,7 +520,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     *es = {EdgeSet::kTemporary, idx};
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_,
                              walking_distance_, tripid, prior_stop, blockid, operator_id, has_transit,
-                             transition_cost);
+                             transition_cost, baldr::kInvalidRestriction);
     adjacencylist_->add(idx);
   }
 
@@ -625,7 +625,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, 0,
-                           GraphId(), 0, 0, false, Cost{});
+                           GraphId(), 0, 0, false, Cost{}, baldr::kInvalidRestriction);
     // Set the origin flag
     edge_label.set_origin();
 
@@ -723,7 +723,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, ++edgeid, ++es) {
     // Skip this edge if permanently labeled (best path already found to this directed edge) or
     // access is not allowed for this mode.
-    int restriction_idx = -1;
+    uint8_t restriction_idx = -1;
     if (es->set() == EdgeSet::kPermanent ||
         !costing->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx)) {
       continue;
@@ -749,7 +749,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels.size();
     edgelabels.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                            walking_distance, transition_cost);
+                            walking_distance, transition_cost, baldr::kInvalidRestriction);
     *es = {EdgeSet::kTemporary, idx};
     adjlist.add(idx);
   }
@@ -809,7 +809,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const valhalla::Location& dest
     // we cannot do transition_cost on this label yet because we have no predecessor, but when we find
     // it, we will do an update on it and set the real transition cost based on the path to it
     edgelabels.emplace_back(kInvalidLabel, oppedge, diredge, cost, cost.cost, 0.0f, mode_, length,
-                            Cost{});
+                            Cost{}, baldr::kInvalidRestriction);
     adjlist.add(label_idx);
     edgestatus.Set(oppedge, EdgeSet::kTemporary, label_idx, tile);
     label_idx++;

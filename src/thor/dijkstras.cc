@@ -141,7 +141,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
 
     // Check if the edge is allowed or if a restriction occurs
     EdgeStatus* todo = nullptr;
-    int restriction_idx = -1;
+    uint8_t restriction_idx = -1;
     if (offset_time.valid) {
       // With date time we check time dependent restrictions and access
       if (!costing_->Allowed(directededge, pred, tile, edgeid, offset_time.local_time,
@@ -295,7 +295,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
 
     // Check if the edge is allowed or if a restriction occurs
     EdgeStatus* todo = nullptr;
-    int restriction_idx = -1;
+    uint8_t restriction_idx = -1;
     if (offset_time.valid) {
       // With date time we check time dependent restrictions and access
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id,
@@ -507,7 +507,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     // costing - assume if you get a transit edge you walked to the transit stop
     uint32_t tripid = 0;
     uint32_t blockid = 0;
-    int restriction_idx = -1;
+    uint8_t restriction_idx = -1;
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
       if (!tc->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx)) {

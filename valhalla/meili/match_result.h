@@ -80,7 +80,7 @@ struct EdgeSegment {
   double target{1.f};
   int first_match_idx{-1};
   int last_match_idx{-1};
-  int restriction_idx{-1};
+  uint8_t restriction_idx{baldr::kInvalidRestriction};
   bool discontinuity{false};
 
   // Stream output

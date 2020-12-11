@@ -18,8 +18,11 @@ constexpr uint32_t kMaxGraphTileId = 4194303;
 // Maximum id/index within a tile. 21 bits
 constexpr uint32_t kMaxGraphId = 2097151;
 
-// Invalid edge label
+// Invalid edge label index
 constexpr uint32_t kInvalidLabel = std::numeric_limits<uint32_t>::max();
+
+// Invalid restriction index
+constexpr uint8_t kInvalidRestriction = std::numeric_limits<uint8_t>::max();
 
 // Access bit field constants. Access in directed edge allows 12 bits.
 constexpr uint16_t kAutoAccess = 1;

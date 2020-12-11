@@ -59,7 +59,7 @@ public:
                        const baldr::GraphId&,
                        const uint64_t,
                        const uint32_t,
-                       int&) const override {
+                       uint8_t&) const override {
     return !edge->is_shortcut();
   }
 
@@ -88,7 +88,7 @@ public:
                               const baldr::GraphId&,
                               const uint64_t,
                               const uint32_t,
-                              int&) const override {
+                              uint8_t&) const override {
     return !opp_edge->is_shortcut();
   }
 
