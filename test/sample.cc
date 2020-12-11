@@ -117,8 +117,12 @@ struct testable_sample_t : public skadi::sample {
     mapped_cache.front().second.map("test/data/blah.hgt", 3601 * 6);
   }
 
-  static uint16_t get_tile_index(const PointLL& coord){ return skadi::sample::get_tile_index(coord); }
-  static std::string get_hgt_file_name(uint16_t index){ return skadi::sample::get_hgt_file_name(index); }
+  static uint16_t get_tile_index(const PointLL& coord) {
+    return skadi::sample::get_tile_index(coord);
+  }
+  static std::string get_hgt_file_name(uint16_t index) {
+    return skadi::sample::get_hgt_file_name(index);
+  }
 };
 
 TEST(Sample, edges) {
@@ -163,19 +167,23 @@ TEST(Sample, lazy_load) {
 TEST(Sample, hgt_file_name) {
   // A mix of coordinates in each hemisphere and indices above and below 32767
   // (There was a bug where the 16-bit index was converted to a signed value and would be invalid)
-  const auto long_island_index = testable_sample_t::get_tile_index(midgard::PointLL{-73.512143, 40.646556});
+  const auto long_island_index =
+      testable_sample_t::get_tile_index(midgard::PointLL{-73.512143, 40.646556});
   ASSERT_EQ(testable_sample_t::get_hgt_file_name(long_island_index), "/N40/N40W074.hgt");
 
-  const auto equador_index = testable_sample_t::get_tile_index(midgard::PointLL{-78.504476, -0.212297});
+  const auto equador_index =
+      testable_sample_t::get_tile_index(midgard::PointLL{-78.504476, -0.212297});
   ASSERT_EQ(testable_sample_t::get_hgt_file_name(equador_index), "/S01/S01W079.hgt");
 
-  const auto brisbane_index = testable_sample_t::get_tile_index(midgard::PointLL{152.967888, -27.533658});
+  const auto brisbane_index =
+      testable_sample_t::get_tile_index(midgard::PointLL{152.967888, -27.533658});
   ASSERT_EQ(testable_sample_t::get_hgt_file_name(brisbane_index), "/S28/S28E152.hgt");
 
   const auto tokyo_index = testable_sample_t::get_tile_index(midgard::PointLL{139.737345, 35.628096});
   ASSERT_EQ(testable_sample_t::get_hgt_file_name(tokyo_index), "/N35/N35E139.hgt");
 
-  const auto amsterdam_index = testable_sample_t::get_tile_index(midgard::PointLL{4.898484, 52.380697});
+  const auto amsterdam_index =
+      testable_sample_t::get_tile_index(midgard::PointLL{4.898484, 52.380697});
   ASSERT_EQ(testable_sample_t::get_hgt_file_name(amsterdam_index), "/N52/N52E004.hgt");
 }
 
