@@ -447,47 +447,6 @@ public:
   }
 
   /**
-   * Constructor with values. Used in Dijkstras, also updates path_distance.
-   * @param predecessor  Index into the edge label list for the predecessor
-   *                     directed edge in the shortest path.
-   * @param edgeid       Directed edge Id.
-   * @param oppedgeid    Opposing directed edge Id.
-   * @param edge         Directed edge.
-   * @param cost         True cost (cost and time in seconds) to the edge.
-   * @param sortcost     Cost for sorting (includes A* heuristic)n
-   * @param dist         Distance to the destination in meters.
-   * @param mode         Mode of travel along this edge.
-   * @param path_dist    Distance along the path till the end of this edge.
-   * @param tc           Transition cost entering this edge.
-   * @param not_thru_pruning  Is not thru pruning enabled.
-   * @param has_time_restrictions Does the edge have time dependent restrictions.
-   */
-  BDEdgeLabel(const uint32_t predecessor,
-              const baldr::GraphId& edgeid,
-              const baldr::GraphId& oppedgeid,
-              const baldr::DirectedEdge* edge,
-              const sif::Cost& cost,
-              const float sortcost,
-              const float dist,
-              const sif::TravelMode mode,
-              const uint32_t path_dist,
-              const sif::Cost& transition_cost,
-              const bool not_thru_pruning,
-              const int restriction_idx)
-      : EdgeLabel(predecessor,
-                  edgeid,
-                  edge,
-                  cost,
-                  sortcost,
-                  dist,
-                  mode,
-                  path_dist,
-                  transition_cost,
-                  restriction_idx),
-        opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
-  }
-
-  /**
    * Constructor with values. Sets sortcost to the true cost.
    * Used with CostMatrix (no heuristic/distance to destination).
    * @param predecessor  Index into the edge label list for the predecessor

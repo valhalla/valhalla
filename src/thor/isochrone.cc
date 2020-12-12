@@ -63,7 +63,7 @@ void Isochrone::ConstructIsoTile(
   } else if (mode == TravelMode::kPedestrian) {
     max_distance = max_seconds_ * 5.0f * kMPHtoMetersPerSec;
   } else if (mode == TravelMode::kBicycle) {
-    max_distance = max_seconds_ * 5.0f * kMPHtoMetersPerSec;
+    max_distance = max_seconds_ * 20.0f * kMPHtoMetersPerSec;
   } else {
     // A driving mode
     max_distance = max_seconds_ * 70.0f * kMPHtoMetersPerSec;

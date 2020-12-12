@@ -183,8 +183,8 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
-    bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, newcost.cost, 0.0f,
-                               mode_, path_dist, transition_cost, false, restriction_idx);
+    bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
+                               transition_cost, path_dist, false, restriction_idx);
     adjacencylist_->add(idx);
   }
 
@@ -336,8 +336,8 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
-    bdedgelabels_.emplace_back(pred_idx, edgeid, opp_edge_id, directededge, newcost, newcost.cost,
-                               0.0f, mode_, path_dist, transition_cost, false, restriction_idx);
+    bdedgelabels_.emplace_back(pred_idx, edgeid, opp_edge_id, directededge, newcost, mode_,
+                               transition_cost, path_dist, false, restriction_idx);
     adjacencylist_->add(idx);
   }
 
@@ -790,6 +790,8 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
 
       // Get cost
       Cost cost = costing->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
+      // Get path distance
+      auto path_dist = edge.distance() * (1 - edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -801,8 +803,8 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // to indicate the origin of the path.
       uint32_t idx = bdedgelabels_.size();
       int restriction_idx = -1;
-      bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, cost.cost,
-                                 0., mode_, Cost{}, false, restriction_idx);
+      bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
+                                 Cost{}, path_dist, false, restriction_idx);
       // Set the origin flag
       bdedgelabels_.back().set_origin();
 
@@ -855,6 +857,8 @@ void Dijkstras::SetDestinationLocations(
 
       // Get the cost
       Cost cost = costing->EdgeCost(directededge, tile) * edge.percent_along();
+      // Get the path distance
+      auto path_dist = edge.distance() * edge.percent_along();
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -867,8 +871,8 @@ void Dijkstras::SetDestinationLocations(
       // edge (edgeid) is set.
       uint32_t idx = bdedgelabels_.size();
       int restriction_idx = -1;
-      bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, cost.cost,
-                                 0., mode_, Cost{}, false, restriction_idx);
+      bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
+                                 Cost{}, path_dist, false, restriction_idx);
       adjacencylist_->add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id));
     }

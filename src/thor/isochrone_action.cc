@@ -17,10 +17,13 @@ std::string thor_worker_t::isochrones(Api& request) {
   std::unordered_map<const IsoMetrics, std::unordered_map<float, std::string>> colors;
 
   for (const auto& contour : options.contours()) {
-    contours_time.push_back(contour.time());
-    colors[IsoMetrics::kTime][contour.time()] = contour.color();
-    contours_distance.push_back(contour.distance());
-    colors[IsoMetrics::kDistance][contour.distance()] = contour.color();
+    if (contour.has_time()) {
+      contours_time.push_back(contour.time());
+      colors[IsoMetrics::kTime][contour.time()] = contour.color();
+    } else if (contour.has_distance()) {
+      contours_distance.push_back(contour.distance());
+      colors[IsoMetrics::kDistance][contour.distance()] = contour.color();
+    }
   }
   // sort the contour vectors in descending order
   std::sort(contours_time.begin(), contours_time.end(), std::greater<float>());
@@ -37,18 +40,17 @@ std::string thor_worker_t::isochrones(Api& request) {
   // Cost (including penalties) is used when adding to the adjacency list but the elapsed
   // time in seconds is used when terminating the search. The + 10 minutes adds a buffer for edges
   // where there has been a higher cost that might still be marked in the isochrone
-  auto grid =
-      (costing == "multimodal" || costing == "transit")
-          ? isochrone_gen.ComputeMultiModal(*options.mutable_locations(),
-                                            contours_time.front() + 10.0f,
-                                            contours_distance.front() + 10.0f, *reader, mode_costing,
-                                            mode)
-          : isochrone_gen.Compute(*options.mutable_locations(), contours_time.front() + 10.0f,
-                                  contours_distance.front() + 10.0f, *reader, mode_costing, mode);
+  auto max_time = contours_time.empty() ? kNoIsoMetric : contours_time.front() + 10.0f;
+  auto max_dist = contours_distance.empty() ? kNoIsoMetric : contours_distance.front() + 10.0f;
+  auto grid = (costing == "multimodal" || costing == "transit")
+                  ? isochrone_gen.ComputeMultiModal(*options.mutable_locations(), max_time, max_dist,
+                                                    *reader, mode_costing, mode)
+                  : isochrone_gen.Compute(*options.mutable_locations(), max_time, max_dist, *reader,
+                                          mode_costing, mode);
 
   // hold isochrones and isodistances in one map if available
   std::map<const IsoMetrics, const tyr::contours_t> isolines;
-  if (contours_time.front() != kNoIsoMetric) {
+  if (!contours_time.empty()) {
     // turn it into geojson
     isolines.emplace(IsoMetrics::kTime,
                      grid->GenerateContours(contours_time,
@@ -56,7 +58,7 @@ std::string thor_worker_t::isochrones(Api& request) {
                                             options.polygons(), options.denoise(),
                                             options.generalize()));
   }
-  if (contours_distance.front() != kNoIsoMetric) {
+  if (!contours_distance.empty()) {
     isolines.emplace(IsoMetrics::kDistance,
                      grid->GenerateContours(contours_distance,
                                             [](const time_distance_t& td) { return td.dist; },

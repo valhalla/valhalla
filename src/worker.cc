@@ -100,7 +100,7 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
     {150, 400}, {151, 400}, {152, 400}, {153, 400}, {154, 400}, {155, 400}, {156, 400}, {157, 400},
     {158, 400}, {159, 400},
 
-    {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400}, {165, 400}, {166, 400},
+    {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400}, {165, 400}, {166, 400}, {167, 400},
 
     {170, 400}, {171, 400}, {172, 400},
 
@@ -549,9 +549,12 @@ void parse_contours(const rapidjson::Document& doc,
 
       // Add new contour object to list
       auto* contour = contours->Add();
-      // Set contour time & distance
-      contour->set_time(t);
-      contour->set_distance(d);
+      // Set contour time or distance
+      if (t != midgard::kNoIsoMetric) {
+        contour->set_time(t);
+      } else if (d != midgard::kNoIsoMetric) {
+        contour->set_distance(d);
+      }
 
       // If specified, grab and set contour color
       auto color = rapidjson::get_optional<std::string>(json_contour, "/color");

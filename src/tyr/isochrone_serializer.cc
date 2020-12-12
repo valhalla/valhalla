@@ -34,10 +34,6 @@ serializeIsochrones(const Api& request,
     auto current_colors = colors.at(metric_contours.first);
     auto metric_json = current_metric == midgard::IsoMetrics::kDistance ? "distance" : "time";
     for (const auto& interval : current_contours) {
-      // Skip empty contours
-      if (interval.first == midgard::kNoIsoMetric) {
-        continue;
-      }
       auto color_itr = current_colors.find(interval.first);
       // color was supplied
       std::stringstream hex;
