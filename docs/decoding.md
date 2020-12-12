@@ -159,5 +159,5 @@ def decode(encoded):
   #hand back the list of coordinates
   return decoded
 
-print decode(sys.argv[1])
+print(decode(sys.argv[1]))
 ```

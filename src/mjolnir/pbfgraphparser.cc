@@ -772,6 +772,15 @@ public:
     tag_handlers_["guidance_view:jct:overlay:backward"] = [this]() {
       way_.set_bwd_jct_overlay_index(osmdata_.name_offset_map.index(tag_.second));
     };
+    tag_handlers_["guidance_view:signboard:base"] = [this]() {
+      way_.set_fwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["guidance_view:signboard:base:forward"] = [this]() {
+      way_.set_fwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["guidance_view:signboard:base:backward"] = [this]() {
+      way_.set_bwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
+    };
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
