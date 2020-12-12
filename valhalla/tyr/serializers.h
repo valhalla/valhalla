@@ -41,7 +41,7 @@ std::string serializeMatrix(const Api& request,
  */
 using contour_t = std::list<midgard::PointLL>;
 using feature_t = std::list<contour_t>;
-using contours_t = std::map<float, std::list<feature_t>>;
+using contours_t = std::map<float, std::list<feature_t>, std::greater<float>>;
 std::string
 serializeIsochrones(const Api& request,
                     const std::map<const midgard::IsoMetrics, const contours_t>& grid_contours,

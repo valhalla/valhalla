@@ -112,7 +112,7 @@ public:
 
   using contour_t = std::list<PointLL>;
   using feature_t = std::list<contour_t>;
-  using contours_t = std::map<float, std::list<feature_t>>;
+  using contours_t = std::map<float, std::list<feature_t>, std::greater<float>>;
   /**
    * TODO: implement two versions of this, leave this one for linestring contours
    * and make another for polygons
@@ -152,7 +152,7 @@ public:
                      (s[p2] * tile_corners[p1].y() - s[p1] * tile_corners[p2].y()) / ds);
     };
 
-    // we need something to hold each iso-line, they're already sorted
+    // we need something to hold each iso-line, bigger ones first
     contours_t contours;
     for (auto v : contour_intervals) {
       contours[v].emplace_back();
