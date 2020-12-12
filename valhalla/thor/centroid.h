@@ -166,7 +166,8 @@ protected:
   std::unordered_set<PathIntersection> intersections_;
 
   // track the best intersection so far so we can return partial results
-  PathIntersection best_intersection_;
+  PathIntersection best_intersection_{baldr::kInvalidGraphId, baldr::kInvalidGraphId,
+                                      baldr::kMaxMultiPathId};
 
   // number of paths we are tracking
   uint8_t location_count_;
