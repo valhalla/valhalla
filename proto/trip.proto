@@ -277,6 +277,7 @@ message TripLeg {
       kMotorwayJunction = 9;        // Highway = motorway_junction
       kBorderControl = 10;          // Border control
       kTollGantry = 11;             // Toll gantry
+      kSumpBuster = 12;             // Sump Buster
     }
 
     optional Edge edge = 1;
