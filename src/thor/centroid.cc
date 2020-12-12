@@ -167,10 +167,12 @@ Centroid::FormPaths(const google::protobuf::RepeatedPtrField<valhalla::Location>
 
     // reverse the path since we recovered it starting at the beginning
     std::reverse(path.begin(), path.end());
-  }
 
-  // TODO: the final edge in each path could be a long one we should probably pick the optimal spot
-  // along it to make all paths to it the most happy
+    // TODO: the final edge in each path could be a long one we should probably pick the optimal spot
+    // along it to make all paths to it the most happy. for now we'll take the mid point
+    auto edge_cost = path.back().elapsed_cost - path.back().transition_cost;
+    path.back().elapsed_cost -= edge_cost * .5;
+  }
 
   return paths;
 }
