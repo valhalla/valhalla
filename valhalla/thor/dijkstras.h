@@ -24,7 +24,7 @@ namespace thor {
 
 enum class InfoRoutingType {
   forward,
-  bidirectional,
+  reverse,
   multi_modal,
 };
 
@@ -131,6 +131,12 @@ protected:
 
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
+
+  // when expanding should we treat each location as its own individual path to track concurrently but
+  // separately from the other paths
+  bool multipath_;
+
+  // TODO: add an interrupt here so that the caller can abort the main loop externally
 
   /**
    * Initialization prior to computing the graph expansion

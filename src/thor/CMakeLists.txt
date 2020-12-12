@@ -5,6 +5,7 @@ set(sources
   astar_bss.cc
   attributes_controller.cc
   bidirectional_astar.cc
+  centroid.cc
   costmatrix.cc
   dijkstras.cc
   isochrone_action.cc

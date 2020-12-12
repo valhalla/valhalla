@@ -30,8 +30,9 @@ public:
       : predecessor_(baldr::kInvalidLabel), path_distance_(0), restrictions_(0),
         edgeid_(baldr::kInvalidGraphId), opp_index_(0), opp_local_idx_(0), mode_(0),
         endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
-        origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), path_index_(0),
+        origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), path_id_(0),
         restriction_idx_(0), cost_(0, 0), sortcost_(0), distance_(0), transition_cost_(0, 0) {
+    assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
   /**
@@ -47,8 +48,8 @@ public:
    * @param path_distance    Accumulated path distance
    * @param transition_cost  Transition cost
    * @param restriction_idx  If this label has restrictions, the index where the restriction is found
-   * @param path_index       When searching more than one path at a time this denotes which path the
-   *                         this label is tracking. Its not the label index in the path!
+   * @param path_id          When searching more than one path at a time this denotes which path the
+   *                         this label is tracking
    */
   EdgeLabel(const uint32_t predecessor,
             const baldr::GraphId& edgeid,
@@ -60,7 +61,7 @@ public:
             const uint32_t path_distance,
             const Cost& transition_cost,
             const uint8_t restriction_idx,
-            const uint8_t path_index = 0)
+            const uint8_t path_id = 0)
       : predecessor_(predecessor), path_distance_(path_distance), restrictions_(edge->restrictions()),
         edgeid_(edgeid), opp_index_(edge->opp_index()), opp_local_idx_(edge->opp_local_idx()),
         mode_(static_cast<uint32_t>(mode)), endnode_(edge->endnode()),
@@ -70,8 +71,9 @@ public:
         deadend_(edge->deadend()),
         on_complex_rest_(edge->part_of_complex_restriction() || edge->start_restriction() ||
                          edge->end_restriction()),
-        path_index_(path_index), restriction_idx_(restriction_idx), cost_(cost), sortcost_(sortcost),
+        path_id_(path_id), restriction_idx_(restriction_idx), cost_(cost), sortcost_(sortcost),
         distance_(dist), transition_cost_(transition_cost) {
+    assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
   /**
@@ -338,6 +340,16 @@ public:
     return transition_cost_;
   }
 
+  /**
+   * Returns the location/path id (index) of the path that this label is tracking. Useful when your
+   * algorithm tracks multiple path expansions at the same time
+   *
+   * @return  the id of the path that this label is tracking
+   */
+  uint8_t path_id() const {
+    return path_id_;
+  }
+
 protected:
   // predecessor_: Index to the predecessor edge label information.
   // Note: invalid predecessor value uses all 32 bits (so if this needs to
@@ -351,7 +363,7 @@ protected:
   uint32_t restrictions_ : 7;
 
   /**
-   * edgeid_:         Graph Id of the edge.
+   * edgeid_:        Graph Id of the edge.
    * opp_index_:     Index at the end node of the opposing directed edge.
    * opp_local_idx_: Index at the end node of the opposing local edge. This
    *                 value can be compared to the directed edge local_edge_idx
@@ -389,9 +401,9 @@ protected:
   uint64_t on_complex_rest_ : 1;
   uint64_t spare_0 : 2;
 
-  // path_index can be used to track more than one path at the same time in the same labelset
+  // path id can be used to track more than one path at the same time in the same labelset
   // its limited to 7 bits because edgestatus only had 7 and matching made sense to reduce confusion
-  uint32_t path_index_ : 7;
+  uint32_t path_id_ : 7;
   uint32_t restriction_idx_ : 8;
   uint32_t spare_1 : 17;
 
@@ -429,8 +441,8 @@ public:
    * @param tc                Transition cost entering this edge.
    * @param not_thru_pruning  Is not thru pruning enabled.
    * @param restriction_idx   If this label has restrictions, the index where the restriction is found
-   * @param path_index       When searching more than one path at a time this denotes which path the
-   *                         this label is tracking. Its not the label index in the path!
+   * @param path_id           When searching more than one path at a time this denotes which path the
+   *                          this label is tracking
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -443,7 +455,7 @@ public:
               const sif::Cost& transition_cost,
               const bool not_thru_pruning,
               const uint8_t restriction_idx,
-              const uint8_t path_index = 0)
+              const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -454,7 +466,7 @@ public:
                   0,
                   transition_cost,
                   restriction_idx,
-                  path_index),
+                  path_id),
         opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
   }
 
@@ -472,8 +484,8 @@ public:
    * @param path_distance     Accumulated path distance.
    * @param not_thru_pruning  Is not thru pruning enabled.
    * @param restriction_idx   If this label has restrictions, the index where the restriction is found
-   * @param path_index       When searching more than one path at a time this denotes which path the
-   *                         this label is tracking. Its not the label index in the path!
+   * @param path_id           When searching more than one path at a time this denotes which path the
+   *                          this label is tracking
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -485,7 +497,7 @@ public:
               const uint32_t path_distance,
               const bool not_thru_pruning,
               const uint8_t restriction_idx,
-              const uint8_t path_index = 0)
+              const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -496,7 +508,7 @@ public:
                   path_distance,
                   transition_cost,
                   restriction_idx,
-                  path_index),
+                  path_id),
         opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
   }
 
@@ -511,8 +523,8 @@ public:
    * @param dist             Distance to the destination in meters.
    * @param mode             Mode of travel along this edge.
    * @param restriction_idx  If this label has restrictions, the index where the restriction is found
-   * @param path_index       When searching more than one path at a time this denotes which path the
-   *                         this label is tracking. Its not the label index in the path!
+   * @param path_id          When searching more than one path at a time this denotes which path the
+   *                         this label is tracking
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -522,7 +534,7 @@ public:
               const float dist,
               const sif::TravelMode mode,
               const uint8_t restriction_idx,
-              const uint8_t path_index = 0)
+              const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -533,7 +545,7 @@ public:
                   0,
                   Cost{},
                   restriction_idx,
-                  path_index),
+                  path_id),
         not_thru_pruning_(!edge->not_thru()) {
     opp_edgeid_ = {};
   }
@@ -629,8 +641,8 @@ public:
    * @param has_transit      Does the path to this edge have any transit.
    * @param transition_cost  Transition cost
    * @param restriction_idx  If this label has restrictions, the index where the restriction is found
-   * @param path_index       When searching more than one path at a time this denotes which path the
-   *                         this label is tracking. Its not the label index in the path!
+   * @param path_id          When searching more than one path at a time this denotes which path the
+   *                         this label is tracking
    */
   MMEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -647,7 +659,7 @@ public:
               const bool has_transit,
               const Cost& transition_cost,
               const uint8_t restriction_idx,
-              const uint8_t path_index = 0)
+              const uint8_t path_id = 0)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -658,7 +670,7 @@ public:
                   path_distance,
                   transition_cost,
                   restriction_idx,
-                  path_index),
+                  path_id),
         prior_stopid_(prior_stopid), tripid_(tripid), blockid_(blockid),
         transit_operator_(transit_operator), has_transit_(has_transit) {
   }

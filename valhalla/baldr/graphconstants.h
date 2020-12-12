@@ -21,6 +21,11 @@ constexpr uint32_t kMaxGraphId = 2097151;
 // Invalid edge label index
 constexpr uint32_t kInvalidLabel = std::numeric_limits<uint32_t>::max();
 
+// The largest path id that can be used in a multi path expansion
+// Up to this many separate paths can be tracked concurrently with a single labelset/edgestatus
+// The value is limited to fit into the 7 spare bits of a 32 bit tile/level id in edgestatus
+constexpr uint8_t kMaxMultiPathId = 127;
+
 // Invalid restriction index
 constexpr uint8_t kInvalidRestriction = std::numeric_limits<uint8_t>::max();
 
