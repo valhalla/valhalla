@@ -97,7 +97,7 @@ valhalla output looks like this:
 */
 using namespace std;
 
-json::MapPtr summary(const valhalla::Api& api) {
+json::MapPtr summary(const valhalla::Api& api, int route_index) {
 
   double route_time = 0;
   double route_length = 0;
@@ -105,9 +105,9 @@ json::MapPtr summary(const valhalla::Api& api) {
   bool has_time_restrictions = false;
   AABB2<PointLL> bbox(10000.0f, 10000.0f, -10000.0f, -10000.0f);
   std::vector<double> recost_times(api.options().recostings_size(), 0);
-  for (int leg_index = 0; leg_index < api.directions().routes(0).legs_size(); ++leg_index) {
-    const auto& leg = api.directions().routes(0).legs(leg_index);
-    const auto& trip_leg = api.trip().routes(0).legs(leg_index);
+  for (int leg_index = 0; leg_index < api.directions().routes(route_index).legs_size(); ++leg_index) {
+    const auto& leg = api.directions().routes(route_index).legs(leg_index);
+    const auto& trip_leg = api.trip().routes(route_index).legs(leg_index);
     route_time += leg.summary().time();
     route_length += leg.summary().length();
     route_cost += trip_leg.node().rbegin()->cost().elapsed_cost().cost();
@@ -626,7 +626,7 @@ std::string serialize(const Api& api) {
   auto alternates = json::array({});
   for (int i = 0; i < api.directions().routes_size(); ++i) {
     auto trip_json = json::map({{"locations", locations(api.directions().routes(i).legs())},
-                                {"summary", summary(api)},
+                                {"summary", summary(api, i)},
                                 {"legs", legs(api, i)},
                                 {"status_message", string("Found route between points")},
                                 {"status", static_cast<uint64_t>(0)}, // 0 success
