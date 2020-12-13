@@ -99,13 +99,20 @@ public:
    * @param reader     Graph reader to provide access to graph primitives
    * @param costings   Per mode costing objects
    * @param mode       The mode specifying which costing to use
-   * @return           The list of paths, one per origin, to the centroid
+   * @param centroid   The location where all paths meet
+   * @return           The list of paths, one per origin, to the centroid as well as the centroid
    */
   std::vector<std::vector<PathInfo>>
   forward(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
           baldr::GraphReader& reader,
           const sif::mode_costing_t& costings,
-          const sif::TravelMode mode);
+          const sif::TravelMode mode,
+          valhalla::Location& centroid);
+
+  /**
+   * Resets internal state before the next call
+   */
+  virtual void Clear() override;
 
 protected:
   /**
@@ -145,21 +152,20 @@ protected:
                                  uint32_t& edge_label_reservation) const override;
 
   /**
-   * Resets internal state before the next call
-   */
-  virtual void Clear() override;
-
-  /**
    * Walks back the labels in the label set for a each location to recover its path to the centroid
    *
    * @param locations   The location from which each path was seeded
    * @param labels      The edge labels used to recover the path
+   * @param reader      used for accessing graph primitives
+   * @param centroid    The location where all paths meet
    * @return The list of paths, one for each location, to the centroid
    */
   template <typename label_container_t>
   std::vector<std::vector<PathInfo>>
   FormPaths(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-            const label_container_t& labels) const;
+            const label_container_t& labels,
+            baldr::GraphReader& reader,
+            valhalla::Location& centroid) const;
 
   // the key is the edge id and the value is the label indices for each location
   // we store both directions of the edge to avoid strange uturns at the centroid

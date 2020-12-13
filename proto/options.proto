@@ -150,6 +150,7 @@ message Options {
     height = 8;
     transit_available = 9;
     expansion = 10;
+    centroid = 11;
   }
 
   enum DateTimeType {

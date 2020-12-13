@@ -3,6 +3,47 @@
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
+namespace {
+
+/**
+ * Constructs a path location as the mid point of an edge
+ *
+ * @param edge_id  the id of the edge from which to construct the location
+ * @param reader   provides access to graph primitives
+ * @return the constructed location
+ */
+valhalla::Location make_centroid(const valhalla::baldr::GraphId& edge_id,
+                                 valhalla::baldr::GraphReader& reader) {
+  using namespace valhalla;
+  const baldr::GraphTile* tile = nullptr;
+  const auto* edge = reader.directededge(baldr::GraphId(edge_id), tile);
+  auto info = tile->edgeinfo(edge->edgeinfo_offset());
+  auto shape = info.shape();
+  auto length = midgard::length(shape);
+  auto mid_point = midgard::resample_spherical_polyline(shape, length / 2.)[1];
+  auto names = info.GetNames();
+
+  valhalla::Location location;
+  location.Clear();
+  location.mutable_ll()->set_lng(mid_point.first);
+  location.mutable_ll()->set_lat(mid_point.second);
+
+  auto* path_edge = location.mutable_path_edges()->Add();
+  std::for_each(names.begin(), names.end(),
+                [path_edge](const std::string& n) { path_edge->mutable_names()->Add()->assign(n); });
+  path_edge->set_begin_node(false);
+  path_edge->set_end_node(false);
+  path_edge->set_distance(0);
+  path_edge->set_percent_along(.5);
+  path_edge->set_inbound_reach(0);
+  path_edge->set_outbound_reach(0);
+  path_edge->set_side_of_street(valhalla::Location::kNone);
+  path_edge->mutable_ll()->CopyFrom(location.ll());
+  return location;
+}
+
+} // namespace
+
 namespace valhalla {
 namespace thor {
 
@@ -15,11 +56,12 @@ PathIntersection::PathIntersection(uint64_t edge_id, uint64_t opp_id, uint8_t lo
     std::swap(edge_id_, opp_id_);
   // we pre-flip the bits of the paths we arent tracking so its as if they are already done
   // that way its easy to tell when we are done later on
-  uint64_t low_bits = std::min(location_count, static_cast<uint8_t>(64));
-  lower_mask_ = ~((1 << low_bits) - 1);
-  if (location_count > 64) {
-    uint64_t high_bits = static_cast<uint64_t>(location_count - 64);
-    upper_mask_ = ~((1 << high_bits) - 1);
+  if (location_count < 64) {
+    lower_mask_ = ~((1ull << static_cast<uint64_t>(location_count)) - 1ull);
+    upper_mask_ = 0xffffffffffffffff;
+  } else {
+    lower_mask_ = 0;
+    upper_mask_ = ~((1ull << static_cast<uint64_t>(location_count - 64)) - 1ull);
   }
 }
 
@@ -32,14 +74,14 @@ bool PathIntersection::AddPath(uint8_t path_id) const {
     upper_mask_ |= 1 << static_cast<uint64_t>(path_id - 64);
   }
   // this will only be true once all the bits are flipped to true
-  return lower_mask_ & upper_mask_;
+  return (lower_mask_ & upper_mask_) == 0xffffffffffffffff;
 }
 
 // has this path converged on this intersection (edge pair)
 bool PathIntersection::HasConverged(uint8_t path_id) const {
   assert(path_id < 128);
   if (path_id < 64) {
-    return lower_mask_ & (1 >> static_cast<uint64_t>(path_id));
+    return lower_mask_ & (1 << static_cast<uint64_t>(path_id));
   } else {
     return upper_mask_ & (1 << static_cast<uint64_t>(path_id - 64));
   }
@@ -55,20 +97,25 @@ std::vector<std::vector<PathInfo>>
 Centroid::forward(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                   baldr::GraphReader& reader,
                   const sif::mode_costing_t& costings,
-                  const sif::TravelMode mode) {
+                  const sif::TravelMode mode,
+                  valhalla::Location& centroid) {
   // preflight check
   if (locations.size() > baldr::kMaxMultiPathId)
     throw std::runtime_error("Max number of locations exceeded");
 
   // initialize state
-  best_intersection_ = PathIntersection{baldr::kInvalidGraphId, baldr::kInvalidGraphId, 0};
   location_count_ = locations.size();
+  best_intersection_ =
+      PathIntersection{baldr::kInvalidGraphId, baldr::kInvalidGraphId, location_count_};
+
   // tell dijkstras we want to track the origin paths separately/concurrently
   multipath_ = true;
+
   // compute the expansion
   Dijkstras::Compute(locations, reader, costings, mode);
+
   // create the paths from the labelset
-  return FormPaths(locations, bdedgelabels_);
+  return FormPaths(locations, bdedgelabels_, reader, centroid);
 }
 
 // this is fired when the edge in the label has been settled (shortest path found) so we need to check
@@ -128,7 +175,12 @@ void Centroid::Clear() {
 template <typename label_container_t>
 std::vector<std::vector<PathInfo>>
 Centroid::FormPaths(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                    const label_container_t& labels) const {
+                    const label_container_t& labels,
+                    baldr::GraphReader& reader,
+                    valhalla::Location& centroid) const {
+  // construct a centroid/destination where all the paths meet
+  centroid = make_centroid(baldr::GraphId(best_intersection_.edge_id_), reader);
+
   // a place to store the results
   std::vector<std::vector<PathInfo>> paths;
   paths.reserve(locations.size());
@@ -179,11 +231,15 @@ Centroid::FormPaths(const google::protobuf::RepeatedPtrField<valhalla::Location>
 
 template std::vector<std::vector<PathInfo>> Centroid::FormPaths<decltype(Dijkstras::bdedgelabels_)>(
     const google::protobuf::RepeatedPtrField<valhalla::Location>&,
-    const decltype(Dijkstras::bdedgelabels_)&) const;
+    const decltype(Dijkstras::bdedgelabels_)&,
+    baldr::GraphReader&,
+    valhalla::Location&) const;
 
 template std::vector<std::vector<PathInfo>> Centroid::FormPaths<decltype(Dijkstras::mmedgelabels_)>(
     const google::protobuf::RepeatedPtrField<valhalla::Location>&,
-    const decltype(Dijkstras::mmedgelabels_)&) const;
+    const decltype(Dijkstras::mmedgelabels_)&,
+    baldr::GraphReader&,
+    valhalla::Location&) const;
 
 } // namespace thor
 } // namespace valhalla

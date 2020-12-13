@@ -277,10 +277,10 @@ travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver) {
   throw std::runtime_error("Unhandled case");
 }
 
-json::ArrayPtr legs(const valhalla::Api& api) {
+json::ArrayPtr legs(const valhalla::Api& api, int route_index) {
   auto legs = json::array({});
-  const auto& directions_legs = api.directions().routes(0).legs();
-  auto trip_leg_itr = api.trip().routes(0).legs().begin();
+  const auto& directions_legs = api.directions().routes(route_index).legs();
+  auto trip_leg_itr = api.trip().routes(route_index).legs().begin();
   for (const auto& directions_leg : directions_legs) {
     auto leg = json::map({});
     auto summary = json::map({});
@@ -622,15 +622,28 @@ json::ArrayPtr legs(const valhalla::Api& api) {
 
 std::string serialize(const Api& api) {
   // build up the json object
-  auto trip_json = json::map({{"locations", locations(api.directions().routes(0).legs())},
-                              {"summary", summary(api)},
-                              {"legs", legs(api)},
-                              {"status_message", string("Found route between points")},
-                              {"status", static_cast<uint64_t>(0)}, // 0 success
-                              {"units", valhalla::Options_Units_Enum_Name(api.options().units())},
-                              {"language", api.options().language()}});
-  tyr::route_references(trip_json, api.trip().routes(0), api.options());
-  auto json = json::map({{"trip", trip_json}});
+  auto json = json::map({});
+  auto alternates = json::array({});
+  for (int i = 0; i < api.directions().routes_size(); ++i) {
+    auto trip_json = json::map({{"locations", locations(api.directions().routes(i).legs())},
+                                {"summary", summary(api)},
+                                {"legs", legs(api, i)},
+                                {"status_message", string("Found route between points")},
+                                {"status", static_cast<uint64_t>(0)}, // 0 success
+                                {"units", valhalla::Options_Units_Enum_Name(api.options().units())},
+                                {"language", api.options().language()}});
+    tyr::route_references(trip_json, api.trip().routes(i), api.options());
+    if (i == 0) {
+      json->emplace("trip", trip_json);
+    } else {
+      alternates->push_back(trip_json);
+    }
+  }
+
+  if (!alternates->empty()) {
+    json->emplace("alternates", alternates);
+  }
+
   if (api.options().has_id()) {
     json->emplace("id", api.options().id());
   }

@@ -49,6 +49,16 @@ const std::unordered_map<std::string, float> kMaxDistances = {
 constexpr float kDistanceScale = 10.f;
 constexpr double kMilePerMeter = 0.000621371;
 
+std::string serialize_to_pbf(Api& request) {
+  std::string buf;
+  if (!request.SerializeToString(&buf)) {
+    LOG_ERROR("Failed serializing to pbf in Thor::Worker - trace_route");
+    throw valhalla_exception_t{401, boost::optional<std::string>(
+                                        "Failed serializing to pbf in Thor::Worker")};
+  }
+  return buf;
+};
+
 } // namespace
 
 namespace valhalla {
@@ -93,16 +103,6 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
 thor_worker_t::~thor_worker_t() {
 }
 
-std::string serialize_to_pbf(Api& request) {
-  std::string buf;
-  if (!request.SerializeToString(&buf)) {
-    LOG_ERROR("Failed serializing to pbf in Thor::Worker - trace_route");
-    throw valhalla_exception_t{401, boost::optional<std::string>(
-                                        "Failed serializing to pbf in Thor::Worker")};
-  }
-  return buf;
-};
-
 #ifdef HAVE_HTTP
 prime_server::worker_t::result_t
 thor_worker_t::work(const std::list<zmq::message_t>& job,
@@ -142,7 +142,7 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
       }
       case Options::isochrone:
         result = to_response(isochrones(request), info, request);
-        denominator = options.sources_size() * options.targets_size();
+        denominator = options.locations_size();
         break;
       case Options::route: {
         route(request);
@@ -162,6 +162,12 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
         break;
       case Options::expansion: {
         result = to_response(expansion(request), info, request);
+        denominator = options.locations_size();
+        break;
+      }
+      case Options::centroid: {
+        centroid(request);
+        result.messages.emplace_back(serialize_to_pbf(request));
         denominator = options.locations_size();
         break;
       }
@@ -360,6 +366,7 @@ void thor_worker_t::cleanup() {
   bss_astar.Clear();
   trace.clear();
   isochrone_gen.Clear();
+  centroid_gen.Clear();
   matcher_factory.ClearFullCache();
   if (reader->OverCommitted()) {
     reader->Trim();

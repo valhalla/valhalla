@@ -277,6 +277,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     switch (options.action()) {
       case Options::route:
       case Options::expansion:
+      case Options::centroid:
         route(request);
         result.messages.emplace_back(request.SerializeAsString());
         break;
