@@ -791,7 +791,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // Get cost
       Cost cost = costing->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
       // Get path distance
-      auto path_dist = edge.distance() * (1 - edge.percent_along());
+      auto path_dist = directededge->length() * (1 - edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -858,7 +858,7 @@ void Dijkstras::SetDestinationLocations(
       // Get the cost
       Cost cost = costing->EdgeCost(directededge, tile) * edge.percent_along();
       // Get the path distance
-      auto path_dist = edge.distance() * edge.percent_along();
+      auto path_dist = directededge->length() * edge.percent_along();
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
