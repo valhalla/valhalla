@@ -827,6 +827,7 @@ std::vector<costing_and_datetype> buildParams() {
 
   std::vector<std::string> costings = {"auto",  "motorcycle", "motor_scooter", "bus",
                                        "truck", "hov",        "taxi"};
+  params.reserve(costings.size());
   for (const auto& costing : costings) {
     // Add date_type:3 for time-invariant bidir a*
     params.emplace_back(std::make_tuple(costing, "3"));
