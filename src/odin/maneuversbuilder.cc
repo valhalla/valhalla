@@ -1821,7 +1821,6 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   if (IsFork(node_index, prev_edge.get(), curr_edge.get()) ||
       IsPedestrianFork(node_index, prev_edge.get(), curr_edge.get())) {
     maneuver.set_fork(true);
-
     return false;
   }
 
