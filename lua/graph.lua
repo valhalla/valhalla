@@ -1814,7 +1814,6 @@ function nodes_proc (kv, nokeys)
       motorcycle = motorcycle_tag or 1024
       emergency = emergency_tag or 16
       hov = hov_tag or 0
-      kv["greg"] = "found"
     end
   end
 
