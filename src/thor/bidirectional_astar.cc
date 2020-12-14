@@ -138,12 +138,10 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     const DirectedEdge* opp_edge;
     const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
     // Check if edge is null before using it (can happen with regional data sets)
-    if (!opp_edge) {
-      return false;
-    }
-    EdgeStatusInfo* opp_status = edgestatus_forward_.GetPtr(opp_edge_id, tile);
-    return ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx,
-                              {opp_edge, opp_edge_id, opp_status}, shortcuts, tile, offset_time);
+    return opp_edge &&
+           ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx,
+                              {opp_edge, opp_edge_id, edgestatus_forward_.GetPtr(opp_edge_id, tile)},
+                              shortcuts, tile, offset_time);
   }
 
   bool disable_uturn = false;
@@ -354,12 +352,10 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     const DirectedEdge* opp_edge;
     const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
     // Check if edge is null before using it (can happen with regional data sets)
-    if (!opp_edge) {
-      return false;
-    }
-    EdgeStatusInfo* opp_status = edgestatus_reverse_.GetPtr(opp_edge_id, tile);
-    return ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
-                              {opp_edge, opp_edge_id, opp_status}, shortcuts, tile, offset_time);
+    return opp_edge &&
+           ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
+                              {opp_edge, opp_edge_id, edgestatus_reverse_.GetPtr(opp_edge_id, tile)},
+                              shortcuts, tile, offset_time);
   }
 
   // We start off allowing uturns, and if we find any edge to expand from we disallow uturns here
