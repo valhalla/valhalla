@@ -150,6 +150,9 @@ thor::ExpansionRecommendation Centroid::ShouldExpand(baldr::GraphReader& reader,
   // TODO: we should probably reject certain road classes as a centroid if desired, if you wanted to
   // actually drive these paths it doesnt make sense to meet other drivers on a limited access road
 
+  // TODO: prune these when they are outside of a reasonable bounding box, if that leads to failure
+  // drop the bounding box and dont prune
+
   // quit as soon as we find a centroid, otherwise always continue looking
   if (is_centroid) {
     best_intersection_ = *found;

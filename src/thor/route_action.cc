@@ -229,6 +229,8 @@ void thor_worker_t::centroid(Api& request) {
     thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
                                 *origin, dest, {}, leg, {"centroid"}, interrupt, nullptr);
 
+    // TODO: set the time at the destination if time dependent
+
     // next route
     ++origin;
   }
