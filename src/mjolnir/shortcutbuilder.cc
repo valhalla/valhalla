@@ -172,7 +172,8 @@ bool CanContract(GraphReader& reader,
     return false;
   }
 
-  // Do not contract if the node is a gate or toll booth or toll gantry or sump buster or intersection type is a fork
+  // Do not contract if the node is a gate or toll booth or toll gantry or sump buster or intersection
+  // type is a fork
   if (nodeinfo->type() == NodeType::kGate || nodeinfo->type() == NodeType::kTollBooth ||
       nodeinfo->type() == NodeType::kTollGantry || nodeinfo->type() == NodeType::kSumpBuster ||
       nodeinfo->intersection() == IntersectionType::kFork) {
