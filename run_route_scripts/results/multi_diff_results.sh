@@ -1,10 +1,24 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -o errexit -o pipefail -o nounset
+
+###############################################################################
+### This script runs the diff_results.sh script between the specified 
+### baseline route directories and the specified latest route directories.
+### This script creates a multi diff report with the number of diffs for each
+### directory pair as well the actual diffs here:
+### $(date +%Y%m%d_%H%M%S)_multi_diff_report.diff
+
+function usage() {
+    echo "Usage: $0 baseline.txt latest.txt"
+    exit 1
+}
 
 # Verify argument exists
 if [ $# -ne 2 ]
 then
   echo "Must supply two files with a list of directories"
-  exit 1
+  usage
 fi
 
 # Verify file exists
@@ -12,7 +26,7 @@ DIRS_BEFORE=${1}
 if [ ! -f "${DIRS_BEFORE}" ]
 then
   echo "${DIRS_BEFORE} does not exist"
-  exit 1
+  usage
 fi
 
 # Verify file exists
@@ -20,7 +34,7 @@ DIRS_AFTER=${2}
 if [ ! -f "${DIRS_AFTER}" ]
 then
   echo "${DIRS_AFTER} does not exist"
-  exit 1
+  usage
 fi
 
 readarray -t DIRS_BEFORE_LIST < ${DIRS_BEFORE}
