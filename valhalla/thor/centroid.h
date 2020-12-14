@@ -51,10 +51,10 @@ struct PathIntersection {
    */
   bool operator==(const PathIntersection& i) const;
 
-  // instead of having two full records for an edge and for its opposing edge we store both
-  // assuming that a centroid is equally accessible from either side of an edge (not strictly true)
+  // instead of having two full records for an edge and for its opposing edge we store one using the
+  // lesser of the two ids to make the tracking deterministic. this assumes that a centroid is equally
+  // accessible from either side of an edge (not strictly true)
   uint64_t edge_id_;
-  uint64_t opp_id_;
 
   // each locations label index for the shortest path to this intersection from that location
   // currently we only support 127 paths at the same time so we use bit fields to mark which

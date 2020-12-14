@@ -49,11 +49,11 @@ namespace thor {
 
 // constructor
 PathIntersection::PathIntersection(uint64_t edge_id, uint64_t opp_id, uint8_t location_count)
-    : edge_id_(edge_id), opp_id_(opp_id) {
+    : edge_id_(edge_id) {
   assert(location_count < 128);
   // the smaller edge goes first for determinisms sake
-  if (opp_id_ < edge_id_)
-    std::swap(edge_id_, opp_id_);
+  if (opp_id < edge_id_)
+    edge_id_ = opp_id;
   // we pre-flip the bits of the paths we arent tracking so its as if they are already done
   // that way its easy to tell when we are done later on
   if (location_count < 64) {
@@ -182,7 +182,11 @@ Centroid::FormPaths(const google::protobuf::RepeatedPtrField<valhalla::Location>
                     baldr::GraphReader& reader,
                     valhalla::Location& centroid) const {
   // construct a centroid/destination where all the paths meet
-  centroid = make_centroid(baldr::GraphId(best_intersection_.edge_id_), reader);
+  auto edge_id = baldr::GraphId(best_intersection_.edge_id_);
+  centroid = make_centroid(edge_id, reader);
+
+  // keep the opposing edge in case its a better path for some locations
+  auto opp_id = reader.GetOpposingEdgeId(edge_id);
 
   // a place to store the results
   std::vector<std::vector<PathInfo>> paths;
@@ -200,8 +204,8 @@ Centroid::FormPaths(const google::protobuf::RepeatedPtrField<valhalla::Location>
     path.reserve(path_reservation);
 
     // grab the edge statuses for both potential paths to two edges at the centroid
-    auto status = edgestatus_.Get(baldr::GraphId(best_intersection_.edge_id_), path_id);
-    auto opp_status = edgestatus_.Get(baldr::GraphId(best_intersection_.opp_id_), path_id);
+    auto status = edgestatus_.Get(edge_id, path_id);
+    auto opp_status = edgestatus_.Get(opp_id, path_id);
 
     // check the edge status for both edges and find the label that was on the cheapest path
     // if the first status either wasnt settled (or even reached) or it was but it wasnt cheapest
