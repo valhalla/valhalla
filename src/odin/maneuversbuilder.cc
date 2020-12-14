@@ -42,8 +42,6 @@ constexpr uint32_t kRelativeStraightTurnDegreeUpperBound = 30;
 
 constexpr float kShortForkThreshold = 0.05f; // Kilometers
 
-constexpr float kPencilPointLengthThreshold = 0.05f; // Kilometers
-
 // Kilometers - picked since the next rounded maneuver announcement will happen
 // in a quarter mile or 400 meters
 constexpr float kShortContinueThreshold = 0.6f;
@@ -2187,14 +2185,9 @@ bool ManeuversBuilder::IsLeftPencilPointUturn(int node_index,
   uint32_t turn_degree = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
 
   // If drive on right
-  // and the the turn is a sharp left (179 < turn < 211)
-  //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
+  // and the the turn is a sharp left (179 < turn < 226)
   // and oneway edges
-  if (curr_edge->drive_on_right() &&
-      (((turn_degree > 179) && (turn_degree < 211)) ||
-       (((prev_edge->length_km() < kPencilPointLengthThreshold) ||
-         (curr_edge->length_km() < kPencilPointLengthThreshold)) &&
-        (turn_degree > 179) && (turn_degree < 226))) &&
+  if (curr_edge->drive_on_right() && (turn_degree > 179) && (turn_degree < 226) &&
       prev_edge->IsOneway() && curr_edge->IsOneway()) {
     // If the above criteria is met then check the following criteria...
 
