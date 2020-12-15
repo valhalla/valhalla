@@ -1720,11 +1720,12 @@ function nodes_proc (kv, nokeys)
 
   --must shut these off if motor_vehicle = 0
   if motor_vehicle_tag == 0 then
-    bus_tag = 0
-    taxi_tag = 0
-    truck_tag = 0
-    moped_tag = 0
-    motorcycle_tag = 0
+    hov_tag = hov_tag or 0
+    bus_tag = bus_tag or 0
+    taxi_tag = taxi_tag or 0
+    truck_tag = truck_tag or 0
+    moped_tag = moped_tag or 0
+    motorcycle_tag = motorcycle_tag or 0
   end
 
   local emergency_tag --implies nil
@@ -1741,12 +1742,12 @@ function nodes_proc (kv, nokeys)
   local auto = auto_tag or 1
   local truck = truck_tag or 8
   local bus = bus_tag or 64
-  local taxi = taxi_tag or 32
+  local taxi = taxi_tag or auto_tag or 32
   local foot = foot_tag or 2
   local wheelchair = wheelchair_tag or 256
   local bike = bike_tag or 4
   local emergency = emergency_tag or 16
-  local hov = hov_tag or 128
+  local hov = hov_tag or auto_tag or 128
   local moped = moped_tag or 512
   local motorcycle = motorcycle_tag or 1024
 
