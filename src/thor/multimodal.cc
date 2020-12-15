@@ -52,8 +52,7 @@ MultiModalPathAlgorithm::~MultiModalPathAlgorithm() {
 }
 
 // Initialize prior to finding best path
-void MultiModalPathAlgorithm::Init(const midgard::PointLL& origll,
-                                   const midgard::PointLL& destll,
+void MultiModalPathAlgorithm::Init(const midgard::PointLL& destll,
                                    const std::shared_ptr<DynamicCost>& costing) {
   // Disable A* for multimodal
   astarheuristic_.Init(destll, 0.0f);
@@ -100,7 +99,7 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
                                      GraphReader& graphreader,
                                      const sif::mode_costing_t& mode_costing,
                                      const TravelMode mode,
-                                     const Options& options) {
+                                     const Options&) {
   // For pedestrian costing - set flag allowing use of transit connections
   // Set pedestrian costing to use max distance. TODO - need for other modes
   const auto& pc = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];

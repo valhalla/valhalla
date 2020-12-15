@@ -615,8 +615,7 @@ bool TimeDistanceMatrix::UpdateDestinations(
     std::vector<uint32_t>& destinations,
     const DirectedEdge* edge,
     const GraphTile* tile,
-    const EdgeLabel& pred,
-    const uint32_t predindex) {
+    const EdgeLabel& pred) {
   // For each destination along this edge
   for (auto dest_idx : destinations) {
     Destination& dest = destinations_[dest_idx];
