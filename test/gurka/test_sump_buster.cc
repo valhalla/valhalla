@@ -3,6 +3,16 @@
 
 using namespace valhalla;
 
+const std::vector<std::string>& costing = {"auto",          "hov",        "taxi",
+                                           "bus",           "truck",      "bicycle",
+                                           "motor_scooter", "motorcycle", "pedestrian"};
+
+void validate_path(valhalla::Api result, const std::vector<std::string>& expected_names) {
+  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+  auto leg = result.trip().routes(0).legs(0);
+  gurka::assert::raw::expect_path(result, expected_names);
+}
+
 TEST(Standalone, SumpBusterDefaults) {
   const std::string ascii_map = R"(
       A----B----C----D------------E
@@ -27,50 +37,14 @@ TEST(Standalone, SumpBusterDefaults) {
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_sump_busterdefaults");
-  auto result = gurka::route(map, "A", "I", "auto");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  auto leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EH", "HL", "KL", "JK", "IJ"});
 
-  result = gurka::route(map, "A", "I", "hov");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EH", "HL", "KL", "JK", "IJ"});
-
-  result = gurka::route(map, "A", "I", "taxi");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EH", "HL", "KL", "JK", "IJ"});
-
-  result = gurka::route(map, "A", "I", "bus");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BF", "FI"});
-
-  result = gurka::route(map, "A", "I", "truck");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BF", "FI"});
-
-  result = gurka::route(map, "A", "I", "bicycle");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BF", "FI"});
-
-  result = gurka::route(map, "A", "I", "motor_scooter");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BF", "FI"});
-
-  result = gurka::route(map, "A", "I", "motorcycle");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BF", "FI"});
-
-  result = gurka::route(map, "A", "I", "pedestrian");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BF", "FI"});
+  for (auto& c : costing) {
+    if (c == "auto" || c == "hov" || c == "taxi")
+      validate_path(gurka::route(map, "A", "I", c),
+                    {"AB", "BC", "CD", "DE", "EH", "HL", "KL", "JK", "IJ"});
+    else
+      validate_path(gurka::route(map, "A", "I", c), {"AB", "BF", "FI"});
+  }
 }
 
 TEST(Standalone, SumpBusterOverride) {
@@ -104,48 +78,8 @@ TEST(Standalone, SumpBusterOverride) {
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_sump_busteroverride");
-  auto result = gurka::route(map, "A", "I", "auto");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  auto leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GK", "JK", "IJ"});
 
-  result = gurka::route(map, "A", "I", "hov");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GK", "JK", "IJ"});
-
-  result = gurka::route(map, "A", "I", "taxi");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GK", "JK", "IJ"});
-
-  result = gurka::route(map, "A", "I", "bus");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GK", "JK", "IJ"});
-
-  result = gurka::route(map, "A", "I", "truck");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GK", "JK", "IJ"});
-
-  result = gurka::route(map, "A", "I", "bicycle");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GK", "JK", "IJ"});
-
-  result = gurka::route(map, "A", "I", "motor_scooter");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GK", "JK", "IJ"});
-
-  result = gurka::route(map, "A", "I", "motorcycle");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GK", "JK", "IJ"});
-
-  result = gurka::route(map, "A", "I", "pedestrian");
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  leg = result.trip().routes(0).legs(0);
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GK", "JK", "IJ"});
+  for (auto& c : costing) {
+    validate_path(gurka::route(map, "A", "I", c), {"AB", "BC", "CD", "DG", "GK", "JK", "IJ"});
+  }
 }
