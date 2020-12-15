@@ -22,8 +22,7 @@ TEST(Standalone, NodeAccess) {
       {"KL", {{"highway", "residential"}}},
   };
 
-  const gurka::nodes nodes = {{"F", {{"motor_vehicle", "no"}}},
-                              {"G", {{"motorcar", "no"}}}};
+  const gurka::nodes nodes = {{"F", {{"motor_vehicle", "no"}}}, {"G", {{"motorcar", "no"}}}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_node_access");
