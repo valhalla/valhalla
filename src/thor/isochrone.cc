@@ -138,46 +138,17 @@ void Isochrone::ConstructIsoTile(
   }
 }
 
-// Compute iso-tile that we can use to generate isochrones.
-std::shared_ptr<const GriddedData<PointLL>>
-Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-                   const unsigned int max_minutes,
-                   GraphReader& graphreader,
-                   const sif::mode_costing_t& mode_costing,
-                   const TravelMode mode) {
+std::shared_ptr<const midgard::GriddedData<midgard::PointLL>>
+Isochrone::Expand(const ExpansionType& expansion_type,
+                  google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                  const unsigned int max_minutes,
+                  baldr::GraphReader& reader,
+                  const sif::mode_costing_t& costings,
+                  const sif::TravelMode mode) {
   // Initialize and create the isotile
-  ConstructIsoTile(false, max_minutes, origin_locations, mode);
+  ConstructIsoTile(expansion_type == ExpansionType::multimodal, max_minutes, locations, mode);
   // Compute the expansion
-  Dijkstras::Compute(origin_locations, graphreader, mode_costing, mode);
-  return isotile_;
-}
-
-// Compute iso-tile that we can use to generate isochrones.
-std::shared_ptr<const GriddedData<PointLL>>
-Isochrone::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
-                          const unsigned int max_minutes,
-                          GraphReader& graphreader,
-                          const sif::mode_costing_t& mode_costing,
-                          const TravelMode mode) {
-
-  // Initialize and create the isotile
-  ConstructIsoTile(false, max_minutes, dest_locations, mode);
-  // Compute the expansion
-  Dijkstras::ComputeReverse(dest_locations, graphreader, mode_costing, mode);
-  return isotile_;
-}
-
-// Compute isochrone for mulit-modal route.
-std::shared_ptr<const GriddedData<PointLL>>
-Isochrone::ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-                             const unsigned int max_minutes,
-                             GraphReader& graphreader,
-                             const sif::mode_costing_t& mode_costing,
-                             const TravelMode mode) {
-  // Initialize and create the isotile
-  ConstructIsoTile(true, max_minutes, origin_locations, mode);
-  // Compute the expansion
-  Dijkstras::ComputeMultiModal(origin_locations, graphreader, mode_costing, mode);
+  Dijkstras::Expand(expansion_type, locations, reader, costings, mode);
   return isotile_;
 }
 
@@ -287,8 +258,8 @@ void Isochrone::ExpandingNode(baldr::GraphReader& graphreader,
 
 ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreader*/,
                                                 const sif::EdgeLabel& pred,
-                                                const InfoRoutingType route_type) {
-  if (route_type == InfoRoutingType::multi_modal) {
+                                                const ExpansionType route_type) {
+  if (route_type == ExpansionType::multimodal) {
     // Skip edges with large penalties (e.g. ferries?), MMCompute function will skip expanding this
     // label
     if (pred.cost().cost > max_seconds_ * 2) {

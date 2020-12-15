@@ -197,6 +197,29 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
   }
 }
 
+// performs one of the types of expansions
+// TODO: reduce code duplication between forward, reverse and multimodal as they are nearly identical
+void Dijkstras::Expand(ExpansionType expansion_type,
+                       google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                       baldr::GraphReader& reader,
+                       const sif::mode_costing_t& costings,
+                       const sif::TravelMode mode) {
+  // compute the expansion
+  switch (expansion_type) {
+    case ExpansionType::forward:
+      Compute(locations, reader, costings, mode);
+      break;
+    case ExpansionType::reverse:
+      Compute(locations, reader, costings, mode);
+      break;
+    case ExpansionType::multimodal:
+      Compute(locations, reader, costings, mode);
+      break;
+    default:
+      throw std::runtime_error("Unknown expansion type");
+  }
+}
+
 // Compute the forward graph traversal
 void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
                         GraphReader& graphreader,
@@ -230,7 +253,7 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
     edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent, pred.path_id());
 
     // Check if we should stop
-    cb_decision = ShouldExpand(graphreader, pred, InfoRoutingType::forward);
+    cb_decision = ShouldExpand(graphreader, pred, ExpansionType::forward);
     if (cb_decision != ExpansionRecommendation::prune_expansion) {
       // Expand from the end node in forward direction.
       ExpandForward(graphreader, pred.endnode(), pred, predindex, false, time_infos.front());
@@ -386,7 +409,7 @@ void Dijkstras::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Loca
         graphreader.GetGraphTile(pred.opp_edgeid())->directededge(pred.opp_edgeid());
 
     // Check if we should stop
-    cb_decision = ShouldExpand(graphreader, pred, InfoRoutingType::reverse);
+    cb_decision = ShouldExpand(graphreader, pred, ExpansionType::reverse);
     if (cb_decision != ExpansionRecommendation::prune_expansion) {
       // Expand from the end node in forward direction.
       ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false,
@@ -644,7 +667,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
                            pred.path_id()};
 
     // See if this is even worth expanding
-    auto maybe_expand = ShouldExpand(graphreader, edge_label, InfoRoutingType::multi_modal);
+    auto maybe_expand = ShouldExpand(graphreader, edge_label, ExpansionType::multimodal);
     if (maybe_expand == ExpansionRecommendation::prune_expansion ||
         maybe_expand == ExpansionRecommendation::stop_expansion) {
       continue;
@@ -742,7 +765,7 @@ void Dijkstras::ComputeMultiModal(
     edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent, pred.path_id());
 
     // Check if we should stop
-    cb_decision = ShouldExpand(graphreader, pred, InfoRoutingType::multi_modal);
+    cb_decision = ShouldExpand(graphreader, pred, ExpansionType::multimodal);
     if (cb_decision != ExpansionRecommendation::prune_expansion) {
       // Expand from the end node of the predecessor edge.
       ExpandForwardMultiModal(graphreader, pred.endnode(), pred, predindex, false, pc, tc,

@@ -82,7 +82,7 @@ namespace thor {
 
 /**
  * TODO: explain this better and more accurately, the claim about minimum isnt quite accurate
- * A Forward direction dijkstras algorithm which given a set of locations, will find the set of paths
+ * A best first (dijkstras) path algorithm which given a set of locations, will find the set of paths
  * from those locations to an intersection point (centroid) such that the cost of each path to the
  * intersection point is minimized among all paths. Rephrased, the algorithm finds the point in the
  * graph at which all paths from all locations converge and each path could not reach that convergence
@@ -92,7 +92,7 @@ namespace thor {
 class Centroid : public thor::Dijkstras {
 public:
   /**
-   * Returns a path for each origin to a common intersection point (centroid) of all origins paths
+   * Returns a path for each location to a common intersection point (centroid) of all locations paths
    * such that each path is the shortest path to that common intersection point
    *
    * @param locations  The locations from which the path finding originates
@@ -100,14 +100,15 @@ public:
    * @param costings   Per mode costing objects
    * @param mode       The mode specifying which costing to use
    * @param centroid   The location where all paths meet
-   * @return           The list of paths, one per origin, to the centroid as well as the centroid
+   * @return           The list of paths, one per location, to the centroid as well as the centroid
    */
   std::vector<std::vector<PathInfo>>
-  forward(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-          baldr::GraphReader& reader,
-          const sif::mode_costing_t& costings,
-          const sif::TravelMode mode,
-          valhalla::Location& centroid);
+  Expand(const ExpansionType& expansion_type,
+         google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+         baldr::GraphReader& reader,
+         const sif::mode_costing_t& costings,
+         const sif::TravelMode mode,
+         valhalla::Location& centroid);
 
   /**
    * Resets internal state before the next call
@@ -140,7 +141,7 @@ protected:
    */
   virtual thor::ExpansionRecommendation ShouldExpand(baldr::GraphReader& reader,
                                                      const sif::EdgeLabel& pred,
-                                                     const thor::InfoRoutingType route_type) override;
+                                                     const thor::ExpansionType route_type) override;
 
   /**
    * Tell the expansion how many labels to expect and how many buckets to use
@@ -162,7 +163,8 @@ protected:
    */
   template <typename label_container_t>
   std::vector<std::vector<PathInfo>>
-  FormPaths(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+  FormPaths(const ExpansionType& expansion_type,
+            const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
             const label_container_t& labels,
             baldr::GraphReader& reader,
             valhalla::Location& centroid) const;

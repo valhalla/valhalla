@@ -94,11 +94,12 @@ bool PathIntersection::operator==(const PathIntersection& i) const {
 
 // main entry point to the functionality
 std::vector<std::vector<PathInfo>>
-Centroid::forward(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                  baldr::GraphReader& reader,
-                  const sif::mode_costing_t& costings,
-                  const sif::TravelMode mode,
-                  valhalla::Location& centroid) {
+Centroid::Expand(const ExpansionType& expansion_type,
+                 google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                 baldr::GraphReader& reader,
+                 const sif::mode_costing_t& costings,
+                 const sif::TravelMode mode,
+                 valhalla::Location& centroid) {
   // preflight check
   if (locations.size() > baldr::kMaxMultiPathId)
     throw std::runtime_error("Max number of locations exceeded");
@@ -108,21 +109,21 @@ Centroid::forward(google::protobuf::RepeatedPtrField<valhalla::Location>& locati
   best_intersection_ =
       PathIntersection{baldr::kInvalidGraphId, baldr::kInvalidGraphId, location_count_};
 
-  // tell dijkstras we want to track the origin paths separately/concurrently
+  // tell dijkstras we want to track the locations' paths separately/concurrently
   multipath_ = true;
 
   // compute the expansion
-  Dijkstras::Compute(locations, reader, costings, mode);
+  Dijkstras::Expand(expansion_type, locations, reader, costings, mode);
 
   // create the paths from the labelset
-  return FormPaths(locations, bdedgelabels_, reader, centroid);
+  return FormPaths(expansion_type, locations, bdedgelabels_, reader, centroid);
 }
 
 // this is fired when the edge in the label has been settled (shortest path found) so we need to check
 // our intersections and add or update them
 thor::ExpansionRecommendation Centroid::ShouldExpand(baldr::GraphReader& reader,
                                                      const sif::EdgeLabel& label,
-                                                     const thor::InfoRoutingType) {
+                                                     const thor::ExpansionType) {
   // TODO: we should quit earlier if finding a centroid isnt working out
 
   // TODO: refactor dijkstras a bit to get the tile and send it to us so we dont have to
@@ -177,16 +178,18 @@ void Centroid::Clear() {
 // walk edge labels to form paths for each location to the centroid
 template <typename label_container_t>
 std::vector<std::vector<PathInfo>>
-Centroid::FormPaths(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+Centroid::FormPaths(const ExpansionType& expansion_type,
+                    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                     const label_container_t& labels,
                     baldr::GraphReader& reader,
                     valhalla::Location& centroid) const {
-  // construct a centroid/destination where all the paths meet
+  // construct a centroid where all the paths meet
   auto edge_id = baldr::GraphId(best_intersection_.edge_id_);
   centroid = make_centroid(edge_id, reader);
 
   // keep the opposing edge in case its a better path for some locations
-  auto opp_id = reader.GetOpposingEdgeId(edge_id);
+  const GraphTile* tile = nullptr;
+  auto opp_id = reader.GetOpposingEdgeId(edge_id, tile);
 
   // a place to store the results
   std::vector<std::vector<PathInfo>> paths;
@@ -217,15 +220,19 @@ Centroid::FormPaths(const google::protobuf::RepeatedPtrField<valhalla::Location>
       label_index = opp_status.index();
     }
 
-    // recover the path from the centroid back to the origin edge
+    // recover the path from the centroid back to the locations edge candidate
     for (auto l = label_index; l != baldr::kInvalidLabel; l = labels[l].predecessor()) {
       const auto& label = labels[l];
-      path.emplace_back(label.mode(), label.cost(), label.edgeid(), 0, label.restriction_idx(),
+      auto path_edge_id = expansion_type == ExpansionType::reverse
+                              ? reader.GetOpposingEdgeId(label.edgeid(), tile)
+                              : label.edgeid();
+      path.emplace_back(label.mode(), label.cost(), path_edge_id, 0, label.restriction_idx(),
                         label.transition_cost());
     }
 
     // reverse the path since we recovered it starting at the beginning
-    std::reverse(path.begin(), path.end());
+    if (expansion_type != ExpansionType::reverse)
+      std::reverse(path.begin(), path.end());
 
     // TODO: the final edge in each path could be a long one we should probably pick the optimal spot
     // along it to make all paths to it the most happy. for now we'll take the mid point
@@ -237,12 +244,14 @@ Centroid::FormPaths(const google::protobuf::RepeatedPtrField<valhalla::Location>
 }
 
 template std::vector<std::vector<PathInfo>> Centroid::FormPaths<decltype(Dijkstras::bdedgelabels_)>(
+    const ExpansionType&,
     const google::protobuf::RepeatedPtrField<valhalla::Location>&,
     const decltype(Dijkstras::bdedgelabels_)&,
     baldr::GraphReader&,
     valhalla::Location&) const;
 
 template std::vector<std::vector<PathInfo>> Centroid::FormPaths<decltype(Dijkstras::mmedgelabels_)>(
+    const ExpansionType&,
     const google::protobuf::RepeatedPtrField<valhalla::Location>&,
     const decltype(Dijkstras::mmedgelabels_)&,
     baldr::GraphReader&,

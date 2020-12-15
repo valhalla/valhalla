@@ -202,15 +202,14 @@ int main(int argc, char* argv[]) {
   // Compute the isotile
   auto t1 = std::chrono::high_resolution_clock::now();
   Isochrone isochrone;
-  auto isotile =
-      (routetype == "multimodal")
-          ? isochrone.ComputeMultiModal(*options.mutable_locations(), contour_times.back() + 10,
-                                        reader, mode_costing, mode)
-          : (reverse)
-                ? isochrone.ComputeReverse(*options.mutable_locations(), contour_times.back() + 10,
-                                           reader, mode_costing, mode)
-                : isochrone.Compute(*options.mutable_locations(), contour_times.back() + 10, reader,
-                                    mode_costing, mode);
+  auto isotile = (routetype == "multimodal")
+                     ? isochrone.Expand(ExpansionType::multimodal, *options.mutable_locations(),
+                                        contour_times.back() + 10, reader, mode_costing, mode)
+                     : (reverse)
+                           ? isochrone.Expand(ExpansionType::reverse, *options.mutable_locations(),
+                                              contour_times.back() + 10, reader, mode_costing, mode)
+                           : isochrone.Expand(ExpansionType::forward, *options.mutable_locations(),
+                                              contour_times.back() + 10, reader, mode_costing, mode);
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("Compute isotile took " + std::to_string(msecs) + " ms");
