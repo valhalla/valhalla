@@ -126,7 +126,7 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
   midgard::PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
   midgard::PointLL destination_new(destination.path_edges(0).ll().lng(),
                                    destination.path_edges(0).ll().lat());
-  Init(origin_new, destination_new, costing);
+  Init(destination_new, costing);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
   // Check if there no possible path to destination based on mode to the
