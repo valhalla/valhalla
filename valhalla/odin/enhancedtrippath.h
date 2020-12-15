@@ -721,6 +721,7 @@ public:
   bool IsMotorwayJunction() const;
   bool IsBorderControl() const;
   bool IsTollGantry() const;
+  bool IsSumpBuster() const;
 
   std::string ToString() const;
 

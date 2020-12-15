@@ -118,6 +118,8 @@ inline TripLeg_Node_Type GetTripLegNodeType(const baldr::NodeType node_type) {
       return TripLeg_Node_Type_kBorderControl;
     case baldr::NodeType::kTollGantry:
       return TripLeg_Node_Type_kTollGantry;
+    case baldr::NodeType::kSumpBuster:
+      return TripLeg_Node_Type_kSumpBuster;
   }
   auto num = static_cast<uint8_t>(node_type);
   throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
