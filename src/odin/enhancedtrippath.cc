@@ -1860,6 +1860,10 @@ bool EnhancedTripLeg_Node::IsTollGantry() const {
   return (type() == TripLeg_Node_Type_kTollGantry);
 }
 
+bool EnhancedTripLeg_Node::IsSumpBuster() const {
+  return (type() == TripLeg_Node_Type_kSumpBuster);
+}
+
 std::string EnhancedTripLeg_Node::ToString() const {
   std::string str;
   str.reserve(256);
