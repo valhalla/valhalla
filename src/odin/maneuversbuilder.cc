@@ -10,6 +10,7 @@
 
 #include <boost/format.hpp>
 
+#include "baldr/graphconstants.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_factory.h"
 #include "baldr/streetnames_us.h"
@@ -486,6 +487,27 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         LOG_TRACE("+++ Combine: obvious maneuver +++");
         next_man = CombineManeuvers(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
+      }
+      // Combine current short length non-internal edges (left or right) with next maneuver that is a
+      // kRampStraight NOTE: This should already be marked internal for OSM data so shouldn't happen
+      // for OSM
+      else if (!curr_man->internal_intersection() &&
+               ((curr_man->type() == DirectionsLeg_Maneuver_Type_kLeft ||
+                 curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kLeft) ||
+                (curr_man->type() == DirectionsLeg_Maneuver_Type_kRight ||
+                 curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kRight)) &&
+               next_man->type() == DirectionsLeg_Maneuver_Type_kRampStraight &&
+               curr_man->length(Options::kilometers) <= (kMaxInternalLength * kKmPerMeter) &&
+               curr_man != next_man && !next_man->IsDestinationType()) {
+        LOG_TRACE(
+            "+++ Combine: current non-internal turn that is very short in length with the next straight ramp maneuver +++");
+        curr_man =
+            CombineDoubleTurnToUturnManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
+        if (is_first_man) {
+          prev_man = curr_man;
+        }
+        maneuvers_have_been_combined = true;
+        ++next_man;
       } else {
         LOG_TRACE("+++ Do Not Combine +++");
         // Update with no combine
@@ -525,6 +547,59 @@ std::list<Maneuver>::iterator ManeuversBuilder::CollapseTransitConnectionDestina
   curr_man->set_end_shape_index(next_man->end_shape_index());
 
   return maneuvers.erase(next_man);
+}
+
+// Collapses maneuvers for short distanced double turns that are on non-internal edges
+std::list<Maneuver>::iterator
+ManeuversBuilder::CombineDoubleTurnToUturnManeuver(std::list<Maneuver>& maneuvers,
+                                                   std::list<Maneuver>::iterator prev_man,
+                                                   std::list<Maneuver>::iterator curr_man,
+                                                   std::list<Maneuver>::iterator next_man,
+                                                   bool start_man) {
+
+  if (start_man) {
+    // Determine turn degree current maneuver and next maneuver
+    next_man->set_turn_degree(GetTurnDegree(curr_man->end_heading(), next_man->begin_heading()));
+  } else {
+    // Determine turn degree based on previous maneuver and next maneuver
+    next_man->set_turn_degree(GetTurnDegree(prev_man->end_heading(), next_man->begin_heading()));
+  }
+
+  // Set the cross street names
+  if (curr_man->HasStreetNames()) {
+    next_man->set_cross_street_names(curr_man->street_names().clone());
+  }
+
+  // Set relative direction
+  next_man->set_begin_relative_direction(
+      ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()));
+
+  // Add distance
+  next_man->set_length(next_man->length() + curr_man->length());
+
+  // Add time
+  next_man->set_time(next_man->time() + curr_man->time());
+
+  // Add basic time
+  next_man->set_basic_time(next_man->basic_time() + curr_man->basic_time());
+
+  // TODO - heading?
+
+  // Set begin node index
+  next_man->set_begin_node_index(curr_man->begin_node_index());
+
+  // Set begin shape index
+  next_man->set_begin_shape_index(curr_man->begin_shape_index());
+
+  if (start_man) {
+    next_man->set_type(DirectionsLeg_Maneuver_Type_kStart);
+  } else {
+    // Set maneuver type to 'none' so the type will be processed again
+    next_man->set_type(DirectionsLeg_Maneuver_Type_kNone);
+    SetManeuverType(*(next_man));
+  }
+
+  return maneuvers.erase(curr_man);
 }
 
 std::list<Maneuver>::iterator

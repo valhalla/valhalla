@@ -6,3 +6,4 @@
 -j '{"locations":[{"lat":39.496216,"lon":-76.328972,"type":"break","name":"MD 24"},{"lat":39.496120,"lon":-76.329254,"type":"break","name":"MD 24"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":39.738953,"lon":-105.153786,"type":"break","name":"Cole Blvd"},{"lat":39.738953,"lon":-105.153603,"type":"break","name":"Cole Blvd"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":39.308140,"lon":-76.532784,"type":"break","name":"Pulaski Highway"},{"lat":39.308372,"lon":-76.532722,"type":"break","name":"Pulaski Highway"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":-20.0021744,"lon":-44.03589946},{"lat":-20.00277306329366,"lon":-44.03552706922852}],"costing":"auto","units":"kilometers"}'

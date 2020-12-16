@@ -44,6 +44,13 @@ protected:
                                                std::list<Maneuver>::iterator curr_man,
                                                std::list<Maneuver>::iterator next_man);
 
+  std::list<Maneuver>::iterator
+  CombineDoubleTurnToUturnManeuver(std::list<Maneuver>& maneuvers,
+                                   std::list<Maneuver>::iterator prev_man,
+                                   std::list<Maneuver>::iterator curr_man,
+                                   std::list<Maneuver>::iterator next_man,
+                                   bool start_man);
+
   std::list<Maneuver>::iterator CombineInternalManeuver(std::list<Maneuver>& maneuvers,
                                                         std::list<Maneuver>::iterator prev_man,
                                                         std::list<Maneuver>::iterator curr_man,
