@@ -21,6 +21,7 @@ namespace {
 constexpr float kShortRemainingDistanceThreshold = 0.402f; // Kilometers (~quarter mile)
 constexpr int kSignificantRoadClassThreshold = 2;          // Max lower road class delta
 constexpr int kSimilarStraightThreshold = 30;              // Max similar straight turn degree delta
+constexpr int kIsStraightestBuffer = 10;                   // Buffer between straight delta values
 
 constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
 constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
@@ -466,18 +467,19 @@ bool EnhancedTripLeg_Edge::IsWiderForward(uint32_t prev2curr_turn_degree) const 
 bool EnhancedTripLeg_Edge::IsStraightest(uint32_t prev2curr_turn_degree,
                                          uint32_t straightest_xedge_turn_degree) const {
   if (IsWiderForward(prev2curr_turn_degree)) {
-    int path_xedge_turn_degree_delta =
-        get_turn_degree_delta(prev2curr_turn_degree, straightest_xedge_turn_degree);
     uint32_t path_straight_delta =
         (prev2curr_turn_degree > 180) ? (360 - prev2curr_turn_degree) : prev2curr_turn_degree;
     uint32_t xedge_straight_delta = (straightest_xedge_turn_degree > 180)
                                         ? (360 - straightest_xedge_turn_degree)
                                         : straightest_xedge_turn_degree;
-    return ((path_xedge_turn_degree_delta > 10) ? (path_straight_delta <= xedge_straight_delta)
-                                                : true);
-  } else {
-    return false;
+    int path_straight_xedge_straight_delta =
+        get_turn_degree_delta(path_straight_delta, xedge_straight_delta);
+
+    return ((path_straight_xedge_straight_delta > kIsStraightestBuffer)
+                ? (path_straight_delta <= xedge_straight_delta)
+                : true);
   }
+  return false;
 }
 
 std::vector<std::pair<std::string, bool>> EnhancedTripLeg_Edge::GetNameList() const {
@@ -1856,6 +1858,10 @@ bool EnhancedTripLeg_Node::IsBorderControl() const {
 
 bool EnhancedTripLeg_Node::IsTollGantry() const {
   return (type() == TripLeg_Node_Type_kTollGantry);
+}
+
+bool EnhancedTripLeg_Node::IsSumpBuster() const {
+  return (type() == TripLeg_Node_Type_kSumpBuster);
 }
 
 std::string EnhancedTripLeg_Node::ToString() const {

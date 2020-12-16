@@ -2063,14 +2063,20 @@ bool ManeuversBuilder::IsFork(int node_index,
 
     // if there is a similar traversable intersecting edge
     //   or there is a traversable intersecting edge and curr edge is link(ramp)
-    //   and the straightest intersecting edge is not in the reversed direction
+    //      and the straightest intersecting edge is not in the reversed direction
+    //   or curr_edge is fork forward and xedge only has forward edge
     if (((xedge_counts.left_similar_traversable_outbound > 0) ||
          (xedge_counts.right_similar_traversable_outbound > 0)) ||
         (((xedge_counts.left_traversable_outbound > 0) ||
           (xedge_counts.right_traversable_outbound > 0)) &&
          curr_edge->IsRampUse() &&
          !node->IsStraightestTraversableIntersectingEdgeReversed(prev_edge->end_heading(),
-                                                                 prev_edge->travel_mode()))) {
+                                                                 prev_edge->travel_mode())) ||
+        (curr_edge->IsForkForward(
+             GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
+         node->HasOnlyForwardTraversableRoadClassXEdges(prev_edge->end_heading(),
+                                                        prev_edge->travel_mode(),
+                                                        prev_edge->road_class()))) {
       return true;
     }
   }
@@ -2185,13 +2191,9 @@ bool ManeuversBuilder::IsLeftPencilPointUturn(int node_index,
   uint32_t turn_degree = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
 
   // If drive on right
-  // and the the turn is a sharp left (179 < turn < 211)
-  //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
+  // and the the turn is a sharp left (179 < turn < 226)
   // and oneway edges
-  if (curr_edge->drive_on_right() &&
-      (((turn_degree > 179) && (turn_degree < 211)) ||
-       (((prev_edge->length_km() < 50) || (curr_edge->length_km() < 50)) && (turn_degree > 179) &&
-        (turn_degree < 226))) &&
+  if (curr_edge->drive_on_right() && (turn_degree > 179) && (turn_degree < 226) &&
       prev_edge->IsOneway() && curr_edge->IsOneway()) {
     // If the above criteria is met then check the following criteria...
 
@@ -2228,13 +2230,9 @@ bool ManeuversBuilder::IsRightPencilPointUturn(int node_index,
   uint32_t turn_degree = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
 
   // If drive on left
-  // and the turn is a sharp right (149 < turn < 181)
-  //    or short distance (< 50m) and wider sharp right (134 < turn < 181)
+  // and the turn is a sharp right (134 < turn < 181)
   // and oneway edges
-  if (curr_edge->drive_on_right() &&
-      (((turn_degree > 149) && (turn_degree < 181)) ||
-       (((prev_edge->length_km() < 50) || (curr_edge->length_km() < 50)) && (turn_degree > 134) &&
-        (turn_degree < 181))) &&
+  if (curr_edge->drive_on_right() && (turn_degree > 134) && (turn_degree < 181) &&
       prev_edge->IsOneway() && curr_edge->IsOneway()) {
     // If the above criteria is met then check the following criteria...
 
