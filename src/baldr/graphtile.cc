@@ -190,6 +190,8 @@ void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::st
     int err = std::rename(tmp_location.c_str(), disk_location.c_str());
     if (err)
       success = false;
+  } else {
+    LOG_ERROR("Failed to create directory " + disk_location);
   }
 
   if (!success)
