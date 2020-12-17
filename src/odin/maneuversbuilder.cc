@@ -501,8 +501,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
                curr_man != next_man && !next_man->IsDestinationType()) {
         LOG_TRACE(
             "+++ Combine: current non-internal turn that is very short in length with the next straight ramp maneuver +++");
-        curr_man =
-            CombineDoubleTurnToUturnManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
+        curr_man = CombineNonInternalManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
         if (is_first_man) {
           prev_man = curr_man;
         }
@@ -551,11 +550,11 @@ std::list<Maneuver>::iterator ManeuversBuilder::CollapseTransitConnectionDestina
 
 // Collapses maneuvers for short distanced double turns that are on non-internal edges
 std::list<Maneuver>::iterator
-ManeuversBuilder::CombineDoubleTurnToUturnManeuver(std::list<Maneuver>& maneuvers,
-                                                   std::list<Maneuver>::iterator prev_man,
-                                                   std::list<Maneuver>::iterator curr_man,
-                                                   std::list<Maneuver>::iterator next_man,
-                                                   bool start_man) {
+ManeuversBuilder::CombineNonInternalManeuver(std::list<Maneuver>& maneuvers,
+                                             std::list<Maneuver>::iterator prev_man,
+                                             std::list<Maneuver>::iterator curr_man,
+                                             std::list<Maneuver>::iterator next_man,
+                                             bool start_man) {
 
   if (start_man) {
     // Determine turn degree current maneuver and next maneuver
