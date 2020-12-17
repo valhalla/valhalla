@@ -524,16 +524,16 @@ void bin_tweeners(const std::string& tile_dir,
     lock.unlock();
 
     // if there is nothing there we need to make something
-    auto tile = std::make_unique<GraphTile>(tile_dir, tile_bin.first);
+    GraphTile tile(tile_dir, tile_bin.first);
 
-    if (!tile->header()) {
+    if (!tile.header()) {
       GraphTileBuilder empty(tile_dir, tile_bin.first, false);
       empty.header_builder().set_dataset_id(dataset_id);
       empty.StoreTileData();
-      tile = std::make_unique<GraphTile>(tile_dir, tile_bin.first);
+      tile = GraphTile(tile_dir, tile_bin.first);
     }
     // keep the extra binned edges
-    GraphTileBuilder::AddBins(tile_dir, tile.get(), tile_bin.second);
+    GraphTileBuilder::AddBins(tile_dir, &tile, tile_bin.second);
   }
 }
 } // namespace

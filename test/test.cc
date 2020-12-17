@@ -22,7 +22,6 @@
 
 #include "microtar.h"
 
-namespace valhalla {
 namespace test {
 
 struct MMap {
@@ -44,7 +43,7 @@ struct MMap {
   size_t length;
 };
 
-class MMapGraphMemory final : public baldr::GraphMemory {
+class MMapGraphMemory final : public valhalla::baldr::GraphMemory {
 public:
   MMapGraphMemory(std::shared_ptr<MMap> mmap, char* data_, size_t size_) : mmap_(std::move(mmap)) {
     data = data_;
@@ -246,4 +245,3 @@ void customize_historical_traffic(const boost::property_tree::ptree& config,
 }
 
 } // namespace test
-} // namespace valhalla

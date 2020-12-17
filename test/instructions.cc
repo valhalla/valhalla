@@ -18,9 +18,7 @@
 #define VALHALLA_SOURCE_DIR
 #endif
 
-using namespace std;
 using namespace valhalla::baldr;
-using namespace valhalla::test;
 
 namespace {
 
@@ -34,7 +32,7 @@ void test_instructions(const std::string& filename,
                        const std::string& expected_verbal_pre_transition_instruction,
                        const std::string& expected_verbal_post_transition_instruction) {
   // Load pinpoint test
-  std::string path_bytes = load_binary_file(filename);
+  std::string path_bytes = test::load_binary_file(filename);
   EXPECT_NE(path_bytes.size(), 0);
 
   // Create the request from the path bytes
@@ -93,7 +91,7 @@ void test_osrm_maneuver(const std::string& filename,
                         const std::string& expected_maneuver_type,
                         const std::string& expected_maneuver_modifier) {
   // Load pinpoint test
-  std::string path_bytes = load_binary_file(filename);
+  std::string path_bytes = test::load_binary_file(filename);
   EXPECT_NE(path_bytes.size(), 0);
 
   // Create the request from the path bytes
@@ -137,7 +135,7 @@ void test_osrm_destinations(const std::string& filename,
                             int steps_index,
                             const std::string& expected_destinations) {
   // Load pinpoint test
-  std::string path_bytes = load_binary_file(filename);
+  std::string path_bytes = test::load_binary_file(filename);
 
   EXPECT_NE(path_bytes.size(), 0);
 

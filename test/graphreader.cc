@@ -156,21 +156,21 @@ TEST(SimpleCache, Clear) {
   SimpleTileCache cache(400);
 
   GraphId id1(100, 2, 0);
-  const auto tile1 = cache.Put(id1, TestGraphTile(id1, 123), 123);
+  const auto* tile1 = cache.Put(id1, TestGraphTile(id1, 123), 123);
   EXPECT_EQ(cache.Get(id1), tile1);
   CheckGraphTile(tile1, id1, 123);
 
   EXPECT_FALSE(cache.OverCommitted());
 
   GraphId id2(300, 1, 0);
-  const auto tile2 = cache.Put(id2, TestGraphTile(id2, 200), 200);
+  const auto* tile2 = cache.Put(id2, TestGraphTile(id2, 200), 200);
   EXPECT_EQ(cache.Get(id2), tile2);
   CheckGraphTile(tile2, id2, 200);
 
   EXPECT_FALSE(cache.OverCommitted());
 
   GraphId id3(1000, 0, 0);
-  const auto tile3 = cache.Put(id3, TestGraphTile(id3, 500), 500);
+  const auto* tile3 = cache.Put(id3, TestGraphTile(id3, 500), 500);
   EXPECT_EQ(cache.Get(id3), tile3);
   CheckGraphTile(tile3, id3, 500);
 
@@ -178,11 +178,11 @@ TEST(SimpleCache, Clear) {
 
   // Check if inserted values are correct
 
-  const auto returned2 = cache.Get({300, 1, 0});
+  const auto* returned2 = cache.Get({300, 1, 0});
   CheckGraphTile(returned2, id2, 200);
-  const auto returned1 = cache.Get({100, 2, 0});
+  const auto* returned1 = cache.Get({100, 2, 0});
   CheckGraphTile(returned1, id1, 123);
-  const auto returned3 = cache.Get({1000, 0, 0});
+  const auto* returned3 = cache.Get({1000, 0, 0});
   CheckGraphTile(returned3, id3, 500);
 
   EXPECT_TRUE(cache.Contains(id1));
@@ -206,21 +206,21 @@ TEST(SimpleCache, Trim) {
   SimpleTileCache cache(400);
 
   GraphId id1(100, 2, 0);
-  const auto tile1 = cache.Put(id1, TestGraphTile(id1, 123), 123);
+  const auto* tile1 = cache.Put(id1, TestGraphTile(id1, 123), 123);
   EXPECT_EQ(cache.Get(id1), tile1);
   CheckGraphTile(tile1, id1, 123);
 
   EXPECT_FALSE(cache.OverCommitted());
 
   GraphId id2(300, 1, 0);
-  const auto tile2 = cache.Put(id2, TestGraphTile(id2, 200), 200);
+  const auto* tile2 = cache.Put(id2, TestGraphTile(id2, 200), 200);
   EXPECT_EQ(cache.Get(id2), tile2);
   CheckGraphTile(tile2, id2, 200);
 
   EXPECT_FALSE(cache.OverCommitted());
 
   GraphId id3(1000, 0, 0);
-  const auto tile3 = cache.Put(id3, TestGraphTile(id3, 500), 500);
+  const auto* tile3 = cache.Put(id3, TestGraphTile(id3, 500), 500);
   EXPECT_EQ(cache.Get(id3), tile3);
   CheckGraphTile(tile3, id3, 500);
 
@@ -228,11 +228,11 @@ TEST(SimpleCache, Trim) {
 
   // Check if inserted values are correct
 
-  const auto returned2 = cache.Get({300, 1, 0});
+  const auto* returned2 = cache.Get({300, 1, 0});
   CheckGraphTile(returned2, id2, 200);
-  const auto returned1 = cache.Get({100, 2, 0});
+  const auto* returned1 = cache.Get({100, 2, 0});
   CheckGraphTile(returned1, id1, 123);
-  const auto returned3 = cache.Get({1000, 0, 0});
+  const auto* returned3 = cache.Get({1000, 0, 0});
   CheckGraphTile(returned3, id3, 500);
 
   EXPECT_TRUE(cache.Contains(id1));
@@ -274,7 +274,7 @@ TEST(CacheLruHard, InsertCacheFullOneshot) {
   TileCacheLRU cache(tile1_size, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId tile1_id(1000, 1, 0);
-  const auto tile1 = cache.Put(tile1_id, TestGraphTile(tile1_id, tile1_size), tile1_size);
+  const auto* tile1 = cache.Put(tile1_id, TestGraphTile(tile1_id, tile1_size), tile1_size);
   EXPECT_EQ(cache.Get(tile1_id), tile1);
   EXPECT_FALSE(cache.OverCommitted());
 
@@ -287,13 +287,13 @@ TEST(CacheLruHard, InsertCacheFull) {
 
   const size_t tile1_size = 4000;
   GraphId tile1_id(1000, 1, 0);
-  const auto tile1 = cache.Put(tile1_id, TestGraphTile(tile1_id, tile1_size), tile1_size);
+  const auto* tile1 = cache.Put(tile1_id, TestGraphTile(tile1_id, tile1_size), tile1_size);
   EXPECT_EQ(cache.Get(tile1_id), tile1);
   CheckGraphTile(tile1, tile1_id, tile1_size);
 
   const size_t tile2_size = 6000;
   GraphId tile2_id(33, 2, 0);
-  const auto tile2 = cache.Put(tile2_id, TestGraphTile(tile2_id, tile2_size), tile2_size);
+  const auto* tile2 = cache.Put(tile2_id, TestGraphTile(tile2_id, tile2_size), tile2_size);
   EXPECT_EQ(cache.Get(tile2_id), tile2);
   CheckGraphTile(tile2, tile2_id, tile2_size);
 
@@ -307,29 +307,29 @@ TEST(CacheLruHard, InsertNoEviction) {
   TileCacheLRU cache(1023, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId id1(100, 2, 0);
-  const auto tile1 = cache.Put(id1, TestGraphTile(id1, 123), 123);
+  const auto* tile1 = cache.Put(id1, TestGraphTile(id1, 123), 123);
   EXPECT_EQ(cache.Get(id1), tile1);
   CheckGraphTile(tile1, id1, 123);
 
   GraphId id2(300, 1, 0);
-  const auto tile2 = cache.Put(id2, TestGraphTile(id2, 200), 200);
+  const auto* tile2 = cache.Put(id2, TestGraphTile(id2, 200), 200);
   EXPECT_EQ(cache.Get(id2), tile2);
   CheckGraphTile(tile2, id2, 200);
 
   GraphId id3(1000, 0, 0);
-  const auto tile3 = cache.Put(id3, TestGraphTile(id3, 500), 500);
+  const auto* tile3 = cache.Put(id3, TestGraphTile(id3, 500), 500);
   EXPECT_EQ(cache.Get(id3), tile3);
   CheckGraphTile(tile3, id3, 500);
 
   // Check if inserted values are correct
 
-  const auto returned2 = cache.Get({300, 1, 0});
+  const auto* returned2 = cache.Get({300, 1, 0});
   CheckGraphTile(returned2, id2, 200);
 
-  const auto returned1 = cache.Get({100, 2, 0});
+  const auto* returned1 = cache.Get({100, 2, 0});
   CheckGraphTile(returned1, id1, 123);
 
-  const auto returned3 = cache.Get({1000, 0, 0});
+  const auto* returned3 = cache.Get({1000, 0, 0});
   CheckGraphTile(returned3, id3, 500);
 
   // Make sure tiles we have never cached are not found
@@ -372,7 +372,7 @@ TEST(CacheLruHard, InsertWithEvictionBasic) {
   // Now we access an entry that would be evicted next
   // to promote its position in the LRU list and change eviction order
 
-  const auto returned2 = cache.Get(tile2_id);
+  const auto* returned2 = cache.Get(tile2_id);
   CheckGraphTile(returned2, tile2_id, tile2_size);
 
   GraphId tile5_id(999, 1, 0);
@@ -563,7 +563,7 @@ TEST(CacheLruHard, InsertWithEvictionEntireCache) {
   EXPECT_FALSE(cache.Contains(tile1_id));
   EXPECT_FALSE(cache.Contains(tile2_id));
 
-  const auto returned3 = cache.Get(tile3_id);
+  const auto* returned3 = cache.Get(tile3_id);
   CheckGraphTile(returned3, tile3_id, tile3_size);
 
   EXPECT_EQ(cache.Get(tile1_id), nullptr);
