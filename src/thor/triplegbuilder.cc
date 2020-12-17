@@ -1332,10 +1332,11 @@ void TripLegBuilder::Build(
     // must be done after the edge's shape has been added.
     SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
 
-    // Add the intersecting edges at the node
-    if (startnode.Is_Valid()) {
-      AddIntersectingEdges(controller, start_tile, node, directededge, prev_de, prior_opp_local_index,
-                           graphreader, trip_node);
+    // Add the intersecting edges at the node. Skip it if the node was an inner node (excluding start
+    // node and end node) of a shortcut that was recovered.
+    if (startnode.Is_Valid() && !edge_itr->start_node_is_recovered) {
+      AddIntersectingEdges(controller, start_tile, startnode, node, directededge, prev_de,
+                           prior_opp_local_index, graphreader, trip_node);
     }
 
     ////////////// Prepare for the next iteration

@@ -1049,6 +1049,9 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     LOG_DEBUG("FormPath path_iterations::" + std::to_string(edgelabels_forward_.size()) + "," +
               std::to_string(edgelabels_reverse_.size()));
 
+    // set of edges recovered from shortcuts (excluding shortcut's start edges)
+    std::unordered_set<GraphId> recovered_inner_edges;
+
     // A place to keep the path
     std::vector<GraphId> path_edges;
     path_edges.reserve(static_cast<size_t>(paths.empty() ? 0.f : paths.back().size() * 1.2f));
@@ -1062,6 +1065,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
       const auto* edge = graphreader.directededge(edgelabel.edgeid(), tile);
       if (edge->is_shortcut()) {
         auto superseded = graphreader.RecoverShortcut(edgelabel.edgeid());
+        recovered_inner_edges.insert(superseded.begin() + 1, superseded.end());
         std::move(superseded.rbegin(), superseded.rend(), std::back_inserter(path_edges));
       } else
         path_edges.push_back(edgelabel.edgeid());
@@ -1087,6 +1091,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
 
       if (opp_edge->is_shortcut()) {
         auto superseded = graphreader.RecoverShortcut(opp_edge_id);
+        recovered_inner_edges.insert(superseded.begin() + 1, superseded.end());
         std::move(superseded.begin(), superseded.end(), std::back_inserter(path_edges));
       } else
         path_edges.emplace_back(std::move(opp_edge_id));
@@ -1107,9 +1112,9 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     std::vector<PathInfo> path;
     path.reserve(path_edges.size());
 
-    const auto label_cb = [&path](const EdgeLabel& label) {
+    const auto label_cb = [&path, &recovered_inner_edges](const EdgeLabel& label) {
       path.emplace_back(label.mode(), label.cost(), label.edgeid(), 0, label.restriction_idx(),
-                        label.transition_cost());
+                        label.transition_cost(), recovered_inner_edges.count(label.edgeid()));
     };
 
     float source_pct;
