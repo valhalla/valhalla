@@ -228,7 +228,8 @@ public:
 
 protected:
   struct KeyValue {
-    KeyValue(GraphId id_, GraphTile&& tile_) : id(id_), tile(std::move(tile_)) {
+    KeyValue(GraphId id_, boost::intrusive_ptr<const baldr::GraphTile> tile_)
+        : id(id_), tile(std::move(tile_)) {
     }
     GraphId id;
     boost::intrusive_ptr<const baldr::GraphTile> tile;

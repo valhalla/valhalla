@@ -269,7 +269,7 @@ void build(const std::string& complex_restriction_from_file,
     // added where ways go through a tile but no end not is within the tile.
     // This allows creation of connectivity maps using the tile set,
     boost::intrusive_ptr<const GraphTile> tile = reader.GetGraphTile(tile_id);
-    if (tile->header()->nodecount() == 0) {
+    if (!tile || tile->header()->nodecount() == 0) {
       lock.unlock();
       continue;
     }

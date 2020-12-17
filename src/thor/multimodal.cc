@@ -237,8 +237,8 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  boost::intrusive_ptr<const GraphTile> tile = graphreader.GetGraphTile(node);
-  if (tile == nullptr) {
+  auto tile = graphreader.GetGraphTile(node);
+  if (!tile) {
     return false;
   }
   const NodeInfo* nodeinfo = tile->node(node);
@@ -505,9 +505,9 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     float sortcost = newcost.cost;
     if (p == destinations_.end()) {
       // Get the end node, skip if the end node tile is not found
-      boost::intrusive_ptr<const GraphTile> endtile =
+      auto endtile =
           (directededge->leaves_tile()) ? graphreader.GetGraphTile(directededge->endnode()) : tile;
-      if (endtile == nullptr) {
+      if (!endtile) {
         continue;
       }
       const NodeInfo* endnode = endtile->node(directededge->endnode());
@@ -568,8 +568,8 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    boost::intrusive_ptr<const GraphTile> endtile = graphreader.GetGraphTile(directededge->endnode());
-    if (endtile == nullptr) {
+    auto endtile = graphreader.GetGraphTile(directededge->endnode());
+    if (!endtile) {
       continue;
     }
 
@@ -702,8 +702,8 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
                                              const bool from_transition) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  boost::intrusive_ptr<const GraphTile> tile = graphreader.GetGraphTile(node);
-  if (tile == nullptr) {
+  auto tile = graphreader.GetGraphTile(node);
+  if (!tile) {
     return false;
   }
   const NodeInfo* nodeinfo = tile->node(node);

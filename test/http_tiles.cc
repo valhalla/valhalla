@@ -178,8 +178,9 @@ void test_tile_download(size_t tile_count, size_t curler_count, size_t thread_co
           auto result = tile_getter.get(tile_uri);
 
           if (result.status_ == tile_getter_t::status_code_t::SUCCESS) {
-            GraphTile tile(GraphId(), std::move(result.bytes_));
-            EXPECT_EQ(tile.id(), expected_tile_id);
+            auto tile = GraphTile::Create(GraphId(), std::move(result.bytes_));
+            ASSERT_TRUE(tile);
+            EXPECT_EQ(tile->id(), expected_tile_id);
           } else {
             EXPECT_EQ(expected_tile_id, non_existent_tile_id);
           }
@@ -219,9 +220,10 @@ void test_graphreader_tile_download(size_t tile_count, size_t curler_count, size
             GraphTile::CacheTileURL(params.full_tile_url_pattern, expected_tile_id, &tile_getter, "");
 
         if (expected_tile_id != non_existent_tile_id) {
+          ASSERT_TRUE(tile);
           EXPECT_EQ(tile->id(), expected_tile_id);
         } else {
-          EXPECT_EQ(tile->header(), nullptr) << "Expected empty header";
+          EXPECT_FALSE(tile) << "Expected no tile";
         }
       }
     });
@@ -277,7 +279,7 @@ TEST(HttpTiles, test_interrupt) {
   };
 
   tile_getter.set_interrupt(&interrupt);
-  for (int tile_i = 0; tile_i < params.test_tile_ids.size(); ++tile_i) {
+  for (size_t tile_i = 0; tile_i < params.test_tile_ids.size(); ++tile_i) {
     auto test_tile_index = tile_i % params.test_tile_names.size();
     auto expected_tile_id = params.test_tile_ids[test_tile_index];
 
@@ -289,8 +291,9 @@ TEST(HttpTiles, test_interrupt) {
 
     auto result = tile_getter.get(tile_uri);
     if (result.status_ == tile_getter_t::status_code_t::SUCCESS) {
-      GraphTile tile(GraphId(), std::move(result.bytes_));
-      EXPECT_EQ(tile.id(), expected_tile_id);
+      auto tile = GraphTile::Create(GraphId(), std::move(result.bytes_));
+      ASSERT_TRUE(tile);
+      EXPECT_EQ(tile->id(), expected_tile_id);
     } else {
       EXPECT_EQ(expected_tile_id, non_existent_tile_id);
     }

@@ -563,6 +563,9 @@ uint32_t TimeDepForward::SetDestination(GraphReader& graphreader, const valhalla
 
     // Get the tile relative density
     auto tile = graphreader.GetGraphTile(edgeid);
+    if (!tile) {
+      continue;
+    }
     density = tile->header()->density();
   }
   return density;

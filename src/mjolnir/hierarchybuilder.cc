@@ -418,7 +418,7 @@ void CreateNodeAssociations(GraphReader& reader,
   for (const auto& base_tile_id : local_tiles) {
     // Get the graph tile. Skip if no tile exists or no nodes exist in the tile.
     boost::intrusive_ptr<const GraphTile> tile = reader.GetGraphTile(base_tile_id);
-    if (tile == nullptr || tile->header()->nodecount() == 0) {
+    if (!tile || tile->header()->nodecount() == 0) {
       continue;
     }
 
@@ -496,7 +496,7 @@ void UpdateTransitConnections(GraphReader& reader, const std::string& old_to_new
   for (const auto& tile_id : transit_tiles) {
     // Skip if no nodes exist in the tile
     boost::intrusive_ptr<const GraphTile> tile = reader.GetGraphTile(tile_id);
-    if (tile == nullptr || tile->header()->nodecount() == 0) {
+    if (!tile || tile->header()->nodecount() == 0) {
       continue;
     }
 

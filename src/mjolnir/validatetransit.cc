@@ -47,8 +47,11 @@ bool WalkTransitLines(const GraphId& n_graphId,
                       const std::string& end_name,
                       const std::string& route_name) {
   lock.lock();
-  boost::intrusive_ptr<const GraphTile> endnodetile = reader.GetGraphTile(n_graphId);
+  auto endnodetile = reader.GetGraphTile(n_graphId);
   lock.unlock();
+  if (!endnodetile) {
+    return false;
+  }
   const NodeInfo* n_info = endnodetile->node(n_graphId);
   GraphId currentNode = n_graphId;
 
@@ -182,8 +185,7 @@ void validate(const boost::property_tree::ptree& pt,
 
     lock.lock();
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level() + 1, tile_id.id());
-    boost::intrusive_ptr<const GraphTile> transit_tile =
-        reader_transit_level.GetGraphTile(transit_tile_id);
+    auto transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
     GraphTileBuilder tilebuilder(reader_transit_level.tile_dir(), transit_tile_id, true);
     lock.unlock();
 

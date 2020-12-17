@@ -549,14 +549,16 @@ uint32_t TimeDepReverse::SetDestination(GraphReader& graphreader, const valhalla
     // remainder of the edge. This cost is subtracted from the total cost
     // up to the end of the destination edge.
     GraphId id(edge.graph_id());
-    boost::intrusive_ptr<const GraphTile> tile = graphreader.GetGraphTile(id);
+    auto tile = graphreader.GetGraphTile(id);
+    if (!tile) {
+      continue;
+    }
     const DirectedEdge* directededge = tile->directededge(id);
 
     // The opposing edge Id is added as a destination since the search
     // is done in reverse direction.
-    boost::intrusive_ptr<const GraphTile> t2 =
-        directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
-    if (t2 == nullptr) {
+    auto t2 = directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
+    if (!t2) {
       continue;
     }
     GraphId oppedge = t2->GetOpposingEdgeId(directededge);

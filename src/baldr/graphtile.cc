@@ -68,6 +68,7 @@ std::string GenerateTmpSuffix() {
      << std::chrono::high_resolution_clock::now().time_since_epoch().count();
   return ss.str();
 }
+
 } // namespace
 
 namespace valhalla {
@@ -84,67 +85,12 @@ private:
   const std::vector<char> memory_;
 };
 
-// Default constructor
-GraphTile::GraphTile()
-    : header_(nullptr), nodes_(nullptr), directededges_(nullptr), ext_directededges_(nullptr),
-      transitions_(nullptr), departures_(nullptr), transit_stops_(nullptr), transit_routes_(nullptr),
-      transit_schedules_(nullptr), transit_transfers_(nullptr), access_restrictions_(nullptr),
-      signs_(nullptr), admins_(nullptr), edge_bins_(nullptr), complex_restriction_forward_(nullptr),
-      complex_restriction_reverse_(nullptr), edgeinfo_(nullptr), textlist_(nullptr),
-      complex_restriction_forward_size_(0), complex_restriction_reverse_size_(0), edgeinfo_size_(0),
-      textlist_size_(0), lane_connectivity_(nullptr), lane_connectivity_size_(0), turnlanes_(nullptr),
-      traffic_tile(nullptr) {
-}
-
-// Constructor given a filename. Reads the graph data into memory.
-GraphTile::GraphTile(const std::string& tile_dir,
-                     const GraphId& graphid,
-                     std::unique_ptr<const GraphMemory> traffic_memory)
-    : header_(nullptr), traffic_tile(std::move(traffic_memory)) {
-
-  // Don't bother with invalid ids
-  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level() || tile_dir.empty()) {
-    return;
-  }
-
-  // Open to the end of the file so we can immediately get size
-  std::string file_location =
-      tile_dir + filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
-  std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
-  if (file.is_open()) {
-    // Read binary file into memory. TODO - protect against failure to
-    // allocate memory
-    size_t filesize = file.tellg();
-
-    std::vector<char> data(filesize);
-    file.seekg(0, std::ios::beg);
-    file.read(data.data(), filesize);
-    file.close();
-    memory_ = std::make_unique<const VectorGraphMemory>(std::move(data));
-
-    // Set pointers to internal data structures
-    Initialize(graphid);
-  } else {
-    // try to load a gzipped tile
-    std::ifstream file(file_location + ".gz", std::ios::in | std::ios::binary | std::ios::ate);
-    if (file.is_open()) {
-      // read the compressed file into memory
-      size_t filesize = file.tellg();
-      file.seekg(0, std::ios::beg);
-      std::vector<char> compressed(filesize);
-      file.read(&compressed[0], filesize);
-      file.close();
-
-      // try to decompress it
-      DecompressTile(graphid, compressed);
-    }
-  }
-}
-
-bool GraphTile::DecompressTile(const GraphId& graphid, std::vector<char>& compressed) {
+boost::intrusive_ptr<const valhalla::baldr::GraphTile>
+GraphTile::DecompressTile(const GraphId& graphid, const std::vector<char>& compressed) {
   // for setting where to read compressed data from
   auto src_func = [&compressed](z_stream& s) -> void {
-    s.next_in = static_cast<Byte*>(static_cast<void*>(compressed.data()));
+    s.next_in =
+        const_cast<Byte*>(static_cast<const Byte*>(static_cast<const void*>(compressed.data())));
     s.avail_in = static_cast<unsigned int>(compressed.size());
   };
 
@@ -168,21 +114,71 @@ bool GraphTile::DecompressTile(const GraphId& graphid, std::vector<char>& compre
 
   // Decompress tile into memory
   if (!baldr::inflate(src_func, dst_func)) {
-    LOG_ERROR("Failed to gunzip " + FileSuffix(graphid, SUFFIX_COMPRESSED));
-    memory_.reset();
-    return false;
+    LOG_ERROR("Failed to gunzip " + GraphTile::FileSuffix(graphid, SUFFIX_COMPRESSED));
+    return nullptr;
   }
-  memory_ = std::make_unique<const VectorGraphMemory>(std::move(data));
 
-  // Set pointers to internal data structures
-  Initialize(graphid);
-  return true;
+  return new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(data)));
 }
 
-GraphTile::GraphTile(const GraphId& graphid, std::vector<char>&& memory)
-    : GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(memory))) {
+// Constructor given a filename. Reads the graph data into memory.
+boost::intrusive_ptr<const GraphTile>
+GraphTile::Create(const std::string& tile_dir,
+                  const GraphId& graphid,
+                  std::unique_ptr<const GraphMemory>&& traffic_memory) {
+
+  // Don't bother with invalid ids
+  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level() || tile_dir.empty()) {
+    return nullptr;
+  }
+
+  // Open to the end of the file so we can immediately get size
+  const std::string file_location =
+      tile_dir + filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
+  std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
+  if (file.is_open()) {
+    // Read binary file into memory. TODO - protect against failure to
+    // allocate memory
+    size_t filesize = file.tellg();
+
+    std::vector<char> data(filesize);
+    file.seekg(0, std::ios::beg);
+    file.read(data.data(), filesize);
+    file.close();
+
+    return new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(data)),
+                         std::move(traffic_memory));
+
+  } else {
+    // try to load a gzipped tile
+    std::ifstream file(file_location + ".gz", std::ios::in | std::ios::binary | std::ios::ate);
+    if (file.is_open()) {
+      // read the compressed file into memory
+      size_t filesize = file.tellg();
+      file.seekg(0, std::ios::beg);
+      std::vector<char> compressed(filesize);
+      file.read(&compressed[0], filesize);
+      file.close();
+
+      return DecompressTile(graphid, std::move(compressed));
+    }
+  }
+  return nullptr;
 }
 
+boost::intrusive_ptr<const GraphTile> GraphTile::Create(const GraphId& graphid,
+                                                        std::vector<char>&& memory) {
+  return new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(memory)));
+}
+
+boost::intrusive_ptr<const GraphTile>
+GraphTile::Create(const GraphId& graphid,
+                  std::unique_ptr<const GraphMemory>&& memory,
+                  std::unique_ptr<const GraphMemory>&& traffic_memory) {
+  return new GraphTile(graphid, std::move(memory), std::move(traffic_memory));
+}
+
+// the right c-tor for GraphTile
 GraphTile::GraphTile(const GraphId& graphid,
                      std::unique_ptr<const GraphMemory> memory,
                      std::unique_ptr<const GraphMemory> traffic_memory)
@@ -192,6 +188,16 @@ GraphTile::GraphTile(const GraphId& graphid,
   memory_ = std::move(memory);
   Initialize(graphid);
 }
+
+GraphTile::GraphTile(const std::string& tile_dir,
+                     const GraphId& graphid,
+                     std::unique_ptr<const GraphMemory>&& traffic_memory) {
+  if (const auto& tile = Create(tile_dir, graphid, std::move(traffic_memory))) {
+    *this = std::move(const_cast<GraphTile&>(*tile));
+  }
+}
+
+GraphTile::GraphTile() = default;
 
 void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::string& disk_location) {
   // At first we save tile to a temporary file and then move it
@@ -225,17 +231,15 @@ boost::intrusive_ptr<const GraphTile> GraphTile::CacheTileURL(const std::string&
                                                               const GraphId& graphid,
                                                               tile_getter_t* tile_getter,
                                                               const std::string& cache_location) {
-  GraphTile* tile = new GraphTile;
-
   // Don't bother with invalid ids
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
-    return tile;
+    return nullptr;
   }
 
   auto uri = MakeSingleTileUrl(tile_url, graphid);
   auto result = tile_getter->get(uri);
   if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
-    return tile;
+    return nullptr;
   }
   // try to cache it on disk so we dont have to keep fetching it from url
   if (!cache_location.empty()) {
@@ -248,18 +252,13 @@ boost::intrusive_ptr<const GraphTile> GraphTile::CacheTileURL(const std::string&
 
   // turn the memory into a tile
   if (tile_getter->gzipped()) {
-    tile->DecompressTile(graphid, result.bytes_);
-  } // we dont need to decompress so just take ownership of the data
-  else {
-    tile->memory_ = std::make_unique<const VectorGraphMemory>(std::move(result.bytes_));
-    tile->Initialize(graphid);
+    return DecompressTile(graphid, result.bytes_);
   }
 
-  return tile;
+  return new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(result.bytes_)));
 }
 
-GraphTile::~GraphTile() {
-}
+GraphTile::~GraphTile() = default;
 
 // Set pointers to internal tile data structures
 void GraphTile::Initialize(const GraphId& graphid) {

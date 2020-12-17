@@ -1128,6 +1128,9 @@ void TripLegBuilder::Build(
   for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {
     const GraphId& edge = edge_itr->edgeid;
     graphtile = graphreader.GetGraphTile(edge, graphtile);
+    if (!graphtile) {
+      continue;
+    }
     const DirectedEdge* directededge = graphtile->directededge(edge);
     const sif::TravelMode mode = edge_itr->mode;
     const uint8_t travel_type = travel_types[static_cast<uint32_t>(mode)];
@@ -1135,7 +1138,7 @@ void TripLegBuilder::Build(
 
     // Set node attributes - only set if they are true since they are optional
     boost::intrusive_ptr<const GraphTile> start_tile = graphtile;
-    start_tile = graphreader.GetGraphTile(startnode, start_tile);
+    graphreader.GetGraphTile(startnode, /*out*/ start_tile);
     const NodeInfo* node = start_tile->node(startnode);
 
     if (osmchangeset == 0 && controller.attributes.at(kOsmChangeset)) {

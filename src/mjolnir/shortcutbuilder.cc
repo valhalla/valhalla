@@ -593,7 +593,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
   for (uint32_t tileid = 0; tileid < ntiles; tileid++) {
     // Get the graph tile. Skip if no tile exists (common case)
     tile = reader.GetGraphTile(GraphId(tileid, tile_level, 0));
-    if (tile == nullptr || tile->header()->nodecount() == 0) {
+    if (!tile || tile->header()->nodecount() == 0) {
       continue;
     }
 

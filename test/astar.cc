@@ -220,12 +220,13 @@ void make_tile() {
     tile_builder.UpdatePredictedSpeeds(directededges);
   }
 
-  GraphTile tile(test_dir, tile_id);
-  ASSERT_EQ(tile.FileSuffix(tile_id), std::string("2/000/519/120.gph"))
+  auto tile = GraphTile::Create(test_dir, tile_id);
+  ASSERT_TRUE(tile);
+  ASSERT_EQ(tile->FileSuffix(tile_id), std::string("2/000/519/120.gph"))
       << "Tile ID didn't match the expected filename";
 
   ASSERT_PRED1(filesystem::exists,
-               test_dir + filesystem::path::preferred_separator + tile.FileSuffix(tile_id))
+               test_dir + filesystem::path::preferred_separator + tile->FileSuffix(tile_id))
       << "Expected tile file didn't show up on disk - are the fixtures in the right location?";
 }
 

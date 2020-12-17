@@ -459,11 +459,8 @@ boost::intrusive_ptr<const baldr::GraphTile> GraphReader::GetGraphTile(const Gra
                               : nullptr;
 
     // This initializes the tile from mmap
-    boost::intrusive_ptr<const GraphTile> tile =
-        new GraphTile(base, t->second.first, t->second.second,
-                      traffic_ptr != tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
-                                                                        : nullptr);
-    if (!tile->header()) {
+    auto tile = GraphTile::Create(base, std::move(memory), std::move(traffic_memory));
+    if (!tile || !tile->header()) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
     }
@@ -482,8 +479,8 @@ boost::intrusive_ptr<const baldr::GraphTile> GraphReader::GetGraphTile(const Gra
 
     // Try to get it from disk and if we cant..
     boost::intrusive_ptr<const GraphTile> tile =
-        new GraphTile(tile_dir_, base, std::move(traffic_memory));
-    if (!tile->header()) {
+        GraphTile::Create(tile_dir_, base, std::move(traffic_memory));
+    if (!tile || !tile->header()) {
       if (!tile_getter_) {
         return nullptr;
       }
@@ -498,7 +495,7 @@ boost::intrusive_ptr<const baldr::GraphTile> GraphReader::GetGraphTile(const Gra
 
       // Get it from the url and cache it to disk if you can
       tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_);
-      if (!tile->header()) {
+      if (!tile || !tile->header()) {
         std::lock_guard<std::mutex> lock(_404s_lock);
         _404s.insert(base);
         // LOG_DEBUG("Url cache miss " + GraphTile::FileSuffix(base));
@@ -893,7 +890,7 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id,
 const valhalla::IncidentsTile::Metadata&
 getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
                     const valhalla::IncidentsTile::Location& incident_location) {
-  auto metadata_index = incident_location.metadata_index();
+  const auto metadata_index = incident_location.metadata_index();
   if (metadata_index >= tile->metadata_size()) {
     throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
                              std::to_string(metadata_index) + " but total incident metadata of " +

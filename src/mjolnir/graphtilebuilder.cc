@@ -25,7 +25,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
                                    const GraphId& graphid,
                                    bool deserialize,
                                    bool serialize_turn_lanes)
-    : tile_dir_(tile_dir), GraphTile(tile_dir, graphid) {
+    : GraphTile(tile_dir, graphid), tile_dir_(tile_dir) {
 
   // Copy tile header to a builder (if tile exists). Always set the tileid
   if (header_) {
@@ -896,7 +896,8 @@ GraphTileBuilder::BinEdges(const boost::intrusive_ptr<const GraphTile>& tile, tw
   // we store these at the highest level
   auto max_level = TileHierarchy::levels().back().level;
   // skip transit or other special levels and empty tiles
-  if (tile->header()->graphid().level() > max_level || tile->header()->directededgecount() == 0) {
+  if (!tile || tile->header()->graphid().level() > max_level ||
+      tile->header()->directededgecount() == 0) {
     return bins;
   }
   // is this the highest level
@@ -963,6 +964,10 @@ GraphTileBuilder::BinEdges(const boost::intrusive_ptr<const GraphTile>& tile, tw
 void GraphTileBuilder::AddBins(const std::string& tile_dir,
                                const boost::intrusive_ptr<const GraphTile>& tile,
                                const std::array<std::vector<GraphId>, kBinCount>& more_bins) {
+  if (!tile || !tile->header()) {
+    return;
+  }
+
   // read bins and append and keep track of how much is appended
   std::vector<GraphId> bins[kBinCount];
   uint32_t shift = 0;

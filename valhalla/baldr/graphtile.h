@@ -52,50 +52,40 @@ class GraphTile : public boost::intrusive_ref_counter<GraphTile, boost::thread_u
 public:
   static const constexpr char* kTilePathPattern = "{tilePath}";
 
-  // GraphTiles are noncopyable.
-  GraphTile(const GraphTile&) = delete;
-  GraphTile& operator=(const GraphTile&) = delete;
-
-  // They are, however, moveable.
-  GraphTile(GraphTile&&) = default;
-  GraphTile& operator=(GraphTile&&) = default;
-
   /**
-   * Constructor
-   */
-  GraphTile();
-
-  /**
-   * Constructor given a GraphId. Reads the graph tile from file
+   * Constructs with a given GraphId. Reads the graph tile from file
    * into memory.
    * @param  tile_dir   Tile directory.
    * @param  graphid    GraphId (tileid and level)
    */
-  GraphTile(const std::string& tile_dir,
-            const GraphId& graphid,
-            std::unique_ptr<const GraphMemory> traffic_memory = nullptr);
+  static boost::intrusive_ptr<const GraphTile>
+  Create(const std::string& tile_dir,
+         const GraphId& graphid,
+         std::unique_ptr<const GraphMemory>&& traffic_memory = nullptr);
 
   /**
-   * Constructor given the graph Id, pointer to the tile data, and the
+   * Constructs with a given the graph Id, pointer to the tile data, and the
    * size of the tile data. This is used for memory mapped (mmap) tiles.
    * @param  graphid  Tile Id.
    * @param  ptr      Pointer to the start of the tile's data.
    */
-  GraphTile(const GraphId& graphid, std::vector<char>&& memory);
+  static boost::intrusive_ptr<const GraphTile> Create(const GraphId& graphid,
+                                                      std::vector<char>&& memory);
 
   /**
-   * Constructor given the graph Id, pointer to the tile data, and the
+   * Constructs given the graph Id, pointer to the tile data, and the
    * size of the tile data. This is used for memory mapped (mmap) tiles.
    * @param  graphid  Tile Id.
    * @param  ptr      Pointer to the start of the tile's data.
    * @param  size     Size in bytes of the tile data.
    */
-  GraphTile(const GraphId& graphid,
-            std::unique_ptr<const GraphMemory> memory,
-            std::unique_ptr<const GraphMemory> traffic_memory = nullptr);
+  static boost::intrusive_ptr<const GraphTile>
+  Create(const GraphId& graphid,
+         std::unique_ptr<const GraphMemory>&& memory,
+         std::unique_ptr<const GraphMemory>&& traffic_memory = nullptr);
 
   /**
-   * Construct a tile given a url for the tile using curl
+   * Constructs a tile given a url for the tile using curl
    * @param  tile_url URL of tile
    * @param  graphid Tile Id
    * @param  tile_getter object that will handle tile downloading
@@ -687,7 +677,7 @@ protected:
   std::unique_ptr<const GraphMemory> memory_;
 
   // Header information for the tile
-  GraphTileHeader* header_;
+  GraphTileHeader* header_{};
 
   // List of nodes. Fixed size structure, indexed by Id within the tile.
   NodeInfo* nodes_{};
@@ -781,7 +771,40 @@ protected:
   std::unordered_map<std::string, std::list<GraphId>> oper_one_stops;
 
   // Pointer to live traffic data (can be nullptr if not active)
-  TrafficTile traffic_tile;
+  TrafficTile traffic_tile{nullptr};
+
+  // GraphTiles are noncopyable.
+  GraphTile(const GraphTile&) = delete;
+  GraphTile& operator=(const GraphTile&) = delete;
+
+  // They are, however, moveable.
+  GraphTile(GraphTile&&) = default;
+  GraphTile& operator=(GraphTile&&) = default;
+
+  // constructs empty tile
+  GraphTile();
+
+  /**
+   * Constructor given the graph Id, pointer to the tile data, and the
+   * size of the tile data. This is used for memory mapped (mmap) tiles.
+   * @param  graphid  Tile Id.
+   * @param  ptr      Pointer to the start of the tile's data.
+   * @param  size     Size in bytes of the tile data.
+   */
+  GraphTile(const GraphId& graphid,
+            std::unique_ptr<const GraphMemory> memory,
+            std::unique_ptr<const GraphMemory> traffic_memory = nullptr);
+
+  /**
+   * Constructor given the graph Id, pointer to the tile data, and the
+   * size of the tile data. This is used for memory mapped (mmap) tiles.
+   * @param  graphid  Tile Id.
+   * @param  ptr      Pointer to the start of the tile's data.
+   * @param  size     Size in bytes of the tile data.
+   */
+  GraphTile(const std::string& tile_dir,
+            const GraphId& graphid,
+            std::unique_ptr<const GraphMemory>&& traffic_memory = nullptr);
 
   /**
    * Initialize pointers to internal tile data structures.
@@ -802,10 +825,11 @@ protected:
   /** Decrompresses tile bytes into the internal graphtile byte buffer
    * @param  graphid     the id of the tile to be decompressed
    * @param  compressed  the compressed bytes
-   * @return whether or not the graphtile has been successfully initialized with
-   *         the uncompressed data
+   * @return a pointer to a graphtile if it  has been successfully initialized with
+   *         the uncompressed data, or nullptr
    */
-  bool DecompressTile(const GraphId& graphid, std::vector<char>& compressed);
+  static boost::intrusive_ptr<const GraphTile> DecompressTile(const GraphId& graphid,
+                                                              const std::vector<char>& compressed);
 };
 
 } // namespace baldr

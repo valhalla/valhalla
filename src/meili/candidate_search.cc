@@ -134,6 +134,10 @@ void IndexBin(const boost::intrusive_ptr<const baldr::GraphTile>& tile,
               const int32_t bin_index,
               baldr::GraphReader& reader,
               CandidateGridQuery::grid_t& grid) {
+  if (!tile) {
+    return;
+  }
+
   // Get the edges within the specified bin.
   auto edge_ids = tile->GetBin(bin_index);
   for (const auto& edge_id : edge_ids) {

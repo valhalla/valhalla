@@ -397,8 +397,7 @@ void FindOSMConnection(const PointLL& stop_ll,
   for (auto t : tilelist) {
     // Check all the nodes within the tile. Skip if tile has no nodes
     lock.lock();
-    boost::intrusive_ptr<const GraphTile> newtile =
-        reader_local_level.GetGraphTile(GraphId(t, local_level, 0));
+    auto newtile = reader_local_level.GetGraphTile(GraphId(t, local_level, 0));
     lock.unlock();
     if (!newtile || newtile->header()->nodecount() == 0) {
       continue;
@@ -454,7 +453,10 @@ void AddOSMConnection(const GraphId& transit_stop_node,
                       GraphReader& reader_local_level,
                       std::mutex& lock,
                       std::vector<OSMConnectionEdge>& connection_edges) {
-
+  if (!tile) {
+    LOG_ERROR(std::string(__FUNCTION__) + " called with no tile");
+    return;
+  }
   const PointLL& stop_ll = transit_node->latlng(tile->header()->base_ll());
   uint64_t wayid = transit_node->connecting_wayid();
 

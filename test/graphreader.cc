@@ -266,7 +266,7 @@ TEST(CacheLruHard, InsertSingleItemBiggerThanCacheSize) {
   GraphId id1(100, 2, 0);
   boost::intrusive_ptr<const GraphTile> tile1 = new TestGraphTile(id1, 2000);
 
-  EXPECT_THROW(cache.Put(id1, TestGraphTile(id1, 2000), 2000), std::runtime_error);
+  EXPECT_THROW(cache.Put(id1, tile1, 2000), std::runtime_error);
   EXPECT_EQ(cache.Get(id1), nullptr);
   EXPECT_FALSE(cache.Contains(id1));
 }

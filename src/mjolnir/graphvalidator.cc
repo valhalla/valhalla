@@ -461,9 +461,8 @@ void validate(
 
     // Write the bins to it
     if (tile->header()->graphid().level() == TileHierarchy::levels().back().level) {
-      boost::intrusive_ptr<const GraphTile> reloaded =
-          new GraphTile(graph_reader.tile_dir(), tile_id);
-      GraphTileBuilder::AddBins(graph_reader.tile_dir(), std::move(reloaded), bins);
+      GraphTileBuilder::AddBins(graph_reader.tile_dir(),
+                                GraphTile::Create(graph_reader.tile_dir(), tile_id), bins);
     }
 
     // Check if we need to clear the tile cache
@@ -521,13 +520,13 @@ void bin_tweeners(const std::string& tile_dir,
     lock.unlock();
 
     // if there is nothing there we need to make something
-    boost::intrusive_ptr<const GraphTile> tile = new GraphTile(tile_dir, tile_bin.first);
+    auto tile = GraphTile::Create(tile_dir, tile_bin.first);
 
-    if (!tile.header()) {
+    if (!tile || !tile->header()) {
       GraphTileBuilder empty(tile_dir, tile_bin.first, false);
       empty.header_builder().set_dataset_id(dataset_id);
       empty.StoreTileData();
-      tile = new GraphTile(tile_dir, tile_bin.first);
+      tile = GraphTile::Create(tile_dir, tile_bin.first);
     }
     // keep the extra binned edges
     GraphTileBuilder::AddBins(tile_dir, std::move(tile), tile_bin.second);
@@ -554,7 +553,17 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(3));
 
   // Remember what the dataset id is in case we have to make some tiles
-  auto dataset_id = GraphTile(tile_dir, *tilequeue.begin()).header()->dataset_id();
+
+  uint64_t dataset_id = 0;
+  if (const auto& tile = GraphTile::Create(tile_dir, *tilequeue.begin())) {
+    if (const auto* header = tile->header()) {
+      dataset_id = header->dataset_id();
+    }
+  }
+  if (dataset_id == 0) {
+    LOG_ERROR("Tile isn't created from " + tile_dir + " with id " +
+              std::to_string(tilequeue.begin()->id()));
+  }
 
   // An mutex we can use to do the synchronization
   std::mutex lock;
