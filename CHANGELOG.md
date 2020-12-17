@@ -218,6 +218,7 @@
    * ADDED: An option for shortcut recovery to be cached at start up to reduce the time it takes to do so on the fly [#2714](https://github.com/valhalla/valhalla/pull/2714)
    * ADDED: If width <= 1.9 then no access for auto, truck, bus, taxi, emergency and hov. [#2713](https://github.com/valhalla/valhalla/pull/2713)
    * ADDED: Added support to process the sump_buster tag.  Also, fixed a few small access bugs for nodes. [#2731](https://github.com/valhalla/valhalla/pull/2731)
+   * ADDED: Log message if failed to create tiles directory. [#2738](https://github.com/valhalla/valhalla/pull/2738)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
