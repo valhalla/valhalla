@@ -772,6 +772,15 @@ public:
     tag_handlers_["guidance_view:jct:overlay:backward"] = [this]() {
       way_.set_bwd_jct_overlay_index(osmdata_.name_offset_map.index(tag_.second));
     };
+    tag_handlers_["guidance_view:signboard:base"] = [this]() {
+      way_.set_fwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["guidance_view:signboard:base:forward"] = [this]() {
+      way_.set_fwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["guidance_view:signboard:base:backward"] = [this]() {
+      way_.set_bwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
+    };
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
@@ -955,6 +964,14 @@ public:
             ++osmdata_.edge_count;
           }
           n.set_type(NodeType::kTollGantry);
+        }
+      } else if (tag.first == "sump_buster") {
+        if (tag.second == "true") {
+          if (!intersection) {
+            intersection = true;
+            ++osmdata_.edge_count;
+          }
+          n.set_type(NodeType::kSumpBuster);
         }
       } else if (tag.first == "access_mask") {
         n.set_access(std::stoi(tag.second));

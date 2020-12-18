@@ -9,7 +9,6 @@
 
 #include "test.h"
 
-using namespace std;
 using namespace valhalla::baldr;
 
 namespace {
@@ -127,10 +126,21 @@ TEST(ConnectivityMap, Basic) {
   filesystem::remove_all(tile_dir);
 }
 
+class TestGraphMemory final : public GraphMemory {
+public:
+  TestGraphMemory() : memory_(sizeof(GraphTileHeader)) {
+    data = const_cast<char*>(memory_.data());
+    size = memory_.size();
+  }
+
+private:
+  const std::vector<char> memory_;
+};
+
 struct TestGraphTile : public GraphTile {
   TestGraphTile(GraphId id, size_t size) {
-    graphtile_ = std::make_shared<std::vector<char>>(sizeof(GraphTileHeader));
-    header_ = reinterpret_cast<GraphTileHeader*>(graphtile_->data());
+    memory_ = std::make_unique<const TestGraphMemory>();
+    header_ = reinterpret_cast<GraphTileHeader*>(memory_->data);
     header_->set_graphid(id);
     header_->set_end_offset(size);
   }
@@ -146,23 +156,23 @@ TEST(SimpleCache, Clear) {
   SimpleTileCache cache(400);
 
   GraphId id1(100, 2, 0);
-  TestGraphTile tile1(id1, 123);
-  const GraphTile* inserted1 = cache.Put(id1, tile1, 123);
-  CheckGraphTile(inserted1, id1, 123);
+  const auto* tile1 = cache.Put(id1, TestGraphTile(id1, 123), 123);
+  EXPECT_EQ(cache.Get(id1), tile1);
+  CheckGraphTile(tile1, id1, 123);
 
   EXPECT_FALSE(cache.OverCommitted());
 
   GraphId id2(300, 1, 0);
-  TestGraphTile tile2(id2, 200);
-  const GraphTile* inserted2 = cache.Put(id2, tile2, 200);
-  CheckGraphTile(inserted2, id2, 200);
+  const auto* tile2 = cache.Put(id2, TestGraphTile(id2, 200), 200);
+  EXPECT_EQ(cache.Get(id2), tile2);
+  CheckGraphTile(tile2, id2, 200);
 
   EXPECT_FALSE(cache.OverCommitted());
 
   GraphId id3(1000, 0, 0);
-  TestGraphTile tile3(id3, 500);
-  const GraphTile* inserted3 = cache.Put(id3, tile3, 500);
-  CheckGraphTile(inserted3, id3, 500);
+  const auto* tile3 = cache.Put(id3, TestGraphTile(id3, 500), 500);
+  EXPECT_EQ(cache.Get(id3), tile3);
+  CheckGraphTile(tile3, id3, 500);
 
   EXPECT_TRUE(cache.OverCommitted());
 
@@ -196,23 +206,23 @@ TEST(SimpleCache, Trim) {
   SimpleTileCache cache(400);
 
   GraphId id1(100, 2, 0);
-  TestGraphTile tile1(id1, 123);
-  const GraphTile* inserted1 = cache.Put(id1, tile1, 123);
-  CheckGraphTile(inserted1, id1, 123);
+  const auto* tile1 = cache.Put(id1, TestGraphTile(id1, 123), 123);
+  EXPECT_EQ(cache.Get(id1), tile1);
+  CheckGraphTile(tile1, id1, 123);
 
   EXPECT_FALSE(cache.OverCommitted());
 
   GraphId id2(300, 1, 0);
-  TestGraphTile tile2(id2, 200);
-  const GraphTile* inserted2 = cache.Put(id2, tile2, 200);
-  CheckGraphTile(inserted2, id2, 200);
+  const auto* tile2 = cache.Put(id2, TestGraphTile(id2, 200), 200);
+  EXPECT_EQ(cache.Get(id2), tile2);
+  CheckGraphTile(tile2, id2, 200);
 
   EXPECT_FALSE(cache.OverCommitted());
 
   GraphId id3(1000, 0, 0);
-  TestGraphTile tile3(id3, 500);
-  const GraphTile* inserted3 = cache.Put(id3, tile3, 500);
-  CheckGraphTile(inserted3, id3, 500);
+  const auto* tile3 = cache.Put(id3, TestGraphTile(id3, 500), 500);
+  EXPECT_EQ(cache.Get(id3), tile3);
+  CheckGraphTile(tile3, id3, 500);
 
   EXPECT_TRUE(cache.OverCommitted());
 
@@ -252,9 +262,8 @@ TEST(CacheLruHard, InsertSingleItemBiggerThanCacheSize) {
   TileCacheLRU cache(1023, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId id1(100, 2, 0);
-  TestGraphTile tile1(id1, 2000);
 
-  EXPECT_THROW(cache.Put(id1, tile1, 2000), std::runtime_error);
+  EXPECT_THROW(cache.Put(id1, TestGraphTile(id1, 2000), 2000), std::runtime_error);
   EXPECT_EQ(cache.Get(id1), nullptr);
   EXPECT_FALSE(cache.Contains(id1));
 }
@@ -265,14 +274,11 @@ TEST(CacheLruHard, InsertCacheFullOneshot) {
   TileCacheLRU cache(tile1_size, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId tile1_id(1000, 1, 0);
-  TestGraphTile tile1(tile1_id, tile1_size);
-
-  const auto* inserted1 = cache.Put(tile1_id, tile1, tile1_size);
-
-  CheckGraphTile(inserted1, tile1_id, tile1_size);
+  const auto* tile1 = cache.Put(tile1_id, TestGraphTile(tile1_id, tile1_size), tile1_size);
+  EXPECT_EQ(cache.Get(tile1_id), tile1);
   EXPECT_FALSE(cache.OverCommitted());
 
-  CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
+  CheckGraphTile(tile1, tile1_id, tile1_size);
   EXPECT_TRUE(cache.Contains(tile1_id));
 }
 
@@ -281,20 +287,18 @@ TEST(CacheLruHard, InsertCacheFull) {
 
   const size_t tile1_size = 4000;
   GraphId tile1_id(1000, 1, 0);
-  TestGraphTile tile1(tile1_id, tile1_size);
-  const auto* inserted1 = cache.Put(tile1_id, tile1, tile1_size);
-  CheckGraphTile(inserted1, tile1_id, tile1_size);
+  const auto* tile1 = cache.Put(tile1_id, TestGraphTile(tile1_id, tile1_size), tile1_size);
+  EXPECT_EQ(cache.Get(tile1_id), tile1);
+  CheckGraphTile(tile1, tile1_id, tile1_size);
 
   const size_t tile2_size = 6000;
   GraphId tile2_id(33, 2, 0);
-  TestGraphTile tile2(tile2_id, tile2_size);
-  const auto* inserted2 = cache.Put(tile2_id, tile2, tile2_size);
-  CheckGraphTile(inserted2, tile2_id, tile2_size);
+  const auto* tile2 = cache.Put(tile2_id, TestGraphTile(tile2_id, tile2_size), tile2_size);
+  EXPECT_EQ(cache.Get(tile2_id), tile2);
+  CheckGraphTile(tile2, tile2_id, tile2_size);
 
   EXPECT_FALSE(cache.OverCommitted());
 
-  CheckGraphTile(cache.Get(tile1_id), tile1_id, tile1_size);
-  CheckGraphTile(cache.Get(tile2_id), tile2_id, tile2_size);
   EXPECT_TRUE(cache.Contains(tile1_id));
   EXPECT_TRUE(cache.Contains(tile2_id));
 }
@@ -303,19 +307,19 @@ TEST(CacheLruHard, InsertNoEviction) {
   TileCacheLRU cache(1023, TileCacheLRU::MemoryLimitControl::HARD);
 
   GraphId id1(100, 2, 0);
-  TestGraphTile tile1(id1, 123);
-  const GraphTile* inserted1 = cache.Put(id1, tile1, 123);
-  CheckGraphTile(inserted1, id1, 123);
+  const auto* tile1 = cache.Put(id1, TestGraphTile(id1, 123), 123);
+  EXPECT_EQ(cache.Get(id1), tile1);
+  CheckGraphTile(tile1, id1, 123);
 
   GraphId id2(300, 1, 0);
-  TestGraphTile tile2(id2, 200);
-  const GraphTile* inserted2 = cache.Put(id2, tile2, 200);
-  CheckGraphTile(inserted2, id2, 200);
+  const auto* tile2 = cache.Put(id2, TestGraphTile(id2, 200), 200);
+  EXPECT_EQ(cache.Get(id2), tile2);
+  CheckGraphTile(tile2, id2, 200);
 
   GraphId id3(1000, 0, 0);
-  TestGraphTile tile3(id3, 500);
-  const GraphTile* inserted3 = cache.Put(id3, tile3, 500);
-  CheckGraphTile(inserted3, id3, 500);
+  const auto* tile3 = cache.Put(id3, TestGraphTile(id3, 500), 500);
+  EXPECT_EQ(cache.Get(id3), tile3);
+  CheckGraphTile(tile3, id3, 500);
 
   // Check if inserted values are correct
 

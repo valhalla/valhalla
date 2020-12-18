@@ -21,7 +21,6 @@
 #define VALHALLA_SOURCE_DIR
 #endif
 
-using namespace std;
 using namespace valhalla::baldr;
 
 // Expected size is 8 bytes. We want to alert if somehow any change grows

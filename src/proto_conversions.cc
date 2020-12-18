@@ -84,6 +84,22 @@ const char* incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impa
   return "UNHANDLED_CASE";
 }
 
+const std::string& GuidanceViewTypeToString(const valhalla::DirectionsLeg_GuidanceView_Type type) {
+  static const std::string empty;
+  static const std::unordered_map<int, std::string>
+      types{{DirectionsLeg_GuidanceView_Type_kJunction, "jct"},
+            {DirectionsLeg_GuidanceView_Type_kSapa, "sapa"},
+            {DirectionsLeg_GuidanceView_Type_kTollbranch, "tollbranch"},
+            {DirectionsLeg_GuidanceView_Type_kAftertoll, "aftertoll"},
+            {DirectionsLeg_GuidanceView_Type_kEnt, "ent"},
+            {DirectionsLeg_GuidanceView_Type_kExit, "exit"},
+            {DirectionsLeg_GuidanceView_Type_kCityreal, "cityreal"},
+            {DirectionsLeg_GuidanceView_Type_kDirectionboard, "directionboard"},
+            {DirectionsLeg_GuidanceView_Type_kSignboard, "signboard"}};
+  auto i = types.find(type);
+  return i == types.cend() ? empty : i->second;
+}
+
 bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
   static const std::unordered_map<std::string, Options::Action> actions{
       {"route", Options::route},

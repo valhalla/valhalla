@@ -10,6 +10,7 @@
 #include "incident_singleton.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
+#include "shortcut_recovery.h"
 
 using namespace valhalla::midgard;
 
@@ -18,6 +19,7 @@ namespace {
 constexpr size_t DEFAULT_MAX_CACHE_SIZE = 1073741824; // 1 gig
 constexpr size_t AVERAGE_TILE_SIZE = 2097152;         // 2 megs
 constexpr size_t AVERAGE_MM_TILE_SIZE = 1024;         // 1k
+
 } // namespace
 
 namespace valhalla {
@@ -140,9 +142,9 @@ const GraphTile* SimpleTileCache::Get(const GraphId& graphid) const {
 }
 
 // Puts a copy of a tile of into the cache.
-const GraphTile* SimpleTileCache::Put(const GraphId& graphid, const GraphTile& tile, size_t size) {
+const GraphTile* SimpleTileCache::Put(const GraphId& graphid, GraphTile&& tile, size_t size) {
   cache_size_ += size;
-  return &cache_.emplace(graphid, tile).first->second;
+  return &cache_.emplace(graphid, std::move(tile)).first->second;
 }
 
 void SimpleTileCache::Trim() {
@@ -213,8 +215,7 @@ void TileCacheLRU::MoveToLruHead(const KeyValueIter& entry_iter) const {
   key_val_lru_list_.splice(key_val_lru_list_.begin(), key_val_lru_list_, entry_iter);
 }
 
-const GraphTile*
-TileCacheLRU::Put(const GraphId& graphid, const GraphTile& tile, size_t new_tile_size) {
+const GraphTile* TileCacheLRU::Put(const GraphId& graphid, GraphTile&& tile, size_t new_tile_size) {
   if (new_tile_size > max_cache_size_) {
     throw std::runtime_error("TileCacheLRU: tile size is bigger than max cache size");
   }
@@ -224,7 +225,7 @@ TileCacheLRU::Put(const GraphId& graphid, const GraphTile& tile, size_t new_tile
     if (mem_control_ == MemoryLimitControl::HARD) {
       TrimToFit(new_tile_size);
     }
-    key_val_lru_list_.emplace_front(KeyValue{graphid, tile});
+    key_val_lru_list_.emplace_front(graphid, std::move(tile));
     cache_.emplace(graphid, key_val_lru_list_.begin());
   } else {
     // Value update; the new size may be different form the previous
@@ -247,7 +248,7 @@ TileCacheLRU::Put(const GraphId& graphid, const GraphTile& tile, size_t new_tile
       }
     }
 
-    entry_iter->tile = tile;
+    entry_iter->tile = std::move(tile);
     cache_size_ -= old_tile_size;
   }
   cache_size_ += new_tile_size;
@@ -300,10 +301,9 @@ const GraphTile* SynchronizedTileCache::Get(const GraphId& graphid) const {
 }
 
 // Puts a copy of a tile of into the cache.
-const GraphTile*
-SynchronizedTileCache::Put(const GraphId& graphid, const GraphTile& tile, size_t size) {
+const GraphTile* SynchronizedTileCache::Put(const GraphId& graphid, GraphTile&& tile, size_t size) {
   std::lock_guard<std::mutex> lock(mutex_ref_);
-  return cache_.Put(graphid, tile, size);
+  return cache_.Put(graphid, std::move(tile), size);
 }
 
 // Constructs tile cache.
@@ -373,6 +373,11 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
                               tile_extract_->tiles.empty() ? std::unordered_set<GraphId>{}
                                                            : GetTileSet());
   }
+
+  // Fill shortcut recovery cache if requested or by default in memmap mode
+  if (pt.get<bool>("shortcut_caching", false)) {
+    shortcut_recovery_t::get_instance(this);
+  }
 }
 
 // Method to test if tile exists
@@ -396,6 +401,18 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
   return stat(file_location.c_str(), &buffer) == 0 ||
          stat((file_location + ".gz").c_str(), &buffer) == 0;
 }
+
+class TarballGraphMemory final : public GraphMemory {
+public:
+  TarballGraphMemory(std::shared_ptr<midgard::tar> archive, std::pair<char*, size_t> position)
+      : archive_(std::move(archive)) {
+    data = position.first;
+    size = position.second;
+  }
+
+private:
+  const std::shared_ptr<midgard::tar> archive_;
+};
 
 // Get a pointer to a graph tile object given a GraphId. Return nullptr
 // if the tile is not found/empty
@@ -422,13 +439,16 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
     }
+    auto memory = std::make_unique<TarballGraphMemory>(tile_extract_->archive, t->second);
 
     auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
+    auto traffic_memory = traffic_ptr != tile_extract_->traffic_tiles.end()
+                              ? std::make_unique<TarballGraphMemory>(tile_extract_->traffic_archive,
+                                                                     traffic_ptr->second)
+                              : nullptr;
 
     // This initializes the tile from mmap
-    GraphTile tile(base, t->second.first, t->second.second,
-                   traffic_ptr != tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
-                                                                     : nullptr);
+    GraphTile tile(base, std::move(memory), std::move(traffic_memory));
     if (!tile.header()) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
@@ -437,15 +457,18 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
 
     // Keep a copy in the cache and return it
     size_t size = AVERAGE_MM_TILE_SIZE; // tile.end_offset();  // TODO what size??
-    auto inserted = cache_->Put(base, tile, size);
+    auto inserted = cache_->Put(base, std::move(tile), size);
     return inserted;
   } // Try getting it from flat file
   else {
     auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
+    auto traffic_memory = traffic_ptr != tile_extract_->traffic_tiles.end()
+                              ? std::make_unique<TarballGraphMemory>(tile_extract_->traffic_archive,
+                                                                     traffic_ptr->second)
+                              : nullptr;
+
     // Try to get it from disk and if we cant..
-    GraphTile tile(tile_dir_, base,
-                   traffic_ptr != tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
-                                                                     : nullptr);
+    GraphTile tile(tile_dir_, base, std::move(traffic_memory));
     if (!tile.header()) {
       if (!tile_getter_) {
         return nullptr;
@@ -474,7 +497,7 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
 
     // Keep a copy in the cache and return it
     size_t size = tile.header()->end_offset();
-    auto inserted = cache_->Put(base, tile, size);
+    auto inserted = cache_->Put(base, std::move(tile), size);
     return inserted;
   }
 }
@@ -661,97 +684,7 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
 
 // Unpack edges for a given shortcut edge
 std::vector<GraphId> GraphReader::RecoverShortcut(const GraphId& shortcut_id) {
-  // grab the shortcut edge
-  const GraphTile* tile = GetGraphTile(shortcut_id);
-  const DirectedEdge* shortcut = tile->directededge(shortcut_id);
-
-  // bail if this isnt a shortcut
-  if (!shortcut->is_shortcut()) {
-    return {shortcut_id};
-  }
-
-  // loop over the edges leaving its begin node and find the superseded edge
-  GraphId begin_node = edge_startnode(shortcut_id);
-  if (!begin_node)
-    return {shortcut_id};
-
-  // loop over the edges leaving its begin node and find the superseded edge
-  std::vector<GraphId> edges;
-  for (const DirectedEdge& de : tile->GetDirectedEdges(begin_node.id())) {
-    if (shortcut->shortcut() & de.superseded()) {
-      edges.push_back(tile->header()->graphid());
-      edges.back().set_id(&de - tile->directededge(0));
-      break;
-    }
-  }
-
-  // bail if we couldnt find it
-  if (edges.empty()) {
-    LOG_ERROR("Unable to recover shortcut for edgeid " + std::to_string(shortcut_id) +
-              " | no superseded edge");
-    return {shortcut_id};
-  }
-
-  // seed the edge walking with the first edge
-  const DirectedEdge* current_edge = tile->directededge(edges.back());
-  uint32_t accumulated_length = current_edge->length();
-
-  // walk edges until we find the same ending node as the shortcut
-  while (current_edge->endnode() != shortcut->endnode()) {
-    // get the node at the end of the last edge we added
-    const NodeInfo* node = GetEndNode(current_edge, tile);
-    if (!node)
-      return {shortcut_id};
-    auto node_index = node - tile->node(0);
-
-    // check the edges leaving this node to see if we can find the one that is part of the shortcut
-    current_edge = nullptr;
-    for (const DirectedEdge& edge : tile->GetDirectedEdges(node_index)) {
-      // are they the same enough that its part of the shortcut
-      // NOTE: this fails in about .05% of cases where there are two candidates and its not clear
-      // which edge is the right one. looking at shortcut builder its not obvious how this is
-      // possible as it seems to terminate a shortcut if more than one edge pair can be contracted...
-      // NOTE: because we change the speed of the edge in graph enhancer we cant use speed as a
-      // reliable determining factor
-      if (begin_node != edge.endnode() && !edge.is_shortcut() &&
-          (edge.forwardaccess() & kAutoAccess) && edge.sign() == shortcut->sign() &&
-          edge.use() == shortcut->use() && edge.classification() == shortcut->classification() &&
-          edge.roundabout() == shortcut->roundabout() && edge.link() == shortcut->link() &&
-          edge.toll() == shortcut->toll() && edge.destonly() == shortcut->destonly() &&
-          edge.unpaved() == shortcut->unpaved() && edge.surface() == shortcut->surface()/* &&
-          edge.speed() == shortcut->speed()*/) {
-        // we are going to keep this edge
-        edges.emplace_back(tile->header()->graphid());
-        edges.back().set_id(&edge - tile->directededge(0));
-        // and keep expanding from the end of it
-        current_edge = &edge;
-        begin_node = tile->header()->graphid();
-        begin_node.set_id(node_index);
-        accumulated_length += edge.length();
-        break;
-      }
-    }
-
-    // if we didnt add an edge or we went over the length we failed
-    if (current_edge == nullptr || accumulated_length > shortcut->length()) {
-      LOG_ERROR("Unable to recover shortcut for edgeid " + std::to_string(shortcut_id) +
-                " | accumulated_length: " + std::to_string(accumulated_length) +
-                " | shortcut_length: " + std::to_string(shortcut->length()));
-      return {shortcut_id};
-    }
-  }
-
-  // we somehow got to the end via a shorter path
-  if (accumulated_length < shortcut->length()) {
-    LOG_ERROR("Unable to recover shortcut for edgeid (accumulated_length < shortcut->length()) " +
-              std::to_string(shortcut_id) +
-              " | accumulated_length: " + std::to_string(accumulated_length) +
-              " | shortcut_length: " + std::to_string(shortcut->length()));
-    return {shortcut_id};
-  }
-
-  // these edges make up this shortcut
-  return edges;
+  return shortcut_recovery_t::get_instance().get(shortcut_id, *this);
 }
 
 // Convenience method to get the relative edge density (from the
