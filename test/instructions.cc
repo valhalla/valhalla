@@ -18,7 +18,6 @@
 #define VALHALLA_SOURCE_DIR
 #endif
 
-using namespace std;
 using namespace valhalla::baldr;
 
 namespace {
