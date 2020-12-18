@@ -281,15 +281,19 @@ json::ArrayPtr legs(const valhalla::Api& api) {
   auto legs = json::array({});
   const auto& directions_legs = api.directions().routes(0).legs();
   auto trip_leg_itr = api.trip().routes(0).legs().begin();
+  legs->reserve(directions_legs.size());
   for (const auto& directions_leg : directions_legs) {
     auto leg = json::map({});
     auto summary = json::map({});
     auto maneuvers = json::array({});
+    maneuvers->reserve(directions_leg.maneuver_size());
     bool has_time_restrictions = false;
 
     for (const auto& maneuver : directions_leg.maneuver()) {
 
+      // we do a modest reservation here because there are a lot of conditionals below
       auto man = json::map({});
+      man->reserve(5);
 
       // Maneuver type
       man->emplace("type", static_cast<uint64_t>(maneuver.type()));
@@ -587,10 +591,10 @@ json::ArrayPtr legs(const valhalla::Api& api) {
       //“portionsUnpavedNote” : “<portionsUnpavedNote>”,
       //“gateAccessRequiredNote” : “<gateAccessRequiredNote>”,
       //“checkFerryInfoNote” : “<checkFerryInfoNote>”
-      maneuvers->emplace_back(man);
+      maneuvers->emplace_back(std::move(man));
     }
     if (directions_leg.maneuver_size() > 0) {
-      leg->emplace("maneuvers", maneuvers);
+      leg->emplace("maneuvers", std::move(maneuvers));
     }
     summary->emplace("time", json::fp_t{directions_leg.summary().time(), 3});
     summary->emplace("length", json::fp_t{directions_leg.summary().length(), 3});
@@ -615,7 +619,7 @@ json::ArrayPtr legs(const valhalla::Api& api) {
     leg->emplace("summary", summary);
     leg->emplace("shape", directions_leg.shape());
 
-    legs->emplace_back(leg);
+    legs->emplace_back(std::move(leg));
   }
   return legs;
 }

@@ -95,6 +95,7 @@ void route_references(json::MapPtr& route_json, const TripRoute& route, const Op
   }
   json::ArrayPtr references = json::array({});
   for (const TripLeg& leg : route.legs()) {
+    references->reserve(references->size() + leg.node_size() - 1);
     for (const std::string& openlr : openlr_edges(leg)) {
       references->emplace_back(openlr);
     }
