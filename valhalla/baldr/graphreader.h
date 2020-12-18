@@ -62,7 +62,7 @@ public:
    * @param tile the graph tile
    * @param size size of the tile in memory
    */
-  virtual const GraphTile* Put(const GraphId& graphid, const GraphTile& tile, size_t size) = 0;
+  virtual const GraphTile* Put(const GraphId& graphid, GraphTile&& tile, size_t size) = 0;
 
   /**
    * Get a pointer to a graph tile object given a GraphId.
@@ -120,7 +120,7 @@ public:
    * @param tile the graph tile
    * @param size size of the tile in memory
    */
-  const GraphTile* Put(const GraphId& graphid, const GraphTile& tile, size_t size) override;
+  const GraphTile* Put(const GraphId& graphid, GraphTile&& tile, size_t size) override;
 
   /**
    * Get a pointer to a graph tile object given a GraphId.
@@ -195,7 +195,7 @@ public:
    * @param tile the graph tile
    * @param size size of the tile in memory
    */
-  const GraphTile* Put(const GraphId& graphid, const GraphTile& tile, size_t tile_size) override;
+  const GraphTile* Put(const GraphId& graphid, GraphTile&& tile, size_t tile_size) override;
 
   /**
    * Get a pointer to a graph tile object given a GraphId.
@@ -223,6 +223,8 @@ public:
 
 protected:
   struct KeyValue {
+    KeyValue(GraphId id_, GraphTile&& tile_) : id(id_), tile(std::move(tile_)) {
+    }
     GraphId id;
     GraphTile tile;
   };
@@ -294,7 +296,7 @@ public:
    * @param tile the graph tile
    * @param size size of the tile in memory
    */
-  const GraphTile* Put(const GraphId& graphid, const GraphTile& tile, size_t size) override;
+  const GraphTile* Put(const GraphId& graphid, GraphTile&& tile, size_t size) override;
 
   /**
    * Get a pointer to a graph tile object given a GraphId.

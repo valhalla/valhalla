@@ -465,7 +465,7 @@ void validate(
 
     // Write the bins to it
     if (tile->header()->graphid().level() == TileHierarchy::levels().back().level) {
-      auto reloaded = GraphTile(graph_reader.tile_dir(), tile_id);
+      GraphTile reloaded(graph_reader.tile_dir(), tile_id);
       GraphTileBuilder::AddBins(graph_reader.tile_dir(), &reloaded, bins);
     }
 
