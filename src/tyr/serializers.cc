@@ -102,6 +102,21 @@ void route_references(json::MapPtr& route_json, const TripRoute& route, const Op
   }
   route_json->emplace("linear_references", references);
 }
+
+void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
+  // you have to have requested it and you have to be some kind of route response
+  if (!api.options().linear_references() ||
+      (api.options().action() != Options::trace_route && api.options().action() != Options::route))
+    return;
+
+  writer.start_array("linear_references");
+  for (const TripLeg& leg : api.trip().routes(route_index).legs()) {
+    for (const std::string& openlr : openlr_edges(leg)) {
+      writer(openlr);
+    }
+  }
+  writer.end_array();
+}
 } // namespace tyr
 } // namespace valhalla
 
