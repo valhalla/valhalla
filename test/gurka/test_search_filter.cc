@@ -227,7 +227,7 @@ protected:
     const std::string ascii_map = R"(
               F----G
               |    |
-    A--1--B---C----D-2-E--J--3--K
+    A--1--B---C----D--2--E--J--3--K
              /
         H---I
 
@@ -247,7 +247,7 @@ protected:
                               {"LM", {{"highway", "primary"}, {"maxspeed", speed_str}}},
                               {"MN", {{"highway", "primary"}, {"maxspeed", speed_str}}}};
 
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10, {.05f, .2f});
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {.05f, .2f});
     closure_map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
 
     closure_map.config.put("mjolnir.traffic_extract", tile_dir + "/traffic.tar");
@@ -342,31 +342,32 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDestination) {
 
   // None of the edges are closed
   {
-    auto result = gurka::route(closure_map, {"1", "3"}, costing,
+    auto result = gurka::route(closure_map, {"1", "2"}, costing,
                                {{"/date_time/type", date_type},
                                 {"/date_time/value", "current"},
                                 {costing_speed_type, "current"}},
                                reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EJ", "JK"});
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
   }
   // DE edge is closed in both directions. Route should avoid DE with
   // exclude_closures set to true (default) & and use it otherwise
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          int index, baldr::TrafficSpeed* current) -> void {
-      close_single_edge(reader, tile, index, current, "JK", closure_map);
+      close_single_edge(reader, tile, index, current, "DE", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
-    // TODO: 1->2 fails to get route without ignoring closure at 2. why?
-    auto result = gurka::route(closure_map, {"1", "3"}, costing,
+    auto result = gurka::route(closure_map, {"1", "2"}, costing,
                                {{"/date_time/type", date_type},
                                 {"/date_time/value", "current"},
                                 {costing_speed_type, "current"}},
                                reader);
-    gurka::assert::osrm::expect_steps(result, {"AB"});
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EJ"});
+    // TODO: See https://github.com/valhalla/valhalla/issues/2709 on why its
+    // taking CFGD instead of DE
+    gurka::assert::osrm::expect_steps(result, {"AB", "CFGD"});
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CFGD"});
 
     // Specify search filter to disable exclude_closures at destination
     const std::string& req_disable_exclude_closures =
@@ -374,12 +375,12 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDestination) {
              R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
          std::to_string(closure_map.nodes.at("1").lat()) %
          std::to_string(closure_map.nodes.at("1").lng()) %
-         std::to_string(closure_map.nodes.at("3").lat()) %
-         std::to_string(closure_map.nodes.at("3").lng()) % costing % costing % date_type)
+         std::to_string(closure_map.nodes.at("2").lat()) %
+         std::to_string(closure_map.nodes.at("2").lng()) % costing % costing % date_type)
             .str();
     result = gurka::route(closure_map, req_disable_exclude_closures, reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
-    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EJ", "JK"});
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
   }
 }
 
@@ -400,7 +401,6 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtMidway) {
                                 {costing_speed_type, "current"}},
                                reader);
     gurka::assert::osrm::expect_steps(result, {"AB", "DE"});
-    // Note: Due to the way 2 is placed, it causes a uturn at E
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "DE", "EJ", "JK"});
   }
 
@@ -710,7 +710,7 @@ TEST_P(ExcludeClosuresOnWaypoints, ConflictingOptions) {
           } catch (const valhalla_exception_t& e) {
             EXPECT_EQ(e.code, 143);
             EXPECT_STREQ(
-                "ignore_closure in costing and exclude_closure in search_filter cannot both be specified",
+                "ignore_closures in costing and exclude_closures in search_filter cannot both be specified",
                 e.what());
             throw;
           }
@@ -735,7 +735,7 @@ TEST_P(ExcludeClosuresOnWaypoints, ConflictingOptions) {
           } catch (const valhalla_exception_t& e) {
             EXPECT_EQ(e.code, 143);
             EXPECT_STREQ(
-                "ignore_closure in costing and exclude_closure in search_filter cannot both be specified",
+                "ignore_closures in costing and exclude_closures in search_filter cannot both be specified",
                 e.what());
             throw;
           }
@@ -760,7 +760,7 @@ TEST_P(ExcludeClosuresOnWaypoints, ConflictingOptions) {
           } catch (const valhalla_exception_t& e) {
             EXPECT_EQ(e.code, 143);
             EXPECT_STREQ(
-                "ignore_closure in costing and exclude_closure in search_filter cannot both be specified",
+                "ignore_closures in costing and exclude_closures in search_filter cannot both be specified",
                 e.what());
             throw;
           }
@@ -785,7 +785,7 @@ TEST_P(ExcludeClosuresOnWaypoints, ConflictingOptions) {
           } catch (const valhalla_exception_t& e) {
             EXPECT_EQ(e.code, 143);
             EXPECT_STREQ(
-                "ignore_closure in costing and exclude_closure in search_filter cannot both be specified",
+                "ignore_closures in costing and exclude_closures in search_filter cannot both be specified",
                 e.what());
             throw;
           }
@@ -812,7 +812,7 @@ TEST_P(ExcludeClosuresOnWaypoints, ConflictingOptions) {
           } catch (const valhalla_exception_t& e) {
             EXPECT_EQ(e.code, 143);
             EXPECT_STREQ(
-                "ignore_closure in costing and exclude_closure in search_filter cannot both be specified",
+                "ignore_closures in costing and exclude_closures in search_filter cannot both be specified",
                 e.what());
             throw;
           }
@@ -833,7 +833,8 @@ std::vector<costing_and_datetype> buildParams() {
     params.emplace_back(std::make_tuple(costing, "3"));
     // Add date_type:0 for timedep-fwd a* using current time
     // TODO: Currently, ignoring closures at destinations does not work for
-    // time dependent a* implmentations. Enable this once its fixed.
+    // time dependent a* implmentations. Enable this once
+    // https://github.com/valhalla/valhalla/issues/2733 is addressed
     // params.emplace_back(std::make_tuple(costing, "0"));
   }
   return params;
@@ -843,6 +844,7 @@ INSTANTIATE_TEST_SUITE_P(SearchFilter,
                          ExcludeClosuresOnWaypoints,
                          ::testing::ValuesIn(buildParams()));
 
+// TODO: Enable once https://github.com/valhalla/valhalla/issues/2732 is addressed
 class DISABLED_ExcludeConsecutiveEdgeClosures
     : public ::testing::TestWithParam<costing_and_datetype> {
 protected:
