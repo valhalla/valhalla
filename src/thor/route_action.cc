@@ -354,6 +354,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   std::vector<thor::PathInfo> path;
   auto& correlated = *api.mutable_options()->mutable_locations();
   std::vector<std::string> algorithms;
+  api.mutable_trip()->mutable_routes()->Reserve(api.options().alternates() + 1);
 
   // For each pair of locations
   for (auto origin = ++correlated.rbegin(); origin != correlated.rend(); ++origin) {
@@ -429,8 +430,10 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         vias.swap(flipped);
 
         // Form output information based on path edges
-        if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
+        if (api.trip().routes_size() == 0 || api.options().alternates() > 0) {
           route = api.mutable_trip()->mutable_routes()->Add();
+          route->mutable_legs()->Reserve(correlated.size());
+        }
         auto& leg = *route->mutable_legs()->Add();
         TripLegBuilder::Build(api.options(), controller, *reader, mode_costing, path.begin(),
                               path.end(), *origin, *destination, throughs, leg, algorithms, interrupt,
@@ -458,6 +461,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   std::list<valhalla::TripLeg> trip_paths;
   auto& correlated = *api.mutable_options()->mutable_locations();
   std::vector<std::string> algorithms;
+  api.mutable_trip()->mutable_routes()->Reserve(api.options().alternates() + 1);
 
   // For each pair of locations
   for (auto destination = ++correlated.begin(); destination != correlated.end(); ++destination) {
@@ -527,8 +531,10 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         }
 
         // Form output information based on path edges. vias are a route discontinuity map
-        if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
+        if (api.trip().routes_size() == 0 || api.options().alternates() > 0) {
           route = api.mutable_trip()->mutable_routes()->Add();
+          route->mutable_legs()->Reserve(correlated.size());
+        }
         auto& leg = *route->mutable_legs()->Add();
         thor::TripLegBuilder::Build(api.options(), controller, *reader, mode_costing, path.begin(),
                                     path.end(), *origin, *destination, throughs, leg, algorithms,
