@@ -371,7 +371,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // Combine double L turns or double R turns in short non-internal intersections as u-turns
       else if (!curr_man->internal_intersection() &&
                curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive &&
-               !curr_man->roundabout() && !next_man->roundabout() &&
+               !prev_man->roundabout() && !curr_man->roundabout() && !next_man->roundabout() &&
                curr_man->length(Options::kilometers) <= (kMaxInternalLength * kKmPerMeter) &&
                prev_man->HasSimilarNames(&(*next_man), true) && curr_man != next_man &&
                !is_first_man && !next_man->IsDestinationType()) {
