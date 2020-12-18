@@ -142,9 +142,9 @@ const GraphTile* SimpleTileCache::Get(const GraphId& graphid) const {
 }
 
 // Puts a copy of a tile of into the cache.
-const GraphTile* SimpleTileCache::Put(const GraphId& graphid, const GraphTile& tile, size_t size) {
+const GraphTile* SimpleTileCache::Put(const GraphId& graphid, GraphTile&& tile, size_t size) {
   cache_size_ += size;
-  return &cache_.emplace(graphid, tile).first->second;
+  return &cache_.emplace(graphid, std::move(tile)).first->second;
 }
 
 void SimpleTileCache::Trim() {
@@ -215,8 +215,7 @@ void TileCacheLRU::MoveToLruHead(const KeyValueIter& entry_iter) const {
   key_val_lru_list_.splice(key_val_lru_list_.begin(), key_val_lru_list_, entry_iter);
 }
 
-const GraphTile*
-TileCacheLRU::Put(const GraphId& graphid, const GraphTile& tile, size_t new_tile_size) {
+const GraphTile* TileCacheLRU::Put(const GraphId& graphid, GraphTile&& tile, size_t new_tile_size) {
   if (new_tile_size > max_cache_size_) {
     throw std::runtime_error("TileCacheLRU: tile size is bigger than max cache size");
   }
@@ -226,7 +225,7 @@ TileCacheLRU::Put(const GraphId& graphid, const GraphTile& tile, size_t new_tile
     if (mem_control_ == MemoryLimitControl::HARD) {
       TrimToFit(new_tile_size);
     }
-    key_val_lru_list_.emplace_front(KeyValue{graphid, tile});
+    key_val_lru_list_.emplace_front(graphid, std::move(tile));
     cache_.emplace(graphid, key_val_lru_list_.begin());
   } else {
     // Value update; the new size may be different form the previous
@@ -249,7 +248,7 @@ TileCacheLRU::Put(const GraphId& graphid, const GraphTile& tile, size_t new_tile
       }
     }
 
-    entry_iter->tile = tile;
+    entry_iter->tile = std::move(tile);
     cache_size_ -= old_tile_size;
   }
   cache_size_ += new_tile_size;
@@ -302,10 +301,9 @@ const GraphTile* SynchronizedTileCache::Get(const GraphId& graphid) const {
 }
 
 // Puts a copy of a tile of into the cache.
-const GraphTile*
-SynchronizedTileCache::Put(const GraphId& graphid, const GraphTile& tile, size_t size) {
+const GraphTile* SynchronizedTileCache::Put(const GraphId& graphid, GraphTile&& tile, size_t size) {
   std::lock_guard<std::mutex> lock(mutex_ref_);
-  return cache_.Put(graphid, tile, size);
+  return cache_.Put(graphid, std::move(tile), size);
 }
 
 // Constructs tile cache.
@@ -404,6 +402,18 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
          stat((file_location + ".gz").c_str(), &buffer) == 0;
 }
 
+class TarballGraphMemory final : public GraphMemory {
+public:
+  TarballGraphMemory(std::shared_ptr<midgard::tar> archive, std::pair<char*, size_t> position)
+      : archive_(std::move(archive)) {
+    data = position.first;
+    size = position.second;
+  }
+
+private:
+  const std::shared_ptr<midgard::tar> archive_;
+};
+
 // Get a pointer to a graph tile object given a GraphId. Return nullptr
 // if the tile is not found/empty
 const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
@@ -429,13 +439,16 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
     }
+    auto memory = std::make_unique<TarballGraphMemory>(tile_extract_->archive, t->second);
 
     auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
+    auto traffic_memory = traffic_ptr != tile_extract_->traffic_tiles.end()
+                              ? std::make_unique<TarballGraphMemory>(tile_extract_->traffic_archive,
+                                                                     traffic_ptr->second)
+                              : nullptr;
 
     // This initializes the tile from mmap
-    GraphTile tile(base, t->second.first, t->second.second,
-                   traffic_ptr != tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
-                                                                     : nullptr);
+    GraphTile tile(base, std::move(memory), std::move(traffic_memory));
     if (!tile.header()) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
@@ -444,15 +457,18 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
 
     // Keep a copy in the cache and return it
     size_t size = AVERAGE_MM_TILE_SIZE; // tile.end_offset();  // TODO what size??
-    auto inserted = cache_->Put(base, tile, size);
+    auto inserted = cache_->Put(base, std::move(tile), size);
     return inserted;
   } // Try getting it from flat file
   else {
     auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
+    auto traffic_memory = traffic_ptr != tile_extract_->traffic_tiles.end()
+                              ? std::make_unique<TarballGraphMemory>(tile_extract_->traffic_archive,
+                                                                     traffic_ptr->second)
+                              : nullptr;
+
     // Try to get it from disk and if we cant..
-    GraphTile tile(tile_dir_, base,
-                   traffic_ptr != tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
-                                                                     : nullptr);
+    GraphTile tile(tile_dir_, base, std::move(traffic_memory));
     if (!tile.header()) {
       if (!tile_getter_) {
         return nullptr;
@@ -481,7 +497,7 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
 
     // Keep a copy in the cache and return it
     size_t size = tile.header()->end_offset();
-    auto inserted = cache_->Put(base, tile, size);
+    auto inserted = cache_->Put(base, std::move(tile), size);
     return inserted;
   }
 }
