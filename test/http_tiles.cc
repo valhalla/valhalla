@@ -178,7 +178,7 @@ void test_tile_download(size_t tile_count, size_t curler_count, size_t thread_co
           auto result = tile_getter.get(tile_uri);
 
           if (result.status_ == tile_getter_t::status_code_t::SUCCESS) {
-            auto tile = GraphTile(GraphId(), result.bytes_.data(), result.bytes_.size());
+            GraphTile tile(GraphId(), std::move(result.bytes_));
             EXPECT_EQ(tile.id(), expected_tile_id);
           } else {
             EXPECT_EQ(expected_tile_id, non_existent_tile_id);
@@ -289,7 +289,7 @@ TEST(HttpTiles, test_interrupt) {
 
     auto result = tile_getter.get(tile_uri);
     if (result.status_ == tile_getter_t::status_code_t::SUCCESS) {
-      auto tile = GraphTile(GraphId(), result.bytes_.data(), result.bytes_.size());
+      GraphTile tile(GraphId(), std::move(result.bytes_));
       EXPECT_EQ(tile.id(), expected_tile_id);
     } else {
       EXPECT_EQ(expected_tile_id, non_existent_tile_id);
