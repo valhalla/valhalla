@@ -141,7 +141,7 @@ void summary(const valhalla::Api& api, int route_index, rapidjson::writer_wrappe
   auto recost_itr = api.options().recostings().begin();
   for (auto recost : recost_times) {
     if (recost < 0)
-      writer("time_" + recost_itr->name(), nullptr_t());
+      writer("time_" + recost_itr->name(), std::nullptr_t());
     else
       writer("time_" + recost_itr->name(), recost);
     ++recost_itr;
@@ -282,7 +282,7 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
           writer("time_" + recost_itr->name(),
                  end_recost.elapsed_cost().seconds() - begin_recost_itr->elapsed_cost().seconds());
         else
-          writer("time_" + recost_itr->name(), nullptr_t());
+          writer("time_" + recost_itr->name(), std::nullptr_t());
         ++recost_itr;
       }
 
@@ -523,7 +523,7 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
       if (recost.has_elapsed_cost())
         writer("time_" + recost_itr->name(), recost.elapsed_cost().seconds());
       else
-        writer("time_" + recost_itr->name(), nullptr_t());
+        writer("time_" + recost_itr->name(), std::nullptr_t());
       ++recost_itr;
     }
     ++trip_leg_itr;

@@ -22,33 +22,36 @@ def get_post_bodies(filename):
       yield post_body
 
 # for persistant connections
-def initialize(url_, output_dir_):
+def initialize(args):
   global session
   session = requests.Session()
   global url
-  url = url_
+  url = args.url
   global output_dir
-  output_dir = output_dir_
+  output_dir = args.output_dir
+  global post_format
+  post_format = args.format
+
 
 # post a request
-def make_request(post_format):
+def make_request(post_body):
   # open a file to put the result
-  post_body = post_format[0]
-  output_file = os.path.join(output_dir, post_body['id'] + '.' + ('csv' if post_format[1] == 'csv' else 'json'))
+  output_file = os.path.join(output_dir, post_body['id'] + '.' + ('csv' if post_format == 'csv' else 'json'))
   with open(output_file, 'w') as f:
     try:
       # make request
       start = time.time()
-      response = session.post(url, json=post_body).json()
+      response = session.post(url, json=post_body)
       stop = time.time()
       elapsed = stop - start
+      response = response.json()
 
       # raw json
-      if post_format[1] == 'raw':
+      if post_format == 'raw':
           f.write('%s' % json.dumps(response, sort_keys=True, indent=2))
 
       # summary json
-      elif post_format[1] == 'json':
+      elif post_format == 'json':
         out = {'routes':[{'legs':[]}]}
         for leg in response['trip']['legs']:
           out['routes'][-1]['legs'].append({'maneuvers':[]})
@@ -87,8 +90,8 @@ if __name__ == "__main__":
   os.mkdir(args.output_dir)
 
   # make a worker pool to work on the requests
-  work = [(body, args.format) for body in get_post_bodies(args.test_file)]
-  with multiprocessing.Pool(initializer=initialize(args.url, args.output_dir), processes=args.concurrency) as pool:
+  work = [ body for body in get_post_bodies(args.test_file) ]
+  with multiprocessing.Pool(initializer=initialize(args), processes=args.concurrency) as pool:
     result = pool.map_async(make_request, work)
 
     # check progress
