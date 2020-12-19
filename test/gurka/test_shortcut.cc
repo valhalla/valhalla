@@ -257,7 +257,7 @@ TEST(Shortcuts, TruckSpeedPartiallySet) {
   EXPECT_TRUE(found_shortcut) << "No shortcuts found. Check the map.";
 }
 
-TEST(shortcuts, test_shortcut_speed) {
+TEST(Shortcuts, ShortcutsInBins) {
   const std::string ascii_map = R"(A---B---C)";
   const gurka::ways ways = {{"AB", {{"highway", "motorway"}, {"name", "High Street"}}},
                             {"BC", {{"highway", "motorway"}, {"name", "High Street"}}}};
