@@ -62,14 +62,11 @@ void MultiModalPathAlgorithm::Init(const midgard::PointLL& origll,
   // to limit how much extra memory is used for persistent objects
   edgelabels_.reserve(kInitialEdgeLabelCount);
 
-  // Set up lambda to get sort costs
-  const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
-
   // Construct adjacency list and edge status.
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing->UnitSize();
   float range = kBucketCount * bucketsize;
-  adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucketsize, edgecost));
+  adjacencylist_.reset(new DoubleBucketQueue<MMEdgeLabel>(0.0f, range, bucketsize, edgelabels_));
   edgestatus_.clear();
 
   // Get hierarchy limits from the costing. Get a copy since we increment
@@ -698,7 +695,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
                                              const std::shared_ptr<DynamicCost>& costing,
                                              EdgeStatus& edgestatus,
                                              std::vector<EdgeLabel>& edgelabels,
-                                             DoubleBucketQueue& adjlist,
+                                             DoubleBucketQueue<EdgeLabel>& adjlist,
                                              const bool from_transition) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -780,13 +777,10 @@ bool MultiModalPathAlgorithm::CanReachDestination(const valhalla::Location& dest
   EdgeStatus edgestatus;
   std::vector<EdgeLabel> edgelabels;
 
-  // Set up lambda to get sort costs (use the local edgelabels, not the class member!)
-  const auto edgecost = [&edgelabels](const uint32_t label) { return edgelabels[label].sortcost(); };
-
   // Use a simple Dijkstra method - no need to recover the path just need to make sure we can
   // get to a transit stop within the specified max. walking distance
   uint32_t bucketsize = costing->UnitSize();
-  DoubleBucketQueue adjlist(0.0f, kBucketCount * bucketsize, bucketsize, edgecost);
+  DoubleBucketQueue<EdgeLabel> adjlist(0.0f, kBucketCount * bucketsize, bucketsize, edgelabels);
 
   // Add the opposing destination edges to the priority queue
   uint32_t label_idx = 0;

@@ -72,22 +72,16 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   edgelabels_forward_.reserve(kInitialEdgeLabelCountBD);
   edgelabels_reverse_.reserve(kInitialEdgeLabelCountBD);
 
-  // Set up lambdas to get sort costs
-  const auto forward_edgecost = [this](const uint32_t label) {
-    return edgelabels_forward_[label].sortcost();
-  };
-  const auto reverse_edgecost = [this](const uint32_t label) {
-    return edgelabels_reverse_[label].sortcost();
-  };
-
   // Construct adjacency list and initialize edge status lookup.
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing_->UnitSize();
   float range = kBucketCount * bucketsize;
   float mincostf = astarheuristic_forward_.Get(origll);
-  adjacencylist_forward_.reset(new DoubleBucketQueue(mincostf, range, bucketsize, forward_edgecost));
+  adjacencylist_forward_.reset(
+      new DoubleBucketQueue<BDEdgeLabel>(mincostf, range, bucketsize, edgelabels_forward_));
   float mincostr = astarheuristic_reverse_.Get(destll);
-  adjacencylist_reverse_.reset(new DoubleBucketQueue(mincostr, range, bucketsize, reverse_edgecost));
+  adjacencylist_reverse_.reset(
+      new DoubleBucketQueue<BDEdgeLabel>(mincostr, range, bucketsize, edgelabels_reverse_));
   edgestatus_forward_.clear();
   edgestatus_reverse_.clear();
 

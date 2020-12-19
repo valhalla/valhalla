@@ -180,14 +180,15 @@ protected:
   // Vector of edge labels (requires access by index).
   std::vector<sif::EdgeLabel> edgelabels_;
 
-  // Adjacency list - approximate double bucket sort
-  std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
-
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
 
   // Destinations, id and percent used along the edge
   std::unordered_map<uint64_t, float> destinations_percent_along_;
+
+private:
+  // Adjacency list - approximate double bucket sort
+  std::shared_ptr<baldr::DoubleBucketQueue<sif::EdgeLabel>> adjacencylist_;
 };
 
 /**
@@ -247,6 +248,9 @@ protected:
   // Vector of edge labels that support reverse search (so use the
   // bidirectional edge label structure.
   std::vector<sif::BDEdgeLabel> edgelabels_rev_;
+
+  // Adjacency list - approximate double bucket sort
+  std::shared_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>> adjacencylist_rev_;
 
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.

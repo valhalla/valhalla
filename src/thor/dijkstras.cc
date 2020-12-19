@@ -57,7 +57,10 @@ void Dijkstras::Clear() {
 // Initialize - create adjacency list, edgestatus support, and reserve
 // edgelabels
 template <typename label_container_t>
-void Dijkstras::Initialize(label_container_t& labels, const uint32_t bucket_size) {
+void Dijkstras::Initialize(
+    label_container_t& labels,
+    std::shared_ptr<baldr::DoubleBucketQueue<typename label_container_t::value_type>>& queue,
+    const uint32_t bucket_size) {
   // Set aside some space for edge labels
   uint32_t edge_label_reservation;
   uint32_t bucket_count;
@@ -65,16 +68,19 @@ void Dijkstras::Initialize(label_container_t& labels, const uint32_t bucket_size
   labels.reserve(edge_label_reservation);
 
   // Set up lambda to get sort costs
-  const auto edgecost = [&labels](const uint32_t label) { return labels[label].sortcost(); };
   float range = bucket_count * bucket_size;
-  adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucket_size, edgecost));
+  queue.reset(new baldr::DoubleBucketQueue<typename label_container_t::value_type>(0.0f, range,
+                                                                                   bucket_size,
+                                                                                   labels));
 }
-template void
-Dijkstras::Initialize<decltype(Dijkstras::bdedgelabels_)>(decltype(Dijkstras::bdedgelabels_)&,
-                                                          const uint32_t);
-template void
-Dijkstras::Initialize<decltype(Dijkstras::mmedgelabels_)>(decltype(Dijkstras::mmedgelabels_)&,
-                                                          const uint32_t);
+template void Dijkstras::Initialize<decltype(Dijkstras::bdedgelabels_)>(
+    decltype(Dijkstras::bdedgelabels_)&,
+    std::shared_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>&,
+    const uint32_t);
+template void Dijkstras::Initialize<decltype(Dijkstras::mmedgelabels_)>(
+    decltype(Dijkstras::mmedgelabels_)&,
+    std::shared_ptr<baldr::DoubleBucketQueue<sif::MMEdgeLabel>>&,
+    const uint32_t);
 
 // Initializes the time of the expansion if there is one
 std::vector<TimeInfo>
@@ -208,7 +214,7 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
   access_mode_ = costing_->access_mode();
 
   // Prepare for a graph traversal
-  Initialize(bdedgelabels_, costing_->UnitSize());
+  Initialize(bdedgelabels_, adjacencylist_, costing_->UnitSize());
   SetOriginLocations(graphreader, origin_locations, costing_);
 
   // Get the time information for all the origin locations
@@ -359,7 +365,7 @@ void Dijkstras::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Loca
   access_mode_ = costing_->access_mode();
 
   // Prepare for graph traversal
-  Initialize(bdedgelabels_, costing_->UnitSize());
+  Initialize(bdedgelabels_, adjacencylist_, costing_->UnitSize());
   SetDestinationLocations(graphreader, dest_locations, costing_);
 
   // Get the time information for all the destination locations
@@ -654,7 +660,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
       MMEdgeLabel& lab = mmedgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(es->index(), newsortcost);
+        mmadjacencylist_->decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid, transition_cost,
                    restriction_idx);
       }
@@ -665,7 +671,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     uint32_t idx = mmedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     mmedgelabels_.emplace_back(edge_label);
-    adjacencylist_->add(idx);
+    mmadjacencylist_->add(idx);
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -708,7 +714,7 @@ void Dijkstras::ComputeMultiModal(
   auto time_infos = SetTime(origin_locations, graphreader);
 
   // Prepare for graph traversal
-  Initialize(mmedgelabels_, mode_costing[static_cast<uint8_t>(mode_)]->UnitSize());
+  Initialize(mmedgelabels_, mmadjacencylist_, mode_costing[static_cast<uint8_t>(mode_)]->UnitSize());
   SetOriginLocationsMultiModal(graphreader, origin_locations,
                                mode_costing[static_cast<uint8_t>(mode_)]);
 
@@ -937,7 +943,7 @@ void Dijkstras::SetOriginLocationsMultiModal(
 
       // Add EdgeLabel to the adjacency list
       mmedgelabels_.push_back(edge_label);
-      adjacencylist_->add(idx);
+      mmadjacencylist_->add(idx);
     }
   }
 }

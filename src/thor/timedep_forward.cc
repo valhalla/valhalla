@@ -377,14 +377,11 @@ void TimeDepForward::Init(const midgard::PointLL& origll, const midgard::PointLL
   // TODO - reserve based on estimate based on distance and route type.
   edgelabels_.reserve(kInitialEdgeLabelCount);
 
-  // Set up lambda to get sort costs
-  const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
-
   // Construct adjacency list, clear edge status.
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing_->UnitSize();
   float range = kBucketCount * bucketsize;
-  adjacencylist_.reset(new DoubleBucketQueue(mincost, range, bucketsize, edgecost));
+  adjacencylist_.reset(new DoubleBucketQueue<EdgeLabel>(mincost, range, bucketsize, edgelabels_));
   edgestatus_.clear();
 
   // Get hierarchy limits from the costing. Get a copy since we increment
