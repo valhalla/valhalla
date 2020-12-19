@@ -220,6 +220,7 @@
    * ADDED: Added support to process the sump_buster tag.  Also, fixed a few small access bugs for nodes. [#2731](https://github.com/valhalla/valhalla/pull/2731)
    * ADDED: Log message if failed to create tiles directory. [#2738](https://github.com/valhalla/valhalla/pull/2738)
    * CHANGED: Tile memory is only owned by the GraphTile rather than shared amongst copies of the graph tile (in GraphReader and TileCaches). [#2340](https://github.com/valhalla/valhalla/pull/2340)
+   * CHANGED: Add shortcuts to the tiles' bins so we can treat them like regular edges. [#2744](https://github.com/valhalla/valhalla/pull/2344)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
