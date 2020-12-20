@@ -280,7 +280,7 @@ TEST(Shortcuts, ShortcutsInBins) {
     }
   }
 
-  u_int8_t shortcut_cnt;
+  size_t shortcut_cnt;
   for (auto edge_id : edge_ids) {
     auto* edge = reader.directededge(edge_id);
     if (edge->is_shortcut()) {
