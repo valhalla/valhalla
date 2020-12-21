@@ -368,6 +368,40 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         curr_man = next_man;
         ++next_man;
       }
+      // Combine current left unspecified internal maneuver with next left maneuver
+      else if (PossibleUnspecifiedInternalManeuver(prev_man, curr_man, next_man) &&
+               prev_man->HasSimilarNames(&(*next_man), true) &&
+               (ManeuversBuilder::DetermineRelativeDirection(curr_man->turn_degree()) ==
+                Maneuver::RelativeDirection::kLeft) &&
+               (ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()) ==
+                Maneuver::RelativeDirection::kLeft) &&
+               (ManeuversBuilder::DetermineRelativeDirection(
+                    GetTurnDegree(prev_man->end_heading(), next_man->begin_heading())) ==
+                Maneuver::RelativeDirection::KReverse)) {
+        LOG_TRACE(
+            "+++ Combine: double L turns with short unspecified internal intersection as ManeuverType=UTURN_LEFT +++");
+        curr_man = CombineUnspecifiedInternalManeuver(maneuvers, prev_man, curr_man, next_man,
+                                                      DirectionsLeg_Maneuver_Type_kUturnLeft);
+        maneuvers_have_been_combined = true;
+        ++next_man;
+      }
+      // Combine current right unspecified internal maneuver with next right maneuver
+      else if (PossibleUnspecifiedInternalManeuver(prev_man, curr_man, next_man) &&
+               prev_man->HasSimilarNames(&(*next_man), true) &&
+               (ManeuversBuilder::DetermineRelativeDirection(curr_man->turn_degree()) ==
+                Maneuver::RelativeDirection::kRight) &&
+               (ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()) ==
+                Maneuver::RelativeDirection::kRight) &&
+               (ManeuversBuilder::DetermineRelativeDirection(
+                    GetTurnDegree(prev_man->end_heading(), next_man->begin_heading())) ==
+                Maneuver::RelativeDirection::KReverse)) {
+        LOG_TRACE(
+            "+++ Combine: double R turns with short unspecified internal intersection as ManeuverType=UTURN_RIGHT +++");
+        curr_man = CombineUnspecifiedInternalManeuver(maneuvers, prev_man, curr_man, next_man,
+                                                      DirectionsLeg_Maneuver_Type_kUturnRight);
+        maneuvers_have_been_combined = true;
+        ++next_man;
+      }
       // Do not combine
       // if next maneuver is a fork or a tee
       else if (next_man->fork() || next_man->tee()) {
@@ -491,17 +525,23 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // Combine current short length non-internal edges (left or right) with next maneuver that is a
       // kRampStraight NOTE: This should already be marked internal for OSM data so shouldn't happen
       // for OSM
-      else if (!curr_man->internal_intersection() &&
-               ((curr_man->type() == DirectionsLeg_Maneuver_Type_kLeft ||
-                 curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kLeft) ||
-                (curr_man->type() == DirectionsLeg_Maneuver_Type_kRight ||
-                 curr_man->begin_relative_direction() == Maneuver::RelativeDirection::kRight)) &&
-               next_man->type() == DirectionsLeg_Maneuver_Type_kRampStraight &&
-               curr_man->length(Options::kilometers) <= (kMaxInternalLength * kKmPerMeter) &&
-               curr_man != next_man && !next_man->IsDestinationType()) {
+      else if (PossibleUnspecifiedInternalManeuver(prev_man, curr_man, next_man) &&
+               ((ManeuversBuilder::DetermineRelativeDirection(curr_man->turn_degree()) ==
+                 Maneuver::RelativeDirection::kLeft) ||
+                (ManeuversBuilder::DetermineRelativeDirection(curr_man->turn_degree()) ==
+                 Maneuver::RelativeDirection::kRight)) &&
+               next_man->type() == DirectionsLeg_Maneuver_Type_kRampStraight) {
         LOG_TRACE(
             "+++ Combine: current non-internal turn that is very short in length with the next straight ramp maneuver +++");
-        curr_man = CombineNonInternalManeuver(maneuvers, prev_man, curr_man, next_man, is_first_man);
+        if (is_first_man) {
+          next_man->set_type(DirectionsLeg_Maneuver_Type_kStart);
+        } else {
+          // Set maneuver type to 'none' so the type will be processed again
+          next_man->set_type(DirectionsLeg_Maneuver_Type_kNone);
+        }
+        curr_man = CombineUnspecifiedInternalManeuver(maneuvers, prev_man, curr_man, next_man,
+                                                      next_man->type());
+
         if (is_first_man) {
           prev_man = curr_man;
         }
@@ -548,21 +588,30 @@ std::list<Maneuver>::iterator ManeuversBuilder::CollapseTransitConnectionDestina
   return maneuvers.erase(next_man);
 }
 
-// Collapses maneuvers for short distanced double turns that are on non-internal edges
-std::list<Maneuver>::iterator
-ManeuversBuilder::CombineNonInternalManeuver(std::list<Maneuver>& maneuvers,
-                                             std::list<Maneuver>::iterator prev_man,
-                                             std::list<Maneuver>::iterator curr_man,
-                                             std::list<Maneuver>::iterator next_man,
-                                             bool start_man) {
-
-  if (start_man) {
-    // Determine turn degree current maneuver and next maneuver
-    next_man->set_turn_degree(GetTurnDegree(curr_man->end_heading(), next_man->begin_heading()));
-  } else {
-    // Determine turn degree based on previous maneuver and next maneuver
-    next_man->set_turn_degree(GetTurnDegree(prev_man->end_heading(), next_man->begin_heading()));
+bool ManeuversBuilder::PossibleUnspecifiedInternalManeuver(std::list<Maneuver>::iterator prev_man,
+                                                           std::list<Maneuver>::iterator curr_man,
+                                                           std::list<Maneuver>::iterator next_man) {
+  if (!curr_man->internal_intersection() &&
+      curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive &&
+      !prev_man->roundabout() && !curr_man->roundabout() && !next_man->roundabout() &&
+      (curr_man->length(Options::kilometers) <= (kMaxInternalLength * kKmPerMeter)) &&
+      curr_man != next_man && !curr_man->IsStartType() && !next_man->IsDestinationType()) {
+    return true;
   }
+  return false;
+}
+
+// Collapses unspecified internal edge maneuvers
+// TODO: Future refactor to pull out common code
+std::list<Maneuver>::iterator ManeuversBuilder::CombineUnspecifiedInternalManeuver(
+    std::list<Maneuver>& maneuvers,
+    std::list<Maneuver>::iterator prev_man,
+    std::list<Maneuver>::iterator curr_man,
+    std::list<Maneuver>::iterator next_man,
+    const DirectionsLeg_Maneuver_Type& maneuver_type) {
+
+  // Determine turn degree based on previous maneuver and next maneuver
+  next_man->set_turn_degree(GetTurnDegree(prev_man->end_heading(), next_man->begin_heading()));
 
   // Set the cross street names
   if (curr_man->HasStreetNames()) {
@@ -590,13 +639,8 @@ ManeuversBuilder::CombineNonInternalManeuver(std::list<Maneuver>& maneuvers,
   // Set begin shape index
   next_man->set_begin_shape_index(curr_man->begin_shape_index());
 
-  if (start_man) {
-    next_man->set_type(DirectionsLeg_Maneuver_Type_kStart);
-  } else {
-    // Set maneuver type to 'none' so the type will be processed again
-    next_man->set_type(DirectionsLeg_Maneuver_Type_kNone);
-    SetManeuverType(*(next_man));
-  }
+  // Set maneuver type to specified argument
+  next_man->set_type(maneuver_type);
 
   return maneuvers.erase(curr_man);
 }
