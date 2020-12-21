@@ -453,10 +453,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
                       GraphReader& reader_local_level,
                       std::mutex& lock,
                       std::vector<OSMConnectionEdge>& connection_edges) {
-  if (!tile) {
-    LOG_ERROR(std::string(__FUNCTION__) + " called with no tile");
-    return;
-  }
+  assert(tile);
   const PointLL& stop_ll = transit_node->latlng(tile->header()->base_ll());
   uint64_t wayid = transit_node->connecting_wayid();
 

@@ -561,8 +561,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
     }
   }
   if (dataset_id == 0) {
-    LOG_ERROR("Tile isn't created from " + tile_dir + " with id " +
-              std::to_string(tilequeue.begin()->id()));
+    LOG_ERROR("Could not load tile from disk");
   }
 
   // An mutex we can use to do the synchronization

@@ -895,9 +895,9 @@ GraphTileBuilder::BinEdges(const boost::intrusive_ptr<const GraphTile>& tile, tw
   std::array<std::vector<GraphId>, kBinCount> bins;
   // we store these at the highest level
   auto max_level = TileHierarchy::levels().back().level;
+  assert(tile);
   // skip transit or other special levels and empty tiles
-  if (!tile || tile->header()->graphid().level() > max_level ||
-      tile->header()->directededgecount() == 0) {
+  if (tile->header()->graphid().level() > max_level || tile->header()->directededgecount() == 0) {
     return bins;
   }
   // is this the highest level
