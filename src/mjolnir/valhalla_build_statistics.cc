@@ -47,7 +47,7 @@ struct HGVRestrictionTypes {
   bool width;
 };
 
-bool IsLoopTerminal(const boost::intrusive_ptr<const GraphTile>& tile,
+bool IsLoopTerminal(const graph_tile_ptr& tile,
                     GraphReader& reader,
                     const DirectedEdge& directededge,
                     statistics::RouletteData& rd) {
@@ -240,7 +240,7 @@ void checkExitInfo(GraphReader& reader,
   if (startnodeinfo.type() == NodeType::kMotorWayJunction) {
     // Check to see if the motorway continues, if it does, this is an exit ramp,
     // otherwise if all forward edges are links, it is a fork
-    boost::intrusive_ptr<const GraphTile> tile = reader.GetGraphTile(startnode);
+    graph_tile_ptr tile = reader.GetGraphTile(startnode);
     const DirectedEdge* otheredge = tile->directededge(startnodeinfo.edge_index());
     std::vector<std::pair<uint64_t, bool>> tile_fork_signs;
     std::vector<std::pair<std::string, bool>> ctry_fork_signs;
@@ -395,7 +395,7 @@ void build(const boost::property_tree::ptree& pt,
     std::vector<DirectedEdge> directededges;
 
     // Get this tile
-    boost::intrusive_ptr<const GraphTile> tile = graph_reader.GetGraphTile(tile_id);
+    graph_tile_ptr tile = graph_reader.GetGraphTile(tile_id);
 
     // Iterate through the nodes and the directed edges
     float roadlength = 0.0f;

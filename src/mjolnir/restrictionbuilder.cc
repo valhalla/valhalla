@@ -33,7 +33,7 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
   std::deque<GraphId> graphids;
 
   lock.lock();
-  boost::intrusive_ptr<const GraphTile> endnodetile = reader.GetGraphTile(n_graphId);
+  graph_tile_ptr endnodetile = reader.GetGraphTile(n_graphId);
   lock.unlock();
 
   const NodeInfo* n_info = endnodetile->node(n_graphId);
@@ -114,7 +114,7 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
           uint32_t k = 0;
           while (k < n_info->transition_count()) {
             // only look at transition edges from this end node
-            boost::intrusive_ptr<const GraphTile> temp_endnodetile = endnodetile;
+            graph_tile_ptr temp_endnodetile = endnodetile;
             // Handle transitions - expand from the end node each transition
             const NodeTransition* trans = endnodetile->transition(n_info->transition_index() + k);
 
@@ -268,7 +268,7 @@ void build(const std::string& complex_restriction_from_file,
     // Get a readable tile.If the tile is empty, skip it. Empty tiles are
     // added where ways go through a tile but no end not is within the tile.
     // This allows creation of connectivity maps using the tile set,
-    boost::intrusive_ptr<const GraphTile> tile = reader.GetGraphTile(tile_id);
+    graph_tile_ptr tile = reader.GetGraphTile(tile_id);
     if (!tile || tile->header()->nodecount() == 0) {
       lock.unlock();
       continue;

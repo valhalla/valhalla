@@ -78,7 +78,7 @@ public:
   void Set(const baldr::GraphId& edgeid,
            const EdgeSet set,
            const uint32_t index,
-           boost::intrusive_ptr<const baldr::GraphTile> tile) {
+           graph_tile_ptr tile) {
     auto p = edgestatus_.find(edgeid.tile_value());
     if (p != edgestatus_.end()) {
       p->second[edgeid.id()] = {set, index};
@@ -125,7 +125,7 @@ public:
    * @return  Returns a pointer to edge status info for this edge.
    */
   EdgeStatusInfo* GetPtr(const baldr::GraphId& edgeid,
-                         const boost::intrusive_ptr<const baldr::GraphTile>& tile) {
+                         const graph_tile_ptr& tile) {
     const auto p = edgestatus_.find(edgeid.tile_value());
     if (p != edgestatus_.end()) {
       return &p->second[edgeid.id()];

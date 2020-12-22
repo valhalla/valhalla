@@ -80,7 +80,7 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
                                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  boost::intrusive_ptr<const GraphTile> tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return false;
   }
@@ -178,7 +178,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
                                                const NodeInfo* nodeinfo,
                                                const uint32_t pred_idx,
                                                const EdgeMetadata& meta,
-                                               const boost::intrusive_ptr<const GraphTile>& tile,
+                                               const graph_tile_ptr& tile,
                                                const TimeInfo& time_info,
                                                const valhalla::Location& destination,
                                                std::pair<int32_t, float>& best_path) {
@@ -195,7 +195,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   }
 
   // Get end node tile, opposing edge Id, and opposing directed edge.
-  boost::intrusive_ptr<const GraphTile> t2 =
+  graph_tile_ptr t2 =
       meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
   if (t2 == nullptr) {
     return false;
@@ -267,7 +267,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   float dist = 0.0f;
   float sortcost = newcost.cost;
   if (p == destinations_percent_along_.end()) {
-    boost::intrusive_ptr<const GraphTile> t2 =
+    graph_tile_ptr t2 =
         meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
     if (t2 == nullptr) {
       return false;
@@ -332,7 +332,7 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
   uint32_t nc = 0; // Count of iterations with no convergence
                    // towards destination
   std::pair<int32_t, float> best_path = std::make_pair(-1, 0.0f);
-  boost::intrusive_ptr<const GraphTile> tile;
+  graph_tile_ptr tile;
   size_t total_labels = 0;
   while (true) {
     // Allow this process to be aborted
@@ -452,7 +452,7 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
 
     // Get the directed edge
     GraphId edgeid(edge.graph_id());
-    boost::intrusive_ptr<const GraphTile> tile = graphreader.GetGraphTile(edgeid);
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the opposing directed edge, continue if we cannot get it

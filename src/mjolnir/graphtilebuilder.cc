@@ -890,8 +890,8 @@ void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
 
 // return this tiles' edges' bins and its edges' tweeners' bins
 using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount>>;
-std::array<std::vector<GraphId>, kBinCount>
-GraphTileBuilder::BinEdges(const boost::intrusive_ptr<const GraphTile>& tile, tweeners_t& tweeners) {
+std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
+                                                                       tweeners_t& tweeners) {
   std::array<std::vector<GraphId>, kBinCount> bins;
   // we store these at the highest level
   auto max_level = TileHierarchy::levels().back().level;
@@ -962,7 +962,7 @@ GraphTileBuilder::BinEdges(const boost::intrusive_ptr<const GraphTile>& tile, tw
 }
 
 void GraphTileBuilder::AddBins(const std::string& tile_dir,
-                               const boost::intrusive_ptr<const GraphTile>& tile,
+                               const graph_tile_ptr& tile,
                                const std::array<std::vector<GraphId>, kBinCount>& more_bins) {
   if (!tile || !tile->header()) {
     return;

@@ -283,10 +283,10 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
   }
 
   // lambda to expand search forward from the end node
-  std::function<void(boost::intrusive_ptr<const GraphTile>, const GraphId&, const NodeInfo*,
+  std::function<void(graph_tile_ptr, const GraphId&, const NodeInfo*,
                      BDEdgeLabel&, const uint32_t, const bool)>
       expand;
-  expand = [&](boost::intrusive_ptr<const GraphTile> tile, const GraphId& node,
+  expand = [&](graph_tile_ptr tile, const GraphId& node,
                const NodeInfo* nodeinfo, BDEdgeLabel& pred, const uint32_t pred_idx,
                const bool from_transition) {
     uint32_t shortcuts = 0;
@@ -339,7 +339,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       }
 
       // Get end node tile (skip if tile is not found) and opposing edge Id
-      boost::intrusive_ptr<const GraphTile> t2 =
+      graph_tile_ptr t2 =
           directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
       if (t2 == nullptr) {
         continue;
@@ -368,7 +368,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
 
         // Expand from end node of this transition.
         GraphId node = trans->endnode();
-        boost::intrusive_ptr<const GraphTile> endtile = graphreader.GetGraphTile(node);
+        graph_tile_ptr endtile = graphreader.GetGraphTile(node);
         if (endtile != nullptr) {
           const NodeInfo* nodeinfo = endtile->node(node);
           expand(std::move(endtile), node, nodeinfo, pred, pred_idx, true);
@@ -380,7 +380,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
   // Expand from node in forward search path. Get the tile and the node info.
   // Skip if tile is null (can happen with regional data sets) or if no access
   // at the node.
-  boost::intrusive_ptr<const GraphTile> tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node);
   if (tile != nullptr) {
     const NodeInfo* nodeinfo = tile->node(node);
     if (costing_->Allowed(nodeinfo)) {
@@ -547,10 +547,10 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
   }
 
   // Expand from node in reverse direction.
-  std::function<void(boost::intrusive_ptr<const GraphTile>, const GraphId&, const NodeInfo*,
+  std::function<void(graph_tile_ptr, const GraphId&, const NodeInfo*,
                      const uint32_t, BDEdgeLabel&, const uint32_t, const DirectedEdge*, const bool)>
       expand;
-  expand = [&](boost::intrusive_ptr<const GraphTile> tile, const GraphId& node,
+  expand = [&](graph_tile_ptr tile, const GraphId& node,
                const NodeInfo* nodeinfo, const uint32_t index, BDEdgeLabel& pred,
                const uint32_t pred_idx, const DirectedEdge* opp_pred_edge,
                const bool from_transition) {
@@ -581,7 +581,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       }
 
       // Get opposing edge Id and end node tile
-      boost::intrusive_ptr<const GraphTile> t2 =
+      graph_tile_ptr t2 =
           directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
       if (t2 == nullptr) {
         continue;
@@ -641,7 +641,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
 
         // Expand from end node of this transition edge.
         GraphId node = trans->endnode();
-        boost::intrusive_ptr<const GraphTile> endtile = graphreader.GetGraphTile(node);
+        graph_tile_ptr endtile = graphreader.GetGraphTile(node);
         if (endtile != nullptr) {
           const NodeInfo* nodeinfo = endtile->node(node);
           expand(std::move(endtile), node, nodeinfo, index, pred, pred_idx, opp_pred_edge, true);
@@ -653,7 +653,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
 
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  boost::intrusive_ptr<const GraphTile> tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node);
   if (tile != nullptr) {
     const NodeInfo* nodeinfo = tile->node(node);
     if (costing_->Allowed(nodeinfo)) {
@@ -711,7 +711,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       }
 
       // Get the directed edge and the opposing edge Id
-      boost::intrusive_ptr<const GraphTile> tile = graphreader.GetGraphTile(edgeid);
+      graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
       GraphId oppedge = graphreader.GetOpposingEdgeId(edgeid);
 
@@ -790,7 +790,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       }
 
       // Get the directed edge
-      boost::intrusive_ptr<const GraphTile> tile = graphreader.GetGraphTile(edgeid);
+      graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
       // Get the opposing directed edge, continue if we cannot get it

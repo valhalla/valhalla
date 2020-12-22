@@ -11,6 +11,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphmemory.h>
 #include <valhalla/baldr/graphtileheader.h>
+#include <valhalla/baldr/graphtileptr.h>
 #include <valhalla/baldr/laneconnectivity.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/nodetransition.h>
@@ -35,9 +36,6 @@
 #include <iterator>
 #include <memory>
 
-#include <boost/intrusive_ptr.hpp>
-#include <boost/smart_ptr/intrusive_ref_counter.hpp>
-
 namespace valhalla {
 namespace baldr {
 
@@ -58,10 +56,9 @@ public:
    * @param  tile_dir   Tile directory.
    * @param  graphid    GraphId (tileid and level)
    */
-  static boost::intrusive_ptr<const GraphTile>
-  Create(const std::string& tile_dir,
-         const GraphId& graphid,
-         std::unique_ptr<const GraphMemory>&& traffic_memory = nullptr);
+  static graph_tile_ptr Create(const std::string& tile_dir,
+                               const GraphId& graphid,
+                               std::unique_ptr<const GraphMemory>&& traffic_memory = nullptr);
 
   /**
    * Constructs with a given the graph Id, pointer to the tile data, and the
@@ -69,8 +66,7 @@ public:
    * @param  graphid  Tile Id.
    * @param  ptr      Pointer to the start of the tile's data.
    */
-  static boost::intrusive_ptr<const GraphTile> Create(const GraphId& graphid,
-                                                      std::vector<char>&& memory);
+  static graph_tile_ptr Create(const GraphId& graphid, std::vector<char>&& memory);
 
   /**
    * Constructs given the graph Id, pointer to the tile data, and the
@@ -79,10 +75,9 @@ public:
    * @param  ptr      Pointer to the start of the tile's data.
    * @param  size     Size in bytes of the tile data.
    */
-  static boost::intrusive_ptr<const GraphTile>
-  Create(const GraphId& graphid,
-         std::unique_ptr<const GraphMemory>&& memory,
-         std::unique_ptr<const GraphMemory>&& traffic_memory = nullptr);
+  static graph_tile_ptr Create(const GraphId& graphid,
+                               std::unique_ptr<const GraphMemory>&& memory,
+                               std::unique_ptr<const GraphMemory>&& traffic_memory = nullptr);
 
   /**
    * Constructs a tile given a url for the tile using curl
@@ -92,10 +87,10 @@ public:
    * @return whether or not the tile could be cached to disk
    */
 
-  static boost::intrusive_ptr<const GraphTile> CacheTileURL(const std::string& tile_url,
-                                                            const GraphId& graphid,
-                                                            tile_getter_t* tile_getter,
-                                                            const std::string& cache_location);
+  static graph_tile_ptr CacheTileURL(const std::string& tile_url,
+                                     const GraphId& graphid,
+                                     tile_getter_t* tile_getter,
+                                     const std::string& cache_location);
 
   /**
    * Construct a tile given a url for the tile using curl
@@ -828,8 +823,7 @@ protected:
    * @return a pointer to a graphtile if it  has been successfully initialized with
    *         the uncompressed data, or nullptr
    */
-  static boost::intrusive_ptr<const GraphTile> DecompressTile(const GraphId& graphid,
-                                                              const std::vector<char>& compressed);
+  static graph_tile_ptr DecompressTile(const GraphId& graphid, const std::vector<char>& compressed);
 };
 
 } // namespace baldr

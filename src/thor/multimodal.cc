@@ -11,7 +11,7 @@ using namespace valhalla::sif;
 namespace {
 
 // Method to get an operator Id from a map of operator strings vs. Id.
-uint32_t GetOperatorId(const boost::intrusive_ptr<const GraphTile>& tile,
+uint32_t GetOperatorId(const graph_tile_ptr& tile,
                        uint32_t routeid,
                        std::unordered_map<std::string, uint32_t>& operators) {
   const TransitRoute* transit_route = tile->GetTransitRoute(routeid);
@@ -563,7 +563,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    boost::intrusive_ptr<const GraphTile> tile = graphreader.GetGraphTile(edgeid);
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the tile at the end node. Skip if tile not found as we won't be
@@ -671,7 +671,7 @@ uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
 
     // Keep the cost to traverse the partial distance for the remainder of the edge. This cost
     // is subtracted from the total cost up to the end of the destination edge.
-    boost::intrusive_ptr<const GraphTile> tile = graphreader.GetGraphTile(edgeid);
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* dest_diredge = tile->directededge(edgeid);
     destinations_[edge.graph_id()] =
         costing->EdgeCost(dest_diredge, tile) * (1.0f - edge.percent_along());
@@ -802,7 +802,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const valhalla::Location& dest
       continue;
     }
 
-    boost::intrusive_ptr<const GraphTile> tile = graphreader.GetGraphTile(oppedge);
+    graph_tile_ptr tile = graphreader.GetGraphTile(oppedge);
     const DirectedEdge* diredge = tile->directededge(oppedge);
     uint32_t length = static_cast<uint32_t>(diredge->length()) * ratio;
     Cost cost = costing->EdgeCost(diredge, tile) * ratio;

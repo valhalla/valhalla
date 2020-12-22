@@ -68,7 +68,7 @@ void FilterTiles(GraphReader& reader,
     n_original_edges += tilebuilder.header()->directededgecount();
 
     // Get the graph tile. Read from this tile to create the new tile.
-    boost::intrusive_ptr<const GraphTile> tile = reader.GetGraphTile(tile_id);
+    graph_tile_ptr tile = reader.GetGraphTile(tile_id);
     if (!tile) {
       continue;
     }
@@ -235,7 +235,7 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
   for (const auto& tile_id : local_tiles) {
     // Get the graph tile. Skip if no tile exists or no nodes exist in the tile
     // (should not happen!?)
-    boost::intrusive_ptr<const GraphTile> tile = reader.GetGraphTile(tile_id);
+    graph_tile_ptr tile = reader.GetGraphTile(tile_id);
     if (!tile || tile->header()->nodecount() == 0) {
       continue;
     }

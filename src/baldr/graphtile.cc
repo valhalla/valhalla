@@ -85,7 +85,7 @@ private:
   const std::vector<char> memory_;
 };
 
-boost::intrusive_ptr<const valhalla::baldr::GraphTile>
+graph_tile_ptr
 GraphTile::DecompressTile(const GraphId& graphid, const std::vector<char>& compressed) {
   // for setting where to read compressed data from
   auto src_func = [&compressed](z_stream& s) -> void {
@@ -122,7 +122,7 @@ GraphTile::DecompressTile(const GraphId& graphid, const std::vector<char>& compr
 }
 
 // Constructor given a filename. Reads the graph data into memory.
-boost::intrusive_ptr<const GraphTile>
+graph_tile_ptr
 GraphTile::Create(const std::string& tile_dir,
                   const GraphId& graphid,
                   std::unique_ptr<const GraphMemory>&& traffic_memory) {
@@ -166,12 +166,12 @@ GraphTile::Create(const std::string& tile_dir,
   return nullptr;
 }
 
-boost::intrusive_ptr<const GraphTile> GraphTile::Create(const GraphId& graphid,
+graph_tile_ptr GraphTile::Create(const GraphId& graphid,
                                                         std::vector<char>&& memory) {
   return new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(memory)));
 }
 
-boost::intrusive_ptr<const GraphTile>
+graph_tile_ptr
 GraphTile::Create(const GraphId& graphid,
                   std::unique_ptr<const GraphMemory>&& memory,
                   std::unique_ptr<const GraphMemory>&& traffic_memory) {
@@ -227,7 +227,7 @@ void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::st
     filesystem::remove(tmp_location);
 }
 
-boost::intrusive_ptr<const GraphTile> GraphTile::CacheTileURL(const std::string& tile_url,
+graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
                                                               const GraphId& graphid,
                                                               tile_getter_t* tile_getter,
                                                               const std::string& cache_location) {

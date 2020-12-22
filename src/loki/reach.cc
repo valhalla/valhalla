@@ -16,7 +16,7 @@ Reach::Reach() : Dijkstras() {
 void Reach::enqueue(const baldr::GraphId& node_id,
                     baldr::GraphReader& reader,
                     const std::shared_ptr<sif::DynamicCost>& costing,
-                    boost::intrusive_ptr<const baldr::GraphTile> tile) {
+                    graph_tile_ptr tile) {
   // skip nodes which are done or invalid
   if (!node_id.Is_Valid() || done_.find(node_id) != done_.cend())
     return;
@@ -61,7 +61,7 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
 
   // seed the expansion with a place to start expanding from
   Clear();
-  boost::intrusive_ptr<const baldr::GraphTile> tile, start_tile = reader.GetGraphTile(edge_id);
+  graph_tile_ptr tile, start_tile = reader.GetGraphTile(edge_id);
   if ((tile = start_tile) && costing->Filter(edge, tile) > 0.f && !edge->restrictions())
     enqueue(edge->endnode(), reader, costing, tile);
 
@@ -154,7 +154,7 @@ directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
   // can we even try to expand?
   directed_reach reach{};
 
-  boost::intrusive_ptr<const baldr::GraphTile> tile = reader.GetGraphTile(edge_id);
+  graph_tile_ptr tile = reader.GetGraphTile(edge_id);
   if (!tile || costing->Filter(edge, tile) == 0.f) {
     return reach;
   }
@@ -194,7 +194,7 @@ directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
 
 // callback fired when a node is expanded from, the node will be the end node of the previous label
 void Reach::ExpandingNode(baldr::GraphReader&,
-                          boost::intrusive_ptr<const baldr::GraphTile> tile,
+                          graph_tile_ptr tile,
                           const baldr::NodeInfo* node,
                           const sif::EdgeLabel&,
                           const sif::EdgeLabel*) {

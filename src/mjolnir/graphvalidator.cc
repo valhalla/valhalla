@@ -47,8 +47,8 @@ struct HGVRestrictionTypes {
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
                               DirectedEdge& edge,
                               uint64_t wayid,
-                              const boost::intrusive_ptr<const GraphTile>& tile,
-                              const boost::intrusive_ptr<const GraphTile>& end_tile,
+                              const graph_tile_ptr& tile,
+                              const graph_tile_ptr& end_tile,
                               std::set<uint32_t>& problem_ways,
                               uint32_t& dupcount,
                               std::string& endnodeiso,
@@ -297,7 +297,7 @@ void validate(
 
     // Get this tile
     lock.lock();
-    boost::intrusive_ptr<const GraphTile> tile = graph_reader.GetGraphTile(tile_id);
+    graph_tile_ptr tile = graph_reader.GetGraphTile(tile_id);
     lock.unlock();
 
     // Iterate through the nodes and the directed edges
@@ -368,7 +368,7 @@ void validate(
         }
 
         // Check if end node is in a different tile
-        boost::intrusive_ptr<const GraphTile> endnode_tile = tile;
+        graph_tile_ptr endnode_tile = tile;
         if (tile_id != directededge.endnode().Tile_Base()) {
           directededge.set_leaves_tile(true);
 

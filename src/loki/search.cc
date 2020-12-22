@@ -50,7 +50,7 @@ bool side_filter(const PathLocation::PathEdge& edge, const Location& location, G
     return false;
 
   // need the driving side for this edge
-  boost::intrusive_ptr<const GraphTile> tile;
+  graph_tile_ptr tile;
   auto* opp = reader.GetOpposingEdge(edge.id, tile);
   if (!opp)
     return false;
@@ -105,7 +105,7 @@ struct candidate_t {
   const DirectedEdge* edge{};
   std::shared_ptr<const EdgeInfo> edge_info;
 
-  boost::intrusive_ptr<const GraphTile> tile;
+  graph_tile_ptr tile;
 
   bool operator<(const candidate_t& c) const {
     return sq_distance < c.sq_distance;
@@ -220,7 +220,7 @@ struct projector_wrapper {
   }
 
   std::function<std::tuple<int32_t, unsigned short, double>()> binner;
-  boost::intrusive_ptr<const GraphTile> cur_tile;
+  graph_tile_ptr cur_tile;
   Location location;
   unsigned short bin_index = 0;
   double sq_radius;
@@ -315,7 +315,7 @@ struct bin_handler_t {
 
         // do we want the evil twin
         const DirectedEdge* other_edge = nullptr;
-        boost::intrusive_ptr<const GraphTile> other_tile;
+        graph_tile_ptr other_tile;
         const auto other_id = reader.GetOpposingEdgeId(id, other_edge, other_tile);
         if (!other_edge)
           continue;
@@ -403,7 +403,7 @@ struct bin_handler_t {
       }
       // correlate its evil twin
       const DirectedEdge* other_edge = nullptr;
-      boost::intrusive_ptr<const GraphTile> other_tile;
+      graph_tile_ptr other_tile;
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_edge, other_tile);
 
       if (other_edge && costing->Filter(other_edge, other_tile) != 0.0f) {
@@ -437,7 +437,7 @@ struct bin_handler_t {
   // do a mini network expansion or maybe not
   directed_reach check_reachability(std::vector<projector_wrapper>::iterator begin,
                                     std::vector<projector_wrapper>::iterator end,
-                                    boost::intrusive_ptr<const GraphTile> tile,
+                                    graph_tile_ptr tile,
                                     const DirectedEdge* edge,
                                     const GraphId edge_id) {
     // no need when set to 0
@@ -570,7 +570,7 @@ struct bin_handler_t {
         bool reachable = reach.outbound >= p_itr->location.min_outbound_reach_ &&
                          reach.inbound >= p_itr->location.min_inbound_reach_;
         const DirectedEdge* opp_edge = nullptr;
-        boost::intrusive_ptr<const GraphTile> opp_tile = tile;
+        graph_tile_ptr opp_tile = tile;
         GraphId opp_edgeid;
         // it's possible that it isnt reachable but the opposing is, switch to that if so
         if (!reachable && (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
@@ -706,7 +706,7 @@ struct bin_handler_t {
                         pp.location.node_snap_tolerance_;
         // it was the begin node
         if ((front && candidate.edge->forward()) || (back && !candidate.edge->forward())) {
-          boost::intrusive_ptr<const GraphTile> other_tile;
+          graph_tile_ptr other_tile;
           auto opposing_edge = reader.GetOpposingEdge(candidate.edge_id, other_tile);
           if (!other_tile) {
             continue; // TODO: do an edge snap instead, but you'll only get one direction

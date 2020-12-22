@@ -103,7 +103,7 @@ void remove_edges(const GraphId& edge_id, valhalla::Location& loc, GraphReader& 
   }
 
   // if its at the begin node lets center our sights on that
- boost::intrusive_ptr<const GraphTile> tile = reader.GetGraphTile(edge_id);
+ graph_tile_ptr tile = reader.GetGraphTile(edge_id);
   const auto* edge = tile->directededge(edge_id);
   const auto* node = reader.GetEndNode(edge, tile);
   if (pe->begin_node()) {
@@ -560,7 +560,7 @@ std::string thor_worker_t::offset_date(GraphReader& reader,
                                        float offset,
                                        const GraphId& out_edge) {
   // get the timezone of the input location
-  boost::intrusive_ptr<const GraphTile> tile = nullptr;
+  graph_tile_ptr tile = nullptr;
   auto in_nodes = reader.GetDirectedEdgeNodes(in_edge, tile);
   uint32_t in_tz = 0;
   if (const auto* node = reader.nodeinfo(in_nodes.first, tile))

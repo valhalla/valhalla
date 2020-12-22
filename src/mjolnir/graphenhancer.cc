@@ -206,13 +206,9 @@ void UpdateSpeed(DirectedEdge& directededge,
 // Turn lanes based on the turns at this node.
 void GetTurnTypes(const DirectedEdge& directededge,
                   std::set<Turn::Type>& outgoing_turn_type,
-                  const boost::intrusive_ptr<GraphTileBuilder>& tilebuilder,
+                  graph_tile_ptr tile,
                   GraphReader& reader,
                   std::mutex& lock) {
-
-  // Get the tile at the startnode
-  boost::intrusive_ptr<const GraphTile> tile = tilebuilder;
-
   // Get the heading value at the end of incoming edge based on edge shape
   auto incoming_shape = tile->edgeinfo(directededge.edgeinfo_offset()).shape();
   if (directededge.forward()) {
@@ -260,7 +256,7 @@ void GetTurnTypes(const DirectedEdge& directededge,
 
 // Update the rightmost lane as needed.
 void EnhanceRightLane(const DirectedEdge& directededge,
-                      const boost::intrusive_ptr<GraphTileBuilder>& tilebuilder,
+                      const graph_tile_ptr& tilebuilder,
                       GraphReader& reader,
                       std::mutex& lock,
                       std::vector<uint16_t>& enhanced_tls) {
@@ -287,7 +283,7 @@ void EnhanceRightLane(const DirectedEdge& directededge,
 
 // Update the leftmost lane as needed.
 void EnhanceLeftLane(const DirectedEdge& directededge,
-                     boost::intrusive_ptr<GraphTileBuilder>& tilebuilder,
+                     const graph_tile_ptr& tilebuilder,
                      GraphReader& reader,
                      std::mutex& lock,
                      std::vector<uint16_t>& enhanced_tls) {
@@ -546,7 +542,7 @@ bool IsUnreachable(GraphReader& reader, std::mutex& lock, DirectedEdge& directed
   // current tile and only read a new tile when needed.
   uint32_t n = 0;
   GraphId prior_tile;
-  boost::intrusive_ptr<const GraphTile> tile;
+  graph_tile_ptr tile;
   while (n < kUnreachableIterations) {
     if (expandset.empty()) {
       // Have expanded all nodes without reaching a higher classification
@@ -616,7 +612,7 @@ bool IsNotThruEdge(GraphReader& reader,
   // To reduce calls to lock and unlock keep a record of current tile and
   // only read a new tile when needed.
   GraphId prior_tile;
-  boost::intrusive_ptr<const GraphTile> tile;
+  graph_tile_ptr tile;
   for (uint32_t n = 0; n < kMaxNoThruTries; n++) {
     // If expand list is exhausted this is "not thru"
     if (expand_pos == expandset.size()) {
@@ -666,7 +662,7 @@ bool IsNotThruEdge(GraphReader& reader,
 }
 
 // Test if the edge is internal to an intersection.
-bool IsIntersectionInternal(const boost::intrusive_ptr<const GraphTile>& start_tile,
+bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
                             GraphReader& reader,
                             std::mutex& lock,
                             const NodeInfo& startnodeinfo,
@@ -694,7 +690,7 @@ bool IsIntersectionInternal(const boost::intrusive_ptr<const GraphTile>& start_t
   };
 
   // Get the tile at the startnode
-  boost::intrusive_ptr<const GraphTile> tile = start_tile;
+  graph_tile_ptr tile = start_tile;
 
   // Exclude trivial "loops" where only 2 edges at start of candidate edge and
   // the end of the candidate edge is the start of the incoming edge to the
@@ -836,9 +832,7 @@ bool IsIntersectionInternal(const boost::intrusive_ptr<const GraphTile>& start_t
 }
 
 // Get the Headings for the node.
-void GetHeadings(const boost::intrusive_ptr<const GraphTileBuilder>& tile,
-                 NodeInfo& nodeinfo,
-                 uint32_t ntrans) {
+void GetHeadings(const graph_tile_ptr& tile, NodeInfo& nodeinfo, uint32_t ntrans) {
   if (ntrans == 0) {
     throw std::runtime_error("edge transitions set is empty");
   }
@@ -846,7 +840,7 @@ void GetHeadings(const boost::intrusive_ptr<const GraphTileBuilder>& tile,
   std::vector<uint32_t> heading(ntrans);
   nodeinfo.set_local_edge_count(ntrans);
   for (uint32_t j = 0; j < ntrans; j++) {
-    const DirectedEdge* de = tile->directededges(nodeinfo.edge_index() + j);
+    const DirectedEdge* de = tile->directededge(nodeinfo.edge_index() + j);
 
     auto e_offset = tile->edgeinfo(de->edgeinfo_offset());
     auto shape = e_offset.shape();
@@ -864,15 +858,15 @@ void GetHeadings(const boost::intrusive_ptr<const GraphTileBuilder>& tile,
 }
 
 bool IsNextEdgeInternalImpl(const DirectedEdge directededge,
-                            const boost::intrusive_ptr<const GraphTileBuilder>& tilebuilder,
-                            const boost::intrusive_ptr<const GraphTileBuilder>& end_node_tile,
+                            const graph_tile_ptr& tilebuilder,
+                            const graph_tile_ptr& end_node_tile,
                             const NodeInfo& end_node_info,
                             GraphReader& reader,
                             std::mutex& lock,
                             bool infer_internal_intersections) {
   // Iterate through outbound edges to find the next edge
   for (uint32_t i = 0; i < end_node_info.edge_count(); i++) {
-    const DirectedEdge* diredge = end_node_tile->directededges(end_node_info.edge_index() + i);
+    const DirectedEdge* diredge = end_node_tile->directededge(end_node_info.edge_index() + i);
 
     // Skip opposing directed edge and any edge that is not a road. Skip any
     // edges that are not driveable outbound.
@@ -897,26 +891,25 @@ bool IsNextEdgeInternalImpl(const DirectedEdge directededge,
 
 // Is the next edge from the end node of the directededge is internal or not.
 bool IsNextEdgeInternal(const DirectedEdge directededge,
-                        const boost::intrusive_ptr<GraphTileBuilder>& tilebuilder,
+                        const graph_tile_ptr& tilebuilder,
                         GraphReader& reader,
                         std::mutex& lock,
                         bool infer_internal_intersections) {
   if (tilebuilder->id() == directededge.endnode().Tile_Base()) {
-    const NodeInfo& end_node_info = tilebuilder->node_builder(directededge.endnode().id());
+    const NodeInfo& end_node_info = *tilebuilder->node(directededge.endnode().id());
     return IsNextEdgeInternalImpl(directededge, tilebuilder, tilebuilder, end_node_info, reader, lock,
                                   infer_internal_intersections);
   } else {
     // Get the tile at the end node. and find inbound heading of the candidate
     // edge to the end node.
     lock.lock();
-    boost::intrusive_ptr<GraphTileBuilder> end_node_tile =
-        new GraphTileBuilder(reader.tile_dir(), directededge.endnode(), true, false);
+    auto end_node_tile = GraphTile::Create(reader.tile_dir(), directededge.endnode());
     lock.unlock();
 
     // this tile may not have been updated yet; therefore, we must
     // compute the headings for the end node as they are needed for the
     // IsIntersectionInternal function
-    NodeInfo& end_node_info = end_node_tile->node_builder(directededge.endnode().id());
+    NodeInfo end_node_info = *end_node_tile->node(directededge.endnode().id());
     uint32_t count = end_node_info.edge_count();
     uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
     GetHeadings(end_node_tile, end_node_info, ntrans);
@@ -1378,9 +1371,9 @@ void ProcessEdgeTransitions(const uint32_t idx,
  * @param  tile          Graph tile of the edge
  * @param  directededge  Directed edge to match.
  */
-uint32_t GetOpposingEdgeIndex(const boost::intrusive_ptr<const GraphTile>& endnodetile,
+uint32_t GetOpposingEdgeIndex(const graph_tile_ptr& endnodetile,
                               const GraphId& startnode,
-                              const boost::intrusive_ptr<const GraphTile>& tile,
+                              const graph_tile_ptr& tile,
                               const DirectedEdge& edge) {
   // Get the nodeinfo at the end of the edge
   const NodeInfo* nodeinfo = endnodetile->node(edge.endnode().id());
@@ -1488,7 +1481,7 @@ void enhance(const boost::property_tree::ptree& pt,
     // Get a readable tile.If the tile is empty, skip it. Empty tiles are
     // added where ways go through a tile but no end not is within the tile.
     // This allows creation of connectivity maps using the tile set,
-    boost::intrusive_ptr<const GraphTile> tile = reader.GetGraphTile(tile_id);
+    graph_tile_ptr tile = reader.GetGraphTile(tile_id);
     if (!tile || tile->header()->nodecount() == 0) {
       lock.unlock();
       continue;
@@ -1560,7 +1553,7 @@ void enhance(const boost::property_tree::ptree& pt,
         DirectedEdge& directededge = tilebuilder->directededge_builder(nodeinfo.edge_index() + j);
 
         // Get the tile at the end node
-        boost::intrusive_ptr<const GraphTile> endnodetile;
+        graph_tile_ptr endnodetile;
         if (tile->id() == directededge.endnode().Tile_Base()) {
           endnodetile = tile;
         } else {
@@ -1615,7 +1608,7 @@ void enhance(const boost::property_tree::ptree& pt,
         std::string end_node_code = "";
         uint32_t end_admin_index = 0;
         // Get the tile at the end node
-        boost::intrusive_ptr<const GraphTile> endnodetile;
+        graph_tile_ptr endnodetile;
         if (tile->id() == directededge.endnode().Tile_Base()) {
           end_admin_index = tile->node(directededge.endnode().id())->admin_index();
           end_node_code = tile->admin(end_admin_index)->country_iso();

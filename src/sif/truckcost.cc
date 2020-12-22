@@ -149,7 +149,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const boost::intrusive_ptr<const GraphTile>& tile,
+                       const graph_tile_ptr& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -176,7 +176,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const boost::intrusive_ptr<const GraphTile>& tile,
+                              const graph_tile_ptr& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -209,7 +209,7 @@ public:
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const boost::intrusive_ptr<const baldr::GraphTile>& tile,
+                        const graph_tile_ptr& tile,
                         const uint32_t seconds) const override;
 
   /**
@@ -262,8 +262,7 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by truck.
    */
-  float Filter(const baldr::DirectedEdge* edge,
-               const boost::intrusive_ptr<const baldr::GraphTile>& tile) const override {
+  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
@@ -392,7 +391,7 @@ bool TruckCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction)
 // Check if access is allowed on the specified edge.
 inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
                                const EdgeLabel& pred,
-                               const boost::intrusive_ptr<const GraphTile>& tile,
+                               const graph_tile_ptr& tile,
                                const baldr::GraphId& edgeid,
                                const uint64_t current_time,
                                const uint32_t tz_index,
@@ -414,7 +413,7 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
 bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                const EdgeLabel& pred,
                                const baldr::DirectedEdge* opp_edge,
-                               const boost::intrusive_ptr<const GraphTile>& tile,
+                               const graph_tile_ptr& tile,
                                const baldr::GraphId& opp_edgeid,
                                const uint64_t current_time,
                                const uint32_t tz_index,
@@ -434,7 +433,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 // Get the cost to traverse the edge in seconds
 Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
-                         const boost::intrusive_ptr<const baldr::GraphTile>& tile,
+                         const graph_tile_ptr& tile,
                          const uint32_t seconds) const {
   auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, true);
   auto s = std::min(edge_speed, top_speed_);

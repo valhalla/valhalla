@@ -38,7 +38,7 @@ public:
 
   bool Allowed(const DirectedEdge* edge,
                const EdgeLabel& pred,
-               const boost::intrusive_ptr<const GraphTile>& /*tile*/,
+               const graph_tile_ptr& /*tile*/,
                const GraphId& edgeid,
                const uint64_t /*current_time*/,
                const uint32_t /*tz_index*/,
@@ -55,7 +55,7 @@ public:
   bool AllowedReverse(const DirectedEdge* edge,
                       const EdgeLabel& pred,
                       const DirectedEdge* opp_edge,
-                      const boost::intrusive_ptr<const GraphTile>& /*tile*/,
+                      const graph_tile_ptr& /*tile*/,
                       const GraphId& opp_edgeid,
                       const uint64_t /*current_time*/,
                       const uint32_t /*tz_index*/,
@@ -77,7 +77,7 @@ public:
   }
 
   Cost EdgeCost(const DirectedEdge* edge,
-                const boost::intrusive_ptr<const GraphTile>& /*tile*/,
+                const graph_tile_ptr& /*tile*/,
                 const uint32_t /*seconds*/) const override {
     float sec = static_cast<float>(edge->length());
     return {sec / 10.0f, sec};
@@ -101,7 +101,7 @@ public:
   }
 
   float Filter(const baldr::DirectedEdge* edge,
-               const boost::intrusive_ptr<const baldr::GraphTile>&) const override {
+               const graph_tile_ptr&) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));

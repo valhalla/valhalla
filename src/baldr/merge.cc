@@ -60,7 +60,7 @@ struct edges {
     }
   };
 
-  edges(const boost::intrusive_ptr<const baldr::GraphTile>& tile, GraphId node_id) {
+  edges(const graph_tile_ptr& tile, GraphId node_id) {
     auto* node_info = tile->node(node_id);
     auto edge_idx = node_info->edge_index();
     m_begin = const_iterator(tile->directededge(edge_idx), node_id.Tile_Base() + uint64_t(edge_idx));

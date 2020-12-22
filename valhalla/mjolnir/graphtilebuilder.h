@@ -388,8 +388,8 @@ public:
    * @param tweeners   the additional bins in other tiles that intersect this tiles edges
    */
   using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount>>;
-  static std::array<std::vector<GraphId>, kBinCount>
-  BinEdges(const boost::intrusive_ptr<const GraphTile>& tile, tweeners_t& tweeners);
+  static std::array<std::vector<GraphId>, kBinCount> BinEdges(const graph_tile_ptr& tile,
+                                                              tweeners_t& tweeners);
 
   /**
    * Adds to the bins the tile already has, only modifies the header to reflect the new counts
@@ -399,7 +399,7 @@ public:
    * @param more_bins  the extra bin data to append to the tile
    */
   static void AddBins(const std::string& tile_dir,
-                      const boost::intrusive_ptr<const GraphTile>& tile,
+                      const graph_tile_ptr& tile,
                       const std::array<std::vector<GraphId>, kBinCount>& more_bins);
 
   /**
