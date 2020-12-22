@@ -76,7 +76,7 @@ TEST(Reach, check_all_reach) {
   Reach reach_finder;
 
   // look at all the edges
-  for (const auto& tile_id : reader.GetTileSet()) {
+  for (auto tile_id : reader.GetTileSet()) {
     auto tile = reader.GetGraphTile(tile_id);
     // loop over edges
     for (GraphId edge_id = tile->header()->graphid();

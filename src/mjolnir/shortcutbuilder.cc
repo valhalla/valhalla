@@ -374,7 +374,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
 
   // Check if this is the last edge in a shortcut (if the endnode cannot be contracted).
   auto last_edge = [&reader](graph_tile_ptr tile, const GraphId& endnode, EdgePairs& edgepairs) {
-    return !CanContract(reader, std::move(tile), endnode, edgepairs);
+    return !CanContract(reader, tile, endnode, edgepairs);
   };
 
   // Iterate through directed edges of the base node
@@ -589,7 +589,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
   for (uint32_t tileid = 0; tileid < ntiles; tileid++) {
     // Get the graph tile. Skip if no tile exists (common case)
     tile = reader.GetGraphTile(GraphId(tileid, tile_level, 0));
-    if (!tile || tile->header()->nodecount() == 0) {
+    if (!tile) {
       continue;
     }
 

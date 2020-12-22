@@ -48,10 +48,8 @@ bool WalkTransitLines(const GraphId& n_graphId,
                       const std::string& route_name) {
   lock.lock();
   auto endnodetile = reader.GetGraphTile(n_graphId);
+  assert(endnodetile);
   lock.unlock();
-  if (!endnodetile) {
-    return false;
-  }
   const NodeInfo* n_info = endnodetile->node(n_graphId);
   GraphId currentNode = n_graphId;
 

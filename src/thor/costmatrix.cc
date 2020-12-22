@@ -369,8 +369,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
         GraphId node = trans->endnode();
         graph_tile_ptr endtile = graphreader.GetGraphTile(node);
         if (endtile != nullptr) {
-          const NodeInfo* nodeinfo = endtile->node(node);
-          expand(std::move(endtile), node, nodeinfo, pred, pred_idx, true);
+          expand(endtile, node, endtile->node(node), pred, pred_idx, true);
         }
       }
     }
@@ -383,7 +382,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
   if (tile != nullptr) {
     const NodeInfo* nodeinfo = tile->node(node);
     if (costing_->Allowed(nodeinfo)) {
-      expand(std::move(tile), node, nodeinfo, pred, pred_idx, false);
+      expand(tile, node, nodeinfo, pred, pred_idx, false);
     }
   }
 }
@@ -641,8 +640,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
         GraphId node = trans->endnode();
         graph_tile_ptr endtile = graphreader.GetGraphTile(node);
         if (endtile != nullptr) {
-          const NodeInfo* nodeinfo = endtile->node(node);
-          expand(std::move(endtile), node, nodeinfo, index, pred, pred_idx, opp_pred_edge, true);
+          expand(endtile, node, endtile->node(node), index, pred, pred_idx, opp_pred_edge, true);
         }
         continue;
       }
@@ -664,7 +662,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
         opp_pred_edge =
             graphreader.GetGraphTile(pred.opp_edgeid().Tile_Base())->directededge(pred.opp_edgeid());
       }
-      expand(std::move(tile), node, nodeinfo, index, pred, pred_idx, opp_pred_edge, false);
+      expand(tile, node, nodeinfo, index, pred, pred_idx, opp_pred_edge, false);
     }
   }
 }

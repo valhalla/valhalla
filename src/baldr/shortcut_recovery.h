@@ -37,49 +37,49 @@ protected:
         // cull cache if we are over allocated
         if (reader->OverCommitted())
           reader->Trim();
-        // for each edge in the tile
+        // this shouldnt fail but garbled files could cause it
         auto tile = reader->GetGraphTile(tile_id);
-        if (tile) {
-          for (const auto& edge : tile->GetDirectedEdges()) {
-            // skip non-shortcuts or the shortcut is one we wont use
-            if (!edge.shortcut())
-              continue;
-            auto shortcut_id = tile->header()->graphid();
-            shortcut_id.set_id(&edge - tile->directededge(0));
-            // skip already found opposing edges
-            if (shortcuts.find(shortcut_id) != shortcuts.end())
-              continue;
-            // recover the shortcut and make a copy for opposing direction
-            auto recovered = recover_shortcut(*reader, shortcut_id);
-            decltype(recovered) opp_recovered = recovered;
-            std::reverse_copy(recovered.cbegin(), recovered.cend(), opp_recovered.begin());
-            // save some stats
-            bool failed = recovered.front() == shortcut_id;
-            unrecovered += failed;
-            superseded += failed ? 0 : recovered.size();
-            // cache it even if it failed (no point in trying the same thing twice)
-            shortcuts.emplace(shortcut_id, std::move(recovered));
+        assert(tile);
+        // for each edge in the tile
+        for (const auto& edge : tile->GetDirectedEdges()) {
+          // skip non-shortcuts or the shortcut is one we wont use
+          if (!edge.shortcut())
+            continue;
+          auto shortcut_id = tile->header()->graphid();
+          shortcut_id.set_id(&edge - tile->directededge(0));
+          // skip already found opposing edges
+          if (shortcuts.find(shortcut_id) != shortcuts.end())
+            continue;
+          // recover the shortcut and make a copy for opposing direction
+          auto recovered = recover_shortcut(*reader, shortcut_id);
+          decltype(recovered) opp_recovered = recovered;
+          std::reverse_copy(recovered.cbegin(), recovered.cend(), opp_recovered.begin());
+          // save some stats
+          bool failed = recovered.front() == shortcut_id;
+          unrecovered += failed;
+          superseded += failed ? 0 : recovered.size();
+          // cache it even if it failed (no point in trying the same thing twice)
+          shortcuts.emplace(shortcut_id, std::move(recovered));
 
-            // its cheaper to get the opposing without crawling the graph
-            auto opp_tile = tile;
-            auto opp_id = reader->GetOpposingEdgeId(shortcut_id, opp_tile);
-            if (!opp_id.Is_Valid())
-              continue; // dont store edges which arent in our tileset
+          // its cheaper to get the opposing without crawling the graph
+          auto opp_tile = tile;
+          auto opp_id = reader->GetOpposingEdgeId(shortcut_id, opp_tile);
+          if (!opp_id.Is_Valid())
+            continue; // dont store edges which arent in our tileset
 
-            for (auto& id : opp_recovered) {
-              id = reader->GetOpposingEdgeId(id, opp_tile);
-              if (!id.Is_Valid()) {
-                opp_recovered = {opp_id};
-                break;
-              }
+          for (auto& id : opp_recovered) {
+            id = reader->GetOpposingEdgeId(id, opp_tile);
+            if (!id.Is_Valid()) {
+              opp_recovered = {opp_id};
+              break;
             }
-            // stats
-            failed = opp_recovered.front() == opp_id;
-            unrecovered += failed;
-            superseded += failed ? 0 : opp_recovered.size();
-            // cache it even if it failed (no point in trying the same thing twice)
-            shortcuts.emplace(opp_id, std::move(opp_recovered));
           }
+          // stats
+          failed = opp_recovered.front() == opp_id;
+          unrecovered += failed;
+          superseded += failed ? 0 : opp_recovered.size();
+          // cache it even if it failed (no point in trying the same thing twice)
+          shortcuts.emplace(opp_id, std::move(opp_recovered));
         }
       }
     }
@@ -101,9 +101,7 @@ protected:
     using namespace valhalla::baldr;
     // grab the shortcut edge
     auto tile = reader.GetGraphTile(shortcut_id);
-    if (!tile) {
-      return {shortcut_id};
-    }
+    assert(tile);
     const DirectedEdge* shortcut = tile->directededge(shortcut_id);
 
     // bail if this isnt a shortcut

@@ -70,19 +70,10 @@ struct edge_t {
 // Get the opposing edge - if the opposing index is invalid return a nullptr
 // for the directed edge. This should not occur but this can happen in
 // GraphValidator if it fails to find an opposing edge.
-edge_t opposing(GraphReader& reader, graph_tile_ptr tile, const DirectedEdge* edge) {
-  graph_tile_ptr t = edge->leaves_tile() ? reader.GetGraphTile(edge->endnode()) : std::move(tile);
-  auto id = edge->endnode();
-  id.set_id(t->node(id)->edge_index() + edge->opp_index());
-
-  // Check for invalid opposing index
-  if (edge->opp_index() == kMaxEdgesPerNode) {
-    PointLL ll = t->get_node_ll(edge->endnode());
-    LOG_ERROR("Invalid edge opp index = " + std::to_string(edge->opp_index()) +
-              " LL = " + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
-    return {id, nullptr};
-  }
-  return {id, t->directededge(id)};
+edge_t opposing(GraphReader& reader, graph_tile_ptr tile, const GraphId& edge_id) {
+  const DirectedEdge* opp_edge = nullptr;
+  auto opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, tile);
+  return {opp_id, opp_edge};
 }
 
 edge_t next(const std::unordered_map<GraphId, uint64_t>& tile_set,
@@ -222,9 +213,9 @@ int main(int argc, char* argv[]) {
       if (reader.DoesTileExist(tile_id)) {
         // TODO: just read the header, parsing the whole thing isnt worth it at this point
         tile_set.emplace(tile_id, edge_count);
-        if (auto tile = reader.GetGraphTile(tile_id)) {
-          edge_count += tile->header()->directededgecount();
-        }
+        auto tile = reader.GetGraphTile(tile_id);
+        assert(tile);
+        edge_count += tile->header()->directededgecount();
         reader.Clear();
       }
     }

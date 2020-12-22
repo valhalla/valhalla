@@ -93,13 +93,14 @@ void merge(TileSet& tiles,
 
   // Iterate over tiles. Merge edges at nodes where the edges can be collapsed.
   for (GraphId tile_id : tiles) {
-    if (auto tile = reader.GetGraphTile(tile_id)) {
-      uint32_t node_count = tile->header()->nodecount();
-      GraphId node_id(tile_id.tileid(), tile_id.level(), 0);
-      for (uint32_t i = 0; i < node_count; ++i, ++node_id) {
-        e.explore(node_id);
-      }
+    auto tile = reader.GetGraphTile(tile_id);
+    assert(tile);
+    uint32_t node_count = tile->header()->nodecount();
+    GraphId node_id(tile_id.tileid(), tile_id.level(), 0);
+    for (uint32_t i = 0; i < node_count; ++i, ++node_id) {
+      e.explore(node_id);
     }
+
     // Clear cache if over committed
     if (reader.OverCommitted()) {
       reader.Trim();
@@ -108,21 +109,21 @@ void merge(TileSet& tiles,
 
   // Iterate over tiles. Handle single edges that remain.
   for (GraphId tile_id : tiles) {
-    if (auto tile = reader.GetGraphTile(tile_id)) {
-      const auto num_edges = tile->header()->directededgecount();
-      GraphId edge_id(tile_id.tileid(), tile_id.level(), 0);
-      for (uint32_t i = 0; i < num_edges; ++i, ++edge_id) {
-        if (!tracker.get(edge_id)) {
-          // Store single edge paths if the edge is allowed.
-          auto* edge = tile->directededge(edge_id);
-          if (edge_allowed_pred(edge)) {
-            // Store the single edge path if the start node is valid. It can be
-            // invalid if the end node tile is null (as in a regional extract)
-            auto end_nodes = reader.GetDirectedEdgeNodes(tile, edge);
-            path p(segment(end_nodes.first, edge_id, end_nodes.second));
-            if (p.m_start.Is_Valid()) {
-              func(p);
-            }
+    auto tile = reader.GetGraphTile(tile_id);
+    assert(tile);
+    const auto num_edges = tile->header()->directededgecount();
+    GraphId edge_id(tile_id.tileid(), tile_id.level(), 0);
+    for (uint32_t i = 0; i < num_edges; ++i, ++edge_id) {
+      if (!tracker.get(edge_id)) {
+        // Store single edge paths if the edge is allowed.
+        auto* edge = tile->directededge(edge_id);
+        if (edge_allowed_pred(edge)) {
+          // Store the single edge path if the start node is valid. It can be
+          // invalid if the end node tile is null (as in a regional extract)
+          auto end_nodes = reader.GetDirectedEdgeNodes(tile, edge);
+          path p(segment(end_nodes.first, edge_id, end_nodes.second));
+          if (p.m_start.Is_Valid()) {
+            func(p);
           }
         }
       }

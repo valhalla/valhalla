@@ -107,7 +107,7 @@ void graph_writer::write_tiles() {
   for (const auto& entry : all_tweeners) {
     // re-open tiles to add tweeners back in.
     auto tile = vb::GraphTile::Create(test_tile_dir, entry.first);
-    vj::GraphTileBuilder::AddBins(test_tile_dir, std::move(tile), entry.second);
+    vj::GraphTileBuilder::AddBins(test_tile_dir, tile, entry.second);
   }
 }
 

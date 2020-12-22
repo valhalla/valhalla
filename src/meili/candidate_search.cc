@@ -142,8 +142,8 @@ void IndexBin(const graph_tile_ptr& tile,
     // Get the right tile (edges in a bin can be in a different tile if they
     // pass through the tile but do not start or end in the tile). Skip if
     // tile is null.
-    auto bin_tile =
-        edge_id.tileid() == tile->header()->graphid().tileid() ? tile : reader.GetGraphTile(edge_id);
+    auto bin_tile = tile;
+    reader.GetGraphTile(edge_id, bin_tile);
     if (bin_tile == nullptr) {
       continue;
     }

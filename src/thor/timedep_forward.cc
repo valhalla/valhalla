@@ -460,12 +460,12 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    const auto& tile = graphreader.GetGraphTile(edgeid);
+    const auto tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    const auto& endtile = graphreader.GetGraphTile(directededge->endnode());
+    const auto endtile = graphreader.GetGraphTile(directededge->endnode());
     if (endtile == nullptr) {
       continue;
     }
@@ -562,9 +562,8 @@ uint32_t TimeDepForward::SetDestination(GraphReader& graphreader, const valhalla
     // Edge score (penalty) is handled within GetPath. Do not add score here.
 
     // Get the tile relative density
-    if (auto tile = graphreader.GetGraphTile(edgeid)) {
-      density = tile->header()->density();
-    }
+    auto tile = graphreader.GetGraphTile(edgeid);
+    density = tile->header()->density();
   }
   return density;
 }

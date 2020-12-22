@@ -55,6 +55,7 @@ public:
    * into memory.
    * @param  tile_dir   Tile directory.
    * @param  graphid    GraphId (tileid and level)
+   * @return nullptr if the tile could not be loaded. may throw
    */
   static graph_tile_ptr Create(const std::string& tile_dir,
                                const GraphId& graphid,

@@ -864,26 +864,23 @@ protected:
                                          const uint32_t idx) const {
     // Cases with both time and penalty: country crossing, ferry, gate, toll booth
     sif::Cost c;
-    const baldr::NodeType nodeType = node->type();
-    const baldr::Use edgeUse = edge->use();
-    const baldr::Use predUse = pred->use();
-    if (nodeType == baldr::NodeType::kBorderControl) {
+    if (node->type() == baldr::NodeType::kBorderControl) {
       c += country_crossing_cost_;
     }
-    if (nodeType == baldr::NodeType::kGate) {
+    if (node->type() == baldr::NodeType::kGate) {
       c += gate_cost_;
     }
-    if (nodeType == baldr::NodeType::kBikeShare) {
+    if (node->type() == baldr::NodeType::kBikeShare) {
       c += bike_share_cost_;
     }
-    if (nodeType == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll())) {
+    if (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll())) {
       c += toll_booth_cost_;
     }
-    if (edgeUse == baldr::Use::kFerry && predUse != baldr::Use::kFerry) {
+    if (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry) {
       c += ferry_transition_cost_;
     }
 
-    if (edgeUse == baldr::Use::kRailFerry && predUse != baldr::Use::kRailFerry) {
+    if (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry) {
       c += rail_ferry_transition_cost_;
     }
 
@@ -891,7 +888,7 @@ protected:
     if (edge->destonly() && !pred->destonly()) {
       c.cost += destination_only_penalty_;
     }
-    if (edgeUse == baldr::Use::kAlley && predUse != baldr::Use::kAlley) {
+    if (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley) {
       c.cost += alley_penalty_;
     }
     if (!edge->link() && !edge->name_consistency(idx)) {

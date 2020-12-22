@@ -385,10 +385,7 @@ public:
    * @return graph_tile_ptr& reference to the tile parameter
    */
   graph_tile_ptr& GetGraphTile(const GraphId& graphid, graph_tile_ptr& tile) {
-    if (!tile || tile->id() != graphid.Tile_Base()) {
-      tile = GetGraphTile(graphid);
-    }
-    return tile;
+    return !tile || tile->id() != graphid.Tile_Base() ? tile = GetGraphTile(graphid) : tile;
   }
 
   /**

@@ -265,11 +265,11 @@ void build(const std::string& complex_restriction_from_file,
     GraphId tile_id = tilequeue.front();
     tilequeue.pop();
 
-    // Get a readable tile.If the tile is empty, skip it. Empty tiles are
+    // Get a readable tile. If the tile is empty, skip it. Empty tiles are
     // added where ways go through a tile but no end not is within the tile.
     // This allows creation of connectivity maps using the tile set,
     graph_tile_ptr tile = reader.GetGraphTile(tile_id);
-    if (!tile || tile->header()->nodecount() == 0) {
+    if (!tile) {
       lock.unlock();
       continue;
     }

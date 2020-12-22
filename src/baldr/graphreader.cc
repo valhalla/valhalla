@@ -450,7 +450,7 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
 
     // This initializes the tile from mmap
     auto tile = GraphTile::Create(base, std::move(memory), std::move(traffic_memory));
-    if (!tile || !tile->header()) {
+    if (!tile) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
     }
@@ -484,7 +484,7 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
 
       // Get it from the url and cache it to disk if you can
       tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_);
-      if (!tile || !tile->header()) {
+      if (!tile) {
         std::lock_guard<std::mutex> lock(_404s_lock);
         _404s.insert(base);
         // LOG_DEBUG("Url cache miss " + GraphTile::FileSuffix(base));
@@ -534,11 +534,8 @@ bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) 
       return false;
     } else {
       graph_tile_ptr tile = GetGraphTile(n1);
-      if (!tile) {
-        return false;
-      }
-      const NodeInfo* ni = tile->node(n1);
-      if (ni->transition_count() == 0) {
+      const NodeInfo* ni = nullptr;
+      if (!tile || (ni = tile->node(n1))->transition_count() == 0) {
         return false;
       }
       const NodeTransition* trans = tile->transition(ni->transition_index());
@@ -553,9 +550,9 @@ bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) 
 
   // Get both directed edges
   graph_tile_ptr t1 = GetGraphTile(edge1);
-  graph_tile_ptr t2 = (edge2.Tile_Base() == edge1.Tile_Base()) ? t1 : GetGraphTile(edge2);
+  graph_tile_ptr t2 = t1;
 
-  if (!t1 || !t2) {
+  if (!t1 || !(t2 = GetGraphTile(edge2, t2))) {
     return false;
   }
   const DirectedEdge* de1 = t1->directededge(edge1);

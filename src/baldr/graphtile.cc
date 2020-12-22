@@ -136,32 +136,30 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
       tile_dir + filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
-    // Read binary file into memory. TODO - protect against failure to
-    // allocate memory
+    // Read binary file into memory. TODO - protect against failure to allocate memory
     size_t filesize = file.tellg();
 
     std::vector<char> data(filesize);
     file.seekg(0, std::ios::beg);
     file.read(data.data(), filesize);
     file.close();
-
     return new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(data)),
                          std::move(traffic_memory));
-
-  } else {
-    // try to load a gzipped tile
-    std::ifstream file(file_location + ".gz", std::ios::in | std::ios::binary | std::ios::ate);
-    if (file.is_open()) {
-      // read the compressed file into memory
-      size_t filesize = file.tellg();
-      file.seekg(0, std::ios::beg);
-      std::vector<char> compressed(filesize);
-      file.read(&compressed[0], filesize);
-      file.close();
-
-      return DecompressTile(graphid, std::move(compressed));
-    }
   }
+
+  // Try to load a gzipped tile
+  std::ifstream gz_file(file_location + ".gz", std::ios::in | std::ios::binary | std::ios::ate);
+  if (gz_file.is_open()) {
+    // Read the compressed file into memory
+    size_t filesize = gz_file.tellg();
+    gz_file.seekg(0, std::ios::beg);
+    std::vector<char> compressed(filesize);
+    gz_file.read(&compressed[0], filesize);
+    gz_file.close();
+    return DecompressTile(graphid, std::move(compressed));
+  }
+
+  // Nothing to load anywhere
   return nullptr;
 }
 
@@ -189,7 +187,9 @@ GraphTile::GraphTile(const GraphId& graphid,
 GraphTile::GraphTile(const std::string& tile_dir,
                      const GraphId& graphid,
                      std::unique_ptr<const GraphMemory>&& traffic_memory) {
-  if (const auto& tile = Create(tile_dir, graphid, std::move(traffic_memory))) {
+  // const_cast is only ok here because Create actually makes a new non-const GraphTile
+  // which is then coerced to const via the template parameter of the managed pointer
+  if (auto tile = Create(tile_dir, graphid, std::move(traffic_memory))) {
     *this = std::move(const_cast<GraphTile&>(*tile));
   }
 }

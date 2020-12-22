@@ -407,7 +407,9 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   auto tile = graphreader.GetGraphTile(node);
-  assert(tile);
+  if (tile == nullptr) {
+    return;
+  }
 
   // Get the nodeinfo
   const NodeInfo* nodeinfo = tile->node(node);

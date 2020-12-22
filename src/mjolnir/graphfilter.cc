@@ -231,12 +231,9 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
   // Iterate through all tiles in the local level
   auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
   for (const auto& tile_id : local_tiles) {
-    // Get the graph tile. Skip if no tile exists or no nodes exist in the tile
-    // (should not happen!?)
+    // Get the graph tile. Skip if no tile exists (should not happen!?)
     graph_tile_ptr tile = reader.GetGraphTile(tile_id);
-    if (!tile || tile->header()->nodecount() == 0) {
-      continue;
-    }
+    assert(tile);
 
     // Create a new tilebuilder - should copy header information
     GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);

@@ -84,7 +84,7 @@ bool DynamicCost::AllowMultiPass() const {
 // with a time that tells the function that we aren't using time. This avoids having to worry about
 // default parameters and inheritance (which are a bad mix)
 Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
-  return EdgeCost(edge, std::move(tile), kConstrainedFlowSecondOfDay);
+  return EdgeCost(edge, tile, kConstrainedFlowSecondOfDay);
 }
 
 // Returns the cost to make the transition from the predecessor edge.

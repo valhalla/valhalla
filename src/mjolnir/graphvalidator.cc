@@ -461,8 +461,8 @@ void validate(
 
     // Write the bins to it
     if (tile->header()->graphid().level() == TileHierarchy::levels().back().level) {
-      GraphTileBuilder::AddBins(graph_reader.tile_dir(),
-                                GraphTile::Create(graph_reader.tile_dir(), tile_id), bins);
+      auto reloaded = GraphTile::Create(graph_reader.tile_dir(), tile_id);
+      GraphTileBuilder::AddBins(graph_reader.tile_dir(), reloaded, bins);
     }
 
     // Check if we need to clear the tile cache
@@ -519,17 +519,18 @@ void bin_tweeners(const std::string& tile_dir,
     ++start;
     lock.unlock();
 
-    // if there is nothing there we need to make something
+    // some tiles are just there because edges' shapes passes through them (no edges/nodes, just bins)
+    // if that's the case we need to make a tile to store the spatial index (binned edges) there
     auto tile = GraphTile::Create(tile_dir, tile_bin.first);
-
-    if (!tile || !tile->header()) {
+    if (!tile) {
       GraphTileBuilder empty(tile_dir, tile_bin.first, false);
       empty.header_builder().set_dataset_id(dataset_id);
       empty.StoreTileData();
       tile = GraphTile::Create(tile_dir, tile_bin.first);
     }
+
     // keep the extra binned edges
-    GraphTileBuilder::AddBins(tile_dir, std::move(tile), tile_bin.second);
+    GraphTileBuilder::AddBins(tile_dir, tile, tile_bin.second);
   }
 }
 } // namespace
@@ -553,16 +554,9 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(3));
 
   // Remember what the dataset id is in case we have to make some tiles
-
-  uint64_t dataset_id = 0;
-  if (const auto& tile = GraphTile::Create(tile_dir, *tilequeue.begin())) {
-    if (const auto* header = tile->header()) {
-      dataset_id = header->dataset_id();
-    }
-  }
-  if (dataset_id == 0) {
-    LOG_ERROR("Could not load tile from disk");
-  }
+  graph_tile_ptr first_tile;
+  assert(tilequeue.size() && (first_tile = GraphTile::Create(tile_dir, *tilequeue.begin())));
+  auto dataset_id = first_tile->header()->dataset_id();
 
   // An mutex we can use to do the synchronization
   std::mutex lock;

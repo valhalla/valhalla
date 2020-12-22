@@ -184,7 +184,7 @@ struct projector_wrapper {
   bool operator<(const projector_wrapper& other) const {
     // the
     if (cur_tile != other.cur_tile) {
-      return other.cur_tile < cur_tile;
+      return cur_tile.get() > other.cur_tile.get();
     }
     return bin_index < other.bin_index;
   }
@@ -280,7 +280,9 @@ struct bin_handler_t {
     crawl = [&](const GraphId& node_id, bool follow_transitions) {
       // now that we have a node we can pass back all the edges leaving and entering it
       auto tile = reader.GetGraphTile(node_id);
-      assert(tile);
+      if (!tile) {
+        return;
+      }
       const auto* node = tile->node(node_id);
       const auto* start_edge = tile->directededge(node->edge_index());
       const auto* end_edge = start_edge + node->edge_count();

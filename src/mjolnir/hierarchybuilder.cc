@@ -417,7 +417,7 @@ void CreateNodeAssociations(GraphReader& reader,
   for (const auto& base_tile_id : local_tiles) {
     // Get the graph tile. Skip if no tile exists or no nodes exist in the tile.
     graph_tile_ptr tile = reader.GetGraphTile(base_tile_id);
-    if (!tile || tile->header()->nodecount() == 0) {
+    if (!tile) {
       continue;
     }
 
@@ -495,7 +495,7 @@ void UpdateTransitConnections(GraphReader& reader, const std::string& old_to_new
   for (const auto& tile_id : transit_tiles) {
     // Skip if no nodes exist in the tile
     graph_tile_ptr tile = reader.GetGraphTile(tile_id);
-    if (!tile || tile->header()->nodecount() == 0) {
+    if (!tile) {
       continue;
     }
 
