@@ -497,9 +497,7 @@ uint32_t AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valha
     // Keep the cost to traverse the partial distance for the remainder of the edge. This cost
     // is subtracted from the total cost up to the end of the destination edge.
     auto tile = graphreader.GetGraphTile(edgeid);
-    if (!tile) {
-      continue;
-    }
+    assert(tile);
     const DirectedEdge* directededge = tile->directededge(edgeid);
     auto* endonode = tile->node(directededge->endnode());
     GraphId startnode =

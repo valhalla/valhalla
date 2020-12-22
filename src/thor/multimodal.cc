@@ -238,9 +238,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   auto tile = graphreader.GetGraphTile(node);
-  if (!tile) {
-    return false;
-  }
+  assert(tile);
   const NodeInfo* nodeinfo = tile->node(node);
 
   if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform ||
@@ -703,9 +701,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   auto tile = graphreader.GetGraphTile(node);
-  if (!tile) {
-    return false;
-  }
+  assert(tile);
   const NodeInfo* nodeinfo = tile->node(node);
   if (!costing->Allowed(nodeinfo)) {
     return false;

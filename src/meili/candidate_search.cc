@@ -134,9 +134,7 @@ void IndexBin(const graph_tile_ptr& tile,
               const int32_t bin_index,
               baldr::GraphReader& reader,
               CandidateGridQuery::grid_t& grid) {
-  if (!tile) {
-    return;
-  }
+  assert(tile);
 
   // Get the edges within the specified bin.
   auto edge_ids = tile->GetBin(bin_index);
@@ -189,9 +187,7 @@ CandidateGridQuery::GetGrid(const int32_t bin_id,
   int32_t tile_id = tiles.TileId(rc.second / ndiv, rc.first / ndiv);
   baldr::GraphId tileid(tile_id, bin_level_, 0);
   auto tile = reader_.GetGraphTile(tileid);
-  if (!tile) {
-    return nullptr;
-  }
+  assert(tile);
 
   // Compute bin index within the tile (row-ordered)
   int32_t bin_row = rc.first % ndiv;

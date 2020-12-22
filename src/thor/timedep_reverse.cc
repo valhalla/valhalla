@@ -550,9 +550,7 @@ uint32_t TimeDepReverse::SetDestination(GraphReader& graphreader, const valhalla
     // up to the end of the destination edge.
     GraphId id(edge.graph_id());
     auto tile = graphreader.GetGraphTile(id);
-    if (!tile) {
-      continue;
-    }
+    assert(tile);
     const DirectedEdge* directededge = tile->directededge(id);
 
     // The opposing edge Id is added as a destination since the search

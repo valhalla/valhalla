@@ -562,11 +562,9 @@ uint32_t TimeDepForward::SetDestination(GraphReader& graphreader, const valhalla
     // Edge score (penalty) is handled within GetPath. Do not add score here.
 
     // Get the tile relative density
-    auto tile = graphreader.GetGraphTile(edgeid);
-    if (!tile) {
-      continue;
+    if (auto tile = graphreader.GetGraphTile(edgeid)) {
+      density = tile->header()->density();
     }
-    density = tile->header()->density();
   }
   return density;
 }

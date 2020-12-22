@@ -280,9 +280,7 @@ struct bin_handler_t {
     crawl = [&](const GraphId& node_id, bool follow_transitions) {
       // now that we have a node we can pass back all the edges leaving and entering it
       auto tile = reader.GetGraphTile(node_id);
-      if (!tile) {
-        return;
-      }
+      assert(!tile);
       const auto* node = tile->node(node_id);
       const auto* start_edge = tile->directededge(node->edge_index());
       const auto* end_edge = start_edge + node->edge_count();

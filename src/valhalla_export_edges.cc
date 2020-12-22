@@ -246,9 +246,7 @@ int main(int argc, char* argv[]) {
     // for each edge in the tile
     reader.Clear();
     auto tile = reader.GetGraphTile(tile_count_pair.first);
-    if (!tile) {
-      continue;
-    }
+    assert(tile);
     for (uint32_t i = 0; i < tile->header()->directededgecount(); ++i) {
       // we've seen this one already
       if (edge_set.get(tile_count_pair.second + i)) {

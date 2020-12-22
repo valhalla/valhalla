@@ -538,8 +538,9 @@ bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) 
         return false;
       }
       const NodeInfo* ni = tile->node(n1);
-      if (ni->transition_count() == 0)
+      if (ni->transition_count() == 0) {
         return false;
+      }
       const NodeTransition* trans = tile->transition(ni->transition_index());
       for (uint32_t i = 0; i < ni->transition_count(); ++i, ++trans) {
         if (trans->endnode() == n2) {

@@ -69,9 +69,7 @@ void FilterTiles(GraphReader& reader,
 
     // Get the graph tile. Read from this tile to create the new tile.
     graph_tile_ptr tile = reader.GetGraphTile(tile_id);
-    if (!tile) {
-      continue;
-    }
+    assert(tile);
 
     std::hash<std::string> hasher;
     GraphId nodeid(tile_id.tileid(), tile_id.level(), 0);
