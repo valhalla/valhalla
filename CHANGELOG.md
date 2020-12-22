@@ -221,6 +221,7 @@
    * ADDED: Log message if failed to create tiles directory. [#2738](https://github.com/valhalla/valhalla/pull/2738)
    * CHANGED: Tile memory is only owned by the GraphTile rather than shared amongst copies of the graph tile (in GraphReader and TileCaches). [#2340](https://github.com/valhalla/valhalla/pull/2340)
    * ADDED: Add Estonian locale. [#2748](https://github.com/valhalla/valhalla/pull/2748)
+   * CHANGED: Handle GraphTile objects as smart pointers [#2703](https://github.com/valhalla/valhalla/pull/2703)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**
