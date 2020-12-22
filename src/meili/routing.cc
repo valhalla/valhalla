@@ -593,8 +593,7 @@ find_shortest_path(baldr::GraphReader& reader,
         // limit is 0
         if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
           // Get the end node tile and node lat,lon to compute heuristic
-          graph_tile_ptr endtile =
-              reader.GetGraphTile(directed_edge->endnode());
+          graph_tile_ptr endtile = reader.GetGraphTile(directed_edge->endnode());
           if (endtile == nullptr) {
             continue;
           }

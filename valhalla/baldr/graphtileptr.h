@@ -7,8 +7,8 @@
 
 namespace valhalla {
 namespace baldr {
-  class GraphTile;
-  using graph_tile_ptr = boost::intrusive_ptr<const GraphTile>;
-}
-}
+class GraphTile;
+using graph_tile_ptr = boost::intrusive_ptr<const GraphTile>;
+} // namespace baldr
+} // namespace valhalla
 using graph_tile_ptr = boost::intrusive_ptr<const valhalla::baldr::GraphTile>;

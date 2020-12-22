@@ -283,12 +283,11 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
   }
 
   // lambda to expand search forward from the end node
-  std::function<void(graph_tile_ptr, const GraphId&, const NodeInfo*,
-                     BDEdgeLabel&, const uint32_t, const bool)>
+  std::function<void(graph_tile_ptr, const GraphId&, const NodeInfo*, BDEdgeLabel&, const uint32_t,
+                     const bool)>
       expand;
-  expand = [&](graph_tile_ptr tile, const GraphId& node,
-               const NodeInfo* nodeinfo, BDEdgeLabel& pred, const uint32_t pred_idx,
-               const bool from_transition) {
+  expand = [&](graph_tile_ptr tile, const GraphId& node, const NodeInfo* nodeinfo, BDEdgeLabel& pred,
+               const uint32_t pred_idx, const bool from_transition) {
     uint32_t shortcuts = 0;
     GraphId edgeid = {node.tileid(), node.level(), nodeinfo->edge_index()};
     EdgeStatusInfo* es = edgestate.GetPtr(edgeid, tile);
@@ -547,13 +546,12 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
   }
 
   // Expand from node in reverse direction.
-  std::function<void(graph_tile_ptr, const GraphId&, const NodeInfo*,
-                     const uint32_t, BDEdgeLabel&, const uint32_t, const DirectedEdge*, const bool)>
+  std::function<void(graph_tile_ptr, const GraphId&, const NodeInfo*, const uint32_t, BDEdgeLabel&,
+                     const uint32_t, const DirectedEdge*, const bool)>
       expand;
-  expand = [&](graph_tile_ptr tile, const GraphId& node,
-               const NodeInfo* nodeinfo, const uint32_t index, BDEdgeLabel& pred,
-               const uint32_t pred_idx, const DirectedEdge* opp_pred_edge,
-               const bool from_transition) {
+  expand = [&](graph_tile_ptr tile, const GraphId& node, const NodeInfo* nodeinfo,
+               const uint32_t index, BDEdgeLabel& pred, const uint32_t pred_idx,
+               const DirectedEdge* opp_pred_edge, const bool from_transition) {
     uint32_t shortcuts = 0;
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     EdgeStatusInfo* es = edgestate.GetPtr(edgeid, tile);

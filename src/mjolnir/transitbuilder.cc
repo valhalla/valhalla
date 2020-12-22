@@ -597,8 +597,7 @@ void build(const boost::property_tree::ptree& pt,
     GraphTileBuilder tilebuilder_local(reader_local_level.tile_dir(), tile_id, true);
 
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level() + 1, tile_id.id());
-    graph_tile_ptr transit_tile =
-        reader_transit_level.GetGraphTile(transit_tile_id);
+    graph_tile_ptr transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
     GraphTileBuilder tilebuilder_transit(reader_transit_level.tile_dir(), transit_tile_id, true);
 
     lock.unlock();

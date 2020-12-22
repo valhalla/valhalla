@@ -85,8 +85,8 @@ private:
   const std::vector<char> memory_;
 };
 
-graph_tile_ptr
-GraphTile::DecompressTile(const GraphId& graphid, const std::vector<char>& compressed) {
+graph_tile_ptr GraphTile::DecompressTile(const GraphId& graphid,
+                                         const std::vector<char>& compressed) {
   // for setting where to read compressed data from
   auto src_func = [&compressed](z_stream& s) -> void {
     s.next_in =
@@ -122,10 +122,9 @@ GraphTile::DecompressTile(const GraphId& graphid, const std::vector<char>& compr
 }
 
 // Constructor given a filename. Reads the graph data into memory.
-graph_tile_ptr
-GraphTile::Create(const std::string& tile_dir,
-                  const GraphId& graphid,
-                  std::unique_ptr<const GraphMemory>&& traffic_memory) {
+graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
+                                 const GraphId& graphid,
+                                 std::unique_ptr<const GraphMemory>&& traffic_memory) {
 
   // Don't bother with invalid ids
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level() || tile_dir.empty()) {
@@ -166,15 +165,13 @@ GraphTile::Create(const std::string& tile_dir,
   return nullptr;
 }
 
-graph_tile_ptr GraphTile::Create(const GraphId& graphid,
-                                                        std::vector<char>&& memory) {
+graph_tile_ptr GraphTile::Create(const GraphId& graphid, std::vector<char>&& memory) {
   return new GraphTile(graphid, std::make_unique<const VectorGraphMemory>(std::move(memory)));
 }
 
-graph_tile_ptr
-GraphTile::Create(const GraphId& graphid,
-                  std::unique_ptr<const GraphMemory>&& memory,
-                  std::unique_ptr<const GraphMemory>&& traffic_memory) {
+graph_tile_ptr GraphTile::Create(const GraphId& graphid,
+                                 std::unique_ptr<const GraphMemory>&& memory,
+                                 std::unique_ptr<const GraphMemory>&& traffic_memory) {
   return new GraphTile(graphid, std::move(memory), std::move(traffic_memory));
 }
 
@@ -228,9 +225,9 @@ void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::st
 }
 
 graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
-                                                              const GraphId& graphid,
-                                                              tile_getter_t* tile_getter,
-                                                              const std::string& cache_location) {
+                                       const GraphId& graphid,
+                                       tile_getter_t* tile_getter,
+                                       const std::string& cache_location) {
   // Don't bother with invalid ids
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
     return nullptr;

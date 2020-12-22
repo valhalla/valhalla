@@ -75,10 +75,8 @@ public:
    * @param  index    Index of the edge label.
    * @param  tile     Graph tile of the directed edge.
    */
-  void Set(const baldr::GraphId& edgeid,
-           const EdgeSet set,
-           const uint32_t index,
-           graph_tile_ptr tile) {
+  void
+  Set(const baldr::GraphId& edgeid, const EdgeSet set, const uint32_t index, graph_tile_ptr tile) {
     auto p = edgestatus_.find(edgeid.tile_value());
     if (p != edgestatus_.end()) {
       p->second[edgeid.id()] = {set, index};
@@ -124,8 +122,7 @@ public:
    * @param   tile    Graph tile of the directed edge.
    * @return  Returns a pointer to edge status info for this edge.
    */
-  EdgeStatusInfo* GetPtr(const baldr::GraphId& edgeid,
-                         const graph_tile_ptr& tile) {
+  EdgeStatusInfo* GetPtr(const baldr::GraphId& edgeid, const graph_tile_ptr& tile) {
     const auto p = edgestatus_.find(edgeid.tile_value());
     if (p != edgestatus_.end()) {
       return &p->second[edgeid.id()];

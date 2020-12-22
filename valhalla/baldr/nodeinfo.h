@@ -2,9 +2,9 @@
 #define VALHALLA_BALDR_NODEINFO_H_
 
 #include <cstdint>
-#include <valhalla/baldr/graphtileptr.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtileptr.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>

@@ -146,9 +146,8 @@ struct TestGraphTile : public GraphTile {
   }
 };
 
-static void CheckGraphTile(const graph_tile_ptr& tile,
-                           const GraphId& expected_id,
-                           size_t expected_size) {
+static void
+CheckGraphTile(const graph_tile_ptr& tile, const GraphId& expected_id, size_t expected_size) {
   ASSERT_NE(tile, nullptr);
   EXPECT_EQ(tile->header()->graphid().value, expected_id.value);
   EXPECT_EQ(tile->header()->end_offset(), expected_size);

@@ -275,8 +275,7 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  float Filter(const baldr::DirectedEdge* edge,
-               const graph_tile_ptr& tile) const override {
+  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
@@ -725,8 +724,7 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by bus.
    */
-  float Filter(const baldr::DirectedEdge* edge,
-               const graph_tile_ptr& tile) const override {
+  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
@@ -899,8 +897,7 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by hov.
    */
-  float Filter(const baldr::DirectedEdge* edge,
-               const graph_tile_ptr& tile) const override {
+  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
@@ -1074,8 +1071,7 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by taxi.
    */
-  float Filter(const baldr::DirectedEdge* edge,
-               const graph_tile_ptr& tile) const override {
+  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
