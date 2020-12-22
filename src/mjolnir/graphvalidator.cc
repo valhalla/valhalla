@@ -554,8 +554,8 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(3));
 
   // Remember what the dataset id is in case we have to make some tiles
-  graph_tile_ptr first_tile;
-  assert(tilequeue.size() && (first_tile = GraphTile::Create(tile_dir, *tilequeue.begin())));
+  graph_tile_ptr first_tile = GraphTile::Create(tile_dir, *tilequeue.begin());
+  assert(tilequeue.size() && first_tile);
   auto dataset_id = first_tile->header()->dataset_id();
 
   // An mutex we can use to do the synchronization
