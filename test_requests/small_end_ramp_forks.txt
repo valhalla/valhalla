@@ -30,3 +30,5 @@
 -j '{"locations":[{"lat":40.901085,"lon":-81.429932,"street":"I 77 South"},{"lat":40.898415,"lon":-81.432510,"street":"Shuffel Street Northwest"}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":40.901085,"lon":-81.429932,"street":"I 77 South"},{"lat":40.899371,"lon":-81.435186,"street":"Shuffel Street Northwest"}],"costing":"auto","units":"miles"}'
 -j '{"locations":[{"lat":40.901207,"lon":-81.429909,"street":"I 77 South"},{"lat":40.899826,"lon":-81.433838,"street":"Hossler Street Northwest"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.257910,"lon":-76.813938,"street":"US 322 West"},{"lat":40.257738,"lon":-76.813361,"street":"Derry Street"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.257910,"lon":-76.813938,"street":"US 322 West"},{"lat":40.257967,"lon":-76.810259,"street":"Derry Street"}],"costing":"auto","units":"miles"}'
