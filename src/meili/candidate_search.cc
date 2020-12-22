@@ -187,7 +187,9 @@ CandidateGridQuery::GetGrid(const int32_t bin_id,
   int32_t tile_id = tiles.TileId(rc.second / ndiv, rc.first / ndiv);
   baldr::GraphId tileid(tile_id, bin_level_, 0);
   auto tile = reader_.GetGraphTile(tileid);
-  assert(tile);
+  if (!tile) {
+    return nullptr;
+  }
 
   // Compute bin index within the tile (row-ordered)
   int32_t bin_row = rc.first % ndiv;
