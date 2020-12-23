@@ -144,7 +144,7 @@ These additional options are available for bicycle costing methods.
 |`bss_return_cost`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to give the time will be used to return a rental bike. This value will be displayed in the final directions and used to calculate the whole duation. The default value is 120 seconds.|
 |`bss_return_penalty`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to describe the potential effort to return a rental bike. This value won't be displayed and used only inside of the algorithm.|
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
-  
+
 ##### Motor_scooter costing options
 Standard costing for travel by motor scooter or moped.  By default, motor_scooter costing will avoid higher class roads unless the country overrides allows motor scooters on these roads.  Motor scooter routes follow regular roads when needed, but avoid roads without motor_scooter, moped, or mofa access. The costing model recognizes factors unique to motor_scooter travel and offers options for tuning motor_scooter routes. Factors unique to travel by motor_scooter influence the resulting route.
 
@@ -253,6 +253,7 @@ A multimodal request with a filter for certain Onestop IDs:
 | `en-US` | `en` | English (United States) |
 | `en-US-x-pirate` | `pirate` | English (United States) Pirate |
 | `es-ES` | `es` | Spanish (Spain) |
+| `et-EE` | `et` | Estonian (Estonia) |
 | `fr-FR` | `fr` | French (France) |
 | `hi-IN` | `hi` | Hindi (India) |
 | `it-IT` | `it` | Italian (Italy) |
