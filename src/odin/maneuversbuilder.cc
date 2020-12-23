@@ -10,6 +10,7 @@
 
 #include <boost/format.hpp>
 
+#include "baldr/graphconstants.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_factory.h"
 #include "baldr/streetnames_us.h"
@@ -367,6 +368,38 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         curr_man = next_man;
         ++next_man;
       }
+      // Combine current left unspecified internal maneuver with next left maneuver
+      else if (PossibleUnspecifiedInternalManeuver(prev_man, curr_man, next_man) &&
+               (ManeuversBuilder::DetermineRelativeDirection(curr_man->turn_degree()) ==
+                Maneuver::RelativeDirection::kLeft) &&
+               (ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()) ==
+                Maneuver::RelativeDirection::kLeft) &&
+               (ManeuversBuilder::DetermineRelativeDirection(
+                    GetTurnDegree(prev_man->end_heading(), next_man->begin_heading())) ==
+                Maneuver::RelativeDirection::KReverse)) {
+        LOG_TRACE(
+            "+++ Combine: double L turns with short unspecified internal intersection as ManeuverType=UTURN_LEFT +++");
+        curr_man = CombineUnspecifiedInternalManeuver(maneuvers, prev_man, curr_man, next_man,
+                                                      DirectionsLeg_Maneuver_Type_kUturnLeft);
+        maneuvers_have_been_combined = true;
+        ++next_man;
+      }
+      // Combine current right unspecified internal maneuver with next right maneuver
+      else if (PossibleUnspecifiedInternalManeuver(prev_man, curr_man, next_man) &&
+               (ManeuversBuilder::DetermineRelativeDirection(curr_man->turn_degree()) ==
+                Maneuver::RelativeDirection::kRight) &&
+               (ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()) ==
+                Maneuver::RelativeDirection::kRight) &&
+               (ManeuversBuilder::DetermineRelativeDirection(
+                    GetTurnDegree(prev_man->end_heading(), next_man->begin_heading())) ==
+                Maneuver::RelativeDirection::KReverse)) {
+        LOG_TRACE(
+            "+++ Combine: double R turns with short unspecified internal intersection as ManeuverType=UTURN_RIGHT +++");
+        curr_man = CombineUnspecifiedInternalManeuver(maneuvers, prev_man, curr_man, next_man,
+                                                      DirectionsLeg_Maneuver_Type_kUturnRight);
+        maneuvers_have_been_combined = true;
+        ++next_man;
+      }
       // Do not combine
       // if next maneuver is a fork or a tee
       else if (next_man->fork() || next_man->tee()) {
@@ -525,6 +558,64 @@ std::list<Maneuver>::iterator ManeuversBuilder::CollapseTransitConnectionDestina
   curr_man->set_end_shape_index(next_man->end_shape_index());
 
   return maneuvers.erase(next_man);
+}
+
+bool ManeuversBuilder::PossibleUnspecifiedInternalManeuver(std::list<Maneuver>::iterator prev_man,
+                                                           std::list<Maneuver>::iterator curr_man,
+                                                           std::list<Maneuver>::iterator next_man) {
+  if (!curr_man->internal_intersection() &&
+      curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive &&
+      !prev_man->roundabout() && !curr_man->roundabout() && !next_man->roundabout() &&
+      (curr_man->length(Options::kilometers) <= (kMaxInternalLength * kKmPerMeter)) &&
+      prev_man->HasSimilarNames(&(*next_man), true) && curr_man != next_man &&
+      !curr_man->IsStartType() && !next_man->IsDestinationType()) {
+    return true;
+  }
+  return false;
+}
+
+// Collapses unspecified internal edge maneuvers
+// TODO: Future refactor to pull out common code
+std::list<Maneuver>::iterator ManeuversBuilder::CombineUnspecifiedInternalManeuver(
+    std::list<Maneuver>& maneuvers,
+    std::list<Maneuver>::iterator prev_man,
+    std::list<Maneuver>::iterator curr_man,
+    std::list<Maneuver>::iterator next_man,
+    const DirectionsLeg_Maneuver_Type& maneuver_type) {
+
+  // Determine turn degree based on previous maneuver and next maneuver
+  next_man->set_turn_degree(GetTurnDegree(prev_man->end_heading(), next_man->begin_heading()));
+
+  // Set the cross street names
+  if (curr_man->HasStreetNames()) {
+    next_man->set_cross_street_names(curr_man->street_names().clone());
+  }
+
+  // Set relative direction
+  next_man->set_begin_relative_direction(
+      ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()));
+
+  // Add distance
+  next_man->set_length(next_man->length() + curr_man->length());
+
+  // Add time
+  next_man->set_time(next_man->time() + curr_man->time());
+
+  // Add basic time
+  next_man->set_basic_time(next_man->basic_time() + curr_man->basic_time());
+
+  // TODO - heading?
+
+  // Set begin node index
+  next_man->set_begin_node_index(curr_man->begin_node_index());
+
+  // Set begin shape index
+  next_man->set_begin_shape_index(curr_man->begin_shape_index());
+
+  // Set maneuver type to specified argument
+  next_man->set_type(maneuver_type);
+
+  return maneuvers.erase(curr_man);
 }
 
 std::list<Maneuver>::iterator

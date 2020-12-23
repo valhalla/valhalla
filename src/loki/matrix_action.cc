@@ -120,9 +120,10 @@ void loki_worker_t::matrix(Api& request) {
       const auto& l = sources_targets[i];
       const auto& projection = searched.at(l);
       PathLocation::toPBF(projection,
-                          i < options.sources_size()
+                          i < static_cast<size_t>(options.sources_size())
                               ? options.mutable_sources(i)
-                              : options.mutable_targets(i - options.sources_size()),
+                              : options.mutable_targets(i -
+                                                        static_cast<size_t>(options.sources_size())),
                           *reader);
       // TODO: get transit level for transit costing
       // TODO: if transit send a non zero radius
