@@ -1056,8 +1056,8 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     std::vector<GraphId> path_edges;
     path_edges.reserve(static_cast<size_t>(paths.empty() ? 0.f : paths.back().size() * 1.2f));
 
-    const GraphTile* tile = nullptr;
     // Work backwards on the forward path
+    graph_tile_ptr tile;
     for (auto edgelabel_index = idx1; edgelabel_index != kInvalidLabel;
          edgelabel_index = edgelabels_forward_[edgelabel_index].predecessor()) {
       const BDEdgeLabel& edgelabel = edgelabels_forward_[edgelabel_index];
