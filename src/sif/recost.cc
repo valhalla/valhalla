@@ -39,7 +39,7 @@ void recost_forward(baldr::GraphReader& reader,
   }
 
   // fetch the graph objects
-  const baldr::GraphTile* tile = nullptr;
+  graph_tile_ptr tile;
   const baldr::DirectedEdge* edge = reader.directededge(edge_id, tile);
 
   // first edge is bogus

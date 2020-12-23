@@ -102,16 +102,16 @@ struct ReproducibleBuild : ::testing::Test {
     ASSERT_EQ(first_tiles.size(), second_reader.GetTileSet().size())
         << "Got different tiles sets: tile count mismatch";
     for (const GraphId& tile_id : first_tiles) {
-      const GraphTile* first_tile = first_reader.GetGraphTile(tile_id);
+      graph_tile_ptr first_tile = first_reader.GetGraphTile(tile_id);
       ASSERT_TRUE(second_reader.DoesTileExist(tile_id))
           << "Tile " << GraphTile::FileSuffix(tile_id) << " isn't found in the second tile set";
-      const GraphTile* second_tile = second_reader.GetGraphTile(tile_id);
+      graph_tile_ptr second_tile = second_reader.GetGraphTile(tile_id);
 
       // human readable check
       assert_tile_equalish(*first_tile, *second_tile);
 
       // check that raw tiles are equal
-      const auto raw_tile_bytes = [](const GraphTile* tile) -> std::string {
+      const auto raw_tile_bytes = [](const graph_tile_ptr& tile) -> std::string {
         const GraphTileHeader* header = tile->header();
         return std::string(reinterpret_cast<const char*>(header), header->end_offset());
       };

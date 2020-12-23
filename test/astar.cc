@@ -220,12 +220,13 @@ void make_tile() {
     tile_builder.UpdatePredictedSpeeds(directededges);
   }
 
-  GraphTile tile(test_dir, tile_id);
-  ASSERT_EQ(tile.FileSuffix(tile_id), std::string("2/000/519/120.gph"))
+  auto tile = GraphTile::Create(test_dir, tile_id);
+  ASSERT_TRUE(tile);
+  ASSERT_EQ(tile->FileSuffix(tile_id), std::string("2/000/519/120.gph"))
       << "Tile ID didn't match the expected filename";
 
   ASSERT_PRED1(filesystem::exists,
-               test_dir + filesystem::path::preferred_separator + tile.FileSuffix(tile_id))
+               test_dir + filesystem::path::preferred_separator + tile->FileSuffix(tile_id))
       << "Expected tile file didn't show up on disk - are the fixtures in the right location?";
 }
 
@@ -262,14 +263,14 @@ std::unique_ptr<vb::GraphReader> get_graph_reader(const std::string& tile_dir) {
   rapidjson::read_json(json, conf);
 
   std::unique_ptr<vb::GraphReader> reader(new vb::GraphReader(conf));
-  auto* tile = reader->GetGraphTile(tile_id);
+  auto tile = reader->GetGraphTile(tile_id);
 
   EXPECT_NE(tile, nullptr) << "Unable to load test tile! Did `make_tile` run succesfully?";
   if (tile->header()->directededgecount() != 28) {
     throw std::logic_error("test-tiles does not contain expected number of edges");
   }
 
-  const GraphTile* endtile = reader->GetGraphTile(node_locations["b"]);
+  auto endtile = reader->GetGraphTile(node_locations["b"]);
   EXPECT_NE(endtile, nullptr) << "bad tile, node 'b' wasn't found in it";
 
   return reader;
@@ -303,7 +304,7 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
     break;
   }
 
-  auto* tile = reader->GetGraphTile(tile_id);
+  auto tile = reader->GetGraphTile(tile_id);
   uint32_t expected_time = 979797;
   switch (assert_type) {
     case TrivialPathTest::DurationEqualTo:
@@ -1518,7 +1519,7 @@ TEST(ComplexRestriction, WalkVias) {
   auto costing = costs[int(mode)];
 
   bool is_forward = true;
-  auto* tile = reader->GetGraphTile(tile_id);
+  auto tile = reader->GetGraphTile(tile_id);
 
   std::vector<valhalla::baldr::Location> locations;
   locations.push_back({node_locations["7"]});

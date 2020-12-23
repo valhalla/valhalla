@@ -40,8 +40,8 @@ struct MultimodalBuilder {
              const GraphId& startnode,
              const DirectedEdge* directededge,
              const GraphId& edge,
-             const GraphTile* start_tile,
-             const GraphTile* graphtile,
+             graph_tile_ptr start_tile,
+             graph_tile_ptr graphtile,
              const mode_costing_t& mode_costing,
              const AttributesController& controller,
              GraphReader& graphreader) {
@@ -95,8 +95,8 @@ private:
   void AddTransitNodes(TripLeg_Node* trip_node,
                        const NodeInfo* node,
                        const GraphId& startnode,
-                       const GraphTile* start_tile,
-                       const GraphTile* graphtile,
+                       graph_tile_ptr start_tile,
+                       graph_tile_ptr graphtile,
                        const AttributesController& controller) {
 
     if (node->type() == NodeType::kTransitStation) {
@@ -163,8 +163,8 @@ private:
                       const GraphId& startnode,
                       const DirectedEdge* directededge,
                       const GraphId& edge,
-                      const GraphTile* start_tile,
-                      const GraphTile* graphtile,
+                      graph_tile_ptr start_tile,
+                      graph_tile_ptr graphtile,
                       const sif::mode_costing_t& mode_costing,
                       const AttributesController& controller,
                       GraphReader& graphreader) {
@@ -214,7 +214,7 @@ private:
         for (uint32_t index = 0; index < node->edge_count(); ++index, dir_edge++) {
           if (dir_edge->use() == Use::kPlatformConnection) {
             GraphId endnode = dir_edge->endnode();
-            const GraphTile* endtile = graphreader.GetGraphTile(endnode);
+            graph_tile_ptr endtile = graphreader.GetGraphTile(endnode);
             const NodeInfo* nodeinfo2 = endtile->node(endnode);
             const TransitStop* transit_station = endtile->GetTransitStop(nodeinfo2->stop_index());
 
@@ -436,7 +436,7 @@ void AddTripIntersectingEdge(const AttributesController& controller,
  * @param trip_node                pbf node in the pbf structure we are building
  */
 void AddIntersectingEdges(const AttributesController& controller,
-                          const GraphTile* start_tile,
+                          const graph_tile_ptr& start_tile,
                           const GraphId& node_id,
                           const NodeInfo* node,
                           const DirectedEdge* directededge,
@@ -489,7 +489,7 @@ void AddIntersectingEdges(const AttributesController& controller,
     for (uint32_t i = 0; i < node->transition_count(); ++i, ++trans) {
       // Get the end node tile and its directed edges
       GraphId endnode = trans->endnode();
-      const GraphTile* endtile = graphreader.GetGraphTile(endnode);
+      graph_tile_ptr endtile = graphreader.GetGraphTile(endnode);
       if (endtile == nullptr) {
         continue;
       }

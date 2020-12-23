@@ -38,7 +38,7 @@ public:
 
   bool Allowed(const DirectedEdge* edge,
                const EdgeLabel& pred,
-               const GraphTile* /*tile*/,
+               const graph_tile_ptr& /*tile*/,
                const GraphId& edgeid,
                const uint64_t /*current_time*/,
                const uint32_t /*tz_index*/,
@@ -55,7 +55,7 @@ public:
   bool AllowedReverse(const DirectedEdge* edge,
                       const EdgeLabel& pred,
                       const DirectedEdge* opp_edge,
-                      const GraphTile* /*tile*/,
+                      const graph_tile_ptr& /*tile*/,
                       const GraphId& opp_edgeid,
                       const uint64_t /*current_time*/,
                       const uint32_t /*tz_index*/,
@@ -77,7 +77,7 @@ public:
   }
 
   Cost EdgeCost(const DirectedEdge* edge,
-                const GraphTile* /*tile*/,
+                const graph_tile_ptr& /*tile*/,
                 const uint32_t /*seconds*/) const override {
     float sec = static_cast<float>(edge->length());
     return {sec / 10.0f, sec};
@@ -100,7 +100,7 @@ public:
     return 0.1f;
   }
 
-  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile*) const override {
+  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr&) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
@@ -249,9 +249,9 @@ TEST(Matrix, test_matrix) {
       request.options().costing_options(static_cast<int>(request.options().costing())));
 
   CostMatrix cost_matrix;
-  std::vector<TimeDistance> results;
-  results = cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                       reader, mode_costing, TravelMode::kDrive, 400000.0);
+  std::vector<TimeDistance> results =
+      cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(), reader,
+                                 mode_costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
         << "result " + std::to_string(i) + "'s distance is not close enough" +

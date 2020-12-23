@@ -107,7 +107,7 @@ OldToNewNodes find_nodes(sequence<OldToNewNodes>& old_to_new, const GraphId& nod
  * @param  tile          Graph tile of the edge
  * @param  directededge  Directed edge to match.
  */
-bool OpposingEdgeInfoMatches(const GraphTile* tile, const DirectedEdge* edge) {
+bool OpposingEdgeInfoMatches(const graph_tile_ptr& tile, const DirectedEdge* edge) {
   // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
   // true if a matching edgeinfo offset if found.
   const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
@@ -194,7 +194,7 @@ void FormTilesInNewLevel(GraphReader& reader,
 
     // Get the node in the base level
     GraphId base_node = (*new_node).second;
-    const GraphTile* tile = reader.GetGraphTile(base_node);
+    graph_tile_ptr tile = reader.GetGraphTile(base_node);
     if (tile == nullptr) {
       LOG_ERROR("Base tile is null? ");
       continue;
@@ -416,8 +416,8 @@ void CreateNodeAssociations(GraphReader& reader,
   auto local_tiles = reader.GetTileSet();
   for (const auto& base_tile_id : local_tiles) {
     // Get the graph tile. Skip if no tile exists or no nodes exist in the tile.
-    const GraphTile* tile = reader.GetGraphTile(base_tile_id);
-    if (tile == nullptr || tile->header()->nodecount() == 0) {
+    graph_tile_ptr tile = reader.GetGraphTile(base_tile_id);
+    if (!tile) {
       continue;
     }
 
@@ -494,8 +494,8 @@ void UpdateTransitConnections(GraphReader& reader, const std::string& old_to_new
   auto transit_tiles = reader.GetTileSet(transit_level);
   for (const auto& tile_id : transit_tiles) {
     // Skip if no nodes exist in the tile
-    const GraphTile* tile = reader.GetGraphTile(tile_id);
-    if (tile == nullptr || tile->header()->nodecount() == 0) {
+    graph_tile_ptr tile = reader.GetGraphTile(tile_id);
+    if (!tile) {
       continue;
     }
 

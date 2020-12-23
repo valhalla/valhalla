@@ -109,7 +109,7 @@ void check_dates(bool time_dependent,
                   l.date_time().find('-', l.date_time().find('T')) == std::string::npos);
       // get the timezone
       baldr::GraphId edge_id(l.path_edges().begin()->graph_id());
-      const auto* tile = reader.GetGraphTile(edge_id);
+      auto tile = reader.GetGraphTile(edge_id);
       const auto* edge = tile->directededge(edge_id);
       tile = reader.GetGraphTile(edge->endnode(), tile);
       const auto* node = tile->node(edge->endnode());
