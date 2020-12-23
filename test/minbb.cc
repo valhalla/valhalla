@@ -29,7 +29,7 @@ struct bb_tester {
     // to get the bb of the whole data set
     bb = AABB2<PointLL>{PointLL{}, PointLL{}};
     for (const auto& id : reader.GetTileSet()) {
-      const auto* t = reader.GetGraphTile(id);
+      auto t = reader.GetGraphTile(id);
       for (const auto& node : t->GetNodes()) {
         const auto* edge = t->directededge(node.edge_index());
         const std::vector<PointLL> shape = t->edgeinfo(edge->edgeinfo_offset()).shape();

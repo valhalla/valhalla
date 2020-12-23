@@ -11,7 +11,7 @@ void check_opposing(const gurka::map& map, uint32_t expected_edge_count) {
   valhalla::baldr::GraphReader reader(map.config.get_child("mjolnir"));
   uint32_t actual_edge_count = 0;
   for (auto tile_id : reader.GetTileSet()) {
-    const auto* tile = reader.GetGraphTile(tile_id);
+    auto tile = reader.GetGraphTile(tile_id);
     for (auto edge = tile_id; edge.id() < tile->header()->directededgecount(); ++edge) {
       ++actual_edge_count;
       auto opposing = reader.GetOpposingEdgeId(edge);
