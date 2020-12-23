@@ -68,12 +68,7 @@ namespace thor {
  */
 void thor_worker_t::trace_route(Api& request) {
   // time this whole method and save that statistic
-  midgard::scoped_timer<> t([&request](const midgard::scoped_timer<>::duration_t& elapsed) {
-    auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
-    auto* stat = request.mutable_info()->mutable_statistics()->Add();
-    stat->set_name("thor_worker_t::trace_route");
-    stat->set_value(e);
-  });
+  auto _ = measure_scope_time(request, "thor_worker_t::trace_route");
 
   // Parse request
   parse_locations(request);

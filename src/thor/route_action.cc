@@ -131,12 +131,7 @@ namespace thor {
 
 std::string thor_worker_t::expansion(Api& request) {
   // time this whole method and save that statistic
-  midgard::scoped_timer<> t([&request](const midgard::scoped_timer<>::duration_t& elapsed) {
-    auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
-    auto* stat = request.mutable_info()->mutable_statistics()->Add();
-    stat->set_name("thor_worker_t::expansion");
-    stat->set_value(e);
-  });
+  measure_scope_time(request, "thor_worker_t::expansion");
 
   // default the expansion geojson so its easy to add to as we go
   rapidjson::Document dom;
@@ -216,12 +211,7 @@ std::string thor_worker_t::expansion(Api& request) {
 
 void thor_worker_t::route(Api& request) {
   // time this whole method and save that statistic
-  midgard::scoped_timer<> t([&request](const midgard::scoped_timer<>::duration_t& elapsed) {
-    auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
-    auto* stat = request.mutable_info()->mutable_statistics()->Add();
-    stat->set_name("thor_worker_t::route");
-    stat->set_value(e);
-  });
+  auto _ = measure_scope_time(request, "thor_worker_t::route");
 
   parse_locations(request);
   parse_filter_attributes(request);

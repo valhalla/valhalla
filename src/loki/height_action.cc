@@ -80,12 +80,7 @@ std::vector<PointLL> loki_worker_t::init_height(Api& request) {
 */
 std::string loki_worker_t::height(Api& request) {
   // time this whole method and save that statistic
-  midgard::scoped_timer<> t([&request](const midgard::scoped_timer<>::duration_t& elapsed) {
-    auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
-    auto* stat = request.mutable_info()->mutable_statistics()->Add();
-    stat->set_name("loki_worker_t::height");
-    stat->set_value(e);
-  });
+  auto _ = measure_scope_time(request, "loki_worker_t::height");
 
   auto shape = init_height(request);
   // get the elevation of each posting

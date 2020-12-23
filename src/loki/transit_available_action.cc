@@ -20,12 +20,7 @@ void loki_worker_t::init_transit_available(Api& request) {
 
 std::string loki_worker_t::transit_available(Api& request) {
   // time this whole method and save that statistic
-  midgard::scoped_timer<> t([&request](const midgard::scoped_timer<>::duration_t& elapsed) {
-    auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
-    auto* stat = request.mutable_info()->mutable_statistics()->Add();
-    stat->set_name("loki_worker_t::transit_available");
-    stat->set_value(e);
-  });
+  auto _ = measure_scope_time(request, "loki_worker_t::transit_available");
 
   init_transit_available(request);
   auto locations = PathLocation::fromPBF(request.options().locations());
