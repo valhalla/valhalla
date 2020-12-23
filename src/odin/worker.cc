@@ -27,7 +27,7 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace odin {
 
-odin_worker_t::odin_worker_t(const boost::property_tree::ptree& config) {
+odin_worker_t::odin_worker_t(const boost::property_tree::ptree&) {
 }
 
 odin_worker_t::~odin_worker_t() {
