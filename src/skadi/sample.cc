@@ -115,7 +115,7 @@ const int16_t* sample::source(uint16_t index) const {
   // if we dont have anything maybe its lazy loaded
   auto& mapped = mapped_cache[index];
   if (mapped.second.get() == nullptr) {
-    auto f = data_source + name_hgt(index);
+    auto f = data_source + get_hgt_file_name(index);
     auto size = file_size(f);
     if (size != HGT_BYTES) {
       return nullptr;
