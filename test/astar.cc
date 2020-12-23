@@ -1676,7 +1676,7 @@ TEST(BiDiAstar, test_recost_path) {
   auto const set_constrained_speed = [&graphreader, &test_dir](const std::vector<GraphId>& edge_ids) {
     for (const auto& edgeid : edge_ids) {
       GraphId tileid(edgeid.tileid(), edgeid.level(), 0);
-      const auto* tile = graphreader.GetGraphTile(tileid);
+      auto tile = graphreader.GetGraphTile(tileid);
       vj::GraphTileBuilder tile_builder(test_dir, tileid, false);
       std::vector<DirectedEdge> edges;
       for (uint32_t j = 0; j < tile->header()->directededgecount(); ++j) {
@@ -1728,7 +1728,7 @@ TEST(BiDiAstar, test_recost_path) {
   const auto get_edge_duration = [&graphreader, &mode_costing,
                                   travel_mode](const vb::GraphId& edgeid,
                                                const vb::DirectedEdge* edge) {
-    const auto* tile = graphreader.GetGraphTile(edgeid);
+    auto tile = graphreader.GetGraphTile(edgeid);
     const float speed_meters_per_sec =
         (1000.f / 3600.f) * tile->GetSpeed(edge, mode_costing[int(travel_mode)]->flow_mask());
     return edge->length() / speed_meters_per_sec;
