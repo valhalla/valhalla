@@ -14,7 +14,7 @@ using namespace valhalla::meili;
 bool ValidateRoute(baldr::GraphReader& graphreader,
                    std::vector<EdgeSegment>::const_iterator segment_begin,
                    std::vector<EdgeSegment>::const_iterator segment_end,
-                   const baldr::GraphTile*& tile) {
+                   graph_tile_ptr& tile) {
   if (segment_begin == segment_end) {
     return true;
   }
@@ -183,7 +183,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
   }
 
   std::vector<EdgeSegment> route;
-  const baldr::GraphTile* tile = nullptr;
+  graph_tile_ptr tile;
 
   // Merge segments into route
   // std::deque<int> match_indices;
