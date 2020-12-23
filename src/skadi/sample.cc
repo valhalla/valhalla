@@ -49,32 +49,6 @@ std::list<std::string> get_files(const std::string& root_dir) {
   return files;
 }
 
-std::string name_hgt(uint16_t index) {
-  auto x = (index % 360) - 180;
-  auto y = (index / 360) - 90;
-
-  std::string name(y < 0 ? "/S" : "/N");
-  y = std::abs(y);
-  if (y < 10) {
-    name.push_back('0');
-  }
-  name.append(std::to_string(y));
-  name.append(name);
-
-  name.append(x < 0 ? "W" : "E");
-  x = std::abs(x);
-  if (x < 100) {
-    name.push_back('0');
-  }
-  if (x < 10) {
-    name.push_back('0');
-  }
-  name.append(std::to_string(x));
-  name.append(".hgt");
-
-  return name;
-}
-
 template <typename fmt_t> uint16_t is_hgt(const std::string& name, fmt_t& fmt) {
   std::smatch m;
   std::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.gz)?$");
@@ -280,7 +254,29 @@ template <class coord_t> uint16_t sample::get_tile_index(const coord_t& coord) {
 }
 
 std::string sample::get_hgt_file_name(uint16_t index) {
-  return name_hgt(index);
+  auto x = (index % 360) - 180;
+  auto y = (index / 360) - 90;
+
+  std::string name(y < 0 ? "/S" : "/N");
+  y = std::abs(y);
+  if (y < 10) {
+    name.push_back('0');
+  }
+  name.append(std::to_string(y));
+  name.append(name);
+
+  name.append(x < 0 ? "W" : "E");
+  x = std::abs(x);
+  if (x < 100) {
+    name.push_back('0');
+  }
+  if (x < 10) {
+    name.push_back('0');
+  }
+  name.append(std::to_string(x));
+  name.append(".hgt");
+
+  return name;
 }
 
 // explicit instantiations for templated get
