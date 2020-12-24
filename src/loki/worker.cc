@@ -17,6 +17,7 @@
 #include "sif/pedestriancost.h"
 #include "tyr/actor.h"
 
+#include "loki/polygon_search.h"
 #include "loki/search.h"
 #include "loki/worker.h"
 
@@ -86,6 +87,13 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
       costing = factory.Create(options);
     }
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
+
+  if (options.avoid_polygons_size()) {
+    double area = GetArea(options.avoid_polygons()) / kSqmPerSqkm;
+    if (area > max_avoid_polygons_sqkm) {
+      throw valhalla_exception_t(167, std::to_string(max_avoid_polygons_sqkm));
+    }
+  }
 
   // See if we have avoids and take care of them
   if (options.avoid_locations_size() > max_avoid_locations) {
@@ -175,7 +183,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
-        kv.first == "max_alternates") {
+        kv.first == "max_alternates" || kv.first == "max_avoid_polygons_sqkm") {
       continue;
     }
     if (kv.first != "skadi" && kv.first != "trace") {
@@ -216,6 +224,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       config.get<size_t>("service_limits.pedestrian.max_transit_walking_distance");
 
   max_avoid_locations = config.get<size_t>("service_limits.max_avoid_locations");
+  max_avoid_polygons_sqkm = config.get<float>("service_limits.max_avoid_polygons_sqkm");
   max_reachability = config.get<unsigned int>("service_limits.max_reachability");
   default_reachability = config.get<unsigned int>("loki.service_defaults.minimum_reachability");
   max_radius = config.get<unsigned int>("service_limits.max_radius");

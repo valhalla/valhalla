@@ -40,10 +40,11 @@ const std::unordered_map<unsigned, std::string>
                 {130, "Failed to parse location"},
                 {131, "Failed to parse source"},
                 {132, "Failed to parse target"},
-                {133, "Failed to parse avoid"},
+                {133, "Failed to parse avoid_locations"},
                 {134, "Failed to parse shape"},
                 {135, "Failed to parse trace"},
                 {136, "durations size not compatible with trace size"},
+                {137, "Failed to parse avoid_polygons"},
 
                 {140, "Action does not support multimodal costing"},
                 {141, "Arrive by for multimodal not implemented yet"},
@@ -67,6 +68,8 @@ const std::unordered_map<unsigned, std::string>
                 {163, "Invalid date_type"},
                 {164, "Invalid shape format"},
                 {165, "Date and time required for destination for date_type of invariant"},
+
+                {167, "Exceeded maximum area for avoid_polygons"},
 
                 {170, "Locations are in unconnected regions. Go check/edit the map at osm.org"},
                 {171, "No suitable edges near location"},

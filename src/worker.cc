@@ -93,14 +93,14 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
 
     {120, 400}, {121, 400}, {122, 400}, {123, 400}, {124, 400}, {125, 400}, {126, 400}, {127, 400},
 
-    {130, 400}, {131, 400}, {132, 400}, {133, 400}, {136, 400},
+    {130, 400}, {131, 400}, {132, 400}, {133, 400}, {136, 400}, {137, 400},
 
     {140, 400}, {141, 501}, {142, 501},
 
     {150, 400}, {151, 400}, {152, 400}, {153, 400}, {154, 400}, {155, 400}, {156, 400}, {157, 400},
     {158, 400}, {159, 400},
 
-    {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400}, {165, 400},
+    {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400}, {165, 400}, {167, 400},
 
     {170, 400}, {171, 400}, {172, 400},
 
@@ -311,6 +311,48 @@ void add_date_to_locations(Options& options,
           loc.set_date_time(options.date_time());
       default:
         break;
+    }
+  }
+}
+
+// Parses polygons of the form [[[lon1, lat1], [lon2, lat2], ...], [[lon1, lat1], [lon2, lat2], ...]]
+void parse_polygons(const rapidjson::Document& doc,
+                    Options& options,
+                    const std::string& node,
+                    unsigned location_parse_error_code) {
+  google::protobuf::RepeatedPtrField<valhalla::Options::AvoidPolygon>* polygons = nullptr;
+  if (node == "avoid_polygons") {
+    polygons = options.mutable_avoid_polygons();
+  }
+  // auto req_polygons = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" +
+  // node).c_str());
+  const auto* req_polygons = rapidjson::GetValueByPointer(doc, "/avoid_polygons");
+  if (req_polygons) {
+    for (const auto& req_poly : req_polygons->GetArray()) {
+      auto* polygon = polygons->Add();
+      const auto& poly_coords = req_poly.GetArray();
+      // if (poly_coords[0] != poly_coords[poly_coords.Size() - 1]) {
+      //  throw std::runtime_error("Avoid polygon is a polyline.");
+      //}
+      for (const auto& coords : req_poly.GetArray()) {
+        // Protect against silly stuff
+        if (coords.Size() < 2) {
+          throw std::runtime_error("Polygon coordinates must consist of [Lon, Lat] arrays.");
+        }
+
+        double lon = coords[0].GetDouble();
+        lon = midgard::circular_range_clamp<double>(lon, -180, 180);
+
+        double lat = coords[1].GetDouble();
+        if (lat < -90.0 || lat > 90.0) {
+          throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
+        }
+
+        // add to PBF
+        auto* ll = polygon->add_coords()->mutable_ll();
+        ll->set_lng(lon);
+        ll->set_lat(lat);
+      }
     }
   }
 }
@@ -852,6 +894,9 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   // get the avoids in there
   parse_locations(doc, options, "avoid_locations", 133, track);
+
+  // get the avoid polygons in there
+  parse_polygons(doc, options, "avoid_polygons", 137);
 
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
   if (!options.has_date_time_type() && (options.shape_size() == 0 || options.shape(0).time() == -1)) {

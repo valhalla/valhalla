@@ -11,7 +11,8 @@ set(sources
   isochrone_action.cc
   trace_route_action.cc
   transit_available_action.cc
-  node_search.cc)
+  node_search.cc
+  polygon_search.cc)
 
 valhalla_module(NAME loki
   SOURCES ${sources}
