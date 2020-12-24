@@ -5,6 +5,7 @@
 #include "baldr/rapidjson_utils.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
@@ -129,6 +130,9 @@ namespace valhalla {
 namespace thor {
 
 std::string thor_worker_t::expansion(Api& request) {
+  // time this whole method and save that statistic
+  measure_scope_time(request, "thor_worker_t::expansion");
+
   // default the expansion geojson so its easy to add to as we go
   rapidjson::Document dom;
   dom.SetObject();
@@ -206,6 +210,9 @@ std::string thor_worker_t::expansion(Api& request) {
 }
 
 void thor_worker_t::route(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request, "thor_worker_t::route");
+
   parse_locations(request);
   parse_filter_attributes(request);
   auto costing = parse_costing(request);
@@ -363,7 +370,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         get_path_algorithm(costing, *origin, *destination, api.options());
     path_algorithm->Clear();
     algorithms.push_back(path_algorithm->name());
-    valhalla::midgard::logging::Log(path_algorithm->name(), " [ANALYTICS] algorithm::");
+    LOG_INFO(std::string("algorithm::") + path_algorithm->name());
 
     // TODO: delete this and send all cases to the function above
     // If we are continuing through a location we need to make sure we
@@ -467,7 +474,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         get_path_algorithm(costing, *origin, *destination, api.options());
     path_algorithm->Clear();
     algorithms.push_back(path_algorithm->name());
-    valhalla::midgard::logging::Log(path_algorithm->name(), " [ANALYTICS] algorithm::");
+    LOG_INFO(std::string("algorithm::") + path_algorithm->name());
 
     // TODO: delete this and send all cases to the function above
     // If we are continuing through a location we need to make sure we
