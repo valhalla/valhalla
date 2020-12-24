@@ -1,0 +1,12 @@
+syntax = "proto2";
+option optimize_for = LITE_RUNTIME;
+package valhalla;
+
+message Statistic {
+  optional string name = 1;  // the name of the statistic
+  optional double value = 2; // the value of the statistic
+}
+
+message Info{
+  repeated Statistic statistics = 1;
+}

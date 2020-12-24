@@ -663,5 +663,21 @@ template <class T> inline void hash_combine(std::size_t& seed, const T& v) {
   seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
+template <typename clock_t = std::chrono::steady_clock> struct scoped_timer {
+  using duration_t = typename clock_t::duration;
+  const std::function<void(const duration_t&)> callback;
+  const std::chrono::time_point<clock_t> start;
+
+  scoped_timer(const std::function<void(const duration_t&)>& finished_callback)
+      : callback(finished_callback), start(clock_t::now()) {
+  }
+  scoped_timer(std::function<void(const duration_t&)>&& finished_callback)
+      : callback(finished_callback), start(clock_t::now()) {
+  }
+  ~scoped_timer() {
+    callback(clock_t::now() - start);
+  }
+};
+
 } // namespace midgard
 } // namespace valhalla

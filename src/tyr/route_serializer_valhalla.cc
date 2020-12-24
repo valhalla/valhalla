@@ -483,8 +483,6 @@ json::ArrayPtr legs(const valhalla::Api& api) {
 
         if (transit_info.has_onestop_id()) {
           json_transit_info->emplace("onestop_id", transit_info.onestop_id());
-          valhalla::midgard::logging::Log("transit_route_stopid::" + transit_info.onestop_id(),
-                                          " [ANALYTICS] ");
         }
         if (transit_info.has_short_name()) {
           json_transit_info->emplace("short_name", transit_info.short_name());
@@ -532,8 +530,6 @@ json::ArrayPtr legs(const valhalla::Api& api) {
             // onestop_id - using the station onestop_id
             if (transit_stop.has_station_onestop_id()) {
               json_transit_stop->emplace("onestop_id", transit_stop.station_onestop_id());
-              valhalla::midgard::logging::Log("transit_stopid::" + transit_stop.station_onestop_id(),
-                                              " [ANALYTICS] ");
             }
 
             // name - using the station name
