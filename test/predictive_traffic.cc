@@ -35,7 +35,7 @@ TEST(PredictiveTraffic, DISABLED_test_predictive_traffic) {
     auto tile_level = *level;
     auto level_tiles = reader.GetTileSet(tile_level.level);
     for (const auto& tile_id : level_tiles) {
-      const GraphTile* tile = reader.GetGraphTile(tile_id);
+      graph_tile_ptr tile = reader.GetGraphTile(tile_id);
       uint32_t nodecount = tile->header()->nodecount();
       GraphId node = tile_id;
       for (uint32_t i = 0; i < nodecount; i++, ++node) {

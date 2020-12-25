@@ -78,6 +78,9 @@ void loki_worker_t::init_isochrones(Api& request) {
   parse_costing(request);
 }
 void loki_worker_t::isochrones(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request, "loki_worker_t::isochrones");
+
   init_isochrones(request);
   auto& options = *request.mutable_options();
   // check that location size does not exceed max
@@ -88,12 +91,6 @@ void loki_worker_t::isochrones(Api& request) {
   // check the distances between the locations
   auto max_location_distance = std::numeric_limits<float>::min();
   check_distance(options.locations(), max_distance.find("isochrone")->second, max_location_distance);
-  if (!options.do_not_track()) {
-    valhalla::midgard::logging::Log("max_location_distance::" +
-                                        std::to_string(max_location_distance * midgard::kKmPerMeter) +
-                                        "km",
-                                    " [ANALYTICS] ");
-  }
 
   try {
     // correlate the various locations to the underlying graph
