@@ -11,19 +11,23 @@ namespace {
 
 TEST(GriddedData, Basic) {
   // fill this as distance from center
-  GriddedData<float> g({-5, -5, 5, 5}, 1, std::numeric_limits<float>::max());
+  GriddedData<1> g({-5, -5, 5, 5}, 1, {std::numeric_limits<float>::max()});
   for (int i = 0; i < 10; ++i) {
     for (int j = 0; j < 10; ++j) {
       Tiles<PointLL> t({-5, -5, 5, 5}, 1);
       // NOTE: we aren't setting the center because the contour algorithm uses bottom left
       auto b = t.Base(t.TileId(i, j));
-      ASSERT_TRUE(g.Set(b, PointLL(0, 0).Distance(b)));
+      float d = PointLL(0, 0).Distance(b);
+      g.SetIfLessThan(t.TileId(i, j), {d});
     }
   }
 
   // make the contours
-  std::vector<float> iso_markers{100000, 200000, 300000, 400000, 500000, 600000};
-  auto contours = g.GenerateContours(iso_markers, [](const float& sec) { return sec; }, true);
+  std::vector<GriddedData<1>::contour_specification_t> iso_markers{
+      {0, 100000, "dist", ""}, {0, 200000, "dist", ""}, {0, 300000, "dist", ""},
+      {0, 400000, "dist", ""}, {0, 500000, "dist", ""}, {0, 600000, "dist", ""},
+  };
+  auto contours = g.GenerateContours(iso_markers, true);
 
   // need to be the same size and all of them have to have a single ring
   ASSERT_EQ(contours.size(), iso_markers.size()) << "There should be 7 iso lines";
@@ -33,15 +37,13 @@ TEST(GriddedData, Basic) {
   size_t rings = 0;
   for (auto collection = std::next(contours.rbegin()); collection != contours.rend(); ++collection) {
     // nothing here
-    auto& contour = collection->second.front();
+    auto& contour = collection->front();
     if (contour.empty())
       continue;
     ++rings;
     // if this is a ring the iso lines with lesser units should be contained within it
-    for (const auto& p : std::prev(collection)->second.front().front()) {
-      ASSERT_TRUE(p.WithinPolygon(contour.front()))
-          << "Ring " + std::to_string(collection->first) + " should contain ring " +
-                 std::to_string(std::prev(collection)->first);
+    for (const auto& p : std::prev(collection)->front().front()) {
+      ASSERT_TRUE(p.WithinPolygon(contour.front())) << "Ring should contain smaller ring";
     }
   }
 
