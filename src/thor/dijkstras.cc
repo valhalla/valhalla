@@ -167,11 +167,11 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
     if (es->set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = bdedgelabels_[es->index()];
+      BDEdgeLabel& lab = bdedgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_->decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, path_dist, transition_cost, restriction_idx);
+        lab.Update(pred_idx, newcost, newsortcost, transition_cost, path_dist, restriction_idx);
       }
       continue;
     }
@@ -871,7 +871,7 @@ void Dijkstras::SetDestinationLocations(
       // edge (edgeid) is set.
       uint32_t idx = bdedgelabels_.size();
       int restriction_idx = -1;
-      bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
+      bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
                                  Cost{}, path_dist, false, restriction_idx);
       adjacencylist_->add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id));
