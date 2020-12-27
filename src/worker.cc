@@ -532,23 +532,21 @@ void parse_contours(const rapidjson::Document& doc,
   if (json_contours) {
     for (const auto& json_contour : *json_contours) {
       // Grab contour time and distance
-      const float t =
-          rapidjson::get_optional<float>(json_contour, "/time").get_value_or(midgard::kNoIsoMetric);
-      const float d = rapidjson::get_optional<float>(json_contour, "/distance")
-                          .get_value_or(midgard::kNoIsoMetric);
-      if (t == midgard::kNoIsoMetric && d == midgard::kNoIsoMetric) {
+      auto t = rapidjson::get_optional<float>(json_contour, "/time");
+      auto d = rapidjson::get_optional<float>(json_contour, "/distance");
+
+      // You need at least something
+      if (!t && !d) {
         throw valhalla_exception_t{111};
-      } else if (t != midgard::kNoIsoMetric && d != midgard::kNoIsoMetric) {
-        throw valhalla_exception_t{167};
       }
 
-      // Add new contour object to list
+      // Set contour time/distance
       auto* contour = contours->Add();
-      // Set contour time or distance
-      if (t != midgard::kNoIsoMetric) {
-        contour->set_time(t);
-      } else if (d != midgard::kNoIsoMetric) {
-        contour->set_distance(d);
+      if (t) {
+        contour->set_time(*t);
+      }
+      if (d) {
+        contour->set_distance(*d);
       }
 
       // If specified, grab and set contour color

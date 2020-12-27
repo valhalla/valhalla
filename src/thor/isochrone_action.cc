@@ -16,60 +16,35 @@ std::string thor_worker_t::isochrones(Api& request) {
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
 
-  std::vector<float> contours_time, contours_distance;
-  std::unordered_map<const IsoMetrics, std::unordered_map<float, std::string>> colors;
-
+  // name of the metric (time/distance, value, color)
+  std::vector<GriddedData<2>::contour_specification_t> contours;
   for (const auto& contour : options.contours()) {
     if (contour.has_time()) {
-      contours_time.push_back(contour.time());
-      colors[IsoMetrics::kTime][contour.time()] = contour.color();
-    } else if (contour.has_distance()) {
-      contours_distance.push_back(contour.distance());
-      colors[IsoMetrics::kDistance][contour.distance()] = contour.color();
+      contours.emplace_back(0, contour.time(), contour.color(), "time");
+    }
+    if (contour.has_distance()) {
+      contours.emplace_back(1, contour.distance(), contour.color(), "distance");
     }
   }
-  // sort the contour vectors in descending order
-  std::sort(contours_time.begin(), contours_time.end(), std::greater<float>());
-  std::sort(contours_distance.begin(), contours_distance.end(), std::greater<float>());
 
-  // If generalize is not provided then an optimal factor is computed
-  // (based on the isotile grid size).
+  // If no generalization is requested an optimal factor is computed (based on the isotile grid size).
   if (!options.has_generalize()) {
     options.set_generalize(kOptimalGeneralization);
   }
 
   // get the raster
-  // Extend the times in the 2-D grid to be 10 minutes beyond the highest contour time.
-  // Cost (including penalties) is used when adding to the adjacency list but the elapsed
-  // time in seconds is used when terminating the search. The + 10 minutes adds a buffer for edges
-  // where there has been a higher cost that might still be marked in the isochrone
-  auto max_time = contours_time.empty() ? kNoIsoMetric : contours_time.front() + 10.0f;
-  auto max_dist = contours_distance.empty() ? kNoIsoMetric : contours_distance.front() + 10.0f;
   auto grid = (costing == "multimodal" || costing == "transit")
-                  ? isochrone_gen.ComputeMultiModal(*options.mutable_locations(), max_time, max_dist,
-                                                    *reader, mode_costing, mode)
-                  : isochrone_gen.Compute(*options.mutable_locations(), max_time, max_dist, *reader,
-                                          mode_costing, mode);
+                  ? isochrone_gen.ComputeMultiModal(request, *reader, mode_costing, mode)
+                  : isochrone_gen.Compute(request, *reader, mode_costing, mode);
 
-  // hold isochrones and isodistances in one map if available
-  std::map<const IsoMetrics, const tyr::contours_t> isolines;
-  if (!contours_time.empty()) {
-    // turn it into geojson
-    isolines.emplace(IsoMetrics::kTime,
-                     grid->GenerateContours(contours_time,
-                                            [](const time_distance_t& td) { return td.sec; },
-                                            options.polygons(), options.denoise(),
-                                            options.generalize()));
-  }
-  if (!contours_distance.empty()) {
-    isolines.emplace(IsoMetrics::kDistance,
-                     grid->GenerateContours(contours_distance,
-                                            [](const time_distance_t& td) { return td.dist; },
-                                            options.polygons(), options.denoise(),
-                                            options.generalize()));
-  }
+  // we have parallel vectors of contour properties and the actual geojson features
+  // this method sorts the contour specifications by metric (time or distance) and then by value
+  // with the largest values coming first. eg (60min, 30min, 10min, 40km, 10km)
+  auto isolines =
+      grid->GenerateContours(contours, options.polygons(), options.denoise(), options.generalize());
 
-  return tyr::serializeIsochrones(request, isolines, options.polygons(), colors,
+  // make the final json
+  return tyr::serializeIsochrones(request, contours, isolines, options.polygons(),
                                   options.show_locations());
 }
 

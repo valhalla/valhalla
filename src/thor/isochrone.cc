@@ -49,14 +49,32 @@ Isochrone::Isochrone() : Dijkstras(), shape_interval_(50.0f) {
 // Construct the isotile. Use a fixed grid size. Convert time in minutes to
 // a max distance in meters based on an estimate of max average speed for
 // the travel mode.
-void Isochrone::ConstructIsoTile(
-    const bool multimodal,
-    const float max_minutes,
-    const float max_km,
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-    const sif::TravelMode mode) {
-  max_seconds_ = max_minutes * kSecPerMinute;
-  max_meters_ = max_km * kMetersPerKm;
+void Isochrone::ConstructIsoTile(const bool multimodal,
+                                 const valhalla::Api& api,
+                                 const sif::TravelMode mode) {
+
+  // Extend the times in the 2-D grid to be 10 minutes beyond the highest contour time.
+  // Cost (including penalties) is used when adding to the adjacency list but the elapsed
+  // time in seconds is used when terminating the search. The + 10 minutes adds a buffer for edges
+  // where there has been a higher cost that might still be marked in the isochrone
+  auto max_time_itr =
+      std::max_element(api.options().contours().begin(), api.options().contours().end(),
+                       [](const auto& a, const auto& b) {
+                         return a.has_time() && (!b.has_time() || a.time() > b.time());
+                       });
+  bool has_time = max_time_itr->has_time();
+  auto max_minutes = has_time ? max_time_itr->time() + 10.0f : std::numeric_limits<float>::min();
+  auto max_dist_itr =
+      std::max_element(api.options().contours().begin(), api.options().contours().end(),
+                       [](const auto& a, const auto& b) {
+                         return a.has_distance() &&
+                                (!b.has_distance() || a.distance() > b.distance());
+                       });
+  bool has_distance = max_dist_itr->has_distance();
+  auto max_km = has_distance ? max_dist_itr->distance() + 10.0f : std::numeric_limits<float>::min();
+
+  max_seconds_ = has_time ? max_minutes * kSecPerMinute : max_minutes;
+  max_meters_ = has_distance ? max_km * kMetersPerKm : max_km;
   float max_distance;
   if (multimodal) {
     max_distance = max_seconds_ * 70.0f * kMPHtoMetersPerSec;
@@ -73,17 +91,17 @@ void Isochrone::ConstructIsoTile(
 
   // Form bounding box that's just big enough to surround all of the locations.
   // Convert to PointLL
-  PointLL center_ll(locations.Get(0).ll().lng(), locations.Get(0).ll().lat());
+  PointLL center_ll(api.options().locations(0).ll().lng(), api.options().locations(0).ll().lat());
   AABB2<PointLL> loc_bounds(center_ll.lng(), center_ll.lat(), center_ll.lng(), center_ll.lat());
 
-  for (const auto& location : locations) {
+  for (const auto& location : api.options().locations()) {
     PointLL ll(location.ll().lng(), location.ll().lat());
     loc_bounds.Expand(ll);
   }
   // Find the location closest to the center.
   PointLL bounds_center = loc_bounds.Center();
   float shortest_dist = center_ll.Distance(bounds_center);
-  for (const auto& location : locations) {
+  for (const auto& location : api.options().locations()) {
     PointLL ll(location.ll().lng(), location.ll().lat());
     float current_dist = ll.Distance(bounds_center);
     if (current_dist < shortest_dist) {
@@ -118,7 +136,7 @@ void Isochrone::ConstructIsoTile(
                         loc_bounds.maxy() + dlat);
 
   // Create isotile (gridded data)
-  isotile_.reset(new GriddedData<time_distance_t>(bounds, grid_size, {max_minutes, max_km}));
+  isotile_.reset(new GriddedData<2>(bounds, grid_size, {max_minutes, max_km}));
 
   // Find the center of the grid that the location lies within. Shift the
   // tilebounds so the location lies in the center of a tile.
@@ -136,55 +154,50 @@ void Isochrone::ConstructIsoTile(
   }
 
   // initialize the time at these locations
-  for (const auto& location : locations) {
+  for (const auto& location : api.options().locations()) {
     PointLL ll(location.ll().lng(), location.ll().lat());
-    isotile_->Set(ll, {0.0f, 0.0f});
+    isotile_->Set(ll, {has_time ? 0.0f : max_minutes, has_distance ? 0.0f : max_km});
   }
 }
 
 // Compute iso-tile that we can use to generate isochrones.
-std::shared_ptr<const GriddedData<time_distance_t>>
-Isochrone::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-                   const float max_minutes,
-                   const float max_km,
-                   GraphReader& graphreader,
-                   const sif::mode_costing_t& mode_costing,
-                   const TravelMode mode) {
+std::shared_ptr<const GriddedData<2>> Isochrone::Compute(Api& api,
+                                                         GraphReader& graphreader,
+                                                         const sif::mode_costing_t& mode_costing,
+                                                         const TravelMode mode) {
   // Initialize and create the isotile
-  ConstructIsoTile(false, max_minutes, max_km, origin_locations, mode);
+  ConstructIsoTile(false, api, mode);
   // Compute the expansion
-  Dijkstras::Compute(origin_locations, graphreader, mode_costing, mode);
+  Dijkstras::Compute(*api.mutable_options()->mutable_locations(), graphreader, mode_costing, mode);
   return isotile_;
 }
 
 // Compute iso-tile that we can use to generate isochrones.
-std::shared_ptr<const GriddedData<time_distance_t>>
-Isochrone::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
-                          const float max_minutes,
-                          const float max_km,
+std::shared_ptr<const GriddedData<2>>
+Isochrone::ComputeReverse(Api& api,
                           GraphReader& graphreader,
                           const sif::mode_costing_t& mode_costing,
                           const TravelMode mode) {
 
   // Initialize and create the isotile
-  ConstructIsoTile(false, max_minutes, max_km, dest_locations, mode);
+  ConstructIsoTile(false, api, mode);
   // Compute the expansion
-  Dijkstras::ComputeReverse(dest_locations, graphreader, mode_costing, mode);
+  Dijkstras::ComputeReverse(*api.mutable_options()->mutable_locations(), graphreader, mode_costing,
+                            mode);
   return isotile_;
 }
 
 // Compute isochrone for mulit-modal route.
-std::shared_ptr<const GriddedData<time_distance_t>>
-Isochrone::ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-                             const float max_minutes,
-                             const float max_km,
+std::shared_ptr<const GriddedData<2>>
+Isochrone::ComputeMultiModal(Api& api,
                              GraphReader& graphreader,
                              const sif::mode_costing_t& mode_costing,
                              const TravelMode mode) {
   // Initialize and create the isotile
-  ConstructIsoTile(true, max_minutes, max_km, origin_locations, mode);
+  ConstructIsoTile(true, api, mode);
   // Compute the expansion
-  Dijkstras::ComputeMultiModal(origin_locations, graphreader, mode_costing, mode);
+  Dijkstras::ComputeMultiModal(*api.mutable_options()->mutable_locations(), graphreader, mode_costing,
+                               mode);
   return isotile_;
 }
 
@@ -226,17 +239,17 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
     auto tile1 = isotile_->TileId(ll0);
     auto tile2 = isotile_->TileId(ll);
     if (tile1 == tile2) {
-      SetData(tile1, {secs1 * kMinPerSec, dist1 * kMetersPerKm});
+      isotile_->SetIfLessThan(tile1, {secs1 * kMinPerSec, dist1 * kMetersPerKm});
     } else if (isotile_->AreNeighbors(tile1, tile2)) {
       // If tile 2 is directly east, west, north, or south of tile 1 then the
       // segment will not intersect any other tiles other than tile1 and tile2.
-      SetData(tile1, {secs1 * kMinPerSec, dist1 * kMetersPerKm});
-      SetData(tile2, {secs1 * kMinPerSec, dist1 * kMetersPerKm});
+      isotile_->SetIfLessThan(tile1, {secs1 * kMinPerSec, dist1 * kMetersPerKm});
+      isotile_->SetIfLessThan(tile2, {secs1 * kMinPerSec, dist1 * kMetersPerKm});
     } else {
       // Find intersecting tiles (using a Bresenham method)
       auto tiles = isotile_->Intersect(std::list<PointLL>{ll0, ll});
       for (const auto& t : tiles) {
-        SetData(t.first, {secs1 * kMinPerSec, dist1 * kMetersPerKm});
+        isotile_->SetIfLessThan(t.first, {secs1 * kMinPerSec, dist1 * kMetersPerKm});
       }
     }
     return;
@@ -270,17 +283,17 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
     auto tile1 = isotile_->TileId(*itr1);
     auto tile2 = isotile_->TileId(*itr2);
     if (tile1 == tile2) {
-      SetData(tile1, {minutes, km});
+      isotile_->SetIfLessThan(tile1, {minutes, km});
     } else if (isotile_->AreNeighbors(tile1, tile2)) {
       // If tile 2 is directly east, west, north, or south of tile 1 then the
       // segment will not intersect any other tiles other than tile1 and tile2.
-      SetData(tile1, {minutes, km});
-      SetData(tile2, {minutes, km});
+      isotile_->SetIfLessThan(tile1, {minutes, km});
+      isotile_->SetIfLessThan(tile2, {minutes, km});
     } else {
       // Find intersecting tiles (using a Bresenham method)
       auto tiles = isotile_->Intersect(std::list<PointLL>{*itr1, *itr2});
       for (const auto& t : tiles) {
-        SetData(t.first, {minutes, km});
+        isotile_->SetIfLessThan(t.first, {minutes, km});
       }
     }
   }

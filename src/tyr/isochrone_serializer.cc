@@ -18,76 +18,73 @@ using rgba_t = std::tuple<float, float, float>;
 namespace valhalla {
 namespace tyr {
 
-std::string
-serializeIsochrones(const Api& request,
-                    const std::map<const midgard::IsoMetrics, const contours_t>& grid_contours,
-                    bool polygons,
-                    const std::unordered_map<const midgard::IsoMetrics,
-                                             std::unordered_map<float, std::string>>& colors,
-                    bool show_locations) {
+std::string serializeIsochrones(const Api& request,
+                                std::vector<midgard::GriddedData<2>::contour_specification_t>& specs,
+                                midgard::GriddedData<2>::contours_t& contours,
+                                bool polygons,
+                                bool show_locations) {
   // for each contour interval
   int i = 0;
   auto features = array({});
-  for (const auto& metric_contours : grid_contours) {
-    auto& current_metric = metric_contours.first;
-    auto& current_contours = metric_contours.second;
-    auto current_colors = colors.at(metric_contours.first);
-    auto metric_json = current_metric == midgard::IsoMetrics::kDistance ? "distance" : "time";
-    for (const auto& interval : current_contours) {
-      auto color_itr = current_colors.find(interval.first);
-      // color was supplied
-      std::stringstream hex;
-      if (color_itr != current_colors.end() && !color_itr->second.empty()) {
-        hex << "#" << color_itr->second;
-      } // or we computed it..
-      else {
-        auto h = i * (150.f / grid_contours.size());
-        auto c = .5f;
-        auto x = c * (1 - std::abs(std::fmod(h / 60.f, 2.f) - 1));
-        auto m = .25f;
-        rgba_t color = h < 60 ? rgba_t{m + c, m + x, m}
-                              : (h < 120 ? rgba_t{m + x, m + c, m} : rgba_t{m, m + c, m + x});
-        hex << "#" << std::hex << static_cast<int>(std::get<0>(color) * 255 + .5f) << std::hex
-            << static_cast<int>(std::get<1>(color) * 255 + .5f) << std::hex
-            << static_cast<int>(std::get<2>(color) * 255 + .5f);
-      }
-      ++i;
+  assert(specs.size() == contours.size());
+  for (size_t contour_index = 0; contour_index < specs.size(); ++contour_index) {
+    const auto& spec = specs[contour_index];
+    const auto& feature_collection = contours[contour_index];
 
-      // for each feature on that interval
-      for (const auto& feature : interval.second) {
-        // for each contour in that feature
-        auto geom = array({});
-        for (const auto& contour : feature) {
-          // make some geometry
-          auto coords = array({});
-          for (const auto& coord : contour) {
-            coords->push_back(array({fp_t{coord.first, 6}, fp_t{coord.second, 6}}));
-          }
-          // its either a ring
-          if (polygons) {
-            geom->emplace_back(coords);
-            // or a single line, if someone has more than one contour per feature they messed up
-          } else {
-            geom = coords;
-          }
+    // color was supplied
+    std::stringstream hex;
+    if (!std::get<3>(spec).empty()) {
+      hex << "#" << std::get<3>(spec);
+    } // or we computed it..
+    else {
+      auto h = i * (150.f / specs.size());
+      auto c = .5f;
+      auto x = c * (1 - std::abs(std::fmod(h / 60.f, 2.f) - 1));
+      auto m = .25f;
+      rgba_t color = h < 60 ? rgba_t{m + c, m + x, m}
+                            : (h < 120 ? rgba_t{m + x, m + c, m} : rgba_t{m, m + c, m + x});
+      hex << "#" << std::hex << static_cast<int>(std::get<0>(color) * 255 + .5f) << std::hex
+          << static_cast<int>(std::get<1>(color) * 255 + .5f) << std::hex
+          << static_cast<int>(std::get<2>(color) * 255 + .5f);
+    }
+    ++i;
+
+    // for each feature on that interval
+    for (const auto& feature : feature_collection) {
+      // for each contour in that feature
+      auto geom = array({});
+      for (const auto& contour : feature) {
+        // make some geometry
+        auto coords = array({});
+        for (const auto& coord : contour) {
+          coords->push_back(array({fp_t{coord.first, 6}, fp_t{coord.second, 6}}));
         }
-        // add a feature
-        features->emplace_back(map({
-            {"type", std::string("Feature")},
-            {"geometry", map({
-                             {"type", std::string(polygons ? "Polygon" : "LineString")},
-                             {"coordinates", geom},
-                         })},
-            {"properties", map({{"contour", static_cast<uint64_t>(interval.first)},
-                                {"color", hex.str()},            // lines
-                                {"fill", hex.str()},             // geojson.io polys
-                                {"fillColor", hex.str()},        // leaflet polys
-                                {"opacity", fp_t{.33f, 2}},      // lines
-                                {"fill-opacity", fp_t{.33f, 2}}, // geojson.io polys
-                                {"fillOpacity", fp_t{.33f, 2}},  // leaflet polys
-                                {"metric", std::string(metric_json)}})},
-        }));
+        // its either a ring
+        if (polygons) {
+          geom->emplace_back(coords);
+          // or a single line, if someone has more than one contour per feature they messed up
+        } else {
+          geom = coords;
+        }
       }
+      // add a feature
+      features->emplace_back(map({
+          {"type", std::string("Feature")},
+          {"geometry", map({
+                           {"type", std::string(polygons ? "Polygon" : "LineString")},
+                           {"coordinates", geom},
+                       })},
+          {"properties", map({
+                             {"metric", std::get<2>(spec)},
+                             {"contour", static_cast<uint64_t>(std::get<1>(spec))},
+                             {"color", hex.str()},            // lines
+                             {"fill", hex.str()},             // geojson.io polys
+                             {"fillColor", hex.str()},        // leaflet polys
+                             {"opacity", fp_t{.33f, 2}},      // lines
+                             {"fill-opacity", fp_t{.33f, 2}}, // geojson.io polys
+                             {"fillOpacity", fp_t{.33f, 2}},  // leaflet polys
+                         })},
+      }));
     }
   }
   // Add input and snapped locations to the geojson

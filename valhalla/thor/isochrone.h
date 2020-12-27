@@ -51,21 +51,16 @@ public:
    * @param  mode_costing List of costing objects
    * @param  mode         Travel mode
    */
-  std::shared_ptr<const midgard::GriddedData<midgard::time_distance_t>>
-  Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locs,
-          const float max_minutes,
-          const float max_km,
-          baldr::GraphReader& graphreader,
-          const sif::mode_costing_t& mode_costing,
-          const sif::TravelMode mode);
+  std::shared_ptr<const midgard::GriddedData<2>> Compute(Api& api,
+                                                         baldr::GraphReader& graphreader,
+                                                         const sif::mode_costing_t& mode_costing,
+                                                         const sif::TravelMode mode);
 
   // Compute iso-tile that we can use to generate isochrones. This is used for
   // the reverse direction - construct times for gridded data indicating how
   // long it takes to reach the destination location.
-  std::shared_ptr<const midgard::GriddedData<midgard::time_distance_t>>
-  ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Location>& dest_locations,
-                 const float max_minutes,
-                 const float max_km,
+  std::shared_ptr<const midgard::GriddedData<2>>
+  ComputeReverse(Api& api,
                  baldr::GraphReader& graphreader,
                  const sif::mode_costing_t& mode_costing,
                  const sif::TravelMode mode);
@@ -82,10 +77,8 @@ public:
    * @param  mode_costing List of costing objects
    * @param  mode         Travel mode
    */
-  std::shared_ptr<const midgard::GriddedData<midgard::time_distance_t>>
-  ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-                    const float max_minutes,
-                    const float max_km,
+  std::shared_ptr<const midgard::GriddedData<2>>
+  ComputeMultiModal(Api& api,
                     baldr::GraphReader& graphreader,
                     const sif::mode_costing_t& mode_costing,
                     const sif::TravelMode mode);
@@ -111,21 +104,17 @@ protected:
   float shape_interval_; // Interval along shape to mark time
   float max_seconds_;
   float max_meters_;
-  std::shared_ptr<midgard::GriddedData<midgard::time_distance_t>> isotile_;
+  std::shared_ptr<midgard::GriddedData<2>> isotile_;
 
   /**
    * Constructs the isotile - 2-D gridded data containing the time
    * to get to each lat,lng tile.
    * @param  multimodal  True if the route type is multimodal.
-   * @param  max_minutes Maximum time (minutes) for computing isochrones.
+   * @param  api         Request information
    * @param  locations   List of origin locations.
    * @param  mode        Travel mode
    */
-  void ConstructIsoTile(const bool multimodal,
-                        const float max_minutes,
-                        const float max_km,
-                        const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                        const sif::TravelMode mode);
+  void ConstructIsoTile(const bool multimodal, const valhalla::Api& api, const sif::TravelMode mode);
 
   /**
    * Updates the isotile using the edge information from the predecessor edge
@@ -140,24 +129,6 @@ protected:
                      const midgard::PointLL& ll,
                      const float secs0,
                      const float dist0);
-
-  /**
-   * Updates data grid values for time and distance if present.
-   * @param tile_id Tile Id to set value for.
-   * @param value   Value to set at the tile/grid location.
-   */
-  inline void SetData(const int tile_id, const midgard::time_distance_t& value) {
-    if (max_seconds_ > midgard::kNoIsoMetric) {
-      isotile_->SetIfLessThan(tile_id, value,
-                              [](const midgard::time_distance_t& td) { return td.sec; },
-                              [](midgard::time_distance_t& td, const float v) { td.sec = v; });
-    }
-    if (max_meters_ > midgard::kNoIsoMetric) {
-      isotile_->SetIfLessThan(tile_id, value,
-                              [](const midgard::time_distance_t& td) { return td.dist; },
-                              [](midgard::time_distance_t& td, const float v) { td.dist = v; });
-    }
-  }
 };
 
 } // namespace thor
