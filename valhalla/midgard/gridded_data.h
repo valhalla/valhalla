@@ -44,10 +44,8 @@ public:
    * @param   value     Value to initialize data with.
    */
   GriddedData(const AABB2<PointLL>& bounds, const float tilesize, const value_type& value)
-      : Tiles<PointLL>(bounds, tilesize), max_value_(value) {
-    // Resize the data vector and fill with the value
-    data_.resize(this->nrows_ * this->ncolumns_);
-    std::fill(data_.begin(), data_.end(), value);
+      : Tiles<PointLL>(bounds, tilesize), max_value_(value),
+        data_(this->nrows_ * this->ncolumns_, value) {
   }
 
   /**
@@ -79,7 +77,7 @@ public:
       auto& current_value = data_[tile_id];
       for (size_t i = 0; i < dimensions_t; ++i) {
         if (value[i] < current_value[i]) {
-          current_value[i] = value[1];
+          current_value[i] = value[i];
         }
       }
     }
@@ -137,7 +135,7 @@ public:
                      (s[p2] * tile_corners[p1].y() - s[p1] * tile_corners[p2].y()) / ds);
     };
 
-    // which value dimensions do we need contours for
+    // which metrics do we need contours for
     auto _ = std::make_pair(intervals.cbegin(), intervals.cend());
     std::vector<decltype(_)> metrics{std::move(_)};
     for (auto interval = intervals.cbegin(); interval != intervals.cend(); ++interval) {
@@ -152,7 +150,7 @@ public:
 
     // and something to find them quickly
     using contour_lookup_t = std::unordered_map<PointLL, typename feature_t::iterator>;
-    std::unordered_map<size_t, contour_lookup_t> lookup(intervals.size());
+    std::vector<contour_lookup_t> lookups(intervals.size());
     // TODO: preallocate the lookups for each interval
 
     int tile_inc[4] = {0, 1, this->ncolumns_ + 1, this->ncolumns_};
@@ -182,11 +180,16 @@ public:
 
           // For each requested contour value
           for (size_t i = 0; i < intervals.size(); ++i) {
+            // some setup to process this contour
+            auto& lookup = lookups[i];
+            auto& contour = contours[i];
+            contour.emplace_back();
+            auto contour_value = std::get<1>(intervals[i]);
+
             // we skip this contour if its interested in a different metric_index or its value
             // would not intersect this cell
-            auto contour_dimension = std::get<0>(intervals[i]);
-            auto contour_value = std::get<1>(intervals[i]);
-            if (contour_dimension != metric_index || contour_value < dmin || contour_value > dmax) {
+            if (std::get<0>(intervals[i]) != metric_index || contour_value < dmin ||
+                contour_value > dmax) {
               continue;
             }
 
@@ -294,22 +297,22 @@ public:
               }
 
               // see if we have anything to connect this segment to
-              typename contour_lookup_t::iterator rec_a = lookup[i].find(pt1);
-              typename contour_lookup_t::iterator rec_b = lookup[i].find(pt2);
-              if (rec_b != lookup[i].end()) {
+              typename contour_lookup_t::iterator rec_a = lookup.find(pt1);
+              typename contour_lookup_t::iterator rec_b = lookup.find(pt2);
+              if (rec_b != lookup.end()) {
                 std::swap(pt1, pt2);
                 std::swap(rec_a, rec_b);
               }
 
               // we want to merge two records
-              if (rec_b != lookup[i].end()) {
+              if (rec_b != lookup.end()) {
                 // get the segments in question and remove their lookup info
                 auto segment_a = rec_a->second;
                 bool head_a = rec_a->first == segment_a->front();
                 auto segment_b = rec_b->second;
                 bool head_b = rec_b->first == segment_b->front();
-                lookup[i].erase(rec_a);
-                lookup[i].erase(rec_b);
+                lookup.erase(rec_a);
+                lookup.erase(rec_b);
 
                 // this segment is now a ring
                 if (segment_a == segment_b) {
@@ -318,37 +321,37 @@ public:
                 }
 
                 // erase the other lookups
-                lookup[i].erase(lookup[i].find(pt1 == segment_a->front() ? segment_a->back()
-                                                                         : segment_a->front()));
-                lookup[i].erase(lookup[i].find(pt2 == segment_b->front() ? segment_b->back()
-                                                                         : segment_b->front()));
+                lookup.erase(
+                    lookup.find(pt1 == segment_a->front() ? segment_a->back() : segment_a->front()));
+                lookup.erase(
+                    lookup.find(pt2 == segment_b->front() ? segment_b->back() : segment_b->front()));
 
                 // add b to a
                 if (!head_a && head_b) {
                   segment_a->splice(segment_a->end(), *segment_b);
-                  contours[i].front().erase(segment_b);
+                  contour.front().erase(segment_b);
                 } // add a to b
                 else if (!head_b && head_a) {
                   segment_b->splice(segment_b->end(), *segment_a);
-                  contours[i].front().erase(segment_a);
+                  contour.front().erase(segment_a);
                   segment_a = segment_b;
                 } // flip a and add b
                 else if (head_a && head_b) {
                   segment_a->reverse();
                   segment_a->splice(segment_a->end(), *segment_b);
-                  contours[i].front().erase(segment_b);
+                  contour.front().erase(segment_b);
                 } // flip b and add to a
                 else if (!head_a && !head_b) {
                   segment_b->reverse();
                   segment_a->splice(segment_a->end(), *segment_b);
-                  contours[i].front().erase(segment_b);
+                  contour.front().erase(segment_b);
                 }
 
                 // update the look up
-                lookup[i].emplace(segment_a->front(), segment_a);
-                lookup[i].emplace(segment_a->back(), segment_a);
+                lookup.emplace(segment_a->front(), segment_a);
+                lookup.emplace(segment_a->back(), segment_a);
               } // ap/prepend to an existing one
-              else if (rec_a != lookup[i].end()) {
+              else if (rec_a != lookup.end()) {
                 // it goes on the front
                 if (rec_a->second->front() == pt1) {
                   rec_a->second->push_front(pt2);
@@ -358,13 +361,13 @@ public:
                 }
 
                 // update the lookup table
-                lookup[i].emplace(pt2, rec_a->second);
-                lookup[i].erase(rec_a);
+                lookup.emplace(pt2, rec_a->second);
+                lookup.erase(rec_a);
               } // this is an orphan segment for now
               else {
-                contours[i].front().push_front(contour_t{pt1, pt2});
-                lookup[i].emplace(pt1, contours[i].front().begin());
-                lookup[i].emplace(pt2, contours[i].front().begin());
+                contour.front().push_front(contour_t{pt1, pt2});
+                lookup.emplace(pt1, contour.front().begin());
+                lookup.emplace(pt2, contour.front().begin());
               }
             }
           } // Each contour
