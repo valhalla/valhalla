@@ -239,17 +239,17 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
     auto tile1 = isotile_->TileId(ll0);
     auto tile2 = isotile_->TileId(ll);
     if (tile1 == tile2) {
-      isotile_->SetIfLessThan(tile1, {secs1 * kMinPerSec, dist1 * kMetersPerKm});
+      isotile_->SetIfLessThan(tile1, {secs1 * kMinPerSec, dist1 * kKmPerMeter});
     } else if (isotile_->AreNeighbors(tile1, tile2)) {
       // If tile 2 is directly east, west, north, or south of tile 1 then the
       // segment will not intersect any other tiles other than tile1 and tile2.
-      isotile_->SetIfLessThan(tile1, {secs1 * kMinPerSec, dist1 * kMetersPerKm});
-      isotile_->SetIfLessThan(tile2, {secs1 * kMinPerSec, dist1 * kMetersPerKm});
+      isotile_->SetIfLessThan(tile1, {secs1 * kMinPerSec, dist1 * kKmPerMeter});
+      isotile_->SetIfLessThan(tile2, {secs1 * kMinPerSec, dist1 * kKmPerMeter});
     } else {
       // Find intersecting tiles (using a Bresenham method)
       auto tiles = isotile_->Intersect(std::list<PointLL>{ll0, ll});
       for (const auto& t : tiles) {
-        isotile_->SetIfLessThan(t.first, {secs1 * kMinPerSec, dist1 * kMetersPerKm});
+        isotile_->SetIfLessThan(t.first, {secs1 * kMinPerSec, dist1 * kKmPerMeter});
       }
     }
     return;
