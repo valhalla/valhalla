@@ -238,7 +238,7 @@ config = {
       'max_time_contour': 120,
       'max_distance': 25000.0,
       'max_locations': 1,
-      'max_distance_contour': 120
+      'max_distance_contour': 200
     },
     'trace': {
       'max_distance': 200000.0,
