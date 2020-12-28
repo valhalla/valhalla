@@ -32,15 +32,6 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
   }
 }
 
-const std::tuple<float, float>
-get_max_metrics(const google::protobuf::RepeatedPtrField<valhalla::Contour>& contours) {
-  float max_dist, max_time = 0.0f;
-  for (auto& contour : contours) {
-    max_time = std::max(max_time, contour.has_time() ? contour.time() : max_time);
-    max_dist = std::max(max_dist, contour.has_distance() ? contour.distance() : max_dist);
-  }
-  return std::make_tuple(max_time, max_dist);
-}
 } // namespace
 
 namespace valhalla {
@@ -66,13 +57,11 @@ void loki_worker_t::init_isochrones(Api& request) {
   }
 
   // check the contour metrics
-  float max_time_c, max_dist_c;
-  std::tie(max_time_c, max_dist_c) = get_max_metrics(options.contours());
-  if (max_time_c > max_contour_min) {
-    throw valhalla_exception_t{151, std::to_string(max_contour_min)};
-  }
-  if (max_dist_c > max_contour_km) {
-    throw valhalla_exception_t{166, std::to_string(max_contour_km)};
+  for (auto& contour : options.contours()) {
+    if (contour.has_time() && contour.time() > max_contour_min)
+      throw valhalla_exception_t{151, std::to_string(max_contour_min)};
+    if (contour.has_distance() && contour.distance() > max_contour_km)
+      throw valhalla_exception_t{166, std::to_string(max_contour_km)};
   }
 
   parse_costing(request);
