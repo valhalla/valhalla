@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
   bool reverse = options.date_time_type() == valhalla::Options::arrive_by;
 
   // Get Contours
-  std::vector<GriddedData<2>::contour_specification_t> contour_times;
+  std::vector<GriddedData<2>::contour_interval_t> contour_times;
   float max_minutes = std::numeric_limits<float>::min();
   for (const auto& contour : options.contours()) {
     if (contour.has_time()) {

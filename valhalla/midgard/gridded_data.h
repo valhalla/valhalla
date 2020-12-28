@@ -94,8 +94,8 @@ public:
   using contour_t = std::list<PointLL>;
   using feature_t = std::list<contour_t>;
   using contours_t = std::vector<std::list<feature_t>>;
-  // dimension, value (seconds/meters), color, name (time/distance)
-  using contour_specification_t = std::tuple<size_t, float, std::string, std::string>;
+  // dimension, value (seconds/meters), name (time/distance), color
+  using contour_interval_t = std::tuple<size_t, float, std::string, std::string>;
   /**
    * TODO: implement two versions of this, leave this one for linestring contours
    * and make another for polygons
@@ -116,7 +116,7 @@ public:
    *
    * @return contour line geometries with the larger intervals first (for rendering purposes)
    */
-  contours_t GenerateContours(std::vector<contour_specification_t>& intervals,
+  contours_t GenerateContours(std::vector<contour_interval_t>& intervals,
                               const bool rings_only = false,
                               const float denoise = 1.f,
                               const float generalize = 200.f) const {
@@ -145,8 +145,8 @@ public:
       }
     }
 
-    // we need something to hold each iso-line, bigger ones first
-    contours_t contours(intervals.size());
+    // we need something to hold each iso-line
+    contours_t contours(intervals.size(), std::list<feature_t>{feature_t{}});
 
     // and something to find them quickly
     using contour_lookup_t = std::unordered_map<PointLL, typename feature_t::iterator>;
@@ -183,7 +183,6 @@ public:
             // some setup to process this contour
             auto& lookup = lookups[i];
             auto& contour = contours[i];
-            contour.emplace_back();
             auto contour_value = std::get<1>(intervals[i]);
 
             // we skip this contour if its interested in a different metric_index or its value

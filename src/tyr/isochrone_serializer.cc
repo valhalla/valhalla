@@ -19,25 +19,25 @@ namespace valhalla {
 namespace tyr {
 
 std::string serializeIsochrones(const Api& request,
-                                std::vector<midgard::GriddedData<2>::contour_specification_t>& specs,
+                                std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
                                 midgard::GriddedData<2>::contours_t& contours,
                                 bool polygons,
                                 bool show_locations) {
   // for each contour interval
   int i = 0;
   auto features = array({});
-  assert(specs.size() == contours.size());
-  for (size_t contour_index = 0; contour_index < specs.size(); ++contour_index) {
-    const auto& spec = specs[contour_index];
+  assert(intervals.size() == contours.size());
+  for (size_t contour_index = 0; contour_index < intervals.size(); ++contour_index) {
+    const auto& interval = intervals[contour_index];
     const auto& feature_collection = contours[contour_index];
 
     // color was supplied
     std::stringstream hex;
-    if (!std::get<3>(spec).empty()) {
-      hex << "#" << std::get<3>(spec);
+    if (!std::get<3>(interval).empty()) {
+      hex << "#" << std::get<3>(interval);
     } // or we computed it..
     else {
-      auto h = i * (150.f / specs.size());
+      auto h = i * (150.f / intervals.size());
       auto c = .5f;
       auto x = c * (1 - std::abs(std::fmod(h / 60.f, 2.f) - 1));
       auto m = .25f;
@@ -75,8 +75,8 @@ std::string serializeIsochrones(const Api& request,
                            {"coordinates", geom},
                        })},
           {"properties", map({
-                             {"metric", std::get<2>(spec)},
-                             {"contour", static_cast<uint64_t>(std::get<1>(spec))},
+                             {"metric", std::get<2>(interval)},
+                             {"contour", static_cast<uint64_t>(std::get<1>(interval))},
                              {"color", hex.str()},            // lines
                              {"fill", hex.str()},             // geojson.io polys
                              {"fillColor", hex.str()},        // leaflet polys

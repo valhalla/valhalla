@@ -17,13 +17,13 @@ std::string thor_worker_t::isochrones(Api& request) {
   auto& options = *request.mutable_options();
 
   // name of the metric (time/distance, value, color)
-  std::vector<GriddedData<2>::contour_specification_t> contours;
+  std::vector<GriddedData<2>::contour_interval_t> contours;
   for (const auto& contour : options.contours()) {
     if (contour.has_time()) {
-      contours.emplace_back(0, contour.time(), contour.color(), "time");
+      contours.emplace_back(0, contour.time(), "time", contour.color());
     }
     if (contour.has_distance()) {
-      contours.emplace_back(1, contour.distance(), contour.color(), "distance");
+      contours.emplace_back(1, contour.distance(), "distance", contour.color());
     }
   }
 
