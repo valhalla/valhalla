@@ -127,12 +127,74 @@ public:
     int sh[5];
     typename PointLL::first_type s[5]; // Values at the tile corners and center
     PointLL tile_corners[5];           // PointLL at tile corners and center
+    int m1, m2, m3;                    // Indices into the tile corners
+    PointLL pt1, pt2;                  // The intersection points in the tile
+    int tile_inc[4] = {0, 1, this->ncolumns_ + 1, this->ncolumns_};
 
     // Find the intersection along a tile edge
     auto intersect = [&tile_corners, &s](int p1, int p2) {
       auto ds = s[p2] - s[p1];
-      return PointLL((s[p2] * tile_corners[p1].x() - s[p1] * tile_corners[p2].x()) / ds,
-                     (s[p2] * tile_corners[p1].y() - s[p1] * tile_corners[p2].y()) / ds);
+      return PointLL((s[p2] * tile_corners[p1].first - s[p1] * tile_corners[p2].first) / ds,
+                     (s[p2] * tile_corners[p1].second - s[p1] * tile_corners[p2].second) / ds);
+    };
+
+    // In the tight loop below, we need to decide where a contour intersects the triangles that make
+    // up the given tile. this works out to a number of discrete cases which we lookup using the table
+    // below. based on the case we perform the appropriate intersection. to avoid branching we store
+    // the intersection operation for each case in an array and perform the correct one by calling the
+    // function stored in the array
+    int case_table[3][3][3] = {
+        {{0, 0, 8}, {0, 2, 5}, {7, 6, 9}},
+        {{0, 3, 4}, {1, 3, 1}, {4, 3, 0}},
+        {{9, 6, 7}, {5, 2, 0}, {8, 0, 0}},
+    };
+    std::array<std::function<void()>, 10> cases{
+        []() {},
+        // Line between vertices 1 and 2
+        [&]() {
+          pt1 = tile_corners[m1];
+          pt2 = tile_corners[m2];
+        },
+        // Line between vertices 2 and 3
+        [&]() {
+          pt1 = tile_corners[m2];
+          pt2 = tile_corners[m3];
+        },
+        // Line between vertices 3 and 1
+        [&]() {
+          pt1 = tile_corners[m3];
+          pt2 = tile_corners[m1];
+        },
+        // Line between vertex 1 and side 2-3
+        [&]() {
+          pt1 = tile_corners[m1];
+          pt2 = intersect(m2, m3);
+        },
+        // Line between vertex 2 and side 3-1
+        [&]() {
+          pt1 = tile_corners[m2];
+          pt2 = intersect(m3, m1);
+        },
+        // Line between vertex 3 and side 1-2
+        [&]() {
+          pt1 = tile_corners[m3];
+          pt2 = intersect(m1, m2);
+        },
+        // Line between sides 1-2 and 2-3
+        [&]() {
+          pt1 = intersect(m1, m2);
+          pt2 = intersect(m2, m3);
+        },
+        // Line between sides 2-3 and 3-1
+        [&]() {
+          pt1 = intersect(m2, m3);
+          pt2 = intersect(m3, m1);
+        },
+        // Line between sides 3-1 and 1-2
+        [&]() {
+          pt1 = intersect(m3, m1);
+          pt2 = intersect(m1, m2);
+        },
     };
 
     // which metrics do we need contours for
@@ -153,11 +215,6 @@ public:
     std::vector<contour_lookup_t> lookups(intervals.size());
     // TODO: preallocate the lookups for each interval
 
-    int tile_inc[4] = {0, 1, this->ncolumns_ + 1, this->ncolumns_};
-    int case_value;
-    int case_table[3][3][3] = {{{0, 0, 8}, {0, 2, 5}, {7, 6, 9}},
-                               {{0, 3, 4}, {1, 3, 1}, {4, 3, 0}},
-                               {{9, 6, 7}, {5, 2, 0}, {8, 0, 0}}};
     // For each metric we tracked
     for (const auto& metric : metrics) {
       size_t metric_index = std::get<0>(*metric.first);
@@ -192,28 +249,20 @@ public:
               continue;
             }
 
-            for (int m = 4; m >= 0; m--) {
-              if (m > 0) {
-                int newtileid = tileid + tile_inc[m - 1];
-                // Make sure the tile corner value is not set to the max_value
-                // (messes up the intersect method). Set a value slightly above
-                // the contour (e.g. 1 minute higher).
-                // TODO - the value 1 is a bit of a hack.
-                float nd = data_[newtileid][metric_index];
-                s[m] = nd < max_value_[metric_index] ? nd - contour_value : 1.0f;
-                tile_corners[m] = this->Base(newtileid);
-              } else {
-                s[0] = 0.25 * (s[1] + s[2] + s[3] + s[4]);
-                tile_corners[0] = this->Center(tileid);
-              }
-              if (s[m] > 0.0f) {
-                sh[m] = 1;
-              } else if (s[m] < 0.0f) {
-                sh[m] = -1;
-              } else {
-                sh[m] = 0;
-              }
+            for (int m = 4; m > 0; m--) {
+              int newtileid = tileid + tile_inc[m - 1];
+              // Make sure the tile corner value is not set to the max_value
+              // (messes up the intersect method). Set a value slightly above
+              // the contour (e.g. 1 minute higher).
+              // TODO - the value 1 is a bit of a hack.
+              float nd = data_[newtileid][metric_index];
+              s[m] = nd < max_value_[metric_index] ? nd - contour_value : 1.0f;
+              tile_corners[m] = this->Base(newtileid);
+              sh[m] = s[m] > 0.0f ? 1 : (s[m] < 0.0f ? -1 : 0);
             }
+            s[0] = 0.25 * (s[1] + s[2] + s[3] + s[4]);
+            tile_corners[0] = this->Center(tileid);
+            sh[0] = s[0] > 0.0f ? 1 : (s[0] < 0.0f ? -1 : 0);
 
             /*
              Note: at this stage the relative heights of the corners and the
@@ -240,55 +289,20 @@ public:
             */
 
             // Scan each triangle in the box
-            PointLL pt1, pt2;
             for (int m = 1; m <= 4; m++) {
-              int m1 = m;
-              int m2 = 0;
-              int m3 = (m != 4) ? m + 1 : 1;
-              if ((case_value = case_table[sh[m1] + 1][sh[m2] + 1][sh[m3] + 1]) == 0) {
+              // figure out which intersection we need to do
+              m1 = m;
+              m2 = 0;
+              m3 = (m != 4) ? m + 1 : 1;
+              int case_index = case_table[sh[m1] + 1][sh[m2] + 1][sh[m3] + 1];
+
+              // there is no intersection of this triangle
+              if (case_index == 0) {
                 continue;
               }
 
-              switch (case_value) {
-                case 1: // Line between vertices 1 and 2
-                  pt1 = tile_corners[m1];
-                  pt2 = tile_corners[m2];
-                  break;
-                case 2: // Line between vertices 2 and 3
-                  pt1 = tile_corners[m2];
-                  pt2 = tile_corners[m3];
-                  break;
-                case 3: // Line between vertices 3 and 1
-                  pt1 = tile_corners[m3];
-                  pt2 = tile_corners[m1];
-                  break;
-                case 4: // Line between vertex 1 and side 2-3
-                  pt1 = tile_corners[m1];
-                  pt2 = intersect(m2, m3);
-                  break;
-                case 5: // Line between vertex 2 and side 3-1
-                  pt1 = tile_corners[m2];
-                  pt2 = intersect(m3, m1);
-                  break;
-                case 6: // Line between vertex 3 and side 1-2
-                  pt1 = tile_corners[m3];
-                  pt2 = intersect(m1, m2);
-                  break;
-                case 7: // Line between sides 1-2 and 2-3
-                  pt1 = intersect(m1, m2);
-                  pt2 = intersect(m2, m3);
-                  break;
-                case 8: // Line between sides 2-3 and 3-1
-                  pt1 = intersect(m2, m3);
-                  pt2 = intersect(m3, m1);
-                  break;
-                case 9: // Line between sides 3-1 and 1-2
-                  pt1 = intersect(m3, m1);
-                  pt2 = intersect(m1, m2);
-                  break;
-                default:
-                  break;
-              }
+              // do the intersection, assigns to pt1 and pt2 inside lambdas defined above
+              cases[case_index]();
 
               // this isnt a segment..
               if (pt1 == pt2) {
