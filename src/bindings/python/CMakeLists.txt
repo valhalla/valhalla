@@ -6,7 +6,7 @@ set_target_properties(valhalla PROPERTIES
   POSITION_INDEPENDENT_CODE ON
   PREFIX "")
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py ${CMAKE_CURRENT_BINARY_DIR}/__init__.py COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py ${CMAKE_CURRENT_BINARY_DIR}/valhalla/__init__.py COPYONLY)
 
 # Part of OpenCVDetectPython.cmake
 set(_executable ${PYTHON_EXECUTABLE})
@@ -45,6 +45,6 @@ message(STATUS "${CMAKE_CURRENT_SOURCE_DIR}")
 install(TARGETS python_valhalla
 DESTINATION "${_packages_path}/valhalla"
 COMPONENT python_valhalla)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/__init__.py
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/valhalla/__init__.py
 DESTINATION "${_packages_path}/valhalla"
 COMPONENT python_valhalla)
