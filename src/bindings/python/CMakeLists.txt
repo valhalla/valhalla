@@ -2,9 +2,11 @@ add_subdirectory(../../../third_party/pybind11 _pybind11)
 
 pybind11_add_module(python_valhalla python.cc)
 target_link_libraries(python_valhalla PUBLIC valhalla)
-set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(valhalla PROPERTIES
+  POSITION_INDEPENDENT_CODE ON
+  PREFIX "")
 
-configure_file(valhalla/__init__.py.in valhalla/__init__.py)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py ${CMAKE_CURRENT_BINARY_DIR}/__init__.py COPYONLY)
 
 # Part of OpenCVDetectPython.cmake
 set(_executable ${PYTHON_EXECUTABLE})
@@ -39,6 +41,10 @@ set(_packages_path "${_path}/Lib/site-packages")
 unset(_path)
 endif()
 message(STATUS "Installing python modules to ${CMAKE_INSTALL_PREFIX}/${_packages_path}")
+message(STATUS "${CMAKE_CURRENT_SOURCE_DIR}")
 install(TARGETS python_valhalla
-DESTINATION "${_packages_path}"
-COMPONENT python)
+DESTINATION "${_packages_path}/valhalla"
+COMPONENT python_valhalla)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/__init__.py
+DESTINATION "${_packages_path}/valhalla"
+COMPONENT python_valhalla)

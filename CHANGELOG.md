@@ -114,6 +114,7 @@
    * FIXED: Some HGT files not found [#2723](https://github.com/valhalla/valhalla/issues/2723)
    * FIXED: Fix PencilPointUturn detection by removing short-edge check and updating angle threshold [#2725](https://github.com/valhalla/valhalla/issues/2725)
    * FIXED: Fix invalid continue/bear maneuvers [#2729](https://github.com/valhalla/valhalla/issues/2729)
+   * FIXED: Python bindings installation [#2751](https://github.com/valhalla/valhalla/issues/2751)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
