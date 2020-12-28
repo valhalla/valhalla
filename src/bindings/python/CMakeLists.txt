@@ -39,7 +39,6 @@ set(_packages_path "${_path}/Lib/site-packages")
 unset(_path)
 endif()
 message(STATUS "Installing python modules to ${CMAKE_INSTALL_PREFIX}/${_packages_path}")
-message(STATUS "${CMAKE_CURRENT_SOURCE_DIR}")
 install(TARGETS python_valhalla
 DESTINATION "${_packages_path}/valhalla"
 COMPONENT python_valhalla)
