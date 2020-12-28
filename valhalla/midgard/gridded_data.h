@@ -258,11 +258,11 @@ public:
               float nd = data_[newtileid][metric_index];
               s[m] = nd < max_value_[metric_index] ? nd - contour_value : 1.0f;
               tile_corners[m] = this->Base(newtileid);
-              sh[m] = s[m] > 0.0f ? 1 : (s[m] < 0.0f ? -1 : 0);
+              sh[m] = (s[m] > 0.0f) - (s[m] < 0.0f); // pos = 1, neg = -1, 0 = 0
             }
             s[0] = 0.25 * (s[1] + s[2] + s[3] + s[4]);
             tile_corners[0] = this->Center(tileid);
-            sh[0] = s[0] > 0.0f ? 1 : (s[0] < 0.0f ? -1 : 0);
+            sh[0] = (s[0] > 0.0f) - (s[0] < 0.0f); // pos = 1, neg = -1, 0 = 0
 
             /*
              Note: at this stage the relative heights of the corners and the
