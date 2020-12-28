@@ -2,9 +2,7 @@ add_subdirectory(../../../third_party/pybind11 _pybind11)
 
 pybind11_add_module(python_valhalla python.cc)
 target_link_libraries(python_valhalla PUBLIC valhalla)
-set_target_properties(valhalla PROPERTIES
-  POSITION_INDEPENDENT_CODE ON
-  PREFIX "")
+set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py ${CMAKE_CURRENT_BINARY_DIR}/valhalla/__init__.py COPYONLY)
 
