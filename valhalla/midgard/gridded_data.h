@@ -2,6 +2,8 @@
 #define VALHALLA_MIDGARD_GRIDDEDDATA_H_
 
 #include <algorithm>
+#include <array>
+#include <functional>
 #include <limits>
 #include <list>
 #include <map>
