@@ -40,7 +40,7 @@ unset(_path)
 endif()
 message(STATUS "Installing python modules to ${CMAKE_INSTALL_PREFIX}/${_packages_path}")
 install(TARGETS python_valhalla
-DESTINATION "${_packages_path}/valhalla"
+DESTINATION "${_packages_path}"
 COMPONENT python_valhalla)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/valhalla/__init__.py
 DESTINATION "${_packages_path}/valhalla"
