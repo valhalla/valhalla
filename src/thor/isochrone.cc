@@ -155,8 +155,8 @@ void Isochrone::ConstructIsoTile(const bool multimodal,
 
   // initialize the time at these locations
   for (const auto& location : api.options().locations()) {
-    PointLL ll(location.ll().lng(), location.ll().lat());
-    isotile_->Set(ll, {has_time ? 0.0f : max_minutes, has_distance ? 0.0f : max_km});
+    auto tile_id = isotile_->TileId({location.ll().lng(), location.ll().lat()});
+    isotile_->SetIfLessThan(tile_id, {has_time ? 0.0f : max_minutes, has_distance ? 0.0f : max_km});
   }
 }
 

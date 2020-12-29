@@ -20,20 +20,14 @@ namespace midgard {
 // compute an optimal generalization factor when creating contours.
 constexpr float kOptimalGeneralization = std::numeric_limits<float>::max();
 
-// TODO: this should really be sif::Cost, but we need to move distance from the
-//  edge label into the cost object first
-struct time_distance_t {
-  float sec;
-  float dist;
-
-  bool operator<(const time_distance_t& other) const {
-    return sec < other.sec;
-  }
-};
-
 /**
  * Class to store data in a gridded/tiled data structure. Contains methods
  * to mark each tile with data using a compare operator.
+ *
+ * Currently its templated so we can store time and distance but really we should
+ * move distance out of the edgelabel and into costing and then only support
+ * sif::Cost as the main thing that we track here. In the future we could track more
+ * things there like fuel usage or battery usage
  */
 template <std::size_t dimensions_t> class GriddedData : public Tiles<PointLL> {
 public:
@@ -51,22 +45,6 @@ public:
   }
 
   /**
-   * Set the value at a specified point. Verifies that the point is within the
-   * tiles.
-   * @param  pt     Coordinate to set within the tiles.
-   * @param  value  Value to set at the tile/grid location.
-   * @return whether or not the value was set
-   */
-  bool Set(const PointLL& pt, const value_type& value) {
-    auto cell_id = this->TileId(pt);
-    if (cell_id >= 0 && cell_id < data_.size()) {
-      data_[cell_id] = value;
-      return true;
-    }
-    return false;
-  }
-
-  /**
    * Set the value at a specified tile Id if the value is less than the current
    * value set at the grid location. Verifies that the tile is valid.
    * @param  tile_id  Tile Id to set value for.
@@ -74,23 +52,13 @@ public:
    * @param  get_data Functor to get the desired data value
    * @param  set_data Functor to set the desired data value
    */
-  void SetIfLessThan(const int tile_id, const value_type& value) {
+  inline void SetIfLessThan(const int tile_id, const value_type& value) {
     if (tile_id >= 0 && tile_id < data_.size()) {
       auto& current_value = data_[tile_id];
       for (size_t i = 0; i < dimensions_t; ++i) {
-        if (value[i] < current_value[i]) {
-          current_value[i] = value[i];
-        }
+        current_value[i] = std::min(value[i], current_value[i]);
       }
     }
-  }
-
-  /**
-   * Get the array of data.
-   * @return  Returns the data associated with the tiles.
-   */
-  const std::vector<value_type>& data() const {
-    return data_;
   }
 
   using contour_t = std::list<PointLL>;

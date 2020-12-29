@@ -212,32 +212,6 @@ int main(int argc, char* argv[]) {
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("Compute isotile took " + std::to_string(msecs) + " ms");
 
-  // Evaluate the min, max rows and columns that are set
-  int nv = 0;
-  int32_t min_row = isotile->nrows();
-  int32_t max_row = 0;
-  int32_t min_col = isotile->ncolumns();
-  int32_t max_col = 0;
-  const auto& iso_data = isotile->data();
-  for (int32_t row = 0; row < isotile->nrows(); row++) {
-    for (int32_t col = 0; col < isotile->ncolumns(); col++) {
-      int id = isotile->TileId(col, row);
-      if (iso_data[id][0] < max_minutes + 5) {
-        min_row = std::min(row, min_row);
-        max_row = std::max(row, max_row);
-        min_col = std::min(col, min_col);
-        max_col = std::max(col, max_col);
-        nv++;
-      }
-    }
-  }
-  LOG_INFO("Marked " + std::to_string(nv) + " cells in the isotile" +
-           " size= " + std::to_string(iso_data.size()));
-  LOG_INFO("Rows = " + std::to_string(isotile->nrows()) + " min = " + std::to_string(min_row) +
-           " max = " + std::to_string(max_row));
-  LOG_INFO("Cols = " + std::to_string(isotile->ncolumns()) + " min = " + std::to_string(min_col) +
-           " max = " + std::to_string(max_col));
-
   // Generate contours
   t2 = std::chrono::high_resolution_clock::now();
   auto contours = isotile->GenerateContours(contour_times, polygons, denoise, generalize);
