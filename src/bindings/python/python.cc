@@ -30,7 +30,7 @@ configure(const boost::optional<std::string>& config_path = boost::none,
           std::string tile_extract = "",
           bool verbose = true) {
   static boost::optional<boost::property_tree::ptree> pt;
-  if (config_path) {
+  if (config_path && !pt) {
     // create the config via python
     py::object create_config = py::module::import("valhalla.config").attr("_create_config");
     create_config(config_path.get(), config, tile_dir, tile_extract);
