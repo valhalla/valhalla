@@ -15,9 +15,6 @@ using namespace valhalla::sif;
 
 namespace {
 
-// Enable runtime derive of deadend
-constexpr bool derive_deadend = true;
-
 constexpr uint64_t kInitialEdgeLabelCountBD = 1000000;
 
 // Threshold (seconds) to extend search once the first connection has been found.
@@ -178,31 +175,22 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     }
   }
 
-  if (!from_transition) {
-    // Now, after having looked at all the edges, including edges on other levels,
-    // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
-    if (!disable_uturn && found_uturn) {
-      // If we found no suitable edge to add, it means we're at a deadend
-      // so lets go back and re-evaluate a potential u-turn
+  // Now, after having looked at all the edges, including edges on other levels,
+  // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
+  if (!from_transition && !disable_uturn && found_uturn) {
+    // If we found no suitable edge to add, it means we're at a deadend
+    // so lets go back and re-evaluate a potential u-turn
+    pred.set_deadend(true);
 
-      if (derive_deadend) { // We can toggle static and runtime definition of deadend here
-        pred.set_deadend(true);
-      }
+    // TODO Is there a shortcut that supersedes our u-turn?
+    // Decide if we should expand a shortcut or the non-shortcut edge...
 
-      // Decide if we should expand a shortcut or the non-shortcut edge...
-      bool was_uturn_shortcut_added = false;
-
-      // TODO Is there a shortcut that supersedes our u-turn?
-      if (was_uturn_shortcut_added) {
-        disable_uturn = true;
-      } else {
-        // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
-        bool uturn_added = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, uturn_meta,
-                                              shortcuts, tile, offset_time);
-        disable_uturn = disable_uturn || uturn_added;
-      }
-    }
+    // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
+    bool uturn_added = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, uturn_meta,
+                                          shortcuts, tile, offset_time);
+    disable_uturn = disable_uturn || uturn_added;
   }
+
   return disable_uturn;
 }
 
@@ -393,31 +381,22 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     }
   }
 
-  if (!from_transition) {
-    // Now, after having looked at all the edges, including edges on other levels,
-    // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
-    if (!disable_uturn && found_uturn) {
-      // If we found no suitable edge to add, it means we're at a deadend
-      // so lets go back and re-evaluate a potential u-turn
+  // Now, after having looked at all the edges, including edges on other levels,
+  // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
+  if (!from_transition && !disable_uturn && found_uturn) {
+    // If we found no suitable edge to add, it means we're at a deadend
+    // so lets go back and re-evaluate a potential u-turn
+    pred.set_deadend(true);
 
-      if (derive_deadend) { // We can toggle static and runtime definition of deadend here
-        pred.set_deadend(true);
-      }
+    // TODO Is there a shortcut that supersedes our u-turn?
+    // Decide if we should expand a shortcut or the non-shortcut edge...
 
-      // Decide if we should expand a shortcut or the non-shortcut edge...
-      bool was_uturn_shortcut_added = false;
-
-      // TODO Is there a shortcut that supersedes our u-turn?
-      if (was_uturn_shortcut_added) {
-        disable_uturn = true;
-      } else {
-        // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
-        disable_uturn = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
-                                           uturn_meta, shortcuts, tile, offset_time) ||
-                        disable_uturn;
-      }
-    }
+    // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
+    disable_uturn = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
+                                       uturn_meta, shortcuts, tile, offset_time) ||
+                    disable_uturn;
   }
+
   return disable_uturn;
 }
 // Runs in the inner loop of `ExpandReverse`, essentially evaluating if
