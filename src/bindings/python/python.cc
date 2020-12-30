@@ -1,6 +1,6 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#include "baldr/rapidjson_utils.h"
 #include <boost/make_shared.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/optional.hpp>
@@ -12,7 +12,11 @@
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
+#include "mjolnir/util.h"
 #include "tyr/actor.h"
+
+using namespace valhalla::mjolnir;
+namespace py = pybind11;
 
 namespace {
 
@@ -20,26 +24,36 @@ namespace {
 // configuring multiple times is wasteful/ineffectual but not harmful
 // TODO: make this threadsafe just in case its abused
 const boost::property_tree::ptree&
-configure(const boost::optional<std::string>& config = boost::none) {
+configure(const boost::optional<std::string>& config_path = boost::none,
+          py::dict config = {},
+          std::string tile_dir = "",
+          std::string tile_extract = "",
+          bool verbose = true) {
   static boost::optional<boost::property_tree::ptree> pt;
-  // if we haven't already loaded one
-  if (config && !pt) {
+  if (config_path) {
+    // create the config via python
+    py::object create_config = py::module::import("valhalla.config").attr("_create_config");
+    create_config(config_path.get(), config, tile_dir, tile_extract);
     try {
       // parse the config
       boost::property_tree::ptree temp_pt;
-      rapidjson::read_json(config.get(), temp_pt);
+      rapidjson::read_json(config_path.get(), temp_pt);
       pt = temp_pt;
 
       // configure logging
       boost::optional<boost::property_tree::ptree&> logging_subtree =
-          pt->get_child_optional("tyr.logging");
+          pt->get_child_optional("loki.logging");
       if (logging_subtree) {
+        // No logging if not wanted
+        if (!verbose) {
+          logging_subtree->put("type", "");
+        }
         auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
                                                        std::unordered_map<std::string, std::string>>(
             logging_subtree.get());
         valhalla::midgard::logging::Configure(logging_config);
       }
-    } catch (...) { throw std::runtime_error("Failed to load config from: " + config.get()); }
+    } catch (...) { throw std::runtime_error("Failed to load config from: " + config_path.get()); }
   }
 
   // if it turned out no one ever configured us we throw
@@ -48,12 +62,35 @@ configure(const boost::optional<std::string>& config = boost::none) {
   }
   return *pt;
 }
-void py_configure(const std::string& config_file) {
-  configure(config_file);
+
+void py_configure(const std::string& config_file,
+                  py::dict config,
+                  std::string tile_dir,
+                  std::string tile_extract,
+                  bool verbose) {
+  configure(config_file, config, tile_dir, tile_extract, verbose);
+}
+
+bool py_build_tiles(std::vector<std::string> input_pbfs) {
+  // make sure the service is configured
+  auto pt = configure();
+
+  pt.get_child("mjolnir").erase("tile_extract");
+  pt.get_child("mjolnir").erase("tile_url");
+
+  if (input_pbfs.empty()) {
+    throw std::invalid_argument("No PBF files specified");
+  }
+
+  return build_tile_set(pt, input_pbfs, BuildStage::kInitialize, BuildStage::kCleanup, false);
+}
+
+void py_tar_tiles(const boost::property_tree::ptree& pt) {
+  // delegate tar balling to python
+  py::object tar_tiles = py::module::import("valhalla._utils").attr("_tar_tiles");
+  tar_tiles(pt.get("mjolnir.tile_dir", ""), pt.get("mjolnir.tile_extract", ""));
 }
 } // namespace
-
-namespace py = pybind11;
 
 struct simplified_actor_t : public valhalla::tyr::actor_t {
   simplified_actor_t(const boost::property_tree::ptree& config)
@@ -93,10 +130,15 @@ struct simplified_actor_t : public valhalla::tyr::actor_t {
 };
 
 PYBIND11_MODULE(python_valhalla, m) {
-  m.def("Configure", py_configure);
+  m.def("Configure", py_configure, py::arg("config_file"), py::arg("config") = py::dict(),
+        py::arg("tile_dir") = "", py::arg("tile_extract") = "", py::arg("verbose") = true);
 
   py::class_<simplified_actor_t, std::shared_ptr<simplified_actor_t>>(m, "Actor")
-      .def(py::init<>([]() { return std::make_shared<simplified_actor_t>(configure()); }))
+      .def(py::init<>([]() {
+        auto pt = configure();
+        std::cout << "Tile extract: " << pt.get("mjolnir.tile_extract", "") << std::endl;
+        return std::make_shared<simplified_actor_t>(pt);
+      }))
       .def("Route", &simplified_actor_t::route, "Calculates a route.")
       .def("Locate", &simplified_actor_t::locate, "Provides information about nodes and edges.")
       .def("OptimizedRoute", &simplified_actor_t::optimized_route,
@@ -118,4 +160,8 @@ PYBIND11_MODULE(python_valhalla, m) {
       .def(
           "Expansion", &simplified_actor_t::expansion,
           "Returns all road segments which were touched by the routing algorithm during the graph traversal.");
+
+  m.def("BuildTiles", py_build_tiles);
+
+  m.def("TarTiles", []() { return py_tar_tiles(configure()); });
 }

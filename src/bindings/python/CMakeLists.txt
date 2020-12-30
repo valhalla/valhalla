@@ -4,7 +4,11 @@ pybind11_add_module(python_valhalla python.cc)
 target_link_libraries(python_valhalla PUBLIC valhalla)
 set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+# build the python lib in bin dir
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py ${CMAKE_CURRENT_BINARY_DIR}/valhalla/__init__.py COPYONLY)
+configure_file(${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_config ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla_build_config.py COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.py ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.py COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/_utils.py ${CMAKE_CURRENT_BINARY_DIR}/valhalla/_utils.py COPYONLY)
 
 # Part of OpenCVDetectPython.cmake
 set(_executable ${PYTHON_EXECUTABLE})
@@ -42,6 +46,10 @@ message(STATUS "Installing python modules to ${CMAKE_INSTALL_PREFIX}/${_packages
 install(TARGETS python_valhalla
 DESTINATION "${_packages_path}"
 COMPONENT python_valhalla)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/valhalla/__init__.py
+install(FILES 
+  ${CMAKE_CURRENT_BINARY_DIR}/valhalla/__init__.py
+  ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla_build_config.py
+  ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.py
+  ${CMAKE_CURRENT_BINARY_DIR}/valhalla/_utils.py
 DESTINATION "${_packages_path}/valhalla"
 COMPONENT python_valhalla)
