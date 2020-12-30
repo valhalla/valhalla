@@ -219,8 +219,8 @@ void locations(const valhalla::Api& api, int route_index, rapidjson::writer_wrap
 
 void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
   writer.start_array("legs");
-  const auto& directions_legs = api.directions().routes(0).legs();
-  auto trip_leg_itr = api.trip().routes(0).legs().begin();
+  const auto& directions_legs = api.directions().routes(route_index).legs();
+  auto trip_leg_itr = api.trip().routes(route_index).legs().begin();
   for (const auto& directions_leg : directions_legs) {
     writer.start_object(); // leg
     bool has_time_restrictions = false;
