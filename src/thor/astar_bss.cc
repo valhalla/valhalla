@@ -110,7 +110,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
 
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return;
   }
@@ -206,7 +206,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
     float sortcost = newcost.cost;
 
     if (p == destinations_.end()) {
-      const GraphTile* t2 =
+      graph_tile_ptr t2 =
           directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
       if (t2 == nullptr) {
         continue;
@@ -298,7 +298,7 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
     // edge and potentially complete the path.
     EdgeLabel pred = edgelabels_[predindex];
 
-    const GraphTile* tile = graphreader.GetGraphTile(pred.endnode());
+    graph_tile_ptr tile = graphreader.GetGraphTile(pred.endnode());
     auto ll = tile->get_node_ll(pred.endnode());
 
     if (destinations_.find(pred.edgeid()) != destinations_.end() &&
@@ -388,12 +388,12 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode());
     if (endtile == nullptr) {
       continue;
     }
@@ -496,7 +496,8 @@ uint32_t AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valha
 
     // Keep the cost to traverse the partial distance for the remainder of the edge. This cost
     // is subtracted from the total cost up to the end of the destination edge.
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    auto tile = graphreader.GetGraphTile(edgeid);
+    assert(tile);
     const DirectedEdge* directededge = tile->directededge(edgeid);
     auto* endonode = tile->node(directededge->endnode());
     GraphId startnode =
@@ -531,7 +532,7 @@ std::vector<PathInfo> AStarBSSAlgorithm::FormPath(baldr::GraphReader& graphreade
     path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), 0,
                       edgelabel.restriction_idx(), edgelabel.transition_cost());
 
-    const GraphTile* tile = graphreader.GetGraphTile(edgelabel.edgeid());
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgelabel.edgeid());
     const DirectedEdge* directededge = tile->directededge(edgelabel.edgeid());
     auto ll = tile->get_node_ll(directededge->endnode());
 

@@ -82,7 +82,7 @@ public:
   void Set(const baldr::GraphId& edgeid,
            const EdgeSet set,
            const uint32_t index,
-           const baldr::GraphTile* tile,
+           const graph_tile_ptr& tile,
            const uint8_t path_id = 0) {
     assert(path_id <= baldr::kMaxMultiPathId);
     auto p = edgestatus_.find(edgeid.tile_value() | SHIFT_path_id(path_id));
@@ -139,7 +139,7 @@ public:
    * @return  Returns a pointer to edge status info for this edge.
    */
   EdgeStatusInfo*
-  GetPtr(const baldr::GraphId& edgeid, const baldr::GraphTile* tile, const uint8_t path_id = 0) {
+  GetPtr(const baldr::GraphId& edgeid, const graph_tile_ptr& tile, const uint8_t path_id = 0) {
     assert(path_id <= baldr::kMaxMultiPathId);
     const auto p = edgestatus_.find(edgeid.tile_value() | SHIFT_path_id(path_id));
     if (p != edgestatus_.end()) {

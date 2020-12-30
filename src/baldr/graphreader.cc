@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <sys/stat.h>
+#include <utility>
 
 #include "baldr/connectivity_map.h"
 #include "baldr/curl_tilegetter.h"
@@ -133,18 +134,18 @@ void SimpleTileCache::Clear() {
 }
 
 // Get a pointer to a graph tile object given a GraphId.
-const GraphTile* SimpleTileCache::Get(const GraphId& graphid) const {
+graph_tile_ptr SimpleTileCache::Get(const GraphId& graphid) const {
   auto cached = cache_.find(graphid);
   if (cached != cache_.end()) {
-    return &cached->second;
+    return cached->second;
   }
   return nullptr;
 }
 
 // Puts a copy of a tile of into the cache.
-const GraphTile* SimpleTileCache::Put(const GraphId& graphid, const GraphTile& tile, size_t size) {
+graph_tile_ptr SimpleTileCache::Put(const GraphId& graphid, graph_tile_ptr tile, size_t size) {
   cache_size_ += size;
-  return &cache_.emplace(graphid, tile).first->second;
+  return cache_.emplace(graphid, std::move(tile)).first->second;
 }
 
 void SimpleTileCache::Trim() {
@@ -157,7 +158,7 @@ void SimpleTileCache::Trim() {
 
 // Constructor.
 TileCacheLRU::TileCacheLRU(size_t max_size, MemoryLimitControl mem_control)
-    : cache_size_(0), max_cache_size_(max_size), mem_control_(mem_control) {
+    : mem_control_(mem_control), cache_size_(0), max_cache_size_(max_size) {
 }
 
 void TileCacheLRU::Reserve(size_t tile_size) {
@@ -185,7 +186,7 @@ void TileCacheLRU::Trim() {
   TrimToFit(0);
 }
 
-const GraphTile* TileCacheLRU::Get(const GraphId& graphid) const {
+graph_tile_ptr TileCacheLRU::Get(const GraphId& graphid) const {
   auto cached = cache_.find(graphid);
   if (cached == cache_.cend()) {
     return nullptr;
@@ -194,7 +195,7 @@ const GraphTile* TileCacheLRU::Get(const GraphId& graphid) const {
   const KeyValueIter& entry_iter = cached->second;
   MoveToLruHead(entry_iter);
 
-  return &entry_iter->tile;
+  return entry_iter->tile;
 }
 
 size_t TileCacheLRU::TrimToFit(const size_t required_size) {
@@ -202,7 +203,7 @@ size_t TileCacheLRU::TrimToFit(const size_t required_size) {
   while ((OverCommitted() || (max_cache_size_ - cache_size_) < required_size) &&
          !key_val_lru_list_.empty()) {
     const KeyValue& entry_to_evict = key_val_lru_list_.back();
-    const auto tile_size = entry_to_evict.tile.header()->end_offset();
+    const auto tile_size = entry_to_evict.tile->header()->end_offset();
     cache_size_ -= tile_size;
     freed_space += tile_size;
     cache_.erase(entry_to_evict.id);
@@ -215,8 +216,7 @@ void TileCacheLRU::MoveToLruHead(const KeyValueIter& entry_iter) const {
   key_val_lru_list_.splice(key_val_lru_list_.begin(), key_val_lru_list_, entry_iter);
 }
 
-const GraphTile*
-TileCacheLRU::Put(const GraphId& graphid, const GraphTile& tile, size_t new_tile_size) {
+graph_tile_ptr TileCacheLRU::Put(const GraphId& graphid, graph_tile_ptr tile, size_t new_tile_size) {
   if (new_tile_size > max_cache_size_) {
     throw std::runtime_error("TileCacheLRU: tile size is bigger than max cache size");
   }
@@ -226,7 +226,7 @@ TileCacheLRU::Put(const GraphId& graphid, const GraphTile& tile, size_t new_tile
     if (mem_control_ == MemoryLimitControl::HARD) {
       TrimToFit(new_tile_size);
     }
-    key_val_lru_list_.emplace_front(KeyValue{graphid, tile});
+    key_val_lru_list_.emplace_front(KeyValue{graphid, std::move(tile)});
     cache_.emplace(graphid, key_val_lru_list_.begin());
   } else {
     // Value update; the new size may be different form the previous
@@ -235,7 +235,7 @@ TileCacheLRU::Put(const GraphId& graphid, const GraphTile& tile, size_t new_tile
     //  do we need to take it into account here? (can dramatically simplify the code)
     // note: SimpleTileCache does not handle the overwrite at the moment
     auto& entry_iter = cached->second;
-    const auto old_tile_size = entry_iter->tile.header()->end_offset();
+    const auto old_tile_size = entry_iter->tile->header()->end_offset();
 
     // do it before TrimToFit avoid its eviction to free space
     MoveToLruHead(entry_iter);
@@ -249,12 +249,12 @@ TileCacheLRU::Put(const GraphId& graphid, const GraphTile& tile, size_t new_tile
       }
     }
 
-    entry_iter->tile = tile;
+    entry_iter->tile = std::move(tile);
     cache_size_ -= old_tile_size;
   }
   cache_size_ += new_tile_size;
 
-  return &key_val_lru_list_.front().tile;
+  return key_val_lru_list_.front().tile;
 }
 
 // ----------------------------------------------------------------------------
@@ -296,16 +296,15 @@ void SynchronizedTileCache::Trim() {
 }
 
 // Get a pointer to a graph tile object given a GraphId.
-const GraphTile* SynchronizedTileCache::Get(const GraphId& graphid) const {
+graph_tile_ptr SynchronizedTileCache::Get(const GraphId& graphid) const {
   std::lock_guard<std::mutex> lock(mutex_ref_);
   return cache_.Get(graphid);
 }
 
 // Puts a copy of a tile of into the cache.
-const GraphTile*
-SynchronizedTileCache::Put(const GraphId& graphid, const GraphTile& tile, size_t size) {
+graph_tile_ptr SynchronizedTileCache::Put(const GraphId& graphid, graph_tile_ptr tile, size_t size) {
   std::lock_guard<std::mutex> lock(mutex_ref_);
-  return cache_.Put(graphid, tile, size);
+  return cache_.Put(graphid, std::move(tile), size);
 }
 
 // Constructs tile cache.
@@ -404,9 +403,21 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
          stat((file_location + ".gz").c_str(), &buffer) == 0;
 }
 
+class TarballGraphMemory final : public GraphMemory {
+public:
+  TarballGraphMemory(std::shared_ptr<midgard::tar> archive, std::pair<char*, size_t> position)
+      : archive_(std::move(archive)) {
+    data = position.first;
+    size = position.second;
+  }
+
+private:
+  const std::shared_ptr<midgard::tar> archive_;
+};
+
 // Get a pointer to a graph tile object given a GraphId. Return nullptr
 // if the tile is not found/empty
-const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
+graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
   // TODO: clear the cache automatically once we become overcommitted by a certain amount
 
   // Return nullptr if not a valid tile
@@ -416,7 +427,7 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
 
   // Check if the level/tileid combination is in the cache
   auto base = graphid.Tile_Base();
-  if (auto cached = cache_->Get(base)) {
+  if (const auto& cached = cache_->Get(base)) {
     // LOG_DEBUG("Memory cache hit " + GraphTile::FileSuffix(base));
     return cached;
   }
@@ -429,31 +440,36 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
     }
+    auto memory = std::make_unique<TarballGraphMemory>(tile_extract_->archive, t->second);
 
     auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
+    auto traffic_memory = traffic_ptr != tile_extract_->traffic_tiles.end()
+                              ? std::make_unique<TarballGraphMemory>(tile_extract_->traffic_archive,
+                                                                     traffic_ptr->second)
+                              : nullptr;
 
     // This initializes the tile from mmap
-    GraphTile tile(base, t->second.first, t->second.second,
-                   traffic_ptr != tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
-                                                                     : nullptr);
-    if (!tile.header()) {
+    auto tile = GraphTile::Create(base, std::move(memory), std::move(traffic_memory));
+    if (!tile) {
       // LOG_DEBUG("Memory map cache miss " + GraphTile::FileSuffix(base));
       return nullptr;
     }
     // LOG_DEBUG("Memory map cache hit " + GraphTile::FileSuffix(base));
 
     // Keep a copy in the cache and return it
-    size_t size = AVERAGE_MM_TILE_SIZE; // tile.end_offset();  // TODO what size??
-    auto inserted = cache_->Put(base, tile, size);
-    return inserted;
+    const size_t size = AVERAGE_MM_TILE_SIZE; // tile.end_offset();  // TODO what size??
+    return cache_->Put(base, std::move(tile), size);
   } // Try getting it from flat file
   else {
     auto traffic_ptr = tile_extract_->traffic_tiles.find(base);
+    auto traffic_memory = traffic_ptr != tile_extract_->traffic_tiles.end()
+                              ? std::make_unique<TarballGraphMemory>(tile_extract_->traffic_archive,
+                                                                     traffic_ptr->second)
+                              : nullptr;
+
     // Try to get it from disk and if we cant..
-    GraphTile tile(tile_dir_, base,
-                   traffic_ptr != tile_extract_->traffic_tiles.end() ? traffic_ptr->second.first
-                                                                     : nullptr);
-    if (!tile.header()) {
+    graph_tile_ptr tile = GraphTile::Create(tile_dir_, base, std::move(traffic_memory));
+    if (!tile || !tile->header()) {
       if (!tile_getter_) {
         return nullptr;
       }
@@ -468,7 +484,7 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
 
       // Get it from the url and cache it to disk if you can
       tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_);
-      if (!tile.header()) {
+      if (!tile) {
         std::lock_guard<std::mutex> lock(_404s_lock);
         _404s.insert(base);
         // LOG_DEBUG("Url cache miss " + GraphTile::FileSuffix(base));
@@ -480,16 +496,15 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     }
 
     // Keep a copy in the cache and return it
-    size_t size = tile.header()->end_offset();
-    auto inserted = cache_->Put(base, tile, size);
-    return inserted;
+    const size_t size = tile->header()->end_offset();
+    return cache_->Put(base, std::move(tile), size);
   }
 }
 
 // Convenience method to get an opposing directed edge graph Id.
-GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& opp_tile) {
+GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, graph_tile_ptr& opp_tile) {
   // If you cant get the tile you get an invalid id
-  const GraphTile* tile = opp_tile;
+  auto tile = opp_tile;
   if (!GetGraphTile(edgeid, tile)) {
     return {};
   };
@@ -518,10 +533,11 @@ bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) 
     if (n1.level() == n2.level()) {
       return false;
     } else {
-      const GraphTile* tile = GetGraphTile(n1);
-      const NodeInfo* ni = tile->node(n1);
-      if (ni->transition_count() == 0)
+      graph_tile_ptr tile = GetGraphTile(n1);
+      const NodeInfo* ni = nullptr;
+      if (!tile || (ni = tile->node(n1))->transition_count() == 0) {
         return false;
+      }
       const NodeTransition* trans = tile->transition(ni->transition_index());
       for (uint32_t i = 0; i < ni->transition_count(); ++i, ++trans) {
         if (trans->endnode() == n2) {
@@ -533,16 +549,15 @@ bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) 
   };
 
   // Get both directed edges
-  const GraphTile* t1 = GetGraphTile(edge1);
-  if (!t1) {
+  graph_tile_ptr t1 = GetGraphTile(edge1);
+  graph_tile_ptr t2 = t1;
+
+  if (!t1 || !(t2 = GetGraphTile(edge2, t2))) {
     return false;
   }
   const DirectedEdge* de1 = t1->directededge(edge1);
-  const GraphTile* t2 = (edge2.Tile_Base() == edge1.Tile_Base()) ? t1 : GetGraphTile(edge2);
-  if (!t2) {
-    return false;
-  }
   const DirectedEdge* de2 = t2->directededge(edge2);
+
   if (de1->endnode() == de2->endnode() || is_transition(de1->endnode(), de2->endnode())) {
     return true;
   }
@@ -566,7 +581,7 @@ bool GraphReader::AreEdgesConnected(const GraphId& edge1, const GraphId& edge2) 
 // end node of edge1 to the start node of edge2.
 bool GraphReader::AreEdgesConnectedForward(const GraphId& edge1,
                                            const GraphId& edge2,
-                                           const GraphTile*& tile) {
+                                           graph_tile_ptr& tile) {
   // Get end node of edge1
   GraphId endnode = edge_endnode(edge1, tile);
   if (endnode.Tile_Base() != edge1.Tile_Base()) {
@@ -600,7 +615,8 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
   // Lambda to get continuing edge at a node. Skips the specified edge Id
   // transition edges, shortcut edges, and transit connections. Returns
   // nullptr if more than one edge remains or no continuing edge is found.
-  auto continuing_edge = [](const GraphTile* tile, const GraphId& edgeid, const NodeInfo* nodeinfo) {
+  auto continuing_edge = [](const graph_tile_ptr& tile, const GraphId& edgeid,
+                            const NodeInfo* nodeinfo) {
     uint32_t idx = nodeinfo->edge_index();
     const DirectedEdge* continuing_edge = static_cast<const DirectedEdge*>(nullptr);
     const DirectedEdge* directededge = tile->directededge(idx);
@@ -625,7 +641,7 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
   }
 
   // If this edge is a shortcut return this edge Id
-  const GraphTile* tile = GetGraphTile(id);
+  graph_tile_ptr tile = GetGraphTile(id);
   const DirectedEdge* directededge = tile->directededge(id);
   if (directededge->is_shortcut()) {
     return id;
@@ -678,7 +694,7 @@ uint32_t GraphReader::GetEdgeDensity(const GraphId& edgeid) {
   const DirectedEdge* opp_edge = GetOpposingEdge(edgeid);
   if (opp_edge) {
     GraphId id = opp_edge->endnode();
-    const GraphTile* tile = GetGraphTile(id);
+    graph_tile_ptr tile = GetGraphTile(id);
     return (tile != nullptr) ? tile->node(id)->density() : 0;
   } else {
     return 0;
@@ -686,11 +702,11 @@ uint32_t GraphReader::GetEdgeDensity(const GraphId& edgeid) {
 }
 
 // Get the end nodes of a directed edge.
-std::pair<GraphId, GraphId> GraphReader::GetDirectedEdgeNodes(const GraphTile* tile,
+std::pair<GraphId, GraphId> GraphReader::GetDirectedEdgeNodes(graph_tile_ptr tile,
                                                               const DirectedEdge* edge) {
   GraphId end_node = edge->endnode();
   GraphId start_node;
-  const GraphTile* t2 = (edge->leaves_tile()) ? GetGraphTile(end_node) : tile;
+  graph_tile_ptr t2 = (edge->leaves_tile()) ? GetGraphTile(end_node) : std::move(tile);
   if (t2 != nullptr) {
     auto edge_idx = t2->node(end_node)->edge_index() + edge->opp_index();
     start_node = t2->directededge(edge_idx)->endnode();
@@ -699,7 +715,7 @@ std::pair<GraphId, GraphId> GraphReader::GetDirectedEdgeNodes(const GraphTile* t
 }
 
 std::string GraphReader::encoded_edge_shape(const valhalla::baldr::GraphId& edgeid) {
-  const baldr::GraphTile* t_debug = GetGraphTile(edgeid);
+  auto t_debug = GetGraphTile(edgeid);
   if (t_debug == nullptr) {
     return {};
   }
@@ -784,7 +800,7 @@ AABB2<PointLL> GraphReader::GetMinimumBoundingBox(const AABB2<PointLL>& bb) {
       Trim();
 
     // Look at every node in the tile
-    const auto* tile = GetGraphTile(tile_id);
+    auto tile = GetGraphTile(tile_id);
     for (uint32_t i = 0; tile && i < tile->header()->nodecount(); i++) {
 
       // If the node is within the input bounding box
@@ -812,7 +828,7 @@ AABB2<PointLL> GraphReader::GetMinimumBoundingBox(const AABB2<PointLL>& bb) {
   return min_bb;
 }
 
-int GraphReader::GetTimezone(const baldr::GraphId& node, const GraphTile*& tile) {
+int GraphReader::GetTimezone(const baldr::GraphId& node, graph_tile_ptr& tile) {
   GetGraphTile(node, tile);
   return (tile == nullptr) ? 0 : tile->node(node)->timezone();
 }
@@ -823,7 +839,7 @@ GraphReader::GetIncidentTile(const GraphId& tile_id) const {
                            : std::shared_ptr<valhalla::IncidentsTile>{};
 }
 
-IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile*& tile) {
+IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, graph_tile_ptr& tile) {
   // if we are not doing this for any reason then bail
   std::shared_ptr<const valhalla::IncidentsTile> itile;
   if (!enable_incidents_ || !GetGraphTile(edge_id, tile) ||
@@ -855,7 +871,7 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, const GraphTile
 const valhalla::IncidentsTile::Metadata&
 getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
                     const valhalla::IncidentsTile::Location& incident_location) {
-  auto metadata_index = incident_location.metadata_index();
+  const auto metadata_index = incident_location.metadata_index();
   if (metadata_index >= tile->metadata_size()) {
     throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
                              std::to_string(metadata_index) + " but total incident metadata of " +
