@@ -102,24 +102,21 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
   // Expand from end node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
 
-  bool found_valid_edge = false;
-  bool found_uturn = false;
-  EdgeMetadata uturn_meta = {};
+  bool disable_uturn = false;
+  EdgeMetadata uturn_meta{};
 
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, meta.increment_pointers()) {
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++meta) {
     // Begin by checking if this is the opposing edge to pred.
     // If so, it means we are attempting a u-turn. In that case, lets wait with evaluating
     // this edge until last. If any other edges were emplaced, it means we should not
     // even try to evaluate a u-turn since u-turns should only happen for deadends
-    if (pred.opp_local_idx() == meta.edge->localedgeidx()) {
-      uturn_meta = meta;
-      found_uturn = true;
-      continue;
-    }
+    uturn_meta = pred.opp_local_idx() == meta.edge->localedgeidx() ? meta : uturn_meta;
 
-    found_valid_edge = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta,
-                                          tile, offset_time, destination, best_path) ||
-                       found_valid_edge;
+    // Expand but only if this isnt the uturn, we'll try that later if nothing else works out
+    disable_uturn = (pred.opp_local_idx() != meta.edge->localedgeidx() &&
+                     ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta,
+                                        tile, offset_time, destination, best_path)) ||
+                    disable_uturn;
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -128,42 +125,34 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       if (trans->up()) {
         hierarchy_limits_[node.level()].up_transition_count++;
-        found_valid_edge = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
-                                         true, offset_time, destination, best_path) ||
-                           found_valid_edge;
+        disable_uturn = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
+                                      true, offset_time, destination, best_path) ||
+                        disable_uturn;
       } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) {
-        found_valid_edge = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
-                                         true, offset_time, destination, best_path) ||
-                           found_valid_edge;
+        disable_uturn = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
+                                      true, offset_time, destination, best_path) ||
+                        disable_uturn;
       }
     }
   }
 
-  if (!from_transition) {
-    // Now, after having looked at all the edges, including edges on other levels,
-    // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
-    if (!found_valid_edge && found_uturn) {
-      // If we found no suitable edge to add, it means we're at a deadend
-      // so lets go back and re-evaluate a potential u-turn
+  // Now, after having looked at all the edges, including edges on other levels,
+  // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
+  if (!from_transition && !disable_uturn && uturn_meta) {
+    // If we found no suitable edge to add, it means we're at a deadend
+    // so lets go back and re-evaluate a potential u-turn
+    pred.set_deadend(true);
 
-      pred.set_deadend(true);
+    // TODO Is there a shortcut that supersedes our u-turn?
+    // Decide if we should expand a shortcut or the non-shortcut edge...
 
-      // Decide if we should expand a shortcut or the non-shortcut edge...
-      bool was_uturn_shortcut_added = false;
-
-      // TODO Is there a shortcut that supersedes our u-turn?
-      if (was_uturn_shortcut_added) {
-        found_valid_edge = true;
-      } else {
-        // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
-        found_valid_edge =
-            ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, uturn_meta, tile,
-                               offset_time, destination, best_path) ||
-            found_valid_edge;
-      }
-    }
+    // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
+    disable_uturn = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
+                                       uturn_meta, tile, offset_time, destination, best_path) ||
+                    disable_uturn;
   }
-  return found_valid_edge;
+
+  return disable_uturn;
 }
 
 // Runs in the inner loop of `ExpandForward`, essentially evaluating if

@@ -151,10 +151,19 @@ struct EdgeMetadata {
     return {directededge, edge_id, edge_status};
   }
 
-  inline void increment_pointers() {
+  inline EdgeMetadata& operator++() {
     ++edge;
     ++edge_id;
     ++edge_status;
+    return *this;
+  }
+
+  inline operator bool() const {
+    return edge;
+  }
+
+  inline bool operator!() const {
+    return !edge;
   }
 };
 

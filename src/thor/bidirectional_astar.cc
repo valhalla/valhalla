@@ -136,25 +136,22 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
   }
 
   bool disable_uturn = false;
-  bool found_uturn = false;
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_forward_);
-  EdgeMetadata uturn_meta = {};
+  EdgeMetadata uturn_meta{};
 
   // Expand from end node in forward direction.
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, meta.increment_pointers()) {
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++meta) {
 
     // Begin by checking if this is the opposing edge to pred.
     // If so, it means we are attempting a u-turn. In that case, lets wait with evaluating
     // this edge until last. If any other edges were emplaced, it means we should not
     // even try to evaluate a u-turn since u-turns should only happen for deadends
-    if (pred.opp_local_idx() == meta.edge->localedgeidx()) {
-      uturn_meta = meta;
-      found_uturn = true;
-      continue;
-    }
+    uturn_meta = pred.opp_local_idx() == meta.edge->localedgeidx() ? meta : uturn_meta;
 
-    disable_uturn = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, meta, shortcuts, tile,
-                                       offset_time) ||
+    // Expand but only if this isnt the uturn, we'll try that later if nothing else works out
+    disable_uturn = (pred.opp_local_idx() != meta.edge->localedgeidx() &&
+                     ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, meta, shortcuts, tile,
+                                        offset_time)) ||
                     disable_uturn;
   }
 
@@ -177,7 +174,7 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
 
   // Now, after having looked at all the edges, including edges on other levels,
   // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
-  if (!from_transition && !disable_uturn && found_uturn) {
+  if (!from_transition && !disable_uturn && uturn_meta) {
     // If we found no suitable edge to add, it means we're at a deadend
     // so lets go back and re-evaluate a potential u-turn
     pred.set_deadend(true);
@@ -185,7 +182,7 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     // TODO Is there a shortcut that supersedes our u-turn?
     // Decide if we should expand a shortcut or the non-shortcut edge...
 
-    // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
+    // Expand the uturn possiblity
     bool uturn_added = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, uturn_meta,
                                           shortcuts, tile, offset_time);
     disable_uturn = disable_uturn || uturn_added;
@@ -342,25 +339,22 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
 
   // We start off allowing uturns, and if we find any edge to expand from we disallow uturns here
   bool disable_uturn = false;
-  bool found_uturn = false;
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_reverse_);
-  EdgeMetadata uturn_meta = {};
+  EdgeMetadata uturn_meta{};
 
   // Expand from end node in reverse direction.
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, meta.increment_pointers()) {
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++meta) {
 
     // Begin by checking if this is the opposing edge to pred.
     // If so, it means we are attempting a u-turn. In that case, lets wait with evaluating
     // this edge until last. If any other edges were emplaced, it means we should not
     // even try to evaluate a u-turn since u-turns should only happen for deadends
-    if (pred.opp_local_idx() == meta.edge->localedgeidx()) {
-      uturn_meta = meta;
-      found_uturn = true;
-      continue;
-    }
+    uturn_meta = pred.opp_local_idx() == meta.edge->localedgeidx() ? meta : uturn_meta;
 
-    disable_uturn = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta,
-                                       shortcuts, tile, offset_time) ||
+    // Expand but only if this isnt the uturn, we'll try that later if nothing else works out
+    disable_uturn = (pred.opp_local_idx() != meta.edge->localedgeidx() &&
+                     ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta,
+                                        shortcuts, tile, offset_time)) ||
                     disable_uturn;
   }
 
@@ -383,7 +377,7 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
 
   // Now, after having looked at all the edges, including edges on other levels,
   // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
-  if (!from_transition && !disable_uturn && found_uturn) {
+  if (!from_transition && !disable_uturn && uturn_meta) {
     // If we found no suitable edge to add, it means we're at a deadend
     // so lets go back and re-evaluate a potential u-turn
     pred.set_deadend(true);
