@@ -75,11 +75,11 @@ protected:
   void enqueue(const baldr::GraphId& node_id,
                baldr::GraphReader& reader,
                const std::shared_ptr<sif::DynamicCost>& costing,
-               const baldr::GraphTile* tile);
+               graph_tile_ptr tile);
 
   // callback fired when a node is expanded from, the node will be the end node of the previous label
   virtual void ExpandingNode(baldr::GraphReader& graphreader,
-                             const baldr::GraphTile* tile,
+                             graph_tile_ptr tile,
                              const baldr::NodeInfo* node,
                              const sif::EdgeLabel& current,
                              const sif::EdgeLabel* previous) override;
@@ -98,8 +98,8 @@ protected:
 
   google::protobuf::RepeatedPtrField<Location> locations_;
   std::unordered_set<uint64_t> queue_, done_;
-  uint32_t max_reach_;
-  size_t transitions_;
+  uint32_t max_reach_{};
+  size_t transitions_{};
 };
 
 } // namespace loki

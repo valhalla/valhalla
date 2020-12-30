@@ -318,8 +318,7 @@ void add_date_to_locations(Options& options,
 void parse_locations(const rapidjson::Document& doc,
                      Options& options,
                      const std::string& node,
-                     unsigned location_parse_error_code,
-                     bool track) {
+                     unsigned location_parse_error_code) {
 
   google::protobuf::RepeatedPtrField<valhalla::Location>* locations = nullptr;
   if (node == "locations") {
@@ -514,10 +513,6 @@ void parse_locations(const rapidjson::Document& doc,
       locations->Mutable(0)->set_type(valhalla::Location::kBreak);
       locations->Mutable(locations->size() - 1)->set_type(valhalla::Location::kBreak);
     }
-    if (track) {
-      midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()),
-                            " [ANALYTICS] ");
-    }
 
     // push the date time information down into the locations
     if (!had_date_time) {
@@ -557,8 +552,6 @@ void parse_contours(const rapidjson::Document& doc,
 }
 
 void from_json(rapidjson::Document& doc, Options& options) {
-  bool track = !options.has_do_not_track() || !options.do_not_track();
-
   // TODO: stop doing this after a sufficient amount of time has passed
   // move anything nested in deprecated directions_options up to the top level
   auto deprecated = get_child_optional(doc, "/directions_options");
@@ -712,11 +705,11 @@ void from_json(rapidjson::Document& doc, Options& options) {
     add_date_to_locations(options, *options.mutable_shape());
   } // fall back from encoded polyline to array of locations
   else {
-    parse_locations(doc, options, "shape", 134, false);
+    parse_locations(doc, options, "shape", 134);
 
     // if no shape then try 'trace'
     if (options.shape().size() == 0) {
-      parse_locations(doc, options, "trace", 135, false);
+      parse_locations(doc, options, "trace", 135);
     }
   }
 
@@ -839,16 +832,16 @@ void from_json(rapidjson::Document& doc, Options& options) {
   }
 
   // get the locations in there
-  parse_locations(doc, options, "locations", 130, track);
+  parse_locations(doc, options, "locations", 130);
 
   // get the sources in there
-  parse_locations(doc, options, "sources", 131, track);
+  parse_locations(doc, options, "sources", 131);
 
   // get the targets in there
-  parse_locations(doc, options, "targets", 132, track);
+  parse_locations(doc, options, "targets", 132);
 
   // get the avoids in there
-  parse_locations(doc, options, "avoid_locations", 133, track);
+  parse_locations(doc, options, "avoid_locations", 133);
 
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
   if (!options.has_date_time_type() && (options.shape_size() == 0 || options.shape(0).time() == -1)) {
@@ -1084,11 +1077,6 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
   if (!request.path.empty() && Options_Action_Enum_Parse(request.path.substr(1), &action)) {
     options.set_action(action);
   }
-
-  // disable analytics
-  auto do_not_track = request.headers.find("DNT");
-  options.set_do_not_track(options.do_not_track() ||
-                           (do_not_track != request.headers.cend() && do_not_track->second == "1"));
 
   // parse out the options
   from_json(document, options);
