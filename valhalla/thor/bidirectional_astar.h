@@ -136,7 +136,6 @@ protected:
    * @param node               the node from which to expand
    * @param pred               the previous edge label in the forward expansion
    * @param pred_idx           the index of the label in the label set
-   * @param from_transition    whether or not we are expanding at a graph node transition
    * @param time_info          time tracking information about the start of the route
    * @param invariant          static date_time, dont offset the time as the path lengthens
    * @return returns true if the expansion continued from this node
@@ -145,7 +144,6 @@ protected:
                      const baldr::GraphId& node,
                      sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
-                     const bool from_transition,
                      const baldr::TimeInfo& time_info,
                      const bool invariant);
   // Private helper function for `ExpandForward`
@@ -165,9 +163,8 @@ protected:
    * @param node               the node from which to expand
    * @param pred               the previous edge label in the reverse expansion
    * @param pred_idx           the index of the label in the label set
-   * @param from_transition    whether or not we are expanding at a graph node transition
    * @param time_info          time tracking information about the end of the route
-   * * @param invariant          static date_time, dont offset the time as the path lengthens
+   * @param invariant          static date_time, dont offset the time as the path lengthens
    * @return returns true if the expansion continued from this node in this direction
    */
   bool ExpandReverse(baldr::GraphReader& graphreader,
@@ -175,7 +172,6 @@ protected:
                      sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
-                     const bool from_transition,
                      const baldr::TimeInfo& time_info,
                      const bool invariant);
   // Private helper function for `ExpandReverse`
@@ -200,8 +196,8 @@ protected:
 
   /**
    * Add destination edges to the reverse path adjacency list.
-   * @param   graphreader  Graph tile reader.
-   * @param   dest         Location information of the destination
+   * @param graphreader  Graph tile reader.
+   * @param dest         Location information of the destination
    * @param time_info    What time is it when we end the route
    */
   void SetDestination(baldr::GraphReader& graphreader,

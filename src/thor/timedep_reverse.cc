@@ -73,7 +73,6 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
                                    BDEdgeLabel& pred,
                                    const uint32_t pred_idx,
                                    const DirectedEdge* opp_pred_edge,
-                                   const bool from_transition,
                                    const TimeInfo& time_info,
                                    const valhalla::Location& destination,
                                    std::pair<int32_t, float>& best_path) {
@@ -86,9 +85,7 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
   const NodeInfo* nodeinfo = tile->node(node);
 
   // Update the time information
-  auto offset_time =
-      from_transition ? time_info
-                      : time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
+  auto offset_time = time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
 
   if (!costing_->Allowed(nodeinfo)) {
     const DirectedEdge* opp_edge;
@@ -120,25 +117,34 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
   }
 
   // Handle transitions - expand from the end node of each transition
-  if (!from_transition && nodeinfo->transition_count() > 0) {
+  if (nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      if (trans->up()) {
-        hierarchy_limits_[node.level()].up_transition_count++;
-        disable_uturn = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
-                                      true, offset_time, destination, best_path) ||
-                        disable_uturn;
-      } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) {
-        disable_uturn = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
-                                      true, offset_time, destination, best_path) ||
-                        disable_uturn;
+      // if this is a downward transition (ups are always allowed) AND we are no longer allowed OR
+      // we cant get the tile at that level (local extracts could have this problem) THEN bail
+      const GraphTile* trans_tile = nullptr;
+      if ((!trans->up() && hierarchy_limits_[trans->endnode().level()].StopExpanding()) ||
+          !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
+        continue;
+      }
+      // setup for expansion at this level
+      hierarchy_limits_[node.level()].up_transition_count += trans->up();
+      const auto* trans_node = trans_tile->node(trans->endnode());
+      EdgeMetadata trans_meta =
+          EdgeMetadata::make(trans->endnode(), trans_node, trans_tile, edgestatus_);
+      // expand the edges from this node at this level
+      for (uint32_t i = 0; i < trans_node->edge_count(); ++i, ++trans_meta) {
+        disable_uturn =
+            ExpandReverseInner(graphreader, pred, opp_pred_edge, trans_node, pred_idx, trans_meta,
+                               trans_tile, offset_time, destination, best_path) ||
+            disable_uturn;
       }
     }
   }
 
   // Now, after having looked at all the edges, including edges on other levels,
   // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
-  if (!from_transition && !disable_uturn && uturn_meta) {
+  if (!disable_uturn && uturn_meta) {
     // If we found no suitable edge to add, it means we're at a deadend
     // so lets go back and re-evaluate a potential u-turn
     pred.set_deadend(true);
@@ -394,8 +400,8 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
         graphreader.GetGraphTile(pred.opp_edgeid())->directededge(pred.opp_edgeid());
 
     // Expand forward from the end node of the predecessor edge.
-    ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, false,
-                  reverse_time_info, destination, best_path);
+    ExpandReverse(graphreader, pred.endnode(), pred, predindex, opp_pred_edge, reverse_time_info,
+                  destination, best_path);
   }
   return {}; // Should never get here
 }
