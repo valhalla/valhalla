@@ -15,7 +15,7 @@ namespace {
 valhalla::Location make_centroid(const valhalla::baldr::GraphId& edge_id,
                                  valhalla::baldr::GraphReader& reader) {
   using namespace valhalla;
-  const baldr::GraphTile* tile = nullptr;
+  valhalla::baldr::graph_tile_ptr tile;
   const auto* edge = reader.directededge(baldr::GraphId(edge_id), tile);
   auto info = tile->edgeinfo(edge->edgeinfo_offset());
   const auto& shape = info.shape();
@@ -129,7 +129,7 @@ thor::ExpansionRecommendation Centroid::ShouldExpand(baldr::GraphReader& reader,
   // TODO: refactor dijkstras a bit to get the tile and send it to us so we dont have to
 
   // grab the opposing edge if you can
-  const baldr::GraphTile* tile = nullptr;
+  baldr::graph_tile_ptr tile;
   baldr::GraphId opp_id;
   if (const auto* node = reader.nodeinfo(label.endnode(), tile)) {
     opp_id = tile->header()->graphid();
@@ -188,7 +188,7 @@ Centroid::FormPaths(const ExpansionType& expansion_type,
   centroid = make_centroid(edge_id, reader);
 
   // keep the opposing edge in case its a better path for some locations
-  const GraphTile* tile = nullptr;
+  graph_tile_ptr tile;
   auto opp_id = reader.GetOpposingEdgeId(edge_id, tile);
 
   // a place to store the results

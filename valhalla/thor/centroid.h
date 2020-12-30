@@ -121,7 +121,7 @@ protected:
    * about edges who have been settled which means we can completely ignore this
    */
   virtual void ExpandingNode(baldr::GraphReader&,
-                             const baldr::GraphTile*,
+                             graph_tile_ptr tile,
                              const baldr::NodeInfo*,
                              const sif::EdgeLabel&,
                              const sif::EdgeLabel*) override {
