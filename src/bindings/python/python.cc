@@ -134,11 +134,7 @@ PYBIND11_MODULE(python_valhalla, m) {
         py::arg("tile_dir") = "", py::arg("tile_extract") = "", py::arg("verbose") = true);
 
   py::class_<simplified_actor_t, std::shared_ptr<simplified_actor_t>>(m, "Actor")
-      .def(py::init<>([]() {
-        auto pt = configure();
-        std::cout << "Tile extract: " << pt.get("mjolnir.tile_extract", "") << std::endl;
-        return std::make_shared<simplified_actor_t>(pt);
-      }))
+      .def(py::init<>([]() { return std::make_shared<simplified_actor_t>(pt); }))
       .def("Route", &simplified_actor_t::route, "Calculates a route.")
       .def("Locate", &simplified_actor_t::locate, "Provides information about nodes and edges.")
       .def("OptimizedRoute", &simplified_actor_t::optimized_route,
