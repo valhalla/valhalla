@@ -317,7 +317,6 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/utrecht-test.py
-      ${VALHALLA_SOURCE_DIR}/test/bindings/python/valhalla.json
       utrecht_tiles
       python_valhalla
     VERBATIM)
