@@ -32,7 +32,7 @@ configure(const boost::optional<std::string>& config_path = boost::none,
   static boost::optional<boost::property_tree::ptree> pt;
   if (config_path && !pt) {
     // create the config via python
-    py::object create_config = py::module::import("valhalla.config").attr("_create_config");
+    py::object create_config = py::module_::import("valhalla.config").attr("_create_config");
     create_config(config_path.get(), config, tile_dir, tile_extract);
     try {
       // parse the config
@@ -87,7 +87,7 @@ bool py_build_tiles(std::vector<std::string> input_pbfs) {
 
 void py_tar_tiles(const boost::property_tree::ptree& pt) {
   // delegate tar balling to python
-  py::object tar_tiles = py::module::import("valhalla._utils").attr("_tar_tiles");
+  py::object tar_tiles = py::module_::import("valhalla._utils").attr("_tar_tiles");
   tar_tiles(pt.get("mjolnir.tile_dir", ""), pt.get("mjolnir.tile_extract", ""));
 }
 } // namespace
