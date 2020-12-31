@@ -15,7 +15,7 @@
 #include "mjolnir/util.h"
 #include "tyr/actor.h"
 
-using namespace valhalla::mjolnir;
+namespace vm = valhalla::mjolnir;
 namespace py = pybind11;
 
 namespace {
@@ -82,7 +82,8 @@ bool py_build_tiles(const std::vector<std::string>& input_pbfs) {
     throw std::invalid_argument("No PBF files specified");
   }
 
-  return build_tile_set(pt, input_pbfs, BuildStage::kInitialize, BuildStage::kCleanup, false);
+  return vm::build_tile_set(pt, input_pbfs, vm::BuildStage::kInitialize, vm::BuildStage::kCleanup,
+                            false);
 }
 
 void py_tar_tiles(const boost::property_tree::ptree& pt) {
