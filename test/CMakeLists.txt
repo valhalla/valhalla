@@ -317,7 +317,7 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/utrecht-test.py
-      utrecht_tiles
+      ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
       python_valhalla
     VERBATIM)
   add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)

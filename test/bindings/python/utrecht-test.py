@@ -4,10 +4,11 @@ import sys
 import os
 import json
 from shutil import rmtree
+from pathlib import Path
 import valhalla
 from valhalla import config
 
-pwd = os.path.dirname(os.path.abspath(__file__))
+pwd = Path(os.path.dirname(os.path.abspath(__file__)))
 
 # Set up and test config
 config_path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(pwd, 'valhalla.json')
@@ -27,7 +28,8 @@ assert config_json['mjolnir']['tile_dir'] == tiles_path
 assert config_json['mjolnir']['tile_extract'] == tar_path
 
 # Build and tar tiles, test
-valhalla.BuildTiles(['test/data/utrecht_netherlands.osm.pbf'])
+pbf_path = os.path.join(pwd.parent.parent, 'data', 'utrecht_netherlands.osm.pbf')
+valhalla.BuildTiles([pbf_path])
 valhalla.TarTiles()
 
 assert all([os.path.isdir(p) for p in [
