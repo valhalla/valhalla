@@ -26,8 +26,8 @@ namespace {
 const boost::property_tree::ptree&
 configure(const boost::optional<std::string>& config_path = boost::none,
           py::dict config = {},
-          std::string tile_dir = "",
-          std::string tile_extract = "",
+          const std::string& tile_dir = "",
+          const std::string& tile_extract = "",
           bool verbose = true) {
   static boost::optional<boost::property_tree::ptree> pt;
   if (config_path && !pt) {
@@ -65,13 +65,13 @@ configure(const boost::optional<std::string>& config_path = boost::none,
 
 void py_configure(const std::string& config_file,
                   py::dict config,
-                  std::string tile_dir,
-                  std::string tile_extract,
+                  const std::string& tile_dir,
+                  const std::string& tile_extract,
                   bool verbose) {
-  configure(config_file, config, tile_dir, tile_extract, verbose);
+  configure(config_file, std::move(config), tile_dir, tile_extract, verbose);
 }
 
-bool py_build_tiles(std::vector<std::string> input_pbfs) {
+bool py_build_tiles(const std::vector<std::string>& input_pbfs) {
   // make sure the service is configured
   auto pt = configure();
 
