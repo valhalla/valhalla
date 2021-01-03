@@ -4,9 +4,7 @@ import os
 import json
 from shutil import rmtree
 from pathlib import Path
-from io import StringIO
 import unittest
-from unittest.mock import patch
 
 import valhalla
 from valhalla import config

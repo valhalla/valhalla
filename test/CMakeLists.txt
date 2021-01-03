@@ -314,7 +314,7 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
       PYTHONPATH=src/bindings/python
       ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
       # needs to run both test modules separately, Cmake runs them sequentially
-      /bin/bash -c "${PYTHON_EXECUTABLE} -m unittest ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_utrecht.py > test/python_valhalla.log"
+      /bin/bash -c "cd ${VALHALLA_SOURCE_DIR}/test/bindings/python/ && ${PYTHON_EXECUTABLE} -m unittest test_utrecht.py > ${CMAKE_BINARY_DIR}/test/python_valhalla.log"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_utrecht.py
