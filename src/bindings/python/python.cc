@@ -1,11 +1,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <boost/make_shared.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <boost/shared_ptr.hpp>
 #include <sstream>
 #include <string>
 
@@ -21,46 +19,44 @@ namespace py = pybind11;
 namespace {
 
 // statically set the config file and configure logging, throw if you never configured
-// configuring multiple times is wasteful/ineffectual but not harmful
+// configuring multiple times is possible, e.g. to change service_limits
 // TODO: make this threadsafe just in case its abused
-const boost::property_tree::ptree&
-configure(const boost::optional<std::string>& config_path = boost::none,
-          py::dict config = {},
-          const std::string& tile_dir = "",
-          const std::string& tile_extract = "",
-          bool verbose = true) {
-  static boost::optional<boost::property_tree::ptree> pt;
-  if (config_path && !pt) {
-    // create the config via python
+const boost::property_tree::ptree& configure(const std::string& config_path = "",
+                                             py::dict config = {},
+                                             const std::string& tile_dir = "",
+                                             const std::string& tile_extract = "",
+                                             bool verbose = true) {
+  static boost::property_tree::ptree pt;
+
+  // only build config when called from python's Configure!
+  if (!config_path.empty()) {
+    // create the config on the filesystem via python
     py::object create_config = py::module_::import("valhalla.config").attr("_create_config");
-    create_config(config_path.get(), config, tile_dir, tile_extract);
+    create_config(config_path, config, tile_dir, tile_extract, verbose);
     try {
       // parse the config
       boost::property_tree::ptree temp_pt;
-      rapidjson::read_json(config_path.get(), temp_pt);
+      rapidjson::read_json(config_path, temp_pt);
       pt = temp_pt;
 
       // configure logging
       boost::optional<boost::property_tree::ptree&> logging_subtree =
-          pt->get_child_optional("loki.logging");
+          pt.get_child_optional("loki.logging");
       if (logging_subtree) {
-        // No logging if not wanted
-        if (!verbose) {
-          logging_subtree->put("type", "");
-        }
         auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
                                                        std::unordered_map<std::string, std::string>>(
             logging_subtree.get());
         valhalla::midgard::logging::Configure(logging_config);
       }
-    } catch (...) { throw std::runtime_error("Failed to load config from: " + config_path.get()); }
+    } catch (...) { throw std::runtime_error("Failed to load config from: " + config_path); }
   }
 
   // if it turned out no one ever configured us we throw
-  if (!pt) {
+  if (pt.empty()) {
     throw std::runtime_error("The service was not configured");
   }
-  return *pt;
+
+  return pt;
 }
 
 void py_configure(const std::string& config_file,
@@ -158,7 +154,9 @@ PYBIND11_MODULE(python_valhalla, m) {
           "Expansion", &simplified_actor_t::expansion,
           "Returns all road segments which were touched by the routing algorithm during the graph traversal.");
 
-  m.def("BuildTiles", py_build_tiles);
+  m.def(
+      "BuildTiles", py_build_tiles,
+      "Builds the Valhalla tiles according to the config. Returns True if successful, False if not.");
 
   m.def("TarTiles", []() { return py_tar_tiles(configure()); });
 }

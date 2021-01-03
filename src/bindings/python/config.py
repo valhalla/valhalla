@@ -16,19 +16,27 @@ def get_help() -> dict:
     """Returns the help texts to the Valhalla configuration."""
     return _help_text
 
-def _create_config(path: str, c: dict, tile_dir: str, tile_extract: str):
+def _create_config(path: str, c: dict, tile_dir: str, tile_extract: str, verbose: bool) -> None:
     conf = c.copy()
-    # use the existing config if one exists and no changes are requested
+
     if os.path.exists(path) and not conf:
+        # use the existing file if one exists and no config was passed
         with open(path) as f:
             conf = json.load(f)
     elif not conf:
-        raise ValueError("No local config file found, you need to specify a configuration")
+        # if the file doesn't exist and no config was passed, raise
+        raise ValueError("No local config file found, you need to specify a configuration to create one.")
     
+    # Write the convenience stuff
     if tile_dir:
         conf["mjolnir"]["tile_dir"] = tile_dir
     if tile_extract:
         conf["mjolnir"]["tile_extract"] = tile_extract
+    if verbose is True:
+        conf["loki"]["logging"]["type"] = "std_out"
+    elif verbose is False:
+        conf["loki"]["logging"]["type"] = ""
 
+    # Finally write the config to filesystem
     with open(path, 'w') as f:
         json.dump(conf, f, indent=2)

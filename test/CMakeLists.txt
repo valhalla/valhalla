@@ -315,14 +315,9 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
       ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
       # needs to run both test modules separately, Cmake runs them sequentially
       /bin/bash -c "${PYTHON_EXECUTABLE} -m unittest ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_utrecht.py > test/python_valhalla.log"
-    COMMAND
-      LOCPATH=${VALHALLA_SOURCE_DIR}/locales
-      PYTHONPATH=src/bindings/python
-      ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
-      /bin/bash -c "${PYTHON_EXECUTABLE} -m unittest ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_utrecht_exceptions.py >> test/python_valhalla.log"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
-      ${VALHALLA_SOURCE_DIR}/test/bindings/python/utrecht-test.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_utrecht.py
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
       python_valhalla
     VERBATIM)
