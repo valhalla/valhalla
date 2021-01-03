@@ -311,9 +311,8 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
   add_custom_command(OUTPUT python_valhalla.log
     COMMAND
       LOCPATH=${VALHALLA_SOURCE_DIR}/locales
-      PYTHONPATH=src/bindings/python
+      PYTHONPATH=${CMAKE_BINARY_DIR}/src/bindings/python
       ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
-      # needs to run both test modules separately, Cmake runs them sequentially
       /bin/bash -c "cd ${VALHALLA_SOURCE_DIR}/test/bindings/python/ && ${PYTHON_EXECUTABLE} -m unittest test_utrecht.py > ${CMAKE_BINARY_DIR}/test/python_valhalla.log"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
