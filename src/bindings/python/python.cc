@@ -82,7 +82,8 @@ bool py_build_tiles(const std::vector<std::string>& input_pbfs) {
                             false);
 }
 
-void py_tar_tiles(const boost::property_tree::ptree& pt) {
+void py_tar_tiles() {
+  const boost::property_tree::ptree& pt = configure();
   // delegate tar balling to python
   py::object tar_tiles = py::module_::import("valhalla._utils").attr("_tar_tiles");
   tar_tiles(pt.get("mjolnir.tile_dir", ""), pt.get("mjolnir.tile_extract", ""));
@@ -158,5 +159,5 @@ PYBIND11_MODULE(python_valhalla, m) {
       "BuildTiles", py_build_tiles,
       "Builds the Valhalla tiles according to the config. Returns True if successful, False if not.");
 
-  m.def("TarTiles", []() { return py_tar_tiles(configure()); });
+  m.def("TarTiles", py_tar_tiles);
 }
