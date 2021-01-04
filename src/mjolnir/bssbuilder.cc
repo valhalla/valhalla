@@ -290,7 +290,6 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
     size_t edge_index = tilebuilder_local.directededges().size();
     NodeInfo new_bss_node{tile.header()->base_ll(),
                           it->bss_ll,
-                          it->roadclass,
                           (kPedestrianAccess | kBicycleAccess),
                           NodeType::kBikeShare,
                           false};
