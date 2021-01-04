@@ -15,14 +15,9 @@ TEST(Standalone, avoid_service) {
               |
               F)";
 
-  const gurka::ways ways = {
-      {"AB", {{"highway", "secondary"}}},
-      {"BC", {{"highway", "secondary"}}},
-      {"CE", {{"highway", "tertiary"}}},
-      {"EF", {{"highway", "tertiary"}}},
-      {"BD", {{"highway", "service"}}},
-      {"DE", {{"highway", "service"}}}
-  };
+  const gurka::ways ways = {{"AB", {{"highway", "secondary"}}}, {"BC", {{"highway", "secondary"}}},
+                            {"CE", {{"highway", "tertiary"}}},  {"EF", {{"highway", "tertiary"}}},
+                            {"BD", {{"highway", "service"}}},   {"DE", {{"highway", "service"}}}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_avoid_service");
