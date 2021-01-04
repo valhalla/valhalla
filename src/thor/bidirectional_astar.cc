@@ -1129,10 +1129,10 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
       throw std::logic_error("Could not find candidate edge used for destination label");
     }
 
-    // recost edges in final path
+    // recost edges in final path; ignore access restrictions
     try {
       sif::recost_forward(graphreader, *costing_, path_edges, label_cb, source_pct, target_pct,
-                          time_info, invariant);
+                          time_info, invariant, true);
     } catch (const std::exception& e) {
       LOG_ERROR(std::string("Bi-directional astar failed to recost final path: ") + e.what());
       continue;

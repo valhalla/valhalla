@@ -17,6 +17,7 @@ namespace sif {
  * @param time_info         the time tracking information representing the local time before
  *                          traversing the first edge
  * @param invariant         static date_time, dont offset the time as the path lengthens
+ * @param ignore_access     ignore access restrictions for edges and nodes if it's true
  */
 void recost_forward(baldr::GraphReader& reader,
                     const sif::DynamicCost& costing,
@@ -25,7 +26,8 @@ void recost_forward(baldr::GraphReader& reader,
                     float source_pct,
                     float target_pct,
                     const baldr::TimeInfo& time_info,
-                    const bool invariant) {
+                    const bool invariant,
+                    const bool ignore_access) {
   // out of bounds edge scaling
   if (source_pct < 0.f || source_pct > 1.f || target_pct < 0.f || target_pct > 1.f) {
     throw std::logic_error("Source and target percentages must be between 0 and 1 inclusive");
@@ -48,7 +50,7 @@ void recost_forward(baldr::GraphReader& reader,
   }
 
   // fail if the first edge is filtered
-  if (costing.Filter(edge, tile) == 0.f) {
+  if (!ignore_access && costing.Filter(edge, tile) == 0.f) {
     throw std::runtime_error("This path requires different edge access than this costing allows");
   }
 
@@ -78,7 +80,7 @@ void recost_forward(baldr::GraphReader& reader,
     label.set_deadend(label.opp_local_idx() == edge->localedgeidx());
 
     // this node is not allowed, unless we made a uturn at it
-    if (node && !label.deadend() && !costing.Allowed(node)) {
+    if (!ignore_access && node && !label.deadend() && !costing.Allowed(node)) {
       throw std::runtime_error("This path requires different node access than this costing allows");
     }
 
@@ -93,10 +95,11 @@ void recost_forward(baldr::GraphReader& reader,
     int time_restrictions_TODO = -1;
     // if its not time dependent set to 0 for Allowed method below
     const uint64_t localtime = offset_time.valid ? offset_time.local_time : 0;
-    // this edge is not allowed
+    // we should evaluate restrictions even if 'ignore_access' flag is true
     if (predecessor != baldr::kInvalidLabel &&
-        !costing.Allowed(edge, label, tile, edge_id, localtime, offset_time.timezone_index,
-                         time_restrictions_TODO)) {
+        (!costing.Allowed(edge, label, tile, edge_id, localtime, offset_time.timezone_index,
+                          time_restrictions_TODO) &&
+         !ignore_access)) {
       throw std::runtime_error("This path requires different edge access than this costing allows");
     }
 
