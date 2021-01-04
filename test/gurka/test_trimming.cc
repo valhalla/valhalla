@@ -42,7 +42,7 @@ TEST(Trimming, routes) {
       gurka::findEdge(reader, map.nodes, "BC", "C");
 
   // we start by getting the shape for the two edges we want a route on
-  const auto* tile = reader.GetGraphTile(start_id);
+  auto tile = reader.GetGraphTile(start_id);
   auto start_shape = tile->edgeinfo(start_edge->edgeinfo_offset()).shape();
   if (!start_edge->forward())
     std::reverse(start_shape.begin(), start_shape.end());

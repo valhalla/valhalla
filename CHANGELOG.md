@@ -111,6 +111,7 @@
    * FIXED: If infer_internal_intersections is true then allow internals that are also ramps or TCs. Without this we produce an extra continue manuever.  [#2710](https://github.com/valhalla/valhalla/pull/2710)
    * FIXED: We were routing down roads that should be destination only. Now we mark roads with motor_vehicle=destination and motor_vehicle=customers or access=destination and access=customers as destination only. [#2722](https://github.com/valhalla/valhalla/pull/2722)
    * FIXED: Replace all Python2 print statements with Python3 syntax [#2716](https://github.com/valhalla/valhalla/issues/2716)
+   * FIXED: Some HGT files not found [#2723](https://github.com/valhalla/valhalla/issues/2723)
    * FIXED: Fix PencilPointUturn detection by removing short-edge check and updating angle threshold [#2725](https://github.com/valhalla/valhalla/issues/2725)
    * FIXED: Fix invalid continue/bear maneuvers [#2729](https://github.com/valhalla/valhalla/issues/2729)
 
@@ -220,6 +221,9 @@
    * ADDED: Added support to process the sump_buster tag.  Also, fixed a few small access bugs for nodes. [#2731](https://github.com/valhalla/valhalla/pull/2731)
    * ADDED: Log message if failed to create tiles directory. [#2738](https://github.com/valhalla/valhalla/pull/2738)
    * CHANGED: Tile memory is only owned by the GraphTile rather than shared amongst copies of the graph tile (in GraphReader and TileCaches). [#2340](https://github.com/valhalla/valhalla/pull/2340)
+   * ADDED: Add Estonian locale. [#2748](https://github.com/valhalla/valhalla/pull/2748)
+   * CHANGED: Handle GraphTile objects as smart pointers [#2703](https://github.com/valhalla/valhalla/pull/2703)
+   * CHANGED: Improve stability with no RTTI build [#2759](https://github.com/valhalla/valhalla/pull/2759)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

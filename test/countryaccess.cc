@@ -119,7 +119,8 @@ void CountryAccess(const std::string& config_file) {
 
   // load a tile and test the default access.
   GraphId id(820099, 2, 0);
-  GraphTile t("test/data/amsterdam_tiles", id);
+  auto t = GraphTile::Create("test/data/amsterdam_tiles", id);
+  ASSERT_TRUE(t);
 
   GraphTileBuilder tilebuilder(graph_reader.tile_dir(), id, true);
 
@@ -190,7 +191,8 @@ void CountryAccess(const std::string& config_file) {
 
   // load a tile and test that the country level access is set.
   GraphId id2(820099, 2, 0);
-  GraphTile t2("test/data/amsterdam_tiles", id2);
+  auto t2 = GraphTile::Create("test/data/amsterdam_tiles", id2);
+  ASSERT_TRUE(t2);
 
   GraphReader graph_reader2(conf.get_child("mjolnir"));
   GraphTileBuilder tilebuilder2(graph_reader2.tile_dir(), id2, true);
