@@ -17,23 +17,21 @@ BOOST_GEOMETRY_REGISTER_BOX(vm::AABB2<vm::PointLL>, vm::PointLL, ll, ur)
 
 namespace {
 
-using ring_t = bg::model::ring<vm::PointLL>;
+using ring_bg_t = bg::model::ring<vm::PointLL>;
 
 } // namespace
 
 namespace valhalla {
 namespace loki {
 
-double GetArea(const google::protobuf::RepeatedPtrField<Options::AvoidPolygon>& rings_pbf) {
+double GetRingsArea(const google::protobuf::RepeatedPtrField<Options::AvoidPolygon>& rings_pbf) {
   double area;
-  size_t cnt{0};
   for (const auto& ring_pbf : rings_pbf) {
-    ring_t new_ring;
+    ring_bg_t new_ring;
     for (const auto& coord : ring_pbf.coords()) {
       new_ring.push_back({coord.ll().lng(), coord.ll().lat()});
     }
     area += bg::area(new_ring);
-    cnt += 1;
   }
 
   return area;

@@ -12,7 +12,7 @@
 namespace valhalla {
 namespace loki {
 
-double GetArea(const google::protobuf::RepeatedPtrField<Options::AvoidPolygon>& rings_pbf);
+double GetRingsArea(const google::protobuf::RepeatedPtrField<Options::AvoidPolygon>& rings_pbf);
 
 } // namespace loki
 } // namespace valhalla

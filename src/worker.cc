@@ -315,20 +315,13 @@ void add_date_to_locations(Options& options,
   }
 }
 
-// Parses polygons of the form [[[lon1, lat1], [lon2, lat2], ...], [[lon1, lat1], [lon2, lat2], ...]]
-<<<<<<< Updated upstream
-void parse_polygons(const rapidjson::Document& doc,
-=======
+// Parses polygons of the form [[[lon1, lat1], [lon2, lat2], ...], [[lon1, lat1], [lon2, lat2], ...]]]
 void parse_polygons(rapidjson::Document& doc,
->>>>>>> Stashed changes
                     Options& options,
                     const std::string& node,
                     unsigned location_parse_error_code) {
   google::protobuf::RepeatedPtrField<valhalla::Options::AvoidPolygon>* polygons = nullptr;
-<<<<<<< Updated upstream
-=======
   auto& allocator = doc.GetAllocator();
->>>>>>> Stashed changes
   if (node == "avoid_polygons") {
     polygons = options.mutable_avoid_polygons();
   }
