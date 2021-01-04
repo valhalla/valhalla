@@ -94,13 +94,13 @@ private:
 };
 
 TEST(GraphTileIntegrity, SizeZero) {
-  EXPECT_THROW(GraphTile tile(GraphId(), std::make_unique<const TestGraphMemory>(0)),
+  EXPECT_THROW(GraphTile::Create(GraphId(), std::make_unique<const TestGraphMemory>(0)),
                std::runtime_error);
 }
 
 TEST(GraphTileIntegrity, SizeLessThanHeader) {
   size_t tileSize = sizeof(GraphTileHeader) - 1;
-  EXPECT_THROW(GraphTile tile(GraphId(), std::make_unique<const TestGraphMemory>(tileSize)),
+  EXPECT_THROW(GraphTile::Create(GraphId(), std::make_unique<const TestGraphMemory>(tileSize)),
                std::runtime_error);
 }
 
@@ -114,7 +114,7 @@ TEST(GraphTileIntegrity, SizeLessThanPayload) {
   std::vector<char> tile_data(tile_size);
   memcpy(tile_data.data(), &header, sizeof(header));
 
-  EXPECT_THROW(GraphTile tile(GraphId(), std::make_unique<const TestGraphMemory>(tile_size)),
+  EXPECT_THROW(GraphTile::Create(GraphId(), std::make_unique<const TestGraphMemory>(tile_size)),
                std::runtime_error);
 }
 

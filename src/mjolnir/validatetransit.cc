@@ -47,7 +47,8 @@ bool WalkTransitLines(const GraphId& n_graphId,
                       const std::string& end_name,
                       const std::string& route_name) {
   lock.lock();
-  const GraphTile* endnodetile = reader.GetGraphTile(n_graphId);
+  auto endnodetile = reader.GetGraphTile(n_graphId);
+  assert(endnodetile);
   lock.unlock();
   const NodeInfo* n_info = endnodetile->node(n_graphId);
   GraphId currentNode = n_graphId;
@@ -60,10 +61,7 @@ bool WalkTransitLines(const GraphId& n_graphId,
   uint32_t date_created = endnodetile->header()->date_created();
   uint32_t day = 0;
   uint32_t time_added = 0;
-  bool date_before_tile = false;
-  if (date < date_created) {
-    date_before_tile = true;
-  } else {
+  if (date >= date_created) {
     day = date - date_created;
   }
 
@@ -185,7 +183,7 @@ void validate(const boost::property_tree::ptree& pt,
 
     lock.lock();
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level() + 1, tile_id.id());
-    const GraphTile* transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
+    auto transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
     GraphTileBuilder tilebuilder(reader_transit_level.tile_dir(), transit_tile_id, true);
     lock.unlock();
 
@@ -235,9 +233,7 @@ void validate(const boost::property_tree::ptree& pt,
             continue;
           }
 
-          const TransitStop* transit_stop = transit_tile->GetTransitStop(nodeinfo.stop_index());
           GraphId currentNode = GraphId(transit_tile->id().tileid(), transit_tile->id().level(), i);
-          GraphId tileid = transit_tile->id();
           std::unordered_multimap<GraphId, uint64_t> visited_map;
 
           if (!WalkTransitLines(currentNode, reader_transit_level, lock, visited_map, t->date_time,
@@ -387,7 +383,6 @@ void ParseLogFile(const std::string& filename) {
   origin = "";
   dest = "";
   tranisit_route = "";
-  int num = 0;
   // Open file
   std::string line;
   std::ifstream file(filename);
