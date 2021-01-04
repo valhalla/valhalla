@@ -18,9 +18,8 @@ constexpr uint32_t kMaxGraphTileId = 4194303;
 // Maximum id/index within a tile. 21 bits
 constexpr uint32_t kMaxGraphId = 2097151;
 
-// A value to use for invalid latitude/longitudes (i.e. uninitialized)
-constexpr float kInvalidLatitude = std::numeric_limits<float>::max();
-constexpr float kInvalidLongitude = std::numeric_limits<float>::max();
+// Invalid edge label
+constexpr uint32_t kInvalidLabel = std::numeric_limits<uint32_t>::max();
 
 // Access bit field constants. Access in directed edge allows 12 bits.
 constexpr uint16_t kAutoAccess = 1;
@@ -207,22 +206,25 @@ enum class NodeType : uint8_t {
   kBikeShare = 7,               // Bike share location
   kParking = 8,                 // Parking location
   kMotorWayJunction = 9,        // Highway = motorway_junction
-  kBorderControl = 10           // Border control
+  kBorderControl = 10,          // Border control
+  kTollGantry = 11,             // Toll gantry
+  kSumpBuster = 12              // Sump Buster
 };
 inline std::string to_string(NodeType n) {
-  static const std::unordered_map<uint8_t, std::string> NodeTypeStrings = {
-      {static_cast<uint8_t>(NodeType::kStreetIntersection), "street_intersection"},
-      {static_cast<uint8_t>(NodeType::kGate), "gate"},
-      {static_cast<uint8_t>(NodeType::kBollard), "bollard"},
-      {static_cast<uint8_t>(NodeType::kTollBooth), "toll_booth"},
-      {static_cast<uint8_t>(NodeType::kTransitEgress), "transit_egress"},
-      {static_cast<uint8_t>(NodeType::kTransitStation), "transit_station"},
-      {static_cast<uint8_t>(NodeType::kMultiUseTransitPlatform), "multi_use_transit_platform"},
-      {static_cast<uint8_t>(NodeType::kBikeShare), "bike_share"},
-      {static_cast<uint8_t>(NodeType::kParking), "parking"},
-      {static_cast<uint8_t>(NodeType::kMotorWayJunction), "motor_way_junction"},
-      {static_cast<uint8_t>(NodeType::kBorderControl), "border_control"},
-  };
+  static const std::unordered_map<uint8_t, std::string> NodeTypeStrings =
+      {{static_cast<uint8_t>(NodeType::kStreetIntersection), "street_intersection"},
+       {static_cast<uint8_t>(NodeType::kGate), "gate"},
+       {static_cast<uint8_t>(NodeType::kBollard), "bollard"},
+       {static_cast<uint8_t>(NodeType::kTollBooth), "toll_booth"},
+       {static_cast<uint8_t>(NodeType::kTransitEgress), "transit_egress"},
+       {static_cast<uint8_t>(NodeType::kTransitStation), "transit_station"},
+       {static_cast<uint8_t>(NodeType::kMultiUseTransitPlatform), "multi_use_transit_platform"},
+       {static_cast<uint8_t>(NodeType::kBikeShare), "bike_share"},
+       {static_cast<uint8_t>(NodeType::kParking), "parking"},
+       {static_cast<uint8_t>(NodeType::kMotorWayJunction), "motor_way_junction"},
+       {static_cast<uint8_t>(NodeType::kBorderControl), "border_control"},
+       {static_cast<uint8_t>(NodeType::kTollGantry), "toll_gantry"},
+       {static_cast<uint8_t>(NodeType::kSumpBuster), "sump_buster"}};
 
   auto i = NodeTypeStrings.find(static_cast<uint8_t>(n));
   if (i == NodeTypeStrings.cend()) {
@@ -287,6 +289,10 @@ enum class Use : uint8_t {
   kPedestrian = 28,
   kBridleway = 29,
 
+  // Rest/Service Areas
+  kRestArea = 30,
+  kServiceArea = 31,
+
   // Other...
   kOther = 40,
 
@@ -324,6 +330,8 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kPath), "path"},
       {static_cast<uint8_t>(Use::kPedestrian), "pedestrian"},
       {static_cast<uint8_t>(Use::kBridleway), "bridleway"},
+      {static_cast<uint8_t>(Use::kRestArea), "rest_area"},
+      {static_cast<uint8_t>(Use::kServiceArea), "service_area"},
       {static_cast<uint8_t>(Use::kOther), "other"},
       {static_cast<uint8_t>(Use::kRailFerry), "rail-ferry"},
       {static_cast<uint8_t>(Use::kFerry), "ferry"},
@@ -340,6 +348,11 @@ inline std::string to_string(Use u) {
   }
   return i->second;
 }
+
+enum class TaggedName : uint8_t { // must start at 1 due to nulls
+  kTunnel = 1,
+  kBridge = 2
+};
 
 // Speed type
 enum class SpeedType : uint8_t {

@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "baldr/datetime.h"
 #include "baldr/json.h"
 #include "baldr/openlr.h"
 #include "baldr/rapidjson_utils.h"
@@ -17,8 +18,10 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "odin/util.h"
+#include "proto_conversions.h"
 #include "tyr/serializers.h"
 
+#include "proto/incidents.pb.h"
 #include "proto/options.pb.h"
 #include "proto/trip.pb.h"
 
@@ -30,6 +33,55 @@ using namespace std;
 namespace {
 midgard::PointLL to_ll(const LatLng& ll) {
   return midgard::PointLL{ll.lng(), ll.lat()};
+}
+using FormOfWay = valhalla::baldr::OpenLR::LocationReferencePoint::FormOfWay;
+
+FormOfWay road_class_to_fow(const valhalla::TripLeg::Edge& edge) {
+  if (edge.roundabout()) {
+    return FormOfWay::ROUNDABOUT;
+  } else if (edge.use() == valhalla::TripLeg::kRampUse ||
+             edge.use() == valhalla::TripLeg::kTurnChannelUse) {
+    return FormOfWay::SLIPROAD;
+  } else if (edge.road_class() == valhalla::RoadClass::kMotorway) {
+    return FormOfWay::MOTORWAY;
+  } else if (edge.traversability() == valhalla::TripLeg::kBoth) {
+    return FormOfWay::MULTIPLE_CARRIAGEWAY;
+  } else if (edge.traversability() != valhalla::TripLeg::kNone) {
+    return FormOfWay::SINGLE_CARRIAGEWAY;
+  } else {
+    return FormOfWay::OTHER;
+  }
+}
+
+std::vector<std::string> openlr_edges(const TripLeg& leg) {
+  // TODO: can we get the uncompressed shape when we have it in other serialization steps
+  const std::vector<midgard::PointLL>& shape =
+      midgard::decode<std::vector<midgard::PointLL>>(leg.shape());
+  std::vector<std::string> openlrs;
+  openlrs.reserve(leg.node_size());
+  for (const TripLeg::Node& node : leg.node()) {
+    // the last trip node is the end, we shouldnt have an openlr there
+    if (!node.has_edge())
+      break;
+
+    const auto& edge = node.edge();
+
+    const FormOfWay fow = road_class_to_fow(edge);
+    const auto frc = static_cast<uint8_t>(edge.road_class());
+
+    const auto& start = shape[edge.begin_shape_index()];
+    float forward_heading =
+        midgard::tangent_angle(edge.begin_shape_index(), start, shape, 20.f, true);
+    const auto& end = shape[edge.end_shape_index()];
+    float reverse_heading = midgard::tangent_angle(edge.end_shape_index(), end, shape, 20.f, false);
+
+    std::vector<baldr::OpenLR::LocationReferencePoint> lrps;
+    lrps.emplace_back(start.lng(), start.lat(), forward_heading, frc, fow, nullptr,
+                      edge.length_km() * valhalla::midgard::kMetersPerKm, frc);
+    lrps.emplace_back(end.lng(), end.lat(), reverse_heading, frc, fow, &lrps.back());
+    openlrs.emplace_back(baldr::OpenLR::OpenLr{lrps, 0, 0}.toBase64());
+  }
+  return openlrs;
 }
 } // namespace
 namespace valhalla {
@@ -43,7 +95,7 @@ void route_references(json::MapPtr& route_json, const TripRoute& route, const Op
   }
   json::ArrayPtr references = json::array({});
   for (const TripLeg& leg : route.legs()) {
-    for (const std::string& openlr : midgard::openlr_edges(leg)) {
+    for (const std::string& openlr : openlr_edges(leg)) {
       references->emplace_back(openlr);
     }
   }
@@ -134,6 +186,108 @@ json::ArrayPtr waypoints(const valhalla::Trip& trip) {
     }
   }
   return waypoints;
+}
+
+void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
+                                 const valhalla::IncidentsTile::Metadata& incident_metadata,
+                                 const int begin_shape_index,
+                                 const int end_shape_index,
+                                 const std::string& road_class,
+                                 const std::string& key_prefix) {
+  writer.Key(key_prefix + "id");
+  writer.String(std::to_string(incident_metadata.id()));
+  {
+    // Type is mandatory
+    writer.Key(key_prefix + "type");
+    writer.String(std::string(valhalla::incidentTypeToString(incident_metadata.type())));
+  }
+  if (!incident_metadata.iso_3166_1_alpha2().empty()) {
+    writer.Key(key_prefix + "iso_3166_1_alpha2");
+    writer.String(incident_metadata.iso_3166_1_alpha2());
+  }
+  if (!incident_metadata.description().empty()) {
+    writer.Key(key_prefix + "description");
+    writer.String(incident_metadata.description());
+  }
+  if (!incident_metadata.long_description().empty()) {
+    writer.Key(key_prefix + "long_description");
+    writer.String(incident_metadata.long_description());
+  }
+  if (incident_metadata.creation_time()) {
+    writer.Key(key_prefix + "creation_time");
+    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.creation_time()));
+  }
+  if (incident_metadata.start_time() > 0) {
+    writer.Key(key_prefix + "start_time");
+    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.start_time()));
+  }
+  if (incident_metadata.end_time()) {
+    writer.Key(key_prefix + "end_time");
+    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.end_time()));
+  }
+  if (incident_metadata.impact()) {
+    writer.Key(key_prefix + "impact");
+    writer.String(std::string(valhalla::incidentImpactToString(incident_metadata.impact())));
+  }
+  if (!incident_metadata.sub_type().empty()) {
+    writer.Key(key_prefix + "sub_type");
+    writer.String(incident_metadata.sub_type());
+  }
+  if (!incident_metadata.sub_type_description().empty()) {
+    writer.Key(key_prefix + "sub_type_description");
+    writer.String(incident_metadata.sub_type_description());
+  }
+  if (incident_metadata.alertc_codes_size() > 0) {
+    writer.Key(key_prefix + "alertc_codes");
+    writer.StartArray();
+    for (const auto& alertc_code : incident_metadata.alertc_codes()) {
+      writer.Int(static_cast<uint64_t>(alertc_code));
+    }
+    writer.EndArray();
+  }
+  {
+    writer.Key(key_prefix + "lanes_blocked");
+    writer.StartArray();
+    for (const auto& blocked_lane : incident_metadata.lanes_blocked()) {
+      writer.String(blocked_lane);
+    }
+    writer.EndArray();
+  }
+  if (incident_metadata.num_lanes_blocked()) {
+    writer.Key(key_prefix + "num_lanes_blocked");
+    writer.Int(incident_metadata.num_lanes_blocked());
+  }
+  if (!incident_metadata.clear_lanes().empty()) {
+    writer.Key(key_prefix + "clear_lanes");
+    writer.String(incident_metadata.clear_lanes());
+  }
+
+  if (incident_metadata.road_closed()) {
+    writer.Key(key_prefix + "closed");
+    writer.Bool(incident_metadata.road_closed());
+  }
+  if (!road_class.empty()) {
+    writer.Key(key_prefix + "class");
+    writer.String(road_class);
+  }
+
+  if (incident_metadata.has_congestion()) {
+    writer.Key(key_prefix + "congestion");
+    writer.StartObject();
+    writer.Key("value");
+    writer.Int(incident_metadata.congestion().value());
+    writer.EndObject();
+  }
+
+  if (begin_shape_index >= 0) {
+    writer.Key(key_prefix + "geometry_index_start");
+    writer.Int(begin_shape_index);
+  }
+  if (end_shape_index >= 0) {
+    writer.Key(key_prefix + "geometry_index_end");
+    writer.Int(end_shape_index);
+  }
+  // TODO Add test of lanes blocked and add missing properties
 }
 
 } // namespace osrm

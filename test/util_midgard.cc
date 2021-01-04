@@ -173,7 +173,7 @@ TEST(UtilMidgard, TestResample) {
     for (const auto& p : resampled) {
       auto cp = p.ClosestPoint(input_shape);
       auto dist = std::get<1>(cp);
-      if (!equal(dist, 0.f, 1.2f)) {
+      if (!equal(dist, 0., 1.2)) {
         throw std::runtime_error("Sampled point was not found on original line");
       }
     }
@@ -223,7 +223,7 @@ TEST(UtilMidgard, TestResampleDuplicate) {
   for (const auto& p : resampled) {
     auto cp = p.ClosestPoint(polyline);
     auto dist = std::get<1>(cp);
-    if (!equal(dist, 0.f, 1.2f)) {
+    if (!equal(dist, 0., 1.2)) {
       throw std::runtime_error("Sampled point was not found on original line");
     }
   }

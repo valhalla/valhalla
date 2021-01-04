@@ -33,7 +33,7 @@ enum ShapeFormat {
 
 enum Costing {
   auto_ = 0;
-  auto_shorter = 1;
+  // deprecated auto_shorter = 1;
   bicycle = 2;
   bus = 3;
   hov = 4;
@@ -43,7 +43,7 @@ enum Costing {
   transit = 8;
   truck = 9;
   motorcycle = 10;
-  auto_data_fix = 11;
+  // deprecated auto_data_fix = 11;
   taxi = 12;
   none_ = 13;
   bikeshare = 14;
@@ -114,7 +114,12 @@ message CostingOptions {
   optional float bike_share_penalty = 57;
   optional float rail_ferry_cost = 58;
   optional float use_rail_ferry = 59;
-  optional float service_penalty = 60;
+  optional bool ignore_restrictions = 60;
+  optional bool ignore_oneways = 61;
+  optional bool ignore_access = 62;
+  optional bool ignore_closures = 63;
+  optional bool shortest = 64;
+  optional float service_penalty = 65;
 
   // these are not specified directly by the user but they get filled in as the request is parsed and fulfilled
   optional Costing costing = 90;
@@ -138,20 +143,21 @@ message Options {
   enum Action {
     route = 1;
     locate = 2;
-    sources_to_targets = 6;
-    optimized_route = 7;
-    isochrone = 8;
-    trace_route = 9;
-    trace_attributes = 10;
-    height = 11;
-    transit_available = 12;
-    expansion = 13;
+    sources_to_targets = 3;
+    optimized_route = 4;
+    isochrone = 5;
+    trace_route = 6;
+    trace_attributes = 7;
+    height = 8;
+    transit_available = 9;
+    expansion = 10;
   }
 
   enum DateTimeType {
     current = 0;
     depart_at = 1;
     arrive_by = 2;
+    invariant = 3;
   }
 
   optional Units units = 1;                                               // kilometers or miles

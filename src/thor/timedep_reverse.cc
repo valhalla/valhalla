@@ -3,7 +3,6 @@
 #include "midgard/logging.h"
 #include "thor/timedep.h"
 #include <algorithm>
-#include <map>
 #include <string>
 
 using namespace valhalla::baldr;
@@ -19,7 +18,7 @@ constexpr uint64_t kInitialEdgeLabelCount = 500000;
 constexpr uint32_t kMaxIterationsWithoutConvergence = 800000;
 
 // Default constructor
-TimeDepReverse::TimeDepReverse() : AStarPathAlgorithm() {
+TimeDepReverse::TimeDepReverse() : TimeDepForward() {
   mode_ = TravelMode::kDrive;
   travel_type_ = 0;
   adjacencylist_ = nullptr;
@@ -33,7 +32,7 @@ TimeDepReverse::~TimeDepReverse() {
 }
 
 void TimeDepReverse::Clear() {
-  AStarPathAlgorithm::Clear();
+  TimeDepForward::Clear();
   edgelabels_rev_.clear();
 }
 
@@ -81,19 +80,25 @@ bool TimeDepReverse::ExpandReverse(GraphReader& graphreader,
                                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return false;
   }
   const NodeInfo* nodeinfo = tile->node(node);
-  if (!costing_->Allowed(nodeinfo)) {
-    return false;
-  }
 
   // Update the time information
   auto offset_time =
       from_transition ? time_info
                       : time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
+
+  if (!costing_->Allowed(nodeinfo)) {
+    const DirectedEdge* opp_edge;
+    const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
+    EdgeStatusInfo* opp_status = edgestatus_.GetPtr(opp_edge_id, tile);
+    return ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
+                              {opp_edge, opp_edge_id, opp_status}, tile, offset_time, destination,
+                              best_path);
+  }
 
   // Expand from end node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
@@ -173,7 +178,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
                                                const NodeInfo* nodeinfo,
                                                const uint32_t pred_idx,
                                                const EdgeMetadata& meta,
-                                               const GraphTile* tile,
+                                               const graph_tile_ptr& tile,
                                                const TimeInfo& time_info,
                                                const valhalla::Location& destination,
                                                std::pair<int32_t, float>& best_path) {
@@ -190,7 +195,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   }
 
   // Get end node tile, opposing edge Id, and opposing directed edge.
-  const GraphTile* t2 =
+  graph_tile_ptr t2 =
       meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
   if (t2 == nullptr) {
     return false;
@@ -262,7 +267,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   float dist = 0.0f;
   float sortcost = newcost.cost;
   if (p == destinations_percent_along_.end()) {
-    const GraphTile* t2 =
+    graph_tile_ptr t2 =
         meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
     if (t2 == nullptr) {
       return false;
@@ -289,7 +294,7 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
                             GraphReader& graphreader,
                             const sif::mode_costing_t& mode_costing,
                             const TravelMode mode,
-                            const Options& options) {
+                            const Options& /*options*/) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -327,7 +332,7 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
   uint32_t nc = 0; // Count of iterations with no convergence
                    // towards destination
   std::pair<int32_t, float> best_path = std::make_pair(-1, 0.0f);
-  const GraphTile* tile;
+  graph_tile_ptr tile;
   size_t total_labels = 0;
   while (true) {
     // Allow this process to be aborted
@@ -410,9 +415,9 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
 // The origin of the reverse path is the destination location.
 // TODO - how do we set the
 void TimeDepReverse::SetOrigin(GraphReader& graphreader,
-                               valhalla::Location& origin,
-                               valhalla::Location& destination,
-                               uint32_t seconds_of_week) {
+                               const valhalla::Location& origin,
+                               const valhalla::Location& destination,
+                               const uint32_t seconds_of_week) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
@@ -447,7 +452,7 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
 
     // Get the directed edge
     GraphId edgeid(edge.graph_id());
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the opposing directed edge, continue if we cannot get it
@@ -544,14 +549,13 @@ uint32_t TimeDepReverse::SetDestination(GraphReader& graphreader, const valhalla
     // remainder of the edge. This cost is subtracted from the total cost
     // up to the end of the destination edge.
     GraphId id(edge.graph_id());
-    const GraphTile* tile = graphreader.GetGraphTile(id);
+    auto tile = graphreader.GetGraphTile(id);
     const DirectedEdge* directededge = tile->directededge(id);
 
     // The opposing edge Id is added as a destination since the search
     // is done in reverse direction.
-    const GraphTile* t2 =
-        directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
-    if (t2 == nullptr) {
+    auto t2 = directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
+    if (!t2) {
       continue;
     }
     GraphId oppedge = t2->GetOpposingEdgeId(directededge);
@@ -566,7 +570,7 @@ uint32_t TimeDepReverse::SetDestination(GraphReader& graphreader, const valhalla
 }
 
 // Form the path from the adjacency list.
-std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& graphreader, const uint32_t dest) {
+std::vector<PathInfo> TimeDepReverse::FormPath(GraphReader& /*graphreader*/, const uint32_t dest) {
   // Metrics to track
   LOG_DEBUG("path_cost::" + std::to_string(edgelabels_rev_[dest].cost().cost));
   LOG_DEBUG("path_iterations::" + std::to_string(edgelabels_rev_.size()));

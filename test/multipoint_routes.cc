@@ -6,11 +6,9 @@
 
 #include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
-#include "midgard/logging.h"
 #include "midgard/util.h"
 #include "odin/worker.h"
 #include "sif/autocost.h"
-#include "thor/astar.h"
 #include "thor/worker.h"
 #include <boost/property_tree/ptree.hpp>
 
@@ -111,7 +109,7 @@ void check_dates(bool time_dependent,
                   l.date_time().find('-', l.date_time().find('T')) == std::string::npos);
       // get the timezone
       baldr::GraphId edge_id(l.path_edges().begin()->graph_id());
-      const auto* tile = reader.GetGraphTile(edge_id);
+      auto tile = reader.GetGraphTile(edge_id);
       const auto* edge = tile->directededge(edge_id);
       tile = reader.GetGraphTile(edge->endnode(), tile);
       const auto* node = tile->node(edge->endnode());
@@ -384,7 +382,7 @@ TEST(MultiPointRoutesBreakThrough, test_mid_break_through_elapsed) {
   EXPECT_LT(previous_node->cost().elapsed_cost().seconds(),
             last_node->cost().elapsed_cost().seconds() -
                 previous_node->cost().transition_cost().seconds());
-  EXPECT_NEAR(legs.rbegin()->node().rbegin()->cost().elapsed_cost().seconds(), 18.2, .2);
+  EXPECT_NEAR(legs.rbegin()->node().rbegin()->cost().elapsed_cost().seconds(), 11.2, .2);
 }
 
 } // namespace

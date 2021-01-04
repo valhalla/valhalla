@@ -8,7 +8,7 @@
 #include "sif/dynamiccost.h"
 
 #ifdef INLINE_TEST
-#include "test/test.h"
+#include "test.h"
 #include "worker.h"
 #include <random>
 #endif
@@ -31,18 +31,11 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  NoCost(const CostingOptions& costing_options) : DynamicCost(costing_options, TravelMode::kDrive) {
+  NoCost(const CostingOptions& costing_options)
+      : DynamicCost(costing_options, TravelMode::kDrive, kAllAccess) {
   }
 
   virtual ~NoCost() {
-  }
-
-  /**
-   * Get the access mode used by this costing method.
-   * @return  Returns access mode.
-   */
-  uint32_t access_mode() const {
-    return kAllAccess;
   }
 
   /**
@@ -61,12 +54,12 @@ public:
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred,
-                       const GraphTile* tile,
-                       const baldr::GraphId& edgeid,
-                       const uint64_t current_time,
-                       const uint32_t tz_index,
-                       int& restriction_idx) const {
+                       const EdgeLabel&,
+                       const graph_tile_ptr&,
+                       const baldr::GraphId&,
+                       const uint64_t,
+                       const uint32_t,
+                       int&) const override {
     return !edge->is_shortcut();
   }
 
@@ -88,14 +81,14 @@ public:
    * @param  tz_index       timezone index for the node
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
-                              const EdgeLabel& pred,
+  virtual bool AllowedReverse(const baldr::DirectedEdge*,
+                              const EdgeLabel&,
                               const baldr::DirectedEdge* opp_edge,
-                              const GraphTile* tile,
-                              const baldr::GraphId& opp_edgeid,
-                              const uint64_t current_time,
-                              const uint32_t tz_index,
-                              int& restriction_idx) const {
+                              const graph_tile_ptr&,
+                              const baldr::GraphId&,
+                              const uint64_t,
+                              const uint32_t,
+                              int&) const override {
     return !opp_edge->is_shortcut();
   }
 
@@ -105,8 +98,22 @@ public:
    * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::NodeInfo* node) const {
+  bool Allowed(const baldr::NodeInfo*) const override {
     return true;
+  }
+
+  /**
+   * Checks if access is allowed for the provided edge. The access check based on mode
+   * of travel and the access modes allowed on the edge.
+   * @param   edge  Pointer to edge information.
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool IsAccessible(const baldr::DirectedEdge*) const override {
+    return true;
+  }
+
+  bool IsClosed(const baldr::DirectedEdge*, const graph_tile_ptr&) const override {
+    return false;
   }
 
   /**
@@ -116,9 +123,9 @@ public:
    * @param curr_time
    * @return
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::TransitDeparture* departure,
-                        const uint32_t curr_time) const {
+  virtual Cost EdgeCost(const baldr::DirectedEdge*,
+                        const baldr::TransitDeparture*,
+                        const uint32_t) const override {
     throw std::runtime_error("NoCost::EdgeCost does not support transit edges");
   }
 
@@ -130,9 +137,8 @@ public:
    * @param   seconds Time of week in seconds.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::GraphTile* tile,
-                        const uint32_t seconds) const {
+  virtual Cost
+  EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr&, const uint32_t) const override {
     return {static_cast<float>(edge->length()), static_cast<float>(edge->length())};
   }
 
@@ -145,9 +151,9 @@ public:
    * @param  pred  Predecessor edge information.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
-                              const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const {
+  virtual Cost TransitionCost(const baldr::DirectedEdge*,
+                              const baldr::NodeInfo*,
+                              const EdgeLabel&) const override {
     return {};
   }
 
@@ -160,10 +166,10 @@ public:
    * @param  edge  the opposing predecessor in the reverse tree
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost TransitionCostReverse(const uint32_t idx,
-                                     const baldr::NodeInfo* node,
-                                     const baldr::DirectedEdge* pred,
-                                     const baldr::DirectedEdge* edge) const {
+  virtual Cost TransitionCostReverse(const uint32_t,
+                                     const baldr::NodeInfo*,
+                                     const baldr::DirectedEdge*,
+                                     const baldr::DirectedEdge*) const override {
     return {};
   }
 
@@ -175,37 +181,24 @@ public:
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
    */
-  virtual float AStarCostFactor() const {
+  virtual float AStarCostFactor() const override {
     return 1.f;
   }
 
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
-    // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      return !(edge->is_shortcut() || edge->IsTransitLine());
-    };
-  }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each node's attribution
-   * @return Function/functor to be used in filtering out nodes
-   */
-  virtual const NodeFilter GetNodeFilter() const {
-    // throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node) { return false; };
+  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr&) const override {
+    return !(edge->is_shortcut() || edge->IsTransitLine());
   }
 };
 
-void ParseNoCostOptions(const rapidjson::Document& doc,
-                        const std::string& costing_options_key,
+void ParseNoCostOptions(const rapidjson::Document&,
+                        const std::string&,
                         CostingOptions* pbf_costing_options) {
   // this is probably not needed but its part of the contract for costing..
   pbf_costing_options->set_costing(Costing::none_);

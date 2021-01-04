@@ -33,13 +33,12 @@
 
 namespace rapidjson {
 
-template <typename T>
-inline std::string to_string(const T& document_or_value, int decimal_places = -1) {
+inline std::string to_string(const rapidjson::Value& value, int decimal_places = -1) {
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   if (decimal_places >= 0)
     writer.SetMaxDecimalPlaces(decimal_places);
-  document_or_value.Accept(writer);
+  value.Accept(writer);
   return std::string(buffer.GetString(), buffer.GetSize());
 }
 
@@ -227,6 +226,15 @@ void read_json(const std::string& filename, Ptree& pt, const std::locale& loc = 
     throw std::runtime_error("Cannot open file " + filename);
   stream.imbue(loc);
   rapidjson::read_json(stream, pt);
+}
+
+inline std::string serialize(const rapidjson::Document& doc) {
+  rapidjson::StringBuffer buffer;
+  rapidjson::PrettyWriter<rapidjson::StringBuffer, rapidjson::Document::EncodingType,
+                          rapidjson::ASCII<>>
+      writer(buffer);
+  doc.Accept(writer);
+  return buffer.GetString();
 }
 
 } // namespace rapidjson

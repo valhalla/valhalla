@@ -37,7 +37,7 @@ constexpr uint32_t kAbsurdRoadClass = 777777;
 
 // Convenience method to get a number from a string. Uses try/catch in case
 // stoi throws an exception
-int get_number(const std::string& tag, const std::string& value) {
+int get_number(const std::string& tag, const std::string& value) { // NOLINT
   int num = -1;
   try {
     num = stoi(value);
@@ -63,8 +63,8 @@ public:
 
     highway_cutoff_rc_ = RoadClass::kPrimary;
     for (auto& level : TileHierarchy::levels()) {
-      if (level.second.name == "highway") {
-        highway_cutoff_rc_ = level.second.importance;
+      if (level.name == "highway") {
+        highway_cutoff_rc_ = level.importance;
       }
     }
 
@@ -74,11 +74,19 @@ public:
     infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
     use_direction_on_ways_ = pt.get<bool>("data_processing.use_direction_on_ways", false);
     allow_alt_name_ = pt.get<bool>("data_processing.allow_alt_name", false);
+    use_urban_tag_ = pt.get<bool>("data_processing.use_urban_tag", false);
+    use_rest_area_ = pt.get<bool>("data_processing.use_rest_area", false);
+    use_admin_db_ = pt.get<bool>("data_processing.use_admin_db", true);
 
     empty_node_results_ = lua_.Transform(OSMType::kNode, 0, {});
     empty_way_results_ = lua_.Transform(OSMType::kWay, 0, {});
     empty_relation_results_ = lua_.Transform(OSMType::kRelation, 0, {});
 
+    tag_handlers_["driving_side"] = [this]() {
+      if (!use_admin_db_) {
+        way_.set_drive_on_right(tag_.second == "right" ? true : false);
+      }
+    };
     tag_handlers_["internal_intersection"] = [this]() {
       if (!infer_internal_intersections_) {
         way_.set_internal(tag_.second == "true" ? true : false);
@@ -238,6 +246,17 @@ public:
       if (tag_.second == "true")
         way_.set_destination_only(true);
     };
+    tag_handlers_["service"] = [this]() {
+      if (tag_.second == "rest_area") {
+        service_ = tag_.second;
+      }
+    };
+    tag_handlers_["amenity"] = [this]() {
+      if (tag_.second == "yes") {
+        amenity_ = tag_.second;
+      }
+    };
+
     tag_handlers_["use"] = [this]() {
       Use use = (Use)std::stoi(tag_.second);
       switch (use) {
@@ -282,6 +301,9 @@ public:
         case Use::kDriveThru:
           way_.set_destination_only(true);
           way_.set_use(Use::kDriveThru);
+          break;
+        case Use::kServiceRoad:
+          way_.set_use(Use::kServiceRoad);
           break;
         case Use::kTrack:
           way_.set_use(Use::kTrack);
@@ -355,6 +377,10 @@ public:
     tag_handlers_["official_name"] = [this]() {
       if (!tag_.second.empty())
         way_.set_official_name_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["tunnel:name"] = [this]() {
+      if (!tag_.second.empty())
+        way_.set_tunnel_name_index(osmdata_.name_offset_map.index(tag_.second));
     };
     tag_handlers_["max_speed"] = [this]() {
       try {
@@ -659,18 +685,18 @@ public:
     tag_handlers_["bridge"] = [this]() { way_.set_bridge(tag_.second == "true" ? true : false); };
     tag_handlers_["seasonal"] = [this]() { way_.set_seasonal(tag_.second == "true" ? true : false); };
     tag_handlers_["bike_network_mask"] = [this]() { way_.set_bike_network(std::stoi(tag_.second)); };
-    tag_handlers_["bike_national_ref"] = [this]() {
-      if (!tag_.second.empty())
-        way_.set_bike_national_ref_index(osmdata_.name_offset_map.index(tag_.second));
-    };
-    tag_handlers_["bike_regional_ref"] = [this]() {
-      if (!tag_.second.empty())
-        way_.set_bike_regional_ref_index(osmdata_.name_offset_map.index(tag_.second));
-    };
-    tag_handlers_["bike_local_ref"] = [this]() {
-      if (!tag_.second.empty())
-        way_.set_bike_local_ref_index(osmdata_.name_offset_map.index(tag_.second));
-    };
+    //    tag_handlers_["bike_national_ref"] = [this]() {
+    //      if (!tag_.second.empty())
+    //        way_.set_bike_national_ref_index(osmdata_.name_offset_map.index(tag_.second));
+    //    };
+    //    tag_handlers_["bike_regional_ref"] = [this]() {
+    //      if (!tag_.second.empty())
+    //        way_.set_bike_regional_ref_index(osmdata_.name_offset_map.index(tag_.second));
+    //    };
+    //    tag_handlers_["bike_local_ref"] = [this]() {
+    //      if (!tag_.second.empty())
+    //        way_.set_bike_local_ref_index(osmdata_.name_offset_map.index(tag_.second));
+    //    };
     tag_handlers_["destination"] = [this]() {
       if (!tag_.second.empty()) {
         way_.set_destination_index(osmdata_.name_offset_map.index(tag_.second));
@@ -749,6 +775,15 @@ public:
     tag_handlers_["guidance_view:jct:overlay:backward"] = [this]() {
       way_.set_bwd_jct_overlay_index(osmdata_.name_offset_map.index(tag_.second));
     };
+    tag_handlers_["guidance_view:signboard:base"] = [this]() {
+      way_.set_fwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["guidance_view:signboard:base:forward"] = [this]() {
+      way_.set_fwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["guidance_view:signboard:base:backward"] = [this]() {
+      way_.set_bwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
+    };
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
@@ -788,7 +823,7 @@ public:
         if (key_value.first == "amenity" && key_value.second == "bicycle_rental") {
           // Create a new node and set its attributes
           OSMNode n{osmid};
-          n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
+          n.set_latlng(lng, lat);
           n.set_type(NodeType::kBikeShare);
           bss_nodes_->push_back(n);
           return; // we are done.
@@ -841,19 +876,37 @@ public:
     // Create a new node and set its attributes
     OSMNode n;
     n.set_id(osmid);
-    n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
+    n.set_latlng(lng, lat);
     bool intersection = false;
     if (is_highway_junction) {
       n.set_type(NodeType::kMotorWayJunction);
     }
 
     for (const auto& tag : *results) {
-      if (tag.first == "highway") {
+      if (tag.first == "iso:3166_1" && !use_admin_db_) {
+        bool hasTag = (tag.second.length() ? true : false);
+        if (hasTag) {
+          // Add the country iso code to the unique node names list and store its index in the OSM
+          // node
+          n.set_country_iso_index(osmdata_.node_names.index(tag.second));
+          ++osmdata_.node_name_count;
+        }
+      } else if ((tag.first == "state_iso_code" && !use_admin_db_)) {
+        bool hasTag = (tag.second.length() ? true : false);
+        if (hasTag) {
+          // Add the state iso code to the unique node names list and store its index in the OSM
+          // node
+          n.set_state_iso_index(osmdata_.node_names.index(tag.second));
+          ++osmdata_.node_name_count;
+        }
+      } else if (tag.first == "highway") {
         n.set_traffic_signal(tag.second == "traffic_signals" ? true : false);
       } else if (tag.first == "forward_signal") {
         n.set_forward_signal(tag.second == "true" ? true : false);
       } else if (tag.first == "backward_signal") {
         n.set_backward_signal(tag.second == "true" ? true : false);
+      } else if (use_urban_tag_ && tag.first == "urban") {
+        n.set_urban(tag.second == "true" ? true : false);
       } else if (is_highway_junction && (tag.first == "exit_to")) {
         bool hasTag = (tag.second.length() ? true : false);
         if (hasTag) {
@@ -906,6 +959,22 @@ public:
             ++osmdata_.edge_count;
           }
           n.set_type(NodeType::kBorderControl);
+        }
+      } else if (tag.first == "toll_gantry") {
+        if (tag.second == "true") {
+          if (!intersection) {
+            intersection = true;
+            ++osmdata_.edge_count;
+          }
+          n.set_type(NodeType::kTollGantry);
+        }
+      } else if (tag.first == "sump_buster") {
+        if (tag.second == "true") {
+          if (!intersection) {
+            intersection = true;
+            ++osmdata_.edge_count;
+          }
+          n.set_type(NodeType::kSumpBuster);
         }
       } else if (tag.first == "access_mask") {
         n.set_access(std::stoi(tag.second));
@@ -1047,7 +1116,7 @@ public:
     has_default_speed_ = false, has_max_speed_ = false;
     has_average_speed_ = false, has_advisory_speed_ = false;
     has_surface_ = true;
-    name_ = {};
+    name_ = {}, service_ = {}, amenity_ = {};
 
     // Process tags
     way_ = OSMWay{osmid_};
@@ -1067,13 +1136,14 @@ public:
     bool is_highway_junction =
         ((highway_junction != results.end()) && (highway_junction->second == "motorway_junction"));
 
+    way_.set_drive_on_right(true); // default
+
     for (const auto& kv : results) {
       tag_ = kv;
       const auto it = tag_handlers_.find(tag_.first);
       if (it != tag_handlers_.end()) {
         it->second();
       }
-
       // motor_vehicle:conditional=no @ (16:30-07:00)
       else if (tag_.first.substr(0, 20) == "motorcar:conditional" ||
                tag_.first.substr(0, 25) == "motor_vehicle:conditional" ||
@@ -1150,6 +1220,15 @@ public:
       }
     }
 
+    // We need to set a data processing flag so we need to
+    // process in pbfgraphparser instead of lua because of config option use_rest_area
+    if (use_rest_area_ && service_ == "rest_area") {
+      if (amenity_ == "yes") {
+        way_.set_use(Use::kServiceArea);
+      } else {
+        way_.set_use(Use::kRestArea);
+      }
+    }
     if (use_direction_on_ways_ && !ref_.empty()) {
       if (direction_.empty()) {
         way_.set_ref_index(osmdata_.name_offset_map.index(ref_));
@@ -1395,9 +1474,6 @@ public:
       } else // fallback to default speed.
         way_.set_speed(default_speed_);
     }
-
-    // default to drive on right.
-    way_.set_drive_on_right(true);
 
     // ferries / auto trains need to be set to highway cut off in config.
     if (way_.ferry() || way_.rail()) {
@@ -1898,7 +1974,7 @@ public:
   OSMAccess osm_access_;
   bool has_user_tags_ = false;
   std::string ref_, int_ref_, direction_, int_direction_;
-  std::string name_;
+  std::string name_, service_, amenity_;
 
   // Configuration option to include driveways
   bool include_driveways_;
@@ -1918,6 +1994,18 @@ public:
   // Configuration option indicating whether or not to process the alt_name key on the ways during the
   // parsing phase
   bool allow_alt_name_;
+
+  // Configuration option indicating whether or not to process the urban key on the ways during the
+  // parsing phase or to get the density during the enhancer phase
+  bool use_urban_tag_;
+
+  // Configuration option indicating whether or not to process the rest/service area keys on the ways
+  // during the parsing phase
+  bool use_rest_area_;
+
+  // Configuration option indicating whether or not to process the admin iso code keys on the
+  // nodes during the parsing phase or to get the admin info from the admin db
+  bool use_admin_db_;
 
   // Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
   RoadClass highway_cutoff_rc_;
@@ -2090,7 +2178,6 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
 
 void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
                                 const std::vector<std::string>& input_files,
-                                const std::string& ways_file,
                                 const std::string& way_nodes_file,
                                 const std::string& bss_nodes_file,
                                 OSMData& osmdata) {

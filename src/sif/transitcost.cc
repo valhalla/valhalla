@@ -7,7 +7,7 @@
 #include "worker.h"
 
 #ifdef INLINE_TEST
-#include "test/test.h"
+#include "test.h"
 #include <random>
 #endif
 
@@ -71,25 +71,25 @@ public:
    * Get the wheelchair required flag.
    * @return  Returns true if wheelchair is required.
    */
-  bool wheelchair() const;
+  bool wheelchair() const override;
 
   /**
    * Get the bicycle required flag.
    * @return  Returns true if bicycle is required.
    */
-  bool bicycle() const;
+  bool bicycle() const override;
 
   /**
    * This method overrides the factor for this mode.  The higher the value
    * the more the mode is favored.
    */
-  virtual float GetModeFactor();
+  virtual float GetModeFactor() override;
 
   /**
    * Get the access mode used by this costing method.
    * @return  Returns access mode.
    */
-  uint32_t access_mode() const;
+  uint32_t access_mode() const override;
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -107,11 +107,11 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const GraphTile* tile,
+                       const graph_tile_ptr& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       int& restriction_idx) const;
+                       int& restriction_idx) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -133,11 +133,11 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const GraphTile* tile,
+                              const graph_tile_ptr& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              int& restriction_idx) const;
+                              int& restriction_idx) const override;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -145,7 +145,7 @@ public:
    * @param  node  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::NodeInfo* node) const;
+  virtual bool Allowed(const baldr::NodeInfo* node) const override;
 
   /**
    * Get the cost to traverse the specified directed edge using a transit
@@ -158,7 +158,7 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::TransitDeparture* departure,
-                        const uint32_t curr_time) const;
+                        const uint32_t curr_time) const override;
 
   /**
    * Transit costing only works on transit edges, hence we throw
@@ -167,10 +167,13 @@ public:
    * @param seconds
    * @return
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::GraphTile* tile,
-                        const uint32_t seconds) const {
+  virtual Cost
+  EdgeCost(const baldr::DirectedEdge*, const graph_tile_ptr&, const uint32_t) const override {
     throw std::runtime_error("TransitCost::EdgeCost only supports transit edges");
+  }
+
+  bool IsClosed(const baldr::DirectedEdge*, const graph_tile_ptr&) const override {
+    return false;
   }
 
   /**
@@ -184,19 +187,19 @@ public:
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const;
+                              const EdgeLabel& pred) const override;
 
   /**
    * Returns the transfer cost between 2 transit stops.
    * @return  Returns the transfer cost and time (seconds).
    */
-  virtual Cost TransferCost() const;
+  virtual Cost TransferCost() const override;
 
   /**
    * Returns the default transfer cost between 2 transit lines.
    * @return  Returns the transfer cost and time (seconds).
    */
-  virtual Cost DefaultTransferCost() const;
+  virtual Cost DefaultTransferCost() const override;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -206,62 +209,50 @@ public:
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
    */
-  virtual float AStarCostFactor() const;
+  virtual float AStarCostFactor() const override;
 
   /**
    * Override unit size since walking costs are higher range of vales
    */
-  virtual uint32_t UnitSize() const;
+  virtual uint32_t UnitSize() const override;
 
   /**
-   * Returns a function/functor to be used in location searching which will
+   * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. Function/functor is also used to filter
+   * mode used by the costing method. Function is also used to filter
    * edges not usable / inaccessible by transit route use.
    * This is used to conflate the stops to OSM way ids and we don't want to
    * include ferries.
-   * @return Function/functor to be used in filtering out edges
    */
-  virtual const EdgeFilter GetEdgeFilter() const {
-    // Throw back a lambda that checks the access for this type of costing
-    return [](const baldr::DirectedEdge* edge) {
-      if (edge->is_shortcut() || edge->use() >= Use::kFerry ||
-          !(edge->forwardaccess() & kPedestrianAccess) || edge->bss_connection()) {
-        return 0.0f;
-      } else {
-        // TODO - use classification/use to alter the factor
-        return 1.0f;
-      }
-    };
-  }
-
-  /**
-   * Returns a function/functor to be used in location searching which will
-   * exclude results from the search by looking at each node's attribution
-   * @return Function/functor to be used in filtering out nodes
-   */
-  virtual const NodeFilter GetNodeFilter() const {
-    // throw back a lambda that checks the access for this type of costing
-    return [](const baldr::NodeInfo* node) { return !(node->access() & kPedestrianAccess); };
+  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr&) const override {
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
+    bool accessible = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    if (edge->is_shortcut() || edge->use() >= Use::kFerry || !accessible || edge->bss_connection()) {
+      return 0.0f;
+    } else {
+      // TODO - use classification/use to alter the factor
+      return 1.0f;
+    }
   }
 
   /**This method adds to the exclude list based on the
    * user inputed exclude and include lists.
    */
-  virtual void AddToExcludeList(const baldr::GraphTile*& tile);
+  virtual void AddToExcludeList(const graph_tile_ptr& tile) override;
 
   /**
    * Checks if we should exclude or not.
    * @return  Returns true if we should exclude, false if not.
    */
-  virtual bool IsExcluded(const baldr::GraphTile*& tile, const baldr::DirectedEdge* edge);
+  virtual bool IsExcluded(const graph_tile_ptr& tile, const baldr::DirectedEdge* edge) override;
 
   /**
    * Checks if we should exclude or not.
    * @return  Returns true if we should exclude, false if not.
    */
-  virtual bool IsExcluded(const baldr::GraphTile*& tile, const baldr::NodeInfo* node);
+  virtual bool IsExcluded(const graph_tile_ptr& tile, const baldr::NodeInfo* node) override;
 
 public:
   // Are wheelchair or bicycle required
@@ -320,7 +311,7 @@ public:
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
 TransitCost::TransitCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kPublicTransit) {
+    : DynamicCost(costing_options, TravelMode::kPublicTransit, kPedestrianAccess) {
 
   mode_factor_ = costing_options.mode_factor();
 
@@ -422,7 +413,7 @@ float TransitCost::GetModeFactor() {
 // This method adds GraphIds to the exclude list based on the
 // operator, stop, and route exclude_onestops and include_onestops lists.
 // The exclude_onestops and include_onestops lists are set by the user.
-void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
+void TransitCost::AddToExcludeList(const graph_tile_ptr& tile) {
 
   // do we have stop work to do?
   if (stop_exclude_onestops_.size() || stop_include_onestops_.size()) {
@@ -510,14 +501,14 @@ void TransitCost::AddToExcludeList(const baldr::GraphTile*& tile) {
 
 // This method acts like an allowed function; however, it uses the exclude list to
 // determine if we should not route on a line.
-bool TransitCost::IsExcluded(const baldr::GraphTile*& tile, const baldr::DirectedEdge* edge) {
+bool TransitCost::IsExcluded(const graph_tile_ptr& tile, const baldr::DirectedEdge* edge) {
   return (exclude_routes_.find(GraphId(tile->id().tileid(), transit_tile_level, edge->lineid())) !=
           exclude_routes_.end());
 }
 
 // This method acts like an allowed function; however, it uses the exclude list to
 // determine if we should not route through this node.
-bool TransitCost::IsExcluded(const baldr::GraphTile*& tile, const baldr::NodeInfo* node) {
+bool TransitCost::IsExcluded(const graph_tile_ptr& tile, const baldr::NodeInfo* node) {
   return (exclude_stops_.find(GraphId(tile->id().tileid(), transit_tile_level, node->stop_index())) !=
           exclude_stops_.end());
 }
@@ -529,12 +520,12 @@ uint32_t TransitCost::access_mode() const {
 
 // Check if access is allowed on the specified edge.
 bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
-                          const EdgeLabel& pred,
-                          const GraphTile* tile,
-                          const baldr::GraphId& edgeid,
-                          const uint64_t current_time,
-                          const uint32_t tz_index,
-                          int& restriction_idx) const {
+                          const EdgeLabel&,
+                          const graph_tile_ptr& tile,
+                          const baldr::GraphId&,
+                          const uint64_t,
+                          const uint32_t,
+                          int&) const {
   // TODO - obtain and check the access restrictions.
 
   if (exclude_stops_.size()) {
@@ -558,21 +549,21 @@ bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
 
 // Checks if access is allowed for an edge on the reverse path (from
 // destination towards origin). Both opposing edges are provided.
-bool TransitCost::AllowedReverse(const baldr::DirectedEdge* edge,
-                                 const EdgeLabel& pred,
-                                 const baldr::DirectedEdge* opp_edge,
-                                 const GraphTile* tile,
-                                 const baldr::GraphId& opp_edgeid,
-                                 const uint64_t current_time,
-                                 const uint32_t tz_index,
-                                 int& restriction_idx) const {
+bool TransitCost::AllowedReverse(const baldr::DirectedEdge*,
+                                 const EdgeLabel&,
+                                 const baldr::DirectedEdge*,
+                                 const graph_tile_ptr&,
+                                 const baldr::GraphId&,
+                                 const uint64_t,
+                                 const uint32_t,
+                                 int&) const {
   // This method should not be called since time based routes do not use
   // bidirectional A*
   return false;
 }
 
 // Check if access is allowed at the specified node.
-bool TransitCost::Allowed(const baldr::NodeInfo* node) const {
+bool TransitCost::Allowed(const baldr::NodeInfo*) const {
   return true;
 }
 
@@ -598,7 +589,7 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
 
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
-                                 const baldr::NodeInfo* node,
+                                 const baldr::NodeInfo*,
                                  const EdgeLabel& pred) const {
   if (pred.mode() == TravelMode::kPedestrian) {
     // Apply any mode-based penalties when boarding transit

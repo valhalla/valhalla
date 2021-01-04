@@ -14,9 +14,10 @@ protected:
 
     const std::string ascii_map = R"(
     B---------C
-    |   2     |
+    |   2   8 |
     |         ↑
     |1    4  3|
+    |7        |
     A---------D
      \        |
       \ 5     |
@@ -25,7 +26,7 @@ protected:
          )";
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
     const gurka::ways ways = {{"AB", {{"highway", "motorway"}}},
-                              {"BC", {{"highway", "primary"}, {"tunnel", "yes"}}},
+                              {"BC", {{"highway", "residential"}, {"tunnel", "yes"}}},
                               {"CD", {{"highway", "primary"}, {"oneway", "-1"}}},
                               {"AD", {{"highway", "primary"}}},
                               {"DE", {{"highway", "primary"}}},
@@ -46,6 +47,7 @@ TEST_F(SearchFilter, Unfiltered) {
        std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
           .str();
+
   auto result = gurka::route(map, request);
 
   // should take the shortest path
@@ -69,8 +71,8 @@ TEST_F(SearchFilter, Heading) {
   gurka::assert::raw::expect_path(result, {"AB", "AD", "CD", "BC"});
 }
 TEST_F(SearchFilter, PreferredSide) {
-  auto from = "1";
-  auto to = "2";
+  auto from = "7";
+  auto to = "8";
 
   const std::string& request =
       (boost::format(
@@ -132,8 +134,8 @@ TEST_F(SearchFilter, ExcludeTunnel) {
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
           .str();
   auto result_filtered = gurka::route(map, request_filtered);
-  gurka::assert::osrm::expect_steps(result_filtered, {"AD", "AB"});
-  gurka::assert::raw::expect_path(result_filtered, {"AD", "AB"});
+  gurka::assert::osrm::expect_steps(result_filtered, {"AB"});
+  gurka::assert::raw::expect_path(result_filtered, {"AB"});
 }
 TEST_F(SearchFilter, ExcludeBridge) {
   auto from = "6";

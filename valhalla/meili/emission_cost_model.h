@@ -2,6 +2,8 @@
 #define MMP_EMISSION_COST_MODEL_H_
 
 #include <functional>
+
+#include <valhalla/meili/config.h>
 #include <valhalla/meili/state.h>
 
 namespace valhalla {
@@ -22,8 +24,8 @@ public:
 
   EmissionCostModel(baldr::GraphReader& graphreader,
                     const StateContainer& container,
-                    const boost::property_tree::ptree& config)
-      : EmissionCostModel(graphreader, container, config.get<float>("sigma_z")) {
+                    const Config::EmissionCost& config)
+      : EmissionCostModel(graphreader, container, config.sigma_z) {
   }
 
   // given the *squared* great circle distance between a measurement and its candidate,

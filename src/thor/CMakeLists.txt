@@ -1,7 +1,7 @@
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/thor/*.h)
 
 set(sources
-  astar.cc
+  alternates.cc
   astar_bss.cc
   attributes_controller.cc
   bidirectional_astar.cc
@@ -22,6 +22,7 @@ set(sources
   trace_attributes_action.cc
   trace_route_action.cc
   triplegbuilder.cc
+  triplegbuilder_utils.h
   worker.cc)
 
 valhalla_module(NAME thor
@@ -32,7 +33,7 @@ valhalla_module(NAME thor
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
       ${VALHALLA_SOURCE_DIR}/third_party/date/include
-      $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
       ${CMAKE_BINARY_DIR}

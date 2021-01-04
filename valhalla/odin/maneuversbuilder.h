@@ -44,6 +44,17 @@ protected:
                                                std::list<Maneuver>::iterator curr_man,
                                                std::list<Maneuver>::iterator next_man);
 
+  bool PossibleUnspecifiedInternalManeuver(std::list<Maneuver>::iterator prev_man,
+                                           std::list<Maneuver>::iterator curr_man,
+                                           std::list<Maneuver>::iterator next_man);
+
+  std::list<Maneuver>::iterator
+  CombineUnspecifiedInternalManeuver(std::list<Maneuver>& maneuvers,
+                                     std::list<Maneuver>::iterator prev_man,
+                                     std::list<Maneuver>::iterator curr_man,
+                                     std::list<Maneuver>::iterator next_man,
+                                     const DirectionsLeg_Maneuver_Type& maneuver_type);
+
   std::list<Maneuver>::iterator CombineInternalManeuver(std::list<Maneuver>& maneuvers,
                                                         std::list<Maneuver>::iterator prev_man,
                                                         std::list<Maneuver>::iterator curr_man,
@@ -216,7 +227,8 @@ protected:
    *
    * @param maneuver The maneuver at the intersection.
    */
-  uint16_t GetExpectedTurnLaneDirection(Maneuver& maneuver) const;
+  uint16_t GetExpectedTurnLaneDirection(std::unique_ptr<EnhancedTripLeg_Edge>& turn_lane_edge,
+                                        const Maneuver& maneuver) const;
 
   /**
    * Process the turn lanes at the maneuver point as well as within the maneuver.
@@ -227,12 +239,12 @@ protected:
   void ProcessTurnLanes(std::list<Maneuver>& maneuvers);
 
   /**
-   * Process the guidance view junctions at the maneuver point.
+   * Process the guidance views at the maneuver point.
    * Match the base to the overlay to form the "<prefix>_<base_suffix>_<overlay_suffix>".
    *
    * @param maneuvers The list of maneuvers to process.
    */
-  void ProcessGuidanceViewJunctions(std::list<Maneuver>& maneuvers);
+  void ProcessGuidanceViews(std::list<Maneuver>& maneuvers);
 
   /**
    * Match the guidance view junctions for the specified base prefix and suffix.
@@ -244,6 +256,13 @@ protected:
   void MatchGuidanceViewJunctions(Maneuver& maneuver,
                                   const std::string& base_prefix,
                                   const std::string& base_suffix);
+
+  /**
+   * Process the guidance view signboards.
+   *
+   * @param maneuver The maneuver to process.
+   */
+  void ProcessGuidanceViewSignboards(Maneuver& maneuver);
 
   /**
    * Returns true if the specified maneuver is a ramp and leads to a highway.
@@ -258,6 +277,28 @@ protected:
    * @param maneuvers The list of maneuvers to process.
    */
   void SetTraversableOutboundIntersectingEdgeFlags(std::list<Maneuver>& maneuvers);
+
+  /**
+   * Update the transition point for internal intersection turns.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void UpdateManeuverPlacementForInternalIntersectionTurns(std::list<Maneuver>& maneuvers);
+
+  /**
+   * Update the transition point for internal intersection turns.
+   *
+   * @param prev_maneuver The previous maneuver that will add the straight internal edge.
+   * @param maneuver The turn maneuver that will remove the internal edge.
+   * @param new_node_index The new node index for the transition point.
+   * @param prev_edge The previous edge that may have turn lane info.
+   * @param edge The straight internal edge that will move to the previous maneuver.
+   */
+  void MoveInternalEdgeToPreviousManeuver(Maneuver& prev_maneuver,
+                                          Maneuver& maneuver,
+                                          uint32_t new_node_index,
+                                          EnhancedTripLeg_Edge* prev_edge,
+                                          EnhancedTripLeg_Edge* edge);
 
   const Options& options_;
   EnhancedTripLeg* trip_path_;

@@ -12,7 +12,7 @@
 #include <vector>
 
 namespace valhalla {
-namespace midgard {
+namespace baldr {
 namespace OpenLR {
 
 namespace {
@@ -115,7 +115,7 @@ struct LocationReferencePoint {
 
   /**
    * Useful for generating an openlr record from non-openlr data. You can create LRPs with this
-   * constructor and then feed them to the special constructor for the LineLocation
+   * constructor and then feed them to the special constructor for the OpenLr
    * @param longitude
    * @param latitude
    * @param bearing
@@ -138,8 +138,8 @@ struct LocationReferencePoint {
         latitude(!prev ? integer2decimal(decimal2integer(latitude))
                        : prev->latitude +
                              (std::round((latitude - prev->latitude) * geom_scale) / geom_scale)),
-        bearing(integer2bearing(bearing2integer(bearing))), frc(frc), fow(fow),
-        distance(integer2distance(distance2integer(distance))), lfrcnp(lfrcnp) {
+        bearing(integer2bearing(bearing2integer(bearing))),
+        distance(integer2distance(distance2integer(distance))), frc(frc), lfrcnp(lfrcnp), fow(fow) {
   }
 
   /**
@@ -161,25 +161,117 @@ struct LocationReferencePoint {
   FormOfWay fow;        // 5.2.3. Form of way
 };
 
+// 5.3.1
+// The side of road information (SOR) describes the relationship between the
+// point of interest and a referenced line. The point can be on the right
+// side of the line, on the left side of the line, on both sides of
+// the line or directly on the line.
+enum SideOfTheRoad {
+  DirectlyOnRoadOrNotApplicable = 0,
+  RightSideOfRoad = 1,
+  LeftSideOfRoad = 2,
+  BothSidesOfRoad = 3,
+};
+
+// 5.3.2
+// The orientation information (ORI) describes the relationship between the point
+// of interest and the direction of a referenced line. The point may be directed
+// in the same direction as the line, against that direction, both directions,
+// or the direction of the point might be unknown.
+enum Orientation {
+  NoOrientation = 0,
+  FirstLrpTowardsSecond = 1,
+  SecondLrpTowardsFirst = 2,
+  BothDirections = 3,
+};
+
+const uint8_t OPENLR_VERSION = 3;
+
+// The first byte of the OpenLr identifier, page 55
+struct OpenLrStatus {
+  uint8_t version : 3;
+  uint8_t has_attributes : 1;
+  uint8_t ArF0 : 1;
+  uint8_t is_point : 1;
+  uint8_t ArF1 : 1;
+  uint8_t rfu : 1;
+
+  constexpr OpenLrStatus()
+      : version(OPENLR_VERSION), has_attributes(0), ArF0(0), is_point(0), ArF1(0), rfu(0){};
+
+  // Status-byte of a Line segment (page 53)
+  constexpr static OpenLrStatus Line() {
+    OpenLrStatus status;
+    status.version = OPENLR_VERSION;
+    status.has_attributes = 1;
+    status.ArF0 = 0;
+    status.is_point = 0;
+    status.ArF1 = 0;
+    status.rfu = 0;
+    return status;
+  }
+  // Status-byte of a PointAlongLine segment (page 55)
+  constexpr static OpenLrStatus PointAlongLine() {
+    OpenLrStatus status;
+    status.version = OPENLR_VERSION;
+    status.has_attributes = 1;
+    status.ArF0 = 0;
+    status.is_point = 1;
+    status.ArF1 = 0;
+    status.rfu = 0;
+    return status;
+  }
+};
+
+// The first metadata byte after the first coordinate
+struct Attribute5 {
+  uint8_t form_of_way : 3;
+  uint8_t functional_road_class : 3;
+  uint8_t orientation : 2; // Only defined for PointAlongLine
+};
+// The first metadata byte after the non-first coordinate
+struct Attribute6 {
+  uint8_t form_of_way : 3;
+  uint8_t functional_road_class : 3;
+  uint8_t side_of_the_road : 2; // Only defined for PointAlongLine
+};
+
 // Line locations, p.19, section 3.1
 // Only line location with 2 location reference points are supported
-struct LineLocation {
-  LineLocation(const std::string& reference, bool base64_encoded = false) {
-    const std::string& decoded = base64_encoded ? decode64(reference) : reference;
-    //  Line location data size: 16 + (n-2)*7 + [0/1/2] bytes
+struct OpenLr {
+  OpenLr(const std::string& reference, bool base64_encoded = false) {
+    const std::string& decoded = base64_encoded ? midgard::decode64(reference) : reference;
     const size_t size = decoded.size();
-    if (size < 16) {
-      throw std::invalid_argument("OpenLR reference is too small reference=" + reference +
-                                  "size=" + std::to_string(decoded.size()));
-    }
 
-    const auto raw = reinterpret_cast<const unsigned char*>(decoded.data());
+    const auto raw = reinterpret_cast<const uint8_t*>(decoded.data());
     std::size_t index = 0;
 
     // Status, version 3, has attributes, ArF 'Circle or no area location'
-    auto status = raw[index++] & 0x7f;
-    if (status != 0x0b)
+    const OpenLrStatus& status = *reinterpret_cast<const OpenLrStatus*>(&raw[index++]);
+    if (status.version != 3) {
+      throw std::invalid_argument("invalid_version " + std::to_string(status.version) +
+                                  ": Can only parse openlr version 3");
+    }
+    if (!status.ArF1 && !status.ArF0 && status.has_attributes) {
+      isPointAlongLine = status.is_point;
+    } else {
       throw std::invalid_argument("OpenLR reference invalid status " + decoded);
+    }
+
+    if (isPointAlongLine) {
+      if (size != 17 && size != 16) {
+        throw std::invalid_argument(
+            "OpenLR PointAlongLine reference is not the expected 17 bytes: size=" +
+            std::to_string(size) + " reference=" + reference);
+      }
+    } else {
+      // LineLocation
+      //  Line location data size: 16 + (n-2)*7 + [0/1/2] bytes
+      if (size < 16) {
+        throw std::invalid_argument("OpenLR Line reference is too small reference=" + reference +
+                                    "size=" + std::to_string(decoded.size()));
+      }
+    }
 
     // First location reference point
     auto longitude = integer2decimal(fixed<std::int32_t, 3>(raw, index));
@@ -189,6 +281,13 @@ struct LineLocation {
     auto attribute3 = raw[index++];
 
     lrps.emplace_back(longitude, latitude, attribute1, attribute2, attribute3);
+
+    if (isPointAlongLine) {
+      const Attribute5& attr5 = *reinterpret_cast<const Attribute5*>(&attribute1);
+      orientation = static_cast<Orientation>(attr5.orientation);
+    } else {
+      orientation = Orientation::NoOrientation;
+    }
 
     // Intermediate location reference points
     while (index + 7 + 6 <= size) {
@@ -207,6 +306,13 @@ struct LineLocation {
     attribute1 = raw[index++];
     auto attribute4 = raw[index++];
 
+    if (isPointAlongLine) {
+      const Attribute6 attr6 = *reinterpret_cast<const Attribute6*>(&attribute1);
+      sideOfTheRoad = static_cast<SideOfTheRoad>(attr6.side_of_the_road);
+    } else {
+      sideOfTheRoad = SideOfTheRoad::DirectlyOnRoadOrNotApplicable;
+    }
+
     lrps.emplace_back(longitude, latitude, attribute1, attribute4);
 
     // Offsets
@@ -215,10 +321,15 @@ struct LineLocation {
     noff = (index < size) && flags[5] ? raw[index++] : 0;
   }
 
-  LineLocation(const std::vector<LocationReferencePoint>& lrps,
-               uint8_t positive_offset_bucket,
-               uint8_t negative_offset_bucket)
-      : lrps(lrps), poff(positive_offset_bucket), noff(negative_offset_bucket) {
+  OpenLr(const std::vector<LocationReferencePoint>& lrps,
+         uint8_t positive_offset_bucket,
+         uint8_t negative_offset_bucket,
+         bool point_along_line = false,
+         const Orientation& orientation = Orientation::NoOrientation,
+         const SideOfTheRoad& side_of_the_road = SideOfTheRoad::DirectlyOnRoadOrNotApplicable)
+      : lrps(lrps), poff(positive_offset_bucket), noff(negative_offset_bucket),
+        isPointAlongLine(point_along_line), orientation(orientation),
+        sideOfTheRoad(side_of_the_road) {
     if (lrps.size() < 2) {
       throw std::invalid_argument(
           "Only descriptors with at least 2 LRPs are supported by this implementation");
@@ -230,11 +341,11 @@ struct LineLocation {
     }
   }
 
-  PointLL getFirstCoordinate() const {
+  midgard::PointLL getFirstCoordinate() const {
     return {lrps.front().longitude, lrps.front().latitude};
   }
 
-  PointLL getLastCoordinate() const {
+  midgard::PointLL getLastCoordinate() const {
     return {lrps.back().longitude, lrps.back().latitude};
   }
 
@@ -260,7 +371,11 @@ struct LineLocation {
     };
 
     // Status
-    result.push_back(0b00001011);
+    {
+      const OpenLrStatus status =
+          isPointAlongLine ? OpenLrStatus::PointAlongLine() : OpenLrStatus::Line();
+      result.push_back(*reinterpret_cast<const uint8_t*>(&status));
+    }
 
     // First location reference point
     const auto& first = lrps.front();
@@ -268,7 +383,13 @@ struct LineLocation {
     auto latitude = first.latitude;
     append3(decimal2integer(longitude));
     append3(decimal2integer(latitude));
-    result.push_back(((first.frc & 0x7) << 3) | (first.fow & 0x7));
+    {
+      uint8_t attr1 = ((first.frc & 0x7) << 3) | (first.fow & 0x7);
+      if (isPointAlongLine) {
+        attr1 |= (orientation << 6);
+      }
+      result.push_back(attr1);
+    }
     result.push_back(((first.lfrcnp & 0x7) << 5) | (bearing2integer(first.bearing) & 0x1f));
     result.push_back(distance2integer(first.distance));
 
@@ -291,7 +412,10 @@ struct LineLocation {
     const auto& last = lrps.back();
     append2(static_cast<std::int32_t>(std::round(geom_scale * (last.longitude - longitude))));
     append2(static_cast<std::int32_t>(std::round(geom_scale * (last.latitude - latitude))));
-    result.push_back(((last.frc & 0x7) << 3) | (last.fow & 0x7));
+    {
+      const uint8_t attr6 = (sideOfTheRoad << 6) | ((last.frc & 0x7) << 3) | (last.fow & 0x7);
+      result.push_back(attr6);
+    }
     result.push_back((pofff << 6) | (nofff << 5) | (bearing2integer(last.bearing) & 0x1f));
 
     // Offsets
@@ -307,47 +431,25 @@ struct LineLocation {
   }
 
   std::string toBase64() const {
-    return encode64(toBinary());
+    return midgard::encode64(toBinary());
   }
 
-  bool operator==(const LineLocation& lloc) const {
+  bool operator==(const OpenLr& lloc) const {
     return lrps.size() == lloc.lrps.size() && poff == lloc.poff && noff == lloc.noff &&
-           std::equal(lrps.begin(), lrps.end(), lloc.lrps.begin());
+           std::equal(lrps.begin(), lrps.end(), lloc.lrps.begin()) &&
+           orientation == lloc.orientation && sideOfTheRoad == lloc.sideOfTheRoad;
   }
 
   std::vector<LocationReferencePoint> lrps;
   uint8_t poff; // 5.2.9.1 Positive offset - stored as 1/256ths of the path length
   uint8_t noff; // 5.2.9.2 Negative offset - stored as 1/256ths of the path length
+  bool isPointAlongLine;
+  Orientation orientation;
+  SideOfTheRoad sideOfTheRoad;
 };
 
 } // namespace OpenLR
-
-/**
- * Maps Valhalla edge and road class to an OpenLR form-of-way.
- *
- * @param node   Node of single trip leg
- * @return       OpenLR form-of-way classification. If this can't be determined
- *               from the edge's road class or use information, will return FormOfWay::OTHER.
- */
-OpenLR::LocationReferencePoint::FormOfWay road_class_to_fow(const TripLeg::Node& node);
-
-/**
- * Compute base64-encoded OpenLR descriptor per-edge of a trip leg.
- *
- * @param   leg   TripPath leg
- * @return        OpenLR descriptors for all edges in a path
- */
-std::vector<std::string> openlr_edges(const TripLeg& leg);
-
-/**
- * Compute base64-encoded OpenLR descriptor for an entire trip leg.
- *
- * @param   leg   TripPath leg
- * @return        OpenLR descriptor for a single trip leg.
- */
-std::vector<std::string> openlr_legs(const TripLeg& leg);
-
-} // namespace midgard
+} // namespace baldr
 } // namespace valhalla
 
 #endif

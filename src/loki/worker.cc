@@ -71,10 +71,6 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   }
 
   const auto& costing_str = Costing_Enum_Name(options.costing());
-  if (!options.do_not_track()) {
-    valhalla::midgard::logging::Log("costing_type::" + costing_str, " [ANALYTICS] ");
-  }
-
   try {
     // For the begin and end of multimodal we expect you to be walking
     if (options.costing() == Costing::multimodal) {
@@ -145,11 +141,10 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       connectivity_map(config.get<bool>("loki.use_connectivity", true)
                            ? new connectivity_map_t(config.get_child("mjolnir"))
                            : nullptr),
-      long_request(config.get<float>("loki.logging.long_request")),
       max_contours(config.get<size_t>("service_limits.isochrone.max_contours")),
       max_time(config.get<size_t>("service_limits.isochrone.max_time")),
       max_trace_shape(config.get<size_t>("service_limits.trace.max_shape")),
-      sample(config.get<std::string>("additional_data.elevation", "test/data/")),
+      sample(config.get<std::string>("additional_data.elevation", "")),
       max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
       min_resample(config.get<float>("service_limits.skadi.min_resample")) {
   // If we weren't provided with a graph reader make our own
@@ -163,6 +158,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     if (!Options_Action_Enum_Parse(path, &action)) {
       throw std::runtime_error("Action not supported " + path);
     }
+    actions.insert(action);
     action_str.append("'/" + path + "' ");
   }
   // Make sure we have at least something to support!
@@ -250,8 +246,8 @@ prime_server::worker_t::result_t
 loki_worker_t::work(const std::list<zmq::message_t>& job,
                     void* request_info,
                     const std::function<void()>& interrupt_function) {
-  // get time for start of request
-  auto s = std::chrono::system_clock::now();
+
+  // grab the request info
   auto& info = *static_cast<prime_server::http_request_info_t*>(request_info);
   LOG_INFO("Got Loki Request " + std::to_string(info.id));
   Api request;
@@ -264,7 +260,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     const auto& options = request.options();
 
     // check there is a valid action
-    if (!options.has_action()) {
+    if (!options.has_action() || actions.find(options.action()) == actions.cend()) {
       return jsonify_error({106, action_str}, info, request);
     }
 
@@ -306,26 +302,12 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
         // apparently you wanted something that we figured we'd support but havent written yet
         return jsonify_error({107}, info, request);
     }
-    // get processing time for loki
-    auto e = std::chrono::system_clock::now();
-    std::chrono::duration<float, std::milli> elapsed_time = e - s;
-    // log request if greater than X (ms)
-    auto work_units = options.locations_size()
-                          ? options.locations_size()
-                          : (options.sources_size() ? options.sources_size() + options.targets_size()
-                                                    : options.shape_size() * 20);
-    if (!options.do_not_track() && elapsed_time.count() / work_units > long_request) {
-      LOG_WARN("loki::request elapsed time (ms)::" + std::to_string(elapsed_time.count()));
-      LOG_WARN("loki::request exceeded threshold::" + std::to_string(info.id));
-      midgard::logging::Log("valhalla_loki_long_request", " [ANALYTICS] ");
-    }
-
     return result;
   } catch (const valhalla_exception_t& e) {
-    valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
+    LOG_WARN("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     return jsonify_error(e, info, request);
   } catch (const std::exception& e) {
-    valhalla::midgard::logging::Log("400::" + std::string(e.what()), " [ANALYTICS] ");
+    LOG_ERROR("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     return jsonify_error({199, std::string(e.what())}, info, request);
   }
 }

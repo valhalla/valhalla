@@ -1,6 +1,104 @@
 #include "proto_conversions.h"
+#include "midgard/logging.h"
+
+using namespace valhalla;
 
 namespace valhalla {
+
+std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& incident_type) {
+  switch (incident_type) {
+    case valhalla::IncidentsTile::Metadata::ACCIDENT:
+      return "accident";
+      break;
+    case valhalla::IncidentsTile::Metadata::CONGESTION:
+      return "congestion";
+      break;
+    case valhalla::IncidentsTile::Metadata::CONSTRUCTION:
+      return "construction";
+      break;
+    case valhalla::IncidentsTile::Metadata::DISABLED_VEHICLE:
+      return "disabled_vehicle";
+      break;
+    case valhalla::IncidentsTile::Metadata::LANE_RESTRICTION:
+      return "lane_restriction";
+      break;
+    case valhalla::IncidentsTile::Metadata::MASS_TRANSIT:
+      return "mass_transit";
+      break;
+    case valhalla::IncidentsTile::Metadata::MISCELLANEOUS:
+      return "miscellaneous";
+      break;
+    case valhalla::IncidentsTile::Metadata::OTHER_NEWS:
+      return "other_news";
+      break;
+    case valhalla::IncidentsTile::Metadata::PLANNED_EVENT:
+      return "planned_event";
+      break;
+    case valhalla::IncidentsTile::Metadata::ROAD_CLOSURE:
+      return "road_closure";
+      break;
+    case valhalla::IncidentsTile::Metadata::ROAD_HAZARD:
+      return "road_hazard";
+      break;
+    case valhalla::IncidentsTile::Metadata::WEATHER:
+      return "weather";
+      break;
+    case valhalla::
+        IncidentsTile_Metadata_Type_IncidentsTile_Metadata_Type_INT_MAX_SENTINEL_DO_NOT_USE_:
+    case valhalla::
+        IncidentsTile_Metadata_Type_IncidentsTile_Metadata_Type_INT_MIN_SENTINEL_DO_NOT_USE_:
+      // Like the name says, do not use. Simply for ensuring full coverage of switch statement
+      break;
+  };
+  throw std::runtime_error("Unhandled case in incidentTypeToString: " +
+                           std::to_string(incident_type));
+}
+
+// Get the string representing the incident-Impact
+const char* incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impact& impact) {
+  switch (impact) {
+    case valhalla::IncidentsTile::Metadata::UNKNOWN:
+      return "unknown";
+      break;
+    case valhalla::IncidentsTile::Metadata::CRITICAL:
+      return "critical";
+      break;
+    case valhalla::IncidentsTile::Metadata::MAJOR:
+      return "major";
+      break;
+    case valhalla::IncidentsTile::Metadata::MINOR:
+      return "minor";
+      break;
+    case valhalla::IncidentsTile::Metadata::LOW:
+      return "low";
+      break;
+    case valhalla::
+        IncidentsTile_Metadata_Impact_IncidentsTile_Metadata_Impact_INT_MAX_SENTINEL_DO_NOT_USE_:
+    case valhalla::
+        IncidentsTile_Metadata_Impact_IncidentsTile_Metadata_Impact_INT_MIN_SENTINEL_DO_NOT_USE_:
+      // Like the name says, do not use. Simply for ensuring full coverage of switch statement
+      break;
+  }
+  // TODO Throw or warn here? Assert maybe to only crash debug build
+  LOG_WARN("Unhandled case in incidentCriticalityToString: " + std::to_string(impact));
+  return "UNHANDLED_CASE";
+}
+
+const std::string& GuidanceViewTypeToString(const valhalla::DirectionsLeg_GuidanceView_Type type) {
+  static const std::string empty;
+  static const std::unordered_map<int, std::string>
+      types{{DirectionsLeg_GuidanceView_Type_kJunction, "jct"},
+            {DirectionsLeg_GuidanceView_Type_kSapa, "sapa"},
+            {DirectionsLeg_GuidanceView_Type_kTollbranch, "tollbranch"},
+            {DirectionsLeg_GuidanceView_Type_kAftertoll, "aftertoll"},
+            {DirectionsLeg_GuidanceView_Type_kEnt, "ent"},
+            {DirectionsLeg_GuidanceView_Type_kExit, "exit"},
+            {DirectionsLeg_GuidanceView_Type_kCityreal, "cityreal"},
+            {DirectionsLeg_GuidanceView_Type_kDirectionboard, "directionboard"},
+            {DirectionsLeg_GuidanceView_Type_kSignboard, "signboard"}};
+  auto i = types.find(type);
+  return i == types.cend() ? empty : i->second;
+}
 
 bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
   static const std::unordered_map<std::string, Options::Action> actions{
@@ -43,7 +141,7 @@ const std::string& Options_Action_Enum_Name(const Options::Action action) {
 bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
   static const std::unordered_map<std::string, Costing> costings{
       {"auto", Costing::auto_},
-      {"auto_shorter", Costing::auto_shorter},
+      // auto_shorter is deprecated
       {"bicycle", Costing::bicycle},
       {"bus", Costing::bus},
       {"hov", Costing::hov},
@@ -54,7 +152,7 @@ bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
       {"transit", Costing::transit},
       {"truck", Costing::truck},
       {"motorcycle", Costing::motorcycle},
-      {"auto_data_fix", Costing::auto_data_fix},
+      // auto_data_fix is deprecated
       {"none", Costing::none_},
       {"", Costing::none_},
       {"bikeshare", Costing::bikeshare},
@@ -70,7 +168,7 @@ const std::string& Costing_Enum_Name(const Costing costing) {
   static const std::string empty;
   static const std::unordered_map<int, std::string> costings{
       {Costing::auto_, "auto"},
-      {Costing::auto_shorter, "auto_shorter"},
+      // auto_shorter is deprecated
       {Costing::bicycle, "bicycle"},
       {Costing::bus, "bus"},
       {Costing::hov, "hov"},
@@ -81,7 +179,7 @@ const std::string& Costing_Enum_Name(const Costing costing) {
       {Costing::transit, "transit"},
       {Costing::truck, "truck"},
       {Costing::motorcycle, "motorcycle"},
-      {Costing::auto_data_fix, "auto_data_fix"},
+      // auto_data_fix is deprecated
       {Costing::none_, "none"},
       {Costing::bikeshare, "bikeshare"},
   };

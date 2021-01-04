@@ -2,14 +2,11 @@
 
 #include "baldr/curl_tilegetter.h"
 #include "baldr/graphtile.h"
-#include "baldr/rapidjson_utils.h"
 #include "tyr/actor.h"
 #include "valhalla/filesystem.h"
 #include "valhalla/tile_server.h"
 
 #include <prime_server/prime_server.hpp>
-
-#include <boost/property_tree/ptree.hpp>
 
 #include <ostream>
 #include <stdexcept>
@@ -22,14 +19,6 @@ using namespace valhalla;
 
 zmq::context_t context;
 
-boost::property_tree::ptree json_to_pt(const std::string& json) {
-  std::stringstream ss;
-  ss << json;
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(ss, pt);
-  return pt;
-}
-
 std::string get_tile_url() {
   std::ostringstream oss;
   oss << test_tile_server_t::server_url << "/route-tile/v1/" << baldr::GraphTile::kTilePathPattern
@@ -41,7 +30,7 @@ std::string get_tile_url() {
 boost::property_tree::ptree
 make_conf(const std::string& tile_dir, bool tile_url_gz, size_t curler_count) {
   // fake up config against pine grove traffic extract
-  auto conf = json_to_pt(R"({
+  auto conf = test::json_to_pt(R"({
       "mjolnir":{
         "user_agent":"MapboxNavigationNative"
       },
@@ -96,7 +85,7 @@ void test_route(const std::string& tile_dir, bool tile_url_gz) {
   auto route_json = actor.route(R"({"locations":[{"lat":52.09620,"lon": 5.11909,"type":"break"},
           {"lat":52.09585,"lon":5.11934,"type":"break"}],"costing":"auto"})");
   actor.cleanup();
-  auto route = json_to_pt(route_json);
+  auto route = test::json_to_pt(route_json);
 
   // TODO: check result
   // didn't find the right street names in the route?
@@ -138,7 +127,9 @@ struct TestTileDownloadData {
                      // non-existent tile to exercise 404 errors
                      {200305, 2, 0}};
     for (const auto& id : test_tile_ids) {
-      test_tile_names.emplace_back(baldr::GraphTile::FileSuffix(id, is_gzipped_tile));
+      test_tile_names.emplace_back(
+          baldr::GraphTile::FileSuffix(id, is_gzipped_tile ? baldr::SUFFIX_COMPRESSED
+                                                           : baldr::SUFFIX_NON_COMPRESSED));
     }
   }
 
@@ -187,8 +178,9 @@ void test_tile_download(size_t tile_count, size_t curler_count, size_t thread_co
           auto result = tile_getter.get(tile_uri);
 
           if (result.status_ == tile_getter_t::status_code_t::SUCCESS) {
-            auto tile = GraphTile(GraphId(), result.bytes_.data(), result.bytes_.size());
-            EXPECT_EQ(tile.id(), expected_tile_id);
+            auto tile = GraphTile::Create(GraphId(), std::move(result.bytes_));
+            ASSERT_TRUE(tile);
+            EXPECT_EQ(tile->id(), expected_tile_id);
           } else {
             EXPECT_EQ(expected_tile_id, non_existent_tile_id);
           }
@@ -228,9 +220,10 @@ void test_graphreader_tile_download(size_t tile_count, size_t curler_count, size
             GraphTile::CacheTileURL(params.full_tile_url_pattern, expected_tile_id, &tile_getter, "");
 
         if (expected_tile_id != non_existent_tile_id) {
-          EXPECT_EQ(tile.id(), expected_tile_id);
+          ASSERT_TRUE(tile);
+          EXPECT_EQ(tile->id(), expected_tile_id);
         } else {
-          EXPECT_EQ(tile.header(), nullptr) << "Expected empty header";
+          EXPECT_FALSE(tile) << "Expected no tile";
         }
       }
     });
@@ -286,7 +279,7 @@ TEST(HttpTiles, test_interrupt) {
   };
 
   tile_getter.set_interrupt(&interrupt);
-  for (int tile_i = 0; tile_i < params.test_tile_ids.size(); ++tile_i) {
+  for (size_t tile_i = 0; tile_i < params.test_tile_ids.size(); ++tile_i) {
     auto test_tile_index = tile_i % params.test_tile_names.size();
     auto expected_tile_id = params.test_tile_ids[test_tile_index];
 
@@ -298,8 +291,9 @@ TEST(HttpTiles, test_interrupt) {
 
     auto result = tile_getter.get(tile_uri);
     if (result.status_ == tile_getter_t::status_code_t::SUCCESS) {
-      auto tile = GraphTile(GraphId(), result.bytes_.data(), result.bytes_.size());
-      EXPECT_EQ(tile.id(), expected_tile_id);
+      auto tile = GraphTile::Create(GraphId(), std::move(result.bytes_));
+      ASSERT_TRUE(tile);
+      EXPECT_EQ(tile->id(), expected_tile_id);
     } else {
       EXPECT_EQ(expected_tile_id, non_existent_tile_id);
     }

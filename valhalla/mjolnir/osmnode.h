@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/midgard/pointll.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -26,6 +27,10 @@ struct OSMNode {
   uint64_t exit_to_index_ : 21;
   uint64_t named_intersection_ : 1;
 
+  uint64_t country_iso_index_ : 21;
+  uint64_t state_iso_index_ : 21;
+  uint64_t spare_ : 22;
+
   uint32_t access_ : 12;
   uint32_t type_ : 4;
   uint32_t intersection_ : 1;
@@ -38,12 +43,12 @@ struct OSMNode {
   uint32_t non_ferry_edge_ : 1;
   uint32_t ferry_edge_ : 1;
   uint32_t flat_loop_ : 1; // A node which on a section of a way that is doubled back on itself
-  uint32_t spare_ : 6;
+  uint32_t urban_ : 1;
+  uint32_t spare1_ : 5;
 
-  // Lat,lng of the node
-  float lng_;
-  float lat_;
-  uint32_t spare2_;
+  // Lat,lng of the node at fixed 7digit precision
+  uint32_t lng7_;
+  uint32_t lat7_;
 
   OSMNode() {
     memset(this, 0, sizeof(OSMNode));
@@ -53,8 +58,8 @@ struct OSMNode {
    * Constructor with OSM node Id
    */
   OSMNode(const uint64_t id,
-          const float lat = baldr::kInvalidLongitude,
-          const float lng = baldr::kInvalidLatitude) {
+          const double lat = std::numeric_limits<double>::max(),
+          const double lng = std::numeric_limits<double>::max()) {
     memset(this, 0, sizeof(OSMNode));
     set_id(id);
     set_latlng(lat, lng);
@@ -75,17 +80,23 @@ struct OSMNode {
    * @param  lat  Latitude of the node.
    *
    */
-  void set_latlng(const float lng, const float lat) {
-    lng_ = lng;
-    lat_ = lat;
+  void set_latlng(const double lng, double lat) {
+    lng7_ = lat7_ = -1;
+    if (lng >= -180 && lng <= 180)
+      lng7_ = std::round((lng + 180) * 1e7);
+    if (lat >= -90 && lat <= 90)
+      lat7_ = std::round((lat + 90) * 1e7);
   }
 
   /**
    * Gets the lat,lng.
    * @return   Returns the lat,lng of the node.
    */
-  std::pair<float, float> latlng() const {
-    return std::make_pair(lng_, lat_);
+  midgard::PointLL latlng() const {
+    // if either coord is borked we return invalid pointll
+    if (lng7_ == -1 || lat7_ == -1)
+      return {};
+    return {lng7_ * 1e-7 - 180, lat7_ * 1e-7 - 90};
   }
 
   /**
@@ -270,6 +281,74 @@ struct OSMNode {
    */
   bool named_intersection() const {
     return named_intersection_;
+  }
+
+  /**
+   * Sets the urban flag.
+   * @param  urban       Urban.
+   */
+  void set_urban(const bool urban) {
+    urban_ = urban;
+  }
+
+  /**
+   * Get the urban flag.
+   * @return  Returns urban flag.
+   */
+  bool urban() const {
+    return urban_;
+  }
+
+  /**
+   * Set the country iso code index
+   * @param country iso code Index into the 2 char Country ISO Code.
+   */
+  void set_country_iso_index(const uint32_t index) {
+    if (index > kMaxNodeNameIndex) {
+      throw std::runtime_error("OSMNode: exceeded maximum country iso index");
+    }
+    country_iso_index_ = index;
+  }
+
+  /**
+   * Get the country iso code.
+   * @return Returns the index into the 2 char Country ISO Code.
+   */
+  uint32_t country_iso_index() const {
+    return country_iso_index_;
+  }
+
+  /**
+   * Does the node have a 2 char code. Check if country_iso_index is non-zero
+   */
+  bool has_country_iso() const {
+    return country_iso_index_ > 0;
+  }
+
+  /**
+   * Set the country iso code index
+   * @param country iso code Index into the 2 char Country ISO Code.
+   */
+  void set_state_iso_index(const uint32_t index) {
+    if (index > kMaxNodeNameIndex) {
+      throw std::runtime_error("OSMNode: exceeded maximum state iso index");
+    }
+    state_iso_index_ = index;
+  }
+
+  /**
+   * Get the state iso code.
+   * @return Returns the index into the 2 char State ISO Code.
+   */
+  uint32_t state_iso_index() const {
+    return state_iso_index_;
+  }
+
+  /**
+   * Does the node have a 2 char code. Check if state_iso_index is non-zero
+   */
+  bool has_state_iso_index() const {
+    return state_iso_index_ > 0;
   }
 };
 

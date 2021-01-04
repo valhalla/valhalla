@@ -25,7 +25,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
                                    const GraphId& graphid,
                                    bool deserialize,
                                    bool serialize_turn_lanes)
-    : tile_dir_(tile_dir), GraphTile(tile_dir, graphid) {
+    : GraphTile(tile_dir, graphid), tile_dir_(tile_dir) {
 
   // Copy tile header to a builder (if tile exists). Always set the tileid
   if (header_) {
@@ -515,6 +515,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const uint32_t speed_limit,
                                        const shape_container_t& lls,
                                        const std::vector<std::string>& names,
+                                       const std::vector<std::string>& tagged_names,
                                        const uint16_t types,
                                        bool& added,
                                        bool diff_names) {
@@ -556,6 +557,23 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       }
       location++;
     }
+    for (const auto& name : tagged_names) {
+      // Stop adding names if max count has been reached
+      if (name_count == kMaxNamesPerEdge) {
+        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+        break;
+      }
+
+      // Verify name is not empty
+      if (!(name.empty())) {
+        // Add name and add its offset to edge info's list.
+        NameInfo ni{AddName(name)};
+        ni.is_route_num_ = 0;
+        ni.tagged_ = 1;
+        name_info_list.emplace_back(ni);
+        ++name_count;
+      }
+    }
     edgeinfo.set_name_info_list(name_info_list);
 
     // Add to the map
@@ -585,6 +603,7 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint
                                                                       const uint32_t,
                                                                       const std::vector<PointLL>&,
                                                                       const std::vector<std::string>&,
+                                                                      const std::vector<std::string>&,
                                                                       const uint16_t,
                                                                       bool&,
                                                                       bool);
@@ -596,6 +615,7 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32
                                                                     const uint32_t,
                                                                     const uint32_t,
                                                                     const std::list<PointLL>&,
+                                                                    const std::vector<std::string>&,
                                                                     const std::vector<std::string>&,
                                                                     const uint16_t,
                                                                     bool&,
@@ -611,6 +631,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const uint32_t speed_limit,
                                        const std::string& llstr,
                                        const std::vector<std::string>& names,
+                                       const std::vector<std::string>& tagged_names,
                                        const uint16_t types,
                                        bool& added,
                                        bool diff_names) {
@@ -652,6 +673,24 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       }
       location++;
     }
+    for (const auto& name : tagged_names) {
+      // Stop adding names if max count has been reached
+      if (name_count == kMaxNamesPerEdge) {
+        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+        break;
+      }
+
+      // Verify name is not empty
+      if (!(name.empty())) {
+        // Add name and add its offset to edge info's list.
+        NameInfo ni{AddName(name)};
+        ni.is_route_num_ = 0;
+        ni.tagged_ = 1;
+        name_info_list.emplace_back(ni);
+        ++name_count;
+      }
+    }
+
     edgeinfo.set_name_info_list(name_info_list);
 
     // Add to the map
@@ -720,7 +759,8 @@ uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name,
                                     const std::string& country_iso,
                                     const std::string& state_iso) {
   // Check if admin already exists
-  auto existing_admin_info_offset_item = admin_info_offset_map_.find(country_iso + state_name);
+  auto existing_admin_info_offset_item =
+      admin_info_offset_map_.find(country_iso + state_iso + state_name);
   if (existing_admin_info_offset_item == admin_info_offset_map_.end()) {
     // Add names and add to the admin builder
     uint32_t country_offset = AddName(country_name);
@@ -728,7 +768,7 @@ uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name,
     admins_builder_.emplace_back(country_offset, state_offset, country_iso, state_iso);
 
     // Add to the map
-    admin_info_offset_map_.emplace(country_iso + state_name, admins_builder_.size() - 1);
+    admin_info_offset_map_.emplace(country_iso + state_iso + state_name, admins_builder_.size() - 1);
     return admins_builder_.size() - 1;
   } else {
     // Already have this admin - return the offset
@@ -761,7 +801,7 @@ DirectedEdge& GraphTileBuilder::directededge(const size_t idx) {
 }
 
 // Gets a pointer to directed edges within the list being built.
-const DirectedEdge* GraphTileBuilder::directededges(const size_t idx) {
+const DirectedEdge* GraphTileBuilder::directededges(const size_t idx) const {
   if (idx < header_->directededgecount()) {
     return &directededges_builder_[idx];
   }
@@ -850,18 +890,19 @@ void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
 
 // return this tiles' edges' bins and its edges' tweeners' bins
 using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount>>;
-std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const GraphTile* tile,
+std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
                                                                        tweeners_t& tweeners) {
+  assert(tile);
   std::array<std::vector<GraphId>, kBinCount> bins;
   // we store these at the highest level
-  auto max_level = TileHierarchy::levels().rbegin()->first;
+  auto max_level = TileHierarchy::levels().back().level;
   // skip transit or other special levels and empty tiles
   if (tile->header()->graphid().level() > max_level || tile->header()->directededgecount() == 0) {
     return bins;
   }
   // is this the highest level
   auto max = tile->header()->graphid().level() == max_level;
-  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
+  const auto& tiles = TileHierarchy::levels().back().tiles;
 
   // each edge please
   std::unordered_set<uint64_t> ids(tile->header()->directededgecount() / 2);
@@ -921,8 +962,9 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
 }
 
 void GraphTileBuilder::AddBins(const std::string& tile_dir,
-                               const GraphTile* tile,
+                               const graph_tile_ptr& tile,
                                const std::array<std::vector<GraphId>, kBinCount>& more_bins) {
+  assert(tile);
   // read bins and append and keep track of how much is appended
   std::vector<GraphId> bins[kBinCount];
   uint32_t shift = 0;

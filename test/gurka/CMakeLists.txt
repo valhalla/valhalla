@@ -6,25 +6,26 @@ if(ENABLE_DATA_TOOLS)
   add_custom_target(run-gurka)
   set_target_properties(run-gurka PROPERTIES FOLDER "Tests")
 
+  if (UNIX)
+    # Enables stricter compiler checks on a file-by-file basis
+    # which allows us to migrate piecemeal
+    set_source_files_properties(test_route_incidents.cc PROPERTIES COMPILE_FLAGS "-Werror")
+  endif (UNIX)
 
   ## Add executable targets
   foreach(FULLFILENAME IN ITEMS ${TEST_FILES})
     file(RELATIVE_PATH FILENAME "${CMAKE_CURRENT_LIST_DIR}" ${FULLFILENAME})
     string(REGEX REPLACE "test_(.*).cc" "gurka_\\1" TESTNAME ${FILENAME})
-    add_executable(${TESTNAME} EXCLUDE_FROM_ALL ${FILENAME} ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c)
+    add_executable(${TESTNAME} EXCLUDE_FROM_ALL ${FILENAME})
     set_target_properties(${TESTNAME} PROPERTIES
       FOLDER "Tests"
       COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
-    create_source_groups("Source Files" ${FILENAME} ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c)
-    target_link_libraries(${TESTNAME} valhalla gtest_main gmock pthread)
+    create_source_groups("Source Files" ${FILENAME})
+    target_link_libraries(${TESTNAME} valhalla_test)
     if (LUAJIT_FOUND AND APPLE)
       # Using LuaJIT on macOS requires a couple of extra linker flags
       target_link_options(${TESTNAME} PUBLIC -pagezero_size 10000 -image_base 100000000)
     endif()
-    target_include_directories(${TESTNAME} SYSTEM PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/microtar/src
-      ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
-      ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include)
     add_dependencies(${TESTNAME} build_timezones)
 
     ## Test run targets

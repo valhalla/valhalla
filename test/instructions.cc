@@ -18,7 +18,6 @@
 #define VALHALLA_SOURCE_DIR
 #endif
 
-using namespace std;
 using namespace valhalla::baldr;
 
 namespace {
@@ -442,7 +441,8 @@ TEST(Instructions, validate_roundabout_unnamed_cycleway_instructions) {
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/roundabout_unnamed_cycleway.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Bike east on the cycleway.", "", "Bike east on the cycleway.",
+                    "Bike east on the cycleway.", "",
+                    "Bike east on the cycleway. Then Enter the roundabout and take the 2nd exit.",
                     "Continue for 200 feet.");
 
   maneuver_index = 1;

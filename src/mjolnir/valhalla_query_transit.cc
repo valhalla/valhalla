@@ -51,7 +51,7 @@ Transit read_pbf(const std::string& file_name) {
 Transit read_pbf(const GraphId& id, const std::string& transit_dir, std::string& file_name) {
   std::string fname = GraphTile::FileSuffix(id);
   fname = fname.substr(0, fname.size() - 3) + "pbf";
-  file_name = transit_dir + '/' + fname;
+  file_name = transit_dir + filesystem::path::preferred_separator + fname;
   Transit transit;
   transit = read_pbf(file_name);
   return transit;
@@ -427,8 +427,8 @@ int main(int argc, char* argv[]) {
 
   // Get the tile
   PointLL stopll(o_lng, o_lat);
-  auto local_level = TileHierarchy::levels().rbegin()->second.level;
-  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
+  auto local_level = TileHierarchy::levels().back().level;
+  auto tiles = TileHierarchy::levels().back().tiles;
   uint32_t tileid = tiles.TileId(stopll);
   LOG_INFO("Origin Tile " + std::to_string(tileid));
 

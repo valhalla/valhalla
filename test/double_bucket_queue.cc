@@ -33,7 +33,7 @@ void TryAddRemove(const std::vector<uint32_t>& costs, const std::vector<uint32_t
     expected = (uint32_t)(float)expected;
     uint32_t labelindex = adjlist.pop();
     auto edgelabel = 0;
-    if (labelindex != kInvalidLabel) {
+    if (labelindex != baldr::kInvalidLabel) {
       edgelabel = edgelabels[labelindex];
     }
     EXPECT_EQ(edgelabel, expected) << "TryAddRemove: expected order test failed";
@@ -70,7 +70,7 @@ void TryClear(const std::vector<uint32_t>& costs) {
   }
   adjlist.clear();
   uint32_t idx = adjlist.pop();
-  EXPECT_EQ(idx, kInvalidLabel) << "TryClear: failed to return invalid edge index after Clear";
+  EXPECT_EQ(idx, baldr::kInvalidLabel) << "TryClear: failed to return invalid edge index after Clear";
 }
 
 TEST(DoubleBucketQueue, TestClear) {
@@ -104,8 +104,8 @@ void TryRemove(DoubleBucketQueue& dbqueue, size_t num_to_remove, const std::vect
   auto previous_cost = -std::numeric_limits<float>::infinity();
   for (size_t i = 0; i < num_to_remove; ++i) {
     const auto top = dbqueue.pop();
-    EXPECT_NE(top, kInvalidLabel) << "TryAddRemove: expected " + std::to_string(num_to_remove) +
-                                         " labels to remove";
+    EXPECT_NE(top, baldr::kInvalidLabel)
+        << "TryAddRemove: expected " + std::to_string(num_to_remove) + " labels to remove";
     const auto cost = costs[top];
     EXPECT_LE(previous_cost, cost) << "TryAddRemove: expected order test failed";
     previous_cost = cost;
@@ -113,7 +113,7 @@ void TryRemove(DoubleBucketQueue& dbqueue, size_t num_to_remove, const std::vect
 
   {
     const auto top = dbqueue.pop();
-    EXPECT_EQ(top, kInvalidLabel) << "Simulation: expect list to be empty";
+    EXPECT_EQ(top, baldr::kInvalidLabel) << "Simulation: expect list to be empty";
   }
 }
 
@@ -132,7 +132,7 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
   std::mt19937 gen(rd());
   for (size_t i = 0; i < loop_count; i++) {
     const auto key = dbqueue.pop();
-    if (key == kInvalidLabel) {
+    if (key == baldr::kInvalidLabel) {
       break;
     }
 

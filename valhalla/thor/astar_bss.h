@@ -58,9 +58,17 @@ public:
               const Options& options = Options::default_instance()) override;
 
   /**
+   * Returns the name of the algorithm
+   * @return the name of the algorithm
+   */
+  virtual const char* name() const override {
+    return "a*_bike_share_station";
+  }
+
+  /**
    * Clear the temporary information generated during path construction.
    */
-  virtual void Clear();
+  virtual void Clear() override;
 
   /**
    * Set a maximum label count. The path algorithm terminates if this

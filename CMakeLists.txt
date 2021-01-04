@@ -103,17 +103,14 @@ include(cmake/SanitizerOptions.cmake)
 
 ## Coverage report targets
 if(ENABLE_COVERAGE)
-  find_program(LCOV_PATH NAMES lcov lcov.bat lcov.exe lcov.perl)
   find_program(GENHTML_PATH NAMES genhtml genhtml.perl genhtml.bat)
-  if(NOT LCOV_PATH OR NOT GENHTML_PATH)
-    message(FATAL_ERROR "no lcov or genhtml installed")
+  if(NOT GENHTML_PATH)
+    message(FATAL_ERROR "no genhtml installed")
   endif()
 
+  set(FASTCOV_PATH ${VALHALLA_SOURCE_DIR}/third_party/fastcov/fastcov.py)
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/coverage.info
-    COMMAND ${LCOV_PATH} --directory . --base-directory ${VALHALLA_SOURCE_DIR} --no-external --capture --output-file coverage.info --no-checksum
-    COMMAND ${LCOV_PATH} --remove coverage.info '*/third_party/*' --output-file coverage.info
-    COMMAND ${LCOV_PATH} --remove coverage.info '${CMAKE_CURRENT_BINARY_DIR}/*' --output-file coverage.info
-    COMMAND ${LCOV_PATH} --list coverage.info
+    COMMAND ${FASTCOV_PATH} -d . --exclude /usr/ third_party/ ${CMAKE_CURRENT_BINARY_DIR}/ --lcov -o coverage.info
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS check)
 
@@ -135,11 +132,12 @@ if(NOT TARGET CURL::CURL)
       find_package(CURL REQUIRED)
     endif()
     set_target_properties(CURL::CURL PROPERTIES
-      #INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}"
       INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
       INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
-    if(NOT WIN32)
+    if(NOT MSVC)
       set_property(TARGET CURL::CURL APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}")
+    else()
+      link_libraries(${CURL_LIBRARIES})
     endif()
   endif()
 else()
@@ -257,16 +255,15 @@ endfunction()
 ## Valhalla programs
 set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_benchmark_skadi
   valhalla_run_isochrone valhalla_run_route valhalla_benchmark_adjacency_list valhalla_run_matrix
-  valhalla_path_comparison valhalla_export_edges valhalla_expand_bounding_box)
+  valhalla_path_comparison valhalla_export_edges valhalla_expand_bounding_box valhalla_service)
 
 ## Valhalla data tools
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
-  valhalla_benchmark_admins	valhalla_build_connectivity	valhalla_build_tiles
-  valhalla_build_admins valhalla_convert_transit valhalla_fetch_transit valhalla_query_transit
-  valhalla_add_predicted_traffic)
+  valhalla_benchmark_admins valhalla_build_connectivity	valhalla_build_tiles valhalla_build_admins
+  valhalla_convert_transit valhalla_fetch_transit valhalla_query_transit valhalla_add_predicted_traffic)
 
 ## Valhalla services
-set(valhalla_services	valhalla_service valhalla_loki_worker	valhalla_odin_worker valhalla_thor_worker)
+set(valhalla_services valhalla_loki_worker valhalla_odin_worker valhalla_thor_worker)
 
 if(ENABLE_TOOLS)
   foreach(program ${valhalla_programs})
@@ -275,7 +272,7 @@ if(ENABLE_TOOLS)
     set_target_properties(${program} PROPERTIES FOLDER "Tools")
     create_source_groups("Source Files" ${path})
     target_link_libraries(${program} Boost::program_options valhalla)
-    if(WIN32)
+    if(MSVC)
       target_link_libraries(${program} ${CURL_LIBRARIES})
     endif()
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
@@ -293,7 +290,7 @@ if(ENABLE_DATA_TOOLS)
       # Using LuaJIT on macOS requires a couple of extra linker flags
       target_link_options(${program} PUBLIC -pagezero_size 10000 -image_base 100000000)
     endif()
-    if(WIN32)
+    if(MSVC)
       target_link_libraries(${program} ${CURL_LIBRARIES})
     endif()
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
@@ -340,7 +337,7 @@ if(ENABLE_TESTS)
 endif()
 
 # NOTE(mookerji): Windows CI seems to break on the gbench build, so shelve Win32 support for now.
-if(ENABLE_BENCHMARKS AND NOT WIN32)
+if(ENABLE_BENCHMARKS AND ENABLE_DATA_TOOLS AND NOT WIN32)
   add_subdirectory(bench)
 endif()
 

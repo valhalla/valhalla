@@ -1,0 +1,9 @@
+-j '{"locations":[{"lat":41.408770,"lon":2.184756,"street":"Carrer de València"},{"lat":41.408175,"lon":2.185273,"street":"Carrer de la Corunya"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":41.408770,"lon":2.184756,"street":"Carrer de València"},{"lat":41.408838,"lon":2.185909,"street":"Carrer de Rogent"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":41.409969,"lon":2.184116,"street":"Carrer de Mallorca"},{"lat":41.410717,"lon":2.183096,"street":"Carrer del Degà Bahí"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":41.409969,"lon":2.184116,"street":"Carrer de Mallorca"},{"lat":41.410806,"lon":2.182572,"street":"Carrer de Rogent"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":51.364064,"lon":6.420518,"street":"Umstraße"},{"lat":51.364898,"lon":6.419843,"street":"Patersgasse"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":51.364064,"lon":6.420518,"street":"Umstraße"},{"lat":51.364600,"lon":6.420221,"street":"Judenstraße"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":48.868716,"lon":2.367337,"street":"Rue du Faubourg du Temple"},{"lat":48.867001,"lon":2.365421,"street":"Place de la République"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":48.868716,"lon":2.367337,"street":"Rue du Faubourg du Temple"},{"lat":48.867201,"lon":2.365290,"street":"Place de la République"}],"costing":"auto","units":"miles"}'
+

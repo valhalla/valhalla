@@ -34,6 +34,7 @@ const std::string kEdgeSignGuideBranch = "edge.sign.guide_branch";
 const std::string kEdgeSignGuideToward = "edge.sign.guide_toward";
 const std::string kEdgeSignJunctionName = "edge.sign.junction_name";
 const std::string kEdgeSignGuidanceViewJunction = "edge.sign.guidance_view_junction";
+const std::string kEdgeSignGuidanceViewSignboard = "edge.sign.guidance_view_signboard";
 const std::string kEdgeTravelMode = "edge.travel_mode";
 const std::string kEdgeVehicleType = "edge.vehicle_type";
 const std::string kEdgePedestrianType = "edge.pedestrian_type";
@@ -69,6 +70,8 @@ const std::string kEdgeTruckSpeed = "edge.truck_speed";
 const std::string kEdgeTruckRoute = "edge.truck_route";
 const std::string kEdgeDefaultSpeed = "edge.default_speed";
 const std::string kEdgeDestinationOnly = "edge.destination_only";
+const std::string kEdgeIsUrban = "edge.is_urban";
+const std::string kEdgeTaggedNames = "edge.tagged_names";
 
 // Node keys
 const std::string kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";
@@ -82,7 +85,7 @@ const std::string kNodeIntersectingEdgeWalkability = "node.intersecting_edge.wal
 const std::string kNodeIntersectingEdgeUse = "node.intersecting_edge.use";
 const std::string kNodeIntersectingEdgeRoadClass = "node.intersecting_edge.road_class";
 const std::string kNodeElapsedTime = "node.elapsed_time";
-const std::string kNodeaAdminIndex = "node.admin_index";
+const std::string kNodeAdminIndex = "node.admin_index";
 const std::string kNodeType = "node.type";
 const std::string kNodeFork = "node.fork";
 const std::string kNodeTransitPlatformInfoType = "node.transit_platform_info.type";
@@ -115,6 +118,9 @@ const std::string kAdminCountryText = "admin.country_text";
 const std::string kAdminStateCode = "admin.state_code";
 const std::string kAdminStateText = "admin.state_text";
 const std::string kShape = "shape";
+const std::string kIncidents = "incidents";
+
+// Map matching ones nested to points and top level ones
 const std::string kMatchedPoint = "matched.point";
 const std::string kMatchedType = "matched.type";
 const std::string kMatchedEdgeIndex = "matched.edge_index";
@@ -129,6 +135,7 @@ const std::string kRawScore = "raw_score";
 const std::string kShapeAttributesTime = "shape_attributes.time";
 const std::string kShapeAttributesLength = "shape_attributes.length";
 const std::string kShapeAttributesSpeed = "shape_attributes.speed";
+const std::string kShapeAttributesSpeedLimit = "shape_attributes.speed_limit";
 
 // Categories
 const std::string kNodeCategory = "node.";

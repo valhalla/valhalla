@@ -6,21 +6,25 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace baldr {
 
-const std::map<uint8_t, TileLevel>& TileHierarchy::levels() {
+const std::vector<TileLevel>& TileHierarchy::levels() {
   // Static tile levels
-  static const std::map<uint8_t, TileLevel> levels_ =
-      {{2, TileLevel{2, stringToRoadClass("ServiceOther"), "local",
-                     midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                      .25,
-                                                      static_cast<unsigned short>(kBinsDim)}}},
-       {1, TileLevel{1, stringToRoadClass("Tertiary"), "arterial",
-                     midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                      1,
-                                                      static_cast<unsigned short>(kBinsDim)}}},
-       {0, TileLevel{0, stringToRoadClass("Primary"), "highway",
-                     midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                      4,
-                                                      static_cast<unsigned short>(kBinsDim)}}}};
+  static const std::vector<TileLevel> levels_ = {
+
+      TileLevel{0, stringToRoadClass("Primary"), "highway",
+                midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                                                 4,
+                                                 static_cast<unsigned short>(kBinsDim)}},
+
+      TileLevel{1, stringToRoadClass("Tertiary"), "arterial",
+                midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                                                 1,
+                                                 static_cast<unsigned short>(kBinsDim)}},
+
+      TileLevel{2, stringToRoadClass("ServiceOther"), "local",
+                midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                                                 .25,
+                                                 static_cast<unsigned short>(kBinsDim)}},
+  };
 
   return levels_;
 }
@@ -46,9 +50,8 @@ midgard::AABB2<midgard::PointLL> TileHierarchy::GetGraphIdBoundingBox(const Grap
 // If the level is not supported an invalid id will be returned.
 GraphId TileHierarchy::GetGraphId(const midgard::PointLL& pointll, const uint8_t level) {
   GraphId id;
-  const auto& tl = levels().find(level);
-  if (tl != levels().end()) {
-    auto tile_id = tl->second.tiles.TileId(pointll);
+  if (level < levels().size()) {
+    auto tile_id = levels()[level].tiles.TileId(pointll);
     if (tile_id >= 0) {
       id = {static_cast<uint32_t>(tile_id), level, 0};
     }
@@ -58,9 +61,9 @@ GraphId TileHierarchy::GetGraphId(const midgard::PointLL& pointll, const uint8_t
 
 // Gets the hierarchy level given the road class.
 uint8_t TileHierarchy::get_level(const RoadClass roadclass) {
-  if (roadclass <= levels().find(0)->second.importance) {
+  if (roadclass <= levels()[0].importance) {
     return 0;
-  } else if (roadclass <= levels().find(1)->second.importance) {
+  } else if (roadclass <= levels()[1].importance) {
     return 1;
   } else {
     return 2;
@@ -77,9 +80,8 @@ uint8_t TileHierarchy::get_max_level() {
 std::vector<GraphId> TileHierarchy::GetGraphIds(const midgard::AABB2<midgard::PointLL>& bbox,
                                                 const uint8_t level) {
   std::vector<GraphId> ids;
-  auto itr = levels().find(level);
-  if (itr != levels().end()) {
-    auto tile_ids = itr->second.tiles.TileList(bbox);
+  if (level < levels().size()) {
+    auto tile_ids = levels()[level].tiles.TileList(bbox);
     ids.reserve(tile_ids.size());
 
     for (auto tile_id : tile_ids) {
@@ -94,7 +96,7 @@ std::vector<GraphId> TileHierarchy::GetGraphIds(const midgard::AABB2<midgard::Po
 std::vector<GraphId> TileHierarchy::GetGraphIds(const midgard::AABB2<midgard::PointLL>& bbox) {
   std::vector<GraphId> ids;
   for (const auto& entry : levels()) {
-    auto level_ids = GetGraphIds(bbox, entry.first);
+    auto level_ids = GetGraphIds(bbox, entry.level);
     ids.reserve(ids.size() + level_ids.size());
     ids.insert(ids.end(), level_ids.begin(), level_ids.end());
   }
@@ -107,9 +109,8 @@ std::vector<GraphId> TileHierarchy::GetGraphIds(const midgard::AABB2<midgard::Po
  * @return Returns a const reference to the tiling system for this level.
  */
 const midgard::Tiles<midgard::PointLL>& TileHierarchy::get_tiling(const uint8_t level) {
-  const auto& tl = levels().find(level);
-  if (tl != levels().end()) {
-    return tl->second.tiles;
+  if (level < levels().size()) {
+    return levels()[level].tiles;
   }
   throw std::runtime_error("Invalid level Id for TileHierarchy::get_tiling");
 }

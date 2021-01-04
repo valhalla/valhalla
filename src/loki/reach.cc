@@ -13,6 +13,33 @@ Reach::Reach() : Dijkstras() {
   path_edge->set_end_node(false);
 }
 
+void Reach::enqueue(const baldr::GraphId& node_id,
+                    baldr::GraphReader& reader,
+                    const std::shared_ptr<sif::DynamicCost>& costing,
+                    graph_tile_ptr tile) {
+  // skip nodes which are done or invalid
+  if (!node_id.Is_Valid() || done_.find(node_id) != done_.cend())
+    return;
+  // if the node isnt accessable bail
+  if (!reader.GetGraphTile(node_id, tile))
+    return;
+  const auto* node = tile->node(node_id);
+  if (!costing->Allowed(node))
+    return;
+  // otherwise we enqueue it
+  queue_.insert(node_id);
+  // and we enqueue it on the other levels
+  for (const auto& transition : tile->GetNodeTransitions(node)) {
+    // skip nodes which are done already
+    if (done_.find(transition.endnode()) != done_.cend())
+      continue;
+    // otherwise we enqueue it
+    queue_.insert(transition.endnode());
+    // and we remember how many duplicates we enqueued
+    ++transitions_;
+  }
+}
+
 directed_reach Reach::operator()(const DirectedEdge* edge,
                                  const baldr::GraphId edge_id,
                                  uint32_t max_reach,
@@ -26,37 +53,6 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
     return reach;
   max_reach_ = max_reach;
 
-  auto node_filter = costing->GetNodeFilter();
-  auto edge_filter = costing->GetEdgeFilter();
-
-  // we keep a queue of nodes to expand from, to prevent duplicate expansion we use a set
-  // each node we pop from the set will increase the reach and be added to the done set
-  // the done set is used to avoid duplicate expansion of already dequeued nodes
-  // we also track how many nodes were added as transitions from other levels
-  // this allows us to have "duplicate" nodes but not do any trickery with the expansion
-
-  // helper lambda to enqueue a node
-  Clear();
-  const GraphTile* tile = nullptr;
-  auto enqueue = [&](const GraphId& node_id) {
-    // skip nodes which are done or invalid
-    if (!node_id.Is_Valid() || done_.find(node_id) != done_.cend())
-      return;
-    // if the node isnt accessable bail
-    if (!reader.GetGraphTile(node_id, tile))
-      return;
-    const auto* node = tile->node(node_id);
-    if (node_filter(node))
-      return;
-    // otherwise we enqueue it
-    queue_.insert(node_id);
-    // and we enqueue it on the other levels
-    for (const auto& transition : tile->GetNodeTransitions(node))
-      queue_.insert(transition.endnode());
-    // and we remember how many duplicates we enqueued
-    transitions_ += node->transition_count();
-  };
-
   // TODO: here we stay extra conservative by avoiding starting on a simple restriction because we
   // TODO: dont have predecessor information in the simple reach expansion so we bail 1 edge earlier
   // NOTE: we can expand from the end of a complex restriction because it cant possibly be on our path
@@ -64,8 +60,10 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
   // potential stopping point (maybe a path followed the restriction)
 
   // seed the expansion with a place to start expanding from
-  if (edge_filter(edge) > 0 && !edge->restrictions())
-    enqueue(edge->endnode());
+  Clear();
+  graph_tile_ptr tile, start_tile = reader.GetGraphTile(edge_id);
+  if ((tile = start_tile) && costing->Filter(edge, tile) > 0.f && !edge->restrictions())
+    enqueue(edge->endnode(), reader, costing, tile);
 
   // get outbound reach by doing a simple forward expansion until you either hit the max_reach
   // or you can no longer expand
@@ -85,34 +83,22 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
       // potential stopping point (maybe a path followed the restriction)
 
       // if this edge is traversable we enqueue its end node
-      if (edge_filter(&edge) > 0 && !edge.end_restriction() && !edge.restrictions())
-        enqueue(edge.endnode());
+      if (costing->Filter(&edge, tile) > 0 && !edge.end_restriction() && !edge.restrictions())
+        enqueue(edge.endnode(), reader, costing, tile);
     }
   }
   // settled nodes + will be settled nodes - duplicated transitions nodes
   reach.outbound =
       std::min(static_cast<uint32_t>(queue_.size() + done_.size() - transitions_), max_reach);
 
-  // TODO: move to graphreader
-  // helper lambdas to get the begin node of an edge by using its opposing edges end node
-  auto begin_node = [&](const DirectedEdge* edge) -> GraphId {
-    // grab the node
-    if (!reader.GetGraphTile(edge->endnode(), tile))
-      return {};
-    const auto* node = tile->node(edge->endnode());
-    // grab the opp edges end node
-    const auto* opp_edge = tile->directededge(node->edge_index() + edge->opp_index());
-    return opp_edge->endnode();
-  };
-
   // NOTE: we can expand from the start of a complex or regular restriction because it cant possibly
   // be on our path and we can expand from the end of a complex restriction because only the start
   // would mark a potential stopping point (maybe a path followed the restriction)
 
-  // seed the expansion with a place to start expanding from
+  // seed the expansion with a place to start expanding from, tile may have changed so reset it
   Clear();
-  if (edge_filter(edge) > 0)
-    enqueue(begin_node(edge));
+  if ((tile = start_tile) && costing->Filter(edge, tile) > 0.f)
+    enqueue(reader.GetBeginNodeId(edge, tile), reader, costing, tile);
 
   // get inbound reach by doing a simple reverse expansion until you either hit the max_reach
   // or you can no longer expand
@@ -125,6 +111,7 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
     // expand from the node
     if (!reader.GetGraphTile(node_id, tile))
       continue;
+
     for (const auto& edge : tile->GetDirectedEdges(node_id)) {
       // get the opposing edge
       if (!reader.GetGraphTile(edge.endnode(), tile))
@@ -137,8 +124,9 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
       // at the start of a simple restriction because it could have been on our path
 
       // if this opposing edge is traversable we enqueue its begin node
-      if (edge_filter(opp_edge) > 0 && !opp_edge->start_restriction() && !opp_edge->restrictions())
-        enqueue(edge.endnode());
+      if (costing->Filter(opp_edge, tile) > 0.f && !opp_edge->start_restriction() &&
+          !opp_edge->restrictions())
+        enqueue(edge.endnode(), reader, costing, tile);
     }
   }
   // settled nodes + will be settled nodes - duplicated transitions nodes
@@ -165,12 +153,13 @@ directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
                             uint8_t direction) {
   // can we even try to expand?
   directed_reach reach{};
-  if (costing->GetEdgeFilter()(edge) == 0) {
+
+  graph_tile_ptr tile = reader.GetGraphTile(edge_id);
+  if (!tile || costing->Filter(edge, tile) == 0.f) {
     return reach;
   }
 
   // fake up the input location
-  const baldr::GraphTile* tile = nullptr;
   const auto* node = reader.GetEndNode(edge, tile);
   if (node == nullptr) {
     return reach;
@@ -204,11 +193,11 @@ directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
 }
 
 // callback fired when a node is expanded from, the node will be the end node of the previous label
-void Reach::ExpandingNode(baldr::GraphReader& graphreader,
-                          const baldr::GraphTile* tile,
+void Reach::ExpandingNode(baldr::GraphReader&,
+                          graph_tile_ptr tile,
                           const baldr::NodeInfo* node,
-                          const sif::EdgeLabel& current,
-                          const sif::EdgeLabel* previous) {
+                          const sif::EdgeLabel&,
+                          const sif::EdgeLabel*) {
   // compute the nodes id
   GraphId node_id = tile->header()->graphid();
   node_id.set_id(node - tile->node(0));
@@ -222,9 +211,8 @@ void Reach::ExpandingNode(baldr::GraphReader& graphreader,
 }
 
 // when the main loop is looking to continue expanding we tell it to terminate here
-thor::ExpansionRecommendation Reach::ShouldExpand(baldr::GraphReader& graphreader,
-                                                  const sif::EdgeLabel& pred,
-                                                  const thor::InfoRoutingType route_type) {
+thor::ExpansionRecommendation
+Reach::ShouldExpand(baldr::GraphReader&, const sif::EdgeLabel&, const thor::InfoRoutingType) {
   if ((done_.size() - transitions_) < max_reach_)
     return thor::ExpansionRecommendation::continue_expansion;
   return thor::ExpansionRecommendation::prune_expansion;

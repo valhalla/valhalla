@@ -24,7 +24,6 @@
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 #include "sif/pedestriancost.h"
-#include "thor/astar.h"
 #include "thor/attributes_controller.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/pathalgorithm.h"
@@ -34,7 +33,7 @@
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
-#include "gurka/gurka.h"
+#include "gurka.h"
 
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
@@ -221,11 +220,13 @@ void make_tile() {
     tile_builder.UpdatePredictedSpeeds(directededges);
   }
 
-  GraphTile tile(test_dir, tile_id);
-  ASSERT_EQ(tile.FileSuffix(tile_id, false), std::string("2/000/519/120.gph"))
+  auto tile = GraphTile::Create(test_dir, tile_id);
+  ASSERT_TRUE(tile);
+  ASSERT_EQ(tile->FileSuffix(tile_id), std::string("2/000/519/120.gph"))
       << "Tile ID didn't match the expected filename";
 
-  ASSERT_PRED1(filesystem::exists, test_dir + "/" + tile.FileSuffix(tile_id, false))
+  ASSERT_PRED1(filesystem::exists,
+               test_dir + filesystem::path::preferred_separator + tile->FileSuffix(tile_id))
       << "Expected tile file didn't show up on disk - are the fixtures in the right location?";
 }
 
@@ -248,14 +249,14 @@ std::unique_ptr<vb::GraphReader> get_graph_reader(const std::string& tile_dir) {
   rapidjson::read_json(json, conf);
 
   std::unique_ptr<vb::GraphReader> reader(new vb::GraphReader(conf));
-  auto* tile = reader->GetGraphTile(tile_id);
+  auto tile = reader->GetGraphTile(tile_id);
 
   EXPECT_NE(tile, nullptr) << "Unable to load test tile! Did `make_tile` run succesfully?";
   if (tile->header()->directededgecount() != 28) {
     throw std::logic_error("test-tiles does not contain expected number of edges");
   }
 
-  const GraphTile* endtile = reader->GetGraphTile(node_locations["b"]);
+  auto endtile = reader->GetGraphTile(node_locations["b"]);
   EXPECT_NE(endtile, nullptr) << "bad tile, node 'b' wasn't found in it";
 
   return reader;
@@ -289,7 +290,7 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
     break;
   }
 
-  auto* tile = reader->GetGraphTile(tile_id);
+  auto tile = reader->GetGraphTile(tile_id);
   uint32_t expected_time = 979797;
   switch (assert_type) {
     case TrivialPathTest::DurationEqualTo:
@@ -381,7 +382,7 @@ TEST(Astar, TestTrivialPathTriangle) {
   // TODO This fails with graphindex out of bounds for Reverse direction, is this
   // related to why we short-circuit trivial routes to AStarPathAlgorithm in route_action.cc?
   //
-  vt::AStarPathAlgorithm astar;
+  vt::TimeDepForward astar;
   // this should go along the path from E to F
   assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 4231,
                          vs::TravelMode::kPedestrian);
@@ -1017,19 +1018,17 @@ void test_backtrack_complex_restriction(int date_time_type) {
     case 0:
     case 1:
       correct_shape =
-          "iggmAa{abeEyD~HaBvCn@^`e@tYdGhCr]nRnCzArDjB{CbFsDyBwC{AsYsP_LcGqA{@wJsGeU{Km@]qFgDz@{A";
+          R"(kggmA_{abeEyDbIaBtCp@Z|d@pYfGdCp]xRnCzArDlB{C`FqDyBwC_BsYmP}KoGsAw@wJmGcUcLo@[qFaDz@aB)";
       break;
     case 2:
       correct_shape =
-          R"(qrgmA_habeE}@xBqFgDkB{@_WiNiB{@mXwNqJcFcIeFeViL}Z_JoVeE\cFw@kBb@NxQdEzb@zKfIvDb`@|Sh\rQ`YdOdB|@tCeF)";
+          R"(wrgmAsgabeEy@hBqFaDkBcA_WcNkBw@iX_OuJ}EcIgFcVgL}ZgJoVeE^yEy@uBb@PvQfE|b@bLdIpDd`@|Sh\vQ~XxNfB~@pC}E)";
       break;
     default:
       throw std::runtime_error("unhandled case");
   }
-  if (leg.shape() != correct_shape) {
-    throw std::runtime_error("Did not find expected shape. Found \n" + leg.shape() +
-                             "\nbut expected \n" + correct_shape);
-  }
+  EXPECT_EQ(leg.shape(), correct_shape)
+      << "Did not find expected shape. Found \n" + leg.shape() + "\nbut expected \n" + correct_shape;
 
   std::vector<std::string> names;
   const auto& directions = response.directions().routes(0).legs();
@@ -1411,7 +1410,7 @@ TEST(Astar, test_complex_restriction_short_path_melborne) {
         R"({"locations":[{"lat":-37.627860699397075,"lon":145.365825588286},{"lat":-37.62842169939707,"lon":145.36587158828598}],"costing":"auto"})";
     auto response = tester.test(request);
     const auto& leg = response.trip().routes(0).legs(0);
-    EXPECT_EQ(leg.shape(), "b|rwfAislgtGtN{UvDtDxLhM");
+    EXPECT_EQ(leg.shape(), "~{rwfAmslgtGxNkUvDtDtLjM");
   }
   {
     // Tests "X-crossing",
@@ -1420,7 +1419,7 @@ TEST(Astar, test_complex_restriction_short_path_melborne) {
         R"({"locations":[{"lat":-37.62403769939707,"lon":145.360320588286},{"lat":-37.624804699397075,"lon":145.36041758828597}],"costing":"auto"})";
     auto response = tester.test(request);
     const auto& leg = response.trip().routes(0).legs(0);
-    EXPECT_EQ(leg.shape(), "tmkwfAa{agtGjAyBpBwC`HkK`M]bR`R");
+    EXPECT_EQ(leg.shape(), "rmkwfAwzagtGlAgCnB}CfHcKzLk@lPbQ");
   }
 }
 
@@ -1506,7 +1505,7 @@ TEST(ComplexRestriction, WalkVias) {
   auto costing = costs[int(mode)];
 
   bool is_forward = true;
-  auto* tile = reader->GetGraphTile(tile_id);
+  auto tile = reader->GetGraphTile(tile_id);
 
   std::vector<valhalla::baldr::Location> locations;
   locations.push_back({node_locations["7"]});

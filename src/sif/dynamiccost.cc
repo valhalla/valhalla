@@ -1,4 +1,5 @@
 #include "sif/dynamiccost.h"
+
 #include "baldr/graphconstants.h"
 #include "proto_conversions.h"
 #include "sif/autocost.h"
@@ -10,6 +11,7 @@
 #include "sif/transitcost.h"
 #include "sif/truckcost.h"
 #include "worker.h"
+#include <utility>
 
 using namespace valhalla::baldr;
 
@@ -48,9 +50,12 @@ uint8_t SpeedMask_Parse(const boost::optional<const rapidjson::Value&>& speed_ty
 namespace valhalla {
 namespace sif {
 
-DynamicCost::DynamicCost(const CostingOptions& options, const TravelMode mode)
+DynamicCost::DynamicCost(const CostingOptions& options, const TravelMode mode, uint32_t access_mask)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
-      flow_mask_(kDefaultFlowMask) {
+      access_mask_(access_mask), flow_mask_(kDefaultFlowMask), shortest_(options.shortest()),
+      ignore_restrictions_(options.ignore_restrictions()), ignore_oneways_(options.ignore_oneways()),
+      ignore_access_(options.ignore_access()), ignore_closures_(options.ignore_closures()),
+      top_speed_(options.top_speed()) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
@@ -78,16 +83,14 @@ bool DynamicCost::AllowMultiPass() const {
 // using them for the current route. Here we just call out to the derived classes costing function
 // with a time that tells the function that we aren't using time. This avoids having to worry about
 // default parameters and inheritance (which are a bad mix)
-Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const {
+Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
   return EdgeCost(edge, tile, kConstrainedFlowSecondOfDay);
 }
 
 // Returns the cost to make the transition from the predecessor edge.
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.
-Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
-                                 const NodeInfo* node,
-                                 const EdgeLabel& pred) const {
+Cost DynamicCost::TransitionCost(const DirectedEdge*, const NodeInfo*, const EdgeLabel&) const {
   return {0.0f, 0.0f};
 }
 
@@ -95,10 +98,10 @@ Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
 // when using a reverse search (from destination towards the origin).
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.
-Cost DynamicCost::TransitionCostReverse(const uint32_t idx,
-                                        const baldr::NodeInfo* node,
-                                        const baldr::DirectedEdge* opp_edge,
-                                        const baldr::DirectedEdge* opp_pred_edge) const {
+Cost DynamicCost::TransitionCostReverse(const uint32_t,
+                                        const baldr::NodeInfo*,
+                                        const baldr::DirectedEdge*,
+                                        const baldr::DirectedEdge*) const {
   return {0.0f, 0.0f};
 }
 
@@ -187,16 +190,16 @@ bool DynamicCost::bicycle() const {
 }
 
 // Add to the exclude list.
-void DynamicCost::AddToExcludeList(const baldr::GraphTile*& tile) {
+void DynamicCost::AddToExcludeList(const graph_tile_ptr&) {
 }
 
 // Checks if we should exclude or not.
-bool DynamicCost::IsExcluded(const baldr::GraphTile*& tile, const baldr::DirectedEdge* edge) {
+bool DynamicCost::IsExcluded(const graph_tile_ptr&, const baldr::DirectedEdge*) {
   return false;
 }
 
 // Checks if we should exclude or not.
-bool DynamicCost::IsExcluded(const baldr::GraphTile*& tile, const baldr::NodeInfo* node) {
+bool DynamicCost::IsExcluded(const graph_tile_ptr&, const baldr::NodeInfo*) {
   return false;
 }
 
@@ -214,10 +217,18 @@ Cost DynamicCost::BSSCost() const {
 void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_costing_options) {
   auto speed_types = rapidjson::get_child_optional(value, "/speed_types");
   pbf_costing_options->set_flow_mask(SpeedMask_Parse(speed_types));
+  pbf_costing_options->set_ignore_restrictions(
+      rapidjson::get<bool>(value, "/ignore_restrictions", false));
+  pbf_costing_options->set_ignore_oneways(rapidjson::get<bool>(value, "/ignore_oneways", false));
+  pbf_costing_options->set_ignore_access(rapidjson::get<bool>(value, "/ignore_access", false));
+  pbf_costing_options->set_ignore_closures(rapidjson::get<bool>(value, "/ignore_closures", false));
   auto name = rapidjson::get_optional<std::string>(value, "/name");
   if (name) {
     pbf_costing_options->set_name(*name);
   }
+  pbf_costing_options->set_shortest(rapidjson::get<bool>(value, "/shortest", false));
+  pbf_costing_options->set_top_speed(
+      kVehicleSpeedRange(rapidjson::get<uint32_t>(value, "/top_speed", kMaxAssumedSpeed)));
 }
 
 void ParseCostingOptions(const rapidjson::Document& doc,
@@ -228,6 +239,11 @@ void ParseCostingOptions(const rapidjson::Document& doc,
     Costing costing = static_cast<Costing>(i);
     // Create the costing string
     const auto& costing_str = valhalla::Costing_Enum_Name(costing);
+    // Deprecated costings still need their place in the array
+    if (costing_str.empty()) {
+      options.add_costing_options();
+      continue;
+    }
     // Create the costing options key
     const auto key = costing_options_key + "/" + costing_str;
     // Parse the costing options
@@ -262,10 +278,6 @@ void ParseCostingOptions(const rapidjson::Document& doc,
       sif::ParseAutoCostOptions(doc, key, costing_options);
       break;
     }
-    case auto_shorter: {
-      sif::ParseAutoShorterCostOptions(doc, key, costing_options);
-      break;
-    }
     case bicycle: {
       sif::ParseBicycleCostOptions(doc, key, costing_options);
       break;
@@ -294,6 +306,10 @@ void ParseCostingOptions(const rapidjson::Document& doc,
       sif::ParsePedestrianCostOptions(doc, key, costing_options);
       break;
     }
+    case bikeshare: {
+      costing_options->set_costing(Costing::bikeshare); // Nothing to parse for this one
+      break;
+    }
     case transit: {
       sif::ParseTransitCostOptions(doc, key, costing_options);
       break;
@@ -304,10 +320,6 @@ void ParseCostingOptions(const rapidjson::Document& doc,
     }
     case motorcycle: {
       sif::ParseMotorcycleCostOptions(doc, key, costing_options);
-      break;
-    }
-    case auto_data_fix: {
-      sif::ParseAutoDataFixCostOptions(doc, key, costing_options);
       break;
     }
     case none_: {

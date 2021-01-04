@@ -100,7 +100,7 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
     {150, 400}, {151, 400}, {152, 400}, {153, 400}, {154, 400}, {155, 400}, {156, 400}, {157, 400},
     {158, 400}, {159, 400},
 
-    {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400},
+    {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400}, {165, 400},
 
     {170, 400}, {171, 400}, {172, 400},
 
@@ -207,6 +207,7 @@ const std::unordered_map<unsigned, std::string> OSRM_ERRORS_CODES{
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
     {164,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"},
+    {165, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
 
     {170, R"({"code":"NoRoute","message":"Impossible route between points"})"},
     {171,
@@ -293,7 +294,8 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
 
 void add_date_to_locations(Options& options,
                            google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
-  if (options.has_date_time() && locations.size()) {
+  // otherwise we do what the person was asking for
+  if (options.has_date_time() && !locations.empty()) {
     switch (options.date_time_type()) {
       case Options::current:
         locations.Mutable(0)->set_date_time("current");
@@ -304,6 +306,9 @@ void add_date_to_locations(Options& options,
       case Options::arrive_by:
         locations.Mutable(locations.size() - 1)->set_date_time(options.date_time());
         break;
+      case Options::invariant:
+        for (auto& loc : locations)
+          loc.set_date_time(options.date_time());
       default:
         break;
     }
@@ -313,8 +318,7 @@ void add_date_to_locations(Options& options,
 void parse_locations(const rapidjson::Document& doc,
                      Options& options,
                      const std::string& node,
-                     unsigned location_parse_error_code,
-                     bool track) {
+                     unsigned location_parse_error_code) {
 
   google::protobuf::RepeatedPtrField<valhalla::Location>* locations = nullptr;
   if (node == "locations") {
@@ -342,21 +346,21 @@ void parse_locations(const rapidjson::Document& doc,
         auto* location = locations->Add();
         location->set_original_index(locations->size() - 1);
 
-        auto lat = rapidjson::get_optional<float>(r_loc, "/lat");
+        auto lat = rapidjson::get_optional<double>(r_loc, "/lat");
         if (!lat) {
           throw std::runtime_error{"lat is missing"};
         };
 
-        if (*lat < -90.0f || *lat > 90.0f) {
+        if (*lat < -90.0 || *lat > 90.0) {
           throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
         }
 
-        auto lon = rapidjson::get_optional<float>(r_loc, "/lon");
+        auto lon = rapidjson::get_optional<double>(r_loc, "/lon");
         if (!lon) {
           throw std::runtime_error{"lon is missing"};
         };
 
-        lon = midgard::circular_range_clamp<float>(*lon, -180, 180);
+        lon = midgard::circular_range_clamp<double>(*lon, -180, 180);
         location->mutable_ll()->set_lat(*lat);
         location->mutable_ll()->set_lng(*lon);
 
@@ -457,10 +461,10 @@ void parse_locations(const rapidjson::Document& doc,
         if (preferred_side && PreferredSide_Enum_Parse(*preferred_side, &side)) {
           location->set_preferred_side(side);
         }
-        lat = rapidjson::get_optional<float>(r_loc, "/display_lat");
-        lon = rapidjson::get_optional<float>(r_loc, "/display_lon");
-        if (lat && lon && *lat >= -90.0f && *lat <= 90.0f) {
-          lon = midgard::circular_range_clamp<float>(*lon, -180, 180);
+        lat = rapidjson::get_optional<double>(r_loc, "/display_lat");
+        lon = rapidjson::get_optional<double>(r_loc, "/display_lon");
+        if (lat && lon && *lat >= -90.0 && *lat <= 90.0) {
+          lon = midgard::circular_range_clamp<double>(*lon, -180, 180);
           location->mutable_display_ll()->set_lat(*lat);
           location->mutable_display_ll()->set_lng(*lon);
         }
@@ -512,10 +516,6 @@ void parse_locations(const rapidjson::Document& doc,
       locations->Mutable(0)->set_type(valhalla::Location::kBreak);
       locations->Mutable(locations->size() - 1)->set_type(valhalla::Location::kBreak);
     }
-    if (track) {
-      midgard::logging::Log(node + "_count::" + std::to_string(request_locations->Size()),
-                            " [ANALYTICS] ");
-    }
 
     // push the date time information down into the locations
     if (!had_date_time) {
@@ -555,8 +555,6 @@ void parse_contours(const rapidjson::Document& doc,
 }
 
 void from_json(rapidjson::Document& doc, Options& options) {
-  bool track = !options.has_do_not_track() || !options.do_not_track();
-
   // TODO: stop doing this after a sufficient amount of time has passed
   // move anything nested in deprecated directions_options up to the top level
   auto deprecated = get_child_optional(doc, "/directions_options");
@@ -616,7 +614,6 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   // date_time
   auto date_time_type = rapidjson::get_optional<unsigned int>(doc, "/date_time/type");
-  auto date_time_value = rapidjson::get_optional<std::string>(doc, "/date_time/value");
   if (date_time_type && Options::DateTimeType_IsValid(*date_time_type)) {
     // check the type is in bounds
     auto const v = static_cast<Options::DateTimeType>(*date_time_type);
@@ -624,19 +621,21 @@ void from_json(rapidjson::Document& doc, Options& options) {
       throw valhalla_exception_t{163};
     options.set_date_time_type(static_cast<Options::DateTimeType>(v));
     // check the value exists for depart at and arrive by
+    auto date_time_value = v != Options::current
+                               ? rapidjson::get_optional<std::string>(doc, "/date_time/value")
+                               : std::string("current");
     if (!date_time_value) {
       if (v == Options::depart_at)
         throw valhalla_exception_t{160};
       else if (v == Options::arrive_by)
         throw valhalla_exception_t{161};
+      else if (v == Options::invariant)
+        throw valhalla_exception_t{165};
     }
-    // check the value is sane for depart at and arrive by
-    if (v != Options::current && !baldr::DateTime::is_iso_valid(*date_time_value))
+    // check the value is sane
+    if (*date_time_value != "current" && !baldr::DateTime::is_iso_valid(*date_time_value))
       throw valhalla_exception_t{162};
-    if (v != Options::current)
-      options.set_date_time(*date_time_value);
-    else
-      options.set_date_time("current");
+    options.set_date_time(*date_time_value);
   } // not specified but you want transit, then we default to current
   else if (options.has_costing() &&
            (options.costing() == multimodal || options.costing() == transit)) {
@@ -644,9 +643,20 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_date_time("current");
   }
 
+  // failure scenarios with respect to time dependence
+  if (options.has_date_time_type()) {
+    if (options.date_time_type() == Options::arrive_by ||
+        options.date_time_type() == Options::invariant) {
+      if (options.costing() == multimodal || options.costing() == transit)
+        throw valhalla_exception_t{141};
+      if (options.action() == Options::isochrone)
+        throw valhalla_exception_t{142};
+    }
+  }
+
   // Set the output precision for shape/geometry (polyline encoding). Defaults to polyline6
   // This also controls the input precision for encoded_polyline in height action
-  // TODO - is this just for OSRM compatibility?
+  // TODO - this just for OSRM compatibility at the moment but could be supported
   options.set_shape_format(polyline6);
   auto shape_format = rapidjson::get_optional<std::string>(doc, "/shape_format");
   if (shape_format) {
@@ -662,6 +672,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
     }
   }
 
+  // whether or not to output b64 encoded openlr
   auto linear_references = rapidjson::get_optional<bool>(doc, "/linear_references");
   if (linear_references) {
     options.set_linear_references(*linear_references);
@@ -697,11 +708,11 @@ void from_json(rapidjson::Document& doc, Options& options) {
     add_date_to_locations(options, *options.mutable_shape());
   } // fall back from encoded polyline to array of locations
   else {
-    parse_locations(doc, options, "shape", 134, false);
+    parse_locations(doc, options, "shape", 134);
 
     // if no shape then try 'trace'
     if (options.shape().size() == 0) {
-      parse_locations(doc, options, "trace", 135, false);
+      parse_locations(doc, options, "trace", 135);
     }
   }
 
@@ -769,6 +780,34 @@ void from_json(rapidjson::Document& doc, Options& options) {
 
   // costing defaults to none which is only valid for locate
   auto costing_str = rapidjson::get<std::string>(doc, "/costing", "none");
+
+  // auto_shorter is deprecated and will be turned into
+  // shortest=true costing option. maybe remove in v4?
+  if (costing_str == "auto_shorter") {
+    costing_str = "auto";
+    rapidjson::SetValueByPointer(doc, "/costing", "auto");
+    auto json_options = rapidjson::GetValueByPointer(doc, "/costing_options/auto_shorter");
+    if (json_options) {
+      rapidjson::SetValueByPointer(doc, "/costing_options/auto", *json_options);
+    }
+    rapidjson::SetValueByPointer(doc, "/costing_options/auto/shortest", true);
+  }
+
+  // auto_data_fix is deprecated and will be turned into
+  // ignore all the things costing option. maybe remove in v4?
+  if (costing_str == "auto_data_fix") {
+    costing_str = "auto";
+    rapidjson::SetValueByPointer(doc, "/costing", "auto");
+    auto json_options = rapidjson::GetValueByPointer(doc, "/costing_options/auto_data_fix");
+    if (json_options) {
+      rapidjson::SetValueByPointer(doc, "/costing_options/auto", *json_options);
+    }
+    rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_restrictions", true);
+    rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_oneways", true);
+    rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_access", true);
+    rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_closures", true);
+  }
+
   // try the string directly, some strings are keywords so add an underscore
   Costing costing;
   if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {
@@ -796,19 +835,18 @@ void from_json(rapidjson::Document& doc, Options& options) {
   }
 
   // get the locations in there
-  parse_locations(doc, options, "locations", 130, track);
+  parse_locations(doc, options, "locations", 130);
 
   // get the sources in there
-  parse_locations(doc, options, "sources", 131, track);
+  parse_locations(doc, options, "sources", 131);
 
   // get the targets in there
-  parse_locations(doc, options, "targets", 132, track);
+  parse_locations(doc, options, "targets", 132);
 
   // get the avoids in there
-  parse_locations(doc, options, "avoid_locations", 133, track);
+  parse_locations(doc, options, "avoid_locations", 133);
 
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
-  // TODO: this is because bidirectional a* defaults to middle of the day time for speed lookup
   if (!options.has_date_time_type() && (options.shape_size() == 0 || options.shape(0).time() == -1)) {
     for (auto& costing : *options.mutable_costing_options()) {
       costing.set_flow_mask(
@@ -961,6 +999,32 @@ void ParseApi(const std::string& request, Options::Action action, valhalla::Api&
   from_json(document, *api.mutable_options());
 }
 
+std::string jsonify_error(const valhalla_exception_t& exception, const Api& request) {
+  // get the http status
+  std::stringstream body;
+
+  // overwrite with osrm error response
+  if (request.options().format() == Options::osrm) {
+    auto found = OSRM_ERRORS_CODES.find(exception.code);
+    if (found == OSRM_ERRORS_CODES.cend()) {
+      found = OSRM_ERRORS_CODES.find(199);
+    }
+    body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "") << found->second
+         << (request.options().has_jsonp() ? ")" : "");
+  } // valhalla error response
+  else {
+    // build up the json map
+    auto json_error = baldr::json::map({});
+    json_error->emplace("status", exception.http_message);
+    json_error->emplace("status_code", static_cast<uint64_t>(exception.http_code));
+    json_error->emplace("error", std::string(exception.message));
+    json_error->emplace("error_code", static_cast<uint64_t>(exception.code));
+    body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "") << *json_error
+         << (request.options().has_jsonp() ? ")" : "");
+  }
+  return body.str();
+}
+
 #ifdef HAVE_HTTP
 void ParseApi(const http_request_t& request, valhalla::Api& api) {
   api.Clear();
@@ -1017,11 +1081,6 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
     options.set_action(action);
   }
 
-  // disable analytics
-  auto do_not_track = request.headers.find("DNT");
-  options.set_do_not_track(options.do_not_track() ||
-                           (do_not_track != request.headers.cend() && do_not_track->second == "1"));
-
   // parse out the options
   from_json(document, options);
 }
@@ -1032,31 +1091,9 @@ const headers_t::value_type ATTACHMENT{"Content-Disposition", "attachment; filen
 worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
                                  http_request_info_t& request_info,
                                  const Api& request) {
-  // get the http status
-  std::stringstream body;
-
-  // overwrite with osrm error response
-  if (request.options().format() == Options::osrm) {
-    auto found = OSRM_ERRORS_CODES.find(exception.code);
-    if (found == OSRM_ERRORS_CODES.cend()) {
-      found = OSRM_ERRORS_CODES.find(199);
-    }
-    body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "") << found->second
-         << (request.options().has_jsonp() ? ")" : "");
-  } // valhalla error response
-  else {
-    // build up the json map
-    auto json_error = baldr::json::map({});
-    json_error->emplace("status", exception.http_message);
-    json_error->emplace("status_code", static_cast<uint64_t>(exception.http_code));
-    json_error->emplace("error", std::string(exception.message));
-    json_error->emplace("error_code", static_cast<uint64_t>(exception.code));
-    body << (request.options().has_jsonp() ? request.options().jsonp() + "(" : "") << *json_error
-         << (request.options().has_jsonp() ? ")" : "");
-  }
-
   worker_t::result_t result{false, std::list<std::string>(), ""};
-  http_response_t response(exception.http_code, exception.http_message, body.str(),
+  http_response_t response(exception.http_code, exception.http_message,
+                           jsonify_error(exception, request),
                            headers_t{CORS, request.options().has_jsonp() ? worker::JS_MIME
                                                                          : worker::JSON_MIME});
   response.from_info(request_info);

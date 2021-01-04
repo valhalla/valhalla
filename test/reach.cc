@@ -1,3 +1,4 @@
+#include "gurka/gurka.h"
 #include "test.h"
 
 #include "baldr/graphreader.h"
@@ -59,7 +60,7 @@ boost::property_tree::ptree get_conf() {
 
 GraphId begin_node(GraphReader& reader, const DirectedEdge* edge) {
   // grab the node
-  const auto* tile = reader.GetGraphTile(edge->endnode());
+  auto tile = reader.GetGraphTile(edge->endnode());
   const auto* node = tile->node(edge->endnode());
   // grab the opp edges end node
   const auto* opp_edge = tile->directededge(node->edge_index() + edge->opp_index());
@@ -76,7 +77,7 @@ TEST(Reach, check_all_reach) {
 
   // look at all the edges
   for (auto tile_id : reader.GetTileSet()) {
-    const auto* tile = reader.GetGraphTile(tile_id);
+    auto tile = reader.GetGraphTile(tile_id);
     // loop over edges
     for (GraphId edge_id = tile->header()->graphid();
          edge_id.id() < tile->header()->directededgecount(); ++edge_id) {
@@ -92,7 +93,7 @@ TEST(Reach, check_all_reach) {
 
       // begin and end nodes are nice to check
       auto node_id = begin_node(reader, edge);
-      const auto* t = reader.GetGraphTile(node_id);
+      auto t = reader.GetGraphTile(node_id);
       const auto* begin = t->node(node_id);
       t = reader.GetGraphTile(edge->endnode());
       const auto* end = t->node(edge->endnode());
@@ -105,17 +106,58 @@ TEST(Reach, check_all_reach) {
 
       // if inbound is 0 and outbound is not then it must be an edge leaving a dead end
       // meaning a begin node that is not accessable
-      EXPECT_FALSE(reach.inbound == 0 && reach.outbound > 0 && !costing->GetNodeFilter()(begin))
+      EXPECT_FALSE(reach.inbound == 0 && reach.outbound > 0 && costing->Allowed(begin))
           << "Only outbound reach should mean an edge that leaves a dead end: " +
                  std::to_string(edge_id.value) + " " + shape_str;
 
       // if outbound is 0 and inbound is not then it must be an edge entering a dead end
       // meaning an end node that is not accessable
-      EXPECT_FALSE(reach.inbound > 0 && reach.outbound == 0 && !costing->GetNodeFilter()(end))
+      EXPECT_FALSE(reach.inbound > 0 && reach.outbound == 0 && costing->Allowed(end))
           << "Only inbound reach should mean an edge that enters a dead end: " +
                  std::to_string(edge_id.value) + " " + shape_str;
     }
   }
+}
+
+TEST(Reach, transition_misscount) {
+  const std::string ascii_map = R"(
+      b--c--d
+      |  |  |
+      |  |  |
+      a--f--e
+      |  |  |
+      |  |  |
+      g--h--i
+    )";
+
+  const gurka::ways ways = {
+      {"abcdefaghie", {{"highway", "residential"}}},
+      {"cfh", {{"highway", "tertiary"}}},
+  };
+
+  // build the graph
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/wrong_reach");
+
+  // get an auto costing
+  sif::CostFactory factory;
+  auto costing = factory.Create(valhalla::auto_);
+
+  // find the problem edge
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  auto edge = gurka::findEdgeByNodes(reader, map.nodes, "a", "f");
+
+  // check its reach
+  loki::Reach reach_checker;
+  auto reach = reach_checker(std::get<1>(edge), std::get<0>(edge), 50, reader, costing);
+
+  // all edges should have the same in/outbound reach
+  EXPECT_EQ(reach.inbound, reach.outbound);
+
+  // they all should be 7. there are only 5 obvious graph nodes above but we insert 2 more
+  // at d and g because the path the way makes loops back on itself
+  EXPECT_EQ(reach.inbound, 7);
+  EXPECT_EQ(reach.outbound, 7);
 }
 
 } // namespace

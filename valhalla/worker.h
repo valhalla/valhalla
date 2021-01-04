@@ -4,6 +4,7 @@
 
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/valhalla.h>
 
@@ -66,6 +67,7 @@ const std::unordered_map<unsigned, std::string>
                 {162, "Date and time is invalid.  Format is YYYY-MM-DDTHH:MM"},
                 {163, "Invalid date_type"},
                 {164, "Invalid shape format"},
+                {165, "Date and time required for destination for date_type of invariant"},
 
                 {170, "Locations are in unconnected regions. Go check/edit the map at osm.org"},
                 {171, "No suitable edges near location"},
@@ -133,6 +135,9 @@ const std::unordered_map<unsigned, std::string>
 
                 {599, "Unknown"}};
 
+/**
+ * Project specific error messages and codes that can be converted to http responses
+ */
 struct valhalla_exception_t : public std::runtime_error {
   valhalla_exception_t(unsigned code, const boost::optional<std::string>& extra = boost::none);
   const char* what() const noexcept override {
@@ -145,22 +150,27 @@ struct valhalla_exception_t : public std::runtime_error {
   unsigned http_code;
 };
 
+// time this whole method and save that statistic
+inline midgard::scoped_timer<> measure_scope_time(Api& api, const std::string& statistic_name) {
+  // we take a copy of the stat to avoid cases when its a temporary and goes out of scope before the
+  // lambda below goes to actually use it
+  return midgard::scoped_timer<>([&api, statistic_name](
+                                     const midgard::scoped_timer<>::duration_t& elapsed) {
+    auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
+    auto* stat = api.mutable_info()->mutable_statistics()->Add();
+    stat->set_name(statistic_name);
+    stat->set_value(e);
+  });
+}
+
 // TODO: this will go away and Options will be the request object
 void ParseApi(const std::string& json_request, Options::Action action, Api& api);
 #ifdef HAVE_HTTP
 void ParseApi(const prime_server::http_request_t& http_request, Api& api);
 #endif
 
+std::string jsonify_error(const valhalla_exception_t& exception, const Api& options);
 #ifdef HAVE_HTTP
-
-namespace worker {
-using content_type = prime_server::headers_t::value_type;
-const content_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
-const content_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-const content_type XML_MIME{"Content-type", "text/xml;charset=utf-8"};
-const content_type GPX_MIME{"Content-type", "application/gpx+xml;charset=utf-8"};
-} // namespace worker
-
 prime_server::worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
                                                prime_server::http_request_info_t& request_info,
                                                const Api& options);
@@ -170,6 +180,14 @@ prime_server::worker_t::result_t to_response(const baldr::json::ArrayPtr& array,
 prime_server::worker_t::result_t to_response(const baldr::json::MapPtr& map,
                                              prime_server::http_request_info_t& request_info,
                                              const Api& options);
+namespace worker {
+using content_type = prime_server::headers_t::value_type;
+const content_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
+const content_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
+const content_type XML_MIME{"Content-type", "text/xml;charset=utf-8"};
+const content_type GPX_MIME{"Content-type", "application/gpx+xml;charset=utf-8"};
+} // namespace worker
+
 prime_server::worker_t::result_t
 to_response(const std::string& data,
             prime_server::http_request_info_t& request_info,

@@ -19,7 +19,7 @@ public:
                                                          float sq_search_radius,
                                                          edgeid_iterator_t edgeid_begin,
                                                          edgeid_iterator_t edgeid_end,
-                                                         const sif::EdgeFilter& filter) const;
+                                                         const sif::cost_ptr_t& costing) const;
 
 private:
   baldr::GraphReader& reader_;
@@ -32,11 +32,11 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
                                           float sq_search_radius,
                                           edgeid_iterator_t edgeid_begin,
                                           edgeid_iterator_t edgeid_end,
-                                          const sif::EdgeFilter& edgefilter) const {
+                                          const sif::cost_ptr_t& costing) const {
   std::vector<baldr::PathLocation> candidates;
   std::unordered_set<baldr::GraphId> visited_nodes;
   midgard::projector_t projector(location);
-  const baldr::GraphTile* tile = nullptr;
+  graph_tile_ptr tile;
 
   for (auto it = edgeid_begin; it != edgeid_end; it++) {
     const auto& edgeid = *it;
@@ -75,7 +75,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
     baldr::PathLocation correlated(baldr::Location(location, stop_type));
 
     // For avoiding recomputing projection later
-    const bool edge_included = !edgefilter || edgefilter(edge) != 0.f;
+    const bool edge_included = !costing || costing->Filter(edge, tile) != 0.f;
 
     if (edge_included) {
       std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape);
@@ -91,7 +91,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
       }
     }
 
-    bool oppedge_included = !edgefilter || edgefilter(opp_edge) != 0.f;
+    bool oppedge_included = !costing || costing->Filter(opp_edge, tile) != 0.f;
 
     // Correlate its opp edge
     if (oppedge_included) {
@@ -130,18 +130,20 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
 
 // Add each road linestring's line segments into grid. Only one side
 // of directed edges is added
-void IndexBin(const baldr::GraphTile& tile,
+void IndexBin(const graph_tile_ptr& tile,
               const int32_t bin_index,
               baldr::GraphReader& reader,
               CandidateGridQuery::grid_t& grid) {
+  assert(tile);
+
   // Get the edges within the specified bin.
-  auto edge_ids = tile.GetBin(bin_index);
+  auto edge_ids = tile->GetBin(bin_index);
   for (const auto& edge_id : edge_ids) {
     // Get the right tile (edges in a bin can be in a different tile if they
     // pass through the tile but do not start or end in the tile). Skip if
     // tile is null.
-    const auto* bin_tile =
-        edge_id.tileid() == tile.header()->graphid().tileid() ? &tile : reader.GetGraphTile(edge_id);
+    auto bin_tile = tile;
+    reader.GetGraphTile(edge_id, bin_tile);
     if (bin_tile == nullptr) {
       continue;
     }
@@ -164,7 +166,7 @@ CandidateGridQuery::CandidateGridQuery(baldr::GraphReader& reader,
                                        float cell_width,
                                        float cell_height)
     : reader_(reader), cell_width_(cell_width), cell_height_(cell_height), grid_cache_() {
-  bin_level_ = baldr::TileHierarchy::levels().rbegin()->second.level;
+  bin_level_ = baldr::TileHierarchy::levels().back().level;
 }
 
 CandidateGridQuery::~CandidateGridQuery() = default;
@@ -197,7 +199,7 @@ CandidateGridQuery::GetGrid(const int32_t bin_id,
   // Insert the bin into the cache and index the bin
   const auto inserted =
       grid_cache_.emplace(bin_id, grid_t(tile->BoundingBox(), cell_width_, cell_height_));
-  IndexBin(*tile, bin_index, reader_, inserted.first->second);
+  IndexBin(tile, bin_index, reader_, inserted.first->second);
   return &(inserted.first->second);
 }
 
@@ -205,7 +207,7 @@ std::unordered_set<baldr::GraphId>
 CandidateGridQuery::RangeQuery(const AABB2<midgard::PointLL>& range) const {
   // Get the tiles object from the tile hierarchy and create the bin tiles
   // (subdivisions within the tile)
-  Tiles<PointLL> tiles = baldr::TileHierarchy::levels().rbegin()->second.tiles;
+  const Tiles<PointLL>& tiles = baldr::TileHierarchy::levels().back().tiles;
   Tiles<PointLL> bins(tiles.TileBounds(), tiles.SubdivisionSize());
 
   // Get a list of bins within the range. These are "tile Ids" that must
@@ -227,9 +229,9 @@ CandidateGridQuery::RangeQuery(const AABB2<midgard::PointLL>& range) const {
 std::vector<baldr::PathLocation> CandidateGridQuery::Query(const midgard::PointLL& location,
                                                            baldr::Location::StopType stop_type,
                                                            float sq_search_radius,
-                                                           sif::EdgeFilter filter) const {
+                                                           const sif::cost_ptr_t& costing) const {
   CandidateCollector collector(reader_);
-  return Query(location, stop_type, sq_search_radius, filter, collector);
+  return Query(location, stop_type, sq_search_radius, costing, collector);
 }
 
 } // namespace meili

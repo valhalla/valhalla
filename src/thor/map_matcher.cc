@@ -13,8 +13,8 @@ using namespace valhalla::sif;
 namespace {
 struct interpolation_t {
   valhalla::baldr::GraphId edge; // edge id
-  float total_distance;          // distance along the path
-  float edge_distance;           // ratio of the distance along the edge
+  double total_distance;         // distance along the path
+  double edge_distance;          // ratio of the distance along the edge
   size_t original_index;         // index into the original measurements
   double epoch_time;             // seconds from epoch
 };
@@ -22,7 +22,7 @@ struct interpolation_t {
 static uint32_t compute_origin_epoch(const std::vector<valhalla::meili::EdgeSegment>& edge_segments,
                                      valhalla::meili::MapMatcher* matcher,
                                      valhalla::Options& options) {
-  const GraphTile* tile = nullptr;
+  graph_tile_ptr tile = nullptr;
   const DirectedEdge* directededge = nullptr;
   const NodeInfo* nodeinfo = nullptr;
 
@@ -199,10 +199,10 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
   // Return an empty path (or throw exception) if path is not connected.
   Cost elapsed;
   std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>> paths;
-  GraphId prior_edge, prior_node;
+  GraphId prior_node;
   EdgeLabel pred;
   const meili::EdgeSegment* prev_segment = nullptr;
-  const GraphTile* tile = nullptr;
+  graph_tile_ptr tile = nullptr;
   const DirectedEdge* directededge = nullptr;
   const NodeInfo* nodeinfo = nullptr;
 
@@ -281,16 +281,15 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
 
     // Update the predecessor EdgeLabel (for transition costing in the next round);
     pred = {kInvalidLabel, edge_id, directededge, elapsed, 0, 0, mode, 0, {}};
-
-    paths.back().first.emplace_back(PathInfo{mode, elapsed, edge_id, 0, -1, transition_cost});
+    paths.back().first.emplace_back(
+        PathInfo{mode, elapsed, edge_id, 0, edge_segment.restriction_idx, transition_cost});
     paths.back().second.emplace_back(&edge_segment);
     --num_segments;
 
     // Update the prior_edge and nodeinfo. TODO (protect against invalid tile)
     prev_segment = &edge_segment;
-    prior_edge = edge_id;
     prior_node = directededge->endnode();
-    const GraphTile* end_tile = matcher->graphreader().GetGraphTile(prior_node);
+    graph_tile_ptr end_tile = matcher->graphreader().GetGraphTile(prior_node);
     nodeinfo = end_tile->node(prior_node);
   }
 

@@ -11,6 +11,7 @@
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/meili/match_result.h>
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/proto/api.pb.h>
@@ -56,7 +57,7 @@ serializeIsochrones(const Api& request,
  */
 std::string serializeHeight(const Api& request,
                             const std::vector<double>& heights,
-                            const std::vector<float>& ranges = {});
+                            const std::vector<double>& ranges = {});
 
 /**
  * Turn some correlated points on the graph into info about those locations
@@ -121,6 +122,13 @@ valhalla::baldr::json::ArrayPtr
 waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
           bool tracepoints = false);
 valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
+
+void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
+                                 const valhalla::IncidentsTile::Metadata& incident_metadata,
+                                 const int begin_shape_index,
+                                 const int end_shape_index,
+                                 const std::string& road_class,
+                                 const std::string& key_prefix);
 
 } // namespace osrm
 

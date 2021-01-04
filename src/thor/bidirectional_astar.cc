@@ -5,6 +5,7 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "sif/edgelabel.h"
+#include "thor/alternates.h"
 #include <algorithm>
 #include <map>
 
@@ -95,8 +96,8 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   // searches.
   cost_diff_ = mincostf - mincostr;
 
-  // Initialize best connection with max cost
-  best_connection_ = {GraphId(), GraphId(), std::numeric_limits<float>::max()};
+  // Initialize best connections as having none
+  best_connections_ = {};
 
   // Set the cost threshold to the maximum float value. Once the initial connection is found
   // the threshold is set.
@@ -113,28 +114,39 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
                                        BDEdgeLabel& pred,
                                        const uint32_t pred_idx,
                                        const bool from_transition,
-                                       const TimeInfo& time_info) {
+                                       const TimeInfo& time_info,
+                                       const bool invariant) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return false;
   }
   const NodeInfo* nodeinfo = tile->node(node);
+
+  // Keep track of superseded edges
+  uint32_t shortcuts = 0;
+
+  // Update the time information even if time is invariant to account for timezones
+  auto seconds_offset = invariant ? 0.f : pred.cost().secs;
+  auto offset_time = from_transition
+                         ? time_info
+                         : time_info.forward(seconds_offset, static_cast<int>(nodeinfo->timezone()));
+
+  // If we encounter a node with an access restriction like a barrier we allow a uturn
   if (!costing_->Allowed(nodeinfo)) {
-    return false;
+    const DirectedEdge* opp_edge;
+    const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
+    // Check if edge is null before using it (can happen with regional data sets)
+    return opp_edge &&
+           ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx,
+                              {opp_edge, opp_edge_id, edgestatus_forward_.GetPtr(opp_edge_id, tile)},
+                              shortcuts, tile, offset_time);
   }
 
-  // Update the time information
-  auto offset_time =
-      from_transition ? time_info
-                      : time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
-
-  uint32_t shortcuts = 0;
-  EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_forward_);
-
-  bool found_valid_edge = false;
+  bool disable_uturn = false;
   bool found_uturn = false;
+  EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_forward_);
   EdgeMetadata uturn_meta = {};
 
   // Expand from end node in forward direction.
@@ -150,9 +162,9 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    found_valid_edge = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, meta, shortcuts,
-                                          tile, offset_time) ||
-                       found_valid_edge;
+    disable_uturn = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, meta, shortcuts, tile,
+                                       offset_time) ||
+                    disable_uturn;
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -161,13 +173,13 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       if (trans->up()) {
         hierarchy_limits_forward_[node.level()].up_transition_count++;
-        found_valid_edge =
-            ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, offset_time) ||
-            found_valid_edge;
+        disable_uturn = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true,
+                                      offset_time, invariant) ||
+                        disable_uturn;
       } else if (!hierarchy_limits_forward_[trans->endnode().level()].StopExpanding()) {
-        found_valid_edge =
-            ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, offset_time) ||
-            found_valid_edge;
+        disable_uturn = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true,
+                                      offset_time, invariant) ||
+                        disable_uturn;
       }
     }
   }
@@ -175,7 +187,7 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
   if (!from_transition) {
     // Now, after having looked at all the edges, including edges on other levels,
     // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
-    if (!found_valid_edge && found_uturn) {
+    if (!disable_uturn && found_uturn) {
       // If we found no suitable edge to add, it means we're at a deadend
       // so lets go back and re-evaluate a potential u-turn
 
@@ -188,16 +200,16 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
 
       // TODO Is there a shortcut that supersedes our u-turn?
       if (was_uturn_shortcut_added) {
-        found_valid_edge = true;
+        disable_uturn = true;
       } else {
         // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
         bool uturn_added = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, uturn_meta,
                                               shortcuts, tile, offset_time);
-        found_valid_edge = found_valid_edge || uturn_added;
+        disable_uturn = disable_uturn || uturn_added;
       }
     }
   }
-  return found_valid_edge;
+  return disable_uturn;
 }
 
 // Runs in the inner loop of `ExpandForward`, essentially evaluating if
@@ -206,14 +218,19 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
 //
 // TODO: Merge this with ExpandReverseInner
 //
-// Returns true if any edge _could_ have been expanded after restrictions etc.
+// Returns false if uturns are allowed.
+// Returns true if we will expand or have expanded from this edge. In that case we disallow uturns.
+// Some edges we won't expand from, but we will still put them on the adjacency list in order to
+// connect the forward and reverse paths. In that case we return false to allow uturns only if this
+// edge is a not-thru edge that will be pruned.
+//
 inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
                                                    const BDEdgeLabel& pred,
                                                    const NodeInfo* nodeinfo,
                                                    const uint32_t pred_idx,
                                                    const EdgeMetadata& meta,
                                                    uint32_t& shortcuts,
-                                                   const GraphTile* tile,
+                                                   const graph_tile_ptr& tile,
                                                    const TimeInfo& time_info) {
   // Skip shortcut edges until we have stopped expanding on the next level. Use regular
   // edges while still expanding on the next level since we can still transition down to
@@ -236,20 +253,23 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
     return true; // This is an edge we _could_ have expanded, so return true
   }
 
-  // TODO: actually use time_info
-  const uint64_t localtime = 0;
-  const uint32_t tz_index = 0;
+  // Skip this edge if no access is allowed (based on costing method)
+  // or if a complex restriction prevents transition onto this edge.
+  // if its not time dependent set to 0 for Allowed and Restricted methods below
+  const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
   int restriction_idx = -1;
-  if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, tz_index, restriction_idx) ||
+
+  if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, time_info.timezone_index,
+                         restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
-                           &edgestatus_forward_, localtime, tz_index)) {
+                           &edgestatus_forward_, localtime, time_info.timezone_index)) {
     return false;
   }
 
   // Get cost. Separate out transition cost.
   Cost transition_cost = costing_->TransitionCost(meta.edge, nodeinfo, pred);
-  // TODO: actually use time_info
-  Cost newcost = pred.cost() + transition_cost + costing_->EdgeCost(meta.edge, tile);
+  Cost newcost =
+      pred.cost() + transition_cost + costing_->EdgeCost(meta.edge, tile, time_info.second_of_week);
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -261,11 +281,12 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
       adjacencylist_forward_->decrease(meta.edge_status->index(), newsortcost);
       lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
     }
-    return true; // Returning true since this means we approved the edge
+    // Returning true since this means we approved the edge
+    return true;
   }
 
   // Get end node tile (skip if tile is not found) and opposing edge Id
-  const GraphTile* t2 =
+  graph_tile_ptr t2 =
       meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
   if (t2 == nullptr) {
     return false;
@@ -292,7 +313,10 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   if (expansion_callback_) {
     expansion_callback_(graphreader, "bidirectional_astar", meta.edge_id, "r", false);
   }
-  return true;
+
+  // we've just added this edge to the queue, but we won't expand from it if it's a not-thru edge that
+  // will be pruned. In that case we want to allow uturns.
+  return !(pred.not_thru_pruning() && meta.edge->not_thru());
 }
 
 // Expand from a node in reverse direction.
@@ -304,28 +328,40 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
                                        const uint32_t pred_idx,
                                        const DirectedEdge* opp_pred_edge,
                                        const bool from_transition,
-                                       const TimeInfo& time_info) {
+                                       const TimeInfo& time_info,
+                                       const bool invariant) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return false;
   }
   const NodeInfo* nodeinfo = tile->node(node);
+
+  // Keep track of superseded edges
+  uint32_t shortcuts = 0;
+
+  // Update the time information even if time is invariant to account for timezones
+  auto seconds_offset = invariant ? 0.f : pred.cost().secs;
+  auto offset_time = from_transition
+                         ? time_info
+                         : time_info.reverse(seconds_offset, static_cast<int>(nodeinfo->timezone()));
+
+  // If we encounter a node with an access restriction like a barrier we allow a uturn
   if (!costing_->Allowed(nodeinfo)) {
-    return false;
+    const DirectedEdge* opp_edge;
+    const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
+    // Check if edge is null before using it (can happen with regional data sets)
+    return opp_edge &&
+           ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
+                              {opp_edge, opp_edge_id, edgestatus_reverse_.GetPtr(opp_edge_id, tile)},
+                              shortcuts, tile, offset_time);
   }
 
-  // Update the time information
-  auto offset_time =
-      from_transition ? time_info
-                      : time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
-
-  uint32_t shortcuts = 0;
-  EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_reverse_);
-
-  bool edge_was_added = false;
+  // We start off allowing uturns, and if we find any edge to expand from we disallow uturns here
+  bool disable_uturn = false;
   bool found_uturn = false;
+  EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_reverse_);
   EdgeMetadata uturn_meta = {};
 
   // Expand from end node in reverse direction.
@@ -341,9 +377,9 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
       continue;
     }
 
-    edge_was_added = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta,
-                                        shortcuts, tile, offset_time) ||
-                     edge_was_added;
+    disable_uturn = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta,
+                                       shortcuts, tile, offset_time) ||
+                    disable_uturn;
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -352,13 +388,13 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       if (trans->up()) {
         hierarchy_limits_reverse_[node.level()].up_transition_count++;
-        edge_was_added = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
-                                       true, offset_time) ||
-                         edge_was_added;
+        disable_uturn = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
+                                      true, offset_time, invariant) ||
+                        disable_uturn;
       } else if (!hierarchy_limits_reverse_[trans->endnode().level()].StopExpanding()) {
-        edge_was_added = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
-                                       true, offset_time) ||
-                         edge_was_added;
+        disable_uturn = ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, opp_pred_edge,
+                                      true, offset_time, invariant) ||
+                        disable_uturn;
       }
     }
   }
@@ -366,7 +402,7 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
   if (!from_transition) {
     // Now, after having looked at all the edges, including edges on other levels,
     // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
-    if (!edge_was_added && found_uturn) {
+    if (!disable_uturn && found_uturn) {
       // If we found no suitable edge to add, it means we're at a deadend
       // so lets go back and re-evaluate a potential u-turn
 
@@ -379,16 +415,16 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
 
       // TODO Is there a shortcut that supersedes our u-turn?
       if (was_uturn_shortcut_added) {
-        edge_was_added = true;
+        disable_uturn = true;
       } else {
         // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
-        edge_was_added = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
-                                            uturn_meta, shortcuts, tile, offset_time) ||
-                         edge_was_added;
+        disable_uturn = ExpandReverseInner(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
+                                           uturn_meta, shortcuts, tile, offset_time) ||
+                        disable_uturn;
       }
     }
   }
-  return edge_was_added;
+  return disable_uturn;
 }
 // Runs in the inner loop of `ExpandReverse`, essentially evaluating if
 // the edge described in `meta` should be placed on the stack
@@ -396,7 +432,12 @@ bool BidirectionalAStar::ExpandReverse(GraphReader& graphreader,
 //
 // TODO: Merge this with ExpandForwardInner
 //
-// Returns true if any edge _could_ have been expanded after restrictions etc.
+// Returns false if uturns are allowed.
+// Returns true if we will expand or have expanded from this edge. In that case we disallow uturns.
+// Some edges we won't expand from, but we will still put them on the adjacency list in order to
+// connect the forward and reverse paths. In that case we return false to allow uturns only if this
+// edge is a not-thru edge that will be pruned.
+//
 inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
                                                    const BDEdgeLabel& pred,
                                                    const DirectedEdge* opp_pred_edge,
@@ -404,7 +445,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
                                                    const uint32_t pred_idx,
                                                    const EdgeMetadata& meta,
                                                    uint32_t& shortcuts,
-                                                   const GraphTile* tile,
+                                                   const graph_tile_ptr& tile,
                                                    const TimeInfo& time_info) {
   // Skip shortcut edges until we have stopped expanding on the next level. Use regular
   // edges while still expanding on the next level since we can still transition down to
@@ -431,7 +472,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   }
 
   // Get end node tile, opposing edge Id, and opposing directed edge.
-  const GraphTile* t2 =
+  graph_tile_ptr t2 =
       meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
   if (t2 == nullptr) {
     return false;
@@ -442,21 +483,22 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
 
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
-  const uint64_t localtime = 0; // Bidirectional is not yet time-aware
-  const uint32_t tz_index = 0;
+  // if its not time dependent set to 0 for Allowed and Restricted methods below
+  const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
   int restriction_idx = -1;
-  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime, tz_index,
-                                restriction_idx) ||
+  if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime,
+                                time_info.timezone_index, restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false,
-                           &edgestatus_reverse_, localtime, tz_index)) {
+                           &edgestatus_reverse_, localtime, time_info.timezone_index)) {
     return false;
   }
 
   // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so we
   // can properly recover elapsed time on the reverse path.
-  Cost transition_cost =
+  const Cost transition_cost =
       costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
-  Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2) + transition_cost;
+  const Cost newcost =
+      pred.cost() + costing_->EdgeCost(opp_edge, t2, time_info.second_of_week) + transition_cost;
 
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated and the sort cost is decremented
@@ -468,7 +510,8 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
       adjacencylist_reverse_->decrease(meta.edge_status->index(), newsortcost);
       lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
     }
-    return true; // Returning true since this means we approved the edge
+    // Returning true since this means we approved the edge
+    return true;
   }
 
   // Find the sort cost (with A* heuristic) using the lat,lng at the
@@ -491,7 +534,10 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   if (expansion_callback_) {
     expansion_callback_(graphreader, "bidirectional_astar", opp_edge_id, "r", false);
   }
-  return true;
+
+  // we've just added this edge to the queue, but we won't expand from it if it's a not-thru edge that
+  // will be pruned. In that case we want to allow uturns.
+  return !(pred.not_thru_pruning() && meta.edge->not_thru());
 }
 
 // Calculate best path using bi-directional A*. No hierarchies or time
@@ -515,16 +561,29 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   Init(origin_new, destination_new);
 
   // Get time information for forward and backward searches
+  bool invariant = options.has_date_time_type() && options.date_time_type() == Options::invariant;
   auto forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
   auto reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
+
+  // When a timedependent route is too long in distance it gets sent to this algorithm. It used to be
+  // the case that this algorithm called EdgeCost without a time component. This would result in
+  // timedependent routes falling back to time independent routing. Now that this algorithm is time
+  // aware we will be tracking time in one direction of the search. To revert to previous behavior
+  // you can uncomment the code below and get a time independent route in the fallback scenario.
+  //  if (!invariant) {
+  //    auto o = origin; o.mutable_date_time()->clear();
+  //    forward_time_info = TimeInfo::make(o, graphreader, &tz_cache_);
+  //    auto d = destination; d.mutable_date_time()->clear();
+  //    reverse_time_info = TimeInfo::make(d, graphreader, &tz_cache_);
+  //  }
 
   // Set origin and destination locations - seeds the adj. lists
   // Note: because we can correlate to more than one place for a given
   // PathLocation using edges.front here means we are only setting the
   // heuristics to one of them alternate paths using the other correlated
   // points to may be harder to find
-  SetOrigin(graphreader, origin);
-  SetDestination(graphreader, destination);
+  SetOrigin(graphreader, origin, forward_time_info);
+  SetDestination(graphreader, destination, reverse_time_info);
 
   // Find shortest path. Switch between a forward direction and a reverse
   // direction search based on the current costs. Alternating like this
@@ -563,7 +622,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         }
       } else {
         // Search is exhausted. If a connection has been found, return it
-        if (best_connection_.cost == std::numeric_limits<float>::max()) {
+        if (best_connections_.empty()) {
           // No route found.
           LOG_ERROR("Bi-directional route failure - forward search exhausted: n = " +
                     std::to_string(edgelabels_forward_.size()) + "," +
@@ -593,7 +652,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         }
       } else {
         // Search is exhausted. If a connection has been found, return it
-        if (best_connection_.cost == std::numeric_limits<float>::max()) {
+        if (best_connections_.empty()) {
           // No route found.
           LOG_ERROR("Bi-directional route failure - reverse search exhausted: n = " +
                     std::to_string(edgelabels_reverse_.size()) + "," +
@@ -627,7 +686,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
       // Expand from the end node in forward direction.
       ExpandForward(graphreader, fwd_pred.endnode(), fwd_pred, forward_pred_idx, false,
-                    forward_time_info);
+                    forward_time_info, invariant);
     } else {
       // Expand reverse - set to get next edge from reverse adj. list on the next pass
       expand_forward = false;
@@ -654,7 +713,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
       // Expand from the end node in reverse direction.
       ExpandReverse(graphreader, rev_pred.endnode(), rev_pred, reverse_pred_idx, opp_pred_edge, false,
-                    reverse_time_info);
+                    reverse_time_info, invariant);
     }
   }
   return {}; // If we are here the route failed
@@ -696,14 +755,14 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
     c = pred.cost().cost + oppcost + opp_pred.transition_cost().cost;
   }
 
-  // Set best_connection if cost is less than the best cost so far.
-  if (c < best_connection_.cost) {
-    best_connection_ = {pred.edgeid(), oppedge, c};
-  }
+  // Keep the best ones at the front all others to the back
+  best_connections_.emplace_back(CandidateConnection{pred.edgeid(), oppedge, c});
+  if (c < best_connections_.front().cost)
+    std::swap(best_connections_.front(), best_connections_.back());
 
   // Set a threshold to extend search
   if (threshold_ == std::numeric_limits<float>::max()) {
-    threshold_ = pred.sortcost() + cost_diff_ + kThresholdDelta;
+    threshold_ = (pred.sortcost() + cost_diff_) + kThresholdDelta;
   }
 
   // setting this edge as connected
@@ -749,10 +808,10 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
     c = rev_pred.cost().cost + oppcost + fwd_pred.transition_cost().cost;
   }
 
-  // Set best_connection if cost is less than the best cost so far.
-  if (c < best_connection_.cost) {
-    best_connection_ = {fwd_edge_id, rev_pred.edgeid(), c};
-  }
+  // Keep the best ones at the front all others to the back
+  best_connections_.emplace_back(CandidateConnection{fwd_edge_id, rev_pred.edgeid(), c});
+  if (c < best_connections_.front().cost)
+    std::swap(best_connections_.front(), best_connections_.back());
 
   // Set a threshold to extend search
   if (threshold_ == std::numeric_limits<float>::max()) {
@@ -768,7 +827,9 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
 }
 
 // Add edges at the origin to the forward adjacency list.
-void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location& origin) {
+void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
+                                   valhalla::Location& origin,
+                                   const TimeInfo& time_info) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
@@ -792,20 +853,21 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
     }
 
     // Get the directed edge
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
-    if (endtile == nullptr) {
+    graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode());
+    if (!endtile) {
       continue;
     }
 
     // Get cost and sort cost (based on distance from endnode of this edge
     // to the destination
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
+    Cost cost = costing_->EdgeCost(directededge, tile, time_info.second_of_week) *
+                (1.0f - edge.percent_along());
 
     // Store a node-info for later timezone retrieval (approximate for closest)
     if (closest_ni == nullptr) {
@@ -845,7 +907,9 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader, valhalla::Location&
 }
 
 // Add destination edges to the reverse path adjacency list.
-void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
+void BidirectionalAStar::SetDestination(GraphReader& graphreader,
+                                        const valhalla::Location& dest,
+                                        const TimeInfo& time_info) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
@@ -869,7 +933,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
       continue;
     }
     // Get the directed edge
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the opposing directed edge, continue if we cannot get it
@@ -885,7 +949,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
     // directed edge for costing, as this is the forward direction along the
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
-    Cost cost = costing_->EdgeCost(directededge, tile) * edge.percent_along();
+    Cost cost =
+        costing_->EdgeCost(directededge, tile, time_info.second_of_week) * edge.percent_along();
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -917,129 +982,187 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader, const valhalla
 
 // Form the path from the adjacency list.
 std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& graphreader,
-                                                                const valhalla::Options& options,
+                                                                const Options& options,
                                                                 const valhalla::Location& origin,
                                                                 const valhalla::Location& dest) {
-  // Get the indexes where the connection occurs.
-  uint32_t idx1 = edgestatus_forward_.Get(best_connection_.edgeid).index();
-  uint32_t idx2 = edgestatus_reverse_.Get(best_connection_.opp_edgeid).index();
 
-  // Metrics (TODO - more accurate cost)
-  uint32_t pathcost = edgelabels_forward_[idx1].cost().cost + edgelabels_reverse_[idx2].cost().cost;
-  LOG_DEBUG("path_cost::" + std::to_string(pathcost));
-  LOG_DEBUG("FormPath path_iterations::" + std::to_string(edgelabels_forward_.size()) + "," +
-            std::to_string(edgelabels_reverse_.size()));
+  // we need to figure out the maximum number of paths we could form here and
+  // if its more than 1 we need to sort them so we do the best first
+  size_t desired_paths = 1;
+  bool allow_alternates = options.has_alternates() && options.alternates() > 0;
 
-  // Work backwards on the forward path
-  std::vector<std::vector<PathInfo>> paths;
-  paths.emplace_back();
-  std::vector<PathInfo>& path = paths.back();
-  for (auto edgelabel_index = idx1; edgelabel_index != kInvalidLabel;
-       edgelabel_index = edgelabels_forward_[edgelabel_index].predecessor()) {
-    const BDEdgeLabel& edgelabel = edgelabels_forward_[edgelabel_index];
-    path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), 0,
-                      edgelabel.restriction_idx(), edgelabel.transition_cost());
+  LOG_DEBUG("Found connections before stretch filter: " + std::to_string(best_connections_.size()));
 
-    // Check if this is a ferry
-    if (edgelabel.use() == Use::kFerry) {
-      has_ferry_ = true;
-    }
+  if (allow_alternates) {
+    desired_paths += options.alternates();
+    // Cull alternate paths longer than maximum stretch
+    // TODO: we should skip adding the connection at all if it's greater than stretch
+    filter_alternates_by_stretch(best_connections_);
   }
+  // For looking up edge ids on previously chosen best paths
+  std::vector<std::unordered_set<GraphId>> shared_edgeids;
 
-  // Reverse the list
-  std::reverse(path.begin(), path.end());
+  // get maximum amount of sharing parameter based on origin->destination distance
+  float max_sharing = allow_alternates ? get_max_sharing(origin, dest) : 0.f;
 
-  // Special case code if the last edge of the forward path is the destination edge
-  // which means we need to worry about partial distance on the edge
-  if (edgelabels_reverse_[idx2].predecessor() == kInvalidLabel) {
-    // the destination is on a different edge than origin but the forward path found it. because of
-    // that we know that the forward path did not care about partial distance along the edge. so the
-    // edge that it added was the full length (time and cost). so what we need to do is look at the
-    // second to last edge and use the reverse path (who does care about partial distance on the
-    // destination edge) to recompute the elapsed time and cost. dont forget the transition cost from
-    // the forward path
-    if (path.size() > 1) {
-      path.back().elapsed_cost.secs = path[path.size() - 2].elapsed_cost.secs +
-                                      edgelabels_reverse_[idx2].cost().secs +
-                                      edgelabels_forward_[idx1].transition_cost().secs;
-      path.back().elapsed_cost.cost = path[path.size() - 2].elapsed_cost.cost +
-                                      edgelabels_reverse_[idx2].cost().cost +
-                                      edgelabels_forward_[idx1].transition_cost().cost;
-      return paths;
-    }
+  LOG_DEBUG("Connections after stretch filter: " + std::to_string(best_connections_.size()));
 
-    // origin and destination on the same edge
-    LOG_WARN("Trivial route with bidirectional A* should not be allowed");
-    // find the destination edge that was used
-    for (const auto& e : dest.path_edges()) {
-      if (e.graph_id() == edgelabels_reverse_[idx2].edgeid()) {
-        // T is the total we find first by scaling R which is the reverse edge trimmed
-        // F is the forward edge trimmed. We then subtract F from T to get the section
-        // at the beginning. Finally we subtract that from R to get the section between
-        // the two locations
-        //           x                           x
-        //      T----------------------------------------
-        //      F    ------------------------------------
-        //      R---------------------------------
+#ifdef LOGGING_LEVEL_TRACE
+  LOG_TRACE("CONNECTIONS FOUND " + std::to_string(best_connections_.size()));
+  for (const auto& b : best_connections_) {
+    auto tile = graphreader.GetGraphTile(b.edgeid);
+    auto nodes = graphreader.GetDirectedEdgeNodes(b.edgeid, tile);
+    auto sll = graphreader.GetGraphTile(nodes.first)
+                   ->node(nodes.first)
+                   ->latlng(graphreader.GetGraphTile(nodes.first)->header()->base_ll());
+    auto ell = graphreader.GetGraphTile(nodes.second)
+                   ->node(nodes.second)
+                   ->latlng(graphreader.GetGraphTile(nodes.second)->header()->base_ll());
+    printf("[[%.6f,%.6f],[%.6f,%.6f]],\n", sll.lng(), sll.lat(), ell.lng(), ell.lat());
+  }
+#endif
 
-        // we scale the cost to what it would be for the full length of the edge
-        auto cost = edgelabels_reverse_[idx1].cost() * static_cast<float>(1 / e.percent_along());
-        // we then subtract the partial cost of the forward to get the piece before the origin
-        cost -= edgelabels_forward_[idx1].cost();
-        // which remove from the reverse cost which goes all the way to the start of the edge
-        cost = edgelabels_reverse_[idx2].cost() - cost;
-        // and we use that instead
-        path.back().elapsed_cost.secs = std::max(cost.secs, 0.f);
-        path.back().elapsed_cost.cost = std::max(cost.cost, 0.f);
-        return paths;
+  // we quit making paths as soon as we've reached the number of paths
+  // that were requested or we run out of paths that we can actually make
+  std::vector<std::vector<PathInfo>> paths;
+  for (auto best_connection = best_connections_.cbegin();
+       paths.size() < desired_paths && best_connection != best_connections_.cend();
+       ++best_connection) {
+    // Get the indexes where the connection occurs.
+    uint32_t idx1 = edgestatus_forward_.Get(best_connection->edgeid).index();
+    uint32_t idx2 = edgestatus_reverse_.Get(best_connection->opp_edgeid).index();
+
+    // Metrics (TODO - more accurate cost)
+    uint32_t pathcost = edgelabels_forward_[idx1].cost().cost + edgelabels_reverse_[idx2].cost().cost;
+    LOG_DEBUG("path_cost::" + std::to_string(pathcost));
+    LOG_DEBUG("FormPath path_iterations::" + std::to_string(edgelabels_forward_.size()) + "," +
+              std::to_string(edgelabels_reverse_.size()));
+
+    // A place to keep the path
+    std::vector<PathInfo> path;
+    path.reserve(static_cast<size_t>(paths.empty() ? 0.f : paths.back().size() * 1.2f));
+
+    // Work backwards on the forward path
+    for (auto edgelabel_index = idx1; edgelabel_index != kInvalidLabel;
+         edgelabel_index = edgelabels_forward_[edgelabel_index].predecessor()) {
+      const BDEdgeLabel& edgelabel = edgelabels_forward_[edgelabel_index];
+
+      path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), 0,
+                        edgelabel.restriction_idx(), edgelabel.transition_cost());
+
+      // Check if this is a ferry
+      if (edgelabel.use() == Use::kFerry) {
+        has_ferry_ = true;
       }
     }
 
-    // This cannot happen because we only make labels from edge candidates in the destination location
-    throw std::logic_error("Could not find candidate edge used for destination label");
-  }
+    // Reverse the list
+    std::reverse(path.begin(), path.end());
 
-  // Get the elapsed time at the end of the forward path. NOTE: PathInfo
-  // stores elapsed time as uint32_t but EdgeLabels uses float. Need to
-  // accumulate in float and cast to int so we do not accumulate roundoff
-  // error.
-  Cost cost = path.back().elapsed_cost;
+    // Special case code if the last edge of the forward path is the destination edge
+    // which means we need to worry about partial distance on the edge
+    if (edgelabels_reverse_[idx2].predecessor() == kInvalidLabel) {
+      // the destination is on a different edge than origin but the forward path found it. because of
+      // that we know that the forward path did not care about partial distance along the edge. so the
+      // edge that it added was the full length (time and cost). so what we need to do is look at the
+      // second to last edge and use the reverse path (who does care about partial distance on the
+      // destination edge) to recompute the elapsed time and cost. dont forget the transition cost
+      // from the forward path
+      if (path.size() > 1) {
+        path.back().elapsed_cost.secs = path[path.size() - 2].elapsed_cost.secs +
+                                        edgelabels_reverse_[idx2].cost().secs +
+                                        edgelabels_forward_[idx1].transition_cost().secs;
+        path.back().elapsed_cost.cost = path[path.size() - 2].elapsed_cost.cost +
+                                        edgelabels_reverse_[idx2].cost().cost +
+                                        edgelabels_forward_[idx1].transition_cost().cost;
+      } // origin and destination on the same edge
+      else {
+        LOG_WARN("Trivial route with bidirectional A* should not be allowed");
+        // find the destination edge that was used
+        bool not_found = true;
+        for (const auto& e : dest.path_edges()) {
+          if (e.graph_id() == edgelabels_reverse_[idx2].edgeid()) {
+            // T is the total we find first by scaling R which is the reverse edge trimmed
+            // F is the forward edge trimmed. We then subtract F from T to get the section
+            // at the beginning. Finally we subtract that from R to get the section between
+            // the two locations
+            //           x                           x
+            //      T----------------------------------------
+            //      F    ------------------------------------
+            //      R---------------------------------
 
-  // Get the transition cost at the last edge of the reverse path
-  Cost previous_transition_cost = edgelabels_reverse_[idx2].transition_cost();
+            // we scale the cost to what it would be for the full length of the edge
+            auto cost = edgelabels_reverse_[idx1].cost() * static_cast<float>(1 / e.percent_along());
+            // we then subtract the partial cost of the forward to get the piece before the origin
+            cost -= edgelabels_forward_[idx1].cost();
+            // which remove from the reverse cost which goes all the way to the start of the edge
+            cost = edgelabels_reverse_[idx2].cost() - cost;
+            // and we use that instead
+            path.back().elapsed_cost.secs = std::max(cost.secs, 0.f);
+            path.back().elapsed_cost.cost = std::max(cost.cost, 0.f);
+            not_found = false;
+          }
+        }
 
-  // Append the reverse path from the destination - use opposing edges
-  // The first edge on the reverse path is the same as the last on the forward
-  // path, so get the predecessor.
-  uint32_t edgelabel_index = edgelabels_reverse_[idx2].predecessor();
-  while (edgelabel_index != kInvalidLabel) {
-    const BDEdgeLabel& edgelabel = edgelabels_reverse_[edgelabel_index];
-
-    // The first edge has no previous edge with elapsed cost so we can just use it directly
-    uint32_t predidx = edgelabel.predecessor();
-    if (predidx == kInvalidLabel) {
-      cost += edgelabel.cost();
-    } // This edge needs the elapsed cost between it and the previous edge, since its the reverse path
-    // in flipping the path around we also need to switch out the transition costs (shifting right)
-    else {
-      cost += edgelabel.cost() - edgelabels_reverse_[predidx].cost() - edgelabel.transition_cost();
+        // This cannot happen because we only make labels from edge candidates in the destination
+        // location
+        if (not_found)
+          throw std::logic_error("Could not find candidate edge used for destination label");
+      }
     }
-    cost += previous_transition_cost;
-    path.emplace_back(edgelabel.mode(), cost, edgelabel.opp_edgeid(), 0, edgelabel.restriction_idx(),
-                      previous_transition_cost);
 
-    // Check if this is a ferry
-    if (edgelabel.use() == Use::kFerry) {
-      has_ferry_ = true;
+    // Get the elapsed time at the end of the forward path. NOTE: PathInfo
+    // stores elapsed time as uint32_t but EdgeLabels uses float. Need to
+    // accumulate in float and cast to int so we do not accumulate roundoff
+    // error.
+    Cost cost = path.back().elapsed_cost;
+
+    // Get the transition cost at the last edge of the reverse path
+    Cost previous_transition_cost = edgelabels_reverse_[idx2].transition_cost();
+
+    // Append the reverse path from the destination - use opposing edges
+    // The first edge on the reverse path is the same as the last on the forward
+    // path, so get the predecessor.
+    uint32_t edgelabel_index = edgelabels_reverse_[idx2].predecessor();
+    while (edgelabel_index != kInvalidLabel) {
+      const BDEdgeLabel& edgelabel = edgelabels_reverse_[edgelabel_index];
+      GraphId oppedge = graphreader.GetOpposingEdgeId(edgelabel.edgeid());
+
+      // The first edge has no previous edge with elapsed cost so we can just use it directly
+      uint32_t predidx = edgelabel.predecessor();
+      if (predidx == kInvalidLabel) {
+        cost += edgelabel.cost();
+      } // This edge needs the elapsed cost between it and the previous edge, since its the reverse
+        // path in flipping the path around we also need to switch out the transition costs (shifting
+        // right)
+      else {
+        cost += edgelabel.cost() - edgelabels_reverse_[predidx].cost() - edgelabel.transition_cost();
+      }
+      cost += previous_transition_cost;
+      path.emplace_back(edgelabel.mode(), cost, oppedge, 0, edgelabel.restriction_idx(),
+                        previous_transition_cost);
+
+      // Check if this is a ferry
+      if (edgelabel.use() == Use::kFerry) {
+        has_ferry_ = true;
+      }
+
+      // Update edgelabel_index and transition cost to apply at next iteration
+      edgelabel_index = predidx;
+      // We apply the turn cost at the beginning of the edge, as is done in the forward path
+      // Semantically this can be thought of is, how much time did it take to turn onto this edge
+      // To do this we need to carry the cost forward to the next edge in the path so we cache it here
+      previous_transition_cost = edgelabel.transition_cost();
     }
 
-    // Update edgelabel_index and transition cost to apply at next iteration
-    edgelabel_index = predidx;
-    // We apply the turn cost at the beginning of the edge, as is done in the forward path
-    // Semantically this can be thought of is, how much time did it take to turn onto this edge
-    // To do this we need to carry the cost forward to the next edge in the path so we cache it here
-    previous_transition_cost = edgelabel.transition_cost();
+    // For the first path just add it for subsequent paths only add if it passes viability tests
+    if (paths.empty() ||
+        (validate_alternate_by_sharing(graphreader, shared_edgeids, paths, path, max_sharing) &&
+         validate_alternate_by_local_optimality(path))) {
+      paths.emplace_back(std::move(path));
+    }
   }
+  // give back the paths
   return paths;
 }
 
@@ -1048,7 +1171,7 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
                               std::vector<sif::BDEdgeLabel>& edge_labels_rev,
                               const BDEdgeLabel& fwd_pred,
                               const BDEdgeLabel& rev_pred,
-                              std::shared_ptr<sif::DynamicCost>& costing) {
+                              const std::shared_ptr<sif::DynamicCost>& costing) {
 
   const uint8_t M = 10;                 // TODO Look at data to figure this out
   const uint8_t PATCH_PATH_SIZE = M * 2 // Expand M in both directions
@@ -1080,7 +1203,7 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
   // at the end before pushing the right-hand edges (opposite direction) onto the back
   std::reverse(patch_path.begin(), patch_path.end());
 
-  const GraphTile* tile = nullptr; // Used for later hinting
+  graph_tile_ptr tile = nullptr; // Used for later hinting
 
   auto next_rev_pred = rev_pred;
   // Now push_back the edges from opposite direction onto our patch_path

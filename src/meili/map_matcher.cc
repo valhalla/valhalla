@@ -15,7 +15,7 @@ namespace {
 using namespace valhalla;
 using namespace valhalla::meili;
 
-constexpr float MAX_ACCUMULATED_COST = 99999999;
+constexpr float MAX_ACCUMULATED_COST = 99999999.f;
 
 inline float GreatCircleDistanceSquared(const Measurement& left, const Measurement& right) {
   return left.lnglat().DistanceSquared(right.lnglat());
@@ -45,10 +45,10 @@ std::string print_result(const StateContainer& container,
 struct Interpolation {
   midgard::PointLL projected;
   baldr::GraphId edgeid;
-  float sq_distance;
-  float route_distance;
-  float route_time;
-  float edge_distance;
+  double sq_distance;
+  double route_distance;
+  double route_time;
+  double edge_distance;
   std::vector<EdgeSegment>::const_iterator segment;
 
   float sortcost(const EmissionCostModel& emission_model,
@@ -93,7 +93,7 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
                                      float match_measurement_time,
                                      const midgard::PointLL& left_most_projected_point,
                                      const midgard::PointLL& right_most_projected_point) {
-  const baldr::GraphTile* tile(nullptr);
+  graph_tile_ptr tile;
   midgard::projector_t projector(measurement.lnglat());
 
   // Route distance from each segment begin to the beginning segment
@@ -347,7 +347,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
   }
 
   // find which candidate was used for this state
-  const baldr::GraphTile* tile = nullptr;
+  graph_tile_ptr tile;
   for (const auto& edge : state.candidate().edges) {
     // if it matches either end of the path coming into this state or the beginning of the
     // path leaving this state, then we are good to go and have found the match
@@ -492,21 +492,21 @@ struct path_t {
 namespace valhalla {
 namespace meili {
 
-MapMatcher::MapMatcher(const boost::property_tree::ptree& config,
+MapMatcher::MapMatcher(const Config& config,
                        baldr::GraphReader& graphreader,
                        CandidateQuery& candidatequery,
                        const sif::mode_costing_t& mode_costing,
                        sif::TravelMode travelmode)
     : config_(config), graphreader_(graphreader), candidatequery_(candidatequery),
       mode_costing_(mode_costing), travelmode_(travelmode), interrupt_(nullptr), vs_(), ts_(vs_),
-      container_(), emission_cost_model_(graphreader_, container_, config_),
+      container_(), emission_cost_model_(graphreader_, container_, config_.emission_cost),
       transition_cost_model_(graphreader_,
                              vs_,
                              ts_,
                              container_,
                              mode_costing_,
                              travelmode_,
-                             config_) {
+                             config_.transition_cost) {
   vs_.set_emission_cost_model(emission_cost_model_);
   vs_.set_transition_cost_model(transition_cost_model_);
 }
@@ -826,10 +826,10 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
 
 std::unordered_map<StateId::Time, std::vector<Measurement>>
 MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements) {
-  const float max_search_radius = config_.get<float>("max_search_radius"),
-              sq_max_search_radius = max_search_radius * max_search_radius;
-  const float interpolation_distance = config_.get<float>("interpolation_distance"),
-              sq_interpolation_distance = interpolation_distance * interpolation_distance;
+  const float sq_max_search_radius = config_.candidate_search.max_search_radius_meters *
+                                     config_.candidate_search.max_search_radius_meters;
+  const float sq_interpolation_distance =
+      config_.routing.interpolation_distance_meters * config_.routing.interpolation_distance_meters;
   std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated;
 
   // Always match the first measurement
@@ -880,8 +880,8 @@ StateId::Time MapMatcher::AppendMeasurement(const Measurement& measurement,
   auto sq_radius = std::min(sq_max_search_radius,
                             std::max(measurement.sq_search_radius(), measurement.sq_gps_accuracy()));
 
-  const auto& candidates = candidatequery_.Query(measurement.lnglat(), measurement.stop_type(),
-                                                 sq_radius, costing()->GetEdgeFilter());
+  const auto& candidates =
+      candidatequery_.Query(measurement.lnglat(), measurement.stop_type(), sq_radius, costing());
 
   const auto time = container_.AppendMeasurement(measurement);
 

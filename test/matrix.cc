@@ -4,9 +4,6 @@
 #include <string>
 #include <vector>
 
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "sif/dynamiccost.h"
@@ -33,25 +30,20 @@ public:
    * Constructor.
    * @param  options Request options in a pbf
    */
-  SimpleCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kDrive) {
+  SimpleCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kDrive, kAutoAccess) {
   }
 
   ~SimpleCost() {
   }
 
-  uint32_t access_mode() const {
-    return kAutoAccess;
-  }
-
   bool Allowed(const DirectedEdge* edge,
                const EdgeLabel& pred,
-               const GraphTile* tile,
+               const graph_tile_ptr& /*tile*/,
                const GraphId& edgeid,
-               const uint64_t current_time,
-               const uint32_t tz_index,
-               int& restriction_idx) const {
-    if (!(edge->forwardaccess() & kAutoAccess) ||
-        (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+               const uint64_t /*current_time*/,
+               const uint32_t /*tz_index*/,
+               int& /*restriction_idx*/) const override {
+    if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (pred.restrictions() & (1 << edge->localedgeidx())) ||
         edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
         (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
@@ -63,12 +55,12 @@ public:
   bool AllowedReverse(const DirectedEdge* edge,
                       const EdgeLabel& pred,
                       const DirectedEdge* opp_edge,
-                      const GraphTile* tile,
+                      const graph_tile_ptr& /*tile*/,
                       const GraphId& opp_edgeid,
-                      const uint64_t current_time,
-                      const uint32_t tz_index,
-                      int& restriction_idx) const {
-    if (!(opp_edge->forwardaccess() & kAutoAccess) ||
+                      const uint64_t /*current_time*/,
+                      const uint32_t /*tz_index*/,
+                      int& /*restriction_idx*/) const override {
+    if (!IsAccessible(opp_edge) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
         opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
@@ -78,70 +70,50 @@ public:
     return true;
   }
 
-  bool Allowed(const NodeInfo* node) const {
-    return (node->access() & kAutoAccess);
-  }
-
-  Cost EdgeCost(const baldr::DirectedEdge* edge,
-                const baldr::TransitDeparture* departure,
-                const uint32_t curr_time) const {
+  Cost EdgeCost(const baldr::DirectedEdge* /*edge*/,
+                const baldr::TransitDeparture* /*departure*/,
+                const uint32_t /*curr_time*/) const override {
     throw std::runtime_error("We shouldnt be testing transit edges");
   }
 
-  Cost EdgeCost(const DirectedEdge* edge, const GraphTile* tile, const uint32_t seconds) const {
+  Cost EdgeCost(const DirectedEdge* edge,
+                const graph_tile_ptr& /*tile*/,
+                const uint32_t /*seconds*/) const override {
     float sec = static_cast<float>(edge->length());
     return {sec / 10.0f, sec};
   }
 
-  Cost TransitionCost(const DirectedEdge* edge, const NodeInfo* node, const EdgeLabel& pred) const {
+  Cost TransitionCost(const DirectedEdge* /*edge*/,
+                      const NodeInfo* /*node*/,
+                      const EdgeLabel& /*pred*/) const override {
     return {5.0f, 5.0f};
   }
 
-  Cost TransitionCostReverse(const uint32_t idx,
-                             const NodeInfo* node,
-                             const DirectedEdge* opp_edge,
-                             const DirectedEdge* opp_pred_edge) const {
+  Cost TransitionCostReverse(const uint32_t /*idx*/,
+                             const NodeInfo* /*node*/,
+                             const DirectedEdge* /*opp_edge*/,
+                             const DirectedEdge* /*opp_pred_edge*/) const override {
     return {5.0f, 5.0f};
   }
 
-  float AStarCostFactor() const {
+  float AStarCostFactor() const override {
     return 0.1f;
   }
 
-  const EdgeFilter GetEdgeFilter() const {
-    return [](const DirectedEdge* edge) {
-      if (edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess))
-        return 0.0f;
-      else {
-        return 1.0f;
-      }
-    };
-  }
-
-  const NodeFilter GetNodeFilter() const {
-    return [](const NodeInfo* node) { return !(node->access() & kAutoAccess); };
+  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr&) const override {
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
+    bool accessible = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    if (edge->is_shortcut() || !accessible)
+      return 0.0f;
+    else {
+      return 1.0f;
+    }
   }
 };
 
 cost_ptr_t CreateSimpleCost(const CostingOptions& options) {
   return std::make_shared<SimpleCost>(options);
-}
-
-boost::property_tree::ptree json_to_pt(const std::string& json) {
-  std::stringstream ss;
-  ss << json;
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(ss, pt);
-  return pt;
-}
-
-rapidjson::Document to_document(const std::string& request) {
-  rapidjson::Document d;
-  auto& allocator = d.GetAllocator();
-  d.Parse(request.c_str());
-  if (d.HasParseError())
-    throw valhalla_exception_t{100};
-  return d;
 }
 
 // Maximum edge score - base this on costing type.
@@ -193,7 +165,7 @@ void adjust_scores(Options& options) {
   }
 }
 
-const auto config = json_to_pt(R"({
+const auto config = test::json_to_pt(R"({
     "meili": { "default": { "breakage_distance": 2000} },
     "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
     "loki":{
@@ -251,10 +223,10 @@ const auto test_request_osrm = R"({
     "costing":"auto"
   }&format=osrm)";
 
-std::vector<TimeDistance> matrix_answers = {{28, 28},     {2027, 1837}, {2389, 2208}, {4164, 3839},
-                                            {1518, 1397}, {1809, 1639}, {2043, 1938}, {3946, 3641},
-                                            {2299, 2109}, {687, 637},   {0, 0},       {2809, 2623},
-                                            {5554, 5178}, {3942, 3706}, {4344, 4104}, {1815, 1679}};
+std::vector<TimeDistance> matrix_answers = {{28, 28},     {2027, 1837}, {2390, 2209}, {4163, 3838},
+                                            {1519, 1398}, {1808, 1638}, {2042, 1937}, {3944, 3639},
+                                            {2298, 2107}, {687, 637},   {0, 0},       {2808, 2623},
+                                            {5552, 5177}, {3942, 3707}, {4344, 4104}, {1815, 1680}};
 } // namespace
 
 const uint32_t kThreshold = 1;
@@ -277,9 +249,9 @@ TEST(Matrix, test_matrix) {
       request.options().costing_options(static_cast<int>(request.options().costing())));
 
   CostMatrix cost_matrix;
-  std::vector<TimeDistance> results;
-  results = cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                       reader, mode_costing, TravelMode::kDrive, 400000.0);
+  std::vector<TimeDistance> results =
+      cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(), reader,
+                                 mode_costing, TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
         << "result " + std::to_string(i) + "'s distance is not close enough" +

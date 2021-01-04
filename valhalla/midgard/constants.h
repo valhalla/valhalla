@@ -36,6 +36,8 @@ constexpr double kDecimeterPerMeter = 10;
 // Speed conversion constants
 constexpr float kMPHtoMetersPerSec = 0.44704f;
 constexpr double kDecimeterPerSectoKPH = 0.36; // dm/s to km/h
+constexpr double kKPHtoMetersPerSec = 1000. / 3600.;
+constexpr double kMetersPerSectoKPH = 3600. / 1000.;
 
 // Angular measures
 constexpr float kPi = 3.14159265f;

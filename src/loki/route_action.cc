@@ -5,6 +5,7 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -34,10 +35,6 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
     }
     total_path_distance += path_distance;
   }
-  valhalla::midgard::logging::Log("total_location_distance::" +
-                                      std::to_string(total_path_distance * midgard::kKmPerMeter) +
-                                      "km",
-                                  " [ANALYTICS] ");
 }
 
 } // namespace
@@ -56,6 +53,9 @@ void loki_worker_t::init_route(Api& request) {
 }
 
 void loki_worker_t::route(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request, "loki_worker_t::route");
+
   init_route(request);
   auto& options = *request.mutable_options();
   const auto& costing_name = Costing_Enum_Name(options.costing());
@@ -98,8 +98,7 @@ void loki_worker_t::route(Api& request) {
       if (!connectivity_map) {
         continue;
       }
-      auto colors =
-          connectivity_map->get_colors(TileHierarchy::levels().rbegin()->first, correlated, 0);
+      auto colors = connectivity_map->get_colors(TileHierarchy::levels().back().level, correlated, 0);
       for (auto color : colors) {
         auto itr = color_counts.find(color);
         if (itr == color_counts.cend()) {

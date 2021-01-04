@@ -21,6 +21,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "mjolnir/util.h"
+#include "sif/osrm_car_duration.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -39,7 +40,7 @@ struct EdgePairs {
  * Test if 2 edges have matching attributes such that they should be
  * considered for combining into a shortcut edge.
  */
-bool EdgesMatch(const GraphTile* tile, const DirectedEdge* edge1, const DirectedEdge* edge2) {
+bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const DirectedEdge* edge2) {
   // Check if edges end at same node.
   if (edge1->endnode() == edge2->endnode()) {
     return false;
@@ -63,10 +64,9 @@ bool EdgesMatch(const GraphTile* tile, const DirectedEdge* edge1, const Directed
   // get marked as a bridge and lead to less shortcuts - so we don't consider
   // bridge and tunnel here
   if (edge1->classification() != edge2->classification() || edge1->link() != edge2->link() ||
-      edge1->use() != edge2->use() || edge1->speed() != edge2->speed() ||
-      edge1->toll() != edge2->toll() || edge1->destonly() != edge2->destonly() ||
-      edge1->unpaved() != edge2->unpaved() || edge1->surface() != edge2->surface() ||
-      edge1->roundabout() != edge2->roundabout()) {
+      edge1->use() != edge2->use() || edge1->toll() != edge2->toll() ||
+      edge1->destonly() != edge2->destonly() || edge1->unpaved() != edge2->unpaved() ||
+      edge1->surface() != edge2->surface() || edge1->roundabout() != edge2->roundabout()) {
     return false;
   }
 
@@ -99,7 +99,7 @@ GraphId GetOpposingEdge(const GraphId& node,
                         GraphReader& reader,
                         const uint64_t wayid) {
   // Get the tile at the end node
-  const GraphTile* tile = reader.GetGraphTile(edge->endnode());
+  graph_tile_ptr tile = reader.GetGraphTile(edge->endnode());
   const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
 
   // Get the directed edges and return when the end node matches
@@ -131,7 +131,7 @@ GraphId GetOpposingEdge(const GraphId& node,
  * @param  tile          Graph tile of the edge
  * @param  directededge  Directed edge to match.
  */
-bool OpposingEdgeInfoMatches(const GraphTile* tile, const DirectedEdge* edge) {
+bool OpposingEdgeInfoMatches(const graph_tile_ptr& tile, const DirectedEdge* edge) {
   // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
   // true if a matching edgeinfo offset if found.
   const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
@@ -147,7 +147,7 @@ bool OpposingEdgeInfoMatches(const GraphTile* tile, const DirectedEdge* edge) {
 
 // Get the ISO country code at the end node
 std::string EndNodeIso(const DirectedEdge* edge, GraphReader& reader) {
-  const GraphTile* tile = reader.GetGraphTile(edge->endnode());
+  graph_tile_ptr tile = reader.GetGraphTile(edge->endnode());
   const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
   return tile->admininfo(nodeinfo->admin_index()).country_iso();
 }
@@ -163,7 +163,7 @@ std::string EndNodeIso(const DirectedEdge* edge, GraphReader& reader) {
  *          false if not.
  */
 bool CanContract(GraphReader& reader,
-                 const GraphTile* tile,
+                 const graph_tile_ptr& tile,
                  const GraphId& node,
                  EdgePairs& edgepairs) {
   // Return false if only 1 edge
@@ -172,8 +172,10 @@ bool CanContract(GraphReader& reader,
     return false;
   }
 
-  // Do not contract if the node is a gate or toll booth
+  // Do not contract if the node is a gate or toll booth or toll gantry or sump buster or intersection
+  // type is a fork
   if (nodeinfo->type() == NodeType::kGate || nodeinfo->type() == NodeType::kTollBooth ||
+      nodeinfo->type() == NodeType::kTollGantry || nodeinfo->type() == NodeType::kSumpBuster ||
       nodeinfo->intersection() == IntersectionType::kFork) {
     return false;
   }
@@ -207,31 +209,12 @@ bool CanContract(GraphReader& reader,
     return false;
   }
 
-  // Get pairs of matching edges. If more than 1 pair exists then
-  // we cannot contract this node.
-  uint32_t n = edges.size();
-  bool matchfound = false;
-  std::pair<uint32_t, uint32_t> match;
-  for (uint32_t i = 0; i < n - 1; i++) {
-    for (uint32_t j = i + 1; j < n; j++) {
-      const DirectedEdge* edge1 = tile->directededge(edges[i]);
-      const DirectedEdge* edge2 = tile->directededge(edges[j]);
-      if (EdgesMatch(tile, edge1, edge2)) {
-        if (matchfound) {
-          // More than 1 match exists - return false
-          return false;
-        }
-        // Save the match
-        match = std::make_pair(i, j);
-        matchfound = true;
-      }
-    }
-  }
+  // Get the directed edges - these are the outbound edges from the node.
+  const DirectedEdge* edge1 = tile->directededge(edges[0]);
+  const DirectedEdge* edge2 = tile->directededge(edges[1]);
 
-  // Return false if no matches exist
-  if (!matchfound) {
+  if (!EdgesMatch(tile, edge1, edge2))
     return false;
-  }
 
   // Exactly one pair of edges match. Check if any other remaining edges
   // are driveable outbound from the node. If so this cannot be contracted.
@@ -243,11 +226,8 @@ bool CanContract(GraphReader& reader,
       }
     }*/
 
-  // Get the directed edges - these are the outbound edges from the node.
   // Get the opposing directed edges - these are the inbound edges to the node.
-  const DirectedEdge* edge1 = tile->directededge(edges[match.first]);
   uint64_t wayid1 = tile->edgeinfo(edge1->edgeinfo_offset()).wayid();
-  const DirectedEdge* edge2 = tile->directededge(edges[match.second]);
   uint64_t wayid2 = tile->edgeinfo(edge2->edgeinfo_offset()).wayid();
   GraphId oppedge1 = GetOpposingEdge(node, edge1, reader, wayid1);
   GraphId oppedge2 = GetOpposingEdge(node, edge2, reader, wayid2);
@@ -269,6 +249,11 @@ bool CanContract(GraphReader& reader,
   // the other outbound edge
   if (((oppdiredge1->restrictions() & (1 << edge2->localedgeidx())) != 0) ||
       ((oppdiredge2->restrictions() & (1 << edge1->localedgeidx())) != 0)) {
+    return false;
+  }
+
+  // Can not have different speeds in the same direction
+  if ((oppdiredge1->speed() != edge2->speed()) || (oppdiredge2->speed() != edge1->speed())) {
     return false;
   }
 
@@ -301,8 +286,8 @@ bool CanContract(GraphReader& reader,
   }
 
   // Store the pairs of base edges entering and exiting this node
-  edgepairs.edge1 = std::make_pair(oppedge1, edges[match.second]);
-  edgepairs.edge2 = std::make_pair(oppedge2, edges[match.first]);
+  edgepairs.edge1 = std::make_pair(oppedge1, edges[1]);
+  edgepairs.edge2 = std::make_pair(oppedge2, edges[0]);
   return true;
 }
 
@@ -314,10 +299,29 @@ uint32_t ConnectEdges(GraphReader& reader,
                       GraphId& endnode,
                       uint32_t& opp_local_idx,
                       uint32_t& restrictions,
-                      float& average_density) {
+                      float& average_density,
+                      float& total_duration,
+                      float& total_truck_duration) {
   // Get the tile and directed edge.
-  const GraphTile* tile = reader.GetGraphTile(startnode);
+  auto tile = reader.GetGraphTile(startnode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
+
+  // Add edge and turn duration for car
+  auto const nodeinfo = tile->node(startnode);
+  auto const turn_duration = OSRMCarTurnDuration(directededge, nodeinfo, opp_local_idx);
+  total_duration += turn_duration;
+  auto const speed = tile->GetSpeed(directededge, kNoFlowMask);
+  assert(speed != 0);
+  auto const edge_duration = directededge->length() / (speed * kKPHtoMetersPerSec);
+  total_duration += edge_duration;
+
+  // Add edge and turn duration for truck
+  // Currently use the same as for cars. TODO: implement for trucks
+  total_truck_duration += turn_duration;
+  auto const truck_speed = tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true);
+  assert(truck_speed != 0);
+  auto const edge_duration_truck = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
+  total_truck_duration += edge_duration_truck;
 
   // Copy the restrictions and opposing local index. Want to set the shortcut
   // edge's restrictions and opp_local_idx to the last directed edge in the chain
@@ -347,7 +351,7 @@ uint32_t ConnectEdges(GraphReader& reader,
 // Check if the edge is entering a contracted node
 bool IsEnteringEdgeOfContractedNode(GraphReader& reader, const GraphId& nodeid, const GraphId& edge) {
   EdgePairs edgepairs;
-  const GraphTile* tile = reader.GetGraphTile(nodeid);
+  graph_tile_ptr tile = reader.GetGraphTile(nodeid);
   bool c = CanContract(reader, tile, nodeid, edgepairs);
   return c && (edgepairs.edge1.first == edge || edgepairs.edge2.first == edge);
 }
@@ -355,7 +359,7 @@ bool IsEnteringEdgeOfContractedNode(GraphReader& reader, const GraphId& nodeid, 
 // Add shortcut edges (if they should exist) from the specified node
 // TODO - need to add access restrictions?
 uint32_t AddShortcutEdges(GraphReader& reader,
-                          const GraphTile* tile,
+                          const graph_tile_ptr& tile,
                           GraphTileBuilder& tilebuilder,
                           const GraphId& start_node,
                           const uint32_t edge_index,
@@ -369,7 +373,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
   }
 
   // Check if this is the last edge in a shortcut (if the endnode cannot be contracted).
-  auto last_edge = [&reader](const GraphTile* tile, const GraphId& endnode, EdgePairs& edgepairs) {
+  auto last_edge = [&reader](graph_tile_ptr tile, const GraphId& endnode, EdgePairs& edgepairs) {
     return !CanContract(reader, tile, endnode, edgepairs);
   };
 
@@ -399,8 +403,15 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       DirectedEdge newedge = *directededge;
       uint32_t length = newedge.length();
 
-      // For computing weighted density along the shortcut
+      // For computing weighted density and total turn duration along the shortcut
       float average_density = length * newedge.density();
+      uint32_t const speed = tile->GetSpeed(directededge, kNoFlowMask);
+      assert(speed != 0);
+      float total_duration = length / (speed * kKPHtoMetersPerSec);
+      uint32_t const truck_speed =
+          tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true);
+      assert(truck_speed != 0);
+      float total_truck_duration = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
 
       // Get the shape for this edge. If this initial directed edge is not
       // forward - reverse the shape so the edge info stored is forward for
@@ -414,6 +425,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
 
       // Get names - they apply over all edges of the shortcut
       auto names = tile->GetNames(directededge->edgeinfo_offset());
+      auto tagged_names = tile->GetNames(directededge->edgeinfo_offset(), true);
+
       auto types = tile->GetTypes(directededge->edgeinfo_offset());
 
       // Add any access restriction records. TODO - make sure we don't contract
@@ -429,11 +442,12 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       // Connect edges to the shortcut while the end node is marked as
       // contracted (contains edge pairs in the shortcut info).
       uint32_t rst = 0;
-      uint32_t opp_local_idx = 0;
+      // For turn duration calculation during contraction
+      uint32_t opp_local_idx = directededge->opp_local_idx();
       GraphId next_edge_id = edge_id;
       while (true) {
         EdgePairs edgepairs;
-        const GraphTile* tile = reader.GetGraphTile(end_node);
+        graph_tile_ptr tile = reader.GetGraphTile(end_node);
         if (last_edge(tile, end_node, edgepairs)) {
           break;
         }
@@ -459,7 +473,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         // on the connected shortcut - need to set that so turn restrictions
         // off of shortcuts work properly
         length += ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
-                               average_density);
+                               average_density, total_duration, total_truck_duration);
       }
 
       // Do we need to force adding edgeinfo (opposing edge could have diff names)?
@@ -477,7 +491,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
-                                  edgeinfo.speed_limit(), shape, names, types, forward, diff_names);
+                                  edgeinfo.speed_limit(), shape, names, tagged_names, types, forward,
+                                  diff_names);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Set the forward flag on this directed edge. If a new edge was added
@@ -523,6 +538,17 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       // Compute the weighted edge density
       newedge.set_density(average_density / (static_cast<float>(length)));
 
+      // Update speed to the one that takes turn durations into account
+      assert(total_duration > 0);
+      uint32_t new_speed =
+          static_cast<uint32_t>(std::round(length / total_duration * kMetersPerSectoKPH));
+      newedge.set_speed(new_speed);
+
+      assert(total_truck_duration > 0);
+      uint32_t new_truck_speed =
+          static_cast<uint32_t>(std::round(length / total_truck_duration * kMetersPerSectoKPH));
+      newedge.set_truck_speed(new_truck_speed);
+
       // Add shortcut edge. Add to the shortcut map (associates the base edge
       // index to the shortcut index). Remove superseded mask that may have
       // been copied from base directed edge
@@ -559,11 +585,11 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
   uint32_t shortcut_count = 0;
   uint32_t ntiles = level.tiles.TileCount();
   uint32_t tile_level = (uint32_t)level.level;
-  const GraphTile* tile = nullptr;
+  graph_tile_ptr tile;
   for (uint32_t tileid = 0; tileid < ntiles; tileid++) {
     // Get the graph tile. Skip if no tile exists (common case)
     tile = reader.GetGraphTile(GraphId(tileid, tile_level, 0));
-    if (tile == nullptr || tile->header()->nodecount() == 0) {
+    if (!tile) {
       continue;
     }
 
@@ -658,6 +684,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
                                     edgeinfo.bike_network(), edgeinfo.speed_limit(),
                                     edgeinfo.encoded_shape(),
                                     tile->GetNames(directededge->edgeinfo_offset()),
+                                    tile->GetNames(directededge->edgeinfo_offset(), true),
                                     tile->GetTypes(directededge->edgeinfo_offset()), added);
         newedge.set_edgeinfo_offset(edge_info_offset);
 
@@ -720,13 +747,12 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
   // Get GraphReader
   GraphReader reader(pt.get_child("mjolnir"));
 
-  auto level = TileHierarchy::levels().rbegin();
-  level++;
-  for (; level != TileHierarchy::levels().rend(); ++level) {
+  auto tile_level = TileHierarchy::levels().rbegin();
+  tile_level++;
+  for (; tile_level != TileHierarchy::levels().rend(); ++tile_level) {
     // Create shortcuts on this level
-    auto tile_level = level->second;
-    LOG_INFO("Creating shortcuts on level " + std::to_string(tile_level.level));
-    uint32_t count = FormShortcuts(reader, tile_level);
+    LOG_INFO("Creating shortcuts on level " + std::to_string(tile_level->level));
+    uint32_t count = FormShortcuts(reader, *tile_level);
     LOG_INFO("Finished with " + std::to_string(count) + " shortcuts");
   }
 }

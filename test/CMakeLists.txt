@@ -4,20 +4,36 @@ set_target_properties(gtest_main PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock_main PROPERTIES FOLDER "Dependencies")
 
+# common things that the tests need
+add_library(valhalla_test
+  test.h test.cc gurka/gurka.h gurka/gurka.cc
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c)
+target_include_directories(valhalla_test PUBLIC
+  ${VALHALLA_SOURCE_DIR}/test
+  ${VALHALLA_SOURCE_DIR}/test/gurka
+  ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
+  ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
+target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
+
 ## Lists tests
-set(tests aabb2 access_restriction actor admin attributes_controller astar_bss complexrestriction countryaccess datetime directededge
+set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
   enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions
-  json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch
-  narrative_dictionary nodeinfo nodetransition obb2 openlr optimizer pathlocation_serialization parse_request point2 pointll
+  json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
+  narrative_dictionary nodeinfo nodetransition obb2 openlr optimizer parse_request point2 pointll
   polyline2 predictedspeeds queue routing sample sequence sign signs streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
   transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
-  verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem traffictile)
+  verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem traffictile
+  incident_loading)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar edgeinfobuilder graphbuilder graphparser graphtilebuilder graphreader isochrone predictive_traffic
-    idtable matrix minbb multipoint_routes names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary thor_worker timedep_paths timeparsing trivial_paths uniquenames utrecht lua)
+  list(APPEND tests astar astar_bss complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
+    graphtilebuilder graphreader isochrone predictive_traffic idtable mapmatch matrix minbb multipoint_routes
+    names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban
+    thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
   if(ENABLE_HTTP)
     list(APPEND tests http_tiles)
   endif()
@@ -32,6 +48,15 @@ if(NOT APPLE)
   list(APPEND tests narrativebuilder util_odin)
 endif()
 
+if (UNIX)
+  # Enables stricter compiler checks on a file-by-file basis
+  # which allows us to migrate piecemeal
+  set_source_files_properties(
+    openlr.cc
+    incidents.cc
+    PROPERTIES COMPILE_FLAGS "-Wall -Werror")
+endif (UNIX)
+
 ## Add executable targets
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
@@ -39,16 +64,12 @@ foreach(test ${tests})
     FOLDER "Tests"
     COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
   create_source_groups("Source Files" ${test}.cc)
-  target_link_libraries(${test} valhalla gtest gmock pthread)
+  target_link_libraries(${test} valhalla_test)
   if (LUAJIT_FOUND AND APPLE)
     # Using LuaJIT on macOS requires a couple of extra linker flags
     # Any tool that needs interact with Lua will need these flags on macOS
     target_link_options(${test} PUBLIC -pagezero_size 10000 -image_base 100000000)
   endif()
-  target_include_directories(${test} SYSTEM PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
-      ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
-      ${VALHALLA_SOURCE_DIR}/test)
 endforeach()
 
 set(cost_tests autocost bicyclecost motorcyclecost motorscootercost pedestriancost transitcost truckcost)
@@ -58,7 +79,17 @@ foreach(test ${cost_tests})
     FOLDER "Tests"
     COMPILE_DEFINITIONS INLINE_TEST)
   create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc)
-  target_link_libraries(${test} valhalla gtest gmock pthread)
+  target_link_libraries(${test} valhalla_test)
+endforeach()
+
+set(tyr_tests route_serializer_osrm)
+foreach(test ${tyr_tests})
+  add_executable(${test} EXCLUDE_FROM_ALL ${VALHALLA_SOURCE_DIR}/src/tyr/${test}.cc)
+  set_target_properties(${test} PROPERTIES
+    FOLDER "Tests"
+    COMPILE_DEFINITIONS INLINE_TEST)
+  create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/tyr/${test}.cc)
+  target_link_libraries(${test} valhalla_test)
 endforeach()
 
 ## Test-specific data, properties and dependencies
@@ -224,7 +255,7 @@ set_target_properties(test_directories PROPERTIES FOLDER "Tests")
 
 
 ## Test run targets
-foreach(test ${tests} ${cost_tests})
+foreach(test ${tests} ${cost_tests} ${tyr_tests})
   add_custom_command(OUTPUT ${test}.log
     COMMAND
       LOCPATH=${VALHALLA_SOURCE_DIR}/locales
@@ -259,11 +290,13 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-reach utrecht_tiles)
   add_dependencies(run-shape_attributes utrecht_tiles)
   add_dependencies(run-summary utrecht_tiles)
+  add_dependencies(run-urban utrecht_tiles)
   add_dependencies(run-thor_worker utrecht_tiles)
   add_dependencies(run-recover_shortcut utrecht_tiles)
   add_dependencies(run-minbb utrecht_tiles)
   add_dependencies(run-astar_bss paris_bss_tiles)
   add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
+  add_dependencies(run-alternates utrecht_tiles)
 if(ENABLE_HTTP)
     add_dependencies(run-http_tiles utrecht_tiles)
   endif()
@@ -279,6 +312,7 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
     COMMAND
       LOCPATH=${VALHALLA_SOURCE_DIR}/locales
       PYTHONPATH=src/bindings/python
+      ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
       /bin/bash -c "${PYTHON_EXECUTABLE} ${VALHALLA_SOURCE_DIR}/test/bindings/python/utrecht-test.py > test/python_valhalla.log"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
@@ -293,10 +327,10 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
 endif()
 
 ## High-level targets
-string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${python_tests}")
+string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${tyr_tests};${python_tests}")
 
 add_custom_target(check DEPENDS ${test_targets})
 set_target_properties(check PROPERTIES FOLDER "Tests")
-add_custom_target(tests DEPENDS ${tests} ${cost_tests})
+add_custom_target(tests DEPENDS ${tests} ${cost_tests} ${tyr_tests})
 set_target_properties(tests PROPERTIES FOLDER "Tests")
-# add_subdirectory(gurka)
+add_subdirectory(gurka)

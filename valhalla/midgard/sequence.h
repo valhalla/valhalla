@@ -23,14 +23,14 @@
 
 #include <valhalla/filesystem.h>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <io.h>
 #define stat _stat64
 #else
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#endif // _MSC_VER
+#endif // _WIN32
 #include <fcntl.h>
 
 // if we are on android
@@ -49,7 +49,7 @@
 #endif
 #endif
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
@@ -172,7 +172,7 @@ public:
     // has to be something to map
     if (new_count > 0) {
       auto fd =
-#if defined(_MSC_VER)
+#if defined(_WIN32)
           _open(new_file_name.c_str(), O_RDWR, 0);
 #else
           open(new_file_name.c_str(), O_RDWR, 0);
@@ -185,7 +185,7 @@ public:
         throw std::runtime_error(new_file_name + "(mmap): " + strerror(errno));
       }
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
       auto cl = _close(fd);
 #else
       auto cl = close(fd);
@@ -313,9 +313,6 @@ public:
   // sort the file based on the predicate
   void sort(const std::function<bool(const T&, const T&)>& predicate,
             size_t buffer_size = 1024 * 1024 * 512 / sizeof(T)) {
-    using queue_t =
-        std::map<T, std::list<std::fstream>::iterator, std::function<bool(const T&, const T&)>>;
-
     flush();
     // if no elements we are done
     if (memmap.size() == 0) {
@@ -570,15 +567,16 @@ struct tar {
       // make a copy and blank the checksum
       header_t temp = *this;
       memset(temp.chksum, ' ', 8);
-      int64_t usum = 0, sum = 0;
+      int64_t sum = 0;
+      uint64_t usum = 0;
       // compute the checksum
-      for (int i = 0; i < sizeof(header_t); i++) {
+      for (int i = 0; static_cast<size_t>(i) < sizeof(header_t); i++) {
         usum += ((unsigned char*)&temp)[i];
         sum += ((char*)&temp)[i];
       }
       // check if its right
       uint64_t rsum = octal_to_int(chksum);
-      return rsum == usum || rsum == sum;
+      return rsum == usum || static_cast<int64_t>(rsum) == sum;
     }
   };
 

@@ -1,10 +1,8 @@
 #include "test.h"
 
-#include <boost/property_tree/ptree.hpp>
 #include <iostream>
 #include <stdexcept>
 
-#include "baldr/rapidjson_utils.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -20,16 +18,8 @@ using namespace valhalla::midgard;
 
 namespace {
 
-boost::property_tree::ptree json_to_pt(const std::string& json) {
-  std::stringstream ss;
-  ss << json;
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(ss, pt);
-  return pt;
-}
-
 // fake config
-const auto conf = json_to_pt(R"({
+const auto conf = test::json_to_pt(R"({
     "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
     "loki":{
       "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],

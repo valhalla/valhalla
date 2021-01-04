@@ -218,6 +218,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the index for tunnel name
+   * @param  idx  Index for the tunnel name.
+   */
+  void set_tunnel_name_index(const uint32_t idx) {
+    tunnel_name_index_ = idx;
+  }
+
+  /**
+   * Get the tunnel name index.
+   * @return  Returns the index for the tunnel name.
+   */
+  uint32_t tunnel_name_index() const {
+    return tunnel_name_index_;
+  }
+
+  /**
    * Sets the index for forward turn lanes string.
    * @param  idx  Index for the forward turn lanes string.
    */
@@ -310,6 +326,38 @@ struct OSMWay {
    */
   uint32_t bwd_jct_overlay_index() const {
     return bwd_jct_overlay_index_;
+  }
+
+  /**
+   * Sets the index for forward signboard base string.
+   * @param  idx  Index for the forward signboard base string.
+   */
+  void set_fwd_signboard_base_index(const uint32_t idx) {
+    fwd_signboard_base_index_ = idx;
+  }
+
+  /**
+   * Get the forward signboard base string index.
+   * @return  Returns the index for the forward signboard base string.
+   */
+  uint32_t fwd_signboard_base_index() const {
+    return fwd_signboard_base_index_;
+  }
+
+  /**
+   * Sets the index for backward signboard base string.
+   * @param  idx  Index for the backward signboard base string.
+   */
+  void set_bwd_signboard_base_index(const uint32_t idx) {
+    bwd_signboard_base_index_ = idx;
+  }
+
+  /**
+   * Get the backward signboard base string index.
+   * @return  Returns the index for the backward signboard base string.
+   */
+  uint32_t bwd_signboard_base_index() const {
+    return bwd_signboard_base_index_;
   }
 
   /**
@@ -444,9 +492,9 @@ struct OSMWay {
    * Sets the index for bike national ref.
    * @param  idx  Index for the name of the national bike network.
    */
-  void set_bike_national_ref_index(const uint32_t idx) {
-    ; // bike_national_ref_index_ = idx; UNUSED - future
-  }
+  //  void set_bike_national_ref_index(const uint32_t idx) {
+  //    ; // bike_national_ref_index_ = idx; UNUSED - future
+  //  }
 
   /**
    * Get the bike national ref index.
@@ -460,9 +508,9 @@ struct OSMWay {
    * Sets the index for bike regional ref.
    * @param  idx  Index for the name of the regional bike network.
    */
-  void set_bike_regional_ref_index(const uint32_t idx) {
-    ; // bike_regional_ref_index_ = idx; UNUSED - future
-  }
+  //  void set_bike_regional_ref_index(const uint32_t idx) {
+  //    ; // bike_regional_ref_index_ = idx; UNUSED - future
+  //  }
 
   /**
    * Get the bike regional ref index.
@@ -476,9 +524,9 @@ struct OSMWay {
    * Sets the index for bike local ref.
    * @param  idx  Index for the name of the local bike network.
    */
-  void set_bike_local_ref_index(const uint32_t idx) {
-    ; // bike_local_ref_index_ = idx; UNUSED - future
-  }
+  //  void set_bike_local_ref_index(const uint32_t idx) {
+  //    ; // bike_local_ref_index_ = idx; UNUSED - future
+  //  }
 
   /**
    * Get the bike local ref index.
@@ -1522,6 +1570,7 @@ struct OSMWay {
    */
   std::vector<std::string>
   GetNames(const std::string& ref, const UniqueNames& name_offset_map, uint16_t& types) const;
+  std::vector<std::string> GetTaggedNames(const UniqueNames& name_offset_map) const;
 
   // OSM way Id
   uint64_t osmwayid_;
@@ -1535,6 +1584,7 @@ struct OSMWay {
   uint32_t name_en_index_;
   uint32_t alt_name_index_;
   uint32_t official_name_index_;
+  uint32_t tunnel_name_index_;
 
   // Turn lanes
   uint32_t fwd_turn_lanes_index_;
@@ -1546,6 +1596,9 @@ struct OSMWay {
 
   uint32_t fwd_jct_overlay_index_;
   uint32_t bwd_jct_overlay_index_;
+
+  uint32_t fwd_signboard_base_index_;
+  uint32_t bwd_signboard_base_index_;
 
   // Sign Destination information
   uint32_t destination_index_;
