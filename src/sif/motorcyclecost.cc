@@ -7,10 +7,11 @@
 #include "midgard/util.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
+#include "sif/osrm_car_duration.h"
 #include <cassert>
 
 #ifdef INLINE_TEST
-#include "test/test.h"
+#include "test.h"
 #include "worker.h"
 #include <random>
 #endif
@@ -153,7 +154,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const GraphTile* tile,
+                       const graph_tile_ptr& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -180,7 +181,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const GraphTile* tile,
+                              const graph_tile_ptr& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -208,7 +209,7 @@ public:
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::GraphTile* tile,
+                        const graph_tile_ptr& tile,
                         const uint32_t seconds) const override;
 
   /**
@@ -251,7 +252,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const override {
-    return speedfactor_[kMaxAssumedSpeed];
+    return speedfactor_[top_speed_];
   }
 
   /**
@@ -269,7 +270,7 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const override {
+  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
@@ -367,7 +368,7 @@ MotorcycleCost::~MotorcycleCost() {
 // Check if access is allowed on the specified edge.
 bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred,
-                             const GraphTile* tile,
+                             const graph_tile_ptr& tile,
                              const baldr::GraphId& edgeid,
                              const uint64_t current_time,
                              const uint32_t tz_index,
@@ -390,7 +391,7 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
 bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const EdgeLabel& pred,
                                     const baldr::DirectedEdge* opp_edge,
-                                    const GraphTile* tile,
+                                    const graph_tile_ptr& tile,
                                     const baldr::GraphId& opp_edgeid,
                                     const uint64_t current_time,
                                     const uint32_t tz_index,
@@ -410,11 +411,12 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 }
 
 Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
-                              const baldr::GraphTile* tile,
+                              const graph_tile_ptr& tile,
                               const uint32_t seconds) const {
-  auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
-  assert(speed < speedfactor_.size());
-  float sec = (edge->length() * speedfactor_[speed]);
+  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
+  auto final_speed = std::min(edge_speed, top_speed_);
+
+  float sec = (edge->length() * speedfactor_[final_speed]);
 
   if (shortest_) {
     return Cost(edge->length(), sec);
@@ -429,6 +431,9 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   float factor = density_factor_[edge->density()] +
                  highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
                  surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
+  // TODO: factor hasn't been extensively tested, might alter this in future
+  float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
+  factor += speed_penalty;
   if (edge->toll()) {
     factor += toll_factor_;
   }
@@ -445,6 +450,7 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, pred, idx);
+  c.secs = OSRMCarTurnDuration(edge, node, idx);
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -473,7 +479,6 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
       seconds *= trans_density_factor_[node->density()];
 
     c.cost += shortest_ ? 0.f : seconds;
-    c.secs += seconds;
   }
   return c;
 }
@@ -490,6 +495,7 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
+  c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -518,7 +524,6 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
       seconds *= trans_density_factor_[node->density()];
 
     c.cost += shortest_ ? 0.f : seconds;
-    c.secs += seconds;
   }
   return c;
 }
@@ -622,6 +627,7 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_use_trails(kDefaultUseTrails);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
+    pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
   }
 }
 

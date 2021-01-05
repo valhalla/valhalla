@@ -118,6 +118,8 @@ inline TripLeg_Node_Type GetTripLegNodeType(const baldr::NodeType node_type) {
       return TripLeg_Node_Type_kBorderControl;
     case baldr::NodeType::kTollGantry:
       return TripLeg_Node_Type_kTollGantry;
+    case baldr::NodeType::kSumpBuster:
+      return TripLeg_Node_Type_kSumpBuster;
   }
   auto num = static_cast<uint8_t>(node_type);
   throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
@@ -206,6 +208,8 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
 std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& incident_type);
 // Get the string representing the incident-Impact
 const char* incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impact& impact);
+// Get the string representing the guidance view type
+const std::string& GuidanceViewTypeToString(const valhalla::DirectionsLeg_GuidanceView_Type type);
 
 // to use protobuflite we cant use descriptors which means we cant translate enums to strings
 // and so we reimplement the ones we use here. newer versions of protobuf provide these even

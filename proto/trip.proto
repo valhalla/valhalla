@@ -20,6 +20,7 @@ message TripLeg {
     repeated SignElement guide_toward_locations = 6;  // The list of guide toward locations, examples: Lewistown or US 15
     repeated SignElement junction_names = 7;          // The list of junction names, examples: 万年橋東 or Mannenbashi East
     repeated SignElement guidance_view_junctions = 8; // The list of guidance view junctions, examples: AB12345;1 or AB12345;E
+    repeated SignElement guidance_view_signboards = 9; // The list of guidance view signboards, examples: SI_721701166;1 or SI_721701166;2
   }
 
   enum Traversability {
@@ -186,7 +187,7 @@ message TripLeg {
 
   message Edge {
     repeated StreetName name = 1;           // street names
-    optional float length = 2;              // km
+    optional float length_km = 2;           // km
     optional float speed = 3;               // km/h
     optional RoadClass road_class = 4;
     optional uint32 begin_heading = 5;      // 0-359
@@ -276,6 +277,7 @@ message TripLeg {
       kMotorwayJunction = 9;        // Highway = motorway_junction
       kBorderControl = 10;          // Border control
       kTollGantry = 11;             // Toll gantry
+      kSumpBuster = 12;             // Sump Buster
     }
 
     optional Edge edge = 1;
@@ -303,6 +305,8 @@ message TripLeg {
     repeated uint32 time = 1 [packed=true]; // milliseconds
     repeated uint32 length = 2 [packed=true]; // decimeters
     repeated uint32 speed = 3 [packed=true]; // decimeters per sec
+    // 4 is reserved
+    repeated uint32 speed_limit = 5 [packed=true]; // speed limit in kph
   }
 
   // we encapsulate the real incident object here so we can add information
@@ -325,6 +329,7 @@ message TripLeg {
   optional BoundingBox bbox = 9;
   optional ShapeAttributes shape_attributes = 10;
   repeated Incident incidents = 11;
+  repeated string algorithms = 12;
 }
 
 message TripRoute {

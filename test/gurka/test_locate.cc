@@ -1,8 +1,7 @@
 #include "baldr/openlr.h"
 #include "baldr/rapidjson_utils.h"
 #include "gurka.h"
-#include "test/util/traffic_utils.h"
-#include <gtest/gtest.h>
+#include "test.h"
 
 using namespace valhalla;
 
@@ -35,7 +34,7 @@ TEST(locate, basic_properties) {
                             {"mjolnir.reclassify_links", "0"},
                             {"mjolnir.traffic_extract", "test/data/gurka_locate_basic/traffic.tar"},
                         });
-  valhalla_tests::utils::build_live_traffic_data(map.config);
+  test::build_live_traffic_data(map.config);
 
   // turn on some traffic for fun
   auto traffic_cb = [](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
@@ -50,10 +49,10 @@ TEST(locate, basic_properties) {
     current->speed3 = 122 >> 1;
     current->congestion3 = 63; // high
   };
-  valhalla_tests::utils::customize_live_traffic_data(map.config, traffic_cb);
+  test::customize_live_traffic_data(map.config, traffic_cb);
 
   // call locate to see some info about each edge
-  auto reader = valhalla_tests::utils::make_clean_graphreader(map.config.get_child("mjolnir"));
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   std::string json;
   auto result = gurka::locate(map, {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "a", "b"},
                               "none", {}, reader, &json);

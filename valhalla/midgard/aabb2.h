@@ -265,20 +265,27 @@ public:
   /**
    * Expands (if necessary) the bounding box to include the specified point.
    * @param  point  Point to "add" to this bounding box.
+   * @return returns true if the bbox was expanded
    */
-  void Expand(const coord_t& point) {
+  bool Expand(const coord_t& point) {
+    bool expanded = false;
     if (point.x() < minx_) {
       minx_ = point.x();
+      expanded = true;
     }
     if (point.y() < miny_) {
       miny_ = point.y();
+      expanded = true;
     }
     if (point.x() > maxx_) {
       maxx_ = point.x();
+      expanded = true;
     }
     if (point.y() > maxy_) {
       maxy_ = point.y();
+      expanded = true;
     }
+    return expanded;
   }
 
 protected:

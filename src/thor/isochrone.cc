@@ -13,7 +13,7 @@ using namespace valhalla::sif;
 namespace {
 
 // Method to get an operator Id from a map of operator strings vs. Id.
-uint32_t GetOperatorId(const GraphTile* tile,
+uint32_t GetOperatorId(const graph_tile_ptr& tile,
                        uint32_t routeid,
                        std::unordered_map<std::string, uint32_t>& operators) {
   const TransitRoute* transit_route = tile->GetTransitRoute(routeid);
@@ -187,7 +187,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
                               const PointLL& ll,
                               float secs0) {
   // Skip if the opposing edge has already been settled.
-  const GraphTile* t2;
+  graph_tile_ptr t2;
   GraphId opp = graphreader.GetOpposingEdgeId(pred.edgeid(), t2);
   EdgeStatusInfo es = edgestatus_.Get(opp);
   if (es.set() == EdgeSet::kPermanent) {
@@ -195,7 +195,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
   }
 
   // Get the DirectedEdge because we'll need its shape
-  const GraphTile* tile = graphreader.GetGraphTile(pred.edgeid().Tile_Base());
+  graph_tile_ptr tile = graphreader.GetGraphTile(pred.edgeid().Tile_Base());
   const DirectedEdge* edge = tile->directededge(pred.edgeid());
 
   // Transit lines and ferries can't really be "reached" you really just
@@ -276,7 +276,7 @@ void Isochrone::UpdateIsoTile(const EdgeLabel& pred,
 
 // here we mark the cells of the isochrone along the edge we just reached up to its end node
 void Isochrone::ExpandingNode(baldr::GraphReader& graphreader,
-                              const baldr::GraphTile* tile,
+                              graph_tile_ptr tile,
                               const baldr::NodeInfo* node,
                               const sif::EdgeLabel& current,
                               const sif::EdgeLabel* previous) {
@@ -285,7 +285,7 @@ void Isochrone::ExpandingNode(baldr::GraphReader& graphreader,
   UpdateIsoTile(current, graphreader, node->latlng(tile->header()->base_ll()), secs0);
 }
 
-ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& graphreader,
+ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreader*/,
                                                 const sif::EdgeLabel& pred,
                                                 const InfoRoutingType route_type) {
   if (route_type == InfoRoutingType::multi_modal) {

@@ -119,7 +119,8 @@ DirectedEdge make_directed_edge(const GraphId endnode,
                                 const uint32_t localedgeidx) {
   DirectedEdge directededge;
   directededge.set_endnode(endnode);
-  directededge.set_length(std::max(1.0f, valhalla::midgard::length(shape)));
+
+  directededge.set_length(valhalla::midgard::length(shape));
   directededge.set_use(conn.use);
   directededge.set_speed(conn.speed);
   directededge.set_surface(conn.surface);
@@ -167,7 +168,7 @@ std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vecto
   });
 
   std::vector<BSSConnection> res;
-  auto local_level = TileHierarchy::levels().rbegin()->first;
+  auto local_level = TileHierarchy::levels().back().level;
 
   std::map<GraphId, size_t> edge_count;
 
@@ -278,7 +279,7 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
                              const GraphTile& tile,
                              std::mutex& lock,
                              std::vector<BSSConnection>& new_connections) {
-  auto local_level = TileHierarchy::levels().rbegin()->first;
+  auto local_level = TileHierarchy::levels().back().level;
   auto scoped_finally = make_finally([&tilebuilder_local, &tile, &lock]() {
     LOG_INFO("Storing local tile data with bss nodes, tile id: " +
              std::to_string(tile.id().tileid()));
@@ -333,7 +334,8 @@ void project_and_add_bss_nodes(const boost::property_tree::ptree& pt,
   GraphReader reader_local_level(pt);
   for (; tile_start != tile_end; ++tile_start) {
 
-    const GraphTile* local_tile = nullptr;
+
+	graph_tile_ptr local_tile = nullptr;
     std::unique_ptr<GraphTileBuilder> tilebuilder_local = nullptr;
     {
       std::lock_guard<std::mutex> l(lock);
@@ -479,7 +481,7 @@ void create_edges_from_way_node(
   GraphReader reader_local_level(pt);
   for (; tile_start != tile_end; ++tile_start) {
 
-    const GraphTile* local_tile = nullptr;
+	graph_tile_ptr local_tile = nullptr;
     std::unique_ptr<GraphTileBuilder> tilebuilder_local = nullptr;
     {
       std::lock_guard<std::mutex> l(lock);
@@ -579,13 +581,13 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt, const std::string&
   bss_by_tile_t bss_by_tile;
 
   GraphReader reader(pt.get_child("mjolnir"));
-  auto local_level = TileHierarchy::levels().rbegin()->first;
+  auto local_level = TileHierarchy::levels().back().level;
 
   // Group the nodes by their tiles. In the next step, we will work on each tile only once
   for (const auto& node : osm_nodes) {
     auto latlng = node.latlng();
     auto tile_id = TileHierarchy::GetGraphId({latlng.first, latlng.second}, local_level);
-    const GraphTile* local_tile = reader.GetGraphTile(tile_id);
+    graph_tile_ptr local_tile = reader.GetGraphTile(tile_id);
     if (!local_tile) {
       LOG_INFO("Cannot find node in tiles");
       continue;

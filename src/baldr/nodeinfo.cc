@@ -72,7 +72,7 @@ NodeInfo::NodeInfo() {
 }
 
 NodeInfo::NodeInfo(const PointLL& tile_corner,
-                   const std::pair<float, float>& ll,
+                   const PointLL& ll,
                    const uint32_t access,
                    const NodeType type,
                    const bool traffic_signal) {
@@ -84,14 +84,21 @@ NodeInfo::NodeInfo(const PointLL& tile_corner,
 }
 
 // Sets the latitude and longitude.
-void NodeInfo::set_latlng(const PointLL& tile_corner, const std::pair<float, float>& ll) {
+void NodeInfo::set_latlng(const PointLL& tile_corner, const PointLL& ll) {
   // Protect against a node being slightly outside the tile (due to float roundoff)
-  lat_offset_ = ll.second < tile_corner.lat()
-                    ? 0
-                    : static_cast<uint32_t>((ll.second - tile_corner.lat()) / kDegreesPrecision);
-  lon_offset_ = ll.first < tile_corner.lng()
-                    ? 0
-                    : static_cast<uint32_t>((ll.first - tile_corner.lng()) / kDegreesPrecision);
+  lat_offset_ = 0;
+  if (ll.lat() > tile_corner.lat()) {
+    auto lat = std::round((ll.lat() - tile_corner.lat()) / 1e-7);
+    lat_offset_ = lat / 10;
+    lat_offset7_ = lat - lat_offset_ * 10;
+  }
+
+  lon_offset_ = 0;
+  if (ll.lng() > tile_corner.lng()) {
+    auto lon = std::round((ll.lng() - tile_corner.lng()) / 1e-7);
+    lon_offset_ = lon / 10;
+    lon_offset7_ = lon - lon_offset_ * 10;
+  }
 }
 
 // Set the index in the node's tile of its first outbound edge.
@@ -234,7 +241,7 @@ void NodeInfo::set_connecting_wayid(const uint64_t wayid) {
   headings_ = wayid;
 }
 
-json::MapPtr NodeInfo::json(const GraphTile* tile) const {
+json::MapPtr NodeInfo::json(const graph_tile_ptr& tile) const {
   auto m = json::map({
       {"lon", json::fp_t{latlng(tile->header()->base_ll()).first, 6}},
       {"lat", json::fp_t{latlng(tile->header()->base_ll()).second, 6}},

@@ -16,7 +16,7 @@
 namespace {
 
 inline float local_tile_size() {
-  const auto& tiles = valhalla::baldr::TileHierarchy::levels().rbegin()->second.tiles;
+  const auto& tiles = valhalla::baldr::TileHierarchy::levels().back().tiles;
   return tiles.TileSize();
 }
 

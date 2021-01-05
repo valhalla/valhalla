@@ -59,6 +59,12 @@ public:
               const Options& options = Options::default_instance()) = 0;
 
   /**
+   * Returns the name of the algorithm
+   * @return the name of the algorithm
+   */
+  virtual const char* name() const = 0;
+
+  /**
    * Clear the temporary information generated during path construction.
    */
   virtual void Clear() = 0;
@@ -137,7 +143,7 @@ struct EdgeMetadata {
 
   inline static EdgeMetadata make(const baldr::GraphId& node,
                                   const baldr::NodeInfo* nodeinfo,
-                                  const baldr::GraphTile* tile,
+                                  const graph_tile_ptr& tile,
                                   EdgeStatus& edge_status_) {
     baldr::GraphId edge_id = {node.tileid(), node.level(), nodeinfo->edge_index()};
     EdgeStatusInfo* edge_status = edge_status_.GetPtr(edge_id, tile);

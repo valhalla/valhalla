@@ -14,7 +14,7 @@ using namespace valhalla::meili;
 bool ValidateRoute(baldr::GraphReader& graphreader,
                    std::vector<EdgeSegment>::const_iterator segment_begin,
                    std::vector<EdgeSegment>::const_iterator segment_end,
-                   const baldr::GraphTile*& tile) {
+                   graph_tile_ptr& tile) {
   if (segment_begin == segment_end) {
     return true;
   }
@@ -52,8 +52,8 @@ namespace valhalla {
 namespace meili {
 
 EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
-                         float the_source,
-                         float the_target,
+                         double the_source,
+                         double the_target,
                          int the_first_match_idx,
                          int the_last_match_idx,
                          bool disconnect,
@@ -65,8 +65,8 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
     throw std::invalid_argument("Invalid edgeid");
   }
 
-  if (!(0.f <= source && source <= target && target <= 1.f)) {
-    throw std::invalid_argument("Expect 0.f <= source <= target <= 1.f, but you got source = " +
+  if (!(0 <= source && source <= target && target <= 1)) {
+    throw std::invalid_argument("Expect 0 <= source <= target <= 1, but you got source = " +
                                 std::to_string(source) + " and target = " + std::to_string(target));
   }
 }
@@ -183,7 +183,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
   }
 
   std::vector<EdgeSegment> route;
-  const baldr::GraphTile* tile = nullptr;
+  graph_tile_ptr tile;
 
   // Merge segments into route
   // std::deque<int> match_indices;

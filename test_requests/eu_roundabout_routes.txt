@@ -41,3 +41,4 @@
 -j '{"locations":[{"lat":49.082375,"lon":6.109714,"street":"Rue de Jouy"},{"lat":49.081211,"lon":6.109402,"street":"Rue des Gravières"}],"costing":"pedestrian","directions_options":{"units":"kilometers"}}'
 -j '{"locations":[{"lat":49.082375,"lon":6.109714,"street":"Rue de Jouy"},{"lat":49.082184,"lon":6.109654,"street":"Rue de Jouy"}],"costing":"pedestrian","directions_options":{"units":"kilometers"}}'
 -j '{"locations":[{"lat":50.784584,"lon":-1.978253},{"lat":50.787511541415796,"lon":-1.9774590328679267}],"costing":"auto","units":"kilometers"}'
+-j '{"locations":[{"lat":40.328152,"lon":-3.880674,"street":"Calle de Granada"},{"lat":40.336296,"lon":-3.888885,"street":"M-856"}],"costing":"auto","units":"kilometers"}'

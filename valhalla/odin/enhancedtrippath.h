@@ -138,8 +138,8 @@ public:
     return mutable_edge_->tagged_name();
   }
 
-  float length() const {
-    return mutable_edge_->length();
+  float length_km() const {
+    return mutable_edge_->length_km();
   }
 
   float speed() const {
@@ -405,6 +405,8 @@ public:
 
   bool IsForward(uint32_t prev2curr_turn_degree) const;
 
+  bool IsForkForward(uint32_t prev2curr_turn_degree) const;
+
   bool IsWiderForward(uint32_t prev2curr_turn_degree) const;
 
   bool IsStraightest(uint32_t prev2curr_turn_degree, uint32_t straightest_xedge_turn_degree) const;
@@ -505,6 +507,9 @@ public:
   std::string ToString() const;
 
 protected:
+  ::valhalla::TripLeg_Traversability
+  GetTravelModeTraversability(const TripLeg_TravelMode travel_mode) const;
+
   TripLeg_IntersectingEdge* mutable_intersecting_edge_;
 };
 
@@ -653,6 +658,23 @@ public:
                                                       const TripLeg_TravelMode travel_mode,
                                                       RoadClass path_road_class);
 
+  bool HasForwardTraversableUseXEdge(uint32_t from_heading,
+                                     const TripLeg_TravelMode travel_mode,
+                                     const TripLeg_Use use);
+
+  bool HasSimilarStraightSignificantRoadClassXEdge(uint32_t path_turn_degree,
+                                                   uint32_t from_heading,
+                                                   const TripLeg_TravelMode travel_mode,
+                                                   RoadClass path_road_class);
+
+  bool HasSimilarStraightNonRampOrSameNameRampXEdge(uint32_t path_turn_degree,
+                                                    uint32_t from_heading,
+                                                    const TripLeg_TravelMode travel_mode);
+
+  bool HasOnlyForwardTraversableRoadClassXEdges(uint32_t from_heading,
+                                                const TripLeg_TravelMode travel_mode,
+                                                RoadClass path_road_class);
+
   bool HasWiderForwardTraversableIntersectingEdge(uint32_t from_heading,
                                                   const TripLeg_TravelMode travel_mode);
 
@@ -699,6 +721,7 @@ public:
   bool IsMotorwayJunction() const;
   bool IsBorderControl() const;
   bool IsTollGantry() const;
+  bool IsSumpBuster() const;
 
   std::string ToString() const;
 

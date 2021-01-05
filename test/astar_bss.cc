@@ -40,6 +40,12 @@ void write_config(const std::string& filename) {
   file.close();
 }
 
+// NOTE: the default radius is set to 10 below. this is because of the stupid way we connect transit
+// and bike share stations to the graph by essentially duplicating the edge instead of creating a
+// false node. if you duplicate the edge but you use a radius of 0, you get a random edge candidate in
+// loki which leads to random results when you make changes to the way the tiles are built. so to
+// avoid that we set a radius here to get both sets of edges and let the algorithm take the cheaper
+// one. this only worked before by luck
 boost::property_tree::ptree get_conf(const char* tiles) {
   std::stringstream ss;
   ss << R"({
@@ -48,7 +54,7 @@ boost::property_tree::ptree get_conf(const char* tiles) {
       "loki":{
         "actions":["route"],
         "logging":{"long_request": 100},
-        "service_defaults":{"minimum_reachability": 2,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60, "street_side_max_distance": 1000}
+        "service_defaults":{"minimum_reachability": 2,"radius": 10,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60, "street_side_max_distance": 1000}
       },
       "thor":{"logging":{"long_request": 100}},
       "odin":{"logging":{"long_request": 100}},
@@ -106,7 +112,7 @@ using BssManeuverType = valhalla::DirectionsLeg_Maneuver_BssManeuverType;
 void test(const std::string& request,
           const std::vector<TravelMode>& expected_travel_modes,
           const std::vector<std::string>& expected_route,
-          // We mark only the maneuvers that are RentBikbe and ReturnBike
+          // We mark only the maneuvers that are RentBike and ReturnBike
           const std::map<size_t, BssManeuverType>& expected_bss_maneuver,
           const boost::optional<const std::string&>& expected_shape = {}) {
 
@@ -116,8 +122,17 @@ void test(const std::string& request,
   const auto& legs = response.trip().routes(0).legs();
   const auto& directions = response.directions().routes(0).legs();
 
-  EXPECT_EQ(legs.size(), 1);
-  EXPECT_EQ(directions.size(), 1);
+  std::cout << legs.begin()->shape() << std::endl;
+  auto shape = midgard::decode<std::vector<midgard::PointLL>>(legs.begin()->shape());
+  for (const auto& node : legs.begin()->node()) {
+    if (node.has_edge()) {
+      std::vector<midgard::PointLL> subshape(shape.begin() + node.edge().begin_shape_index(),
+                                             shape.begin() + node.edge().end_shape_index() + 1);
+      std::cout << midgard::encode(subshape) << std::endl;
+    }
+  }
+
+  EXPECT_EQ(legs.size(), 1) << "Should have 1 leg";
 
   // We going to count how many times the travel_mode has been changed
   std::vector<valhalla::DirectionsLeg_TravelMode> travel_modes;
@@ -134,10 +149,11 @@ void test(const std::string& request,
       if (it == expected_bss_maneuver.end()) {
         EXPECT_EQ(m.bss_maneuver_type(),
                   BssManeuverType::DirectionsLeg_Maneuver_BssManeuverType_kNoneAction)
-            << "BSS maneuver type at " << idx << " is incorrect";
+            << "BSS maneuver type at " + std::to_string(idx) + " is incorrect";
+
       } else {
         EXPECT_EQ(m.bss_maneuver_type(), it->second)
-            << "BSS maneuver type at " << idx << " is incorrect";
+            << "BSS maneuver type at " + std::to_string(idx) + " is incorrect";
       }
       travel_modes.push_back(m.travel_mode());
       std::string name;
@@ -154,8 +170,16 @@ void test(const std::string& request,
   }
 
   travel_modes.erase(std::unique(travel_modes.begin(), travel_modes.end()), travel_modes.end());
-  EXPECT_EQ(travel_modes, expected_travel_modes);
-  EXPECT_EQ(route, expected_route);
+  std::copy(travel_modes.begin(), travel_modes.end(), std::ostream_iterator<int>(std::cout, ", "));
+  std::cout << std::endl;
+  EXPECT_TRUE(std::equal(travel_modes.begin(), travel_modes.end(), expected_travel_modes.begin(),
+                         expected_travel_modes.end()))
+      << "Should have " + std::to_string(expected_travel_modes.size()) + " travel_modes";
+
+  std::copy(route.begin(), route.end(), std::ostream_iterator<std::string>(std::cout, ", "));
+  std::cout << std::endl;
+  EXPECT_TRUE(std::equal(route.begin(), route.end(), expected_route.begin(), expected_route.end()))
+      << "The route is incorrect";
 }
 
 /*
@@ -163,7 +187,9 @@ void test(const std::string& request,
  */
 TEST(AstarBss, test_With_Mode_Changes) {
   std::string request =
-      R"({"locations":[{"lat":48.864655,"lon":2.361374},{"lat":48.859608,"lon":2.36117}],"costing":"bikeshare"})";
+      R"({"locations":[{"lat":48.864655,"lon":2.361374},{"lat":48.859608,"lon":2.36117}],"costing":"bikeshare",
+	       "costing_options":{"pedestrian":{"bss_rent_cost":0,"bss_rent_penalty":0},
+	                          "bicycle"   :{"bss_return_cost":0,"bss_return_penalty":0}}})";
   std::vector<valhalla::DirectionsLeg_TravelMode>
       expected_travel_modes{valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian,
                             valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kBicycle,
@@ -197,11 +223,11 @@ TEST(AstarBss, test_BSS_mode_Without_Mode_Changes) {
       valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
 
   // yes... the departure is still projected on the bss connection..
-  std::vector<std::string> expected_route{"Rue du Grand Prieuré", "Rue Jean-Pierre Timbaud",
+  std::vector<std::string> expected_route{"Rue du Grand Prieuré", "Rue de Crussol",
                                           "Rue Amelot",           "Place Pasdeloup",
                                           "Boulevard du Temple",  "Rue des Filles du Calvaire",
-                                          "Rue de Turenne",       "Rue Debelleyme",
-                                          "Rue de Thorigny",      "Rue de la Perle"};
+                                          "Rue de Turenne",       "Rue Vieille du Temple",
+										  "Rue de la Perle"};
 
   const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
 
@@ -223,11 +249,11 @@ TEST(AstarBss, test_BSS_mode_Without_Mode_Changes_2) {
       valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
 
   // yes... the departure is still projected on the bss connection..
-  std::vector<std::string> expected_route{"Rue du Grand Prieuré", "Rue Jean-Pierre Timbaud",
+  std::vector<std::string> expected_route{"Rue du Grand Prieuré", "Rue de Crussol",
                                           "Rue Amelot",           "Place Pasdeloup",
                                           "Boulevard du Temple",  "Rue des Filles du Calvaire",
-                                          "Rue de Turenne",       "Rue Debelleyme",
-                                          "Rue de Thorigny",      "Rue de la Perle"};
+                                          "Rue de Turenne",       "Rue Vieille du Temple",
+                                          "Rue de la Perle"};
 
   const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
 
@@ -237,13 +263,14 @@ TEST(AstarBss, test_BSS_mode_Without_Mode_Changes_2) {
 // We test if the bss connection edges respect the forward/reverse access
 TEST(AstarBss, test_With_Mode_Changes_2) {
   std::string request =
-      R"({"locations":[{"lat":48.8601411,"lon":2.3716413},{"lat":48.8594916,"lon":2.3602581}],"costing":"bikeshare"})";
+      R"({"locations":[{"lat":48.8601411,"lon":2.3716413},{"lat":48.8594916,"lon":2.3602581}],"costing":"bikeshare",
+	       "costing_options":{"pedestrian":{"bss_rent_cost":0,"bss_rent_penalty":0},
+	                          "bicycle"   :{"bss_return_cost":0,"bss_return_penalty":0}}})";
   std::vector<valhalla::DirectionsLeg_TravelMode>
       expected_travel_modes{valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian,
                             valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kBicycle,
                             valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
   std::vector<std::string> expected_route{"Rue Pelée",
-                                          "Rue Pelée",
                                           "Rue Pelée",
                                           "Rue Alphonse Baudin",
                                           "Rue Saint-Sébastien",
@@ -256,8 +283,8 @@ TEST(AstarBss, test_With_Mode_Changes_2) {
                                           "Rue de la Perle",
                                           "Rue Vieille du Temple"};
   const std::map<size_t, BssManeuverType>&
-      expected_bss_maneuver{{2, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
-                            {11, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
+      expected_bss_maneuver{{1, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
+                            {10, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
 
   test(request, expected_travel_modes, expected_route, expected_bss_maneuver);
 }
@@ -370,7 +397,7 @@ TEST(AstarBss, test_BSSConnections_on_Pedestrian_and_Bicycle) {
                             {11, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
 
   std::string expected_shape =
-      "c~le|AykdoCwDzIsArCkAvC]v@iBpEeAoAdAnAhBqE\\w@jAwC}c@_i@{AeBs@mCsF{T_@aB]uAyQez@e@eC{Ar@ig@dX{t@``@wCzAyBuH}EeLiCvEmD|Ga]~q@sFmHsPsTu@eA{AoBe@o@e@o@}D_CcB}@wChC_YfVt@hCjA~Dt@zB?nBeA|BV\\d@j@yBpE";
+      "e~le|A_ldoCyD~IoAtCkArC]z@kBpEeAsAdArAjBqE\\{@jAsCad@ai@yAgBo@iCuF_Ua@_B[uAyQgz@i@cCwAt@mg@bXyt@b`@yCvAyBqH{EgLiCvEoD|G{\\`r@wFqHoPqTy@gAyAkBe@o@i@q@{D_CeB{@wCfC{XfVt@jCjA~Dn@xB?lBcA|BV\\f@r@wBlE";
   test(request, expected_travel_modes, expected_route, expected_bss_maneuver, expected_shape);
 }
 

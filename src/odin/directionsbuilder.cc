@@ -127,19 +127,19 @@ void DirectionsBuilder::UpdateHeading(EnhancedTripLeg* etp) {
       min_edge_length = kMinPedestrianBicycleEdgeLength;
     }
 
-    if (curr_edge && (curr_edge->length() < min_edge_length)) {
+    if (curr_edge && (curr_edge->length_km() < min_edge_length)) {
 
       // Set the current begin heading
-      if (prev_edge && (prev_edge->length() >= min_edge_length)) {
+      if (prev_edge && (prev_edge->length_km() >= min_edge_length)) {
         curr_edge->set_begin_heading(prev_edge->end_heading());
-      } else if (next_edge && (next_edge->length() >= min_edge_length)) {
+      } else if (next_edge && (next_edge->length_km() >= min_edge_length)) {
         curr_edge->set_begin_heading(next_edge->begin_heading());
       }
 
       // Set the current end heading
-      if (next_edge && (next_edge->length() >= min_edge_length)) {
+      if (next_edge && (next_edge->length_km() >= min_edge_length)) {
         curr_edge->set_end_heading(next_edge->begin_heading());
-      } else if (prev_edge && (prev_edge->length() >= min_edge_length)) {
+      } else if (prev_edge && (prev_edge->length_km() >= min_edge_length)) {
         curr_edge->set_end_heading(prev_edge->end_heading());
       }
     }

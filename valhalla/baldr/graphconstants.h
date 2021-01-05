@@ -21,10 +21,6 @@ constexpr uint32_t kMaxGraphId = 2097151;
 // Invalid edge label
 constexpr uint32_t kInvalidLabel = std::numeric_limits<uint32_t>::max();
 
-// A value to use for invalid latitude/longitudes (i.e. uninitialized)
-constexpr float kInvalidLatitude = std::numeric_limits<float>::max();
-constexpr float kInvalidLongitude = std::numeric_limits<float>::max();
-
 // Access bit field constants. Access in directed edge allows 12 bits.
 constexpr uint16_t kAutoAccess = 1;
 constexpr uint16_t kPedestrianAccess = 2;
@@ -211,7 +207,8 @@ enum class NodeType : uint8_t {
   kParking = 8,                 // Parking location
   kMotorWayJunction = 9,        // Highway = motorway_junction
   kBorderControl = 10,          // Border control
-  kTollGantry = 11              // Toll gantry
+  kTollGantry = 11,             // Toll gantry
+  kSumpBuster = 12              // Sump Buster
 };
 inline std::string to_string(NodeType n) {
   static const std::unordered_map<uint8_t, std::string> NodeTypeStrings =
@@ -226,7 +223,8 @@ inline std::string to_string(NodeType n) {
        {static_cast<uint8_t>(NodeType::kParking), "parking"},
        {static_cast<uint8_t>(NodeType::kMotorWayJunction), "motor_way_junction"},
        {static_cast<uint8_t>(NodeType::kBorderControl), "border_control"},
-       {static_cast<uint8_t>(NodeType::kTollGantry), "toll_gantry"}};
+       {static_cast<uint8_t>(NodeType::kTollGantry), "toll_gantry"},
+       {static_cast<uint8_t>(NodeType::kSumpBuster), "sump_buster"}};
 
   auto i = NodeTypeStrings.find(static_cast<uint8_t>(n));
   if (i == NodeTypeStrings.cend()) {

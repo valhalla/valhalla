@@ -104,11 +104,8 @@ EdgeInfo::GetNamesAndTypes(bool include_tagged_names) const {
       if (ni->name_offset_ < names_list_length_) {
         std::string name = names_list_ + ni->name_offset_;
         if (name.size() > 1) {
-          uint8_t num = 0;
           try {
-            num = std::stoi(name.substr(0, 1));
             name_type_pairs.push_back({name.substr(1), false});
-
           } catch (const std::invalid_argument& arg) {
             LOG_DEBUG("invalid_argument thrown for name: " + name);
           }
@@ -165,6 +162,7 @@ uint16_t EdgeInfo::GetTypes() const {
 }
 
 // Returns shape as a vector of PointLL
+// TODO: use shared ptr here so that we dont have to worry about lifetime
 const std::vector<midgard::PointLL>& EdgeInfo::shape() const {
   // if we haven't yet decoded the shape, do so
   if (encoded_shape_ != nullptr && shape_.empty()) {

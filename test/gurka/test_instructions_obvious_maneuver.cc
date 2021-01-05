@@ -128,7 +128,7 @@ TEST_F(InstructionsObviousManeuver, NotObviousBecauseSameNameIntersectingEdgeRam
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
-                                                DirectionsLeg_Maneuver_Type_kContinue,
+                                                DirectionsLeg_Maneuver_Type_kStayLeft,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
   int maneuver_index = 0;
 
@@ -140,8 +140,8 @@ TEST_F(InstructionsObviousManeuver, NotObviousBecauseSameNameIntersectingEdgeRam
 
   // Verify continue because of same name intersecting edge
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, ++maneuver_index,
-                                                            "Continue on US 422.",
-                                                            "Continue on US 4 22.",
-                                                            "Continue on US 4 22.",
+                                                            "Keep left to take US 422.",
+                                                            "Keep left to take US 4 22.",
+                                                            "Keep left to take US 4 22.",
                                                             "Continue for 6 kilometers.");
 }

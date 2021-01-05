@@ -52,7 +52,8 @@ namespace mjolnir {
  */
 std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) {
   std::vector<std::string> tokens;
-  boost::algorithm::split(tokens, tag_value, std::bind1st(std::equal_to<char>(), delim),
+  boost::algorithm::split(tokens, tag_value,
+                          std::bind(std::equal_to<char>(), delim, std::placeholders::_1),
                           boost::algorithm::token_compress_off);
   return tokens;
 }
@@ -190,7 +191,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   if (start_stage == BuildStage::kInitialize) {
     // set up the directories and purge old tiles if starting at the parsing stage
     for (const auto& level : valhalla::baldr::TileHierarchy::levels()) {
-      auto level_dir = tile_dir + std::to_string(level.first);
+      auto level_dir = tile_dir + std::to_string(level.level);
       if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
         LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
         filesystem::remove_all(level_dir);
@@ -199,8 +200,7 @@ bool build_tile_set(const boost::property_tree::ptree& config,
 
     // check for transit level.
     auto level_dir =
-        tile_dir +
-        std::to_string(valhalla::baldr::TileHierarchy::levels().rbegin()->second.level + 1);
+        tile_dir + std::to_string(valhalla::baldr::TileHierarchy::GetTransitLevel().level);
     if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
       LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
       filesystem::remove_all(level_dir);
@@ -266,8 +266,8 @@ bool build_tile_set(const boost::property_tree::ptree& config,
   if (start_stage <= BuildStage::kParseNodes && BuildStage::kParseNodes <= end_stage) {
     // Read the OSM protocol buffer file. Callbacks for nodes
     // are defined within the PBFParser class
-    PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, ways_bin, way_nodes_bin,
-                               bss_nodes_bin, osm_data);
+    PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, way_nodes_bin, bss_nodes_bin,
+                               osm_data);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
     if (release_osmpbf_memory) {

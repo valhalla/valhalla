@@ -7,10 +7,11 @@
 #include "midgard/util.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
+#include "sif/osrm_car_duration.h"
 #include <cassert>
 
 #ifdef INLINE_TEST
-#include "test/test.h"
+#include "test.h"
 #include "worker.h"
 #include <random>
 #endif
@@ -193,7 +194,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const GraphTile* tile,
+                       const graph_tile_ptr& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -220,7 +221,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const GraphTile* tile,
+                              const graph_tile_ptr& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -248,7 +249,7 @@ public:
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::GraphTile* tile,
+                        const graph_tile_ptr& tile,
                         const uint32_t seconds) const override;
 
   /**
@@ -287,7 +288,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const override {
-    return speedfactor_[kMaxAssumedSpeed];
+    return speedfactor_[top_speed_];
   }
 
   /**
@@ -304,7 +305,7 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const override {
+  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
@@ -326,10 +327,7 @@ public:
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
-
-  uint32_t top_speed_; // Top speed the motorized scooter can go. Used to avoid roads
-                       // with higher speeds than it
-  float road_factor_;  // Road factor based on use_primary
+  float road_factor_; // Road factor based on use_primary
 
   // Elevation/grade penalty (weighting applied based on the edge's weighted
   // grade (relative value from 0-15)
@@ -356,9 +354,6 @@ MotorScooterCost::MotorScooterCost(const CostingOptions& costing_options)
     density_factor_[d] = 0.85f + (d * 0.018f);
   }
 
-  // Set top speed for motor scooter
-  top_speed_ = costing_options.top_speed();
-
   // Set grade penalties based on use_hills option.
   // Scale from 0 (avoid hills) to 1 (don't avoid hills)
   float use_hills = costing_options.use_hills();
@@ -378,7 +373,7 @@ MotorScooterCost::MotorScooterCost(const CostingOptions& costing_options)
 // Check if access is allowed on the specified edge.
 bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
                                const EdgeLabel& pred,
-                               const GraphTile* tile,
+                               const graph_tile_ptr& tile,
                                const baldr::GraphId& edgeid,
                                const uint64_t current_time,
                                const uint32_t tz_index,
@@ -401,7 +396,7 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
 bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                       const EdgeLabel& pred,
                                       const baldr::DirectedEdge* opp_edge,
-                                      const GraphTile* tile,
+                                      const graph_tile_ptr& tile,
                                       const baldr::GraphId& opp_edgeid,
                                       const uint64_t current_time,
                                       const uint32_t tz_index,
@@ -421,7 +416,7 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
 }
 
 Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
-                                const baldr::GraphTile* tile,
+                                const graph_tile_ptr& tile,
                                 const uint32_t seconds) const {
   auto speed = tile->GetSpeed(edge, flow_mask_, seconds);
 
@@ -462,6 +457,7 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, pred, idx);
+  c.secs = OSRMCarTurnDuration(edge, node, idx);
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -490,7 +486,6 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
       seconds *= trans_density_factor_[node->density()];
 
     c.cost += shortest_ ? 0.f : seconds;
-    c.secs += seconds;
   }
   return c;
 }
@@ -506,6 +501,7 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
+  c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -534,7 +530,6 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
       seconds *= trans_density_factor_[node->density()];
 
     c.cost += shortest_ ? 0.f : seconds;
-    c.secs += seconds;
   }
   return c;
 }
@@ -597,7 +592,7 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
         kUseFerryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_ferry")
                            .get_value_or(kDefaultUseFerry)));
 
-    // top_speed
+    // top_speed; override defaults
     pbf_costing_options->set_top_speed(
         kTopSpeedRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/top_speed")
                            .get_value_or(kDefaultTopSpeed)));
@@ -655,6 +650,7 @@ public:
   using MotorScooterCost::ferry_transition_cost_;
   using MotorScooterCost::gate_cost_;
   using MotorScooterCost::maneuver_penalty_;
+  using MotorScooterCost::top_speed_;
 };
 
 TestMotorScooterCost* make_motorscootercost_from_json(const std::string& property, float testVal) {

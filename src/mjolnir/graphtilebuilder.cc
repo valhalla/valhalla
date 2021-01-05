@@ -25,7 +25,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
                                    const GraphId& graphid,
                                    bool deserialize,
                                    bool serialize_turn_lanes)
-    : tile_dir_(tile_dir), GraphTile(tile_dir, graphid) {
+    : GraphTile(tile_dir, graphid), tile_dir_(tile_dir) {
 
   // Copy tile header to a builder (if tile exists). Always set the tileid
   if (header_) {
@@ -890,18 +890,19 @@ void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
 
 // return this tiles' edges' bins and its edges' tweeners' bins
 using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount>>;
-std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const GraphTile* tile,
+std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
                                                                        tweeners_t& tweeners) {
+  assert(tile);
   std::array<std::vector<GraphId>, kBinCount> bins;
   // we store these at the highest level
-  auto max_level = TileHierarchy::levels().rbegin()->first;
+  auto max_level = TileHierarchy::levels().back().level;
   // skip transit or other special levels and empty tiles
   if (tile->header()->graphid().level() > max_level || tile->header()->directededgecount() == 0) {
     return bins;
   }
   // is this the highest level
   auto max = tile->header()->graphid().level() == max_level;
-  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
+  const auto& tiles = TileHierarchy::levels().back().tiles;
 
   // each edge please
   std::unordered_set<uint64_t> ids(tile->header()->directededgecount() / 2);
@@ -961,8 +962,9 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
 }
 
 void GraphTileBuilder::AddBins(const std::string& tile_dir,
-                               const GraphTile* tile,
+                               const graph_tile_ptr& tile,
                                const std::array<std::vector<GraphId>, kBinCount>& more_bins) {
+  assert(tile);
   // read bins and append and keep track of how much is appended
   std::vector<GraphId> bins[kBinCount];
   uint32_t shift = 0;

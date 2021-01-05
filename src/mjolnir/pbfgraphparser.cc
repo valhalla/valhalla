@@ -37,7 +37,7 @@ constexpr uint32_t kAbsurdRoadClass = 777777;
 
 // Convenience method to get a number from a string. Uses try/catch in case
 // stoi throws an exception
-int get_number(const std::string& tag, const std::string& value) {
+int get_number(const std::string& tag, const std::string& value) { // NOLINT
   int num = -1;
   try {
     num = stoi(value);
@@ -63,8 +63,8 @@ public:
 
     highway_cutoff_rc_ = RoadClass::kPrimary;
     for (auto& level : TileHierarchy::levels()) {
-      if (level.second.name == "highway") {
-        highway_cutoff_rc_ = level.second.importance;
+      if (level.name == "highway") {
+        highway_cutoff_rc_ = level.importance;
       }
     }
 
@@ -682,18 +682,18 @@ public:
     tag_handlers_["bridge"] = [this]() { way_.set_bridge(tag_.second == "true" ? true : false); };
     tag_handlers_["seasonal"] = [this]() { way_.set_seasonal(tag_.second == "true" ? true : false); };
     tag_handlers_["bike_network_mask"] = [this]() { way_.set_bike_network(std::stoi(tag_.second)); };
-    tag_handlers_["bike_national_ref"] = [this]() {
-      if (!tag_.second.empty())
-        way_.set_bike_national_ref_index(osmdata_.name_offset_map.index(tag_.second));
-    };
-    tag_handlers_["bike_regional_ref"] = [this]() {
-      if (!tag_.second.empty())
-        way_.set_bike_regional_ref_index(osmdata_.name_offset_map.index(tag_.second));
-    };
-    tag_handlers_["bike_local_ref"] = [this]() {
-      if (!tag_.second.empty())
-        way_.set_bike_local_ref_index(osmdata_.name_offset_map.index(tag_.second));
-    };
+    //    tag_handlers_["bike_national_ref"] = [this]() {
+    //      if (!tag_.second.empty())
+    //        way_.set_bike_national_ref_index(osmdata_.name_offset_map.index(tag_.second));
+    //    };
+    //    tag_handlers_["bike_regional_ref"] = [this]() {
+    //      if (!tag_.second.empty())
+    //        way_.set_bike_regional_ref_index(osmdata_.name_offset_map.index(tag_.second));
+    //    };
+    //    tag_handlers_["bike_local_ref"] = [this]() {
+    //      if (!tag_.second.empty())
+    //        way_.set_bike_local_ref_index(osmdata_.name_offset_map.index(tag_.second));
+    //    };
     tag_handlers_["destination"] = [this]() {
       if (!tag_.second.empty()) {
         way_.set_destination_index(osmdata_.name_offset_map.index(tag_.second));
@@ -772,6 +772,15 @@ public:
     tag_handlers_["guidance_view:jct:overlay:backward"] = [this]() {
       way_.set_bwd_jct_overlay_index(osmdata_.name_offset_map.index(tag_.second));
     };
+    tag_handlers_["guidance_view:signboard:base"] = [this]() {
+      way_.set_fwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["guidance_view:signboard:base:forward"] = [this]() {
+      way_.set_fwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["guidance_view:signboard:base:backward"] = [this]() {
+      way_.set_bwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
+    };
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
@@ -811,7 +820,7 @@ public:
         if (key_value.first == "amenity" && key_value.second == "bicycle_rental") {
           // Create a new node and set its attributes
           OSMNode n{osmid};
-          n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
+          n.set_latlng(lng, lat);
           n.set_type(NodeType::kBikeShare);
           bss_nodes_->push_back(n);
           return; // we are done.
@@ -864,7 +873,7 @@ public:
     // Create a new node and set its attributes
     OSMNode n;
     n.set_id(osmid);
-    n.set_latlng(static_cast<float>(lng), static_cast<float>(lat));
+    n.set_latlng(lng, lat);
     bool intersection = false;
     if (is_highway_junction) {
       n.set_type(NodeType::kMotorWayJunction);
@@ -955,6 +964,14 @@ public:
             ++osmdata_.edge_count;
           }
           n.set_type(NodeType::kTollGantry);
+        }
+      } else if (tag.first == "sump_buster") {
+        if (tag.second == "true") {
+          if (!intersection) {
+            intersection = true;
+            ++osmdata_.edge_count;
+          }
+          n.set_type(NodeType::kSumpBuster);
         }
       } else if (tag.first == "access_mask") {
         n.set_access(std::stoi(tag.second));
@@ -2156,7 +2173,6 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
 
 void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
                                 const std::vector<std::string>& input_files,
-                                const std::string& ways_file,
                                 const std::string& way_nodes_file,
                                 const std::string& bss_nodes_file,
                                 OSMData& osmdata) {

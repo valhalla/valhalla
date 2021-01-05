@@ -7,6 +7,7 @@
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/point2.h>
+
 namespace valhalla {
 namespace midgard {
 
@@ -14,7 +15,7 @@ namespace {
 constexpr double RAD_PER_DEG = valhalla::midgard::kPiDouble / 180.0;
 constexpr double DEG_PER_RAD = 180.0 / valhalla::midgard::kPiDouble;
 } // namespace
-constexpr float INVALID_LL = (float)0xBADBADBAD;
+constexpr double INVALID_LL = (double)0xBADBADBAD;
 /**
  * Longitude, Latitude  point. Derives from Point2 and allows access methods
  * using lng,lat naming. Extends functionality to add heading, curvature,
@@ -203,9 +204,10 @@ public:
 
   /**
    * Test whether this point is to the left of a segment from p1 to p2.
+   * The determinant of the vectors p1->p2 p1->this
    * @param  p1  First point of the segment.
    * @param  p2  End point of the segment.
-   * @return  Returns true if this point is left of the segment.
+   * @return  Returns a positive value if this point is left of the segment.
    */
   virtual value_type IsLeft(const GeoPoint& p1, const GeoPoint& p2) const {
     return (p2.lng() - p1.lng()) * (lat() - p1.lat()) - (lng() - p1.lng()) * (p2.lat() - p1.lat());
@@ -263,18 +265,12 @@ public:
   std::tuple<GeoPoint, PrecisionT, int> Project(const std::vector<GeoPoint>& pts) const;
 };
 
-using PointLL = GeoPoint<float>;
+using PointLL = GeoPoint<double>;
 } // namespace midgard
 } // namespace valhalla
 
 namespace std {
 template <> struct hash<valhalla::midgard::PointLL> {
-  size_t operator()(const valhalla::midgard::PointLL& p) const {
-    uint64_t h;
-    char* b = static_cast<char*>(static_cast<void*>(&h));
-    std::memcpy(b, &p.first, 4);
-    std::memcpy(b + 4, &p.second, 4);
-    return std::hash<uint64_t>()(h);
-  }
+  size_t operator()(const valhalla::midgard::PointLL& p) const;
 };
 } // namespace std

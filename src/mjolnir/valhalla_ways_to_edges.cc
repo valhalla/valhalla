@@ -107,8 +107,8 @@ int main(int argc, char** argv) {
 
   // Get something we can use to fetch tiles
   auto tile_properties = pt.get_child("mjolnir");
-  auto local_level = TileHierarchy::levels().rbegin()->second.level;
-  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
+  auto local_level = TileHierarchy::levels().back().level;
+  auto tiles = TileHierarchy::levels().back().tiles;
 
   // Create an unordered map of OSM ways Ids and their associated graph edges
   std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ways_edges;
@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
       continue;
     }
 
-    const GraphTile* tile = reader.GetGraphTile(edge_id);
+    graph_tile_ptr tile = reader.GetGraphTile(edge_id);
     for (uint32_t n = 0; n < tile->header()->directededgecount(); n++, ++edge_id) {
       const DirectedEdge* edge = tile->directededge(edge_id);
       if (edge->IsTransitLine() || edge->use() == Use::kTransitConnection ||

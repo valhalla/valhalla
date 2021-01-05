@@ -24,7 +24,6 @@
 #define VALHALLA_SOURCE_DIR
 #endif
 
-using namespace std;
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
 
@@ -81,7 +80,7 @@ void CountryAccess(const std::string& config_file) {
   // setup and purge
   GraphReader graph_reader(conf.get_child("mjolnir"));
   for (const auto& level : TileHierarchy::levels()) {
-    auto level_dir = graph_reader.tile_dir() + "/" + std::to_string(level.first);
+    auto level_dir = graph_reader.tile_dir() + "/" + std::to_string(level.level);
     if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
       filesystem::remove_all(level_dir);
     }
@@ -107,8 +106,8 @@ void CountryAccess(const std::string& config_file) {
                                  cr_to_file, osmdata);
 
   PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
-                             {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
-                             way_nodes_file, bss_nodes_file, osmdata);
+                             {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, way_nodes_file,
+                             bss_nodes_file, osmdata);
 
   std::map<valhalla::baldr::GraphId, size_t> tiles =
       GraphBuilder::BuildEdges(conf.get_child("mjolnir"), ways_file, way_nodes_file, nodes_file,
@@ -120,7 +119,8 @@ void CountryAccess(const std::string& config_file) {
 
   // load a tile and test the default access.
   GraphId id(820099, 2, 0);
-  GraphTile t("test/data/amsterdam_tiles", id);
+  auto t = GraphTile::Create("test/data/amsterdam_tiles", id);
+  ASSERT_TRUE(t);
 
   GraphTileBuilder tilebuilder(graph_reader.tile_dir(), id, true);
 
@@ -191,7 +191,8 @@ void CountryAccess(const std::string& config_file) {
 
   // load a tile and test that the country level access is set.
   GraphId id2(820099, 2, 0);
-  GraphTile t2("test/data/amsterdam_tiles", id2);
+  auto t2 = GraphTile::Create("test/data/amsterdam_tiles", id2);
+  ASSERT_TRUE(t2);
 
   GraphReader graph_reader2(conf.get_child("mjolnir"));
   GraphTileBuilder tilebuilder2(graph_reader2.tile_dir(), id2, true);

@@ -53,8 +53,10 @@ set(sources
     nodeinfo.cc
     location.cc
     pathlocation.cc
+    predictedspeeds.cc
     tilehierarchy.cc
     turn.cc
+    shortcut_recovery.h
     streetname.cc
     streetnames.cc
     streetnames_factory.cc

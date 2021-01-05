@@ -19,8 +19,9 @@ using LabelCallback = std::function<void(const EdgeLabel& label)>;
  * @param label_cb          the callback used to emit each label in the path
  * @param source_pct        the percent along the initial edge the source location is
  * @param target_pct        the percent along the final edge the target location is
- * @param date_time         the time string representing the local time before traversing the first
- *                          edge. of the format YYYY-MM-DDTHH:mm
+ * @param time_info         the time tracking information representing the local time before
+ *                          traversing the first edge
+ * @param invariant         static date_time, dont offset the time as the path lengthens
  */
 void recost_forward(baldr::GraphReader& reader,
                     const sif::DynamicCost& costing,
@@ -28,7 +29,8 @@ void recost_forward(baldr::GraphReader& reader,
                     const LabelCallback& label_cb,
                     float source_pct,
                     float target_pct,
-                    const std::string& date_time) {
+                    const baldr::TimeInfo& time_info,
+                    const bool invariant) {
   // out of bounds edge scaling
   if (source_pct < 0.f || source_pct > 1.f || target_pct < 0.f || target_pct > 1.f) {
     throw std::logic_error("Source and target percentages must be between 0 and 1 inclusive");
@@ -41,9 +43,8 @@ void recost_forward(baldr::GraphReader& reader,
   }
 
   // fetch the graph objects
-  const baldr::GraphTile* tile = nullptr;
+  graph_tile_ptr tile;
   const baldr::DirectedEdge* edge = reader.directededge(edge_id, tile);
-  const baldr::NodeInfo* node = edge ? reader.nodeinfo(edge->endnode(), tile) : nullptr;
 
   // first edge is bogus
   if (!edge) {
@@ -55,12 +56,8 @@ void recost_forward(baldr::GraphReader& reader,
     throw std::runtime_error("This path requires different edge access than this costing allows");
   }
 
-  // setup the time tracking
-  baldr::DateTime::tz_sys_info_cache_t tz_cache;
-  std::string dt = date_time;
-  baldr::TimeInfo time_info = baldr::TimeInfo::make(dt, node ? node->timezone() : 0, &tz_cache);
   edge = nullptr;
-  node = nullptr;
+  const baldr::NodeInfo* node = nullptr;
 
   // keep grabbing edges while we get valid ids
   EdgeLabel label;
@@ -86,17 +83,20 @@ void recost_forward(baldr::GraphReader& reader,
       throw std::runtime_error("Edge cannot be found");
     }
 
-    // update the time
-    auto ti = node ? time_info.forward(cost.secs, node->timezone()) : time_info;
+    // Update the time information even if time is invariant to account for timezones
+    const auto seconds_offset = invariant ? 0.f : cost.secs;
+    const auto offset_time =
+        node ? time_info.forward(seconds_offset, static_cast<int>(node->timezone())) : time_info;
 
     // TODO: if this edge begins a restriction, we need to start popping off edges into queue
     // so that we can find if we reach the end of the restriction. then we need to replay the
     // queued edges as normal
     int time_restrictions_TODO = -1;
-
+    // if its not time dependent set to 0 for Allowed method below
+    const uint64_t localtime = offset_time.valid ? offset_time.local_time : 0;
     // this edge is not allowed
     if (predecessor != baldr::kInvalidLabel &&
-        !costing.Allowed(edge, label, tile, edge_id, ti.local_time, node->timezone(),
+        !costing.Allowed(edge, label, tile, edge_id, localtime, offset_time.timezone_index,
                          time_restrictions_TODO)) {
       throw std::runtime_error("This path requires different edge access than this costing allows");
     }
@@ -115,7 +115,7 @@ void recost_forward(baldr::GraphReader& reader,
     // the cost for traversing this intersection
     Cost transition_cost = node ? costing.TransitionCost(edge, node, label) : Cost{};
     // update the cost to the end of this edge
-    cost += transition_cost + costing.EdgeCost(edge, tile, ti.second_of_week) * edge_pct;
+    cost += transition_cost + costing.EdgeCost(edge, tile, offset_time.second_of_week) * edge_pct;
     // update the length to the end of this edge
     length += edge->length() * edge_pct;
     // construct the label

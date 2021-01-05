@@ -8,7 +8,7 @@
 #include "sif/costconstants.h"
 
 #ifdef INLINE_TEST
-#include "test/test.h"
+#include "test.h"
 #include "worker.h"
 #include <random>
 #endif
@@ -224,7 +224,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const GraphTile* tile,
+                       const graph_tile_ptr& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -251,7 +251,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const GraphTile* tile,
+                              const graph_tile_ptr& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -270,7 +270,7 @@ public:
     throw std::runtime_error("PedestrianCost::EdgeCost does not support transit edges");
   }
 
-  bool IsClosed(const baldr::DirectedEdge*, const baldr::GraphTile*) const override {
+  bool IsClosed(const baldr::DirectedEdge*, const graph_tile_ptr&) const override {
     return false;
   }
 
@@ -283,7 +283,7 @@ public:
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::GraphTile* tile,
+                        const graph_tile_ptr& tile,
                         const uint32_t seconds) const override;
 
   /**
@@ -364,7 +364,7 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by pedestrians.
    */
-  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile*) const override {
+  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr&) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
@@ -577,7 +577,7 @@ PedestrianCost::PedestrianCost(const CostingOptions& costing_options)
 // Disallow edges where max. distance will be exceeded.
 bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred,
-                             const GraphTile* tile,
+                             const graph_tile_ptr& tile,
                              const baldr::GraphId& edgeid,
                              const uint64_t current_time,
                              const uint32_t tz_index,
@@ -606,7 +606,7 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
 bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const EdgeLabel& pred,
                                     const baldr::DirectedEdge* opp_edge,
-                                    const GraphTile* tile,
+                                    const graph_tile_ptr& tile,
                                     const baldr::GraphId& opp_edgeid,
                                     const uint64_t current_time,
                                     const uint32_t tz_index,
@@ -632,7 +632,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // Returns the cost to traverse the edge and an estimate of the actual time
 // (in seconds) to traverse the edge.
 Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
-                              const baldr::GraphTile* tile,
+                              const graph_tile_ptr& tile,
                               const uint32_t seconds) const {
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)

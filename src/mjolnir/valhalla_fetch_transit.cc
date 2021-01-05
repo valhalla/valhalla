@@ -166,7 +166,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
           : "";
 
   std::set<GraphId> tiles;
-  const auto& tile_level = TileHierarchy::levels().rbegin()->second;
+  const auto& tile_level = TileHierarchy::levels().back();
   pt_curler_t curler;
   auto request = url("/api/v1/feeds.geojson?per_page=false", pt);
   request += transit_bounding_box;
@@ -285,9 +285,9 @@ void get_stop_stations(Transit& tile,
                        std::unordered_map<std::string, uint64_t>& platforms,
                        const GraphId& tile_id,
                        const ptree& response,
-                       const AABB2<PointLL>& filter,
+                       const AABB2<PointLL>& filter/*,
                        bool tile_within_one_tz,
-                       const std::unordered_multimap<uint32_t, multi_polygon_type>& tz_polys) {
+                       const std::unordered_multimap<uint32_t, multi_polygon_type>& tz_polys*/) {
 
   for (const auto& station_pt : response.get_child("stop_stations")) {
 
@@ -718,7 +718,7 @@ void fetch_tiles(const ptree& pt,
                  std::priority_queue<weighted_tile_t>& queue,
                  unique_transit_t& uniques,
                  std::promise<std::list<GraphId>>& promise) {
-  const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
+  const auto& tiles = TileHierarchy::levels().back().tiles;
   std::list<GraphId> dangling;
   pt_curler_t curler;
   auto now = time(nullptr);
@@ -797,8 +797,8 @@ void fetch_tiles(const ptree& pt,
       // grab some stuff
       response = curler(*request, "stop_stations");
       // copy stops in, keeping map of stopid to graphid
-      get_stop_stations(tile, nodes, platforms, current, response, filter, tile_within_one_tz,
-                        tz_polys);
+      get_stop_stations(tile, nodes, platforms, current, response, filter/*, tile_within_one_tz,
+                        tz_polys*/);
       // please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
 
@@ -978,7 +978,7 @@ void stitch_tiles(const ptree& pt,
                   const std::unordered_set<GraphId>& all_tiles,
                   std::list<GraphId>& tiles,
                   std::mutex& lock) {
-  auto grid = TileHierarchy::levels().rbegin()->second.tiles;
+  auto grid = TileHierarchy::levels().back().tiles;
   auto tile_name = [&pt](const GraphId& id) {
     auto file_name = GraphTile::FileSuffix(id);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
@@ -1157,7 +1157,7 @@ int main(int argc, char** argv) {
   // figure out which transit tiles even exist
   filesystem::recursive_directory_iterator transit_file_itr(
       pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
-      std::to_string(TileHierarchy::levels().rbegin()->first));
+      std::to_string(TileHierarchy::levels().back().level));
   filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
