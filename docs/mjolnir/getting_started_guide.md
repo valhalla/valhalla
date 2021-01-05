@@ -25,7 +25,7 @@ You'll see `valhalla_build_tiles` under the build directory. One level up you'll
 
 Generate your config:
 
-    ../scripts/valhalla_build_config > valhalla.config
+    ../scripts/valhalla_build_config > valhalla.json
 
 Then build some tiles from an extract:
 

@@ -533,18 +533,8 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
                next_man->type() == DirectionsLeg_Maneuver_Type_kRampStraight) {
         LOG_TRACE(
             "+++ Combine: current non-internal turn that is very short in length with the next straight ramp maneuver +++");
-        if (is_first_man) {
-          next_man->set_type(DirectionsLeg_Maneuver_Type_kStart);
-        } else {
-          // Set maneuver type to 'none' so the type will be processed again
-          next_man->set_type(DirectionsLeg_Maneuver_Type_kNone);
-        }
         curr_man = CombineUnspecifiedInternalManeuver(maneuvers, prev_man, curr_man, next_man,
-                                                      next_man->type());
-
-        if (is_first_man) {
-          prev_man = curr_man;
-        }
+                                                      DirectionsLeg_Maneuver_Type_kNone);
         maneuvers_have_been_combined = true;
         ++next_man;
       } else {
