@@ -43,6 +43,7 @@ message TripLeg {
     kCuldesacUse = 9;          // Cul-de-sac (edge that forms a loop and is only
                                // connected at one node to another edge.
     kLivingStreetUse = 10;     // Shared space for cars, bikes, pedestrians
+    kServiceRoadUse = 11;      // Generic service road (not driveway, alley, parking aisle, etc.)
 
     // Bicycle specific uses
     kCyclewayUse = 20;          // Dedicated bicycle path
