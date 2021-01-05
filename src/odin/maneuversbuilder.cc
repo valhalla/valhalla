@@ -370,6 +370,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       }
       // Combine current left unspecified internal maneuver with next left maneuver
       else if (PossibleUnspecifiedInternalManeuver(prev_man, curr_man, next_man) &&
+               prev_man->HasSimilarNames(&(*next_man), true) &&
                (ManeuversBuilder::DetermineRelativeDirection(curr_man->turn_degree()) ==
                 Maneuver::RelativeDirection::kLeft) &&
                (ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()) ==
@@ -386,6 +387,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       }
       // Combine current right unspecified internal maneuver with next right maneuver
       else if (PossibleUnspecifiedInternalManeuver(prev_man, curr_man, next_man) &&
+               prev_man->HasSimilarNames(&(*next_man), true) &&
                (ManeuversBuilder::DetermineRelativeDirection(curr_man->turn_degree()) ==
                 Maneuver::RelativeDirection::kRight) &&
                (ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()) ==
@@ -519,6 +521,22 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         LOG_TRACE("+++ Combine: obvious maneuver +++");
         next_man = CombineManeuvers(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
+      }
+      // Combine current short length non-internal edges (left or right) with next maneuver that is a
+      // kRampStraight NOTE: This should already be marked internal for OSM data so shouldn't happen
+      // for OSM
+      else if (PossibleUnspecifiedInternalManeuver(prev_man, curr_man, next_man) &&
+               ((ManeuversBuilder::DetermineRelativeDirection(curr_man->turn_degree()) ==
+                 Maneuver::RelativeDirection::kLeft) ||
+                (ManeuversBuilder::DetermineRelativeDirection(curr_man->turn_degree()) ==
+                 Maneuver::RelativeDirection::kRight)) &&
+               next_man->type() == DirectionsLeg_Maneuver_Type_kRampStraight) {
+        LOG_TRACE(
+            "+++ Combine: current non-internal turn that is very short in length with the next straight ramp maneuver +++");
+        curr_man = CombineUnspecifiedInternalManeuver(maneuvers, prev_man, curr_man, next_man,
+                                                      DirectionsLeg_Maneuver_Type_kNone);
+        maneuvers_have_been_combined = true;
+        ++next_man;
       } else {
         LOG_TRACE("+++ Do Not Combine +++");
         // Update with no combine
@@ -567,8 +585,7 @@ bool ManeuversBuilder::PossibleUnspecifiedInternalManeuver(std::list<Maneuver>::
       curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive &&
       !prev_man->roundabout() && !curr_man->roundabout() && !next_man->roundabout() &&
       (curr_man->length(Options::kilometers) <= (kMaxInternalLength * kKmPerMeter)) &&
-      prev_man->HasSimilarNames(&(*next_man), true) && curr_man != next_man &&
-      !curr_man->IsStartType() && !next_man->IsDestinationType()) {
+      curr_man != next_man && !curr_man->IsStartType() && !next_man->IsDestinationType()) {
     return true;
   }
   return false;
