@@ -289,11 +289,8 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
 
   for (auto it = new_connections.begin(); it != new_connections.end(); std::advance(it, 4)) {
     size_t edge_index = tilebuilder_local.directededges().size();
-    NodeInfo new_bss_node{tile.header()->base_ll(),
-                          it->bss_ll,
-                          (kPedestrianAccess | kBicycleAccess),
-                          NodeType::kBikeShare,
-                          false};
+    NodeInfo new_bss_node{tile.header()->base_ll(), it->bss_ll, (kPedestrianAccess | kBicycleAccess),
+                          NodeType::kBikeShare, false};
 
     new_bss_node.set_mode_change(true);
     new_bss_node.set_edge_index(edge_index);
@@ -334,8 +331,7 @@ void project_and_add_bss_nodes(const boost::property_tree::ptree& pt,
   GraphReader reader_local_level(pt);
   for (; tile_start != tile_end; ++tile_start) {
 
-
-	graph_tile_ptr local_tile = nullptr;
+    graph_tile_ptr local_tile = nullptr;
     std::unique_ptr<GraphTileBuilder> tilebuilder_local = nullptr;
     {
       std::lock_guard<std::mutex> l(lock);
@@ -481,7 +477,7 @@ void create_edges_from_way_node(
   GraphReader reader_local_level(pt);
   for (; tile_start != tile_end; ++tile_start) {
 
-	graph_tile_ptr local_tile = nullptr;
+    graph_tile_ptr local_tile = nullptr;
     std::unique_ptr<GraphTileBuilder> tilebuilder_local = nullptr;
     {
       std::lock_guard<std::mutex> l(lock);

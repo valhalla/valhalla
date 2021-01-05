@@ -227,7 +227,7 @@ TEST(AstarBss, test_BSS_mode_Without_Mode_Changes) {
                                           "Rue Amelot",           "Place Pasdeloup",
                                           "Boulevard du Temple",  "Rue des Filles du Calvaire",
                                           "Rue de Turenne",       "Rue Vieille du Temple",
-										  "Rue de la Perle"};
+                                          "Rue de la Perle"};
 
   const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
 
