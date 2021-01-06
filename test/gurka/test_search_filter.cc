@@ -229,8 +229,9 @@ protected:
               |    |
     A--1--B---C----D--2--E--J--3--K
              /
-        H---I
-
+            I
+            |
+            H
 
    L-4---5-M-6-N
   )";
@@ -313,8 +314,8 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDeparture) {
                                 {"/date_time/value", "current"},
                                 {costing_speed_type, "current"}},
                                reader);
-    gurka::assert::osrm::expect_steps(result, {"HIC", "CD"});
-    gurka::assert::raw::expect_path(result, {"HIC", "CD", "DE"});
+    gurka::assert::osrm::expect_steps(result, {"BC"});
+    gurka::assert::raw::expect_path(result, {"BC", "CD", "DE"});
 
     // Specify search filter to disable exclude_closures at departure
     const std::string& req_disable_exclude_closures =
@@ -350,6 +351,7 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDestination) {
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
   }
+
   // DE edge is closed in both directions. Route should avoid DE with
   // exclude_closures set to true (default) & and use it otherwise
   {
