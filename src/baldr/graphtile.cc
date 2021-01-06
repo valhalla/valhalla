@@ -27,28 +27,6 @@
 using namespace valhalla::midgard;
 
 namespace {
-struct dir_facet : public std::numpunct<char> {
-protected:
-  virtual char do_thousands_sep() const override {
-    return filesystem::path::preferred_separator;
-  }
-
-  virtual std::string do_grouping() const override {
-    return "\03";
-  }
-};
-struct url_facet : public std::numpunct<char> {
-protected:
-  virtual char do_thousands_sep() const override {
-    return '/';
-  }
-
-  virtual std::string do_grouping() const override {
-    return "\03";
-  }
-};
-const std::locale url_locale(std::locale("C"), new url_facet());
-const std::locale dir_locale(std::locale("C"), new dir_facet());
 const AABB2<PointLL> world_box(PointLL(-180, -90), PointLL(180, 90));
 constexpr float COMPRESSION_HINT = 3.5f;
 
@@ -450,32 +428,29 @@ GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, b
                           : TileHierarchy::levels()[graphid.level()];
 
   // figure out how many digits
-  auto max_id = level.tiles.ncolumns() * level.tiles.nrows() - 1;
-  size_t max_length = static_cast<size_t>(std::log10(std::max(1, max_id))) + 1;
-  const size_t remainder = max_length % 3;
-  if (remainder) {
-    max_length += 3 - remainder;
+  auto get_num_digits = [&level]() {
+    auto max_id = level.tiles.ncolumns() * level.tiles.nrows() - 1;
+    size_t max_length = static_cast<size_t>(std::log10(std::max(1, max_id))) + 1;
+    const size_t remainder = max_length % 3;
+    if (remainder) {
+      max_length += 3 - remainder;
+    }
+    return max_length;
+  };
+  const size_t num_digits = get_num_digits();
+  const char separator = is_file_path ? filesystem::path::preferred_separator : '/';
+
+  std::string tile_id_str(num_digits + num_digits / 3, '0');
+  assert(tile_id_str.size() % 4 == 0);
+  for (int sep_index = tile_id_str.size() - 4; sep_index >= 0; sep_index -= 4)
+    tile_id_str[sep_index] = separator;
+  size_t ind = tile_id_str.size();
+  for (auto tile_id = graphid.tileid(); tile_id != 0; tile_id /= 1000, ind -= 4) {
+    std::string tree_digits = std::to_string(tile_id % 1000);
+    std::copy(tree_digits.begin(), tree_digits.end(), tile_id_str.begin() + ind - tree_digits.size());
   }
 
-  // make a locale to use as a formatter for numbers
-  std::ostringstream stream;
-  if (is_file_path) {
-    stream.imbue(dir_locale);
-  } else {
-    stream.imbue(url_locale);
-  }
-
-  // if it starts with a zero the pow trick doesn't work
-  if (graphid.level() == 0) {
-    stream << static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << fname_suffix;
-    std::string suffix = stream.str();
-    suffix[0] = '0';
-    return suffix;
-  }
-  // it was something else
-  stream << graphid.level() * static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid()
-         << fname_suffix;
-  return stream.str();
+  return std::to_string(graphid.level()) + tile_id_str + fname_suffix;
 }
 
 // Get the tile Id given the full path to the file.
