@@ -25,7 +25,7 @@ template <typename T> inline T square(T v) {
 
 bool is_search_filter_triggered(const DirectedEdge* edge,
                                 const DynamicCost& costing,
-                                const GraphTile* tile,
+                                const graph_tile_ptr& tile,
                                 const Location::SearchFilter& search_filter) {
   // check if this edge matches any of the exclusion filters
   uint32_t road_class = static_cast<uint32_t>(edge->classification());
