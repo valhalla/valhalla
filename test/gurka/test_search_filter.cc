@@ -637,12 +637,14 @@ TEST_P(ExcludeClosuresOnWaypoints, TrivialRouteSameEdge) {
 }
 
 TEST_P(ExcludeClosuresOnWaypoints, DISABLED_TrivialRouteAdjacentEdges) {
+  // Test disabled since trivial case use timedep-fwd, which currently
+  // does not work with closures at destination
   std::string costing = std::get<0>(GetParam());
   std::string date_type = std::get<1>(GetParam());
   std::string costing_speed_type =
       (boost::format("/costing_options/%s/speed_types/0") % costing).str();
 
-  // Start and end locations are on adjacent edges. This will use timedep_fwd even woith date_type 3
+  // Start and end locations are on adjacent edges. This will use timedep_fwd even with date_type 3
   {
     auto result = gurka::route(closure_map, {"4", "6"}, costing,
                                {{"/date_time/type", date_type},
@@ -662,13 +664,14 @@ TEST_P(ExcludeClosuresOnWaypoints, DISABLED_TrivialRouteAdjacentEdges) {
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
-    // No route since the edges are closed
-    EXPECT_THROW(gurka::route(closure_map, {"4", "6"}, costing,
-                              {{"/date_time/type", date_type},
-                               {"/date_time/value", "current"},
-                               {costing_speed_type, "current"}},
-                              reader),
-                 valhalla_exception_t);
+    // Snaps to the nearby edge HIC, since candidate edges are closed
+    auto res = gurka::route(closure_map, {"4", "6"}, costing,
+                            {{"/date_time/type", date_type},
+                             {"/date_time/value", "current"},
+                             {costing_speed_type, "current"}},
+                            reader);
+    gurka::assert::osrm::expect_steps(res, {"HIC"});
+    gurka::assert::raw::expect_path(res, {"HIC", "HIC"});
 
     const std::string& req_disable_exclude_closures =
         (boost::format(
@@ -678,6 +681,7 @@ TEST_P(ExcludeClosuresOnWaypoints, DISABLED_TrivialRouteAdjacentEdges) {
          std::to_string(closure_map.nodes.at("6").lat()) %
          std::to_string(closure_map.nodes.at("6").lng()) % costing % costing % date_type)
             .str();
+    // TODO: Enable once timedep-fwd handles clsures at destination edges
     auto result = gurka::route(closure_map, req_disable_exclude_closures, reader);
     gurka::assert::osrm::expect_steps(result, {"LM"});
     gurka::assert::raw::expect_path(result, {"LM", "MN"});
