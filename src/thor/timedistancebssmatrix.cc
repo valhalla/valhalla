@@ -76,7 +76,7 @@ void TimeDistanceBSSMatrix::ExpandForward(GraphReader& graphreader,
 
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return;
   }
@@ -219,7 +219,7 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::OneToMany(
     }
 
     auto endnode = pred.endnode();
-    auto* tile = graphreader.GetGraphTile(endnode);
+    graph_tile_ptr tile = graphreader.GetGraphTile(endnode);;
     auto ll = tile->get_node_ll(endnode);
 
     // Identify any destinations on this edge
@@ -258,7 +258,7 @@ void TimeDistanceBSSMatrix::ExpandReverse(GraphReader& graphreader,
 
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return;
   }
@@ -289,7 +289,7 @@ void TimeDistanceBSSMatrix::ExpandReverse(GraphReader& graphreader,
     }
 
     // Get opposing edge Id and end node tile
-    const GraphTile* t2 =
+    graph_tile_ptr t2 =
         directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
     if (t2 == nullptr) {
       continue;
@@ -389,8 +389,7 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ManyToOne(
   SetOriginManyToOne(graphreader, dest);
   SetDestinationsManyToOne(graphreader, locations);
 
-  // Find shortest path
-  const GraphTile* tile;
+  graph_tile_ptr tile;
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
@@ -499,12 +498,12 @@ void TimeDistanceBSSMatrix::SetOriginOneToMany(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode());
     if (endtile == nullptr) {
       continue;
     }
@@ -543,7 +542,7 @@ void TimeDistanceBSSMatrix::SetOriginManyToOne(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the opposing directed edge, continue if we cannot get it
@@ -555,7 +554,7 @@ void TimeDistanceBSSMatrix::SetOriginManyToOne(GraphReader& graphreader,
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode());
     if (endtile == nullptr) {
       continue;
     }
@@ -626,7 +625,7 @@ void TimeDistanceBSSMatrix::SetDestinationsOneToMany(
 
       // Form a threshold cost (the total cost to traverse the edge)
       GraphId id(static_cast<GraphId>(edge.graph_id()));
-      const GraphTile* tile = graphreader.GetGraphTile(id);
+      graph_tile_ptr tile = graphreader.GetGraphTile(id);
       const DirectedEdge* directededge = tile->directededge(id);
       float c = pedestrian_costing_->EdgeCost(directededge, tile).cost;
 
@@ -674,7 +673,7 @@ void TimeDistanceBSSMatrix::SetDestinationsManyToOne(
 
       // Form a threshold cost (the total cost to traverse the edge)
       GraphId id(static_cast<GraphId>(edge.graph_id()));
-      const GraphTile* tile = graphreader.GetGraphTile(id);
+      graph_tile_ptr tile = graphreader.GetGraphTile(id);
       const DirectedEdge* directededge = tile->directededge(id);
       float c = pedestrian_costing_->EdgeCost(directededge, tile).cost;
 
@@ -701,7 +700,7 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     std::vector<uint32_t>& destinations,
     const DirectedEdge* edge,
-    const GraphTile* tile,
+    const graph_tile_ptr tile,
     const EdgeLabel& pred,
     const uint32_t predindex) {
   // For each destination along this edge

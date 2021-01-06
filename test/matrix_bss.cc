@@ -1,7 +1,7 @@
 #include "proto/options.pb.h"
 #include "sif/costconstants.h"
 #include "test.h"
-#include "utils.h"
+//#include "utils.h"
 
 #include <iostream>
 #include <string>
@@ -44,7 +44,7 @@ const auto config = test::json_to_pt(R"({
 	      "loki":{
 	        "actions":["sources_to_targets"],
 	        "logging":{"long_request": 100},
-	        "service_defaults":{"minimum_reachability": 2,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60, "street_side_max_distance": 1000}
+	        "service_defaults":{"minimum_reachability": 2,"radius": 10,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60, "street_side_max_distance": 1000}
 	      },
 	      "thor":{"logging":{"long_request": 100}},
 	      "odin":{"logging":{"long_request": 100}},
@@ -100,13 +100,13 @@ public:
     for (uint32_t i = 0; i < results.size(); ++i) {
       EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
           << "result " + std::to_string(i) + "'s distance is not equal to" +
-                 " the expected value for TimeDistMatrix"
-          << results[i].dist << "  " << matrix_answers[i].dist;
+                 " the expected value for TimeDistMatrix "
+          << results[i].dist << " expected: " << matrix_answers[i].dist;
 
       EXPECT_NEAR(results[i].time, matrix_answers[i].time, kThreshold)
           << "result " + std::to_string(i) +
                  "'s time is not equal to the expected value for TimeDistMatrix"
-          << results[i].time << "  " << matrix_answers[i].time;
+          << results[i].time << " expected " << matrix_answers[i].time;
     }
   }
 
@@ -130,7 +130,7 @@ TEST_F(MatrixBssTest, OneToMany) {
 	    ],
 	    "costing":"bikeshare"
 	  })";
-  std::vector<TimeDistance> matrix_answers = {{712, 1182}, {894, 1262}, {942, 1983}, {775, 1268}};
+  std::vector<TimeDistance> matrix_answers = {{706, 1173}, {894, 1783}, {942, 1981}, {775, 1266}};
   test(test_request, matrix_answers);
 }
 
