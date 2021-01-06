@@ -44,7 +44,7 @@ const auto config = test::json_to_pt(R"({
 	      "loki":{
 	        "actions":["sources_to_targets"],
 	        "logging":{"long_request": 100},
-	        "service_defaults":{"minimum_reachability": 2,"radius": 10,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60, "street_side_max_distance": 1000}
+	        "service_defaults":{"minimum_reachability": 2,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60, "street_side_max_distance": 1000}
 	      },
 	      "thor":{"logging":{"long_request": 100}},
 	      "odin":{"logging":{"long_request": 100}},
@@ -130,7 +130,7 @@ TEST_F(MatrixBssTest, OneToMany) {
 	    ],
 	    "costing":"bikeshare"
 	  })";
-  std::vector<TimeDistance> matrix_answers = {{706, 1173}, {894, 1783}, {942, 1981}, {775, 1266}};
+  std::vector<TimeDistance> matrix_answers = {{712, 1182}, {894, 1262}, {942, 1983}, {775, 1268}};
   test(test_request, matrix_answers);
 }
 
