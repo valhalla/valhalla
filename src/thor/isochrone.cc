@@ -58,7 +58,7 @@ void Isochrone::ConstructIsoTile(const bool multimodal,
   // time in seconds is used when terminating the search. The + 10 minutes adds a buffer for edges
   // where there has been a higher cost that might still be marked in the isochrone
   float max_minutes(0.0f), max_km(0.0f);
-  for (const auto c : api.options().contours()) {
+  for (const auto& c : api.options().contours()) {
     if (c.has_time() && c.time() > max_minutes) {
       max_minutes = c.time();
     } else if (c.has_distance() && c.distance() > max_km) {
@@ -66,10 +66,12 @@ void Isochrone::ConstructIsoTile(const bool multimodal,
     }
   }
   bool has_time = max_minutes > 0.0f;
+  max_minutes = has_time ? max_minutes + 10.0f : std::numeric_limits<float>::min();
   bool has_distance = max_km > 0.0f;
+  max_km = has_distance ? max_km + 10.0f : std::numeric_limits<float>::min();
 
-  max_seconds_ = has_time ? (max_minutes + 10.0f) * kSecPerMinute : std::numeric_limits<float>::min();
-  max_meters_ = has_distance ? (max_km + 10.0f) * kMetersPerKm : std::numeric_limits<float>::min();
+  max_seconds_ = has_time ? max_minutes * kSecPerMinute : max_minutes;
+  max_meters_ = has_distance ? max_km * kMetersPerKm : max_km;
   float max_distance;
   if (multimodal) {
     max_distance = max_seconds_ * 70.0f * kMPHtoMetersPerSec;
