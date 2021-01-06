@@ -40,101 +40,6 @@ namespace valhalla {
 namespace gurka {
 namespace detail {
 
-boost::property_tree::ptree
-build_config(const std::string& tiledir,
-             const std::unordered_map<std::string, std::string>& config_options) {
-
-  const std::string default_config = R"(
-    {"mjolnir":{"id_table_size":1000,"tile_dir":"", "concurrency": 1},
-     "thor":{
-       "logging" : {"long_request" : 100}
-     },
-     "meili":{
-       "logging" : {"long_request" : 100},
-       "grid" : {"cache_size" : 100, "size": 100 },
-       "default": {
-         "beta": 3,
-         "breakage_distance": 2000,
-         "geometry": false,
-         "gps_accuracy": 5.0,
-         "interpolation_distance": 10,
-         "max_route_distance_factor": 5,
-         "max_route_time_factor": 5,
-         "max_search_radius": 100,
-         "route": true,
-         "search_radius": 50,
-         "sigma_z": 4.07,
-         "turn_penalty_factor": 0,
-         "penalize_immediate_uturn": true
-       },
-       "customizable": [
-         "mode",
-         "search_radius",
-         "turn_penalty_factor",
-         "gps_accuracy",
-         "interpolation_distance",
-         "sigma_z",
-         "beta",
-         "max_route_distance_factor",
-         "max_route_time_factor",
-         "penalize_immediate_uturn"
-       ]
-     },
-     "loki":{
-       "actions": [
-         "locate",
-         "route",
-         "height",
-         "sources_to_targets",
-         "optimized_route",
-         "isochrone",
-         "trace_route",
-         "trace_attributes",
-         "transit_available"
-       ],
-       "logging" : {"long_request" : 100},
-       "service_defaults" : {
-         "minimum_reachability" : 50,
-         "radius" : 0,
-         "search_cutoff" : 35000,
-         "node_snap_tolerance" : 5,
-         "street_side_tolerance" : 5,
-         "street_side_max_distance": 1000,
-         "heading_tolerance" : 60
-        }
-     },
-     "service_limits": {
-      "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "auto_data_fix": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "motorcycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "motor_scooter": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-
-      "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
-      "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
-      "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
-      "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
-      "skadi": {"max_shape": 750000,"min_resample": 10.0},
-      "trace": {"max_distance": 200000.0,"max_gps_accuracy": 100.0,"max_search_radius": 100,"max_shape": 16000,"max_best_paths":4,"max_best_paths_shape":100},
-      "transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
-    }
-  })";
-
-  std::stringstream stream(default_config);
-  boost::property_tree::ptree ptree;
-  boost::property_tree::json_parser::read_json(stream, ptree);
-  ptree.put("mjolnir.tile_dir", tiledir);
-  for (const auto& kv : config_options) {
-    ptree.put(kv.first, kv.second);
-  }
-  return ptree;
-}
-
 midgard::PointLL to_ll(const nodelayout& nodes, const std::string& node_name) {
   return nodes.at(node_name);
 }
@@ -534,7 +439,7 @@ map buildtiles(const nodelayout& layout,
                const std::unordered_map<std::string, std::string>& config_options) {
 
   map result;
-  result.config = detail::build_config(workdir, config_options);
+  result.config = test::make_config(workdir, config_options);
   result.nodes = layout;
 
   // Sanity check so that we don't blow away / by mistake

@@ -13,18 +13,12 @@ midgard::PointLL to_ll(const valhalla::Location& l) {
 }
 
 void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                    float matrix_max_distance,
-                    float& max_location_distance) {
+                    float matrix_max_distance) {
   // see if any locations pairs are unreachable or too far apart
   for (auto source = locations.begin(); source != locations.end() - 1; ++source) {
     for (auto target = source + 1; target != locations.end(); ++target) {
       // check if distance between latlngs exceed max distance limit
       auto path_distance = to_ll(*source).Distance(to_ll(*target));
-
-      if (path_distance >= max_location_distance) {
-        max_location_distance = path_distance;
-      }
-
       if (path_distance > matrix_max_distance) {
         throw valhalla_exception_t{154};
       };
@@ -75,8 +69,7 @@ void loki_worker_t::isochrones(Api& request) {
   };
 
   // check the distances
-  auto max_location_distance = std::numeric_limits<float>::min();
-  check_distance(options.locations(), max_distance.find("isochrone")->second, max_location_distance);
+  check_distance(options.locations(), max_distance.find("isochrone")->second);
 
   try {
     // correlate the various locations to the underlying graph

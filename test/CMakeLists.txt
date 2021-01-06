@@ -60,9 +60,10 @@ endif (UNIX)
 ## Add executable targets
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
-  set_target_properties(${test} PROPERTIES
-    FOLDER "Tests"
-    COMPILE_DEFINITIONS VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/")
+  set_target_properties(${test} PROPERTIES FOLDER "Tests")
+  target_compile_definitions(${test} PRIVATE
+      VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
+      VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
   create_source_groups("Source Files" ${test}.cc)
   target_link_libraries(${test} valhalla_test)
   if (LUAJIT_FOUND AND APPLE)

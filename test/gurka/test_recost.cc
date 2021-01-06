@@ -370,7 +370,7 @@ TEST(recosting, throwing) {
 }
 
 TEST(recosting, error_request) {
-  auto config = gurka::detail::build_config("foo_bar", {});
+  auto config = test::make_config("foo_bar", {});
   auto reader = std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(config, *reader, true);
 

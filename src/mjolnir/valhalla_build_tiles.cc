@@ -133,10 +133,7 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  // Build some tiles! Take out tile_extract and tile_url from property tree as tiles
-  // must only use the tile_dir
-  pt.get_child("mjolnir").erase("tile_extract");
-  pt.get_child("mjolnir").erase("tile_url");
+  // Build some tiles!
   if (build_tile_set(pt, input_files, start_stage, end_stage)) {
     return EXIT_SUCCESS;
   } else {

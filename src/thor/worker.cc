@@ -78,13 +78,13 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
-        kv.first == "max_alternates") {
+        kv.first == "max_alternates" || kv.first == "skadi" || kv.first == "trace" ||
+        kv.first == "isochrone" || kv.first == "centroid") {
       continue;
     }
-    if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
-      max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +
-                                                              ".max_matrix_distance"));
-    }
+
+    max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +
+                                                            ".max_matrix_distance"));
   }
 
   if (conf_algorithm == "timedistancematrix") {

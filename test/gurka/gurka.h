@@ -69,9 +69,6 @@ struct relation {
 using relations = std::vector<relation>;
 
 namespace detail {
-boost::property_tree::ptree
-build_config(const std::string& tiledir,
-             const std::unordered_map<std::string, std::string>& config_options);
 
 /**
  * Given a string that's an "ASCII map", will decide on coordinates
