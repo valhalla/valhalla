@@ -57,24 +57,19 @@ void Isochrone::ConstructIsoTile(const bool multimodal,
   // Cost (including penalties) is used when adding to the adjacency list but the elapsed
   // time in seconds is used when terminating the search. The + 10 minutes adds a buffer for edges
   // where there has been a higher cost that might still be marked in the isochrone
-  auto max_time_itr =
-      std::max_element(api.options().contours().begin(), api.options().contours().end(),
-                       [](const auto& a, const auto& b) {
-                         return a.has_time() && (!b.has_time() || a.time() > b.time());
-                       });
-  bool has_time = max_time_itr->has_time();
-  auto max_minutes = has_time ? max_time_itr->time() + 10.0f : std::numeric_limits<float>::min();
-  auto max_dist_itr =
-      std::max_element(api.options().contours().begin(), api.options().contours().end(),
-                       [](const auto& a, const auto& b) {
-                         return a.has_distance() &&
-                                (!b.has_distance() || a.distance() > b.distance());
-                       });
-  bool has_distance = max_dist_itr->has_distance();
-  auto max_km = has_distance ? max_dist_itr->distance() + 10.0f : std::numeric_limits<float>::min();
+  float max_minutes(0.0f), max_km(0.0f);
+  for (const auto c : api.options().contours()) {
+    if (c.has_time() && c.time() > max_minutes) {
+      max_minutes = c.time();
+    } else if (c.has_distance() && c.distance() > max_km) {
+      max_km = c.distance();
+    }
+  }
+  bool has_time = max_minutes > 0.0f;
+  bool has_distance = max_km > 0.0f;
 
-  max_seconds_ = has_time ? max_minutes * kSecPerMinute : max_minutes;
-  max_meters_ = has_distance ? max_km * kMetersPerKm : max_km;
+  max_seconds_ = has_time ? (max_minutes + 10.0f) * kSecPerMinute : std::numeric_limits<float>::min();
+  max_meters_ = has_distance ? (max_km + 10.0f) * kMetersPerKm : std::numeric_limits<float>::min();
   float max_distance;
   if (multimodal) {
     max_distance = max_seconds_ * 70.0f * kMPHtoMetersPerSec;
