@@ -219,7 +219,8 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::OneToMany(
     }
 
     auto endnode = pred.endnode();
-    graph_tile_ptr tile = graphreader.GetGraphTile(endnode);;
+    graph_tile_ptr tile = graphreader.GetGraphTile(endnode);
+    ;
     auto ll = tile->get_node_ll(endnode);
 
     // Identify any destinations on this edge

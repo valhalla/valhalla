@@ -419,14 +419,21 @@ public:
   bool project_on_bss_connection = 0;
 
 private:
-  baldr::Use get_pred_use(const sif::EdgeLabel& pred)const { return pred.use();}
-  baldr::Use get_pred_use(const baldr::DirectedEdge* pred)const{ return pred->use();}
+  baldr::Use get_pred_use(const sif::EdgeLabel& pred) const {
+    return pred.use();
+  }
+  baldr::Use get_pred_use(const baldr::DirectedEdge* pred) const {
+    return pred->use();
+  }
 
-  bool get_pred_destonly(const sif::EdgeLabel& pred)const{ return pred.destonly();}
-  bool get_pred_destonly(const baldr::DirectedEdge* pred)const{ return pred->destonly();}
+  bool get_pred_destonly(const sif::EdgeLabel& pred) const {
+    return pred.destonly();
+  }
+  bool get_pred_destonly(const baldr::DirectedEdge* pred) const {
+    return pred->destonly();
+  }
 
-
-  template<typename PredType>
+  template <typename PredType>
   sif::Cost base_transition_cost_impl(const baldr::NodeInfo* node,
                                       const baldr::DirectedEdge* edge,
                                       PredType pred,
@@ -466,7 +473,6 @@ private:
   }
 
 public:
-
   /**
    * Override the base transition cost to not add maneuver penalties onto transit edges.
    * Base transition cost that all costing methods use. Includes costs for
@@ -483,7 +489,7 @@ public:
                                  const baldr::DirectedEdge* edge,
                                  const sif::EdgeLabel& pred,
                                  const uint32_t idx) const {
-	  return base_transition_cost_impl(node, edge,pred,idx);
+    return base_transition_cost_impl(node, edge, pred, idx);
   }
 
   /**
@@ -502,7 +508,7 @@ public:
                                  const baldr::DirectedEdge* edge,
                                  const baldr::DirectedEdge* pred,
                                  const uint32_t idx) const {
-	  return base_transition_cost_impl(node, edge,pred,idx);
+    return base_transition_cost_impl(node, edge, pred, idx);
   }
 };
 
