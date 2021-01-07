@@ -230,7 +230,7 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::OneToMany(
       // have been settled.
       tile = graphreader.GetGraphTile(pred.edgeid());
       const DirectedEdge* edge = tile->directededge(pred.edgeid());
-      if (UpdateDestinations(origin, locations, destedge->second, edge, tile, pred, predindex)) {
+      if (UpdateDestinations(origin, locations, destedge->second, edge, tile, pred)) {
         return FormTimeDistanceMatrix();
       }
     }
@@ -421,7 +421,7 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ManyToOne(
       // have been settled.
       tile = graphreader.GetGraphTile(pred.edgeid());
       const DirectedEdge* edge = tile->directededge(pred.edgeid());
-      if (UpdateDestinations(dest, locations, destedge->second, edge, tile, pred, predindex)) {
+      if (UpdateDestinations(dest, locations, destedge->second, edge, tile, pred)) {
         return FormTimeDistanceMatrix();
       }
     }
@@ -701,9 +701,8 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     std::vector<uint32_t>& destinations,
     const DirectedEdge* edge,
-    const graph_tile_ptr tile,
-    const EdgeLabel& pred,
-    const uint32_t predindex) {
+    const graph_tile_ptr& tile,
+    const EdgeLabel& pred) {
   // For each destination along this edge
   for (auto dest_idx : destinations) {
     Destination& dest = destinations_[dest_idx];
