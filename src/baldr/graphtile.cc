@@ -427,27 +427,32 @@ GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, b
                           ? TileHierarchy::GetTransitLevel()
                           : TileHierarchy::levels()[graphid.level()];
 
-  // figure out how many digits
-  auto get_num_digits = [&level]() {
-    auto max_id = level.tiles.ncolumns() * level.tiles.nrows() - 1;
-    size_t max_length = static_cast<size_t>(std::log10(std::max(1, max_id))) + 1;
-    const size_t remainder = max_length % 3;
-    if (remainder) {
-      max_length += 3 - remainder;
-    }
-    return max_length;
-  };
-  const size_t num_digits = get_num_digits();
+  // figure out how many digits in tile-id
+  const auto max_id = level.tiles.ncolumns() * level.tiles.nrows() - 1;
+  size_t max_length = static_cast<size_t>(std::log10(std::max(1, max_id))) + 1;
+  const size_t remainder = max_length % 3;
+  if (remainder) {
+    max_length += 3 - remainder;
+  }
+  assert(max_length % 3 == 0);
+
+  // Calculate tile-id string length with separators
+  const size_t tile_id_strlen = max_length + max_length / 3;
+  assert(tile_id_strlen % 4 == 0);
+
   const char separator = is_file_path ? filesystem::path::preferred_separator : '/';
 
-  std::string tile_id_str(num_digits + num_digits / 3, '0');
-  assert(tile_id_str.size() % 4 == 0);
-  for (int sep_index = tile_id_str.size() - 4; sep_index >= 0; sep_index -= 4)
-    tile_id_str[sep_index] = separator;
-  size_t ind = tile_id_str.size();
-  for (auto tile_id = graphid.tileid(); tile_id != 0; tile_id /= 1000, ind -= 4) {
-    std::string tree_digits = std::to_string(tile_id % 1000);
-    std::copy(tree_digits.begin(), tree_digits.end(), tile_id_str.begin() + ind - tree_digits.size());
+  std::string tile_id_str(tile_id_strlen, '0');
+  size_t ind = tile_id_strlen - 1;
+  for (uint32_t tile_id = graphid.tileid(); tile_id != 0; tile_id /= 10) {
+    tile_id_str[ind--] = '0' + static_cast<char>(tile_id % 10);
+    if ((tile_id_strlen - ind) % 4 == 0) {
+      tile_id_str[ind--] = separator;
+    }
+  }
+  // add missing separators
+  for (size_t sep_ind = 0; sep_ind < ind; sep_ind += 4) {
+    tile_id_str[sep_ind] = separator;
   }
 
   return std::to_string(graphid.level()) + tile_id_str + fname_suffix;
