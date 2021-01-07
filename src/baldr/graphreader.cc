@@ -377,6 +377,8 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
                              ? TileCacheLRU::MemoryLimitControl::HARD
                              : TileCacheLRU::MemoryLimitControl::SOFT;
 
+  bool use_simple_cache = pt.get<bool>("use_simple_mem_cache", false);
+
   // wrap tile cache with thread-safe version
   if (pt.get<bool>("global_synchronized_cache", false)) {
     // Handle synchronization of cache
@@ -396,11 +398,17 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
     return new SynchronizedTileCache(*globalTileCache_, globalCacheMutex_);
   }
 
-  // Otherwise: No synchronization
+  // or do you want to use an LRU cache
   if (use_lru_cache) {
     return new TileCacheLRU(max_cache_size, lru_mem_control);
   }
-  // return new SimpleTileCache(max_cache_size);
+
+  // maybe you want a basic hashmap of tiles
+  if (use_simple_cache) {
+    return new SimpleTileCache(max_cache_size);
+  }
+
+  // by default you get a fixed size vector of tiles, requires about 8.5 megs of ram
   return new FlatTileCache(max_cache_size);
 }
 
