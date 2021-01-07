@@ -187,6 +187,25 @@ public:
   }
 
   /**
+   * Returns a value between 0 and 1 indicating how
+   * desirable the edge is for use as a location. A value of 0 indicates the
+   * edge is not usable (no access for the travel mode used by this costing)
+   * while 1 indicates the edge is highly preferred. Values in between can be
+   * used to rank edges such that desirable edges that might be slightly
+   * farther from the location than a less desirable edge can be chosen.
+   *
+   * Function to be used in location searching which will
+   * exclude and allow ranking results from the search by looking at each
+   * edges attribution and suitability for use as a location by the travel
+   * mode used by the costing method.
+   *
+   * @param edge the edge that should or shouldnt be filtered
+   * @param tile the tile which contains the edge (for traffic lookup)
+   * @return
+   */
+  virtual float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const = 0;
+
+  /**
    * Checks if access is allowed for the provided edge. The access check based on mode
    * of travel and the access modes allowed on the edge.
    * @param   edge  Pointer to edge information.
@@ -572,21 +591,6 @@ public:
   virtual bool bicycle() const;
 
   /**
-   * Returns a value between 0 and 1 indicating how
-   * desirable the edge is for use as a location. A value of 0 indicates the
-   * edge is not usable (no access for the travel mode used by this costing)
-   * while 1 indicates the edge is highly preferred. Values in between can be
-   * used to rank edges such that desirable edges that might be slightly
-   * farther from the location than a less desirable edge can be chosen.
-   *
-   * Function to be used in location searching which will
-   * exclude and allow ranking results from the search by looking at each
-   * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method.
-   */
-  virtual float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const = 0;
-
-  /**
    * Gets the hierarchy limits.
    * @return  Returns the hierarchy limits.
    */
@@ -671,15 +675,6 @@ public:
   }
 
   virtual Cost BSSCost() const;
-
-  /*
-   * Determine whether an edge is currently closed due to traffic.
-   * @param  edgeid         GraphId of the opposing edge.
-   * @return  Returns true if the edge is closed due to live traffic constraints, false if not.
-   */
-  inline virtual bool IsClosed(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
-    return !ignore_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
-  }
 
 protected:
   // Algorithm pass
@@ -918,6 +913,15 @@ protected:
    */
   float TransitionFactor(const bool has_traffic, const float density) const {
     return has_traffic ? kTrafficTransitionFactor : density;
+  }
+
+  /*
+   * Determine whether an edge is currently closed due to traffic.
+   * @param  edgeid         GraphId of the opposing edge.
+   * @return  Returns true if the edge is closed due to live traffic constraints, false if not.
+   */
+  inline virtual bool IsClosed(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
+    return !ignore_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
   }
 
   /*
