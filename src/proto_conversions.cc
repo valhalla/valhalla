@@ -386,25 +386,25 @@ travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver) {
       auto i = maneuver.has_vehicle_type() ? vehicle_to_string.find(maneuver.vehicle_type())
                                            : vehicle_to_string.cend();
       return i == vehicle_to_string.cend() ? std::make_pair("drive", "car")
-                                           : make_pair("drive", i->second);
+                                           : std::make_pair("drive", i->second);
     }
     case DirectionsLeg_TravelMode_kPedestrian: {
       auto i = maneuver.has_pedestrian_type() ? pedestrian_to_string.find(maneuver.pedestrian_type())
                                               : pedestrian_to_string.cend();
       return i == pedestrian_to_string.cend() ? std::make_pair("pedestrian", "foot")
-                                              : make_pair("pedestrian", i->second);
+                                              : std::make_pair("pedestrian", i->second);
     }
     case DirectionsLeg_TravelMode_kBicycle: {
       auto i = maneuver.has_bicycle_type() ? bicycle_to_string.find(maneuver.bicycle_type())
                                            : bicycle_to_string.cend();
       return i == bicycle_to_string.cend() ? std::make_pair("bicycle", "road")
-                                           : make_pair("bicycle", i->second);
+                                           : std::make_pair("bicycle", i->second);
     }
     case DirectionsLeg_TravelMode_kTransit: {
       auto i = maneuver.has_transit_type() ? transit_to_string.find(maneuver.transit_type())
                                            : transit_to_string.cend();
       return i == transit_to_string.cend() ? std::make_pair("transit", "rail")
-                                           : make_pair("transit", i->second);
+                                           : std::make_pair("transit", i->second);
     }
   }
   throw std::runtime_error("Unhandled case");
