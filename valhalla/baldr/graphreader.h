@@ -161,7 +161,7 @@ protected:
   // Indicies into the array of actual cached items
   std::vector<uint32_t> cache_indices_;
 
-  // Offsets in the idicides list for where a set of tile indices begin
+  // Offsets in the indices list for where a set of tile indices begin
   std::array<uint32_t, 8> index_offsets_;
 
   // The current cache size in bytes
