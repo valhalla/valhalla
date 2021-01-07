@@ -209,11 +209,11 @@ void close_dir_edge(baldr::GraphReader& reader,
 }
 
 void close_bidir_edge(baldr::GraphReader& reader,
-                       baldr::TrafficTile& tile,
-                       uint32_t index,
-                       baldr::TrafficSpeed* current,
-                       const std::string& edge_name,
-                       const gurka::map& closure_map) {
+                      baldr::TrafficTile& tile,
+                      uint32_t index,
+                      baldr::TrafficSpeed* current,
+                      const std::string& edge_name,
+                      const gurka::map& closure_map) {
   baldr::GraphId tile_id(tile.header->tile_id);
   std::string start_node(1, edge_name.front());
   std::string end_node(1, edge_name.back());
@@ -271,7 +271,7 @@ protected:
     test::customize_live_traffic_data(closure_map.config,
                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
-                                        (void) reader, (void) tile, (void) index;
+                                        (void)reader, (void)tile, (void)index;
                                         SetLiveSpeed(current, default_speed);
                                       });
   }
@@ -957,7 +957,7 @@ protected:
     test::customize_live_traffic_data(closure_map.config,
                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
-                                        (void) reader, (void) tile, (void) index;
+                                        (void)reader, (void)tile, (void)index;
                                         SetLiveSpeed(current, default_speed);
                                       });
   }
