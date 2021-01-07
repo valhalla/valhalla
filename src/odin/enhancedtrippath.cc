@@ -316,7 +316,7 @@ bool EnhancedTripLeg_Edge::IsUnnamed() const {
 }
 
 bool EnhancedTripLeg_Edge::IsRoadUse() const {
-  return (use() == TripLeg_Use_kRoadUse);
+  return (use() == TripLeg_Use_kRoadUse || use() == TripLeg_Use_kServiceRoadUse);
 }
 
 bool EnhancedTripLeg_Edge::IsRampUse() const {
@@ -1858,6 +1858,10 @@ bool EnhancedTripLeg_Node::IsBorderControl() const {
 
 bool EnhancedTripLeg_Node::IsTollGantry() const {
   return (type() == TripLeg_Node_Type_kTollGantry);
+}
+
+bool EnhancedTripLeg_Node::IsSumpBuster() const {
+  return (type() == TripLeg_Node_Type_kSumpBuster);
 }
 
 std::string EnhancedTripLeg_Node::ToString() const {

@@ -267,14 +267,12 @@ protected:
 
     // add live traffic
     test::build_live_traffic_data(map.config);
-    test::customize_live_traffic_data(map.config,
-                                      [&](baldr::GraphReader& reader,
-                                          baldr::TrafficTile& traffic_tile, int edge_index,
-                                          valhalla::baldr::TrafficSpeed* traffic_speed) {
-                                        traffic_speed->overall_speed = 50 >> 1;
-                                        traffic_speed->speed1 = 50 >> 1;
-                                        traffic_speed->breakpoint1 = 255;
-                                      });
+    test::customize_live_traffic_data(map.config, [&](baldr::GraphReader&, baldr::TrafficTile&, int,
+                                                      valhalla::baldr::TrafficSpeed* traffic_speed) {
+      traffic_speed->overall_speed = 50 >> 1;
+      traffic_speed->speed1 = 50 >> 1;
+      traffic_speed->breakpoint1 = 255;
+    });
 
     test::customize_historical_traffic(map.config, [](DirectedEdge& e) {
       e.set_constrained_flow_speed(25);
@@ -289,7 +287,7 @@ protected:
     size_t second_of_week = 5 * 24 * 60 * 60 + 9 * 60 * 60 + 27;
     auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
     for (auto tile_id : reader->GetTileSet()) {
-      const auto* tile = reader->GetGraphTile(tile_id);
+      auto tile = reader->GetGraphTile(tile_id);
       for (const auto& e : tile->GetDirectedEdges()) {
         current = tile->GetSpeed(&e, baldr::kCurrentFlowMask, second_of_week);
         EXPECT_EQ(current, 50);
