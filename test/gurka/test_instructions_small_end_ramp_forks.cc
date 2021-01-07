@@ -78,17 +78,15 @@ TEST_F(InstructionsSmallEndRampForks, LeftTurn) {
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kExitRight,
-                                                DirectionsLeg_Maneuver_Type_kStayLeft,
                                                 DirectionsLeg_Maneuver_Type_kLeft,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
   int maneuver_index = 2;
 
   // Verify the turn left instructions
-  //  gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-  //                                                            "Turn left onto Hershey Road/PA 743.",
-  //                                                            "Turn left onto Hershey Road.",
-  //                                                            "Turn left onto Hershey Road, PA
-  //                                                            7 43.", "Continue for 4 kilometers.");
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, maneuver_index, "Turn left onto Hershey Road/PA 743.", "Turn left onto Hershey Road.",
+      "Turn left onto Hershey Road, PA 7 43. Then You will arrive at your destination.",
+      "Continue for 60 meters.");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -105,30 +103,26 @@ TEST_F(InstructionsSmallEndRampForks, KeepLeftContinue) {
   int maneuver_index = 3;
 
   // Verify the keep left toward instructions
-  //  gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-  //                                                            "Continue on Ridge Road",
-  //                                                            "Continue on Ridge Road",
-  //                                                            "Continue on Ridge Road", "Continue
-  //                                                            for 4 kilometers.");
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, maneuver_index, "Continue on Ridge Road.", "Continue on Ridge Road.",
+      "Continue on Ridge Road. Then You will arrive at your destination.", "Continue for 90 meters.");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Right
-TEST_F(InstructionsSmallEndRampForks, BearRight) {
+TEST_F(InstructionsSmallEndRampForks, RightTurn) {
   auto result = gurka::route(map, "A", "H", "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kExitRight,
-                                                DirectionsLeg_Maneuver_Type_kStayRight,
                                                 DirectionsLeg_Maneuver_Type_kRight,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
   int maneuver_index = 2;
 
-  //  Verify the keep straight toward instructions gurka::assert::raw::
-  //      expect_instructions_at_maneuver_index(result, maneuver_index,
-  //                                            "Bear right onto Hershey Road/PA 743.",
-  //                                            "Bear right onto Hershey Road.",
-  //                                            "Bear right onto Hershey Road, PA 7 43.",
-  //                                            "Continue for 4 kilometers.");
+  //  Verify the turn right instructions
+  gurka::assert::raw::expect_instructions_at_maneuver_index(
+      result, maneuver_index, "Turn right onto Hershey Road/PA 743.", "Turn right onto Hershey Road.",
+      "Turn right onto Hershey Road, PA 7 43. Then You will arrive at your destination.",
+      "Continue for 40 meters.");
 }

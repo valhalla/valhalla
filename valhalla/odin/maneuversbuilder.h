@@ -289,6 +289,13 @@ protected:
                                           EnhancedTripLeg_Edge* prev_edge,
                                           EnhancedTripLeg_Edge* edge);
 
+  /**
+   * Collapse a small end ramp fork maneuver if the fork and the next turn is in the same direction.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void CollapseSmallEndRampFork(std::list<Maneuver>& maneuvers);
+
   const Options& options_;
   EnhancedTripLeg* trip_path_;
 };
