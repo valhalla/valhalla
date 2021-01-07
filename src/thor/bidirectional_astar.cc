@@ -189,9 +189,9 @@ bool BidirectionalAStar::ExpandForward(GraphReader& graphreader,
     // Decide if we should expand a shortcut or the non-shortcut edge...
 
     // Expand the uturn possiblity
-    bool uturn_added = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, uturn_meta,
-                                          shortcuts, tile, offset_time);
-    disable_uturn = disable_uturn || uturn_added;
+    disable_uturn = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, uturn_meta, shortcuts,
+                                       tile, offset_time) ||
+                    disable_uturn;
   }
 
   return disable_uturn;
