@@ -504,6 +504,14 @@ public:
   void set_use(const Use use);
 
   /**
+   * Is the edge a road (includes generic service roads)
+   * @return Returns true if the edge is a road use or service road.
+   */
+  bool is_road() const {
+    return use() == Use::kRoad || use() == Use::kServiceRoad;
+  }
+
+  /**
    * Is this edge a transit line (bus or rail)?
    * @return  Returns true if this edge is a transit line.
    */
