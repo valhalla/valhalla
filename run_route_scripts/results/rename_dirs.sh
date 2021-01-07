@@ -24,12 +24,12 @@ then
 fi
 
 TAG=${2}
-echo "Tag=${TAG}"
+echo "Appending the following tag: ${TAG}"
 
 DIRS_LIST=`cat ${DIRS_FILE}`
 
 for DIR in ${DIRS_LIST}; do
-  echo ${DIR} to ${DIR}_${TAG}
+  echo ${DIR}_${TAG}
   mv ${DIR} ${DIR}_${TAG}
 done
 
