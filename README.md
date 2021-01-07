@@ -170,6 +170,10 @@ C:\path\to\vcpkg.exe --triplet x64-windows install "@.vcpkg_deps.txt"
 "C:\Program Files\CMake\bin\cmake.EXE" --no-warn-unused-cli -DENABLE_TOOLS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_HTTP=ON -DENABLE_CCACHE=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DENABLE_TESTS=OFF -DLUA_LIBRARIES=path\to\vcpkg\installed\x64-windows\lib\lua51.lib -DLUA_INCLUDE_DIR=path\to\vcpkg\installed\x64-windows\include\luajit -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=path\to\vcpkg\scripts\buildsystems\vcpkg.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -Hpath/to/project -Bpath/to/project/build -G "Visual Studio 16 2019" -T host=x64 -A x64
 ```
 3. Run the build for all targets.
+```
+cd path/to/project/build 
+cmake --build .
+```
 
 ## Running
 
