@@ -39,12 +39,18 @@ valhalla::sif::cost_ptr_t create_costing() {
   return valhalla::sif::CostFactory{}.Create(options);
 }
 
+// Note that the "loki/radius" is intentionally left to 10, since the bss_connection is a duplication
+// of the existing way on which the bike share sation is projected. It would be advisable to not set
+// radius to 0 so that the algorithm will choose the best projection. Otherwise, the location may be
+// projected uniquely on the bss_connection.
 const auto config = test::json_to_pt(R"({
 	      "mjolnir":{"tile_dir":"test/data/paris_bss_tiles", "concurrency": 1},
 	      "loki":{
 	        "actions":["sources_to_targets"],
 	        "logging":{"long_request": 100},
-	        "service_defaults":{"minimum_reachability": 2,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60, "street_side_max_distance": 1000}
+	        "service_defaults":{"minimum_reachability": 2,
+			"radius": 10,
+			"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60, "street_side_max_distance": 1000}
 	      },
 	      "thor":{"logging":{"long_request": 100}},
 	      "odin":{"logging":{"long_request": 100}},
@@ -74,7 +80,7 @@ const auto config = test::json_to_pt(R"({
 
 } // namespace
 
-const uint32_t kDistanceThreshold = 5;
+const uint32_t kDistanceThreshold = 2;
 const uint32_t kTimeThreshold = 2;
 
 class MatrixBssTest : public ::testing::Test {
@@ -121,47 +127,47 @@ private:
 TEST_F(MatrixBssTest, OneToMany) {
   const auto test_request = R"({
 	    "sources":[
-	      {"lat":48.857204,"lon":2.358989}
+	      {"lat":48.858376,"lon":2.358229}
 	    ],
 	    "targets":[
-	      {"lat":48.865082,"lon":2.362597},
+	      {"lat":48.865032,"lon":2.362484},
 	      {"lat":48.862484,"lon":2.365708},
 	      {"lat":48.868229,"lon":2.360172},
 	      {"lat":48.865448,"lon":2.363641}
 	    ],
 	    "costing":"bikeshare"
 	  })";
-  std::vector<TimeDistance> matrix_answers = {{712, 1182}, {894, 1262}, {942, 1983}, {775, 1268}};
+  std::vector<TimeDistance> matrix_answers = {{624, 1057}, {739, 1667}, {860, 1865}, {693, 1151}};
   test(test_request, matrix_answers);
 }
 
 TEST_F(MatrixBssTest, ManyToOne) {
   const auto test_request = R"({
 	    "sources":[
-	      {"lat":48.857204,"lon":2.358989},
-	      {"lat":48.859535,"lon":2.363044},
+	      {"lat":48.858376,"lon":2.358229},
+	      {"lat":48.859636,"lon":2.362984},
 	      {"lat":48.857826,"lon":2.366695},
 	      {"lat":48.85788 ,"lon":2.36125 }
 	    ],
 	    "targets":[
-	      {"lat":48.865082,"lon":2.362597}
+	      {"lat":48.865032,"lon":2.362484}
 	    ],
 	    "costing":"bikeshare"
 	  })";
-  std::vector<TimeDistance> matrix_answers = {{712, 1182}, {619, 1034}, {666, 1341}, {687, 1128}};
+  std::vector<TimeDistance> matrix_answers = {{624, 1057}, {616, 1031}, {659, 1332}, {679, 1121}};
   test(test_request, matrix_answers);
 }
 
 TEST_F(MatrixBssTest, ManyToMany) {
   const auto test_request = R"({
 	    "sources":[
-	      {"lat":48.857204,"lon":2.358989},
-	      {"lat":48.859535,"lon":2.363044},
+	      {"lat":48.858376,"lon":2.358229},
+	      {"lat":48.859636,"lon":2.362984},
 	      {"lat":48.857826,"lon":2.366695},
 	      {"lat":48.85788 ,"lon":2.36125 }
 	    ],
 	    "targets":[
-	      {"lat":48.865082,"lon":2.362597},
+	      {"lat":48.865032,"lon":2.362484},
 	      {"lat":48.862484,"lon":2.365708},
 	      {"lat":48.868229,"lon":2.360172},
 	      {"lat":48.865448,"lon":2.363641}
@@ -169,10 +175,10 @@ TEST_F(MatrixBssTest, ManyToMany) {
 	    "costing":"bikeshare"
 	  })";
 
-  std::vector<TimeDistance> matrix_answers = {{712, 1182}, {894, 1262}, {942, 1983}, {775, 1268},
-                                              {619, 1034}, {316, 445},  {884, 1236}, {561, 787},
-                                              {666, 1341}, {488, 689},  {800, 1790}, {728, 1427},
-                                              {687, 1131}, {485, 685},  {917, 1933}, {749, 1218}};
+  std::vector<TimeDistance> matrix_answers = {{624, 1057}, {739, 1667}, {860, 1865}, {693, 1151},
+                                              {616, 1031}, {313, 441},  {870, 1216}, {557, 782},
+                                              {659, 1332}, {489, 691},  {799, 1790}, {727, 1425},
+                                              {679, 1121}, {486, 685},  {915, 1929}, {747, 1214}};
 
   test(test_request, matrix_answers);
 }
