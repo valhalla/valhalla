@@ -488,7 +488,7 @@ public:
   sif::Cost base_transition_cost(const baldr::NodeInfo* node,
                                  const baldr::DirectedEdge* edge,
                                  const sif::EdgeLabel& pred,
-                                 const uint32_t idx) const {
+                                 const uint32_t idx) const override {
     return base_transition_cost_impl(node, edge, pred, idx);
   }
 
@@ -507,7 +507,7 @@ public:
   sif::Cost base_transition_cost(const baldr::NodeInfo* node,
                                  const baldr::DirectedEdge* edge,
                                  const baldr::DirectedEdge* pred,
-                                 const uint32_t idx) const {
+                                 const uint32_t idx) const override {
     return base_transition_cost_impl(node, edge, pred, idx);
   }
 };
