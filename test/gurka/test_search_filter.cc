@@ -194,9 +194,23 @@ inline void SetLiveSpeed(baldr::TrafficSpeed* live_speed, uint64_t speed) {
   live_speed->speed1 = speed >> 1;
 }
 
-void close_single_edge(baldr::GraphReader& reader,
+void close_dir_edge(baldr::GraphReader& reader,
+                    baldr::TrafficTile& tile,
+                    uint32_t index,
+                    baldr::TrafficSpeed* current,
+                    const std::string& edge_name,
+                    const std::string& start_node,
+                    const gurka::map& closure_map) {
+  baldr::GraphId tile_id(tile.header->tile_id);
+  auto edge = std::get<0>(gurka::findEdge(reader, closure_map.nodes, edge_name, start_node));
+  if (edge.Tile_Base() == tile_id && edge.id() == index) {
+    SetLiveSpeed(current, 0);
+  }
+}
+
+void close_bidir_edge(baldr::GraphReader& reader,
                        baldr::TrafficTile& tile,
-                       int index,
+                       uint32_t index,
                        baldr::TrafficSpeed* current,
                        const std::string& edge_name,
                        const gurka::map& closure_map) {
@@ -204,14 +218,10 @@ void close_single_edge(baldr::GraphReader& reader,
   std::string start_node(1, edge_name.front());
   std::string end_node(1, edge_name.back());
 
-  auto fwd = std::get<0>(gurka::findEdge(reader, closure_map.nodes, edge_name, start_node));
-  auto back = std::get<0>(gurka::findEdge(reader, closure_map.nodes, edge_name, end_node));
-  bool should_close = (fwd.Tile_Base() == tile_id && fwd.id() == index) ||
-                      (back.Tile_Base() == tile_id && back.id() == index);
-  if (should_close) {
-    SetLiveSpeed(current, 0);
-  }
+  close_dir_edge(reader, tile, index, current, edge_name, start_node, closure_map);
+  close_dir_edge(reader, tile, index, current, edge_name, end_node, closure_map);
 }
+
 } // namespace
 
 using costing_and_datetype = std::tuple<std::string, std::string>;
@@ -260,7 +270,8 @@ protected:
   void set_default_speed_on_all_edges() {
     test::customize_live_traffic_data(closure_map.config,
                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         int index, baldr::TrafficSpeed* current) -> void {
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+                                        (void) reader, (void) tile, (void) index;
                                         SetLiveSpeed(current, default_speed);
                                       });
   }
@@ -304,8 +315,8 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDeparture) {
   // exclude_closures set to true (default) & and use it otherwise
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         int index, baldr::TrafficSpeed* current) -> void {
-      close_single_edge(reader, tile, index, current, "AB", closure_map);
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_bidir_edge(reader, tile, index, current, "AB", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
@@ -356,8 +367,8 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDestination) {
   // exclude_closures set to true (default) & and use it otherwise
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         int index, baldr::TrafficSpeed* current) -> void {
-      close_single_edge(reader, tile, index, current, "DE", closure_map);
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_bidir_edge(reader, tile, index, current, "DE", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
@@ -408,12 +419,12 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtMidway) {
 
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         int index, baldr::TrafficSpeed* current) -> void {
-      close_single_edge(reader, tile, index, current, "DE", closure_map);
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_bidir_edge(reader, tile, index, current, "DE", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
-    // TODO: 1->2 fails to get route. Why?
+    // The route from 2->3 fails since there's no suitable edge from 2->3
     EXPECT_THROW((gurka::route(closure_map, {"1", "2", "3"}, costing,
                                {{"/date_time/type", date_type},
                                 {"/date_time/value", "current"},
@@ -464,8 +475,8 @@ TEST_P(ExcludeClosuresOnWaypoints, IgnoreClosuresOverridesExcludeClosures) {
   // exclude_closures set to true (default)
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         int index, baldr::TrafficSpeed* current) -> void {
-      close_single_edge(reader, tile, index, current, "CD", closure_map);
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_bidir_edge(reader, tile, index, current, "CD", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
@@ -514,9 +525,9 @@ TEST_P(ExcludeClosuresOnWaypoints, ConsecutiveClosuresAtDeparture) {
   // Close departure & destination edges
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         int index, baldr::TrafficSpeed* current) -> void {
-      close_single_edge(reader, tile, index, current, "AB", closure_map);
-      close_single_edge(reader, tile, index, current, "BC", closure_map);
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_bidir_edge(reader, tile, index, current, "AB", closure_map);
+      close_bidir_edge(reader, tile, index, current, "BC", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
@@ -542,6 +553,51 @@ TEST_P(ExcludeClosuresOnWaypoints, ConsecutiveClosuresAtDeparture) {
   }
 }
 
+TEST_P(ExcludeClosuresOnWaypoints, DISABLED_ConsecutiveClosuresWithLowReachability) {
+  // Tests that edge candidates with low reachability can be selected when
+  // routing out of consecutive closures
+  std::string costing = std::get<0>(GetParam());
+  std::string date_type = std::get<1>(GetParam());
+  std::string costing_speed_type =
+      (boost::format("/costing_options/%s/speed_types/0") % costing).str();
+
+  // Close departure & destination edges
+  {
+    LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_bidir_edge(reader, tile, index, current, "AB", closure_map);
+      close_bidir_edge(reader, tile, index, current, "BC", closure_map);
+    };
+    test::customize_live_traffic_data(closure_map.config, close_edge);
+
+    // Specify search filter to disable exclude_closures at departure
+    const std::string& req_disable_exclude_closures =
+        (boost::format(
+             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
+         std::to_string(closure_map.nodes.at("1").lat()) %
+         std::to_string(closure_map.nodes.at("1").lng()) %
+         std::to_string(closure_map.nodes.at("2").lat()) %
+         std::to_string(closure_map.nodes.at("2").lng()) % costing % costing % date_type)
+            .str();
+    EXPECT_THROW(gurka::route(closure_map, req_disable_exclude_closures, reader),
+                 valhalla_exception_t);
+
+    // Specify minimum reachability so that nearby edges (which were previously
+    // rejected due to low-reachbility), can be selected
+    const std::string& req_low_reachbility =
+        (boost::format(
+             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}, "minimum_reachability": 5},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
+         std::to_string(closure_map.nodes.at("1").lat()) %
+         std::to_string(closure_map.nodes.at("1").lng()) %
+         std::to_string(closure_map.nodes.at("2").lat()) %
+         std::to_string(closure_map.nodes.at("2").lng()) % costing % costing % date_type)
+            .str();
+    auto result = gurka::route(closure_map, req_low_reachbility, reader);
+    gurka::assert::osrm::expect_steps(result, {"HIC", "CD"});
+    gurka::assert::raw::expect_path(result, {"HIC", "CD", "DE"});
+  }
+}
+
 TEST_P(ExcludeClosuresOnWaypoints, AvoidOnlyMidwayClosures) {
   std::string costing = std::get<0>(GetParam());
   std::string date_type = std::get<1>(GetParam());
@@ -562,10 +618,10 @@ TEST_P(ExcludeClosuresOnWaypoints, AvoidOnlyMidwayClosures) {
   // Close edges at departure, midway & destination edges
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         int index, baldr::TrafficSpeed* current) -> void {
-      close_single_edge(reader, tile, index, current, "AB", closure_map);
-      close_single_edge(reader, tile, index, current, "CD", closure_map);
-      close_single_edge(reader, tile, index, current, "JK", closure_map);
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_bidir_edge(reader, tile, index, current, "AB", closure_map);
+      close_bidir_edge(reader, tile, index, current, "CD", closure_map);
+      close_bidir_edge(reader, tile, index, current, "JK", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
@@ -574,8 +630,8 @@ TEST_P(ExcludeClosuresOnWaypoints, AvoidOnlyMidwayClosures) {
                                 {"/date_time/value", "current"},
                                 {costing_speed_type, "current"}},
                                reader);
-    gurka::assert::osrm::expect_steps(result, {"HIC", "CFGD", "DE"});
-    gurka::assert::raw::expect_path(result, {"HIC", "CFGD", "DE", "EJ"});
+    gurka::assert::osrm::expect_steps(result, {"BC", "CFGD", "DE"});
+    gurka::assert::raw::expect_path(result, {"BC", "CFGD", "DE", "EJ"});
 
     const std::string& req_disable_exclude_closures =
         (boost::format(
@@ -611,8 +667,8 @@ TEST_P(ExcludeClosuresOnWaypoints, TrivialRouteSameEdge) {
   // Close LM edge
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         int index, baldr::TrafficSpeed* current) -> void {
-      close_single_edge(reader, tile, index, current, "LM", closure_map);
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_bidir_edge(reader, tile, index, current, "LM", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
@@ -660,9 +716,9 @@ TEST_P(ExcludeClosuresOnWaypoints, DISABLED_TrivialRouteAdjacentEdges) {
   // Close adjacent edges LM & MN
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         int index, baldr::TrafficSpeed* current) -> void {
-      close_single_edge(reader, tile, index, current, "LM", closure_map);
-      close_single_edge(reader, tile, index, current, "MN", closure_map);
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_bidir_edge(reader, tile, index, current, "LM", closure_map);
+      close_bidir_edge(reader, tile, index, current, "MN", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
@@ -900,7 +956,8 @@ protected:
   void set_default_speed_on_all_edges() {
     test::customize_live_traffic_data(closure_map.config,
                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         int index, baldr::TrafficSpeed* current) -> void {
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+                                        (void) reader, (void) tile, (void) index;
                                         SetLiveSpeed(current, default_speed);
                                       });
   }
@@ -940,12 +997,12 @@ TEST_P(DISABLED_ExcludeConsecutiveEdgeClosures, UturnDueToClosure) {
     gurka::assert::raw::expect_path(result, {"CD", "DE"});
   }
 
-  // Close consecutive edges CD & DE
+  // Close consecutive edges CD & DE in fwd direction
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         int index, baldr::TrafficSpeed* current) -> void {
-      close_single_edge(reader, tile, index, current, "CD", closure_map);
-      close_single_edge(reader, tile, index, current, "DE", closure_map);
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_dir_edge(reader, tile, index, current, "CD", "D", closure_map);
+      close_dir_edge(reader, tile, index, current, "DE", "E", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
@@ -995,12 +1052,12 @@ TEST_P(DISABLED_ExcludeConsecutiveEdgeClosures, DistantSnapDueToClosure) {
     gurka::assert::raw::expect_path(result, {"KM", "HK", "HI", "FI", "EF", "BE"});
   }
 
-  // Close consecutive edges CD & DE
+  // Close consecutive edges HK & KM
   {
     LiveTrafficCustomize close_edge = [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
-                                         int index, baldr::TrafficSpeed* current) -> void {
-      close_single_edge(reader, tile, index, current, "HK", closure_map);
-      close_single_edge(reader, tile, index, current, "KM", closure_map);
+                                         uint32_t index, baldr::TrafficSpeed* current) -> void {
+      close_bidir_edge(reader, tile, index, current, "HK", closure_map);
+      close_bidir_edge(reader, tile, index, current, "KM", closure_map);
     };
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
