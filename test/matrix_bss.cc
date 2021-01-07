@@ -74,7 +74,8 @@ const auto config = test::json_to_pt(R"({
 
 } // namespace
 
-const uint32_t kThreshold = 1;
+const uint32_t kDistanceThreshold = 5;
+const uint32_t kTimeThreshold = 2;
 
 class MatrixBssTest : public ::testing::Test {
 
@@ -98,12 +99,12 @@ public:
                                            reader, mode_costing, TravelMode::kPedestrian, 400000.0);
 
     for (uint32_t i = 0; i < results.size(); ++i) {
-      EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
+      EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kDistanceThreshold)
           << "result " + std::to_string(i) + "'s distance is not equal to" +
                  " the expected value for TimeDistMatrix "
           << results[i].dist << " expected: " << matrix_answers[i].dist;
 
-      EXPECT_NEAR(results[i].time, matrix_answers[i].time, kThreshold)
+      EXPECT_NEAR(results[i].time, matrix_answers[i].time, kTimeThreshold)
           << "result " + std::to_string(i) +
                  "'s time is not equal to the expected value for TimeDistMatrix"
           << results[i].time << " expected " << matrix_answers[i].time;
@@ -147,7 +148,7 @@ TEST_F(MatrixBssTest, ManyToOne) {
 	    ],
 	    "costing":"bikeshare"
 	  })";
-  std::vector<TimeDistance> matrix_answers = {{712, 1182}, {619, 1034}, {666, 1341}, {687, 1131}};
+  std::vector<TimeDistance> matrix_answers = {{712, 1182}, {619, 1034}, {666, 1341}, {687, 1128}};
   test(test_request, matrix_answers);
 }
 
@@ -170,7 +171,7 @@ TEST_F(MatrixBssTest, ManyToMany) {
 
   std::vector<TimeDistance> matrix_answers = {{712, 1182}, {894, 1262}, {942, 1983}, {775, 1268},
                                               {619, 1034}, {316, 445},  {884, 1236}, {561, 787},
-                                              {666, 1341}, {488, 689},  {800, 1749}, {728, 1427},
+                                              {666, 1341}, {488, 689},  {800, 1790}, {728, 1427},
                                               {687, 1131}, {485, 685},  {917, 1933}, {749, 1218}};
 
   test(test_request, matrix_answers);
