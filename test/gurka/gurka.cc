@@ -805,9 +805,12 @@ std::string dump_geojson_graph(const map& graph) {
       for (const std::string& name : info.GetNames()) {
         names.PushBack(rapidjson::Value(name, doc.GetAllocator()).Move(), doc.GetAllocator());
       }
-      properties.AddMember("edge_id", std::to_string(edge_id), doc.GetAllocator());
-      properties.AddMember("opp_edge_id", std::to_string(reader.GetOpposingEdgeId(edge_id)),
-                           doc.GetAllocator());
+
+      // TODO: why on earth do we need decltype?
+      properties.AddMember(decltype(doc)::StringRefType(edge.forward() ? "edge_id" : "opp_edge_id"),
+                           std::to_string(edge_id), doc.GetAllocator());
+      properties.AddMember(decltype(doc)::StringRefType(edge.forward() ? "opp_edge_id" : "edge_id"),
+                           std::to_string(reader.GetOpposingEdgeId(edge_id)), doc.GetAllocator());
       properties.AddMember("names", names, doc.GetAllocator());
 
       // add the geom

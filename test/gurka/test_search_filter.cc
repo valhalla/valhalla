@@ -553,7 +553,7 @@ TEST_P(ExcludeClosuresOnWaypoints, ConsecutiveClosuresAtDeparture) {
   }
 }
 
-TEST_P(ExcludeClosuresOnWaypoints, DISABLED_ConsecutiveClosuresWithLowReachability) {
+TEST_P(ExcludeClosuresOnWaypoints, ConsecutiveClosuresWithLowReachability) {
   // Tests that edge candidates with low reachability can be selected when
   // routing out of consecutive closures
   std::string costing = std::get<0>(GetParam());
@@ -573,7 +573,9 @@ TEST_P(ExcludeClosuresOnWaypoints, DISABLED_ConsecutiveClosuresWithLowReachabili
     // Specify search filter to disable exclude_closures at departure
     const std::string& req_disable_exclude_closures =
         (boost::format(
-             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
+             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s}],"costing":"%s",
+       "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}},
+       "date_time":{"type":"%s", "value": "current"}})") %
          std::to_string(closure_map.nodes.at("1").lat()) %
          std::to_string(closure_map.nodes.at("1").lng()) %
          std::to_string(closure_map.nodes.at("2").lat()) %
@@ -584,17 +586,19 @@ TEST_P(ExcludeClosuresOnWaypoints, DISABLED_ConsecutiveClosuresWithLowReachabili
 
     // Specify minimum reachability so that nearby edges (which were previously
     // rejected due to low-reachbility), can be selected
+    // Note: we must turn off candidate ranking because of a bug in bidira* that
+    // doesnt continue the other direction of the search if one becomes exhausted
     const std::string& req_low_reachbility =
         (boost::format(
-             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}, "minimum_reachability": 5},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
+             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}, "minimum_reachability": 2, "rank_candidates":false},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
          std::to_string(closure_map.nodes.at("1").lat()) %
          std::to_string(closure_map.nodes.at("1").lng()) %
          std::to_string(closure_map.nodes.at("2").lat()) %
          std::to_string(closure_map.nodes.at("2").lng()) % costing % costing % date_type)
             .str();
     auto result = gurka::route(closure_map, req_low_reachbility, reader);
-    gurka::assert::osrm::expect_steps(result, {"HIC", "CD"});
-    gurka::assert::raw::expect_path(result, {"HIC", "CD", "DE"});
+    gurka::assert::osrm::expect_steps(result, {"BC"});
+    gurka::assert::raw::expect_path(result, {"BC", "CD", "DE"});
   }
 }
 
@@ -887,8 +891,9 @@ TEST_P(ExcludeClosuresOnWaypoints, ConflictingOptions) {
 std::vector<costing_and_datetype> buildParams() {
   std::vector<costing_and_datetype> params;
 
-  std::vector<std::string> costings = {"auto",  "motorcycle", "motor_scooter", "bus",
-                                       "truck", "hov",        "taxi"};
+  std::vector<std::string> costings = {
+      "auto", "motorcycle", "motor_scooter", "bus", "truck", "hov", "taxi",
+  };
   params.reserve(costings.size());
   for (const auto& costing : costings) {
     // Add date_type:3 for time-invariant bidir a*

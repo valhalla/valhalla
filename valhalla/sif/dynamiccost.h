@@ -931,16 +931,6 @@ protected:
   inline virtual bool IsClosed(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
     return !ignore_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
   }
-
-  /*
-   * Determine whether an edge is filtered due to traffic closure.
-   * @param  edgeid         GraphId of the opposing edge.
-   * @return  Returns true if the edge is filtered due to live traffic closure, false if not.
-   */
-  inline virtual bool FilterClosed(const baldr::DirectedEdge* edge,
-                                   const graph_tile_ptr& tile) const {
-    return filter_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
-  }
 };
 
 using cost_ptr_t = std::shared_ptr<DynamicCost>;
