@@ -73,6 +73,9 @@ struct AvoidEdge {
 struct Cost {
   float cost;
   float secs;
+  // TODO:
+  // float dist;
+  // float consumption;
 
   /**
    * Default constructor
