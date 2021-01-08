@@ -101,6 +101,8 @@ void route_references(baldr::json::MapPtr& route_json,
                       const TripRoute& route,
                       const Options& options);
 
+void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer);
+
 } // namespace tyr
 } // namespace valhalla
 

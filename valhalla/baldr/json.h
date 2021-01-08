@@ -12,6 +12,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace baldr {
@@ -47,10 +48,10 @@ public:
 };
 
 // the array value type in json
-class Jarray : public std::list<Value> {
+class Jarray : public std::vector<Value> {
 public:
   // just specialize vector
-  using std::list<Value>::list;
+  using std::vector<Value>::vector;
 
 protected:
   // and be able to spit out text
