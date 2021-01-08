@@ -44,6 +44,17 @@ constexpr midgard::ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMax
                                                                  baldr::kMaxSpeedKph};
 
 /**
+ * Mask values used in the allowed function by loki::reach to control how conservative
+ * the decision should be. By default allowed methods will not disallow start/end/simple
+ * restrictions and closures are determined by the costing configuration
+ */
+constexpr uint16_t kDisallowNone = 0x0;
+constexpr uint16_t kDisallowStartRestriction = 0x1;
+constexpr uint16_t kDisallowEndRestriction = 0x2;
+constexpr uint16_t kDisallowSimpleRestriction = 0x4;
+constexpr uint16_t kDisallowClosure = 0x8;
+
+/**
  * Base class for dynamic edge costing. This class defines the interface for
  * costing methods and includes a few base methods that define default behavior
  * for cases where a derived class does not need to override the method.
@@ -193,11 +204,14 @@ public:
    *
    * This method is to be used by loki::search and loki::reach
    *
-   * @param edge the edge that should or shouldnt be filtered
-   * @param tile the tile which contains the edge (for traffic lookup)
+   * @param edge           the edge that should or shouldnt be allowed
+   * @param tile           the tile which contains the edge (for traffic lookup)
+   * @param disallow_mask  a mask that controls additional properties that should disallow the edge
    * @return true if the edge is allowed to be used (either as a candidate or a reach traversal)
    */
-  virtual bool Allowed(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const = 0;
+  virtual bool Allowed(const baldr::DirectedEdge* edge,
+                       const graph_tile_ptr& tile,
+                       uint16_t disallow_mask = kDisallowNone) const = 0;
 
   /**
    * Checks if access is allowed for the provided edge. The access check based on mode

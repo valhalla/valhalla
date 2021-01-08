@@ -262,7 +262,9 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by truck.
    */
-  bool Allowed(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const override {
+  bool Allowed(const baldr::DirectedEdge* edge,
+               const graph_tile_ptr& tile,
+               uint16_t disallow_mask = kDisallowNone) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
