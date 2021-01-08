@@ -124,6 +124,9 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Must happen after updating maneuver placement for internal edges
   CollapseSmallEndRampFork(maneuvers);
 
+  // Collapse merge maneuvers to reduce obvious instructions
+  CollapseMergeManeuvers(maneuvers);
+
   // Process the turn lanes. Must happen after updating maneuver placement for internal edges so we
   // activate the correct lanes.
   ProcessTurnLanes(maneuvers);
@@ -3416,6 +3419,30 @@ void ManeuversBuilder::CollapseSmallEndRampFork(std::list<Maneuver>& maneuvers) 
       curr_man = next_man;
       ++next_man;
     }
+  }
+}
+
+void ManeuversBuilder::CollapseMergeManeuvers(std::list<Maneuver>& maneuvers) {
+  // Set current maneuver
+  auto curr_man = maneuvers.begin();
+
+  // Set next maneuver
+  auto next_man = maneuvers.begin();
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+  }
+
+  // Walk the maneuvers to find merge maneuvers
+  while (next_man != maneuvers.end()) {
+
+    // If found, collapse the small end ramp fork maneuver
+    if (curr_man->ramp() && next_man->IsMergeType() && !curr_man->has_collapsed_merge_maneuver()) {
+      next_man = CombineManeuvers(maneuvers, curr_man, next_man);
+      curr_man->set_has_collapsed_merge_maneuver(true);
+    }
+    // on to the next maneuver...
+    curr_man = next_man;
+    ++next_man;
   }
 }
 

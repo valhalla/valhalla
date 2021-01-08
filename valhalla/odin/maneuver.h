@@ -280,6 +280,9 @@ public:
   bool has_collapsed_small_end_ramp_fork() const;
   void set_has_collapsed_small_end_ramp_fork(bool has_collapsed_small_end_ramp_fork);
 
+  bool has_collapsed_merge_maneuver() const;
+  void set_has_collapsed_merge_maneuver(bool has_collapsed_merge_maneuver);
+
   TripLeg_TravelMode travel_mode() const;
   void set_travel_mode(TripLeg_TravelMode travel_mode);
 
@@ -417,6 +420,7 @@ protected:
   float roundabout_length_;      // Kilometers
   float roundabout_exit_length_; // Kilometers
   bool has_collapsed_small_end_ramp_fork_;
+  bool has_collapsed_merge_maneuver_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support
