@@ -164,6 +164,7 @@ It's recommended to work with the following toolset:
 ```
 # Basic packages
 cd C:\path\to\vcpkg
+git checkout f4bd6423
 vcpkg.exe --triplet x64-windows install "@.vcpkg_deps.txt"
 ```
 2. Let CMake configure the build with the required modules enabled. **Note**, you have to manually link LuaJIT for some reason, e.g. the final command for `x64` could look like
