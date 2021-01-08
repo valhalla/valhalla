@@ -1,6 +1,8 @@
-# Isochrone service API reference
+# Isochrone & Isodistance service API reference
 
 An isochrone is a line that connects points of equal travel time about a given location, from the Greek roots of `iso` for equal and `chrone` for time. Valhalla's isochrone service computes areas that are reachable within specified time intervals from a location, and returns the reachable regions as contours of polygons or lines that you can display on a map.
+
+Isodistances follow the same concept, but instead of time one specifies distance intervals.
 
 Isochrone maps share some of the same concepts and terminology with familiar topographic maps, which depict contour lines for points of equal elevation. For this reason other terms common in topography apply, such as contours or isolines.
 
@@ -41,7 +43,7 @@ The isochrone service uses the `auto`, `bicycle`, `pedestrian`, and `multimodal`
 | :------------------ | :----------- |
 | `date_time` | The local date and time at the location. These parameters apply only for multimodal requests and are not used with other costing methods.<ul><li>`type`<ul><li>0 - Current departure time for multimodal requests.</li><li>1 - Specified departure time for multimodal requests.</li><li>2 - Specified arrival time. Note: This is not yet implemented.</li></ul></li><li>`value` - the date and time specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival. For example, "2016-07-03T08:06"</li></ul> |
 | `id` | Name of the isochrone request. If `id` is specified, the name is returned with the response. |
-| `contours` | A JSON array of contour objects with the time in minutes and color to use for each isochrone contour. You can specify up to four contours. <ul><li>`time` - A floating point value specifying the time in minutes for the contour.<li>`color` - The color for the output of the contour. Specify it as a [Hex value](http://www.w3schools.com/colors/colors_hexadecimal.asp), but without the `#`, such as `"color":"ff0000"` for red. If no color is specified, the isochrone service will assign a default color to the output.</li></ul>  |
+| `contours` | A JSON array of contour objects with the time in minutes or distance in kilometers and color to use for each isochrone contour. You can specify up to four contours (by default).<ul><li>`time` - A floating point value specifying the time in minutes for the contour.</li><li>`distance` - A floating point value specifying the distance in kilometers for the contour.</li><li>`color` - The color for the output of the contour. Specify it as a [Hex value](http://www.w3schools.com/colors/colors_hexadecimal.asp), but without the `#`, such as `"color":"ff0000"` for red. If no color is specified, the isochrone service will assign a default color to the output.</li></ul>You can only specify **one metric per contour**, i.e. `time` or `distance`.  |
 | `polygons` | A Boolean value to determine whether to return geojson polygons or linestrings as the contours. The default is `false`, which returns lines; when `true`, polygons are returned. Note: When `polygons` is `true`, any contour that forms a ring is returned as a polygon. |
 | `denoise` | A floating point value from `0` to `1` (default of `1`) which can be used to remove smaller contours. A value of `1` will only return the largest contour for a given time value. A value of `0.5` drops any contours that are less than half the area of the largest contour in the set of contours for that same time value. |
 | `generalize` | A floating point value in meters used as the tolerance for [Douglas-Peucker](https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm) generalization. Note: Generalization of contours can lead to self-intersections, as well as intersections of adjacent contours. |
@@ -51,7 +53,7 @@ The isochrone service uses the `auto`, `bicycle`, `pedestrian`, and `multimodal`
 
 In the service response, the isochrone contours are returned as [GeoJSON](http://geojson.org/), which can be integrated into mapping applications.
 
-The contours are calculated using rasters and are returned as either polygon or line features, depending on your input setting for the `polygons` parameter. If an isochrone request has been named using the optional `&id=` input, then the `id` is returned as a name property for the feature collection within the GeoJSON response.
+The contours are calculated using rasters and are returned as either polygon or line features, depending on your input setting for the `polygons` parameter. If an isochrone request has been named using the optional `&id=` input, then the `id` is returned as a name property for the feature collection within the GeoJSON response. A `metric` attribute lets you know whether it's a `distance` or `time` contour.
 
 See the [HTTP return codes](../turn-by-turn/api-reference.md#http-status-codes-and-conditions) for more on messages you might receive from the service.
 
@@ -73,7 +75,7 @@ The Isochrone service is in active development. To report software issues or sug
 
 Several other options are being considered as future service enhancements. These include:
 
-* Using distance rather than time for each unit.
+* ~~Using distance rather than time for each unit.~~
 * Generating outer contours or contours with interior holes for regions that cannot be accessed within the specified time, including with options to control the minimum size of interior holes.
 * Removing self intersections from polygonal contours.
 * Allowing multiple locations to compute the region reachable from any of the locations within a specified time.
