@@ -225,7 +225,7 @@ public:
    * This is used to conflate the stops to OSM way ids and we don't want to
    * include ferries.
    */
-  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr&) const override {
+  bool Allowed(const baldr::DirectedEdge* edge, const graph_tile_ptr&) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));

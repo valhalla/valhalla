@@ -187,23 +187,17 @@ public:
   }
 
   /**
-   * Returns a value between 0 and 1 indicating how
-   * desirable the edge is for use as a location. A value of 0 indicates the
-   * edge is not usable (no access for the travel mode used by this costing)
-   * while 1 indicates the edge is highly preferred. Values in between can be
-   * used to rank edges such that desirable edges that might be slightly
-   * farther from the location than a less desirable edge can be chosen.
+   * Used for determine the viability of a candidate edge as well as a conservative reachability
+   * The notable difference to the full featured allowed method is this methods lack of info
+   * about the currently tracked path (hence why its conservative)
    *
-   * Function to be used in location searching which will
-   * exclude and allow ranking results from the search by looking at each
-   * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method.
+   * This method is to be used by loki::search and loki::reach
    *
    * @param edge the edge that should or shouldnt be filtered
    * @param tile the tile which contains the edge (for traffic lookup)
-   * @return
+   * @return true if the edge is allowed to be used (either as a candidate or a reach traversal)
    */
-  virtual float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const = 0;
+  virtual bool Allowed(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const = 0;
 
   /**
    * Checks if access is allowed for the provided edge. The access check based on mode
