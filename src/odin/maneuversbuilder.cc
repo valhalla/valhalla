@@ -47,10 +47,13 @@ constexpr float kShortForkThreshold = 0.05f; // Kilometers
 // in a quarter mile or 400 meters
 constexpr float kShortContinueThreshold = 0.6f;
 
-constexpr uint32_t kOverlaySignBoardEdgeMax =
-    5; // Maximum number of edges to look for matching overlay
+// Maximum number of edges to look for matching overlay
+constexpr uint32_t kOverlaySignBoardEdgeMax = 5;
 
 constexpr float kUpcomingLanesThreshold = 3.f; // Kilometers
+
+// Small end ramp fork threshold in kilometers
+constexpr float kSmallEndRampForkThreshold = 0.125f;
 
 std::vector<std::string> split(const std::string& source, char delimiter) {
   std::vector<std::string> tokens;
@@ -116,6 +119,10 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 
   // Update the maneuver placement for internal intersection turns
   UpdateManeuverPlacementForInternalIntersectionTurns(maneuvers);
+
+  // Collapse small end ramp fork maneuvers to reduce verbose instructions
+  // Must happen after updating maneuver placement for internal edges
+  CollapseSmallEndRampFork(maneuvers);
 
   // Process the turn lanes. Must happen after updating maneuver placement for internal edges so we
   // activate the correct lanes.
@@ -3355,6 +3362,60 @@ void ManeuversBuilder::MoveInternalEdgeToPreviousManeuver(Maneuver& prev_maneuve
   // then copy the turn lanes from the previous edge
   if (edge->turn_lanes_size() == 0) {
     edge->mutable_turn_lanes()->CopyFrom(prev_edge->turn_lanes());
+  }
+}
+
+void ManeuversBuilder::CollapseSmallEndRampFork(std::list<Maneuver>& maneuvers) {
+  // Set previous maneuver
+  auto prev_man = maneuvers.begin();
+
+  // Set current maneuver
+  auto curr_man = maneuvers.begin();
+  auto next_man = maneuvers.begin();
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+    curr_man = next_man;
+  }
+
+  // Set next maneuver
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+  }
+
+  auto is_fork_then_turn_same_direction =
+      [](const DirectionsLeg_Maneuver_Type curr_maneuver_type,
+         const DirectionsLeg_Maneuver_Type next_maneuver_type) -> bool {
+    if ((curr_maneuver_type == DirectionsLeg_Maneuver_Type_kStayRight) &&
+        ((next_maneuver_type == DirectionsLeg_Maneuver_Type_kSlightRight) ||
+         (next_maneuver_type == DirectionsLeg_Maneuver_Type_kRight) ||
+         (next_maneuver_type == DirectionsLeg_Maneuver_Type_kSharpRight))) {
+      return true;
+    } else if ((curr_maneuver_type == DirectionsLeg_Maneuver_Type_kStayLeft) &&
+               ((next_maneuver_type == DirectionsLeg_Maneuver_Type_kSlightLeft) ||
+                (next_maneuver_type == DirectionsLeg_Maneuver_Type_kLeft) ||
+                (next_maneuver_type == DirectionsLeg_Maneuver_Type_kSharpLeft))) {
+      return true;
+    }
+    return false;
+  };
+
+  // Walk the maneuvers to find small end ramp fork maneuvers
+  while (next_man != maneuvers.end()) {
+
+    // If found, collapse the small end ramp fork maneuver
+    if ((prev_man != curr_man) && !prev_man->has_collapsed_small_end_ramp_fork() &&
+        prev_man->ramp() && curr_man->ramp() && !next_man->ramp() &&
+        (curr_man->length(Options::kilometers) <= kSmallEndRampForkThreshold) &&
+        is_fork_then_turn_same_direction(curr_man->type(), next_man->type())) {
+      curr_man = CombineManeuvers(maneuvers, prev_man, curr_man);
+      prev_man->set_has_collapsed_small_end_ramp_fork(true);
+      ++next_man;
+    } else {
+      // on to the next maneuver...
+      prev_man = curr_man;
+      curr_man = next_man;
+      ++next_man;
+    }
   }
 }
 
