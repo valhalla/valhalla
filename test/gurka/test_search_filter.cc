@@ -573,9 +573,7 @@ TEST_P(ExcludeClosuresOnWaypoints, ConsecutiveClosuresWithLowReachability) {
     // Specify search filter to disable exclude_closures at departure
     const std::string& req_disable_exclude_closures =
         (boost::format(
-             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s}],"costing":"%s",
-       "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}},
-       "date_time":{"type":"%s", "value": "current"}})") %
+             R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_closures":false}},{"lat":%s,"lon":%s}],"costing":"%s", "costing_options": {"%s": {"speed_types":["freeflow","constrained","predicted","current"]}}, "date_time":{"type":"%s", "value": "current"}})") %
          std::to_string(closure_map.nodes.at("1").lat()) %
          std::to_string(closure_map.nodes.at("1").lng()) %
          std::to_string(closure_map.nodes.at("2").lat()) %
