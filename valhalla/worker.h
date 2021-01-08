@@ -4,6 +4,7 @@
 
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/valhalla.h>
 
@@ -137,6 +138,9 @@ const std::unordered_map<unsigned, std::string>
 
                 {599, "Unknown"}};
 
+/**
+ * Project specific error messages and codes that can be converted to http responses
+ */
 struct valhalla_exception_t : public std::runtime_error {
   valhalla_exception_t(unsigned code, const boost::optional<std::string>& extra = boost::none);
   const char* what() const noexcept override {
@@ -148,6 +152,19 @@ struct valhalla_exception_t : public std::runtime_error {
   std::string http_message;
   unsigned http_code;
 };
+
+// time this whole method and save that statistic
+inline midgard::scoped_timer<> measure_scope_time(Api& api, const std::string& statistic_name) {
+  // we take a copy of the stat to avoid cases when its a temporary and goes out of scope before the
+  // lambda below goes to actually use it
+  return midgard::scoped_timer<>([&api, statistic_name](
+                                     const midgard::scoped_timer<>::duration_t& elapsed) {
+    auto e = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(elapsed).count();
+    auto* stat = api.mutable_info()->mutable_statistics()->Add();
+    stat->set_name(statistic_name);
+    stat->set_value(e);
+  });
+}
 
 // TODO: this will go away and Options will be the request object
 void ParseApi(const std::string& json_request, Options::Action action, Api& api);

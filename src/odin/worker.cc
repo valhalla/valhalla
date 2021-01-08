@@ -11,6 +11,7 @@
 #include "baldr/json.h"
 #include "midgard/logging.h"
 
+#include "midgard/util.h"
 #include "odin/directionsbuilder.h"
 #include "odin/util.h"
 #include "odin/worker.h"
@@ -26,7 +27,7 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace odin {
 
-odin_worker_t::odin_worker_t(const boost::property_tree::ptree& config) {
+odin_worker_t::odin_worker_t(const boost::property_tree::ptree&) {
 }
 
 odin_worker_t::~odin_worker_t() {
@@ -36,6 +37,9 @@ void odin_worker_t::cleanup() {
 }
 
 void odin_worker_t::narrate(Api& request) const {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request, "odin_worker_t::narrate");
+
   // get some annotated directions
   try {
     odin::DirectionsBuilder().Build(request);

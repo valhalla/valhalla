@@ -111,8 +111,12 @@
    * FIXED: If infer_internal_intersections is true then allow internals that are also ramps or TCs. Without this we produce an extra continue manuever.  [#2710](https://github.com/valhalla/valhalla/pull/2710)
    * FIXED: We were routing down roads that should be destination only. Now we mark roads with motor_vehicle=destination and motor_vehicle=customers or access=destination and access=customers as destination only. [#2722](https://github.com/valhalla/valhalla/pull/2722)
    * FIXED: Replace all Python2 print statements with Python3 syntax [#2716](https://github.com/valhalla/valhalla/issues/2716)
+   * FIXED: Some HGT files not found [#2723](https://github.com/valhalla/valhalla/issues/2723)
    * FIXED: Fix PencilPointUturn detection by removing short-edge check and updating angle threshold [#2725](https://github.com/valhalla/valhalla/issues/2725)
    * FIXED: Fix invalid continue/bear maneuvers [#2729](https://github.com/valhalla/valhalla/issues/2729)
+   * FIXED: Fixes an issue that lead to double turns within a very short distance, when instead, it should be a u-turn. We now collapse double L turns or double R turns in short non-internal intersections to u-turns. [#2740](https://github.com/valhalla/valhalla/pull/2740)
+   * FIXED: fixes an issue that lead to adding an extra maneuver. We now combine a current maneuver short length non-internal edges (left or right) with the next maneuver that is a kRampStraight. [#2741](https://github.com/valhalla/valhalla/pull/2741)
+   * FIXED: Reduce verbose instructions by collapsing small end ramp forks [#2762](https://github.com/valhalla/valhalla/issues/2762)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
@@ -221,6 +225,10 @@
    * ADDED: Log message if failed to create tiles directory. [#2738](https://github.com/valhalla/valhalla/pull/2738)
    * CHANGED: Tile memory is only owned by the GraphTile rather than shared amongst copies of the graph tile (in GraphReader and TileCaches). [#2340](https://github.com/valhalla/valhalla/pull/2340)
    * CHANGED: Add shortcuts to the tiles' bins so we can treat them like regular edges. [#2744](https://github.com/valhalla/valhalla/pull/2344)
+   * ADDED: Add Estonian locale. [#2748](https://github.com/valhalla/valhalla/pull/2748)
+   * CHANGED: Handle GraphTile objects as smart pointers [#2703](https://github.com/valhalla/valhalla/pull/2703)
+   * CHANGED: Improve stability with no RTTI build [#2759](https://github.com/valhalla/valhalla/pull/2759)
+   * CHANGED: Change generic service roads to a new Use=kServiceRoad. This is for highway=service without other service=* tags (such as driveway, alley, parking aisle).
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

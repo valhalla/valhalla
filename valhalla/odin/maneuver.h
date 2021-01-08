@@ -277,6 +277,9 @@ public:
   float roundabout_exit_length(const Options::Units& units = Options::kilometers) const;
   void set_roundabout_exit_length(float roundabout_exit_km_length); // Kilometers
 
+  bool has_collapsed_small_end_ramp_fork() const;
+  void set_has_collapsed_small_end_ramp_fork(bool has_collapsed_small_end_ramp_fork);
+
   TripLeg_TravelMode travel_mode() const;
   void set_travel_mode(TripLeg_TravelMode travel_mode);
 
@@ -413,6 +416,7 @@ protected:
   bool has_combined_enter_exit_roundabout_;
   float roundabout_length_;      // Kilometers
   float roundabout_exit_length_; // Kilometers
+  bool has_collapsed_small_end_ramp_fork_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support
