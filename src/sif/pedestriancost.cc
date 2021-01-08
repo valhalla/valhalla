@@ -365,15 +365,11 @@ public:
    * edges not usable / inaccessible by pedestrians.
    */
   bool Allowed(const baldr::DirectedEdge* edge,
-               const graph_tile_ptr&,
+               const graph_tile_ptr& tile,
                uint16_t disallow_mask = kDisallowNone) const override {
-    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    bool accessible = (edge->forwardaccess() & access_mask) ||
-                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-
-    return !(edge->is_shortcut() || edge->use() >= Use::kRail ||
-             edge->sac_scale() > max_hiking_difficulty_ || !accessible ||
-             (edge->bss_connection() && !project_on_bss_connection));
+    return DynamicCost::Allowed(edge, tile, disallow_mask) && edge->use() < Use::kRailFerry &&
+           edge->sac_scale() <= max_hiking_difficulty_ &&
+           (!edge->bss_connection() || project_on_bss_connection);
   }
 
   virtual Cost BSSCost() const override {

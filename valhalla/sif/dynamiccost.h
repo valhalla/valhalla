@@ -202,16 +202,26 @@ public:
    * The notable difference to the full featured allowed method is this methods lack of info
    * about the currently tracked path (hence why its conservative)
    *
-   * This method is to be used by loki::search and loki::reach
+   * This method is to be used by loki::search and loki::reach and the base class implementation is
+   * used to do basically accessibility and adherence to the disallow mask
    *
    * @param edge           the edge that should or shouldnt be allowed
    * @param tile           the tile which contains the edge (for traffic lookup)
    * @param disallow_mask  a mask that controls additional properties that should disallow the edge
    * @return true if the edge is allowed to be used (either as a candidate or a reach traversal)
    */
-  virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const graph_tile_ptr& tile,
-                       uint16_t disallow_mask = kDisallowNone) const = 0;
+  inline virtual bool Allowed(const baldr::DirectedEdge* edge,
+                              const graph_tile_ptr& tile,
+                              uint16_t disallow_mask = kDisallowNone) const {
+    auto access_mask = (ignore_access_ ? baldr::kAllAccess : access_mask_);
+    bool accessible = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    bool assumed_restricted =
+        ((disallow_mask & kDisallowStartRestriction) && edge->start_restriction()) ||
+        ((disallow_mask & kDisallowEndRestriction) && edge->end_restriction()) ||
+        ((disallow_mask & kDisallowSimpleRestriction) && edge->restrictions());
+    return !edge->is_shortcut() && accessible && !assumed_restricted;
+  }
 
   /**
    * Checks if access is allowed for the provided edge. The access check based on mode

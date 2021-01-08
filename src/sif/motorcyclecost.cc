@@ -273,17 +273,9 @@ public:
   bool Allowed(const baldr::DirectedEdge* edge,
                const graph_tile_ptr& tile,
                uint16_t disallow_mask = kDisallowNone) const override {
-    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    bool accessible = (edge->forwardaccess() & access_mask) ||
-                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
     bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
                           !(flow_mask_ & kCurrentFlowMask);
-    bool assumed_restricted =
-        ((disallow_mask & kDisallowStartRestriction) && edge->start_restriction()) ||
-        ((disallow_mask & kDisallowEndRestriction) && edge->end_restriction()) ||
-        ((disallow_mask & kDisallowSimpleRestriction) && edge->restrictions());
-    return !edge->is_shortcut() && accessible && edge->surface() <= kMinimumMotorcycleSurface &&
-           !edge->bss_connection() && !assumed_restricted &&
+    return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection()&&
            (allow_closures || !tile->IsClosed(edge));
   }
   // Hidden in source file so we don't need it to be protected
