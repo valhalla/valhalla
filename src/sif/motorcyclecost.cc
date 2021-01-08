@@ -275,7 +275,7 @@ public:
                uint16_t disallow_mask = kDisallowNone) const override {
     bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
                           !(flow_mask_ & kCurrentFlowMask);
-    return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection()&&
+    return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
            (allow_closures || !tile->IsClosed(edge));
   }
   // Hidden in source file so we don't need it to be protected
