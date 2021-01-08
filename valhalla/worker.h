@@ -69,6 +69,7 @@ const std::unordered_map<unsigned, std::string>
                 {163, "Invalid date_type"},
                 {164, "Invalid shape format"},
                 {165, "Date and time required for destination for date_type of invariant"},
+                {166, "Exceeded max distance"},
 
                 {167, "Exceeded maximum area for avoid_polygons"},
 

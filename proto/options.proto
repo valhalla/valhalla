@@ -6,6 +6,7 @@ import public "tripcommon.proto";
 message Contour {
   optional float time = 1;     // minutes
   optional string color = 2;   // hex color with out # - for example: "ff0000" for red
+  optional float distance = 3; // kilometers
 }
 
 enum ShapeMatch {
