@@ -8,7 +8,7 @@ The time distance matrix service takes a `sources` and `targets` to list locatio
 
 ## Inputs of the matrix service
 
-The matrix request run locally takes the form of `localhost:8002/sources_to_targets?json={}`, where the JSON inputs inside the `{}` includes at least one location for both sources and for targets as well as the route costing type and options for the route costing model.
+The matrix request run locally takes the form of `localhost:8002/sources_to_targets?json={}`, where the JSON inputs inside the `{}` includes at least one location for both sources and for targets as well as the route costing type and options for the route costing modelb.
 
 
 For example, while at your office, you want to know the times and distances to walk to several restaurants where you could have dinner, as well as the times and distances from each restaurant to the train station for your commute home. This will help you determine where to eat. 
@@ -48,7 +48,7 @@ You can refer to the [route location documentation](/turn-by-turn/api-reference.
 
 ### Costing parameters
 
-The Time-Distance Matrix service uses the `auto`, `bicycle` and `pedestrian` and other costing models available in the route service. Exception: **multimodal costing is not supported** for the time-distance matrix service at this time.  Refer to the [route costing models](/turn-by-turn/api-reference.md#costing-models) and [costing options](/turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
+The Time-Distance Matrix service uses the `auto`, `bicycle`, `pedestrian` and `bikeshare` and other costing models available in the route service. Exception: **multimodal costing is not supported** for the time-distance matrix service at this time.  Refer to the [route costing models](/turn-by-turn/api-reference.md#costing-models) and [costing options](/turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
 
 ### Other request options
 
