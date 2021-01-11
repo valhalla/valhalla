@@ -35,15 +35,12 @@ bool is_search_filter_triggered(const DirectedEdge* edge,
   // Note that min_ and max_road_class are integers where, by default, max_road_class
   // is 0 and min_road_class is 7. This filter rejects roads where the functional
   // road class is outside of the min to max range.
-  if ((road_class > min_road_class || road_class < max_road_class) ||
-      (search_filter.exclude_tunnel_ && edge->tunnel()) ||
-      (search_filter.exclude_bridge_ && edge->bridge()) ||
-      (search_filter.exclude_ramp_ && (edge->use() == Use::kRamp)) ||
-      (search_filter.exclude_closures_ && costing.IsClosed(edge, tile))) {
-    return true;
-  }
-
-  return false;
+  return (road_class > min_road_class || road_class < max_road_class) ||
+         (search_filter.exclude_tunnel_ && edge->tunnel()) ||
+         (search_filter.exclude_bridge_ && edge->bridge()) ||
+         (search_filter.exclude_ramp_ && (edge->use() == Use::kRamp)) ||
+         (search_filter.exclude_closures_ && (costing.flow_mask() & kCurrentFlowMask) &&
+          tile->IsClosed(edge));
 }
 
 bool side_filter(const PathLocation::PathEdge& edge, const Location& location, GraphReader& reader) {
@@ -305,7 +302,7 @@ struct bin_handler_t {
             tangent_angle(index, candidate.point, info.shape(),
                           GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
         // do we want this edge
-        if (costing->Filter(edge, tile) != 0.0f) {
+        if (costing->Allowed(edge, tile) != 0.0f) {
           auto reach = get_reach(id, edge);
           PathLocation::PathEdge
               path_edge{id, 0, node_ll, distance, PathLocation::NONE, reach.outbound, reach.inbound};
@@ -323,7 +320,7 @@ struct bin_handler_t {
         if (!other_edge)
           continue;
 
-        if (costing->Filter(other_edge, other_tile) != 0.0f) {
+        if (costing->Allowed(other_edge, other_tile) != 0.0f) {
           auto reach = get_reach(other_id, other_edge);
           PathLocation::PathEdge path_edge{other_id,
                                            1,
@@ -409,7 +406,7 @@ struct bin_handler_t {
       graph_tile_ptr other_tile;
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_edge, other_tile);
 
-      if (other_edge && costing->Filter(other_edge, other_tile) != 0.0f) {
+      if (other_edge && costing->Allowed(other_edge, other_tile) != 0.0f) {
         auto reach = get_reach(opposing_edge_id, other_edge);
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point,
                                                distance,         flip_side(side),  reach.outbound,
@@ -474,7 +471,7 @@ struct bin_handler_t {
 
     const DirectedEdge* opp_edge = nullptr;
     if (reach.outbound > 0 && reach.inbound > 0 && (opp_edge = reader.GetOpposingEdge(edge, tile)) &&
-        costing->Filter(opp_edge, tile) > 0.f) {
+        costing->Allowed(opp_edge, tile) > 0.f) {
       directed_reaches[opp_edge] = reach;
     }
     return reach;
@@ -494,11 +491,11 @@ struct bin_handler_t {
 
       // if this edge is filtered
       const auto* edge = tile->directededge(edge_id);
-      if (costing->Filter(edge, tile) == 0.0f) {
+      if (costing->Allowed(edge, tile) == 0.0f) {
         // then we try its opposing edge
         edge_id = reader.GetOpposingEdgeId(edge_id, edge, tile);
         // but if we couldnt get it or its filtered too then we move on
-        if (!edge_id.Is_Valid() || costing->Filter(edge, tile) == 0.0f)
+        if (!edge_id.Is_Valid() || costing->Allowed(edge, tile) == 0.0f)
           continue;
       }
 
@@ -578,7 +575,7 @@ struct bin_handler_t {
         GraphId opp_edgeid;
         // it's possible that it isnt reachable but the opposing is, switch to that if so
         if (!reachable && (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
-            costing->Filter(opp_edge, opp_tile) > 0.f) {
+            costing->Allowed(opp_edge, opp_tile) > 0.f) {
           auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, opp_edgeid);
           if (opp_reach.outbound >= p_itr->location.min_outbound_reach_ &&
               opp_reach.inbound >= p_itr->location.min_inbound_reach_) {

@@ -297,12 +297,13 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
 json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
   auto geojson = json::map({});
   auto coords = json::array({});
+  coords->reserve(shape.size());
   for (const auto& p : shape) {
     coords->emplace_back(
         json::array({json::fp_t{p.lng(), DIGITS_PRECISION}, json::fp_t{p.lat(), DIGITS_PRECISION}}));
   }
   geojson->emplace("type", std::string("LineString"));
-  geojson->emplace("coordinates", coords);
+  geojson->emplace("coordinates", std::move(coords));
   return geojson;
 }
 
@@ -377,9 +378,11 @@ void route_geometry(json::MapPtr& route,
 
 json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
   auto attributes_map = json::map({});
+  attributes_map->reserve(4);
 
   if (trip_leg.shape_attributes().time_size() > 0) {
     auto duration_array = json::array({});
+    duration_array->reserve(trip_leg.shape_attributes().time_size());
     for (const auto& time : trip_leg.shape_attributes().time()) {
       // milliseconds (ms) to seconds (sec)
       duration_array->push_back(json::fp_t{time * kSecPerMillisecond, 3});
@@ -389,6 +392,7 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
 
   if (trip_leg.shape_attributes().length_size() > 0) {
     auto distance_array = json::array({});
+    distance_array->reserve(trip_leg.shape_attributes().length_size());
     for (const auto& length : trip_leg.shape_attributes().length()) {
       // decimeters (dm) to meters (m)
       distance_array->push_back(json::fp_t{length * kMeterPerDecimeter, 1});
@@ -398,6 +402,7 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
 
   if (trip_leg.shape_attributes().speed_size() > 0) {
     auto speeds_array = json::array({});
+    speeds_array->reserve(trip_leg.shape_attributes().speed_size());
     for (const auto& speed : trip_leg.shape_attributes().speed()) {
       // dm/s to m/s
       speeds_array->push_back(json::fp_t{speed * kMeterPerDecimeter, 1});
@@ -407,6 +412,7 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
 
   if (trip_leg.shape_attributes().speed_limit_size() > 0) {
     auto speed_limits_array = json::array({});
+    speed_limits_array->reserve(trip_leg.shape_attributes().speed_limit_size());
     for (const auto& speed_limit : trip_leg.shape_attributes().speed_limit()) {
       auto speed_limit_annotation = json::map({});
       if (speed_limit == kUnlimitedSpeedLimit) {
@@ -1349,6 +1355,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
                               bool imperial,
                               const valhalla::Options& options) {
   auto output_legs = json::array({});
+  output_legs->reserve(path_legs.size());
 
   // Verify that the path_legs list is the same size as the legs list
   if (legs.size() != path_legs.size()) {
@@ -1360,6 +1367,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
   for (auto& path_leg : path_legs) {
     valhalla::odin::EnhancedTripLeg etp(path_leg);
     auto output_leg = json::map({});
+    output_leg->reserve(10);
 
     // Get the full shape for the leg. We want to use this for serializing
     // encoded shape for each step (maneuver) in OSRM output.
@@ -1381,6 +1389,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     json::MapPtr prev_step;
     for (const auto& maneuver : leg->maneuver()) {
       auto step = json::map({});
+      step->reserve(15); // lots of conditional stuff here
       bool depart_maneuver = (maneuver_index == 0);
       bool arrive_maneuver = (maneuver_index == leg->maneuver_size() - 1);
 
@@ -1500,22 +1509,24 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         // Add guidance_views if not the start maneuver
         if (!depart_maneuver && (maneuver.guidance_views_size() > 0)) {
           auto guidance_views = json::array({});
+          guidance_views->reserve(maneuver.guidance_views_size());
           for (const auto& gv : maneuver.guidance_views()) {
             auto guidance_view = json::map({});
             guidance_view->emplace("data_id", gv.data_id());
             guidance_view->emplace("type", GuidanceViewTypeToString(gv.type()));
             guidance_view->emplace("base_id", gv.base_id());
             auto overlay_ids = json::array({});
+            overlay_ids->reserve(gv.overlay_ids_size());
             for (const auto& overlay : gv.overlay_ids()) {
               overlay_ids->emplace_back(overlay);
             }
-            guidance_view->emplace("overlay_ids", overlay_ids);
+            guidance_view->emplace("overlay_ids", std::move(overlay_ids));
 
             // Append to guidance view list
-            guidance_views->emplace_back(guidance_view);
+            guidance_views->emplace_back(std::move(guidance_view));
           }
           // Add guidance views to step
-          step->emplace("guidance_views", guidance_views);
+          step->emplace("guidance_views", std::move(guidance_views));
         }
       }
 
@@ -1524,12 +1535,12 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
                     intersections(maneuver, &etp, shape, prev_intersection_count, arrive_maneuver));
 
       // Add step
-      steps->emplace_back(step);
       prev_rotary = rotary;
       prev_mode = mode;
       prev_step = step;
       prev_maneuver = &maneuver;
       maneuver_index++;
+      steps->emplace_back(std::move(step));
     } // end maneuver loop
     //#########################################################################
 
@@ -1558,6 +1569,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
     // Add admin country codes to leg json
     auto admins = json::array({});
+    admins->reserve(path_leg.admin_size());
     for (const auto& admin : path_leg.admin()) {
       auto admin_map = json::map({});
       if (admin.has_country_code()) {
@@ -1570,10 +1582,10 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       // TODO: iso_3166_2 state code
       admins->push_back(admin_map);
     }
-    output_leg->emplace("admins", admins);
+    output_leg->emplace("admins", std::move(admins));
 
     // Add steps to the leg
-    output_leg->emplace("steps", steps);
+    output_leg->emplace("steps", std::move(steps));
 
     // Add shape_attributes, if requested
     if (path_leg.has_shape_attributes()) {
@@ -1584,7 +1596,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     serializeIncidents(path_leg.incidents(), *output_leg);
 
     // Keep the leg
-    output_legs->emplace_back(output_leg);
+    output_legs->emplace_back(std::move(output_leg));
     leg++;
   }
   return output_legs;
@@ -1618,6 +1630,7 @@ std::string serialize(valhalla::Api& api) {
 
   // Add each route
   auto routes = json::array({});
+  routes->reserve(api.trip().routes_size());
 
   // OSRM is always using metric for non narrative stuff
   bool imperial = options.units() == Options::miles;
@@ -1626,6 +1639,8 @@ std::string serialize(valhalla::Api& api) {
   for (int i = 0; i < api.trip().routes_size(); ++i) {
     // Create a route to add to the array
     auto route = json::map({});
+    route->reserve(10); // some of the things are conditional so we take a swag here
+
     if (options.action() == Options::trace_route) {
       // NOTE(mookerji): confidence value here is a placeholder for future implementation.
       route->emplace("confidence", json::fp_t{1, 1});
@@ -1644,11 +1659,12 @@ std::string serialize(valhalla::Api& api) {
                                           *api.mutable_trip()->mutable_routes(i)->mutable_legs(),
                                           imperial, options));
 
-    routes->emplace_back(route);
+    routes->emplace_back(std::move(route));
   }
 
   // Routes are called matchings in osrm map matching mode
-  json->emplace(options.action() == valhalla::Options::trace_route ? "matchings" : "routes", routes);
+  json->emplace(options.action() == valhalla::Options::trace_route ? "matchings" : "routes",
+                std::move(routes));
 
   std::stringstream ss;
   ss << *json;

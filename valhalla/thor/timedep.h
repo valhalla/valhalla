@@ -97,8 +97,6 @@ protected:
    * @param  node         Graph Id of the node being expanded.
    * @param  pred         Predecessor edge label (for costing).
    * @param  pred_idx     Predecessor index into the EdgeLabel list.
-   * @param  from_transition True if this method is called from a transition
-   *                         edge.
    * @param  time_info    Tracks time offset as the route progresses
    * @param  dest         Location information of the destination.
    * @param  best_path    Best path found so far. Includes the index into
@@ -108,7 +106,6 @@ protected:
                      const baldr::GraphId& node,
                      sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
-                     const bool from_transition,
                      const baldr::TimeInfo& time_info,
                      const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);
@@ -180,14 +177,15 @@ protected:
   // Vector of edge labels (requires access by index).
   std::vector<sif::EdgeLabel> edgelabels_;
 
-  // Adjacency list - approximate double bucket sort
-  std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
-
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
 
   // Destinations, id and percent used along the edge
   std::unordered_map<uint64_t, float> destinations_percent_along_;
+
+private:
+  // Adjacency list - approximate double bucket sort
+  std::shared_ptr<baldr::DoubleBucketQueue<sif::EdgeLabel>> adjacencylist_;
 };
 
 /**
@@ -248,6 +246,9 @@ protected:
   // bidirectional edge label structure.
   std::vector<sif::BDEdgeLabel> edgelabels_rev_;
 
+  // Adjacency list - approximate double bucket sort
+  std::shared_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>> adjacencylist_rev_;
+
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
    * @param  origll  Lat,lng of the origin.
@@ -265,8 +266,6 @@ protected:
    * @param  pred         Predecessor edge label (for costing).
    * @param  pred_idx     Predecessor index into the EdgeLabel list.
    * @param  opp_pred_edge Opposing predecessor directed edge.
-   * @param  from_transition True if this method is called from a transition
-   *                         edge.
    * @param  time_info    Tracks time offset as the route progresses
    * @param  dest         Location information of the destination.
    * @param  best_path    Best path found so far. Includes the index into
@@ -277,7 +276,6 @@ protected:
                      sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
                      const baldr::DirectedEdge* opp_pred_edge,
-                     const bool from_transition,
                      const baldr::TimeInfo& time_info,
                      const valhalla::Location& dest,
                      std::pair<int32_t, float>& best_path);
