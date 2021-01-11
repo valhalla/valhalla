@@ -228,7 +228,6 @@
    * CHANGED: Handle GraphTile objects as smart pointers [#2703](https://github.com/valhalla/valhalla/pull/2703)
    * CHANGED: Improve stability with no RTTI build [#2759](https://github.com/valhalla/valhalla/pull/2759)
    * CHANGED: Change generic service roads to a new Use=kServiceRoad. This is for highway=service without other service=* tags (such as driveway, alley, parking aisle).
-   * ADDED: If the length of the edge is greater than kMaxEdgeLength, then consider this a catastrophic error if the should_error bool is true in the set_length function. [#2678](https://github.com/valhalla/valhalla/pull/2678)
    * ADDED: Add support for ignoring live traffic closures for waypoints [#2685](https://github.com/valhalla/valhalla/pull/2685)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
