@@ -181,8 +181,8 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::OneToMany(
   // Set up lambda to get sort costs
   const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
 
-  adjacencylist_ =
-      std::make_shared<DoubleBucketQueue>(0.0f, current_cost_threshold_, bucketsize, edgecost);
+  adjacencylist_ = std::make_shared<DoubleBucketQueue<sif::EdgeLabel>>(0.0f, current_cost_threshold_,
+                                                                       bucketsize, edgelabels_);
 
   edgelabels_.reserve(kInitialEdgeLabelCount);
   pedestrian_edgestatus_.clear();
@@ -375,11 +375,8 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ManyToOne(
 
   uint32_t bucketsize = std::max(pedestrian_costing_->UnitSize(), bicycle_costing_->UnitSize());
 
-  // Set up lambda to get sort costs
-  const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
-
-  adjacencylist_ =
-      std::make_shared<DoubleBucketQueue>(0.0f, current_cost_threshold_, bucketsize, edgecost);
+  adjacencylist_ = std::make_shared<DoubleBucketQueue<sif::EdgeLabel>>(0.0f, current_cost_threshold_,
+                                                                       bucketsize, edgelabels_);
 
   edgelabels_.reserve(kInitialEdgeLabelCount);
   pedestrian_edgestatus_.clear();
