@@ -17,8 +17,7 @@ namespace valhalla {
 namespace meili {
 
 LabelSet::LabelSet(const float max_cost, const float bucket_size) {
-  const auto edgecost = [this](const uint32_t label) { return labels_[label].sortcost(); };
-  queue_.reset(new baldr::DoubleBucketQueue(0.0f, max_cost, bucket_size, edgecost));
+  queue_.reset(new baldr::DoubleBucketQueue<Label>(0.0f, max_cost, bucket_size, labels_));
 }
 
 void LabelSet::put(const baldr::GraphId& nodeid,

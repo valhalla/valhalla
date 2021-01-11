@@ -101,7 +101,7 @@ const std::unordered_map<unsigned, unsigned> ERROR_TO_STATUS{
     {150, 400}, {151, 400}, {152, 400}, {153, 400}, {154, 400}, {155, 400}, {156, 400}, {157, 400},
     {158, 400}, {159, 400},
 
-    {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400}, {165, 400},
+    {160, 400}, {161, 400}, {162, 400}, {163, 400}, {164, 400}, {165, 400}, {166, 400}, {167, 400},
 
     {170, 400}, {171, 400}, {172, 400},
 
@@ -375,12 +375,9 @@ void parse_locations(const rapidjson::Document& doc,
           location->set_type(valhalla::Location::kVia);
         } // other actions let you specify whatever type of stop you want
         else if (stop_type_json) {
-          if (*stop_type_json == std::string("through"))
-            location->set_type(valhalla::Location::kThrough);
-          else if (*stop_type_json == std::string("via"))
-            location->set_type(valhalla::Location::kVia);
-          else if (*stop_type_json == std::string("break_through"))
-            location->set_type(valhalla::Location::kBreakThrough);
+          Location::Type type = Location::kBreak;
+          Location_Type_Enum_Parse(*stop_type_json, &type);
+          location->set_type(type);
         } // and if you didnt set it it defaulted to break which is not the default for trace_route
         else if (options.action() == Options::trace_route) {
           location->set_type(valhalla::Location::kVia);
@@ -570,26 +567,30 @@ void parse_contours(const rapidjson::Document& doc,
   // make sure the isoline definitions are valid
   auto json_contours = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, "/contours");
   if (json_contours) {
-    float prev = 0.f;
-    const float NO_TIME = -1.f;
     for (const auto& json_contour : *json_contours) {
-      // Grab contour time and validate that it is increasing
-      const float c = rapidjson::get_optional<float>(json_contour, "/time").get_value_or(NO_TIME);
-      if (c < prev || c == NO_TIME) {
+      // Grab contour time and distance
+      auto t = rapidjson::get_optional<float>(json_contour, "/time");
+      auto d = rapidjson::get_optional<float>(json_contour, "/distance");
+
+      // You need at least something
+      if (!t && !d) {
         throw valhalla_exception_t{111};
       }
 
-      // Add new contour object to list
+      // Set contour time/distance
       auto* contour = contours->Add();
-      // Set contour time
-      contour->set_time(c);
+      if (t) {
+        contour->set_time(*t);
+      }
+      if (d) {
+        contour->set_distance(*d);
+      }
 
       // If specified, grab and set contour color
       auto color = rapidjson::get_optional<std::string>(json_contour, "/color");
       if (color) {
         contour->set_color(*color);
       }
-      prev = c;
     }
   }
 }
