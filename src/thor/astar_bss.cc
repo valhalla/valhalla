@@ -85,7 +85,8 @@ void AStarBSSAlgorithm::Init(const midgard::PointLL& origll, const midgard::Poin
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = std::max(pedestrian_costing_->UnitSize(), bicycle_costing_->UnitSize());
   float range = kBucketCount * bucketsize;
-  adjacencylist_ = std::make_shared<DoubleBucketQueue>(mincost, range, bucketsize, edgecost);
+  adjacencylist_ =
+      std::make_shared<DoubleBucketQueue<EdgeLabel>>(mincost, range, bucketsize, edgelabels_);
   pedestrian_edgestatus_.clear();
   bicycle_edgestatus_.clear();
 }

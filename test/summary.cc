@@ -146,7 +146,7 @@ TEST(Summary, test_time_summary) {
       accumulated_time += maneuver["time"].GetDouble();
     }
     // make sure the end of the trip path is the same as the legs
-    EXPECT_NEAR(accumulated_time, leg["summary"].GetObject()["time"].GetDouble(), .01);
+    EXPECT_NEAR(accumulated_time, leg["summary"].GetObject()["time"].GetDouble(), .02);
   }
 
   // get the osrm json

@@ -370,12 +370,9 @@ void parse_locations(const rapidjson::Document& doc,
           location->set_type(valhalla::Location::kVia);
         } // other actions let you specify whatever type of stop you want
         else if (stop_type_json) {
-          if (*stop_type_json == std::string("through"))
-            location->set_type(valhalla::Location::kThrough);
-          else if (*stop_type_json == std::string("via"))
-            location->set_type(valhalla::Location::kVia);
-          else if (*stop_type_json == std::string("break_through"))
-            location->set_type(valhalla::Location::kBreakThrough);
+          Location::Type type = Location::kBreak;
+          Location_Type_Enum_Parse(*stop_type_json, &type);
+          location->set_type(type);
         } // and if you didnt set it it defaulted to break which is not the default for trace_route
         else if (options.action() == Options::trace_route) {
           location->set_type(valhalla::Location::kVia);
