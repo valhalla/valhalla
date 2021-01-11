@@ -56,7 +56,6 @@ std::string thor_worker_t::matrix(Api& request) {
     time_distances =
         matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
                               max_matrix_distance.find(costing)->second);
-
     return tyr::serializeMatrix(request, time_distances, distance_scale);
   }
   switch (source_to_target_algorithm) {

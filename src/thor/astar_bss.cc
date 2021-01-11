@@ -325,9 +325,6 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
       bicycle_edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
-    auto endnode = pred.endnode();
-    auto l = graphreader.GetGraphTile(endnode)->get_node_ll(endnode);
-
     // Check that distance is converging towards the destination. Return route
     // failure if no convergence for TODO iterations
     float dist2dest = pred.distance();
