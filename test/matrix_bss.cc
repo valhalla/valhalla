@@ -48,9 +48,14 @@ const auto config = test::json_to_pt(R"({
 	      "loki":{
 	        "actions":["sources_to_targets"],
 	        "logging":{"long_request": 100},
-	        "service_defaults":{"minimum_reachability": 2,
-			"radius": 10,
-			"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "heading_tolerance": 60, "street_side_max_distance": 1000}
+	        "service_defaults":{
+				"minimum_reachability": 2,
+				"radius": 10,
+				"search_cutoff": 35000, 
+				"node_snap_tolerance": 5, 
+				"street_side_tolerance": 5, 
+				"heading_tolerance": 60, 
+				"street_side_max_distance": 1000}
 	      },
 	      "thor":{"logging":{"long_request": 100}},
 	      "odin":{"logging":{"long_request": 100}},
@@ -61,21 +66,22 @@ const auto config = test::json_to_pt(R"({
 	              "max_route_distance_factor":5,"max_route_time_factor":5,"max_search_radius":200,"route":true,
 	              "search_radius":15.0,"sigma_z":4.07,"turn_penalty_factor":200}},
 	      "service_limits": {
-	        "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-	        "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-	        "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-	        "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-	        "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-	        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
-	        "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
-	        "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
-	        "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
-	        "skadi": {"max_shape": 750000,"min_resample": 10.0},
-	        "trace": {"max_distance": 200000.0,"max_gps_accuracy": 100.0,"max_search_radius": 100,"max_shape": 16000,"max_best_paths":4,"max_best_paths_shape":100},
-	        "transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-	        "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
+      		"auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
+      		"auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
+      		"bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
+      		"bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
+      		"hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
+      		"taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
+      		"isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time_contour": 240, "max_distance_contour":200},
+      		"max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
+      		"multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
+      		"pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
+      		"skadi": {"max_shape": 750000,"min_resample": 10.0},
+      		"trace": {"max_distance": 200000.0,"max_gps_accuracy": 100.0,"max_search_radius": 100,"max_shape": 16000,"max_best_paths":4,"max_best_paths_shape":100},
+      		"transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
+      		"truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
 	        "bikeshare": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
-	      }
+    		}
 	    })");
 
 } // namespace
@@ -132,12 +138,12 @@ TEST_F(MatrixBssTest, OneToMany) {
 	    "targets":[
 	      {"lat":48.865032,"lon":2.362484},
 	      {"lat":48.862484,"lon":2.365708},
-	      {"lat":48.868229,"lon":2.360172},
+	      {"lat":48.86911, "lon":2.36019},
 	      {"lat":48.865448,"lon":2.363641}
 	    ],
 	    "costing":"bikeshare"
 	  })";
-  std::vector<TimeDistance> matrix_answers = {{624, 1057}, {739, 1667}, {860, 1865}, {693, 1151}};
+  std::vector<TimeDistance> matrix_answers = {{624, 1057}, {739, 1667}, {742, 1699}, {693, 1151}};
   test(test_request, matrix_answers);
 }
 
@@ -169,16 +175,16 @@ TEST_F(MatrixBssTest, ManyToMany) {
 	    "targets":[
 	      {"lat":48.865032,"lon":2.362484},
 	      {"lat":48.862484,"lon":2.365708},
-	      {"lat":48.868229,"lon":2.360172},
+	      {"lat":48.86911, "lon": 2.36019},
 	      {"lat":48.865448,"lon":2.363641}
 	    ],
 	    "costing":"bikeshare"
 	  })";
 
-  std::vector<TimeDistance> matrix_answers = {{624, 1057}, {739, 1667}, {860, 1865}, {693, 1151},
-                                              {616, 1031}, {313, 441},  {870, 1216}, {557, 782},
-                                              {659, 1332}, {489, 691},  {799, 1790}, {727, 1425},
-                                              {679, 1121}, {486, 685},  {915, 1929}, {747, 1214}};
+  std::vector<TimeDistance> matrix_answers = {{624, 1057}, {739, 1667}, {742, 1699}, {693, 1151},
+                                              {616, 1031}, {313, 441},  {734, 1673}, {557, 782},
+                                              {659, 1332}, {489, 691},  {693, 1583}, {727, 1425},
+                                              {679, 1121}, {486, 685},  {797, 1763}, {747, 1214}};
 
   test(test_request, matrix_answers);
 }
