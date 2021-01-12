@@ -40,13 +40,11 @@ std::string serializeMatrix(const Api& request,
  * @param grid_contours    the contours generated from the grid
  * @param colors           the #ABC123 hex string color used in geojson fill color
  */
-template <class coord_t>
-std::string
-serializeIsochrones(const Api& request,
-                    const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
-                    bool polygons = true,
-                    const std::unordered_map<float, std::string>& colors = {},
-                    bool show_locations = false);
+std::string serializeIsochrones(const Api& request,
+                                std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
+                                midgard::GriddedData<2>::contours_t& contours,
+                                bool polygons = true,
+                                bool show_locations = false);
 
 /**
  * Turn heights and ranges into a height response
@@ -102,6 +100,8 @@ std::string serializeTraceAttributes(
 void route_references(baldr::json::MapPtr& route_json,
                       const TripRoute& route,
                       const Options& options);
+
+void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer);
 
 } // namespace tyr
 } // namespace valhalla
