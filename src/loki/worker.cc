@@ -84,7 +84,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
   // See if we have avoids and take care of them
-  if (options.avoid_locations_size() > max_avoid_locations) {
+  if ((size_t)options.avoid_locations_size() > max_avoid_locations) {
     throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
   }
 
@@ -268,7 +268,11 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     // Set the interrupt function
     service_worker_t::set_interrupt(&interrupt_function);
 
-    prime_server::worker_t::result_t result{true};
+    prime_server::worker_t::result_t result{
+        true,
+        {},
+        "",
+    };
     // do request specific processing
     switch (options.action()) {
       case Options::route:
