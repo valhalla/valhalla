@@ -3,6 +3,8 @@ import os
 
 from .valhalla_build_config import config as _config, help_text as _help_text, optional as _optional
 
+_global_config = dict()
+
 
 def get_default() -> dict:
     """Returns the default Valhalla configuration."""
@@ -12,11 +14,15 @@ def get_default() -> dict:
             c['mjolnir'][k] = ""
     return c
 
+
 def get_help() -> dict:
     """Returns the help texts to the Valhalla configuration."""
     return _help_text
 
+
 def _create_config(path: str, c: dict, tile_dir: str, tile_extract: str, verbose: bool) -> None:
+    # set a global config so that other modules can work with it
+    global _global_config
     conf = c.copy()
 
     if os.path.exists(path) and not conf:
@@ -40,3 +46,5 @@ def _create_config(path: str, c: dict, tile_dir: str, tile_extract: str, verbose
     # Finally write the config to filesystem
     with open(path, 'w') as f:
         json.dump(conf, f, indent=2)
+
+    _global_config = conf

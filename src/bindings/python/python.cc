@@ -28,7 +28,7 @@ const boost::property_tree::ptree& configure(const std::string& config_path = ""
                                              bool verbose = true) {
   static boost::property_tree::ptree pt;
 
-  // only build config when called from python's Configure!
+  // only build config when called from binding's Configure!
   if (!config_path.empty()) {
     // create the config on the filesystem via python
     py::object create_config = py::module_::import("valhalla.config").attr("_create_config");
@@ -68,25 +68,14 @@ void py_configure(const std::string& config_file,
 }
 
 bool py_build_tiles(const std::vector<std::string>& input_pbfs) {
-  // make sure the service is configured
   auto pt = configure();
 
+  // confuses the tile builder otherwise
   pt.get_child("mjolnir").erase("tile_extract");
   pt.get_child("mjolnir").erase("tile_url");
 
-  if (input_pbfs.empty()) {
-    throw std::invalid_argument("No PBF files specified");
-  }
-
   return vm::build_tile_set(pt, input_pbfs, vm::BuildStage::kInitialize, vm::BuildStage::kCleanup,
                             false);
-}
-
-void py_tar_tiles() {
-  const boost::property_tree::ptree& pt = configure();
-  // delegate tar balling to python
-  py::object tar_tiles = py::module_::import("valhalla._utils").attr("_tar_tiles");
-  tar_tiles(pt.get("mjolnir.tile_dir", ""), pt.get("mjolnir.tile_extract", ""));
 }
 } // namespace
 
@@ -131,7 +120,7 @@ PYBIND11_MODULE(python_valhalla, m) {
   m.def("Configure", py_configure, py::arg("config_file"), py::arg("config") = py::dict(),
         py::arg("tile_dir") = "", py::arg("tile_extract") = "", py::arg("verbose") = true);
 
-  py::class_<simplified_actor_t, std::shared_ptr<simplified_actor_t>>(m, "Actor")
+  py::class_<simplified_actor_t, std::shared_ptr<simplified_actor_t>>(m, "_Actor")
       .def(py::init<>([]() { return std::make_shared<simplified_actor_t>(configure()); }))
       .def("Route", &simplified_actor_t::route, "Calculates a route.")
       .def("Locate", &simplified_actor_t::locate, "Provides information about nodes and edges.")
@@ -155,9 +144,5 @@ PYBIND11_MODULE(python_valhalla, m) {
           "Expansion", &simplified_actor_t::expansion,
           "Returns all road segments which were touched by the routing algorithm during the graph traversal.");
 
-  m.def(
-      "BuildTiles", py_build_tiles,
-      "Builds the Valhalla tiles according to the config. Returns True if successful, False if not.");
-
-  m.def("TarTiles", py_tar_tiles);
+  m.def("_BuildTiles", py_build_tiles);
 }
