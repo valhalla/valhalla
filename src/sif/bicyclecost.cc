@@ -29,6 +29,7 @@ namespace {
 constexpr float kDefaultDestinationOnlyPenalty = 600.0f; // Seconds
 constexpr float kDefaultManeuverPenalty = 5.0f;          // Seconds
 constexpr float kDefaultAlleyPenalty = 60.0f;            // Seconds
+constexpr float kDefaultServicePenalty = 15.0f;          // Seconds
 constexpr float kDefaultGateCost = 30.0f;                // Seconds
 constexpr float kDefaultGatePenalty = 600.0f;            // Seconds
 constexpr float kDefaultFerryCost = 300.0f;              // Seconds
@@ -197,6 +198,7 @@ constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestin
 constexpr ranged_default_t<float> kManeuverPenaltyRange{0.0f, kDefaultManeuverPenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kDrivewayPenaltyRange{0.0f, kDefaultDrivewayPenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kAlleyPenaltyRange{0.0f, kDefaultAlleyPenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kServicePenaltyRange{0.0f, kDefaultServicePenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kGateCostRange{0.0f, kDefaultGateCost, kMaxPenalty};
 constexpr ranged_default_t<float> kGatePenaltyRange{0.0f, kDefaultGatePenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kFerryCostRange{0.0f, kDefaultFerryCost, kMaxPenalty};
@@ -367,6 +369,7 @@ public:
   float use_roads_;                // Preference of using roads between 0 and 1
   float road_factor_;              // Road factor based on use_roads_
   float avoid_bad_surfaces_;       // Preference of avoiding bad surfaces for the bike type
+  float service_penalty_;          // Penalty (seconds) to use a generic service road
 
   // Average speed (kph) on smooth, flat roads.
   float speed_;
@@ -398,19 +401,12 @@ protected:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by bicycle.
    */
-  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr&) const override {
-    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    bool accessible = (edge->forwardaccess() & access_mask) ||
-                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-
-    if (edge->is_shortcut() || !accessible || edge->use() == Use::kSteps ||
-        (avoid_bad_surfaces_ == 1.0f && edge->surface() > worst_allowed_surface_) ||
-        edge->bss_connection()) {
-      return 0.0f;
-    } else {
-      // TODO - use classification/use to alter the factor
-      return 1.0f;
-    }
+  bool Allowed(const baldr::DirectedEdge* edge,
+               const graph_tile_ptr& tile,
+               uint16_t disallow_mask = kDisallowNone) const override {
+    return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
+           edge->use() != Use::kSteps &&
+           (avoid_bad_surfaces_ != 1.0f || edge->surface() <= worst_allowed_surface_);
   }
 };
 
@@ -459,6 +455,9 @@ BicycleCost::BicycleCost(const CostingOptions& costing_options)
 
   // Willingness to use roads. Make sure this is within range [0, 1].
   use_roads_ = costing_options.use_roads();
+
+  // Penalty to use service roads
+  service_penalty_ = costing_options.service_penalty();
 
   // Set the road classification factor. use_roads factors above 0.5 start to
   // reduce the weight difference between road classes while factors below 0.5
@@ -746,6 +745,11 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
     turn_stress += (node->traffic_signal()) ? 0.4 : 1.0;
   }
 
+  // Penalize transitions onto service roads
+  if (edge->use() == Use::kServiceRoad && pred.use() != Use::kServiceRoad) {
+    penalty += service_penalty_;
+  }
+
   // Reduce penalty by bike_accom the closer use_roads_ is to 0
   penalty *= (bike_accom * avoid_roads) + use_roads_;
 
@@ -826,6 +830,11 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
     turn_stress += (node->traffic_signal()) ? 0.4 : 1.0;
   }
 
+  // Penalize transitions onto service roads
+  if (edge->use() == Use::kServiceRoad && pred->use() != Use::kServiceRoad) {
+    penalty += service_penalty_;
+  }
+
   // Reduce penalty by bike_accom the closer use_roads_ is to 0
   penalty *= (bike_accom * avoid_roads) + use_roads_;
 
@@ -862,6 +871,11 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_alley_penalty(
         kAlleyPenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_penalty")
                                .get_value_or(kDefaultAlleyPenalty)));
+
+    // alley_penalty
+    pbf_costing_options->set_service_penalty(
+        kServicePenaltyRange(rapidjson::get_optional<float>(*json_costing_options, "/service_penalty")
+                                 .get_value_or(kDefaultServicePenalty)));
 
     // gate_cost
     pbf_costing_options->set_gate_cost(
@@ -950,6 +964,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
     pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
     pbf_costing_options->set_alley_penalty(kDefaultAlleyPenalty);
+    pbf_costing_options->set_service_penalty(kDefaultServicePenalty);
     pbf_costing_options->set_gate_cost(kDefaultGateCost);
     pbf_costing_options->set_gate_penalty(kDefaultGatePenalty);
     pbf_costing_options->set_ferry_cost(kDefaultFerryCost);
@@ -994,6 +1009,7 @@ public:
   using BicycleCost::ferry_transition_cost_;
   using BicycleCost::gate_cost_;
   using BicycleCost::maneuver_penalty_;
+  using BicycleCost::service_penalty_;
 };
 
 TestBicycleCost* make_bicyclecost_from_json(const std::string& property, float testVal) {
@@ -1031,6 +1047,14 @@ TEST(BicycleCost, testBicycleCostParams) {
     ctorTester.reset(make_bicyclecost_from_json("alley_penalty", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->alley_penalty_,
                 test::IsBetween(kAlleyPenaltyRange.min, kAlleyPenaltyRange.max));
+  }
+
+  // service_penalty_
+  distributor.reset(make_distributor_from_range(kServicePenaltyRange));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_bicyclecost_from_json("service_penalty", (*distributor)(generator)));
+    EXPECT_THAT(ctorTester->service_penalty_,
+                test::IsBetween(kServicePenaltyRange.min, kServicePenaltyRange.max));
   }
 
   // destination_only_penalty_

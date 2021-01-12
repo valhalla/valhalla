@@ -281,17 +281,15 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by automobile.
    */
-  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const override {
-    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    bool accessible = (edge->forwardaccess() & access_mask) ||
-                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-    if (edge->is_shortcut() || !accessible || edge->bss_connection() || IsClosed(edge, tile)) {
-      return 0.0f;
-    } else {
-      // TODO - use classification/use to alter the factor
-      return 1.0f;
-    }
+  virtual bool Allowed(const baldr::DirectedEdge* edge,
+                       const graph_tile_ptr& tile,
+                       uint16_t disallow_mask = kDisallowNone) const override {
+    bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
+                          !(flow_mask_ & kCurrentFlowMask);
+    return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
+           (allow_closures || !tile->IsClosed(edge));
   }
+
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 public:
@@ -740,25 +738,6 @@ public:
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               int& restriction_idx) const override;
-
-  /**
-   * Function to be used in location searching which will
-   * exclude and allow ranking results from the search by looking at each
-   * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. It's also used to filter
-   * edges not usable / inaccessible by bus.
-   */
-  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const override {
-    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    bool accessible = (edge->forwardaccess() & access_mask) ||
-                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-    if (!accessible || IsClosed(edge, tile)) {
-      return 0.0f;
-    } else {
-      // TODO - use classification/use to alter the factor
-      return 1.0f;
-    }
-  }
 };
 
 // Check if access is allowed on the specified edge.
@@ -919,25 +898,6 @@ public:
     }
 
     return Cost(sec * factor, sec);
-  }
-
-  /**
-   * Function to be used in location searching which will
-   * exclude and allow ranking results from the search by looking at each
-   * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. It's also used to filter
-   * edges not usable / inaccessible by hov.
-   */
-  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const override {
-    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    bool accessible = (edge->forwardaccess() & access_mask) ||
-                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-    if (!accessible || IsClosed(edge, tile)) {
-      return 0.0f;
-    } else {
-      // TODO - use classification/use to alter the factor
-      return 1.0f;
-    }
   }
 };
 
@@ -1100,25 +1060,6 @@ public:
     }
 
     return Cost(sec * factor, sec);
-  }
-
-  /**
-   * Function to be used in location searching which will
-   * exclude and allow ranking results from the search by looking at each
-   * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method. It's also used to filter
-   * edges not usable / inaccessible by taxi.
-   */
-  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const override {
-    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    bool accessible = (edge->forwardaccess() & access_mask) ||
-                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-    if (!accessible || IsClosed(edge, tile)) {
-      return 0.0f;
-    } else {
-      // TODO - use classification/use to alter the factor
-      return 1.0f;
-    }
   }
 };
 

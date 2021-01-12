@@ -4,9 +4,11 @@
 #include "odin/worker.h"
 #include "thor/worker.h"
 
+#include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <algorithm> // std::copy
+#include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -68,7 +70,7 @@ boost::property_tree::ptree get_conf(const char* tiles) {
         "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
         "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
         "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
+        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time_contour": 120, "max_distance_contour":200},
         "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
         "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
         "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
@@ -111,7 +113,8 @@ void test(const std::string& request,
           const std::vector<TravelMode>& expected_travel_modes,
           const std::vector<std::string>& expected_route,
           // We mark only the maneuvers that are RentBike and ReturnBike
-          const std::map<size_t, BssManeuverType>& expected_bss_maneuver) {
+          const std::map<size_t, BssManeuverType>& expected_bss_maneuver,
+          const boost::optional<const std::string&>& expected_shape = {}) {
 
   auto conf = get_conf("paris_bss_tiles");
   route_tester tester(conf);
@@ -137,6 +140,9 @@ void test(const std::string& request,
   std::vector<std::string> route;
 
   for (const auto& d : directions) {
+    if (expected_shape) {
+      EXPECT_EQ(d.shape(), *expected_shape) << "The shape is incorrect";
+    }
     size_t idx = -1;
     for (const auto& m : d.maneuver()) {
       auto it = expected_bss_maneuver.find(++idx);
@@ -177,22 +183,22 @@ void test(const std::string& request,
 }
 
 /*
- * In this test, we make it free to rent/return, so the algorithm will prefer bike share routes
+ * A general case
  */
 TEST(AstarBss, test_With_Mode_Changes) {
   std::string request =
-      R"({"locations":[{"lat":48.86481,"lon":2.361015},{"lat":48.859782,"lon":2.36101}],"costing":"bikeshare",
+      R"({"locations":[{"lat":48.864655,"lon":2.361374},{"lat":48.859608,"lon":2.36117}],"costing":"bikeshare",
 	       "costing_options":{"pedestrian":{"bss_rent_cost":0,"bss_rent_penalty":0},
 	                          "bicycle"   :{"bss_return_cost":0,"bss_return_penalty":0}}})";
   std::vector<valhalla::DirectionsLeg_TravelMode>
       expected_travel_modes{valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian,
                             valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kBicycle,
                             valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
-
-  std::vector<std::string> expected_route{"Rue Perrée",        "Rue Perrée",        "Rue Perrée",
-                                          "Rue Caffarelli",    "Rue de Bretagne",   "Rue de Turenne",
-                                          "Rue du Parc Royal", "Place de Thorigny", "Rue de la Perle",
-                                          "Rue de la Perle"};
+  std::vector<std::string> expected_route{"Rue Gabriel Vicaire", "Rue Perrée",
+                                          "Rue Perrée",          "Rue Caffarelli",
+                                          "Rue de Bretagne",     "Rue de Turenne",
+                                          "Rue du Parc Royal",   "Place de Thorigny",
+                                          "Rue de la Perle",     "Rue de la Perle"};
 
   const std::map<size_t, BssManeuverType>&
       expected_bss_maneuver{{2, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
@@ -351,6 +357,49 @@ public:
     write_config(config_file);
   }
 };
+
+// In this test case, the bike share station(48.8690345, 2.3622890) is located a dedicated cyclelane
+// and a pedestrian way.
+//
+//        (cyclelane) ------------------------------>
+//
+//           user ->> ____________
+//                               |
+//                               * Bike Share Station
+//                               |__________ ->>
+//
+//    (pedestrian way) ------------------------------>
+//
+// Since BSS connections are created over both Pedestrian mode and Bicycle mode, user should be able
+// to turn back the bike right on the cyclelane, change the travel mode and coninue his journey way on
+// the pedestrian way.
+TEST(AstarBss, test_BSSConnections_on_Pedestrian_and_Bicycle) {
+  std::string request =
+      R"({"locations":[{"lat":48.864218,"lon":2.362034},{"lat":48.869068,"lon":2.362151}],"costing":"bikeshare"})";
+  std::vector<valhalla::DirectionsLeg_TravelMode>
+      expected_travel_modes{valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian,
+                            valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kBicycle,
+                            valhalla::DirectionsLeg_TravelMode::DirectionsLeg_TravelMode_kPedestrian};
+  std::vector<std::string> expected_route{"Rue Perrée",
+                                          "Rue Perrée",
+                                          "Rue Perrée",
+                                          "Rue Eugène Spuller",
+                                          "Rue Béranger",
+                                          "Rue du Temple",
+                                          "Place de la République",
+                                          "Place de la République",
+                                          "Boulevard de Magenta",
+                                          "Rue du Château d'Eau",
+                                          "Rue du Château d'Eau"};
+
+  const std::map<size_t, BssManeuverType>&
+      expected_bss_maneuver{{2, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
+                            {11, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
+
+  std::string expected_shape =
+      "e~le|A_ldoCyD~IoAtCkArC]z@kBpEeAsAdArAjBqE\\{@jAsCad@ai@yAgBo@iCuF_Ua@_B[uAyQgz@i@cCwAt@mg@bXyt@b`@yCvAyBqH{EgLiCvEoD|G{\\`r@wFqHoPqTy@gAyAkBe@o@i@q@{D_CeB{@wCfC{XfVt@jCjA~Dn@xB?lBcA|BV\\f@r@wBlE";
+  test(request, expected_travel_modes, expected_route, expected_bss_maneuver, expected_shape);
+}
 
 } // anonymous namespace
 

@@ -88,7 +88,8 @@ protected:
   size_t min_transit_walking_dis;
   size_t max_transit_walking_dis;
   size_t max_contours;
-  size_t max_time;
+  size_t max_contour_min;
+  size_t max_contour_km;
   size_t max_trace_shape;
   float max_gps_accuracy;
   float max_search_radius;
