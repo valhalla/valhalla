@@ -25,13 +25,16 @@ protected:
            |        |       3
            |        |       |
            C--------D       G
+                     \
+                      \
+                       I
     )";
 
     const gurka::ways ways = {
         {"AB", {{"highway", "track"}}},       {"BE", {{"highway", "track"}}},
         {"EF", {{"highway", "track"}}},       {"FG", {{"highway", "residential"}}},
         {"BC", {{"highway", "residential"}}}, {"CD", {{"highway", "residential"}}},
-        {"DE", {{"highway", "residential"}}},
+        {"DE", {{"highway", "residential"}}}, {"DI", {{"highway", "secondary"}}},
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
@@ -49,7 +52,7 @@ protected:
 gurka::map UseTracksTest::use_tracks_map = {};
 
 TEST_F(UseTracksTest, test_default_value) {
-  // don't set `use_tracks` parameter; avoid tracks by default
+  // avoid tracks by default; use tracks only if the route starts or ends at 'track' edge
   for (const auto& c : costing)
     validate_path(gurka::route(use_tracks_map, "1", "2", c), {"AB", "BC", "CD", "DE", "EF"});
 }
@@ -57,13 +60,13 @@ TEST_F(UseTracksTest, test_default_value) {
 TEST_F(UseTracksTest, test_favor_tracks) {
   // prefer routes with tracks
   for (const auto& c : costing)
-    validate_path(gurka::route(use_tracks_map, "1", "D", c,
+    validate_path(gurka::route(use_tracks_map, "1", "I", c,
                                {{"/costing_options/" + c + "/use_tracks", "1"}}),
-                  {"AB", "BE", "DE"});
+                  {"AB", "BE", "DE", "DI"});
 }
 
 TEST_F(UseTracksTest, test_avoid_tracks) {
-  // prefer routes with tracks
+  // avoid tracks
   for (const auto& c : costing)
     validate_path(gurka::route(use_tracks_map, "1", "2", c,
                                {{"/costing_options/" + c + "/use_tracks", "0"}}),
@@ -71,12 +74,10 @@ TEST_F(UseTracksTest, test_avoid_tracks) {
 }
 
 TEST_F(UseTracksTest, test_use_tracks_if_no_other_roads) {
-  // prefer routes with tracks
+  // use track only if it's the only way to complete the route
   for (const auto& c : costing) {
-    if (c != "auto")
-      continue;
     validate_path(gurka::route(use_tracks_map, "1", "3", c,
-                               {{"/costing_options/" + c + "/use_tracks", "1"}}),
+                               {{"/costing_options/" + c + "/use_tracks", "0"}}),
                   {"AB", "BC", "CD", "DE", "EF", "FG"});
   }
 }
