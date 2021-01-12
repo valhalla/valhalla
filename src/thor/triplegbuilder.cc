@@ -1093,7 +1093,7 @@ void TripLegBuilder::Build(
       first_tile->directededge(first_node->edge_index() + first_edge->opp_index())->endnode();
 
   // Partial edge at the start and side of street (sos)
-  float start_pct;
+  float start_pct = 0.;
   valhalla::Location::SideOfStreet start_sos =
       valhalla::Location::SideOfStreet::Location_SideOfStreet_kNone;
   PointLL start_vrt;
