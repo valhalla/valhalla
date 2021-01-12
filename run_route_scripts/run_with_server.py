@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import multiprocessing
-import psutil
 import requests
 import json
 import os
@@ -93,7 +92,7 @@ if __name__ == "__main__":
   parser.add_argument('--test-file', type=str, help='The file with the test requests', required=True)
   parser.add_argument('--url', type=str, help='The url to which you want to POST the request bodies', default='http://localhost:8002/route')
   parser.add_argument('--output-dir', type=str, help='The directory in which to place the result of each request')
-  parser.add_argument('--concurrency', type=int, help='The number of processes to use to make requests', default=psutil.cpu_count(logical=True))
+  parser.add_argument('--concurrency', type=int, help='The number of processes to use to make requests', default=multiprocessing.cpu_count())
   parser.add_argument('--format', type=str, help='Supports csv, json, raw and null output formats', default='csv')
   parsed_args = parser.parse_args()
 

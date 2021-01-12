@@ -165,7 +165,7 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
                           const Label& pred_edgelabel,
                           const graph_tile_ptr& tile,
                           int& restriction_idx) {
-  bool valid_pred = (!pred_edgelabel.edgeid().Is_Valid() && costing->Filter(edge, tile) != 0.f) ||
+  bool valid_pred = (!pred_edgelabel.edgeid().Is_Valid() && costing->Allowed(edge, tile)) ||
                     edgeid == pred_edgelabel.edgeid();
   bool restricted = !costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0, restriction_idx);
   return valid_pred || !restricted;
