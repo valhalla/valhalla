@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import multiprocessing
-import psutil
 import requests
 import json
 import os
@@ -21,34 +20,54 @@ def get_post_bodies(filename):
       post_body['id'] = str(line_number)
       yield post_body
 
-# for persistant connections
-def initialize(url_, output_dir_):
+def initialize(args_):
+  # for persistant connections
   global session
   session = requests.Session()
-  global url
-  url = url_
-  global output_dir
-  output_dir = output_dir_
+  # so each process knows the options provided
+  global args
+  args = args_
+  # so each process can signal completing a request
+  global response_count
+  response_count = multiprocessing.Value('i', 0)
+
+  # make the output directory
+  if args.output_dir is None:
+    basename = os.path.basename(os.path.splitext(args.test_file)[0])
+    datestr = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    args.output_dir = '_'.join([datestr, basename])
+  if os.path.exists(args.output_dir):
+    shutil.rmtree(args.output_dir)
+  os.mkdir(args.output_dir)
 
 # post a request
-def make_request(post_format):
+def make_request(post_body):
+  # make request
+  try:
+    start = time.time()
+    response = session.post(args.url, json=post_body)
+    stop = time.time()
+    elapsed = stop - start
+    response = response.json()
+    with response_count.get_lock():
+      response_count.value += 1
+  except Exception as e:
+    print(e)
+
+  # nothing to write
+  if args.format == 'null':
+    return
+
   # open a file to put the result
-  post_body = post_format[0]
-  output_file = os.path.join(output_dir, post_body['id'] + '.' + ('csv' if post_format[1] == 'csv' else 'json'))
+  output_file = os.path.join(args.output_dir, post_body['id'] + '.' + ('csv' if args.format == 'csv' else 'json'))
   with open(output_file, 'w') as f:
     try:
-      # make request
-      start = time.time()
-      response = session.post(url, json=post_body).json()
-      stop = time.time()
-      elapsed = stop - start
-
       # raw json
-      if post_format[1] == 'raw':
+      if args.format == 'raw':
           f.write('%s' % json.dumps(response, sort_keys=True, indent=2))
 
       # summary json
-      elif post_format[1] == 'json':
+      elif args.format == 'json':
         out = {'routes':[{'legs':[]}]}
         for leg in response['trip']['legs']:
           out['routes'][-1]['legs'].append({'maneuvers':[]})
@@ -62,7 +81,7 @@ def make_request(post_format):
         f.write('length (meters), time (seconds), instruction' + os.linesep)
         for leg in response['trip']['legs']:
           for man in leg['maneuvers']:
-            f.write('%d,%d,%s%s' % (man['length']*1000, man['time'], man['instruction'],os.linesep))
+            f.write('%d,%d,%s%s' % (man['length']*1000, man['time'], man['instruction'], os.linesep))
      
     except Exception as e:
       f.write('%s' % e)
@@ -73,32 +92,23 @@ if __name__ == "__main__":
   parser.add_argument('--test-file', type=str, help='The file with the test requests', required=True)
   parser.add_argument('--url', type=str, help='The url to which you want to POST the request bodies', default='http://localhost:8002/route')
   parser.add_argument('--output-dir', type=str, help='The directory in which to place the result of each request')
-  parser.add_argument('--concurrency', type=int, help='The number of processes to use to make requests', default=psutil.cpu_count(logical=True))
-  parser.add_argument('--format', type=str, help='Supports csv and json output formats', default='csv')
-  args = parser.parse_args()
-
-  # make the output directory
-  if args.output_dir is None:
-    basename = os.path.basename(os.path.splitext(args.test_file)[0])
-    datestr = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-    args.output_dir = '_'.join([datestr, basename])
-  if os.path.exists(args.output_dir):
-    shutil.rmtree(args.output_dir)
-  os.mkdir(args.output_dir)
+  parser.add_argument('--concurrency', type=int, help='The number of processes to use to make requests', default=multiprocessing.cpu_count())
+  parser.add_argument('--format', type=str, help='Supports csv, json, raw and null output formats', default='csv')
+  parsed_args = parser.parse_args()
 
   # make a worker pool to work on the requests
-  work = [(body, args.format) for body in get_post_bodies(args.test_file)]
-  with multiprocessing.Pool(initializer=initialize(args.url, args.output_dir), processes=args.concurrency) as pool:
+  work = [body for body in get_post_bodies(parsed_args.test_file)]
+  with multiprocessing.Pool(initializer=initialize(parsed_args), processes=parsed_args.concurrency) as pool:
     result = pool.map_async(make_request, work)
 
     # check progress
-    print('Placing %d results in %s' % (len(work), args.output_dir))
+    if args.format != 'null':
+      print('Placing %d results in %s' % (len(work), args.output_dir))
     progress = 0
     increment = 5
     while not result.ready():
-      result.wait(timeout=5)
-      done = len([f for f in os.listdir(args.output_dir) if os.path.isfile(os.path.join(args.output_dir, f))])
-      next_progress = int(done / len(work) * 100)
+      result.wait(timeout=5)      
+      next_progress = int(response_count.value / len(work) * 100)
       if int(next_progress / increment) > progress:
         print('%d%%' % next_progress)
         progress = int(next_progress / increment)

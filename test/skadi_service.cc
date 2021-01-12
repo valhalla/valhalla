@@ -209,7 +209,7 @@ void start_service(zmq::context_t& context) {
         "pedestrian": { "max_distance": 250000.0, "max_locations": 50,
                         "max_matrix_distance": 200000.0, "max_matrix_locations": 50,
                         "min_transit_walking_distance": 1, "max_transit_walking_distance": 10000 },
-        "isochrone": { "max_contours": 4, "max_time": 120, "max_distance": 25000, "max_locations": 1},
+        "isochrone": { "max_contours": 4, "max_time_contour": 120, "max_distance_contour":200, "max_distance": 25000, "max_locations": 1},
         "trace": { "max_best_paths": 4, "max_best_paths_shape": 100, "max_distance": 200000.0, "max_gps_accuracy": 100.0, "max_search_radius": 100, "max_shape": 16000 },
         "max_avoid_locations": 0,
         "max_reachability": 100,
