@@ -47,7 +47,6 @@ const std::unordered_map<std::string, float> kMaxDistances = {
 };
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
-constexpr double kMilePerMeter = 0.000621371;
 
 } // namespace
 

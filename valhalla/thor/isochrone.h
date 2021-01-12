@@ -51,6 +51,7 @@ public:
    * @param  mode_costing List of costing objects
    * @param  mode         Travel mode
    */
+  using Dijkstras::Compute;
   std::shared_ptr<const midgard::GriddedData<2>> Compute(Api& api,
                                                          baldr::GraphReader& graphreader,
                                                          const sif::mode_costing_t& mode_costing,
@@ -59,6 +60,7 @@ public:
   // Compute iso-tile that we can use to generate isochrones. This is used for
   // the reverse direction - construct times for gridded data indicating how
   // long it takes to reach the destination location.
+  using Dijkstras::ComputeReverse;
   std::shared_ptr<const midgard::GriddedData<2>>
   ComputeReverse(Api& api,
                  baldr::GraphReader& graphreader,
@@ -77,6 +79,7 @@ public:
    * @param  mode_costing List of costing objects
    * @param  mode         Travel mode
    */
+  using Dijkstras::ComputeMultiModal;
   std::shared_ptr<const midgard::GriddedData<2>>
   ComputeMultiModal(Api& api,
                     baldr::GraphReader& graphreader,
