@@ -239,6 +239,37 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
   return graphids;
 }
 
+ComplexRestrictionBuilder CreateComplexRestriction(const OSMRestriction& restriction,
+                                                   const GraphId& from,
+                                                   const GraphId& to,
+                                                   const std::vector<GraphId>& vias) {
+  ComplexRestrictionBuilder complex_restriction;
+  complex_restriction.set_from_id(from);
+  complex_restriction.set_via_list(vias);
+  complex_restriction.set_to_id(to);
+  complex_restriction.set_type(restriction.type());
+  complex_restriction.set_modes(restriction.modes());
+
+  TimeDomain td = TimeDomain(restriction.time_domain());
+  if (td.td_value()) {
+    complex_restriction.set_begin_day_dow(td.begin_day_dow());
+    complex_restriction.set_begin_hrs(td.begin_hrs());
+    complex_restriction.set_begin_mins(td.begin_mins());
+    complex_restriction.set_begin_month(td.begin_month());
+    complex_restriction.set_begin_week(td.begin_week());
+    complex_restriction.set_dow(td.dow());
+    complex_restriction.set_dt(true);
+    complex_restriction.set_dt_type(td.type());
+    complex_restriction.set_end_day_dow(td.end_day_dow());
+    complex_restriction.set_end_hrs(td.end_hrs());
+    complex_restriction.set_end_mins(td.end_mins());
+    complex_restriction.set_end_month(td.end_month());
+    complex_restriction.set_end_week(td.end_week());
+  }
+
+  return complex_restriction;
+};
+
 void build(const std::string& complex_restriction_from_file,
            const std::string& complex_restriction_to_file,
            const boost::property_tree::ptree& hierarchy_properties,
@@ -281,13 +312,11 @@ void build(const std::string& complex_restriction_from_file,
 
     size_t forward_count = 0, reverse_count = 0;
 
-    uint32_t id = tile_id.tileid();
     GraphId prevNode;
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
       NodeInfo& nodeinfo = tilebuilder.node_builder(i);
 
       // Go through directed edges and "enhance" directed edge attributes
-      const DirectedEdge* edges = tilebuilder.directededges(nodeinfo.edge_index());
       for (uint32_t j = 0; j < nodeinfo.edge_count(); j++) {
         DirectedEdge& directededge = tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
@@ -297,7 +326,7 @@ void build(const std::string& complex_restriction_from_file,
             directededge.use() == Use::kPlatformConnection) {
           continue;
         }
-        auto e_offset = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
+        auto edge_info = tilebuilder.edgeinfo(directededge.edgeinfo_offset());
         //    |      |       |
         //    |      |  to   |
         // ---O------O---x---O---
@@ -315,16 +344,16 @@ void build(const std::string& complex_restriction_from_file,
         // other hierarchy levels as needed at endnodes.
 
         if (directededge.start_restriction()) {
-
-          OSMRestriction target_res{e_offset.wayid()}; // this is our from way id
-          OSMRestriction restriction{};
+          OSMRestriction target_res{edge_info.wayid()}; // this is our from way id
           sequence<OSMRestriction>::iterator res_it =
               complex_restrictions_from.find(target_res,
                                              [](const OSMRestriction& a, const OSMRestriction& b) {
                                                return a.from() < b.from();
                                              });
+          OSMRestriction restriction{};
           while (res_it != complex_restrictions_from.end() &&
-                 (restriction = *res_it).from() == e_offset.wayid() && restriction.vias().size()) {
+                 (restriction = *res_it).from() == edge_info.wayid()) {
+            ++res_it;
 
             if (restriction.type() < RestrictionType::kOnlyRightTurn ||
                 restriction.type() > RestrictionType::kOnlyStraightOn) {
@@ -332,7 +361,7 @@ void build(const std::string& complex_restriction_from_file,
               GraphId currentNode = directededge.endnode();
 
               std::vector<uint64_t> res_way_ids;
-              res_way_ids.push_back(e_offset.wayid());
+              res_way_ids.push_back(restriction.from());
 
               for (const auto& v : restriction.vias()) {
                 res_way_ids.push_back(v);
@@ -340,9 +369,7 @@ void build(const std::string& complex_restriction_from_file,
 
               // if via = restriction.to then don't add to the res_way_ids vector.  This happens
               // when we have a restriction:<type> with a via as a node in the osm data.
-              if (restriction.vias().size() == 1 && restriction.vias().at(0) != restriction.to()) {
-                res_way_ids.push_back(restriction.to());
-              } else if (restriction.vias().size() > 1) {
+              if (restriction.vias().size() != 1 || restriction.vias().at(0) != restriction.to()) {
                 res_way_ids.push_back(restriction.to());
               }
 
@@ -352,72 +379,32 @@ void build(const std::string& complex_restriction_from_file,
               // now that we have the tile and currentNode walk in the reverse direction as this is
               // really what needs to be stored in this tile.
               if (tmp_ids.size()) {
-
-                res_way_ids.clear();
-                res_way_ids.push_back(restriction.to());
-
-                std::vector<uint64_t> temp_vias = restriction.vias();
-                std::reverse(temp_vias.begin(), temp_vias.end());
-
-                // if via = restriction.to then don't add to the res_way_ids vector.  This happens
-                // when we have a restriction:<type> with a via as a node in the osm data.
-                if (restriction.vias().size() == 1 && restriction.vias().at(0) != restriction.to()) {
-                  for (const auto& v : temp_vias) {
-                    res_way_ids.push_back(v);
-                  }
-                } else if (restriction.vias().size() > 1) {
-                  for (const auto& v : temp_vias) {
-                    res_way_ids.push_back(v);
-                  }
-                }
-
-                res_way_ids.push_back(e_offset.wayid());
+                std::reverse(res_way_ids.begin(), res_way_ids.end());
                 tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
 
                 if (tmp_ids.size() && tmp_ids.back().Tile_Base() == tile_id) {
 
-                  std::vector<GraphId> vias;
-                  std::copy(tmp_ids.begin() + 1, tmp_ids.end() - 1, std::back_inserter(vias));
+                  std::vector<GraphId> vias(tmp_ids.begin() + 1, tmp_ids.end() - 1);
 
                   if (vias.size() > kMaxViasPerRestriction) {
                     LOG_WARN("Tried to exceed max vias per restriction(forward).  Way: " +
                              std::to_string(tmp_ids.at(0)));
-                    res_it++;
                     continue;
                   }
 
                   // flip the vias because we walk backwards from the search direction
                   // using the predecessor edges in thor.
                   std::reverse(vias.begin(), vias.end());
+                  GraphId from = tmp_ids.back();
+                  GraphId to = tmp_ids.front();
 
-                  ComplexRestrictionBuilder complex_restriction;
-                  complex_restriction.set_from_id(tmp_ids.at(tmp_ids.size() - 1));
-                  complex_restriction.set_via_list(vias);
-                  complex_restriction.set_to_id(tmp_ids.at(0));
-                  complex_restriction.set_type(restriction.type());
-                  complex_restriction.set_modes(restriction.modes());
-
-                  TimeDomain td = TimeDomain(restriction.time_domain());
-                  if (td.td_value()) {
-                    complex_restriction.set_begin_day_dow(td.begin_day_dow());
-                    complex_restriction.set_begin_hrs(td.begin_hrs());
-                    complex_restriction.set_begin_mins(td.begin_mins());
-                    complex_restriction.set_begin_month(td.begin_month());
-                    complex_restriction.set_begin_week(td.begin_week());
-                    complex_restriction.set_dow(td.dow());
-                    complex_restriction.set_dt(true);
-                    complex_restriction.set_dt_type(td.type());
-                    complex_restriction.set_end_day_dow(td.end_day_dow());
-                    complex_restriction.set_end_hrs(td.end_hrs());
-                    complex_restriction.set_end_mins(td.end_mins());
-                    complex_restriction.set_end_month(td.end_month());
-                    complex_restriction.set_end_week(td.end_week());
-                  }
+                  ComplexRestrictionBuilder complex_restriction =
+                      CreateComplexRestriction(restriction, from, to, vias);
 
                   // determine if we need to add this complex restriction or not.
                   // basically we do not want any dups.
                   bool bfound = false;
-                  const auto res = reverse_tmp_cr.equal_range(tmp_ids.at(0));
+                  const auto res = reverse_tmp_cr.equal_range(to);
                   if (res.first != reverse_tmp_cr.end()) {
                     for (auto r = res.first; r != res.second; ++r) {
                       if (complex_restriction == r->second) {
@@ -427,29 +414,28 @@ void build(const std::string& complex_restriction_from_file,
                     }
                   }
                   if (!bfound) { // no dups.
-                    reverse_tmp_cr.emplace(tmp_ids.at(0), complex_restriction);
+                    reverse_tmp_cr.emplace(to, complex_restriction);
                     tilebuilder.AddReverseComplexRestriction(complex_restriction);
                     reverse_count++;
                   }
                 }
               }
             }
-            res_it++;
           }
         }
 
         if (directededge.end_restriction()) {
-
-          OSMRestriction target_to_res{e_offset.wayid()}; // this is our from way id
-          OSMRestriction restriction_to{};
+          OSMRestriction target_to_res{edge_info.wayid()}; // this is our from way id
           sequence<OSMRestriction>::iterator res_to_it =
               complex_restrictions_to.find(target_to_res,
                                            [](const OSMRestriction& a, const OSMRestriction& b) {
                                              return a.from() < b.from();
                                            });
+          OSMRestriction restriction_to{};
           // is this edge the end of a restriction?
           while (res_to_it != complex_restrictions_to.end() &&
-                 (restriction_to = *res_to_it).from() == e_offset.wayid()) {
+                 (restriction_to = *res_to_it).from() == edge_info.wayid()) {
+            res_to_it++;
 
             OSMRestriction target_res{restriction_to.to()}; // this is our from way id
             OSMRestriction restriction{};
@@ -459,8 +445,8 @@ void build(const std::string& complex_restriction_from_file,
                                                  return a.from() < b.from();
                                                });
             while (res_it != complex_restrictions_from.end() &&
-                   (restriction = *res_it).from() == restriction_to.to() &&
-                   restriction.vias().size()) {
+                   (restriction = *res_it).from() == restriction_to.to()) {
+              ++res_it;
 
               if (restriction.type() < RestrictionType::kOnlyRightTurn ||
                   restriction.type() > RestrictionType::kOnlyStraightOn) {
@@ -476,17 +462,13 @@ void build(const std::string& complex_restriction_from_file,
                 // if via = restriction.to then don't add to the res_way_ids vector.  This
                 // happens
                 // when we have a restriction:<type> with a via as a node in the osm data.
-                if (restriction.vias().size() == 1 && restriction.vias().at(0) != restriction.to()) {
-                  for (const auto& v : temp_vias) {
-                    res_way_ids.push_back(v);
-                  }
-                } else if (restriction.vias().size() > 1) {
+                if (restriction.vias().size() > 1 || restriction.vias().at(0) != restriction.to()) {
                   for (const auto& v : temp_vias) {
                     res_way_ids.push_back(v);
                   }
                 }
 
-                res_way_ids.push_back(restriction_to.to());
+                res_way_ids.push_back(restriction.from());
 
                 // walk in the forward direction (reverse in relation to the restriction)
                 std::deque<GraphId> tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
@@ -495,66 +477,28 @@ void build(const std::string& complex_restriction_from_file,
                 // direction(forward in relation to the restriction) as this is really what
                 // needs to be stored in this tile.
                 if (tmp_ids.size()) {
-
-                  res_way_ids.clear();
-                  res_way_ids.push_back(restriction_to.to());
-
-                  for (const auto& v : restriction.vias()) {
-                    res_way_ids.push_back(v);
-                  }
-
-                  // if via = restriction.to then don't add to the res_way_ids vector.  This
-                  // happens when we have a restriction:<type> with a via as a node in the osm
-                  // data.
-                  if (restriction.vias().size() == 1 &&
-                      restriction.vias().at(0) != restriction.to()) {
-                    res_way_ids.push_back(restriction.to());
-                  } else if (restriction.vias().size() > 1) {
-                    res_way_ids.push_back(restriction.to());
-                  }
-
+                  std::reverse(res_way_ids.begin(), res_way_ids.end());
                   tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
 
                   if (tmp_ids.size() && tmp_ids.back().Tile_Base() == tile_id) {
-                    std::vector<GraphId> vias;
-                    std::copy(tmp_ids.begin() + 1, tmp_ids.end() - 1, std::back_inserter(vias));
+                    std::vector<GraphId> vias(tmp_ids.begin() + 1, tmp_ids.end() - 1);
 
                     if (vias.size() > kMaxViasPerRestriction) {
                       LOG_WARN("Tried to exceed max vias per restriction(reverse).  Way: " +
                                std::to_string(tmp_ids.at(0)));
-                      res_it++;
                       continue;
                     }
 
                     std::reverse(vias.begin(), vias.end());
-                    ComplexRestrictionBuilder complex_restriction;
-                    complex_restriction.set_from_id(tmp_ids.at(0));
-                    complex_restriction.set_via_list(vias);
-                    complex_restriction.set_to_id(tmp_ids.at(tmp_ids.size() - 1));
-                    complex_restriction.set_type(restriction.type());
-                    complex_restriction.set_modes(restriction.modes());
-
-                    TimeDomain td = TimeDomain(restriction.time_domain());
-                    if (td.td_value()) {
-                      complex_restriction.set_begin_day_dow(td.begin_day_dow());
-                      complex_restriction.set_begin_hrs(td.begin_hrs());
-                      complex_restriction.set_begin_mins(td.begin_mins());
-                      complex_restriction.set_begin_month(td.begin_month());
-                      complex_restriction.set_begin_week(td.begin_week());
-                      complex_restriction.set_dow(td.dow());
-                      complex_restriction.set_dt(true);
-                      complex_restriction.set_dt_type(td.type());
-                      complex_restriction.set_end_day_dow(td.end_day_dow());
-                      complex_restriction.set_end_hrs(td.end_hrs());
-                      complex_restriction.set_end_mins(td.end_mins());
-                      complex_restriction.set_end_month(td.end_month());
-                      complex_restriction.set_end_week(td.end_week());
-                    }
+                    GraphId from = tmp_ids.front();
+                    GraphId to = tmp_ids.back();
+                    ComplexRestrictionBuilder complex_restriction =
+                        CreateComplexRestriction(restriction, from, to, vias);
 
                     // determine if we need to add this complex restriction or not.
                     // basically we do not want any dups.
                     bool bfound = false;
-                    const auto res = forward_tmp_cr.equal_range(tmp_ids.at(0));
+                    const auto res = forward_tmp_cr.equal_range(from);
                     if (res.first != forward_tmp_cr.end()) {
                       for (auto r = res.first; r != res.second; ++r) {
                         if (complex_restriction == r->second) {
@@ -564,16 +508,14 @@ void build(const std::string& complex_restriction_from_file,
                       }
                     }
                     if (!bfound) { // no dups.
-                      forward_tmp_cr.emplace(tmp_ids.at(0), complex_restriction);
+                      forward_tmp_cr.emplace(from, complex_restriction);
                       tilebuilder.AddForwardComplexRestriction(complex_restriction);
                       forward_count++;
                     }
                   }
                 }
               }
-              res_it++;
             }
-            res_to_it++;
           }
         }
       }
