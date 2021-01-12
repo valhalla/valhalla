@@ -82,7 +82,7 @@ class TestBindings(unittest.TestCase):
 
         assert tar_path == self.tar_path
         assert tar_path.is_file()
-        assert tar_path.stat().st_size > 90000  # actual produced a tar
+        assert tar_path.stat().st_size > 10000  # actual produced a tar
 
     def test_6_route(self):
         actor = valhalla.Actor()
