@@ -1117,7 +1117,7 @@ void TripLegBuilder::Build(
   }
 
   // Partial edge at the end
-  float end_pct;
+  float end_pct = 1.;
   valhalla::Location::SideOfStreet end_sos =
       valhalla::Location::SideOfStreet::Location_SideOfStreet_kNone;
   PointLL end_vrt;
