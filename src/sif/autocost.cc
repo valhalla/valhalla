@@ -45,6 +45,7 @@ constexpr float kDefaultUseFerry = 0.5f;     // Factor between 0 and 1
 constexpr float kDefaultUseRailFerry = 0.4f; // Factor between 0 and 1
 constexpr float kDefaultUseHighways = 1.0f;  // Factor between 0 and 1
 constexpr float kDefaultUseTolls = 0.5f;     // Factor between 0 and 1
+constexpr float kDefaultUseDistance = 0.f;   // Factor between 0 and 1
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -96,6 +97,7 @@ constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseRailFerryRange{0, kDefaultUseRailFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
+constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
 
 constexpr float kHighwayFactor[] = {
     10.0f, // Motorway
@@ -289,11 +291,13 @@ public:
 public:
   VehicleType type_; // Vehicle type: car (default), motorcycle, etc
   std::vector<float> speedfactor_;
-  float density_factor_[16]; // Density factor
-  float highway_factor_;     // Factor applied when road is a motorway or trunk
-  float alley_factor_;       // Avoid alleys factor.
-  float toll_factor_;        // Factor applied when road has a toll
-  float surface_factor_;     // How much the surface factors are applied.
+  float density_factor_[16];  // Density factor
+  float highway_factor_;      // Factor applied when road is a motorway or trunk
+  float alley_factor_;        // Avoid alleys factor.
+  float toll_factor_;         // Factor applied when road has a toll
+  float surface_factor_;      // How much the surface factors are applied.
+  float distance_factor_;     // How much distance factors in overall favorability
+  float inv_distance_factor_; // How much time factors in overall favorability
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -332,6 +336,10 @@ AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
   // Preference to use highways. Is a value from 0 to 1
   float use_highways_ = costing_options.use_highways();
   highway_factor_ = 1.0f - use_highways_;
+
+  // Preference for distance vs time
+  distance_factor_ = costing_options.use_distance();
+  inv_distance_factor_ = 1.f - costing_options.use_distance();
 
   // Preference to use toll roads (separate from toll booth penalty). Sets a toll
   // factor. A toll factor of 0 would indicate no adjustment to weighting for toll roads.
@@ -433,7 +441,7 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= alley_factor_;
   }
 
-  return Cost(sec * factor, sec);
+  return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
@@ -619,8 +627,13 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(
         kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
                            .get_value_or(kDefaultUseTolls)));
-  } else {
-    // Set pbf values to defaults
+
+    // use distance
+    pbf_costing_options->set_use_distance(
+        kUseDistanceRange(rapidjson::get_optional<float>(*json_costing_options, "/use_distance")
+                              .get_value_or(kDefaultUseDistance)));
+  } // Set pbf values to defaults
+  else {
     pbf_costing_options->set_transport_type("car");
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
     pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
@@ -640,6 +653,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
+    pbf_costing_options->set_use_distance(kDefaultUseDistance);
   }
 }
 
