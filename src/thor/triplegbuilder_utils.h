@@ -12,11 +12,6 @@ using namespace valhalla::thor;
 
 namespace {
 
-// Adds incidents to a TripLeg_Edge
-void addIncidents(TripLeg::Edge& trip_edge, GraphReader& graphreader, const GraphId& edge_id) {
-  // TODO
-}
-
 /**
  * A simple way to encapsulate the marshalling of native data types specific to multi modal into
  * the protobuf ones that we pass downstream to odin and other clients
@@ -443,25 +438,26 @@ void AddIntersectingEdges(const AttributesController& controller,
                           uint32_t prior_opp_local_index,
                           GraphReader& graphreader,
                           valhalla::TripLeg::Node* trip_node) {
-  // Add connected edges from the start node. Do this after the first trip
-  // edge is added
-  //
-  // Our path is from 1 to 2 to 3 (nodes) to ... n nodes.
-  // Each letter represents the edge info.
-  // So at node 2, we will store the edge info for D and we will store the
-  // intersecting edge info for B, C, E, F, and G.  We need to make sure
-  // that we don't store the edge info from A and D again.
-  //
-  //     (X)    (3)   (X)
-  //       \\   ||   //
-  //      C \\ D|| E//
-  //         \\ || //
-  //      B   \\||//   F
-  // (X)======= (2) ======(X)
-  //            ||\\
-  //          A || \\ G
-  //            ||  \\
-  //            (1)  (X)
+  /* Add connected edges from the start node. Do this after the first trip
+     edge is added
+
+     Our path is from 1 to 2 to 3 (nodes) to ... n nodes.
+     Each letter represents the edge info.
+     So at node 2, we will store the edge info for D and we will store the
+     intersecting edge info for B, C, E, F, and G.  We need to make sure
+     that we don't store the edge info from A and D again.
+
+         (X)    (3)   (X)
+           \\   ||   //
+          C \\ D|| E//
+             \\ || //
+          B   \\||//   F
+     (X)======= (2) ======(X)
+                ||\\
+              A || \\ G
+                ||  \\
+                (1)  (X)
+  */
 
   // prepare for some edges
   trip_node->mutable_intersecting_edge()->Reserve(node->local_edge_count());

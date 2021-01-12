@@ -70,7 +70,7 @@ bool validate_alternate_by_sharing(GraphReader& graphreader,
     shared_edgeids.resize(paths.size());
 
   // we check each accepted path against the candidate
-  for (int i = 0; i < paths.size(); ++i) {
+  for (size_t i = 0; i < paths.size(); ++i) {
     // cache edge ids encountered on the current best path, including edges that were superseded by a
     // shortcut edge. we need to expand the shortcut edges on the current best path.
     //

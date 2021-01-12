@@ -580,6 +580,8 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
+          default:
+            break;
         }
       }
     }
