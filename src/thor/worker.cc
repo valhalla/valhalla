@@ -125,7 +125,7 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
     // Set the interrupt function
     service_worker_t::set_interrupt(&interrupt_function);
 
-    prime_server::worker_t::result_t result{true};
+    prime_server::worker_t::result_t result{true, {}, {}};
     // do request specific processing
     switch (options.action()) {
       case Options::sources_to_targets:

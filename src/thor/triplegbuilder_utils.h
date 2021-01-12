@@ -59,9 +59,9 @@ private:
    */
   void AddBssNode(TripLeg_Node* trip_node,
                   const NodeInfo* node,
-                  const GraphId& startnode,
+                  const GraphId&,
                   const mode_costing_t& mode_costing,
-                  const AttributesController& controller) {
+                  const AttributesController&) {
     auto pedestrian_costing = mode_costing[static_cast<size_t>(TravelMode::kPedestrian)];
     auto bicycle_costing = mode_costing[static_cast<size_t>(TravelMode::kBicycle)];
 
@@ -155,12 +155,12 @@ private:
   void AddTransitInfo(TripLeg_Node* trip_node,
                       uint32_t trip_id,
                       const NodeInfo* node,
-                      const GraphId& startnode,
+                      const GraphId&,
                       const DirectedEdge* directededge,
                       const GraphId& edge,
                       graph_tile_ptr start_tile,
                       graph_tile_ptr graphtile,
-                      const sif::mode_costing_t& mode_costing,
+                      const sif::mode_costing_t&,
                       const AttributesController& controller,
                       GraphReader& graphreader) {
     if (node->is_transit()) {

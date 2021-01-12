@@ -184,13 +184,18 @@ void SetShapeAttributes(const AttributesController& controller,
     // cutting for now
     const auto& traffic_speed = tile->trafficspeed(edge);
     if (traffic_speed.breakpoint1 > 0) {
-      cuts.emplace_back(cut_t{traffic_speed.breakpoint1 / 255.0, speed,
-                              static_cast<std::uint8_t>(traffic_speed.congestion1)});
+      cuts.emplace_back(cut_t{traffic_speed.breakpoint1 / 255.0,
+                              speed,
+                              static_cast<std::uint8_t>(traffic_speed.congestion1),
+                              {}});
       if (traffic_speed.breakpoint2 > 0) {
-        cuts.emplace_back(cut_t{traffic_speed.breakpoint2 / 255.0, speed,
-                                static_cast<std::uint8_t>(traffic_speed.congestion2)});
+        cuts.emplace_back(cut_t{traffic_speed.breakpoint2 / 255.0,
+                                speed,
+                                static_cast<std::uint8_t>(traffic_speed.congestion2),
+                                {}});
         if (traffic_speed.speed3 != UNKNOWN_TRAFFIC_SPEED_RAW) {
-          cuts.emplace_back(cut_t{1, speed, static_cast<std::uint8_t>(traffic_speed.congestion3)});
+          cuts.emplace_back(
+              cut_t{1, speed, static_cast<std::uint8_t>(traffic_speed.congestion3), {}});
         }
       }
     }
