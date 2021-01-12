@@ -119,6 +119,7 @@ message CostingOptions {
   optional bool ignore_access = 62;
   optional bool ignore_closures = 63;
   optional bool shortest = 64;
+  optional float use_tracks = 65;
 
   // these are not specified directly by the user but they get filled in as the request is parsed and fulfilled
   optional Costing costing = 90;
