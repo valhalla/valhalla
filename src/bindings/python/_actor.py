@@ -1,7 +1,10 @@
 import json
 from typing import Union, Callable
 
-from .python_valhalla import _Actor
+try:
+    from .python_valhalla import _Actor
+except ModuleNotFoundError:
+    from python_valhalla import _Actor
 
 
 def _wrapper(func: Callable, req: Union[str, dict]) -> Union[str, dict]:

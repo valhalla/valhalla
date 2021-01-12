@@ -3,7 +3,10 @@ import tarfile
 from pathlib import Path
 import os
 
-from .python_valhalla import _BuildTiles
+try:
+    from .python_valhalla import _BuildTiles
+except ModuleNotFoundError:
+    from python_valhalla import _BuildTiles
 
 
 def BuildTiles(input_pbfs: List[str]):
