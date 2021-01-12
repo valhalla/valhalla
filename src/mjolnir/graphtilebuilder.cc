@@ -187,6 +187,45 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   lane_connectivity_builder_.reserve(n);
   std::copy(lane_connectivity_, lane_connectivity_ + n,
             std::back_inserter(lane_connectivity_builder_));
+
+  {
+    size_t offset = 0;
+    while (offset < complex_restriction_forward_size_) {
+      const ComplexRestriction* cr =
+          reinterpret_cast<ComplexRestriction*>(complex_restriction_forward_ + offset);
+      ComplexRestrictionBuilder builder(*cr);
+      if (cr->via_count()) {
+        std::vector<GraphId> vias;
+        vias.reserve(cr->via_count());
+        const baldr::GraphId* via = reinterpret_cast<const baldr::GraphId*>(cr + 1);
+        for (uint32_t i = 0; i < cr->via_count(); i++, ++via) {
+          vias.push_back(*via);
+        }
+        builder.set_via_list(vias);
+      }
+      complex_restriction_forward_builder_.push_back(std::move(builder));
+      offset += cr->SizeOf();
+    }
+  }
+  {
+    size_t offset = 0;
+    while (offset < complex_restriction_reverse_size_) {
+      const ComplexRestriction* cr =
+          reinterpret_cast<ComplexRestriction*>(complex_restriction_reverse_ + offset);
+      ComplexRestrictionBuilder builder(*cr);
+      if (cr->via_count()) {
+        std::vector<GraphId> vias;
+        vias.reserve(cr->via_count());
+        const baldr::GraphId* via = reinterpret_cast<const baldr::GraphId*>(cr + 1);
+        for (uint32_t i = 0; i < cr->via_count(); i++, ++via) {
+          vias.push_back(*via);
+        }
+        builder.set_via_list(vias);
+      }
+      complex_restriction_reverse_builder_.push_back(std::move(builder));
+      offset += cr->SizeOf();
+    }
+  }
 }
 
 // Output the tile to file. Stores as binary data.
