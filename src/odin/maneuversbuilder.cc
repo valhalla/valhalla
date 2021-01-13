@@ -3435,8 +3435,19 @@ void ManeuversBuilder::CollapseMergeManeuvers(std::list<Maneuver>& maneuvers) {
   // Walk the maneuvers to find merge maneuvers
   while (next_man != maneuvers.end()) {
 
-    // If found, collapse the small end ramp fork maneuver
+    // If found, collapse the merge maneuver
     if (curr_man->ramp() && next_man->IsMergeType() && !curr_man->has_collapsed_merge_maneuver()) {
+      // Disable the "to stay on" flag if not the same street names
+      if (curr_man->to_stay_on() && !(next_man->HasSameNames(&(*curr_man), true))) {
+        curr_man->set_to_stay_on(false);
+      }
+
+      // Use the merge maneuver street names
+      if (next_man->HasStreetNames()) {
+        curr_man->set_street_names(next_man->street_names().clone());
+      }
+
+      // Combine the maneuvers and set the "has_collapsed_merge_maneuver" attribute
       next_man = CombineManeuvers(maneuvers, curr_man, next_man);
       curr_man->set_has_collapsed_merge_maneuver(true);
     }
