@@ -77,10 +77,6 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 constexpr float kMinFactor = 0.1f;
 constexpr float kMaxFactor = 100000.0f;
 
-// min and max factors to apply when use tracks
-constexpr float kMinTrackFactor = 0.8f;
-constexpr float kMaxTrackFactor = 10.f;
-
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kManeuverPenaltyRange{0, kDefaultManeuverPenalty, kMaxPenalty};
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
@@ -300,7 +296,6 @@ public:
   float alley_factor_;       // Avoid alleys factor.
   float toll_factor_;        // Factor applied when road has a toll
   float surface_factor_;     // How much the surface factors are applied.
-  float track_factor_;       // Avoid tracks factor.
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -347,15 +342,6 @@ AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
   float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) : // ranges from 4 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
-
-  // Preference to use tracks. Is a value from 0 to 1.
-  float use_tracks = costing_options.use_tracks();
-  // Calculate factor value based on use preference. Return value
-  // in range [kMaxTrackFactor; 1], if use < 0.5; or
-  // in range [1; kMinTrackFactor], if use > 0.5
-  track_factor_ = use_tracks < 0.5f
-                      ? (kMaxTrackFactor - 2.f * use_tracks * (kMaxTrackFactor - 1.f))
-                      : (kMinTrackFactor + 2.f * (1.f - use_tracks) * (1.f - kMinTrackFactor));
 
   // Create speed cost table
   speedfactor_.resize(kMaxSpeedKph + 1, 0);

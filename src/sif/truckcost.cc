@@ -69,10 +69,6 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 // How much to favor truck routes.
 constexpr float kTruckRouteFactor = 0.85f;
 
-// min and max factors to apply when use tracks
-constexpr float kMinTrackFactor = 0.8f;
-constexpr float kMaxTrackFactor = 10.f;
-
 // Weighting factor based on road class. These apply penalties to lower class
 // roads.
 constexpr float kRoadClassFactor[] = {
@@ -283,7 +279,6 @@ public:
   float density_factor_[16]; // Density factor
   float toll_factor_;        // Factor applied when road has a toll
   float low_class_penalty_;  // Penalty (seconds) to go to residential or service road
-  float track_factor_;       // Avoid tracks factor.
 
   // Vehicle attributes (used for special restrictions and costing)
   bool hazmat_;     // Carrying hazardous materials
@@ -332,15 +327,6 @@ TruckCost::TruckCost(const CostingOptions& costing_options)
   float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (2.0f - 4 * use_tolls) : // ranges from 2 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
-
-  // Preference to use tracks. Is a value from 0 to 1.
-  float use_tracks = costing_options.use_tracks();
-  // Calculate factor value based on use preference. Return value
-  // in range [kMaxTrackFactor; 1], if use < 0.5; or
-  // in range [1; kMinTrackFactor], if use > 0.5
-  track_factor_ = use_tracks < 0.5f
-                      ? (kMaxTrackFactor - 2.f * use_tracks * (kMaxTrackFactor - 1.f))
-                      : (kMinTrackFactor + 2.f * (1.f - use_tracks) * (1.f - kMinTrackFactor));
 
   for (uint32_t d = 0; d < 16; d++) {
     density_factor_[d] = 0.85f + (d * 0.025f);
