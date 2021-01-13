@@ -42,11 +42,17 @@ namespace baldr {
 const std::string SUFFIX_NON_COMPRESSED = ".gph";
 const std::string SUFFIX_COMPRESSED = ".gph.gz";
 
+#ifdef ENABLE_THREAD_SAFE_TILE_REF_COUNT
+using GraphTileRefCounter = boost::thread_safe_counter;
+#else
+using GraphTileRefCounter = boost::thread_unsafe_counter;
+#endif // ENABLE_THREAD_SAFE_TILE_REF_COUNT
+
 class tile_getter_t;
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
  */
-class GraphTile : public boost::intrusive_ref_counter<GraphTile, boost::thread_unsafe_counter> {
+class GraphTile : public boost::intrusive_ref_counter<GraphTile, GraphTileRefCounter> {
 public:
   static const constexpr char* kTilePathPattern = "{tilePath}";
 
