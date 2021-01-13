@@ -3447,6 +3447,21 @@ void ManeuversBuilder::CollapseMergeManeuvers(std::list<Maneuver>& maneuvers) {
         curr_man->set_street_names(next_man->street_names().clone());
       }
 
+      // Use merge maneuver guide signs
+      if (!curr_man->HasSigns()) {
+        // Assign guide branch signs - if they exist
+        if (next_man->HasGuideBranchSign()) {
+          *(curr_man->mutable_signs()->mutable_guide_branch_list()) =
+              next_man->signs().guide_branch_list();
+        }
+
+        // Assign guide branch signs - if they exist
+        if (next_man->HasGuideTowardSign()) {
+          *(curr_man->mutable_signs()->mutable_guide_toward_list()) =
+              next_man->signs().guide_toward_list();
+        }
+      }
+
       // Combine the maneuvers and set the "has_collapsed_merge_maneuver" attribute
       next_man = CombineManeuvers(maneuvers, curr_man, next_man);
       curr_man->set_has_collapsed_merge_maneuver(true);

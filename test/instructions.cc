@@ -166,43 +166,6 @@ void test_osrm_destinations(const std::string& filename,
   EXPECT_EQ(found_destinations, expected_destinations);
 }
 
-TEST(Instructions, validate_merge_instructions) {
-
-  int expected_routes_size = 1;
-  int expected_legs_size = 1;
-  int expected_maneuvers_size = 4;
-  int maneuver_index = 2;
-
-  // Test merge right
-  test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/merge_right.pbf"},
-                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Merge right onto I 695 West/Baltimore Beltway.", "",
-                    "Merge right onto Interstate 6 95 West, Baltimore Beltway.",
-                    "Continue for a quarter mile.");
-
-  // Test merge left
-  test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/merge_left.pbf"},
-                    expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Merge left onto US 322 East.", "",
-                    "Merge left onto U.S. 3 22 East. Then You will arrive at U.S. 3 22 East.",
-                    "Continue for 1,000 feet.");
-}
-
-TEST(Instructions, validate_osrm_merge_maneuver) {
-
-  int routes_index = 0;
-  int legs_index = 0;
-  int steps_index = 2;
-
-  // Test osrm merge right
-  test_osrm_maneuver({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/merge_right.pbf"},
-                     routes_index, legs_index, steps_index, "merge", "slight right");
-
-  // Test osrm merge left
-  test_osrm_maneuver({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/merge_left.pbf"}, routes_index,
-                     legs_index, steps_index, "merge", "slight left");
-}
-
 TEST(Instructions, validate_osrm_turn_destinations) {
 
   int routes_index = 0;
@@ -289,7 +252,7 @@ TEST(Instructions, validate_osrm_roundabout_destinations) {
 TEST(Instructions, validate_ramp_instructions) {
   int expected_routes_size = 1;
   int expected_legs_size = 1;
-  int expected_maneuvers_size = 4;
+  int expected_maneuvers_size = 3;
   int maneuver_index = 1;
 
   // Test take toward driving side right
@@ -354,7 +317,7 @@ TEST(Instructions, validate_exit_instructions) {
                     "Take the Pennsylvania 9 34 exit.",
                     "Take the Pennsylvania 9 34 exit toward Interstate 81, Fort Indiantown Gap.", "");
 
-  expected_maneuvers_size = 5;
+  expected_maneuvers_size = 4;
   // Test exit non-motorway in VA
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/exit_right_nonmotorway_va.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
@@ -534,16 +497,17 @@ TEST(Instructions, validate_obvious_maneuver_instructions) {
 
   // Short continue collapsed
   // no continue on US 422; US 322 and then the PA 39 West/Hersheypark Drive Exit
-  expected_maneuvers_size = 6;
-  maneuver_index = 2;
+  expected_maneuvers_size = 5;
+  maneuver_index = 1;
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/obvious_maneuver_short_continue.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                    "Merge left onto US 322 East.", "", "Merge left onto U.S. 3 22 East.",
-                    "Continue for a half mile.");
+                    "Turn right to take the US 322 East ramp.",
+                    "Turn right to take the U.S. 3 22 East ramp.",
+                    "Turn right to take the U.S. 3 22 East ramp.", "Continue for 1 mile.");
 
   // Exit onto PA 39 West/Hersheypark Drive
-  maneuver_index = 3;
+  maneuver_index = 2;
   test_instructions({VALHALLA_SOURCE_DIR
                      "test/pinpoints/instructions/obvious_maneuver_short_continue.pbf"},
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
