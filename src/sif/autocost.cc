@@ -120,6 +120,15 @@ constexpr float kSurfaceFactor[] = {
     1.0f  // kPath
 };
 
+// The basic costing for an edge is a trade off between time and distance. We allow the user to
+// specify which one is more important to them and then we use a linear combination to combine the two
+// into a final metric. The problem is that time in seconds and length in meters have two wildly
+// different ranges, so the linear combination always favors length vs time. What we do to combat this
+// is to change length units into time units by multiplying by the reciprocal of a constant speed.
+// This means basically changes the units of distance to be more in the same ballpark as the units of
+// time and makes the linear combination make more sense.
+constexpr float kInvMedianSpeed = 1.f / 16.f; // about 37mph
+
 } // namespace
 
 /**
@@ -338,7 +347,7 @@ AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
   highway_factor_ = 1.0f - use_highways_;
 
   // Preference for distance vs time
-  distance_factor_ = costing_options.use_distance();
+  distance_factor_ = costing_options.use_distance() * kInvMedianSpeed;
   inv_distance_factor_ = 1.f - costing_options.use_distance();
 
   // Preference to use toll roads (separate from toll booth penalty). Sets a toll
@@ -416,31 +425,27 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   // either the computed edge speed or optional top_speed
   auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
   auto final_speed = std::min(edge_speed, top_speed_);
-
-  float sec = (edge->length() * speedfactor_[final_speed]);
+  float sec = edge->length() * speedfactor_[final_speed];
 
   if (shortest_) {
     return Cost(edge->length(), sec);
   }
 
-  float factor =
-      (edge->use() == Use::kFerry)
-          ? ferry_factor_
-          : (edge->use() == Use::kRailFerry) ? rail_ferry_factor_ : density_factor_[edge->density()];
+  // base factor is either ferry, rail ferry or density based
+  float factor = (edge->use() == Use::kFerry) * ferry_factor_ +
+                 (edge->use() == Use::kRailFerry) * rail_ferry_factor_ +
+                 (edge->use() != Use::kFerry && edge->use() != Use::kRailFerry) *
+                     density_factor_[edge->density()];
 
-  // TODO: factor hasn't been extensively tested, might alter this in future
+  // TODO: speed_penality hasn't been extensively tested, might alter this in future
   float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
-  factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] + speed_penalty;
+  factor += (highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
+             speed_penalty + edge->toll() * toll_factor_) *
+            (edge->use() == Use::kAlley ? alley_factor_ : 1.f);
 
-  if (edge->toll()) {
-    factor += toll_factor_;
-  }
-
-  if (edge->use() == Use::kAlley) {
-    factor *= alley_factor_;
-  }
-
+  // base cost before the factor is a linear combination of time vs distance, depending on which one
+  // the user thinks is more important to them
   return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
 }
 
@@ -453,10 +458,11 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, pred, idx);
   c.secs = OSRMCarTurnDuration(edge, node, pred.opp_local_idx());
+  c.cost *= !shortest_;
 
   // Intersection transition time = factor * stopimpact * turncost. Factor depends
   // on density and whether traffic is available
-  if (edge->stopimpact(idx) > 0) {
+  if (edge->stopimpact(idx) > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
       turn_cost = kTCCrossing;
@@ -481,8 +487,11 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-    c.cost += shortest_ ? 0.f : seconds;
+    c.cost += seconds;
   }
+
+  // Account for the user preferring distance
+  c.cost *= inv_distance_factor_;
 
   return c;
 }
@@ -499,9 +508,10 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
   c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
+  c.cost *= !shortest_;
 
   // Transition time = densityfactor * stopimpact * turncost
-  if (edge->stopimpact(idx) > 0) {
+  if (edge->stopimpact(idx) > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
       turn_cost = kTCCrossing;
@@ -526,8 +536,11 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-    c.cost += shortest_ ? 0 : seconds;
+    c.cost += seconds;
   }
+
+  // Account for the user preferring distance
+  c.cost *= inv_distance_factor_;
 
   return c;
 }
