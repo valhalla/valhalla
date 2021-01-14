@@ -4,8 +4,9 @@
 
 using namespace valhalla;
 
-// set costings impacted by `use_tracks` parameter
-const std::vector<std::string>& costing = {"auto", "hov", "taxi", "bus", "truck"};
+const std::vector<std::string>& costing = {"auto",          "hov",        "taxi",
+                                           "bus",           "truck",      "bicycle",
+                                           "motor_scooter", "motorcycle", "pedestrian"};
 
 void validate_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
@@ -26,12 +27,11 @@ protected:
            |        |       |
            C--------D       G
                      \
-                      \
-                       I
+                      I
     )";
 
     const gurka::ways ways = {
-        {"AB", {{"highway", "track"}}},       {"BE", {{"highway", "track"}}},
+        {"AB", {{"highway", "track"}}},       {"BE", {{"highway", "track"}, {"surface", "paved"}}},
         {"EF", {{"highway", "track"}}},       {"FG", {{"highway", "residential"}}},
         {"BC", {{"highway", "residential"}}}, {"CD", {{"highway", "residential"}}},
         {"DE", {{"highway", "residential"}}}, {"DI", {{"highway", "secondary"}}},
@@ -52,17 +52,21 @@ protected:
 gurka::map UseTracksTest::use_tracks_map = {};
 
 TEST_F(UseTracksTest, test_default_value) {
-  // avoid tracks by default; use tracks only if the route starts or ends at 'track' edge
   for (const auto& c : costing)
-    validate_path(gurka::route(use_tracks_map, "1", "2", c), {"AB", "BC", "CD", "DE", "EF"});
+    if (c == "auto" || c == "hov" || c == "taxi" || c == "bus" || c == "truck")
+      // avoid tracks by default; use tracks only if the route starts or ends at 'track' edge
+      validate_path(gurka::route(use_tracks_map, "1", "2", c), {"AB", "BC", "CD", "DE", "EF"});
+    else
+      // track tag shouldn't affect other costings too much
+      validate_path(gurka::route(use_tracks_map, "1", "2", c), {"AB", "BE", "EF"});
 }
 
-TEST_F(UseTracksTest, test_favor_tracks) {
-  // prefer routes with tracks
+TEST_F(UseTracksTest, test_use_tracks) {
+  // use routes with tracks
   for (const auto& c : costing)
-    validate_path(gurka::route(use_tracks_map, "1", "I", c,
+    validate_path(gurka::route(use_tracks_map, "1", "2", c,
                                {{"/costing_options/" + c + "/use_tracks", "1"}}),
-                  {"AB", "BE", "DE", "DI"});
+                  {"AB", "BE", "EF"});
 }
 
 TEST_F(UseTracksTest, test_avoid_tracks) {
@@ -74,10 +78,10 @@ TEST_F(UseTracksTest, test_avoid_tracks) {
 }
 
 TEST_F(UseTracksTest, test_use_tracks_if_no_other_roads) {
-  // use track only if it's the only way to complete the route
+  // use track if it's needed to complete the route
   for (const auto& c : costing) {
-    validate_path(gurka::route(use_tracks_map, "1", "3", c,
+    validate_path(gurka::route(use_tracks_map, "D", "3", c,
                                {{"/costing_options/" + c + "/use_tracks", "0"}}),
-                  {"AB", "BC", "CD", "DE", "EF", "FG"});
+                  {"DE", "EF", "FG"});
   }
 }

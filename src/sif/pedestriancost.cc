@@ -344,6 +344,9 @@ public:
       if (driveway_factor_ < 1.f) {
         factor *= driveway_factor_;
       }
+      if (track_factor_ < 1.f) {
+        factor *= track_factor_;
+      }
 
       return (speedfactor_ * factor);
     } else {
