@@ -456,9 +456,8 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
-  Cost c = base_transition_cost(node, edge, pred, idx);
+  Cost c = base_transition_cost(node, edge, &pred, idx);
   c.secs = OSRMCarTurnDuration(edge, node, pred.opp_local_idx());
-  c.cost *= !shortest_;
 
   // Intersection transition time = factor * stopimpact * turncost. Factor depends
   // on density and whether traffic is available
@@ -508,7 +507,6 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
   c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
-  c.cost *= !shortest_;
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0 && !shortest_) {
