@@ -10,4 +10,9 @@ jobs:
       - name: Validate
         shell: bash
         run: |
-          git diff origin/master -- CHANGELOG.md
+          git fetch origin master --depth 1
+          LINE_COUNT=$(git diff origin/master -- CHANGELOG.md | wc -l)
+          if [ ${LINE_COUNT} -eq 0 ]; then
+            exit 1
+          fi
+          #TODO: validate changes
