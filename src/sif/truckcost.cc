@@ -48,7 +48,7 @@ constexpr float kTCFavorableSharp = 1.5f;
 constexpr float kTCCrossing = 2.0f;
 constexpr float kTCUnfavorable = 2.5f;
 constexpr float kTCUnfavorableSharp = 3.5f;
-constexpr float kTCReverse = 5.0f;
+constexpr float kTCReverse = 9.5f;
 
 // Default truck attributes
 constexpr float kDefaultTruckWeight = 21.77f;  // Metric Tons (48,000 lbs)
@@ -262,17 +262,13 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by truck.
    */
-  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const override {
-    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    bool accessible = (edge->forwardaccess() & access_mask) ||
-                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-
-    if (edge->is_shortcut() || !accessible || edge->bss_connection() || IsClosed(edge, tile)) {
-      return 0.0f;
-    } else {
-      // TODO - use classification/use to alter the factor
-      return 1.0f;
-    }
+  bool Allowed(const baldr::DirectedEdge* edge,
+               const graph_tile_ptr& tile,
+               uint16_t disallow_mask = kDisallowNone) const override {
+    bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
+                          !(flow_mask_ & kCurrentFlowMask);
+    return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
+           (allow_closures || !tile->IsClosed(edge));
   }
 
 public:
