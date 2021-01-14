@@ -250,19 +250,17 @@ private:
       maxcost_ = mincost_ + bucketrange_;
 
       // Move elements within the range from overflow to buckets
-      bucket_t tmp;
-      for (const auto& label : overflowbucket_) {
-        // Get the cost (using the label cost function)
-        float cost = (*labelcontainer_)[label].sortcost();
-        if (cost < maxcost_) {
-          buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)].push_back(label);
-        } else {
-          tmp.push_back(label);
-        }
-      }
-
-      // Add any labels that lie outside the new range back to overflow bucket
-      overflowbucket_ = std::move(tmp);
+      auto minLabelsIt =
+          std::remove_if(overflowbucket_.begin(), overflowbucket_.end(), [this](const auto label) {
+            float cost = (*labelcontainer_)[label].sortcost();
+            if (cost < maxcost_) {
+              buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)].push_back(label);
+              return true;
+            }
+            return false;
+          });
+      // Remove labels with min costs from overflow bucket
+      overflowbucket_.erase(minLabelsIt, overflowbucket_.end());
     }
 
     // Reset current cost and bucket to beginning of low level buckets
