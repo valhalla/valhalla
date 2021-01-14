@@ -48,7 +48,7 @@ constexpr float kTCFavorableSharp = 1.5f;
 constexpr float kTCCrossing = 2.0f;
 constexpr float kTCUnfavorable = 2.5f;
 constexpr float kTCUnfavorableSharp = 3.5f;
-constexpr float kTCReverse = 5.0f;
+constexpr float kTCReverse = 9.5f;
 
 // Default truck attributes
 constexpr float kDefaultTruckWeight = 21.77f;  // Metric Tons (48,000 lbs)
