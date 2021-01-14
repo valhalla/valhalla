@@ -15,9 +15,9 @@ jobs:
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
           PR_TITLE=$(jq --raw-output .pull_request.title "$GITHUB_EVENT_PATH")
           if [ ${LINE_COUNT} -eq 0 ]; then
-            printf "\x1b[31;1mNo CHANGELOG entries detected. Consider whether this PR warrents one\x1b[0m"
-            printf "Please consider the following: "
-            printf "   * ${PR_TITLE} [#${PR_NUMBER}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/pull/l${PR_NUMBER})"
+            printf "\x1b[31;1mNo CHANGELOG entries detected. Consider whether this PR warrents one\x1b[0m\n"
+            printf "Please consider the following:\n"
+            printf "   * ${PR_TITLE} [#${PR_NUMBER}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/pull/${PR_NUMBER})\n"
             exit 1
           fi
           #TODO: validate changelog line format
