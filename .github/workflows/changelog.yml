@@ -1,0 +1,13 @@
+name: Valhalla Changelog Validation
+on: [pull_request]
+
+jobs:
+  build:
+    name: Changelog Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Validate
+        shell: bash
+        run: |
+          git diff origin/master -- CHANGELOG.md
