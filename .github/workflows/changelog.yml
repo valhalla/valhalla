@@ -10,7 +10,7 @@ jobs:
       - name: Validate
         shell: bash
         run: |
-          PR_BASE=$(jq --raw-output .base.ref "$GITHUB_EVENT_PATH")
+          PR_BASE=$(jq --raw-output .pull_request.base.ref "$GITHUB_EVENT_PATH")
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
           PR_TITLE=$(jq --raw-output .pull_request.title "$GITHUB_EVENT_PATH")
           git fetch origin {PR_BASE} --depth 1
