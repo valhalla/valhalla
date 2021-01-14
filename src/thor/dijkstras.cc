@@ -56,10 +56,9 @@ void Dijkstras::Clear() {
 // Initialize - create adjacency list, edgestatus support, and reserve
 // edgelabels
 template <typename label_container_t>
-void Dijkstras::Initialize(
-    label_container_t& labels,
-    baldr::DoubleBucketQueue<typename label_container_t::value_type>& queue,
-    const uint32_t bucket_size) {
+void Dijkstras::Initialize(label_container_t& labels,
+                           baldr::DoubleBucketQueue<typename label_container_t::value_type>& queue,
+                           const uint32_t bucket_size) {
   // Set aside some space for edge labels
   uint32_t edge_label_reservation;
   uint32_t bucket_count;
@@ -70,14 +69,14 @@ void Dijkstras::Initialize(
   float range = bucket_count * bucket_size;
   queue.reuse(0.0f, range, bucket_size, &labels);
 }
-template void Dijkstras::Initialize<decltype(Dijkstras::bdedgelabels_)>(
-    decltype(Dijkstras::bdedgelabels_)&,
-    baldr::DoubleBucketQueue<sif::BDEdgeLabel>&,
-    const uint32_t);
-template void Dijkstras::Initialize<decltype(Dijkstras::mmedgelabels_)>(
-    decltype(Dijkstras::mmedgelabels_)&,
-    baldr::DoubleBucketQueue<sif::MMEdgeLabel>&,
-    const uint32_t);
+template void
+Dijkstras::Initialize<decltype(Dijkstras::bdedgelabels_)>(decltype(Dijkstras::bdedgelabels_)&,
+                                                          baldr::DoubleBucketQueue<sif::BDEdgeLabel>&,
+                                                          const uint32_t);
+template void
+Dijkstras::Initialize<decltype(Dijkstras::mmedgelabels_)>(decltype(Dijkstras::mmedgelabels_)&,
+                                                          baldr::DoubleBucketQueue<sif::MMEdgeLabel>&,
+                                                          const uint32_t);
 
 // Initializes the time of the expansion if there is one
 std::vector<TimeInfo>

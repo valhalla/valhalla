@@ -16,7 +16,7 @@ namespace valhalla {
 namespace meili {
 
 LabelSet::LabelSet(const float max_cost, const float bucket_size)
-  : queue_(0.0f, max_cost, bucket_size, &labels_) {
+    : queue_(0.0f, max_cost, bucket_size, &labels_) {
 }
 
 void LabelSet::put(const baldr::GraphId& nodeid,
