@@ -16,9 +16,7 @@ namespace valhalla {
 namespace meili {
 
 LabelSet::LabelSet(const float max_cost, const float bucket_size)
-    : queue_(0.0f, max_cost, bucket_size, [this](const uint32_t label) {
-        return labels_[label].sortcost();
-      }) {
+  : queue_(0.0f, max_cost, bucket_size, &labels_) {
 }
 
 void LabelSet::put(const baldr::GraphId& nodeid,
@@ -166,7 +164,7 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
                           const Label& pred_edgelabel,
                           const graph_tile_ptr& tile,
                           int& restriction_idx) {
-  bool valid_pred = (!pred_edgelabel.edgeid().Is_Valid() && costing->Filter(edge, tile) != 0.f) ||
+  bool valid_pred = (!pred_edgelabel.edgeid().Is_Valid() && costing->Allowed(edge, tile)) ||
                     edgeid == pred_edgelabel.edgeid();
   bool restricted = !costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0, restriction_idx);
   return valid_pred || !restricted;

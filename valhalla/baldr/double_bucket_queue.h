@@ -10,11 +10,6 @@
 namespace valhalla {
 namespace baldr {
 
-/**
- * A callable element which returns the cost for a label.
- */
-using LabelCost = std::function<float(const uint32_t label)>;
-
 // Bucket type and bucket list type.
 using bucket_t = std::vector<uint32_t>;
 using buckets_t = std::vector<bucket_t>;
@@ -26,7 +21,7 @@ using buckets_t = std::vector<bucket_t>;
  * into the overflow bucket and are moved into the low-level buckets as
  * needed. Each bucket stores label indexes into external data.
  */
-class DoubleBucketQueue final {
+template <typename label_t> class DoubleBucketQueue final {
 public:
   /**
    * Default c-tor creates empty object that needs to be initializd with reuse()
@@ -47,8 +42,8 @@ public:
   DoubleBucketQueue(const float mincost,
                     const float range,
                     const uint32_t bucketsize,
-                    const LabelCost& labelcost) {
-    reuse(mincost, range, bucketsize, labelcost);
+                    const std::vector<label_t>* labelcontainer) {
+    reuse(mincost, range, bucketsize, labelcontainer);
   }
 
   DoubleBucketQueue(DoubleBucketQueue&&) = default;
@@ -68,7 +63,8 @@ public:
   void reuse(const float mincost,
              const float range,
              const uint32_t bucketsize,
-             const LabelCost& labelcost) {
+             const std::vector<label_t>* labelcontainer) {
+    labelcontainer_ = labelcontainer;
     // We need at least a bucketsize of 1 or more
     if (bucketsize < 1) {
       throw std::runtime_error("Bucketsize must be 1 or greater");
@@ -105,9 +101,6 @@ public:
 
     // Set the current bucket to the lowest cost low level bucket
     currentbucket_ = buckets_.begin();
-
-    // Set the cost function.
-    labelcost_ = labelcost;
   }
 
   /**
@@ -132,7 +125,7 @@ public:
    * @param   label  Label index to add to the queue.
    */
   void add(const uint32_t label) {
-    get_bucket(labelcost_(label)).push_back(label);
+    get_bucket((*labelcontainer_)[label].sortcost()).push_back(label);
   }
 
   /**
@@ -145,7 +138,7 @@ public:
   void decrease(const uint32_t label, const float newcost) {
     // Get the buckets of the previous and new costs. Nothing needs to be done
     // if old cost and the new cost are in the same buckets.
-    bucket_t& prevbucket = get_bucket(labelcost_(label));
+    bucket_t& prevbucket = get_bucket((*labelcontainer_)[label].sortcost());
     bucket_t& newbucket = get_bucket(newcost);
     if (prevbucket != newbucket) {
       // Add label to newbucket and remove from previous bucket
@@ -201,8 +194,8 @@ private:
   // Overflow bucket
   bucket_t overflowbucket_;
 
-  // Cost function to get cost given the label index.
-  LabelCost labelcost_;
+  // Access to a container of labels to get cost given the label index.
+  const std::vector<label_t>* labelcontainer_;
 
   /**
    * Returns the bucket given the cost.
@@ -237,13 +230,15 @@ private:
     // Get the minimum label so we can figure out where the new range should be
     auto itr =
         std::min_element(overflowbucket_.begin(), overflowbucket_.end(),
-                         [this](uint32_t a, uint32_t b) { return labelcost_(a) < labelcost_(b); });
+                         [this](uint32_t a, uint32_t b) {
+                           return (*labelcontainer_)[a].sortcost() < (*labelcontainer_)[b].sortcost();
+                         });
 
     // If there is actually stuff to move
     if (itr != overflowbucket_.end()) {
 
       // Adjust cost range so smallest element is in the buckets_
-      float min = labelcost_(*itr);
+      float min = (*labelcontainer_)[*itr].sortcost();
       mincost_ += (std::floor((min - mincost_) / bucketrange_)) * bucketrange_;
 
       // Avoid precision issues
@@ -258,7 +253,7 @@ private:
       bucket_t tmp;
       for (const auto& label : overflowbucket_) {
         // Get the cost (using the label cost function)
-        float cost = labelcost_(label);
+        float cost = (*labelcontainer_)[label].sortcost();
         if (cost < maxcost_) {
           buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)].push_back(label);
         } else {

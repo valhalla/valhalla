@@ -229,5 +229,10 @@ const std::string& FilterAction_Enum_Name(const FilterAction action);
 bool DirectionsType_Enum_Parse(const std::string& dtype, DirectionsType* t);
 bool PreferredSide_Enum_Parse(const std::string& pside, valhalla::Location::PreferredSide* p);
 bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc);
+bool Location_Type_Enum_Parse(const std::string& type, Location::Type* t);
+const std::string& Location_Type_Enum_Name(const Location::Type t);
+const std::string& Location_SideOfStreet_Enum_Name(const Location::SideOfStreet s);
 
+std::pair<std::string, std::string>
+travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver);
 } // namespace valhalla

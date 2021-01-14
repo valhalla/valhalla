@@ -102,7 +102,7 @@ protected:
   std::vector<sif::MMEdgeLabel> edgelabels_;
 
   // Adjacency list - approximate double bucket sort
-  baldr::DoubleBucketQueue adjacencylist_;
+  baldr::DoubleBucketQueue<sif::MMEdgeLabel> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
@@ -166,7 +166,7 @@ protected:
                       const std::shared_ptr<sif::DynamicCost>& costing,
                       EdgeStatus& edgestatus,
                       std::vector<sif::EdgeLabel>& edgelabels,
-                      baldr::DoubleBucketQueue& adjlist,
+                      baldr::DoubleBucketQueue<sif::EdgeLabel>& adjlist,
                       const bool from_transition);
 
   /**

@@ -261,7 +261,7 @@ public:
   }
 
 private:
-  baldr::DoubleBucketQueue queue_;                         // Priority queue
+  baldr::DoubleBucketQueue<Label> queue_;                         // Priority queue
   std::unordered_map<baldr::GraphId, Status> node_status_; // Node status
   std::unordered_map<uint16_t, Status> dest_status_;       // Destination status
   std::vector<Label> labels_;                              // Label list.

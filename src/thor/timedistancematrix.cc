@@ -155,8 +155,7 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
   astarheuristic_.Init({origin.ll().lng(), origin.ll().lat()}, 0.0f);
   uint32_t bucketsize = costing_->UnitSize();
   // Set up lambda to get sort costs
-  const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
-  adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, edgecost);
+  adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, &edgelabels_);
   edgestatus_.clear();
 
   // Initialize the origin and destination locations
@@ -315,8 +314,7 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
   // factor (needed for setting the origin).
   astarheuristic_.Init({dest.ll().lng(), dest.ll().lat()}, 0.0f);
   uint32_t bucketsize = costing_->UnitSize();
-  const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
-  adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, edgecost);
+  adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, &edgelabels_);
   edgestatus_.clear();
 
   // Initialize the origin and destination locations

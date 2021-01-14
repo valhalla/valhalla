@@ -124,7 +124,8 @@ protected:
   std::vector<sif::MMEdgeLabel> mmedgelabels_;
 
   // Adjacency list - approximate double bucket sort
-  baldr::DoubleBucketQueue adjacencylist_;
+  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_;
+  baldr::DoubleBucketQueue<sif::MMEdgeLabel> mmadjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
@@ -139,7 +140,10 @@ protected:
    * @param bucketsize  Adjacency list bucket size.
    */
   template <typename label_container_t>
-  void Initialize(label_container_t& labels, const uint32_t bucketsize);
+  void
+  Initialize(label_container_t& labels,
+             baldr::DoubleBucketQueue<typename label_container_t::value_type>& queue,
+             const uint32_t bucketsize);
 
   /**
    * Sets the start time for forward expansion or end time for reverse expansion based on the

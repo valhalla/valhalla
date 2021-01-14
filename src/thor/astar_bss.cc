@@ -78,14 +78,11 @@ void AStarBSSAlgorithm::Init(const midgard::PointLL& origll, const midgard::Poin
   // TODO - reserve based on estimate based on distance and route type.
   edgelabels_.reserve(kInitialEdgeLabelCount);
 
-  // Set up lambda to get sort costs
-  const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
-
   // Construct adjacency list, clear edge status.
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = std::max(pedestrian_costing_->UnitSize(), bicycle_costing_->UnitSize());
   float range = kBucketCount * bucketsize;
-  adjacencylist_.reuse(mincost, range, bucketsize, edgecost);
+  adjacencylist_.reuse(mincost, range, bucketsize, &edgelabels_);
   pedestrian_edgestatus_.clear();
   bicycle_edgestatus_.clear();
 }
