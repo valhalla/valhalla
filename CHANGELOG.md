@@ -117,6 +117,7 @@
    * FIXED: Fixes an issue that lead to double turns within a very short distance, when instead, it should be a u-turn. We now collapse double L turns or double R turns in short non-internal intersections to u-turns. [#2740](https://github.com/valhalla/valhalla/pull/2740)
    * FIXED: fixes an issue that lead to adding an extra maneuver. We now combine a current maneuver short length non-internal edges (left or right) with the next maneuver that is a kRampStraight. [#2741](https://github.com/valhalla/valhalla/pull/2741)
    * FIXED: Reduce verbose instructions by collapsing small end ramp forks [#2762](https://github.com/valhalla/valhalla/issues/2762)
+   * FIXED: Remove redundant return statements [#2776](https://github.com/valhalla/valhalla/pull/2776)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
