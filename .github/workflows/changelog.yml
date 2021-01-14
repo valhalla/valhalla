@@ -13,7 +13,7 @@ jobs:
           git fetch origin master --depth 1
           LINE_COUNT=$(git diff origin/master -- CHANGELOG.md | wc -l)
           if [ ${LINE_COUNT} -eq 0 ]; then
-            >&2 echo "No CHANGELOG entries detected. Consider whether this PR warrents one"
+            echo "No CHANGELOG entries detected. Consider whether this PR warrents one" &>2
             exit 1
           fi
           #TODO: validate changes
