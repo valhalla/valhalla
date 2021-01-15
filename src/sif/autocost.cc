@@ -432,10 +432,15 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   // base factor is either ferry, rail ferry or density based
-  float factor = (edge->use() == Use::kFerry) * ferry_factor_ +
-                 (edge->use() == Use::kRailFerry) * rail_ferry_factor_ +
-                 (edge->use() != Use::kFerry && edge->use() != Use::kRailFerry) *
-                     density_factor_[edge->density()];
+  float factor = 1;
+  switch (edge->use()) {
+    case Use::kFerry:
+      factor = ferry_factor_;
+    case Use::kRailFerry:
+      factor = rail_ferry_factor_;
+    default:
+      factor = density_factor_[edge->density()];
+  }
 
   // TODO: speed_penality hasn't been extensively tested, might alter this in future
   float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
