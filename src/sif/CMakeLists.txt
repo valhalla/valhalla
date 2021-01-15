@@ -16,7 +16,7 @@ set(sources
 if (UNIX)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
-  set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS "-Werror")
+  set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS "-Wpedantic -Wextra -Wall -Werror")
 endif (UNIX)
 
 valhalla_module(NAME sif

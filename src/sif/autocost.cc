@@ -41,11 +41,11 @@ constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 
 // Other options
-constexpr float kDefaultUseFerry = 0.5f;     // Factor between 0 and 1
-constexpr float kDefaultUseRailFerry = 0.4f; // Factor between 0 and 1
-constexpr float kDefaultUseHighways = 1.0f;  // Factor between 0 and 1
-constexpr float kDefaultUseTolls = 0.5f;     // Factor between 0 and 1
-constexpr float kDefaultUseDistance = 0.f;   // Factor between 0 and 1
+constexpr float kDefaultUseFerry = 0.5f;     // Default preference of using a ferry 0-1
+constexpr float kDefaultUseRailFerry = 0.4f; // Default preference of using a rail ferry 0-1
+constexpr float kDefaultUseHighways = 1.0f;  // Default preference of using a motorway or trunk 0-1
+constexpr float kDefaultUseTolls = 0.5f;     // Default preference of using toll roads 0-1
+constexpr float kDefaultUseDistance = 0.f;   // Default preference of using distance vs time 0-1
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
