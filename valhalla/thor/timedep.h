@@ -185,7 +185,7 @@ protected:
 
 private:
   // Adjacency list - approximate double bucket sort
-  baldr::DoubleBucketQueue<sif::EdgeLabel> adjacencylist_;
+  std::unique_ptr<baldr::DoubleBucketQueue<sif::EdgeLabel>> adjacencylist_;
 };
 
 /**
@@ -247,7 +247,7 @@ protected:
   std::vector<sif::BDEdgeLabel> edgelabels_rev_;
 
   // Adjacency list - approximate double bucket sort
-  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_rev_;
+  std::unique_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>> adjacencylist_rev_;
 
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.

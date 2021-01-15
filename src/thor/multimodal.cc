@@ -43,7 +43,7 @@ constexpr uint64_t kInitialEdgeLabelCount = 200000;
 // Default constructor
 MultiModalPathAlgorithm::MultiModalPathAlgorithm()
     : PathAlgorithm(), walking_distance_(0), max_label_count_(std::numeric_limits<uint32_t>::max()),
-      mode_(TravelMode::kPedestrian), travel_type_(0) {
+      mode_(TravelMode::kPedestrian), travel_type_(0), adjacencylist_(nullptr) {
 }
 
 // Destructor
@@ -66,7 +66,11 @@ void MultiModalPathAlgorithm::Init(const midgard::PointLL& /*origll*/,
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing->UnitSize();
   float range = kBucketCount * bucketsize;
-  adjacencylist_.reuse(0.0f, range, bucketsize, &edgelabels_);
+  if (!adjacencylist_)
+    adjacencylist_ =
+        std::make_unique<DoubleBucketQueue<MMEdgeLabel>>(0.0f, range, bucketsize, &edgelabels_);
+  else
+    adjacencylist_->reuse(0.0f, range, bucketsize, &edgelabels_);
   edgestatus_.clear();
 
   // Get hierarchy limits from the costing. Get a copy since we increment
@@ -81,7 +85,8 @@ void MultiModalPathAlgorithm::Clear() {
   destinations_.clear();
 
   // Clear elements from the adjacency list
-  adjacencylist_.clear();
+  if (adjacencylist_)
+    adjacencylist_->clear();
 
   // Clear the edge status flags
   edgestatus_.clear();
@@ -177,7 +182,7 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    const uint32_t predindex = adjacencylist_.pop();
+    const uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
       LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabels_.size()));
       return {};
@@ -488,7 +493,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
       MMEdgeLabel& lab = edgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_.decrease(es->index(), newsortcost);
+        adjacencylist_->decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, walking_distance_, tripid, blockid,
                    transition_cost, restriction_idx);
       }
@@ -518,7 +523,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_,
                              walking_distance_, tripid, prior_stop, blockid, operator_id, has_transit,
                              transition_cost);
-    adjacencylist_.add(idx);
+    adjacencylist_->add(idx);
   }
 
   // Handle transitions - expand from the end node each transition
@@ -629,7 +634,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list
     uint32_t idx = edgelabels_.size();
     edgelabels_.push_back(std::move(edge_label));
-    adjacencylist_.add(idx);
+    adjacencylist_->add(idx);
 
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
   }

@@ -19,10 +19,7 @@ constexpr uint32_t kMaxIterationsWithoutConvergence = 800000;
 // Default constructor
 TimeDepForward::TimeDepForward()
     : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
-      mode_(TravelMode::kDrive), travel_type_(0) {
-  mode_ = TravelMode::kDrive;
-  travel_type_ = 0;
-  max_label_count_ = std::numeric_limits<uint32_t>::max();
+      mode_(TravelMode::kDrive), travel_type_(0), adjacencylist_(nullptr) {
 }
 
 // Destructor
@@ -36,7 +33,8 @@ void TimeDepForward::Clear() {
   // and clear edge status.
   edgelabels_.clear();
   destinations_percent_along_.clear();
-  adjacencylist_.clear();
+  if (adjacencylist_)
+    adjacencylist_->clear();
   edgestatus_.clear();
 
   // Set the ferry flag to false
@@ -210,7 +208,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
     EdgeLabel& lab = edgelabels_[meta.edge_status->index()];
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-      adjacencylist_.decrease(meta.edge_status->index(), newsortcost);
+      adjacencylist_->decrease(meta.edge_status->index(), newsortcost);
       lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
     }
     return true;
@@ -235,7 +233,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   edgelabels_.emplace_back(pred_idx, meta.edge_id, meta.edge, newcost, sortcost, dist, mode_, 0,
                            transition_cost, restriction_idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
-  adjacencylist_.add(idx);
+  adjacencylist_->add(idx);
   return true;
 }
 
@@ -297,7 +295,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    const uint32_t predindex = adjacencylist_.pop();
+    const uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
       LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabels_.size()));
       return {};
@@ -374,7 +372,11 @@ void TimeDepForward::Init(const midgard::PointLL& origll, const midgard::PointLL
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing_->UnitSize();
   float range = kBucketCount * bucketsize;
-  adjacencylist_.reuse(mincost, range, bucketsize, &edgelabels_);
+  if (!adjacencylist_)
+    adjacencylist_ =
+        std::make_unique<DoubleBucketQueue<EdgeLabel>>(mincost, range, bucketsize, &edgelabels_);
+  else
+    adjacencylist_->reuse(mincost, range, bucketsize, &edgelabels_);
   edgestatus_.clear();
 
   // Get hierarchy limits from the costing. Get a copy since we increment
@@ -516,7 +518,7 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list
     uint32_t idx = edgelabels_.size();
     edgelabels_.push_back(edge_label);
-    adjacencylist_.add(idx);
+    adjacencylist_->add(idx);
 
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
   }

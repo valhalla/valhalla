@@ -40,7 +40,9 @@ namespace valhalla {
 namespace thor {
 
 // Default constructor
-Dijkstras::Dijkstras() : mode_(TravelMode::kDrive), access_mode_(kAutoAccess) {
+Dijkstras::Dijkstras()
+    : mode_(TravelMode::kDrive), access_mode_(kAutoAccess), adjacencylist_(nullptr),
+      mmadjacencylist_(nullptr) {
 }
 
 // Clear the temporary information generated during path construction.
@@ -49,16 +51,20 @@ void Dijkstras::Clear() {
   // TODO - clear only the edge label set that was used?
   bdedgelabels_.clear();
   mmedgelabels_.clear();
-  adjacencylist_.clear();
+  if (adjacencylist_)
+    adjacencylist_->clear();
+  if (mmadjacencylist_)
+    mmadjacencylist_->clear();
   edgestatus_.clear();
 }
 
 // Initialize - create adjacency list, edgestatus support, and reserve
 // edgelabels
 template <typename label_container_t>
-void Dijkstras::Initialize(label_container_t& labels,
-                           baldr::DoubleBucketQueue<typename label_container_t::value_type>& queue,
-                           const uint32_t bucket_size) {
+void Dijkstras::Initialize(
+    label_container_t& labels,
+    std::unique_ptr<baldr::DoubleBucketQueue<typename label_container_t::value_type>>& queue,
+    const uint32_t bucket_size) {
   // Set aside some space for edge labels
   uint32_t edge_label_reservation;
   uint32_t bucket_count;
@@ -67,16 +73,21 @@ void Dijkstras::Initialize(label_container_t& labels,
 
   // Set up lambda to get sort costs
   float range = bucket_count * bucket_size;
-  queue.reuse(0.0f, range, bucket_size, &labels);
+  if (!queue)
+    queue = std::make_unique<
+        baldr::DoubleBucketQueue<typename label_container_t::value_type>>(0.0f, range, bucket_size,
+                                                                          &labels);
+  else
+    queue->reuse(0.0f, range, bucket_size, &labels);
 }
-template void
-Dijkstras::Initialize<decltype(Dijkstras::bdedgelabels_)>(decltype(Dijkstras::bdedgelabels_)&,
-                                                          baldr::DoubleBucketQueue<sif::BDEdgeLabel>&,
-                                                          const uint32_t);
-template void
-Dijkstras::Initialize<decltype(Dijkstras::mmedgelabels_)>(decltype(Dijkstras::mmedgelabels_)&,
-                                                          baldr::DoubleBucketQueue<sif::MMEdgeLabel>&,
-                                                          const uint32_t);
+template void Dijkstras::Initialize<decltype(Dijkstras::bdedgelabels_)>(
+    decltype(Dijkstras::bdedgelabels_)&,
+    std::unique_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>&,
+    const uint32_t);
+template void Dijkstras::Initialize<decltype(Dijkstras::mmedgelabels_)>(
+    decltype(Dijkstras::mmedgelabels_)&,
+    std::unique_ptr<baldr::DoubleBucketQueue<sif::MMEdgeLabel>>&,
+    const uint32_t);
 
 // Initializes the time of the expansion if there is one
 std::vector<TimeInfo>
@@ -172,7 +183,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
       BDEdgeLabel& lab = bdedgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_.decrease(es->index(), newsortcost);
+        adjacencylist_->decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, transition_cost, path_dist, restriction_idx);
       }
       continue;
@@ -187,7 +198,7 @@ void Dijkstras::ExpandForward(GraphReader& graphreader,
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
                                transition_cost, path_dist, false, restriction_idx);
-    adjacencylist_.add(idx);
+    adjacencylist_->add(idx);
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -222,7 +233,7 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
   while (cb_decision != ExpansionRecommendation::stop_expansion) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_.pop();
+    uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
       break;
     }
@@ -329,7 +340,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
       BDEdgeLabel& lab = bdedgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_.decrease(es->index(), newsortcost);
+        adjacencylist_->decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, transition_cost, path_dist, restriction_idx);
       }
       continue;
@@ -340,7 +351,7 @@ void Dijkstras::ExpandReverse(GraphReader& graphreader,
     *es = {EdgeSet::kTemporary, idx};
     bdedgelabels_.emplace_back(pred_idx, edgeid, opp_edge_id, directededge, newcost, mode_,
                                transition_cost, path_dist, false, restriction_idx);
-    adjacencylist_.add(idx);
+    adjacencylist_->add(idx);
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -374,7 +385,7 @@ void Dijkstras::ComputeReverse(google::protobuf::RepeatedPtrField<valhalla::Loca
   while (cb_decision != ExpansionRecommendation::stop_expansion) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_.pop();
+    uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
       break;
     }
@@ -658,7 +669,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
       MMEdgeLabel& lab = mmedgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        mmadjacencylist_.decrease(es->index(), newsortcost);
+        mmadjacencylist_->decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid, transition_cost,
                    restriction_idx);
       }
@@ -669,7 +680,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     uint32_t idx = mmedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     mmedgelabels_.emplace_back(edge_label);
-    mmadjacencylist_.add(idx);
+    mmadjacencylist_->add(idx);
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -731,7 +742,7 @@ void Dijkstras::ComputeMultiModal(
   while (cb_decision != ExpansionRecommendation::stop_expansion) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    const uint32_t predindex = adjacencylist_.pop();
+    const uint32_t predindex = adjacencylist_->pop();
     if (predindex == kInvalidLabel) {
       break;
     }
@@ -810,7 +821,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       bdedgelabels_.back().set_origin();
 
       // Add EdgeLabel to the adjacency list
-      adjacencylist_.add(idx);
+      adjacencylist_->add(idx);
       edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
     }
   }
@@ -874,7 +885,7 @@ void Dijkstras::SetDestinationLocations(
       int restriction_idx = -1;
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
                                  Cost{}, path_dist, false, restriction_idx);
-      adjacencylist_.add(idx);
+      adjacencylist_->add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, graphreader.GetGraphTile(opp_edge_id));
     }
   }
@@ -944,7 +955,7 @@ void Dijkstras::SetOriginLocationsMultiModal(
 
       // Add EdgeLabel to the adjacency list
       mmedgelabels_.push_back(edge_label);
-      mmadjacencylist_.add(idx);
+      mmadjacencylist_->add(idx);
     }
   }
 }

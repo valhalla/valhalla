@@ -24,11 +24,6 @@ using buckets_t = std::vector<bucket_t>;
 template <typename label_t> class DoubleBucketQueue final {
 public:
   /**
-   * Default c-tor creates empty object that needs to be initializd with reuse()
-   */
-  DoubleBucketQueue() = default;
-
-  /**
    * Constructor given a minimum cost, a range of costs held within the
    * bucket sort, and a bucket size. All costs above mincost + range are
    * stored in an "overflow" bucket.
@@ -37,7 +32,7 @@ public:
    * @param range      Cost range for low-level buckets.
    * @param bucketsize Bucket size (range of costs within same bucket).
    *                   Must be an integer value.
-   * @param labelcost  Functor to get a cost given a label index.
+   * @param labelcontainer  Container of labels with sortcosts.
    */
   DoubleBucketQueue(const float mincost,
                     const float range,
@@ -52,13 +47,14 @@ public:
   DoubleBucketQueue& operator=(const DoubleBucketQueue&) = delete;
 
   /**
-   * The same as c-tor, but without buffers reallocation
+   * The same as c-tor, but without buffers reallocation. Before call this
+   * method you should clean up the current state (call `clear`).
    * @param mincost    Minimum cost. Used to create the initial range for
    *                   bucket sorting.
    * @param range      Cost range for low-level buckets.
    * @param bucketsize Bucket size (range of costs within same bucket).
    *                   Must be an integer value.
-   * @param labelcost  Functor to get a cost given a label index.
+   * @param labelcontainer  Container of labels with sortcosts.
    */
   void reuse(const float mincost,
              const float range,
@@ -88,16 +84,7 @@ public:
 
     // Allocate the low-level buckets
     const size_t bucketcount = (range / bucketsize_) + 1;
-
-    // Assume all buckets below currentbucket_ are empty according to algorithm
-    std::for_each(currentbucket_, buckets_.end(), [](auto& b) { b.clear(); });
-
-    // resize only if previous size is less then required
-    if (buckets_.size() < bucketcount) {
-      buckets_.resize(bucketcount);
-    }
-    // Empty the overflow bucket and each bucket
-    overflowbucket_.clear();
+    buckets_.resize(bucketcount);
 
     // Set the current bucket to the lowest cost low level bucket
     currentbucket_ = buckets_.begin();
@@ -109,9 +96,11 @@ public:
    */
   void clear() {
     overflowbucket_.clear();
-    overflowbucket_.shrink_to_fit();
-    buckets_.clear();
-    buckets_.shrink_to_fit();
+    while (currentbucket_ != buckets_.end()) {
+      currentbucket_->clear();
+      currentbucket_++;
+    }
+
     // Reset current bucket and cost
     currentcost_ = mincost_;
     currentbucket_ = buckets_.begin();
@@ -178,12 +167,12 @@ public:
   }
 
 private:
-  float bucketrange_{}; // Total range of costs in lower level buckets
-  float bucketsize_{};  // Bucket size (range of costs in same bucket)
-  float inv_{};         // 1/bucketsize (so we can avoid division)
-  double mincost_{};    // Minimum cost within the low level buckets
-  float maxcost_{};     // Above this goes into overflow bucket
-  float currentcost_{}; // Current cost
+  float bucketrange_; // Total range of costs in lower level buckets
+  float bucketsize_;  // Bucket size (range of costs in same bucket)
+  float inv_;         // 1/bucketsize (so we can avoid division)
+  double mincost_;    // Minimum cost within the low level buckets
+  float maxcost_;     // Above this goes into overflow bucket
+  float currentcost_; // Current cost
 
   // Low level buckets
   buckets_t buckets_;

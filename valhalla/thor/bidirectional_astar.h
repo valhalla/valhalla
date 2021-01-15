@@ -110,8 +110,8 @@ protected:
   std::vector<sif::BDEdgeLabel> edgelabels_reverse_;
 
   // Adjacency list - approximate double bucket sort
-  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_forward_;
-  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_reverse_;
+  std::unique_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>> adjacencylist_forward_;
+  std::unique_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>> adjacencylist_reverse_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_forward_;

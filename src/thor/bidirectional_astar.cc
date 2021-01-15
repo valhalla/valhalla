@@ -35,6 +35,8 @@ BidirectionalAStar::BidirectionalAStar() : PathAlgorithm() {
   access_mode_ = kAutoAccess;
   travel_type_ = 0;
   cost_diff_ = 0.0f;
+  adjacencylist_forward_ = nullptr;
+  adjacencylist_reverse_ = nullptr;
 }
 
 // Destructor
@@ -45,8 +47,10 @@ BidirectionalAStar::~BidirectionalAStar() {
 void BidirectionalAStar::Clear() {
   edgelabels_forward_.clear();
   edgelabels_reverse_.clear();
-  adjacencylist_forward_.clear();
-  adjacencylist_reverse_.clear();
+  if (adjacencylist_forward_)
+    adjacencylist_forward_->clear();
+  if (adjacencylist_reverse_)
+    adjacencylist_reverse_->clear();
   edgestatus_forward_.clear();
   edgestatus_reverse_.clear();
 
@@ -71,10 +75,23 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   // Set bucket size and cost range based on DynamicCost.
   const uint32_t bucketsize = costing_->UnitSize();
   const float range = kBucketCount * bucketsize;
+
   const float mincostf = astarheuristic_forward_.Get(origll);
-  adjacencylist_forward_.reuse(mincostf, range, bucketsize, &edgelabels_forward_);
+  if (!adjacencylist_forward_)
+    adjacencylist_forward_ =
+        std::make_unique<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>(mincostf, range, bucketsize,
+                                                                     &edgelabels_forward_);
+  else
+    adjacencylist_forward_->reuse(mincostf, range, bucketsize, &edgelabels_forward_);
+
   const float mincostr = astarheuristic_reverse_.Get(destll);
-  adjacencylist_reverse_.reuse(mincostr, range, bucketsize, &edgelabels_reverse_);
+  if (!adjacencylist_reverse_)
+    adjacencylist_reverse_ =
+        std::make_unique<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>(mincostr, range, bucketsize,
+                                                                     &edgelabels_reverse_);
+  else
+    adjacencylist_reverse_->reuse(mincostr, range, bucketsize, &edgelabels_reverse_);
+
   edgestatus_forward_.clear();
   edgestatus_reverse_.clear();
 
@@ -259,7 +276,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
     BDEdgeLabel& lab = edgelabels_forward_[meta.edge_status->index()];
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-      adjacencylist_forward_.decrease(meta.edge_status->index(), newsortcost);
+      adjacencylist_forward_->decrease(meta.edge_status->index(), newsortcost);
       lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
     }
     // Returning true since this means we approved the edge
@@ -287,7 +304,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    restriction_idx);
 
-  adjacencylist_forward_.add(idx);
+  adjacencylist_forward_->add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
 
   // setting this edge as reached
@@ -482,7 +499,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
     BDEdgeLabel& lab = edgelabels_reverse_[meta.edge_status->index()];
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-      adjacencylist_reverse_.decrease(meta.edge_status->index(), newsortcost);
+      adjacencylist_reverse_->decrease(meta.edge_status->index(), newsortcost);
       lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
     }
     // Returning true since this means we approved the edge
@@ -502,7 +519,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
                                    (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                    restriction_idx);
 
-  adjacencylist_reverse_.add(idx);
+  adjacencylist_reverse_->add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
 
   // setting this edge as reached, sending the opposing because this is the reverse tree
@@ -578,7 +595,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
     // Get the next predecessor (based on which direction was expanded in prior step)
     if (expand_forward) {
-      forward_pred_idx = adjacencylist_forward_.pop();
+      forward_pred_idx = adjacencylist_forward_->pop();
       if (forward_pred_idx != kInvalidLabel) {
         fwd_pred = edgelabels_forward_[forward_pred_idx];
 
@@ -608,7 +625,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       }
     }
     if (expand_reverse) {
-      reverse_pred_idx = adjacencylist_reverse_.pop();
+      reverse_pred_idx = adjacencylist_reverse_->pop();
       if (reverse_pred_idx != kInvalidLabel) {
         rev_pred = edgelabels_reverse_[reverse_pred_idx];
 
@@ -862,7 +879,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     edgestatus_forward_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
                                      -1);
-    adjacencylist_forward_.add(idx);
+    adjacencylist_forward_->add(idx);
 
     // setting this edge as reached
     if (expansion_callback_) {
@@ -942,7 +959,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                             graphreader.GetGraphTile(opp_edge_id));
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                      dist, mode_, c, !opp_dir_edge->not_thru(), -1);
-    adjacencylist_reverse_.add(idx);
+    adjacencylist_reverse_->add(idx);
 
     // setting this edge as settled, sending the opposing because this is the reverse tree
     if (expansion_callback_) {
