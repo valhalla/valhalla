@@ -6,9 +6,6 @@
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
-constexpr float kTimeDistCostThresholdBicycleDivisor =
-    19.0f; // 200 km distance threshold will result in a cost threshold of ~10800 (3 hours)
-
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
 namespace {
@@ -43,6 +40,8 @@ TimeDistanceBSSMatrix::TimeDistanceBSSMatrix() : settled_count_(0), current_cost
 }
 
 float TimeDistanceBSSMatrix::GetCostThreshold(const float max_matrix_distance) const {
+  // The threshold should be the time consumed by the pedestrian, because in the worst case,
+  // the route may be pure pedestrian.
   return max_matrix_distance / kTimeDistCostThresholdPedestrianDivisor;
 }
 
@@ -567,7 +566,6 @@ void TimeDistanceBSSMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag.
-    // TODO - restrictions?
     EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f,
                          TravelMode::kPedestrian, d, {});
     edge_label.set_origin();
@@ -674,7 +672,6 @@ void TimeDistanceBSSMatrix::SetDestinationsManyToOne(
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
-      // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
       c += edge.distance();
       if (c > d.threshold) {
         d.threshold = c;

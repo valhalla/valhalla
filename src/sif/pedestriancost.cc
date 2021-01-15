@@ -416,60 +416,6 @@ public:
   // a bike share station connection
   bool project_on_bss_connection = 0;
 
-private:
-  baldr::Use get_pred_use(const sif::EdgeLabel& pred) const {
-    return pred.use();
-  }
-  baldr::Use get_pred_use(const baldr::DirectedEdge* pred) const {
-    return pred->use();
-  }
-
-  bool get_pred_destonly(const sif::EdgeLabel& pred) const {
-    return pred.destonly();
-  }
-  bool get_pred_destonly(const baldr::DirectedEdge* pred) const {
-    return pred->destonly();
-  }
-
-  template <typename PredType>
-  sif::Cost base_transition_cost_impl(const baldr::NodeInfo* node,
-                                      const baldr::DirectedEdge* edge,
-                                      PredType pred,
-                                      const uint32_t idx) const {
-    // Cases with both time and pena lty: country crossing, ferry, gate, toll booth
-    sif::Cost c;
-    if (node->type() == baldr::NodeType::kBorderControl) {
-      c += country_crossing_cost_;
-    }
-    if (node->type() == baldr::NodeType::kGate) {
-      c += gate_cost_;
-    }
-    if (node->type() == baldr::NodeType::kTollBooth) {
-      c += toll_booth_cost_;
-    }
-    if (edge->use() == baldr::Use::kFerry && get_pred_use(pred) != baldr::Use::kFerry) {
-      c += ferry_transition_cost_;
-    }
-    if (node->type() == baldr::NodeType::kBikeShare) {
-      c += bike_share_cost_;
-    }
-
-    // Additional penalties without any time cost
-    if (edge->destonly() && !get_pred_destonly(pred)) {
-      c.cost += destination_only_penalty_;
-    }
-    if (edge->use() == baldr::Use::kAlley && get_pred_use(pred) != baldr::Use::kAlley) {
-      c.cost += alley_penalty_;
-    }
-    if (!edge->link() && edge->use() != Use::kEgressConnection &&
-        edge->use() != Use::kPlatformConnection && !edge->name_consistency(idx)) {
-      c.cost += maneuver_penalty_;
-    }
-    // shortest ignores any penalties in favor of path length
-    c.cost *= !shortest_;
-    return c;
-  }
-
 public:
   /**
    * Override the base transition cost to not add maneuver penalties onto transit edges.
@@ -487,7 +433,38 @@ public:
                                  const baldr::DirectedEdge* edge,
                                  const sif::EdgeLabel& pred,
                                  const uint32_t idx) const override {
-    return base_transition_cost_impl(node, edge, pred, idx);
+    // Cases with both time and penalty: country crossing, ferry, gate, toll booth
+    sif::Cost c;
+    if (node->type() == baldr::NodeType::kBorderControl) {
+      c += country_crossing_cost_;
+    }
+    if (node->type() == baldr::NodeType::kGate) {
+      c += gate_cost_;
+    }
+    if (node->type() == baldr::NodeType::kTollBooth) {
+      c += toll_booth_cost_;
+    }
+    if (edge->use() == baldr::Use::kFerry && pred.use() != baldr::Use::kFerry) {
+      c += ferry_transition_cost_;
+    }
+    if (node->type() == baldr::NodeType::kBikeShare) {
+      c += bike_share_cost_;
+    }
+
+    // Additional penalties without any time cost
+    if (edge->destonly() && !pred.destonly()) {
+      c.cost += destination_only_penalty_;
+    }
+    if (edge->use() == baldr::Use::kAlley && pred.use() != baldr::Use::kAlley) {
+      c.cost += alley_penalty_;
+    }
+    if (!edge->link() && edge->use() != Use::kEgressConnection &&
+        edge->use() != Use::kPlatformConnection && !edge->name_consistency(idx)) {
+      c.cost += maneuver_penalty_;
+    }
+    // shortest ignores any penalties in favor of path length
+    c.cost *= !shortest_;
+    return c;
   }
 
   /**
@@ -506,7 +483,38 @@ public:
                                  const baldr::DirectedEdge* edge,
                                  const baldr::DirectedEdge* pred,
                                  const uint32_t idx) const override {
-    return base_transition_cost_impl(node, edge, pred, idx);
+    // Cases with both time and penalty: country crossing, ferry, gate, toll booth
+    sif::Cost c;
+    if (node->type() == baldr::NodeType::kBorderControl) {
+      c += country_crossing_cost_;
+    }
+    if (node->type() == baldr::NodeType::kGate) {
+      c += gate_cost_;
+    }
+    if (node->type() == baldr::NodeType::kTollBooth) {
+      c += toll_booth_cost_;
+    }
+    if (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry) {
+      c += ferry_transition_cost_;
+    }
+    if (node->type() == baldr::NodeType::kBikeShare) {
+      c += bike_share_cost_;
+    }
+
+    // Additional penalties without any time cost
+    if (edge->destonly() && !pred->destonly()) {
+      c.cost += destination_only_penalty_;
+    }
+    if (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley) {
+      c.cost += alley_penalty_;
+    }
+    if (!edge->link() && edge->use() != Use::kEgressConnection &&
+        edge->use() != Use::kPlatformConnection && !edge->name_consistency(idx)) {
+      c.cost += maneuver_penalty_;
+    }
+    // shortest ignores any penalties in favor of path length
+    c.cost *= !shortest_;
+    return c;
   }
 };
 
