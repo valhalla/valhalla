@@ -11,15 +11,16 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
-constexpr uint64_t kInitialEdgeLabelCount = 500000;
+constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Number of iterations to allow with no convergence to the destination
 constexpr uint32_t kMaxIterationsWithoutConvergence = 800000;
 
 // Default constructor
-TimeDepForward::TimeDepForward()
+TimeDepForward::TimeDepForward(uint32_t max_reserved_labels_count)
     : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
-      mode_(TravelMode::kDrive), travel_type_(0), adjacencylist_(nullptr) {
+      mode_(TravelMode::kDrive), travel_type_(0), adjacencylist_(nullptr),
+      max_reserved_labels_count_(max_reserved_labels_count) {
 }
 
 // Destructor
@@ -31,6 +32,10 @@ TimeDepForward::~TimeDepForward() {
 void TimeDepForward::Clear() {
   // Clear the edge labels and destination list. Reset the adjacency list
   // and clear edge status.
+  if (edgelabels_.size() > max_reserved_labels_count_) {
+    edgelabels_.resize(max_reserved_labels_count_);
+    edgelabels_.shrink_to_fit();
+  }
   edgelabels_.clear();
   destinations_percent_along_.clear();
   if (adjacencylist_)
@@ -366,7 +371,7 @@ void TimeDepForward::Init(const midgard::PointLL& origll, const midgard::PointLL
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects.
   // TODO - reserve based on estimate based on distance and route type.
-  edgelabels_.reserve(kInitialEdgeLabelCount);
+  edgelabels_.reserve(std::min(max_reserved_labels_count_, kInitialEdgeLabelCount));
 
   // Construct adjacency list, clear edge status.
   // Set bucket size and cost range based on DynamicCost.

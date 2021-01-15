@@ -31,8 +31,10 @@ class TimeDepForward : public PathAlgorithm {
 public:
   /**
    * Constructor.
+   * @param max_reserved_labels_count maximum capacity of edgelabels container
+   *                                  that allowed to keep reserved
    */
-  TimeDepForward();
+  explicit TimeDepForward(uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
 
   /**
    * Destructor
@@ -176,6 +178,7 @@ protected:
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::EdgeLabel> edgelabels_;
+  uint32_t max_reserved_labels_count_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
@@ -198,8 +201,10 @@ class TimeDepReverse : public TimeDepForward {
 public:
   /**
    * Constructor.
+   * @param max_reserved_labels_count maximum capacity of edgelabels container
+   *                                  that allowed to keep reserved
    */
-  TimeDepReverse();
+  explicit TimeDepReverse(uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
 
   /**
    * Destructor

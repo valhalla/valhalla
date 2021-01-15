@@ -31,6 +31,10 @@ namespace {
 // route starts to become suspect (due to user breaks and other factors).
 constexpr float kDefaultMaxTimeDependentDistance = 500000.0f; // 500 km
 
+// Maximum capacity of edge labels container that allowed to keep reserved.
+// It's used to prevent memory from infinite growth.
+constexpr uint32_t kMaxReservedLabelsCount = 1000000;
+
 // Maximum edge score - base this on costing type.
 // Large values can cause very bad performance. Setting this back
 // to 2 hours for bike and pedestrian and 12 hours for driving routes.
@@ -87,6 +91,16 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
 
   max_timedep_distance =
       config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
+
+  auto max_reserved_labels_count =
+      config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount);
+
+  bidir_astar = std::make_unique<BidirectionalAStar>(max_reserved_labels_count);
+  bss_astar = std::make_unique<AStarBSSAlgorithm>(max_reserved_labels_count);
+  multi_modal_astar = std::make_unique<MultiModalPathAlgorithm>(max_reserved_labels_count);
+  timedep_forward = std::make_unique<TimeDepForward>(max_reserved_labels_count);
+  timedep_reverse = std::make_unique<TimeDepReverse>(max_reserved_labels_count);
+  isochrone_gen = std::make_unique<Isochrone>(max_reserved_labels_count);
 }
 
 thor_worker_t::~thor_worker_t() {
@@ -320,13 +334,13 @@ void thor_worker_t::parse_filter_attributes(const Api& request, bool is_strict_f
 }
 
 void thor_worker_t::cleanup() {
-  bidir_astar.Clear();
-  timedep_forward.Clear();
-  timedep_reverse.Clear();
-  multi_modal_astar.Clear();
-  bss_astar.Clear();
+  bidir_astar->Clear();
+  timedep_forward->Clear();
+  timedep_reverse->Clear();
+  multi_modal_astar->Clear();
+  bss_astar->Clear();
   trace.clear();
-  isochrone_gen.Clear();
+  isochrone_gen->Clear();
   matcher_factory.ClearFullCache();
   if (reader->OverCommitted()) {
     reader->Trim();

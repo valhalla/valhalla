@@ -38,12 +38,13 @@ uint32_t GetOperatorId(const graph_tile_ptr& tile,
 namespace valhalla {
 namespace thor {
 
-constexpr uint64_t kInitialEdgeLabelCount = 200000;
+constexpr uint32_t kInitialEdgeLabelCount = 200000;
 
 // Default constructor
-MultiModalPathAlgorithm::MultiModalPathAlgorithm()
+MultiModalPathAlgorithm::MultiModalPathAlgorithm(uint32_t max_reserved_labels_count)
     : PathAlgorithm(), walking_distance_(0), max_label_count_(std::numeric_limits<uint32_t>::max()),
-      mode_(TravelMode::kPedestrian), travel_type_(0), adjacencylist_(nullptr) {
+      mode_(TravelMode::kPedestrian), travel_type_(0), adjacencylist_(nullptr),
+      max_reserved_labels_count_(max_reserved_labels_count) {
 }
 
 // Destructor
@@ -60,7 +61,7 @@ void MultiModalPathAlgorithm::Init(const midgard::PointLL& /*origll*/,
 
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects
-  edgelabels_.reserve(kInitialEdgeLabelCount);
+  edgelabels_.reserve(std::min(max_reserved_labels_count_, kInitialEdgeLabelCount));
 
   // Construct adjacency list and edge status.
   // Set bucket size and cost range based on DynamicCost.
@@ -81,6 +82,10 @@ void MultiModalPathAlgorithm::Init(const midgard::PointLL& /*origll*/,
 // Clear the temporary information generated during path construction.
 void MultiModalPathAlgorithm::Clear() {
   // Clear the edge labels and destination list
+  if (edgelabels_.size() > max_reserved_labels_count_) {
+    edgelabels_.resize(max_reserved_labels_count_);
+    edgelabels_.shrink_to_fit();
+  }
   edgelabels_.clear();
   destinations_.clear();
 

@@ -18,7 +18,8 @@ constexpr uint64_t kInitialEdgeLabelCount = 500000;
 constexpr uint32_t kMaxIterationsWithoutConvergence = 800000;
 
 // Default constructor
-TimeDepReverse::TimeDepReverse() : TimeDepForward() {
+TimeDepReverse::TimeDepReverse(uint32_t max_reserved_labels_count)
+    : TimeDepForward(max_reserved_labels_count) {
   mode_ = TravelMode::kDrive;
   travel_type_ = 0;
   max_label_count_ = std::numeric_limits<uint32_t>::max();
@@ -33,6 +34,10 @@ TimeDepReverse::~TimeDepReverse() {
 
 void TimeDepReverse::Clear() {
   TimeDepForward::Clear();
+  if (edgelabels_rev_.size() > max_reserved_labels_count_) {
+    edgelabels_rev_.resize(max_reserved_labels_count_);
+    edgelabels_rev_.shrink_to_fit();
+  }
   edgelabels_rev_.clear();
   if (adjacencylist_rev_)
     adjacencylist_rev_->clear();

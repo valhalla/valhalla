@@ -40,17 +40,27 @@ namespace valhalla {
 namespace thor {
 
 // Default constructor
-Dijkstras::Dijkstras()
+Dijkstras::Dijkstras(uint32_t max_reserved_labels_count)
     : mode_(TravelMode::kDrive), access_mode_(kAutoAccess), adjacencylist_(nullptr),
-      mmadjacencylist_(nullptr) {
+      mmadjacencylist_(nullptr), max_reserved_labels_count_(max_reserved_labels_count) {
 }
 
 // Clear the temporary information generated during path construction.
 void Dijkstras::Clear() {
   // Clear the edge labels, edge status flags, and adjacency list
   // TODO - clear only the edge label set that was used?
+  if (bdedgelabels_.size() > max_reserved_labels_count_) {
+    bdedgelabels_.resize(max_reserved_labels_count_);
+    bdedgelabels_.shrink_to_fit();
+  }
   bdedgelabels_.clear();
+
+  if (mmedgelabels_.size() > max_reserved_labels_count_) {
+    mmedgelabels_.resize(max_reserved_labels_count_);
+    mmedgelabels_.shrink_to_fit();
+  }
   mmedgelabels_.clear();
+
   if (adjacencylist_)
     adjacencylist_->clear();
   if (mmadjacencylist_)
@@ -69,7 +79,7 @@ void Dijkstras::Initialize(
   uint32_t edge_label_reservation;
   uint32_t bucket_count;
   GetExpansionHints(bucket_count, edge_label_reservation);
-  labels.reserve(edge_label_reservation);
+  labels.reserve(std::min(max_reserved_labels_count_, edge_label_reservation));
 
   // Set up lambda to get sort costs
   float range = bucket_count * bucket_size;

@@ -39,7 +39,12 @@ enum class ExpansionRecommendation {
  */
 class Dijkstras {
 public:
-  Dijkstras();
+  /**
+   * Constructor.
+   * @param max_reserved_labels_count maximum capacity of edgelabels container
+   *                                  that allowed to keep reserved
+   */
+  explicit Dijkstras(uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
   virtual ~Dijkstras() {
   }
 
@@ -122,6 +127,7 @@ protected:
   // Vector of edge labels (requires access by index).
   std::vector<sif::BDEdgeLabel> bdedgelabels_;
   std::vector<sif::MMEdgeLabel> mmedgelabels_;
+  uint32_t max_reserved_labels_count_;
 
   // Adjacency list - approximate double bucket sort
   std::unique_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>> adjacencylist_;

@@ -182,11 +182,11 @@ std::string thor_worker_t::expansion(Api& request) {
 
   // tell all the algorithms how to track expansion
   for (auto* alg : std::vector<PathAlgorithm*>{
-           &multi_modal_astar,
-           &timedep_forward,
-           &timedep_reverse,
-           &bidir_astar,
-           &bss_astar,
+           multi_modal_astar.get(),
+           timedep_forward.get(),
+           timedep_reverse.get(),
+           bidir_astar.get(),
+           bss_astar.get(),
        }) {
     alg->set_track_expansion(track_expansion);
   }
@@ -200,11 +200,11 @@ std::string thor_worker_t::expansion(Api& request) {
 
   // tell all the algorithms to stop tracking the expansion
   for (auto* alg : std::vector<PathAlgorithm*>{
-           &multi_modal_astar,
-           &timedep_forward,
-           &timedep_reverse,
-           &bidir_astar,
-           &bss_astar,
+           multi_modal_astar.get(),
+           timedep_forward.get(),
+           timedep_reverse.get(),
+           bidir_astar.get(),
+           bss_astar.get(),
        }) {
     alg->set_track_expansion(nullptr);
   }
@@ -244,23 +244,23 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
                                                        const Options& options) {
   // make sure they are all cancelable
   for (auto* alg : std::vector<PathAlgorithm*>{
-           &multi_modal_astar,
-           &timedep_forward,
-           &timedep_reverse,
-           &bidir_astar,
-           &bss_astar,
+           multi_modal_astar.get(),
+           timedep_forward.get(),
+           timedep_reverse.get(),
+           bidir_astar.get(),
+           bss_astar.get(),
        }) {
     alg->set_interrupt(interrupt);
   }
 
   // Have to use multimodal for transit based routing
   if (routetype == "multimodal" || routetype == "transit") {
-    return &multi_modal_astar;
+    return multi_modal_astar.get();
   }
 
   // Have to use bike share station algorithm
   if (routetype == "bikeshare") {
-    return &bss_astar;
+    return bss_astar.get();
   }
 
   // If the origin has date_time set use timedep_forward method if the distance
@@ -269,7 +269,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
-      return &timedep_forward;
+      return timedep_forward.get();
     }
   }
 
@@ -279,7 +279,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
-      return &timedep_reverse;
+      return timedep_reverse.get();
     }
   }
 
@@ -291,13 +291,13 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     for (auto& edge2 : destination.path_edges()) {
       if (edge1.graph_id() == edge2.graph_id() ||
           reader->AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()))) {
-        return &timedep_forward;
+        return timedep_forward.get();
       }
     }
   }
 
   // No other special cases we land on bidirectional a*
-  return &bidir_astar;
+  return bidir_astar.get();
 }
 
 std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* path_algorithm,
@@ -308,7 +308,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
   // Find the path. If bidirectional A* disable use of destination only edges on the
   // first pass. If there is a failure, we allow them on the second pass.
   valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
-  if (path_algorithm == &bidir_astar) {
+  if (path_algorithm == bidir_astar.get()) {
     cost->set_allow_destination_only(false);
   }
   cost->set_pass(0);
@@ -337,8 +337,8 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
     path_algorithm->Clear();
     cost->set_pass(1);
     // since bidir does about half the expansion we can do half the relaxation here
-    float relax_factor = path_algorithm == &bidir_astar ? 8.f : 16.f;
-    float expansion_within_factor = path_algorithm == &bidir_astar ? 2.f : 4.f;
+    float relax_factor = path_algorithm == bidir_astar.get() ? 8.f : 16.f;
+    float expansion_within_factor = path_algorithm == bidir_astar.get() ? 2.f : 4.f;
     cost->RelaxHierarchyLimits(relax_factor, expansion_within_factor);
     cost->set_allow_destination_only(true);
 

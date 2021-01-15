@@ -34,8 +34,8 @@ std::string thor_worker_t::isochrones(Api& request) {
 
   // get the raster
   auto grid = (costing == "multimodal" || costing == "transit")
-                  ? isochrone_gen.ComputeMultiModal(request, *reader, mode_costing, mode)
-                  : isochrone_gen.Compute(request, *reader, mode_costing, mode);
+                  ? isochrone_gen->ComputeMultiModal(request, *reader, mode_costing, mode)
+                  : isochrone_gen->Compute(request, *reader, mode_costing, mode);
 
   // we have parallel vectors of contour properties and the actual geojson features
   // this method sorts the contour specifications by metric (time or distance) and then by value

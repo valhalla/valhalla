@@ -23,15 +23,16 @@ static TravelMode get_other_travel_mode(const TravelMode current_mode) {
 namespace valhalla {
 namespace thor {
 
-constexpr uint64_t kInitialEdgeLabelCount = 500000;
+constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Number of iterations to allow with no convergence to the destination
 constexpr uint32_t kMaxIterationsWithoutConvergence = 200000;
 
 // Default constructor
-AStarBSSAlgorithm::AStarBSSAlgorithm()
+AStarBSSAlgorithm::AStarBSSAlgorithm(uint32_t max_reserved_labels_count)
     : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
-      mode_(TravelMode::kDrive), travel_type_(0), adjacencylist_(nullptr) {
+      mode_(TravelMode::kDrive), travel_type_(0), adjacencylist_(nullptr),
+      max_reserved_labels_count_(max_reserved_labels_count) {
 }
 
 // Destructor
@@ -41,6 +42,11 @@ AStarBSSAlgorithm::~AStarBSSAlgorithm() {
 
 // Clear the temporary information generated during path construction.
 void AStarBSSAlgorithm::Clear() {
+  // Reduce edge labels capacity if it's more than limit
+  if (edgelabels_.size() > max_reserved_labels_count_) {
+    edgelabels_.resize(max_reserved_labels_count_);
+    edgelabels_.shrink_to_fit();
+  }
   // Clear the edge labels and destination list. Reset the adjacency list
   // and clear edge status.
   edgelabels_.clear();
@@ -77,7 +83,7 @@ void AStarBSSAlgorithm::Init(const midgard::PointLL& origll, const midgard::Poin
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects.
   // TODO - reserve based on estimate based on distance and route type.
-  edgelabels_.reserve(kInitialEdgeLabelCount);
+  edgelabels_.reserve(std::min(kInitialEdgeLabelCount, max_reserved_labels_count_));
 
   // Construct adjacency list, clear edge status.
   // Set bucket size and cost range based on DynamicCost.
