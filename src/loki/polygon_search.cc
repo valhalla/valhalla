@@ -4,36 +4,61 @@
 #include <iostream>
 #include <math.h>
 
-#include <midgard/aabb2.h>
-#include <midgard/pointll.h>
-#include <proto/options.pb.h>
+#include "loki/node_search.h"
+#include "loki/polygon_search.h"
+#include "midgard/aabb2.h"
+#include "midgard/pointll.h"
+#include "proto/options.pb.h"
 
 namespace bg = boost::geometry;
 namespace vm = valhalla::midgard;
-
-// Register custom geom types with boost
-BOOST_GEOMETRY_REGISTER_POINT_2D(vm::PointLL, double, bg::cs::geographic<bg::degree>, first, second)
-BOOST_GEOMETRY_REGISTER_BOX(vm::AABB2<vm::PointLL>, vm::PointLL, ll, ur)
+namespace vb = valhalla::baldr;
 
 namespace {
-
-using ring_bg_t = bg::model::ring<vm::PointLL>;
 
 } // namespace
 
 namespace valhalla {
 namespace loki {
 
-double GetRingsArea(const google::protobuf::RepeatedPtrField<Options::AvoidPolygon>& rings_pbf) {
-  double area;
+void edges_in_rings(multi_ring_t rings) {
+
+  auto tiles = vb::TileHierarchy::levels().back().tiles;
+  const uint8_t bin_level = vb::TileHierarchy::levels().back().level;
+  
+  std::unordered_map<int32_t, std::unordered_set<unsigned short>> intersection;
+  // loop over rings and collect all bins:
+  // - inspect all tiles & bins which are in between the ones returned by intersection (per row) -> look at Tiles.Intersect()
+  //    - if the tile's/bin's center (or other point) is inside the polygon, the whole tile/bin is inside and consequently all edges
+  // - the intersected tiles/bins have to be fully intersected to find the edges which are affected
+  // in the end we'll have two sets of bins:
+  //    - one set containing all bins which are fully inside the polygon(s)
+  //    - one set which needs further handling to find all edges intersecting the polygons
+  for (auto ring : rings) {
+    auto line_intersected = tiles.Intersect(ring);
+  }
+  
+  // Then we can continue to try and make an edge's shape a boost.geometry to intersect it with a polygon
+  // Finally return this set of edges to loki worker
+}
+
+multi_ring_t PBFToRings(const google::protobuf::RepeatedPtrField<Options::AvoidPolygon>& rings_pbf) {
+  multi_ring_t rings;
   for (const auto& ring_pbf : rings_pbf) {
     ring_bg_t new_ring;
     for (const auto& coord : ring_pbf.coords()) {
       new_ring.push_back({coord.ll().lng(), coord.ll().lat()});
     }
-    area += bg::area(new_ring);
+    rings.push_back(new_ring);
   }
+  return rings;
+}
 
+double GetAvoidArea(const multi_ring_t& rings) {
+  double area;
+  for (const auto& ring : rings) {
+    area += bg::area(ring, bg::strategy::area::geographic<>());
+  }
   return area;
 }
 } // namespace loki

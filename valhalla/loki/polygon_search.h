@@ -1,18 +1,38 @@
 #ifndef VALHALLA_LOKI_POLYGON_SEARCH_H_
 #define VALHALLA_LOKI_POLYGON_SEARCH_H_
 
-#include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/sif/dynamiccost.h>
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/register/box.hpp>
+#include <boost/geometry/geometries/register/point.hpp>
+#include <boost/geometry/geometries/register/ring.hpp>
+
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/proto/options.pb.h>
 
 #include <functional>
+
+// Register custom geom types with boost
+BOOST_GEOMETRY_REGISTER_POINT_2D(valhalla::midgard::PointLL,
+                                 double,
+                                 boost::geometry::cs::geographic<boost::geometry::degree>,
+                                 first,
+                                 second)
+BOOST_GEOMETRY_REGISTER_BOX(valhalla::midgard::AABB2<valhalla::midgard::PointLL>,
+                            valhalla::midgard::PointLL,
+                            ll,
+                            ur)
+BOOST_GEOMETRY_REGISTER_RING(std::vector<valhalla::midgard::PointLL>)
 
 namespace valhalla {
 namespace loki {
 
-double GetRingsArea(const google::protobuf::RepeatedPtrField<Options::AvoidPolygon>& rings_pbf);
+using ring_bg_t = std::vector<midgard::PointLL>;
+using multi_ring_t = std::vector<ring_bg_t>;
+
+multi_ring_t PBFToRings(const google::protobuf::RepeatedPtrField<Options::AvoidPolygon>& rings_pbf);
+
+double GetAvoidArea(const multi_ring_t& rings);
 
 } // namespace loki
 } // namespace valhalla

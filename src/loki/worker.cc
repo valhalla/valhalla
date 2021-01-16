@@ -85,7 +85,8 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
   if (options.avoid_polygons_size()) {
-    double area = GetRingsArea(options.avoid_polygons()) / kSqmPerSqkm;
+    multi_ring_t rings = PBFToRings(options.avoid_polygons());
+    double area = GetAvoidArea(rings) / kSqmPerSqkm;
     if (area > max_avoid_polygons_sqkm) {
       throw valhalla_exception_t(167, std::to_string(max_avoid_polygons_sqkm));
     }

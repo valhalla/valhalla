@@ -13,9 +13,7 @@
 using namespace valhalla;
 namespace bg = boost::geometry;
 namespace vm = valhalla::midgard;
-
-BOOST_GEOMETRY_REGISTER_POINT_2D(PointLL, double, bg::cs::geographic<bg::degree>, first, second)
-BOOST_GEOMETRY_REGISTER_MULTI_POLYGON(std::vector<bg::model::polygon<PointLL>>)
+namespace vl = valhalla::loki;
 
 class AvoidTest : public ::testing::Test {
 protected:
@@ -42,29 +40,31 @@ protected:
 
 gurka::map AvoidTest::avoid_map = {};
 
-TEST_F(AvoidPolygons, TestArea) {
+TEST_F(AvoidTest, TestArea) {
   // define multipolygon with ~
-  std::vector<bg::model::polygon<PointLL>> polys(2);
+  vl::multi_ring_t erings(2);
   bg::read_wkt(
       "POLYGON ((13.38625361 52.4652558, 13.38625361 52.48000128, 13.4181769 52.48000128, 13.4181769 52.4652558, 13.38625361 52.4652558))",
-      polys[0]);
+      erings[0]);
   bg::read_wkt(
       "POLYGON ((13.36862753 52.43148012, 13.36862753 52.4555968, 13.39944328 52.4555968, 13.39944328 52.43148012, 13.36862753 52.43148012))",
-      polys[1]);
-  double actual_area = bg::area(polys);
+      erings[1]);
+  double actual_area = bg::area(erings[0], bg::strategy::area::geographic<>());
+  actual_area += bg::area(erings[1], bg::strategy::area::geographic<>());
 
   // Add polygons to PBF
   Options options;
   auto avoid_polygons = options.mutable_avoid_polygons();
-  for (auto& poly : polys) {
+  for (auto& poly : erings) {
     auto* polygon = avoid_polygons->Add();
-    for (auto& coord : poly.outer()) {
+    for (auto& coord : poly) {
       auto* ll = polygon->add_coords()->mutable_ll();
       ll->set_lng(coord.lng());
       ll->set_lat(coord.lat());
     }
   }
-  auto calc_area = loki::GetArea(options.avoid_polygons());
+  auto trings = loki::PBFToRings(options.avoid_polygons());
+  auto calc_area = loki::GetAvoidArea(trings);
 
   EXPECT_EQ(actual_area, calc_area);
 

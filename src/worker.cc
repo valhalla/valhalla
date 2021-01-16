@@ -315,47 +315,37 @@ void add_date_to_locations(Options& options,
   }
 }
 
-// Parses polygons of the form [[[lon1, lat1], [lon2, lat2], ...], [[lon1, lat1], [lon2, lat2], ...]]]
-void parse_polygons(rapidjson::Document& doc,
-                    Options& options,
-                    const std::string& node,
-                    unsigned location_parse_error_code) {
-  google::protobuf::RepeatedPtrField<valhalla::Options::AvoidPolygon>* polygons = nullptr;
-  auto& allocator = doc.GetAllocator();
-  if (node == "avoid_polygons") {
-    polygons = options.mutable_avoid_polygons();
+/** Parses JSON rings of the form [[lon1, lat1], [lon2, lat2], ...]] and operates on
+ * PBF objects of the sort "repeated Location". If rings are open, this will close them.
+ * @param ring        PBF template type of the sort "repeated Location"
+ * @param coord_array JSON representation of the coordinate array
+ * @param allocator   JSON document allocator to insert values
+ * @param close_ring  whether to close an open ring/linestring
+*/
+template <typename ring_pbf_t>
+void parse_ring(ring_pbf_t& ring,
+                rapidjson::Value& coord_array,
+                rapidjson::Document::AllocatorType& allocator,
+                bool close_ring = true) {
+  // make sure it's a closed polygon
+  if (coord_array[0] != coord_array[coord_array.Size() - 1] && close_ring) {
+    coord_array.PushBack(coord_array[0], allocator);
   }
-  // auto req_polygons = rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" +
-  // node).c_str());
-  auto* req_polygons = rapidjson::GetValueByPointer(doc, "/avoid_polygons");
-  if (req_polygons) {
-    for (auto& req_poly : req_polygons->GetArray()) {
-      auto* polygon = polygons->Add();
-      auto poly_coords = req_poly.GetArray();
-      if (poly_coords[0] != poly_coords[poly_coords.Size() - 1]) {
-        poly_coords.PushBack(poly_coords[0].GetArray(), allocator);
-        // throw std::runtime_error("Avoid polygon is a polyline.");
-      }
-      for (const auto& coords : req_poly.GetArray()) {
-        // Protect against silly stuff
-        if (coords.Size() < 2) {
-          throw std::runtime_error("Polygon coordinates must consist of [Lon, Lat] arrays.");
-        }
-
-        double lon = coords[0].GetDouble();
-        lon = midgard::circular_range_clamp<double>(lon, -180, 180);
-
-        double lat = coords[1].GetDouble();
-        if (lat < -90.0 || lat > 90.0) {
-          throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
-        }
-
-        // add to PBF
-        auto* ll = polygon->add_coords()->mutable_ll();
-        ll->set_lng(lon);
-        ll->set_lat(lat);
-      }
+  for (const auto& coords : coord_array.GetArray()) {
+    if (coords.Size() < 2) {
+      throw std::runtime_error("Polygon coordinates must consist of [Lon, Lat] arrays.");
     }
+
+    double lon = coords[0].GetDouble();
+    lon = midgard::circular_range_clamp<double>(lon, -180, 180);
+    double lat = coords[1].GetDouble();
+    if (lat < -90.0 || lat > 90.0) {
+      throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
+    }
+
+    auto* ll = ring->add_coords()->mutable_ll();
+    ll->set_lng(lon);
+    ll->set_lat(lat);
   }
 }
 
@@ -892,7 +882,18 @@ void from_json(rapidjson::Document& doc, Options& options) {
   parse_locations(doc, options, "avoid_locations", 133);
 
   // get the avoid polygons in there
-  parse_polygons(doc, options, "avoid_polygons", 137);
+  auto rings_req = rapidjson::get_child_optional(doc, "/avoid_polygons");
+  if (rings_req) {
+    auto* rings_pbf = options.mutable_avoid_polygons();
+    try {
+      for (auto& req_poly : rings_req->GetArray()) {
+        auto* ring = rings_pbf->Add();
+        parse_ring(ring, req_poly, allocator);
+      }
+    } 
+    catch (const std::runtime_error& e) { throw e; }
+    catch (...) { throw valhalla_exception_t{137}; }
+  }
 
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
   if (!options.has_date_time_type() && (options.shape_size() == 0 || options.shape(0).time() == -1)) {
