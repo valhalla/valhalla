@@ -321,7 +321,7 @@ void add_date_to_locations(Options& options,
  * @param coord_array JSON representation of the coordinate array
  * @param allocator   JSON document allocator to insert values
  * @param close_ring  whether to close an open ring/linestring
-*/
+ */
 template <typename ring_pbf_t>
 void parse_ring(ring_pbf_t& ring,
                 rapidjson::Value& coord_array,
@@ -890,9 +890,9 @@ void from_json(rapidjson::Document& doc, Options& options) {
         auto* ring = rings_pbf->Add();
         parse_ring(ring, req_poly, allocator);
       }
-    } 
-    catch (const std::runtime_error& e) { throw e; }
-    catch (...) { throw valhalla_exception_t{137}; }
+    } catch (const std::runtime_error& e) { throw e; } catch (...) {
+      throw valhalla_exception_t{137};
+    }
   }
 
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources

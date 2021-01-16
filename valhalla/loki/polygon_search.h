@@ -30,6 +30,8 @@ namespace loki {
 using ring_bg_t = std::vector<midgard::PointLL>;
 using multi_ring_t = std::vector<ring_bg_t>;
 
+void edges_in_rings(const multi_ring_t& rings);
+
 multi_ring_t PBFToRings(const google::protobuf::RepeatedPtrField<Options::AvoidPolygon>& rings_pbf);
 
 double GetAvoidArea(const multi_ring_t& rings);

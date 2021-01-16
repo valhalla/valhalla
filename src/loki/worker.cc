@@ -90,15 +90,15 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     if (area > max_avoid_polygons_sqkm) {
       throw valhalla_exception_t(167, std::to_string(max_avoid_polygons_sqkm));
     }
-  }
-
-  // See if we have avoids and take care of them
-  if (options.avoid_locations_size() > max_avoid_locations) {
-    throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
+    edges_in_rings(rings);
   }
 
   // Process avoid locations. Add to a list of edgeids and percent along the edge.
   if (options.avoid_locations_size()) {
+    // See if we have avoids and take care of them
+    if (options.avoid_locations_size() > max_avoid_locations) {
+      throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
+    }
     try {
       auto avoid_locations = PathLocation::fromPBF(options.avoid_locations());
       auto results = loki::Search(avoid_locations, *reader, costing);

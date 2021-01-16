@@ -14,32 +14,37 @@ namespace bg = boost::geometry;
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 
-namespace {
-
-} // namespace
+namespace {} // namespace
 
 namespace valhalla {
 namespace loki {
 
-void edges_in_rings(multi_ring_t rings) {
+void edges_in_rings(const multi_ring_t& rings) {
 
   auto tiles = vb::TileHierarchy::levels().back().tiles;
   const uint8_t bin_level = vb::TileHierarchy::levels().back().level;
-  
+
   std::unordered_map<int32_t, std::unordered_set<unsigned short>> intersection;
   // loop over rings and collect all bins:
-  // - inspect all tiles & bins which are in between the ones returned by intersection (per row) -> look at Tiles.Intersect()
-  //    - if the tile's/bin's center (or other point) is inside the polygon, the whole tile/bin is inside and consequently all edges
+  // - inspect all tiles & bins which are in between the ones returned by intersection (per row) ->
+  // look at Tiles.Intersect()
+  //    - if the tile's/bin's center (or other point) is inside the polygon, the whole tile/bin is
+  //    inside and consequently all edges
   // - the intersected tiles/bins have to be fully intersected to find the edges which are affected
   // in the end we'll have two sets of bins:
   //    - one set containing all bins which are fully inside the polygon(s)
   //    - one set which needs further handling to find all edges intersecting the polygons
   for (auto ring : rings) {
     auto line_intersected = tiles.Intersect(ring);
+    std::cout << "No of intersected tiles: " << std::to_string(line_intersected.size()) << std::endl;
+    for (auto& tile : line_intersected) {
+      std::cout << "Tile: " << std::to_string(tile.first)
+                << ", Num bins: " << std::to_string(tile.second.size()) << std::endl;
+    }
   }
-  
-  // Then we can continue to try and make an edge's shape a boost.geometry to intersect it with a polygon
-  // Finally return this set of edges to loki worker
+
+  // Then we can continue to try and make an edge's shape a boost.geometry to intersect it with a
+  // polygon Finally return this set of edges to loki worker
 }
 
 multi_ring_t PBFToRings(const google::protobuf::RepeatedPtrField<Options::AvoidPolygon>& rings_pbf) {
