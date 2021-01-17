@@ -34,7 +34,7 @@ jobs:
       - task: Cache@2
         displayName: "Cache vcpkg's packages"
         inputs:
-          key: .\.vcpkg_deps.txt | "$(VCPKG_REF)" | "$(TRIPLET)" |  ".v2"
+          key: .\.vcpkg_deps.txt | "$(VCPKG_REF)" | "$(TRIPLET)" |  "deps"
           path: "$(VCPKG_DIR)"
           cacheHitVar: CACHE_RESTORED
       
