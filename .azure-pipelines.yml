@@ -37,6 +37,13 @@ jobs:
           key: .\.vcpkg_deps.txt | "$(VCPKG_REF)" | "$(TRIPLET)" |  ".v2"
           path: "$(VCPKG_DIR)"
           cacheHitVar: CACHE_RESTORED
+      
+      - task: Cache@2
+        displayName: "Cache build"
+        inputs:
+          key: .\.vcpkg_deps.txt | "$(VCPKG_REF)" | "$(TRIPLET)" |  ".v2"
+          path: "${BUILD_DIR}"
+          cacheHitVar: BUILD_CACHE_RESTORED
 
       - task: UsePythonVersion@0
         inputs:
@@ -72,9 +79,12 @@ jobs:
           del /Q third_party\OSM-binary\src\osmformat.proto.orig
         displayName: 'Patch .proto files of OSMPBF with syntax=proto2'
 
-      - script: |
+      - powershell: |
+          wget https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip -o .\ninja_win.zip
+          Expand-Archive .\ninja_win.zip -DestinationPath .\ninja
+          $env:Path += ";$pwd\ninja"
           cmake --version
-          cmake -H$(Build.SourcesDirectory) -B%BUILD_DIR% -G "Visual Studio 16 2019" -A %PLATFORM% -T host=%TRIPLET% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR=%VCPKG_DIR%\installed\%TRIPLET%-windows\include\luajit -DLUA_LIBRARIES=%VCPKG_DIR%\installed\%TRIPLET%-windows\lib\lua51.lib
+          cmake -H$(Build.SourcesDirectory) -B%BUILD_DIR% -G "Ninja" -A %PLATFORM% -T host=%TRIPLET% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR=%VCPKG_DIR%\installed\%TRIPLET%-windows\include\luajit -DLUA_LIBRARIES=%VCPKG_DIR%\installed\%TRIPLET%-windows\lib\lua51.lib
         displayName: 'Run CMake to configure build'
 
       - script: |
