@@ -33,6 +33,13 @@ public:
   PathAlgorithm() : interrupt(nullptr), has_ferry_(false), expansion_callback_() {
   }
 
+  // this class or derived can have nontrivial destructor (for example, call `Clear`);
+  // in order to avoid invalid memory access we should explicitly forbid `move`
+  PathAlgorithm(PathAlgorithm&&) = delete;
+  PathAlgorithm& operator=(PathAlgorithm&&) = delete;
+  PathAlgorithm(const PathAlgorithm&) = delete;
+  PathAlgorithm& operator=(const PathAlgorithm&) = delete;
+
   /**
    * Destructor
    */

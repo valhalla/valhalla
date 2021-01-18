@@ -102,6 +102,7 @@ public:
    * memory.
    */
   void clear() {
+    // Empty the overflow bucket and each bucket
     overflowbucket_.clear();
     while (currentbucket_ != buckets_.end()) {
       currentbucket_->clear();
