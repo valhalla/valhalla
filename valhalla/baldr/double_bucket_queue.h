@@ -24,6 +24,13 @@ using buckets_t = std::vector<bucket_t>;
 template <typename label_t> class DoubleBucketQueue final {
 public:
   /**
+   * Default c-tor creates empty object that needs to be initialized with `reuse` method
+   */
+  DoubleBucketQueue() {
+    reuse(0.f, 1.f, 1, nullptr);
+  }
+
+  /**
    * Constructor given a minimum cost, a range of costs held within the
    * bucket sort, and a bucket size. All costs above mincost + range are
    * stored in an "overflow" bucket.
