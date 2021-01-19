@@ -28,6 +28,7 @@ TEST(Graphtile, FileSuffix) {
   EXPECT_EQ(GraphTile::FileSuffix(GraphId(64799, 1, 0)), "1/064/799.gph");
   EXPECT_EQ(GraphTile::FileSuffix(GraphId(49, 0, 0)), "0/000/049.gph");
   EXPECT_EQ(GraphTile::FileSuffix(GraphId(1000000, 3, 1)), "3/001/000/000.gph");
+  EXPECT_EQ(GraphTile::FileSuffix(GraphId(795646, 1, 0)), "1/795/646.gph");
 }
 
 TEST(Graphtile, IdFromString) {
