@@ -28,7 +28,6 @@ TimeDepReverse::TimeDepReverse(uint32_t max_reserved_labels_count)
 
 // Destructor
 TimeDepReverse::~TimeDepReverse() {
-  Clear();
 }
 
 void TimeDepReverse::Clear() {

@@ -50,6 +50,18 @@ struct EdgeStatusInfo {
 class EdgeStatus {
 public:
   /**
+   * Default constructor.
+   */
+  EdgeStatus() = default;
+
+  // in order no to delete objects twice in destructor we should explicitly
+  // forbid copying
+  EdgeStatus(const EdgeStatus&) = delete;
+  EdgeStatus& operator=(const EdgeStatus&) = delete;
+  EdgeStatus(EdgeStatus&&) = default;
+  EdgeStatus& operator=(EdgeStatus&&) = default;
+
+  /**
    * Destructor. Delete any allocated EdgeStatusInfo arrays.
    */
   ~EdgeStatus() {

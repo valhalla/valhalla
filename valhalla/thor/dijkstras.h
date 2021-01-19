@@ -46,10 +46,6 @@ public:
    */
   explicit Dijkstras(uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
 
-  // this class or derived can have nontrivial destructor (for example, call `Clear`);
-  // in order to avoid invalid memory access we should explicitly forbid `move`
-  Dijkstras(Dijkstras&&) = delete;
-  Dijkstras& operator=(Dijkstras&&) = delete;
   Dijkstras(const Dijkstras&) = delete;
   Dijkstras& operator=(const Dijkstras&) = delete;
 

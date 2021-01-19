@@ -37,7 +37,6 @@ AStarBSSAlgorithm::AStarBSSAlgorithm(uint32_t max_reserved_labels_count)
 
 // Destructor
 AStarBSSAlgorithm::~AStarBSSAlgorithm() {
-  Clear();
 }
 
 // Clear the temporary information generated during path construction.

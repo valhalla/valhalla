@@ -25,7 +25,6 @@ TimeDepForward::TimeDepForward(uint32_t max_reserved_labels_count)
 
 // Destructor
 TimeDepForward::~TimeDepForward() {
-  Clear();
 }
 
 // Clear the temporary information generated during path construction.

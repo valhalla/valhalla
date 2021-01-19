@@ -49,7 +49,6 @@ MultiModalPathAlgorithm::MultiModalPathAlgorithm(uint32_t max_reserved_labels_co
 
 // Destructor
 MultiModalPathAlgorithm::~MultiModalPathAlgorithm() {
-  Clear();
 }
 
 // Initialize prior to finding best path
