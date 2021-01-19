@@ -45,6 +45,7 @@ constexpr float kDefaultUseFerry = 0.5f;     // Factor between 0 and 1
 constexpr float kDefaultUseRailFerry = 0.4f; // Factor between 0 and 1
 constexpr float kDefaultUseHighways = 1.0f;  // Factor between 0 and 1
 constexpr float kDefaultUseTolls = 0.5f;     // Factor between 0 and 1
+constexpr float kDefaultUseTracks = 0.f;     // Avoid tracks by default. Factor between 0 and 1
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -96,6 +97,7 @@ constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseRailFerryRange{0, kDefaultUseRailFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
+constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
 
 constexpr float kHighwayFactor[] = {
     10.0f, // Motorway
@@ -431,6 +433,8 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   if (edge->use() == Use::kAlley) {
     factor *= alley_factor_;
+  } else if (edge->use() == Use::kTrack) {
+    factor *= track_factor_;
   }
 
   return Cost(sec * factor, sec);
@@ -619,6 +623,11 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tolls(
         kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
                            .get_value_or(kDefaultUseTolls)));
+
+    // use_tracks
+    pbf_costing_options->set_use_tracks(
+        kUseTracksRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tracks")
+                            .get_value_or(kDefaultUseTracks)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_transport_type("car");
@@ -638,6 +647,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_rail_ferry(kDefaultUseRailFerry);
     pbf_costing_options->set_use_highways(kDefaultUseHighways);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
+    pbf_costing_options->set_use_tracks(kDefaultUseTracks);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
   }
@@ -866,6 +876,13 @@ public:
     if ((edge->forwardaccess() & kHOVAccess) && !(edge->forwardaccess() & kAutoAccess)) {
       factor *= kHOVFactor;
     }
+
+    if (edge->use() == Use::kAlley) {
+      factor *= alley_factor_;
+    } else if (edge->use() == Use::kTrack) {
+      factor *= track_factor_;
+    }
+
     return Cost(sec * factor, sec);
   }
 };
@@ -1021,6 +1038,13 @@ public:
     if ((edge->forwardaccess() & kTaxiAccess) && !(edge->forwardaccess() & kAutoAccess)) {
       factor *= kTaxiFactor;
     }
+
+    if (edge->use() == Use::kAlley) {
+      factor *= alley_factor_;
+    } else if (edge->use() == Use::kTrack) {
+      factor *= track_factor_;
+    }
+
     return Cost(sec * factor, sec);
   }
 };
