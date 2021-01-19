@@ -31,6 +31,10 @@ namespace {
 // route starts to become suspect (due to user breaks and other factors).
 constexpr float kDefaultMaxTimeDependentDistance = 500000.0f; // 500 km
 
+// Maximum capacity of edge labels container that allowed to keep reserved.
+// It's used to prevent memory from infinite growth.
+constexpr uint32_t kMaxReservedLabelsCount = 1000000;
+
 // Maximum edge score - base this on costing type.
 // Large values can cause very bad performance. Setting this back
 // to 2 hours for bike and pedestrian and 12 hours for driving routes.
@@ -56,7 +60,16 @@ namespace thor {
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : mode(valhalla::sif::TravelMode::kPedestrian), matcher_factory(config, graph_reader),
-      reader(graph_reader), controller{} {
+      reader(graph_reader), controller{},
+      bidir_astar(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      bss_astar(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      multi_modal_astar(
+          config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      timedep_forward(
+          config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      timedep_reverse(
+          config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      isochrone_gen(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)) {
   // If we weren't provided with a graph reader make our own
   if (!reader)
     reader = matcher_factory.graphreader();
