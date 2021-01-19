@@ -60,7 +60,7 @@ namespace thor {
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : mode(valhalla::sif::TravelMode::kPedestrian), matcher_factory(config, graph_reader),
-      reader(graph_reader), controller{},
+      reader(graph_reader),
       bidir_astar(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
       bss_astar(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
       multi_modal_astar(
@@ -69,7 +69,8 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
           config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
       timedep_reverse(
           config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
-      isochrone_gen(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)) {
+      isochrone_gen(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      controller{} {
   // If we weren't provided with a graph reader make our own
   if (!reader)
     reader = matcher_factory.graphreader();
