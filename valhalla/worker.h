@@ -73,6 +73,8 @@ const std::unordered_map<unsigned, std::string>
 
                 {167, "Exceeded maximum area for avoid_polygons"},
 
+                {167, "Exceeded maximum area for avoid_polygons"},
+
                 {170, "Locations are in unconnected regions. Go check/edit the map at osm.org"},
                 {171, "No suitable edges near location"},
                 {172, "Exceeded breakage distance for all pairs"},

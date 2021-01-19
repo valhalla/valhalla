@@ -74,8 +74,4 @@ TEST_F(AvoidTest, TestArea) {
        "[[[13.38625361, 52.4652558], [13.38625361, 52.48000128], [13.4181769, 52.48000128], [13.4181769, 52.4652558]]]"}};
 
   EXPECT_THROW(gurka::route(avoid_map, "A", "D", "auto", req_options), valhalla_exception_t);
-  const std::unordered_map<std::string, std::string>& req_options2 = {
-      {"/avoid_polygons",
-       "[[[13.38625361, 52.4652558], [13.38625361, 52.4680128], [13.3881769, 52.4680128], [13.3881769, 52.4680128]]]"}};
-  gurka::route(avoid_map, "A", "D", "auto", req_options2);
 }
