@@ -155,7 +155,6 @@ TEST(Traffic, CutGeoms) {
   {
     auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
-    clean_reader->GetGraphTile(valhalla::baldr::GraphId{})->get_traffic_tile();
     tyr::actor_t actor(map.config, *clean_reader);
     valhalla::Api api;
     actor.route(
