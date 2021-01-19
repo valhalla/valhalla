@@ -18,23 +18,26 @@ constexpr uint64_t kInitialEdgeLabelCount = 500000;
 constexpr uint32_t kMaxIterationsWithoutConvergence = 800000;
 
 // Default constructor
-TimeDepReverse::TimeDepReverse() : TimeDepForward() {
+TimeDepReverse::TimeDepReverse(uint32_t max_reserved_labels_count)
+    : TimeDepForward(max_reserved_labels_count) {
   mode_ = TravelMode::kDrive;
   travel_type_ = 0;
-  adjacencylist_rev_ = nullptr;
   max_label_count_ = std::numeric_limits<uint32_t>::max();
   access_mode_ = kAutoAccess;
 }
 
 // Destructor
 TimeDepReverse::~TimeDepReverse() {
-  Clear();
 }
 
 void TimeDepReverse::Clear() {
   TimeDepForward::Clear();
+  if (edgelabels_rev_.size() > max_reserved_labels_count_) {
+    edgelabels_rev_.resize(max_reserved_labels_count_);
+    edgelabels_rev_.shrink_to_fit();
+  }
   edgelabels_rev_.clear();
-  adjacencylist_rev_.reset();
+  adjacencylist_rev_.clear();
 }
 
 // Initialize prior to finding best path
@@ -55,8 +58,7 @@ void TimeDepReverse::Init(const midgard::PointLL& origll, const midgard::PointLL
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing_->UnitSize();
   float range = kBucketCount * bucketsize;
-  adjacencylist_rev_.reset(
-      new DoubleBucketQueue<BDEdgeLabel>(mincost, range, bucketsize, edgelabels_rev_));
+  adjacencylist_rev_.reuse(mincost, range, bucketsize, &edgelabels_rev_);
   edgestatus_.clear();
 
   // Get hierarchy limits from the costing. Get a copy since we increment
@@ -249,7 +251,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
     BDEdgeLabel& lab = edgelabels_rev_[meta.edge_status->index()];
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-      adjacencylist_rev_->decrease(meta.edge_status->index(), newsortcost);
+      adjacencylist_rev_.decrease(meta.edge_status->index(), newsortcost);
       lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
     }
     return true;
@@ -274,7 +276,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
   edgelabels_rev_.emplace_back(pred_idx, meta.edge_id, oppedge, meta.edge, newcost, sortcost, dist,
                                mode_, transition_cost,
                                (pred.not_thru_pruning() || !meta.edge->not_thru()), restriction_idx);
-  adjacencylist_rev_->add(idx);
+  adjacencylist_rev_.add(idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
 
   return true;
@@ -344,7 +346,7 @@ TimeDepReverse::GetBestPath(valhalla::Location& origin,
 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_rev_->pop();
+    uint32_t predindex = adjacencylist_rev_.pop();
 
     if (predindex == kInvalidLabel) {
       LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabels_rev_.size()));
@@ -509,7 +511,7 @@ void TimeDepReverse::SetOrigin(GraphReader& graphreader,
     uint32_t idx = edgelabels_rev_.size();
     edgelabels_rev_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                  dist, mode_, c, false, -1);
-    adjacencylist_rev_->add(idx);
+    adjacencylist_rev_.add(idx);
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.

@@ -31,8 +31,10 @@ class Isochrone : public Dijkstras {
 public:
   /**
    * Constructor.
+   * @param max_reserved_labels_count maximum capacity of edgelabels container
+   *                                  that allowed to keep reserved
    */
-  Isochrone();
+  explicit Isochrone(uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
 
   /**
    * Destructor

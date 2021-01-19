@@ -105,6 +105,7 @@ static void BM_UtrechtCostMatrix(benchmark::State& state) {
   for (auto _ : state) {
     thor::CostMatrix matrix;
     auto result = matrix.SourceToTarget(sources, sources, reader, costs, mode, 100000.);
+    matrix.Clear();
     result_size += result.size();
   }
   state.counters["Routes"] = benchmark::Counter(size, benchmark::Counter::kIsIterationInvariantRate);
