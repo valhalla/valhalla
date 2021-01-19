@@ -30,8 +30,11 @@ class AStarBSSAlgorithm : public PathAlgorithm {
 public:
   /**
    * Constructor.
+   * @param max_reserved_labels_count maximum capacity of edgelabels container
+   *                                  that allowed to keep reserved
    */
-  AStarBSSAlgorithm();
+  explicit AStarBSSAlgorithm(
+      uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
 
   /**
    * Destructor
@@ -94,9 +97,10 @@ protected:
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::EdgeLabel> edgelabels_;
+  uint32_t max_reserved_labels_count_;
 
   // Adjacency list - approximate double bucket sort
-  std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
+  baldr::DoubleBucketQueue<sif::EdgeLabel> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus pedestrian_edgestatus_;

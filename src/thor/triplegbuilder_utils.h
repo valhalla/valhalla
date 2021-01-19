@@ -464,6 +464,9 @@ void AddIntersectingEdges(const AttributesController& controller,
   //            ||  \\
   //            (1)  (X)
 
+  // prepare for some edges
+  trip_node->mutable_intersecting_edge()->Reserve(node->local_edge_count());
+
   // Iterate through edges on this level to find any intersecting edges
   // Follow any upwards or downward transitions
   const DirectedEdge* de = start_tile->directededge(node->edge_index());

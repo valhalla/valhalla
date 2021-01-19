@@ -69,35 +69,13 @@ void CostMatrix::Clear() {
   targets_->clear();
 
   // Clear all source adjacency lists, edge labels, and edge status
-  for (auto& adj : source_adjacency_) {
-    adj.reset();
-  }
   source_adjacency_.clear();
-
-  for (auto& el : source_edgelabel_) {
-    el.clear();
-  }
   source_edgelabel_.clear();
-
-  for (auto& es : source_edgestatus_) {
-    es.clear();
-  }
   source_edgestatus_.clear();
 
   // Clear all target adjacency lists, edge labels, and edge status
-  for (auto& adj : target_adjacency_) {
-    adj.reset();
-  }
   target_adjacency_.clear();
-
-  for (auto& el : target_edgelabel_) {
-    el.clear();
-  }
   target_edgelabel_.clear();
-
-  for (auto& es : target_edgestatus_) {
-    es.clear();
-  }
   target_edgestatus_.clear();
 
   source_hierarchy_limits_.clear();
@@ -682,15 +660,11 @@ void CostMatrix::SetSources(GraphReader& graphreader,
   uint32_t index = 0;
   Cost empty_cost;
   for (const auto& origin : sources) {
-    // Set up lambda to get sort costs
-    const auto edgecost = [this, index](const uint32_t label) -> float {
-      return source_edgelabel_[index][label].sortcost();
-    };
-
     // Allocate the adjacency list and hierarchy limits for this source.
     // Use the cost threshold to size the adjacency list.
-    source_adjacency_[index].reset(
-        new DoubleBucketQueue(0, current_cost_threshold_, costing_->UnitSize(), edgecost));
+    source_adjacency_[index].reset(new DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
+                                                                      costing_->UnitSize(),
+                                                                      &source_edgelabel_[index]));
     source_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
     // Iterate through edges and add to adjacency list
@@ -759,15 +733,11 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
   uint32_t index = 0;
   Cost empty_cost;
   for (const auto& dest : targets) {
-    // Set up lambda to get sort costs
-    const auto edgecost = [this, index](const uint32_t label) {
-      return target_edgelabel_[index][label].sortcost();
-    };
-
     // Allocate the adjacency list and hierarchy limits for target location.
     // Use the cost threshold to size the adjacency list.
-    target_adjacency_[index].reset(
-        new DoubleBucketQueue(0, current_cost_threshold_, costing_->UnitSize(), edgecost));
+    target_adjacency_[index].reset(new DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
+                                                                      costing_->UnitSize(),
+                                                                      &target_edgelabel_[index]));
     target_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
     // Iterate through edges and add to adjacency list

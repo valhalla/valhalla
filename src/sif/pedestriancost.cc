@@ -59,6 +59,7 @@ constexpr float kDefaultSideWalkFactor = 1.0f;     // Neutral value for sidewalk
 constexpr float kDefaultAlleyFactor = 2.0f;        // Avoid alleys
 constexpr float kDefaultDrivewayFactor = 5.0f;     // Avoid driveways
 constexpr float kDefaultUseFerry = 1.0f;
+constexpr float kDefaultUseTracks = 0.5f; // Factor between 0 and 1
 
 // Maximum distance at the beginning or end of a multimodal route
 // that you are willing to travel for this mode.  In this case,
@@ -131,6 +132,7 @@ constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 
 constexpr ranged_default_t<float> kBSSCostRange{0, kDefaultBssCost, kMaxPenalty};
 constexpr ranged_default_t<float> kBSSPenaltyRange{0, kDefaultBssPenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
 
 constexpr float kSacScaleSpeedFactor[] = {
     1.0f,  // kNone
@@ -342,6 +344,9 @@ public:
       if (driveway_factor_ < 1.f) {
         factor *= driveway_factor_;
       }
+      if (track_factor_ < 1.f) {
+        factor *= track_factor_;
+      }
 
       return (speedfactor_ * factor);
     } else {
@@ -364,14 +369,12 @@ public:
    * mode used by the costing method. It's also used to filter
    * edges not usable / inaccessible by pedestrians.
    */
-  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr&) const override {
-    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    bool accessible = (edge->forwardaccess() & access_mask) ||
-                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-
-    return !(edge->is_shortcut() || edge->use() >= Use::kRail ||
-             edge->sac_scale() > max_hiking_difficulty_ || !accessible ||
-             (edge->bss_connection() && !project_on_bss_connection));
+  bool Allowed(const baldr::DirectedEdge* edge,
+               const graph_tile_ptr& tile,
+               uint16_t disallow_mask = kDisallowNone) const override {
+    return DynamicCost::Allowed(edge, tile, disallow_mask) && edge->use() < Use::kRailFerry &&
+           edge->sac_scale() <= max_hiking_difficulty_ &&
+           (!edge->bss_connection() || project_on_bss_connection);
   }
 
   virtual Cost BSSCost() const override {
@@ -657,6 +660,8 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= alley_factor_;
   } else if (edge->use() == Use::kDriveway) {
     factor *= driveway_factor_;
+  } else if (edge->use() == Use::kTrack) {
+    factor *= track_factor_;
   } else if (edge->sidewalk_left() || edge->sidewalk_right()) {
     factor *= sidewalk_factor_;
   } else if (edge->roundabout()) {
@@ -865,6 +870,11 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_bike_share_penalty(
         kBSSPenaltyRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_rent_penalty")
                              .get_value_or(kDefaultBssPenalty)));
+
+    // use_tracks
+    pbf_costing_options->set_use_tracks(
+        kUseTracksRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tracks")
+                            .get_value_or(kDefaultUseTracks)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -890,6 +900,7 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_transit_transfer_max_distance(kTransitTransferMaxDistance);
     pbf_costing_options->set_bike_share_cost(kDefaultBssCost);
     pbf_costing_options->set_bike_share_penalty(kDefaultBssPenalty);
+    pbf_costing_options->set_use_tracks(kDefaultUseTracks);
   }
 }
 

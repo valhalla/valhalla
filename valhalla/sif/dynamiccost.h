@@ -44,6 +44,17 @@ constexpr midgard::ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMax
                                                                  baldr::kMaxSpeedKph};
 
 /**
+ * Mask values used in the allowed function by loki::reach to control how conservative
+ * the decision should be. By default allowed methods will not disallow start/end/simple
+ * restrictions and closures are determined by the costing configuration
+ */
+constexpr uint16_t kDisallowNone = 0x0;
+constexpr uint16_t kDisallowStartRestriction = 0x1;
+constexpr uint16_t kDisallowEndRestriction = 0x2;
+constexpr uint16_t kDisallowSimpleRestriction = 0x4;
+constexpr uint16_t kDisallowClosure = 0x8;
+
+/**
  * Base class for dynamic edge costing. This class defines the interface for
  * costing methods and includes a few base methods that define default behavior
  * for cases where a derived class does not need to override the method.
@@ -184,6 +195,32 @@ public:
    */
   inline virtual bool Allowed(const baldr::NodeInfo* node) const {
     return (node->access() & access_mask_) || ignore_access_;
+  }
+
+  /**
+   * Used for determine the viability of a candidate edge as well as a conservative reachability
+   * The notable difference to the full featured allowed method is this methods lack of info
+   * about the currently tracked path (hence why its conservative)
+   *
+   * This method is to be used by loki::search and loki::reach and the base class implementation is
+   * used to do basically accessibility and adherence to the disallow mask
+   *
+   * @param edge           the edge that should or shouldnt be allowed
+   * @param tile           the tile which contains the edge (for traffic lookup)
+   * @param disallow_mask  a mask that controls additional properties that should disallow the edge
+   * @return true if the edge is allowed to be used (either as a candidate or a reach traversal)
+   */
+  inline virtual bool Allowed(const baldr::DirectedEdge* edge,
+                              const graph_tile_ptr&,
+                              uint16_t disallow_mask = kDisallowNone) const {
+    auto access_mask = (ignore_access_ ? baldr::kAllAccess : access_mask_);
+    bool accessible = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    bool assumed_restricted =
+        ((disallow_mask & kDisallowStartRestriction) && edge->start_restriction()) ||
+        ((disallow_mask & kDisallowEndRestriction) && edge->end_restriction()) ||
+        ((disallow_mask & kDisallowSimpleRestriction) && edge->restrictions());
+    return !edge->is_shortcut() && accessible && !assumed_restricted;
   }
 
   /**
@@ -572,21 +609,6 @@ public:
   virtual bool bicycle() const;
 
   /**
-   * Returns a value between 0 and 1 indicating how
-   * desirable the edge is for use as a location. A value of 0 indicates the
-   * edge is not usable (no access for the travel mode used by this costing)
-   * while 1 indicates the edge is highly preferred. Values in between can be
-   * used to rank edges such that desirable edges that might be slightly
-   * farther from the location than a less desirable edge can be chosen.
-   *
-   * Function to be used in location searching which will
-   * exclude and allow ranking results from the search by looking at each
-   * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method.
-   */
-  virtual float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const = 0;
-
-  /**
    * Gets the hierarchy limits.
    * @return  Returns the hierarchy limits.
    */
@@ -673,6 +695,12 @@ public:
   virtual Cost BSSCost() const;
 
 protected:
+  /**
+   * Calculate `track` costs based on tracks preference.
+   * @param use_tracks value of tracks preference in range [0; 1]
+   */
+  virtual void set_use_tracks(float use_tracks);
+
   // Algorithm pass
   uint32_t pass_;
 
@@ -698,6 +726,7 @@ protected:
 
   // Weighting to apply to ferry edges
   float ferry_factor_, rail_ferry_factor_;
+  float track_factor_; // Avoid tracks factor.
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -723,8 +752,9 @@ protected:
   bool ignore_oneways_{false};
   bool ignore_access_{false};
   bool ignore_closures_{false};
-
   uint32_t top_speed_;
+  // if ignore_closures_ is set to true by the user request, filter_closures_ is forced to false
+  bool filter_closures_{true};
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
@@ -788,6 +818,9 @@ protected:
     }
     rail_ferry_transition_cost_ = {costing_options.rail_ferry_cost() + rail_ferry_penalty,
                                    costing_options.rail_ferry_cost()};
+
+    // Calculate cost factor for track roads
+    set_use_tracks(costing_options.use_tracks());
 
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();
