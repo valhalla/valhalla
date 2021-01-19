@@ -113,13 +113,13 @@ protected:
   sif::mode_costing_t mode_costing;
 
   // Path algorithms (TODO - perhaps use a map?))
-  std::unique_ptr<BidirectionalAStar> bidir_astar;
-  std::unique_ptr<AStarBSSAlgorithm> bss_astar;
-  std::unique_ptr<MultiModalPathAlgorithm> multi_modal_astar;
-  std::unique_ptr<TimeDepForward> timedep_forward;
-  std::unique_ptr<TimeDepReverse> timedep_reverse;
+  BidirectionalAStar bidir_astar;
+  AStarBSSAlgorithm bss_astar;
+  MultiModalPathAlgorithm multi_modal_astar;
+  TimeDepForward timedep_forward;
+  TimeDepReverse timedep_reverse;
 
-  std::unique_ptr<Isochrone> isochrone_gen;
+  Isochrone isochrone_gen;
   std::shared_ptr<meili::MapMatcher> matcher;
   float max_timedep_distance;
   std::unordered_map<std::string, float> max_matrix_distance;

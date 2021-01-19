@@ -61,7 +61,16 @@ namespace thor {
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : mode(valhalla::sif::TravelMode::kPedestrian), matcher_factory(config, graph_reader),
-      reader(graph_reader), controller{} {
+      reader(graph_reader), controller{},
+      bidir_astar(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      bss_astar(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      multi_modal_astar(
+          config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      timedep_forward(
+          config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      timedep_reverse(
+          config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      isochrone_gen(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)) {
   // If we weren't provided with a graph reader make our own
   if (!reader)
     reader = matcher_factory.graphreader();
@@ -91,16 +100,6 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
 
   max_timedep_distance =
       config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
-
-  auto max_reserved_labels_count =
-      config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount);
-
-  bidir_astar = std::make_unique<BidirectionalAStar>(max_reserved_labels_count);
-  bss_astar = std::make_unique<AStarBSSAlgorithm>(max_reserved_labels_count);
-  multi_modal_astar = std::make_unique<MultiModalPathAlgorithm>(max_reserved_labels_count);
-  timedep_forward = std::make_unique<TimeDepForward>(max_reserved_labels_count);
-  timedep_reverse = std::make_unique<TimeDepReverse>(max_reserved_labels_count);
-  isochrone_gen = std::make_unique<Isochrone>(max_reserved_labels_count);
 }
 
 thor_worker_t::~thor_worker_t() {
@@ -334,13 +333,13 @@ void thor_worker_t::parse_filter_attributes(const Api& request, bool is_strict_f
 }
 
 void thor_worker_t::cleanup() {
-  bidir_astar->Clear();
-  timedep_forward->Clear();
-  timedep_reverse->Clear();
-  multi_modal_astar->Clear();
-  bss_astar->Clear();
+  bidir_astar.Clear();
+  timedep_forward.Clear();
+  timedep_reverse.Clear();
+  multi_modal_astar.Clear();
+  bss_astar.Clear();
   trace.clear();
-  isochrone_gen->Clear();
+  isochrone_gen.Clear();
   matcher_factory.ClearFullCache();
   if (reader->OverCommitted()) {
     reader->Trim();
