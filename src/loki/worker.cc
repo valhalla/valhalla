@@ -90,7 +90,13 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     if (area > max_avoid_polygons_sqkm) {
       throw valhalla_exception_t(167, std::to_string(max_avoid_polygons_sqkm));
     }
-    edges_in_rings(rings);
+    auto* co = options.mutable_costing_options(static_cast<uint8_t>(costing->travel_mode()));
+    auto edges = edges_in_rings(rings, *reader);
+    for (auto edge_id : edges) {
+      auto* avoid = co->add_avoid_edges();
+      avoid->set_id(edge_id);
+      avoid->set_percent_along(0);
+    }
   }
 
   // Process avoid locations. Add to a list of edgeids and percent along the edge.

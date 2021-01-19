@@ -3,9 +3,11 @@
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/register/box.hpp>
+#include <boost/geometry/geometries/register/linestring.hpp>
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/register/ring.hpp>
 
+#include <valhalla/baldr/graphreader.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/options.pb.h>
@@ -30,7 +32,8 @@ namespace loki {
 using ring_bg_t = std::vector<midgard::PointLL>;
 using multi_ring_t = std::vector<ring_bg_t>;
 
-void edges_in_rings(const multi_ring_t& rings);
+std::set<valhalla::baldr::GraphId> edges_in_rings(const multi_ring_t& rings,
+                                                  baldr::GraphReader& reader);
 
 multi_ring_t PBFToRings(const google::protobuf::RepeatedPtrField<Options::AvoidPolygon>& rings_pbf);
 

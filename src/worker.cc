@@ -315,13 +315,8 @@ void add_date_to_locations(Options& options,
   }
 }
 
-/** Parses JSON rings of the form [[lon1, lat1], [lon2, lat2], ...]] and operates on
- * PBF objects of the sort "repeated Location". If rings are open, this will close them.
- * @param ring        PBF template type of the sort "repeated Location"
- * @param coord_array JSON representation of the coordinate array
- * @param allocator   JSON document allocator to insert values
- * @param close_ring  whether to close an open ring/linestring
- */
+// Parses JSON rings of the form [[lon1, lat1], [lon2, lat2], ...]] and operates on
+// PBF objects of the sort "repeated Location". Rings can be optionally closed.
 template <typename ring_pbf_t>
 void parse_ring(ring_pbf_t& ring,
                 rapidjson::Value& coord_array,

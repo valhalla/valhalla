@@ -1,11 +1,5 @@
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/register/box.hpp>
-#include <boost/geometry/geometries/register/point.hpp>
-#include <iostream>
-#include <math.h>
-
-#include "loki/node_search.h"
 #include "loki/polygon_search.h"
+#include "loki/node_search.h"
 #include "midgard/aabb2.h"
 #include "midgard/pointll.h"
 #include "proto/options.pb.h"
@@ -19,29 +13,61 @@ namespace {} // namespace
 namespace valhalla {
 namespace loki {
 
-void edges_in_rings(const multi_ring_t& rings) {
+std::set<vb::GraphId> edges_in_rings(const multi_ring_t& rings, baldr::GraphReader& reader) {
 
-  auto tiles = vb::TileHierarchy::levels().back().tiles;
-  const uint8_t bin_level = vb::TileHierarchy::levels().back().level;
+  const auto tiles = vb::TileHierarchy::levels().back().tiles;
+  const auto bin_level = vb::TileHierarchy::levels().back().level;
 
-  std::unordered_map<int32_t, std::unordered_set<unsigned short>> intersection;
-  // loop over rings and collect all bins:
-  // - inspect all tiles & bins which are in between the ones returned by intersection (per row) ->
-  // look at Tiles.Intersect()
-  //    - if the tile's/bin's center (or other point) is inside the polygon, the whole tile/bin is
-  //    inside and consequently all edges
-  // - the intersected tiles/bins have to be fully intersected to find the edges which are affected
-  // in the end we'll have two sets of bins:
-  //    - one set containing all bins which are fully inside the polygon(s)
-  //    - one set which needs further handling to find all edges intersecting the polygons
+  std::set<vb::GraphId> edges;
+
   for (auto ring : rings) {
     auto line_intersected = tiles.Intersect(ring);
+    std::vector<int32_t> tile_keys;
+    tile_keys.reserve(line_intersected.size());
+    std::for_each(line_intersected.cbegin(), line_intersected.cend(),
+                  [&tile_keys](const std::pair<int32_t, std::unordered_set<unsigned short>>& e) {
+                    tile_keys.push_back(e.first);
+                  });
+    std::sort(tile_keys.begin(), tile_keys.end());
+
     std::cout << "No of intersected tiles: " << std::to_string(line_intersected.size()) << std::endl;
-    for (auto& tile : line_intersected) {
-      std::cout << "Tile: " << std::to_string(tile.first)
-                << ", Num bins: " << std::to_string(tile.second.size()) << std::endl;
+    for (auto& tile_id : tile_keys) {
+      int32_t row, col;
+      std::tie(row, col) = tiles.GetRowColumn(tile_id);
+      auto tile = reader.GetGraphTile({static_cast<uint32_t>(tile_id), bin_level, 0});
+      if (!tile) {
+        continue;
+      }
+      for (auto bin_id : line_intersected[tile_id]) {
+        for (auto edge_id : tile->GetBin(bin_id)) {
+          // weed out duplicates early on
+          // TODO: find a more efficient way to do this..
+          if (edges.find(edge_id) != edges.end()) {
+            continue;
+          }
+          // TODO: figure out how to best get the edges from other tiles
+          // why the hell is this still failing the assert in tile->directededge()?!?!
+          if (edge_id.Tile_Base() != tile->header()->graphid().Tile_Base()) {
+            continue;
+          }
+          auto opp_edge_id = reader.GetOpposingEdgeId(edge_id, tile);
+          const auto edge = tile->directededge(edge_id);
+          if (!edge) {
+            continue;
+          }
+          auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
+          auto edge_shape = edge_info.shape();
+          bool intersects = bg::intersects(ring, edge_shape);
+          if (intersects) {
+            edges.emplace(edge_id);
+            edges.emplace(opp_edge_id);
+          }
+        }
+      }
     }
   }
+
+  return edges;
 
   // Then we can continue to try and make an edge's shape a boost.geometry to intersect it with a
   // polygon Finally return this set of edges to loki worker
@@ -54,6 +80,8 @@ multi_ring_t PBFToRings(const google::protobuf::RepeatedPtrField<Options::AvoidP
     for (const auto& coord : ring_pbf.coords()) {
       new_ring.push_back({coord.ll().lng(), coord.ll().lat()});
     }
+    // corrects geometry and handedness as expected
+    bg::correct(new_ring);
     rings.push_back(new_ring);
   }
   return rings;
