@@ -34,7 +34,7 @@ if (UNIX AND NOT APPLE)
     triplegbuilder.cc
     worker.cc
   PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-endif (UNIX)
+endif ()
 
 valhalla_module(NAME thor
   SOURCES ${sources}
