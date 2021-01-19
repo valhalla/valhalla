@@ -134,17 +134,17 @@ struct candidate_t {
     // 10 degrees on either side is considered to be straight ahead
     constexpr float angle_tolerance = 10.f;
 
-    // check which side the point falls in:
-    // If angle_diff is between 10 and 170 it's on the right side,
-    // if angle_diff is between 190 and 350 it's on the left side,
-    // otherwise it's practically straight ahead or behind.
-    //
-    //       \    L    /
-    //        \       /
-    //  - - - - - x - - - - -
-    //        /       \
-    //       /    R    \
-    //
+    /* check which side the point falls in:
+       If angle_diff is between 10 and 170 it's on the right side,
+       if angle_diff is between 190 and 350 it's on the left side,
+       otherwise it's practically straight ahead or behind.
+
+             \    L    /
+              \       /
+        - - - - - x - - - - -
+              /       \
+             /    R    \
+    */
     if (angle_diff > angle_tolerance && angle_diff < (180.f - angle_tolerance)) {
       return PathLocation::SideOfStreet::RIGHT;
     } else if (angle_diff > (180.f + angle_tolerance) && angle_diff < (360.f - angle_tolerance)) {
