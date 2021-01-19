@@ -696,6 +696,12 @@ public:
   virtual Cost BSSCost() const;
 
 protected:
+  /**
+   * Calculate `track` costs based on tracks preference.
+   * @param use_tracks value of tracks preference in range [0; 1]
+   */
+  virtual void set_use_tracks(float use_tracks);
+
   // Algorithm pass
   uint32_t pass_;
 
@@ -721,6 +727,7 @@ protected:
 
   // Weighting to apply to ferry edges
   float ferry_factor_, rail_ferry_factor_;
+  float track_factor_; // Avoid tracks factor.
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -812,6 +819,9 @@ protected:
     }
     rail_ferry_transition_cost_ = {costing_options.rail_ferry_cost() + rail_ferry_penalty,
                                    costing_options.rail_ferry_cost()};
+
+    // Calculate cost factor for track roads
+    set_use_tracks(costing_options.use_tracks());
 
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();

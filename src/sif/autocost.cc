@@ -45,6 +45,7 @@ constexpr float kDefaultUseFerry = 0.5f;     // Default preference of using a fe
 constexpr float kDefaultUseRailFerry = 0.4f; // Default preference of using a rail ferry 0-1
 constexpr float kDefaultUseHighways = 1.0f;  // Default preference of using a motorway or trunk 0-1
 constexpr float kDefaultUseTolls = 0.5f;     // Default preference of using toll roads 0-1
+constexpr float kDefaultUseTracks = 0.f;     // Default preference of using tracks 0-1
 constexpr float kDefaultUseDistance = 0.f;   // Default preference of using distance vs time 0-1
 
 // Default turn costs
@@ -97,6 +98,7 @@ constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseRailFerryRange{0, kDefaultUseRailFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
+constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
 constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
 
 constexpr float kHighwayFactor[] = {
@@ -447,13 +449,23 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   // TODO: speed_penality hasn't been extensively tested, might alter this in future
   float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
-  factor += (highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
-             speed_penalty + edge->toll() * toll_factor_) *
-            (edge->use() == Use::kAlley ? alley_factor_ : 1.f);
+  factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] + speed_penalty +
+            edge->toll() * toll_factor_;
 
-  // base cost before the factor is a linear combination of time vs distance, depending on which one
-  // the user thinks is more important to them
+  switch (edge->use()) {
+    case Use::kAlley:
+      factor *= alley_factor_;
+      break;
+    case Use::kTrack:
+      factor *= track_factor_;
+      break;
+    default:
+      break;
+  }
+
+  // base cost before the factor is a linear combination of time vs distance, depending on which
+  // one the user thinks is more important to them
   return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
 }
 
@@ -651,8 +663,14 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_distance(
         kUseDistanceRange(rapidjson::get_optional<float>(*json_costing_options, "/use_distance")
                               .get_value_or(kDefaultUseDistance)));
+
+    // use_tracks
+    pbf_costing_options->set_use_tracks(
+        kUseTracksRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tracks")
+                            .get_value_or(kDefaultUseTracks)));
   } // Set pbf values to defaults
   else {
+
     pbf_costing_options->set_transport_type("car");
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
     pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
@@ -670,6 +688,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_rail_ferry(kDefaultUseRailFerry);
     pbf_costing_options->set_use_highways(kDefaultUseHighways);
     pbf_costing_options->set_use_tolls(kDefaultUseTolls);
+    pbf_costing_options->set_use_tracks(kDefaultUseTracks);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
     pbf_costing_options->set_use_distance(kDefaultUseDistance);
@@ -899,6 +918,13 @@ public:
     if ((edge->forwardaccess() & kHOVAccess) && !(edge->forwardaccess() & kAutoAccess)) {
       factor *= kHOVFactor;
     }
+
+    if (edge->use() == Use::kAlley) {
+      factor *= alley_factor_;
+    } else if (edge->use() == Use::kTrack) {
+      factor *= track_factor_;
+    }
+
     return Cost(sec * factor, sec);
   }
 };
@@ -1054,6 +1080,13 @@ public:
     if ((edge->forwardaccess() & kTaxiAccess) && !(edge->forwardaccess() & kAutoAccess)) {
       factor *= kTaxiFactor;
     }
+
+    if (edge->use() == Use::kAlley) {
+      factor *= alley_factor_;
+    } else if (edge->use() == Use::kTrack) {
+      factor *= track_factor_;
+    }
+
     return Cost(sec * factor, sec);
   }
 };
