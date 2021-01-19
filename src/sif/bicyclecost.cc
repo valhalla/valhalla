@@ -672,13 +672,6 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Create a final edge factor based on total stress and the weighted grade penalty for the edge.
   float factor = 1.0f + grade_penalty[edge->weighted_grade()] + total_stress + surface_factor;
 
-  // Apply factor that defines willingness to use track roads. Pay attention that `track` tag is
-  // already used when calculate `roadway_stress` parameter.
-  // TODO - work with `track` tag in one place
-  if (edge->use() == Use::kTrack) {
-    factor *= track_factor_;
-  }
-
   // Compute elapsed time based on speed. Modulate cost with weighting factors.
   assert(bike_speed < speedfactor_.size());
   float sec = (edge->length() * speedfactor_[bike_speed]);
