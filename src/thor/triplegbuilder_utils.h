@@ -432,7 +432,6 @@ void AddTripIntersectingEdge(const AttributesController& controller,
  */
 void AddIntersectingEdges(const AttributesController& controller,
                           const graph_tile_ptr& start_tile,
-                          const GraphId& node_id,
                           const NodeInfo* node,
                           const DirectedEdge* directededge,
                           const DirectedEdge* prev_de,

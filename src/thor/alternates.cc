@@ -70,7 +70,7 @@ bool validate_alternate_by_sharing(std::vector<std::unordered_set<GraphId>>& sha
     shared_edgeids.resize(paths.size());
 
   // we check each accepted path against the candidate
-  for (int i = 0; i < paths.size(); ++i) {
+  for (size_t i = 0; i < paths.size(); ++i) {
     // cache edge ids encountered on the current best path. Don't care about shortcuts because they
     // have already been recovered.
     auto& shared = shared_edgeids[i];
