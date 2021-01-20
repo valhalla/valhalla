@@ -104,7 +104,7 @@ bool validate_alternate_by_sharing(std::vector<std::unordered_set<GraphId>>& sha
   return true;
 }
 
-bool validate_alternate_by_local_optimality(const std::vector<PathInfo>& /*candidate_path*/) {
+bool validate_alternate_by_local_optimality(const std::vector<PathInfo>&) {
   // [TODO] NOT IMPLEMENTED
   return true;
 }
