@@ -26,9 +26,8 @@ using namespace valhalla::mjolnir;
 // Function to replace wayids with graphids.  Will transition up and down the hierarchy as needed.
 std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
                                 GraphReader& reader,
-                                GraphId& tileid,
                                 std::mutex& lock,
-                                std::vector<uint64_t> res_way_ids) {
+                                const std::vector<uint64_t>& res_way_ids) {
 
   std::deque<GraphId> graphids;
 
@@ -237,7 +236,6 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
   }
 
   n_graphId = currentNode;
-  tileid = endnodetile->id();
   return graphids;
 }
 
@@ -332,7 +330,6 @@ void build(const std::string& complex_restriction_from_file,
                 restriction.type() > RestrictionType::kOnlyStraightOn) {
 
               GraphId currentNode = directededge.endnode();
-              GraphId tileid = currentNode.Tile_Base();
 
               std::vector<uint64_t> res_way_ids;
               res_way_ids.push_back(e_offset.wayid());
@@ -351,7 +348,7 @@ void build(const std::string& complex_restriction_from_file,
 
               // walk in the forward direction.
               std::deque<GraphId> tmp_ids =
-                  GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
+                  GetGraphIds(currentNode, reader, lock, res_way_ids);
 
               // now that we have the tile and currentNode walk in the reverse direction as this is
               // really what needs to be stored in this tile.
@@ -376,7 +373,7 @@ void build(const std::string& complex_restriction_from_file,
                 }
 
                 res_way_ids.push_back(e_offset.wayid());
-                tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
+                tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
 
                 if (tmp_ids.size()) {
 
@@ -495,7 +492,7 @@ void build(const std::string& complex_restriction_from_file,
 
                 // walk in the forward direction (reverse in relation to the restriction)
                 std::deque<GraphId> tmp_ids =
-                    GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
+                    GetGraphIds(currentNode, reader, lock, res_way_ids);
 
                 // now that we have the tile and currentNode walk in the reverse
                 // direction(forward in relation to the restriction) as this is really what
@@ -519,7 +516,7 @@ void build(const std::string& complex_restriction_from_file,
                     res_way_ids.push_back(restriction.to());
                   }
 
-                  tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
+                  tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
 
                   if (tmp_ids.size()) {
                     std::vector<GraphId> vias;
