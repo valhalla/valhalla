@@ -26,6 +26,7 @@ set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
 
   admin.cc
+  adminbuilder.cc
   bssbuilder.cc
   complexrestrictionbuilder.cc
   countryaccess.cc
