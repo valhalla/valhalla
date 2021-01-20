@@ -31,6 +31,10 @@ namespace {
 // route starts to become suspect (due to user breaks and other factors).
 constexpr float kDefaultMaxTimeDependentDistance = 500000.0f; // 500 km
 
+// Maximum capacity of edge labels container that allowed to keep reserved.
+// It's used to prevent memory from infinite growth.
+constexpr uint32_t kMaxReservedLabelsCount = 1000000;
+
 // Maximum edge score - base this on costing type.
 // Large values can cause very bad performance. Setting this back
 // to 2 hours for bike and pedestrian and 12 hours for driving routes.
@@ -47,7 +51,6 @@ const std::unordered_map<std::string, float> kMaxDistances = {
 };
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
-constexpr double kMilePerMeter = 0.000621371;
 
 } // namespace
 
@@ -56,8 +59,17 @@ namespace thor {
 
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
-    : mode(valhalla::sif::TravelMode::kPedestrian), matcher_factory(config, graph_reader),
-      reader(graph_reader), controller{} {
+    : mode(valhalla::sif::TravelMode::kPedestrian),
+      bidir_astar(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      bss_astar(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      multi_modal_astar(
+          config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      timedep_forward(
+          config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      timedep_reverse(
+          config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      isochrone_gen(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      matcher_factory(config, graph_reader), reader(graph_reader), controller{} {
   // If we weren't provided with a graph reader make our own
   if (!reader)
     reader = matcher_factory.graphreader();
@@ -125,43 +137,35 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
     // Set the interrupt function
     service_worker_t::set_interrupt(&interrupt_function);
 
-    prime_server::worker_t::result_t result{true};
-    double denominator = 0;
+    prime_server::worker_t::result_t result{true, {}, {}};
     // do request specific processing
     switch (options.action()) {
       case Options::sources_to_targets:
         result = to_response(matrix(request), info, request);
-        denominator = options.sources_size() + options.targets_size();
         break;
       case Options::optimized_route: {
         optimized_route(request);
         result.messages.emplace_back(serialize_to_pbf(request));
-        denominator = std::max(options.sources_size(), options.targets_size());
         break;
       }
       case Options::isochrone:
         result = to_response(isochrones(request), info, request);
-        denominator = options.sources_size() * options.targets_size();
         break;
       case Options::route: {
         route(request);
         result.messages.emplace_back(serialize_to_pbf(request));
-        denominator = options.locations_size();
         break;
       }
       case Options::trace_route: {
         trace_route(request);
         result.messages.emplace_back(serialize_to_pbf(request));
-        denominator = trace.size() / 1100;
         break;
       }
       case Options::trace_attributes:
         result = to_response(trace_attributes(request), info, request);
-        denominator = trace.size() / 1100;
         break;
       case Options::expansion: {
         result = to_response(expansion(request), info, request);
-        denominator = options.locations_size();
         break;
       }
       default:

@@ -24,10 +24,14 @@ struct testable_graphtile : public valhalla::baldr::GraphTile {
 TEST(Graphtile, FileSuffix) {
   EXPECT_EQ(GraphTile::FileSuffix(GraphId(2, 2, 0)), "2/000/000/002.gph");
   EXPECT_EQ(GraphTile::FileSuffix(GraphId(4, 2, 0)), "2/000/000/004.gph");
-  EXPECT_EQ(GraphTile::FileSuffix(GraphId(1197468, 2, 0)), "2/001/197/468.gph");
   EXPECT_EQ(GraphTile::FileSuffix(GraphId(64799, 1, 0)), "1/064/799.gph");
   EXPECT_EQ(GraphTile::FileSuffix(GraphId(49, 0, 0)), "0/000/049.gph");
   EXPECT_EQ(GraphTile::FileSuffix(GraphId(1000000, 3, 1)), "3/001/000/000.gph");
+  EXPECT_THROW(GraphTile::FileSuffix(GraphId(64800, 1, 0)), std::runtime_error);
+  EXPECT_THROW(GraphTile::FileSuffix(GraphId(1337, 6, 0)), std::runtime_error);
+  EXPECT_THROW(GraphTile::FileSuffix(GraphId(1036800, 2, 0)), std::runtime_error);
+  EXPECT_THROW(GraphTile::FileSuffix(GraphId(4050, 0, 0)), std::runtime_error);
+  EXPECT_THROW(GraphTile::FileSuffix(GraphId(1036800, 3, 0)), std::runtime_error);
 }
 
 TEST(Graphtile, IdFromString) {
