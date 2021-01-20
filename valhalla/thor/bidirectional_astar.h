@@ -43,8 +43,11 @@ class BidirectionalAStar : public PathAlgorithm {
 public:
   /**
    * Constructor.
+   * @param max_reserved_labels_count maximum capacity of edgelabels container
+   *                                  that allowed to keep reserved
    */
-  BidirectionalAStar();
+  explicit BidirectionalAStar(
+      uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
 
   /**
    * Destructor
@@ -108,10 +111,11 @@ protected:
   // Vector of edge labels (requires access by index).
   std::vector<sif::BDEdgeLabel> edgelabels_forward_;
   std::vector<sif::BDEdgeLabel> edgelabels_reverse_;
+  uint32_t max_reserved_labels_count_;
 
   // Adjacency list - approximate double bucket sort
-  std::shared_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>> adjacencylist_forward_;
-  std::shared_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>> adjacencylist_reverse_;
+  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_forward_;
+  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_reverse_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_forward_;

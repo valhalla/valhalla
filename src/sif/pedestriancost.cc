@@ -59,6 +59,7 @@ constexpr float kDefaultSideWalkFactor = 1.0f;     // Neutral value for sidewalk
 constexpr float kDefaultAlleyFactor = 2.0f;        // Avoid alleys
 constexpr float kDefaultDrivewayFactor = 5.0f;     // Avoid driveways
 constexpr float kDefaultUseFerry = 1.0f;
+constexpr float kDefaultUseTracks = 0.5f; // Factor between 0 and 1
 
 // Maximum distance at the beginning or end of a multimodal route
 // that you are willing to travel for this mode.  In this case,
@@ -131,6 +132,7 @@ constexpr ranged_default_t<float> kUseFerryRange{0, kDefaultUseFerry, 1.0f};
 
 constexpr ranged_default_t<float> kBSSCostRange{0, kDefaultBssCost, kMaxPenalty};
 constexpr ranged_default_t<float> kBSSPenaltyRange{0, kDefaultBssPenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
 
 constexpr float kSacScaleSpeedFactor[] = {
     1.0f,  // kNone
@@ -341,6 +343,9 @@ public:
       }
       if (driveway_factor_ < 1.f) {
         factor *= driveway_factor_;
+      }
+      if (track_factor_ < 1.f) {
+        factor *= track_factor_;
       }
 
       return (speedfactor_ * factor);
@@ -660,6 +665,8 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= alley_factor_;
   } else if (edge->use() == Use::kDriveway) {
     factor *= driveway_factor_;
+  } else if (edge->use() == Use::kTrack) {
+    factor *= track_factor_;
   } else if (edge->sidewalk_left() || edge->sidewalk_right()) {
     factor *= sidewalk_factor_;
   } else if (edge->roundabout()) {
@@ -868,6 +875,11 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_bike_share_penalty(
         kBSSPenaltyRange(rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_rent_penalty")
                              .get_value_or(kDefaultBssPenalty)));
+
+    // use_tracks
+    pbf_costing_options->set_use_tracks(
+        kUseTracksRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tracks")
+                            .get_value_or(kDefaultUseTracks)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -893,6 +905,7 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_transit_transfer_max_distance(kTransitTransferMaxDistance);
     pbf_costing_options->set_bike_share_cost(kDefaultBssCost);
     pbf_costing_options->set_bike_share_penalty(kDefaultBssPenalty);
+    pbf_costing_options->set_use_tracks(kDefaultUseTracks);
   }
 }
 

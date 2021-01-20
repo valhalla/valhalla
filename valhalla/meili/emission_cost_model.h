@@ -14,8 +14,8 @@ private:
   using StateGetter = std::function<const State&(const StateId& stateid)>;
 
 public:
-  EmissionCostModel(baldr::GraphReader& graphreader, const StateContainer& container, float sigma_z)
-      : graphreader_(graphreader), container_(container), sigma_z_(sigma_z),
+  EmissionCostModel(baldr::GraphReader&, const StateContainer& container, float sigma_z)
+      : container_(container), sigma_z_(sigma_z),
         inv_double_sq_sigma_z_(1.f / (sigma_z_ * sigma_z_ * 2.f)) {
     if (sigma_z_ <= 0.f) {
       throw std::invalid_argument("Expect sigma_z to be positive");
@@ -39,8 +39,6 @@ public:
   }
 
 private:
-  baldr::GraphReader& graphreader_;
-
   const StateContainer& container_;
 
   float sigma_z_;
