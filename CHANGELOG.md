@@ -232,6 +232,7 @@
    * ADDED: Isochrones support isodistance lines as well [#2699](https://github.com/valhalla/valhalla/pull/2699)
    * ADDED: Add support for ignoring live traffic closures for waypoints [#2685](https://github.com/valhalla/valhalla/pull/2685)
    * ADDED: Add use_distance to auto cost to allow choosing between two primary cost components, time or distance [#2771](https://github.com/valhalla/valhalla/pull/2771)
+   * CHANGED: nit: Enables compiler warnings in part of loki module [#2767](https://github.com/valhalla/valhalla/pull/2767)
    * CHANGED: Reducing the number of uturns by increasing the cost to for them to 9.5f. Note: Did not increase the cost for motorcycles or motorscooters. [#2770](https://github.com/valhalla/valhalla/pull/2770)
    * ADDED: Add option to use thread-safe GraphTile's reference counter. [#2772](https://github.com/valhalla/valhalla/pull/2772)
    * CHANGED: nit: Enables compiler warnings in part of thor module [#2768](https://github.com/valhalla/valhalla/pull/2768)
