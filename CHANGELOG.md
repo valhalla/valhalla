@@ -119,6 +119,7 @@
    * FIXED: Reduce verbose instructions by collapsing small end ramp forks [#2762](https://github.com/valhalla/valhalla/issues/2762)
    * FIXED: Remove redundant return statements [#2776](https://github.com/valhalla/valhalla/pull/2776)
    * FIXED: Added unit test for BuildAdminFromPBF() to test GEOS 3.9 update. [#2787](https://github.com/valhalla/valhalla/pull/2787)
+   * FIXED: Add support for geos-3.9 c++ api [#2739](https://github.com/valhalla/valhalla/issues/2739)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
