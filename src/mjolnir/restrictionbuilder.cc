@@ -331,8 +331,8 @@ void build(const std::string& complex_restriction_from_file,
             if (restriction.type() < RestrictionType::kOnlyRightTurn ||
                 restriction.type() > RestrictionType::kOnlyStraightOn) {
 
-              GraphId currentNode = GraphId(tile->id().tileid(), tile->id().level(), i);
-              GraphId tileid = tile->id();
+              GraphId currentNode = directededge.endnode();
+              GraphId tileid = currentNode.Tile_Base();
 
               std::vector<uint64_t> res_way_ids;
               res_way_ids.push_back(e_offset.wayid());
@@ -469,8 +469,8 @@ void build(const std::string& complex_restriction_from_file,
               if (restriction.type() < RestrictionType::kOnlyRightTurn ||
                   restriction.type() > RestrictionType::kOnlyStraightOn) {
 
-                GraphId currentNode = GraphId(tile->id().tileid(), tile->id().level(), i);
-                GraphId tileid = tile->id();
+                GraphId currentNode = directededge.endnode();
+                GraphId tileid = currentNode.Tile_Base();
 
                 std::vector<uint64_t> res_way_ids;
                 res_way_ids.push_back(restriction.to());
