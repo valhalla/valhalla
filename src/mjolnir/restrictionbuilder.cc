@@ -347,8 +347,7 @@ void build(const std::string& complex_restriction_from_file,
               }
 
               // walk in the forward direction.
-              std::deque<GraphId> tmp_ids =
-                  GetGraphIds(currentNode, reader, lock, res_way_ids);
+              std::deque<GraphId> tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
 
               // now that we have the tile and currentNode walk in the reverse direction as this is
               // really what needs to be stored in this tile.
@@ -491,8 +490,7 @@ void build(const std::string& complex_restriction_from_file,
                 res_way_ids.push_back(restriction_to.to());
 
                 // walk in the forward direction (reverse in relation to the restriction)
-                std::deque<GraphId> tmp_ids =
-                    GetGraphIds(currentNode, reader, lock, res_way_ids);
+                std::deque<GraphId> tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
 
                 // now that we have the tile and currentNode walk in the reverse
                 // direction(forward in relation to the restriction) as this is really what
