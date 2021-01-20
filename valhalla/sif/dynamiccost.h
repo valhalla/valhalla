@@ -241,7 +241,8 @@ public:
 
   inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
     return true;
-  };
+  }
+
   /**
    * Get the cost to traverse the specified directed edge using a transit
    * departure (schedule based edge traversal). Cost includes
@@ -833,114 +834,45 @@ protected:
    * country crossing, boarding a ferry, toll booth, gates, entering destination
    * only, alleys, and maneuver penalties. Each costing method can provide different
    * costs for these transitions (via costing options).
+   *
+   * The template allows us to treat edgelabels and directed edges the same. The unidirectinal
+   * path algorithms dont have access to the directededge from the label but they have the same
+   * function names. At the moment we could change edgelabel to keep the edge pointer because
+   * we dont clear tiles while the algorithm is running but for embedded use-cases we might one day
+   * do that so its best to keep support for labels and edges here
+   *
    * @param node Node at the intersection where the edge transition occurs.
    * @param edge Directed edge entering.
-   * @param pred Predecessor edge information.
+   * @param pred Predecessor edge or edgelabel.
    * @param idx  Index used for name consistency.
    * @return Returns the transition cost (cost, elapsed time).
    */
-  virtual sif::Cost base_transition_cost(const baldr::NodeInfo* node,
-                                         const baldr::DirectedEdge* edge,
-                                         const sif::EdgeLabel& pred,
-                                         const uint32_t idx) const {
+  template <typename predecessor_t>
+  sif::Cost base_transition_cost(const baldr::NodeInfo* node,
+                                 const baldr::DirectedEdge* edge,
+                                 const predecessor_t* pred,
+                                 const uint32_t idx) const {
     // Cases with both time and penalty: country crossing, ferry, rail_ferry, gate, toll booth
     sif::Cost c;
-    if (node->type() == baldr::NodeType::kBorderControl) {
-      c += country_crossing_cost_;
-    }
-    if (node->type() == baldr::NodeType::kGate) {
-      c += gate_cost_;
-    }
-    if (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred.toll())) {
-      c += toll_booth_cost_;
-    }
-    if (node->type() == baldr::NodeType::kBikeShare) {
-      c += bike_share_cost_;
-    }
-    if (edge->use() == baldr::Use::kFerry && pred.use() != baldr::Use::kFerry) {
-      c += ferry_transition_cost_;
-    }
-    if (edge->use() == baldr::Use::kRailFerry && pred.use() != baldr::Use::kRailFerry) {
-      c += rail_ferry_transition_cost_;
-    }
+    c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
+    c += gate_cost_ * (node->type() == baldr::NodeType::kGate);
+    c += bike_share_cost_ * (node->type() == baldr::NodeType::kBikeShare);
+    c += toll_booth_cost_ *
+         (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll()));
+    c += ferry_transition_cost_ *
+         (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry);
+    c += rail_ferry_transition_cost_ *
+         (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
-    if (edge->destonly() && !pred.destonly()) {
-      c.cost += destination_only_penalty_;
-    }
-    if (edge->use() == baldr::Use::kAlley && pred.use() != baldr::Use::kAlley) {
-      c.cost += alley_penalty_;
-    }
-    if (!edge->link() && !edge->name_consistency(idx)) {
-      c.cost += maneuver_penalty_;
-    }
+    c.cost += destination_only_penalty_ * (edge->destonly() && !pred->destonly());
+    c.cost +=
+        alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
+    c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));
 
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;
     return c;
-  }
-
-  /**
-   * Base transition cost that all costing methods use. Includes costs for
-   * country crossing, boarding a ferry, toll booth, gates, entering destination
-   * only, alleys, and maneuver penalties. Each costing method can provide different
-   * costs for these transitions (via costing options).
-   * @param node Node at the intersection where the edge transition occurs.
-   * @param edge Directed edge entering.
-   * @param pred Predecessor edge.
-   * @param idx  Index used for name consistency.
-   * @return Returns the transition cost (cost, elapsed time).
-   */
-  virtual sif::Cost base_transition_cost(const baldr::NodeInfo* node,
-                                         const baldr::DirectedEdge* edge,
-                                         const baldr::DirectedEdge* pred,
-                                         const uint32_t idx) const {
-    // Cases with both time and penalty: country crossing, ferry, gate, toll booth
-    sif::Cost c;
-    if (node->type() == baldr::NodeType::kBorderControl) {
-      c += country_crossing_cost_;
-    }
-    if (node->type() == baldr::NodeType::kGate) {
-      c += gate_cost_;
-    }
-    if (node->type() == baldr::NodeType::kBikeShare) {
-      c += bike_share_cost_;
-    }
-    if (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll())) {
-      c += toll_booth_cost_;
-    }
-    if (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry) {
-      c += ferry_transition_cost_;
-    }
-
-    if (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry) {
-      c += rail_ferry_transition_cost_;
-    }
-
-    // Additional penalties without any time cost
-    if (edge->destonly() && !pred->destonly()) {
-      c.cost += destination_only_penalty_;
-    }
-    if (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley) {
-      c.cost += alley_penalty_;
-    }
-    if (!edge->link() && !edge->name_consistency(idx)) {
-      c.cost += maneuver_penalty_;
-    }
-    // shortest ignores any penalties in favor of path length
-    c.cost *= !shortest_;
-    return c;
-  }
-
-  /**
-   * Convenience method to get the transition factor.
-   * @param has_traffic Does the intersection have traffic information? Currently
-   *                    is based on the exiting edge. TODO - determine if we also
-   *                    need this info on the predecessor.
-   * @param density_factor Density factor.
-   */
-  float TransitionFactor(const bool has_traffic, const float density) const {
-    return has_traffic ? kTrafficTransitionFactor : density;
   }
 
   /*
