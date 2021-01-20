@@ -43,7 +43,8 @@ namespace thor {
 constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Default constructor
-Isochrone::Isochrone() : Dijkstras(), shape_interval_(50.0f) {
+Isochrone::Isochrone(uint32_t max_reserved_labels_count)
+    : Dijkstras(max_reserved_labels_count), shape_interval_(50.0f) {
 }
 
 // Construct the isotile. Use a fixed grid size. Convert time in minutes to
@@ -334,7 +335,7 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreade
 
 void Isochrone::GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const {
   bucket_count = 20000;
-  edge_label_reservation = 500000;
+  edge_label_reservation = kInitialEdgeLabelCount;
 }
 
 } // namespace thor

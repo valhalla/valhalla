@@ -43,6 +43,7 @@ constexpr float kDefaultDrivewayPenalty = 300.0f; // Seconds
 constexpr float kDefaultUseRoad = 0.25f;          // Factor between 0 and 1
 constexpr float kDefaultUseFerry = 0.5f;          // Factor between 0 and 1
 constexpr float kDefaultAvoidBadSurfaces = 0.25f; // Factor between 0 and 1
+constexpr float kDefaultUseTracks = 0.5f;         // Factor between 0 and 1
 const std::string kDefaultBicycleType = "Hybrid"; // Bicycle type
 
 // Default turn costs - modified by the stop impact.
@@ -210,6 +211,7 @@ constexpr ranged_default_t<float> kUseRoadRange{0.0f, kDefaultUseRoad, 1.0f};
 constexpr ranged_default_t<float> kUseFerryRange{0.0f, kDefaultUseFerry, 1.0f};
 constexpr ranged_default_t<float> kUseHillsRange{0.0f, kDefaultUseHills, 1.0f};
 constexpr ranged_default_t<float> kAvoidBadSurfacesRange{0.0f, kDefaultAvoidBadSurfaces, 1.0f};
+constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
 
 constexpr ranged_default_t<float> kBSSCostRange{0, kDefaultBssCost, kMaxPenalty};
 constexpr ranged_default_t<float> kBSSPenaltyRange{0, kDefaultBssPenalty, kMaxPenalty};
@@ -959,6 +961,11 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_bike_share_penalty(kBSSPenaltyRange(
         rapidjson::get_optional<uint32_t>(*json_costing_options, "/bss_return_penalty")
             .get_value_or(kDefaultBssPenalty)));
+
+    // use_tracks
+    pbf_costing_options->set_use_tracks(
+        kUseTracksRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tracks")
+                            .get_value_or(kDefaultUseTracks)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -979,6 +986,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
         kDefaultCyclingSpeed[static_cast<uint32_t>(BicycleType::kHybrid)]);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_bike_share_cost(kDefaultBssCost);
+    pbf_costing_options->set_use_tracks(kDefaultUseTracks);
     pbf_costing_options->set_bike_share_penalty(kDefaultBssPenalty);
   }
 }

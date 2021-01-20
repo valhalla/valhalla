@@ -27,11 +27,11 @@ void TryAddRemove(const std::vector<uint32_t>& costs, const std::vector<uint32_t
   std::vector<simple_label> edgelabels;
 
   uint32_t i = 0;
-  DoubleBucketQueue<simple_label> adjlist(0, 10000, 1, edgelabels);
+  DoubleBucketQueue<simple_label> adjlist(0, 10000, 1, &edgelabels);
   for (auto cost : costs) {
     edgelabels.emplace_back(simple_label{static_cast<float>(cost)});
     adjlist.add(i);
-    i++;
+    ++i;
   }
   for (auto expected : expectedorder) {
     uint32_t labelindex = adjlist.pop();
@@ -46,9 +46,9 @@ void TryAddRemove(const std::vector<uint32_t>& costs, const std::vector<uint32_t
 
 TEST(DoubleBucketQueue, TestInvalidConstruction) {
   std::vector<simple_label> edgelabels;
-  EXPECT_THROW(DoubleBucketQueue<simple_label> adjlist(0, 10000, 0, edgelabels), runtime_error)
+  EXPECT_THROW(DoubleBucketQueue<simple_label> adjlist(0, 10000, 0, &edgelabels), runtime_error)
       << "Invalid bucket size not caught";
-  EXPECT_THROW(DoubleBucketQueue<simple_label> adjlist(0, 0.0f, 1, edgelabels), runtime_error)
+  EXPECT_THROW(DoubleBucketQueue<simple_label> adjlist(0, 0.0f, 1, &edgelabels), runtime_error)
       << "Invalid cost range not caught";
 }
 
@@ -63,7 +63,7 @@ TEST(DoubleBucketQueue, TestAddRemove) {
 void TryClear(const std::vector<uint32_t>& costs) {
   uint32_t i = 0;
   std::vector<simple_label> edgelabels;
-  DoubleBucketQueue<simple_label> adjlist(0, 10000, 50, edgelabels);
+  DoubleBucketQueue<simple_label> adjlist(0, 10000, 50, &edgelabels);
   for (auto cost : costs) {
     edgelabels.emplace_back(simple_label{static_cast<float>(cost)});
     adjlist.add(i);
@@ -180,25 +180,25 @@ void TrySimulation(DoubleBucketQueue<simple_label>& dbqueue,
 TEST(DoubleBucketQueue, TestSimulation) {
   {
     std::vector<simple_label> costs;
-    DoubleBucketQueue<simple_label> dbqueue1(0, 1, 100000, costs);
+    DoubleBucketQueue<simple_label> dbqueue1(0, 1, 100000, &costs);
     TrySimulation(dbqueue1, costs, 1000, 10, 1000);
   }
 
   {
     std::vector<simple_label> costs;
-    DoubleBucketQueue<simple_label> dbqueue2(0, 1, 100000, costs);
+    DoubleBucketQueue<simple_label> dbqueue2(0, 1, 100000, &costs);
     TrySimulation(dbqueue2, costs, 222, 40, 100);
   }
 
   {
     std::vector<simple_label> costs;
-    DoubleBucketQueue<simple_label> dbqueue3(0, 1, 100000, costs);
+    DoubleBucketQueue<simple_label> dbqueue3(0, 1, 100000, &costs);
     TrySimulation(dbqueue3, costs, 333, 60, 100);
   }
 
   {
     std::vector<simple_label> costs;
-    DoubleBucketQueue<simple_label> dbqueue4(0, 1, 1000, costs);
+    DoubleBucketQueue<simple_label> dbqueue4(0, 1, 1000, &costs);
     TrySimulation(dbqueue4, costs, 333, 60, 100);
   }
 }
