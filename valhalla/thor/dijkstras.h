@@ -39,7 +39,16 @@ enum class ExpansionRecommendation {
  */
 class Dijkstras {
 public:
-  Dijkstras();
+  /**
+   * Constructor.
+   * @param max_reserved_labels_count maximum capacity of edgelabels container
+   *                                  that allowed to keep reserved
+   */
+  explicit Dijkstras(uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
+
+  Dijkstras(const Dijkstras&) = delete;
+  Dijkstras& operator=(const Dijkstras&) = delete;
+
   virtual ~Dijkstras() {
   }
 
@@ -122,10 +131,11 @@ protected:
   // Vector of edge labels (requires access by index).
   std::vector<sif::BDEdgeLabel> bdedgelabels_;
   std::vector<sif::MMEdgeLabel> mmedgelabels_;
+  uint32_t max_reserved_labels_count_;
 
   // Adjacency list - approximate double bucket sort
-  std::shared_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>> adjacencylist_;
-  std::shared_ptr<baldr::DoubleBucketQueue<sif::MMEdgeLabel>> mmadjacencylist_;
+  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_;
+  baldr::DoubleBucketQueue<sif::MMEdgeLabel> mmadjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
@@ -140,10 +150,9 @@ protected:
    * @param bucketsize  Adjacency list bucket size.
    */
   template <typename label_container_t>
-  void
-  Initialize(label_container_t& labels,
-             std::shared_ptr<baldr::DoubleBucketQueue<typename label_container_t::value_type>>& queue,
-             const uint32_t bucketsize);
+  void Initialize(label_container_t& labels,
+                  baldr::DoubleBucketQueue<typename label_container_t::value_type>& queue,
+                  const uint32_t bucketsize);
 
   /**
    * Sets the start time for forward expansion or end time for reverse expansion based on the

@@ -27,9 +27,8 @@ struct EdgeStatusInfo {
   EdgeStatusInfo() : index_(0), set_(0) {
   }
 
-  EdgeStatusInfo(const EdgeSet set, const uint32_t index) {
-    set_ = static_cast<uint32_t>(set);
-    index_ = index;
+  EdgeStatusInfo(const EdgeSet set, const uint32_t index)
+      : index_(index), set_(static_cast<uint32_t>(set)) {
   }
 
   uint32_t index() const {
@@ -50,6 +49,18 @@ struct EdgeStatusInfo {
  */
 class EdgeStatus {
 public:
+  /**
+   * Default constructor.
+   */
+  EdgeStatus() = default;
+
+  // in order no to delete objects twice in destructor we should explicitly
+  // forbid copying
+  EdgeStatus(const EdgeStatus&) = delete;
+  EdgeStatus& operator=(const EdgeStatus&) = delete;
+  EdgeStatus(EdgeStatus&&) = default;
+  EdgeStatus& operator=(EdgeStatus&&) = default;
+
   /**
    * Destructor. Delete any allocated EdgeStatusInfo arrays.
    */
