@@ -28,7 +28,7 @@ protected:
           F-------E-------D
     )";
 
-    // To define an administrative boundary, the nodes must for a closed polygon.
+    // To define an administrative boundary, the nodes must form a closed polygon.
     const gurka::ways ways =
     {
       {
