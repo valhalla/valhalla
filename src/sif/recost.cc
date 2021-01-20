@@ -95,7 +95,8 @@ void recost_forward(baldr::GraphReader& reader,
     int time_restrictions_TODO = -1;
     // if its not time dependent set to 0 for Allowed method below
     const uint64_t localtime = offset_time.valid ? offset_time.local_time : 0;
-    // we should evaluate restrictions even if 'ignore_access' flag is true
+    // we should call 'Allowed' method even if 'ignore_access' flag is true in order to
+    // evaluate time restrictions
     if (predecessor != baldr::kInvalidLabel &&
         (!costing.Allowed(edge, label, tile, edge_id, localtime, offset_time.timezone_index,
                           time_restrictions_TODO) &&
