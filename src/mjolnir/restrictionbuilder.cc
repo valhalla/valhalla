@@ -466,7 +466,6 @@ void build(const std::string& complex_restriction_from_file,
                   restriction.type() > RestrictionType::kOnlyStraightOn) {
 
                 GraphId currentNode = directededge.endnode();
-                GraphId tileid = currentNode.Tile_Base();
 
                 std::vector<uint64_t> res_way_ids;
                 res_way_ids.push_back(restriction.to());
