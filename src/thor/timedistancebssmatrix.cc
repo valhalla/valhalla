@@ -54,7 +54,7 @@ void TimeDistanceBSSMatrix::Clear() {
   dest_edges_.clear();
 
   // Clear elements from the adjacency list
-  adjacencylist_.reset();
+  adjacencylist_.clear();
 
   // Clear the edge status flags
   pedestrian_edgestatus_.clear();
@@ -126,7 +126,7 @@ void TimeDistanceBSSMatrix::ExpandForward(GraphReader& graphreader,
       EdgeLabel& lab = edgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(es->index(), newsortcost);
+        adjacencylist_.decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
       }
       continue;
@@ -137,7 +137,7 @@ void TimeDistanceBSSMatrix::ExpandForward(GraphReader& graphreader,
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode,
                              distance, transition_cost, restriction_idx);
     *es = {EdgeSet::kTemporary, idx};
-    adjacencylist_->add(idx);
+    adjacencylist_.add(idx);
   }
 
   if (!from_bss && nodeinfo->type() == NodeType::kBikeShare) {
@@ -177,8 +177,7 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::OneToMany(
 
   uint32_t bucketsize = std::max(pedestrian_costing_->UnitSize(), bicycle_costing_->UnitSize());
 
-  adjacencylist_ = std::make_shared<DoubleBucketQueue<sif::EdgeLabel>>(0.0f, current_cost_threshold_,
-                                                                       bucketsize, edgelabels_);
+  adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, &edgelabels_);
 
   edgelabels_.reserve(kInitialEdgeLabelCount);
   pedestrian_edgestatus_.clear();
@@ -194,7 +193,7 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::OneToMany(
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->pop();
+    uint32_t predindex = adjacencylist_.pop();
     if (predindex == kInvalidLabel) {
       // Can not expand any further...
       return FormTimeDistanceMatrix();
@@ -320,7 +319,7 @@ void TimeDistanceBSSMatrix::ExpandReverse(GraphReader& graphreader,
       EdgeLabel& lab = edgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(es->index(), newsortcost);
+        adjacencylist_.decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, restriction_idx);
       }
       continue;
@@ -331,7 +330,7 @@ void TimeDistanceBSSMatrix::ExpandReverse(GraphReader& graphreader,
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode,
                              distance, transition_cost, restriction_idx);
     *es = {EdgeSet::kTemporary, idx};
-    adjacencylist_->add(idx);
+    adjacencylist_.add(idx);
   }
 
   if (!from_bss && nodeinfo->type() == NodeType::kBikeShare) {
@@ -371,8 +370,7 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ManyToOne(
 
   uint32_t bucketsize = std::max(pedestrian_costing_->UnitSize(), bicycle_costing_->UnitSize());
 
-  adjacencylist_ = std::make_shared<DoubleBucketQueue<sif::EdgeLabel>>(0.0f, current_cost_threshold_,
-                                                                       bucketsize, edgelabels_);
+  adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, &edgelabels_);
 
   edgelabels_.reserve(kInitialEdgeLabelCount);
   pedestrian_edgestatus_.clear();
@@ -387,7 +385,7 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ManyToOne(
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->pop();
+    uint32_t predindex = adjacencylist_.pop();
     if (predindex == kInvalidLabel) {
       // Can not expand any further...
       return FormTimeDistanceMatrix();
@@ -519,7 +517,7 @@ void TimeDistanceBSSMatrix::SetOriginOneToMany(GraphReader& graphreader,
                          TravelMode::kPedestrian, d, {});
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
-    adjacencylist_->add(edgelabels_.size() - 1);
+    adjacencylist_.add(edgelabels_.size() - 1);
   }
 }
 
@@ -570,7 +568,7 @@ void TimeDistanceBSSMatrix::SetOriginManyToOne(GraphReader& graphreader,
                          TravelMode::kPedestrian, d, {});
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
-    adjacencylist_->add(edgelabels_.size() - 1);
+    adjacencylist_.add(edgelabels_.size() - 1);
   }
 }
 
