@@ -237,6 +237,7 @@
    * ADDED: Add option to use thread-safe GraphTile's reference counter. [#2772](https://github.com/valhalla/valhalla/pull/2772)
    * CHANGED: nit: Enables compiler warnings in part of thor module [#2768](https://github.com/valhalla/valhalla/pull/2768)
    * ADDED: Add costing option `use_tracks` to avoid or favor tracks in route. [#2769](https://github.com/valhalla/valhalla/pull/2769)
+   * CHANGED: chore: Updates libosmium [#2786](https://github.com/valhalla/valhalla/pull/2786)
    * CHANGED: Optimize double bucket queue to reduce memory reallocations. [#2719](https://github.com/valhalla/valhalla/pull/2719)
 
 
