@@ -690,7 +690,6 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tracks(kDefaultUseTracks);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
-    pbf_costing_options->set_use_tracks(kDefaultUseTracks);
     pbf_costing_options->set_use_distance(kDefaultUseDistance);
   }
 }
