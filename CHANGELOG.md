@@ -231,7 +231,7 @@
    * ADDED: Add Estonian locale. [#2748](https://github.com/valhalla/valhalla/pull/2748)
    * CHANGED: Handle GraphTile objects as smart pointers [#2703](https://github.com/valhalla/valhalla/pull/2703)
    * CHANGED: Improve stability with no RTTI build [#2759](https://github.com/valhalla/valhalla/pull/2759) and [#2760](https://github.com/valhalla/valhalla/pull/2760)
-   * CHANGED: Change generic service roads to a new Use=kServiceRoad. This is for highway=service without other service=* tags (such as driveway, alley, parking aisle) [#2419](https://github.com/valhalla/valhalla/pull/2419)
+   * CHANGED: Change generic service roads to a new Use=kServiceRoad. This is for highway=service without other service= tags (such as driveway, alley, parking aisle) [#2419](https://github.com/valhalla/valhalla/pull/2419)
    * ADDED: Isochrones support isodistance lines as well [#2699](https://github.com/valhalla/valhalla/pull/2699)
    * ADDED: Add support for ignoring live traffic closures for waypoints [#2685](https://github.com/valhalla/valhalla/pull/2685)
    * ADDED: Add use_distance to auto cost to allow choosing between two primary cost components, time or distance [#2771](https://github.com/valhalla/valhalla/pull/2771)
@@ -242,6 +242,7 @@
    * ADDED: Add costing option `use_tracks` to avoid or favor tracks in route. [#2769](https://github.com/valhalla/valhalla/pull/2769)
    * CHANGED: chore: Updates libosmium [#2786](https://github.com/valhalla/valhalla/pull/2786)
    * CHANGED: Optimize double bucket queue to reduce memory reallocations. [#2719](https://github.com/valhalla/valhalla/pull/2719)
+   * CHANGED: Collapse merge maneuvers [#2773](https://github.com/valhalla/valhalla/pull/2773)
 
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
