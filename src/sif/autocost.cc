@@ -41,11 +41,12 @@ constexpr float kDefaultCountryCrossingCost = 600.0f;    // Seconds
 constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 
 // Other options
-constexpr float kDefaultUseFerry = 0.5f;     // Factor between 0 and 1
-constexpr float kDefaultUseRailFerry = 0.4f; // Factor between 0 and 1
-constexpr float kDefaultUseHighways = 1.0f;  // Factor between 0 and 1
-constexpr float kDefaultUseTolls = 0.5f;     // Factor between 0 and 1
-constexpr float kDefaultUseTracks = 0.f;     // Avoid tracks by default. Factor between 0 and 1
+constexpr float kDefaultUseFerry = 0.5f;     // Default preference of using a ferry 0-1
+constexpr float kDefaultUseRailFerry = 0.4f; // Default preference of using a rail ferry 0-1
+constexpr float kDefaultUseHighways = 1.0f;  // Default preference of using a motorway or trunk 0-1
+constexpr float kDefaultUseTolls = 0.5f;     // Default preference of using toll roads 0-1
+constexpr float kDefaultUseTracks = 0.f;     // Default preference of using tracks 0-1
+constexpr float kDefaultUseDistance = 0.f;   // Default preference of using distance vs time 0-1
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -98,6 +99,7 @@ constexpr ranged_default_t<float> kUseRailFerryRange{0, kDefaultUseRailFerry, 1.
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
+constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
 
 constexpr float kHighwayFactor[] = {
     10.0f, // Motorway
@@ -119,6 +121,15 @@ constexpr float kSurfaceFactor[] = {
     0.5f, // kGravel
     1.0f  // kPath
 };
+
+// The basic costing for an edge is a trade off between time and distance. We allow the user to
+// specify which one is more important to them and then we use a linear combination to combine the two
+// into a final metric. The problem is that time in seconds and length in meters have two wildly
+// different ranges, so the linear combination always favors length vs time. What we do to combat this
+// is to change length units into time units by multiplying by the reciprocal of a constant speed.
+// This means basically changes the units of distance to be more in the same ballpark as the units of
+// time and makes the linear combination make more sense.
+constexpr float kInvMedianSpeed = 1.f / 16.f; // about 37mph
 
 } // namespace
 
@@ -291,11 +302,13 @@ public:
 public:
   VehicleType type_; // Vehicle type: car (default), motorcycle, etc
   std::vector<float> speedfactor_;
-  float density_factor_[16]; // Density factor
-  float highway_factor_;     // Factor applied when road is a motorway or trunk
-  float alley_factor_;       // Avoid alleys factor.
-  float toll_factor_;        // Factor applied when road has a toll
-  float surface_factor_;     // How much the surface factors are applied.
+  float density_factor_[16];  // Density factor
+  float highway_factor_;      // Factor applied when road is a motorway or trunk
+  float alley_factor_;        // Avoid alleys factor.
+  float toll_factor_;         // Factor applied when road has a toll
+  float surface_factor_;      // How much the surface factors are applied.
+  float distance_factor_;     // How much distance factors in overall favorability
+  float inv_distance_factor_; // How much time factors in overall favorability
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -334,6 +347,10 @@ AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
   // Preference to use highways. Is a value from 0 to 1
   float use_highways_ = costing_options.use_highways();
   highway_factor_ = 1.0f - use_highways_;
+
+  // Preference for distance vs time
+  distance_factor_ = costing_options.use_distance() * kInvMedianSpeed;
+  inv_distance_factor_ = 1.f - costing_options.use_distance();
 
   // Preference to use toll roads (separate from toll booth penalty). Sets a toll
   // factor. A toll factor of 0 would indicate no adjustment to weighting for toll roads.
@@ -410,34 +427,46 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   // either the computed edge speed or optional top_speed
   auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds);
   auto final_speed = std::min(edge_speed, top_speed_);
-
-  float sec = (edge->length() * speedfactor_[final_speed]);
+  float sec = edge->length() * speedfactor_[final_speed];
 
   if (shortest_) {
     return Cost(edge->length(), sec);
   }
 
-  float factor =
-      (edge->use() == Use::kFerry)
-          ? ferry_factor_
-          : (edge->use() == Use::kRailFerry) ? rail_ferry_factor_ : density_factor_[edge->density()];
+  // base factor is either ferry, rail ferry or density based
+  float factor = 1;
+  switch (edge->use()) {
+    case Use::kFerry:
+      factor = ferry_factor_;
+      break;
+    case Use::kRailFerry:
+      factor = rail_ferry_factor_;
+      break;
+    default:
+      factor = density_factor_[edge->density()];
+      break;
+  }
 
-  // TODO: factor hasn't been extensively tested, might alter this in future
+  // TODO: speed_penality hasn't been extensively tested, might alter this in future
   float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] + speed_penalty;
+            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] + speed_penalty +
+            edge->toll() * toll_factor_;
 
-  if (edge->toll()) {
-    factor += toll_factor_;
+  switch (edge->use()) {
+    case Use::kAlley:
+      factor *= alley_factor_;
+      break;
+    case Use::kTrack:
+      factor *= track_factor_;
+      break;
+    default:
+      break;
   }
 
-  if (edge->use() == Use::kAlley) {
-    factor *= alley_factor_;
-  } else if (edge->use() == Use::kTrack) {
-    factor *= track_factor_;
-  }
-
-  return Cost(sec * factor, sec);
+  // base cost before the factor is a linear combination of time vs distance, depending on which
+  // one the user thinks is more important to them
+  return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
@@ -447,12 +476,12 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
-  Cost c = base_transition_cost(node, edge, pred, idx);
+  Cost c = base_transition_cost(node, edge, &pred, idx);
   c.secs = OSRMCarTurnDuration(edge, node, pred.opp_local_idx());
 
   // Intersection transition time = factor * stopimpact * turncost. Factor depends
   // on density and whether traffic is available
-  if (edge->stopimpact(idx) > 0) {
+  if (edge->stopimpact(idx) > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
       turn_cost = kTCCrossing;
@@ -477,8 +506,11 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-    c.cost += shortest_ ? 0.f : seconds;
+    c.cost += seconds;
   }
+
+  // Account for the user preferring distance
+  c.cost *= inv_distance_factor_;
 
   return c;
 }
@@ -497,7 +529,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Transition time = densityfactor * stopimpact * turncost
-  if (edge->stopimpact(idx) > 0) {
+  if (edge->stopimpact(idx) > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
       turn_cost = kTCCrossing;
@@ -522,8 +554,11 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
 
-    c.cost += shortest_ ? 0 : seconds;
+    c.cost += seconds;
   }
+
+  // Account for the user preferring distance
+  c.cost *= inv_distance_factor_;
 
   return c;
 }
@@ -624,12 +659,17 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
         kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
                            .get_value_or(kDefaultUseTolls)));
 
+    // use distance
+    pbf_costing_options->set_use_distance(
+        kUseDistanceRange(rapidjson::get_optional<float>(*json_costing_options, "/use_distance")
+                              .get_value_or(kDefaultUseDistance)));
+
     // use_tracks
     pbf_costing_options->set_use_tracks(
         kUseTracksRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tracks")
                             .get_value_or(kDefaultUseTracks)));
-  } else {
-    // Set pbf values to defaults
+  } // Set pbf values to defaults
+  else {
     pbf_costing_options->set_transport_type("car");
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
     pbf_costing_options->set_destination_only_penalty(kDefaultDestinationOnlyPenalty);
@@ -650,6 +690,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_tracks(kDefaultUseTracks);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
     pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
+    pbf_costing_options->set_use_distance(kDefaultUseDistance);
   }
 }
 
