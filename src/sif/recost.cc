@@ -21,7 +21,7 @@ namespace sif {
  */
 void recost_forward(baldr::GraphReader& reader,
                     const sif::DynamicCost& costing,
-                    const std::vector<baldr::GraphId>& edge_ids,
+                    const EdgeCallback& edge_cb,
                     const LabelCallback& label_cb,
                     float source_pct,
                     float target_pct,
@@ -33,9 +33,8 @@ void recost_forward(baldr::GraphReader& reader,
     throw std::logic_error("Source and target percentages must be between 0 and 1 inclusive");
   }
 
-  auto edge_iter = edge_ids.begin();
   // grab the first path edge
-  baldr::GraphId edge_id = (edge_iter != edge_ids.end()) ? (*edge_iter++) : baldr::GraphId();
+  baldr::GraphId edge_id = edge_cb();
   if (!edge_id.Is_Valid()) {
     return;
   }
@@ -111,7 +110,7 @@ void recost_forward(baldr::GraphReader& reader,
       source_pct = -1;
     }
 
-    const auto next_id = (edge_iter != edge_ids.end()) ? (*edge_iter++) : baldr::GraphId{};
+    const auto next_id = edge_cb();
     if (!next_id.Is_Valid()) {
       edge_pct -= 1.f - target_pct;
       // just to keep compatibility with the logic that handled trivial path in bidiastar

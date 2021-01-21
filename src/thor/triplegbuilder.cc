@@ -983,9 +983,12 @@ void AccumulateRecostingInfoForward(const valhalla::Options& options,
   }
 
   // setup a callback for the recosting to get each edge
-  std::vector<GraphId> edge_ids;
-  for (auto in_itr = leg.node().begin(); in_itr->has_edge(); ++in_itr)
-    edge_ids.emplace_back(in_itr->edge().id());
+  auto in_itr = leg.node().begin();
+  sif::EdgeCallback edge_cb = [&in_itr]() -> baldr::GraphId {
+    auto edge_id = in_itr->has_edge() ? baldr::GraphId(in_itr->edge().id()) : baldr::GraphId{};
+    ++in_itr;
+    return edge_id;
+  };
 
   // setup a callback for the recosting to tell us about the new label each made
   auto out_itr = leg.mutable_node()->begin();
@@ -1007,13 +1010,14 @@ void AccumulateRecostingInfoForward(const valhalla::Options& options,
     // get the costing
     auto costing = factory.Create(recosting);
     // reset to the beginning of the route
+    in_itr = leg.node().begin();
     out_itr = leg.mutable_node()->begin();
     // no elapsed time yet at the start of the leg
     out_itr->mutable_recosts()->Add()->mutable_elapsed_cost()->set_seconds(0);
     out_itr->mutable_recosts()->rbegin()->mutable_elapsed_cost()->set_cost(0);
     // do the recosting for this costing
     try {
-      sif::recost_forward(reader, *costing, edge_ids, label_cb, src_pct, tgt_pct, time_info,
+      sif::recost_forward(reader, *costing, edge_cb, label_cb, src_pct, tgt_pct, time_info,
                           invariant);
       // no turn cost at the end of the leg
       out_itr->mutable_recosts()->rbegin()->mutable_transition_cost()->set_seconds(0);

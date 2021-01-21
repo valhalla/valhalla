@@ -9,6 +9,8 @@
 namespace valhalla {
 namespace sif {
 
+// what this function calls to get the next edge
+using EdgeCallback = std::function<baldr::GraphId(void)>;
 // what this function calls to emit the next label
 using LabelCallback = std::function<void(const EdgeLabel& label)>;
 
@@ -29,7 +31,7 @@ using LabelCallback = std::function<void(const EdgeLabel& label)>;
  */
 void recost_forward(baldr::GraphReader& reader,
                     const sif::DynamicCost& costing,
-                    const std::vector<baldr::GraphId>& edge_ids,
+                    const EdgeCallback& edge_cb,
                     const LabelCallback& label_cb,
                     float source_pct = 0.f,
                     float target_pct = 1.f,
