@@ -43,7 +43,7 @@ class BidirectionalAStar : public PathAlgorithm {
 public:
   /**
    * Constructor.
-   * @param config A config object of key, value pairs
+   * @param config   Config with std::string for key and data
    */
   explicit BidirectionalAStar(const boost::property_tree::ptree& config = {});
 
@@ -111,6 +111,9 @@ protected:
   std::vector<sif::BDEdgeLabel> edgelabels_forward_;
   std::vector<sif::BDEdgeLabel> edgelabels_reverse_;
   uint32_t max_reserved_labels_count_;
+
+  // if `true` clean reserved memory for edge labels
+  bool clear_reserved_memory_;
 
   // Adjacency list - approximate double bucket sort
   baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_forward_;

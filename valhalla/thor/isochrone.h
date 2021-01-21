@@ -31,7 +31,7 @@ class Isochrone : public Dijkstras {
 public:
   /**
    * Constructor.
-   * @param config A config object of key, value pairs
+   * @param config   Config with std::string for key and data
    */
   explicit Isochrone(const boost::property_tree::ptree& config = {});
 

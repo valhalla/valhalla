@@ -33,9 +33,14 @@ class UnidirectionalAStar : public PathAlgorithm {
 public:
   /**
    * Constructor.
-   * @param config A config object of key, value pairs
+   * @param config   Config with std::string for key and data, and default
    */
-  explicit UnidirectionalAStar(const boost::property_tree::ptree& config = {});
+  explicit TimeDepForward(const boost::property_tree::ptree& config = {});
+
+  /**
+   * Destructor
+   */
+  virtual ~TimeDepForward();
 
   /**
    * Form path between and origin and destination location using the supplied
@@ -183,6 +188,9 @@ protected:
   std::vector<sif::BDEdgeLabel> edgelabels_;
   uint32_t max_reserved_labels_count_;
 
+  // if `true` clean reserved memory for edge labels
+  bool clear_reserved_memory_;
+
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
 
@@ -202,6 +210,13 @@ protected:
  * routes it uses a highway hierarchy with shortcut edges to improve
  * performance.
  */
+class TimeDepReverse : public TimeDepForward {
+public:
+  /**
+   * Constructor.
+   * @param config   Config with std::string for key and data
+   */
+  explicit TimeDepReverse(const boost::property_tree::ptree& config = {});
 
 /*
 template <const ExpansionType expansion_direction,

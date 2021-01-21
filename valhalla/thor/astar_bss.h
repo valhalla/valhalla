@@ -30,7 +30,7 @@ class AStarBSSAlgorithm : public PathAlgorithm {
 public:
   /**
    * Constructor.
-   * @param config A config object of key, value pairs
+   * @param config   Config with std::string for key and data
    */
   explicit AStarBSSAlgorithm(const boost::property_tree::ptree& config = {});
 
@@ -96,6 +96,9 @@ protected:
   // Vector of edge labels (requires access by index).
   std::vector<sif::EdgeLabel> edgelabels_;
   uint32_t max_reserved_labels_count_;
+
+  // if `true` clean reserved memory for edge labels
+  bool clear_reserved_memory_;
 
   // Adjacency list - approximate double bucket sort
   baldr::DoubleBucketQueue<sif::EdgeLabel> adjacencylist_;

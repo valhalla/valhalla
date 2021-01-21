@@ -35,7 +35,7 @@ class Dijkstras {
 public:
   /**
    * Constructor.
-   * @param config A config object of key, value pairs
+   * @param config   Config with std::string for key and data
    */
   explicit Dijkstras(const boost::property_tree::ptree& config = {});
 
@@ -129,6 +129,9 @@ protected:
   std::vector<sif::BDEdgeLabel> bdedgelabels_;
   std::vector<sif::MMEdgeLabel> mmedgelabels_;
   uint32_t max_reserved_labels_count_;
+
+  // if `true` clean reserved memory for edge labels
+  bool clear_reserved_memory_;
 
   // Adjacency list - approximate double bucket sort
   baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_;
