@@ -5,6 +5,7 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "sif/edgelabel.h"
+#include "sif/recost.h"
 #include "thor/alternates.h"
 #include <algorithm>
 #include <map>
@@ -22,6 +23,14 @@ constexpr uint32_t kInitialEdgeLabelCountBD = 1000000;
 // the PA Turnpike which have very long edges). Using a metric based on maximum edge
 // cost creates large performance drops - so perhaps some other metric can be found?
 constexpr float kThresholdDelta = 420.0f;
+
+inline float find_percent_along(const valhalla::Location& location, const GraphId& edge_id) {
+  for (const auto& e : location.path_edges()) {
+    if (e.graph_id() == edge_id)
+      return e.percent_along();
+  }
+  throw std::logic_error("Could not find candidate edge for the location");
+}
 
 } // namespace
 
@@ -597,7 +606,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Terminate if the cost threshold has been exceeded.
         if (fwd_pred.sortcost() + cost_diff_ > threshold_) {
-          return FormPath(graphreader, options, origin, destination);
+          return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
         }
 
         // Check if the edge on the forward search connects to a settled edge on the
@@ -617,7 +626,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
                     std::to_string(edgelabels_reverse_.size()));
           return {};
         }
-        return FormPath(graphreader, options, origin, destination);
+        return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
       }
     }
     if (expand_reverse) {
@@ -627,7 +636,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Terminate if the cost threshold has been exceeded.
         if (rev_pred.sortcost() > threshold_) {
-          return FormPath(graphreader, options, origin, destination);
+          return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
         }
 
         // Check if the edge on the reverse search connects to a settled edge on the
@@ -647,7 +656,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
                     std::to_string(edgelabels_forward_.size()));
           return {};
         }
-        return FormPath(graphreader, options, origin, destination);
+        return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
       }
     }
 
@@ -972,7 +981,9 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
 std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& graphreader,
                                                                 const Options& options,
                                                                 const valhalla::Location& origin,
-                                                                const valhalla::Location& dest) {
+                                                                const valhalla::Location& dest,
+                                                                const baldr::TimeInfo& time_info,
+                                                                const bool invariant) {
 
   // we need to figure out the maximum number of paths we could form here and
   // if its more than 1 we need to sort them so we do the best first
@@ -1026,17 +1037,26 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     LOG_DEBUG("FormPath path_iterations::" + std::to_string(edgelabels_forward_.size()) + "," +
               std::to_string(edgelabels_reverse_.size()));
 
+    // set of edges recovered from shortcuts (excluding shortcut's start edges)
+    std::unordered_set<GraphId> recovered_inner_edges;
+
     // A place to keep the path
-    std::vector<PathInfo> path;
-    path.reserve(static_cast<size_t>(paths.empty() ? 0.f : paths.back().size() * 1.2f));
+    std::vector<GraphId> path_edges;
+    path_edges.reserve(static_cast<size_t>(paths.empty() ? 0.f : paths.back().size() * 1.2f));
 
     // Work backwards on the forward path
+    graph_tile_ptr tile;
     for (auto edgelabel_index = idx1; edgelabel_index != kInvalidLabel;
          edgelabel_index = edgelabels_forward_[edgelabel_index].predecessor()) {
       const BDEdgeLabel& edgelabel = edgelabels_forward_[edgelabel_index];
 
-      path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), 0,
-                        edgelabel.restriction_idx(), edgelabel.transition_cost());
+      const auto* edge = graphreader.directededge(edgelabel.edgeid(), tile);
+      if (edge->is_shortcut()) {
+        auto superseded = graphreader.RecoverShortcut(edgelabel.edgeid());
+        recovered_inner_edges.insert(superseded.begin() + 1, superseded.end());
+        std::move(superseded.rbegin(), superseded.rend(), std::back_inserter(path_edges));
+      } else
+        path_edges.push_back(edgelabel.edgeid());
 
       // Check if this is a ferry
       if (edgelabel.use() == Use::kFerry) {
@@ -1045,108 +1065,75 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     }
 
     // Reverse the list
-    std::reverse(path.begin(), path.end());
-
-    // Special case code if the last edge of the forward path is the destination edge
-    // which means we need to worry about partial distance on the edge
-    if (edgelabels_reverse_[idx2].predecessor() == kInvalidLabel) {
-      // the destination is on a different edge than origin but the forward path found it. because of
-      // that we know that the forward path did not care about partial distance along the edge. so the
-      // edge that it added was the full length (time and cost). so what we need to do is look at the
-      // second to last edge and use the reverse path (who does care about partial distance on the
-      // destination edge) to recompute the elapsed time and cost. dont forget the transition cost
-      // from the forward path
-      if (path.size() > 1) {
-        path.back().elapsed_cost.secs = path[path.size() - 2].elapsed_cost.secs +
-                                        edgelabels_reverse_[idx2].cost().secs +
-                                        edgelabels_forward_[idx1].transition_cost().secs;
-        path.back().elapsed_cost.cost = path[path.size() - 2].elapsed_cost.cost +
-                                        edgelabels_reverse_[idx2].cost().cost +
-                                        edgelabels_forward_[idx1].transition_cost().cost;
-      } // origin and destination on the same edge
-      else {
-        LOG_WARN("Trivial route with bidirectional A* should not be allowed");
-        // find the destination edge that was used
-        bool not_found = true;
-        for (const auto& e : dest.path_edges()) {
-          if (e.graph_id() == edgelabels_reverse_[idx2].edgeid()) {
-            // T is the total we find first by scaling R which is the reverse edge trimmed
-            // F is the forward edge trimmed. We then subtract F from T to get the section
-            // at the beginning. Finally we subtract that from R to get the section between
-            // the two locations
-            //           x                           x
-            //      T----------------------------------------
-            //      F    ------------------------------------
-            //      R---------------------------------
-
-            // we scale the cost to what it would be for the full length of the edge
-            auto cost = edgelabels_reverse_[idx1].cost() * static_cast<float>(1 / e.percent_along());
-            // we then subtract the partial cost of the forward to get the piece before the origin
-            cost -= edgelabels_forward_[idx1].cost();
-            // which remove from the reverse cost which goes all the way to the start of the edge
-            cost = edgelabels_reverse_[idx2].cost() - cost;
-            // and we use that instead
-            path.back().elapsed_cost.secs = std::max(cost.secs, 0.f);
-            path.back().elapsed_cost.cost = std::max(cost.cost, 0.f);
-            not_found = false;
-          }
-        }
-
-        // This cannot happen because we only make labels from edge candidates in the destination
-        // location
-        if (not_found)
-          throw std::logic_error("Could not find candidate edge used for destination label");
-      }
-    }
-
-    // Get the elapsed time at the end of the forward path. NOTE: PathInfo
-    // stores elapsed time as uint32_t but EdgeLabels uses float. Need to
-    // accumulate in float and cast to int so we do not accumulate roundoff
-    // error.
-    Cost cost = path.back().elapsed_cost;
-
-    // Get the transition cost at the last edge of the reverse path
-    Cost previous_transition_cost = edgelabels_reverse_[idx2].transition_cost();
+    std::reverse(path_edges.begin(), path_edges.end());
 
     // Append the reverse path from the destination - use opposing edges
     // The first edge on the reverse path is the same as the last on the forward
     // path, so get the predecessor.
-    uint32_t edgelabel_index = edgelabels_reverse_[idx2].predecessor();
-    while (edgelabel_index != kInvalidLabel) {
+    for (auto edgelabel_index = edgelabels_reverse_[idx2].predecessor();
+         edgelabel_index != kInvalidLabel;
+         edgelabel_index = edgelabels_reverse_[edgelabel_index].predecessor()) {
       const BDEdgeLabel& edgelabel = edgelabels_reverse_[edgelabel_index];
-      GraphId oppedge = graphreader.GetOpposingEdgeId(edgelabel.edgeid());
+      const DirectedEdge* opp_edge = nullptr;
+      GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgelabel.edgeid(), opp_edge, tile);
 
-      // The first edge has no previous edge with elapsed cost so we can just use it directly
-      uint32_t predidx = edgelabel.predecessor();
-      if (predidx == kInvalidLabel) {
-        cost += edgelabel.cost();
-      } // This edge needs the elapsed cost between it and the previous edge, since its the reverse
-        // path in flipping the path around we also need to switch out the transition costs (shifting
-        // right)
-      else {
-        cost += edgelabel.cost() - edgelabels_reverse_[predidx].cost() - edgelabel.transition_cost();
-      }
-      cost += previous_transition_cost;
-      path.emplace_back(edgelabel.mode(), cost, oppedge, 0, edgelabel.restriction_idx(),
-                        previous_transition_cost);
+      if (opp_edge->is_shortcut()) {
+        auto superseded = graphreader.RecoverShortcut(opp_edge_id);
+        recovered_inner_edges.insert(superseded.begin() + 1, superseded.end());
+        std::move(superseded.begin(), superseded.end(), std::back_inserter(path_edges));
+      } else
+        path_edges.emplace_back(std::move(opp_edge_id));
 
       // Check if this is a ferry
       if (edgelabel.use() == Use::kFerry) {
         has_ferry_ = true;
       }
+    }
 
-      // Update edgelabel_index and transition cost to apply at next iteration
-      edgelabel_index = predidx;
-      // We apply the turn cost at the beginning of the edge, as is done in the forward path
-      // Semantically this can be thought of is, how much time did it take to turn onto this edge
-      // To do this we need to carry the cost forward to the next edge in the path so we cache it here
-      previous_transition_cost = edgelabel.transition_cost();
+    // bidirectional a* has a bug where it fails trivial routes in which you are on a one way edge and
+    // the origin is near the end of the edge and the destination is near the beginning, in other
+    // words a route that looks trivial but actually needs to go around the block to complete
+    if (path_edges.size() == 1)
+      LOG_WARN("Trivial route with bidirectional A* should not be allowed");
+
+    // once we recovered the whole path we should construct list of PathInfo objects
+    std::vector<PathInfo> path;
+    path.reserve(path_edges.size());
+
+    auto edge_itr = path_edges.begin();
+    const auto edge_cb = [&edge_itr, &path_edges]() {
+      return (edge_itr == path_edges.end()) ? GraphId{} : (*edge_itr++);
+    };
+
+    const auto label_cb = [&path, &recovered_inner_edges](const EdgeLabel& label) {
+      path.emplace_back(label.mode(), label.cost(), label.edgeid(), 0, label.restriction_idx(),
+                        label.transition_cost(), recovered_inner_edges.count(label.edgeid()));
+    };
+
+    float source_pct;
+    try {
+      source_pct = find_percent_along(origin, path_edges.front());
+    } catch (...) { throw std::logic_error("Could not find candidate edge used for origin label"); }
+
+    float target_pct;
+    try {
+      target_pct = find_percent_along(dest, path_edges.back());
+    } catch (...) {
+      throw std::logic_error("Could not find candidate edge used for destination label");
+    }
+
+    // recost edges in final path; ignore access restrictions
+    try {
+      sif::recost_forward(graphreader, *costing_, edge_cb, label_cb, source_pct, target_pct,
+                          time_info, invariant, true);
+    } catch (const std::exception& e) {
+      LOG_ERROR(std::string("Bi-directional astar failed to recost final path: ") + e.what());
+      continue;
     }
 
     // For the first path just add it for subsequent paths only add if it passes viability tests
-    if (paths.empty() ||
-        (validate_alternate_by_sharing(graphreader, shared_edgeids, paths, path, max_sharing) &&
-         validate_alternate_by_local_optimality(path))) {
+    if (paths.empty() || (validate_alternate_by_sharing(shared_edgeids, paths, path, max_sharing) &&
+                          validate_alternate_by_local_optimality(path))) {
       paths.emplace_back(std::move(path));
     }
   }
