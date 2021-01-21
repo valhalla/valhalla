@@ -1,7 +1,8 @@
 ## Release Date: 2020-08-?? Valhalla 3.1.0
 * **Removed**
    * REMOVED: Remove Node bindings. [#2502](https://github.com/valhalla/valhalla/pull/2502)
-   * REMOVED: appveyor builds. [#2544](https://github.com/valhalla/valhalla/issues/2544)
+   * REMOVED: appveyor builds. [#2550](https://github.com/valhalla/valhalla/pull/2550)
+   * REMOVED: Removed x86 CI builds. [#2792](https://github.com/valhalla/valhalla/pull/2792)
 
 * **Bug Fix**
    * FIXED: Crazy ETAs.  If a way has forward speed with no backward speed and it is not oneway, then we must set the default speed.  The reverse logic applies as well.  If a way has no backward speed but has a forward speed and it is not a oneway, then set the default speed. [#2102](https://github.com/valhalla/valhalla/pull/2102)
