@@ -428,10 +428,10 @@ void AddTripIntersectingEdge(const AttributesController& controller,
  * @param prev_de                  the previous edge in the path
  * @param prior_opp_local_index    opposing edge local index of previous edge in the path
  * @param graphreader              graph reader for graph access
- * @param trip_node                pbf node in the pbf structure we ar ebuilding
+ * @param trip_node                pbf node in the pbf structure we are building
  */
 void AddIntersectingEdges(const AttributesController& controller,
-                          graph_tile_ptr start_tile,
+                          const graph_tile_ptr& start_tile,
                           const NodeInfo* node,
                           const DirectedEdge* directededge,
                           const DirectedEdge* prev_de,

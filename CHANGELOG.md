@@ -221,6 +221,7 @@
    * ADDED: Added signboards to guidance views.  [#2687](https://github.com/valhalla/valhalla/pull/2687)
    * ADDED: Regular speed on shortcut edges is calculated with turn durations taken into account. Truck, motorcycle and motorscooter profiles use OSRM-like turn duration. [#2662](https://github.com/valhalla/valhalla/pull/2662)
    * CHANGED: Remove astar algorithm and replace its use with timedep_forward as its redundant [#2706](https://github.com/valhalla/valhalla/pull/2706)
+   * ADDED: Recover and recost all shortcuts in final path for bidirectional astar algorithm [#2711](https://github.com/valhalla/valhalla/pull/2711)
    * ADDED: An option for shortcut recovery to be cached at start up to reduce the time it takes to do so on the fly [#2714](https://github.com/valhalla/valhalla/pull/2714)
    * ADDED: If width <= 1.9 then no access for auto, truck, bus, taxi, emergency and hov. [#2713](https://github.com/valhalla/valhalla/pull/2713)
    * ADDED: Added support to process the sump_buster tag.  Also, fixed a few small access bugs for nodes. [#2731](https://github.com/valhalla/valhalla/pull/2731)
