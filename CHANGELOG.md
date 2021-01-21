@@ -243,6 +243,7 @@
    * CHANGED: chore: Updates libosmium [#2786](https://github.com/valhalla/valhalla/pull/2786)
    * CHANGED: Optimize double bucket queue to reduce memory reallocations. [#2719](https://github.com/valhalla/valhalla/pull/2719)
    * CHANGED: Collapse merge maneuvers [#2773](https://github.com/valhalla/valhalla/pull/2773)
+   * ADDED: Updates swedish and italian translations [#2794](https://github.com/valhalla/valhalla/pull/2794)
 
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9

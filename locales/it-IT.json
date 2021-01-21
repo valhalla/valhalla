@@ -38,8 +38,8 @@
         "1": "Piega leggermente a <RELATIVE_DIRECTION> e prendi <STREET_NAMES>.",
         "2": "Piega leggermente a <RELATIVE_DIRECTION> e prendi <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
         "3": "Piega leggermente a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Svolta leggermente a <RELATIVE_DIRECTION> in <JUNCTION_NAME>.",
+        "5": "Svolta leggermente a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -77,8 +77,8 @@
         "1": "Piega leggermente a <RELATIVE_DIRECTION> su <STREET_NAMES>.",
         "2": "Piega leggermente a <RELATIVE_DIRECTION> su <BEGIN_STREET_NAMES>.",
         "3": "Piega leggermente a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Svolta leggermente a <RELATIVE_DIRECTION> in <JUNCTION_NAME>.",
+        "5": "Svolta leggermente a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -134,8 +134,8 @@
       "phrases": {
         "0": "Continua.",
         "1": "Continua su <STREET_NAMES>.",
-        "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "2": "Prosegui su <JUNCTION_NAME>.",
+        "3": "Prosegui verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -163,10 +163,10 @@
         "1": "Continua per <LENGTH>.",
         "2": "Continua su <STREET_NAMES>.",
         "3": "Continua su <STREET_NAMES> per <LENGTH>.",
-        "4": "Continue at <JUNCTION_NAME>.",
-        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
-        "6": "Continue toward <TOWARD_SIGN>.",
-        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
+        "4": "Prosegui su <JUNCTION_NAME>.",
+        "5": "Prosegui su <JUNCTION_NAME> per <LENGTH>.",
+        "6": "Prosegui verso <TOWARD_SIGN>.",
+        "7": "Prosegui verso <TOWARD_SIGN> per <LENGTH>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -183,7 +183,7 @@
         "<MILES> miglio",
         "1 miglio",
         "un mezzo miglio",
-        "a quarter mile",
+        "un quarto di miglio",
         "<FEET> piedi",
         "meno di 10 piedi"
       ],
@@ -218,8 +218,8 @@
       "phrases": {
         "0": "Continua.",
         "1": "Continua su <STREET_NAMES>.",
-        "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "2": "Prosegui su <JUNCTION_NAME>.",
+        "3": "Prosegui verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -355,7 +355,7 @@
         "0": "Prendi il traghetto.",
         "1": "Prendi <STREET_NAMES>.",
         "2": "Prendi <STREET_NAMES> <FERRY_LABEL>.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "3": "Prendi il traghetto verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -383,7 +383,7 @@
         "0": "Prendi il traghetto.",
         "1": "Prendi il <STREET_NAMES>.",
         "2": "Prendi il <STREET_NAMES> <FERRY_LABEL>.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "3": "Prendi il traghetto verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -410,9 +410,9 @@
       "phrases": {
         "0": "Entra nella rotonda.",
         "1": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "2": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Prosegui su <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita verso <TOWARD_SIGN>.",
         "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
@@ -421,9 +421,9 @@
         "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "13": "Entra in <STREET_NAMES> e prendi l'uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Entra in <STREET_NAMES> e prendi l'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Prosegui su <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Entra in <STREET_NAMES> e prendi l'uscita verso <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "1°",
@@ -506,9 +506,9 @@
       "phrases": {
         "0": "Entra nella rotonda.",
         "1": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "2": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Entra nella rotonda e prendi la <ORDINAL_VALUE> uscita verso <TOWARD_SIGN>.",
         "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
         "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
@@ -517,9 +517,9 @@
         "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
         "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "13": "Entra in <STREET_NAMES> e prendi l'uscita per <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Entra in <STREET_NAMES> e prendi l'uscita per <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Entra in <STREET_NAMES> e prendi l'uscita verso <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "prima",
@@ -710,7 +710,7 @@
         "0": "Esci dalla rotonda.",
         "1": "Esci dalla rotonda e prendi <STREET_NAMES>.",
         "2": "Esci dalla rotonda e prendi <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "3": "Esci dalla rotonda verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -737,7 +737,7 @@
         "0": "Esci dalla rotonda.",
         "1": "Esci dalla rotonda e prendi <STREET_NAMES>.",
         "2": "Esci dalla rotonda e prendi <BEGIN_STREET_NAMES>.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "3": "Esci dalla rotonda verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -1050,8 +1050,8 @@
         "1": "Entra a <RELATIVE_DIRECTION>.",
         "2": "Entra in <STREET_NAMES>.",
         "3": "Entra a <RELATIVE_DIRECTION> in <STREET_NAMES>.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Immettiti verso <TOWARD_SIGN>.",
+        "5": "Immettiti a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
       "relative_directions": [
         "sinistra",
@@ -1089,8 +1089,8 @@
         "1": "Entra a <RELATIVE_DIRECTION>.",
         "2": "Entra in <STREET_NAMES>.",
         "3": "Entra a <RELATIVE_DIRECTION> in <STREET_NAMES>.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Immettiti verso <TOWARD_SIGN>.",
+        "5": "Immettiti a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
       "relative_directions": [
         "sinistra",
@@ -1157,7 +1157,7 @@
         "<MILES> miglio",
         "1 miglio",
         "un mezzo miglio",
-        "a quarter mile",
+        "un quarto di miglio",
         "<FEET> piedi",
         "meno di 10 piedi"
       ],
@@ -1374,8 +1374,8 @@
         "1": "Svolta tutto a <RELATIVE_DIRECTION> e prendi <STREET_NAMES>.",
         "2": "Svolta tutto a <RELATIVE_DIRECTION> e prendi <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
         "3": "Svolta tutto a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Svolta subito a <RELATIVE_DIRECTION> in <JUNCTION_NAME>.",
+        "5": "Svolta subito a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -1413,8 +1413,8 @@
         "1": "Svolta tutto a <RELATIVE_DIRECTION> e prendi <STREET_NAMES>.",
         "2": "Svolta tutto a <RELATIVE_DIRECTION> e prendi <BEGIN_STREET_NAMES>.",
         "3": "Svolta tutto a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Svolta subito a <RELATIVE_DIRECTION> in <JUNCTION_NAME>.",
+        "5": "Svolta subito a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -1573,7 +1573,7 @@
         "<MILES> miglio",
         "1 miglio",
         "un mezzo miglio",
-        "a quarter mile",
+        "un quarto di miglio",
         "<FEET> piedi",
         "meno di 10 piedi"
       ],
@@ -1929,8 +1929,8 @@
         "1": "Svolta a <RELATIVE_DIRECTION> e prendi <STREET_NAMES>.",
         "2": "Svolta a <RELATIVE_DIRECTION> e prendi <BEGIN_STREET_NAMES>. Continua su <STREET_NAMES>.",
         "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Svolta a <RELATIVE_DIRECTION> in <JUNCTION_NAME>.",
+        "5": "Svolta a <RELATIVE_DIRECTION> in <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -1968,8 +1968,8 @@
         "1": "Svolta a <RELATIVE_DIRECTION> e prendi <STREET_NAMES>.",
         "2": "Svolta a <RELATIVE_DIRECTION> e prendi <BEGIN_STREET_NAMES>.",
         "3": "Svolta a <RELATIVE_DIRECTION> per rimanere su <STREET_NAMES>.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Svolta a <RELATIVE_DIRECTION> in <JUNCTION_NAME>.",
+        "5": "Svolta a <RELATIVE_DIRECTION> in <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -2009,8 +2009,8 @@
         "3": "Fai inversione a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES>.",
         "4": "Fai inversione a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> e prendi <STREET_NAMES>.",
         "5": "Fai inversione a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> per rimanere su <STREET_NAMES>.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "6": "Fai inversione a <RELATIVE_DIRECTION> in <JUNCTION_NAME>.",
+        "7": "Fai inversione a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -2056,8 +2056,8 @@
         "3": "Fai inversione a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES>.",
         "4": "Fai inversione a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> e prendi <STREET_NAMES>.",
         "5": "Fai inversione a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> per rimanere su <STREET_NAMES>.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "6": "Fai inversione a <RELATIVE_DIRECTION> in <JUNCTION_NAME>.",
+        "7": "Fai inversione a <RELATIVE_DIRECTION> verso <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "il marciapiedi",
@@ -2098,7 +2098,7 @@
     "verbal_multi_cue": {
       "phrases": {
         "0": "<CURRENT_VERBAL_CUE>, poi <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+        "1": "<CURRENT_VERBAL_CUE> Poi, tra <LENGTH>, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
         "<KILOMETERS> chilometri",
@@ -2110,7 +2110,7 @@
         "<MILES> miglio",
         "1 miglio",
         "un mezzo miglio",
-        "a quarter mile",
+        "un quarto di miglio",
         "<FEET> piedi",
         "meno di 10 piedi"
       ],
@@ -2125,7 +2125,7 @@
     },
     "approach_verbal_alert": {
       "phrases": {
-        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+        "0": "Tra <LENGTH>, <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
         "<KILOMETERS> chilometri",
@@ -2137,13 +2137,13 @@
         "<MILES> miglio",
         "1 miglio",
         "un mezzo miglio",
-        "a quarter mile",
+        "un quarto di miglio",
         "<FEET> piedi",
         "meno di 10 piedi"
       ],
       "example_phrases": {
         "0": [
-          "In a quarter mile, Turn right onto North Gay Street."
+          "In un quarto di miglio, Turn right onto North Gay Street."
         ]
       }
     }
