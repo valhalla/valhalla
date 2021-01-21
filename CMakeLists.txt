@@ -206,7 +206,7 @@ if(ENABLE_SERVICES)
     HINTS ${libprime_server_LIBRARY_DIRS})
   set_target_properties(libprime_server PROPERTIES
     INTERFACE_LINK_LIBRARIES "${libprime_server_LIBRARY}"
-    INTERFACE_INCLUDE_DIRECTORIES "${libprime_server_INCLUDE_DIRS}"
+    INTERFACE_INCLUDE_DIRECTORIES "${libprime_server_INCLUDE_DIRS}" SYSTEM
     INTERFACE_COMPILE_DEFINITIONS HAVE_HTTP)
 endif()
 

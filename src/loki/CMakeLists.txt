@@ -13,7 +13,7 @@ set(sources
   transit_available_action.cc
   node_search.cc)
 
-if (UNIX AND NOT APPLE)
+if (UNIX)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
   set_source_files_properties(
