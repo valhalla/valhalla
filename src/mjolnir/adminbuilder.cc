@@ -4,8 +4,8 @@
 
 #include "baldr/graphconstants.h"
 #include "filesystem.h"
-#include "mjolnir/adminconstants.h"
 #include "mjolnir/adminbuilder.h"
+#include "mjolnir/adminconstants.h"
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/util.h"
@@ -44,7 +44,6 @@
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-
 using namespace geos::geom;
 using namespace geos::io;
 using namespace geos::util;
@@ -79,7 +78,6 @@ int polygondata_comparearea(const void* vp1, const void* vp2) {
   }
   return 1;
 }
-
 
 std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
   std::vector<std::string> wkts;
@@ -221,7 +219,6 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
 }
 
 } // anonymous namespace
-
 
 namespace valhalla {
 namespace mjolnir {
@@ -649,7 +646,6 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   LOG_INFO("Finished.");
 }
 
+} // namespace mjolnir
 
-} // mjolnir namespace
-
-} // valhalla namespace
+} // namespace valhalla

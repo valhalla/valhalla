@@ -2,17 +2,16 @@
 
 #include <boost/program_options.hpp>
 
-#include "config.h"
-#include "mjolnir/adminbuilder.h"
 #include "baldr/rapidjson_utils.h"
+#include "config.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
+#include "mjolnir/adminbuilder.h"
 
 namespace bpo = boost::program_options;
 
 filesystem::path config_file_path;
 std::vector<std::string> input_files;
-
 
 bool ParseArguments(int argc, char* argv[]) {
 
@@ -71,7 +70,6 @@ bool ParseArguments(int argc, char* argv[]) {
 
   return false;
 }
-
 
 int main(int argc, char** argv) {
 

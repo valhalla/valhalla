@@ -3,17 +3,15 @@
 #include "gurka.h"
 
 #include "baldr/admin.h"
-#include "mjolnir/adminbuilder.h"
 #include "mjolnir/admin.h"
+#include "mjolnir/adminbuilder.h"
 #include "mjolnir/pbfgraphparser.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
-
-class AdminTest : public ::testing::Test
-{
+class AdminTest : public ::testing::Test {
 protected:
   static gurka::map admin_map;
 
@@ -29,76 +27,39 @@ protected:
     )";
 
     // To define an administrative boundary, the nodes must form a closed polygon.
-    const gurka::ways ways =
-    {
-      {
-        "ABCDEFA",
-        {
-          {
-            "highway",
-            "primary"
-          },
-        }
-      },
-      {
-        "ABEFA",
-        {
-          {
-            "highway",
-            "primary"
-          },
-        }
-      },
-      {
-        "BCDEB",
-        {
-          {
-            "highway",
-            "primary"
-          },
-        }
-      }
-    };
+    const gurka::ways ways = {{"ABCDEFA",
+                               {
+                                   {"highway", "primary"},
+                               }},
+                              {"ABEFA",
+                               {
+                                   {"highway", "primary"},
+                               }},
+                              {"BCDEB",
+                               {
+                                   {"highway", "primary"},
+                               }}};
 
-    const gurka::relations relations =
-    {
-      {
-        {
-          {
-            { gurka::way_member, "ABEFA", "outer" }
-          }
-        },
-       {
-         { "type", "boundary" },
-         { "boundary", "administrative" },
-         { "admin_level", "4" },
-       }
-      },
-      {
-        {
-          {
-            { gurka::way_member, "BCDEB", "outer" }
-          }
-        },
-        {
-          { "type", "boundary" },
-          { "boundary", "administrative" },
-          { "admin_level", "4" },
-        },
-      },
-      {
-        {
-          {
-            { gurka::way_member, "ABCDEFA", "outer" }
-          }
-        },
-        {
-          { "type", "boundary" },
-          { "boundary", "administrative" },
-          { "admin_level", "2" },
-        }
-      }
-    };
+    const gurka::relations relations = {{{{{gurka::way_member, "ABEFA", "outer"}}},
+                                         {
+                                             {"type", "boundary"},
+                                             {"boundary", "administrative"},
+                                             {"admin_level", "4"},
+                                         }},
+                                        {
+                                            {{{gurka::way_member, "BCDEB", "outer"}}},
+                                            {
+                                                {"type", "boundary"},
+                                                {"boundary", "administrative"},
+                                                {"admin_level", "4"},
+                                            },
+                                        },
+                                        {{{{gurka::way_member, "ABCDEFA", "outer"}}},
+                                         {
+                                             {"type", "boundary"},
+                                             {"boundary", "administrative"},
+                                             {"admin_level", "2"},
+                                         }}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
     admin_map = gurka::buildtiles(layout, ways, {}, relations, "test/data/admin");
@@ -106,7 +67,6 @@ protected:
 };
 
 gurka::map AdminTest::admin_map;
-
 
 TEST_F(AdminTest, test) {
   // create a config file
