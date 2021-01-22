@@ -76,6 +76,7 @@ TEST_F(AvoidTest, TestArea) {
       {"/avoid_polygons",
        "[[[13.38625361, 52.4652558], [13.38625361, 52.48000128], [13.4181769, 52.48000128], [13.4181769, 52.4652558]]]"}};
 
+  // this really shouldn't work, but as of now boost.geometry returns 0 length for rings
   auto r = gurka::route(avoid_map, "A", "D", "auto", req_options);
   // EXPECT_THROW(gurka::route(avoid_map, "A", "D", "auto", req_options), valhalla_exception_t);
 }

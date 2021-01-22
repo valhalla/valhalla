@@ -19,15 +19,16 @@ std::set<vb::GraphId> edges_in_rings(const multi_ring_t& rings, baldr::GraphRead
   const auto tiles = vb::TileHierarchy::levels().back().tiles;
   const auto bin_level = vb::TileHierarchy::levels().back().level;
 
-  // output container
-  std::set<vb::GraphId> edges;
+  std::set<vb::GraphId> result_ids;
 
   for (auto ring : rings) {
     // first pull out all bins which intersect the ring (no within/contains!)
+    // TODO: fill this container for all rings before proceeding, makes sure no duplicate bins are
+    // iterated
     auto line_intersected = tiles.Intersect(ring);
 
     // get the tile ids in a vector and sort
-    // this might help to find tiles & bins which are ENTIRELY inside the ring
+    // TODO: find tiles & bins which are ENTIRELY inside the ring, should be pure arithmetics
     std::vector<int32_t> tile_keys;
     tile_keys.reserve(line_intersected.size());
     std::for_each(line_intersected.cbegin(), line_intersected.cend(),
@@ -35,14 +36,9 @@ std::set<vb::GraphId> edges_in_rings(const multi_ring_t& rings, baldr::GraphRead
                     tile_keys.push_back(e.first);
                   });
     std::sort(tile_keys.begin(), tile_keys.end());
-
-    // std::cout << "No of intersected tiles: " << std::to_string(line_intersected.size()) <<
-    // std::endl;
     for (auto& tile_id : tile_keys) {
       // int32_t row, col;
       // std::tie(row, col) = tiles.GetRowColumn(tile_id);
-
-      // Problem: only intersects edges which are part of the tile
       auto tile = reader.GetGraphTile({static_cast<uint32_t>(tile_id), bin_level, 0});
       if (!tile) {
         continue;
@@ -50,33 +46,27 @@ std::set<vb::GraphId> edges_in_rings(const multi_ring_t& rings, baldr::GraphRead
       for (auto bin_id : line_intersected[tile_id]) {
         for (auto edge_id : tile->GetBin(bin_id)) {
           // weed out duplicates early on
-          // TODO: find a more efficient way to do this..
-          if (edges.find(edge_id) != edges.end()) {
+          // TODO: don't iterate over the same bin twice, much more efficient
+          if (result_ids.find(edge_id) != result_ids.end()) {
             continue;
           }
-          // TODO: figure out how to best get the edges from other tiles
-          // why the hell is this still failing the assert in tile->directededge()?!?!
-          if (edge_id.Tile_Base() != tile->header()->graphid().Tile_Base()) {
+          if (edge_id.Tile_Base() != tile->header()->graphid().Tile_Base() &&
+              reader.GetGraphTile(edge_id, tile)) {
             continue;
           }
-          auto opp_edge_id = reader.GetOpposingEdgeId(edge_id, tile);
           const auto edge = tile->directededge(edge_id);
-          if (!edge) {
-            continue;
-          }
           auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
-          auto edge_shape = edge_info.shape();
-          bool intersects = bg::intersects(ring, edge_shape);
+          bool intersects = bg::intersects(ring, edge_info.shape());
           if (intersects) {
-            edges.emplace(edge_id);
-            edges.emplace(opp_edge_id);
+            result_ids.emplace(edge_id);
+            result_ids.emplace(reader.GetOpposingEdgeId(edge_id, tile));
           }
         }
       }
     }
   }
 
-  return edges;
+  return result_ids;
 }
 
 multi_ring_t PBFToRings(const google::protobuf::RepeatedPtrField<Options::AvoidPolygon>& rings_pbf) {
@@ -102,6 +92,8 @@ double GetAvoidArea(const multi_ring_t& rings) {
   return area;
 }
 */
+
+// TODO: this somehow returns 0 length for rings, investigate..
 float GetRingLength(const multi_ring_t& rings) {
   float length = 0;
   for (const auto& ring : rings) {
