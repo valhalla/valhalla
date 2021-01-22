@@ -89,7 +89,7 @@ jobs:
         displayName: 'Run CMake to configure build'
 
       - script: |
-          cmake --build build --config %BUILD_CFG%
+          cmake --build %BUILD_DIR% --config %BUILD_CFG%
         displayName: 'Run CMake to build'
 
       - script: |
