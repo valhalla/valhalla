@@ -118,6 +118,7 @@
    * FIXED: fixes an issue that lead to adding an extra maneuver. We now combine a current maneuver short length non-internal edges (left or right) with the next maneuver that is a kRampStraight. [#2741](https://github.com/valhalla/valhalla/pull/2741)
    * FIXED: Reduce verbose instructions by collapsing small end ramp forks [#2762](https://github.com/valhalla/valhalla/issues/2762)
    * FIXED: Remove redundant return statements [#2776](https://github.com/valhalla/valhalla/pull/2776)
+   * FIXED: Add support for geos-3.9 c++ api [#2739](https://github.com/valhalla/valhalla/issues/2739)
 
 * **Enhancement**
    * ADDED: Matrix of Bike Share [#2590](https://github.com/valhalla/valhalla/pull/2590)
@@ -232,11 +233,13 @@
    * CHANGED: Change generic service roads to a new Use=kServiceRoad. This is for highway=service without other service=* tags (such as driveway, alley, parking aisle) [#2419](https://github.com/valhalla/valhalla/pull/2419)
    * ADDED: Isochrones support isodistance lines as well [#2699](https://github.com/valhalla/valhalla/pull/2699)
    * ADDED: Add support for ignoring live traffic closures for waypoints [#2685](https://github.com/valhalla/valhalla/pull/2685)
+   * ADDED: Add use_distance to auto cost to allow choosing between two primary cost components, time or distance [#2771](https://github.com/valhalla/valhalla/pull/2771)
    * CHANGED: nit: Enables compiler warnings in part of loki module [#2767](https://github.com/valhalla/valhalla/pull/2767)
    * CHANGED: Reducing the number of uturns by increasing the cost to for them to 9.5f. Note: Did not increase the cost for motorcycles or motorscooters. [#2770](https://github.com/valhalla/valhalla/pull/2770)
    * ADDED: Add option to use thread-safe GraphTile's reference counter. [#2772](https://github.com/valhalla/valhalla/pull/2772)
    * CHANGED: nit: Enables compiler warnings in part of thor module [#2768](https://github.com/valhalla/valhalla/pull/2768)
    * ADDED: Add costing option `use_tracks` to avoid or favor tracks in route. [#2769](https://github.com/valhalla/valhalla/pull/2769)
+   * CHANGED: chore: Updates libosmium [#2786](https://github.com/valhalla/valhalla/pull/2786)
    * CHANGED: Optimize double bucket queue to reduce memory reallocations. [#2719](https://github.com/valhalla/valhalla/pull/2719)
 
 
