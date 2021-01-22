@@ -74,7 +74,7 @@ protected:
   std::unordered_map<std::string, float> max_matrix_distance;
   std::unordered_map<std::string, float> max_matrix_locations;
   size_t max_avoid_locations;
-  float max_avoid_polygons_sqkm;
+  float max_avoid_polygons_length;
   unsigned int max_reachability;
   unsigned int default_reachability;
   unsigned int max_radius;

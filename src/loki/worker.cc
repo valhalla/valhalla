@@ -86,15 +86,16 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
 
   if (options.avoid_polygons_size()) {
     multi_ring_t rings = PBFToRings(options.avoid_polygons());
-    double area = GetAvoidArea(rings) / kSqmPerSqkm;
-    if (area > max_avoid_polygons_sqkm) {
-      throw valhalla_exception_t(167, std::to_string(max_avoid_polygons_sqkm));
+    auto length = GetRingLength(rings) * kMetersPerKm;
+    if (length > max_avoid_polygons_length) {
+      throw valhalla_exception_t(167, std::to_string(max_avoid_polygons_length));
     }
     auto* co = options.mutable_costing_options(static_cast<uint8_t>(costing->travel_mode()));
     auto edges = edges_in_rings(rings, *reader);
     for (auto edge_id : edges) {
       auto* avoid = co->add_avoid_edges();
       avoid->set_id(edge_id);
+      // clearly wrong for origin & destination edges
       avoid->set_percent_along(0);
     }
   }
@@ -186,7 +187,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
-        kv.first == "max_alternates" || kv.first == "max_avoid_polygons_sqkm") {
+        kv.first == "max_alternates" || kv.first == "max_avoid_polygons_length") {
       continue;
     }
     if (kv.first != "skadi" && kv.first != "trace") {
@@ -227,7 +228,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       config.get<size_t>("service_limits.pedestrian.max_transit_walking_distance");
 
   max_avoid_locations = config.get<size_t>("service_limits.max_avoid_locations");
-  max_avoid_polygons_sqkm = config.get<float>("service_limits.max_avoid_polygons_sqkm");
+  max_avoid_polygons_length = config.get<float>("service_limits.max_avoid_polygons_length");
   max_reachability = config.get<unsigned int>("service_limits.max_reachability");
   default_reachability = config.get<unsigned int>("loki.service_defaults.minimum_reachability");
   max_radius = config.get<unsigned int>("service_limits.max_radius");

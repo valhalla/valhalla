@@ -9,6 +9,7 @@
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/options.pb.h>
 
@@ -25,6 +26,9 @@ BOOST_GEOMETRY_REGISTER_BOX(valhalla::midgard::AABB2<valhalla::midgard::PointLL>
                             ll,
                             ur)
 BOOST_GEOMETRY_REGISTER_RING(std::vector<valhalla::midgard::PointLL>)
+static const auto Haversine = [] {
+  return boost::geometry::strategy::distance::haversine<float>(valhalla::midgard::kRadEarthMeters);
+};
 
 namespace valhalla {
 namespace loki {
@@ -37,7 +41,8 @@ std::set<valhalla::baldr::GraphId> edges_in_rings(const multi_ring_t& rings,
 
 multi_ring_t PBFToRings(const google::protobuf::RepeatedPtrField<Options::AvoidPolygon>& rings_pbf);
 
-double GetAvoidArea(const multi_ring_t& rings);
+// double GetAvoidArea(const multi_ring_t& rings);
+float GetRingLength(const multi_ring_t& rings);
 
 } // namespace loki
 } // namespace valhalla

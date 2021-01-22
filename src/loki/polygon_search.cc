@@ -15,13 +15,19 @@ namespace loki {
 
 std::set<vb::GraphId> edges_in_rings(const multi_ring_t& rings, baldr::GraphReader& reader) {
 
+  // Get the lowest level and tiles
   const auto tiles = vb::TileHierarchy::levels().back().tiles;
   const auto bin_level = vb::TileHierarchy::levels().back().level;
 
+  // output container
   std::set<vb::GraphId> edges;
 
   for (auto ring : rings) {
+    // first pull out all bins which intersect the ring (no within/contains!)
     auto line_intersected = tiles.Intersect(ring);
+
+    // get the tile ids in a vector and sort
+    // this might help to find tiles & bins which are ENTIRELY inside the ring
     std::vector<int32_t> tile_keys;
     tile_keys.reserve(line_intersected.size());
     std::for_each(line_intersected.cbegin(), line_intersected.cend(),
@@ -30,10 +36,13 @@ std::set<vb::GraphId> edges_in_rings(const multi_ring_t& rings, baldr::GraphRead
                   });
     std::sort(tile_keys.begin(), tile_keys.end());
 
-    std::cout << "No of intersected tiles: " << std::to_string(line_intersected.size()) << std::endl;
+    // std::cout << "No of intersected tiles: " << std::to_string(line_intersected.size()) <<
+    // std::endl;
     for (auto& tile_id : tile_keys) {
-      int32_t row, col;
-      std::tie(row, col) = tiles.GetRowColumn(tile_id);
+      // int32_t row, col;
+      // std::tie(row, col) = tiles.GetRowColumn(tile_id);
+
+      // Problem: only intersects edges which are part of the tile
       auto tile = reader.GetGraphTile({static_cast<uint32_t>(tile_id), bin_level, 0});
       if (!tile) {
         continue;
@@ -68,9 +77,6 @@ std::set<vb::GraphId> edges_in_rings(const multi_ring_t& rings, baldr::GraphRead
   }
 
   return edges;
-
-  // Then we can continue to try and make an edge's shape a boost.geometry to intersect it with a
-  // polygon Finally return this set of edges to loki worker
 }
 
 multi_ring_t PBFToRings(const google::protobuf::RepeatedPtrField<Options::AvoidPolygon>& rings_pbf) {
@@ -87,12 +93,21 @@ multi_ring_t PBFToRings(const google::protobuf::RepeatedPtrField<Options::AvoidP
   return rings;
 }
 
+/*
 double GetAvoidArea(const multi_ring_t& rings) {
   double area;
   for (const auto& ring : rings) {
     area += bg::area(ring, bg::strategy::area::geographic<>());
   }
   return area;
+}
+*/
+float GetRingLength(const multi_ring_t& rings) {
+  float length = 0;
+  for (const auto& ring : rings) {
+    length += bg::length(ring, Haversine());
+  }
+  return length;
 }
 } // namespace loki
 } // namespace valhalla

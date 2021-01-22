@@ -890,9 +890,6 @@ void from_json(rapidjson::Document& doc, Options& options) {
     }
   }
 
-  // get the avoid polygons in there
-  parse_polygons(doc, options, "avoid_polygons", 137);
-
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
   if (!options.has_date_time_type() && (options.shape_size() == 0 || options.shape(0).time() == -1)) {
     for (auto& costing : *options.mutable_costing_options()) {
