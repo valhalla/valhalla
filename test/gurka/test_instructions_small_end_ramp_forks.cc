@@ -62,7 +62,7 @@ protected:
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
 
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_instructions_keep_highway_signs",
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_instructions_small_end_ramp_forks",
                             {{"mjolnir.admin",
                               {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}}});
   }

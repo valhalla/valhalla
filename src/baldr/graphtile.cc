@@ -27,28 +27,6 @@
 using namespace valhalla::midgard;
 
 namespace {
-struct dir_facet : public std::numpunct<char> {
-protected:
-  virtual char do_thousands_sep() const override {
-    return filesystem::path::preferred_separator;
-  }
-
-  virtual std::string do_grouping() const override {
-    return "\03";
-  }
-};
-struct url_facet : public std::numpunct<char> {
-protected:
-  virtual char do_thousands_sep() const override {
-    return '/';
-  }
-
-  virtual std::string do_grouping() const override {
-    return "\03";
-  }
-};
-const std::locale url_locale(std::locale("C"), new url_facet());
-const std::locale dir_locale(std::locale("C"), new dir_facet());
 const AABB2<PointLL> world_box(PointLL(-180, -90), PointLL(180, 90));
 constexpr float COMPRESSION_HINT = 3.5f;
 
@@ -440,8 +418,8 @@ GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, b
   // figure the largest id for this level
   if (graphid.level() >= TileHierarchy::levels().size() &&
       graphid.level() != TileHierarchy::GetTransitLevel().level) {
-    throw std::runtime_error("Could not compute FileSuffix for non-existent level: " +
-                             std::to_string(graphid.level()));
+    throw std::runtime_error("Could not compute FileSuffix for GraphId with invalid level: " +
+                             std::to_string(graphid));
   }
 
   // get the level info
@@ -449,33 +427,39 @@ GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, b
                           ? TileHierarchy::GetTransitLevel()
                           : TileHierarchy::levels()[graphid.level()];
 
-  // figure out how many digits
-  auto max_id = level.tiles.ncolumns() * level.tiles.nrows() - 1;
+  // figure out how many digits in tile-id
+  const auto max_id = level.tiles.ncolumns() * level.tiles.nrows() - 1;
+  if (graphid.tileid() > max_id) {
+    throw std::runtime_error("Could not compute FileSuffix for GraphId with invalid tile id:" +
+                             std::to_string(graphid));
+  }
   size_t max_length = static_cast<size_t>(std::log10(std::max(1, max_id))) + 1;
   const size_t remainder = max_length % 3;
   if (remainder) {
     max_length += 3 - remainder;
   }
+  assert(max_length % 3 == 0);
 
-  // make a locale to use as a formatter for numbers
-  std::ostringstream stream;
-  if (is_file_path) {
-    stream.imbue(dir_locale);
-  } else {
-    stream.imbue(url_locale);
+  // Calculate tile-id string length with separators
+  const size_t tile_id_strlen = max_length + max_length / 3;
+  assert(tile_id_strlen % 4 == 0);
+
+  const char separator = is_file_path ? filesystem::path::preferred_separator : '/';
+
+  std::string tile_id_str(tile_id_strlen, '0');
+  size_t ind = tile_id_strlen - 1;
+  for (uint32_t tile_id = graphid.tileid(); tile_id != 0; tile_id /= 10) {
+    tile_id_str[ind--] = '0' + static_cast<char>(tile_id % 10);
+    if ((tile_id_strlen - ind) % 4 == 0) {
+      tile_id_str[ind--] = separator;
+    }
+  }
+  // add missing separators
+  for (size_t sep_ind = 0; sep_ind < ind; sep_ind += 4) {
+    tile_id_str[sep_ind] = separator;
   }
 
-  // if it starts with a zero the pow trick doesn't work
-  if (graphid.level() == 0) {
-    stream << static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << fname_suffix;
-    std::string suffix = stream.str();
-    suffix[0] = '0';
-    return suffix;
-  }
-  // it was something else
-  stream << graphid.level() * static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid()
-         << fname_suffix;
-  return stream.str();
+  return std::to_string(graphid.level()) + tile_id_str + fname_suffix;
 }
 
 // Get the tile Id given the full path to the file.

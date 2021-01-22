@@ -178,6 +178,7 @@ static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
       // LOG_WARN("Running index "+std::to_string(i));
       auto result = astar.GetBestPath(origins[i], destinations[i], *clean_reader, costs,
                                       sif::TravelMode::kDrive);
+      astar.Clear();
       route_size += 1;
     }
   }

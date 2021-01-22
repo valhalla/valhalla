@@ -108,3 +108,9 @@ TEST(AutoShorter, deprecation) {
   ASSERT_EQ(request.options().costing_options(valhalla::auto_).use_ferry(), 0.1f);
   ASSERT_EQ(request.options().costing_options(valhalla::auto_).use_tolls(), 0.77f);
 }
+
+TEST_F(ShortestTest, AutoUseDistance) {
+  std::string costing = "auto";
+  doTests(costing, {"ABDE", "BFGD", "ABDE"},
+          {{"/costing_options/" + costing + "/use_distance", "1"}});
+}

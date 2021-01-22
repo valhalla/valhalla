@@ -192,7 +192,11 @@ std::string thor_worker_t::expansion(Api& request) {
   }
 
   // track the expansion
-  route(request);
+  try {
+    route(request);
+  } catch (...) {
+    // we swallow exceptions because we actually want to see what the heck the expansion did anyway
+  }
 
   // tell all the algorithms to stop tracking the expansion
   for (auto* alg : std::vector<PathAlgorithm*>{

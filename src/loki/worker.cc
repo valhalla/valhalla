@@ -103,7 +103,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   // Process avoid locations. Add to a list of edgeids and percent along the edge.
   if (options.avoid_locations_size()) {
     // See if we have avoids and take care of them
-    if (options.avoid_locations_size() > max_avoid_locations) {
+    if (static_cast<size_t>(options.avoid_locations_size()) > max_avoid_locations) {
       throw valhalla_exception_t{157, std::to_string(max_avoid_locations)};
     }
     try {
@@ -285,7 +285,11 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     // Set the interrupt function
     service_worker_t::set_interrupt(&interrupt_function);
 
-    prime_server::worker_t::result_t result{true};
+    prime_server::worker_t::result_t result{
+        true,
+        {},
+        "",
+    };
     // do request specific processing
     switch (options.action()) {
       case Options::route:

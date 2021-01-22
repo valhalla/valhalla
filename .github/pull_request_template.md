@@ -6,7 +6,7 @@ What issue is this PR targeting? If there is no issue that addresses the problem
 
  - [ ] Add tests
  - [ ] Add #fixes with the issue number that this PR addresses
- - [ ] Generally use squash merge to rebase and clean comments before merging
+ - [ ] Update the docs with any new request parameters or changes to behavior described
  - [ ] Update the [changelog](CHANGELOG.md)
 
 ## Requirements / Relations

@@ -12,11 +12,6 @@ using namespace valhalla::thor;
 
 namespace {
 
-// Adds incidents to a TripLeg_Edge
-void addIncidents(TripLeg::Edge& trip_edge, GraphReader& graphreader, const GraphId& edge_id) {
-  // TODO
-}
-
 /**
  * A simple way to encapsulate the marshalling of native data types specific to multi modal into
  * the protobuf ones that we pass downstream to odin and other clients
@@ -64,9 +59,9 @@ private:
    */
   void AddBssNode(TripLeg_Node* trip_node,
                   const NodeInfo* node,
-                  const GraphId& startnode,
+                  const GraphId&,
                   const mode_costing_t& mode_costing,
-                  const AttributesController& controller) {
+                  const AttributesController&) {
     auto pedestrian_costing = mode_costing[static_cast<size_t>(TravelMode::kPedestrian)];
     auto bicycle_costing = mode_costing[static_cast<size_t>(TravelMode::kBicycle)];
 
@@ -160,12 +155,12 @@ private:
   void AddTransitInfo(TripLeg_Node* trip_node,
                       uint32_t trip_id,
                       const NodeInfo* node,
-                      const GraphId& startnode,
+                      const GraphId&,
                       const DirectedEdge* directededge,
                       const GraphId& edge,
                       graph_tile_ptr start_tile,
                       graph_tile_ptr graphtile,
-                      const sif::mode_costing_t& mode_costing,
+                      const sif::mode_costing_t&,
                       const AttributesController& controller,
                       GraphReader& graphreader) {
     if (node->is_transit()) {
@@ -433,35 +428,36 @@ void AddTripIntersectingEdge(const AttributesController& controller,
  * @param prev_de                  the previous edge in the path
  * @param prior_opp_local_index    opposing edge local index of previous edge in the path
  * @param graphreader              graph reader for graph access
- * @param trip_node                pbf node in the pbf structure we ar ebuilding
+ * @param trip_node                pbf node in the pbf structure we are building
  */
 void AddIntersectingEdges(const AttributesController& controller,
-                          graph_tile_ptr start_tile,
+                          const graph_tile_ptr& start_tile,
                           const NodeInfo* node,
                           const DirectedEdge* directededge,
                           const DirectedEdge* prev_de,
                           uint32_t prior_opp_local_index,
                           GraphReader& graphreader,
                           valhalla::TripLeg::Node* trip_node) {
-  // Add connected edges from the start node. Do this after the first trip
-  // edge is added
-  //
-  // Our path is from 1 to 2 to 3 (nodes) to ... n nodes.
-  // Each letter represents the edge info.
-  // So at node 2, we will store the edge info for D and we will store the
-  // intersecting edge info for B, C, E, F, and G.  We need to make sure
-  // that we don't store the edge info from A and D again.
-  //
-  //     (X)    (3)   (X)
-  //       \\   ||   //
-  //      C \\ D|| E//
-  //         \\ || //
-  //      B   \\||//   F
-  // (X)======= (2) ======(X)
-  //            ||\\
-  //          A || \\ G
-  //            ||  \\
-  //            (1)  (X)
+  /* Add connected edges from the start node. Do this after the first trip
+     edge is added
+
+     Our path is from 1 to 2 to 3 (nodes) to ... n nodes.
+     Each letter represents the edge info.
+     So at node 2, we will store the edge info for D and we will store the
+     intersecting edge info for B, C, E, F, and G.  We need to make sure
+     that we don't store the edge info from A and D again.
+
+         (X)    (3)   (X)
+           \\   ||   //
+          C \\ D|| E//
+             \\ || //
+          B   \\||//   F
+     (X)======= (2) ======(X)
+                ||\\
+              A || \\ G
+                ||  \\
+                (1)  (X)
+  */
 
   // prepare for some edges
   trip_node->mutable_intersecting_edge()->Reserve(node->local_edge_count());

@@ -63,7 +63,7 @@ std::vector<PointLL> loki_worker_t::init_height(Api& request) {
   }
 
   // there are limits though
-  if (options.shape_size() > max_elevation_shape) {
+  if (static_cast<size_t>(options.shape_size()) > max_elevation_shape) {
     throw valhalla_exception_t{314, " (" + std::to_string(options.shape_size()) +
                                         (resampled ? " after resampling" : "") + "). The limit is " +
                                         std::to_string(max_elevation_shape)};

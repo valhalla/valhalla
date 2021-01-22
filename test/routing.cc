@@ -41,7 +41,7 @@ TEST(Routing, TestAddRemove) {
       {67}, {325}, {25}, {466}, {1000}, {10000}, {758}, {167}, {258}, {16442}, {278},
   };
 
-  baldr::DoubleBucketQueue<simple_label> adjlist(0, 100000, 1, costs);
+  baldr::DoubleBucketQueue<simple_label> adjlist(0, 100000, 1, &costs);
 
   Add(adjlist, costs);
   TryRemove(adjlist, costs.size(), costs);
@@ -56,7 +56,7 @@ TEST(Routing, TestAddRemove) {
     costs.push_back({cost});
   }
 
-  baldr::DoubleBucketQueue<simple_label> adjlist2(0, 10000, 1, costs);
+  baldr::DoubleBucketQueue<simple_label> adjlist2(0, 10000, 1, &costs);
   Add(adjlist2, costs);
   TryRemove(adjlist2, costs.size(), costs);
   EXPECT_EQ(adjlist.pop(), baldr::kInvalidLabel) << "TestAddRemove: expect list to be empty";
@@ -65,7 +65,7 @@ TEST(Routing, TestAddRemove) {
   costs = {
       {1000}, {100}, {10}, {9}, {5},
   };
-  baldr::DoubleBucketQueue<simple_label> adjlist3(0, 10, 1, costs);
+  baldr::DoubleBucketQueue<simple_label> adjlist3(0, 10, 1, &costs);
 
   adjlist3.add(0);
   adjlist3.add(1);
@@ -86,7 +86,7 @@ void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_incremen
   // Track all label indexes in the adjlist
   std::unordered_set<uint32_t> track;
 
-  baldr::DoubleBucketQueue<simple_label> adjlist(0, 100000, 1, costs);
+  baldr::DoubleBucketQueue<simple_label> adjlist(0, 100000, 1, &costs);
 
   const uint32_t idx = costs.size();
   costs.push_back({10.f});
@@ -150,7 +150,7 @@ TEST(Routing, Benchmark) {
   }
 
   std::clock_t start = std::clock();
-  baldr::DoubleBucketQueue<simple_label> adjlist5(0, N, 1, costs);
+  baldr::DoubleBucketQueue<simple_label> adjlist5(0, N, 1, &costs);
   Add(adjlist5, costs);
   TryRemove(adjlist5, costs.size(), costs);
   uint32_t ms = (std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC / 1000);

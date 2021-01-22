@@ -14,6 +14,17 @@ set(sources
   node_search.cc
   polygon_search.cc)
 
+if (UNIX AND NOT APPLE)
+  # Enables stricter compiler checks on a file-by-file basis
+  # which allows us to migrate piecemeal
+  set_source_files_properties(
+    search.cc
+    worker.cc
+    locate_action.cc
+    height_action.cc
+  PROPERTIES COMPILE_FLAGS "-Wall -Werror")
+endif (UNIX)
+
 valhalla_module(NAME loki
   SOURCES ${sources}
   HEADERS ${headers}

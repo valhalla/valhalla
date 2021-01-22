@@ -138,6 +138,7 @@ public:
     l->mutable_search_filter()->set_exclude_tunnel(pl.search_filter_.exclude_tunnel_);
     l->mutable_search_filter()->set_exclude_bridge(pl.search_filter_.exclude_bridge_);
     l->mutable_search_filter()->set_exclude_ramp(pl.search_filter_.exclude_ramp_);
+    l->mutable_search_filter()->set_exclude_closures(pl.search_filter_.exclude_closures_);
 
     auto* path_edges = l->mutable_path_edges();
     for (const auto& e : pl.edges) {
@@ -249,6 +250,7 @@ public:
       l.search_filter_.exclude_tunnel_ = loc.search_filter().exclude_tunnel();
       l.search_filter_.exclude_bridge_ = loc.search_filter().exclude_bridge();
       l.search_filter_.exclude_ramp_ = loc.search_filter().exclude_ramp();
+      l.search_filter_.exclude_closures_ = loc.search_filter().exclude_closures();
     }
     if (loc.has_display_ll()) {
       l.display_latlng_ = midgard::PointLL{loc.display_ll().lng(), loc.display_ll().lat()};

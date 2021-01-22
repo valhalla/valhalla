@@ -32,8 +32,11 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
 public:
   /**
    * Constructor.
+   * @param max_reserved_labels_count maximum capacity of edgelabels container
+   *                                  that allowed to keep reserved
    */
-  MultiModalPathAlgorithm();
+  explicit MultiModalPathAlgorithm(
+      uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
 
   /**
    * Destructor
@@ -100,9 +103,10 @@ protected:
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::MMEdgeLabel> edgelabels_;
+  uint32_t max_reserved_labels_count_;
 
   // Adjacency list - approximate double bucket sort
-  std::shared_ptr<baldr::DoubleBucketQueue<sif::MMEdgeLabel>> adjacencylist_;
+  baldr::DoubleBucketQueue<sif::MMEdgeLabel> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;

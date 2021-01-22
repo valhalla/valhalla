@@ -184,13 +184,18 @@ void SetShapeAttributes(const AttributesController& controller,
     // cutting for now
     const auto& traffic_speed = tile->trafficspeed(edge);
     if (traffic_speed.breakpoint1 > 0) {
-      cuts.emplace_back(cut_t{traffic_speed.breakpoint1 / 255.0, speed,
-                              static_cast<std::uint8_t>(traffic_speed.congestion1)});
+      cuts.emplace_back(cut_t{traffic_speed.breakpoint1 / 255.0,
+                              speed,
+                              static_cast<std::uint8_t>(traffic_speed.congestion1),
+                              {}});
       if (traffic_speed.breakpoint2 > 0) {
-        cuts.emplace_back(cut_t{traffic_speed.breakpoint2 / 255.0, speed,
-                                static_cast<std::uint8_t>(traffic_speed.congestion2)});
+        cuts.emplace_back(cut_t{traffic_speed.breakpoint2 / 255.0,
+                                speed,
+                                static_cast<std::uint8_t>(traffic_speed.congestion2),
+                                {}});
         if (traffic_speed.speed3 != UNKNOWN_TRAFFIC_SPEED_RAW) {
-          cuts.emplace_back(cut_t{1, speed, static_cast<std::uint8_t>(traffic_speed.congestion3)});
+          cuts.emplace_back(
+              cut_t{1, speed, static_cast<std::uint8_t>(traffic_speed.congestion3), {}});
         }
       }
     }
@@ -580,6 +585,8 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
+          default:
+            break;
         }
       }
     }
@@ -1086,7 +1093,7 @@ void TripLegBuilder::Build(
       first_tile->directededge(first_node->edge_index() + first_edge->opp_index())->endnode();
 
   // Partial edge at the start and side of street (sos)
-  float start_pct;
+  float start_pct = 0.;
   valhalla::Location::SideOfStreet start_sos =
       valhalla::Location::SideOfStreet::Location_SideOfStreet_kNone;
   PointLL start_vrt;
@@ -1110,7 +1117,7 @@ void TripLegBuilder::Build(
   }
 
   // Partial edge at the end
-  float end_pct;
+  float end_pct = 1.;
   valhalla::Location::SideOfStreet end_sos =
       valhalla::Location::SideOfStreet::Location_SideOfStreet_kNone;
   PointLL end_vrt;
@@ -1362,8 +1369,9 @@ void TripLegBuilder::Build(
     // must be done after the edge's shape has been added.
     SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
 
-    // Add the intersecting edges at the node
-    if (startnode.Is_Valid()) {
+    // Add the intersecting edges at the node. Skip it if the node was an inner node (excluding start
+    // node and end node) of a shortcut that was recovered.
+    if (startnode.Is_Valid() && !edge_itr->start_node_is_recovered) {
       AddIntersectingEdges(controller, start_tile, node, directededge, prev_de, prior_opp_local_index,
                            graphreader, trip_node);
     }

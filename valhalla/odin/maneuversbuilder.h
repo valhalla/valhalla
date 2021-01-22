@@ -307,6 +307,13 @@ protected:
    */
   void CollapseSmallEndRampFork(std::list<Maneuver>& maneuvers);
 
+  /**
+   * Collapse merge maneuver with previous maneuver.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void CollapseMergeManeuvers(std::list<Maneuver>& maneuvers);
+
   const Options& options_;
   EnhancedTripLeg* trip_path_;
 };
