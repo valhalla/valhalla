@@ -5,6 +5,7 @@
 #include "baldr/admin.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/adminbuilder.h"
+#include "mjolnir/pbfadminparser.h"
 #include "mjolnir/pbfgraphparser.h"
 
 using namespace valhalla;
@@ -57,7 +58,61 @@ valhalla::gurka::map BuildPBFandTiles(const std::string& workdir) {
   return admin_map;
 }
 
+
+uint32_t GetContainingState(GraphTileBuilder & tilebuilder,
+                            const std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
+                            const PointLL& ll) {
+  uint32_t index = 0;
+  point_type p(ll.lng(), ll.lat());
+  for (const auto& poly : polys) {
+    if (boost::geometry::covered_by(p, poly.second)) {
+      uint32_t poly_id = poly.first;
+      const Admin & admin = tilebuilder.admins_builder(poly_id);
+      // if state_offset is non-zero, it must be a state (not a country)
+      if ( admin.state_offset() != 0 )
+        return admin.state_offset();
+    }
+  }
+  return 0;
+}
+
 } // anonymous namespace
+
+
+// Test that BuildAdminFromPBF() works.
+//
+// This test creates a mock pbf AND tile data. Both are required to prove
+// that BuildAdminFromPBF() is working.
+//
+// Given map.pbf, BuildAdminFromPBF() creates test/data/admin.sqlite. Hence,
+// this test needs to prove that the contents of admin.sqlite are correct.
+// Before we get into how I propose to prove correctness, some thoughts must
+// be written.
+//
+// The mock graph we're using has three "relations" (which are just administrative
+// boundaries). BuildAdminFromPBF() will create three rows in the admin.sqlite::admins
+// table. The rows in the admin table do not store spatial/positional information
+// about the nodes that form the administrative area. This is instead stored in the
+// tile-data.
+//
+// GetAdminInfo() will query the tile-data AND the sqlite file to retrieve information
+// about the administrative polygons stored within. You'll see that a map of "polys"
+// is returned - but each "poly" returned is just polygonal data. The remaining admin
+// area metadata is stored in the GraphTileBuilder object that was passed into GetAdminInfo().
+//
+// So how do you get the admin area metadata? When you get the "polys" map back from
+// GetAdminInfo(), the integral map key can be passed to GraphTileBuilder::admins_builder()
+// to retrieve each admin area's metadata.
+//
+// As you can see in the ascii-map, there is a simple two node highway that spans
+// the two states. I thought it'd be interesting to see if I could prove that the
+// node "G" lives in "Colorado" and that "H" lives in "Utah".
+//
+// To prove the admin.sqlite is built correctly, we need to ensure the offsets/
+// indicies stored for each entry in the admins table is correct - which
+// requires the presence of the tile-data.
+//
+// Basically
 
 TEST(AdminTest, TestAdminPolygonBasic) {
   // Creates test/data/admin/map.pbf and tile data
@@ -71,7 +126,7 @@ TEST(AdminTest, TestAdminPolygonBasic) {
   pt.put("mjolnir.admin", "test/data/admin.sqlite");
   pt.put("mjolnir.timezone", "test/data/not_needed.sqlite");
 
-  // given map.pbf, creates test/data/admin.sqlite
+  // Given map.pbf, BuildAdminFromPBF() creates test/data/admin.sqlite.
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
   BuildAdminFromPBF(pt.get_child("mjolnir"), input_files);
 
@@ -111,5 +166,23 @@ TEST(AdminTest, TestAdminPolygonBasic) {
 
   // find the GH way/edge in the graph, make sure its there
   auto bigt = findEdge(graph_reader, admin_map.nodes, "GH", "H", tile_id);
-  ASSERT_NE(std::get<1>(bigt), nullptr);
+  const DirectedEdge * dir_edge = std::get<1>(bigt);
+  ASSERT_NE(dir_edge, nullptr);
+
+  // See that nodes G and H are in the correct state
+  for ( const auto & node : admin_map.nodes ) {
+      const std::string & node_name = node.first;
+      if ( node_name == "G" ) {
+          uint32_t co_offset = tilebuilder.AddName( "Colorado" );
+          const midgard::PointLL &node_latlon = node.second;
+          uint32_t state_offset = GetContainingState(tilebuilder, polys, node_latlon);
+          ASSERT_EQ( state_offset, co_offset );
+      }
+      else if ( node_name == "H" ) {
+        uint32_t ut_offset = tilebuilder.AddName( "Utah" );
+        const midgard::PointLL &node_latlon = node.second;
+        uint32_t state_offset = GetContainingState(tilebuilder, polys, node_latlon);
+        ASSERT_EQ( state_offset, ut_offset );
+      }
+  }
 }
