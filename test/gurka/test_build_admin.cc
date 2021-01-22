@@ -16,7 +16,7 @@ namespace {
 
 // GetAdminInfo() requires a sqlite db handle and tiles. This creates a mock
 // graph with two states part of the same country - with a highway between them.
-valhalla::gurka::map BuildPBFandTiles( const std::string & workdir ) {
+valhalla::gurka::map BuildPBFandTiles(const std::string& workdir) {
   const std::string ascii_map = R"(
         A-------B-------C
         |       |       |
@@ -59,11 +59,10 @@ valhalla::gurka::map BuildPBFandTiles( const std::string & workdir ) {
 
 } // anonymous namespace
 
-
 TEST(AdminTest, TestAdminPolygonBasic) {
   // Creates test/data/admin/map.pbf and tile data
   const std::string workdir = "test/data/admin";
-  auto admin_map = BuildPBFandTiles( workdir );
+  auto admin_map = BuildPBFandTiles(workdir);
 
   boost::property_tree::ptree pt;
   pt.put("mjolnir.concurrency", 1);
@@ -73,7 +72,7 @@ TEST(AdminTest, TestAdminPolygonBasic) {
   pt.put("mjolnir.timezone", "test/data/not_needed.sqlite");
 
   // given map.pbf, creates test/data/admin.sqlite
-  std::vector<std::string> input_files = { workdir + "/map.pbf" };
+  std::vector<std::string> input_files = {workdir + "/map.pbf"};
   BuildAdminFromPBF(pt.get_child("mjolnir"), input_files);
 
   // reverse engineer the tile_id from the nodes that make up
@@ -81,7 +80,7 @@ TEST(AdminTest, TestAdminPolygonBasic) {
   // for its tile-id if I know they are all in the same tile-id...
   std::unordered_set<GraphId> tile_ids;
   for (const auto& node : admin_map.nodes) {
-    const midgard::PointLL & latlon = node.second;
+    const midgard::PointLL& latlon = node.second;
     GraphId tile_id = TileHierarchy::GetGraphId(latlon, 0);
     tile_ids.insert(tile_id);
   }
@@ -111,6 +110,6 @@ TEST(AdminTest, TestAdminPolygonBasic) {
   ASSERT_EQ(allow_intersection_names.size(), 3);
 
   // find the GH way/edge in the graph, make sure its there
-  auto bigt = findEdge( graph_reader, admin_map.nodes, "GH", "H", tile_id );
-  ASSERT_NE( std::get<1>(bigt), nullptr );
+  auto bigt = findEdge(graph_reader, admin_map.nodes, "GH", "H", tile_id);
+  ASSERT_NE(std::get<1>(bigt), nullptr);
 }
