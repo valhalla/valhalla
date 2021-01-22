@@ -124,6 +124,9 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Must happen after updating maneuver placement for internal edges
   CollapseSmallEndRampFork(maneuvers);
 
+  // Collapse merge maneuvers to reduce obvious instructions
+  CollapseMergeManeuvers(maneuvers);
+
   // Process the turn lanes. Must happen after updating maneuver placement for internal edges so we
   // activate the correct lanes.
   ProcessTurnLanes(maneuvers);
@@ -3416,6 +3419,56 @@ void ManeuversBuilder::CollapseSmallEndRampFork(std::list<Maneuver>& maneuvers) 
       curr_man = next_man;
       ++next_man;
     }
+  }
+}
+
+void ManeuversBuilder::CollapseMergeManeuvers(std::list<Maneuver>& maneuvers) {
+  // Set current maneuver
+  auto curr_man = maneuvers.begin();
+
+  // Set next maneuver
+  auto next_man = maneuvers.begin();
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+  }
+
+  // Walk the maneuvers to find merge maneuvers
+  while (next_man != maneuvers.end()) {
+
+    // If found, collapse the merge maneuver
+    if (curr_man->ramp() && next_man->IsMergeType() && !curr_man->has_collapsed_merge_maneuver()) {
+      // Disable the "to stay on" flag if not the same street names
+      if (curr_man->to_stay_on() && !(next_man->HasSameNames(&(*curr_man), true))) {
+        curr_man->set_to_stay_on(false);
+      }
+
+      // Use the merge maneuver street names
+      if (next_man->HasStreetNames()) {
+        curr_man->set_street_names(next_man->street_names().clone());
+      }
+
+      // Use merge maneuver guide signs
+      if (!curr_man->HasSigns()) {
+        // Assign guide branch signs - if they exist
+        if (next_man->HasGuideBranchSign()) {
+          *(curr_man->mutable_signs()->mutable_guide_branch_list()) =
+              next_man->signs().guide_branch_list();
+        }
+
+        // Assign guide branch signs - if they exist
+        if (next_man->HasGuideTowardSign()) {
+          *(curr_man->mutable_signs()->mutable_guide_toward_list()) =
+              next_man->signs().guide_toward_list();
+        }
+      }
+
+      // Combine the maneuvers and set the "has_collapsed_merge_maneuver" attribute
+      next_man = CombineManeuvers(maneuvers, curr_man, next_man);
+      curr_man->set_has_collapsed_merge_maneuver(true);
+    }
+    // on to the next maneuver...
+    curr_man = next_man;
+    ++next_man;
   }
 }
 
