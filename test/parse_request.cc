@@ -27,6 +27,7 @@ constexpr float kDefaultAuto_CountryCrossingPenalty = 0.0f;   // Seconds
 constexpr float kDefaultAuto_UseFerry = 0.5f;                 // Factor between 0 and 1
 constexpr float kDefaultAuto_UseHighways = 1.0f;              // Factor between 0 and 1
 constexpr float kDefaultAuto_UseTolls = 0.5f;                 // Factor between 0 and 1
+constexpr float kDefaultAuto_UseTracks = 0.f;                 // Factor between 0 and 1
 
 // Motor Scooter defaults
 constexpr float kDefaultMotorScooter_ManeuverPenalty = 5.0f;          // Seconds
@@ -119,6 +120,7 @@ constexpr float kDefaultTruck_TruckAxleLoad = 9.07f;           // Metric Tons (2
 constexpr float kDefaultTruck_TruckHeight = 4.11f;             // Meters (13 feet 6 inches)
 constexpr float kDefaultTruck_TruckWidth = 2.6f;               // Meters (102.36 inches)
 constexpr float kDefaultTruck_TruckLength = 21.64f;            // Meters (71 feet)
+constexpr float kDefaultTruck_UseTracks = 0.f;                 // Factor between 0 and 1
 
 // Transit defaults
 constexpr float kDefaultTransit_ModeFactor = 1.0f; // Favor this mode?
@@ -471,6 +473,8 @@ void test_default_base_auto_cost_options(const Costing costing, const Options::A
            request.options().costing_options(static_cast<int>(costing)).use_highways());
   validate("use_tolls", kDefaultAuto_UseTolls,
            request.options().costing_options(static_cast<int>(costing)).use_tolls());
+  validate("use_tracks", kDefaultAuto_UseTracks,
+           request.options().costing_options(static_cast<int>(costing)).use_tracks());
 }
 
 void test_default_motor_scooter_cost_options(const Costing costing, const Options::Action action) {
@@ -667,6 +671,8 @@ void test_default_truck_cost_options(const Costing costing, const Options::Actio
            request.options().costing_options(static_cast<int>(costing)).width());
   validate("length", kDefaultTruck_TruckLength,
            request.options().costing_options(static_cast<int>(costing)).length());
+  validate("use_tracks", kDefaultTruck_UseTracks,
+           request.options().costing_options(static_cast<int>(costing)).use_tracks());
 }
 
 void test_default_transit_cost_options(const Costing costing, const Options::Action action) {
@@ -916,6 +922,22 @@ void test_use_tolls_parsing(const Costing costing,
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
   validate(key, expected_value,
            request.options().costing_options(static_cast<int>(costing)).use_tolls());
+}
+
+void test_use_tracks_parsing(const Costing costing,
+                             const float specified_value,
+                             const float expected_value,
+                             const Options::Action action = Options::route) {
+  // Create the costing string
+  auto costing_str = get_costing_str(costing);
+  const std::string grandparent_key = "costing_options";
+  const std::string& parent_key = costing_str;
+  const std::string key = "use_tracks";
+
+  Api request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  validate(key, expected_value,
+           request.options().costing_options(static_cast<int>(costing)).use_tracks());
 }
 
 void test_use_hills_parsing(const Costing costing,
@@ -2142,6 +2164,21 @@ TEST(ParseRequest, test_use_tolls) {
   test_use_tolls_parsing(costing, 0.6f, 0.6f);
   test_use_tolls_parsing(costing, -2.f, default_value);
   test_use_tolls_parsing(costing, 2.f, default_value);
+}
+
+TEST(ParseRequest, test_use_tracks) {
+  std::vector<std::pair<Costing, float>> costing_with_defaults;
+  for (auto costing : get_base_auto_costing_list())
+    costing_with_defaults.emplace_back(costing, kDefaultTruck_UseTracks);
+  costing_with_defaults.emplace_back(Costing::truck, kDefaultTruck_UseTracks);
+
+  for (const auto& [costing, default_value] : costing_with_defaults) {
+    test_use_tracks_parsing(costing, default_value, default_value);
+    test_use_tracks_parsing(costing, 0.2f, 0.2f);
+    test_use_tracks_parsing(costing, 0.6f, 0.6f);
+    test_use_tracks_parsing(costing, -2.f, default_value);
+    test_use_tracks_parsing(costing, 2.f, default_value);
+  }
 }
 
 TEST(ParseRequest, test_use_hills) {

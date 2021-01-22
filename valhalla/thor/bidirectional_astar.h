@@ -43,8 +43,11 @@ class BidirectionalAStar : public PathAlgorithm {
 public:
   /**
    * Constructor.
+   * @param max_reserved_labels_count maximum capacity of edgelabels container
+   *                                  that allowed to keep reserved
    */
-  BidirectionalAStar();
+  explicit BidirectionalAStar(
+      uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
 
   /**
    * Destructor
@@ -108,10 +111,11 @@ protected:
   // Vector of edge labels (requires access by index).
   std::vector<sif::BDEdgeLabel> edgelabels_forward_;
   std::vector<sif::BDEdgeLabel> edgelabels_reverse_;
+  uint32_t max_reserved_labels_count_;
 
   // Adjacency list - approximate double bucket sort
-  std::shared_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>> adjacencylist_forward_;
-  std::shared_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>> adjacencylist_reverse_;
+  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_forward_;
+  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_reverse_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_forward_;
@@ -231,6 +235,8 @@ protected:
    * @param   options      Controls whether or not we get alternatives
    * @param   origin       The origin location
    * @param   destination  The destination location
+   * @param   time_info    What time is it when we start the route
+   * @param   invariant    Static date_time, dont offset the time as the path lengthens
    * @return  Returns the path infos, a list of GraphIds representing the
    *          directed edges along the path - ordered from origin to
    *          destination - along with travel modes and elapsed time.
@@ -238,7 +244,9 @@ protected:
   std::vector<std::vector<PathInfo>> FormPath(baldr::GraphReader& graphreader,
                                               const Options& options,
                                               const valhalla::Location& origin,
-                                              const valhalla::Location& dest);
+                                              const valhalla::Location& dest,
+                                              const baldr::TimeInfo& time_info,
+                                              const bool invariant);
 };
 
 // This function checks if the path formed by the two expanding trees

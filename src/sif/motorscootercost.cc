@@ -40,6 +40,7 @@ constexpr float kDefaultCountryCrossingPenalty = 0.0f;   // Seconds
 constexpr float kDefaultUseFerry = 0.5f;   // Factor between 0 and 1
 constexpr float kDefaultUseHills = 0.5f;   // Factor between 0 and 1
 constexpr float kDefaultUsePrimary = 0.5f; // Factor between 0 and 1
+constexpr float kDefaultUseTracks = 0.5f;  // Factor between 0 and 1
 constexpr uint32_t kMinimumTopSpeed = 20;  // Kilometers per hour
 constexpr uint32_t kDefaultTopSpeed = 45;  // Kilometers per hour
 constexpr uint32_t kMaximumTopSpeed = 120; // Kilometers per hour
@@ -80,6 +81,7 @@ constexpr ranged_default_t<uint32_t> kTopSpeedRange{kMinimumTopSpeed, kDefaultTo
                                                     kMaximumTopSpeed};
 constexpr ranged_default_t<float> kDestinationOnlyPenaltyRange{0, kDefaultDestinationOnlyPenalty,
                                                                kMaxPenalty};
+constexpr ranged_default_t<float> kUseTracksRange{0.f, kDefaultUseTracks, 1.0f};
 
 // Additional penalty to avoid destination only
 constexpr float kDestinationOnlyFactor = 0.2f;
@@ -441,6 +443,10 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor += kDestinationOnlyFactor;
   }
 
+  if (edge->use() == Use::kTrack) {
+    factor *= track_factor_;
+  }
+
   return {sec * factor, sec};
 }
 
@@ -451,7 +457,7 @@ Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
-  Cost c = base_transition_cost(node, edge, pred, idx);
+  Cost c = base_transition_cost(node, edge, &pred, idx);
   c.secs = OSRMCarTurnDuration(edge, node, idx);
 
   // Transition time = densityfactor * stopimpact * turncost
@@ -601,6 +607,11 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_use_primary(
         kUsePrimaryRange(rapidjson::get_optional<float>(*json_costing_options, "/use_primary")
                              .get_value_or(kDefaultUsePrimary)));
+
+    // use_tracks
+    pbf_costing_options->set_use_tracks(
+        kUseTracksRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tracks")
+                            .get_value_or(kDefaultUseTracks)));
   } else {
     // Set pbf values to defaults
     pbf_costing_options->set_maneuver_penalty(kDefaultManeuverPenalty);
@@ -615,6 +626,7 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
     pbf_costing_options->set_top_speed(kDefaultTopSpeed);
     pbf_costing_options->set_use_hills(kDefaultUseHills);
     pbf_costing_options->set_use_primary(kDefaultUsePrimary);
+    pbf_costing_options->set_use_tracks(kDefaultUseTracks);
     pbf_costing_options->set_flow_mask(kDefaultFlowMask);
   }
 }

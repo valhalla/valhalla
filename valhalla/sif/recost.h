@@ -27,6 +27,7 @@ using LabelCallback = std::function<void(const EdgeLabel& label)>;
  * @param time_info         the time tracking information representing the local time before
  *                          traversing the first edge
  * @param invariant         static date_time, dont offset the time as the path lengthens
+ * @param ignore_access     ignore access restrictions for edges and nodes if it's true
  */
 void recost_forward(baldr::GraphReader& reader,
                     const sif::DynamicCost& costing,
@@ -35,6 +36,7 @@ void recost_forward(baldr::GraphReader& reader,
                     float source_pct = 0.f,
                     float target_pct = 1.f,
                     const baldr::TimeInfo& time_info = baldr::TimeInfo::invalid(),
-                    const bool invariant = false);
+                    const bool invariant = false,
+                    const bool ignore_access = false);
 } // namespace sif
 } // namespace valhalla

@@ -24,16 +24,11 @@ jobs:
           command: |
             docker build -f ./docker/Dockerfile-build --tag valhalla/valhalla:build-latest ./docker
       - run:
-          name: Build Valhalla base Dockerfile x86
-          command: |
-            docker build -f ./docker/Dockerfile-build-x86 --tag valhalla/valhalla:build-x86-latest ./docker
-      - run:
           name: Push Valhalla base image
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
               docker push valhalla/valhalla:build-latest
-              docker push valhalla/valhalla:build-x86-latest
             fi
 
   build-release-binary-linux:
@@ -148,31 +143,6 @@ jobs:
       - run: make -C build install
       - run: make -C build package
 
-  build-release-x86:
-    docker:
-      - image: valhalla/valhalla:build-x86-latest
-    steps:
-      - checkout
-      #- run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
-      - run: git submodule sync && git submodule update --init
-      - restore_cache:
-          keys:
-            - ccache-release-linux-x86_32-{{ .Branch }}
-            - ccache-release-linux-x86_32
-      - run: mkdir build
-      - run: |
-          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release
-      - run: make -C build -j4
-      - run: make -C build utrecht_tiles
-      - run: make -C build -j2 tests
-      - run: make -C build -j2 check
-      - run: make -C build -j2 benchmarks
-      - run: make -C build run-benchmarks
-      - save_cache:
-          key: ccache-release-linux-x86_32-{{ .Branch }}-{{ epoch }}
-          paths:
-            - ~/.ccache
-
   build-osx:
     executor: macos
     steps:
@@ -244,7 +214,6 @@ workflows:
       - build-base
       - lint-build-debug
       - build-release
-      - build-release-x86
       - build-osx
       - build-release-binary-osx:
           filters:

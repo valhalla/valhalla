@@ -171,7 +171,7 @@ TEST_F(SearchFilter, ExcludeRamp) {
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
           .str();
   auto result_unfiltered = gurka::route(map, request_unfiltered);
-  gurka::assert::osrm::expect_steps(result_unfiltered, {"AF", "AB", "BC"});
+  gurka::assert::osrm::expect_steps(result_unfiltered, {"AB", "BC"});
   gurka::assert::raw::expect_path(result_unfiltered, {"AF", "AB", "BC"});
 
   const std::string& request_filtered =
