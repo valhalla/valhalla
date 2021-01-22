@@ -9,87 +9,71 @@
 
 using namespace valhalla;
 using namespace valhalla::baldr;
+using namespace valhalla::gurka;
 using namespace valhalla::mjolnir;
 
-class AdminTest : public ::testing::Test {
-protected:
-  static gurka::map admin_map;
+namespace {
 
-  static void SetUpTestSuite() {
-    constexpr double gridsize = 10;
+// GetAdminInfo() requires a sqlite db handle and tiles. This creates a mock
+// graph with two states part of the same country - with a highway between them.
+valhalla::gurka::map BuildPBFandTiles( const std::string & workdir ) {
+  const std::string ascii_map = R"(
+        A-------B-------C
+        |       |       |
+        |   G---|---H   |
+        |       |       |
+        F-------E-------D
+  )";
 
-    const std::string ascii_map = R"(
-          A-------B-------C
-          |       |       |
-          |       |       |
-          |       |       |
-          F-------E-------D
-    )";
+  // To define an administrative boundary, the nodes must form a closed polygon.
+  const gurka::ways ways = {{"ABCDEFA", {}},
+                            {"ABEFA", {}},
+                            {"BCDEB", {}},
+                            {"GH",
+                             {
+                                 {"highway", "primary"},
+                             }}};
 
-    // To define an administrative boundary, the nodes must form a closed polygon.
-    const gurka::ways ways = {{"ABCDEFA",
-                               {
-                                   {"highway", "primary"},
-                               }},
-                              {"ABEFA",
-                               {
-                                   {"highway", "primary"},
-                               }},
-                              {"BCDEB",
-                               {
-                                   {"highway", "primary"},
-                               }}};
+  const gurka::relations relations = {{{{{gurka::way_member, "ABEFA", "outer"}}},
+                                       {{"type", "boundary"},
+                                        {"boundary", "administrative"},
+                                        {"admin_level", "4"},
+                                        {"name", "Colorado"}}},
+                                      {{{{gurka::way_member, "BCDEB", "outer"}}},
+                                       {{"type", "boundary"},
+                                        {"boundary", "administrative"},
+                                        {"admin_level", "4"},
+                                        {"name", "Utah"}}},
+                                      {{{{gurka::way_member, "ABCDEFA", "outer"}}},
+                                       {{"type", "boundary"},
+                                        {"boundary", "administrative"},
+                                        {"admin_level", "2"},
+                                        {"name", "USA"}}}};
 
-    const gurka::relations relations = {{{{{gurka::way_member, "ABEFA", "outer"}}},
-                                         {
-                                             {"type", "boundary"},
-                                             {"boundary", "administrative"},
-                                             {"admin_level", "4"},
-                                         }},
-                                        {
-                                            {{{gurka::way_member, "BCDEB", "outer"}}},
-                                            {
-                                                {"type", "boundary"},
-                                                {"boundary", "administrative"},
-                                                {"admin_level", "4"},
-                                            },
-                                        },
-                                        {{{{gurka::way_member, "ABCDEFA", "outer"}}},
-                                         {
-                                             {"type", "boundary"},
-                                             {"boundary", "administrative"},
-                                             {"admin_level", "2"},
-                                         }}};
+  constexpr double gridsize = 10;
+  auto nodes = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto admin_map = gurka::buildtiles(nodes, ways, {}, relations, workdir);
 
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-    admin_map = gurka::buildtiles(layout, ways, {}, relations, "test/data/admin");
-  }
-};
+  return admin_map;
+}
 
-gurka::map AdminTest::admin_map;
+} // anonymous namespace
 
-TEST_F(AdminTest, test) {
-  // create a config file
-  const std::string config_file = "test/data/admin/config";
-  std::ofstream file;
-  file.open(config_file, std::ios_base::trunc);
-  ASSERT_TRUE(file.is_open());
-  file << "{ \
-    \"mjolnir\": { \
-    \"concurrency\": 1, \
-    \"id_table_size\": 1000, \
-    \"tile_dir\": \"test/data/admin\", \
-    \"admin\": \"test/data/admin.sqlite\", \
-    \"timezone\": \"test/data/not_needed.sqlite\" \
-    } \
-  }";
-  file.close();
+
+TEST(AdminTest, TestAdminPolygonBasic) {
+  // Creates test/data/admin/map.pbf and tile data
+  const std::string workdir = "test/data/admin";
+  auto admin_map = BuildPBFandTiles( workdir );
 
   boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file, pt);
+  pt.put("mjolnir.concurrency", 1);
+  pt.put("mjolnir.id_table_size", 1000);
+  pt.put("mjolnir.tile_dir", "test/data/admin");
+  pt.put("mjolnir.admin", "test/data/admin.sqlite");
+  pt.put("mjolnir.timezone", "test/data/not_needed.sqlite");
 
-  // AdminTest::SetUpTestSuite() creates our mock map.pbf here.
-  std::vector<std::string> input_files = {"test/data/admin/map.pbf"};
+  // given map.pbf, creates test/data/admin.sqlite
+  std::vector<std::string> input_files = { workdir + "/map.pbf" };
   BuildAdminFromPBF(pt.get_child("mjolnir"), input_files);
 
   // reverse engineer the tile_id from the nodes that make up
@@ -97,7 +81,7 @@ TEST_F(AdminTest, test) {
   // for its tile-id if I know they are all in the same tile-id...
   std::unordered_set<GraphId> tile_ids;
   for (const auto& node : admin_map.nodes) {
-    midgard::PointLL latlon(node.second);
+    const midgard::PointLL & latlon = node.second;
     GraphId tile_id = TileHierarchy::GetGraphId(latlon, 0);
     tile_ids.insert(tile_id);
   }
@@ -121,8 +105,12 @@ TEST_F(AdminTest, test) {
   polys = GetAdminInfo(db_handle, drive_on_right, allow_intersection_names, world_box, tilebuilder);
   sqlite3_close(db_handle);
 
-  // Very loose test constraints...
+  // For two states part of one country, there should be three polys, etc.
   ASSERT_EQ(polys.size(), 3);
-  ASSERT_EQ(drive_on_right.size(), 1);
-  ASSERT_EQ(allow_intersection_names.size(), 1);
+  ASSERT_EQ(drive_on_right.size(), 3);
+  ASSERT_EQ(allow_intersection_names.size(), 3);
+
+  // find the GH way/edge in the graph, make sure its there
+  auto bigt = findEdge( graph_reader, admin_map.nodes, "GH", "H", tile_id );
+  ASSERT_NE( std::get<1>(bigt), nullptr );
 }
