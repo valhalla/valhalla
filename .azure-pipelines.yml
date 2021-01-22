@@ -17,7 +17,6 @@ jobs:
       BUILD_DIR: '$(Agent.WorkFolder)\build'
       VCPKG_DIR: '$(Build.SourcesDirectory)\vcpkg'
       VCPKG_REF: 'f4bd6423'
-      PLATFORM: 'x64'
       TRIPLET: 'x64'
 
     steps:
@@ -78,9 +77,10 @@ jobs:
           $env:Path += ";$pwd\ninja"
           cmake --version
           mkdir build
-          ls
           cd build
-          cmake -G "Ninja" -A $env:PLATFORM -T host=$env:TRIPLET -DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_DIR\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR=$env:VCPKG_DIR\installed\$env:TRIPLET-windows\include\luajit -DLUA_LIBRARIES=$env:VCPKG_DIR\installed\$env:TRIPLET-windows\lib\lua51.lib ..
+          echo $env:VCPKG_DIR
+          ls $env:VCPKG_DIR\scripts\buildsystems
+          cmake -G "Ninja" -T host=$env:TRIPLET -DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_DIR\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR=$env:VCPKG_DIR\installed\$env:TRIPLET-windows\include\luajit -DLUA_LIBRARIES=$env:VCPKG_DIR\installed\$env:TRIPLET-windows\lib\lua51.lib ..
         displayName: 'Run CMake to configure build'
 
       - script: |
