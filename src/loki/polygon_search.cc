@@ -69,35 +69,25 @@ std::set<vb::GraphId> edges_in_rings(const multi_ring_t& rings, baldr::GraphRead
   return result_ids;
 }
 
-multi_ring_t PBFToRings(const google::protobuf::RepeatedPtrField<Options::AvoidPolygon>& rings_pbf) {
+multi_ring_t PBFToRings(const google::protobuf::RepeatedPtrField<Options::Polygon>& rings_pbf) {
   multi_ring_t rings;
   for (const auto& ring_pbf : rings_pbf) {
     ring_bg_t new_ring;
     for (const auto& coord : ring_pbf.coords()) {
       new_ring.push_back({coord.ll().lng(), coord.ll().lat()});
     }
-    // corrects geometry and handedness as expected
+    // corrects geometry and handedness as expected by bg
     bg::correct(new_ring);
     rings.push_back(new_ring);
   }
   return rings;
 }
 
-/*
-double GetAvoidArea(const multi_ring_t& rings) {
-  double area;
+double GetRingLength(const multi_ring_t& rings) {
+  double length = 0;
   for (const auto& ring : rings) {
-    area += bg::area(ring, bg::strategy::area::geographic<>());
-  }
-  return area;
-}
-*/
-
-// TODO: this somehow returns 0 length for rings, investigate..
-float GetRingLength(const multi_ring_t& rings) {
-  float length = 0;
-  for (const auto& ring : rings) {
-    length += bg::length(ring, Haversine());
+    line_bg_t line{ring.begin(), ring.end() - 1};
+    length += bg::length(line, Haversine());
   }
   return length;
 }

@@ -325,7 +325,7 @@ void parse_ring(ring_pbf_t& ring,
                 rapidjson::Value& coord_array,
                 rapidjson::Document::AllocatorType& allocator,
                 bool close_ring = true) {
-  // make sure it's a closed polygon
+  // optionally close the ring
   if (coord_array[0] != coord_array[coord_array.Size() - 1] && close_ring) {
     coord_array.PushBack(coord_array[0], allocator);
   }
@@ -931,9 +931,7 @@ void from_json(rapidjson::Document& doc, Options& options) {
         auto* ring = rings_pbf->Add();
         parse_ring(ring, req_poly, allocator);
       }
-    } catch (const std::runtime_error& e) { throw e; } catch (...) {
-      throw valhalla_exception_t{137};
-    }
+    } catch (...) { throw valhalla_exception_t{137}; }
   }
 
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources

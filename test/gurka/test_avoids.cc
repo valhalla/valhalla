@@ -40,43 +40,40 @@ protected:
 
 gurka::map AvoidTest::avoid_map = {};
 
-TEST_F(AvoidTest, TestArea) {
-  vl::multi_ring_t erings(2);
+TEST_F(AvoidTest, TestLength) {
+  vl::line_bg_t line;
   // ~ 7.6 km circumference
-  bg::read_wkt(
-      "POLYGON ((13.38625361 52.4652558, 13.38625361 52.48000128, 13.4181769 52.48000128, 13.4181769 52.4652558, 13.38625361 52.4652558))",
-      erings[0]);
-  // ~ 9.6 km circumference
-  bg::read_wkt(
-      "POLYGON ((13.36862753 52.43148012, 13.36862753 52.4555968, 13.39944328 52.4555968, 13.39944328 52.43148012, 13.36862753 52.43148012))",
-      erings[1]);
-  double actual_length = bg::length(erings[0], boost::geometry::strategy::distance::haversine<float>(
-                                                   valhalla::midgard::kRadEarthMeters));
-  actual_length += bg::length(erings[1], boost::geometry::strategy::distance::haversine<float>(
-                                             valhalla::midgard::kRadEarthMeters * vm::kKmPerMeter));
+  bg::read_wkt("LINESTRING (13.38625361 52.4652558, 13.38625361 52.48000128, 13.4181769 52.48000128)",
+               line);
+  auto actual_length = bg::length(line, Haversine());
 
   // Add polygons to PBF
+  vl::ring_bg_t ring;
+  bg::read_wkt(
+      "POLYGON ((13.38625361 52.4652558, 13.38625361 52.48000128, 13.4181769 52.48000128,13.38625361 52.4652558))",
+      ring);
   Options options;
   auto avoid_polygons = options.mutable_avoid_polygons();
-  for (auto& poly : erings) {
-    auto* polygon = avoid_polygons->Add();
-    for (auto& coord : poly) {
-      auto* ll = polygon->add_coords()->mutable_ll();
-      ll->set_lng(coord.lng());
-      ll->set_lat(coord.lat());
-    }
+  auto* polygon = avoid_polygons->Add();
+  for (auto& coord : ring) {
+    auto* ll = polygon->add_coords()->mutable_ll();
+    ll->set_lng(coord.lng());
+    ll->set_lat(coord.lat());
   }
   auto trings = loki::PBFToRings(options.avoid_polygons());
   auto calc_length = loki::GetRingLength(trings);
 
   EXPECT_EQ(actual_length, calc_length);
 
-  // Add a ~ 3.5 sqkm avoid_polygon so it throws
+  // Add a ~ 3.8 km avoid_polygon so it throws
   const std::unordered_map<std::string, std::string>& req_options = {
       {"/avoid_polygons",
        "[[[13.38625361, 52.4652558], [13.38625361, 52.48000128], [13.4181769, 52.48000128], [13.4181769, 52.4652558]]]"}};
 
-  // this really shouldn't work, but as of now boost.geometry returns 0 length for rings
-  auto r = gurka::route(avoid_map, "A", "D", "auto", req_options);
-  // EXPECT_THROW(gurka::route(avoid_map, "A", "D", "auto", req_options), valhalla_exception_t);
+  // make sure the right excpetion is thrown
+  try {
+    gurka::route(avoid_map, "A", "D", "auto", req_options);
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 167); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
 }

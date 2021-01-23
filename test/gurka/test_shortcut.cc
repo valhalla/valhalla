@@ -267,11 +267,10 @@ TEST(Shortcuts, ShortcutsInBins) {
 
   std::vector<GraphId> edge_ids;
   auto bin_tileset = reader.GetTileSet(2);
-  size_t count;
   for (auto tileid : bin_tileset) {
     if (reader.OverCommitted())
       reader.Trim();
-    auto* tile = reader.GetGraphTile(tileid);
+    auto tile = reader.GetGraphTile(tileid);
     for (size_t j = 0; j < kBinCount; ++j) {
       auto bin = tile->GetBin(j);
       for (auto edge_id : bin) {

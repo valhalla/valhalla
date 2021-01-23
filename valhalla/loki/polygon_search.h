@@ -33,16 +33,17 @@ static const auto Haversine = [] {
 namespace valhalla {
 namespace loki {
 
+using line_bg_t = boost::geometry::model::linestring<midgard::PointLL>;
 using ring_bg_t = std::vector<midgard::PointLL>;
 using multi_ring_t = std::vector<ring_bg_t>;
 
 std::set<valhalla::baldr::GraphId> edges_in_rings(const multi_ring_t& rings,
                                                   baldr::GraphReader& reader);
 
-multi_ring_t PBFToRings(const google::protobuf::RepeatedPtrField<Options::AvoidPolygon>& rings_pbf);
+multi_ring_t PBFToRings(const google::protobuf::RepeatedPtrField<Options::Polygon>& rings_pbf);
 
 // double GetAvoidArea(const multi_ring_t& rings);
-float GetRingLength(const multi_ring_t& rings);
+double GetRingLength(const multi_ring_t& rings);
 
 } // namespace loki
 } // namespace valhalla

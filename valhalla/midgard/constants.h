@@ -33,9 +33,6 @@ constexpr double kKmPerDecimeter = 0.0001;
 constexpr double kMeterPerDecimeter = 0.1;
 constexpr double kDecimeterPerMeter = 10;
 
-// Area
-constexpr double kSqmPerSqkm = 1000000;
-
 // Speed conversion constants
 constexpr float kMPHtoMetersPerSec = 0.44704f;
 constexpr double kDecimeterPerSectoKPH = 0.36; // dm/s to km/h

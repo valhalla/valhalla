@@ -95,7 +95,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     for (auto edge_id : edges) {
       auto* avoid = co->add_avoid_edges();
       avoid->set_id(edge_id);
-      // clearly wrong for origin & destination edges
+      // TODO: set correct percent_along in edges_in_rings (imp for origin & destination edges)
       avoid->set_percent_along(0);
     }
   }
@@ -123,6 +123,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
             avoid->set_id(edge.id);
             avoid->set_percent_along(edge.percent_along);
 
+            // TODO: check if still necessary here since shortcuts are in bins now!
             // Check if a shortcut exists
             GraphId shortcut = reader->GetShortcut(edge.id);
             if (shortcut.Is_Valid()) {
