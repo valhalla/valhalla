@@ -63,7 +63,7 @@ std::vector<PointLL> loki_worker_t::init_height(Api& request) {
   }
 
   // there are limits though
-  if (options.shape_size() > max_elevation_shape) {
+  if (static_cast<size_t>(options.shape_size()) > max_elevation_shape) {
     throw valhalla_exception_t{314, " (" + std::to_string(options.shape_size()) +
                                         (resampled ? " after resampling" : "") + "). The limit is " +
                                         std::to_string(max_elevation_shape)};
@@ -79,12 +79,12 @@ std::vector<PointLL> loki_worker_t::init_height(Api& request) {
 }
 */
 std::string loki_worker_t::height(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request, "loki_worker_t::height");
+
   auto shape = init_height(request);
   // get the elevation of each posting
   std::vector<double> heights = sample.get_all(shape);
-  if (!request.options().do_not_track()) {
-    valhalla::midgard::logging::Log("sample_count::" + std::to_string(shape.size()), " [ANALYTICS] ");
-  }
 
   // get the distances between the postings if desired
   std::vector<double> ranges;

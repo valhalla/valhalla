@@ -8,8 +8,8 @@
 #include <vector>
 
 #include "meili/map_matcher.h"
-
 #include "meili/match_result.h"
+#include "midgard/util.h"
 #include "thor/attributes_controller.h"
 #include "thor/map_matcher.h"
 #include "thor/route_matcher.h"
@@ -67,6 +67,9 @@ namespace thor {
  * The trace_route action takes a GPS trace and turns it into a route result.
  */
 void thor_worker_t::trace_route(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request, "thor_worker_t::trace_route");
+
   // Parse request
   parse_locations(request);
   parse_costing(request);
@@ -203,7 +206,7 @@ thor_worker_t::map_match(Api& request) {
     // OSRM map matching format has both the match points and the route, fill out the match points
     // here Note that we only support trace_route as OSRM format so best_paths == 1
     if (options.action() == Options::trace_route && options.format() == Options::osrm) {
-      const GraphTile* tile = nullptr;
+      graph_tile_ptr tile = nullptr;
       for (int i = 0; i < result.results.size(); ++i) {
         // Get the match
         const auto& match = result.results[i];

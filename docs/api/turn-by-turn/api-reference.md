@@ -45,7 +45,7 @@ To build a route, you need to specify two `break` locations. In addition, you ca
 | `node_snap_tolerance` | During edge correlation this is the tolerance used to determine whether or not to snap to the intersection rather than along the street, if the snap location is within this distance from the intersection the intersection is used instead. The default is 5 meters |
 | `street_side_tolerance` | If your input coordinate is less than this tolerance away from the edge centerline then we set your side of street to none otherwise your side of street will be left or right depending on direction of travel |
 | `street_side_max_distance` | The max distance in meters that the input coordinates or display ll can be from the edge centerline for them to be used for determining the side of street. Beyond this distance the side of street is set to none |
-| `search_filter` | A set of optional filters to exclude candidate edges based on their attribution. The following exclusion filters are supported: <ul><li>`exclude_tunnel` (boolean, defaults to `false`): whether to exclude roads marked as tunnels</li><li>`exclude_bridge` (boolean, defaults to `false`): whether to exclude roads marked as bridges</li><li>`exclude_ramp` (boolean, defaults to `false`): whether to exclude link roads marked as ramps, note that some turn channels are also marked as ramps</li><li>`min_road_class` (string, defaults to `"service_other"`): lowest road class allowed</li><li>`max_road_class` (string, defaults to `"motorway"`): highest road class allowed</li></ul>Road classes from highest to lowest are: motorway, trunk, primary, secondary, tertiary, unclassified, residential, service_other.
+| `search_filter` | A set of optional filters to exclude candidate edges based on their attribution. The following exclusion filters are supported: <ul><li>`exclude_tunnel` (boolean, defaults to `false`): whether to exclude roads marked as tunnels</li><li>`exclude_bridge` (boolean, defaults to `false`): whether to exclude roads marked as bridges</li><li>`exclude_ramp` (boolean, defaults to `false`): whether to exclude link roads marked as ramps, note that some turn channels are also marked as ramps</li><li>`exclude_closures` (boolean, defaults to `true`): whether to exclude roads considered closed due to live traffic closure. **Note:** This option cannot be set if `costing_options.<costing>.ignore_closures` is also specified. An error is returned if both options are specified.</li><li>`min_road_class` (string, defaults to `"service_other"`): lowest road class allowed</li><li>`max_road_class` (string, defaults to `"motorway"`): highest road class allowed</li></ul>Road classes from highest to lowest are: motorway, trunk, primary, secondary, tertiary, unclassified, residential, service_other.
 
 Optionally, you can include the following location information without impacting the routing. This information is carried through the request and returned as a convenience.
 
@@ -107,6 +107,7 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `country_crossing_penalty` | A penalty applied for a country crossing. This penalty can be used to create paths that avoid spanning country boundaries. The default penalty is 0. |
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
 | `top_speed` | Top speed the vehicle can go. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 140 KPH. |
+| `ignore_closures` | If set to `true`, ignores all closures, marked due to live traffic closures, during routing. **Note:** This option cannot be set if `location.search_filter.exclude_closures` is also specified in the request and will return an error if it is |
 
 ###### Truck-specific costing options
 
@@ -144,7 +145,7 @@ These additional options are available for bicycle costing methods.
 |`bss_return_cost`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to give the time will be used to return a rental bike. This value will be displayed in the final directions and used to calculate the whole duation. The default value is 120 seconds.|
 |`bss_return_penalty`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to describe the potential effort to return a rental bike. This value won't be displayed and used only inside of the algorithm.|
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
-  
+
 ##### Motor_scooter costing options
 Standard costing for travel by motor scooter or moped.  By default, motor_scooter costing will avoid higher class roads unless the country overrides allows motor scooters on these roads.  Motor scooter routes follow regular roads when needed, but avoid roads without motor_scooter, moped, or mofa access. The costing model recognizes factors unique to motor_scooter travel and offers options for tuning motor_scooter routes. Factors unique to travel by motor_scooter influence the resulting route.
 
@@ -253,6 +254,7 @@ A multimodal request with a filter for certain Onestop IDs:
 | `en-US` | `en` | English (United States) |
 | `en-US-x-pirate` | `pirate` | English (United States) Pirate |
 | `es-ES` | `es` | Spanish (Spain) |
+| `et-EE` | `et` | Estonian (Estonia) |
 | `fr-FR` | `fr` | French (France) |
 | `hi-IN` | `hi` | Hindi (India) |
 | `it-IT` | `it` | Italian (Italy) |
@@ -494,6 +496,7 @@ The codes correspond to code returned from a particular [Valhalla project](https
 |140 | Action does not support multimodal costing |
 |141 | Arrive by for multimodal not implemented yet |
 |142 | Arrive by not implemented for isochrones |
+|143 | ignore_closure in costing and exclude_closure in search_filter cannot both be specified |
 |150 | Exceeded max locations |
 |151 | Exceeded max time |
 |152 | Exceeded max contours |

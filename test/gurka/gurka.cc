@@ -113,8 +113,7 @@ build_config(const std::string& tiledir,
       "motorcycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
       "motor_scooter": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
       "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-
-      "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
+      "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time_contour": 120,"max_distance_contour":200},
       "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
       "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
       "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
@@ -586,7 +585,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
   // Iterate over all the tiles, there wont be many in unit tests..
   const auto& end_node_coordinates = nodes.at(end_node);
   for (auto tile_id : tileset) {
-    auto* tile = reader.GetGraphTile(tile_id);
+    auto tile = reader.GetGraphTile(tile_id);
     // Iterate over all directed edges to find one with the name we want
     for (uint32_t i = 0; i < tile->header()->directededgecount(); i++) {
       const auto* forward_directed_edge = tile->directededge(i);
@@ -629,7 +628,7 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                 const std::string& end_node_name) {
   // Iterate over all the tiles, there wont be many in unit tests..
   for (auto tile_id : reader.GetTileSet()) {
-    auto* tile = reader.GetGraphTile(tile_id);
+    auto tile = reader.GetGraphTile(tile_id);
     // Iterate over all directed edges to find one with the name we want
     for (const auto& e : tile->GetDirectedEdges()) {
       // Bail if wrong end node
@@ -657,6 +656,7 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
 valhalla::Api route(const map& map,
                     const std::string& request_json,
                     std::shared_ptr<valhalla::baldr::GraphReader> reader) {
+  std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -690,7 +690,6 @@ valhalla::Api route(const map& map,
   std::cerr << " with costing " << costing << std::endl;
   auto lls = detail::to_lls(map.nodes, waypoints);
   auto request_json = detail::build_valhalla_request("locations", lls, costing, options);
-  std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   return route(map, request_json, reader);
 }
@@ -793,7 +792,7 @@ std::string dump_geojson_graph(const map& graph) {
   for (auto tile_id : reader.GetTileSet()) {
     if (reader.OverCommitted())
       reader.Trim();
-    const auto* tile = reader.GetGraphTile(tile_id);
+    auto tile = reader.GetGraphTile(tile_id);
     for (const auto& edge : tile->GetDirectedEdges()) {
       valhalla::baldr::GraphId edge_id(tile_id.tileid(), tile_id.level(),
                                        &edge - tile->directededge(0));
@@ -805,9 +804,12 @@ std::string dump_geojson_graph(const map& graph) {
       for (const std::string& name : info.GetNames()) {
         names.PushBack(rapidjson::Value(name, doc.GetAllocator()).Move(), doc.GetAllocator());
       }
-      properties.AddMember("edge_id", std::to_string(edge_id), doc.GetAllocator());
-      properties.AddMember("opp_edge_id", std::to_string(reader.GetOpposingEdgeId(edge_id)),
-                           doc.GetAllocator());
+
+      // TODO: why on earth do we need decltype?
+      properties.AddMember(decltype(doc)::StringRefType(edge.forward() ? "edge_id" : "opp_edge_id"),
+                           std::to_string(edge_id), doc.GetAllocator());
+      properties.AddMember(decltype(doc)::StringRefType(edge.forward() ? "opp_edge_id" : "edge_id"),
+                           std::to_string(reader.GetOpposingEdgeId(edge_id)), doc.GetAllocator());
       properties.AddMember("names", names, doc.GetAllocator());
 
       // add the geom

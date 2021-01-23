@@ -12,20 +12,13 @@ jobs:
     pool:
       vmImage: 'windows-2019'
 
-    strategy:
-      matrix:
-        x86:
-          PLATFORM: 'Win32'
-          TRIPLET: 'x86'
-        x64:
-          PLATFORM: 'x64'
-          TRIPLET: 'x64'
-
     variables:
       BUILD_CFG: 'Release'
       BUILD_DIR: '$(Agent.WorkFolder)\build'
       VCPKG_DIR: '$(Build.SourcesDirectory)\vcpkg'
       VCPKG_REF: 'f4bd6423'
+      PLATFORM: 'x64'
+      TRIPLET: 'x64'
 
     steps:
       - script: git submodule update --init --recursive

@@ -19,6 +19,9 @@ void loki_worker_t::init_transit_available(Api& request) {
 }
 
 std::string loki_worker_t::transit_available(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request, "loki_worker_t::transit_available");
+
   init_transit_available(request);
   auto locations = PathLocation::fromPBF(request.options().locations());
   std::unordered_set<baldr::Location> found;

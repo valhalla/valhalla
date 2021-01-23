@@ -44,6 +44,17 @@ constexpr midgard::ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMax
                                                                  baldr::kMaxSpeedKph};
 
 /**
+ * Mask values used in the allowed function by loki::reach to control how conservative
+ * the decision should be. By default allowed methods will not disallow start/end/simple
+ * restrictions and closures are determined by the costing configuration
+ */
+constexpr uint16_t kDisallowNone = 0x0;
+constexpr uint16_t kDisallowStartRestriction = 0x1;
+constexpr uint16_t kDisallowEndRestriction = 0x2;
+constexpr uint16_t kDisallowSimpleRestriction = 0x4;
+constexpr uint16_t kDisallowClosure = 0x8;
+
+/**
  * Base class for dynamic edge costing. This class defines the interface for
  * costing methods and includes a few base methods that define default behavior
  * for cases where a derived class does not need to override the method.
@@ -143,7 +154,7 @@ public:
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred,
-                       const baldr::GraphTile* tile,
+                       const graph_tile_ptr& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -170,7 +181,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const baldr::GraphTile* tile,
+                              const graph_tile_ptr& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -184,6 +195,32 @@ public:
    */
   inline virtual bool Allowed(const baldr::NodeInfo* node) const {
     return (node->access() & access_mask_) || ignore_access_;
+  }
+
+  /**
+   * Used for determine the viability of a candidate edge as well as a conservative reachability
+   * The notable difference to the full featured allowed method is this methods lack of info
+   * about the currently tracked path (hence why its conservative)
+   *
+   * This method is to be used by loki::search and loki::reach and the base class implementation is
+   * used to do basically accessibility and adherence to the disallow mask
+   *
+   * @param edge           the edge that should or shouldnt be allowed
+   * @param tile           the tile which contains the edge (for traffic lookup)
+   * @param disallow_mask  a mask that controls additional properties that should disallow the edge
+   * @return true if the edge is allowed to be used (either as a candidate or a reach traversal)
+   */
+  inline virtual bool Allowed(const baldr::DirectedEdge* edge,
+                              const graph_tile_ptr&,
+                              uint16_t disallow_mask = kDisallowNone) const {
+    auto access_mask = (ignore_access_ ? baldr::kAllAccess : access_mask_);
+    bool accessible = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    bool assumed_restricted =
+        ((disallow_mask & kDisallowStartRestriction) && edge->start_restriction()) ||
+        ((disallow_mask & kDisallowEndRestriction) && edge->end_restriction()) ||
+        ((disallow_mask & kDisallowSimpleRestriction) && edge->restrictions());
+    return !edge->is_shortcut() && accessible && !assumed_restricted;
   }
 
   /**
@@ -204,7 +241,8 @@ public:
 
   inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
     return true;
-  };
+  }
+
   /**
    * Get the cost to traverse the specified directed edge using a transit
    * departure (schedule based edge traversal). Cost includes
@@ -227,7 +265,7 @@ public:
    * @return  Returns the cost and time (seconds).
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const baldr::GraphTile* tile,
+                        const graph_tile_ptr& tile,
                         const uint32_t seconds) const = 0;
 
   /**
@@ -237,7 +275,7 @@ public:
    * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
    * @return  Returns the cost and time (seconds).
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -291,7 +329,7 @@ public:
   bool Restricted(const baldr::DirectedEdge* edge,
                   const EdgeLabel& pred,
                   const edge_labels_container_t& edge_labels,
-                  const baldr::GraphTile*& tile,
+                  const graph_tile_ptr& tile,
                   const baldr::GraphId& edgeid,
                   const bool forward,
                   thor::EdgeStatus* edgestatus = nullptr,
@@ -439,7 +477,7 @@ public:
 
   inline bool EvaluateRestrictions(uint32_t access_mode,
                                    const baldr::DirectedEdge* edge,
-                                   const baldr::GraphTile*& tile,
+                                   const graph_tile_ptr& tile,
                                    const baldr::GraphId& edgeid,
                                    const uint64_t current_time,
                                    const uint32_t tz_index,
@@ -572,21 +610,6 @@ public:
   virtual bool bicycle() const;
 
   /**
-   * Returns a value between 0 and 1 indicating how
-   * desirable the edge is for use as a location. A value of 0 indicates the
-   * edge is not usable (no access for the travel mode used by this costing)
-   * while 1 indicates the edge is highly preferred. Values in between can be
-   * used to rank edges such that desirable edges that might be slightly
-   * farther from the location than a less desirable edge can be chosen.
-   *
-   * Function to be used in location searching which will
-   * exclude and allow ranking results from the search by looking at each
-   * edges attribution and suitability for use as a location by the travel
-   * mode used by the costing method.
-   */
-  virtual float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const = 0;
-
-  /**
    * Gets the hierarchy limits.
    * @return  Returns the hierarchy limits.
    */
@@ -600,19 +623,19 @@ public:
   /**
    * Checks if we should exclude or not.
    */
-  virtual void AddToExcludeList(const baldr::GraphTile*& tile);
+  virtual void AddToExcludeList(const graph_tile_ptr& tile);
 
   /**
    * Checks if we should exclude or not.
    * @return  Returns true if we should exclude, false if not.
    */
-  virtual bool IsExcluded(const baldr::GraphTile*& tile, const baldr::DirectedEdge* edge);
+  virtual bool IsExcluded(const graph_tile_ptr& tile, const baldr::DirectedEdge* edge);
 
   /**
    * Checks if we should exclude or not.
    * @return  Returns true if we should exclude, false if not.
    */
-  virtual bool IsExcluded(const baldr::GraphTile*& tile, const baldr::NodeInfo* node);
+  virtual bool IsExcluded(const graph_tile_ptr& tile, const baldr::NodeInfo* node);
 
   /**
    * Adds a list of edges (GraphIds) to the user specified avoid list.
@@ -673,6 +696,12 @@ public:
   virtual Cost BSSCost() const;
 
 protected:
+  /**
+   * Calculate `track` costs based on tracks preference.
+   * @param use_tracks value of tracks preference in range [0; 1]
+   */
+  virtual void set_use_tracks(float use_tracks);
+
   // Algorithm pass
   uint32_t pass_;
 
@@ -698,6 +727,7 @@ protected:
 
   // Weighting to apply to ferry edges
   float ferry_factor_, rail_ferry_factor_;
+  float track_factor_; // Avoid tracks factor.
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -723,8 +753,9 @@ protected:
   bool ignore_oneways_{false};
   bool ignore_access_{false};
   bool ignore_closures_{false};
-
   uint32_t top_speed_;
+  // if ignore_closures_ is set to true by the user request, filter_closures_ is forced to false
+  bool filter_closures_{true};
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
@@ -789,6 +820,9 @@ protected:
     rail_ferry_transition_cost_ = {costing_options.rail_ferry_cost() + rail_ferry_penalty,
                                    costing_options.rail_ferry_cost()};
 
+    // Calculate cost factor for track roads
+    set_use_tracks(costing_options.use_tracks());
+
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();
     // Set the top speed a vehicle wants to go
@@ -800,114 +834,45 @@ protected:
    * country crossing, boarding a ferry, toll booth, gates, entering destination
    * only, alleys, and maneuver penalties. Each costing method can provide different
    * costs for these transitions (via costing options).
+   *
+   * The template allows us to treat edgelabels and directed edges the same. The unidirectinal
+   * path algorithms dont have access to the directededge from the label but they have the same
+   * function names. At the moment we could change edgelabel to keep the edge pointer because
+   * we dont clear tiles while the algorithm is running but for embedded use-cases we might one day
+   * do that so its best to keep support for labels and edges here
+   *
    * @param node Node at the intersection where the edge transition occurs.
    * @param edge Directed edge entering.
-   * @param pred Predecessor edge information.
+   * @param pred Predecessor edge or edgelabel.
    * @param idx  Index used for name consistency.
    * @return Returns the transition cost (cost, elapsed time).
    */
-  virtual sif::Cost base_transition_cost(const baldr::NodeInfo* node,
-                                         const baldr::DirectedEdge* edge,
-                                         const sif::EdgeLabel& pred,
-                                         const uint32_t idx) const {
+  template <typename predecessor_t>
+  sif::Cost base_transition_cost(const baldr::NodeInfo* node,
+                                 const baldr::DirectedEdge* edge,
+                                 const predecessor_t* pred,
+                                 const uint32_t idx) const {
     // Cases with both time and penalty: country crossing, ferry, rail_ferry, gate, toll booth
     sif::Cost c;
-    if (node->type() == baldr::NodeType::kBorderControl) {
-      c += country_crossing_cost_;
-    }
-    if (node->type() == baldr::NodeType::kGate) {
-      c += gate_cost_;
-    }
-    if (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred.toll())) {
-      c += toll_booth_cost_;
-    }
-    if (node->type() == baldr::NodeType::kBikeShare) {
-      c += bike_share_cost_;
-    }
-    if (edge->use() == baldr::Use::kFerry && pred.use() != baldr::Use::kFerry) {
-      c += ferry_transition_cost_;
-    }
-    if (edge->use() == baldr::Use::kRailFerry && pred.use() != baldr::Use::kRailFerry) {
-      c += rail_ferry_transition_cost_;
-    }
+    c += country_crossing_cost_ * (node->type() == baldr::NodeType::kBorderControl);
+    c += gate_cost_ * (node->type() == baldr::NodeType::kGate);
+    c += bike_share_cost_ * (node->type() == baldr::NodeType::kBikeShare);
+    c += toll_booth_cost_ *
+         (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll()));
+    c += ferry_transition_cost_ *
+         (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry);
+    c += rail_ferry_transition_cost_ *
+         (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
-    if (edge->destonly() && !pred.destonly()) {
-      c.cost += destination_only_penalty_;
-    }
-    if (edge->use() == baldr::Use::kAlley && pred.use() != baldr::Use::kAlley) {
-      c.cost += alley_penalty_;
-    }
-    if (!edge->link() && !edge->name_consistency(idx)) {
-      c.cost += maneuver_penalty_;
-    }
+    c.cost += destination_only_penalty_ * (edge->destonly() && !pred->destonly());
+    c.cost +=
+        alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
+    c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));
 
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;
     return c;
-  }
-
-  /**
-   * Base transition cost that all costing methods use. Includes costs for
-   * country crossing, boarding a ferry, toll booth, gates, entering destination
-   * only, alleys, and maneuver penalties. Each costing method can provide different
-   * costs for these transitions (via costing options).
-   * @param node Node at the intersection where the edge transition occurs.
-   * @param edge Directed edge entering.
-   * @param pred Predecessor edge.
-   * @param idx  Index used for name consistency.
-   * @return Returns the transition cost (cost, elapsed time).
-   */
-  virtual sif::Cost base_transition_cost(const baldr::NodeInfo* node,
-                                         const baldr::DirectedEdge* edge,
-                                         const baldr::DirectedEdge* pred,
-                                         const uint32_t idx) const {
-    // Cases with both time and penalty: country crossing, ferry, gate, toll booth
-    sif::Cost c;
-    if (node->type() == baldr::NodeType::kBorderControl) {
-      c += country_crossing_cost_;
-    }
-    if (node->type() == baldr::NodeType::kGate) {
-      c += gate_cost_;
-    }
-    if (node->type() == baldr::NodeType::kBikeShare) {
-      c += bike_share_cost_;
-    }
-    if (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll())) {
-      c += toll_booth_cost_;
-    }
-    if (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry) {
-      c += ferry_transition_cost_;
-    }
-
-    if (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry) {
-      c += rail_ferry_transition_cost_;
-    }
-
-    // Additional penalties without any time cost
-    if (edge->destonly() && !pred->destonly()) {
-      c.cost += destination_only_penalty_;
-    }
-    if (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley) {
-      c.cost += alley_penalty_;
-    }
-    if (!edge->link() && !edge->name_consistency(idx)) {
-      c.cost += maneuver_penalty_;
-    }
-    // shortest ignores any penalties in favor of path length
-    c.cost *= !shortest_;
-    return c;
-  }
-
-  /**
-   * Convenience method to get the transition factor.
-   * @param has_traffic Does the intersection have traffic information? Currently
-   *                    is based on the exiting edge. TODO - determine if we also
-   *                    need this info on the predecessor.
-   * @param density_factor Density factor.
-   */
-  float TransitionFactor(const bool has_traffic, const float density) const {
-    return has_traffic ? kTrafficTransitionFactor : density;
   }
 
   /*
@@ -915,7 +880,7 @@ protected:
    * @param  edgeid         GraphId of the opposing edge.
    * @return  Returns true if the edge is closed due to live traffic constraints, false if not.
    */
-  inline virtual bool IsClosed(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const {
+  inline virtual bool IsClosed(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
     return !ignore_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
   }
 };

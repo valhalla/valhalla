@@ -24,14 +24,12 @@ namespace thor {
 constexpr uint32_t kCostMatrixThreshold = 5;
 
 std::string thor_worker_t::matrix(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request, "thor_worker_t::matrix");
+
   parse_locations(request);
   auto costing = parse_costing(request);
   const auto& options = request.options();
-
-  if (!options.do_not_track()) {
-    valhalla::midgard::logging::Log("matrix_type::" + Options_Action_Enum_Name(options.action()),
-                                    " [ANALYTICS] ");
-  }
 
   // Parse out units; if none specified, use kilometers
   double distance_scale = kKmPerMeter;

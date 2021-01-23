@@ -18,25 +18,26 @@ using rgba_t = std::tuple<float, float, float>;
 namespace valhalla {
 namespace tyr {
 
-template <class coord_t>
-std::string
-serializeIsochrones(const Api& request,
-                    const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
-                    bool polygons,
-                    const std::unordered_map<float, std::string>& colors,
-                    bool show_locations) {
+std::string serializeIsochrones(const Api& request,
+                                std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
+                                midgard::GriddedData<2>::contours_t& contours,
+                                bool polygons,
+                                bool show_locations) {
   // for each contour interval
   int i = 0;
   auto features = array({});
-  for (const auto& interval : grid_contours) {
-    auto color_itr = colors.find(interval.first);
+  assert(intervals.size() == contours.size());
+  for (size_t contour_index = 0; contour_index < intervals.size(); ++contour_index) {
+    const auto& interval = intervals[contour_index];
+    const auto& feature_collection = contours[contour_index];
+
     // color was supplied
     std::stringstream hex;
-    if (color_itr != colors.end() && !color_itr->second.empty()) {
-      hex << "#" << color_itr->second;
+    if (!std::get<3>(interval).empty()) {
+      hex << "#" << std::get<3>(interval);
     } // or we computed it..
     else {
-      auto h = i * (150.f / grid_contours.size());
+      auto h = i * (150.f / intervals.size());
       auto c = .5f;
       auto x = c * (1 - std::abs(std::fmod(h / 60.f, 2.f) - 1));
       auto m = .25f;
@@ -49,7 +50,7 @@ serializeIsochrones(const Api& request,
     ++i;
 
     // for each feature on that interval
-    for (const auto& feature : interval.second) {
+    for (const auto& feature : feature_collection) {
       // for each contour in that feature
       auto geom = array({});
       for (const auto& contour : feature) {
@@ -74,7 +75,8 @@ serializeIsochrones(const Api& request,
                            {"coordinates", geom},
                        })},
           {"properties", map({
-                             {"contour", static_cast<uint64_t>(interval.first)},
+                             {"metric", std::get<2>(interval)},
+                             {"contour", static_cast<uint64_t>(std::get<1>(interval))},
                              {"color", hex.str()},            // lines
                              {"fill", hex.str()},             // geojson.io polys
                              {"fillColor", hex.str()},        // leaflet polys
@@ -134,19 +136,5 @@ serializeIsochrones(const Api& request,
   ss << *feature_collection;
   return ss.str();
 }
-
-template std::string
-serializeIsochrones<midgard::Point2>(const Api&,
-                                     const midgard::GriddedData<midgard::Point2>::contours_t&,
-                                     bool,
-                                     const std::unordered_map<float, std::string>&,
-                                     bool);
-template std::string
-serializeIsochrones<midgard::PointLL>(const Api&,
-                                      const midgard::GriddedData<midgard::PointLL>::contours_t&,
-                                      bool,
-                                      const std::unordered_map<float, std::string>&,
-                                      bool);
-
 } // namespace tyr
 } // namespace valhalla

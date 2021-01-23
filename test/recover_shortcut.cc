@@ -45,7 +45,7 @@ boost::property_tree::ptree get_conf() {
         "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
         "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
         "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
+        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time_contour": 120, "max_distance_contour":200},
         "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
         "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
         "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
@@ -87,7 +87,7 @@ void recover(bool cache) {
         graphreader.Trim();
 
       // for each edge in the tile
-      const auto* tile = graphreader.GetGraphTile(tileid);
+      auto tile = graphreader.GetGraphTile(tileid);
       for (size_t j = 0; j < tile->header()->directededgecount(); ++j) {
         // skip it if its not a shortcut or the shortcut is one we will never traverse
         const auto* edge = tile->directededge(j);
@@ -117,7 +117,7 @@ void recover(bool cache) {
         // accumulate the shape along the edges that we recovered
         std::vector<PointLL> recovered_shape;
         for (auto edgeid : edgeids) {
-          const auto* tile = graphreader.GetGraphTile(edgeid);
+          auto tile = graphreader.GetGraphTile(edgeid);
           const auto* de = tile->directededge(edgeid);
           auto de_shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
           if (!de->forward()) {

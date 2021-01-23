@@ -11,33 +11,33 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
-constexpr uint64_t kInitialEdgeLabelCount = 500000;
+constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Number of iterations to allow with no convergence to the destination
 constexpr uint32_t kMaxIterationsWithoutConvergence = 800000;
 
 // Default constructor
-TimeDepForward::TimeDepForward()
-    : PathAlgorithm(), mode_(TravelMode::kDrive), travel_type_(0), adjacencylist_(nullptr),
-      max_label_count_(std::numeric_limits<uint32_t>::max()) {
-  mode_ = TravelMode::kDrive;
-  travel_type_ = 0;
-  adjacencylist_ = nullptr;
-  max_label_count_ = std::numeric_limits<uint32_t>::max();
+TimeDepForward::TimeDepForward(uint32_t max_reserved_labels_count)
+    : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
+      mode_(TravelMode::kDrive), travel_type_(0),
+      max_reserved_labels_count_(max_reserved_labels_count) {
 }
 
 // Destructor
 TimeDepForward::~TimeDepForward() {
-  Clear();
 }
 
 // Clear the temporary information generated during path construction.
 void TimeDepForward::Clear() {
   // Clear the edge labels and destination list. Reset the adjacency list
   // and clear edge status.
+  if (edgelabels_.size() > max_reserved_labels_count_) {
+    edgelabels_.resize(max_reserved_labels_count_);
+    edgelabels_.shrink_to_fit();
+  }
   edgelabels_.clear();
   destinations_percent_along_.clear();
-  adjacencylist_.reset();
+  adjacencylist_.clear();
   edgestatus_.clear();
 
   // Set the ferry flag to false
@@ -52,22 +52,19 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
                                    const GraphId& node,
                                    EdgeLabel& pred,
                                    const uint32_t pred_idx,
-                                   const bool from_transition,
                                    const TimeInfo& time_info,
                                    const valhalla::Location& destination,
                                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return false;
   }
   const NodeInfo* nodeinfo = tile->node(node);
 
   // Update the time information
-  auto offset_time =
-      from_transition ? time_info
-                      : time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
+  auto offset_time = time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
 
   if (!costing_->Allowed(nodeinfo)) {
     const DirectedEdge* opp_edge;
@@ -82,68 +79,66 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
   // Expand from start node.
   EdgeMetadata meta = EdgeMetadata::make(node, nodeinfo, tile, edgestatus_);
 
-  bool found_valid_edge = false;
-  bool found_uturn = false;
-  EdgeMetadata uturn_meta = {};
+  bool disable_uturn = false;
+  EdgeMetadata uturn_meta{};
 
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, meta.increment_pointers()) {
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); ++i, ++meta) {
 
     // Begin by checking if this is the opposing edge to pred.
     // If so, it means we are attempting a u-turn. In that case, lets wait with evaluating
     // this edge until last. If any other edges were emplaced, it means we should not
     // even try to evaluate a u-turn since u-turns should only happen for deadends
-    if (pred.opp_local_idx() == meta.edge->localedgeidx()) {
-      uturn_meta = meta;
-      found_uturn = true;
-      continue;
-    }
+    uturn_meta = pred.opp_local_idx() == meta.edge->localedgeidx() ? meta : uturn_meta;
 
-    found_valid_edge = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, meta, tile,
-                                          offset_time, destination, best_path) ||
-                       found_valid_edge;
+    // Expand but only if this isnt the uturn, we'll try that later if nothing else works out
+    disable_uturn = (pred.opp_local_idx() != meta.edge->localedgeidx() &&
+                     ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, meta, tile,
+                                        offset_time, destination, best_path)) ||
+                    disable_uturn;
   }
 
   // Handle transitions - expand from the end node of each transition
-  if (!from_transition && nodeinfo->transition_count() > 0) {
+  if (nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      if (trans->up()) {
-        hierarchy_limits_[node.level()].up_transition_count++;
-        found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true,
-                                         offset_time, destination, best_path) ||
-                           found_valid_edge;
-      } else if (!hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) {
-        found_valid_edge = ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true,
-                                         offset_time, destination, best_path) ||
-                           found_valid_edge;
+      // if this is a downward transition (ups are always allowed) AND we are no longer allowed OR
+      // we cant get the tile at that level (local extracts could have this problem) THEN bail
+      graph_tile_ptr trans_tile = nullptr;
+      if ((!trans->up() && hierarchy_limits_[trans->endnode().level()].StopExpanding()) ||
+          !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
+        continue;
+      }
+      // setup for expansion at this level
+      hierarchy_limits_[node.level()].up_transition_count += trans->up();
+      const auto* trans_node = trans_tile->node(trans->endnode());
+      EdgeMetadata trans_meta =
+          EdgeMetadata::make(trans->endnode(), trans_node, trans_tile, edgestatus_);
+      // expand the edges from this node at this level
+      for (uint32_t i = 0; i < trans_node->edge_count(); ++i, ++trans_meta) {
+        disable_uturn = ExpandForwardInner(graphreader, pred, trans_node, pred_idx, trans_meta,
+                                           trans_tile, offset_time, destination, best_path) ||
+                        disable_uturn;
       }
     }
   }
 
-  if (!from_transition) {
-    // Now, after having looked at all the edges, including edges on other levels,
-    // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
-    if (!found_valid_edge && found_uturn) {
-      // If we found no suitable edge to add, it means we're at a deadend
-      // so lets go back and re-evaluate a potential u-turn
+  // Now, after having looked at all the edges, including edges on other levels,
+  // we can say if this is a deadend or not, and if so, evaluate the uturn-edge (if it exists)
+  if (!disable_uturn && uturn_meta) {
+    // If we found no suitable edge to add, it means we're at a deadend
+    // so lets go back and re-evaluate a potential u-turn
+    pred.set_deadend(true);
 
-      pred.set_deadend(true);
+    // TODO Is there a shortcut that supersedes our u-turn?
+    // Decide if we should expand a shortcut or the non-shortcut edge...
 
-      // Decide if we should expand a shortcut or the non-shortcut edge...
-      bool was_uturn_shortcut_added = false;
-
-      // TODO Is there a shortcut that supersedes our u-turn?
-      if (was_uturn_shortcut_added) {
-        found_valid_edge = true;
-      } else {
-        // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
-        found_valid_edge = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, uturn_meta, tile,
-                                              offset_time, destination, best_path) ||
-                           found_valid_edge;
-      }
-    }
+    // We didn't add any shortcut of the uturn, therefore evaluate the regular uturn instead
+    disable_uturn = ExpandForwardInner(graphreader, pred, nodeinfo, pred_idx, uturn_meta, tile,
+                                       offset_time, destination, best_path) ||
+                    disable_uturn;
   }
-  return found_valid_edge;
+
+  return disable_uturn;
 }
 
 // Runs in the inner loop of `ExpandForward`, essentially evaluating if
@@ -156,7 +151,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
                                                const NodeInfo* nodeinfo,
                                                const uint32_t pred_idx,
                                                const EdgeMetadata& meta,
-                                               const GraphTile* tile,
+                                               const graph_tile_ptr& tile,
                                                const TimeInfo& time_info,
                                                const valhalla::Location& destination,
                                                std::pair<int32_t, float>& best_path) {
@@ -216,7 +211,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
     EdgeLabel& lab = edgelabels_[meta.edge_status->index()];
     if (newcost.cost < lab.cost().cost) {
       float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-      adjacencylist_->decrease(meta.edge_status->index(), newsortcost);
+      adjacencylist_.decrease(meta.edge_status->index(), newsortcost);
       lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
     }
     return true;
@@ -228,7 +223,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   float dist = 0.0f;
   float sortcost = newcost.cost;
   if (dest_edge == destinations_percent_along_.end()) {
-    const GraphTile* t2 =
+    graph_tile_ptr t2 =
         meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
     if (t2 == nullptr) {
       return false;
@@ -241,7 +236,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   edgelabels_.emplace_back(pred_idx, meta.edge_id, meta.edge, newcost, sortcost, dist, mode_, 0,
                            transition_cost, restriction_idx);
   *meta.edge_status = {EdgeSet::kTemporary, idx};
-  adjacencylist_->add(idx);
+  adjacencylist_.add(idx);
   return true;
 }
 
@@ -286,7 +281,6 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
   uint32_t nc = 0; // Count of iterations with no convergence
                    // towards destination
   std::pair<int32_t, float> best_path = std::make_pair(-1, 0.0f);
-  const GraphTile* tile;
   size_t total_labels = 0;
   while (true) {
     // Allow this process to be aborted
@@ -304,7 +298,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->pop();
+    const uint32_t predindex = adjacencylist_.pop();
     if (predindex == kInvalidLabel) {
       LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabels_.size()));
       return {};
@@ -355,7 +349,7 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
     }
 
     // Expand forward from the end node of the predecessor edge.
-    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, forward_time_info, destination,
+    ExpandForward(graphreader, pred.endnode(), pred, predindex, forward_time_info, destination,
                   best_path);
   }
   return {}; // Should never get here
@@ -375,16 +369,13 @@ void TimeDepForward::Init(const midgard::PointLL& origll, const midgard::PointLL
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects.
   // TODO - reserve based on estimate based on distance and route type.
-  edgelabels_.reserve(kInitialEdgeLabelCount);
-
-  // Set up lambda to get sort costs
-  const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
+  edgelabels_.reserve(std::min(max_reserved_labels_count_, kInitialEdgeLabelCount));
 
   // Construct adjacency list, clear edge status.
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing_->UnitSize();
   float range = kBucketCount * bucketsize;
-  adjacencylist_.reset(new DoubleBucketQueue(mincost, range, bucketsize, edgecost));
+  adjacencylist_.reuse(mincost, range, bucketsize, &edgelabels_);
   edgestatus_.clear();
 
   // Get hierarchy limits from the costing. Get a copy since we increment
@@ -460,12 +451,12 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    const auto tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    const auto endtile = graphreader.GetGraphTile(directededge->endnode());
     if (endtile == nullptr) {
       continue;
     }
@@ -526,7 +517,7 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list
     uint32_t idx = edgelabels_.size();
     edgelabels_.push_back(edge_label);
-    adjacencylist_->add(idx);
+    adjacencylist_.add(idx);
 
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
   }
@@ -562,7 +553,7 @@ uint32_t TimeDepForward::SetDestination(GraphReader& graphreader, const valhalla
     // Edge score (penalty) is handled within GetPath. Do not add score here.
 
     // Get the tile relative density
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    auto tile = graphreader.GetGraphTile(edgeid);
     density = tile->header()->density();
   }
   return density;

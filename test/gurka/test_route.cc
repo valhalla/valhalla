@@ -287,7 +287,7 @@ protected:
     size_t second_of_week = 5 * 24 * 60 * 60 + 9 * 60 * 60 + 27;
     auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
     for (auto tile_id : reader->GetTileSet()) {
-      const auto* tile = reader->GetGraphTile(tile_id);
+      auto tile = reader->GetGraphTile(tile_id);
       for (const auto& e : tile->GetDirectedEdges()) {
         current = tile->GetSpeed(&e, baldr::kCurrentFlowMask, second_of_week);
         EXPECT_EQ(current, 50);

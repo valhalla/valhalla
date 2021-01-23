@@ -270,9 +270,9 @@ TEST(RampsTCs, test_tc_infer) {
   EXPECT_EQ(leg.node(4).edge().use(), valhalla::TripLeg_Use::TripLeg_Use_kRoadUse);
   EXPECT_EQ(leg.node(4).edge().internal_intersection(), 0);
 
-  gurka::assert::raw::expect_maneuver_begin_path_indexes(result, {0, 1, 2, 4, 5});
+  gurka::assert::raw::expect_maneuver_begin_path_indexes(result, {0, 1, 4, 5});
 
-  int maneuver_index = 3;
+  int maneuver_index = 2;
 
   // Verify that we are marking the internal edge.  If not, there will be a continue instruction
   gurka::assert::raw::expect_instructions_at_maneuver_index(

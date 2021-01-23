@@ -65,6 +65,7 @@ void AssignAdmins(const AttributesController& controller,
                   const std::vector<AdminInfo>& admin_info_list) {
   if (controller.category_attribute_enabled(kAdminCategory)) {
     // Assign the admins
+    trip_path.mutable_admin()->Reserve(admin_info_list.size());
     for (const auto& admin_info : admin_info_list) {
       TripLeg_Admin* trip_admin = trip_path.add_admin();
 
@@ -141,7 +142,7 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
  * @param incidents
  */
 void SetShapeAttributes(const AttributesController& controller,
-                        const GraphTile* tile,
+                        const graph_tile_ptr& tile,
                         const DirectedEdge* edge,
                         std::vector<PointLL>& shape,
                         size_t shape_begin,
@@ -183,13 +184,18 @@ void SetShapeAttributes(const AttributesController& controller,
     // cutting for now
     const auto& traffic_speed = tile->trafficspeed(edge);
     if (traffic_speed.breakpoint1 > 0) {
-      cuts.emplace_back(cut_t{traffic_speed.breakpoint1 / 255.0, speed,
-                              static_cast<std::uint8_t>(traffic_speed.congestion1)});
+      cuts.emplace_back(cut_t{traffic_speed.breakpoint1 / 255.0,
+                              speed,
+                              static_cast<std::uint8_t>(traffic_speed.congestion1),
+                              {}});
       if (traffic_speed.breakpoint2 > 0) {
-        cuts.emplace_back(cut_t{traffic_speed.breakpoint2 / 255.0, speed,
-                                static_cast<std::uint8_t>(traffic_speed.congestion2)});
+        cuts.emplace_back(cut_t{traffic_speed.breakpoint2 / 255.0,
+                                speed,
+                                static_cast<std::uint8_t>(traffic_speed.congestion2),
+                                {}});
         if (traffic_speed.speed3 != UNKNOWN_TRAFFIC_SPEED_RAW) {
-          cuts.emplace_back(cut_t{1, speed, static_cast<std::uint8_t>(traffic_speed.congestion3)});
+          cuts.emplace_back(
+              cut_t{1, speed, static_cast<std::uint8_t>(traffic_speed.congestion3), {}});
         }
       }
     }
@@ -248,6 +254,24 @@ void SetShapeAttributes(const AttributesController& controller,
                                 return distance_total_pct <= s.percent_along;
                               });
   assert(cut_itr != cuts.cend());
+
+  // reservations
+  if (controller.attributes.at(kShapeAttributesTime)) {
+    leg.mutable_shape_attributes()->mutable_time()->Reserve(leg.shape_attributes().time_size() +
+                                                            shape.size() + cuts.size());
+  }
+  if (controller.attributes.at(kShapeAttributesLength)) {
+    leg.mutable_shape_attributes()->mutable_length()->Reserve(leg.shape_attributes().length_size() +
+                                                              shape.size() + cuts.size());
+  }
+  if (controller.attributes.at(kShapeAttributesSpeed)) {
+    leg.mutable_shape_attributes()->mutable_speed()->Reserve(leg.shape_attributes().speed_size() +
+                                                             shape.size() + cuts.size());
+  }
+  if (controller.attributes.at(kShapeAttributesSpeedLimit)) {
+    leg.mutable_shape_attributes()->mutable_speed_limit()->Reserve(
+        leg.shape_attributes().speed_limit_size() + shape.size() + cuts.size());
+  }
 
   // Set the shape attributes
   for (auto i = shape_begin + 1; i < shape.size(); ++i) {
@@ -422,11 +446,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const DirectedEdge* directededge,
                           const bool drive_on_right,
                           TripLeg_Node* trip_node,
-                          const GraphTile* graphtile,
+                          const graph_tile_ptr& graphtile,
                           const uint32_t second_of_week,
                           const uint32_t start_node_idx,
                           const bool has_junction_name,
-                          const GraphTile* start_tile,
+                          const graph_tile_ptr& start_tile,
                           const int restrictions_idx) {
 
   // Index of the directed edge within the tile
@@ -440,6 +464,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Add names to edge if requested
   if (controller.attributes.at(kEdgeNames)) {
     auto names_and_types = edgeinfo.GetNamesAndTypes();
+    trip_edge->mutable_name()->Reserve(names_and_types.size());
     for (const auto& name_and_type : names_and_types) {
       auto* trip_edge_name = trip_edge->mutable_name()->Add();
       trip_edge_name->set_value(name_and_type.first);
@@ -450,6 +475,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Add tagged names to the edge if requested
   if (controller.attributes.at(kEdgeTaggedNames)) {
     auto tagged_names_and_types = edgeinfo.GetTaggedNamesAndTypes();
+    trip_edge->mutable_tagged_name()->Reserve(tagged_names_and_types.size());
     for (const auto& tagged_name_and_type : tagged_names_and_types) {
       auto* trip_edge_tag_name = trip_edge->mutable_tagged_name()->Add();
       trip_edge_tag_name->set_value(tagged_name_and_type.first);
@@ -559,6 +585,8 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
             }
             break;
           }
+          default:
+            break;
         }
       }
     }
@@ -567,6 +595,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // If turn lanes exist
   if (directededge->turnlanes()) {
     auto turnlanes = graphtile->turnlanes(idx);
+    trip_edge->mutable_turn_lanes()->Reserve(turnlanes.size());
     for (auto tl : turnlanes) {
       TurnLane* turn_lane = trip_edge->add_turn_lanes();
       turn_lane->set_directions_mask(tl);
@@ -773,7 +802,9 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   }
 
   if (directededge->laneconnectivity() && controller.attributes.at(kEdgeLaneConnectivity)) {
-    for (const auto& l : graphtile->GetLaneConnectivity(idx)) {
+    auto laneconnectivity = graphtile->GetLaneConnectivity(idx);
+    trip_edge->mutable_lane_connectivity()->Reserve(laneconnectivity.size());
+    for (const auto& l : laneconnectivity) {
       TripLeg_LaneConnectivity* path_lane = trip_edge->add_lane_connectivity();
       path_lane->set_from_way_id(l.from());
       path_lane->set_to_lanes(l.to_lanes());
@@ -1056,13 +1087,13 @@ void TripLegBuilder::Build(
   // opposing edge then use the opposing index to get the opposing edge, and its end node is the
   // begin node of the original edge
   auto* first_edge = graphreader.GetGraphTile(path_begin->edgeid)->directededge(path_begin->edgeid);
-  auto* first_tile = graphreader.GetGraphTile(first_edge->endnode());
+  auto first_tile = graphreader.GetGraphTile(first_edge->endnode());
   auto* first_node = first_tile->node(first_edge->endnode());
   GraphId startnode =
       first_tile->directededge(first_node->edge_index() + first_edge->opp_index())->endnode();
 
   // Partial edge at the start and side of street (sos)
-  float start_pct;
+  float start_pct = 0.;
   valhalla::Location::SideOfStreet start_sos =
       valhalla::Location::SideOfStreet::Location_SideOfStreet_kNone;
   PointLL start_vrt;
@@ -1086,7 +1117,7 @@ void TripLegBuilder::Build(
   }
 
   // Partial edge at the end
-  float end_pct;
+  float end_pct = 1.;
   valhalla::Location::SideOfStreet end_sos =
       valhalla::Location::SideOfStreet::Location_SideOfStreet_kNone;
   PointLL end_vrt;
@@ -1119,12 +1150,14 @@ void TripLegBuilder::Build(
   uint64_t osmchangeset = 0;
   size_t edge_index = 0;
   const DirectedEdge* prev_de = nullptr;
-  const GraphTile* graphtile = nullptr;
+  graph_tile_ptr graphtile = nullptr;
   TimeInfo time_info = forward_time_info;
   // remember that MultimodalBuilder keeps 'time_info' as reference,
   // so we should care about 'time_info' updates during iterations
   MultimodalBuilder multimodal_builder(origin, time_info);
 
+  // prepare to make some edges!
+  trip_path.mutable_node()->Reserve((path_end - path_begin) + 1);
   for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {
     const GraphId& edge = edge_itr->edgeid;
     graphtile = graphreader.GetGraphTile(edge, graphtile);
@@ -1134,8 +1167,8 @@ void TripLegBuilder::Build(
     const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
 
     // Set node attributes - only set if they are true since they are optional
-    const GraphTile* start_tile = graphtile;
-    start_tile = graphreader.GetGraphTile(startnode, start_tile);
+    graph_tile_ptr start_tile = graphtile;
+    graphreader.GetGraphTile(startnode, start_tile);
     const NodeInfo* node = start_tile->node(startnode);
 
     if (osmchangeset == 0 && controller.attributes.at(kOsmChangeset)) {
@@ -1336,8 +1369,9 @@ void TripLegBuilder::Build(
     // must be done after the edge's shape has been added.
     SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
 
-    // Add the intersecting edges at the node
-    if (startnode.Is_Valid()) {
+    // Add the intersecting edges at the node. Skip it if the node was an inner node (excluding start
+    // node and end node) of a shortcut that was recovered.
+    if (startnode.Is_Valid() && !edge_itr->start_node_is_recovered) {
       AddIntersectingEdges(controller, start_tile, node, directededge, prev_de, prior_opp_local_index,
                            graphreader, trip_node);
     }
@@ -1349,7 +1383,7 @@ void TripLegBuilder::Build(
 
     // Save the opposing edge as the previous DirectedEdge (for name consistency)
     if (!directededge->IsTransitLine()) {
-      const GraphTile* t2 =
+      graph_tile_ptr t2 =
           directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : graphtile;
       if (t2 == nullptr) {
         continue;
@@ -1365,7 +1399,7 @@ void TripLegBuilder::Build(
   // Add the last node
   auto* node = trip_path.add_node();
   if (controller.attributes.at(kNodeAdminIndex)) {
-    auto* last_tile = graphreader.GetGraphTile(startnode);
+    auto last_tile = graphreader.GetGraphTile(startnode);
     node->set_admin_index(
         GetAdminIndex(last_tile->admininfo(last_tile->node(startnode)->admin_index()), admin_info_map,
                       admin_info_list));

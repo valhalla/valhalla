@@ -57,7 +57,7 @@ void TimeDistanceMatrix::Clear() {
   dest_edges_.clear();
 
   // Clear elements from the adjacency list
-  adjacencylist_.reset();
+  adjacencylist_.clear();
 
   // Clear the edge status flags
   edgestatus_.clear();
@@ -71,7 +71,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
                                        const bool from_transition) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return;
   }
@@ -112,7 +112,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
       EdgeLabel& lab = edgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(es->index(), newsortcost);
+        adjacencylist_.decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, restriction_idx);
       }
       continue;
@@ -123,7 +123,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                              distance, transition_cost, restriction_idx);
     *es = {EdgeSet::kTemporary, idx};
-    adjacencylist_->add(idx);
+    adjacencylist_.add(idx);
   }
 
   // Handle transitions - expand from the end node each transition
@@ -154,9 +154,7 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
   // factor (needed for setting the origin).
   astarheuristic_.Init({origin.ll().lng(), origin.ll().lat()}, 0.0f);
   uint32_t bucketsize = costing_->UnitSize();
-  // Set up lambda to get sort costs
-  const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
-  adjacencylist_.reset(new DoubleBucketQueue(0.0f, current_cost_threshold_, bucketsize, edgecost));
+  adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, &edgelabels_);
   edgestatus_.clear();
 
   // Initialize the origin and destination locations
@@ -165,11 +163,11 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
   SetDestinations(graphreader, locations);
 
   // Find shortest path
-  const GraphTile* tile;
+  graph_tile_ptr tile;
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->pop();
+    uint32_t predindex = adjacencylist_.pop();
     if (predindex == kInvalidLabel) {
       // Can not expand any further...
       return FormTimeDistanceMatrix();
@@ -216,7 +214,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
                                        const bool from_transition) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return;
   }
@@ -245,7 +243,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     }
 
     // Get opposing edge Id and end node tile
-    const GraphTile* t2 =
+    graph_tile_ptr t2 =
         directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
     if (t2 == nullptr) {
       continue;
@@ -273,7 +271,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
       EdgeLabel& lab = edgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(es->index(), newsortcost);
+        adjacencylist_.decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, restriction_idx);
       }
       continue;
@@ -284,7 +282,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
                              distance, transition_cost, restriction_idx);
     *es = {EdgeSet::kTemporary, idx};
-    adjacencylist_->add(idx);
+    adjacencylist_.add(idx);
   }
 
   // Handle transitions - expand from the end node each transition
@@ -315,8 +313,7 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
   // factor (needed for setting the origin).
   astarheuristic_.Init({dest.ll().lng(), dest.ll().lat()}, 0.0f);
   uint32_t bucketsize = costing_->UnitSize();
-  const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
-  adjacencylist_.reset(new DoubleBucketQueue(0.0f, current_cost_threshold_, bucketsize, edgecost));
+  adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, &edgelabels_);
   edgestatus_.clear();
 
   // Initialize the origin and destination locations
@@ -325,11 +322,11 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
   SetDestinationsManyToOne(graphreader, locations);
 
   // Find shortest path
-  const GraphTile* tile;
+  graph_tile_ptr tile;
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->pop();
+    uint32_t predindex = adjacencylist_.pop();
     if (predindex == kInvalidLabel) {
       // Can not expand any further...
       return FormTimeDistanceMatrix();
@@ -430,12 +427,12 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode());
     if (endtile == nullptr) {
       continue;
     }
@@ -456,7 +453,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, {});
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
-    adjacencylist_->add(edgelabels_.size() - 1);
+    adjacencylist_.add(edgelabels_.size() - 1);
   }
 }
 
@@ -472,7 +469,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the opposing directed edge, continue if we cannot get it
@@ -484,7 +481,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode());
     if (endtile == nullptr) {
       continue;
     }
@@ -507,7 +504,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
                          {});
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
-    adjacencylist_->add(edgelabels_.size() - 1);
+    adjacencylist_.add(edgelabels_.size() - 1);
   }
 }
 
@@ -540,7 +537,7 @@ void TimeDistanceMatrix::SetDestinations(
 
       // Form a threshold cost (the total cost to traverse the edge)
       GraphId id(static_cast<GraphId>(edge.graph_id()));
-      const GraphTile* tile = graphreader.GetGraphTile(id);
+      graph_tile_ptr tile = graphreader.GetGraphTile(id);
       const DirectedEdge* directededge = tile->directededge(id);
       float c = costing_->EdgeCost(directededge, tile).cost;
 
@@ -586,7 +583,7 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(
 
       // Form a threshold cost (the total cost to traverse the edge)
       GraphId id(static_cast<GraphId>(edge.graph_id()));
-      const GraphTile* tile = graphreader.GetGraphTile(id);
+      graph_tile_ptr tile = graphreader.GetGraphTile(id);
       const DirectedEdge* directededge = tile->directededge(id);
       float c = costing_->EdgeCost(directededge, tile).cost;
 
@@ -613,9 +610,9 @@ bool TimeDistanceMatrix::UpdateDestinations(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     std::vector<uint32_t>& destinations,
     const DirectedEdge* edge,
-    const GraphTile* tile,
+    const graph_tile_ptr& tile,
     const EdgeLabel& pred,
-    const uint32_t predindex) {
+    const uint32_t /*predindex*/) {
   // For each destination along this edge
   for (auto dest_idx : destinations) {
     Destination& dest = destinations_[dest_idx];

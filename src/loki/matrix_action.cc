@@ -30,10 +30,8 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
       auto path_distance = to_ll(source).Distance(to_ll(target));
 
       // only want to log the maximum distance between 2 locations for matrix
-      LOG_DEBUG("path_distance -> " + std::to_string(path_distance));
       if (path_distance >= max_location_distance) {
         max_location_distance = path_distance;
-        LOG_DEBUG("max_location_distance -> " + std::to_string(max_location_distance));
       }
 
       if (path_distance > matrix_max_distance) {
@@ -87,6 +85,9 @@ void loki_worker_t::init_matrix(Api& request) {
 }
 
 void loki_worker_t::matrix(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request, "loki_worker_t::matrix");
+
   init_matrix(request);
   auto& options = *request.mutable_options();
   const auto& costing_name = Costing_Enum_Name(options.costing());
@@ -120,9 +121,10 @@ void loki_worker_t::matrix(Api& request) {
       const auto& l = sources_targets[i];
       const auto& projection = searched.at(l);
       PathLocation::toPBF(projection,
-                          i < options.sources_size()
+                          i < static_cast<size_t>(options.sources_size())
                               ? options.mutable_sources(i)
-                              : options.mutable_targets(i - options.sources_size()),
+                              : options.mutable_targets(i -
+                                                        static_cast<size_t>(options.sources_size())),
                           *reader);
       // TODO: get transit level for transit costing
       // TODO: if transit send a non zero radius
@@ -155,12 +157,6 @@ void loki_worker_t::matrix(Api& request) {
   if (!connected) {
     throw valhalla_exception_t{170};
   };
-  if (!options.do_not_track()) {
-    valhalla::midgard::logging::Log("max_location_distance::" +
-                                        std::to_string(max_location_distance * midgard::kKmPerMeter) +
-                                        "km",
-                                    " [ANALYTICS] ");
-  }
 }
 } // namespace loki
 } // namespace valhalla

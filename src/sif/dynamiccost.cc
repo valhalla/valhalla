@@ -1,4 +1,5 @@
 #include "sif/dynamiccost.h"
+
 #include "baldr/graphconstants.h"
 #include "proto_conversions.h"
 #include "sif/autocost.h"
@@ -10,6 +11,7 @@
 #include "sif/transitcost.h"
 #include "sif/truckcost.h"
 #include "worker.h"
+#include <utility>
 
 using namespace valhalla::baldr;
 
@@ -48,12 +50,22 @@ uint8_t SpeedMask_Parse(const boost::optional<const rapidjson::Value&>& speed_ty
 namespace valhalla {
 namespace sif {
 
+// default options/parameters
+namespace {
+
+// min and max factors to apply when use tracks
+constexpr float kMinTrackFactor = 0.8f;
+constexpr float kMaxTrackFactor = 10.f;
+
+} // namespace
+
 DynamicCost::DynamicCost(const CostingOptions& options, const TravelMode mode, uint32_t access_mask)
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true), travel_mode_(mode),
       access_mask_(access_mask), flow_mask_(kDefaultFlowMask), shortest_(options.shortest()),
       ignore_restrictions_(options.ignore_restrictions()), ignore_oneways_(options.ignore_oneways()),
       ignore_access_(options.ignore_access()), ignore_closures_(options.ignore_closures()),
-      top_speed_(options.top_speed()) {
+      top_speed_(options.top_speed()),
+      filter_closures_(ignore_closures_ ? false : options.filter_closures()) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
@@ -81,7 +93,7 @@ bool DynamicCost::AllowMultiPass() const {
 // using them for the current route. Here we just call out to the derived classes costing function
 // with a time that tells the function that we aren't using time. This avoids having to worry about
 // default parameters and inheritance (which are a bad mix)
-Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const baldr::GraphTile* tile) const {
+Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
   return EdgeCost(edge, tile, kConstrainedFlowSecondOfDay);
 }
 
@@ -188,16 +200,16 @@ bool DynamicCost::bicycle() const {
 }
 
 // Add to the exclude list.
-void DynamicCost::AddToExcludeList(const baldr::GraphTile*&) {
+void DynamicCost::AddToExcludeList(const graph_tile_ptr&) {
 }
 
 // Checks if we should exclude or not.
-bool DynamicCost::IsExcluded(const baldr::GraphTile*&, const baldr::DirectedEdge*) {
+bool DynamicCost::IsExcluded(const graph_tile_ptr&, const baldr::DirectedEdge*) {
   return false;
 }
 
 // Checks if we should exclude or not.
-bool DynamicCost::IsExcluded(const baldr::GraphTile*&, const baldr::NodeInfo*) {
+bool DynamicCost::IsExcluded(const graph_tile_ptr&, const baldr::NodeInfo*) {
   return false;
 }
 
@@ -210,7 +222,16 @@ void DynamicCost::AddUserAvoidEdges(const std::vector<AvoidEdge>& avoid_edges) {
 
 Cost DynamicCost::BSSCost() const {
   return kNoCost;
-};
+}
+
+void DynamicCost::set_use_tracks(float use_tracks) {
+  // Calculate factor value based on use preference. Return value
+  // in range [kMaxTrackFactor; 1], if use < 0.5; or
+  // in range [1; kMinTrackFactor], if use > 0.5
+  track_factor_ = use_tracks < 0.5f
+                      ? (kMaxTrackFactor - 2.f * use_tracks * (kMaxTrackFactor - 1.f))
+                      : (kMinTrackFactor + 2.f * (1.f - use_tracks) * (1.f - kMinTrackFactor));
+}
 
 void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_costing_options) {
   auto speed_types = rapidjson::get_child_optional(value, "/speed_types");

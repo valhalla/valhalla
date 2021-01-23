@@ -33,6 +33,9 @@ public:
   PathAlgorithm() : interrupt(nullptr), has_ferry_(false), expansion_callback_() {
   }
 
+  PathAlgorithm(const PathAlgorithm&) = delete;
+  PathAlgorithm& operator=(const PathAlgorithm&) = delete;
+
   /**
    * Destructor
    */
@@ -143,7 +146,7 @@ struct EdgeMetadata {
 
   inline static EdgeMetadata make(const baldr::GraphId& node,
                                   const baldr::NodeInfo* nodeinfo,
-                                  const baldr::GraphTile* tile,
+                                  const graph_tile_ptr& tile,
                                   EdgeStatus& edge_status_) {
     baldr::GraphId edge_id = {node.tileid(), node.level(), nodeinfo->edge_index()};
     EdgeStatusInfo* edge_status = edge_status_.GetPtr(edge_id, tile);
@@ -151,10 +154,19 @@ struct EdgeMetadata {
     return {directededge, edge_id, edge_status};
   }
 
-  inline void increment_pointers() {
+  inline EdgeMetadata& operator++() {
     ++edge;
     ++edge_id;
     ++edge_status;
+    return *this;
+  }
+
+  inline operator bool() const {
+    return edge;
+  }
+
+  inline bool operator!() const {
+    return !edge;
   }
 };
 

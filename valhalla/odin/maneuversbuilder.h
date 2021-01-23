@@ -44,6 +44,17 @@ protected:
                                                std::list<Maneuver>::iterator curr_man,
                                                std::list<Maneuver>::iterator next_man);
 
+  bool PossibleUnspecifiedInternalManeuver(std::list<Maneuver>::iterator prev_man,
+                                           std::list<Maneuver>::iterator curr_man,
+                                           std::list<Maneuver>::iterator next_man);
+
+  std::list<Maneuver>::iterator
+  CombineUnspecifiedInternalManeuver(std::list<Maneuver>& maneuvers,
+                                     std::list<Maneuver>::iterator prev_man,
+                                     std::list<Maneuver>::iterator curr_man,
+                                     std::list<Maneuver>::iterator next_man,
+                                     const DirectionsLeg_Maneuver_Type& maneuver_type);
+
   std::list<Maneuver>::iterator CombineInternalManeuver(std::list<Maneuver>& maneuvers,
                                                         std::list<Maneuver>::iterator prev_man,
                                                         std::list<Maneuver>::iterator curr_man,
@@ -288,6 +299,20 @@ protected:
                                           uint32_t new_node_index,
                                           EnhancedTripLeg_Edge* prev_edge,
                                           EnhancedTripLeg_Edge* edge);
+
+  /**
+   * Collapse a small end ramp fork maneuver if the fork and the next turn is in the same direction.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void CollapseSmallEndRampFork(std::list<Maneuver>& maneuvers);
+
+  /**
+   * Collapse merge maneuver with previous maneuver.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void CollapseMergeManeuvers(std::list<Maneuver>& maneuvers);
 
   const Options& options_;
   EnhancedTripLeg* trip_path_;

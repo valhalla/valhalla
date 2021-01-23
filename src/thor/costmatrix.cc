@@ -69,35 +69,13 @@ void CostMatrix::Clear() {
   targets_->clear();
 
   // Clear all source adjacency lists, edge labels, and edge status
-  for (auto& adj : source_adjacency_) {
-    adj.reset();
-  }
   source_adjacency_.clear();
-
-  for (auto& el : source_edgelabel_) {
-    el.clear();
-  }
   source_edgelabel_.clear();
-
-  for (auto& es : source_edgestatus_) {
-    es.clear();
-  }
   source_edgestatus_.clear();
 
   // Clear all target adjacency lists, edge labels, and edge status
-  for (auto& adj : target_adjacency_) {
-    adj.reset();
-  }
   target_adjacency_.clear();
-
-  for (auto& el : target_edgelabel_) {
-    el.clear();
-  }
   target_edgelabel_.clear();
-
-  for (auto& es : target_edgestatus_) {
-    es.clear();
-  }
   target_edgestatus_.clear();
 
   source_hierarchy_limits_.clear();
@@ -283,11 +261,11 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
   }
 
   // lambda to expand search forward from the end node
-  std::function<void(const GraphTile*, const GraphId&, const NodeInfo*, BDEdgeLabel&, const uint32_t,
+  std::function<void(graph_tile_ptr, const GraphId&, const NodeInfo*, BDEdgeLabel&, const uint32_t,
                      const bool)>
       expand;
-  expand = [&](const GraphTile* tile, const GraphId& node, const NodeInfo* nodeinfo,
-               BDEdgeLabel& pred, const uint32_t pred_idx, const bool from_transition) {
+  expand = [&](graph_tile_ptr tile, const GraphId& node, const NodeInfo* nodeinfo, BDEdgeLabel& pred,
+               const uint32_t pred_idx, const bool from_transition) {
     uint32_t shortcuts = 0;
     GraphId edgeid = {node.tileid(), node.level(), nodeinfo->edge_index()};
     EdgeStatusInfo* es = edgestate.GetPtr(edgeid, tile);
@@ -338,7 +316,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       }
 
       // Get end node tile (skip if tile is not found) and opposing edge Id
-      const GraphTile* t2 =
+      graph_tile_ptr t2 =
           directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
       if (t2 == nullptr) {
         continue;
@@ -367,7 +345,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
 
         // Expand from end node of this transition.
         GraphId node = trans->endnode();
-        const GraphTile* endtile = graphreader.GetGraphTile(node);
+        graph_tile_ptr endtile = graphreader.GetGraphTile(node);
         if (endtile != nullptr) {
           expand(endtile, node, endtile->node(node), pred, pred_idx, true);
         }
@@ -378,7 +356,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
   // Expand from node in forward search path. Get the tile and the node info.
   // Skip if tile is null (can happen with regional data sets) or if no access
   // at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node);
   if (tile != nullptr) {
     const NodeInfo* nodeinfo = tile->node(node);
     if (costing_->Allowed(nodeinfo)) {
@@ -545,10 +523,10 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
   }
 
   // Expand from node in reverse direction.
-  std::function<void(const GraphTile*, const GraphId&, const NodeInfo*, const uint32_t, BDEdgeLabel&,
+  std::function<void(graph_tile_ptr, const GraphId&, const NodeInfo*, const uint32_t, BDEdgeLabel&,
                      const uint32_t, const DirectedEdge*, const bool)>
       expand;
-  expand = [&](const GraphTile* tile, const GraphId& node, const NodeInfo* nodeinfo,
+  expand = [&](graph_tile_ptr tile, const GraphId& node, const NodeInfo* nodeinfo,
                const uint32_t index, BDEdgeLabel& pred, const uint32_t pred_idx,
                const DirectedEdge* opp_pred_edge, const bool from_transition) {
     uint32_t shortcuts = 0;
@@ -578,7 +556,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       }
 
       // Get opposing edge Id and end node tile
-      const GraphTile* t2 =
+      graph_tile_ptr t2 =
           directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
       if (t2 == nullptr) {
         continue;
@@ -638,7 +616,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
 
         // Expand from end node of this transition edge.
         GraphId node = trans->endnode();
-        const GraphTile* endtile = graphreader.GetGraphTile(node);
+        graph_tile_ptr endtile = graphreader.GetGraphTile(node);
         if (endtile != nullptr) {
           expand(endtile, node, endtile->node(node), index, pred, pred_idx, opp_pred_edge, true);
         }
@@ -649,7 +627,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
 
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node);
   if (tile != nullptr) {
     const NodeInfo* nodeinfo = tile->node(node);
     if (costing_->Allowed(nodeinfo)) {
@@ -682,15 +660,11 @@ void CostMatrix::SetSources(GraphReader& graphreader,
   uint32_t index = 0;
   Cost empty_cost;
   for (const auto& origin : sources) {
-    // Set up lambda to get sort costs
-    const auto edgecost = [this, index](const uint32_t label) -> float {
-      return source_edgelabel_[index][label].sortcost();
-    };
-
     // Allocate the adjacency list and hierarchy limits for this source.
     // Use the cost threshold to size the adjacency list.
-    source_adjacency_[index].reset(
-        new DoubleBucketQueue(0, current_cost_threshold_, costing_->UnitSize(), edgecost));
+    source_adjacency_[index].reset(new DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
+                                                                      costing_->UnitSize(),
+                                                                      &source_edgelabel_[index]));
     source_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
     // Iterate through edges and add to adjacency list
@@ -707,7 +681,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       }
 
       // Get the directed edge and the opposing edge Id
-      const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+      graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
       GraphId oppedge = graphreader.GetOpposingEdgeId(edgeid);
 
@@ -759,15 +733,11 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
   uint32_t index = 0;
   Cost empty_cost;
   for (const auto& dest : targets) {
-    // Set up lambda to get sort costs
-    const auto edgecost = [this, index](const uint32_t label) {
-      return target_edgelabel_[index][label].sortcost();
-    };
-
     // Allocate the adjacency list and hierarchy limits for target location.
     // Use the cost threshold to size the adjacency list.
-    target_adjacency_[index].reset(
-        new DoubleBucketQueue(0, current_cost_threshold_, costing_->UnitSize(), edgecost));
+    target_adjacency_[index].reset(new DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
+                                                                      costing_->UnitSize(),
+                                                                      &target_edgelabel_[index]));
     target_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
     // Iterate through edges and add to adjacency list
@@ -786,7 +756,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       }
 
       // Get the directed edge
-      const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+      graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
 
       // Get the opposing directed edge, continue if we cannot get it

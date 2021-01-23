@@ -121,7 +121,6 @@ protected:
 
   Isochrone isochrone_gen;
   std::shared_ptr<meili::MapMatcher> matcher;
-  float long_request;
   float max_timedep_distance;
   std::unordered_map<std::string, float> max_matrix_distance;
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;

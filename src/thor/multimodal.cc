@@ -11,7 +11,7 @@ using namespace valhalla::sif;
 namespace {
 
 // Method to get an operator Id from a map of operator strings vs. Id.
-uint32_t GetOperatorId(const GraphTile* tile,
+uint32_t GetOperatorId(const graph_tile_ptr& tile,
                        uint32_t routeid,
                        std::unordered_map<std::string, uint32_t>& operators) {
   const TransitRoute* transit_route = tile->GetTransitRoute(routeid);
@@ -38,21 +38,21 @@ uint32_t GetOperatorId(const GraphTile* tile,
 namespace valhalla {
 namespace thor {
 
-constexpr uint64_t kInitialEdgeLabelCount = 200000;
+constexpr uint32_t kInitialEdgeLabelCount = 200000;
 
 // Default constructor
-MultiModalPathAlgorithm::MultiModalPathAlgorithm()
-    : PathAlgorithm(), walking_distance_(0), mode_(TravelMode::kPedestrian), travel_type_(0),
-      adjacencylist_(nullptr), max_label_count_(std::numeric_limits<uint32_t>::max()) {
+MultiModalPathAlgorithm::MultiModalPathAlgorithm(uint32_t max_reserved_labels_count)
+    : PathAlgorithm(), walking_distance_(0), max_label_count_(std::numeric_limits<uint32_t>::max()),
+      mode_(TravelMode::kPedestrian), travel_type_(0),
+      max_reserved_labels_count_(max_reserved_labels_count) {
 }
 
 // Destructor
 MultiModalPathAlgorithm::~MultiModalPathAlgorithm() {
-  Clear();
 }
 
 // Initialize prior to finding best path
-void MultiModalPathAlgorithm::Init(const midgard::PointLL& origll,
+void MultiModalPathAlgorithm::Init(const midgard::PointLL& /*origll*/,
                                    const midgard::PointLL& destll,
                                    const std::shared_ptr<DynamicCost>& costing) {
   // Disable A* for multimodal
@@ -60,16 +60,13 @@ void MultiModalPathAlgorithm::Init(const midgard::PointLL& origll,
 
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects
-  edgelabels_.reserve(kInitialEdgeLabelCount);
-
-  // Set up lambda to get sort costs
-  const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
+  edgelabels_.reserve(std::min(max_reserved_labels_count_, kInitialEdgeLabelCount));
 
   // Construct adjacency list and edge status.
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing->UnitSize();
   float range = kBucketCount * bucketsize;
-  adjacencylist_.reset(new DoubleBucketQueue(0.0f, range, bucketsize, edgecost));
+  adjacencylist_.reuse(0.0f, range, bucketsize, &edgelabels_);
   edgestatus_.clear();
 
   // Get hierarchy limits from the costing. Get a copy since we increment
@@ -80,11 +77,15 @@ void MultiModalPathAlgorithm::Init(const midgard::PointLL& origll,
 // Clear the temporary information generated during path construction.
 void MultiModalPathAlgorithm::Clear() {
   // Clear the edge labels and destination list
+  if (edgelabels_.size() > max_reserved_labels_count_) {
+    edgelabels_.resize(max_reserved_labels_count_);
+    edgelabels_.shrink_to_fit();
+  }
   edgelabels_.clear();
   destinations_.clear();
 
   // Clear elements from the adjacency list
-  adjacencylist_.reset();
+  adjacencylist_.clear();
 
   // Clear the edge status flags
   edgestatus_.clear();
@@ -100,7 +101,7 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
                                      GraphReader& graphreader,
                                      const sif::mode_costing_t& mode_costing,
                                      const TravelMode mode,
-                                     const Options& options) {
+                                     const Options& /*options*/) {
   // For pedestrian costing - set flag allowing use of transit connections
   // Set pedestrian costing to use max distance. TODO - need for other modes
   const auto& pc = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
@@ -180,7 +181,7 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->pop();
+    const uint32_t predindex = adjacencylist_.pop();
     if (predindex == kInvalidLabel) {
       LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabels_.size()));
       return {};
@@ -237,7 +238,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  auto tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return false;
   }
@@ -491,7 +492,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
       MMEdgeLabel& lab = edgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(es->index(), newsortcost);
+        adjacencylist_.decrease(es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, walking_distance_, tripid, blockid,
                    transition_cost, restriction_idx);
       }
@@ -505,9 +506,9 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     float sortcost = newcost.cost;
     if (p == destinations_.end()) {
       // Get the end node, skip if the end node tile is not found
-      const GraphTile* endtile =
-          (directededge->leaves_tile()) ? graphreader.GetGraphTile(directededge->endnode()) : tile;
-      if (endtile == nullptr) {
+      auto endtile = tile;
+      endtile = graphreader.GetGraphTile(directededge->endnode(), endtile);
+      if (!endtile) {
         continue;
       }
       const NodeInfo* endnode = endtile->node(directededge->endnode());
@@ -521,7 +522,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_,
                              walking_distance_, tripid, prior_stop, blockid, operator_id, has_transit,
                              transition_cost);
-    adjacencylist_->add(idx);
+    adjacencylist_.add(idx);
   }
 
   // Handle transitions - expand from the end node each transition
@@ -563,13 +564,13 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
-    if (endtile == nullptr) {
+    auto endtile = graphreader.GetGraphTile(directededge->endnode());
+    if (!endtile) {
       continue;
     }
 
@@ -632,7 +633,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list
     uint32_t idx = edgelabels_.size();
     edgelabels_.push_back(std::move(edge_label));
-    adjacencylist_->add(idx);
+    adjacencylist_.add(idx);
 
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
   }
@@ -649,11 +650,9 @@ uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
                                                  const valhalla::Location& dest,
                                                  const std::shared_ptr<DynamicCost>& costing) {
   // Only skip outbound edges if we have other options
-  bool has_other_edges = false;
-  std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
-                [&has_other_edges](const valhalla::Location::PathEdge& e) {
-                  has_other_edges = has_other_edges || !e.begin_node();
-                });
+  bool has_other_edges =
+      std::any_of(dest.path_edges().begin(), dest.path_edges().end(),
+                  [](const valhalla::Location::PathEdge& e) { return !e.begin_node(); });
 
   // For each edge
   uint32_t density = 0;
@@ -671,7 +670,7 @@ uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
 
     // Keep the cost to traverse the partial distance for the remainder of the edge. This cost
     // is subtracted from the total cost up to the end of the destination edge.
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* dest_diredge = tile->directededge(edgeid);
     destinations_[edge.graph_id()] =
         costing->EdgeCost(dest_diredge, tile) * (1.0f - edge.percent_along());
@@ -698,14 +697,15 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
                                              const std::shared_ptr<DynamicCost>& costing,
                                              EdgeStatus& edgestatus,
                                              std::vector<EdgeLabel>& edgelabels,
-                                             DoubleBucketQueue& adjlist,
+                                             DoubleBucketQueue<EdgeLabel>& adjlist,
                                              const bool from_transition) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  auto tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return false;
   }
+
   const NodeInfo* nodeinfo = tile->node(node);
   if (!costing->Allowed(nodeinfo)) {
     return false;
@@ -780,13 +780,10 @@ bool MultiModalPathAlgorithm::CanReachDestination(const valhalla::Location& dest
   EdgeStatus edgestatus;
   std::vector<EdgeLabel> edgelabels;
 
-  // Set up lambda to get sort costs (use the local edgelabels, not the class member!)
-  const auto edgecost = [&edgelabels](const uint32_t label) { return edgelabels[label].sortcost(); };
-
   // Use a simple Dijkstra method - no need to recover the path just need to make sure we can
   // get to a transit stop within the specified max. walking distance
   uint32_t bucketsize = costing->UnitSize();
-  DoubleBucketQueue adjlist(0.0f, kBucketCount * bucketsize, bucketsize, edgecost);
+  DoubleBucketQueue<EdgeLabel> adjlist(0.0f, kBucketCount * bucketsize, bucketsize, &edgelabels);
 
   // Add the opposing destination edges to the priority queue
   uint32_t label_idx = 0;
@@ -802,7 +799,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const valhalla::Location& dest
       continue;
     }
 
-    const GraphTile* tile = graphreader.GetGraphTile(oppedge);
+    graph_tile_ptr tile = graphreader.GetGraphTile(oppedge);
     const DirectedEdge* diredge = tile->directededge(oppedge);
     uint32_t length = static_cast<uint32_t>(diredge->length()) * ratio;
     Cost cost = costing->EdgeCost(diredge, tile) * ratio;

@@ -26,10 +26,10 @@ TEST(EdgeStatus, TestStatus) {
   // Dummy tile header
   GraphTileHeader header;
   header.set_directededgecount(200000);
-  test_tile tt;
-  tt.header_ = &header;
+  test_tile* tt = new test_tile;
+  tt->header_ = &header;
 
-  const GraphTile* tile = &tt;
+  graph_tile_ptr tile = tt;
 
   // Add some edges
   edgestatus.Set(GraphId(555, 1, 100100), EdgeSet::kPermanent, 1, tile);

@@ -10,6 +10,7 @@
 #include "meili/match_result.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "thor/attributes_controller.h"
@@ -42,6 +43,8 @@ namespace thor {
  * path as well as any intersections along the path.
  */
 std::string thor_worker_t::trace_attributes(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request, "thor_worker_t::trace_attributes");
 
   // Parse request
   parse_locations(request);
