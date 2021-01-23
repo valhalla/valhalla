@@ -1922,6 +1922,7 @@ public:
         // complex restrictions -- add to end map.
         if (vias.size()) {
           osmdata_.via_set.insert(from_way_id);
+          osmdata_.via_set.insert(restriction.to());
           restriction.set_from(from_way_id);
           restriction.set_vias(vias);
           // for bi-directional we need to create the restriction in reverse.  flip the to and from.
