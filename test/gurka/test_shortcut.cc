@@ -125,7 +125,7 @@ TEST(Shortcuts, ShortcutSpeed) {
       reader.Trim();
 
     // for each edge in the tile
-    const auto* tile = reader.GetGraphTile(tileid);
+    auto tile = reader.GetGraphTile(tileid);
     for (size_t j = 0; j < tile->header()->directededgecount(); ++j) {
       // skip it if its not a shortcut or the shortcut is one we will never traverse
       const auto* edge = tile->directededge(j);
@@ -156,7 +156,7 @@ TEST(Shortcuts, ShortcutSpeed) {
     // Shortcut speed should be lower because it is calculated including turn duration
     std::vector<midgard::PointLL> recovered_shape;
     for (auto const edgeid : edgeids) {
-      const auto* tile = reader.GetGraphTile(edgeid);
+      auto tile = reader.GetGraphTile(edgeid);
       const auto* de = tile->directededge(edgeid);
       EXPECT_GT(de->speed(), shortcut_speed);
       EXPECT_GT(de->truck_speed(), shortcut_truck_speed);
@@ -198,7 +198,7 @@ TEST(Shortcuts, TruckSpeedNotSet) {
       reader.Trim();
 
     // for each edge in the tile
-    const auto* tile = reader.GetGraphTile(tileid);
+    auto tile = reader.GetGraphTile(tileid);
     for (size_t j = 0; j < tile->header()->directededgecount(); ++j) {
       // skip it if its not a shortcut or the shortcut is one we will never traverse
       const auto* edge = tile->directededge(j);
@@ -242,7 +242,7 @@ TEST(Shortcuts, TruckSpeedPartiallySet) {
       reader.Trim();
 
     // for each edge in the tile
-    const auto* tile = reader.GetGraphTile(tileid);
+    auto tile = reader.GetGraphTile(tileid);
     for (size_t j = 0; j < tile->header()->directededgecount(); ++j) {
       // skip it if its not a shortcut or the shortcut is one we will never traverse
       const auto* edge = tile->directededge(j);

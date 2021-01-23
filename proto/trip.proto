@@ -20,6 +20,7 @@ message TripLeg {
     repeated SignElement guide_toward_locations = 6;  // The list of guide toward locations, examples: Lewistown or US 15
     repeated SignElement junction_names = 7;          // The list of junction names, examples: 万年橋東 or Mannenbashi East
     repeated SignElement guidance_view_junctions = 8; // The list of guidance view junctions, examples: AB12345;1 or AB12345;E
+    repeated SignElement guidance_view_signboards = 9; // The list of guidance view signboards, examples: SI_721701166;1 or SI_721701166;2
   }
 
   enum Traversability {
@@ -42,6 +43,7 @@ message TripLeg {
     kCuldesacUse = 9;          // Cul-de-sac (edge that forms a loop and is only
                                // connected at one node to another edge.
     kLivingStreetUse = 10;     // Shared space for cars, bikes, pedestrians
+    kServiceRoadUse = 11;      // Generic service road (not driveway, alley, parking aisle, etc.)
 
     // Bicycle specific uses
     kCyclewayUse = 20;          // Dedicated bicycle path
@@ -276,6 +278,7 @@ message TripLeg {
       kMotorwayJunction = 9;        // Highway = motorway_junction
       kBorderControl = 10;          // Border control
       kTollGantry = 11;             // Toll gantry
+      kSumpBuster = 12;             // Sump Buster
     }
 
     optional Edge edge = 1;

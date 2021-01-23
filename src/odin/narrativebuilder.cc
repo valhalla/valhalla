@@ -146,8 +146,9 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
 
         // Only set verbal post if > min ramp length
         // or contains obvious maneuver
+        // or has collapsed merge maneuver
         if ((maneuver.length() > kVerbalPostMinimumRampLength) ||
-            maneuver.contains_obvious_maneuver()) {
+            maneuver.contains_obvious_maneuver() || maneuver.has_collapsed_merge_maneuver()) {
           // Set verbal post transition instruction
           maneuver.set_verbal_post_transition_instruction(
               FormVerbalPostTransitionInstruction(maneuver));
@@ -167,8 +168,9 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
 
         // Only set verbal post if > min ramp length
         // or contains obvious maneuver
+        // or has collapsed merge maneuver
         if ((maneuver.length() > kVerbalPostMinimumRampLength) ||
-            maneuver.contains_obvious_maneuver()) {
+            maneuver.contains_obvious_maneuver() || maneuver.has_collapsed_merge_maneuver()) {
           // Set verbal post transition instruction
           maneuver.set_verbal_post_transition_instruction(
               FormVerbalPostTransitionInstruction(maneuver));
@@ -188,8 +190,9 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
 
         // Only set verbal post if > min ramp length
         // or contains obvious maneuver
+        // or has collapsed merge maneuver
         if ((maneuver.length() > kVerbalPostMinimumRampLength) ||
-            maneuver.contains_obvious_maneuver()) {
+            maneuver.contains_obvious_maneuver() || maneuver.has_collapsed_merge_maneuver()) {
           // Set verbal post transition instruction
           maneuver.set_verbal_post_transition_instruction(
               FormVerbalPostTransitionInstruction(maneuver));
@@ -211,7 +214,7 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
           maneuver.set_verbal_pre_transition_instruction(FormVerbalKeepToStayOnInstruction(maneuver));
 
           // For a ramp - only set verbal post if > min ramp length
-          if (maneuver.ramp()) {
+          if (maneuver.ramp() && !maneuver.has_collapsed_merge_maneuver()) {
             if (maneuver.length() > kVerbalPostMinimumRampLength) {
               // Set verbal post transition instruction
               maneuver.set_verbal_post_transition_instruction(
@@ -233,7 +236,7 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
           maneuver.set_verbal_pre_transition_instruction(FormVerbalKeepInstruction(maneuver));
 
           // For a ramp - only set verbal post if > min ramp length
-          if (maneuver.ramp()) {
+          if (maneuver.ramp() && !maneuver.has_collapsed_merge_maneuver()) {
             if (maneuver.length() > kVerbalPostMinimumRampLength) {
               // Set verbal post transition instruction
               maneuver.set_verbal_post_transition_instruction(

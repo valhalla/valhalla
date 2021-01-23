@@ -10,6 +10,7 @@
 
 #include <boost/format.hpp>
 
+#include "baldr/graphconstants.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_factory.h"
 #include "baldr/streetnames_us.h"
@@ -46,9 +47,13 @@ constexpr float kShortForkThreshold = 0.05f; // Kilometers
 // in a quarter mile or 400 meters
 constexpr float kShortContinueThreshold = 0.6f;
 
-constexpr uint32_t kOverlayEdgeMax = 5; // Maximum number of edges to look for matching overlay
+// Maximum number of edges to look for matching overlay
+constexpr uint32_t kOverlaySignBoardEdgeMax = 5;
 
 constexpr float kUpcomingLanesThreshold = 3.f; // Kilometers
+
+// Small end ramp fork threshold in kilometers
+constexpr float kSmallEndRampForkThreshold = 0.125f;
 
 std::vector<std::string> split(const std::string& source, char delimiter) {
   std::vector<std::string> tokens;
@@ -63,7 +68,6 @@ std::vector<std::string> split(const std::string& source, char delimiter) {
 bool is_pair(const std::vector<std::string>& tokens) {
   return (tokens.size() == 2);
 }
-
 } // namespace
 
 namespace valhalla {
@@ -110,11 +114,18 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Enhance signless interchanges
   EnhanceSignlessInterchnages(maneuvers);
 
-  // Process the guidance view junctions
-  ProcessGuidanceViewJunctions(maneuvers);
+  // Process the guidance view junctions and signboards
+  ProcessGuidanceViews(maneuvers);
 
   // Update the maneuver placement for internal intersection turns
   UpdateManeuverPlacementForInternalIntersectionTurns(maneuvers);
+
+  // Collapse small end ramp fork maneuvers to reduce verbose instructions
+  // Must happen after updating maneuver placement for internal edges
+  CollapseSmallEndRampFork(maneuvers);
+
+  // Collapse merge maneuvers to reduce obvious instructions
+  CollapseMergeManeuvers(maneuvers);
 
   // Process the turn lanes. Must happen after updating maneuver placement for internal edges so we
   // activate the correct lanes.
@@ -367,6 +378,40 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         curr_man = next_man;
         ++next_man;
       }
+      // Combine current left unspecified internal maneuver with next left maneuver
+      else if (PossibleUnspecifiedInternalManeuver(prev_man, curr_man, next_man) &&
+               prev_man->HasSimilarNames(&(*next_man), true) &&
+               (ManeuversBuilder::DetermineRelativeDirection(curr_man->turn_degree()) ==
+                Maneuver::RelativeDirection::kLeft) &&
+               (ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()) ==
+                Maneuver::RelativeDirection::kLeft) &&
+               (ManeuversBuilder::DetermineRelativeDirection(
+                    GetTurnDegree(prev_man->end_heading(), next_man->begin_heading())) ==
+                Maneuver::RelativeDirection::KReverse)) {
+        LOG_TRACE(
+            "+++ Combine: double L turns with short unspecified internal intersection as ManeuverType=UTURN_LEFT +++");
+        curr_man = CombineUnspecifiedInternalManeuver(maneuvers, prev_man, curr_man, next_man,
+                                                      DirectionsLeg_Maneuver_Type_kUturnLeft);
+        maneuvers_have_been_combined = true;
+        ++next_man;
+      }
+      // Combine current right unspecified internal maneuver with next right maneuver
+      else if (PossibleUnspecifiedInternalManeuver(prev_man, curr_man, next_man) &&
+               prev_man->HasSimilarNames(&(*next_man), true) &&
+               (ManeuversBuilder::DetermineRelativeDirection(curr_man->turn_degree()) ==
+                Maneuver::RelativeDirection::kRight) &&
+               (ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()) ==
+                Maneuver::RelativeDirection::kRight) &&
+               (ManeuversBuilder::DetermineRelativeDirection(
+                    GetTurnDegree(prev_man->end_heading(), next_man->begin_heading())) ==
+                Maneuver::RelativeDirection::KReverse)) {
+        LOG_TRACE(
+            "+++ Combine: double R turns with short unspecified internal intersection as ManeuverType=UTURN_RIGHT +++");
+        curr_man = CombineUnspecifiedInternalManeuver(maneuvers, prev_man, curr_man, next_man,
+                                                      DirectionsLeg_Maneuver_Type_kUturnRight);
+        maneuvers_have_been_combined = true;
+        ++next_man;
+      }
       // Do not combine
       // if next maneuver is a fork or a tee
       else if (next_man->fork() || next_man->tee()) {
@@ -486,6 +531,22 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         LOG_TRACE("+++ Combine: obvious maneuver +++");
         next_man = CombineManeuvers(maneuvers, curr_man, next_man);
         maneuvers_have_been_combined = true;
+      }
+      // Combine current short length non-internal edges (left or right) with next maneuver that is a
+      // kRampStraight NOTE: This should already be marked internal for OSM data so shouldn't happen
+      // for OSM
+      else if (PossibleUnspecifiedInternalManeuver(prev_man, curr_man, next_man) &&
+               ((ManeuversBuilder::DetermineRelativeDirection(curr_man->turn_degree()) ==
+                 Maneuver::RelativeDirection::kLeft) ||
+                (ManeuversBuilder::DetermineRelativeDirection(curr_man->turn_degree()) ==
+                 Maneuver::RelativeDirection::kRight)) &&
+               next_man->type() == DirectionsLeg_Maneuver_Type_kRampStraight) {
+        LOG_TRACE(
+            "+++ Combine: current non-internal turn that is very short in length with the next straight ramp maneuver +++");
+        curr_man = CombineUnspecifiedInternalManeuver(maneuvers, prev_man, curr_man, next_man,
+                                                      DirectionsLeg_Maneuver_Type_kNone);
+        maneuvers_have_been_combined = true;
+        ++next_man;
       } else {
         LOG_TRACE("+++ Do Not Combine +++");
         // Update with no combine
@@ -525,6 +586,63 @@ std::list<Maneuver>::iterator ManeuversBuilder::CollapseTransitConnectionDestina
   curr_man->set_end_shape_index(next_man->end_shape_index());
 
   return maneuvers.erase(next_man);
+}
+
+bool ManeuversBuilder::PossibleUnspecifiedInternalManeuver(std::list<Maneuver>::iterator prev_man,
+                                                           std::list<Maneuver>::iterator curr_man,
+                                                           std::list<Maneuver>::iterator next_man) {
+  if (!curr_man->internal_intersection() &&
+      curr_man->travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive &&
+      !prev_man->roundabout() && !curr_man->roundabout() && !next_man->roundabout() &&
+      (curr_man->length(Options::kilometers) <= (kMaxInternalLength * kKmPerMeter)) &&
+      curr_man != next_man && !curr_man->IsStartType() && !next_man->IsDestinationType()) {
+    return true;
+  }
+  return false;
+}
+
+// Collapses unspecified internal edge maneuvers
+// TODO: Future refactor to pull out common code
+std::list<Maneuver>::iterator ManeuversBuilder::CombineUnspecifiedInternalManeuver(
+    std::list<Maneuver>& maneuvers,
+    std::list<Maneuver>::iterator prev_man,
+    std::list<Maneuver>::iterator curr_man,
+    std::list<Maneuver>::iterator next_man,
+    const DirectionsLeg_Maneuver_Type& maneuver_type) {
+
+  // Determine turn degree based on previous maneuver and next maneuver
+  next_man->set_turn_degree(GetTurnDegree(prev_man->end_heading(), next_man->begin_heading()));
+
+  // Set the cross street names
+  if (curr_man->HasStreetNames()) {
+    next_man->set_cross_street_names(curr_man->street_names().clone());
+  }
+
+  // Set relative direction
+  next_man->set_begin_relative_direction(
+      ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()));
+
+  // Add distance
+  next_man->set_length(next_man->length() + curr_man->length());
+
+  // Add time
+  next_man->set_time(next_man->time() + curr_man->time());
+
+  // Add basic time
+  next_man->set_basic_time(next_man->basic_time() + curr_man->basic_time());
+
+  // TODO - heading?
+
+  // Set begin node index
+  next_man->set_begin_node_index(curr_man->begin_node_index());
+
+  // Set begin shape index
+  next_man->set_begin_shape_index(curr_man->begin_shape_index());
+
+  // Set maneuver type to specified argument
+  next_man->set_type(maneuver_type);
+
+  return maneuvers.erase(curr_man);
 }
 
 std::list<Maneuver>::iterator
@@ -2063,14 +2181,20 @@ bool ManeuversBuilder::IsFork(int node_index,
 
     // if there is a similar traversable intersecting edge
     //   or there is a traversable intersecting edge and curr edge is link(ramp)
-    //   and the straightest intersecting edge is not in the reversed direction
+    //      and the straightest intersecting edge is not in the reversed direction
+    //   or curr_edge is fork forward and xedge only has forward edge
     if (((xedge_counts.left_similar_traversable_outbound > 0) ||
          (xedge_counts.right_similar_traversable_outbound > 0)) ||
         (((xedge_counts.left_traversable_outbound > 0) ||
           (xedge_counts.right_traversable_outbound > 0)) &&
          curr_edge->IsRampUse() &&
          !node->IsStraightestTraversableIntersectingEdgeReversed(prev_edge->end_heading(),
-                                                                 prev_edge->travel_mode()))) {
+                                                                 prev_edge->travel_mode())) ||
+        (curr_edge->IsForkForward(
+             GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())) &&
+         node->HasOnlyForwardTraversableRoadClassXEdges(prev_edge->end_heading(),
+                                                        prev_edge->travel_mode(),
+                                                        prev_edge->road_class()))) {
       return true;
     }
   }
@@ -2185,13 +2309,9 @@ bool ManeuversBuilder::IsLeftPencilPointUturn(int node_index,
   uint32_t turn_degree = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
 
   // If drive on right
-  // and the the turn is a sharp left (179 < turn < 211)
-  //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
+  // and the the turn is a sharp left (179 < turn < 226)
   // and oneway edges
-  if (curr_edge->drive_on_right() &&
-      (((turn_degree > 179) && (turn_degree < 211)) ||
-       (((prev_edge->length_km() < 50) || (curr_edge->length_km() < 50)) && (turn_degree > 179) &&
-        (turn_degree < 226))) &&
+  if (curr_edge->drive_on_right() && (turn_degree > 179) && (turn_degree < 226) &&
       prev_edge->IsOneway() && curr_edge->IsOneway()) {
     // If the above criteria is met then check the following criteria...
 
@@ -2228,13 +2348,9 @@ bool ManeuversBuilder::IsRightPencilPointUturn(int node_index,
   uint32_t turn_degree = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
 
   // If drive on left
-  // and the turn is a sharp right (149 < turn < 181)
-  //    or short distance (< 50m) and wider sharp right (134 < turn < 181)
+  // and the turn is a sharp right (134 < turn < 181)
   // and oneway edges
-  if (curr_edge->drive_on_right() &&
-      (((turn_degree > 149) && (turn_degree < 181)) ||
-       (((prev_edge->length_km() < 50) || (curr_edge->length_km() < 50)) && (turn_degree > 134) &&
-        (turn_degree < 181))) &&
+  if (curr_edge->drive_on_right() && (turn_degree > 134) && (turn_degree < 181) &&
       prev_edge->IsOneway() && curr_edge->IsOneway()) {
     // If the above criteria is met then check the following criteria...
 
@@ -2980,9 +3096,10 @@ void ManeuversBuilder::ProcessTurnLanes(std::list<Maneuver>& maneuvers) {
   }
 }
 
-void ManeuversBuilder::ProcessGuidanceViewJunctions(std::list<Maneuver>& maneuvers) {
+void ManeuversBuilder::ProcessGuidanceViews(std::list<Maneuver>& maneuvers) {
   // Walk the maneuvers to match find guidance view junctions
   for (Maneuver& maneuver : maneuvers) {
+
     // Only process driving maneuvers
     if (maneuver.travel_mode() == TripLeg_TravelMode::TripLeg_TravelMode_kDrive) {
       auto prev_edge = trip_path_->GetPrevEdge(maneuver.begin_node_index());
@@ -2997,6 +3114,9 @@ void ManeuversBuilder::ProcessGuidanceViewJunctions(std::list<Maneuver>& maneuve
           }
         } // end for loop over base guidance view junction
       }
+
+      // Signboards only have base images so we need to check the current edge and not the previous
+      ProcessGuidanceViewSignboards(maneuver);
     }
   }
 }
@@ -3007,7 +3127,7 @@ void ManeuversBuilder::MatchGuidanceViewJunctions(Maneuver& maneuver,
   // Loop over edges
   uint32_t edge_count = 0;
   for (uint32_t node_index = maneuver.begin_node_index();
-       ((node_index < maneuver.end_node_index()) && (edge_count < kOverlayEdgeMax));
+       ((node_index < maneuver.end_node_index()) && (edge_count < kOverlaySignBoardEdgeMax));
        ++node_index, edge_count++) {
     // Loop over guidance view junctions
     auto curr_edge = trip_path_->GetCurrEdge(node_index);
@@ -3020,13 +3140,38 @@ void ManeuversBuilder::MatchGuidanceViewJunctions(Maneuver& maneuver,
             (base_prefix == overlay_tokens.at(0))) {
           DirectionsLeg_GuidanceView guidance_view;
           guidance_view.set_data_id(std::to_string(trip_path_->osm_changeset()));
-          guidance_view.set_type("jct"); // TODO implement for real in the future based on sign type
+          guidance_view.set_type(DirectionsLeg_GuidanceView_Type_kJunction);
           guidance_view.set_base_id(base_prefix + base_suffix);
           guidance_view.add_overlay_ids(overlay_tokens.at(0) + overlay_tokens.at(1));
           maneuver.mutable_guidance_views()->emplace_back(guidance_view);
           return;
         }
       } // end for loop over base guidance view junction
+    }
+  }
+}
+
+void ManeuversBuilder::ProcessGuidanceViewSignboards(Maneuver& maneuver) {
+  // Loop over edges
+  uint32_t edge_count = 0;
+  for (uint32_t node_index = maneuver.begin_node_index();
+       ((node_index < maneuver.end_node_index()) && (edge_count < kOverlaySignBoardEdgeMax));
+       ++node_index, edge_count++) {
+    // Loop over guidance view signboards
+    auto curr_edge = trip_path_->GetCurrEdge(node_index);
+    if (curr_edge && (curr_edge->has_sign())) {
+      // Process overlay guidance view signboards
+      for (const auto& base_guidance_view_signboard : curr_edge->sign().guidance_view_signboards()) {
+        auto base_tokens = split(base_guidance_view_signboard.text(), ';');
+        // If base(is_route_number) guidance view board and a pair...
+        if (base_guidance_view_signboard.is_route_number() && is_pair(base_tokens)) {
+          DirectionsLeg_GuidanceView guidance_view;
+          guidance_view.set_data_id(std::to_string(trip_path_->osm_changeset()));
+          guidance_view.set_type(DirectionsLeg_GuidanceView_Type_kSignboard);
+          guidance_view.set_base_id(base_tokens.at(0) + base_tokens.at(1));
+          maneuver.mutable_guidance_views()->emplace_back(guidance_view);
+        }
+      }
     }
   }
 }
@@ -3220,6 +3365,110 @@ void ManeuversBuilder::MoveInternalEdgeToPreviousManeuver(Maneuver& prev_maneuve
   // then copy the turn lanes from the previous edge
   if (edge->turn_lanes_size() == 0) {
     edge->mutable_turn_lanes()->CopyFrom(prev_edge->turn_lanes());
+  }
+}
+
+void ManeuversBuilder::CollapseSmallEndRampFork(std::list<Maneuver>& maneuvers) {
+  // Set previous maneuver
+  auto prev_man = maneuvers.begin();
+
+  // Set current maneuver
+  auto curr_man = maneuvers.begin();
+  auto next_man = maneuvers.begin();
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+    curr_man = next_man;
+  }
+
+  // Set next maneuver
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+  }
+
+  auto is_fork_then_turn_same_direction =
+      [](const DirectionsLeg_Maneuver_Type curr_maneuver_type,
+         const DirectionsLeg_Maneuver_Type next_maneuver_type) -> bool {
+    if ((curr_maneuver_type == DirectionsLeg_Maneuver_Type_kStayRight) &&
+        ((next_maneuver_type == DirectionsLeg_Maneuver_Type_kSlightRight) ||
+         (next_maneuver_type == DirectionsLeg_Maneuver_Type_kRight) ||
+         (next_maneuver_type == DirectionsLeg_Maneuver_Type_kSharpRight))) {
+      return true;
+    } else if ((curr_maneuver_type == DirectionsLeg_Maneuver_Type_kStayLeft) &&
+               ((next_maneuver_type == DirectionsLeg_Maneuver_Type_kSlightLeft) ||
+                (next_maneuver_type == DirectionsLeg_Maneuver_Type_kLeft) ||
+                (next_maneuver_type == DirectionsLeg_Maneuver_Type_kSharpLeft))) {
+      return true;
+    }
+    return false;
+  };
+
+  // Walk the maneuvers to find small end ramp fork maneuvers
+  while (next_man != maneuvers.end()) {
+
+    // If found, collapse the small end ramp fork maneuver
+    if ((prev_man != curr_man) && !prev_man->has_collapsed_small_end_ramp_fork() &&
+        prev_man->ramp() && curr_man->ramp() && !next_man->ramp() &&
+        (curr_man->length(Options::kilometers) <= kSmallEndRampForkThreshold) &&
+        is_fork_then_turn_same_direction(curr_man->type(), next_man->type())) {
+      curr_man = CombineManeuvers(maneuvers, prev_man, curr_man);
+      prev_man->set_has_collapsed_small_end_ramp_fork(true);
+      ++next_man;
+    } else {
+      // on to the next maneuver...
+      prev_man = curr_man;
+      curr_man = next_man;
+      ++next_man;
+    }
+  }
+}
+
+void ManeuversBuilder::CollapseMergeManeuvers(std::list<Maneuver>& maneuvers) {
+  // Set current maneuver
+  auto curr_man = maneuvers.begin();
+
+  // Set next maneuver
+  auto next_man = maneuvers.begin();
+  if (next_man != maneuvers.end()) {
+    ++next_man;
+  }
+
+  // Walk the maneuvers to find merge maneuvers
+  while (next_man != maneuvers.end()) {
+
+    // If found, collapse the merge maneuver
+    if (curr_man->ramp() && next_man->IsMergeType() && !curr_man->has_collapsed_merge_maneuver()) {
+      // Disable the "to stay on" flag if not the same street names
+      if (curr_man->to_stay_on() && !(next_man->HasSameNames(&(*curr_man), true))) {
+        curr_man->set_to_stay_on(false);
+      }
+
+      // Use the merge maneuver street names
+      if (next_man->HasStreetNames()) {
+        curr_man->set_street_names(next_man->street_names().clone());
+      }
+
+      // Use merge maneuver guide signs
+      if (!curr_man->HasSigns()) {
+        // Assign guide branch signs - if they exist
+        if (next_man->HasGuideBranchSign()) {
+          *(curr_man->mutable_signs()->mutable_guide_branch_list()) =
+              next_man->signs().guide_branch_list();
+        }
+
+        // Assign guide branch signs - if they exist
+        if (next_man->HasGuideTowardSign()) {
+          *(curr_man->mutable_signs()->mutable_guide_toward_list()) =
+              next_man->signs().guide_toward_list();
+        }
+      }
+
+      // Combine the maneuvers and set the "has_collapsed_merge_maneuver" attribute
+      next_man = CombineManeuvers(maneuvers, curr_man, next_man);
+      curr_man->set_has_collapsed_merge_maneuver(true);
+    }
+    // on to the next maneuver...
+    curr_man = next_man;
+    ++next_man;
   }
 }
 

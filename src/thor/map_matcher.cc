@@ -25,7 +25,7 @@ init_time_info(const std::vector<valhalla::meili::EdgeSegment>& edge_segments,
                valhalla::meili::MapMatcher* matcher,
                valhalla::Options& options,
                valhalla::baldr::DateTime::tz_sys_info_cache_t* tz_cache) {
-  const GraphTile* tile = nullptr;
+  graph_tile_ptr tile = nullptr;
   const DirectedEdge* directededge = nullptr;
   const NodeInfo* nodeinfo = nullptr;
 
@@ -200,7 +200,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
   GraphId prior_node;
   EdgeLabel pred;
   const meili::EdgeSegment* prev_segment = nullptr;
-  const GraphTile* tile = nullptr;
+  graph_tile_ptr tile = nullptr;
   const DirectedEdge* directededge = nullptr;
   const NodeInfo* nodeinfo = nullptr;
 
@@ -283,7 +283,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     // Update the prior_edge and nodeinfo. TODO (protect against invalid tile)
     prev_segment = &edge_segment;
     prior_node = directededge->endnode();
-    const GraphTile* end_tile = matcher->graphreader().GetGraphTile(prior_node);
+    graph_tile_ptr end_tile = matcher->graphreader().GetGraphTile(prior_node);
     nodeinfo = end_tile->node(prior_node);
   }
 

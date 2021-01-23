@@ -6,14 +6,14 @@
 #include <unordered_map>
 #include <vector>
 
-#include "baldr/json.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
-#include <boost/property_tree/ptree.hpp>
-
+#include "midgard/util.h"
 #include "thor/isochrone.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
+
+#include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla;
 using namespace valhalla::tyr;
@@ -31,6 +31,10 @@ namespace {
 // route starts to become suspect (due to user breaks and other factors).
 constexpr float kDefaultMaxTimeDependentDistance = 500000.0f; // 500 km
 
+// Maximum capacity of edge labels container that allowed to keep reserved.
+// It's used to prevent memory from infinite growth.
+constexpr uint32_t kMaxReservedLabelsCount = 1000000;
+
 // Maximum edge score - base this on costing type.
 // Large values can cause very bad performance. Setting this back
 // to 2 hours for bike and pedestrian and 12 hours for driving routes.
@@ -47,7 +51,6 @@ const std::unordered_map<std::string, float> kMaxDistances = {
 };
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
-constexpr double kMilePerMeter = 0.000621371;
 
 } // namespace
 
@@ -56,9 +59,17 @@ namespace thor {
 
 thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
-    : mode(valhalla::sif::TravelMode::kPedestrian), matcher_factory(config, graph_reader),
-      reader(graph_reader), controller{},
-      long_request(config.get<float>("thor.logging.long_request")) {
+    : mode(valhalla::sif::TravelMode::kPedestrian),
+      bidir_astar(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      bss_astar(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      multi_modal_astar(
+          config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      timedep_forward(
+          config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      timedep_reverse(
+          config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      isochrone_gen(config.get<uint32_t>("thor.max_reserved_labels_count", kMaxReservedLabelsCount)),
+      matcher_factory(config, graph_reader), reader(graph_reader), controller{} {
   // If we weren't provided with a graph reader make our own
   if (!reader)
     reader = matcher_factory.graphreader();
@@ -108,8 +119,8 @@ prime_server::worker_t::result_t
 thor_worker_t::work(const std::list<zmq::message_t>& job,
                     void* request_info,
                     const std::function<void()>& interrupt_function) {
-  // get time for start of request
-  auto s = std::chrono::system_clock::now();
+
+  // get request info
   auto& info = *static_cast<prime_server::http_request_info_t*>(request_info);
   LOG_INFO("Got Thor Request " + std::to_string(info.id));
   Api request;
@@ -126,71 +137,46 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
     // Set the interrupt function
     service_worker_t::set_interrupt(&interrupt_function);
 
-    prime_server::worker_t::result_t result{true};
-    double denominator = 0;
+    prime_server::worker_t::result_t result{true, {}, {}};
     // do request specific processing
     switch (options.action()) {
       case Options::sources_to_targets:
         result = to_response(matrix(request), info, request);
-        denominator = options.sources_size() + options.targets_size();
         break;
       case Options::optimized_route: {
         optimized_route(request);
         result.messages.emplace_back(serialize_to_pbf(request));
-        denominator = std::max(options.sources_size(), options.targets_size());
         break;
       }
       case Options::isochrone:
         result = to_response(isochrones(request), info, request);
-        denominator = options.sources_size() * options.targets_size();
         break;
       case Options::route: {
         route(request);
         result.messages.emplace_back(serialize_to_pbf(request));
-        denominator = options.locations_size();
         break;
       }
       case Options::trace_route: {
         trace_route(request);
         result.messages.emplace_back(serialize_to_pbf(request));
-        denominator = trace.size() / 1100;
         break;
       }
       case Options::trace_attributes:
         result = to_response(trace_attributes(request), info, request);
-        denominator = trace.size() / 1100;
         break;
       case Options::expansion: {
         result = to_response(expansion(request), info, request);
-        denominator = options.locations_size();
         break;
       }
       default:
         throw valhalla_exception_t{400}; // this should never happen
     }
-
-    double elapsed_time =
-        std::chrono::duration<float, std::milli>(std::chrono::system_clock::now() - s).count();
-    if (!options.do_not_track() && elapsed_time / denominator > long_request) {
-      LOG_WARN("thor::" + Options_Action_Enum_Name(options.action()) +
-               " request elapsed time (ms)::" + std::to_string(elapsed_time));
-      LOG_WARN("thor::" + Options_Action_Enum_Name(options.action()) +
-               " request exceeded threshold::" + std::to_string(info.id));
-      midgard::logging::Log("valhalla_thor_long_request_" +
-                                Options_Action_Enum_Name(options.action()),
-                            " [ANALYTICS] ");
-    }
-
     return result;
   } catch (const valhalla_exception_t& e) {
-    valhalla::midgard::logging::Log("400::" + std::string(e.what()) +
-                                        " request_id=" + std::to_string(info.id),
-                                    " [ANALYTICS] ");
+    LOG_WARN("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     return jsonify_error(e, info, request);
   } catch (const std::exception& e) {
-    valhalla::midgard::logging::Log("400::" + std::string(e.what()) +
-                                        " request_id=" + std::to_string(info.id),
-                                    " [ANALYTICS] ");
+    LOG_ERROR("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     return jsonify_error({499, std::string(e.what())}, info, request);
   }
 }
@@ -225,8 +211,6 @@ std::string thor_worker_t::parse_costing(const Api& request) {
   auto costing = options.costing();
   auto costing_str = Costing_Enum_Name(costing);
   mode_costing = factory.CreateModeCosting(options, mode);
-  valhalla::midgard::logging::Log("travel_mode::" + std::to_string(static_cast<uint32_t>(mode)),
-                                  " [ANALYTICS] ");
   return costing_str;
 }
 
@@ -293,7 +277,6 @@ void thor_worker_t::parse_measurements(const Api& request) {
 void thor_worker_t::log_admin(const valhalla::TripLeg& trip_path) {
   std::unordered_set<std::string> state_iso;
   std::unordered_set<std::string> country_iso;
-  std::stringstream s_ss, c_ss;
   if (trip_path.admin_size() > 0) {
     for (const auto& admin : trip_path.admin()) {
       if (admin.has_state_code()) {
@@ -302,18 +285,6 @@ void thor_worker_t::log_admin(const valhalla::TripLeg& trip_path) {
       if (admin.has_country_code()) {
         country_iso.insert(admin.country_code());
       }
-    }
-    for (const std::string& x : state_iso) {
-      s_ss << " " << x;
-    }
-    for (const std::string& x : country_iso) {
-      c_ss << " " << x;
-    }
-    if (!s_ss.eof()) {
-      valhalla::midgard::logging::Log("admin_state_iso::" + s_ss.str() + ' ', " [ANALYTICS] ");
-    }
-    if (!c_ss.eof()) {
-      valhalla::midgard::logging::Log("admin_country_iso::" + c_ss.str() + ' ', " [ANALYTICS] ");
     }
   }
 }

@@ -1835,9 +1835,9 @@ TEST(Maneuversbuilder, TestPathSlightRightXSlightLeftIsIntersectingForwardEdge) 
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Horace Greeley Road", 0}}, 0.205258, 30.000000,
-               valhalla::RoadClass::kResidential, 35, 19, 6, 12, TripLeg_Traversability_kBoth, 0, 0,
+               valhalla::RoadClass::kResidential, 45, 19, 6, 12, TripLeg_Traversability_kBoth, 0, 0,
                0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {}, TripLeg_TravelMode_kDrive);
-  PopulateIntersectingEdge(node->add_intersecting_edge(), 355, 0, 0, TripLeg_Traversability_kBoth,
+  PopulateIntersectingEdge(node->add_intersecting_edge(), 3, 0, 0, TripLeg_Traversability_kBoth,
                            TripLeg_Traversability_kBoth, TripLeg_Traversability_kBoth);
 
   // node:2

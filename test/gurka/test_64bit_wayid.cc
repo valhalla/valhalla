@@ -6,7 +6,7 @@ using namespace valhalla;
 void find_ids(baldr::GraphReader& reader, std::multiset<uint64_t> osm_way_ids) {
   // check all edges have correct edge info
   for (const auto& tile_id : reader.GetTileSet()) {
-    const auto* tile = reader.GetGraphTile(tile_id);
+    auto tile = reader.GetGraphTile(tile_id);
     for (auto edge = tile_id; edge.id() < tile->header()->directededgecount(); ++edge) {
       // we should find every way id in the tile set
       auto info = tile->edgeinfo(tile->directededge(edge)->edgeinfo_offset());

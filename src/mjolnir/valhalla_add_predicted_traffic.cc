@@ -406,7 +406,7 @@ int main(int argc, char** argv) {
         reader.Trim();
       }
 
-      const GraphTile* tile = reader.GetGraphTile(tile_id);
+      graph_tile_ptr tile = reader.GetGraphTile(tile_id);
       uint32_t n = tile->header()->directededgecount();
       if (n == 0)
         continue;

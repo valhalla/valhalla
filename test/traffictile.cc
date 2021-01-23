@@ -2,6 +2,16 @@
 
 #include "baldr/traffictile.h"
 
+namespace {
+class UnmanagedGraphMemory : public valhalla::baldr::GraphMemory {
+public:
+  UnmanagedGraphMemory(char* const buf, const size_t len) {
+    data = buf;
+    size = len;
+  }
+};
+} // namespace
+
 TEST(Traffic, TileConstruction) {
   using namespace valhalla::baldr;
 
@@ -15,8 +25,7 @@ TEST(Traffic, TileConstruction) {
   };
 #pragma pack(pop)
 
-  TestTile testdata = {};
-
+  TestTile testdata{};
   testdata.header.directed_edge_count = 3;
   testdata.header.traffic_tile_version = TRAFFIC_TILE_VERSION;
   testdata.speed3.overall_speed = 98 >> 1;
@@ -25,7 +34,9 @@ TEST(Traffic, TileConstruction) {
   testdata.speed3.speed3 = UNKNOWN_TRAFFIC_SPEED_RAW;
   testdata.speed3.breakpoint1 = 255;
 
-  TrafficTile tile(reinterpret_cast<char*>(&testdata));
+  auto memory =
+      std::make_unique<UnmanagedGraphMemory>(reinterpret_cast<char*>(&testdata), sizeof(TestTile));
+  TrafficTile tile(std::move(memory));
 
   auto const volatile& speed = tile.trafficspeed(2);
   EXPECT_TRUE(speed.valid());

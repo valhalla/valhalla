@@ -16,7 +16,7 @@ Reach::Reach() : Dijkstras() {
 void Reach::enqueue(const baldr::GraphId& node_id,
                     baldr::GraphReader& reader,
                     const std::shared_ptr<sif::DynamicCost>& costing,
-                    const baldr::GraphTile* tile) {
+                    graph_tile_ptr tile) {
   // skip nodes which are done or invalid
   if (!node_id.Is_Valid() || done_.find(node_id) != done_.cend())
     return;
@@ -53,6 +53,12 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
     return reach;
   max_reach_ = max_reach;
 
+  // these are used below to get conservative estimates of forward and reverse reach
+  constexpr uint16_t forward_disallow_mask =
+      sif::kDisallowEndRestriction | sif::kDisallowSimpleRestriction | sif::kDisallowClosure;
+  constexpr uint16_t reverse_disallow_mask =
+      sif::kDisallowStartRestriction | sif::kDisallowSimpleRestriction | sif::kDisallowClosure;
+
   // TODO: here we stay extra conservative by avoiding starting on a simple restriction because we
   // TODO: dont have predecessor information in the simple reach expansion so we bail 1 edge earlier
   // NOTE: we can expand from the end of a complex restriction because it cant possibly be on our path
@@ -61,8 +67,8 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
 
   // seed the expansion with a place to start expanding from
   Clear();
-  const GraphTile *tile, *start_tile = reader.GetGraphTile(edge_id);
-  if ((tile = start_tile) && costing->Filter(edge, tile) > 0.f && !edge->restrictions())
+  graph_tile_ptr tile, start_tile = reader.GetGraphTile(edge_id);
+  if ((tile = start_tile) && costing->Allowed(edge, tile, sif::kDisallowSimpleRestriction))
     enqueue(edge->endnode(), reader, costing, tile);
 
   // get outbound reach by doing a simple forward expansion until you either hit the max_reach
@@ -83,7 +89,7 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
       // potential stopping point (maybe a path followed the restriction)
 
       // if this edge is traversable we enqueue its end node
-      if (costing->Filter(&edge, tile) > 0 && !edge.end_restriction() && !edge.restrictions())
+      if (costing->Allowed(&edge, tile, forward_disallow_mask))
         enqueue(edge.endnode(), reader, costing, tile);
     }
   }
@@ -97,7 +103,7 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
 
   // seed the expansion with a place to start expanding from, tile may have changed so reset it
   Clear();
-  if ((tile = start_tile) && costing->Filter(edge, tile) > 0.f)
+  if ((tile = start_tile) && costing->Allowed(edge, tile))
     enqueue(reader.GetBeginNodeId(edge, tile), reader, costing, tile);
 
   // get inbound reach by doing a simple reverse expansion until you either hit the max_reach
@@ -124,8 +130,7 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
       // at the start of a simple restriction because it could have been on our path
 
       // if this opposing edge is traversable we enqueue its begin node
-      if (costing->Filter(opp_edge, tile) > 0.f && !opp_edge->start_restriction() &&
-          !opp_edge->restrictions())
+      if (costing->Allowed(opp_edge, tile, reverse_disallow_mask))
         enqueue(edge.endnode(), reader, costing, tile);
     }
   }
@@ -154,8 +159,8 @@ directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
   // can we even try to expand?
   directed_reach reach{};
 
-  const baldr::GraphTile* tile = reader.GetGraphTile(edge_id);
-  if (!tile || costing->Filter(edge, tile) == 0.f) {
+  graph_tile_ptr tile = reader.GetGraphTile(edge_id);
+  if (!tile || !costing->Allowed(edge, tile)) {
     return reach;
   }
 
@@ -194,7 +199,7 @@ directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
 
 // callback fired when a node is expanded from, the node will be the end node of the previous label
 void Reach::ExpandingNode(baldr::GraphReader&,
-                          const baldr::GraphTile* tile,
+                          graph_tile_ptr tile,
                           const baldr::NodeInfo* node,
                           const sif::EdgeLabel&,
                           const sif::EdgeLabel*) {

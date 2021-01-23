@@ -159,7 +159,7 @@ protected:
   std::vector<sif::EdgeLabel> edgelabels_;
 
   // Adjacency list - approximate double bucket sort
-  std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
+  baldr::DoubleBucketQueue<sif::EdgeLabel> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
@@ -257,7 +257,7 @@ protected:
                           const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
-                          const baldr::GraphTile* tile,
+                          const graph_tile_ptr& tile,
                           const sif::EdgeLabel& pred,
                           const uint32_t predindex);
 

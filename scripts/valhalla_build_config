@@ -15,6 +15,7 @@ config = {
     'id_table_size': 1300000000,
     'use_lru_mem_cache': False,
     'lru_mem_cache_hard_control': False,
+    'use_simple_mem_cache': False,
     'user_agent': optional(str),
     'tile_url': optional(str),
     'tile_url_gz': optional(bool),
@@ -24,6 +25,7 @@ config = {
     'traffic_extract': '/data/valhalla/traffic.tar',
     'incident_dir': optional(str),
     'incident_log': optional(str),
+    'shortcut_caching': optional(bool),
     'admin': '/data/valhalla/admin.sqlite',
     'timezone': '/data/valhalla/tz_world.sqlite',
     'transit_dir': '/data/valhalla/transit',
@@ -89,7 +91,8 @@ config = {
     'source_to_target_algorithm': 'select_optimal',
     'service': {
       'proxy': 'ipc:///tmp/thor'
-    }
+    },
+    'max_reserved_labels_count': 1000000
   },
   'odin': {
     'logging': {
@@ -234,9 +237,10 @@ config = {
     },
     'isochrone': {
       'max_contours': 4,
-      'max_time': 120,
+      'max_time_contour': 120,
       'max_distance': 25000.0,
-      'max_locations': 1
+      'max_locations': 1,
+      'max_distance_contour': 200
     },
     'trace': {
       'max_distance': 200000.0,
@@ -266,6 +270,7 @@ help_text = {
     'id_table_size': 'Value controls the initial size of the Id table',
     'use_lru_mem_cache': 'Use memory cache with LRU eviction policy',
     'lru_mem_cache_hard_control': 'Use hard memory limit control for LRU memory cache (i.e. on every put) - never allow overcommit',
+    'use_simple_mem_cache': 'Use memory cache within a simple hash map the clears all tiles when overcommitted',
     'user_agent': 'User-Agent http header to request single tiles',
     'tile_url': 'Location to read tiles from if they are not found in the tile_dir',
     'tile_url_gz': 'Whether or not to request for compressed tiles',
@@ -275,6 +280,7 @@ help_text = {
     'traffic_extract': 'Location to read traffic from tar',
     'incident_dir': 'Location to read incident tiles from',
     'incident_log': 'Location to read change events of incident tiles',
+    'shortcut_caching': 'Precaches the superceded edges of all shortcuts in the graph. Defaults to false',
     'admin': 'Location of sqlite file holding admin polygons created with valhalla_build_admins',
     'timezone': 'Location of sqlite file holding timezone information created with valhalla_build_timezones',
     'transit_dir': 'Location of intermediate transit tiles created with valhalla_build_transit',
@@ -340,7 +346,8 @@ help_text = {
     'source_to_target_algorithm': 'TODO: which matrix algorithm should be used',
     'service': {
       'proxy': 'IPC linux domain socket file location'
-    }
+    },
+    'max_reserved_labels_count': 'Maximum capacity that allowed to keep reserved in path algorithm.'
   },
   'odin': {
     'logging': {
@@ -485,9 +492,10 @@ help_text = {
     },
     'isochrone': {
       'max_contours': 'Maximum number of input contours to allow',
-      'max_time': 'Maximum time value for any one contour',
+      'max_time_contour': 'Maximum time value for any one contour in minutes',
       'max_distance':'Maximum b-line distance between all locations in meters',
-      'max_locations': 'Maximum number of input locations'
+      'max_locations': 'Maximum number of input locations',
+      'max_distance_contour': 'Maximum distance value for any one contour in kilometers'
     },
     'trace': {
       'max_distance': 'Maximum input shape distance in meters',

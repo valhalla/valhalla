@@ -43,7 +43,7 @@ boost::property_tree::ptree get_conf() {
         "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
         "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
         "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
+        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time_contour": 120, "max_distance_contour":200},
         "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
         "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
         "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
@@ -60,7 +60,7 @@ boost::property_tree::ptree get_conf() {
 
 GraphId begin_node(GraphReader& reader, const DirectedEdge* edge) {
   // grab the node
-  const auto* tile = reader.GetGraphTile(edge->endnode());
+  auto tile = reader.GetGraphTile(edge->endnode());
   const auto* node = tile->node(edge->endnode());
   // grab the opp edges end node
   const auto* opp_edge = tile->directededge(node->edge_index() + edge->opp_index());
@@ -77,7 +77,7 @@ TEST(Reach, check_all_reach) {
 
   // look at all the edges
   for (auto tile_id : reader.GetTileSet()) {
-    const auto* tile = reader.GetGraphTile(tile_id);
+    auto tile = reader.GetGraphTile(tile_id);
     // loop over edges
     for (GraphId edge_id = tile->header()->graphid();
          edge_id.id() < tile->header()->directededgecount(); ++edge_id) {
@@ -93,7 +93,7 @@ TEST(Reach, check_all_reach) {
 
       // begin and end nodes are nice to check
       auto node_id = begin_node(reader, edge);
-      const auto* t = reader.GetGraphTile(node_id);
+      auto t = reader.GetGraphTile(node_id);
       const auto* begin = t->node(node_id);
       t = reader.GetGraphTile(edge->endnode());
       const auto* end = t->node(edge->endnode());

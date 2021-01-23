@@ -79,7 +79,7 @@ TEST(Traffic, BasicUpdates) {
     if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
       current->overall_speed = 0;
     } else {
-      current->overall_speed = valhalla::baldr::MAX_TRAFFIC_SPEED_KPH >> 1;
+      current->overall_speed = valhalla::baldr::kMaxAssumedSpeed >> 1;
     }
   };
   test::customize_live_traffic_data(map.config, cb_setter_max);
@@ -87,7 +87,7 @@ TEST(Traffic, BasicUpdates) {
     auto result = gurka::route(map, "A", "C", "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC"});
-    gurka::assert::raw::expect_eta(result, 14.303419);
+    gurka::assert::raw::expect_eta(result, 25.731991);
   }
 
   printf("Back to previous speed");
@@ -154,6 +154,7 @@ TEST(Traffic, CutGeoms) {
   // first we get the edge without traffic on it
   {
     auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+
     tyr::actor_t actor(map.config, *clean_reader);
     valhalla::Api api;
     actor.route(

@@ -220,12 +220,13 @@ void make_tile() {
     tile_builder.UpdatePredictedSpeeds(directededges);
   }
 
-  GraphTile tile(test_dir, tile_id);
-  ASSERT_EQ(tile.FileSuffix(tile_id), std::string("2/000/519/120.gph"))
+  auto tile = GraphTile::Create(test_dir, tile_id);
+  ASSERT_TRUE(tile);
+  ASSERT_EQ(tile->FileSuffix(tile_id), std::string("2/000/519/120.gph"))
       << "Tile ID didn't match the expected filename";
 
   ASSERT_PRED1(filesystem::exists,
-               test_dir + filesystem::path::preferred_separator + tile.FileSuffix(tile_id))
+               test_dir + filesystem::path::preferred_separator + tile->FileSuffix(tile_id))
       << "Expected tile file didn't show up on disk - are the fixtures in the right location?";
 }
 
@@ -233,6 +234,20 @@ void create_costing_options(Options& options, Costing costing) {
   const rapidjson::Document doc;
   sif::ParseCostingOptions(doc, "/costing_options", options);
   options.set_costing(costing);
+}
+// Convert locations to format needed by PathAlgorithm
+std::vector<valhalla::Location> ToPBFLocations(const std::vector<vb::Location>& locations,
+                                               vb::GraphReader& graphreader,
+                                               const std::shared_ptr<vs::DynamicCost>& costing) {
+  const auto projections = loki::Search(locations, graphreader, costing);
+  std::vector<valhalla::Location> result;
+  for (const auto& loc : locations) {
+    valhalla::Location pbfLoc;
+    const auto& correlated = projections.at(loc);
+    PathLocation::toPBF(correlated, &pbfLoc, graphreader);
+    result.emplace_back(std::move(pbfLoc));
+  }
+  return result;
 }
 
 enum class TrivialPathTest {
@@ -248,14 +263,14 @@ std::unique_ptr<vb::GraphReader> get_graph_reader(const std::string& tile_dir) {
   rapidjson::read_json(json, conf);
 
   std::unique_ptr<vb::GraphReader> reader(new vb::GraphReader(conf));
-  auto* tile = reader->GetGraphTile(tile_id);
+  auto tile = reader->GetGraphTile(tile_id);
 
   EXPECT_NE(tile, nullptr) << "Unable to load test tile! Did `make_tile` run succesfully?";
   if (tile->header()->directededgecount() != 28) {
     throw std::logic_error("test-tiles does not contain expected number of edges");
   }
 
-  const GraphTile* endtile = reader->GetGraphTile(node_locations["b"]);
+  auto endtile = reader->GetGraphTile(node_locations["b"]);
   EXPECT_NE(endtile, nullptr) << "bad tile, node 'b' wasn't found in it";
 
   return reader;
@@ -289,7 +304,7 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
     break;
   }
 
-  auto* tile = reader->GetGraphTile(tile_id);
+  auto tile = reader->GetGraphTile(tile_id);
   uint32_t expected_time = 979797;
   switch (assert_type) {
     case TrivialPathTest::DurationEqualTo:
@@ -342,12 +357,12 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
 }
 
 TEST(Astar, TestTrivialPathForward) {
-  auto astar = vt::TimeDepForward();
+  vt::TimeDepForward astar;
   TestTrivialPath(astar);
 }
 
 TEST(Astar, TestTrivialPathReverse) {
-  auto astar = vt::TimeDepReverse();
+  vt::TimeDepReverse astar;
   TestTrivialPath(astar);
 }
 
@@ -476,7 +491,7 @@ boost::property_tree::ptree get_conf(const char* tiles) {
         "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
         "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
         "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
+        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time_contour": 120, "max_distance_contour":200},
         "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
         "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
         "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
@@ -1504,7 +1519,7 @@ TEST(ComplexRestriction, WalkVias) {
   auto costing = costs[int(mode)];
 
   bool is_forward = true;
-  auto* tile = reader->GetGraphTile(tile_id);
+  auto tile = reader->GetGraphTile(tile_id);
 
   std::vector<valhalla::baldr::Location> locations;
   locations.push_back({node_locations["7"]});
@@ -1615,6 +1630,120 @@ TEST(Astar, BiDirTrivial) {
   ASSERT_TRUE(path.size() == 1);
   EXPECT_LT(path.front().elapsed_cost.cost, 1);
   EXPECT_LT(path.front().elapsed_cost.secs, 1);
+}
+
+TEST(BiDiAstar, test_recost_path) {
+  const std::string ascii_map = R"(
+           X-----------Y
+          /             \
+    1----A               E---2
+          \             /
+           B--C--------D
+           |  |        |
+           3  4        5
+  )";
+  const gurka::ways ways = {
+      // make ABC to be a shortcut
+      {"ABC", {{"highway", "primary"}, {"maxspeed", "80"}}},
+      // make CDE to be a shortcut
+      {"CDE", {{"highway", "primary"}, {"maxspeed", "80"}}},
+      {"1A", {{"highway", "secondary"}}},
+      {"B3", {{"highway", "secondary"}}},
+      {"C4", {{"highway", "secondary"}}},
+      {"D5", {{"highway", "secondary"}}},
+      // set speeds less than on ABCDE path to force the algorithm
+      // to go through ABCDE nodes instead of AXY
+      {"AX", {{"highway", "primary"}, {"maxspeed", "70"}}},
+      {"XY", {{"highway", "primary"}, {"maxspeed", "70"}}},
+      {"YE", {{"highway", "primary"}, {"maxspeed", "80"}}},
+      {"E2", {{"highway", "secondary"}}},
+  };
+
+  auto nodes = gurka::detail::map_to_coordinates(ascii_map, 500);
+
+  const std::string test_dir = "test/data/astar_shortcuts_recosting";
+  const auto map = gurka::buildtiles(nodes, ways, {}, {}, test_dir);
+
+  vb::GraphReader graphreader(map.config.get_child("mjolnir"));
+
+  // before continue check that ABC is actually a shortcut
+  const auto ABC = gurka::findEdgeByNodes(graphreader, nodes, "A", "C");
+  ASSERT_TRUE(std::get<1>(ABC)->is_shortcut()) << "Expected ABC to be a shortcut";
+  // before continue check that CDE is actually a shortcut
+  const auto CDE = gurka::findEdgeByNodes(graphreader, nodes, "C", "E");
+  ASSERT_TRUE(std::get<1>(CDE)->is_shortcut()) << "Expected CDE to be a shortcut";
+
+  auto const set_constrained_speed = [&graphreader, &test_dir](const std::vector<GraphId>& edge_ids) {
+    for (const auto& edgeid : edge_ids) {
+      GraphId tileid(edgeid.tileid(), edgeid.level(), 0);
+      auto tile = graphreader.GetGraphTile(tileid);
+      vj::GraphTileBuilder tile_builder(test_dir, tileid, false);
+      std::vector<DirectedEdge> edges;
+      for (uint32_t j = 0; j < tile->header()->directededgecount(); ++j) {
+        DirectedEdge& edge = tile_builder.directededge(j);
+        // update only superseded edges
+        if (edgeid.id() == j)
+          edge.set_constrained_flow_speed(10);
+        edges.emplace_back(std::move(edge));
+      }
+      tile_builder.UpdatePredictedSpeeds(edges);
+    }
+  };
+  // set constrained speed for all superseded edges;
+  // this speed will be used for them in costing model
+  set_constrained_speed(graphreader.RecoverShortcut(std::get<0>(ABC)));
+  set_constrained_speed(graphreader.RecoverShortcut(std::get<0>(CDE)));
+  // reset cache to see updated speeds
+  graphreader.Clear();
+
+  Options options;
+  create_costing_options(options, Costing::auto_);
+  vs::TravelMode travel_mode = vs::TravelMode::kDrive;
+  const auto mode_costing = vs::CostFactory().CreateModeCosting(options, travel_mode);
+
+  std::vector<vb::Location> locations;
+  // set origin location
+  locations.push_back({nodes["1"]});
+  // set destination location
+  locations.push_back({nodes["2"]});
+  auto pbf_locations = ToPBFLocations(locations, graphreader, mode_costing[int(travel_mode)]);
+
+  vt::BidirectionalAStar astar;
+
+  // hack hierarchy limits to allow to go through the shortcut
+  mode_costing[int(travel_mode)]->RelaxHierarchyLimits(0.f, 0.f);
+  const auto path =
+      astar.GetBestPath(pbf_locations[0], pbf_locations[1], graphreader, mode_costing, travel_mode)
+          .front();
+
+  // check that final path doesn't contain shortcuts
+  for (const auto& info : path) {
+    const auto* edge = graphreader.directededge(info.edgeid);
+    ASSERT_FALSE(edge->is_shortcut()) << "Final path shouldn't contain shortcuts";
+  }
+  // check that final path contains right number of edges
+  ASSERT_EQ(path.size(), 6) << "Final path has wrong number of edges";
+
+  // calculate edge duration based on length and speed
+  const auto get_edge_duration = [&graphreader, &mode_costing,
+                                  travel_mode](const vb::GraphId& edgeid,
+                                               const vb::DirectedEdge* edge) {
+    auto tile = graphreader.GetGraphTile(edgeid);
+    const float speed_meters_per_sec =
+        (1000.f / 3600.f) * tile->GetSpeed(edge, mode_costing[int(travel_mode)]->flow_mask());
+    return edge->length() / speed_meters_per_sec;
+  };
+
+  // Check that final path really was recosted. To do that we compare actual
+  // edges durations with durations in the final path.
+  const std::vector<std::string> superseded_nodes = {"A", "B", "C", "D", "E"};
+  for (size_t i = 0; (i + 1) < superseded_nodes.size(); ++i) {
+    const auto edge =
+        gurka::findEdgeByNodes(graphreader, nodes, superseded_nodes[i], superseded_nodes[i + 1]);
+    ASSERT_EQ(path[i + 1].edgeid, std::get<0>(edge)) << "Not expected edge in the path";
+    EXPECT_NEAR((path[i + 1].elapsed_cost - path[i].elapsed_cost - path[i + 1].transition_cost).secs,
+                get_edge_duration(std::get<0>(edge), std::get<1>(edge)), 0.1f);
+  }
 }
 
 class AstarTestEnv : public ::testing::Environment {

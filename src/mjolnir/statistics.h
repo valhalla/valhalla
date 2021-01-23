@@ -123,8 +123,6 @@ public:
     void GenerateTasks(const boost::property_tree::ptree& pt) const;
   } roulette_data;
 
-  statistics();
-
   void add_tile_road(const uint64_t& tile_id, const RoadClass& rclass, const float length);
   void add_country_road(const std::string& ctry_code, const RoadClass& rclass, const float length);
 

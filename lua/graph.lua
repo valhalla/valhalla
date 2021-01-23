@@ -97,6 +97,8 @@ access = {
 
 private = {
 ["private"] = "true",
+["destination"] = "true",
+["customers"] = "true",
 ["delivery"] = "true"
 }
 
@@ -1302,6 +1304,8 @@ function filter_tags_generic(kv)
         use = 3
      elseif kv["highway"] == "living_street" then
         use = 10
+     elseif use == nil and kv["highway"] == "service" then
+        use = 11
      elseif kv["highway"] == "cycleway" then
         use = 20
      elseif kv["pedestrian"] == "false" and kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and (kv["bike_forward"] == "true" or kv["bike_backward"] == "true") then
@@ -1598,6 +1602,25 @@ function filter_tags_generic(kv)
     kv["truck_route"] = "true"
   end
 
+  if (kv["maxwidth"]) then
+    local width = tonumber(kv["maxwidth"])
+    if (width and width <= 1.9) then
+      kv["auto_forward"] = "false"
+      kv["truck_forward"] = "false"
+      kv["bus_forward"] = "false"
+      kv["taxi_forward"] = "false"
+      kv["emergency_forward"] = "false"
+      kv["hov_forward"] = "false"
+
+      kv["auto_backward"] = "false"
+      kv["truck_backward"] = "false"
+      kv["bus_backward"] = "false"
+      kv["taxi_backward"] = "false"
+      kv["emergency_backward"] = "false"
+      kv["hov_backward"] = "false"
+    end
+  end
+
   local nref = kv["ncn_ref"]
   local rref = kv["rcn_ref"]
   local lref = kv["lcn_ref"]
@@ -1699,11 +1722,12 @@ function nodes_proc (kv, nokeys)
 
   --must shut these off if motor_vehicle = 0
   if motor_vehicle_tag == 0 then
-    bus_tag = 0
-    taxi_tag = 0
-    truck_tag = 0
-    moped_tag = 0
-    motorcycle_tag = 0
+    hov_tag = hov_tag or 0
+    bus_tag = bus_tag or 0
+    taxi_tag = taxi_tag or 0
+    truck_tag = truck_tag or 0
+    moped_tag = moped_tag or 0
+    motorcycle_tag = motorcycle_tag or 0
   end
 
   local emergency_tag --implies nil
@@ -1720,12 +1744,12 @@ function nodes_proc (kv, nokeys)
   local auto = auto_tag or 1
   local truck = truck_tag or 8
   local bus = bus_tag or 64
-  local taxi = taxi_tag or 32
+  local taxi = taxi_tag or auto_tag or 32
   local foot = foot_tag or 2
   local wheelchair = wheelchair_tag or 256
   local bike = bike_tag or 4
   local emergency = emergency_tag or 16
-  local hov = hov_tag or 128
+  local hov = hov_tag or auto_tag or 128
   local moped = moped_tag or 512
   local motorcycle = motorcycle_tag or 1024
 
@@ -1749,12 +1773,17 @@ function nodes_proc (kv, nokeys)
     hov = hov_tag or 0
   end
 
-  --check for gates and bollards
+  --check for gates, bollards, and sump_busters
   local gate = kv["barrier"] == "gate" or kv["barrier"] == "lift_gate"
   local bollard = false
+  local sump_buster = false
+
   if gate == false then
     --if there was a bollard cars can't get through it
     bollard = kv["barrier"] == "bollard" or kv["barrier"] == "block" or kv["bollard"] == "removable" or false
+
+    --if sump_buster then no access for auto, hov, and taxi unless a tag exists.
+    sump_buster = kv["barrier"] == "sump_buster" or false
 
     --save the following as gates.
     if (bollard and (kv["bollard"] == "rising")) then
@@ -1775,11 +1804,24 @@ function nodes_proc (kv, nokeys)
       motorcycle = motorcycle_tag or 0
       emergency = emergency_tag or 0
       hov = hov_tag or 0
+    --sump_buster = true shuts off access unless the tag exists.
+    elseif sump_buster == true then
+      auto = auto_tag or 0
+      truck = truck_tag or 8
+      bus = bus_tag or 64
+      taxi = taxi_tag or 0
+      foot = foot_tag or 2
+      wheelchair = wheelchair_tag or 256
+      bike = bike_tag or 4
+      moped = moped_tag or 512
+      motorcycle = motorcycle_tag or 1024
+      emergency = emergency_tag or 16
+      hov = hov_tag or 0
     end
   end
 
   --if nothing blocks access at this node assume access is allowed.
-  if gate == false and bollard == false and access == "true" then
+  if gate == false and bollard == false and sump_buster == false and access == "true" then
     if kv["highway"] == "crossing" or kv["railway"] == "crossing" or
        kv["footway"] == "crossing" or kv["cycleway"] == "crossing" or
        kv["foot"] == "crossing" or kv["bicycle"] == "crossing" or
@@ -1787,7 +1829,7 @@ function nodes_proc (kv, nokeys)
          auto = auto_tag or 1
          truck = truck_tag or 8
          bus = bus_tag or 64
-         taxi = taxi or 32
+         taxi = taxi_tag or 32
          foot = foot_tag or 2
          wheelchair = wheelchair_tag or 256
          bike = bike_tag or 4
@@ -1801,6 +1843,7 @@ function nodes_proc (kv, nokeys)
   --store the gate and bollard info
   kv["gate"] = tostring(gate)
   kv["bollard"] = tostring(bollard)
+  kv["sump_buster"] = tostring(sump_buster)
 
   if kv["barrier"] == "border_control" then
     kv["border_control"] = "true"

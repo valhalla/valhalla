@@ -34,8 +34,6 @@ void check_shape(const google::protobuf::RepeatedPtrField<valhalla::Location>& s
     throw valhalla_exception_t{153, "(" + std::to_string(shape.size()) + "). The limit is " +
                                         std::to_string(max_shape)};
   };
-
-  valhalla::midgard::logging::Log("trace_size::" + std::to_string(shape.size()), " [ANALYTICS] ");
 }
 
 void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
@@ -67,10 +65,6 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
   if (!can_be_matched) {
     throw valhalla_exception_t{172, " " + std::to_string(max_breakage_distance) + " meters"};
   }
-
-  valhalla::midgard::logging::Log("location_distance::" +
-                                      std::to_string(crow_distance * kKmPerMeter) + "km",
-                                  " [ANALYTICS] ");
 }
 
 void check_best_paths(unsigned int best_paths, unsigned int max_best_paths) {
@@ -105,18 +99,12 @@ void check_gps_accuracy(const float input_gps_accuracy, const float max_gps_accu
   if (input_gps_accuracy > max_gps_accuracy || input_gps_accuracy < 0.f) {
     throw valhalla_exception_t{158};
   }
-
-  valhalla::midgard::logging::Log("gps_accuracy::" + std::to_string(input_gps_accuracy) + "meters",
-                                  " [ANALYTICS] ");
 }
 
 void check_search_radius(const float input_search_radius, const float max_search_radius) {
   if (input_search_radius > max_search_radius || input_search_radius < 0.f) {
     throw valhalla_exception_t{158};
   }
-
-  valhalla::midgard::logging::Log("search_radius::" + std::to_string(input_search_radius) + "meters",
-                                  " [ANALYTICS] ");
 }
 
 void check_turn_penalty_factor(const float input_turn_penalty_factor) {
@@ -173,6 +161,9 @@ void loki_worker_t::init_trace(Api& request) {
 }
 
 void loki_worker_t::trace(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request, "loki_worker_t::trace");
+
   init_trace(request);
   if (request.options().costing() == Costing::multimodal) {
     throw valhalla_exception_t{140, Options_Action_Enum_Name(request.options().action())};
@@ -221,7 +212,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
       orig->mutable_ll()->set_lat(orig_ll.lat());
       for (auto& e : *orig->mutable_path_edges()) {
         GraphId edgeid(e.graph_id());
-        const GraphTile* tile = reader->GetGraphTile(edgeid);
+        graph_tile_ptr tile = reader->GetGraphTile(edgeid);
         const DirectedEdge* de = tile->directededge(edgeid);
         auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
         auto closest = orig_ll.ClosestPoint(shape);
@@ -248,7 +239,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
       dest->mutable_ll()->set_lat(dest_ll.lat());
       for (auto& e : *dest->mutable_path_edges()) {
         GraphId edgeid(e.graph_id());
-        const GraphTile* tile = reader->GetGraphTile(edgeid);
+        graph_tile_ptr tile = reader->GetGraphTile(edgeid);
         const DirectedEdge* de = tile->directededge(edgeid);
         auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
         auto closest = dest_ll.ClosestPoint(shape);

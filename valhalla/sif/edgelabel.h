@@ -582,6 +582,10 @@ protected:
  */
 class MMEdgeLabel : public EdgeLabel {
 public:
+  // Default constructor
+  MMEdgeLabel() {
+  }
+
   /**
    * Constructor with values.  Used for multi-modal path.
    * @param predecessor   Index into the edge label list for the predecessor

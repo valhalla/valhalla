@@ -84,6 +84,22 @@ const char* incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impa
   return "UNHANDLED_CASE";
 }
 
+const std::string& GuidanceViewTypeToString(const valhalla::DirectionsLeg_GuidanceView_Type type) {
+  static const std::string empty;
+  static const std::unordered_map<int, std::string>
+      types{{DirectionsLeg_GuidanceView_Type_kJunction, "jct"},
+            {DirectionsLeg_GuidanceView_Type_kSapa, "sapa"},
+            {DirectionsLeg_GuidanceView_Type_kTollbranch, "tollbranch"},
+            {DirectionsLeg_GuidanceView_Type_kAftertoll, "aftertoll"},
+            {DirectionsLeg_GuidanceView_Type_kEnt, "ent"},
+            {DirectionsLeg_GuidanceView_Type_kExit, "exit"},
+            {DirectionsLeg_GuidanceView_Type_kCityreal, "cityreal"},
+            {DirectionsLeg_GuidanceView_Type_kDirectionboard, "directionboard"},
+            {DirectionsLeg_GuidanceView_Type_kSignboard, "signboard"}};
+  auto i = types.find(type);
+  return i == types.cend() ? empty : i->second;
+}
+
 bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
   static const std::unordered_map<std::string, Options::Action> actions{
       {"route", Options::route},
@@ -120,6 +136,42 @@ const std::string& Options_Action_Enum_Name(const Options::Action action) {
   };
   auto i = actions.find(action);
   return i == actions.cend() ? empty : i->second;
+}
+
+bool Location_Type_Enum_Parse(const std::string& type, Location::Type* t) {
+  static const std::unordered_map<std::string, Location::Type> types{
+      {"break", Location::kBreak},
+      {"through", Location::kThrough},
+      {"break_through", Location::kBreakThrough},
+      {"via", Location::kVia},
+  };
+  auto i = types.find(type);
+  if (i == types.cend())
+    return false;
+  *t = i->second;
+  return true;
+}
+const std::string& Location_Type_Enum_Name(const Location::Type type) {
+  static const std::string empty;
+  static const std::unordered_map<int, std::string> types{
+      {Location::kBreak, "break"},
+      {Location::kThrough, "through"},
+      {Location::kBreakThrough, "break_through"},
+      {Location::kVia, "via"},
+  };
+  auto i = types.find(type);
+  return i == types.cend() ? empty : i->second;
+}
+
+const std::string& Location_SideOfStreet_Enum_Name(const Location::SideOfStreet side) {
+  static const std::string empty;
+  static const std::unordered_map<int, std::string> sides{
+      {Location::kLeft, "left"},
+      {Location::kRight, "right"},
+      {Location::kNone, "none"},
+  };
+  auto i = sides.find(side);
+  return i == sides.cend() ? empty : i->second;
 }
 
 bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
@@ -293,5 +345,68 @@ bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc) {
     return false;
   *rc = i->second;
   return true;
+}
+
+const std::unordered_map<int, std::string> vehicle_to_string{
+    {static_cast<int>(DirectionsLeg_VehicleType_kCar), "car"},
+    {static_cast<int>(DirectionsLeg_VehicleType_kMotorcycle), "motorcycle"},
+    {static_cast<int>(DirectionsLeg_VehicleType_kAutoBus), "bus"},
+    {static_cast<int>(DirectionsLeg_VehicleType_kTractorTrailer), "tractor_trailer"},
+    {static_cast<int>(DirectionsLeg_VehicleType_kMotorScooter), "motor_scooter"},
+};
+
+const std::unordered_map<int, std::string> pedestrian_to_string{
+    {static_cast<int>(DirectionsLeg_PedestrianType_kFoot), "foot"},
+    {static_cast<int>(DirectionsLeg_PedestrianType_kWheelchair), "wheelchair"},
+    {static_cast<int>(DirectionsLeg_PedestrianType_kSegway), "segway"},
+};
+
+const std::unordered_map<int, std::string> bicycle_to_string{
+    {static_cast<int>(DirectionsLeg_BicycleType_kRoad), "road"},
+    {static_cast<int>(DirectionsLeg_BicycleType_kCross), "cross"},
+    {static_cast<int>(DirectionsLeg_BicycleType_kHybrid), "hybrid"},
+    {static_cast<int>(DirectionsLeg_BicycleType_kMountain), "mountain"},
+};
+
+const std::unordered_map<int, std::string> transit_to_string{
+    {static_cast<int>(DirectionsLeg_TransitType_kTram), "tram"},
+    {static_cast<int>(DirectionsLeg_TransitType_kMetro), "metro"},
+    {static_cast<int>(DirectionsLeg_TransitType_kRail), "rail"},
+    {static_cast<int>(DirectionsLeg_TransitType_kBus), "bus"},
+    {static_cast<int>(DirectionsLeg_TransitType_kFerry), "ferry"},
+    {static_cast<int>(DirectionsLeg_TransitType_kCableCar), "cable_car"},
+    {static_cast<int>(DirectionsLeg_TransitType_kGondola), "gondola"},
+    {static_cast<int>(DirectionsLeg_TransitType_kFunicular), "funicular"},
+};
+
+std::pair<std::string, std::string>
+travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver) {
+  switch (maneuver.travel_mode()) {
+    case DirectionsLeg_TravelMode_kDrive: {
+      auto i = maneuver.has_vehicle_type() ? vehicle_to_string.find(maneuver.vehicle_type())
+                                           : vehicle_to_string.cend();
+      return i == vehicle_to_string.cend() ? std::make_pair("drive", "car")
+                                           : std::make_pair("drive", i->second);
+    }
+    case DirectionsLeg_TravelMode_kPedestrian: {
+      auto i = maneuver.has_pedestrian_type() ? pedestrian_to_string.find(maneuver.pedestrian_type())
+                                              : pedestrian_to_string.cend();
+      return i == pedestrian_to_string.cend() ? std::make_pair("pedestrian", "foot")
+                                              : std::make_pair("pedestrian", i->second);
+    }
+    case DirectionsLeg_TravelMode_kBicycle: {
+      auto i = maneuver.has_bicycle_type() ? bicycle_to_string.find(maneuver.bicycle_type())
+                                           : bicycle_to_string.cend();
+      return i == bicycle_to_string.cend() ? std::make_pair("bicycle", "road")
+                                           : std::make_pair("bicycle", i->second);
+    }
+    case DirectionsLeg_TravelMode_kTransit: {
+      auto i = maneuver.has_transit_type() ? transit_to_string.find(maneuver.transit_type())
+                                           : transit_to_string.cend();
+      return i == transit_to_string.cend() ? std::make_pair("transit", "rail")
+                                           : std::make_pair("transit", i->second);
+    }
+  }
+  throw std::runtime_error("Unhandled case");
 }
 } // namespace valhalla

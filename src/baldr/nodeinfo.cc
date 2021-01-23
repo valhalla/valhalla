@@ -241,7 +241,7 @@ void NodeInfo::set_connecting_wayid(const uint64_t wayid) {
   headings_ = wayid;
 }
 
-json::MapPtr NodeInfo::json(const GraphTile* tile) const {
+json::MapPtr NodeInfo::json(const graph_tile_ptr& tile) const {
   auto m = json::map({
       {"lon", json::fp_t{latlng(tile->header()->base_ll()).first, 6}},
       {"lat", json::fp_t{latlng(tile->header()->base_ll()).second, 6}},

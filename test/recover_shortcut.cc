@@ -9,6 +9,7 @@
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
 #include "midgard/util.h"
+#include "src/baldr/shortcut_recovery.h"
 #include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla;
@@ -20,7 +21,6 @@ std::string to_string(const midgard::PointLL& p) {
   return "[" + to_string(p.first) + "," + to_string(p.second) + "]";
 }
 } // namespace std
-namespace {
 
 boost::property_tree::ptree get_conf() {
   std::stringstream ss;
@@ -45,7 +45,7 @@ boost::property_tree::ptree get_conf() {
         "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
         "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
         "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
+        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time_contour": 120, "max_distance_contour":200},
         "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
         "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
         "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
@@ -60,10 +60,16 @@ boost::property_tree::ptree get_conf() {
   return conf;
 }
 
-TEST(RecoverShortcut, test_recover_shortcut_edges) {
+// expose the constructor
+struct testable_recovery : public shortcut_recovery_t {
+  testable_recovery(GraphReader* reader) : shortcut_recovery_t(reader) {
+  }
+};
+
+void recover(bool cache) {
   auto conf = get_conf();
   GraphReader graphreader(conf.get_child("mjolnir"));
-
+  testable_recovery recovery{cache ? &graphreader : nullptr};
   size_t total = 0;
   size_t bad = 0;
 
@@ -81,11 +87,12 @@ TEST(RecoverShortcut, test_recover_shortcut_edges) {
         graphreader.Trim();
 
       // for each edge in the tile
-      const auto* tile = graphreader.GetGraphTile(tileid);
+      auto tile = graphreader.GetGraphTile(tileid);
       for (size_t j = 0; j < tile->header()->directededgecount(); ++j) {
         // skip it if its not a shortcut or the shortcut is one we will never traverse
         const auto* edge = tile->directededge(j);
-        if (!edge->is_shortcut() || !(edge->forwardaccess() & kAutoAccess))
+        if (!edge->is_shortcut() ||
+            (!(edge->forwardaccess() & kAutoAccess) && !(edge->reverseaccess() & kAutoAccess)))
           continue;
 
         // we'll have the shape to compare to
@@ -96,7 +103,7 @@ TEST(RecoverShortcut, test_recover_shortcut_edges) {
         // make a graph id out of the shortcut to send to recover
         auto shortcutid = tileid;
         shortcutid.set_id(j);
-        auto edgeids = graphreader.RecoverShortcut(shortcutid);
+        auto edgeids = recovery.get(shortcutid, graphreader);
 
         // if it gave us back the shortcut we failed
         if (edgeids.front() == shortcutid) {
@@ -110,7 +117,7 @@ TEST(RecoverShortcut, test_recover_shortcut_edges) {
         // accumulate the shape along the edges that we recovered
         std::vector<PointLL> recovered_shape;
         for (auto edgeid : edgeids) {
-          const auto* tile = graphreader.GetGraphTile(edgeid);
+          auto tile = graphreader.GetGraphTile(edgeid);
           const auto* de = tile->directededge(edgeid);
           auto de_shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
           if (!de->forward()) {
@@ -153,7 +160,13 @@ TEST(RecoverShortcut, test_recover_shortcut_edges) {
   EXPECT_LE(double(bad) / double(total), .001) << "More than 0.1% is too much";
 }
 
-} // namespace
+TEST(RecoverShortcut, test_recover_shortcut_edges_no_cache) {
+  recover(false);
+}
+
+TEST(RecoverShortcut, test_recover_shortcut_edges_cache) {
+  recover(true);
+}
 
 int main(int argc, char* argv[]) {
   // valhalla::midgard::logging::Configure({{"type", ""}});

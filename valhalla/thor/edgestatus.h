@@ -27,9 +27,8 @@ struct EdgeStatusInfo {
   EdgeStatusInfo() : index_(0), set_(0) {
   }
 
-  EdgeStatusInfo(const EdgeSet set, const uint32_t index) {
-    set_ = static_cast<uint32_t>(set);
-    index_ = index;
+  EdgeStatusInfo(const EdgeSet set, const uint32_t index)
+      : index_(index), set_(static_cast<uint32_t>(set)) {
   }
 
   uint32_t index() const {
@@ -50,6 +49,18 @@ struct EdgeStatusInfo {
  */
 class EdgeStatus {
 public:
+  /**
+   * Default constructor.
+   */
+  EdgeStatus() = default;
+
+  // in order no to delete objects twice in destructor we should explicitly
+  // forbid copying
+  EdgeStatus(const EdgeStatus&) = delete;
+  EdgeStatus& operator=(const EdgeStatus&) = delete;
+  EdgeStatus(EdgeStatus&&) = default;
+  EdgeStatus& operator=(EdgeStatus&&) = default;
+
   /**
    * Destructor. Delete any allocated EdgeStatusInfo arrays.
    */
@@ -75,10 +86,8 @@ public:
    * @param  index    Index of the edge label.
    * @param  tile     Graph tile of the directed edge.
    */
-  void Set(const baldr::GraphId& edgeid,
-           const EdgeSet set,
-           const uint32_t index,
-           const baldr::GraphTile* tile) {
+  void
+  Set(const baldr::GraphId& edgeid, const EdgeSet set, const uint32_t index, graph_tile_ptr tile) {
     auto p = edgestatus_.find(edgeid.tile_value());
     if (p != edgestatus_.end()) {
       p->second[edgeid.id()] = {set, index};
@@ -124,7 +133,7 @@ public:
    * @param   tile    Graph tile of the directed edge.
    * @return  Returns a pointer to edge status info for this edge.
    */
-  EdgeStatusInfo* GetPtr(const baldr::GraphId& edgeid, const baldr::GraphTile* tile) {
+  EdgeStatusInfo* GetPtr(const baldr::GraphId& edgeid, const graph_tile_ptr& tile) {
     const auto p = edgestatus_.find(edgeid.tile_value());
     if (p != edgestatus_.end()) {
       return &p->second[edgeid.id()];

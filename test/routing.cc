@@ -9,20 +9,27 @@ using namespace valhalla::meili;
 
 namespace {
 
-void Add(baldr::DoubleBucketQueue& adjlist, const std::vector<float>& costs) {
+struct simple_label {
+  float c;
+  float sortcost() const {
+    return c;
+  }
+};
+
+void Add(baldr::DoubleBucketQueue<simple_label>& adjlist, const std::vector<simple_label>& costs) {
   uint32_t idx = 0;
   for (const auto cost : costs) {
     adjlist.add(idx++);
   }
 }
 
-void TryRemove(baldr::DoubleBucketQueue& adjlist,
+void TryRemove(baldr::DoubleBucketQueue<simple_label>& adjlist,
                size_t num_to_remove,
-               const std::vector<float>& costs) {
+               const std::vector<simple_label>& costs) {
   auto previous_cost = -std::numeric_limits<float>::infinity();
   for (size_t i = 0; i < num_to_remove; ++i) {
     const auto top = adjlist.pop();
-    const auto cost = costs[top];
+    const auto cost = costs[top].sortcost();
     EXPECT_LE(previous_cost, cost) << "TryAddRemove: expected order test failed";
     previous_cost = cost;
   }
@@ -30,11 +37,11 @@ void TryRemove(baldr::DoubleBucketQueue& adjlist,
 
 TEST(Routing, TestAddRemove) {
   // Test add and remove
-  std::vector<float> costs = {67, 325, 25, 466, 1000, 10000, 758, 167, 258, 16442, 278};
+  std::vector<simple_label> costs = {
+      {67}, {325}, {25}, {466}, {1000}, {10000}, {758}, {167}, {258}, {16442}, {278},
+  };
 
-  const auto labelcost = [&costs](const uint32_t label) { return costs[label]; };
-
-  baldr::DoubleBucketQueue adjlist(0, 100000, 1, labelcost);
+  baldr::DoubleBucketQueue<simple_label> adjlist(0, 100000, 1, &costs);
 
   Add(adjlist, costs);
   TryRemove(adjlist, costs.size(), costs);
@@ -46,22 +53,19 @@ TEST(Routing, TestAddRemove) {
   std::mt19937 gen(rd());
   for (size_t i = 0; i < 10000; i++) {
     const auto cost = std::floor(test::rand01(gen) * 100000);
-    costs.push_back(cost);
+    costs.push_back({cost});
   }
 
-  baldr::DoubleBucketQueue adjlist2(0, 10000, 1, labelcost);
+  baldr::DoubleBucketQueue<simple_label> adjlist2(0, 10000, 1, &costs);
   Add(adjlist2, costs);
   TryRemove(adjlist2, costs.size(), costs);
   EXPECT_EQ(adjlist.pop(), baldr::kInvalidLabel) << "TestAddRemove: expect list to be empty";
 
   // Construct a new adjlist
-  costs.resize(5);
-  costs[0] = 1000;
-  costs[1] = 100;
-  costs[2] = 10;
-  costs[3] = 9;
-  costs[4] = 5;
-  baldr::DoubleBucketQueue adjlist3(0, 10, 1, labelcost);
+  costs = {
+      {1000}, {100}, {10}, {9}, {5},
+  };
+  baldr::DoubleBucketQueue<simple_label> adjlist3(0, 10, 1, &costs);
 
   adjlist3.add(0);
   adjlist3.add(1);
@@ -71,23 +75,21 @@ TEST(Routing, TestAddRemove) {
 
   // Decrease cost of label 3 to 3 - pop the lowest cost element - it should be label 3
   adjlist3.decrease(3, 3);
-  costs[3] = 3;
+  costs[3] = {3};
   uint32_t lab = adjlist3.pop();
   EXPECT_EQ(lab, 3) << "TestAddRemove: After decrease the lowest cost label must be label 3, top = " +
                            std::to_string(lab);
 }
 
 void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_increment_cost) {
-  std::vector<float> costs;
+  std::vector<simple_label> costs;
   // Track all label indexes in the adjlist
   std::unordered_set<uint32_t> track;
 
-  const auto labelcost = [&costs](const uint32_t label) { return costs[label]; };
-
-  baldr::DoubleBucketQueue adjlist(0, 100000, 1, labelcost);
+  baldr::DoubleBucketQueue<simple_label> adjlist(0, 100000, 1, &costs);
 
   const uint32_t idx = costs.size();
-  costs.push_back(10.f);
+  costs.push_back({10.f});
   adjlist.add(idx);
   track.insert(idx);
 
@@ -95,10 +97,10 @@ void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_incremen
   std::mt19937 gen(rd());
   for (size_t i = 0; i < loop_count; i++) {
     const auto key = adjlist.pop();
-    const auto min_cost = costs[key];
+    const auto min_cost = costs[key].sortcost();
     // Must be the minimal one among the tracked labels
     for (auto k : track) {
-      EXPECT_LE(min_cost, costs[k]) << "Simulation: minimal cost expected";
+      EXPECT_LE(min_cost, costs[k].sortcost()) << "Simulation: minimal cost expected";
     }
     track.erase(key);
 
@@ -107,10 +109,10 @@ void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_incremen
       if (i % 2 == 0 && !track.empty()) {
         // Decrease cost
         const auto idx = *std::next(track.begin(), test::rand01(gen) * track.size());
-        if (newcost < costs[idx]) {
+        if (newcost < costs[idx].sortcost()) {
           adjlist.decrease(idx, newcost);
-          costs[idx] = newcost;
-          EXPECT_EQ(labelcost(idx), newcost) << "failed to decrease cost";
+          costs[idx] = {newcost};
+          EXPECT_EQ(costs[idx].sortcost(), newcost) << "failed to decrease cost";
         } /*else {
           // Assert that it must fail to decrease since costs[idx] <= newcost
           test::assert_throw<std::runtime_error>([&adjlist, idx, newcost](){
@@ -120,7 +122,7 @@ void TrySimulation(size_t loop_count, size_t expansion_size, size_t max_incremen
       } else {
         // Add new label
         const uint32_t idx = costs.size();
-        costs.push_back(newcost);
+        costs.push_back({newcost});
         adjlist.add(idx);
         track.insert(idx);
       }
@@ -141,16 +143,14 @@ TEST(Routing, TestSimulation) {
 TEST(Routing, Benchmark) {
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::vector<float> costs;
+  std::vector<simple_label> costs;
   size_t N = 1000000;
   for (size_t i = 0; i < N; ++i) {
-    costs.push_back(std::floor(test::rand01(gen) * N));
+    costs.push_back({std::floor(test::rand01(gen) * N)});
   }
 
-  const auto labelcost = [&costs](const uint32_t label) { return costs[label]; };
-
   std::clock_t start = std::clock();
-  baldr::DoubleBucketQueue adjlist5(0, N, 1, labelcost);
+  baldr::DoubleBucketQueue<simple_label> adjlist5(0, N, 1, &costs);
   Add(adjlist5, costs);
   TryRemove(adjlist5, costs.size(), costs);
   uint32_t ms = (std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC / 1000);

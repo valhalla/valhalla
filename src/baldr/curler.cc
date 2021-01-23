@@ -46,10 +46,10 @@ size_t write_callback(char* in, size_t block_size, size_t blocks, std::vector<ch
 }
 
 int progress_callback(void* data,
-                      curl_off_t dltotal,
-                      curl_off_t dlnow,
-                      curl_off_t ultotal,
-                      curl_off_t ulnow) {
+                      curl_off_t /*dltotal*/,
+                      curl_off_t /*dlnow*/,
+                      curl_off_t /*ultotal*/,
+                      curl_off_t /*ulnow*/) {
   auto interrupt = static_cast<const valhalla::baldr::curler_t::interrupt_t*>(data);
   try {
     (*interrupt)();
@@ -132,7 +132,7 @@ struct curler_t::pimpl_t {
   }
 
   std::shared_ptr<CURL> connection;
-  char error[CURL_ERROR_SIZE];
+  char error[CURL_ERROR_SIZE]{};
   std::string user_agent;
 };
 

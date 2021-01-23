@@ -49,7 +49,7 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   posix_locale = narrative_pt.get<std::string>(kPosixLocaleKey, "en_US.UTF-8");
   try {
     locale = std::locale(posix_locale.c_str());
-  } catch (std::runtime_error& rte) {
+  } catch (...) {
     LOG_TRACE("Using the default locale because a locale was not found for: " + posix_locale);
   }
 
