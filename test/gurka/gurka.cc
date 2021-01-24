@@ -562,6 +562,7 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
 valhalla::Api route(const map& map,
                     const std::string& request_json,
                     std::shared_ptr<valhalla::baldr::GraphReader> reader) {
+  std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -595,7 +596,6 @@ valhalla::Api route(const map& map,
   std::cerr << " with costing " << costing << std::endl;
   auto lls = detail::to_lls(map.nodes, waypoints);
   auto request_json = detail::build_valhalla_request("locations", lls, costing, options);
-  std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
 
   return route(map, request_json, reader);
 }
@@ -710,9 +710,12 @@ std::string dump_geojson_graph(const map& graph) {
       for (const std::string& name : info.GetNames()) {
         names.PushBack(rapidjson::Value(name, doc.GetAllocator()).Move(), doc.GetAllocator());
       }
-      properties.AddMember("edge_id", std::to_string(edge_id), doc.GetAllocator());
-      properties.AddMember("opp_edge_id", std::to_string(reader.GetOpposingEdgeId(edge_id)),
-                           doc.GetAllocator());
+
+      // TODO: why on earth do we need decltype?
+      properties.AddMember(decltype(doc)::StringRefType(edge.forward() ? "edge_id" : "opp_edge_id"),
+                           std::to_string(edge_id), doc.GetAllocator());
+      properties.AddMember(decltype(doc)::StringRefType(edge.forward() ? "opp_edge_id" : "edge_id"),
+                           std::to_string(reader.GetOpposingEdgeId(edge_id)), doc.GetAllocator());
       properties.AddMember("names", names, doc.GetAllocator());
 
       // add the geom

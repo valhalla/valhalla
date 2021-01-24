@@ -13,12 +13,10 @@
 #include "meili/routing.h"
 
 namespace valhalla {
-
 namespace meili {
 
-LabelSet::LabelSet(const float max_cost, const float bucket_size) {
-  const auto edgecost = [this](const uint32_t label) { return labels_[label].sortcost(); };
-  queue_.reset(new baldr::DoubleBucketQueue(0.0f, max_cost, bucket_size, edgecost));
+LabelSet::LabelSet(const float max_cost, const float bucket_size)
+    : queue_(0.0f, max_cost, bucket_size, &labels_) {
 }
 
 void LabelSet::put(const baldr::GraphId& nodeid,
@@ -43,7 +41,7 @@ void LabelSet::put(const baldr::GraphId& nodeid,
     const uint32_t idx = labels_.size();
     labels_.emplace_back(nodeid, kInvalidDestination, edgeid, source, target, cost, turn_cost,
                          sortcost, predecessor, edge, mode, restriction_idx);
-    queue_->add(idx);
+    queue_.add(idx);
     node_status_.emplace(nodeid, idx);
   } else {
     // Node has been found. Check if there is a lower sortcost than the
@@ -52,7 +50,7 @@ void LabelSet::put(const baldr::GraphId& nodeid,
     if (!status.permanent && sortcost < labels_[status.label_idx].sortcost()) {
       // Update queue first since it uses the label cost within the decrease
       // method to determine the current bucket.
-      queue_->decrease(status.label_idx, sortcost);
+      queue_.decrease(status.label_idx, sortcost);
       labels_[status.label_idx] = {nodeid, kInvalidDestination, edgeid,   source,      target,
                                    cost,   turn_cost,           sortcost, predecessor, edge,
                                    mode,   restriction_idx};
@@ -83,7 +81,7 @@ void LabelSet::put(const uint16_t dest,
     const uint32_t idx = labels_.size();
     labels_.emplace_back(inv, dest, edgeid, source, target, cost, turn_cost, sortcost, predecessor,
                          edge, travelmode, restriction_idx);
-    queue_->add(idx);
+    queue_.add(idx);
     dest_status_.emplace(dest, idx);
   } else {
     // Decrease cost of the existing label
@@ -91,7 +89,7 @@ void LabelSet::put(const uint16_t dest,
     if (!status.permanent && sortcost < labels_[status.label_idx].sortcost()) {
       // Update queue first since it uses the label cost within the decrease
       // method to determine the current bucket.
-      queue_->decrease(status.label_idx, sortcost);
+      queue_.decrease(status.label_idx, sortcost);
       labels_[status.label_idx] = {inv,         dest, edgeid,     source,
                                    target,      cost, turn_cost,  sortcost,
                                    predecessor, edge, travelmode, restriction_idx};
@@ -102,7 +100,7 @@ void LabelSet::put(const uint16_t dest,
 // Get the next label from the priority queue. Marks the popped label
 // as permanent (best path found).
 uint32_t LabelSet::pop() {
-  const auto idx = queue_->pop();
+  const auto idx = queue_.pop();
 
   // Mark the popped label as permanent (optimal)
   if (idx != baldr::kInvalidLabel) {
@@ -166,7 +164,7 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
                           const Label& pred_edgelabel,
                           const graph_tile_ptr& tile,
                           uint8_t& restriction_idx) {
-  bool valid_pred = (!pred_edgelabel.edgeid().Is_Valid() && costing->Filter(edge, tile) != 0.f) ||
+  bool valid_pred = (!pred_edgelabel.edgeid().Is_Valid() && costing->Allowed(edge, tile)) ||
                     edgeid == pred_edgelabel.edgeid();
   bool restricted = !costing->Allowed(edge, pred_edgelabel, tile, edgeid, 0, 0, restriction_idx);
   return valid_pred || !restricted;
@@ -221,13 +219,11 @@ void set_origin(baldr::GraphReader& reader,
 }
 
 /**
- * Set destinations. Note that we put the origin in the destinations as
- * well.
- * TODO: are we doing this because to skip outliers? in other words, if we
- * cant find a path to any of the destinations in the right column then
- * we'll at least have the path from the left column to itself, which we can
- * then use to route directly to the (right + 1)th column effectively
- * skipping the right column as an outlier
+ * Set destinations. Note that we put the origin in the destinations as well.
+ * TODO: are we doing this because to skip outliers? in other words, if we cant find a path to any of
+ * the destinations in the right column then we'll at least have the path from the left column to
+ * itself, which we can then use to route directly to the (right + 1)th column effectively skipping
+ * the right column as an outlier
  */
 void set_destinations(baldr::GraphReader& reader,
                       const std::vector<baldr::PathLocation>& destinations,

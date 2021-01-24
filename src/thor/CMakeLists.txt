@@ -26,6 +26,17 @@ set(sources
   triplegbuilder_utils.h
   worker.cc)
 
+if (UNIX AND NOT APPLE)
+  # Enables stricter compiler checks on a file-by-file basis
+  # which allows us to migrate piecemeal
+  set_source_files_properties(
+    alternates.cc
+    attributes_controller.cc
+    triplegbuilder.cc
+    worker.cc
+  PROPERTIES COMPILE_FLAGS "-Wall -Werror")
+endif ()
+
 valhalla_module(NAME thor
   SOURCES ${sources}
   HEADERS ${headers}

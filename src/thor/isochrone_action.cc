@@ -16,36 +16,36 @@ std::string thor_worker_t::isochrones(Api& request) {
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
 
-  std::vector<float> contours;
-  std::unordered_map<float, std::string> colors;
+  // name of the metric (time/distance, value, color)
+  std::vector<GriddedData<2>::contour_interval_t> contours;
   for (const auto& contour : options.contours()) {
-    contours.push_back(contour.time());
-    colors[contours.back()] = contour.color();
+    if (contour.has_time()) {
+      contours.emplace_back(0, contour.time(), "time", contour.color());
+    }
+    if (contour.has_distance()) {
+      contours.emplace_back(1, contour.distance(), "distance", contour.color());
+    }
   }
 
-  // If generalize is not provided then an optimal factor is computed
-  // (based on the isotile grid size).
+  // If no generalization is requested an optimal factor is computed (based on the isotile grid size).
   if (!options.has_generalize()) {
     options.set_generalize(kOptimalGeneralization);
   }
 
   // get the raster
-  // Extend the times in the 2-D grid to be 10 minutes beyond the highest contour time.
-  // Cost (including penalties) is used when adding to the adjacency list but the elapsed
-  // time in seconds is used when terminating the search. The + 10 minutes adds a buffer for edges
-  // where there has been a higher cost that might still be marked in the isochrone
-  auto grid = (costing == "multimodal" || costing == "transit")
-                  ? isochrone_gen.Expand(ExpansionType::multimodal, *options.mutable_locations(),
-                                         contours.back() + 10, *reader, mode_costing, mode)
-                  : isochrone_gen.Expand(ExpansionType::forward, *options.mutable_locations(),
-                                         contours.back() + 10, *reader, mode_costing, mode);
+  auto expansion_type = costing == "multimodal" || costing == "transit" ? ExpansionType::multimodal
+                                                                        : ExpansionType::forward;
+  auto grid = isochrone_gen.Expand(expansion_type, request, *reader, mode_costing, mode);
 
-  // turn it into geojson
+  // we have parallel vectors of contour properties and the actual geojson features
+  // this method sorts the contour specifications by metric (time or distance) and then by value
+  // with the largest values coming first. eg (60min, 30min, 10min, 40km, 10km)
   auto isolines =
       grid->GenerateContours(contours, options.polygons(), options.denoise(), options.generalize());
 
-  return tyr::serializeIsochrones<PointLL>(request, isolines, options.polygons(), colors,
-                                           options.show_locations());
+  // make the final json
+  return tyr::serializeIsochrones(request, contours, isolines, options.polygons(),
+                                  options.show_locations());
 }
 
 } // namespace thor

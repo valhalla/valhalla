@@ -31,8 +31,10 @@ class Isochrone : public Dijkstras {
 public:
   /**
    * Constructor.
+   * @param max_reserved_labels_count maximum capacity of edgelabels container
+   *                                  that allowed to keep reserved
    */
-  Isochrone();
+  explicit Isochrone(uint32_t max_reserved_labels_count = std::numeric_limits<uint32_t>::max());
 
   /**
    * Destructor
@@ -46,20 +48,18 @@ public:
    * so it can be output as polygons. Multiple locations are allowed as the
    * origins - within some reasonable distance from each other.
    *
-   * @param locations    The locations from which the path finding originates
-   * @param max_minutes  Maximum time (minutes) for largest contour
-   * @param reader       Graph reader to provide access to graph primitives
-   * @param costings     Per mode costing objects
-   * @param mode         The mode specifying which costing to use
-   * @return             The 2d grid each marked with the minimum time to reach it
+   * @param expansion_type  Which type of expansion to do, forward/reverse/mulitmodal
+   * @param api             The request response containing the locations to seed the expansion
+   * @param reader          Graph reader to provide access to graph primitives
+   * @param costings        Per mode costing objects
+   * @param mode            The mode specifying which costing to use
+   * @return                The 2d grid each marked with the minimum time to reach it
    */
-  std::shared_ptr<const midgard::GriddedData<midgard::PointLL>>
-  Expand(const ExpansionType& expansion_type,
-         google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-         const unsigned int max_minutes,
-         baldr::GraphReader& reader,
-         const sif::mode_costing_t& costings,
-         const sif::TravelMode mode);
+  std::shared_ptr<const midgard::GriddedData<2>> Expand(const ExpansionType& expansion_type,
+                                                        valhalla::Api& api,
+                                                        baldr::GraphReader& reader,
+                                                        const sif::mode_costing_t& costings,
+                                                        const sif::TravelMode mode);
 
 protected:
   // when we expand up to a node we color the cells of the grid that the edge that ends at the
@@ -80,21 +80,19 @@ protected:
                                  uint32_t& edge_label_reservation) const override;
 
   float shape_interval_; // Interval along shape to mark time
-  uint32_t max_seconds_;
-  std::shared_ptr<midgard::GriddedData<midgard::PointLL>> isotile_;
+  float max_seconds_;
+  float max_meters_;
+  std::shared_ptr<midgard::GriddedData<2>> isotile_;
 
   /**
    * Constructs the isotile - 2-D gridded data containing the time
    * to get to each lat,lng tile.
    * @param  multimodal  True if the route type is multimodal.
-   * @param  max_minutes Maximum time (minutes) for computing isochrones.
+   * @param  api         Request information
    * @param  locations   List of origin locations.
    * @param  mode        Travel mode
    */
-  void ConstructIsoTile(const bool multimodal,
-                        const unsigned int max_minutes,
-                        const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                        const sif::TravelMode mode);
+  void ConstructIsoTile(const bool multimodal, const valhalla::Api& api, const sif::TravelMode mode);
 
   /**
    * Updates the isotile using the edge information from the predecessor edge
@@ -107,7 +105,8 @@ protected:
   void UpdateIsoTile(const sif::EdgeLabel& pred,
                      baldr::GraphReader& graphreader,
                      const midgard::PointLL& ll,
-                     const float secs0);
+                     const float secs0,
+                     const float dist0);
 };
 
 } // namespace thor

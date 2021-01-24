@@ -225,16 +225,11 @@ public:
    * This is used to conflate the stops to OSM way ids and we don't want to
    * include ferries.
    */
-  float Filter(const baldr::DirectedEdge* edge, const graph_tile_ptr&) const override {
-    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
-    bool accessible = (edge->forwardaccess() & access_mask) ||
-                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
-    if (edge->is_shortcut() || edge->use() >= Use::kFerry || !accessible || edge->bss_connection()) {
-      return 0.0f;
-    } else {
-      // TODO - use classification/use to alter the factor
-      return 1.0f;
-    }
+  bool Allowed(const baldr::DirectedEdge* edge,
+               const graph_tile_ptr& tile,
+               uint16_t disallow_mask = kDisallowNone) const override {
+    return DynamicCost::Allowed(edge, tile, disallow_mask) && edge->use() < Use::kFerry &&
+           !edge->bss_connection();
   }
 
   /**This method adds to the exclude list based on the

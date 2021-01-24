@@ -95,20 +95,21 @@ public:
    * Returns a path for each location to a common intersection point (centroid) of all locations paths
    * such that each path is the shortest path to that common intersection point
    *
-   * @param locations  The locations from which the path finding originates
-   * @param reader     Graph reader to provide access to graph primitives
-   * @param costings   Per mode costing objects
-   * @param mode       The mode specifying which costing to use
-   * @param centroid   The location where all paths meet
-   * @return           The list of paths, one per location, to the centroid as well as the centroid
+   * @param expansion_type  Which type of expansion to do, forward/reverse/mulitmodal
+   * @param api             The locations from which the path finding originates
+   * @param reader          Graph reader to provide access to graph primitives
+   * @param costings        Per mode costing objects
+   * @param mode            The mode specifying which costing to use
+   * @param centroid        The location where all paths meet
+   * @return                The list of paths, one per location, to the centroid as well as the
+   * centroid
    */
-  std::vector<std::vector<PathInfo>>
-  Expand(const ExpansionType& expansion_type,
-         google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-         baldr::GraphReader& reader,
-         const sif::mode_costing_t& costings,
-         const sif::TravelMode mode,
-         valhalla::Location& centroid);
+  std::vector<std::vector<PathInfo>> Expand(const ExpansionType& expansion_type,
+                                            valhalla::Api& api,
+                                            baldr::GraphReader& reader,
+                                            const sif::mode_costing_t& costings,
+                                            const sif::TravelMode mode,
+                                            valhalla::Location& centroid);
 
   /**
    * Resets internal state before the next call

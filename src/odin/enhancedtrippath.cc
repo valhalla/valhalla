@@ -316,7 +316,7 @@ bool EnhancedTripLeg_Edge::IsUnnamed() const {
 }
 
 bool EnhancedTripLeg_Edge::IsRoadUse() const {
-  return (use() == TripLeg_Use_kRoadUse);
+  return (use() == TripLeg_Use_kRoadUse || use() == TripLeg_Use_kServiceRoadUse);
 }
 
 bool EnhancedTripLeg_Edge::IsRampUse() const {

@@ -301,7 +301,8 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_contours": 4,
           "max_distance": 25000.0,
           "max_locations": 1,
-          "max_time": 120
+          "max_time_contour": 120,
+          "max_distance_contour": 200
         },
         "max_alternates": 2,
         "max_avoid_locations": 50,

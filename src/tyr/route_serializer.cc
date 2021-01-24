@@ -5,7 +5,6 @@
 
 #include "midgard/encoded.h"
 #include "midgard/util.h"
-#include "odin/util.h"
 #include "route_serializer_osrm.cc"
 #include "route_serializer_valhalla.cc"
 #include "tyr/serializers.h"

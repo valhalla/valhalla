@@ -93,19 +93,18 @@ bool PathIntersection::operator==(const PathIntersection& i) const {
 }
 
 // main entry point to the functionality
-std::vector<std::vector<PathInfo>>
-Centroid::Expand(const ExpansionType& expansion_type,
-                 google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                 baldr::GraphReader& reader,
-                 const sif::mode_costing_t& costings,
-                 const sif::TravelMode mode,
-                 valhalla::Location& centroid) {
+std::vector<std::vector<PathInfo>> Centroid::Expand(const ExpansionType& expansion_type,
+                                                    valhalla::Api& api,
+                                                    baldr::GraphReader& reader,
+                                                    const sif::mode_costing_t& costings,
+                                                    const sif::TravelMode mode,
+                                                    valhalla::Location& centroid) {
   // preflight check
-  if (locations.size() > baldr::kMaxMultiPathId)
+  if (api.options().locations_size() > baldr::kMaxMultiPathId)
     throw std::runtime_error("Max number of locations exceeded");
 
   // initialize state
-  location_count_ = locations.size();
+  location_count_ = api.options().locations_size();
   best_intersection_ =
       PathIntersection{baldr::kInvalidGraphId, baldr::kInvalidGraphId, location_count_};
 
@@ -113,10 +112,10 @@ Centroid::Expand(const ExpansionType& expansion_type,
   multipath_ = true;
 
   // compute the expansion
-  Dijkstras::Expand(expansion_type, locations, reader, costings, mode);
+  Dijkstras::Expand(expansion_type, api, reader, costings, mode);
 
   // create the paths from the labelset
-  return FormPaths(expansion_type, locations, bdedgelabels_, reader, centroid);
+  return FormPaths(expansion_type, api.options().locations(), bdedgelabels_, reader, centroid);
 }
 
 // this is fired when the edge in the label has been settled (shortest path found) so we need to check

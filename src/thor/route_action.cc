@@ -192,7 +192,11 @@ std::string thor_worker_t::expansion(Api& request) {
   }
 
   // track the expansion
-  route(request);
+  try {
+    route(request);
+  } catch (...) {
+    // we swallow exceptions because we actually want to see what the heck the expansion did anyway
+  }
 
   // tell all the algorithms to stop tracking the expansion
   for (auto* alg : std::vector<PathAlgorithm*>{
@@ -218,8 +222,8 @@ void thor_worker_t::centroid(Api& request) {
   valhalla::Location destination;
 
   // get all the routes
-  auto paths = centroid_gen.Expand(ExpansionType::forward, locations, *reader, mode_costing, mode,
-                                   destination);
+  auto paths =
+      centroid_gen.Expand(ExpansionType::forward, request, *reader, mode_costing, mode, destination);
 
   // serialize path information of each route into protobuf route objects
   auto origin = locations.begin();
@@ -393,6 +397,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   std::vector<thor::PathInfo> path;
   auto& correlated = *api.mutable_options()->mutable_locations();
   std::vector<std::string> algorithms;
+  api.mutable_trip()->mutable_routes()->Reserve(api.options().alternates() + 1);
 
   // For each pair of locations
   for (auto origin = ++correlated.rbegin(); origin != correlated.rend(); ++origin) {
@@ -468,8 +473,10 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         vias.swap(flipped);
 
         // Form output information based on path edges
-        if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
+        if (api.trip().routes_size() == 0 || api.options().alternates() > 0) {
           route = api.mutable_trip()->mutable_routes()->Add();
+          route->mutable_legs()->Reserve(correlated.size());
+        }
         auto& leg = *route->mutable_legs()->Add();
         TripLegBuilder::Build(api.options(), controller, *reader, mode_costing, path.begin(),
                               path.end(), *origin, *destination, throughs, leg, algorithms, interrupt,
@@ -497,6 +504,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   std::list<valhalla::TripLeg> trip_paths;
   auto& correlated = *api.mutable_options()->mutable_locations();
   std::vector<std::string> algorithms;
+  api.mutable_trip()->mutable_routes()->Reserve(api.options().alternates() + 1);
 
   // For each pair of locations
   for (auto destination = ++correlated.begin(); destination != correlated.end(); ++destination) {
@@ -566,8 +574,10 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
         }
 
         // Form output information based on path edges. vias are a route discontinuity map
-        if (api.trip().routes_size() == 0 || api.options().alternates() > 0)
+        if (api.trip().routes_size() == 0 || api.options().alternates() > 0) {
           route = api.mutable_trip()->mutable_routes()->Add();
+          route->mutable_legs()->Reserve(correlated.size());
+        }
         auto& leg = *route->mutable_legs()->Add();
         thor::TripLegBuilder::Build(api.options(), controller, *reader, mode_costing, path.begin(),
                                     path.end(), *origin, *destination, throughs, leg, algorithms,

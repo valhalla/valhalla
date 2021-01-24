@@ -32,7 +32,11 @@
 #include <geos/geom/Polygon.h>
 #include <geos/io/WKTReader.h>
 #include <geos/io/WKTWriter.h>
+#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 9
+#include <geos/operation/linemerge/LineMerger.h>
+#else
 #include <geos/opLinemerge.h>
+#endif
 #include <geos/util/GEOSException.h>
 
 #include <boost/optional.hpp>
@@ -149,17 +153,25 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
   std::unique_ptr<GeometryFactory> gf(new GeometryFactory());
 #endif
 
+  WKTWriter writer;
   LineMerger merger;
   merger.add(mline.get());
-  std::unique_ptr<std::vector<LineString*>> merged(merger.getMergedLineStrings());
-  WKTWriter writer;
 
-  // Procces ways into lines or simple polygon list
+  // Process ways into lines or simple polygon list
+  unsigned totalpolys = 0;
+
+#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 9
+  std::vector<std::unique_ptr<LineString>> merged(merger.getMergedLineStrings());
+  polygondata* polys = new polygondata[merged.size()];
+
+  for (const auto& pline : merged) {
+#else
+  std::unique_ptr<std::vector<LineString*>> merged(merger.getMergedLineStrings());
   polygondata* polys = new polygondata[merged->size()];
 
-  unsigned totalpolys = 0;
   for (unsigned i = 0; i < merged->size(); ++i) {
     std::unique_ptr<LineString> pline((*merged)[i]);
+#endif
     if (pline->getNumPoints() > 3 && pline->isClosed()) {
 #if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
       polys[totalpolys].polygon =
