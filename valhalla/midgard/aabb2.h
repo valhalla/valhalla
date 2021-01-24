@@ -23,10 +23,6 @@ public:
   using x_t = typename coord_t::first_type;
   using y_t = typename coord_t::second_type;
 
-  // for boost::geometry to register this class
-  coord_t ll;
-  coord_t ur;
-
   /**
    * Default constructor. Sets all min,max values to 0.
    */
@@ -43,8 +39,6 @@ public:
     miny_ = minpt.y();
     maxx_ = maxpt.x();
     maxy_ = maxpt.y();
-    ll = {minx_, miny_};
-    ur = {maxx_, maxy_};
   }
 
   /**
@@ -56,8 +50,6 @@ public:
    */
   AABB2(const x_t minx, const y_t miny, const x_t maxx, const y_t maxy)
       : minx_(minx), miny_(miny), maxx_(maxx), maxy_(maxy) {
-    ll = {minx_, miny_};
-    ur = {maxx_, maxy_};
   }
 
   /**
@@ -66,8 +58,6 @@ public:
    */
   AABB2(const std::vector<coord_t>& pts) {
     Create(pts);
-    ll = {minx_, miny_};
-    ur = {maxx_, maxy_};
   }
 
   /**

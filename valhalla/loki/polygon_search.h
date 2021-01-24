@@ -12,19 +12,17 @@
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/options.pb.h>
+#include <valhalla/sif/dynamiccost.h>
 
 #include <functional>
 
 // Register custom geom types with boost
+// TODO: declare PointLL registration in its own headers, so it's available across valhalla?
 BOOST_GEOMETRY_REGISTER_POINT_2D(valhalla::midgard::PointLL,
                                  double,
                                  boost::geometry::cs::geographic<boost::geometry::degree>,
                                  first,
                                  second)
-BOOST_GEOMETRY_REGISTER_BOX(valhalla::midgard::AABB2<valhalla::midgard::PointLL>,
-                            valhalla::midgard::PointLL,
-                            ll,
-                            ur)
 BOOST_GEOMETRY_REGISTER_RING(std::vector<valhalla::midgard::PointLL>)
 static const auto Haversine = [] {
   return boost::geometry::strategy::distance::haversine<float>(valhalla::midgard::kRadEarthMeters);
@@ -35,15 +33,33 @@ namespace loki {
 
 using line_bg_t = boost::geometry::model::linestring<midgard::PointLL>;
 using ring_bg_t = std::vector<midgard::PointLL>;
-using multi_ring_t = std::vector<ring_bg_t>;
 
-std::set<valhalla::baldr::GraphId> edges_in_rings(const multi_ring_t& rings,
-                                                  baldr::GraphReader& reader);
+/**
+ * Finds all edge IDs which are intersected by the ring
+ *
+ * @param rings The (optionally closed) rings to intersect edges with
+ * @param reader GraphReader instance
+ *
+ */
+std::set<valhalla::baldr::GraphId> edges_in_rings(const std::vector<ring_bg_t>& rings,
+                                                  baldr::GraphReader& reader,
+                                                  const std::shared_ptr<sif::DynamicCost>& costing);
 
-multi_ring_t PBFToRings(const google::protobuf::RepeatedPtrField<Options::Polygon>& rings_pbf);
+/**
+ * Convert PBF Polygon to boost geometry ring.
+ *
+ * @param ring_pbf The Options::Polygon ring
+ *
+ */
+ring_bg_t PBFToRing(const Options::Polygon& ring_pbf);
 
-// double GetAvoidArea(const multi_ring_t& rings);
-double GetRingLength(const multi_ring_t& rings);
+/**
+ * Computes the length of a ring's circumference.
+ *
+ * @param ring The boost geometry ring.
+ *
+ */
+double GetRingLength(const ring_bg_t& ring);
 
 } // namespace loki
 } // namespace valhalla

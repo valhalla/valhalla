@@ -358,7 +358,8 @@ boost::property_tree::ptree make_config(
         "max_avoid_locations": 0,
         "max_reachability": 100,
         "max_radius": 200,
-        "max_alternates":2
+        "max_alternates":2,
+        "max_avoid_polygons_length":100
       },
       "costing_directions_options": { "auto": {}, "pedestrian": {} }
     })";

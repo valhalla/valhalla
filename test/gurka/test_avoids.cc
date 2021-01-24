@@ -24,56 +24,93 @@ protected:
                                      |      |      |
                                      |      |      |
                                      D------E------F)";
-    const gurka::ways ways = {{"ABC", {{"highway", "motorway"}, {"name", "High Street"}}},
-                              {"DEF", {{"highway", "motorway"}, {"name", "Low Street"}}},
-                              {"AD", {{"highway", "motorway"}, {"name", "1st Street"}}},
-                              {"BE", {{"highway", "motorway"}, {"name", "2nd Street"}}},
-                              {"CF", {{"highway", "motorway"}, {"name", "3rd Street"}}}};
+    const gurka::ways ways = {{"ABC", {{"highway", "motorway"}, {"name", "High"}}},
+                              {"DEF", {{"highway", "motorway"}, {"name", "Low"}}},
+                              {"AD", {{"highway", "motorway"}, {"name", "1st"}}},
+                              {"BE", {{"highway", "motorway"}, {"name", "2nd"}}},
+                              {"CF", {{"highway", "motorway"}, {"name", "3rd"}}}};
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
     // Add low length limit for avoid_polygons so it throws an error
     avoid_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_shortcut",
                                   {{"service_limits.max_avoid_polygons_length", "1"}});
-    double dx = avoid_map.nodes.at("B").first - avoid_map.nodes.at("A").first;
-    double dy = avoid_map.nodes.at("A").second - avoid_map.nodes.at("D").second;
   }
 };
 
 gurka::map AvoidTest::avoid_map = {};
 
 TEST_F(AvoidTest, TestLength) {
-  vl::line_bg_t line;
-  // ~ 7.6 km circumference
-  bg::read_wkt("LINESTRING (13.38625361 52.4652558, 13.38625361 52.48000128, 13.4181769 52.48000128)",
-               line);
-  auto actual_length = bg::length(line, Haversine());
+  std::vector<vl::line_bg_t> lines(2);
+  // ~ 7.6 km length
+  bg::read_wkt(
+      "LINESTRING (13.38625361 52.4652558, 13.38625361 52.48000128, 13.4181769 52.48000128,13.38625361 52.4652558)",
+      lines[0]);
+  // ~ 10.1 km length
+  bg::read_wkt(
+      "LINESTRING (13.371981 52.439271, 13.371981 52.479088, 13.381839 52.479088, 13.381839 52.439271, 13.371981 52.439271)",
+      lines[1]);
+  double actual_length = bg::length(lines[0], Haversine());
+  actual_length += bg::length(lines[1], Haversine());
 
-  // Add polygons to PBF
-  vl::ring_bg_t ring;
+  // Add polygons to PBF and calculate total circumference
+  Options options;
+  double calc_length = 0;
+  std::vector<vl::ring_bg_t> e_rings(2);
   bg::read_wkt(
       "POLYGON ((13.38625361 52.4652558, 13.38625361 52.48000128, 13.4181769 52.48000128,13.38625361 52.4652558))",
-      ring);
-  Options options;
+      e_rings[0]);
+  bg::read_wkt(
+      "POLYGON ((13.371981 52.439271, 13.371981 52.479088, 13.381839 52.479088, 13.381839 52.439271, 13.371981 52.439271))",
+      e_rings[1]);
   auto avoid_polygons = options.mutable_avoid_polygons();
-  auto* polygon = avoid_polygons->Add();
-  for (auto& coord : ring) {
-    auto* ll = polygon->add_coords()->mutable_ll();
-    ll->set_lng(coord.lng());
-    ll->set_lat(coord.lat());
+  for (const auto& ring : e_rings) {
+    auto* polygon = avoid_polygons->Add();
+    for (auto& coord : ring) {
+      auto* ll = polygon->add_coords()->mutable_ll();
+      ll->set_lng(coord.lng());
+      ll->set_lat(coord.lat());
+    }
+    calc_length += vl::GetRingLength(vl::PBFToRing(*polygon));
   }
-  auto trings = loki::PBFToRings(options.avoid_polygons());
-  auto calc_length = loki::GetRingLength(trings);
 
   EXPECT_EQ(actual_length, calc_length);
+}
 
-  // Add a ~ 3.8 km avoid_polygon so it throws
+TEST_F(AvoidTest, TestConfig) {
+  // Add a polygon with longer circumference than the limit
   const std::unordered_map<std::string, std::string>& req_options = {
       {"/avoid_polygons",
        "[[[13.38625361, 52.4652558], [13.38625361, 52.48000128], [13.4181769, 52.48000128], [13.4181769, 52.4652558]]]"}};
 
-  // make sure the right excpetion is thrown
+  // make sure the right exception is thrown
   try {
     gurka::route(avoid_map, "A", "D", "auto", req_options);
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 167); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
+}
+
+TEST_F(AvoidTest, TestAvoidPolygon) {
+  auto node_a = avoid_map.nodes.at("A");
+  auto node_b = avoid_map.nodes.at("B");
+  auto node_d = avoid_map.nodes.at("D");
+  auto dx = node_b.lng() - node_a.lng();
+  auto dy = node_a.lat() - node_d.lat();
+
+  // create a small polygon intersecting AD just below node A, so the route goes ABED
+  vl::ring_bg_t ring{{node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy},
+                     {node_a.lng() + 0.1 * dx, node_a.lat() - 0.1 * dy},
+                     {node_a.lng() - 0.1 * dx, node_a.lat() - 0.1 * dy},
+                     {node_a.lng() - 0.1 * dx, node_a.lat() - 0.01 * dy},
+                     {node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy}};
+
+  std::ostringstream avoid;
+  avoid << "[" << bg::dsv(ring, ", ", "[", "]", ", ", "[", "]") << "]";
+
+  const std::unordered_map<std::string, std::string>& req_options = {
+      {"/avoid_polygons", avoid.str()}};
+
+  auto route = gurka::route(avoid_map, "A", "D", "auto", req_options);
+  // Why does it not route over 2nd?? Even "B" -> "E" routes over 3rd (polygon does NOT intersect
+  // 2nd!)
+  gurka::assert::raw::expect_path(route, {"High", "High", "3rd", "Low", "Low"});
 }

@@ -13,7 +13,9 @@ namespace {} // namespace
 namespace valhalla {
 namespace loki {
 
-std::set<vb::GraphId> edges_in_rings(const multi_ring_t& rings, baldr::GraphReader& reader) {
+std::set<vb::GraphId> edges_in_rings(const std::vector<ring_bg_t>& rings,
+                                     baldr::GraphReader& reader,
+                                     const std::shared_ptr<sif::DynamicCost>& costing) {
 
   // Get the lowest level and tiles
   const auto tiles = vb::TileHierarchy::levels().back().tiles;
@@ -21,7 +23,7 @@ std::set<vb::GraphId> edges_in_rings(const multi_ring_t& rings, baldr::GraphRead
 
   std::set<vb::GraphId> result_ids;
 
-  for (auto ring : rings) {
+  for (const auto& ring : rings) {
     // first pull out all bins which intersect the ring (no within/contains!)
     // TODO: fill this container for all rings before proceeding, makes sure no duplicate bins are
     // iterated
@@ -51,15 +53,28 @@ std::set<vb::GraphId> edges_in_rings(const multi_ring_t& rings, baldr::GraphRead
             continue;
           }
           if (edge_id.Tile_Base() != tile->header()->graphid().Tile_Base() &&
-              reader.GetGraphTile(edge_id, tile)) {
+              !reader.GetGraphTile(edge_id, tile)) {
             continue;
           }
           const auto edge = tile->directededge(edge_id);
+          // grab the opposing
+          auto opp_tile = tile;
+          const baldr::DirectedEdge* opp_edge = nullptr;
+          baldr::GraphId opp_id;
+
+          // bail if we wouldnt be allowed on this edge anyway (or its opposing)
+          if (!costing->Allowed(edge, tile) &&
+              (!(opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)).Is_Valid() ||
+               !costing->Allowed(opp_edge, opp_tile))) {
+            continue;
+          }
           auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
+          auto name = edge_info.GetNames()[0];
           bool intersects = bg::intersects(ring, edge_info.shape());
           if (intersects) {
             result_ids.emplace(edge_id);
-            result_ids.emplace(reader.GetOpposingEdgeId(edge_id, tile));
+            result_ids.emplace(
+                opp_id.Is_Valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile));
           }
         }
       }
@@ -69,26 +84,19 @@ std::set<vb::GraphId> edges_in_rings(const multi_ring_t& rings, baldr::GraphRead
   return result_ids;
 }
 
-multi_ring_t PBFToRings(const google::protobuf::RepeatedPtrField<Options::Polygon>& rings_pbf) {
-  multi_ring_t rings;
-  for (const auto& ring_pbf : rings_pbf) {
-    ring_bg_t new_ring;
-    for (const auto& coord : ring_pbf.coords()) {
-      new_ring.push_back({coord.ll().lng(), coord.ll().lat()});
-    }
-    // corrects geometry and handedness as expected by bg
-    bg::correct(new_ring);
-    rings.push_back(new_ring);
+ring_bg_t PBFToRing(const Options::Polygon& ring_pbf) {
+  ring_bg_t new_ring;
+  for (const auto& coord : ring_pbf.coords()) {
+    new_ring.push_back({coord.ll().lng(), coord.ll().lat()});
   }
-  return rings;
+  // corrects geometry and handedness as expected by bg
+  bg::correct(new_ring);
+  return new_ring;
 }
 
-double GetRingLength(const multi_ring_t& rings) {
-  double length = 0;
-  for (const auto& ring : rings) {
-    line_bg_t line{ring.begin(), ring.end() - 1};
-    length += bg::length(line, Haversine());
-  }
+double GetRingLength(const ring_bg_t& ring) {
+  line_bg_t line{ring.begin(), ring.end()};
+  auto length = bg::length(line, Haversine());
   return length;
 }
 } // namespace loki
