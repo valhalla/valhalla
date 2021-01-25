@@ -455,7 +455,6 @@ public:
          (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry);
     c += rail_ferry_transition_cost_ *
          (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
-    c += bike_share_cost_ * (node->type() == baldr::NodeType::kBikeShare);
 
     // Additional penalties without any time cost
     c.cost += destination_only_penalty_ * (edge->destonly() && !pred->destonly());
