@@ -46,7 +46,7 @@ constexpr float kDefaultUseRailFerry = 0.4f; // Default preference of using a ra
 constexpr float kDefaultUseHighways = 1.0f;  // Default preference of using a motorway or trunk 0-1
 constexpr float kDefaultUseTolls = 0.5f;     // Default preference of using toll roads 0-1
 constexpr float kDefaultUseTracks = 0.f;     // Default preference of using tracks 0-1
-constexpr float kDefaultUseDistance = 0.f;   // Default preference of using distance vs time 0-1
+constexpr float kDefaultUseDistance = 0.5f;  // Default preference of using distance vs time 0-1
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
