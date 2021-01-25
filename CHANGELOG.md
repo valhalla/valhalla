@@ -1,4 +1,11 @@
-## Release Date: 2020-08-?? Valhalla 3.1.0
+## Release Date: 2021-??-?? Valhalla 3.1.1
+* **Removed**
+
+* **Bug Fix**
+
+* **Enhancement**
+
+## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
    * REMOVED: Remove Node bindings. [#2502](https://github.com/valhalla/valhalla/pull/2502)
    * REMOVED: appveyor builds. [#2550](https://github.com/valhalla/valhalla/pull/2550)
