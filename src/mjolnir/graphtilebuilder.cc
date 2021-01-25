@@ -910,8 +910,8 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const gra
   for (const DirectedEdge* edge = start_edge; edge < start_edge + tile->header()->directededgecount();
        ++edge) {
     // dont bin these
-    if (edge->is_shortcut() || edge->use() == Use::kTransitConnection ||
-        edge->use() == Use::kPlatformConnection || edge->use() == Use::kEgressConnection) {
+    if (edge->use() == Use::kTransitConnection || edge->use() == Use::kPlatformConnection ||
+        edge->use() == Use::kEgressConnection) {
       continue;
     }
 
