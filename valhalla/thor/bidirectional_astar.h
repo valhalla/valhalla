@@ -235,6 +235,8 @@ protected:
    * @param   options      Controls whether or not we get alternatives
    * @param   origin       The origin location
    * @param   destination  The destination location
+   * @param   time_info    What time is it when we start the route
+   * @param   invariant    Static date_time, dont offset the time as the path lengthens
    * @return  Returns the path infos, a list of GraphIds representing the
    *          directed edges along the path - ordered from origin to
    *          destination - along with travel modes and elapsed time.
@@ -242,7 +244,9 @@ protected:
   std::vector<std::vector<PathInfo>> FormPath(baldr::GraphReader& graphreader,
                                               const Options& options,
                                               const valhalla::Location& origin,
-                                              const valhalla::Location& dest);
+                                              const valhalla::Location& dest,
+                                              const baldr::TimeInfo& time_info,
+                                              const bool invariant);
 };
 
 // This function checks if the path formed by the two expanding trees

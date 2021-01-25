@@ -122,6 +122,7 @@ message CostingOptions {
   optional bool shortest = 64;
   optional float service_penalty = 65;
   optional float use_tracks = 66;
+  optional float use_distance = 67;
 
   // these are not specified directly by the user but they get filled in as the request is parsed and fulfilled
   optional Costing costing = 90;
