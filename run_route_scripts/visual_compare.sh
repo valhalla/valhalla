@@ -24,6 +24,6 @@ alias urlencode='python -c "import sys; import os; import requests; print(*(requ
 
 # diff to get the file names, these have the line number in the orginal input
 for i in $(diff -qr ${output_dir1} ${output_dir2} | sed -e "s/.*\///g" -e "s/\..*$//g" | sort -n); do
-  anchor=$(echo -e "[$(sed "${i}q;d" ${input_file1}),$(sed "${i}q;d" ${input_file2})]" | urlencode)
+  anchor=$(echo -e "[$(sed "${i}q;d" ${input_file1} | jq -rc '. + {id: "770000"}'),$(sed "${i}q;d" ${input_file2} | jq -rc '. + {id: "007700"}')]" | urlencode)
   echo "http://valhalla.github.io/demos/routing/simple.html#${anchor}";
 done
