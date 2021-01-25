@@ -99,7 +99,7 @@
     "continue_verbal": {
       "phrases": {
         "0": "Fortsätt.", 
-        "1": "Fortsätt i  <LENGTH>.", 
+        "1": "Fortsätt i <LENGTH>.",
         "2": "Fortsätt på <STREET_NAMES>.", 
         "3": "Fortsätt på <STREET_NAMES> i <LENGTH>.", 
         "4": "Fortsätt på <JUNCTION_NAME>.", 
@@ -167,7 +167,7 @@
       "phrases": {
         "0": "Du har anlänt till din destination.", 
         "1": "Du har anlänt till <DESTINATION>.", 
-        "2": " Din destination är till <RELATIVE_DIRECTION>.", 
+        "2": "Din destination är till <RELATIVE_DIRECTION>.",
         "3": "<DESTINATION> är till <RELATIVE_DIRECTION>."
       }, 
       "relative_directions": [
@@ -295,7 +295,7 @@
         "1": "Ta avfart <NUMBER_SIGN> till <RELATIVE_DIRECTION>.", 
         "2": "Ta <BRANCH_SIGN> avfarten till <RELATIVE_DIRECTION>.", 
         "3": "Ta avfart <NUMBER_SIGN> till <RELATIVE_DIRECTION> in på <BRANCH_SIGN>.", 
-        "4": " Ta avfarten till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.", 
+        "4": "Ta avfarten till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
         "5": "Ta avfart <NUMBER_SIGN> till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.", 
         "6": "Ta <BRANCH_SIGN> avfarten till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.", 
         "7": "Ta avfart <NUMBER_SIGN> till <RELATIVE_DIRECTION> in på <BRANCH_SIGN> mot<TOWARD_SIGN>.", 
@@ -314,7 +314,7 @@
         "23": "Ta <NAME_SIGN>avfarten.", 
         "25": "Ta <NAME_SIGN>avfarten in på  <BRANCH_SIGN>.", 
         "27": "Ta <NAME_SIGN>avfarten mot <TOWARD_SIGN>.", 
-        "29": "Ta <NAME_SIGN>avfarten in på  <BRANCH_SIGN> mot <TOWARD_SIGN>."
+        "29": "Ta <NAME_SIGN>avfarten in på <BRANCH_SIGN> mot <TOWARD_SIGN>."
       }, 
       "relative_directions": [
         "vänster", 
@@ -937,14 +937,14 @@
     }, 
     "uturn_verbal": {
       "phrases": {
-        "0": "Gör en  <RELATIVE_DIRECTION> U-sväng.", 
-        "1": "Gör en  <RELATIVE_DIRECTION> U-sväng in på <STREET_NAMES>.", 
+        "0": "Gör en <RELATIVE_DIRECTION> U-sväng.",
+        "1": "Gör en <RELATIVE_DIRECTION> U-sväng in på <STREET_NAMES>.",
         "2": "Gör en <RELATIVE_DIRECTION> U-sväng för att stanna kvar på <STREET_NAMES>.", 
         "3": "Gör en <RELATIVE_DIRECTION> U-sväng vid <CROSS_STREET_NAMES>.", 
         "4": "Gör en <RELATIVE_DIRECTION> U-sväng vid <CROSS_STREET_NAMES> in på <STREET_NAMES>.", 
-        "5": "Gör en  <RELATIVE_DIRECTION> U-sväng vid <CROSS_STREET_NAMES> för att stanna kvar på <STREET_NAMES>.", 
-        "6": "Gör en  <RELATIVE_DIRECTION> U-sväng vid <JUNCTION_NAME>.", 
-        "7": "Gör en  <RELATIVE_DIRECTION> U-sväng mot <TOWARD_SIGN>."
+        "5": "Gör en <RELATIVE_DIRECTION> U-sväng vid <CROSS_STREET_NAMES> för att stanna kvar på <STREET_NAMES>.",
+        "6": "Gör en <RELATIVE_DIRECTION> U-sväng vid <JUNCTION_NAME>.",
+        "7": "Gör en <RELATIVE_DIRECTION> U-sväng mot <TOWARD_SIGN>."
       }, 
       "empty_street_name_labels": [
         "gångvägen", 
