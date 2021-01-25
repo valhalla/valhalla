@@ -14,6 +14,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <queue>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -312,15 +313,7 @@ public:
 
   // sort the file based on the predicate
   void sort(const std::function<bool(const T&, const T&)>& predicate,
-            size_t buffer_size = 1024 * 1024 * 512 / sizeof(T)) {
-    flush();
-    // if no elements we are done
-    if (memmap.size() == 0) {
-      return;
-    }
-    std::sort(static_cast<T*>(memmap), static_cast<T*>(memmap) + memmap.size(), predicate);
-    return;
-  }
+            size_t buffer_size = 1024 * 1024 * 512 / sizeof(T));
 
   // perform an volatile operation on all the items of this sequence
   void transform(const std::function<void(T&)>& predicate) {
@@ -508,12 +501,106 @@ public:
     return iterator(this, memmap.size() + write_buffer.size());
   }
 
+  std::string file_name;
+
 protected:
   std::shared_ptr<std::fstream> file;
-  std::string file_name;
   std::vector<T> write_buffer;
   mem_map<T> memmap;
 };
+
+template <typename T>
+std::queue<std::string> Split(sequence<T>& seq,
+                              std::function<bool(T const&, T const&)> const& predicate,
+                              size_t buffer_size) {
+  std::queue<std::string> filenames;
+  for (size_t i = 0; i < seq.size();) {
+    size_t part_end = std::min(seq.size(), i + buffer_size / sizeof(T));
+    std::string filename = "_" + std::to_string(filenames.size());
+    filenames.push(filename);
+
+    std::vector<T> part;
+    part.reserve(part_end - i);
+    for (; i < part_end; ++i) {
+      part.push_back(seq[i]);
+    }
+    std::sort(part.begin(), part.end(), predicate);
+
+    sequence<T> seq_part(filename, true);
+    for (const auto& j : part) {
+      seq_part.push_back(j);
+    }
+  }
+  return filenames;
+}
+
+template <typename T>
+void Merge(std::queue<std::string>&& parts,
+           std::function<bool(T const&, T const&)> const& predicate,
+           size_t buffer_size,
+           const std::string& output_file) {
+  size_t file_count = parts.size();
+  auto pred2 = [&predicate](const std::pair<T, int>& a, const std::pair<T, int>& b) {
+    return predicate(a.first, b.first);
+  };
+
+  while (true) {
+    std::vector<std::unique_ptr<sequence<T>>> fins;
+    std::vector<int64_t> indexes;
+    using elem = std::pair<T, int>;
+    std::priority_queue<elem, std::vector<elem>, decltype(pred2)> pq(pred2);
+
+    auto part_count = std::min(static_cast<int>(parts.size()), 1000);
+    fins.reserve(part_count);
+    indexes.assign(part_count, 0);
+
+    for (size_t i = 0; i < part_count; ++i) {
+      fins.emplace_back(std::make_unique<sequence<T>>(parts.front()));
+      parts.pop();
+
+      pq.emplace(fins.back()->at(0), i);
+    }
+
+    auto output_name =
+        (parts.size() == 0 ? output_file : std::string("_") + std::to_string(file_count++));
+    sequence<T> output(output_name, true);
+    while (!pq.empty()) {
+      auto top = pq.top();
+      pq.pop();
+      int file_index = top.second;
+
+      output.push_back(top.first);
+      if (indexes[file_index] != fins[file_index]->size()) {
+        pq.emplace(fins[file_index]->at(indexes[file_index]), file_index);
+        ++indexes[file_index];
+      }
+    }
+    parts.push(output_name);
+
+    if (parts.size() == 1) {
+      break;
+    }
+  }
+}
+
+template <typename T>
+void ExternalSort(sequence<T>& seq,
+                  std::function<bool(T const&, T const&)> const& predicate,
+                  size_t buffer_size) {
+  std::queue<std::string> parts = Split(seq, predicate, buffer_size);
+  Merge(std::move(parts), predicate, buffer_size, seq.file_name);
+}
+
+template <class T>
+void sequence<T>::sort(std::function<bool(T const&, T const&)> const& predicate, size_t buffer_size) {
+  flush();
+  // if no elements we are done
+  if (memmap.size() == 0) {
+    return;
+  }
+
+  ExternalSort(*this, predicate, buffer_size);
+}
 
 struct tar {
   struct header_t {
