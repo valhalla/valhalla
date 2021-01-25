@@ -121,6 +121,7 @@
    * FIXED: Remove redundant return statements [#2776](https://github.com/valhalla/valhalla/pull/2776)
    * FIXED: Added unit test for BuildAdminFromPBF() to test GEOS 3.9 update. [#2787](https://github.com/valhalla/valhalla/pull/2787)
    * FIXED: Add support for geos-3.9 c++ api [#2739](https://github.com/valhalla/valhalla/issues/2739)
+   * FIXED: Fix check for live speed validness [#2797](https://github.com/valhalla/valhalla/pull/2797)
 
 * **Enhancement**
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
@@ -226,6 +227,7 @@
    * ADDED: Recover and recost all shortcuts in final path for bidirectional astar algorithm [#2711](https://github.com/valhalla/valhalla/pull/2711)
    * ADDED: An option for shortcut recovery to be cached at start up to reduce the time it takes to do so on the fly [#2714](https://github.com/valhalla/valhalla/pull/2714)
    * ADDED: If width <= 1.9 then no access for auto, truck, bus, taxi, emergency and hov. [#2713](https://github.com/valhalla/valhalla/pull/2713)
+   * ADDED: Centroid/Converge/Rendezvous/Meet API which allows input locations to find a least cost convergence point from all locations [#2713](https://github.com/valhalla/valhalla/pull/2734)
    * ADDED: Added support to process the sump_buster tag.  Also, fixed a few small access bugs for nodes. [#2731](https://github.com/valhalla/valhalla/pull/2731)
    * ADDED: Log message if failed to create tiles directory. [#2738](https://github.com/valhalla/valhalla/pull/2738)
    * CHANGED: Tile memory is only owned by the GraphTile rather than shared amongst copies of the graph tile (in GraphReader and TileCaches). [#2340](https://github.com/valhalla/valhalla/pull/2340)
@@ -244,7 +246,7 @@
    * CHANGED: chore: Updates libosmium [#2786](https://github.com/valhalla/valhalla/pull/2786)
    * CHANGED: Optimize double bucket queue to reduce memory reallocations. [#2719](https://github.com/valhalla/valhalla/pull/2719)
    * CHANGED: Collapse merge maneuvers [#2773](https://github.com/valhalla/valhalla/pull/2773)
-
+   * CHANGED: Add shortcuts to the tiles' bins so we can find them when doing spatial lookups. [#2744](https://github.com/valhalla/valhalla/pull/2344)
 
 ## Release Date: 2019-11-21 Valhalla 3.0.9
 * **Bug Fix**

@@ -35,10 +35,12 @@ protected:
   void doTests(const std::string& costing,
                const std::unordered_map<std::string, std::string>& options) {
 
-    valhalla::Api default_route = gurka::route(speed_map, "A", "D", costing);
+    valhalla::Api default_route =
+        gurka::do_action(valhalla::Options::route, speed_map, {"A", "D"}, costing);
     float default_time = getDuration(default_route);
 
-    valhalla::Api capped_route = gurka::route(speed_map, "A", "D", costing, options);
+    valhalla::Api capped_route =
+        gurka::do_action(valhalla::Options::route, speed_map, {"A", "D"}, costing, options);
     float capped_time = getDuration(capped_route);
 
     gurka::assert::raw::expect_path(default_route, {"ABCD"});

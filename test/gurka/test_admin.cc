@@ -46,7 +46,7 @@ rapidjson::Document d;
 /*************************************************************/
 
 TEST_F(Admin, Iso) {
-  auto result = gurka::route(map, "A", "C", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
 
   // rest_area
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
@@ -60,7 +60,7 @@ TEST_F(Admin, Iso) {
 }
 
 TEST_F(Admin, test_admin_response) {
-  auto result = gurka::route(map, "A", "C", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
   ASSERT_EQ(d["routes"].Size(), 1);
