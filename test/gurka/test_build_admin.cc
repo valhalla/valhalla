@@ -58,8 +58,7 @@ valhalla::gurka::map BuildPBFandTiles(const std::string& workdir) {
   return admin_map;
 }
 
-
-uint32_t GetContainingState(GraphTileBuilder & tilebuilder,
+uint32_t GetContainingState(GraphTileBuilder& tilebuilder,
                             const std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
                             const PointLL& ll) {
   uint32_t index = 0;
@@ -67,9 +66,9 @@ uint32_t GetContainingState(GraphTileBuilder & tilebuilder,
   for (const auto& poly : polys) {
     if (boost::geometry::covered_by(p, poly.second)) {
       uint32_t poly_id = poly.first;
-      const Admin & admin = tilebuilder.admins_builder(poly_id);
+      const Admin& admin = tilebuilder.admins_builder(poly_id);
       // if state_offset is non-zero, it is a state (not a country)
-      if ( admin.state_offset() != 0 )
+      if (admin.state_offset() != 0)
         return admin.state_offset();
     }
   }
@@ -77,7 +76,6 @@ uint32_t GetContainingState(GraphTileBuilder & tilebuilder,
 }
 
 } // anonymous namespace
-
 
 // Test that BuildAdminFromPBF() works.
 //
@@ -127,7 +125,7 @@ TEST(AdminTest, TestAdminPolygonBasic) {
   // our mock map.pbf. Its probably overkill to check every node
   // for its tile-id if I know they are all in the same tile-id,
   // but its a good exercise.
-  std::unordered_set<GraphId> tile_ids;Admin
+  std::unordered_set<GraphId> tile_ids;
   for (const auto& node : admin_map.nodes) {
     const midgard::PointLL& latlon = node.second;
     GraphId tile_id = TileHierarchy::GetGraphId(latlon, 0);
@@ -137,19 +135,23 @@ TEST(AdminTest, TestAdminPolygonBasic) {
 
   GraphId tile_id(*tile_ids.begin());
 
-  GraphReader graph_reader(pt.get_child("mjolnir"));
-  auto t = GraphTile::Create(graph_reader.tile_dir(), tile_id);
-  ASSERT_TRUE(t);
-
+  // Load the admin.sqlite table we just created
   sqlite3* db_handle = NULL;
   std::string dbname = pt.get<std::string>("mjolnir.admin");
   uint32_t ret = sqlite3_open_v2(dbname.c_str(), &db_handle, SQLITE_OPEN_READONLY, NULL);
   EXPECT_EQ(ret, SQLITE_OK);
+
+  // Create a GraphReader so we can create a GraphTileBuilder
+  GraphReader graph_reader(pt.get_child("mjolnir"));
+  auto t = GraphTile::Create(graph_reader.tile_dir(), tile_id);
+  ASSERT_TRUE(t);
+  GraphTileBuilder tilebuilder(graph_reader.tile_dir(), tile_id, true);
+
+  // Call GetAdminInfo.
+  std::unordered_multimap<uint32_t, multi_polygon_type> polys;
   std::unordered_map<uint32_t, bool> drive_on_right;
   std::unordered_map<uint32_t, bool> allow_intersection_names;
   AABB2<PointLL> world_box(-180.0f, -90.0f, 180.f, 90.f);
-  GraphTileBuilder tilebuilder(graph_reader.tile_dir(), tile_id, true);
-  std::unordered_multimap<uint32_t, multi_polygon_type> polys;
   polys = GetAdminInfo(db_handle, drive_on_right, allow_intersection_names, world_box, tilebuilder);
   sqlite3_close(db_handle);
 
@@ -160,23 +162,22 @@ TEST(AdminTest, TestAdminPolygonBasic) {
 
   // find the GH way/edge in the graph, make sure its there
   auto tup = findEdge(graph_reader, admin_map.nodes, "GH", "H", tile_id);
-  const DirectedEdge * dir_edge = std::get<1>(tup);
+  const DirectedEdge* dir_edge = std::get<1>(tup);
   ASSERT_NE(dir_edge, nullptr);
 
   // See that nodes G and H are in the correct state
-  for ( const auto & node : admin_map.nodes ) {
-      const std::string & node_name = node.first;
-      if ( node_name == "G" ) {
-          uint32_t co_offset = tilebuilder.AddName( "Colorado" );
-          const midgard::PointLL &node_latlon = node.second;
-          uint32_t state_offset = GetContainingState(tilebuilder, polys, node_latlon);
-          ASSERT_EQ( state_offset, co_offset );
-      }
-      else if ( node_name == "H" ) {
-        uint32_t ut_offset = tilebuilder.AddName( "Utah" );
-        const midgard::PointLL &node_latlon = node.second;
-        uint32_t state_offset = GetContainingState(tilebuilder, polys, node_latlon);
-        ASSERT_EQ( state_offset, ut_offset );
-      }
+  for (const auto& node : admin_map.nodes) {
+    const std::string& node_name = node.first;
+    if (node_name == "G") {
+      uint32_t co_offset = tilebuilder.AddName("Colorado");
+      const midgard::PointLL& node_latlon = node.second;
+      uint32_t state_offset = GetContainingState(tilebuilder, polys, node_latlon);
+      ASSERT_EQ(state_offset, co_offset);
+    } else if (node_name == "H") {
+      uint32_t ut_offset = tilebuilder.AddName("Utah");
+      const midgard::PointLL& node_latlon = node.second;
+      uint32_t state_offset = GetContainingState(tilebuilder, polys, node_latlon);
+      ASSERT_EQ(state_offset, ut_offset);
+    }
   }
 }
