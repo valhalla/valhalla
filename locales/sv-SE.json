@@ -59,7 +59,7 @@
         "0": "Sväng <RELATIVE_DIRECTION>.",
         "1": "Sväng <RELATIVE_DIRECTION> in på <STREET_NAMES>.",
         "2": "Sväng <RELATIVE_DIRECTION> in på <BEGIN_STREET_NAMES>.",
-        "3": "Sväng  <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
+        "3": "Sväng <RELATIVE_DIRECTION> för att stanna kvar på <STREET_NAMES>.",
         "4": "Sväng <RELATIVE_DIRECTION> i <JUNCTION_NAME>.",
         "5": "Sväng <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
       },
