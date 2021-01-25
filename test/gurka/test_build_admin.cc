@@ -68,7 +68,7 @@ uint32_t GetContainingState(GraphTileBuilder & tilebuilder,
     if (boost::geometry::covered_by(p, poly.second)) {
       uint32_t poly_id = poly.first;
       const Admin & admin = tilebuilder.admins_builder(poly_id);
-      // if state_offset is non-zero, it must be a state (not a country)
+      // if state_offset is non-zero, it is a state (not a country)
       if ( admin.state_offset() != 0 )
         return admin.state_offset();
     }
@@ -89,30 +89,23 @@ uint32_t GetContainingState(GraphTileBuilder & tilebuilder,
 // Before we get into how I propose to prove correctness, some thoughts must
 // be written.
 //
-// The mock graph we're using has three "relations" (which are just administrative
+// The mock graph we're using has three "relations" (this defines three administrative
 // boundaries). BuildAdminFromPBF() will create three rows in the admin.sqlite::admins
-// table. The rows in the admin table do not store spatial/positional information
-// about the nodes that form the administrative area. This is instead stored in the
-// tile-data.
+// table, one for each admin area.
 //
 // GetAdminInfo() will query the tile-data AND the sqlite file to retrieve information
 // about the administrative polygons stored within. You'll see that a map of "polys"
 // is returned - but each "poly" returned is just polygonal data. The remaining admin
 // area metadata is stored in the GraphTileBuilder object that was passed into GetAdminInfo().
 //
-// So how do you get the admin area metadata? When you get the "polys" map back from
-// GetAdminInfo(), the integral map key can be passed to GraphTileBuilder::admins_builder()
-// to retrieve each admin area's metadata.
+// To prove the admin.sqlite is built correctly, we need to ensure the integral key's
+// stored for each entry in the admins table are correct. We can pass these integral
+// admin keys to GraphTileBuilder::admins_builder(int) to retrieve information about each
+// admin via the returned Admin object.
 //
 // As you can see in the ascii-map, there is a simple two node highway that spans
 // the two states. I thought it'd be interesting to see if I could prove that the
 // node "G" lives in "Colorado" and that "H" lives in "Utah".
-//
-// To prove the admin.sqlite is built correctly, we need to ensure the offsets/
-// indicies stored for each entry in the admins table is correct - which
-// requires the presence of the tile-data.
-//
-// Basically
 
 TEST(AdminTest, TestAdminPolygonBasic) {
   // Creates test/data/admin/map.pbf and tile data
@@ -132,8 +125,9 @@ TEST(AdminTest, TestAdminPolygonBasic) {
 
   // reverse engineer the tile_id from the nodes that make up
   // our mock map.pbf. Its probably overkill to check every node
-  // for its tile-id if I know they are all in the same tile-id...
-  std::unordered_set<GraphId> tile_ids;
+  // for its tile-id if I know they are all in the same tile-id,
+  // but its a good exercise.
+  std::unordered_set<GraphId> tile_ids;Admin
   for (const auto& node : admin_map.nodes) {
     const midgard::PointLL& latlon = node.second;
     GraphId tile_id = TileHierarchy::GetGraphId(latlon, 0);
@@ -165,8 +159,8 @@ TEST(AdminTest, TestAdminPolygonBasic) {
   ASSERT_EQ(allow_intersection_names.size(), 3);
 
   // find the GH way/edge in the graph, make sure its there
-  auto bigt = findEdge(graph_reader, admin_map.nodes, "GH", "H", tile_id);
-  const DirectedEdge * dir_edge = std::get<1>(bigt);
+  auto tup = findEdge(graph_reader, admin_map.nodes, "GH", "H", tile_id);
+  const DirectedEdge * dir_edge = std::get<1>(tup);
   ASSERT_NE(dir_edge, nullptr);
 
   // See that nodes G and H are in the correct state
