@@ -54,8 +54,9 @@ TEST(locate, basic_properties) {
   // call locate to see some info about each edge
   auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   std::string json;
-  auto result = gurka::do_action(valhalla::Options::locate, map, {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "a", "b"},
-                              "none", {}, reader, &json);
+  auto result = gurka::do_action(valhalla::Options::locate, map,
+                                 {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "a", "b"}, "none",
+                                 {}, reader, &json);
   rapidjson::Document response;
   response.Parse(json);
   if (response.HasParseError())

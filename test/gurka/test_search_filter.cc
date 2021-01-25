@@ -303,10 +303,10 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDeparture) {
   // None of the edges are closed
   {
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "2"}, costing,
-                               {{"/date_time/type", date_type},
-                                {"/date_time/value", "current"},
-                                {costing_speed_type, "current"}},
-                               reader);
+                                   {{"/date_time/type", date_type},
+                                    {"/date_time/value", "current"},
+                                    {costing_speed_type, "current"}},
+                                   reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
   }
@@ -321,10 +321,10 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDeparture) {
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "2"}, costing,
-                               {{"/date_time/type", date_type},
-                                {"/date_time/value", "current"},
-                                {costing_speed_type, "current"}},
-                               reader);
+                                   {{"/date_time/type", date_type},
+                                    {"/date_time/value", "current"},
+                                    {costing_speed_type, "current"}},
+                                   reader);
     gurka::assert::osrm::expect_steps(result, {"BC"});
     gurka::assert::raw::expect_path(result, {"BC", "CD", "DE"});
 
@@ -337,7 +337,8 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDeparture) {
          std::to_string(closure_map.nodes.at("2").lat()) %
          std::to_string(closure_map.nodes.at("2").lng()) % costing % costing % date_type)
             .str();
-    result = gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
+    result =
+        gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
   }
@@ -355,10 +356,10 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDestination) {
   // None of the edges are closed
   {
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "2"}, costing,
-                               {{"/date_time/type", date_type},
-                                {"/date_time/value", "current"},
-                                {costing_speed_type, "current"}},
-                               reader);
+                                   {{"/date_time/type", date_type},
+                                    {"/date_time/value", "current"},
+                                    {costing_speed_type, "current"}},
+                                   reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
   }
@@ -373,10 +374,10 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDestination) {
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "2"}, costing,
-                               {{"/date_time/type", date_type},
-                                {"/date_time/value", "current"},
-                                {costing_speed_type, "current"}},
-                               reader);
+                                   {{"/date_time/type", date_type},
+                                    {"/date_time/value", "current"},
+                                    {costing_speed_type, "current"}},
+                                   reader);
     // TODO: See https://github.com/valhalla/valhalla/issues/2709 on why its
     // taking CFGD instead of DE
     gurka::assert::osrm::expect_steps(result, {"AB", "CFGD"});
@@ -391,7 +392,8 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtDestination) {
          std::to_string(closure_map.nodes.at("2").lat()) %
          std::to_string(closure_map.nodes.at("2").lng()) % costing % costing % date_type)
             .str();
-    result = gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
+    result =
+        gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
   }
@@ -409,10 +411,10 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtMidway) {
   // None of the edges are closed. Route has multiple waypoints
   {
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "2", "3"}, costing,
-                               {{"/date_time/type", date_type},
-                                {"/date_time/value", "current"},
-                                {costing_speed_type, "current"}},
-                               reader);
+                                   {{"/date_time/type", date_type},
+                                    {"/date_time/value", "current"},
+                                    {costing_speed_type, "current"}},
+                                   reader);
     gurka::assert::osrm::expect_steps(result, {"AB", "DE"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "DE", "EJ", "JK"});
   }
@@ -426,10 +428,10 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtMidway) {
 
     // The route from 2->3 fails since there's no suitable edge from 2->3
     EXPECT_THROW((gurka::do_action(valhalla::Options::route, closure_map, {"1", "2", "3"}, costing,
-                               {{"/date_time/type", date_type},
-                                {"/date_time/value", "current"},
-                                {costing_speed_type, "current"}},
-                               reader)),
+                                   {{"/date_time/type", date_type},
+                                    {"/date_time/value", "current"},
+                                    {costing_speed_type, "current"}},
+                                   reader)),
                  valhalla_exception_t);
 
     // Specify search filter to disable exclude_closures at midway waypoint
@@ -443,7 +445,8 @@ TEST_P(ExcludeClosuresOnWaypoints, ExcludeClosuresAtMidway) {
          std::to_string(closure_map.nodes.at("3").lat()) %
          std::to_string(closure_map.nodes.at("3").lng()) % costing % costing % date_type)
             .str();
-    auto result = gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
+    auto result =
+        gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
     gurka::assert::osrm::expect_steps(result, {"AB", "DE"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EJ", "JK"});
   }
@@ -463,10 +466,10 @@ TEST_P(ExcludeClosuresOnWaypoints, IgnoreClosuresOverridesExcludeClosures) {
   // None of the edges are closed
   {
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "2"}, costing,
-                               {{"/date_time/type", date_type},
-                                {"/date_time/value", "current"},
-                                {costing_speed_type, "current"}},
-                               reader);
+                                   {{"/date_time/type", date_type},
+                                    {"/date_time/value", "current"},
+                                    {costing_speed_type, "current"}},
+                                   reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
   }
@@ -481,10 +484,10 @@ TEST_P(ExcludeClosuresOnWaypoints, IgnoreClosuresOverridesExcludeClosures) {
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "2"}, costing,
-                               {{"/date_time/type", date_type},
-                                {"/date_time/value", "current"},
-                                {costing_speed_type, "current"}},
-                               reader);
+                                   {{"/date_time/type", date_type},
+                                    {"/date_time/value", "current"},
+                                    {costing_speed_type, "current"}},
+                                   reader);
     gurka::assert::osrm::expect_steps(result, {"AB", "CFGD", "DE"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CFGD", "DE"});
 
@@ -499,7 +502,8 @@ TEST_P(ExcludeClosuresOnWaypoints, IgnoreClosuresOverridesExcludeClosures) {
          std::to_string(closure_map.nodes.at("2").lat()) %
          std::to_string(closure_map.nodes.at("2").lng()) % costing % costing % date_type)
             .str();
-    result = gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
+    result =
+        gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
   }
@@ -514,10 +518,10 @@ TEST_P(ExcludeClosuresOnWaypoints, ConsecutiveClosuresAtDeparture) {
   // None of the edges are closed
   {
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "3"}, costing,
-                               {{"/date_time/type", date_type},
-                                {"/date_time/value", "current"},
-                                {costing_speed_type, "current"}},
-                               reader);
+                                   {{"/date_time/type", date_type},
+                                    {"/date_time/value", "current"},
+                                    {costing_speed_type, "current"}},
+                                   reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EJ", "JK"});
   }
@@ -532,10 +536,10 @@ TEST_P(ExcludeClosuresOnWaypoints, ConsecutiveClosuresAtDeparture) {
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "3"}, costing,
-                               {{"/date_time/type", date_type},
-                                {"/date_time/value", "current"},
-                                {costing_speed_type, "current"}},
-                               reader);
+                                   {{"/date_time/type", date_type},
+                                    {"/date_time/value", "current"},
+                                    {costing_speed_type, "current"}},
+                                   reader);
     gurka::assert::osrm::expect_steps(result, {"HIC", "CD"});
     gurka::assert::raw::expect_path(result, {"HIC", "CD", "DE", "EJ", "JK"});
 
@@ -548,7 +552,8 @@ TEST_P(ExcludeClosuresOnWaypoints, ConsecutiveClosuresAtDeparture) {
          std::to_string(closure_map.nodes.at("3").lat()) %
          std::to_string(closure_map.nodes.at("3").lng()) % costing % costing % date_type)
             .str();
-    EXPECT_THROW(gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader),
+    EXPECT_THROW(gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures,
+                                  reader),
                  valhalla_exception_t);
   }
 }
@@ -579,7 +584,8 @@ TEST_P(ExcludeClosuresOnWaypoints, ConsecutiveClosuresWithLowReachability) {
          std::to_string(closure_map.nodes.at("2").lat()) %
          std::to_string(closure_map.nodes.at("2").lng()) % costing % costing % date_type)
             .str();
-    EXPECT_THROW(gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader),
+    EXPECT_THROW(gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures,
+                                  reader),
                  valhalla_exception_t);
 
     // Specify minimum reachability so that nearby edges (which were previously
@@ -594,7 +600,8 @@ TEST_P(ExcludeClosuresOnWaypoints, ConsecutiveClosuresWithLowReachability) {
          std::to_string(closure_map.nodes.at("2").lat()) %
          std::to_string(closure_map.nodes.at("2").lng()) % costing % costing % date_type)
             .str();
-    auto result = gurka::do_action(valhalla::Options::route, closure_map, req_low_reachbility, reader);
+    auto result =
+        gurka::do_action(valhalla::Options::route, closure_map, req_low_reachbility, reader);
     gurka::assert::osrm::expect_steps(result, {"BC"});
     gurka::assert::raw::expect_path(result, {"BC", "CD", "DE"});
   }
@@ -609,10 +616,10 @@ TEST_P(ExcludeClosuresOnWaypoints, AvoidOnlyMidwayClosures) {
   // None of the edges are closed
   {
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "3"}, costing,
-                               {{"/date_time/type", date_type},
-                                {"/date_time/value", "current"},
-                                {costing_speed_type, "current"}},
-                               reader);
+                                   {{"/date_time/type", date_type},
+                                    {"/date_time/value", "current"},
+                                    {costing_speed_type, "current"}},
+                                   reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EJ", "JK"});
   }
@@ -628,10 +635,10 @@ TEST_P(ExcludeClosuresOnWaypoints, AvoidOnlyMidwayClosures) {
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"1", "3"}, costing,
-                               {{"/date_time/type", date_type},
-                                {"/date_time/value", "current"},
-                                {costing_speed_type, "current"}},
-                               reader);
+                                   {{"/date_time/type", date_type},
+                                    {"/date_time/value", "current"},
+                                    {costing_speed_type, "current"}},
+                                   reader);
     gurka::assert::osrm::expect_steps(result, {"BC", "CFGD", "DE"});
     gurka::assert::raw::expect_path(result, {"BC", "CFGD", "DE", "EJ"});
 
@@ -643,7 +650,8 @@ TEST_P(ExcludeClosuresOnWaypoints, AvoidOnlyMidwayClosures) {
          std::to_string(closure_map.nodes.at("3").lat()) %
          std::to_string(closure_map.nodes.at("3").lng()) % costing % costing % date_type)
             .str();
-    result = gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
+    result =
+        gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
     gurka::assert::osrm::expect_steps(result, {"AB", "CFGD", "DE"});
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CFGD", "DE", "EJ", "JK"});
   }
@@ -658,10 +666,10 @@ TEST_P(ExcludeClosuresOnWaypoints, TrivialRouteSameEdge) {
   // Route starts & ends on a single edge
   {
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"4", "5"}, costing,
-                               {{"/date_time/type", date_type},
-                                {"/date_time/value", "current"},
-                                {costing_speed_type, "current"}},
-                               reader);
+                                   {{"/date_time/type", date_type},
+                                    {"/date_time/value", "current"},
+                                    {costing_speed_type, "current"}},
+                                   reader);
     gurka::assert::osrm::expect_steps(result, {"LM"});
     gurka::assert::raw::expect_path(result, {"LM"});
   }
@@ -676,10 +684,10 @@ TEST_P(ExcludeClosuresOnWaypoints, TrivialRouteSameEdge) {
 
     // No route since the edge is closed
     EXPECT_THROW(gurka::do_action(valhalla::Options::route, closure_map, {"4", "5"}, costing,
-                              {{"/date_time/type", date_type},
-                               {"/date_time/value", "current"},
-                               {costing_speed_type, "current"}},
-                              reader),
+                                  {{"/date_time/type", date_type},
+                                   {"/date_time/value", "current"},
+                                   {costing_speed_type, "current"}},
+                                  reader),
                  valhalla_exception_t);
 
     const std::string& req_disable_exclude_closures =
@@ -690,7 +698,8 @@ TEST_P(ExcludeClosuresOnWaypoints, TrivialRouteSameEdge) {
          std::to_string(closure_map.nodes.at("5").lat()) %
          std::to_string(closure_map.nodes.at("5").lng()) % costing % costing % date_type)
             .str();
-    auto result = gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
+    auto result =
+        gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
     gurka::assert::osrm::expect_steps(result, {"LM"});
     gurka::assert::raw::expect_path(result, {"LM"});
   }
@@ -707,10 +716,10 @@ TEST_P(ExcludeClosuresOnWaypoints, DISABLED_TrivialRouteAdjacentEdges) {
   // Start and end locations are on adjacent edges. This will use timedep_fwd even with date_type 3
   {
     auto result = gurka::do_action(valhalla::Options::route, closure_map, {"4", "6"}, costing,
-                               {{"/date_time/type", date_type},
-                                {"/date_time/value", "current"},
-                                {costing_speed_type, "current"}},
-                               reader);
+                                   {{"/date_time/type", date_type},
+                                    {"/date_time/value", "current"},
+                                    {costing_speed_type, "current"}},
+                                   reader);
     gurka::assert::osrm::expect_steps(result, {"LM"});
     gurka::assert::raw::expect_path(result, {"LM", "MN"});
   }
@@ -726,10 +735,10 @@ TEST_P(ExcludeClosuresOnWaypoints, DISABLED_TrivialRouteAdjacentEdges) {
 
     // Snaps to the nearby edge HIC, since candidate edges are closed
     auto res = gurka::do_action(valhalla::Options::route, closure_map, {"4", "6"}, costing,
-                            {{"/date_time/type", date_type},
-                             {"/date_time/value", "current"},
-                             {costing_speed_type, "current"}},
-                            reader);
+                                {{"/date_time/type", date_type},
+                                 {"/date_time/value", "current"},
+                                 {costing_speed_type, "current"}},
+                                reader);
     gurka::assert::osrm::expect_steps(res, {"HIC"});
     gurka::assert::raw::expect_path(res, {"HIC", "HIC"});
 
@@ -742,7 +751,8 @@ TEST_P(ExcludeClosuresOnWaypoints, DISABLED_TrivialRouteAdjacentEdges) {
          std::to_string(closure_map.nodes.at("6").lng()) % costing % costing % date_type)
             .str();
     // TODO: Enable once timedep-fwd handles clsures at destination edges
-    auto result = gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
+    auto result =
+        gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
     gurka::assert::osrm::expect_steps(result, {"LM"});
     gurka::assert::raw::expect_path(result, {"LM", "MN"});
   }
@@ -1029,7 +1039,8 @@ TEST_P(DISABLED_ExcludeConsecutiveEdgeClosures, UturnDueToClosure) {
          std::to_string(closure_map.nodes.at("E").lat()) %
          std::to_string(closure_map.nodes.at("E").lng()) % costing % costing % date_type)
             .str();
-    result = gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
+    result =
+        gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
     gurka::assert::osrm::expect_steps(result, {"CD", "AC", "AB", "BE"});
     gurka::assert::raw::expect_path(result, {"CD", "CD", "AC", "AB", "BE"});
   }
@@ -1072,7 +1083,8 @@ TEST_P(DISABLED_ExcludeConsecutiveEdgeClosures, DistantSnapDueToClosure) {
          std::to_string(closure_map.nodes.at("B").lat()) %
          std::to_string(closure_map.nodes.at("B").lng()) % costing % costing % date_type)
             .str();
-    EXPECT_THROW(gurka::do_action(valhalla::Options::route, closure_map, req_with_heading, reader), valhalla_exception_t);
+    EXPECT_THROW(gurka::do_action(valhalla::Options::route, closure_map, req_with_heading, reader),
+                 valhalla_exception_t);
 
     const std::string& req_disable_exclude_closures =
         (boost::format(
@@ -1082,7 +1094,8 @@ TEST_P(DISABLED_ExcludeConsecutiveEdgeClosures, DistantSnapDueToClosure) {
          std::to_string(closure_map.nodes.at("B").lat()) %
          std::to_string(closure_map.nodes.at("B").lng()) % costing % costing % date_type)
             .str();
-    auto result = gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
+    auto result =
+        gurka::do_action(valhalla::Options::route, closure_map, req_disable_exclude_closures, reader);
     gurka::assert::osrm::expect_steps(result, {"HI", "FI", "EF", "BE"});
     gurka::assert::raw::expect_path(result, {"HI", "FI", "EF", "BE"});
   }
