@@ -90,6 +90,9 @@ struct simplified_actor_t : public valhalla::tyr::actor_t {
   std::string expansion(const std::string& request_str) {
     return valhalla::tyr::actor_t::expansion(request_str, nullptr, nullptr);
   };
+  std::string centroid(const std::string& request_str) {
+    return valhalla::tyr::actor_t::centroid(request_str, nullptr, nullptr);
+  };
 };
 
 PYBIND11_MODULE(python_valhalla, m) {
@@ -117,5 +120,8 @@ PYBIND11_MODULE(python_valhalla, m) {
           "Lookup if transit stops are available in a defined radius around a set of input locations.")
       .def(
           "Expansion", &simplified_actor_t::expansion,
-          "Returns all road segments which were touched by the routing algorithm during the graph traversal.");
+          "Returns all road segments which were touched by the routing algorithm during the graph traversal.")
+      .def(
+          "Centroid", &simplified_actor_t::centroid,
+          "Returns routes from all the input locations to the minimum cost meeting point of those paths.");
 }

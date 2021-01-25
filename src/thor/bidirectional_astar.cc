@@ -260,8 +260,7 @@ inline bool BidirectionalAStar::ExpandForwardInner(GraphReader& graphreader,
   // or if a complex restriction prevents transition onto this edge.
   // if its not time dependent set to 0 for Allowed and Restricted methods below
   const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
-  int restriction_idx = -1;
-
+  uint8_t restriction_idx = -1;
   if (!costing_->Allowed(meta.edge, pred, tile, meta.edge_id, localtime, time_info.timezone_index,
                          restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
@@ -482,7 +481,7 @@ inline bool BidirectionalAStar::ExpandReverseInner(GraphReader& graphreader,
   // or if a complex restriction prevents transition onto this edge.
   // if its not time dependent set to 0 for Allowed and Restricted methods below
   const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
-  int restriction_idx = -1;
+  uint8_t restriction_idx = -1;
   if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime,
                                 time_info.timezone_index, restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false,

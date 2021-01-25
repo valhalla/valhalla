@@ -226,6 +226,7 @@
    * ADDED: Recover and recost all shortcuts in final path for bidirectional astar algorithm [#2711](https://github.com/valhalla/valhalla/pull/2711)
    * ADDED: An option for shortcut recovery to be cached at start up to reduce the time it takes to do so on the fly [#2714](https://github.com/valhalla/valhalla/pull/2714)
    * ADDED: If width <= 1.9 then no access for auto, truck, bus, taxi, emergency and hov. [#2713](https://github.com/valhalla/valhalla/pull/2713)
+   * ADDED: Centroid/Converge/Rendezvous/Meet API which allows input locations to find a least cost convergence point from all locations [#2713](https://github.com/valhalla/valhalla/pull/2734)
    * ADDED: Added support to process the sump_buster tag.  Also, fixed a few small access bugs for nodes. [#2731](https://github.com/valhalla/valhalla/pull/2731)
    * ADDED: Log message if failed to create tiles directory. [#2738](https://github.com/valhalla/valhalla/pull/2738)
    * CHANGED: Tile memory is only owned by the GraphTile rather than shared amongst copies of the graph tile (in GraphReader and TileCaches). [#2340](https://github.com/valhalla/valhalla/pull/2340)

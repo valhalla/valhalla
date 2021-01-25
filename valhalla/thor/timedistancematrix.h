@@ -224,7 +224,6 @@ protected:
    * @param   destinations  Vector of destination indexes along this edge.
    * @param   edge          Directed edge
    * @param   pred          Predecessor information in shortest path.
-   * @param   predindex     Predecessor index in EdgeLabels vector.
    * @return  Returns true if all destinations have been settled.
    */
   bool UpdateDestinations(const valhalla::Location& origin,
@@ -232,8 +231,7 @@ protected:
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
                           const graph_tile_ptr& tile,
-                          const sif::EdgeLabel& pred,
-                          const uint32_t predindex);
+                          const sif::EdgeLabel& pred);
 
   /**
    * Form a time/distance matrix from the results.

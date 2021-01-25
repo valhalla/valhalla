@@ -54,33 +54,35 @@ TEST_F(UseTracksTest, test_default_value) {
   for (const auto& c : costing)
     if (c == "auto" || c == "hov" || c == "taxi" || c == "bus" || c == "truck")
       // avoid tracks by default; use tracks only if the route starts or ends at 'track' edge
-      validate_path(gurka::route(use_tracks_map, "1", "2", c), {"AB", "BC", "CD", "DE", "EF"});
+      validate_path(gurka::do_action(valhalla::Options::route, use_tracks_map, {"1", "2"}, c),
+                    {"AB", "BC", "CD", "DE", "EF"});
     else
       // track tag shouldn't affect other costings too much
-      validate_path(gurka::route(use_tracks_map, "1", "2", c), {"AB", "BE", "EF"});
+      validate_path(gurka::do_action(valhalla::Options::route, use_tracks_map, {"1", "2"}, c),
+                    {"AB", "BE", "EF"});
 }
 
 TEST_F(UseTracksTest, test_use_tracks) {
   // use routes with tracks
   for (const auto& c : costing)
-    validate_path(gurka::route(use_tracks_map, "1", "2", c,
-                               {{"/costing_options/" + c + "/use_tracks", "1"}}),
+    validate_path(gurka::do_action(valhalla::Options::route, use_tracks_map, {"1", "2"}, c,
+                                   {{"/costing_options/" + c + "/use_tracks", "1"}}),
                   {"AB", "BE", "EF"});
 }
 
 TEST_F(UseTracksTest, test_avoid_tracks) {
   // avoid tracks
   for (const auto& c : costing)
-    validate_path(gurka::route(use_tracks_map, "1", "2", c,
-                               {{"/costing_options/" + c + "/use_tracks", "0"}}),
+    validate_path(gurka::do_action(valhalla::Options::route, use_tracks_map, {"1", "2"}, c,
+                                   {{"/costing_options/" + c + "/use_tracks", "0"}}),
                   {"AB", "BC", "CD", "DE", "EF"});
 }
 
 TEST_F(UseTracksTest, test_use_tracks_if_no_other_roads) {
   // use track if it's needed to complete the route
   for (const auto& c : costing) {
-    validate_path(gurka::route(use_tracks_map, "D", "3", c,
-                               {{"/costing_options/" + c + "/use_tracks", "0"}}),
+    validate_path(gurka::do_action(valhalla::Options::route, use_tracks_map, {"D", "3"}, c,
+                                   {{"/costing_options/" + c + "/use_tracks", "0"}}),
                   {"DE", "EF", "FG"});
   }
 }
