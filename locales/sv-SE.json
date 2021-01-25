@@ -183,7 +183,8 @@
         "<MILES> engelska mil",
         "1 engelsk mil",
         "en halv engelsk mil",
-        "en kvarts engelsk mil <instructions.continue_verbal.us_customary_lengths.__array__><FEET> fot",
+        "en kvarts engelsk mil ",
+        "<FEET> fot",
         "mindre än 10 fot"
       ],
       "example_phrases": {
@@ -786,7 +787,8 @@
         "29": "Ta <NAME_SIGN>avfarten in på <BRANCH_SIGN> mot <TOWARD_SIGN>."
       },
       "relative_directions": [
-        "vänster <instructions.exit_verbal.relative_directions.__array__>höger"
+        "vänster ",
+        "höger"
       ],
       "example_phrases": {
         "0": [
@@ -1173,7 +1175,7 @@
     "ramp": {
       "phrases": {
         "0": "Ta påfarten till <RELATIVE_DIRECTION>.",
-        "1": "Ta <BRANCH_SIGN>påfarten till  <RELATIVE_DIRECTION>.",
+        "1": "Ta <BRANCH_SIGN>påfarten till <RELATIVE_DIRECTION>.",
         "2": "Ta påfarten till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
         "3": "Ta <BRANCH_SIGN>påfarten till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
         "4": "Ta <NAME_SIGN>påfarten till <RELATIVE_DIRECTION>.",
@@ -1304,7 +1306,7 @@
         "5": "Sväng <RELATIVE_DIRECTION> för att ta påfarten.",
         "6": "Sväng <RELATIVE_DIRECTION> för att ta <BRANCH_SIGN>påfarten.",
         "7": "Sväng <RELATIVE_DIRECTION> för att ta påfarten mot <TOWARD_SIGN>.",
-        "8": "Sväng  <RELATIVE_DIRECTION> för att ta <BRANCH_SIGN>påfarten mot <TOWARD_SIGN>.",
+        "8": "Sväng <RELATIVE_DIRECTION> för att ta <BRANCH_SIGN>påfarten mot <TOWARD_SIGN>.",
         "9": "Sväng <RELATIVE_DIRECTION> för att ta <NAME_SIGN>påfarten.",
         "10": "Ta påfarten.",
         "11": "Ta <BRANCH_SIGN>påfarten.",
@@ -1370,10 +1372,10 @@
       "phrases": {
         "0": "Gör en skarp sväng till <RELATIVE_DIRECTION>.",
         "1": "Gör en skarp sväng till <RELATIVE_DIRECTION> in på <STREET_NAMES>.",
-        "2": "Gör en skarp sväng till  <RELATIVE_DIRECTION> in på <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
+        "2": "Gör en skarp sväng till <RELATIVE_DIRECTION> in på <BEGIN_STREET_NAMES>. Fortsätt på <STREET_NAMES>.",
         "3": "Gör en skarp sväng till <RELATIVE_DIRECTION> för att stanna kvar på  <STREET_NAMES>.",
         "4": "Gör en skarp sväng till <RELATIVE_DIRECTION> i <JUNCTION_NAME>.",
-        "5": "Gör en skarp sväng till  <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+        "5": "Gör en skarp sväng till <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "gångvägen",
@@ -1529,7 +1531,7 @@
         "1": "Kör <CARDINAL_DIRECTION> i <LENGTH>.",
         "2": "Kör <CARDINAL_DIRECTION> på <STREET_NAMES>.",
         "3": "Kör <CARDINAL_DIRECTION> på <STREET_NAMES> i <LENGTH>.",
-        "4": "Kör  <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
+        "4": "Kör <CARDINAL_DIRECTION> på <BEGIN_STREET_NAMES>.",
         "5": "Kör <CARDINAL_DIRECTION>.",
         "6": "Kör <CARDINAL_DIRECTION> i <LENGTH>.",
         "7": "Kör <CARDINAL_DIRECTION>  <STREET_NAMES>.",
@@ -1797,7 +1799,8 @@
         "1": "Stanna kvar på <TRANSIT_NAME> mot <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "spårvagnen <instructions.transit_remain_on.empty_transit_name_labels.__array__>tunnelbanan",
+        "spårvagnen ",
+        "tunnelbanan",
         "tåget",
         "bussen",
         "färjan",
