@@ -150,45 +150,20 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                 const std::string& begin_node_name,
                 const std::string& end_node_name);
 
-valhalla::Api route(const map& map,
-                    const std::string& request_json,
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader = {});
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::string& request_json,
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
+                        std::string* json = nullptr);
 
-/**
- * Calculates a route along a set of waypoints with a given costing model, and returns the
- * valhalla::Api result.
- *
- * @param map a map returned by buildtiles
- * @param waypoints an array of node names to use as waypoints
- * @param costing the name of the costing model to use
- */
-valhalla::Api route(const map& map,
-                    const std::vector<std::string>& waypoints,
-                    const std::string& costing,
-                    const std::unordered_map<std::string, std::string>& options = {},
-                    const std::shared_ptr<valhalla::baldr::GraphReader>& reader = {});
-
-// TODO: delete this
-valhalla::Api route(const map& map,
-                    const std::string& origin,
-                    const std::string& destination,
-                    const std::string& costing,
-                    const std::unordered_map<std::string, std::string>& options = {},
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader = {});
-
-valhalla::Api match(const map& map,
-                    const std::vector<std::string>& waypoints,
-                    const std::string& stop_type,
-                    const std::string& costing,
-                    const std::unordered_map<std::string, std::string>& options = {},
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader = {});
-
-valhalla::Api locate(const map& map,
-                     const std::vector<std::string>& waypoints,
-                     const std::string& costing,
-                     const std::unordered_map<std::string, std::string>& options = {},
-                     std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
-                     std::string* json = nullptr);
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::vector<std::string>& waypoints,
+                        const std::string& costing,
+                        const std::unordered_map<std::string, std::string>& options = {},
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
+                        std::string* json = nullptr,
+                        const std::string& stop_type = "break");
 
 /* Returns the raw_result formatted as a JSON document in the given format.
  *

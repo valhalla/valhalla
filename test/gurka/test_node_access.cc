@@ -39,11 +39,11 @@ TEST(Standalone, NodeAccess) {
 
   for (auto& c : costing) {
     if (c == "auto" || c == "hov" || c == "taxi")
-      validate_path(gurka::route(map, "A", "I", c),
+      validate_path(gurka::do_action(valhalla::Options::route, map, {"A", "I"}, c),
                     {"AB", "BC", "CD", "DE", "EH", "HL", "KL", "JK", "IJ"});
     else if (c == "bicycle" || c == "pedestrian")
-      validate_path(gurka::route(map, "A", "I", c), {"AB", "BF", "FI"});
+      validate_path(gurka::do_action(valhalla::Options::route, map, {"A", "I"}, c), {"AB", "BF", "FI"});
     else
-      validate_path(gurka::route(map, "A", "I", c), {"AB", "BC", "CD", "DG", "GK", "JK", "IJ"});
+      validate_path(gurka::do_action(valhalla::Options::route, map, {"A", "I"}, c), {"AB", "BC", "CD", "DG", "GK", "JK", "IJ"});
   }
 }

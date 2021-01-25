@@ -15,7 +15,8 @@ TEST(Standalone, TruckRegression) {
   const double gridsize = 10;
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/truck_regression");
-  auto result = gurka::route(map, {"1", "2", "1"}, "truck", {{"/locations/1/type", "break_through"}});
+  auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2", "1"}, "truck",
+                                 {{"/locations/1/type", "break_through"}});
   // Annoyingly because its a node snap at a break through, it starts on AB ends a leg at the end of
   // AB and then starts the next leg at the end of AB and then uturns and goes back on BA
   gurka::assert::raw::expect_path(result, {"AB", "AB", "AB"});
@@ -79,58 +80,66 @@ inline std::string IgnoreAccessParam(const std::string& cost_name) {
 
 TEST_F(IgnoreAccessTest, BicycleIgnoreOneWay) {
   const std::string cost = "bicycle";
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost,
+                                   {{IgnoreOneWaysParam(cost), "1"}}));
 }
 
 TEST_F(IgnoreAccessTest, AutoIgnoreOneWay) {
   const std::string cost = "auto";
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost,
+                                   {{IgnoreOneWaysParam(cost), "1"}}));
 }
 
 TEST_F(IgnoreAccessTest, BusIgnoreOneWay) {
   const std::string cost = "bus";
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost,
+                                   {{IgnoreOneWaysParam(cost), "1"}}));
 }
 
 TEST_F(IgnoreAccessTest, HOVIgnoreOneWay) {
   const std::string cost = "hov";
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost,
+                                   {{IgnoreOneWaysParam(cost), "1"}}));
 }
 
 TEST_F(IgnoreAccessTest, TaxiIgnoreOneWay) {
   const std::string cost = "taxi";
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost,
+                                   {{IgnoreOneWaysParam(cost), "1"}}));
 }
 
 TEST_F(IgnoreAccessTest, MotorcycleIgnoreOneWay) {
   const std::string cost = "motorcycle";
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost,
+                                   {{IgnoreOneWaysParam(cost), "1"}}));
 }
 
 TEST_F(IgnoreAccessTest, MotorScooterIgnoreOneWay) {
   const std::string cost = "motor_scooter";
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost,
+                                   {{IgnoreOneWaysParam(cost), "1"}}));
 }
 
 TEST_F(IgnoreAccessTest, TruckIgnoreOneWay) {
   const std::string cost = "truck";
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "D"}, cost, {{IgnoreOneWaysParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost,
+                                   {{IgnoreOneWaysParam(cost), "1"}}));
 }
 
 // check 'ignore access' parameter
@@ -138,73 +147,83 @@ TEST_F(IgnoreAccessTest, TruckIgnoreOneWay) {
 TEST_F(IgnoreAccessTest, BicycleIgnoreAccess) {
   const std::string cost = "bicycle";
   // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "B", "D"}, cost, {{IgnoreAccessParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost,
+                                   {{IgnoreAccessParam(cost), "1"}}));
 }
 
 TEST_F(IgnoreAccessTest, AutoIgnoreAccess) {
   const std::string cost = "auto";
   // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "B", "D"}, cost, {{IgnoreAccessParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost,
+                                   {{IgnoreAccessParam(cost), "1"}}));
 }
 
 TEST_F(IgnoreAccessTest, BusIgnoreAccess) {
   const std::string cost = "bus";
   // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "B", "D"}, cost, {{IgnoreAccessParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost,
+                                   {{IgnoreAccessParam(cost), "1"}}));
 }
 
 TEST_F(IgnoreAccessTest, HOVIgnoreAccess) {
   const std::string cost = "hov";
   // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "B", "D"}, cost, {{IgnoreAccessParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost,
+                                   {{IgnoreAccessParam(cost), "1"}}));
 }
 
 TEST_F(IgnoreAccessTest, TaxiIgnoreAccess) {
   const std::string cost = "taxi";
   // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "B", "D"}, cost, {{IgnoreAccessParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost,
+                                   {{IgnoreAccessParam(cost), "1"}}));
 }
 
 TEST_F(IgnoreAccessTest, MotorcycleIgnoreAccess) {
   const std::string cost = "motorcycle";
   // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "B", "D"}, cost, {{IgnoreAccessParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost,
+                                   {{IgnoreAccessParam(cost), "1"}}));
 }
 
 TEST_F(IgnoreAccessTest, MotorScooterIgnoreAccess) {
   const std::string cost = "motor_scooter";
   // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "B", "D"}, cost, {{IgnoreAccessParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost,
+                                   {{IgnoreAccessParam(cost), "1"}}));
 }
 
 TEST_F(IgnoreAccessTest, TruckIgnoreAccess) {
   const std::string cost = "truck";
   // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "B", "D"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "B", "D"}, cost, {{IgnoreAccessParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost,
+                                   {{IgnoreAccessParam(cost), "1"}}));
 }
 
 TEST_F(IgnoreAccessTest, PedestrianIgnoreAccess) {
   const std::string cost = "pedestrian";
   // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::route(ignore_access_map, {"A", "F", "D", "B"}, cost), std::runtime_error);
-  EXPECT_NO_THROW(
-      gurka::route(ignore_access_map, {"A", "F", "D", "B"}, cost, {{IgnoreAccessParam(cost), "1"}}));
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "F", "D", "B"},
+                                cost),
+               std::runtime_error);
+  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "F", "D", "B"},
+                                   cost, {{IgnoreAccessParam(cost), "1"}}));
 }
 
 TEST(AutoDataFix, deprecation) {
@@ -325,20 +344,20 @@ uint32_t speed_from_edge(const valhalla::Api& api) {
 // this happens with depart_at routes trivial or not and trivial invariant routes
 TEST_F(AlgorithmTest, TDForward) {
   {
-    auto api = gurka::route(map, {"0", "3"}, "auto",
-                            {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
+    auto api = gurka::do_action(valhalla::Options::route, map, {"0", "3"}, "auto",
+                                {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
   }
 
   {
-    auto api = gurka::route(map, {"8", "A"}, "auto",
-                            {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
+    auto api = gurka::do_action(valhalla::Options::route, map, {"8", "A"}, "auto",
+                                {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
   }
 
   {
-    auto api = gurka::route(map, {"2", "5"}, "auto",
-                            {{"/date_time/type", "3"}, {"/date_time/value", "2020-10-30T09:00"}});
+    auto api = gurka::do_action(valhalla::Options::route, map, {"2", "5"}, "auto",
+                                {{"/date_time/type", "3"}, {"/date_time/value", "2020-10-30T09:00"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_forward_a*");
   }
 }
@@ -346,14 +365,14 @@ TEST_F(AlgorithmTest, TDForward) {
 // this happens with arrive_by routes trivial or not
 TEST_F(AlgorithmTest, TDReverse) {
   {
-    auto api = gurka::route(map, {"6", "B"}, "auto",
-                            {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
+    auto api = gurka::do_action(valhalla::Options::route, map, {"6", "B"}, "auto",
+                                {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_reverse_a*");
   }
 
   {
-    auto api = gurka::route(map, {"9", "7"}, "auto",
-                            {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
+    auto api = gurka::do_action(valhalla::Options::route, map, {"9", "7"}, "auto",
+                                {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "time_dependent_reverse_a*");
   }
 }
@@ -361,34 +380,34 @@ TEST_F(AlgorithmTest, TDReverse) {
 // this happens only with non-trivial routes with no date_time or invariant date_time
 TEST_F(AlgorithmTest, Bidir) {
   {
-    auto api = gurka::route(map, {"4", "0"}, "auto");
+    auto api = gurka::do_action(valhalla::Options::route, map, {"4", "0"}, "auto");
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
     EXPECT_EQ(speed_from_edge(api), constrained);
   }
 
   {
-    auto api = gurka::route(map, {"A", "2"}, "auto",
-                            {{"/date_time/type", "3"},
-                             {"/date_time/value", "2020-10-30T09:00"},
-                             {"/costing_options/auto/speed_types/0", "constrained"}});
+    auto api = gurka::do_action(valhalla::Options::route, map, {"A", "2"}, "auto",
+                                {{"/date_time/type", "3"},
+                                 {"/date_time/value", "2020-10-30T09:00"},
+                                 {"/costing_options/auto/speed_types/0", "constrained"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
     EXPECT_EQ(speed_from_edge(api), constrained);
   }
 
   {
-    auto api = gurka::route(map, {"A", "2"}, "auto",
-                            {{"/date_time/type", "3"},
-                             {"/date_time/value", "2020-10-30T09:00"},
-                             {"/costing_options/auto/speed_types/0", "predicted"}});
+    auto api = gurka::do_action(valhalla::Options::route, map, {"A", "2"}, "auto",
+                                {{"/date_time/type", "3"},
+                                 {"/date_time/value", "2020-10-30T09:00"},
+                                 {"/costing_options/auto/speed_types/0", "predicted"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
     EXPECT_EQ(speed_from_edge(api), historical);
   }
 
   {
-    auto api = gurka::route(map, {"A", "2"}, "auto",
-                            {{"/date_time/type", "3"},
-                             {"/date_time/value", "2020-10-30T09:00"},
-                             {"/costing_options/auto/speed_types/0", "current"}});
+    auto api = gurka::do_action(valhalla::Options::route, map, {"A", "2"}, "auto",
+                                {{"/date_time/type", "3"},
+                                 {"/date_time/value", "2020-10-30T09:00"},
+                                 {"/costing_options/auto/speed_types/0", "current"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
     EXPECT_EQ(speed_from_edge(api), current);
   }
@@ -409,7 +428,8 @@ TEST(Standalone, LegWeightRegression) {
   const double gridsize = 30;
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/leg_weights");
-  auto result = gurka::route(map, {"1", "E", "3"}, "auto", {{"/locations/1/type", "via"}});
+  auto result = gurka::do_action(valhalla::Options::route, map, {"1", "E", "3"}, "auto",
+                                 {{"/locations/1/type", "via"}});
 
   auto doc = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 

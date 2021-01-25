@@ -559,96 +559,57 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                            end_node_name);
 }
 
-valhalla::Api route(const map& map,
-                    const std::string& request_json,
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader) {
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::string& request_json,
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader,
+                        std::string* json) {
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
   valhalla::Api api;
-  actor.route(request_json, nullptr, &api);
+  std::string json_str;
+  switch (action) {
+    case valhalla::Options::route:
+      json_str = actor.route(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::trace_route:
+      json_str = actor.trace_route(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::trace_attributes:
+      json_str = actor.trace_attributes(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::locate:
+      json_str = actor.locate(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::centroid:
+      json_str = actor.centroid(request_json, nullptr, &api);
+      break;
+    default:
+      throw std::logic_error("Unsupported action");
+      break;
+  }
+  if (json) {
+    *json = json_str;
+  }
   return api;
 }
 
-/**
- * Calculates a route along a set of waypoints with a given costing model, and returns the
- * valhalla::Api result.
- *
- * @param map a map returned by buildtiles
- * @param waypoints an array of node names to use as waypoints
- * @param costing the name of the costing model to use
- */
-valhalla::Api route(const map& map,
-                    const std::vector<std::string>& waypoints,
-                    const std::string& costing,
-                    const std::unordered_map<std::string, std::string>& options,
-                    const std::shared_ptr<valhalla::baldr::GraphReader>& reader) {
-  std::cerr << "[          ] Routing with mjolnir.tile_dir = "
-            << map.config.get<std::string>("mjolnir.tile_dir") << " with waypoints ";
-  bool first = true;
-  for (const auto& waypoint : waypoints) {
-    if (!first)
-      std::cerr << " -> ";
-    std::cerr << waypoint;
-    first = false;
-  };
-  std::cerr << " with costing " << costing << std::endl;
-  auto lls = detail::to_lls(map.nodes, waypoints);
-  auto request_json = detail::build_valhalla_request("locations", lls, costing, options);
-
-  return route(map, request_json, reader);
-}
-
-valhalla::Api route(const map& map,
-                    const std::string& origin,
-                    const std::string& destination,
-                    const std::string& costing,
-                    const std::unordered_map<std::string, std::string>& options,
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader) {
-  return route(map, {origin, destination}, costing, options, std::move(reader));
-}
-
-valhalla::Api match(const map& map,
-                    const std::vector<std::string>& waypoints,
-                    const std::string& stop_type,
-                    const std::string& costing,
-                    const std::unordered_map<std::string, std::string>& options,
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader) {
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::vector<std::string>& waypoints,
+                        const std::string& costing,
+                        const std::unordered_map<std::string, std::string>& options,
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader,
+                        std::string* json,
+                        const std::string& stop_type) {
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
-  std::cerr << "[          ] Matching with mjolnir.tile_dir = "
-            << map.config.get<std::string>("mjolnir.tile_dir") << " with waypoints ";
-  bool first = true;
-  for (const auto& waypoint : waypoints) {
-    if (!first)
-      std::cerr << " -> ";
-    std::cerr << waypoint;
-    first = false;
-  };
-  std::cerr << " with costing " << costing << std::endl;
-  auto lls = detail::to_lls(map.nodes, waypoints);
-  auto request_json = detail::build_valhalla_request("shape", lls, costing, options, stop_type);
-  std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
-
-  valhalla::tyr::actor_t actor(map.config, *reader, true);
-  valhalla::Api api;
-  actor.trace_route(request_json, nullptr, &api);
-  return api;
-}
-
-valhalla::Api locate(const map& map,
-                     const std::vector<std::string>& waypoints,
-                     const std::string& costing,
-                     const std::unordered_map<std::string, std::string>& options,
-                     std::shared_ptr<valhalla::baldr::GraphReader> reader,
-                     std::string* json) {
-  if (!reader)
-    reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
-
-  std::cerr << "[          ] Locate with mjolnir.tile_dir = "
-            << map.config.get<std::string>("mjolnir.tile_dir") << " with locations ";
+  std::cerr << "[          ] " << Options_Action_Enum_Name(action)
+            << " with mjolnir.tile_dir = " << map.config.get<std::string>("mjolnir.tile_dir")
+            << " with locations ";
   bool first = true;
   for (const auto& waypoint : waypoints) {
     if (!first)
@@ -658,16 +619,10 @@ valhalla::Api locate(const map& map,
   };
   std::cerr << " with costing " << costing << std::endl;
   auto lls = detail::to_lls(map.nodes, waypoints);
-  auto request_json = detail::build_valhalla_request("locations", lls, costing, options);
-  std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
-
-  valhalla::tyr::actor_t actor(map.config, *reader, true);
-  valhalla::Api api;
-  auto json_str = actor.locate(request_json, nullptr, &api);
-  if (json) {
-    *json = json_str;
-  }
-  return api;
+  auto location_type =
+      action == Options::trace_route || action == Options::trace_attributes ? "shape" : "locations";
+  auto request_json = detail::build_valhalla_request(location_type, lls, costing, options, stop_type);
+  return do_action(action, map, request_json, reader, json);
 }
 
 /* Returns the raw_result formatted as a JSON document in the given format.

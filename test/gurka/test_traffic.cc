@@ -38,7 +38,7 @@ TEST(Traffic, BasicUpdates) {
   auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   printf("Do a route with initial traffic");
   {
-    auto result = gurka::route(map, "A", "C", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC"});
     gurka::assert::raw::expect_eta(result, 360.0177);
@@ -64,7 +64,7 @@ TEST(Traffic, BasicUpdates) {
   printf(" Now do another route with the same (not restarted) actor to see if"
          " it's noticed the changes in the live traffic file");
   {
-    auto result = gurka::route(map, "A", "C", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC"});
     gurka::assert::raw::expect_eta(result, 150.0177);
@@ -84,7 +84,7 @@ TEST(Traffic, BasicUpdates) {
   };
   test::customize_live_traffic_data(map.config, cb_setter_max);
   {
-    auto result = gurka::route(map, "A", "C", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC"});
     gurka::assert::raw::expect_eta(result, 25.731991);
@@ -95,7 +95,7 @@ TEST(Traffic, BasicUpdates) {
   // And verify that without the "current" timestamp, the live traffic
   // results aren't used
   {
-    auto result = gurka::route(map, "A", "C", "auto", {}, clean_reader);
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto", {}, clean_reader);
     gurka::assert::osrm::expect_steps(result, {"AB"});
     gurka::assert::raw::expect_path(result, {"AB", "BC"});
     gurka::assert::raw::expect_eta(result, 360.0177);
@@ -105,13 +105,13 @@ TEST(Traffic, BasicUpdates) {
          "it's noticed the changes in the live traffic file");
   {
 
-    auto result = gurka::route(map, "B", "D", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    auto result = gurka::do_action(valhalla::Options::route, map, {"B", "D"}, "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::osrm::expect_steps(result, {"BC", "CE", "DE"});
     gurka::assert::raw::expect_path(result, {"BC", "CE", "DE"});
     gurka::assert::raw::expect_eta(result, 180., 0.01);
   }
   {
-    auto result = gurka::route(map, "D", "B", "auto", {{"/date_time/type", "0"}}, clean_reader);
+    auto result = gurka::do_action(valhalla::Options::route, map, {"D", "B"}, "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::osrm::expect_steps(result, {"BD"});
     gurka::assert::raw::expect_path(result, {"BD"});
     gurka::assert::raw::expect_eta(result, 30., 0.01);
@@ -120,7 +120,7 @@ TEST(Traffic, BasicUpdates) {
   printf(" Repeat the B->D route, but this time with no timestamp - this should disable "
          "using live traffc and the road should be open again");
   {
-    auto result = gurka::route(map, "B", "D", "auto", {}, clean_reader);
+    auto result = gurka::do_action(valhalla::Options::route, map, {"B", "D"}, "auto", {}, clean_reader);
     gurka::assert::osrm::expect_steps(result, {"BD"});
     gurka::assert::raw::expect_path(result, {"BD"});
     gurka::assert::raw::expect_eta(result, 72);
@@ -756,7 +756,7 @@ TEST_F(WaypointsOnClosuresTest, DepartPointAtClosure) {
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
-        gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
+        gurka::do_action(valhalla::Options::route, closure_map, {"1", "A"}, "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::raw::expect_path(result, {"BC", "AB"});
     gurka::assert::raw::expect_eta(result, 7.f, eta_margin);
   }
@@ -775,7 +775,7 @@ TEST_F(WaypointsOnClosuresTest, DepartPointAtClosure) {
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
-        gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
+        gurka::do_action(valhalla::Options::route, closure_map, {"1", "A"}, "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::raw::expect_path(result, {"BC", "CD", "DA"});
     gurka::assert::raw::expect_eta(result, 23.f, eta_margin);
   }
@@ -799,7 +799,7 @@ TEST_F(WaypointsOnClosuresTest, DepartPointAtClosure) {
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
-        gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
+        gurka::do_action(valhalla::Options::route, closure_map, {"1", "A"}, "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::raw::expect_path(result, {"AB"});
     gurka::assert::raw::expect_eta(result, 5.f, eta_margin);
   }
@@ -822,7 +822,7 @@ TEST_F(WaypointsOnClosuresTest, ArrivePointAtClosure) {
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
-        gurka::route(closure_map, "B", "2", "auto", {{"/date_time/type", "0"}}, clean_reader);
+        gurka::do_action(valhalla::Options::route, closure_map, {"B", "2"}, "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::raw::expect_path(result, {"AB", "DA"});
     gurka::assert::raw::expect_eta(result, 7.f, eta_margin);
   }
@@ -841,7 +841,7 @@ TEST_F(WaypointsOnClosuresTest, ArrivePointAtClosure) {
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
-        gurka::route(closure_map, "B", "2", "auto", {{"/date_time/type", "0"}}, clean_reader);
+        gurka::do_action(valhalla::Options::route, closure_map, {"B", "2"}, "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::raw::expect_path(result, {"BC", "CD", "DA"});
     gurka::assert::raw::expect_eta(result, 23.f, eta_margin);
   }
@@ -865,7 +865,7 @@ TEST_F(WaypointsOnClosuresTest, ArrivePointAtClosure) {
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
-        gurka::route(closure_map, "B", "2", "auto", {{"/date_time/type", "0"}}, clean_reader);
+        gurka::do_action(valhalla::Options::route, closure_map, {"B", "2"}, "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::raw::expect_path(result, {"AB"});
     gurka::assert::raw::expect_eta(result, 5.f, eta_margin);
   }
@@ -875,7 +875,7 @@ TEST_F(WaypointsOnClosuresTest, IgnoreDepartPointAtClosure) {
   // the edge is not closed
   {
     auto result =
-        gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
+        gurka::do_action(valhalla::Options::route, closure_map, {"1", "A"}, "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::raw::expect_path(result, {"BC", "AB"});
   }
 
@@ -893,7 +893,7 @@ TEST_F(WaypointsOnClosuresTest, IgnoreDepartPointAtClosure) {
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
-        gurka::route(closure_map, "1", "A", "auto", {{"/date_time/type", "0"}}, clean_reader);
+        gurka::do_action(valhalla::Options::route, closure_map, {"1", "A"}, "auto", {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::raw::expect_path(result, {"AB"});
   }
 
@@ -911,7 +911,7 @@ TEST_F(WaypointsOnClosuresTest, IgnoreDepartPointAtClosure) {
     test::customize_live_traffic_data(closure_map.config, close_edge);
 
     auto result =
-        gurka::route(closure_map, "1", "A", "auto",
+        gurka::do_action(valhalla::Options::route, closure_map, {"1", "A"}, "auto",
                      {{"/date_time/type", "0"}, {"/costing_options/auto/ignore_closures", "1"}},
                      clean_reader);
     gurka::assert::raw::expect_path(result, {"BC", "AB"});
