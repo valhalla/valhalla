@@ -20,9 +20,9 @@ TEST(Standalone, Maxspeed) {
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_maxspeed");
-  auto result = gurka::route(map, "A", "G", "auto",
-                             {{"/filters/action", "include"},
-                              {"/filters/attributes/0", "shape_attributes.speed_limit"}});
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
+                                 {{"/filters/action", "include"},
+                                  {"/filters/attributes/0", "shape_attributes.speed_limit"}});
 
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   auto leg = result.trip().routes(0).legs(0);

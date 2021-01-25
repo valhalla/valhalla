@@ -55,7 +55,7 @@ gurka::map Use::map = {};
 /*************************************************************/
 
 TEST_F(Use, EdgeUse) {
-  auto result = gurka::route(map, "A", "C", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
 
   // rest_area
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
@@ -63,14 +63,14 @@ TEST_F(Use, EdgeUse) {
   EXPECT_EQ(leg.node(1).edge().use(), TripLeg::Use::TripLeg_Use_kRestAreaUse); // BC
 
   // service_area
-  result = gurka::route(map, "A", "F", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
 
   leg = result.trip().routes(0).legs(0);
   EXPECT_EQ(leg.node(3).edge().use(), TripLeg::Use::TripLeg_Use_kServiceAreaUse); // EF
 }
 
 TEST_F(Use, test_passing_rest_area) {
-  auto result = gurka::route(map, "A", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
   // Assert expected number of routes, legs, steps
@@ -98,7 +98,7 @@ TEST_F(Use, test_passing_rest_area) {
 }
 
 TEST_F(Use, test_entering_rest_area) {
-  auto result = gurka::route(map, "A", "C", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
   // Assert expected number of routes, legs, steps
@@ -135,7 +135,7 @@ TEST_F(Use, test_entering_rest_area) {
 }
 
 TEST_F(Use, test_passing_service_area) {
-  auto result = gurka::route(map, "D", "G", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"D", "G"}, "auto");
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
   // Assert expected number of routes, legs, steps
@@ -163,7 +163,7 @@ TEST_F(Use, test_passing_service_area) {
 }
 
 TEST_F(Use, test_entering_service_area) {
-  auto result = gurka::route(map, "D", "F", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"D", "F"}, "auto");
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
   // Assert expected number of routes, legs, steps

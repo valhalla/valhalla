@@ -52,6 +52,16 @@ const std::unordered_map<std::string, float> kMaxDistances = {
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
 
+std::string serialize_to_pbf(Api& request) {
+  std::string buf;
+  if (!request.SerializeToString(&buf)) {
+    LOG_ERROR("Failed serializing to pbf in Thor::Worker - trace_route");
+    throw valhalla_exception_t{401, boost::optional<std::string>(
+                                        "Failed serializing to pbf in Thor::Worker")};
+  }
+  return buf;
+};
+
 } // namespace
 
 namespace valhalla {
@@ -80,13 +90,13 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
-        kv.first == "max_alternates") {
+        kv.first == "max_alternates" || kv.first == "skadi" || kv.first == "trace" ||
+        kv.first == "isochrone" || kv.first == "centroid") {
       continue;
     }
-    if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
-      max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +
-                                                              ".max_matrix_distance"));
-    }
+
+    max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +
+                                                            ".max_matrix_distance"));
   }
 
   if (conf_algorithm == "timedistancematrix") {
@@ -103,16 +113,6 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
 
 thor_worker_t::~thor_worker_t() {
 }
-
-std::string serialize_to_pbf(Api& request) {
-  std::string buf;
-  if (!request.SerializeToString(&buf)) {
-    LOG_ERROR("Failed serializing to pbf in Thor::Worker - trace_route");
-    throw valhalla_exception_t{401, boost::optional<std::string>(
-                                        "Failed serializing to pbf in Thor::Worker")};
-  }
-  return buf;
-};
 
 #ifdef HAVE_HTTP
 prime_server::worker_t::result_t
@@ -166,6 +166,11 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
         break;
       case Options::expansion: {
         result = to_response(expansion(request), info, request);
+        break;
+      }
+      case Options::centroid: {
+        centroid(request);
+        result.messages.emplace_back(serialize_to_pbf(request));
         break;
       }
       default:
@@ -331,6 +336,7 @@ void thor_worker_t::cleanup() {
   bss_astar.Clear();
   trace.clear();
   isochrone_gen.Clear();
+  centroid_gen.Clear();
   matcher_factory.ClearFullCache();
   if (reader->OverCommitted()) {
     reader->Trim();

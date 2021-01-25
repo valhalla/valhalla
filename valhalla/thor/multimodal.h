@@ -116,13 +116,10 @@ protected:
 
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
-   * @param  origll  Lat,lng of the origin.
    * @param  destll  Lat,lng of the destination.
    * @param  costing Dynamic costing method.
    */
-  void Init(const midgard::PointLL& origll,
-            const midgard::PointLL& destll,
-            const std::shared_ptr<sif::DynamicCost>& costing);
+  void Init(const midgard::PointLL& destll, const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
    * Add edges at the origin to the adjacency list.

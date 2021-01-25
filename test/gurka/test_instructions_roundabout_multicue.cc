@@ -70,7 +70,7 @@ gurka::map InstructionsRoundaboutMulticue::map = {};
 /*************************************************************/
 
 TEST_F(InstructionsRoundaboutMulticue, StartThenEnterRoundaboutMulticueOrdinalOnly) {
-  auto result = gurka::route(map, "A", "I", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutExit,
@@ -97,7 +97,7 @@ TEST_F(InstructionsRoundaboutMulticue, StartThenEnterRoundaboutMulticueOrdinalOn
 }
 
 TEST_F(InstructionsRoundaboutMulticue, StartThenEnterRoundaboutMulticueOntoStreetName) {
-  auto result = gurka::route(map, "A", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutExit,
@@ -124,7 +124,7 @@ TEST_F(InstructionsRoundaboutMulticue, StartThenEnterRoundaboutMulticueOntoStree
 }
 
 TEST_F(InstructionsRoundaboutMulticue, TurnThenEnterRoundaboutMulticueOrdinalOnly) {
-  auto result = gurka::route(map, "P", "O", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"P", "O"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRight,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
@@ -153,7 +153,7 @@ TEST_F(InstructionsRoundaboutMulticue, TurnThenEnterRoundaboutMulticueOrdinalOnl
 
 // Verify that no multicue for exit/enter roundabout
 TEST_F(InstructionsRoundaboutMulticue, ExitThenEnterRoundaboutNoMulticue) {
-  auto result = gurka::route(map, "P", "A", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"P", "A"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRight,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
