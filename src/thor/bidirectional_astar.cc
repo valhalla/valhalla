@@ -603,6 +603,9 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       if (forward_pred_idx != kInvalidLabel) {
         fwd_pred = edgelabels_forward_[forward_pred_idx];
 
+        // Forward path to this edge can't be improved, so we can settle it right now.
+        edgestatus_forward_.Update(fwd_pred.edgeid(), EdgeSet::kPermanent);
+
         // Terminate if the cost threshold has been exceeded.
         if (fwd_pred.sortcost() + cost_diff_ > threshold_) {
           return FormPath(graphreader, options, origin, destination, forward_time_info, invariant);
@@ -632,6 +635,9 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       reverse_pred_idx = adjacencylist_reverse_.pop();
       if (reverse_pred_idx != kInvalidLabel) {
         rev_pred = edgelabels_reverse_[reverse_pred_idx];
+
+        // Reverse path to this edge can't be improved, so we can settle it right now.
+        edgestatus_reverse_.Update(rev_pred.edgeid(), EdgeSet::kPermanent);
 
         // Terminate if the cost threshold has been exceeded.
         if (rev_pred.sortcost() > threshold_) {
@@ -665,9 +671,6 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       expand_forward = true;
       expand_reverse = false;
 
-      // Settle this edge.
-      edgestatus_forward_.Update(fwd_pred.edgeid(), EdgeSet::kPermanent);
-
       // setting this edge as settled
       if (expansion_callback_) {
         expansion_callback_(graphreader, "bidirectional_astar", fwd_pred.edgeid(), "s", false);
@@ -687,9 +690,6 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       // Expand reverse - set to get next edge from reverse adj. list on the next pass
       expand_forward = false;
       expand_reverse = true;
-
-      // Settle this edge
-      edgestatus_reverse_.Update(rev_pred.edgeid(), EdgeSet::kPermanent);
 
       // setting this edge as settled, sending the opposing because this is the reverse tree
       if (expansion_callback_) {
