@@ -102,7 +102,7 @@ void TimeDistanceBSSMatrix::ExpandForward(GraphReader& graphreader,
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction prevents this path.
-    int restriction_idx = -1;
+    uint8_t restriction_idx = -1;
     if (es->set() == EdgeSet::kPermanent ||
         !current_costing->Allowed(directededge, pred, tile, edgeid, 0, 0, restriction_idx) ||
         current_costing->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
@@ -294,7 +294,7 @@ void TimeDistanceBSSMatrix::ExpandReverse(GraphReader& graphreader,
 
     // Get opposing directed edge and check if allowed.
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
-    int restriction_idx = -1;
+    uint8_t restriction_idx = -1;
     if (opp_edge == nullptr || !current_costing->AllowedReverse(directededge, pred, opp_edge, t2,
                                                                 oppedge, 0, 0, restriction_idx)) {
       continue;
@@ -514,7 +514,7 @@ void TimeDistanceBSSMatrix::SetOriginOneToMany(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f,
-                         TravelMode::kPedestrian, d, {});
+                         TravelMode::kPedestrian, d, {}, baldr::kInvalidRestriction);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);
@@ -565,7 +565,7 @@ void TimeDistanceBSSMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag.
     EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f,
-                         TravelMode::kPedestrian, d, {});
+                         TravelMode::kPedestrian, d, {}, baldr::kInvalidRestriction);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
     adjacencylist_.add(edgelabels_.size() - 1);
