@@ -130,7 +130,7 @@
       "phrases": {
         "0": "Fortsätt.",
         "1": "Fortsätt på <STREET_NAMES>.",
-        "2": "Fortsätt i  <JUNCTION_NAME>.",
+        "2": "Fortsätt i <JUNCTION_NAME>.",
         "3": "Fortsätt mot <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
