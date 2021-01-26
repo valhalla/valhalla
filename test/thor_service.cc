@@ -68,19 +68,7 @@ std::list<std::pair<std::string, std::string>>
 
 TEST(ThorService, test_failure_requests) {
   // service worker
-  boost::property_tree::ptree config;
-  config.add("mjolnir.tile_dir", "test/data/thor_service");
-  config.add_child("costing_options.auto", {});
-  config.add_child("costing_options.bicycle", {});
-  config.add_child("costing_options.pedestrian", {});
-  config.add_child("costing_options.transit", {});
-  config.add_child("service_limits", {});
-  config.add("thor.logging.long_request", "110.0");
-  config.add("meili.default.gps_accuracy", "4.07");
-  config.add("meili.default.search_radius", "40");
-  config.add("meili.default.breakage_distance", "2000");
-  config.add("meili.grid.size", "500");
-  config.add("meili.grid.cache_size", "64");
+  auto config = test::make_config("test/data/thor_service");
 
   boost::property_tree::ptree customizable;
   boost::property_tree::ptree mode;

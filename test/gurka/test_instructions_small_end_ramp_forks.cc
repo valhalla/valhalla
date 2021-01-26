@@ -73,7 +73,7 @@ gurka::map InstructionsSmallEndRampForks::map = {};
 ///////////////////////////////////////////////////////////////////////////////
 // Left
 TEST_F(InstructionsSmallEndRampForks, LeftTurn) {
-  auto result = gurka::route(map, "A", "F", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -92,7 +92,7 @@ TEST_F(InstructionsSmallEndRampForks, LeftTurn) {
 ///////////////////////////////////////////////////////////////////////////////
 // Left/Straight
 TEST_F(InstructionsSmallEndRampForks, KeepLeftContinue) {
-  auto result = gurka::route(map, "A", "K", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "K"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -111,7 +111,7 @@ TEST_F(InstructionsSmallEndRampForks, KeepLeftContinue) {
 ///////////////////////////////////////////////////////////////////////////////
 // Right
 TEST_F(InstructionsSmallEndRampForks, RightTurn) {
-  auto result = gurka::route(map, "A", "H", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,

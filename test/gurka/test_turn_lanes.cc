@@ -40,7 +40,7 @@ TEST(Standalone, TurnLanes) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_1");
 
-  auto result = gurka::route(map, "D", "C", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"D", "C"}, "auto");
 
   gurka::assert::osrm::expect_steps(result, {"DB", "ABC"});
   gurka::assert::raw::expect_path(result, {"DB", "ABC"});
@@ -55,19 +55,19 @@ TEST(Standalone, TurnLanes) {
                                   {4, "[ left | through | through | right ]"},
                               });
 
-  result = gurka::route(map, "A", "D", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
   validate_turn_lanes(result, {
                                   {4, "[ left | through | through | *right* ACTIVE ]"},
                                   {0, ""},
                               });
 
-  result = gurka::route(map, "C", "D", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"C", "D"}, "auto");
   validate_turn_lanes(result, {
                                   {0, ""},
                                   {0, ""},
                               });
 
-  result = gurka::route(map, "D", "C", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"D", "C"}, "auto");
   validate_turn_lanes(result, {
                                   {3, "[ left | through | through;*right* ACTIVE ]"},
                                   {4, "[ left | through | through | right ]"},
@@ -113,21 +113,21 @@ TEST(Standalone, TurnLanesSplitLane) {
   valhalla::Api result;
 
   // A -> C - takes the leftmost left lane
-  result = gurka::route(map, "A", "C", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
   validate_turn_lanes(result, {
                                   {3, "[ *left* ACTIVE | *left*;through VALID | through;right ]"},
                                   {0, ""},
                               });
 
   // A -> E - takes the leftmost through lane
-  result = gurka::route(map, "A", "E", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto");
   validate_turn_lanes(result, {
                                   {3, "[ left | left;*through* ACTIVE | *through*;right VALID ]"},
                                   {0, ""}, // TODO lanes are tossed when all are through
                               });
 
   // A -> G - takes the rightmost through lane
-  result = gurka::route(map, "A", "G", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto");
   gurka::assert::osrm::expect_steps(result, {"Bronx and Pelham Parkway", "Pelham Parkway South"});
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kSlightRight,
@@ -138,7 +138,7 @@ TEST(Standalone, TurnLanesSplitLane) {
                               });
 
   // A -> H - takes the right lane
-  result = gurka::route(map, "A", "H", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "auto");
   validate_turn_lanes(result, {
                                   {3, "[ left | left;through | through;*right* ACTIVE ]"},
                                   {0, ""},
@@ -177,7 +177,7 @@ TEST(Standalone, TurnLanesSharedTurnLane) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_3");
 
   // A -> G  - only through lanes should be active throughout
-  auto result = gurka::route(map, "A", "G", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto");
   validate_turn_lanes(result, {
                                   {3, "[ *through* ACTIVE | *through* VALID | right ]"},
                                   {3, "[ *through* ACTIVE | *through* VALID | right ]"},
@@ -186,7 +186,7 @@ TEST(Standalone, TurnLanesSharedTurnLane) {
                               });
 
   // A -> C - right lane should always be active
-  result = gurka::route(map, "A", "C", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
   validate_turn_lanes(result, {
                                   {3, "[ through | through | *right* ACTIVE ]"},
                                   {0, ""},
@@ -194,7 +194,7 @@ TEST(Standalone, TurnLanesSharedTurnLane) {
 
   // A -> F - only right lane after B should be active, before that rightmost right lane should be
   // active
-  result = gurka::route(map, "A", "F", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
   validate_turn_lanes(result, {
                                   {3, "[ *through* VALID | *through* ACTIVE | right ]"},
                                   {3, "[ through | through | *right* ACTIVE ]"},
@@ -243,7 +243,7 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
 
   // TODO - side of street not being set correctly
   // // A -> 1 - takes leftmost left lane
-  result = gurka::route(map, "A", "1", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "1"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kLeft,
                                                 DirectionsLeg_Maneuver_Type_kDestinationLeft});
@@ -254,7 +254,7 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                               });
 
   // // A -> 2 - takes rightmost left lane
-  result = gurka::route(map, "A", "2", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "2"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kLeft,
                                                 DirectionsLeg_Maneuver_Type_kDestinationRight});
@@ -265,7 +265,7 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                               });
 
   // A -> E - takes leftmost left lane (left side driving)
-  result = gurka::route(map, "A", "E", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kLeft,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
@@ -276,7 +276,7 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                               });
 
   // A -> 3 - takes rightmost right lane
-  result = gurka::route(map, "A", "3", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "3"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRight,
                                                 DirectionsLeg_Maneuver_Type_kDestinationRight});
@@ -287,7 +287,7 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                               });
 
   // A -> 4 - takes leftmost right lane
-  result = gurka::route(map, "A", "4", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "4"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRight,
                                                 DirectionsLeg_Maneuver_Type_kDestinationLeft});
@@ -302,7 +302,7 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                           {{"mjolnir.data_processing.use_admin_db", "true"}});
 
   // A -> F - takes leftmost right lane (left side driving)
-  result = gurka::route(map, "A", "F", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRight,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
@@ -313,7 +313,7 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                               });
 
   // A -> G - takes both right lanes as destination is far away from previous transition
-  result = gurka::route(map, "A", "G", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRight,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
@@ -376,7 +376,7 @@ TEST(Standalone, TurnLanesUTurns) {
 
   // Test U-turn using left-only lanes. The left-most left lane should be
   // active & rest invalid
-  result = gurka::route(map, "A", "H", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "auto");
 
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kUturnLeft,
@@ -391,7 +391,7 @@ TEST(Standalone, TurnLanesUTurns) {
 
   // Test using reverse lanes. The reverse lane should be active & the rest
   // invalid
-  result = gurka::route(map, "E", "D", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"E", "D"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kUturnLeft,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
@@ -482,7 +482,7 @@ TEST(Standalone, TurnLanesInternalsTurnChannels) {
                                {{"mjolnir.data_processing.infer_internal_intersections", "false"}});
 
   valhalla::Api result;
-  result = gurka::route(map, "A", "L", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "L"}, "auto");
 
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kLeft,
@@ -498,7 +498,7 @@ TEST(Standalone, TurnLanesInternalsTurnChannels) {
   map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_8",
                           {{"mjolnir.data_processing.infer_internal_intersections", "true"}});
 
-  result = gurka::route(map, "A", "L", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "L"}, "auto");
 
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kLeft,
@@ -602,7 +602,7 @@ TEST(Standalone, TurnLanesInternalsAndRestrictions) {
 
   // Test U-turn using left-only lanes. The left-most left lane should be
   // active & rest invalid
-  result = gurka::route(map, "A", "H", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "auto");
 
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kUturnLeft,
@@ -617,7 +617,7 @@ TEST(Standalone, TurnLanesInternalsAndRestrictions) {
 
   // Test using reverse lanes. The reverse lane should be active & the rest
   // invalid
-  result = gurka::route(map, "E", "D", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"E", "D"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kUturnLeft,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
@@ -629,7 +629,7 @@ TEST(Standalone, TurnLanesInternalsAndRestrictions) {
                                   {0, ""},
                               });
 
-  result = gurka::route(map, "K", "J", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"K", "J"}, "auto");
 
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kUturnLeft,
@@ -717,7 +717,7 @@ TEST(Standalone, TurnLanesSerializedResponse) {
     // A->E : Both right lanes should be valid and left-most right lane should
     // be active. For following step, both left lanes should be valid and the
     // left-most left lane should be active.
-    auto result = gurka::route(map, "A", "E", "auto");
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto");
     rapidjson::Document directions = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
     // Assert expected number of routes, legs, steps
@@ -792,7 +792,7 @@ TEST(Standalone, TurnLanesSerializedResponse) {
 
   {
     // C->G: test that left uturn gets activated
-    auto result = gurka::route(map, "C", "G", "auto");
+    auto result = gurka::do_action(valhalla::Options::route, map, {"C", "G"}, "auto");
     rapidjson::Document directions = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
     // Assert expected number of routes, legs, steps
@@ -870,7 +870,7 @@ TEST(Standalone, TurnLanesSerializedResponse) {
 
   {
     // J->G: test that right uturn gets activated
-    auto result = gurka::route(map, "J", "G", "auto");
+    auto result = gurka::do_action(valhalla::Options::route, map, {"J", "G"}, "auto");
     rapidjson::Document directions = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
     // Assert expected number of routes, legs, steps

@@ -16,7 +16,7 @@ TEST(Standalone, TurnStraight) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turns_3");
 
-  auto result = gurka::route(map, "A", "C", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
 
   gurka::assert::osrm::expect_steps(result, {"ABC"});
   gurka::assert::raw::expect_path(result, {"ABC", "ABC"});
@@ -60,7 +60,7 @@ gurka::map Turns::map_2 = {};
 /************************************************************************************/
 TEST_F(Turns, TurnRight) {
 
-  auto result = gurka::route(map_1, "A", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map_1, {"A", "D"}, "auto");
 
   gurka::assert::osrm::expect_steps(result, {"ABC", "BD"});
   gurka::assert::raw::expect_path(result, {"ABC", "BD"});
@@ -73,7 +73,7 @@ TEST_F(Turns, TurnRight) {
 /************************************************************************************/
 TEST_F(Turns, TurnLeft) {
 
-  auto result = gurka::route(map_2, "C", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map_2, {"C", "D"}, "auto");
 
   gurka::assert::osrm::expect_steps(result, {"FEBC", "FDB"});
   gurka::assert::raw::expect_path(result, {"FEBC", "FDB"});

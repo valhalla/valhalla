@@ -41,7 +41,7 @@ TEST_F(SearchSideOfStreet, InputStraight) {
        std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
           .str();
-  auto result = gurka::route(map, request);
+  auto result = gurka::do_action(valhalla::Options::route, map, request);
 
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
@@ -55,7 +55,7 @@ TEST_F(SearchSideOfStreet, InputLeft) {
        std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
           .str();
-  auto result = gurka::route(map, request);
+  auto result = gurka::do_action(valhalla::Options::route, map, request);
 
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kDestinationLeft});
@@ -69,7 +69,7 @@ TEST_F(SearchSideOfStreet, InputRight) {
        std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
           .str();
-  auto result = gurka::route(map, request);
+  auto result = gurka::do_action(valhalla::Options::route, map, request);
 
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kDestinationRight});
@@ -86,7 +86,7 @@ TEST_F(SearchSideOfStreet, InputRightDisplayLeft) {
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()) %
        std::to_string(map.nodes.at(display).lat()) % std::to_string(map.nodes.at(display).lng()))
           .str();
-  auto result = gurka::route(map, request);
+  auto result = gurka::do_action(valhalla::Options::route, map, request);
 
   // display_ll is on the left and overrides the input point being on the right
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -104,7 +104,7 @@ TEST_F(SearchSideOfStreet, InputLeftDisplayRight) {
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()) %
        std::to_string(map.nodes.at(display).lat()) % std::to_string(map.nodes.at(display).lng()))
           .str();
-  auto result = gurka::route(map, request);
+  auto result = gurka::do_action(valhalla::Options::route, map, request);
 
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kDestinationRight});
@@ -121,7 +121,7 @@ TEST_F(SearchSideOfStreet, InputRightDisplayAheadLeft) {
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()) %
        std::to_string(map.nodes.at(display).lat()) % std::to_string(map.nodes.at(display).lng()))
           .str();
-  auto result = gurka::route(map, request);
+  auto result = gurka::do_action(valhalla::Options::route, map, request);
 
   // point 5 is left enough of the tangent line so is considered left side of street
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -139,7 +139,7 @@ TEST_F(SearchSideOfStreet, InputRightDisplayAheadStraightLeft) {
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()) %
        std::to_string(map.nodes.at(display).lat()) % std::to_string(map.nodes.at(display).lng()))
           .str();
-  auto result = gurka::route(map, request);
+  auto result = gurka::do_action(valhalla::Options::route, map, request);
 
   // point 6 is not left enough so is considered straight ahead
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -157,7 +157,7 @@ TEST_F(SearchSideOfStreet, InputRightDisplayBehindLeft) {
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()) %
        std::to_string(map.nodes.at(display).lat()) % std::to_string(map.nodes.at(display).lng()))
           .str();
-  auto result = gurka::route(map, request);
+  auto result = gurka::do_action(valhalla::Options::route, map, request);
 
   // point 7 is behind and left enough of the tangent line so is considered left side of street
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
