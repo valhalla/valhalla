@@ -493,10 +493,21 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
         turn_cost += 0.5f;
     }
 
+    uint32_t si = edge->stopimpact(idx);
+    if (node->drive_on_right()) {
+      if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
+          !edge->edge_to_left(idx) && edge->name_consistency(idx))
+        si *= si;
+    } else {
+      if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
+          edge->edge_to_left(idx) && edge->name_consistency(idx))
+        si *= si;
+    }
+
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
-    float seconds = turn_cost * edge->stopimpact(idx);
+    float seconds = turn_cost * si;
     // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
@@ -543,10 +554,21 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
         turn_cost += 0.5f;
     }
 
+    uint32_t si = edge->stopimpact(idx);
+    if (node->drive_on_right()) {
+      if (edge->turntype(idx) == baldr::Turn::Type::kSharpLeft && edge->edge_to_right(idx) &&
+          !edge->edge_to_left(idx) && edge->name_consistency(idx))
+        si *= si;
+    } else {
+      if (edge->turntype(idx) == baldr::Turn::Type::kSharpRight && !edge->edge_to_right(idx) &&
+          edge->edge_to_left(idx) && edge->name_consistency(idx))
+        si *= si;
+    }
+
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
-    float seconds = turn_cost * edge->stopimpact(idx);
+    float seconds = turn_cost * si;
     // Apply density factor penality if there isnt traffic on this edge or youre not using traffic
     if (!edge->has_flow_speed() || flow_mask_ == 0)
       seconds *= trans_density_factor_[node->density()];
