@@ -77,6 +77,7 @@ struct enhancer_stats {
   uint32_t not_thru;
   uint32_t no_country_found;
   uint32_t internalcount;
+  uint32_t internalrestrictioncount;
   uint32_t turnchannelcount;
   uint32_t rampcount;
   uint32_t pencilucount;
@@ -88,6 +89,7 @@ struct enhancer_stats {
     not_thru += other.not_thru;
     no_country_found += other.no_country_found;
     internalcount += other.internalcount;
+    internalrestrictioncount += other.internalrestrictioncount;
     turnchannelcount += other.turnchannelcount;
     rampcount += other.rampcount;
     pencilucount += other.pencilucount;
@@ -831,6 +833,71 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
   return true;
 }
 
+// Test if the edge is internal to an intersection.
+void CreateInternalRestriction(const graph_tile_ptr& start_tile,
+                            GraphReader& reader,
+                            std::mutex& lock,
+                            const NodeInfo& startnodeinfo,
+                            DirectedEdge& directededge,
+                            const uint32_t idx,
+                            enhancer_stats& stats) {
+  // must be marked as internal
+  if (!directededge.internal()) {
+    return;
+  }
+
+  // Get the tile at the startnode
+  graph_tile_ptr tile = start_tile;
+  uint32_t heading = startnodeinfo.heading(idx);
+
+  // Get the tile at the end node. and find inbound heading of the candidate
+  // edge to the end node.
+  if (tile->id() != directededge.endnode().Tile_Base()) {
+    lock.lock();
+    tile = reader.GetGraphTile(directededge.endnode());
+    lock.unlock();
+  }
+  // add a restriction if a small length and oneway outbound
+  const NodeInfo* node = tile->node(directededge.endnode());
+  const DirectedEdge* diredge = tile->directededge(node->edge_index());
+  for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
+    // Skip opposing directed edge and any edge that is not a road. Skip any
+    // edges that are not driveable outbound.
+    if (i == directededge.opp_local_idx() || !diredge->is_road() ||
+        !(diredge->forwardaccess() & kAutoAccess) || ((directededge.restrictions() & (1 << diredge->localedgeidx())) != 0)) {
+      continue;
+    }
+
+    // Get the heading of the outbound edge (unfortunately GraphEnhancer may
+    // not have yet computed and stored headings for this node).
+    auto shape = tile->edgeinfo(diredge->edgeinfo_offset()).shape();
+    if (!diredge->forward()) {
+      std::reverse(shape.begin(), shape.end());
+    }
+    uint32_t to_heading =
+        std::round(PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(diredge->classification(),
+                                                                            diredge->use())));
+    // Store outgoing turn type for any driveable edges
+    uint32_t turndegree = GetTurnDegree(heading, to_heading);
+
+    // Flag if this is oneway, not a link, and not nearly straight turn
+    // from the candidate edge.
+    if (!(diredge->reverseaccess() & kAutoAccess) && !diredge->link() &&
+        !(turndegree < 30 || turndegree > 330)) {
+
+      if (directededge.length() <= 8.0f &&
+         ((node->drive_on_right() && Turn::GetType(turndegree) == Turn::Type::kLeft) ||
+            (!node->drive_on_right() && Turn::GetType(turndegree) == Turn::Type::kRight)))
+        {
+          uint32_t mask = directededge.restrictions();
+          mask |= (1 << i);
+          directededge.set_restrictions(mask);
+          stats.internalrestrictioncount++;
+      }
+    }
+  }
+}
+
 // Get the Headings for the node.
 void GetHeadings(const graph_tile_ptr& tile, NodeInfo& nodeinfo, uint32_t ntrans) {
   if (ntrans == 0) {
@@ -854,67 +921,6 @@ void GetHeadings(const graph_tile_ptr& tile, NodeInfo& nodeinfo, uint32_t ntrans
     // same heading - should one be "adjusted" so the relative direction
     // is maintained.
     nodeinfo.set_heading(j, heading[j]);
-  }
-}
-
-bool IsNextEdgeInternalImpl(const DirectedEdge directededge,
-                            const graph_tile_ptr& tilebuilder,
-                            const graph_tile_ptr& end_node_tile,
-                            const NodeInfo& end_node_info,
-                            GraphReader& reader,
-                            std::mutex& lock,
-                            bool infer_internal_intersections) {
-  // Iterate through outbound edges to find the next edge
-  for (uint32_t i = 0; i < end_node_info.edge_count(); i++) {
-    const DirectedEdge* diredge = end_node_tile->directededge(end_node_info.edge_index() + i);
-
-    // Skip opposing directed edge and any edge that is not a road. Skip any
-    // edges that are not driveable outbound.
-    if (i == directededge.opp_local_idx() || !diredge->is_road() ||
-        !(diredge->forwardaccess() & kAutoAccess)) {
-      continue;
-    }
-
-    // if the edge from the endnode is the next edge for this way, then
-    // check if it is internal.
-    if (tilebuilder->edgeinfo(directededge.edgeinfo_offset()).wayid() ==
-        end_node_tile->edgeinfo(diredge->edgeinfo_offset()).wayid()) {
-
-      if (!infer_internal_intersections)
-        return diredge->internal();
-      else
-        return IsIntersectionInternal(end_node_tile, reader, lock, end_node_info, *diredge, i);
-    }
-  }
-  return false;
-}
-
-// Is the next edge from the end node of the directededge is internal or not.
-bool IsNextEdgeInternal(const DirectedEdge directededge,
-                        const graph_tile_ptr& tilebuilder,
-                        GraphReader& reader,
-                        std::mutex& lock,
-                        bool infer_internal_intersections) {
-  if (tilebuilder->id() == directededge.endnode().Tile_Base()) {
-    const NodeInfo& end_node_info = *tilebuilder->node(directededge.endnode().id());
-    return IsNextEdgeInternalImpl(directededge, tilebuilder, tilebuilder, end_node_info, reader, lock,
-                                  infer_internal_intersections);
-  } else {
-    // Get the tile at the end node. and find inbound heading of the candidate
-    // edge to the end node.
-    lock.lock();
-    auto end_node_tile = GraphTile::Create(reader.tile_dir(), directededge.endnode());
-    lock.unlock();
-
-    // this tile may not have been updated yet; therefore, we must
-    // compute the headings for the end node as they are needed for the
-    // IsIntersectionInternal function
-    NodeInfo end_node_info = *end_node_tile->node(directededge.endnode().id());
-    uint32_t count = end_node_info.edge_count();
-    uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
-    GetHeadings(end_node_tile, end_node_info, ntrans);
-    return IsNextEdgeInternalImpl(directededge, tilebuilder, end_node_tile, end_node_info, reader,
-                                  lock, infer_internal_intersections);
   }
 }
 
@@ -1750,6 +1756,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
         if (directededge.internal()) {
           stats.internalcount++;
+          CreateInternalRestriction(tilebuilder, reader, lock, nodeinfo, directededge, j, stats);
         }
 
         // Enhance and add turn lanes if not an internal edge.
@@ -1902,6 +1909,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   LOG_DEBUG("not_thru = " + std::to_string(stats.not_thru));
   LOG_DEBUG("no country found = " + std::to_string(stats.no_country_found));
   LOG_INFO("internal intersection = " + std::to_string(stats.internalcount));
+  LOG_INFO("internal intersection restrictions = " + std::to_string(stats.internalrestrictioncount));
   LOG_DEBUG("Turn Channel Count = " + std::to_string(stats.turnchannelcount));
   LOG_DEBUG("Ramp Count = " + std::to_string(stats.rampcount));
   LOG_DEBUG("Pencil Point Uturn count = " + std::to_string(stats.pencilucount));
