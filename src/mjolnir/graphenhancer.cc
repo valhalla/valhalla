@@ -835,12 +835,12 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
 
 // Test if the edge is internal to an intersection.
 void CreateInternalRestriction(const graph_tile_ptr& start_tile,
-                            GraphReader& reader,
-                            std::mutex& lock,
-                            const NodeInfo& startnodeinfo,
-                            DirectedEdge& directededge,
-                            const uint32_t idx,
-                            enhancer_stats& stats) {
+                               GraphReader& reader,
+                               std::mutex& lock,
+                               const NodeInfo& startnodeinfo,
+                               DirectedEdge& directededge,
+                               const uint32_t idx,
+                               enhancer_stats& stats) {
   // must be marked as internal
   if (!directededge.internal()) {
     return;
@@ -864,7 +864,8 @@ void CreateInternalRestriction(const graph_tile_ptr& start_tile,
     // Skip opposing directed edge and any edge that is not a road. Skip any
     // edges that are not driveable outbound.
     if (i == directededge.opp_local_idx() || !diredge->is_road() ||
-        !(diredge->forwardaccess() & kAutoAccess) || ((directededge.restrictions() & (1 << diredge->localedgeidx())) != 0)) {
+        !(diredge->forwardaccess() & kAutoAccess) ||
+        ((directededge.restrictions() & (1 << diredge->localedgeidx())) != 0)) {
       continue;
     }
 
@@ -886,13 +887,12 @@ void CreateInternalRestriction(const graph_tile_ptr& start_tile,
         !(turndegree < 30 || turndegree > 330)) {
 
       if (directededge.length() <= 8.0f &&
-         ((node->drive_on_right() && Turn::GetType(turndegree) == Turn::Type::kLeft) ||
-            (!node->drive_on_right() && Turn::GetType(turndegree) == Turn::Type::kRight)))
-        {
-          uint32_t mask = directededge.restrictions();
-          mask |= (1 << i);
-          directededge.set_restrictions(mask);
-          stats.internalrestrictioncount++;
+          ((node->drive_on_right() && Turn::GetType(turndegree) == Turn::Type::kLeft) ||
+           (!node->drive_on_right() && Turn::GetType(turndegree) == Turn::Type::kRight))) {
+        uint32_t mask = directededge.restrictions();
+        mask |= (1 << i);
+        directededge.set_restrictions(mask);
+        stats.internalrestrictioncount++;
       }
     }
   }
