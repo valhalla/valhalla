@@ -374,7 +374,7 @@ void build(const std::string& complex_restriction_from_file,
                 res_way_ids.push_back(e_offset.wayid());
                 tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
 
-                if (tmp_ids.size()) {
+                if (tmp_ids.size() && tmp_ids.back().Tile_Base() == tile_id) {
 
                   std::vector<GraphId> vias;
                   std::copy(tmp_ids.begin() + 1, tmp_ids.end() - 1, std::back_inserter(vias));
@@ -515,7 +515,7 @@ void build(const std::string& complex_restriction_from_file,
 
                   tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
 
-                  if (tmp_ids.size()) {
+                  if (tmp_ids.size() && tmp_ids.back().Tile_Base() == tile_id) {
                     std::vector<GraphId> vias;
                     std::copy(tmp_ids.begin() + 1, tmp_ids.end() - 1, std::back_inserter(vias));
 
