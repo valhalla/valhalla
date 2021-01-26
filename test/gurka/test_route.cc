@@ -470,7 +470,7 @@ TEST(Standalone, DontIgnoreRestriction) {
                                {{"mjolnir.concurrency", "1"}});
 
   try {
-    auto result = gurka::route(map, "D", "E", "auto");
+    auto result = gurka::do_action(valhalla::Options::route, map, {"D", "E"}, "auto");
     gurka::assert::raw::expect_path(result, {"Unexpected path found"});
   } catch (const std::runtime_error& e) {
     EXPECT_STREQ(e.what(), "No path could be found for input");
