@@ -17,7 +17,7 @@
 #include <functional>
 
 // Register custom geom types with boost
-// TODO: declare PointLL registration in its own headers, so it's available across valhalla?
+// TODO: register PointLL in its own header, so it's available for bg across valhalla?
 BOOST_GEOMETRY_REGISTER_POINT_2D(valhalla::midgard::PointLL,
                                  double,
                                  boost::geometry::cs::geographic<boost::geometry::degree>,
@@ -33,6 +33,16 @@ namespace loki {
 
 using line_bg_t = boost::geometry::model::linestring<midgard::PointLL>;
 using ring_bg_t = std::vector<midgard::PointLL>;
+
+struct ring_bin {
+  std::vector<size_t> ring_ids;
+  bool within;
+
+  ring_bin() : within(false) {
+  }
+};
+
+using bins_collector = std::unordered_map<unsigned short, ring_bin>;
 
 /**
  * Finds all edge IDs which are intersected by the ring
