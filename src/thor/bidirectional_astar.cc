@@ -758,7 +758,7 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
 
   // Set a threshold to extend search
   if (threshold_ == std::numeric_limits<float>::max()) {
-    threshold_ = (pred.sortcost() + cost_diff_) + kThresholdDelta;
+    threshold_ = std::max(pred.sortcost() + cost_diff_, opp_pred.sortcost()) + kThresholdDelta;
   }
 
   // setting this edge as connected
@@ -811,7 +811,7 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
 
   // Set a threshold to extend search
   if (threshold_ == std::numeric_limits<float>::max()) {
-    threshold_ = rev_pred.sortcost() + kThresholdDelta;
+    threshold_ = std::max(rev_pred.sortcost(), fwd_pred.sortcost() + cost_diff_) + kThresholdDelta;
   }
 
   // setting this edge as connected, sending the opposing because this is the reverse tree
