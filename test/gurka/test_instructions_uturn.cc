@@ -71,7 +71,7 @@ gurka::map InstructionsUturn::map = {};
 
 // Drive north and turn left at internal intersection
 TEST_F(InstructionsUturn, LUturn) {
-  auto result = gurka::route(map, "A", "F", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
   // Verify steps
   gurka::assert::osrm::expect_steps(result, {"AB", "EF"});
 
@@ -95,7 +95,7 @@ TEST_F(InstructionsUturn, LUturn) {
 ///////////////////////////////////////////////////////////////////////////////
 // Drive north and make a left u-turn
 TEST_F(InstructionsUturn, LUturn2) {
-  auto result = gurka::route(map, "Q", "J", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"Q", "J"}, "auto");
 
   // Verify path
   gurka::assert::raw::expect_path(result, {"Broken Land Parkway", "Broken Land Parkway",
