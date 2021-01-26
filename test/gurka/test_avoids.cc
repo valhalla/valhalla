@@ -20,15 +20,14 @@ protected:
   static gurka::map avoid_map;
 
   static void SetUpTestSuite() {
-    const std::string ascii_map = R"(A------B------C
-                                     |      |      |
-                                     |      |      |
-                                     D------E------F)";
-    const gurka::ways ways = {{"ABC", {{"highway", "motorway"}, {"name", "High"}}},
-                              {"DEF", {{"highway", "motorway"}, {"name", "Low"}}},
+    const std::string ascii_map = R"(A------B
+                                     |      |
+                                     |      |
+                                     D------E)";
+    const gurka::ways ways = {{"AB", {{"highway", "motorway"}, {"name", "High"}}},
+                              {"DE", {{"highway", "motorway"}, {"name", "Low"}}},
                               {"AD", {{"highway", "motorway"}, {"name", "1st"}}},
-                              {"BE", {{"highway", "motorway"}, {"name", "2nd"}}},
-                              {"CF", {{"highway", "motorway"}, {"name", "3rd"}}}};
+                              {"BE", {{"highway", "motorway"}, {"name", "2nd"}}}};
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
     // Add low length limit for avoid_polygons so it throws an error
     avoid_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_shortcut",
@@ -96,7 +95,13 @@ TEST_F(AvoidTest, TestAvoidPolygon) {
   auto dx = node_b.lng() - node_a.lng();
   auto dy = node_a.lat() - node_d.lat();
 
-  // create a small polygon intersecting AD just below node A, so the route goes ABED
+  // create a small polygon intersecting AD ("1st") just below node A, so the route goes ABED
+  //      A------B
+  //  x---|---x  |
+  //  |   |   |  |
+  //  x---|---x  |
+  //      |      |
+  //      D------E
   vl::ring_bg_t ring{{node_a.lng() + 0.1 * dx, node_a.lat() - 0.01 * dy},
                      {node_a.lng() + 0.1 * dx, node_a.lat() - 0.1 * dy},
                      {node_a.lng() - 0.1 * dx, node_a.lat() - 0.1 * dy},
@@ -110,7 +115,5 @@ TEST_F(AvoidTest, TestAvoidPolygon) {
       {"/avoid_polygons", avoid.str()}};
 
   auto route = gurka::route(avoid_map, "A", "D", "auto", req_options);
-  // Why does it not route over 2nd?? Even "B" -> "E" routes over 3rd (polygon does NOT intersect
-  // 2nd!)
-  gurka::assert::raw::expect_path(route, {"High", "High", "3rd", "Low", "Low"});
+  gurka::assert::raw::expect_path(route, {"High", "2nd", "Low"});
 }

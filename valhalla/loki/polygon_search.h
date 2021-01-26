@@ -16,7 +16,6 @@
 
 #include <functional>
 
-// Register custom geom types with boost
 // TODO: register PointLL in its own header, so it's available for bg across valhalla?
 BOOST_GEOMETRY_REGISTER_POINT_2D(valhalla::midgard::PointLL,
                                  double,
@@ -33,16 +32,9 @@ namespace loki {
 
 using line_bg_t = boost::geometry::model::linestring<midgard::PointLL>;
 using ring_bg_t = std::vector<midgard::PointLL>;
-
-struct ring_bin {
-  std::vector<size_t> ring_ids;
-  bool within;
-
-  ring_bin() : within(false) {
-  }
-};
-
-using bins_collector = std::unordered_map<unsigned short, ring_bin>;
+// map of tile for map of bin ids & their ring ids
+using bins_collector =
+    std::unordered_map<int32_t, std::unordered_map<unsigned short, std::vector<size_t>>>;
 
 /**
  * Finds all edge IDs which are intersected by the ring
@@ -51,9 +43,10 @@ using bins_collector = std::unordered_map<unsigned short, ring_bin>;
  * @param reader GraphReader instance
  *
  */
-std::set<valhalla::baldr::GraphId> edges_in_rings(const std::vector<ring_bg_t>& rings,
-                                                  baldr::GraphReader& reader,
-                                                  const std::shared_ptr<sif::DynamicCost>& costing);
+std::unordered_set<valhalla::baldr::GraphId>
+edges_in_rings(const std::vector<ring_bg_t>& rings,
+               baldr::GraphReader& reader,
+               const std::shared_ptr<sif::DynamicCost>& costing);
 
 /**
  * Convert PBF Polygon to boost geometry ring.

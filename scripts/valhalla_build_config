@@ -261,7 +261,7 @@ config = {
     'max_radius': 200,
     'max_timedep_distance': 500000,
     'max_alternates': 2,
-    'max_avoid_polygons_length': 4
+    'max_avoid_polygons_length': 10
   }
 }
 
