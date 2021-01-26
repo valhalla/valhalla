@@ -82,7 +82,7 @@ gurka::map InstructionsKeepHighwaySigns::map = {};
 ///////////////////////////////////////////////////////////////////////////////
 // Keep right
 TEST_F(InstructionsKeepHighwaySigns, KeepRightBranchToward) {
-  auto result = gurka::route(map, "A", "F", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -102,7 +102,7 @@ TEST_F(InstructionsKeepHighwaySigns, KeepRightBranchToward) {
 ///////////////////////////////////////////////////////////////////////////////
 // Keep left
 TEST_F(InstructionsKeepHighwaySigns, KeepLeftBranchToward) {
-  auto result = gurka::route(map, "A", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -122,7 +122,7 @@ TEST_F(InstructionsKeepHighwaySigns, KeepLeftBranchToward) {
 ///////////////////////////////////////////////////////////////////////////////
 // Keep straight
 TEST_F(InstructionsKeepHighwaySigns, KeepStraightBranchToward) {
-  auto result = gurka::route(map, "A", "H", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -143,7 +143,7 @@ TEST_F(InstructionsKeepHighwaySigns, KeepStraightBranchToward) {
 // Keep right to take exit number
 // "5": "Keep <RELATIVE_DIRECTION> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>.",
 TEST_F(InstructionsKeepHighwaySigns, KeepRightExitNumberBranchToward) {
-  auto result = gurka::route(map, "H", "M", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"H", "M"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -162,7 +162,7 @@ TEST_F(InstructionsKeepHighwaySigns, KeepRightExitNumberBranchToward) {
 ///////////////////////////////////////////////////////////////////////////////
 // Keep left to take exit number
 TEST_F(InstructionsKeepHighwaySigns, KeepLeftExitNumberBranchToward) {
-  auto result = gurka::route(map, "H", "K", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"H", "K"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -181,7 +181,7 @@ TEST_F(InstructionsKeepHighwaySigns, KeepLeftExitNumberBranchToward) {
 ///////////////////////////////////////////////////////////////////////////////
 // Keep straight to take exit number
 TEST_F(InstructionsKeepHighwaySigns, KeepStraightExitNumberBranchToward) {
-  auto result = gurka::route(map, "H", "O", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"H", "O"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,

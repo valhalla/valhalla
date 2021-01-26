@@ -2,6 +2,7 @@
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
 #include "thor/costmatrix.h"
+#include "thor/timedistancebssmatrix.h"
 #include "thor/timedistancematrix.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
@@ -50,6 +51,13 @@ std::string thor_worker_t::matrix(Api& request) {
     return matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
                                  max_matrix_distance.find(costing)->second);
   };
+  if (costing == "bikeshare") {
+    thor::TimeDistanceBSSMatrix matrix;
+    time_distances =
+        matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
+                              max_matrix_distance.find(costing)->second);
+    return tyr::serializeMatrix(request, time_distances, distance_scale);
+  }
   switch (source_to_target_algorithm) {
     case SELECT_OPTIMAL:
       // TODO - Do further performance testing to pick the best algorithm for the job

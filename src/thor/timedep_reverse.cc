@@ -201,7 +201,7 @@ inline bool TimeDepReverse::ExpandReverseInner(GraphReader& graphreader,
 
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
-  int restriction_idx = -1;
+  uint8_t restriction_idx = -1;
   if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, oppedge, time_info.local_time,
                                 nodeinfo->timezone(), restriction_idx) ||
       costing_->Restricted(meta.edge, pred, edgelabels_rev_, tile, meta.edge_id, false, &edgestatus_,

@@ -158,7 +158,7 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       int& restriction_idx) const = 0;
+                       uint8_t& restriction_idx) const = 0;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -185,7 +185,7 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              int& restriction_idx) const = 0;
+                              uint8_t& restriction_idx) const = 0;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -481,7 +481,7 @@ public:
                                    const baldr::GraphId& edgeid,
                                    const uint64_t current_time,
                                    const uint32_t tz_index,
-                                   int& restriction_idx) const {
+                                   uint8_t& restriction_idx) const {
     if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
       return true;
 
@@ -490,13 +490,14 @@ public:
 
     bool time_allowed = false;
 
-    for (int i = 0, n = static_cast<int>(restrictions.size()); i < n; ++i) {
+    for (size_t i = 0; i < restrictions.size(); ++i) {
       const auto& restriction = restrictions[i];
       // Compare the time to the time-based restrictions
       baldr::AccessType access_type = restriction.type();
       if (access_type == baldr::AccessType::kTimedAllowed ||
           access_type == baldr::AccessType::kTimedDenied) {
-        restriction_idx = i;
+        // TODO: if(i > baldr::kInvalidRestriction) LOG_ERROR("restriction index overflow");
+        restriction_idx = static_cast<uint8_t>(i);
 
         if (access_type == baldr::AccessType::kTimedAllowed)
           time_allowed = true;

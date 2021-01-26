@@ -22,7 +22,7 @@ TEST(Standalone, avoid_service) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_avoid_service");
 
-  auto result = gurka::route(map, "A", "F", "bicycle");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "bicycle");
 
   // Make sure the path doesn't take service road "B-D-E"
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CE", "EF"});

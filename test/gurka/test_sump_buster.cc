@@ -40,10 +40,11 @@ TEST(Standalone, SumpBusterDefaults) {
 
   for (auto& c : costing) {
     if (c == "auto" || c == "hov" || c == "taxi")
-      validate_path(gurka::route(map, "A", "I", c),
+      validate_path(gurka::do_action(valhalla::Options::route, map, {"A", "I"}, c),
                     {"AB", "BC", "CD", "DE", "EH", "HL", "KL", "JK", "IJ"});
     else
-      validate_path(gurka::route(map, "A", "I", c), {"AB", "BF", "FI"});
+      validate_path(gurka::do_action(valhalla::Options::route, map, {"A", "I"}, c),
+                    {"AB", "BF", "FI"});
   }
 }
 
@@ -80,6 +81,7 @@ TEST(Standalone, SumpBusterOverride) {
   auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_sump_busteroverride");
 
   for (auto& c : costing) {
-    validate_path(gurka::route(map, "A", "I", c), {"AB", "BC", "CD", "DG", "GK", "JK", "IJ"});
+    validate_path(gurka::do_action(valhalla::Options::route, map, {"A", "I"}, c),
+                  {"AB", "BC", "CD", "DG", "GK", "JK", "IJ"});
   }
 }

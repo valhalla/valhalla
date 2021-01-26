@@ -52,7 +52,7 @@ gurka::map InstructionsObviousManeuver::map = {};
 
 ///////////////////////////////////////////////////////////////////////////////
 TEST_F(InstructionsObviousManeuver, IgnoreSimpleNameChange) {
-  auto result = gurka::route(map, "B", "F", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"B", "F"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -76,7 +76,7 @@ TEST_F(InstructionsObviousManeuver, IgnoreSimpleNameChange) {
 
 ///////////////////////////////////////////////////////////////////////////////
 TEST_F(InstructionsObviousManeuver, IgnoreOpposingSameNameIntersectingEdge) {
-  auto result = gurka::route(map, "A", "F", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -100,7 +100,7 @@ TEST_F(InstructionsObviousManeuver, IgnoreOpposingSameNameIntersectingEdge) {
 
 ///////////////////////////////////////////////////////////////////////////////
 TEST_F(InstructionsObviousManeuver, IgnoreSameNameIntersectingEdge) {
-  auto result = gurka::route(map, "D", "J", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"D", "J"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -124,7 +124,7 @@ TEST_F(InstructionsObviousManeuver, IgnoreSameNameIntersectingEdge) {
 
 ///////////////////////////////////////////////////////////////////////////////
 TEST_F(InstructionsObviousManeuver, NotObviousBecauseSameNameIntersectingEdgeRamp) {
-  auto result = gurka::route(map, "H", "M", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"H", "M"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
