@@ -5,6 +5,7 @@
    * FIXED: Fix compiler errors if HAVE_HTTP not enabled [#2807](https://github.com/valhalla/valhalla/pull/2807)
    * FIXED: Fix alternate route serialization [#2811](https://github.com/valhalla/valhalla/pull/2811)
    * FIXED: Store restrictions in the right tile [#2781](https://github.com/valhalla/valhalla/pull/2781)
+   * FIXED: Regression in stopping expansion on transitions down in time-dependent routes [#2815](https://github.com/valhalla/valhalla/pull/2815)
 
 * **Enhancement**
 
