@@ -376,9 +376,9 @@ inline bool create_directories(const path& p) {
     if (stat(partial.c_str(), &s) != 0) {
       // create this piece with filesystem::permissions::all
 #ifdef _WIN32
-      if (_mkdir(partial.c_str()) != 0) {
+      if (_mkdir(partial.c_str()) != 0 && errno != EEXIST) {
 #else
-      if (mkdir(partial.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
+      if (mkdir(partial.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) != 0 && errno != EEXIST) {
 #endif
         return false;
         // throw std::runtime_error(std::string("Failed to create path: ") + strerror(errno));
