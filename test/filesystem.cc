@@ -93,8 +93,8 @@ TEST(Filesystem, recursive_directory_listing) {
 }
 
 TEST(Filesystem, remove_any) {
-  // delete non existant thing
-  EXPECT_FALSE(filesystem::remove(".foobar")) << ".foobar should not exist";
+  // delete non existent thing
+  EXPECT_TRUE(filesystem::remove(".foobar")) << "Deleting nonexistent item should return true";
 
   // make and delete a file
   { std::fstream fs(".foobar", std::ios::out); }
