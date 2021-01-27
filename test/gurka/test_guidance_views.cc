@@ -50,7 +50,7 @@ gurka::map GuidanceViews::map = {};
 /*************************************************************/
 
 TEST_F(GuidanceViews, CheckGuidanceViews) {
-  auto result = gurka::route(map, "A", "G", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto");
 
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views_size(), 1);
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views(0).type(),

@@ -38,7 +38,7 @@ gurka::map MtbAccess::map = {};
 /*************************************************************/
 
 TEST_F(MtbAccess, CheckMtbAccess) {
-  auto result = gurka::route(map, "A", "C", "bicycle");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "bicycle");
   gurka::assert::osrm::expect_steps(result, {"AB"});
   gurka::assert::raw::expect_path(result, {"AB", "BC"});
 }

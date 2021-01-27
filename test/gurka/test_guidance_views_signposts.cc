@@ -45,7 +45,7 @@ gurka::map GuidanceViews_Signboards::map = {};
 /*************************************************************/
 
 TEST_F(GuidanceViews_Signboards, CheckGuidanceViews) {
-  auto result = gurka::route(map, "A", "G", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto");
 
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views_size(), 1);
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views(0).type(),
@@ -54,7 +54,7 @@ TEST_F(GuidanceViews_Signboards, CheckGuidanceViews) {
             "SI_53271604A1");
   EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(1).guidance_views(0).data_id(), "1001");
 
-  result = gurka::route(map, "A", "X", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "X"}, "auto");
   // should be no guidance views
   for (int i = 0; i < result.directions().routes(0).legs(0).maneuver_size(); ++i) {
     EXPECT_EQ(result.directions().routes(0).legs(0).maneuver(i).guidance_views_size(), 0);

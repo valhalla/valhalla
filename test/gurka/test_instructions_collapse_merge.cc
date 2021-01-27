@@ -84,7 +84,7 @@ gurka::map InstructionsCollapseMerge::map = {};
 
 ///////////////////////////////////////////////////////////////////////////////
 TEST_F(InstructionsCollapseMerge, RightRampMerge) {
-  auto result = gurka::route(map, "A", "E", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -112,7 +112,7 @@ TEST_F(InstructionsCollapseMerge, RightRampMerge) {
 
 ///////////////////////////////////////////////////////////////////////////////
 TEST_F(InstructionsCollapseMerge, LeftRampMerge) {
-  auto result = gurka::route(map, "A", "H", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -140,7 +140,7 @@ TEST_F(InstructionsCollapseMerge, LeftRampMerge) {
 
 ///////////////////////////////////////////////////////////////////////////////
 TEST_F(InstructionsCollapseMerge, RightRampLeftForkMerge) {
-  auto result = gurka::route(map, "B", "H", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"B", "H"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -180,7 +180,7 @@ TEST_F(InstructionsCollapseMerge, RightRampLeftForkMerge) {
 
 ///////////////////////////////////////////////////////////////////////////////
 TEST_F(InstructionsCollapseMerge, RightRampRightForkMerge) {
-  auto result = gurka::route(map, "B", "M", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"B", "M"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,

@@ -230,7 +230,7 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       int& restriction_idx) const override;
+                       uint8_t& restriction_idx) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -257,7 +257,7 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              int& restriction_idx) const override;
+                              uint8_t& restriction_idx) const override;
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -536,7 +536,7 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const baldr::GraphId& edgeid,
                              const uint64_t current_time,
                              const uint32_t tz_index,
-                             int& restriction_idx) const {
+                             uint8_t& restriction_idx) const {
   if (!IsAccessible(edge) || (edge->surface() > minimal_allowed_surface_) || edge->is_shortcut() ||
       IsUserAvoidEdge(edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
@@ -565,7 +565,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const baldr::GraphId& opp_edgeid,
                                     const uint64_t current_time,
                                     const uint32_t tz_index,
-                                    int& restriction_idx) const {
+                                    uint8_t& restriction_idx) const {
   // Do not check max walking distance and assume we are not allowing
   // transit connections. Assume this method is never used in
   // multimodal routes).

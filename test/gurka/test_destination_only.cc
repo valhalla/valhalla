@@ -26,7 +26,7 @@ TEST(Standalone, DestinationOnly) {
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_destination");
-  auto result = gurka::route(map, "A", "I", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
 
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   auto leg = result.trip().routes(0).legs(0);

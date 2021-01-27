@@ -48,10 +48,12 @@ protected:
                const std::unordered_map<std::string, std::string>& shortest_options,
                const std::unordered_map<std::string, std::string>& fastest_options = {}) {
 
-    valhalla::Api fastest = gurka::route(shortest_map, "A", "E", costing, fastest_options);
+    valhalla::Api fastest = gurka::do_action(valhalla::Options::route, shortest_map, {"A", "E"},
+                                             costing, fastest_options);
     float fastest_l = getLength(fastest);
 
-    valhalla::Api shortest = gurka::route(shortest_map, "A", "E", costing, shortest_options);
+    valhalla::Api shortest = gurka::do_action(valhalla::Options::route, shortest_map, {"A", "E"},
+                                              costing, shortest_options);
     float shortest_l = getLength(shortest);
 
     std::cout << "Lenghts: " << fastest_l << ", " << shortest_l << EOF;

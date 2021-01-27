@@ -451,7 +451,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const uint32_t start_node_idx,
                           const bool has_junction_name,
                           const graph_tile_ptr& start_tile,
-                          const int restrictions_idx) {
+                          const uint8_t restrictions_idx) {
 
   // Index of the directed edge within the tile
   uint32_t idx = edge.id();
@@ -661,14 +661,14 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     }
   }
 
-  if (directededge->access_restriction() && restrictions_idx >= 0) {
+  if (directededge->access_restriction() && restrictions_idx != kInvalidRestriction) {
     const std::vector<baldr::AccessRestriction>& restrictions =
         graphtile->GetAccessRestrictions(edge.id(), costing->access_mode());
     trip_edge->mutable_restriction()->set_type(
         static_cast<uint32_t>(restrictions[restrictions_idx].type()));
   }
 
-  trip_edge->set_has_time_restrictions(restrictions_idx >= 0);
+  trip_edge->set_has_time_restrictions(restrictions_idx != kInvalidRestriction);
 
   // Set the trip path use based on directed edge use if requested
   if (controller.attributes.at(kEdgeUse)) {
