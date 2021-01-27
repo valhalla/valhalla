@@ -26,9 +26,8 @@ using namespace valhalla::mjolnir;
 // Function to replace wayids with graphids.  Will transition up and down the hierarchy as needed.
 std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
                                 GraphReader& reader,
-                                GraphId& tileid,
                                 std::mutex& lock,
-                                std::vector<uint64_t> res_way_ids) {
+                                const std::vector<uint64_t>& res_way_ids) {
 
   std::deque<GraphId> graphids;
 
@@ -237,7 +236,6 @@ std::deque<GraphId> GetGraphIds(GraphId& n_graphId,
   }
 
   n_graphId = currentNode;
-  tileid = endnodetile->id();
   return graphids;
 }
 
@@ -331,8 +329,7 @@ void build(const std::string& complex_restriction_from_file,
             if (restriction.type() < RestrictionType::kOnlyRightTurn ||
                 restriction.type() > RestrictionType::kOnlyStraightOn) {
 
-              GraphId currentNode = GraphId(tile->id().tileid(), tile->id().level(), i);
-              GraphId tileid = tile->id();
+              GraphId currentNode = directededge.endnode();
 
               std::vector<uint64_t> res_way_ids;
               res_way_ids.push_back(e_offset.wayid());
@@ -350,8 +347,7 @@ void build(const std::string& complex_restriction_from_file,
               }
 
               // walk in the forward direction.
-              std::deque<GraphId> tmp_ids =
-                  GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
+              std::deque<GraphId> tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
 
               // now that we have the tile and currentNode walk in the reverse direction as this is
               // really what needs to be stored in this tile.
@@ -376,9 +372,9 @@ void build(const std::string& complex_restriction_from_file,
                 }
 
                 res_way_ids.push_back(e_offset.wayid());
-                tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
+                tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
 
-                if (tmp_ids.size()) {
+                if (tmp_ids.size() && tmp_ids.back().Tile_Base() == tile_id) {
 
                   std::vector<GraphId> vias;
                   std::copy(tmp_ids.begin() + 1, tmp_ids.end() - 1, std::back_inserter(vias));
@@ -469,8 +465,7 @@ void build(const std::string& complex_restriction_from_file,
               if (restriction.type() < RestrictionType::kOnlyRightTurn ||
                   restriction.type() > RestrictionType::kOnlyStraightOn) {
 
-                GraphId currentNode = GraphId(tile->id().tileid(), tile->id().level(), i);
-                GraphId tileid = tile->id();
+                GraphId currentNode = directededge.endnode();
 
                 std::vector<uint64_t> res_way_ids;
                 res_way_ids.push_back(restriction.to());
@@ -494,8 +489,7 @@ void build(const std::string& complex_restriction_from_file,
                 res_way_ids.push_back(restriction_to.to());
 
                 // walk in the forward direction (reverse in relation to the restriction)
-                std::deque<GraphId> tmp_ids =
-                    GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
+                std::deque<GraphId> tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
 
                 // now that we have the tile and currentNode walk in the reverse
                 // direction(forward in relation to the restriction) as this is really what
@@ -519,9 +513,9 @@ void build(const std::string& complex_restriction_from_file,
                     res_way_ids.push_back(restriction.to());
                   }
 
-                  tmp_ids = GetGraphIds(currentNode, reader, tileid, lock, res_way_ids);
+                  tmp_ids = GetGraphIds(currentNode, reader, lock, res_way_ids);
 
-                  if (tmp_ids.size()) {
+                  if (tmp_ids.size() && tmp_ids.back().Tile_Base() == tile_id) {
                     std::vector<GraphId> vias;
                     std::copy(tmp_ids.begin() + 1, tmp_ids.end() - 1, std::back_inserter(vias));
 
