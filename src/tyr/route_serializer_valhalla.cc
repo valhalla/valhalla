@@ -1,7 +1,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "baldr/json.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "odin/util.h"
@@ -538,7 +537,6 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
 std::string serialize(const Api& api) {
   // build up the json object, reserve 4k bytes
   rapidjson::writer_wrapper_t writer(4096);
-  writer.start_object();
 
   // for each route
   for (int i = 0; i < api.directions().routes_size(); ++i) {
@@ -546,22 +544,28 @@ std::string serialize(const Api& api) {
       writer.start_array("alternates");
     }
 
-    // the main route
+    // the route itself
+    writer.start_object();
     writer.start_object("trip");
 
     // the locations in the trip
-    locations(api, 0, writer);
+    locations(api, i, writer);
 
     // the actual meat of the route
-    legs(api, 0, writer);
+    legs(api, i, writer);
 
     // openlr references of the edges in the route
-    valhalla::tyr::openlr(api, 0, writer);
+    valhalla::tyr::openlr(api, i, writer);
 
     // summary time/distance and other stats
-    summary(api, 0, writer);
+    summary(api, i, writer);
 
     writer.end_object(); // trip
+
+    // leave space for alternates by closing this one outside the loop
+    if (i > 0) {
+      writer.end_object();
+    }
   }
 
   if (api.directions().routes_size() > 1) {

@@ -185,7 +185,11 @@ private:
     if (stat(path_.c_str(), &s) == 0) {
       // if it is a directory and we are going to iterate over it
       if (S_ISDIR(s.st_mode) && iterate) {
-        dir_.reset(opendir(path_.c_str()), [](DIR* d) { closedir(d); });
+        if ( dir_ )
+          closedir(dir_.get());
+        auto * dirp = opendir(path_.c_str());
+        if ( dirp )
+          dir_.reset(dirp);
         return;
       }
       // make a dirent from stat info for starting out
@@ -416,7 +420,11 @@ inline void resize_file(const path& p, std::uintmax_t new_size) {
 }
 
 inline bool remove(const path& p) {
-  return ::remove(p.c_str()) == 0;
+  bool success = ::remove(p.c_str()) == 0;
+  if ( !success ) {
+    success = errno == ENOENT;
+  }
+  return success;
 }
 
 inline bool remove_all(const path& p) {
