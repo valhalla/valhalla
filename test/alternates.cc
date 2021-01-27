@@ -56,6 +56,11 @@ void test_alternates(int num_alternates) {
   auto response = tester.test(request, json);
   const auto& routes = response.trip().routes();
   ASSERT_EQ(routes.size(), num_alternates + 1);
+  std::unordered_set<std::string> shapes;
+  for (const auto& route : routes) {
+    shapes.insert(route.legs(0).shape());
+  }
+  ASSERT_EQ(shapes.size(), num_alternates + 1);
 
   rapidjson::Document doc;
   doc.Parse(json);
