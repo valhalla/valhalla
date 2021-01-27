@@ -94,7 +94,7 @@ TEST(Filesystem, recursive_directory_listing) {
 
 TEST(Filesystem, remove_any) {
   // delete non existant thing
-  EXPECT_FALSE(filesystem::remove(".foobar")) << ".foobar should not exist";
+  EXPECT_TRUE(filesystem::remove(".foobar")) << ".foobar should not exist";
 
   // make and delete a file
   { std::fstream fs(".foobar", std::ios::out); }
@@ -136,7 +136,6 @@ TEST(Filesystem, extension) {
 TEST(Filesystem, file_size) {
 }
 
-
 TEST(Filesystem, concurrent_folder_create_delete) {
 
   const char * folder_name = "test/a/b/c/d/e/f/g";
@@ -171,7 +170,6 @@ TEST(Filesystem, concurrent_folder_create_delete) {
     }
   }
 }
-
 
 } // namespace
 
