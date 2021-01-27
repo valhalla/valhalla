@@ -703,6 +703,13 @@ protected:
    */
   virtual void set_use_tracks(float use_tracks);
 
+  /**
+   * TODO add comment
+   * Calculate `living_street` costs based on living streets preference.
+   * @param use_living_streets value of living streets preference in range [0; 1]
+   */
+  virtual void set_use_living_streets(float use_living_streets);
+
   // Algorithm pass
   uint32_t pass_;
 
@@ -728,7 +735,8 @@ protected:
 
   // Weighting to apply to ferry edges
   float ferry_factor_, rail_ferry_factor_;
-  float track_factor_; // Avoid tracks factor.
+  float track_factor_;         // Avoid tracks factor.
+  float living_street_factor_; // Avoid living streets factor.
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -823,6 +831,9 @@ protected:
 
     // Calculate cost factor for track roads
     set_use_tracks(costing_options.use_tracks());
+
+    // Get living street factor from costing options.
+    set_use_living_streets(costing_options.use_living_streets());
 
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();

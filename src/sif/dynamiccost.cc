@@ -57,6 +57,10 @@ namespace {
 constexpr float kMinTrackFactor = 0.8f;
 constexpr float kMaxTrackFactor = 10.f;
 
+// min and max factors to apply when use living streets
+constexpr float kMinLivingStreetFactor = 0.8f;
+constexpr float kMaxLivingStreetFactor = 10.f;
+
 } // namespace
 
 DynamicCost::DynamicCost(const CostingOptions& options, const TravelMode mode, uint32_t access_mask)
@@ -231,6 +235,17 @@ void DynamicCost::set_use_tracks(float use_tracks) {
   track_factor_ = use_tracks < 0.5f
                       ? (kMaxTrackFactor - 2.f * use_tracks * (kMaxTrackFactor - 1.f))
                       : (kMinTrackFactor + 2.f * (1.f - use_tracks) * (1.f - kMinTrackFactor));
+}
+
+void DynamicCost::set_use_living_streets(float use_living_streets) {
+  // Calculate factor value based on use preference. Return value
+  // in range [kMaxLivingStreetFactor; 1], if use < 0.5; or
+  // in range [1; kMinLivingStreetFactor], if use > 0.5
+  living_street_factor_ =
+      use_living_streets < 0.5f
+          ? (kMaxLivingStreetFactor - 2.f * use_living_streets * (kMaxLivingStreetFactor - 1.f))
+          : (kMinLivingStreetFactor +
+             2.f * (1.f - use_living_streets) * (1.f - kMinLivingStreetFactor));
 }
 
 void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_costing_options) {
