@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <sys/stat.h>
+#include <thread>
 #include <vector>
 
 #include "test.h"
@@ -134,6 +135,43 @@ TEST(Filesystem, extension) {
 
 TEST(Filesystem, file_size) {
 }
+
+
+TEST(Filesystem, concurrent_folder_create_delete) {
+
+  const char * folder_name = "test/a/b/c/d/e/f/g";
+
+  auto create_folder = [&]() {
+    bool success = filesystem::create_directories(folder_name);
+    EXPECT_TRUE(success);
+  };
+
+  auto remove_folder = [&]() {
+    bool success = filesystem::remove_all(folder_name);
+    EXPECT_TRUE(success);
+  };
+
+  size_t num_threads = std::thread::hardware_concurrency();
+
+  for (int j = 0; j < 500; j++) {
+    {
+      std::vector<std::unique_ptr<std::thread>> threads(num_threads);
+      for (size_t i = 0; i < num_threads; i++)
+        threads[i].reset(new std::thread(create_folder));
+      for (size_t i = 0; i < num_threads; i++)
+        threads[i]->join();
+    }
+
+    {
+      std::vector<std::unique_ptr<std::thread>> threads(num_threads);
+      for (size_t i = 0; i < num_threads; i++)
+        threads[i].reset(new std::thread(remove_folder));
+      for (size_t i = 0; i < num_threads; i++)
+        threads[i]->join();
+    }
+  }
+}
+
 
 } // namespace
 
