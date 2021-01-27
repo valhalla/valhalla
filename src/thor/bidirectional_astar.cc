@@ -23,6 +23,7 @@ constexpr uint32_t kInitialEdgeLabelCountBD = 1000000;
 // the PA Turnpike which have very long edges). Using a metric based on maximum edge
 // cost creates large performance drops - so perhaps some other metric can be found?
 constexpr float kThresholdDelta = 420.0f;
+constexpr float kExtendSearch = 1.02f;
 
 inline float find_percent_along(const valhalla::Location& location, const GraphId& edge_id) {
   for (const auto& e : location.path_edges()) {
@@ -758,7 +759,7 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
 
   // Set a threshold to extend search
   if (threshold_ == std::numeric_limits<float>::max()) {
-    threshold_ = (pred.sortcost() + cost_diff_) + kThresholdDelta;
+    threshold_ = (pred.sortcost() + cost_diff_) * kExtendSearch; // + kThresholdDelta;
   }
 
   // setting this edge as connected
@@ -811,7 +812,7 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
 
   // Set a threshold to extend search
   if (threshold_ == std::numeric_limits<float>::max()) {
-    threshold_ = rev_pred.sortcost() + kThresholdDelta;
+    threshold_ = rev_pred.sortcost() * kExtendSearch; // + kThresholdDelta;
   }
 
   // setting this edge as connected, sending the opposing because this is the reverse tree
