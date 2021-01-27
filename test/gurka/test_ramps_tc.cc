@@ -166,28 +166,28 @@ TEST(RampsTCs, test_tc_no_infer) {
                                 {"mjolnir.data_processing.infer_turn_channels", "false"},
                                 {"mjolnir.reclassify_links", "false"}});
 
-  auto result = gurka::route(map, "A", "J", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, "auto");
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   auto leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, {"AM", "MN", "NJ"});
   EXPECT_EQ(leg.node(1).edge().use(), valhalla::TripLeg_Use::TripLeg_Use_kRampUse);
   EXPECT_EQ(leg.node(1).edge().internal_intersection(), 0);
 
-  result = gurka::route(map, "K", "D", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"K", "D"}, "auto");
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, {"KO", "OP", "PD"});
   EXPECT_EQ(leg.node(1).edge().use(), valhalla::TripLeg_Use::TripLeg_Use_kTurnChannelUse);
   EXPECT_EQ(leg.node(1).edge().internal_intersection(), 0);
 
-  result = gurka::route(map, "E", "L", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"E", "L"}, "auto");
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, {"EQ", "QR", "RL"});
   EXPECT_EQ(leg.node(1).edge().use(), valhalla::TripLeg_Use::TripLeg_Use_kRampUse);
   EXPECT_EQ(leg.node(1).edge().internal_intersection(), 0);
 
-  result = gurka::route(map, "A", "D", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, {"AM", "MB", "BC", "CP", "PD"});
@@ -250,7 +250,7 @@ TEST(RampsTCs, test_tc_infer) {
                                 {"mjolnir.data_processing.infer_turn_channels", "true"},
                                 {"mjolnir.reclassify_links", "true"}});
 
-  auto result = gurka::route(map, "A", "J", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "J"}, "auto");
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   auto leg = result.trip().routes(0).legs(0);
   gurka::assert::raw::expect_path(result, {"AB", "BE", "EG", "GK", "KJ"});

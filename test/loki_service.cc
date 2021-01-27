@@ -12,6 +12,7 @@
 #include <thread>
 #include <unistd.h>
 
+#include "filesystem.h"
 #include "loki/worker.h"
 
 using namespace valhalla;
@@ -111,9 +112,9 @@ const std::vector<std::pair<uint16_t, std::string>> valhalla_responses{
     {405,
      R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
     {404,
-     R"({"error_code":106,"error":"Try any of:'\/locate' '\/route' '\/sources_to_targets' '\/optimized_route' '\/isochrone' '\/trace_route' '\/trace_attributes' ","status_code":404,"status":"Not Found"})"},
+     R"({"error_code":106,"error":"Try any of:'\/locate' '\/route' '\/height' '\/sources_to_targets' '\/optimized_route' '\/isochrone' '\/trace_route' '\/trace_attributes' '\/transit_available' '\/expansion' '\/centroid' ","status_code":404,"status":"Not Found"})"},
     {404,
-     R"({"error_code":106,"error":"Try any of:'\/locate' '\/route' '\/sources_to_targets' '\/optimized_route' '\/isochrone' '\/trace_route' '\/trace_attributes' ","status_code":404,"status":"Not Found"})"},
+     R"({"error_code":106,"error":"Try any of:'\/locate' '\/route' '\/height' '\/sources_to_targets' '\/optimized_route' '\/isochrone' '\/trace_route' '\/trace_attributes' '\/transit_available' '\/expansion' '\/centroid' ","status_code":404,"status":"Not Found"})"},
     {400,
      R"({"error_code":100,"error":"Failed to parse json request","status_code":400,"status":"Bad Request"})"},
     {400,
@@ -330,59 +331,59 @@ const std::vector<std::pair<uint16_t, std::string>> osrm_responses{
     {400,
      R"({"code":"InvalidValue","message":"The successfully parsed query parameters are invalid."})"}};
 
-boost::property_tree::ptree make_config(
-    const std::string& actions =
-        R"([ "locate", "route", "sources_to_targets", "optimized_route", "isochrone", "trace_route", "trace_attributes" ])") {
-  boost::property_tree::ptree config;
-  std::stringstream json;
-  json << R"({
-      "meili": { "default": { "breakage_distance": 2000} },
-      "mjolnir": { "tile_dir": "test/tiles" },
-      "loki": { "actions": )";
-  json << actions;
-  json << R"(,
-                  "logging": { "long_request": 100.0 },
-                  "service": { "proxy": "ipc:///tmp/test_loki_proxy" },
-                "service_defaults": { "minimum_reachability": 50, "radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60} },
-      "thor": { "service": { "proxy": "ipc:///tmp/test_thor_proxy" } },
-      "httpd": { "service": { "loopback": "ipc:///tmp/test_loki_results", "interrupt": "ipc:///tmp/test_loki_interrupt" } },
-      "service_limits": {
-        "skadi": { "max_shape": 100, "min_resample": "10"},
-        "auto": { "max_distance": 5000000.0, "max_locations": 20,
-                  "max_matrix_distance": 400000.0, "max_matrix_locations": 50 },
-        "pedestrian": { "max_distance": 250000.0, "max_locations": 50,
-                        "max_matrix_distance": 200000.0, "max_matrix_locations": 50,
-                        "min_transit_walking_distance": 1, "max_transit_walking_distance": 10000 },
-        "isochrone": { "max_contours": 4, "max_time_contour": 120, "max_distance_contour":200, "max_distance": 25000, "max_locations": 1},
-        "trace": { "max_best_paths": 4, "max_best_paths_shape": 100, "max_distance": 200000.0, "max_gps_accuracy": 100.0, "max_search_radius": 100, "max_shape": 16000 },
-        "max_avoid_locations": 0,
-        "max_reachability": 100,
-        "max_radius": 200,
-        "max_alternates":2,
-        "max_avoid_polygons_length":100
-      },
-      "costing_directions_options": { "auto": {}, "pedestrian": {} }
-    })";
-  rapidjson::read_json(json, config);
+boost::property_tree::ptree make_config(const std::vector<std::string>& whitelist = {
+                                            "locate",
+                                            "route",
+                                            "height",
+                                            "sources_to_targets",
+                                            "optimized_route",
+                                            "isochrone",
+                                            "trace_route",
+                                            "trace_attributes",
+                                            "transit_available",
+                                            "expansion",
+                                            "centroid",
+                                        }) {
+  auto run_dir = VALHALLA_BUILD_DIR "test" + std::string(1, filesystem::path::preferred_separator) +
+                 "loki_service_tmp";
+  if (!filesystem::is_directory(run_dir) && !filesystem::create_directories(run_dir))
+    throw std::runtime_error("Couldnt make directory to run from");
+
+  auto config = test::make_config(run_dir,
+                                  {
+                                      {"service_limits.skadi.max_shape", "100"},
+                                      {"service_limits.max_avoid_locations", "0"},
+                                  },
+                                  {"loki.actions"});
+
+  boost::property_tree::ptree actions;
+  for (const auto& action_name : whitelist) {
+    boost::property_tree::ptree action;
+    action.put("", action_name);
+    actions.push_back(std::make_pair("", action));
+  }
+  config.add_child("loki.actions", actions);
   return config;
 }
+
+// config for permanently running server
+auto const config = make_config();
 
 zmq::context_t context;
 void start_service() {
   // server
-  std::thread server(
-      std::bind(&http_server_t::serve,
-                http_server_t(context, "ipc:///tmp/test_loki_server", "ipc:///tmp/test_loki_proxy_in",
-                              "ipc:///tmp/test_loki_results", "ipc:///tmp/test_loki_interrupt")));
+  std::thread server(std::bind(&http_server_t::serve,
+                               http_server_t(context, config.get<std::string>("httpd.service.listen"),
+                                             config.get<std::string>("loki.service.proxy") + "_in",
+                                             config.get<std::string>("httpd.service.loopback"),
+                                             config.get<std::string>("httpd.service.interrupt"))));
   server.detach();
 
   // load balancer
-  std::thread proxy(std::bind(&proxy_t::forward, proxy_t(context, "ipc:///tmp/test_loki_proxy_in",
-                                                         "ipc:///tmp/test_loki_proxy_out")));
+  std::thread proxy(std::bind(&proxy_t::forward,
+                              proxy_t(context, config.get<std::string>("loki.service.proxy") + "_in",
+                                      config.get<std::string>("loki.service.proxy") + "_out")));
   proxy.detach();
-
-  // make the config file
-  auto config = make_config();
 
   // service worker
   std::thread worker(valhalla::loki::run_service, config);
@@ -397,7 +398,7 @@ void run_requests(const std::vector<http_request_t>& requests,
   std::string request_str;
   int success_count = 0;
   http_client_t
-      client(context, "ipc:///tmp/test_loki_server",
+      client(context, config.get<std::string>("httpd.service.listen"),
              [&requests, &request, &request_str]() {
                // we dont have any more requests so bail
                if (request == requests.cend()) {
@@ -450,9 +451,8 @@ TEST(LokiService, test_actions_whitelist) {
 
     auto wrong_action = static_cast<Options::Action>(static_cast<int>(action) +
                                                      (action == Options::Action_MAX ? -1 : 1));
-    auto whitelist = R"([")" + Options_Action_Enum_Name(wrong_action) + R"("])";
-    auto config = make_config(whitelist);
-    loki::loki_worker_t worker(config);
+    auto cfg = make_config({Options_Action_Enum_Name(wrong_action)});
+    loki::loki_worker_t worker(cfg);
     http_request_t request(method_t::GET, "/" + Options_Action_Enum_Name(action));
     auto req_str = request.to_string();
     auto msg = zmq::message_t{reinterpret_cast<void*>(&req_str.front()), req_str.size(),

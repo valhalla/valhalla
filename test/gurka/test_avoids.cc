@@ -82,7 +82,7 @@ TEST_F(AvoidTest, TestConfig) {
 
   // make sure the right exception is thrown
   try {
-    gurka::route(avoid_map, "A", "D", "auto", req_options);
+    gurka::do_action(Options::route, avoid_map, {"A", "D"}, "auto", req_options);
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 167); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
@@ -95,7 +95,7 @@ TEST_F(AvoidTest, TestAvoidPolygon) {
   auto dx = node_b.lng() - node_a.lng();
   auto dy = node_a.lat() - node_d.lat();
 
-  // create a small polygon intersecting AD ("1st") just below node A, so the route goes ABED
+  // create a small polygon intersecting AD ("1st") just below node A
   //      A------B
   //  x---|---x  |
   //  |   |   |  |
@@ -114,6 +114,7 @@ TEST_F(AvoidTest, TestAvoidPolygon) {
   const std::unordered_map<std::string, std::string>& req_options = {
       {"/avoid_polygons", avoid.str()}};
 
-  auto route = gurka::route(avoid_map, "A", "D", "auto", req_options);
+  // will avoid 1st
+  auto route = gurka::do_action(Options::route, avoid_map, {"A", "D"}, "auto", req_options);
   gurka::assert::raw::expect_path(route, {"High", "2nd", "Low"});
 }

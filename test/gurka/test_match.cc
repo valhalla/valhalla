@@ -24,7 +24,8 @@ TEST(Standalone, BasicMatch) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/basic_match");
 
-  auto result = gurka::match(map, {"1", "2", "3", "4", "5"}, "via", "auto");
+  auto result = gurka::do_action(valhalla::Options::trace_route, map, {"1", "2", "3", "4", "5"},
+                                 "auto", {}, {}, nullptr, "via");
 
   gurka::assert::osrm::expect_match(result, {"AB", "CD"});
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD"});
@@ -51,8 +52,9 @@ TEST(Standalone, UturnMatch) {
                                                                           {"through", 210},
                                                                           {"break_through", 210}}) {
 
-    auto result = gurka::match(map, {"1", "2", "1", "2"}, test_case.first, "auto",
-                               {{"/trace_options/penalize_immediate_uturn", "0"}});
+    auto result = gurka::do_action(valhalla::Options::trace_route, map, {"1", "2", "1", "2"}, "auto",
+                                   {{"/trace_options/penalize_immediate_uturn", "0"}}, {}, nullptr,
+                                   test_case.first);
 
     // throughs or vias will make a uturn without a destination notification (left hand driving)
     std::vector<DirectionsLeg::Maneuver::Type> expected_maneuvers{
@@ -105,8 +107,9 @@ D--3--4--C--5--6--E)";
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/uturn_asan");
 
-  auto result = gurka::match(map, {"2", "6", "3"}, "via", "auto",
-                             {{"/trace_options/penalize_immediate_uturn", "0"}});
+  auto result =
+      gurka::do_action(valhalla::Options::trace_route, map, {"2", "6", "3"}, "auto",
+                       {{"/trace_options/penalize_immediate_uturn", "0"}}, {}, nullptr, "via");
 
   auto shape =
       midgard::decode<std::vector<midgard::PointLL>>(result.trip().routes(0).legs(0).shape());

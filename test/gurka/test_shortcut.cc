@@ -267,6 +267,10 @@ TEST(Shortcuts, ShortcutsInBins) {
 
   std::vector<GraphId> edge_ids;
   auto bin_tileset = reader.GetTileSet(2);
+<<<<<<< HEAD
+=======
+  size_t count;
+>>>>>>> upstream/master
   for (auto tileid : bin_tileset) {
     if (reader.OverCommitted())
       reader.Trim();

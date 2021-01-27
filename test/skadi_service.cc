@@ -155,6 +155,10 @@ const std::vector<std::string> responses{
         "244,243,240,239,239,238,239,241,241,239,236,221,221,225,224]}"),
 };
 
+const auto config =
+    test::make_config(VALHALLA_BUILD_DIR "test" +
+                      std::string(1, filesystem::path::preferred_separator) + "skadi_service_tmp");
+
 void create_tile() {
   // its annoying to have to get actual data but its also very boring to test with fake data
   // so we get some real data build the tests and then create the data on the fly
@@ -167,73 +171,59 @@ void create_tile() {
   std::vector<int16_t> tile(3601 * 3601, 0);
   for (const auto& p : pixels)
     tile[p.first] = p.second;
-  std::ofstream file("test/data/service/N40W077.hgt", std::ios::binary | std::ios::trunc);
+
+  // a place to store it
+  auto tile_dir = config.get<std::string>("additional_data.elevation");
+  if (!filesystem::is_directory(tile_dir) && !filesystem::create_directories(tile_dir))
+    throw std::runtime_error("Couldnt make directory to store elevation");
+
+  // actually store it
+  std::ofstream file(tile_dir + "/N40W077.hgt", std::ios::binary | std::ios::trunc);
   file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
              sizeof(int16_t) * tile.size());
 
   ASSERT_TRUE(file.good()) << "File stream is not good";
 }
 
-void start_service(zmq::context_t& context) {
+zmq::context_t context;
+void start_service() {
+  // need a place to drop our sockets
+  auto run_dir = config.get<std::string>("mjolnir.tile_dir");
+  if (!filesystem::is_directory(run_dir) && !filesystem::create_directories(run_dir))
+    throw std::runtime_error("Couldnt make directory to run from");
+
   // server
-  std::thread server(
-      std::bind(&http_server_t::serve,
-                http_server_t(context, "ipc:///tmp/test_skadi_server",
-                              "ipc:///tmp/test_skadi_proxy_upstream", "ipc:///tmp/test_skadi_results",
-                              "ipc:///tmp/test_skadi_interrupt")));
+  std::thread server(std::bind(&http_server_t::serve,
+                               http_server_t(context, config.get<std::string>("httpd.service.listen"),
+                                             config.get<std::string>("loki.service.proxy") + "_in",
+                                             config.get<std::string>("httpd.service.loopback"),
+                                             config.get<std::string>("httpd.service.interrupt"))));
   server.detach();
 
   // load balancer
-  std::thread proxy(
-      std::bind(&proxy_t::forward, proxy_t(context, "ipc:///tmp/test_skadi_proxy_upstream",
-                                           "ipc:///tmp/test_skadi_proxy_out")));
+  std::thread proxy(std::bind(&proxy_t::forward,
+                              proxy_t(context, config.get<std::string>("loki.service.proxy") + "_in",
+                                      config.get<std::string>("loki.service.proxy") + "_out")));
   proxy.detach();
 
   // service worker
-  boost::property_tree::ptree config;
-  std::stringstream json;
-  json << R"({
-      "meili": { "default": { "breakage_distance": 2000} },
-      "mjolnir": { "tile_dir": "test/tiles" },
-      "loki": { "actions": [ "height" ],
-                  "logging": { "long_request": 100.0 },
-                  "service": { "proxy": "ipc:///tmp/test_skadi_proxy" },
-                "service_defaults": { "minimum_reachability": 50, "radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60} },
-      "thor": { "service": { "proxy": "ipc:///tmp/test_skadi_thor_proxy" } },
-      "httpd": { "service": { "loopback": "ipc:///tmp/test_skadi_results", "interrupt": "ipc:///tmp/test_skadi_interrupt" } },
-      "additional_data": { "elevation": "test/data/service" },
-      "service_limits": {
-        "skadi": { "max_shape": 100, "min_resample": "10"},
-        "auto": { "max_distance": 5000000.0, "max_locations": 20,
-                  "max_matrix_distance": 400000.0, "max_matrix_locations": 50 },
-        "pedestrian": { "max_distance": 250000.0, "max_locations": 50,
-                        "max_matrix_distance": 200000.0, "max_matrix_locations": 50,
-                        "min_transit_walking_distance": 1, "max_transit_walking_distance": 10000 },
-        "isochrone": { "max_contours": 4, "max_time_contour": 120, "max_distance_contour":200, "max_distance": 25000, "max_locations": 1},
-        "trace": { "max_best_paths": 4, "max_best_paths_shape": 100, "max_distance": 200000.0, "max_gps_accuracy": 100.0, "max_search_radius": 100, "max_shape": 16000 },
-        "max_avoid_locations": 0,
-        "max_reachability": 100,
-        "max_radius": 200,
-        "max_alternates":2,
-        "max_avoid_polygons_length":100
-      },
-      "costing_options": { "auto": {}, "pedestrian": {} }
-    })";
-  rapidjson::read_json(json, config);
-
   std::thread worker(valhalla::loki::run_service, config);
   worker.detach();
 }
 
+} // namespace
+
 TEST(SkadiService, test_requests) {
+  // make some elevation data
+  create_tile();
+
   // start up the service
-  zmq::context_t context;
-  start_service(context);
+  start_service();
 
   // client makes requests and gets back responses in a batch fashion
   auto request = requests.cbegin();
   std::string request_str;
-  http_client_t client(context, "ipc:///tmp/test_skadi_server",
+  http_client_t client(context, config.get<std::string>("httpd.service.listen"),
                        [&request, &request_str]() {
                          // we dont have any more requests so bail
                          if (request == requests.cend())
@@ -251,26 +241,10 @@ TEST(SkadiService, test_requests) {
                          return request != requests.cend();
                        },
                        1);
-  // request and receive
-  client.batch();
-}
-} // namespace
 
-// TODO: add tests that do resampling as well
-
-class SkadiServiceEnv : public ::testing::Environment {
-public:
-  void SetUp() override {
-    create_tile();
-  }
-};
-
-// Elevation service
-int main(int argc, char* argv[]) {
   // make this whole thing bail if it doesnt finish fast
   alarm(120);
 
-  testing::AddGlobalTestEnvironment(new SkadiServiceEnv);
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+  // request and receive
+  client.batch();
 }

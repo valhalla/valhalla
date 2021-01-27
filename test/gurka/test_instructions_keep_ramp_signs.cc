@@ -57,7 +57,7 @@ gurka::map InstructionsKeepRampSigns::map = {};
 ///////////////////////////////////////////////////////////////////////////////
 // Keep right branch toward
 TEST_F(InstructionsKeepRampSigns, KeepRightBranchToward) {
-  auto result = gurka::route(map, "A", "F", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -76,7 +76,7 @@ TEST_F(InstructionsKeepRampSigns, KeepRightBranchToward) {
 ///////////////////////////////////////////////////////////////////////////////
 // Keep left branch toward
 TEST_F(InstructionsKeepRampSigns, KeepLeftBranchToward) {
-  auto result = gurka::route(map, "A", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -95,7 +95,7 @@ TEST_F(InstructionsKeepRampSigns, KeepLeftBranchToward) {
 ///////////////////////////////////////////////////////////////////////////////
 // Keep straight branch toward
 TEST_F(InstructionsKeepRampSigns, KeepStraightBranchToward) {
-  auto result = gurka::route(map, "A", "H", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,

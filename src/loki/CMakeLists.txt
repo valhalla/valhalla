@@ -23,7 +23,7 @@ if (UNIX AND NOT APPLE)
     locate_action.cc
     height_action.cc
   PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-endif (UNIX)
+endif ()
 
 valhalla_module(NAME loki
   SOURCES ${sources}

@@ -18,17 +18,18 @@ struct PathInfo {
                           // of the edge
   uint32_t trip_id;       // Trip Id (0 if not a transit edge).
   baldr::GraphId edgeid;  // Directed edge Id
-  int restriction_index;  // Record which restrictionn
+  uint8_t restriction_index;    // Record which restriction
   sif::Cost transition_cost;    // Turn cost at the beginning of the edge
   bool start_node_is_recovered; // Indicates if the start node of the edge is an inner node
                                 // of a shortcut that was recovered. Pay attention this flag
                                 // is 'false' for the first and the last shortcut nodes.
+
   // TODO: drop this superfluous constructor
   PathInfo(const sif::TravelMode m,
            const sif::Cost c,
            const baldr::GraphId& edge,
            const uint32_t tripid,
-           const int restriction_idx,
+           const uint8_t restriction_idx = baldr::kInvalidRestriction,
            const sif::Cost tc = {},
            bool start_node_is_recovered = false)
       : mode(m), elapsed_cost(c), trip_id(tripid), edgeid(edge), restriction_index(restriction_idx),

@@ -195,18 +195,18 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_avoid_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
-        kv.first == "max_alternates" || kv.first == "max_avoid_polygons_length") {
+        kv.first == "max_alternates" || kv.first == "max_avoid_polygons_length" ||
+        kv.first == "skadi") {
       continue;
     }
-    if (kv.first != "skadi" && kv.first != "trace") {
+    if (kv.first != "trace") {
       max_locations.emplace(kv.first,
                             config.get<size_t>("service_limits." + kv.first + ".max_locations"));
+      if (kv.first == "centroid" && max_locations["centroid"] > 127)
+        throw std::runtime_error("Max locations for centroid action must be < 128");
     }
-    if (kv.first != "skadi") {
-      max_distance.emplace(kv.first,
-                           config.get<float>("service_limits." + kv.first + ".max_distance"));
-    }
-    if (kv.first != "skadi" && kv.first != "trace" && kv.first != "isochrone") {
+    max_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_distance"));
+    if (kv.first != "centroid" && kv.first != "trace" && kv.first != "isochrone") {
       max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +
                                                               ".max_matrix_distance"));
       max_matrix_locations.emplace(kv.first, config.get<float>("service_limits." + kv.first +
@@ -302,6 +302,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     switch (options.action()) {
       case Options::route:
       case Options::expansion:
+      case Options::centroid:
         route(request);
         result.messages.emplace_back(request.SerializeAsString());
         break;
