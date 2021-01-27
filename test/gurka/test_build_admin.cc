@@ -1,12 +1,13 @@
 #include <gtest/gtest.h>
 
+#include "filesystem.h"
 #include "gurka.h"
-
 #include "baldr/admin.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/adminbuilder.h"
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/pbfgraphparser.h"
+#include "test/test.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -17,7 +18,7 @@ namespace {
 
 // GetAdminInfo() requires a sqlite db handle and tiles. This creates a mock
 // graph with two states part of the same country - with a highway between them.
-valhalla::gurka::map BuildPBFandTiles(const std::string& workdir) {
+valhalla::gurka::map BuildPBF(const std::string& workdir) {
   const std::string ascii_map = R"(
         A-------B-------C
         |       |       |
@@ -52,11 +53,79 @@ valhalla::gurka::map BuildPBFandTiles(const std::string& workdir) {
                                         {"name", "USA"}}}};
 
   constexpr double gridsize = 10;
-  auto nodes = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-  auto admin_map = gurka::buildtiles(nodes, ways, {}, relations, workdir);
+  auto node_layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
 
-  return admin_map;
+  auto pbf_filename = workdir + "/map.pbf";
+  detail::build_pbf(node_layout, ways, {}, relations, pbf_filename);
+
+  valhalla::gurka::map result;
+  result.nodes = node_layout;
+  return result;
 }
+
+
+void BuildTiles(valhalla::gurka::map& admin_map,
+                const std::vector<std::string>& pbf_filenames) {
+  build_tile_set(admin_map.config, pbf_filenames, mjolnir::BuildStage::kInitialize,
+                          mjolnir::BuildStage::kValidate, false);
+}
+
+
+void GetAdminData(const std::string& dbname,
+                  std::set<std::string> & countries,
+                  std::set<std::string> & states )
+{
+  countries.clear();
+  states.clear();
+
+  // Load the admin.sqlite table we just created
+  sqlite3* db_handle = NULL;
+  uint32_t ret = sqlite3_open_v2(dbname.c_str(), &db_handle, SQLITE_OPEN_READONLY, NULL);
+  EXPECT_EQ(ret, SQLITE_OK);
+
+  sqlite3_stmt* stmt = 0;
+  std::string sql = "SELECT admin_level, name from admins;";
+
+  uint32_t result = 0;
+  bool dor = true;
+  bool intersection_name = false;
+  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+
+  if (ret == SQLITE_OK || ret == SQLITE_ERROR) {
+    result = sqlite3_step(stmt);
+
+    if (result == SQLITE_DONE) {
+      sqlite3_finalize(stmt);
+      stmt = 0;
+      return;
+    }
+  }
+
+  while (result == SQLITE_ROW) {
+    int admin_level = 0;
+    if (sqlite3_column_type(stmt, 0) == SQLITE_INTEGER)
+      admin_level = sqlite3_column_int(stmt, 0);
+    EXPECT_TRUE((admin_level == 4) || (admin_level == 2));
+
+    std::string name;
+    if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
+      name = (char*)sqlite3_column_text(stmt, 1);
+    EXPECT_TRUE(!name.empty());
+
+    if ( admin_level == 4)
+      states.insert(name);
+    else
+      countries.insert(name);
+
+    result = sqlite3_step(stmt);
+  }
+
+  if (stmt) {
+    sqlite3_finalize(stmt);
+    stmt = 0;
+  }
+}
+
 
 uint32_t GetContainingState(GraphTileBuilder& tilebuilder,
                             const std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
@@ -77,49 +146,53 @@ uint32_t GetContainingState(GraphTileBuilder& tilebuilder,
 
 } // anonymous namespace
 
-// Test that BuildAdminFromPBF() works.
-//
-// This test creates a mock pbf AND tile data. Both are required to prove
-// that BuildAdminFromPBF() is working.
-//
-// Given map.pbf, BuildAdminFromPBF() creates test/data/admin.sqlite. Hence,
-// this test needs to prove that the contents of admin.sqlite are correct.
-// Before we get into how I propose to prove correctness, some thoughts must
-// be written.
-//
-// The mock graph we're using has three "relations" (this defines three administrative
-// boundaries). BuildAdminFromPBF() will create three rows in the admin.sqlite::admins
-// table, one for each admin area.
-//
-// GetAdminInfo() will query the tile-data AND the sqlite file to retrieve information
-// about the administrative polygons stored within. You'll see that a map of "polys"
-// is returned - but each "poly" returned is just polygonal data. The remaining admin
-// area metadata is stored in the GraphTileBuilder object that was passed into GetAdminInfo().
-//
-// To prove the admin.sqlite is built correctly, we need to ensure the integral key's
-// stored for each entry in the admins table are correct. We can pass these integral
-// admin keys to GraphTileBuilder::admins_builder(int) to retrieve information about each
-// admin via the returned Admin object.
-//
-// As you can see in the ascii-map, there is a simple two node highway that spans
-// the two states. I thought it'd be interesting to see if I could prove that the
-// node "G" lives in "Colorado" and that "H" lives in "Utah".
 
-TEST(AdminTest, TestAdminPolygonBasic) {
-  // Creates test/data/admin/map.pbf and tile data
+TEST(AdminTest, TestBuildAdminFromPBF) {
+  //======================================================================
+  // part I: create a mock graph, build a pbf from it, build a sqlite
+  // from that pbf, read a few bits from the sqlite to prove its there
+  // and has the things we'd expect.
+  //======================================================================
+
+  // Create test/data/admin/map.pbf
   const std::string workdir = "test/data/admin";
-  auto admin_map = BuildPBFandTiles(workdir);
 
-  boost::property_tree::ptree pt;
+  if ( !filesystem::exists(workdir) ) {
+    bool created = filesystem::create_directories(workdir);
+    EXPECT_TRUE(created);
+  }
+
+  valhalla::gurka::map admin_map = BuildPBF(workdir);
+
+  boost::property_tree::ptree & pt = admin_map.config;
   pt.put("mjolnir.concurrency", 1);
   pt.put("mjolnir.id_table_size", 1000);
-  pt.put("mjolnir.tile_dir", "test/data/admin");
-  pt.put("mjolnir.admin", "test/data/admin.sqlite");
-  pt.put("mjolnir.timezone", "test/data/not_needed.sqlite");
+  pt.put("mjolnir.tile_dir", workdir + "/tiles");
+  pt.put("mjolnir.admin", workdir + "/admin.sqlite");
+  pt.put("mjolnir.timezone", workdir + "/not_needed.sqlite");
+
+  std::string dbname = pt.get<std::string>("mjolnir.admin");
 
   // Given map.pbf, BuildAdminFromPBF() creates test/data/admin.sqlite.
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
   BuildAdminFromPBF(pt.get_child("mjolnir"), input_files);
+
+  // Load the sqlite and read the countries/states from the admin table
+  std::set<std::string> countries, states;
+  GetAdminData(dbname, countries, states);
+
+  std::set<std::string> exp_countries = { "USA" };
+  EXPECT_EQ( countries, exp_countries);
+
+  std::set<std::string> exp_states = { "Colorado", "Utah" };
+  EXPECT_EQ( states, exp_states);
+
+  //======================================================================
+  // part II: build the tile data. Call GetAdminInfo() which reads
+  // sqlite and tile data. Confirm the polygonal data is correct
+  // with a few simple containment tests.
+  //======================================================================
+  BuildTiles(admin_map, input_files);
 
   // reverse engineer the tile_id from the nodes that make up
   // our mock map.pbf. Its probably overkill to check every node
@@ -131,21 +204,20 @@ TEST(AdminTest, TestAdminPolygonBasic) {
     GraphId tile_id = TileHierarchy::GetGraphId(latlon, 0);
     tile_ids.insert(tile_id);
   }
-  ASSERT_EQ(tile_ids.size(), 1);
+  EXPECT_EQ(tile_ids.size(), 1);
 
   GraphId tile_id(*tile_ids.begin());
-
-  // Load the admin.sqlite table we just created
-  sqlite3* db_handle = NULL;
-  std::string dbname = pt.get<std::string>("mjolnir.admin");
-  uint32_t ret = sqlite3_open_v2(dbname.c_str(), &db_handle, SQLITE_OPEN_READONLY, NULL);
-  EXPECT_EQ(ret, SQLITE_OK);
 
   // Create a GraphReader so we can create a GraphTileBuilder
   GraphReader graph_reader(pt.get_child("mjolnir"));
   auto t = GraphTile::Create(graph_reader.tile_dir(), tile_id);
-  ASSERT_TRUE(t);
+  EXPECT_TRUE(t);
   GraphTileBuilder tilebuilder(graph_reader.tile_dir(), tile_id, true);
+
+  // Load the admin.sqlite table we just created
+  sqlite3* db_handle = nullptr;
+  uint32_t ret = sqlite3_open_v2(dbname.c_str(), &db_handle, SQLITE_OPEN_READONLY, nullptr);
+  EXPECT_EQ(ret, SQLITE_OK);
 
   // Call GetAdminInfo.
   std::unordered_multimap<uint32_t, multi_polygon_type> polys;
@@ -156,15 +228,44 @@ TEST(AdminTest, TestAdminPolygonBasic) {
   sqlite3_close(db_handle);
 
   // For two states part of one country, there should be three polys, etc.
-  ASSERT_EQ(polys.size(), 3);
-  ASSERT_EQ(drive_on_right.size(), 3);
-  ASSERT_EQ(allow_intersection_names.size(), 3);
+  EXPECT_EQ(polys.size(), 3);
+  EXPECT_EQ(drive_on_right.size(), 3);
+  EXPECT_EQ(allow_intersection_names.size(), 3);
 
   // find the GH way/edge in the graph, make sure its there
-  auto tup = findEdge(graph_reader, admin_map.nodes, "GH", "H", tile_id);
-  const DirectedEdge* dir_edge = std::get<1>(tup);
-  ASSERT_NE(dir_edge, nullptr);
+  GraphId edge_id;
+  const DirectedEdge* edge = nullptr;
+  GraphId opp_edge_id;
+  const DirectedEdge* opp_edge = nullptr;
+  std::tie(edge_id, edge, opp_edge_id, opp_edge) = findEdge(graph_reader, admin_map.nodes, "GH", "H", tile_id);
+  EXPECT_NE(edge, nullptr);
+  EXPECT_NE(opp_edge, nullptr);
 
+  // H is the end node of edge GH
+  {
+    auto H_tile = graph_reader.GetGraphTile(edge_id);
+    const DirectedEdge* GH_edge = H_tile->directededge(edge_id);
+    EXPECT_EQ(GH_edge, edge);
+    GraphId H_node_id = GH_edge->endnode();
+    const NodeInfo* H_node = H_tile->node(H_node_id);
+    AdminInfo H_admin = H_tile->admininfo(H_node->admin_index());
+    EXPECT_EQ(H_admin.state_text(), "Utah");
+    EXPECT_EQ(H_admin.country_text(), "USA");
+  }
+
+  // G is the end node of opp_edge HG
+  {
+    auto G_tile = graph_reader.GetGraphTile(opp_edge_id);
+    const DirectedEdge* HG_edge = G_tile->directededge(opp_edge_id);
+    EXPECT_EQ(HG_edge, opp_edge);
+    GraphId G_node_id = HG_edge->endnode();
+    const NodeInfo* G_node = G_tile->node(G_node_id);
+    AdminInfo G_admin = G_tile->admininfo(G_node->admin_index());
+    EXPECT_EQ(G_admin.state_text(), "Colorado");
+    EXPECT_EQ(G_admin.country_text(), "USA");
+  }
+
+#if 0
   // See that nodes G and H are in the correct state
   for (const auto& node : admin_map.nodes) {
     const std::string& node_name = node.first;
@@ -180,4 +281,5 @@ TEST(AdminTest, TestAdminPolygonBasic) {
       ASSERT_EQ(state_offset, ut_offset);
     }
   }
+#endif
 }
