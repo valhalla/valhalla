@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
+#include "baldr/admin.h"
 #include "filesystem.h"
 #include "gurka.h"
-#include "baldr/admin.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/adminbuilder.h"
 #include "mjolnir/pbfadminparser.h"
@@ -63,18 +63,14 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
   return result;
 }
 
-
-void BuildTiles(valhalla::gurka::map& admin_map,
-                const std::vector<std::string>& pbf_filenames) {
+void BuildTiles(valhalla::gurka::map& admin_map, const std::vector<std::string>& pbf_filenames) {
   build_tile_set(admin_map.config, pbf_filenames, mjolnir::BuildStage::kInitialize,
-                          mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate, false);
 }
 
-
 void GetAdminData(const std::string& dbname,
-                  std::set<std::string> & countries,
-                  std::set<std::string> & states )
-{
+                  std::set<std::string>& countries,
+                  std::set<std::string>& states) {
   countries.clear();
   states.clear();
 
@@ -112,7 +108,7 @@ void GetAdminData(const std::string& dbname,
       name = (char*)sqlite3_column_text(stmt, 1);
     EXPECT_TRUE(!name.empty());
 
-    if ( admin_level == 4)
+    if (admin_level == 4)
       states.insert(name);
     else
       countries.insert(name);
@@ -125,7 +121,6 @@ void GetAdminData(const std::string& dbname,
     stmt = 0;
   }
 }
-
 
 uint32_t GetContainingState(GraphTileBuilder& tilebuilder,
                             const std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
@@ -146,7 +141,6 @@ uint32_t GetContainingState(GraphTileBuilder& tilebuilder,
 
 } // anonymous namespace
 
-
 TEST(AdminTest, TestBuildAdminFromPBF) {
   //======================================================================
   // part I: create a mock graph, build a pbf from it, build a sqlite
@@ -157,14 +151,14 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   // Create test/data/admin/map.pbf
   const std::string workdir = "test/data/admin";
 
-  if ( !filesystem::exists(workdir) ) {
+  if (!filesystem::exists(workdir)) {
     bool created = filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
   valhalla::gurka::map admin_map = BuildPBF(workdir);
 
-  boost::property_tree::ptree & pt = admin_map.config;
+  boost::property_tree::ptree& pt = admin_map.config;
   pt.put("mjolnir.concurrency", 1);
   pt.put("mjolnir.id_table_size", 1000);
   pt.put("mjolnir.tile_dir", workdir + "/tiles");
@@ -181,11 +175,11 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   std::set<std::string> countries, states;
   GetAdminData(dbname, countries, states);
 
-  std::set<std::string> exp_countries = { "USA" };
-  EXPECT_EQ( countries, exp_countries);
+  std::set<std::string> exp_countries = {"USA"};
+  EXPECT_EQ(countries, exp_countries);
 
-  std::set<std::string> exp_states = { "Colorado", "Utah" };
-  EXPECT_EQ( states, exp_states);
+  std::set<std::string> exp_states = {"Colorado", "Utah"};
+  EXPECT_EQ(states, exp_states);
 
   //======================================================================
   // part II: build the tile data. Call GetAdminInfo() which reads
@@ -237,7 +231,8 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   const DirectedEdge* edge = nullptr;
   GraphId opp_edge_id;
   const DirectedEdge* opp_edge = nullptr;
-  std::tie(edge_id, edge, opp_edge_id, opp_edge) = findEdge(graph_reader, admin_map.nodes, "GH", "H", tile_id);
+  std::tie(edge_id, edge, opp_edge_id, opp_edge) =
+      findEdge(graph_reader, admin_map.nodes, "GH", "H", tile_id);
   EXPECT_NE(edge, nullptr);
   EXPECT_NE(opp_edge, nullptr);
 

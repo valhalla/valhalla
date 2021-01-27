@@ -218,7 +218,8 @@ TEST(TimeTracking, routes) {
       }
     }
   }
-  std::vector<double> expected = {0, 17.1429, 34.2857, 51.4286, 193.9319, 245.4273, 269.4273, 293.4273};
+  std::vector<double> expected = {0,        17.1429,  34.2857,  51.4286,
+                                  193.9319, 245.4273, 269.4273, 293.4273};
   ASSERT_EQ(times.size(), expected.size());
   ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
                          [](double a, double b) { return std::abs(a - b) < .0001; }));
@@ -262,7 +263,7 @@ TEST(TimeTracking, routes) {
   }
 
   // TODO: why does arrive by have an extra node in here...
-  expected = {0, 0, 44.6402, 61.7830, 78.9259, 221.4292, 272.9246, 296.9246, 320.9246 };
+  expected = {0, 0, 44.6402, 61.7830, 78.9259, 221.4292, 272.9246, 296.9246, 320.9246};
   ASSERT_EQ(times.size(), expected.size());
   ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
                          [](double a, double b) { return std::abs(a - b) < .0001; }));
