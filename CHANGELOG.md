@@ -4,6 +4,7 @@
 * **Bug Fix**
    * FIXED: Fix compiler errors if HAVE_HTTP not enabled [#2807](https://github.com/valhalla/valhalla/pull/2807)
    * FIXED: Fix alternate route serialization [#2811](https://github.com/valhalla/valhalla/pull/2811)
+   * FIXED: Store restrictions in the right tile [#2781](https://github.com/valhalla/valhalla/pull/2781)
 
 * **Enhancement**
 
@@ -130,7 +131,6 @@
    * FIXED: Remove redundant return statements [#2776](https://github.com/valhalla/valhalla/pull/2776)
    * FIXED: Add support for geos-3.9 c++ api [#2739](https://github.com/valhalla/valhalla/issues/2739)
    * FIXED: Fix check for live speed validness [#2797](https://github.com/valhalla/valhalla/pull/2797)
-   * FIXED: Store restrictions in the right tile [#2781](https://github.com/valhalla/valhalla/pull/2781)
 
 * **Enhancement**
    * ADDED: Matrix of Bike Share [#2590](https://github.com/valhalla/valhalla/pull/2590)
