@@ -3,6 +3,7 @@
 
 * **Bug Fix**
    * FIXED: Fix compiler errors if HAVE_HTTP not enabled [#2807](https://github.com/valhalla/valhalla/pull/2807)
+   * FIXED: Fix alternate route serialization [#2811](https://github.com/valhalla/valhalla/pull/2811)
 
 * **Enhancement**
    * ADDED: Support for date_time type invariant for map matching [#2712](https://github.com/valhalla/valhalla/pull/2712)
