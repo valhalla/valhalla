@@ -96,6 +96,7 @@ protected:
    * to the adjacency list or EdgeLabel list). Does not expand transition
    * edges if from_transition is false.
    * @param  graphreader  Graph tile reader.
+   * @param  potential_tile     for a quick search of edges/nodes among the tiles
    * @param  node         Graph Id of the node being expanded.
    * @param  pred         Predecessor edge label (for costing).
    * @param  pred_idx     Predecessor index into the EdgeLabel list.
@@ -105,6 +106,7 @@ protected:
    *                      EdgeLabels and the cost.
    */
   bool ExpandForward(baldr::GraphReader& graphreader,
+                     baldr::graph_tile_ptr& potential_tile,
                      const baldr::GraphId& node,
                      sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
@@ -118,7 +120,7 @@ protected:
                                  const baldr::NodeInfo* nodeinfo,
                                  const uint32_t pred_idx,
                                  const EdgeMetadata& meta,
-                                 const graph_tile_ptr& tile,
+                                 graph_tile_ptr tile,
                                  const baldr::TimeInfo& time_info,
                                  const valhalla::Location& destination,
                                  std::pair<int32_t, float>& best_path);
@@ -137,10 +139,12 @@ protected:
   /**
    * Add edges at the origin to the adjacency list.
    * @param  graphreader  Graph tile reader.
+   * @param  potential_tile     for a quick search of edges/nodes among the tiles
    * @param  origin       Location information of the origin.
    * @param  dest         Location information of the destination.
    */
   virtual void SetOrigin(baldr::GraphReader& graphreader,
+                         baldr::graph_tile_ptr& potential_tile,
                          const valhalla::Location& origin,
                          const valhalla::Location& destination,
                          const uint32_t seconds_of_week);
@@ -148,10 +152,13 @@ protected:
   /**
    * Set the destination edge(s).
    * @param   graphreader  Graph tile reader.
+   * @param   potential_tile     for a quick search of edges/nodes among the tiles
    * @param   dest         Location information of the destination.
    * @return  Returns the relative density near the destination (0-15)
    */
-  virtual uint32_t SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
+  virtual uint32_t SetDestination(baldr::GraphReader& graphreader,
+                                  baldr::graph_tile_ptr& potential_tile,
+                                  const valhalla::Location& dest);
 
   /**
    * Form the path from the adjacency list. Recovers the path from the
@@ -277,6 +284,7 @@ protected:
    *                      EdgeLabels and the cost.
    */
   bool ExpandReverse(baldr::GraphReader& graphreader,
+                     baldr::graph_tile_ptr& potential_tile,
                      const baldr::GraphId& node,
                      sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
@@ -292,7 +300,7 @@ protected:
                           const baldr::NodeInfo* nodeinfo,
                           const uint32_t pred_idx,
                           const EdgeMetadata& meta,
-                          const graph_tile_ptr& tile,
+                          graph_tile_ptr tile,
                           const baldr::TimeInfo& time_info,
                           const valhalla::Location& destination,
                           std::pair<int32_t, float>& best_path);
@@ -305,6 +313,7 @@ protected:
    * @param  dest         Location information of the destination.
    */
   void SetOrigin(baldr::GraphReader& graphreader,
+                 baldr::graph_tile_ptr& potential_tile,
                  const valhalla::Location& origin,
                  const valhalla::Location& destination,
                  const uint32_t seconds_of_week) override;
@@ -317,6 +326,7 @@ protected:
    * @return  Returns the relative density near the destination (0-15)
    */
   virtual uint32_t SetDestination(baldr::GraphReader& graphreader,
+                                  baldr::graph_tile_ptr& potential_tile,
                                   const valhalla::Location& dest) override;
 
   /**

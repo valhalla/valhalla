@@ -137,6 +137,7 @@ protected:
    * Expand from the node along the forward search path
    *
    * @param graphreader        to access graph data
+   * @param potential_tile     for a quick search of edges/nodes among the tiles
    * @param node               the node from which to expand
    * @param pred               the previous edge label in the forward expansion
    * @param pred_idx           the index of the label in the label set
@@ -145,6 +146,7 @@ protected:
    * @return returns true if the expansion continued from this node
    */
   bool ExpandForward(baldr::GraphReader& graphreader,
+                     graph_tile_ptr& potential_tile,
                      const baldr::GraphId& node,
                      sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
@@ -157,13 +159,14 @@ protected:
                           const uint32_t pred_idx,
                           const EdgeMetadata& meta,
                           uint32_t& shortcuts,
-                          const graph_tile_ptr& tile,
+                          graph_tile_ptr tile,
                           const baldr::TimeInfo& time_info);
 
   /**
    * Expand from the node along the reverse search path
    *
    * @param graphreader        to access graph data
+   * @param potential_tile     for a quick search of edges/nodes among the tiles
    * @param node               the node from which to expand
    * @param pred               the previous edge label in the reverse expansion
    * @param pred_idx           the index of the label in the label set
@@ -172,6 +175,7 @@ protected:
    * @return returns true if the expansion continued from this node in this direction
    */
   bool ExpandReverse(baldr::GraphReader& graphreader,
+                     graph_tile_ptr& potential_tile,
                      const baldr::GraphId& node,
                      sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
@@ -186,25 +190,29 @@ protected:
                           const uint32_t pred_idx,
                           const EdgeMetadata& meta,
                           uint32_t& shortcuts,
-                          const graph_tile_ptr& tile,
+                          graph_tile_ptr tile,
                           const baldr::TimeInfo& time_info);
   /**
    * Add edges at the origin to the forward adjacency list.
    * @param graphreader  Graph tile reader.
+   * @param potential_tile     for a quick search of edges/nodes among the tiles
    * @param origin       Location information of the destination
    * @param time_info    What time is it when we start the route
    */
   void SetOrigin(baldr::GraphReader& graphreader,
+                 graph_tile_ptr& potential_tile,
                  valhalla::Location& origin,
                  const baldr::TimeInfo& time_info);
 
   /**
    * Add destination edges to the reverse path adjacency list.
    * @param graphreader  Graph tile reader.
+   * @param potential_tile     for a quick search of edges/nodes among the tiles
    * @param dest         Location information of the destination
    * @param time_info    What time is it when we end the route
    */
   void SetDestination(baldr::GraphReader& graphreader,
+                      graph_tile_ptr& potential_tile,
                       const valhalla::Location& dest,
                       const baldr::TimeInfo& time_info);
 

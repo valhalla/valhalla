@@ -49,6 +49,7 @@ void TimeDepForward::Clear() {
 // to the adjacency list or EdgeLabel list). Does not expand transition
 // edges if from_transition is false.
 bool TimeDepForward::ExpandForward(GraphReader& graphreader,
+                                   baldr::graph_tile_ptr& potential_tile,
                                    const GraphId& node,
                                    EdgeLabel& pred,
                                    const uint32_t pred_idx,
@@ -57,7 +58,7 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
                                    std::pair<int32_t, float>& best_path) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  graph_tile_ptr tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node, potential_tile);
   if (tile == nullptr) {
     return false;
   }
@@ -105,7 +106,7 @@ bool TimeDepForward::ExpandForward(GraphReader& graphreader,
       // we cant get the tile at that level (local extracts could have this problem) THEN bail
       graph_tile_ptr trans_tile = nullptr;
       if ((!trans->up() && hierarchy_limits_[trans->endnode().level()].StopExpanding()) ||
-          !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
+          !(trans_tile = graphreader.GetGraphTile(trans->endnode(), potential_tile))) {
         continue;
       }
       // setup for expansion at this level
@@ -151,7 +152,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
                                                const NodeInfo* nodeinfo,
                                                const uint32_t pred_idx,
                                                const EdgeMetadata& meta,
-                                               const graph_tile_ptr& tile,
+                                               graph_tile_ptr tile,
                                                const TimeInfo& time_info,
                                                const valhalla::Location& destination,
                                                std::pair<int32_t, float>& best_path) {
@@ -224,7 +225,7 @@ inline bool TimeDepForward::ExpandForwardInner(GraphReader& graphreader,
   float sortcost = newcost.cost;
   if (dest_edge == destinations_percent_along_.end()) {
     graph_tile_ptr t2 =
-        meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode()) : tile;
+        meta.edge->leaves_tile() ? graphreader.GetGraphTile(meta.edge->endnode(), tile) : tile;
     if (t2 == nullptr) {
       return false;
     }
@@ -264,15 +265,17 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
+  baldr::graph_tile_ptr potential_tile = nullptr;
+
   // Get time information for forward
   auto forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
 
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
-  uint32_t density = SetDestination(graphreader, destination);
+  uint32_t density = SetDestination(graphreader, potential_tile, destination);
   // Call SetOrigin with kFreeFlowSecondOfDay for now since we don't yet have
   // a timezone for converting a date_time of "current" to seconds_of_week
-  SetOrigin(graphreader, origin, destination, forward_time_info.second_of_week);
+  SetOrigin(graphreader, potential_tile, origin, destination, forward_time_info.second_of_week);
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
@@ -349,8 +352,8 @@ TimeDepForward::GetBestPath(valhalla::Location& origin,
     }
 
     // Expand forward from the end node of the predecessor edge.
-    ExpandForward(graphreader, pred.endnode(), pred, predindex, forward_time_info, destination,
-                  best_path);
+    ExpandForward(graphreader, potential_tile, pred.endnode(), pred, predindex, forward_time_info,
+                  destination, best_path);
   }
   return {}; // Should never get here
 }
@@ -413,6 +416,7 @@ void TimeDepForward::ModifyHierarchyLimits(const float dist, const uint32_t /*de
 
 // Add an edge at the origin to the adjacency list
 void TimeDepForward::SetOrigin(GraphReader& graphreader,
+                               baldr::graph_tile_ptr& potential_tile,
                                const valhalla::Location& origin,
                                const valhalla::Location& destination,
                                const uint32_t seconds_of_week) {
@@ -451,12 +455,12 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    const auto tile = graphreader.GetGraphTile(edgeid);
+    const auto tile = graphreader.GetGraphTile(edgeid, potential_tile);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    const auto endtile = graphreader.GetGraphTile(directededge->endnode());
+    const auto endtile = graphreader.GetGraphTile(directededge->endnode(), potential_tile);
     if (endtile == nullptr) {
       continue;
     }
@@ -525,7 +529,9 @@ void TimeDepForward::SetOrigin(GraphReader& graphreader,
 }
 
 // Add a destination edge
-uint32_t TimeDepForward::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
+uint32_t TimeDepForward::SetDestination(GraphReader& graphreader,
+                                        baldr::graph_tile_ptr& potential_tile,
+                                        const valhalla::Location& dest) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
@@ -554,7 +560,7 @@ uint32_t TimeDepForward::SetDestination(GraphReader& graphreader, const valhalla
     // Edge score (penalty) is handled within GetPath. Do not add score here.
 
     // Get the tile relative density
-    auto tile = graphreader.GetGraphTile(edgeid);
+    auto tile = graphreader.GetGraphTile(edgeid, potential_tile);
     density = tile->header()->density();
   }
   return density;
