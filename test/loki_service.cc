@@ -363,6 +363,7 @@ boost::property_tree::ptree make_config(const std::vector<std::string>& whitelis
     actions.push_back(std::make_pair("", action));
   }
   config.add_child("loki.actions", actions);
+
   return config;
 }
 

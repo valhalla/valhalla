@@ -525,7 +525,7 @@ help_text = {
     'max_radius': 'Maximum radius in meters allowed on any one location',
     'max_timedep_distance': 'Maximum b-line distance between locations to allow a time-dependent route',
     'max_alternates': 'Maximum number of alternate routes to allow in a request',
-    'max_avoid_polygons_length': 'Maximum total area of all avoid_polygons in degrees'
+    'max_avoid_polygons_length': 'Maximum total circumference of all avoid_polygons in kilometers'
   }
 }
 

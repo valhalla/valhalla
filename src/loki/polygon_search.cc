@@ -1,10 +1,4 @@
-#include <numeric>
-
-#include "loki/node_search.h"
 #include "loki/polygon_search.h"
-#include "midgard/aabb2.h"
-#include "midgard/pointll.h"
-#include "proto/options.pb.h"
 
 namespace bg = boost::geometry;
 namespace vm = valhalla::midgard;

@@ -2,13 +2,10 @@
 #define VALHALLA_LOKI_POLYGON_SEARCH_H_
 
 #include <boost/geometry.hpp>
-#include <boost/geometry/geometries/register/box.hpp>
-#include <boost/geometry/geometries/register/linestring.hpp>
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/register/ring.hpp>
 
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/options.pb.h>

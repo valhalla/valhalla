@@ -1,1 +1,0 @@
-{       "mjolnir": {       "concurrency": 1,       "id_table_size": 1000,        "tile_dir": "test/data/fake_tiles_astar",         "admin": "/home/nilsnolde/dev/cpp/valhalla/test/data/netherlands_admin.sqlite",          "timezone": "/home/nilsnolde/dev/cpp/valhalla/test/data/not_needed.sqlite"       }     }

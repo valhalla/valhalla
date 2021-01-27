@@ -5,6 +5,7 @@
    * FIXED: Fix compiler errors if HAVE_HTTP not enabled [#2807](https://github.com/valhalla/valhalla/pull/2807)
 
 * **Enhancement**
+   * ADDED: avoid_polygons logic [#2750](https://github.com/valhalla/valhalla/pull/2750)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
@@ -239,7 +240,7 @@
    * ADDED: Added support to process the sump_buster tag.  Also, fixed a few small access bugs for nodes. [#2731](https://github.com/valhalla/valhalla/pull/2731)
    * ADDED: Log message if failed to create tiles directory. [#2738](https://github.com/valhalla/valhalla/pull/2738)
    * CHANGED: Tile memory is only owned by the GraphTile rather than shared amongst copies of the graph tile (in GraphReader and TileCaches). [#2340](https://github.com/valhalla/valhalla/pull/2340)
-   * CHANGED: Add shortcuts to the tiles' bins so we can treat them like regular edges. [#2744](https://github.com/valhalla/valhalla/pull/2344)
+   * CHANGED: Add shortcuts to the tiles' bins so we can treat them like regular edges. [#2744](https://github.com/valhalla/valhalla/pull/2744)
    * ADDED: Add Estonian locale. [#2748](https://github.com/valhalla/valhalla/pull/2748)
    * CHANGED: Handle GraphTile objects as smart pointers [#2703](https://github.com/valhalla/valhalla/pull/2703)
    * CHANGED: Improve stability with no RTTI build [#2759](https://github.com/valhalla/valhalla/pull/2759) and [#2760](https://github.com/valhalla/valhalla/pull/2760)
