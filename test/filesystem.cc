@@ -136,10 +136,9 @@ TEST(Filesystem, extension) {
 TEST(Filesystem, file_size) {
 }
 
-
 TEST(Filesystem, concurrent_folder_create_delete) {
 
-  const char * folder_name = "test/a/b/c/d/e/f/g";
+  const char* folder_name = "test/a/b/c/d/e/f/g";
 
   auto create_folder = [&]() {
     bool success = filesystem::create_directories(folder_name);
@@ -171,7 +170,6 @@ TEST(Filesystem, concurrent_folder_create_delete) {
     }
   }
 }
-
 
 } // namespace
 
