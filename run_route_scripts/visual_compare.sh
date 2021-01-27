@@ -23,7 +23,7 @@ input_file2=${4}
 alias urlencode='python -c "import sys; import os; import requests; print(*(requests.utils.quote(line.strip()) for line in sys.stdin), sep=os.linesep)"'
 
 # diff to get the file names, these have the line number in the orginal input
-for i in $(diff -qr ${output_dir1} ${output_dir2} | sed -e "s/.*\///g" -e "s/\..*$//g" | sort -n); do
+for i in $(diff -qr ${output_dir1} ${output_dir2} | sed -e "s/.*\///g" -e "s/\..*$//g" | sort -n | grep -v "statistics"); do
   anchor_before=$(echo -e "[$(sed "${i}q;d" ${input_file1} | sed -e "s/^[^{]*//g" -e "s/}[^}]*$/}/g" | jq -rc '. + {id: "770000"}')," | urlencode)
   anchor_after=$(echo -e "$(sed "${i}q;d" ${input_file2} | sed -e "s/^[^{]*//g" -e "s/}[^}]*$/}/g" | jq -rc '. + {id: "007700"}')]" | urlencode)
   echo "http://valhalla.github.io/demos/routing/simple.html#${anchor_before}${anchor_after}";
