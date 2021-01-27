@@ -9,6 +9,7 @@
 #include "midgard/util.h"
 #include "odin/worker.h"
 #include "thor/worker.h"
+#include "tyr/serializers.h"
 #include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla;
@@ -27,13 +28,14 @@ struct route_tester {
       : reader(new GraphReader(conf.get_child("mjolnir"))), loki_worker(conf, reader),
         thor_worker(conf, reader), odin_worker(conf) {
   }
-  Api test(const std::string& request_json) {
+  Api test(const std::string& request_json, std::string& response_json) {
     Api request;
     ParseApi(request_json, Options::route, request);
     loki_worker.route(request);
     std::pair<std::list<TripLeg>, std::list<DirectionsLeg>> results;
     thor_worker.route(request);
     odin_worker.narrate(request);
+    response_json = tyr::serializeDirections(request);
     return request;
   }
   std::shared_ptr<GraphReader> reader;
@@ -50,12 +52,21 @@ void test_alternates(int num_alternates) {
       "alternates":)" +
       std::to_string(num_alternates) + "}";
 
-  auto response = tester.test(request);
+  std::string json;
+  auto response = tester.test(request, json);
   const auto& routes = response.trip().routes();
+  ASSERT_EQ(routes.size(), num_alternates + 1);
 
-  if (routes.size() != num_alternates + 1)
-    throw std::logic_error("Expected " + std::to_string(num_alternates + 1) + " routes, got " +
-                           std::to_string(routes.size()));
+  rapidjson::Document doc;
+  doc.Parse(json);
+  ASSERT_FALSE(doc.HasParseError());
+  ASSERT_TRUE(doc.HasMember("trip"));
+  ASSERT_TRUE(doc.HasMember("alternates") == (num_alternates > 0));
+  if (num_alternates > 0) {
+    for (const auto& alt : doc["alternates"].GetArray()) {
+      ASSERT_TRUE(alt.HasMember("trip"));
+    }
+  }
 }
 } // namespace
 
