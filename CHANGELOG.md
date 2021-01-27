@@ -15,6 +15,7 @@
    * ADDED: Support for date_time type invariant for map matching [#2712](https://github.com/valhalla/valhalla/pull/2712)
    * ADDED: Add Bulgarian locale [#2825](https://github.com/valhalla/valhalla/pull/2825)
    * FIXED: No need for write permissions on tarball indices [#2822](https://github.com/valhalla/valhalla/pull/2822)
+  * nit: Links debug build with lld [#2813](https://github.com/valhalla/valhalla/pull/2813)
 
 ## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
