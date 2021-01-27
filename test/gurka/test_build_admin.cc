@@ -122,23 +122,6 @@ void GetAdminData(const std::string& dbname,
   }
 }
 
-uint32_t GetContainingState(GraphTileBuilder& tilebuilder,
-                            const std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
-                            const PointLL& ll) {
-  uint32_t index = 0;
-  point_type p(ll.lng(), ll.lat());
-  for (const auto& poly : polys) {
-    if (boost::geometry::covered_by(p, poly.second)) {
-      uint32_t poly_id = poly.first;
-      const Admin& admin = tilebuilder.admins_builder(poly_id);
-      // if state_offset is non-zero, it is a state (not a country)
-      if (admin.state_offset() != 0)
-        return admin.state_offset();
-    }
-  }
-  return 0;
-}
-
 } // anonymous namespace
 
 TEST(AdminTest, TestBuildAdminFromPBF) {
@@ -259,22 +242,4 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
     EXPECT_EQ(G_admin.state_text(), "Colorado");
     EXPECT_EQ(G_admin.country_text(), "USA");
   }
-
-#if 0
-  // See that nodes G and H are in the correct state
-  for (const auto& node : admin_map.nodes) {
-    const std::string& node_name = node.first;
-    if (node_name == "G") {
-      uint32_t co_offset = tilebuilder.AddName("Colorado");
-      const midgard::PointLL& node_latlon = node.second;
-      uint32_t state_offset = GetContainingState(tilebuilder, polys, node_latlon);
-      ASSERT_EQ(state_offset, co_offset);
-    } else if (node_name == "H") {
-      uint32_t ut_offset = tilebuilder.AddName("Utah");
-      const midgard::PointLL& node_latlon = node.second;
-      uint32_t state_offset = GetContainingState(tilebuilder, polys, node_latlon);
-      ASSERT_EQ(state_offset, ut_offset);
-    }
-  }
-#endif
 }
