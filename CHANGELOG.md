@@ -1,4 +1,12 @@
-## Release Date: 2020-08-?? Valhalla 3.1.0
+## Release Date: 2021-??-?? Valhalla 3.1.1
+* **Removed**
+
+* **Bug Fix**
+   * FIXED: Fix compiler errors if HAVE_HTTP not enabled [#2807](https://github.com/valhalla/valhalla/pull/2807)
+
+* **Enhancement**
+
+## Release Date: 2021-01-25 Valhalla 3.1.0
 * **Removed**
    * REMOVED: Remove Node bindings. [#2502](https://github.com/valhalla/valhalla/pull/2502)
    * REMOVED: appveyor builds. [#2550](https://github.com/valhalla/valhalla/pull/2550)
@@ -124,6 +132,7 @@
    * FIXED: Fix check for live speed validness [#2797](https://github.com/valhalla/valhalla/pull/2797)
 
 * **Enhancement**
+   * ADDED: Matrix of Bike Share [#2590](https://github.com/valhalla/valhalla/pull/2590)
    * ADDED: Add ability to provide custom implementation for candidate collection in CandidateQuery. [#2328](https://github.com/valhalla/valhalla/pull/2328)
    * ADDED: Cancellation of tile downloading. [#2319](https://github.com/valhalla/valhalla/pull/2319)
    * ADDED: Return the coordinates of the nodes isochrone input locations snapped to [#2111](https://github.com/valhalla/valhalla/pull/2111)

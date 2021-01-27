@@ -52,6 +52,7 @@ const std::unordered_map<std::string, float> kMaxDistances = {
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
 
+#ifdef HAVE_HTTP
 std::string serialize_to_pbf(Api& request) {
   std::string buf;
   if (!request.SerializeToString(&buf)) {
@@ -61,6 +62,7 @@ std::string serialize_to_pbf(Api& request) {
   }
   return buf;
 };
+#endif
 
 } // namespace
 

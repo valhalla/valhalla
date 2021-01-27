@@ -501,9 +501,6 @@ uint32_t AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valha
     auto tile = graphreader.GetGraphTile(edgeid);
     assert(tile);
     const DirectedEdge* directededge = tile->directededge(edgeid);
-    auto* endonode = tile->node(directededge->endnode());
-    GraphId startnode =
-        tile->directededge(endonode->edge_index() + directededge->opp_index())->endnode();
 
     destinations_[edge.graph_id()] =
         pedestrian_costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
